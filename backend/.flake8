@@ -1,0 +1,29 @@
+[flake8]
+exclude =
+   .git,
+   .venv,
+   .eggs,
+   __pycache__,
+   doc/source/conf.py,
+   build,
+   dist,
+   examples/github/github_schema.py,
+   examples/github/sample_operations.py,
+   examples/shopify/shopify_schema.py,
+   examples/shopify/shopify_operations.py
+
+per-file-ignores =
+   examples/**:T201
+   utils/**:T201
+   # 'RST399 Document or section may not begin with a transition.', but none really :-(
+   sgqlc/introspection/__init__.py:RST399
+
+# I801: from x import Y
+# RST304: :class:, :func:, :mod: are supported by sphinx
+# RST303: literalinclude is supported by sphinx
+# N999: ignore dashes in the name (ideally only disabled for examples/)
+# W503: old coding style (new PEP8 is enforced by W504)
+ignore = I801,RST303,RST304,N999,W503
+max-complexity = 10
+max-line-length = 110
+known-modules = websocket-client:[websocket],graphql-core:[graphql]

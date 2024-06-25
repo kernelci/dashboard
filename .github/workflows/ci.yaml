@@ -125,3 +125,7 @@ jobs:
       - name: Run migrations
         run: poetry run python manage.py migrate --no-input
         working-directory: ./backend
+
+      - name: Lint
+        run: poetry run flake8
+        working-directory: ./backend
