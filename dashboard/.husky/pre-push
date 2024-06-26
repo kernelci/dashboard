@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+set -e
+
+REMOTE="$1"
+MASTER_REF=${MASTER_REF:-$REMOTE/main}
+
+if ! read LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; then
+  echo "NOTE: nothing to push, nothing to check"
+  exit 0
+fi
+
+if [ "$LOCAL_REF" = "(delete)" ]; then
+  echo "NOTE: deleting branch, nothing to check"
+  exit 0
+fi
+
+cd dashboard && pnpm pypush
