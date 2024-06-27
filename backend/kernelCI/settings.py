@@ -45,7 +45,6 @@ ALLOWED_HOSTS = get_json_env_var(
     ['localhost'],
 )
 
-
 # Application definition
 
 INSTALLED_APPS = [
