@@ -14,3 +14,18 @@ A web app built with [React](https://react.dev/) + [Typescript](https://www.type
 
 ### Backend
 A Python http server built with [Django](https://www.djangoproject.com/) + [DRF](https://www.django-rest-framework.org/), to see more information check the backend [README](/backend/README.md).
+
+
+# Build
+
+Create secret files:
+```sh
+mkdir -p backend/runtime/secrets
+uuidgen > backend/runtime/secrets/postgres_password_secret
+```
+
+Startup the services with
+ ```sh
+ docker compose up --build -d
+ ```
+ 

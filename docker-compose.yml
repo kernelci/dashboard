@@ -1,0 +1,63 @@
+volumes:
+    db-data:
+    runtime-data:
+
+networks:
+    public:
+    private:
+
+secrets:
+    postgres_password_secret:
+        file: ./backend/runtime/secrets/postgres_password_secret
+
+services:
+    db:
+        image: postgres:16.3-alpine
+        networks:
+            - private
+        environment:
+            - POSTGRES_USER=kernelci
+            - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password_secret
+            - PGDATA=/var/run/postgresql/data
+        volumes:
+            - db-data:/var/run/postgresql/data
+        ports:
+            - target: 5432
+              published: 5432
+              protocol: tcp
+              mode: host
+        secrets:
+            - postgres_password_secret
+
+    backend:
+        build: ./backend
+        restart: always
+        networks:
+            - private
+            - public
+        ports:
+            - target: 8000
+              published: 8000
+              protocol: tcp
+              mode: host
+        secrets:
+            - postgres_password_secret
+        environment:
+            - 'ALLOWED_HOSTS=["backend"]'
+            - DB_DEFAULT_PASSWORD_FILE=/run/secrets/postgres_password_secret
+            - DB_DEFAULT_HOST=db
+
+    proxy:
+        build: ./proxy
+        restart: always
+        depends_on:
+            - backend
+        networks:
+            - public
+        ports:
+            - target: 80
+              published: 80
+              protocol: tcp
+              mode: host
+        environment:
+            - PROXY_TARGET=http://backend:8000
