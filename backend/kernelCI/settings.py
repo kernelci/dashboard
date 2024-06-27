@@ -94,10 +94,16 @@ WSGI_APPLICATION = "kernelCI.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": get_json_env_var("DB_DEFAULT", {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "kernelci",
+        "USER": "kernelci",
+        "PASSWORD": "kernelci-db-password",
+        "HOST": "127.0.0.1",
+        "OPTIONS": {
+                "connect_timeout": 5,
+        },
+    })
 }
 
 
