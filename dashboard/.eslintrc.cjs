@@ -10,7 +10,7 @@ module.exports = {
     "plugin:react-hooks/recommended",
     "plugin:storybook/recommended",
   ],
-  ignorePatterns: [".eslintrc.cjs", "*.config.js"],
+  ignorePatterns: [".eslintrc.cjs", "*.config.js", "/src/components/ui/*"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaFeatures: {
@@ -76,10 +76,10 @@ module.exports = {
       "error",
       "ignorePackages",
       {
-        js: "never",
-        jsx: "never",
-        ts: "never",
-        tsx: "never",
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never",
       },
     ],
     "import/no-cycle": ["error", { ignoreExternal: true }],

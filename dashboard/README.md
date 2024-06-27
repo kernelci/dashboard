@@ -12,7 +12,7 @@ To add a new component to projet use the following command on terminal:
 ```
 pnpm dlx shadcn-ui@latest add <component-name>
 ```
-
+- [Docs](https://ui.shadcn.com/docs/cli)
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
