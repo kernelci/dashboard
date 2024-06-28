@@ -67,7 +67,7 @@ const SideMenu = (): JSX.Element => {
 
   return (
     <NavigationMenu
-      className="fixed h-screen justify-start bg-bgSecondary pt-6 flex-col"
+      className="h-screen justify-start bg-bgSecondary pt-6 flex-col"
       orientation="vertical"
     >
       <div className="w-full px-4">

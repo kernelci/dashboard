@@ -1,13 +1,11 @@
 import "./App.css";
-import LateralMenu from "./components/SideMenu/SideMenu";
+import Dashboard from "./components/Dashboard/Dashboard";
 
 function App(): JSX.Element {
   return (
-    <>
       <div className="w-screen h-screen">
-        <LateralMenu />
+        <Dashboard />
       </div>
-    </>
   );
 }
 
