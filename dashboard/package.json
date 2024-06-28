@@ -24,16 +24,18 @@
     "@radix-ui/react-navigation-menu": "^1.2.0",
     "@radix-ui/react-separator": "^1.1.0",
     "@tanstack/react-query": "^5.45.1",
+    "@vitejs/plugin-react": "^4.3.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "flat": "^6.0.1",
     "lucide-react": "^0.396.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.2.1",
+    "react-intl": "^6.6.8",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "vite": "^5.3.1",
-    "@vitejs/plugin-react": "^4.3.1"
+    "vite": "^5.3.1"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^1.5.0",

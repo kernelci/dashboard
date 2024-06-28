@@ -2,6 +2,8 @@ import { MdOutlineMonitorHeart, MdOutlineDashboard } from "react-icons/md";
 
 import { ImTree, ImImages } from "react-icons/im";
 
+import { FormattedMessage } from "react-intl";
+
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -13,7 +15,7 @@ import { Separator } from "../ui/separator";
 
 type MenuItems = {
   onClick: () => void;
-  text: string;
+  idIntl: string;
   icon: JSX.Element;
   selected: boolean;
 };
@@ -23,25 +25,25 @@ const emptyFunc = () : void => {}
 const items: MenuItems[] = [
   {
     onClick: emptyFunc,
-    text: "Dashboard",
+    idIntl: "lateralMenu.dashboard",
     icon: <MdOutlineDashboard className="size-5" />,
     selected: false,
   },
   {
     onClick: emptyFunc,
-    text: "Tree Monitor",
+    idIntl: "lateralMenu.treeMonitor",
     icon: <ImTree className="size-5" />,
     selected: true,
   },
   {
     onClick: emptyFunc,
-    text: "Device Monitor",
+    idIntl: "lateralMenu.deviceMonitor",
     icon: <MdOutlineMonitorHeart className="size-5" />,
     selected: false,
   },
   {
     onClick: emptyFunc,
-    text: "Labs Monitor",
+    idIntl: "lateralMenu.labsMonitor",
     icon: <ImImages className="size-5" />,
     selected: false,
   },
@@ -49,12 +51,12 @@ const items: MenuItems[] = [
 
 const NavLink = ({
   icon,
-  text,
-}: Pick<MenuItems, "icon" | "text">): JSX.Element => (
+  idIntl,
+}: Pick<MenuItems, "icon" | "idIntl">): JSX.Element => (
   <NavigationMenuLink asChild>
     <a className="flex items-center no-underline hover:text-sky-500">
       <span className="mr-3">{icon}</span>
-      <span className="text-sm text-center">{text}</span>
+      <span className="text-sm text-center" ><FormattedMessage  id={idIntl}/> </span>
     </a>
   </NavigationMenuLink>
 );
@@ -79,9 +81,9 @@ const SideMenu = (): JSX.Element => {
 
             <NavigationMenuItem
               className={item.selected ? selectedItemClassName : notSelectedItemClassName}
-              key={item.text}
+              key={item.idIntl}
             >
-              <NavLink icon={item.icon} text={item.text} />
+              <NavLink icon={item.icon} idIntl={item.idIntl} />
             </NavigationMenuItem>
           
         )}
