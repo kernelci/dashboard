@@ -25,25 +25,25 @@ const emptyFunc = () : void => {}
 const items: MenuItems[] = [
   {
     onClick: emptyFunc,
-    idIntl: "lateralMenu.dashboard",
+    idIntl: "routes.dashboard",
     icon: <MdOutlineDashboard className="size-5" />,
     selected: false,
   },
   {
     onClick: emptyFunc,
-    idIntl: "lateralMenu.treeMonitor",
+    idIntl: "routes.treeMonitor",
     icon: <ImTree className="size-5" />,
     selected: true,
   },
   {
     onClick: emptyFunc,
-    idIntl: "lateralMenu.deviceMonitor",
+    idIntl: "routes.deviceMonitor",
     icon: <MdOutlineMonitorHeart className="size-5" />,
     selected: false,
   },
   {
     onClick: emptyFunc,
-    idIntl: "lateralMenu.labsMonitor",
+    idIntl: "routes.labsMonitor",
     icon: <ImImages className="size-5" />,
     selected: false,
   },

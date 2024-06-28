@@ -2,7 +2,7 @@ import {LOCALES} from '../constants'
 
 export const messages = {
   [LOCALES.EN_US]: {
-    lateralMenu: {
+    routes: {
       dashboard: "Dashboard",
       treeMonitor: "Tree Monitor",
       deviceMonitor: "Device Monitor",
