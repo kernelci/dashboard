@@ -8,5 +8,12 @@ export const messages = {
       deviceMonitor: "Device Monitor",
       labsMonitor: "Labs Monitor",
     },
+    treeTable: {
+      tree: "Tree",
+      branch: "Branch",
+      commit: "Commit/tag",
+      build: "Build Status",
+      test: "Test Status",
+    }
   },
 };
