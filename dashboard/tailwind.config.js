@@ -36,7 +36,11 @@ module.exports = {
         'onSecondary' : '#FFFFFF',
         'lightBlue': '#11B3E6', 
         'onSecondary-10': '#FFFFFF1A',
-        'dark': '#000'
+        "white": '#FFFFFF',
+        "lightGray": '#F4F4F4',
+        "mediumGray": '#EAEAEA',
+        "darkGray": '#D6D6D6',
+        "black": '#000000'
       }
     },
   },
