@@ -2,18 +2,27 @@ import {LOCALES} from '../constants'
 
 export const messages = {
   [LOCALES.EN_US]: {
+    global: {
+      filters: "Filters",
+    },
     routes: {
       dashboard: "Dashboard",
-      treeMonitor: "Tree Monitor",
       deviceMonitor: "Device Monitor",
       labsMonitor: "Labs Monitor",
+      treeMonitor: "Tree Monitor",
+    },
+    table: {
+      itemsPerPage: "Items per page:",
+      of: "of",
+      showing: "Showing:",
+      tree: "Tree",
     },
     treeTable: {
-      tree: "Tree",
       branch: "Branch",
-      commit: "Commit/tag",
       build: "Build Status",
+      commit: "Commit/tag",
       test: "Test Status",
-    }
+      tree: "Tree",
+    },
   },
 };
