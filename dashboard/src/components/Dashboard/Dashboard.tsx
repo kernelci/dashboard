@@ -1,6 +1,6 @@
 import SideMenu from "../SideMenu/SideMenu";
-import TreeTable from "../Table/TreeTable";
 import TopBar from "../TopBar/TopBar";
+import TreeMonitorListingPage from "../TreeMonitorListingPage/TreeMonitorListingPage";
 
 const Dashboard = () : JSX.Element => {
   return (
@@ -8,8 +8,8 @@ const Dashboard = () : JSX.Element => {
       <div className="flex flex-row w-full justify-between">
         <SideMenu />
         <TopBar />
-        <div className="w-full px-16 pt-64 bg-lightGray">
-          <TreeTable />
+        <div className="w-full px-16 pt-24 bg-lightGray">
+          <TreeMonitorListingPage />
         </div>
       </div>
     </div>

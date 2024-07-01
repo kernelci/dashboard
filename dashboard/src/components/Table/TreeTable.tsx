@@ -4,12 +4,16 @@ import { TableRow, TableCell } from "../ui/table";
 
 import BaseTable from "./BaseTable";
 
-interface ITreeTableBody {
+export interface ITreeTableBody {
   name: string;
   branch: string;
   commit: string;
   buildStatus: string;
   testStatus: string;
+}
+
+interface ITreeTable {
+  treeTableRows: ITreeTableBody[];
 }
 
 const treeTableColumnsLabelId = [
@@ -18,44 +22,6 @@ const treeTableColumnsLabelId = [
   'treeTable.commit',
   'treeTable.build',
   'treeTable.test'
-];
-
-const treeTableRows: ITreeTableBody[] = [
-  {
-    name: "stable-rc",
-    branch: "linux-5.15",
-    commit: "asidnasidn-oqiwejeoij-oaidnosdnk",
-    buildStatus: "150 completed",
-    testStatus: "80 completed"
-  },
-  {
-    name: "stable-rc",
-    branch: "linux-5.15",
-    commit: "asidnasidn-oqiwejeoij-oaidnosdnk",
-    buildStatus: "10 completed",
-    testStatus: "150 completed"
-  },
-  {
-    name: "stable-rc",
-    branch: "linux-5.15",
-    commit: "asidnasidn-oqiwejeoij-oaidnosdnk",
-    buildStatus: "10 completed",
-    testStatus: "150 completed"
-  },
-  {
-    name: "stable-rc",
-    branch: "linux-5.15",
-    commit: "asidnasidn-oqiwejeoij-oaidnosdnk",
-    buildStatus: "10 completed",
-    testStatus: "150 completed"
-  },
-  {
-    name: "stable-rc",
-    branch: "linux-5.15",
-    commit: "asidnasidn-oqiwejeoij-oaidnosdnk",
-    buildStatus: "10 completed",
-    testStatus: "150 completed"
-  }
 ];
 
 const TreeTableRow = (row: ITreeTableBody): JSX.Element => {
@@ -70,7 +36,7 @@ const TreeTableRow = (row: ITreeTableBody): JSX.Element => {
   );
 };
 
-const TreeTable = () : JSX.Element => {
+  const TreeTable = ({treeTableRows}: ITreeTable) : JSX.Element => {
   const treeTableBody = useMemo(() => {
     return (
       treeTableRows.map((row: ITreeTableBody) => (
