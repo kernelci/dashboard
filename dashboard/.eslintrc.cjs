@@ -60,7 +60,6 @@ module.exports = {
       { allowConstantExport: true },
     ],
     "@typescript-eslint/prefer-optional-chain": "warn",
-    "@typescript-eslint/consistent-type-imports": "warn",
     "@typescript-eslint/explicit-function-return-type": "warn",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-inferrable-types": "warn",
