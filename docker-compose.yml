@@ -1,6 +1,7 @@
 volumes:
     db-data:
     runtime-data:
+    static-data:
 
 networks:
     public:
@@ -47,6 +48,19 @@ services:
             - DB_DEFAULT_PASSWORD_FILE=/run/secrets/postgres_password_secret
             - DB_DEFAULT_HOST=db
 
+    dashboard:
+        build: ./dashboard
+        restart: always
+        image: dashboard:latest
+
+    collect_static:
+        build: './collect_static'
+        image: collect_static:latest
+        depends_on:
+            - dashboard
+        volumes:
+            - static-data:/data/static
+
     proxy:
         build: ./proxy
         restart: always
@@ -54,6 +68,8 @@ services:
             - backend
         networks:
             - public
+        volumes:
+            - static-data:/data/static
         ports:
             - target: 80
               published: 80

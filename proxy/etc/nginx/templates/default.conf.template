@@ -1,5 +1,9 @@
 server {
-    location / {
+    location /api {
         proxy_pass ${PROXY_TARGET};
+    }
+    location /{
+        root /data/static;
+        try_files $uri /index.html;
     }
 }
