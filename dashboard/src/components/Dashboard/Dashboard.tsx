@@ -1,6 +1,6 @@
 import SideMenu from "../SideMenu/SideMenu";
 import TopBar from "../TopBar/TopBar";
-import TreeMonitorListingPage from "../TreeMonitorListingPage/TreeMonitorListingPage";
+import TreeListingPage from "../TreeListingPage/TreeListingPage";
 
 const Dashboard = () : JSX.Element => {
   return (
@@ -9,7 +9,7 @@ const Dashboard = () : JSX.Element => {
         <SideMenu />
         <TopBar />
         <div className="w-full px-16 pt-24 bg-lightGray">
-          <TreeMonitorListingPage />
+          <TreeListingPage />
         </div>
       </div>
     </div>
