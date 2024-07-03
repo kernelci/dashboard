@@ -12,23 +12,16 @@ secrets:
         file: ./backend/runtime/secrets/postgres_password_secret
 
 services:
-    db:
-        image: postgres:16.3-alpine
+    cloudsql-proxy:
+        image: gcr.io/cloudsql-docker/gce-proxy:latest
+        command: /cloud_sql_proxy --dir=/cloudsql -instances=kernelci-production:us-central1:postgresql2=tcp:0.0.0.0:5432 -credential_file=/secrets/cloudsql/application_default_credentials.json
+        ports:
+            - 5432:5432
+        volumes:
+            - ./application_default_credentials.json:/secrets/cloudsql/application_default_credentials.json
         networks:
             - private
-        environment:
-            - POSTGRES_USER=kernelci
-            - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password_secret
-            - PGDATA=/var/run/postgresql/data
-        volumes:
-            - db-data:/var/run/postgresql/data
-        ports:
-            - target: 5432
-              published: 5432
-              protocol: tcp
-              mode: host
-        secrets:
-            - postgres_password_secret
+        restart: always
 
     backend:
         build: ./backend
@@ -41,16 +34,17 @@ services:
               published: 8000
               protocol: tcp
               mode: host
+        depends_on:
+            - cloudsql-proxy
         secrets:
             - postgres_password_secret
         environment:
-            - 'ALLOWED_HOSTS=["backend"]'
+            - 'ALLOWED_HOSTS=["backend", "localhost"]'
             - DB_DEFAULT_PASSWORD_FILE=/run/secrets/postgres_password_secret
-            - DB_DEFAULT_HOST=db
+            - DB_DEFAULT_HOST=cloudsql-proxy
 
     dashboard:
         build: ./dashboard
-        restart: always
         image: dashboard:latest
 
     collect_static:
@@ -66,6 +60,7 @@ services:
         restart: always
         depends_on:
             - backend
+            - collect_static
         networks:
             - public
         volumes:

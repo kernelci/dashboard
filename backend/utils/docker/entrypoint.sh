@@ -30,14 +30,14 @@ file_env DB_DEFAULT_PASSWORD
 
 export DB_DEFAULT="{
     \"ENGINE\": \"${DB_DEFAULT_ENGINE:=django.db.backends.postgresql}\",
-    \"NAME\": \"${DB_DEFAULT_NAME:=kernelci}\",
+    \"NAME\": \"${DB_DEFAULT_NAME:=playground_kcidb}\",
     \"USER\": \"${DB_DEFAULT_USER:=kernelci}\",
     \"PASSWORD\": \"$DB_DEFAULT_PASSWORD\",
-    \"HOST\": \"${DB_DEFAULT_HOST:=db}\",
+    \"HOST\": \"${DB_DEFAULT_HOST:=cloudsql-proxy}\",
     \"PORT\": \"${DB_DEFAULT_PORT:=5432}\",
     \"CONN_MAX_AGE\": ${DB_DEAFULT_CONN_MAX_AGE:=null},
     \"OPTIONS\": {
-      \"connect_timeout\": ${DB_DEFAULT_TIMEOUT:=2}
+      \"connect_timeout\": ${DB_DEFAULT_TIMEOUT:=16}
     }
 }"
 
