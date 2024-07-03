@@ -45,12 +45,6 @@ module.exports = {
         ignoreDefaultValues: true,
       },
     ],
-    "no-restricted-imports": [
-      "error",
-      {
-        patterns: ["../../*"],
-      },
-    ],
     "no-shadow": "off",
     "no-underscore-dangle": ["error", { allow: ["__typename"] }],
     "no-unused-vars": "off",
