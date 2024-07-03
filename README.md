@@ -18,11 +18,15 @@ A Python http server built with [Django](https://www.djangoproject.com/) + [DRF]
 
 # Build
 
-Create secret files:
+Add a application_default_credentials.json file in the root of the project. To do so, follow the "Configure ADC with your Google Account" in the [link](https://cloud.google.com/docs/authentication/provide-credentials-adc#google-idp <https://cloud.google.com/docs/authentication/)provide-credentials-adc#google-idp>). Then, find the `application_default_credentials.json` on `home/.config/gcloud` and copy its content to the file you created.
+
+Create secret files and add your password to playground_kcidb:
 ```sh
 mkdir -p backend/runtime/secrets
 uuidgen > backend/runtime/secrets/postgres_password_secret
 ```
+
+If necessary, change the DB_DEFAULT_USER in the `backend/utils/entrypoint.sh` file.
 
 Startup the services with
  ```sh
