@@ -2,18 +2,12 @@ import { useMemo } from "react";
 
 import { TableRow, TableCell } from "../ui/table";
 
+import { TreeTableBody } from "../../types/tree/Tree";
+
 import BaseTable from "./BaseTable";
 
-export interface ITreeTableBody {
-  name: string;
-  branch: string;
-  commit: string;
-  buildStatus: string;
-  testStatus: string;
-}
-
 interface ITreeTable {
-  treeTableRows: ITreeTableBody[];
+  treeTableRows: TreeTableBody[];
 }
 
 const treeTableColumnsLabelId = [
@@ -24,7 +18,7 @@ const treeTableColumnsLabelId = [
   'treeTable.test'
 ];
 
-const TreeTableRow = (row: ITreeTableBody): JSX.Element => {
+const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   return (
     <TableRow>
       <TableCell>{row.name}</TableCell>
@@ -39,7 +33,7 @@ const TreeTableRow = (row: ITreeTableBody): JSX.Element => {
   const TreeTable = ({treeTableRows}: ITreeTable) : JSX.Element => {
   const treeTableBody = useMemo(() => {
     return (
-      treeTableRows.map((row: ITreeTableBody) => (
+      treeTableRows.map((row: TreeTableBody) => (
         <TreeTableRow 
           key={row.commit} 
           name={row.name}
