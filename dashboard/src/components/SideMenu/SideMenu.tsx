@@ -65,7 +65,7 @@ const SideMenu = (): JSX.Element => {
       orientation="vertical"
     >
       <div className="w-full px-4">
-        <img src="./src/assets/kernelCI_logo.png"className="size-14 text-onSecondary" />
+        <img src="kernelCI_logo.png"className="size-14 text-onSecondary" />
       </div>
 
       <Separator className="my-4 bg-onSecondary-10" />
