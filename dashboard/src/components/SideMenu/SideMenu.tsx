@@ -1,4 +1,4 @@
-import { MdOutlineMonitorHeart, MdOutlineDashboard } from "react-icons/md";
+import { MdOutlineMonitorHeart } from "react-icons/md";
 
 import { ImTree, ImImages } from "react-icons/im";
 
@@ -23,12 +23,6 @@ type MenuItems = {
 const emptyFunc = () : void => {} 
 
 const items: MenuItems[] = [
-  {
-    onClick: emptyFunc,
-    idIntl: "routes.dashboard",
-    icon: <MdOutlineDashboard className="size-5" />,
-    selected: false,
-  },
   {
     onClick: emptyFunc,
     idIntl: "routes.treeMonitor",
