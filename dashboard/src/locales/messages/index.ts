@@ -18,8 +18,9 @@ export const messages = {
     },
     treeTable: {
       branch: "Branch",
-      build: "Build Status",
+      build: "Build Status (valid / invalid)",
       commit: "Commit/tag",
+      finished: "Finished",
       test: "Test Status",
       tree: "Tree",
     },

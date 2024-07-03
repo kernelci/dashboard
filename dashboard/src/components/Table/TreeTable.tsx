@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 
+import { FormattedMessage } from "react-intl";
+
 import { TableRow, TableCell } from "../ui/table";
 
 import { TreeTableBody } from "../../types/tree/Tree";
@@ -19,13 +21,18 @@ const treeTableColumnsLabelId = [
 ];
 
 const TreeTableRow = (row: TreeTableBody): JSX.Element => {
+  const backgroundClassName = "flex flex-row bg-lightGray w-fit h-fit p-1 rounded-lg";
   return (
     <TableRow>
       <TableCell>{row.name}</TableCell>
       <TableCell>{row.branch}</TableCell>
       <TableCell>{row.commit}</TableCell>
-      <TableCell><div className="bg-lightGray w-fit h-fit p-1 rounded-lg">{row.buildStatus}</div></TableCell>
-      <TableCell><div className="bg-lightGray w-fit h-fit p-1 rounded-lg">{row.testStatus}</div></TableCell>
+      <TableCell><div className={backgroundClassName}>{row.buildStatus}</div></TableCell>
+      <TableCell>
+        <div className={backgroundClassName}>
+          <FormattedMessage id="treeTable.finished" />
+          <div className="pl-1">{row.testStatus}</div>
+        </div></TableCell>
     </TableRow>
   );
 };
