@@ -6,9 +6,9 @@ export const messages = {
       filters: "Filters",
     },
     routes: {
-      deviceMonitor: "Device",
+      deviceMonitor: "Devices",
       labsMonitor: "Labs",
-      treeMonitor: "Tree",
+      treeMonitor: "Trees",
     },
     table: {
       itemsPerPage: "Items per page:",
