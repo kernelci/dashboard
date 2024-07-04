@@ -15,13 +15,19 @@ class CheckoutsSerializer(serializers.ModelSerializer):
         ]
 
 
-class TreeSerializer(CheckoutsSerializer):
+class TreeSerializer(serializers.Serializer):
     build_status = serializers.SerializerMethodField(method_name="get_build_status")
     test_status = serializers.SerializerMethodField(method_name="get_test_status")
     tree_name = serializers.SerializerMethodField(method_name="get_tree_name")
+    git_commit_name = serializers.SerializerMethodField(method_name="get_git_commit_name")
+    git_repository_branch = serializers.SerializerMethodField(method_name="get_git_repository_branch")
+    git_commit_hash = serializers.SerializerMethodField(method_name="get_git_commit_hash")
 
-    class Meta(CheckoutsSerializer.Meta):
-        fields = CheckoutsSerializer.Meta.fields + ['build_status', 'test_status']
+    class Meta():
+        fields = [
+            'tree_name', 'git_commit_name', 'git_repository_branch',
+            'build_status', 'test_status', 'git_commit_hash'
+        ]
 
     def get_config(self, obj):
         return get_visible_record_config('checkouts', obj.id)
@@ -32,6 +38,15 @@ class TreeSerializer(CheckoutsSerializer):
 
     def get_tree_name(self, obj):
         return self.get_field_from_config(obj, 'tree_name')
+
+    def get_git_commit_name(self, obj):
+        return self.get_field_from_config(obj, 'git_commit_name')
+
+    def get_git_repository_branch(self, obj):
+        return self.get_field_from_config(obj, 'git_repository_branch')
+
+    def get_git_commit_hash(self, obj):
+        return obj.id
 
     def get_build_status(self, obj):
         return {

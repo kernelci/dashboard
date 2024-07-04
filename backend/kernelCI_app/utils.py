@@ -2,7 +2,7 @@ def get_visible_records(table_name):
     return visible_records.get(table_name, {})
 
 
-def get_visible_record_ids(table_name):
+def get_visible_record_identifiers(table_name):
     return list(get_visible_records(table_name).keys())
 
 
@@ -12,23 +12,40 @@ def get_visible_record_config(table_name, id):
 
 visible_records = {
     "checkouts": {
-        "broonie:7592653346c84691a16ccd1c115df05c": {
+        "22a40d14b572deb80c0648557f4bd502d7e83826": {
             "tree_name": "mainline",
+            "git_repository_branch": "master",
+            "git_commit_name": "v6.10-rc6"
         },
-        "broonie:170e93ec1178448293bb3b1163b1a4ee": {
+        "61945f2f69d080a9cf2c879cb959d4648df9b94c": {
             "tree_name": "stable",
+            "git_repository_branch": "linux-6.6.y",
+            "git_commit_name": "v6.6.36"
         },
-        "broonie:88964264010d43159ffa28bb524be058": {
+        "99e6a620de00b96f059c9e7f14b5795ca0c6b125": {
             "tree_name": "stable",
+            "git_repository_branch": "linux-6.1.y",
+            "git_commit_name": "v6.1.96"
         },
-        "broonie:12f55b2668fb4eca9254bfadad4ee871": {
+        "4878aadf2d1519f3731ae300ce1fef78fc63ee30": {
             "tree_name": "stable",
+            "git_repository_branch": "linux-5.15.y",
+            "git_commit_name": "v5.15.161"
         },
-        "broonie:c4ea3368208f4909b5af51c6a148047d": {
+        "3a3877de44342d0a09216dfbe674a404e8f5e96f": {
             "tree_name": "stable",
+            "git_repository_branch": "linux-5.10.y",
+            "git_commit_name": "v5.10.220"
         },
-        "broonie:1b17e613a3e94254af6fef1167572d35": {
+        "189ee9735a4b2e8095b1a6c088ebc8e133872471": {
             "tree_name": "stable",
+            "git_repository_branch": "linux-5.4.y",
+            "git_commit_name": "v5.4.278"
+        },
+        "b37477f5316fe37f74645a5d9d92a3a9c93d8cfa": {
+            "tree_name": "stable",
+            "git_repository_branch": "linux-4.19.y",
+            "git_commit_name": "v4.19.316"
         },
     }
 }

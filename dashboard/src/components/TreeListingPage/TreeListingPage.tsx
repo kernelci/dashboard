@@ -75,7 +75,7 @@ const TreeListingPage = (): JSX.Element => {
         return [];
       } else {
           return((data as Tree[]).map(tree => {
-            const fullHash = tree.git_commit_hash ?? tree.patchset_hash ?? '';
+            const fullHash = tree.git_commit_hash ?? '';
             const commitHash = fullHash.substring(0, NUMBER_CHAR_HASH) + (fullHash.length > NUMBER_CHAR_HASH ? '...' : '');
             const tagCommit = tree.git_commit_name ? `${tree.git_commit_name} - ${commitHash}` : commitHash;
 

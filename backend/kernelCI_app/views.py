@@ -3,18 +3,19 @@ from django.views import View
 
 from kernelCI_app.models import Checkouts
 from kernelCI_app.serializers import TreeSerializer
-from kernelCI_app.utils import get_visible_record_ids
+from kernelCI_app.utils import get_visible_record_identifiers
 
 
 class TreeView(View):
 
     def get(self, _):
-        checkout_ids = get_visible_record_ids('checkouts')
-        placeholders = ','.join(['%s'] * len(checkout_ids))
+        commit_hashs = get_visible_record_identifiers('checkouts')
+        placeholders = ','.join(['%s'] * len(commit_hashs))
 
-        checkouts = Checkouts.objects.raw(f"""
+        checkouts = Checkouts.objects.raw(
+            f"""
             SELECT
-                checkouts.*,
+                checkouts.git_commit_hash AS id,
                 COUNT(CASE WHEN builds.valid = true THEN 1 END) AS valid_builds,
                 COUNT(CASE WHEN builds.valid = false THEN 1 END) AS invalid_builds,
                 SUM(CASE WHEN builds.valid IS NULL AND builds.id IS NOT NULL THEN 1 ELSE 0 END)
@@ -36,15 +37,12 @@ class TreeView(View):
             LEFT JOIN
                 tests ON tests.build_id = builds.id
             WHERE
-                checkouts.id IN ({placeholders})
+                checkouts.git_commit_hash IN ({placeholders})
             GROUP BY
-                checkouts.id;
+                checkouts.git_commit_hash;
             """,
-            checkout_ids
+            commit_hashs
         )
-
-        for c in checkouts:
-            print('checkout:', c.id, c.valid_builds, c.pass_tests)
 
         serializer = TreeSerializer(checkouts, many=True)
         resp = JsonResponse(serializer.data, safe=False)
