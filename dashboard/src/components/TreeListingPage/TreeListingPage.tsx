@@ -71,31 +71,35 @@ const TreeListingPage = (): JSX.Element => {
   const { data } = useTreeTable();
 
   const listItems: TreeTableBody[] = useMemo(() => {
-    return data ? (data as Tree[]).map(tree => ({
-      name: tree.tree_name ?? '',
-      branch: tree.git_repository_branch ?? '',
-      commit: tree.git_commit_hash ?? tree.patchset_hash ?? '',
-      buildStatus: `${tree.build_status.valid} / ${tree.build_status.total}`,
-      testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
-    })) : [];
+    return data ? (data as Tree[]).map(tree => {
+      const fullHash = tree.git_commit_hash ?? tree.patchset_hash ?? '';
+      const commitHash = fullHash.substring(0, NUMBER_CHAR_HASH) + (fullHash.length > NUMBER_CHAR_HASH ? '...' : '');
+      const tagCommit = tree.git_commit_name ? `${tree.git_commit_name} - ${commitHash}` : commitHash;
+      return ({
+        name: tree.tree_name ?? '',
+        branch: tree.git_repository_branch ?? '',
+        commit: tagCommit,
+        buildStatus: `${tree.build_status.valid} / ${tree.build_status.total}`,
+        testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
+      })
+    }) : [];
   }, [data]);
 
-  const itemsPerPage = 10;
   const [startIndex, setStartIndex] = useState(0);
   const [endIndex, setEndIndex] = useState(0);
 
   useEffect(() => {
-    setEndIndex(listItems.length > itemsPerPage ? itemsPerPage : listItems.length);
+    setEndIndex(listItems.length > ITEMS_PER_PAGE ? ITEMS_PER_PAGE : listItems.length);
   }, [listItems]);
 
   const onClickGoForward = useCallback(() => {
     setStartIndex(endIndex);
-    setEndIndex(endIndex+itemsPerPage >= listItems.length ? listItems.length : endIndex+itemsPerPage)
+    setEndIndex(endIndex+ITEMS_PER_PAGE >= listItems.length ? listItems.length : endIndex+ITEMS_PER_PAGE)
   }, [endIndex, listItems]);
 
   const onClickGoBack = useCallback(() => {
-    setStartIndex(startIndex-itemsPerPage);
-    setEndIndex(endIndex % itemsPerPage !== 0 ? endIndex - endIndex % itemsPerPage : endIndex - itemsPerPage);
+    setStartIndex(startIndex-ITEMS_PER_PAGE);
+    setEndIndex(endIndex % ITEMS_PER_PAGE !== 0 ? endIndex - endIndex % ITEMS_PER_PAGE : endIndex - ITEMS_PER_PAGE);
   }, [startIndex, endIndex]);
 
   return (
@@ -106,7 +110,7 @@ const TreeListingPage = (): JSX.Element => {
         startIndex={startIndex+1}
         endIndex={endIndex}
         totalTrees={listItems.length}
-        itemsPerPage={itemsPerPage}
+        itemsPerPage={ITEMS_PER_PAGE}
         onClickBack={onClickGoBack}
         onClickForward={onClickGoForward}
       />
@@ -117,7 +121,7 @@ const TreeListingPage = (): JSX.Element => {
           startIndex={startIndex+1}
           endIndex={endIndex}
           totalTrees={listItems.length}
-          itemsPerPage={itemsPerPage}
+          itemsPerPage={ITEMS_PER_PAGE}
           onClickBack={onClickGoBack}
           onClickForward={onClickGoForward}
         />
@@ -125,5 +129,8 @@ const TreeListingPage = (): JSX.Element => {
     </div>
   );
 };
+
+const ITEMS_PER_PAGE = 10;
+const NUMBER_CHAR_HASH = 12;
 
 export default TreeListingPage;
