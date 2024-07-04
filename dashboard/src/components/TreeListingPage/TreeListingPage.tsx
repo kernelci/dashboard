@@ -19,6 +19,10 @@ interface ITableInformation {
   onClickBack: () => void; 
 }
 
+interface ITreeListingPage {
+  inputFilter: string;
+}
+
 const TableInfo = ({
   startIndex,
   endIndex,
@@ -66,7 +70,7 @@ const FilterButton = (): JSX.Element => {
   );
 };
 
-const TreeListingPage = (): JSX.Element => {
+const TreeListingPage = ({inputFilter}: ITreeListingPage): JSX.Element => {
 
   const { data } = useTreeTable();
 
@@ -74,7 +78,12 @@ const TreeListingPage = (): JSX.Element => {
       if(!data) {
         return [];
       } else {
-          return((data as Tree[]).map(tree => {
+          return((data as Tree[])
+          .filter(tree => tree.tree_name?.includes(inputFilter)
+            || tree.git_commit_hash?.includes(inputFilter)
+              || tree.git_commit_name?.includes(inputFilter)
+                || tree.git_repository_branch?.includes(inputFilter))
+          .map(tree => {
             const fullHash = tree.git_commit_hash ?? '';
             const commitHash = fullHash.substring(0, NUMBER_CHAR_HASH) + (fullHash.length > NUMBER_CHAR_HASH ? '...' : '');
             const tagCommit = tree.git_commit_name ? `${tree.git_commit_name} - ${commitHash}` : commitHash;
@@ -90,8 +99,8 @@ const TreeListingPage = (): JSX.Element => {
           .sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true})
                             || a.branch.localeCompare(b.branch, undefined, {numeric: true})));
         }
-  }, [data]);
-
+  }, [data, inputFilter]);
+  
   const [startIndex, setStartIndex] = useState(0);
   const [endIndex, setEndIndex] = useState(0);
 
