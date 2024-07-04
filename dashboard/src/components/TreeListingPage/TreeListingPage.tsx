@@ -71,18 +71,25 @@ const TreeListingPage = (): JSX.Element => {
   const { data } = useTreeTable();
 
   const listItems: TreeTableBody[] = useMemo(() => {
-    return data ? (data as Tree[]).map(tree => {
-      const fullHash = tree.git_commit_hash ?? tree.patchset_hash ?? '';
-      const commitHash = fullHash.substring(0, NUMBER_CHAR_HASH) + (fullHash.length > NUMBER_CHAR_HASH ? '...' : '');
-      const tagCommit = tree.git_commit_name ? `${tree.git_commit_name} - ${commitHash}` : commitHash;
-      return ({
-        name: tree.tree_name ?? '',
-        branch: tree.git_repository_branch ?? '',
-        commit: tagCommit,
-        buildStatus: `${tree.build_status.valid} / ${tree.build_status.total}`,
-        testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
-      })
-    }) : [];
+      if(!data) {
+        return [];
+      } else {
+          return((data as Tree[]).map(tree => {
+            const fullHash = tree.git_commit_hash ?? tree.patchset_hash ?? '';
+            const commitHash = fullHash.substring(0, NUMBER_CHAR_HASH) + (fullHash.length > NUMBER_CHAR_HASH ? '...' : '');
+            const tagCommit = tree.git_commit_name ? `${tree.git_commit_name} - ${commitHash}` : commitHash;
+
+            return ({
+              name: tree.tree_name ?? '',
+              branch: tree.git_repository_branch ?? '',
+              commit: tagCommit,
+              buildStatus: `${tree.build_status.valid} / ${tree.build_status.total}`,
+              testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
+            })
+          })
+          .sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true})
+                            || a.branch.localeCompare(b.branch, undefined, {numeric: true})));
+        }
   }, [data]);
 
   const [startIndex, setStartIndex] = useState(0);
