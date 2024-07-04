@@ -18,17 +18,25 @@ A Python http server built with [Django](https://www.djangoproject.com/) + [DRF]
 
 # Build
 
-Add a application_default_credentials.json file in the root of the project. To do so, follow the "Configure ADC with your Google Account" in the [link](https://cloud.google.com/docs/authentication/provide-credentials-adc#google-idp <https://cloud.google.com/docs/authentication/)provide-credentials-adc#google-idp>). Then, find the `application_default_credentials.json` on `home/.config/gcloud` and copy its content to the file you created.
-
-Create secret files and add your password to playground_kcidb:
+Add a `application_default_credentials.json` file with your ADC in the root of the project.
 ```sh
-mkdir -p backend/runtime/secrets
-uuidgen > backend/runtime/secrets/postgres_password_secret
+gcloud auth application-default login
+cp ~/.config/gcloud/application_default_credentials.json .
 ```
 
-If necessary, change the DB_DEFAULT_USER in the `backend/utils/entrypoint.sh` file.
+ If it doesn't work, check the [Configure ADC with your Google Account](https://cloud.google.com/docs/authentication/provide-credentials-adc#google-idp) documentation.
 
-Startup the services with
+Create a secret file with the database password:
+```sh
+mkdir -p backend/runtime/secrets
+echo <password> > backend/runtime/secrets/postgres_password_secret
+```
+
+If you are going to use a database user other than `kernelci`, set it to `DB_DEFAULT_USER`:
+```sh
+export DB_DEFAULT_USER=<user>
+```
+Startup the services:
  ```sh
  docker compose up --build -d
  ```
