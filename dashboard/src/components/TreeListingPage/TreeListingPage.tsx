@@ -76,7 +76,7 @@ const TreeListingPage = (): JSX.Element => {
       branch: tree.git_repository_branch ?? '',
       commit: tree.git_commit_hash ?? tree.patchset_hash ?? '',
       buildStatus: `${tree.build_status.valid} / ${tree.build_status.total}`,
-      testStatus: `${tree.test_status.done ?? 0}`,
+      testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
     })) : [];
   }, [data]);
 

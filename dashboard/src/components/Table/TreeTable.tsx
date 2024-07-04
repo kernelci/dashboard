@@ -1,7 +1,5 @@
 import { useMemo } from "react";
 
-import { FormattedMessage } from "react-intl";
-
 import { TableRow, TableCell } from "../ui/table";
 
 import { TreeTableBody } from "../../types/tree/Tree";
@@ -28,11 +26,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       <TableCell>{row.branch}</TableCell>
       <TableCell>{row.commit}</TableCell>
       <TableCell><div className={backgroundClassName}>{row.buildStatus}</div></TableCell>
-      <TableCell>
-        <div className={backgroundClassName}>
-          <FormattedMessage id="treeTable.finished" />
-          <div className="pl-1">{row.testStatus}</div>
-        </div></TableCell>
+      <TableCell><div className={backgroundClassName}>{row.testStatus}</div></TableCell>
     </TableRow>
   );
 };
