@@ -92,7 +92,7 @@ const TreeListingPage = ({inputFilter}: ITreeListingPage): JSX.Element => {
               name: tree.tree_name ?? '',
               branch: tree.git_repository_branch ?? '',
               commit: tagCommit,
-              buildStatus: `${tree.build_status.valid} / ${tree.build_status.invalid}`,
+              buildStatus: `${tree.build_status.invalid} / ${tree.build_status.invalid + tree.build_status.valid}`,
               testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
             })
           })
