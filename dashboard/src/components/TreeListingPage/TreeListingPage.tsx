@@ -57,7 +57,7 @@ const TableInfo = ({
 
 const FilterButton = (): JSX.Element => {
   return(
-    <Button variant="outline" className="rounded-full w-[128px] border-black">
+    <Button variant="outline" className="rounded-full w-[128px] border-black text-black">
       <div className="flex flex-row gap-1 items-center">
         <FormattedMessage id="global.filters" />
         <MdExpandMore />

@@ -12,7 +12,7 @@ const TopBar = (): JSX.Element => {
         <div className="flex w-2/3 px-6 items-center">
           {/* placeholder for search */}
           {/* TODO: use i18n for the input placeholder */}
-          <Input className="w-2/3" type="text" placeholder="Search by tree, branch or tag" />
+          <Input className="w-2/3 text-black" type="text" placeholder="Search by tree, branch or tag" />
         </div>
       </div>
     </div>
