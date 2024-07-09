@@ -39,7 +39,9 @@ module.exports = {
         "lightGray": '#F4F4F4',
         "mediumGray": '#EAEAEA',
         "darkGray": '#D6D6D6',
-        "black": '#000000'
+        "black": '#000000',
+        "lightRed": '#FFBBBB',
+        "yellow": '#FFD27C',
       }
     },
   },
