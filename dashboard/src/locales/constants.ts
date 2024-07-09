@@ -1,4 +1,3 @@
 export const LOCALES = {
-    EN_US: 'en-us',
-  };
-  
+  EN_US: 'en-us',
+};

@@ -69,7 +69,7 @@ jobs:
           node-version-file: './dashboard/.nvmrc'
 
       - name: Run eslint
-        run: pnpm lint
+        run: pnpm lint-staged
         working-directory: ./dashboard
 
   build-front:
