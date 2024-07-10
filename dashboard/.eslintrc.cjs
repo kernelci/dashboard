@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = {
   root: true,
   env: { browser: true, es2020: true },
@@ -27,6 +29,22 @@ module.exports = {
     react: {
       version: "detect",
     },
+    "import/extensions": [".js", ".jsx", ".ts", ".tsx"],
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "webpack": {
+        config: {
+          resolve: {
+            alias: {
+              '@': path.join(__dirname, 'src/'),
+            },
+            extensions: ['.js', '.jsx', '.ts', '.tsx', '.mjs'],
+          },
+        },
+      },
+    }
   },
   plugins: [
     "react-refresh",
