@@ -50,10 +50,6 @@ module.exports = {
     "no-underscore-dangle": ["error", { allow: ["__typename"] }],
     "no-unused-vars": "off",
     "no-use-before-define": "off",
-    "react-refresh/only-export-components": [
-      "warn",
-      { allowConstantExport: true },
-    ],
     "@typescript-eslint/prefer-optional-chain": "warn",
     "@typescript-eslint/explicit-function-return-type": "warn",
     "@typescript-eslint/no-empty-function": "off",
@@ -76,7 +72,6 @@ module.exports = {
         "tsx": "never",
       },
     ],
-    "import/no-cycle": ["error", { ignoreExternal: true }],
     "import/no-extraneous-dependencies": [
       "error",
       {
