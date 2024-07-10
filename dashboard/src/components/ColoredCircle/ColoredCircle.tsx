@@ -1,30 +1,22 @@
 import classNames from 'classnames';
 
-import { ItemType } from '../ListingItem/ListingItem';
-
 interface IColoredCircle {
-  quantity: number;
-  type: ItemType;
+  quantity?: number;
   className?: string;
+  backgroundClassName: string;
 }
 
 const ColoredCircle = ({
   quantity,
-  type,
+  backgroundClassName,
   className,
 }: IColoredCircle): JSX.Element => {
-  const backgroundColor =
-    type === ItemType.Error
-      ? 'bg-lightRed'
-      : type === ItemType.Success
-        ? 'bg-lightGreen'
-        : 'bg-mediumGray';
   return (
     <div
       className={classNames(
-        backgroundColor,
         'rounded-full text-black h-6 min-w-6 flex justify-center px-1',
         className,
+        backgroundClassName,
       )}
     >
       <span className="text-sm">{quantity}</span>

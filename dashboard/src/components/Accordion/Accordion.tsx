@@ -97,7 +97,7 @@ const AccordionBuildsTrigger = ({ trigger }: IAccordionItems): JSX.Element => {
         <ColoredCircle
           className="max-w-6"
           quantity={triggerInfo.buildErrors ?? 0}
-          type={ItemType.Error}
+          backgroundClassName={ItemType.Error}
         />
       </TableCell>
       <TableCell>{triggerInfo.buildTime}</TableCell>
@@ -120,11 +120,11 @@ const AccordionTestsTrigger = ({ trigger }: IAccordionItems): JSX.Element => {
       <TableCell className="flex flex-row gap-1">
         <ColoredCircle
           quantity={triggerInfo.testErrors ?? 0}
-          type={ItemType.Error}
+          backgroundClassName={ItemType.Error}
         />
         <ColoredCircle
           quantity={triggerInfo.testSuccessfull ?? 0}
-          type={ItemType.Warning}
+          backgroundClassName={ItemType.Warning}
         />
       </TableCell>
       <TableCell>

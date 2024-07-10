@@ -11,10 +11,10 @@ export interface IListingItem {
 }
 
 export enum ItemType {
-  Warning,
-  Error,
-  Success,
-  None,
+  Warning = 'bg-yellow',
+  Error = 'bg-lightRed',
+  Success = 'bg-lightGreen',
+  None = 'bg-mediumGray',
 }
 
 const ListingItem = ({
@@ -27,28 +27,34 @@ const ListingItem = ({
   const hasBorder = hasBottomBorder ? 'border-b' : '';
   const itemError =
     errors && errors > 0 ? (
-      <ColoredCircle quantity={errors} type={ItemType.Error} />
+      <ColoredCircle quantity={errors} backgroundClassName={ItemType.Error} />
     ) : (
       <></>
     );
 
   const itemWarning =
     warnings && warnings > 0 ? (
-      <ColoredCircle quantity={warnings} type={ItemType.Warning} />
+      <ColoredCircle
+        quantity={warnings}
+        backgroundClassName={ItemType.Warning}
+      />
     ) : (
       <></>
     );
 
   const itemNeutral =
     !errors || errors === 0 || !success || success === 0 ? (
-      <ColoredCircle quantity={0} type={ItemType.None} />
+      <ColoredCircle quantity={0} backgroundClassName={ItemType.None} />
     ) : (
       <></>
     );
 
   const itemSuccess =
     success && success > 0 ? (
-      <ColoredCircle quantity={success} type={ItemType.Success} />
+      <ColoredCircle
+        quantity={success}
+        backgroundClassName={ItemType.Success}
+      />
     ) : (
       <></>
     );
