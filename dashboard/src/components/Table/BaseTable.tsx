@@ -1,23 +1,29 @@
 import type { ReactElement } from 'react';
 
-import { FormattedMessage } from 'react-intl';
+import classNames from 'classnames';
 
 import { Table, TableHead, TableHeader, TableRow } from '../ui/table';
 
 interface IBaseTable {
-  headers: string[];
+  headers: ReactElement[];
   body: ReactElement;
+  className?: string;
 }
 
-const BaseTable = ({ headers, body }: IBaseTable): JSX.Element => {
+const BaseTable = ({ headers, body, className }: IBaseTable): JSX.Element => {
   return (
-    <div>
-      <Table className="rounded-lg text-black bg-white w-full">
+    <div className="h-full">
+      <Table
+        className={classNames(
+          className,
+          'rounded-lg text-black bg-white w-full',
+        )}
+      >
         <TableHeader className="bg-mediumGray">
           <TableRow>
             {headers.map(column => (
-              <TableHead className="text-black border-b" key={column}>
-                <FormattedMessage id={column} />
+              <TableHead className="text-black border-b" key={column.key}>
+                {column}
               </TableHead>
             ))}
           </TableRow>

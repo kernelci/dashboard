@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 
+import { FormattedMessage } from 'react-intl';
+
 import { TableRow, TableCell } from '../ui/table';
 
 import { TreeTableBody } from '../../types/tree/Tree';
@@ -51,9 +53,13 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [treeTableRows]);
 
-  return (
-    <BaseTable headers={treeTableColumnsLabelId} body={<>{treeTableBody}</>} />
-  );
+  const treeTableHeaders = useMemo(() => {
+    return treeTableColumnsLabelId.map(columnLabelId => (
+      <FormattedMessage key={columnLabelId} id={columnLabelId} />
+    ));
+  }, []);
+
+  return <BaseTable headers={treeTableHeaders} body={<>{treeTableBody}</>} />;
 };
 
 export default TreeTable;
