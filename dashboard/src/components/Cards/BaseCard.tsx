@@ -12,9 +12,11 @@ const containerClassName =
 
 const BaseCard = ({ title, content, className }: IBaseCard): JSX.Element => {
   return (
-    <div className={classNames(className, containerClassName)}>
-      <div className="flex flex-col w-full h-full p-4 gap-2">
-        <span className="font-bold border-b border-darkGray pb-2">{title}</span>
+    <div className={classNames(containerClassName, className)}>
+      <div className="flex flex-col w-full h-full pt-4 gap-2">
+        <span className="font-bold border-b border-darkGray pb-2 pl-3">
+          {title}
+        </span>
         {content}
       </div>
     </div>
