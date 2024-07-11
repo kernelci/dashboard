@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 
-import { ComponentType } from '@/components/Cards/ListingComponentCard/ListingComponentCard';
+import { ComponentType } from '../ListingComponentItem/ListingComponentItem';
 
 interface IColoredCircle {
   quantity: number;

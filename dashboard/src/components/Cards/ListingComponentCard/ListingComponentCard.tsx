@@ -1,60 +1,19 @@
 import { useMemo } from 'react';
 
-import classNames from 'classnames';
+import ListingComponentItem, {
+  IListingComponentItem,
+} from '@/components/ListingComponentItem/ListingComponentItem';
 
 import BaseCard from '../BaseCard';
-import ColoredCircle from '../../ColoredCircle/ColoredCircle';
 
 export interface IListingComponent {
   items: IListingComponentItem[];
   title: string;
 }
 
-interface IListingComponentItem {
-  warnings?: number;
-  errors?: number;
-  text?: string;
-  hasBottomBorder?: boolean;
-}
-
 interface IListedComponent {
   items: IListingComponentItem[];
 }
-
-export enum ComponentType {
-  Warning,
-  Error,
-}
-
-const ListingComponentItem = ({
-  warnings,
-  errors,
-  text,
-  hasBottomBorder,
-}: IListingComponentItem): JSX.Element => {
-  const hasBorder = hasBottomBorder ? 'border-b' : '';
-  const itemError =
-    errors && errors > 0 ? (
-      <ColoredCircle quantity={errors} type={ComponentType.Error} />
-    ) : (
-      <></>
-    );
-
-  const itemWarning =
-    warnings && warnings > 0 ? (
-      <ColoredCircle quantity={warnings} type={ComponentType.Warning} />
-    ) : (
-      <></>
-    );
-
-  return (
-    <div className={classNames('flex flex-row gap-2 pb-1', hasBorder)}>
-      {itemError}
-      {itemWarning}
-      <span className="text-black text-sm">{text}</span>
-    </div>
-  );
-};
 
 const ListedContent = ({ items }: IListedComponent): JSX.Element => {
   const content = useMemo(() => {
