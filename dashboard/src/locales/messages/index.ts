@@ -4,6 +4,7 @@ export const messages = {
   [LOCALES.EN_US]: {
     global: {
       filters: 'Filters',
+      cleanAll: 'Clean all',
     },
     routes: {
       deviceMonitor: 'Devices',

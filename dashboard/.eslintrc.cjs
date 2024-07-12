@@ -97,6 +97,7 @@ module.exports = {
           "**/*{.,_}{test,spec}.{ts,tsx}",
           ".storybook/**",
           "src/stories/**",
+          "**/*.stories*",
         ],
       },
     ],
