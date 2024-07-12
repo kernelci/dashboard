@@ -67,3 +67,17 @@ class TreeSerializer(serializers.Serializer):
             "null": obj.null_tests,
             "total": obj.total_tests
         }
+
+
+class TreeDetailsSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    architecture = serializers.CharField()
+    config_name = serializers.CharField()
+    valid = serializers.BooleanField()
+    start_time = serializers.CharField()
+    duration = serializers.CharField()
+    compiler = serializers.CharField()
+    config_url = serializers.CharField()
+    log_url = serializers.CharField()
+    test_status = serializers.DictField()
+    misc = serializers.JSONField()
