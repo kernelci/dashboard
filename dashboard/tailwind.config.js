@@ -42,6 +42,9 @@ module.exports = {
         "black": '#000000',
         "lightRed": '#FFBBBB',
         "yellow": '#FFD27C',
+        "lightGreen": '#C9FADA',
+        "green": '#1DDF5D',
+        "red": '#E15739'
       }
     },
   },

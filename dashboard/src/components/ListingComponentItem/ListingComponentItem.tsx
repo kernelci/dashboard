@@ -12,6 +12,7 @@ export interface IListingComponentItem {
 export enum ComponentType {
   Warning,
   Error,
+  Success,
 }
 
 const ListingComponentItem = ({
