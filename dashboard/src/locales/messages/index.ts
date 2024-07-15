@@ -24,5 +24,9 @@ export const messages = {
       test: 'Test Status (Failed / Total)',
       tree: 'Tree',
     },
+    filter: {
+      min: 'Min',
+      max: 'Max',
+    },
   },
 };
