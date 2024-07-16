@@ -116,6 +116,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
             commit: tagCommit,
             buildStatus: `${tree.build_status.invalid} / ${tree.build_status.invalid + tree.build_status.valid}`,
             testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
+            id: tree.git_commit_hash ?? '',
           };
         })
         .sort(

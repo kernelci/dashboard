@@ -4,6 +4,7 @@ export type TreeTableBody = {
   commit: string;
   buildStatus: string;
   testStatus: string;
+  id: string;
 };
 
 export type Tree = {

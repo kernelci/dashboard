@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
+
+import { useNavigate } from 'react-router-dom';
 
 import { TableRow, TableCell } from '../ui/table';
 
@@ -23,8 +25,15 @@ const treeTableColumnsLabelId = [
 const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   const backgroundClassName =
     'flex flex-row bg-lightGray w-fit h-fit p-1 rounded-lg';
+
+  const navigate = useNavigate();
+
+  const navigateToTreeDetailPage = useCallback(() => {
+    navigate(`tree/${row.id}`);
+  }, [navigate, row.id]);
+
   return (
-    <TableRow>
+    <TableRow onClick={navigateToTreeDetailPage}>
       <TableCell>{row.name}</TableCell>
       <TableCell>{row.branch}</TableCell>
       <TableCell>{row.commit}</TableCell>
@@ -48,6 +57,7 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
         commit={row.commit}
         buildStatus={row.buildStatus}
         testStatus={row.testStatus}
+        id={row.id}
       />
     ));
     // eslint-disable-next-line react-hooks/exhaustive-deps
