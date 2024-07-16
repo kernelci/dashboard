@@ -13,6 +13,7 @@ import { LOCALES } from './locales/constants';
 import './index.css';
 import Root from './routes/Root/Root';
 import Trees from './routes/Trees/Trees';
+import TreeDetails from './routes/TreeDetails/TreeDetails';
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
       {
         path: '/',
         element: <Trees />,
+      },
+      {
+        path: '/tree/:treeId',
+        element: <TreeDetails />,
       },
     ],
   },
