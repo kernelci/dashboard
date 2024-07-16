@@ -27,6 +27,9 @@ export const messages = {
     filter: {
       min: 'Min',
       max: 'Max',
+      filtering: 'Filtering',
+      treeURL: 'Tree URL',
+      refresh: 'Refresh',
     },
   },
 };
