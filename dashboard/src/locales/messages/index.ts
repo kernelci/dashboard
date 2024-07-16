@@ -17,6 +17,11 @@ export const messages = {
       showing: 'Showing:',
       tree: 'Tree',
     },
+    treeDetails: {
+      boots: 'Boots',
+      builds: 'Builds',
+      tests: 'Tests',
+    },
     treeTable: {
       branch: 'Branch',
       build: 'Build Status (Failed / Total)',
