@@ -2,13 +2,13 @@ import { ReactElement } from 'react';
 import classNames from 'classnames';
 
 interface IBaseCard {
-  title: string;
+  title: ReactElement;
   content: ReactElement;
   className?: string;
 }
 
 const containerClassName =
-  'flex flex-col rounded-xl bg-white w-1/2 h-fit border border-darkGray text-black';
+  'flex flex-col rounded-xl bg-white w-full h-fit border border-darkGray text-black';
 
 const BaseCard = ({ title, content, className }: IBaseCard): JSX.Element => {
   return (

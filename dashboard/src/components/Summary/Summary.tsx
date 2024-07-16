@@ -1,33 +1,28 @@
-import { useMemo } from 'react';
+import { ReactElement, useMemo } from 'react';
 
-import BaseCard from '../Cards/BaseCard';
 import BaseTable from '../Table/BaseTable';
 import { TableBody, TableCell, TableRow } from '../ui/table';
-import ListingComponentItem, {
-  IListingComponentItem,
-} from '../ListingComponentItem/ListingComponentItem';
+import ListingItem, { IListingItem } from '../ListingItem/ListingItem';
 
-export interface ISummary {
-  title: string;
-  summaryHeaders: string[];
+export interface ISummary extends ISummaryTable {
+  title: ReactElement;
+  type: 'summary';
+}
+
+export interface ISummaryTable {
+  summaryHeaders: ReactElement[];
   summaryBody: ISummaryItem[];
 }
 
 export interface ISummaryItem {
-  arch: IListingComponentItem;
+  arch: IListingItem;
   compilers: string[];
 }
 
 const Summary = ({
-  title,
   summaryHeaders,
   summaryBody,
-}: ISummary): JSX.Element => {
-  const summaryHeadersRow = useMemo(
-    () => summaryHeaders.map(header => <span key={header}>{header}</span>),
-    [summaryHeaders],
-  );
-
+}: ISummaryTable): JSX.Element => {
   const summaryBodyRows = useMemo(
     () =>
       summaryBody.map(row => (
@@ -41,16 +36,10 @@ const Summary = ({
   );
 
   return (
-    <BaseCard
-      title={title}
-      className="w-fit bg-mediumGray"
-      content={
-        <BaseTable
-          className="!rounded-[0rem] bg-mediumGray"
-          headers={summaryHeadersRow}
-          body={<TableBody>{summaryBodyRows}</TableBody>}
-        />
-      }
+    <BaseTable
+      className="!rounded-[0rem] bg-mediumGray"
+      headers={summaryHeaders}
+      body={<TableBody>{summaryBodyRows}</TableBody>}
     />
   );
 };
@@ -68,10 +57,11 @@ const SummaryItem = ({ arch, compilers }: ISummaryItem): JSX.Element => {
   return (
     <TableRow>
       <TableCell>
-        <ListingComponentItem
+        <ListingItem
           errors={arch.errors}
           warnings={arch.warnings}
           text={arch.text}
+          success={arch.success}
         />
       </TableCell>
       <TableCell>

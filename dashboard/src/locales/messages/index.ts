@@ -18,8 +18,12 @@ export const messages = {
       tree: 'Tree',
     },
     treeDetails: {
+      arch: 'Arch',
       boots: 'Boots',
       builds: 'Builds',
+      configs: 'Configs',
+      compiler: 'Compiler',
+      summary: 'Summary',
       tests: 'Tests',
     },
     treeTable: {

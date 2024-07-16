@@ -1,10 +1,10 @@
 import classNames from 'classnames';
 
-import { ComponentType } from '../ListingComponentItem/ListingComponentItem';
+import { ItemType } from '../ListingItem/ListingItem';
 
 interface IColoredCircle {
   quantity: number;
-  type: ComponentType;
+  type: ItemType;
   className?: string;
 }
 
@@ -14,7 +14,7 @@ const ColoredCircle = ({
   className,
 }: IColoredCircle): JSX.Element => {
   const backgroundColor =
-    type === ComponentType.Error ? 'bg-lightRed' : 'bg-lightGreen';
+    type === ItemType.Error ? 'bg-lightRed' : 'bg-lightGreen';
   return (
     <div
       className={classNames(
