@@ -31,7 +31,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { min: 0, max: 10 },
+  args: {
+    title: 'Timing',
+    subtitle: 'Please select a range of timing:',
+    min: 0,
+    max: 10,
+  },
   decorators: [
     (story): JSX.Element => (
       <IntlProvider

@@ -3,6 +3,8 @@ import { FormattedMessage } from 'react-intl';
 import { Input } from '../ui/input';
 
 interface TimeRangeSection {
+  title: string;
+  subtitle: string;
   min: number;
   max: number;
   onMinChange: (e: React.FormEvent<HTMLInputElement>) => void;
@@ -13,13 +15,17 @@ const inputContainerClass = 'flex gap-x-4 items-center';
 const inputClass = 'max-w-20';
 
 const TimeRangeSection = ({
+  title,
+  subtitle,
   min,
   max,
   onMinChange,
   onMaxChange,
 }: TimeRangeSection): JSX.Element => {
   return (
-    <div className="flex flex-col gap-y-2">
+    <div className="flex flex-col gap-y-2 text-dimGray">
+      <h3 className="font-semibold text-xl mb-2">{title}</h3>
+      <h4 className="text-s mb-6">{subtitle}</h4>
       <div className={inputContainerClass}>
         <span className="w-8">
           <FormattedMessage id="filter.min" />:
