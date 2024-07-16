@@ -4,11 +4,11 @@ import { flatten } from 'flat';
 
 import { fn } from '@storybook/test';
 
-import { LOCALES } from '../../locales/constants';
+import { LOCALES } from '../../../locales/constants';
 
-import { messages } from '../../locales/messages';
+import { messages } from '../../../locales/messages';
 
-import TimeRangeSection from './TimeRangeSection';
+import TimeRangeSection from '../TimeRangeSection';
 
 const ActionsData = {
   onMinChange: fn(),

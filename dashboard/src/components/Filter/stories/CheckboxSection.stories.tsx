@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
 
-import CheckboxSection from './CheckboxSection';
+import CheckboxSection from '../CheckboxSection';
 
 const ActionsData = {
   onClickItem: fn(),
