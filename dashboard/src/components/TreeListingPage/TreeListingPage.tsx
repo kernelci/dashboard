@@ -1,76 +1,20 @@
 import { FormattedMessage } from 'react-intl';
 
-import {
-  MdArrowBackIos,
-  MdArrowForwardIos,
-  MdExpandMore,
-} from 'react-icons/md';
+import { MdExpandMore } from 'react-icons/md';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+
+import { usePagination } from '@/hooks/usePagination';
 
 import TreeTable from '../Table/TreeTable';
 import { Button } from '../ui/button';
 import { Tree, TreeTableBody } from '../../types/tree/Tree';
 import { useTreeTable } from '../../api/Tree';
-
-interface ITableInformation {
-  startIndex: number;
-  endIndex: number;
-  totalTrees: number;
-  itemsPerPage: number;
-  onClickForward: () => void;
-  onClickBack: () => void;
-}
+import { TableInfo } from '../Table/TableInfo';
 
 interface ITreeListingPage {
   inputFilter: string;
 }
-
-const TableInfo = ({
-  startIndex,
-  endIndex,
-  totalTrees,
-  itemsPerPage,
-  onClickForward,
-  onClickBack,
-}: ITableInformation): JSX.Element => {
-  const buttonsClassName = 'text-lightBlue font-bold';
-  const groupsClassName = 'flex flex-row items-center gap-2';
-  return (
-    <div className="flex flex-row gap-4 text-sm text-black">
-      <div className={groupsClassName}>
-        <FormattedMessage id="table.showing" />
-        <span className="font-bold">
-          {startIndex} - {endIndex}
-        </span>
-        <FormattedMessage id="table.of" />
-        <span className="font-bold">{totalTrees}</span>
-        <FormattedMessage id="table.tree" />
-      </div>
-      <div className={groupsClassName}>
-        <FormattedMessage id="table.itemsPerPage" />
-        <span className="font-bold">{itemsPerPage}</span>
-        <MdExpandMore className={buttonsClassName} />
-      </div>
-      <div className="flex flex-row gap-2 items-center">
-        <Button
-          variant="outline"
-          onClick={onClickBack}
-          disabled={startIndex === 1}
-        >
-          <MdArrowBackIos className={buttonsClassName} />
-        </Button>
-        <Button
-          variant="outline"
-          onClick={onClickForward}
-          disabled={endIndex === totalTrees}
-        >
-          <MdArrowForwardIos className={buttonsClassName} />
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 const FilterButton = (): JSX.Element => {
   return (
@@ -127,32 +71,8 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
     }
   }, [data, inputFilter]);
 
-  const [startIndex, setStartIndex] = useState(0);
-  const [endIndex, setEndIndex] = useState(0);
-
-  useEffect(() => {
-    setEndIndex(
-      listItems.length > ITEMS_PER_PAGE ? ITEMS_PER_PAGE : listItems.length,
-    );
-  }, [listItems]);
-
-  const onClickGoForward = useCallback(() => {
-    setStartIndex(endIndex);
-    setEndIndex(
-      endIndex + ITEMS_PER_PAGE >= listItems.length
-        ? listItems.length
-        : endIndex + ITEMS_PER_PAGE,
-    );
-  }, [endIndex, listItems]);
-
-  const onClickGoBack = useCallback(() => {
-    setStartIndex(startIndex - ITEMS_PER_PAGE);
-    setEndIndex(
-      endIndex % ITEMS_PER_PAGE !== 0
-        ? endIndex - (endIndex % ITEMS_PER_PAGE)
-        : endIndex - ITEMS_PER_PAGE,
-    );
-  }, [startIndex, endIndex]);
+  const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
+    usePagination(listItems.length, ITEMS_PER_PAGE);
 
   return (
     <div className="flex flex-col gap-6">
