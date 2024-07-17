@@ -12,11 +12,9 @@ import { useTreeDetails } from '@/api/TreeDetails';
 
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
-import CardsGroup from '@/components/CardsGroup/CardsGroup';
-import { Colors } from '@/components/StatusChart/StatusCharts';
 import { Results } from '@/types/tree/TreeDetails';
 
-interface ITreeDetails {
+export interface ITreeDetails {
   archs: ISummaryItem[];
   configs: IListingItem[];
   builds: Results;
@@ -61,67 +59,14 @@ const TreeDetails = (): JSX.Element => {
 
   return (
     <div className="flex flex-col pt-8">
-      <div className="flex flex-row pb-2 border-b border-darkGray">
-        <TreeDetailsTab />
-        <ButtonWithIcon
-          icon={<MdExpandMore />}
-          label={<FormattedMessage id="global.filters" />}
-        />
-      </div>
-      <div className="pt-4">
-        <CardsGroup
-          cards={[
-            {
-              title: <FormattedMessage id="treeDetails.buildStatus" />,
-              type: 'chart',
-              pieCentralLabel: `${
-                (treeDetailsData?.builds.invalid ?? 0) +
-                (treeDetailsData?.builds.valid ?? 0) +
-                (treeDetailsData?.builds.null ?? 0)
-              }`,
-              pieCentralDescription: (
-                <FormattedMessage id="treeDetails.executed" />
-              ),
-              elements: [
-                {
-                  value: treeDetailsData?.builds.valid ?? 0,
-                  label: 'Valid',
-                  color: Colors.Green,
-                },
-                {
-                  value: treeDetailsData?.builds.invalid ?? 0,
-                  label: 'Invalid',
-                  color: Colors.Red,
-                },
-                {
-                  value: treeDetailsData?.builds.null ?? 0,
-                  label: 'Null',
-                  color: Colors.Gray,
-                },
-              ],
-            },
-            {
-              items: treeDetailsData?.configs ?? [],
-              title: <FormattedMessage id="treeDetails.configs" />,
-              type: 'listing',
-            },
-            {
-              summaryBody: treeDetailsData?.archs ?? [],
-              title: <FormattedMessage id="treeDetails.summary" />,
-              summaryHeaders: [
-                <FormattedMessage
-                  key="treeDetails.arch"
-                  id="treeDetails.arch"
-                />,
-                <FormattedMessage
-                  key="treeDetails.compiler"
-                  id="treeDetails.compiler"
-                />,
-              ],
-              type: 'summary',
-            },
-          ]}
-        />
+      <div className="flex flex-col pb-2">
+        <div className="flex justify-end">
+          <ButtonWithIcon
+            icon={<MdExpandMore />}
+            label={<FormattedMessage id="global.filters" />}
+          />
+        </div>
+        <TreeDetailsTab treeDetailsData={treeDetailsData} />
       </div>
     </div>
   );
