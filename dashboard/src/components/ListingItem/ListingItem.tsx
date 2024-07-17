@@ -14,6 +14,7 @@ export enum ItemType {
   Warning,
   Error,
   Success,
+  None,
 }
 
 const ListingItem = ({
@@ -38,6 +39,13 @@ const ListingItem = ({
       <></>
     );
 
+  const itemNeutral =
+    !errors || errors === 0 || !success || success === 0 ? (
+      <ColoredCircle quantity={0} type={ItemType.None} />
+    ) : (
+      <></>
+    );
+
   const itemSuccess =
     success && success > 0 ? (
       <ColoredCircle quantity={success} type={ItemType.Success} />
@@ -50,6 +58,7 @@ const ListingItem = ({
       {itemError}
       {itemWarning}
       {itemSuccess}
+      {itemNeutral}
       <span className="text-black text-sm">{text}</span>
     </div>
   );

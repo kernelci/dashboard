@@ -14,7 +14,11 @@ const ColoredCircle = ({
   className,
 }: IColoredCircle): JSX.Element => {
   const backgroundColor =
-    type === ItemType.Error ? 'bg-lightRed' : 'bg-lightGreen';
+    type === ItemType.Error
+      ? 'bg-lightRed'
+      : type === ItemType.Success
+        ? 'bg-lightGreen'
+        : 'bg-mediumGray';
   return (
     <div
       className={classNames(
