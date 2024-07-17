@@ -8,7 +8,7 @@ interface IBaseCard {
 }
 
 const containerClassName =
-  'flex flex-col rounded-xl bg-white w-full h-fit border border-darkGray text-black';
+  'flex flex-col rounded-xl bg-white w-full h-fit border border-darkGray text-black break-inside-avoid-column mb-6';
 
 const BaseCard = ({ title, content, className }: IBaseCard): JSX.Element => {
   return (

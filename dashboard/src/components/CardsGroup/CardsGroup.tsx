@@ -5,13 +5,14 @@ import BaseCard from '../Cards/BaseCard';
 import ListingContent, {
   IListingContent,
 } from '../ListingContent/ListingContent';
+import StatusChartMemoized, { IStatusChart } from '../StatusChart/StatusCharts';
 
 interface ICardsGroup {
-  cards: (IListingContent | ISummary)[];
+  cards: (IListingContent | ISummary | IStatusChart)[];
 }
 
 interface ICardContent {
-  card: IListingContent | ISummary;
+  card: IListingContent | ISummary | IStatusChart;
 }
 
 const CardsGroup = ({ cards }: ICardsGroup): JSX.Element => {
@@ -24,7 +25,7 @@ const CardsGroup = ({ cards }: ICardsGroup): JSX.Element => {
       />
     ));
   }, [cards]);
-  return <div className="grid grid-cols-2 gap-8">{cardsList}</div>;
+  return <div className="columns-2">{cardsList}</div>;
 };
 
 const CardContent = ({ card }: ICardContent): JSX.Element => {
@@ -38,6 +39,8 @@ const CardContent = ({ card }: ICardContent): JSX.Element => {
         summaryBody={card?.summaryBody}
       />
     );
+  } else if (card.type === 'chart') {
+    return <StatusChartMemoized {...card} />;
   } else {
     return <></>;
   }

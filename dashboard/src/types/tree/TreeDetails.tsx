@@ -24,12 +24,14 @@ type TreeDetailsBuild = {
 export type TreeDetails = {
   builds: TreeDetailsBuild[];
   summary: {
-    builds: {
-      valid: number;
-      invalid: number;
-      null: number;
-    };
+    builds: Results;
     configs: object;
     architectures: object;
   };
+};
+
+export type Results = {
+  valid: number;
+  invalid: number;
+  null: number;
 };

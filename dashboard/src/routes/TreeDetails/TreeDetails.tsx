@@ -13,13 +13,20 @@ import { useTreeDetails } from '@/api/TreeDetails';
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
 import CardsGroup from '@/components/CardsGroup/CardsGroup';
+import { Colors } from '@/components/StatusChart/StatusCharts';
+import { Results } from '@/types/tree/TreeDetails';
+
+interface ITreeDetails {
+  archs: ISummaryItem[];
+  configs: IListingItem[];
+  builds: Results;
+}
 
 const TreeDetails = (): JSX.Element => {
   const { treeId } = useParams();
   const { data } = useTreeDetails(treeId ?? '');
 
-  const [configs, setConfigs] = useState<IListingItem[]>();
-  const [archictectures, setArchitectures] = useState<ISummaryItem[]>();
+  const [treeDetailsData, setTreeDetailsData] = useState<ITreeDetails>();
 
   useEffect(() => {
     if (data) {
@@ -30,7 +37,6 @@ const TreeDetails = (): JSX.Element => {
         errors: value.invalid,
         success: value.valid,
       }));
-      setConfigs(configsData);
 
       const archData: ISummaryItem[] = Object.entries(
         data.summary.architectures,
@@ -39,7 +45,17 @@ const TreeDetails = (): JSX.Element => {
         compilers: value.compilers,
       }));
 
-      setArchitectures(archData);
+      const buildSummaryData: Results = {
+        valid: data.summary.builds.valid,
+        invalid: data.summary.builds.invalid,
+        null: data.summary.builds.null,
+      };
+
+      setTreeDetailsData({
+        archs: archData,
+        configs: configsData,
+        builds: buildSummaryData,
+      });
     }
   }, [data]);
 
@@ -56,12 +72,41 @@ const TreeDetails = (): JSX.Element => {
         <CardsGroup
           cards={[
             {
-              items: configs ?? [],
+              title: <FormattedMessage id="treeDetails.buildStatus" />,
+              type: 'chart',
+              pieCentralLabel: `${
+                (treeDetailsData?.builds.invalid ?? 0) +
+                (treeDetailsData?.builds.valid ?? 0) +
+                (treeDetailsData?.builds.null ?? 0)
+              }`,
+              pieCentralDescription: (
+                <FormattedMessage id="treeDetails.executed" />
+              ),
+              elements: [
+                {
+                  value: treeDetailsData?.builds.valid ?? 0,
+                  label: 'Valid',
+                  color: Colors.Green,
+                },
+                {
+                  value: treeDetailsData?.builds.invalid ?? 0,
+                  label: 'Invalid',
+                  color: Colors.Red,
+                },
+                {
+                  value: treeDetailsData?.builds.null ?? 0,
+                  label: 'Null',
+                  color: Colors.Gray,
+                },
+              ],
+            },
+            {
+              items: treeDetailsData?.configs ?? [],
               title: <FormattedMessage id="treeDetails.configs" />,
               type: 'listing',
             },
             {
-              summaryBody: archictectures ?? [],
+              summaryBody: treeDetailsData?.archs ?? [],
               title: <FormattedMessage id="treeDetails.summary" />,
               summaryHeaders: [
                 <FormattedMessage
