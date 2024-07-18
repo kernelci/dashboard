@@ -104,6 +104,22 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-query-builder"
+version = "3.2.0"
+description = "Build complex nested queries"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-query-builder-3.2.0.tar.gz", hash = "sha256:e22228cb66305a08b2763a46c028b14c6627e7b31d536c7dd8a1c37c1a1c8c70"},
+    {file = "django_query_builder-3.2.0-py2.py3-none-any.whl", hash = "sha256:560ee939533b9e2cdd707a13a9cb79e34599d8455405934d27233532889c8abf"},
+]
+
+[package.dependencies]
+Django = ">=3.2"
+fleming = ">=0.6.0"
+pytz = ">=2015.6"
+
+[[package]]
 name = "djangorestframework"
 version = "3.15.2"
 description = "Web APIs for Django, made easy."
@@ -132,6 +148,21 @@ files = [
 mccabe = ">=0.7.0,<0.8.0"
 pycodestyle = ">=2.12.0,<2.13.0"
 pyflakes = ">=3.2.0,<3.3.0"
+
+[[package]]
+name = "fleming"
+version = "0.7.0"
+description = "Python helpers for manipulating datetime objects relative to time zones"
+optional = false
+python-versions = "*"
+files = [
+    {file = "fleming-0.7.0-py2.py3-none-any.whl", hash = "sha256:9bdd83f8497c19be4e316726b8419be45ab5000c6398876e6aea456676345613"},
+    {file = "fleming-0.7.0.tar.gz", hash = "sha256:dd93f95f17f220d8ec3cedc2090b3703d7499e6c723bc9f45eb5f7bda8d75a63"},
+]
+
+[package.dependencies]
+python-dateutil = ">=2.2"
+pytz = ">=2013.9"
 
 [[package]]
 name = "gunicorn"
@@ -306,6 +337,42 @@ files = [
 ]
 
 [[package]]
+name = "python-dateutil"
+version = "2.9.0.post0"
+description = "Extensions to the standard Python datetime module"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+files = [
+    {file = "python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3"},
+    {file = "python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"},
+]
+
+[package.dependencies]
+six = ">=1.5"
+
+[[package]]
+name = "pytz"
+version = "2024.1"
+description = "World timezone definitions, modern and historical"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pytz-2024.1-py2.py3-none-any.whl", hash = "sha256:328171f4e3623139da4983451950b28e95ac706e13f3f2630a879749e7a8b319"},
+    {file = "pytz-2024.1.tar.gz", hash = "sha256:2a29735ea9c18baf14b448846bde5a48030ed267578472d8955cd0e7443a9812"},
+]
+
+[[package]]
+name = "six"
+version = "1.16.0"
+description = "Python 2 and 3 compatibility utilities"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+files = [
+    {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
+    {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+]
+
+[[package]]
 name = "sqlparse"
 version = "0.5.0"
 description = "A non-validating SQL parser."
@@ -345,4 +412,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "6bccc453c42238e3cf955bbec77a7e023271de8f9eea93b8df215863476a7a82"
+content-hash = "fe5323a273b28a06ad10a51fbfc0a4b214e449b0f61d40e72cb4a9c7753008fa"
