@@ -5,6 +5,7 @@ export const messages = {
     global: {
       filters: 'Filters',
       cleanAll: 'Clean all',
+      seconds: 'sec',
     },
     routes: {
       deviceMonitor: 'Devices',

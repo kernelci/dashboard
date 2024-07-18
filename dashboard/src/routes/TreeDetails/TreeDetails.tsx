@@ -13,11 +13,13 @@ import { useTreeDetails } from '@/api/TreeDetails';
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
 import { Results } from '@/types/tree/TreeDetails';
+import { AccordionItemBuildsTrigger } from '@/components/Accordion/Accordion';
 
 export interface ITreeDetails {
   archs: ISummaryItem[];
   configs: IListingItem[];
-  builds: Results;
+  buildsSummary: Results;
+  builds: AccordionItemBuildsTrigger[];
 }
 
 const TreeDetails = (): JSX.Element => {
@@ -49,10 +51,22 @@ const TreeDetails = (): JSX.Element => {
         null: data.summary.builds.null,
       };
 
+      const buildsData: AccordionItemBuildsTrigger[] = Object.entries(
+        data.builds,
+      ).map(([, value]) => ({
+        config: value.config_name,
+        date: value.start_time,
+        buildTime: value.duration,
+        compiler: value.compiler,
+        buildErrors: value.test_status.error,
+        status: value.valid ? 'valid' : 'invalid',
+      }));
+
       setTreeDetailsData({
         archs: archData,
         configs: configsData,
-        builds: buildSummaryData,
+        buildsSummary: buildSummaryData,
+        builds: buildsData,
       });
     }
   }, [data]);
