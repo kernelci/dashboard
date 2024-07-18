@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 from django.views import View
-
+from querybuilder.query import Query
 from kernelCI_app.models import Checkouts, Builds
-from kernelCI_app.serializers import TreeSerializer, TreeDetailsSerializer
+from kernelCI_app.serializers import TreeSerializer
 from kernelCI_app.utils import get_visible_record_identifiers
 
 
@@ -108,25 +108,30 @@ class TreeDetails(View):
         return {k: getattr(builds[0], k) for k in status_keys}
 
     def get(self, request, commit_hash):
-        builds = Builds.objects.raw(
-            """
-            SELECT
-                builds.id, builds.architecture, builds.config_name, builds.misc,
-                builds.config_url, builds.compiler, builds.valid,
-                builds.start_time, builds.duration, builds.log_url
-            FROM
-                builds
-            INNER JOIN
-                checkouts ON checkouts.id = builds.checkout_id
-            WHERE checkouts.git_commit_hash = %s;
-            """,
-            [commit_hash]
-        )
+        build_fields = [
+            'id', 'architecture', 'config_name', 'misc', 'config_url',
+            'compiler', 'valid', 'duration', 'log_url', 'start_time']
+        checkout_fields = [
+            'git_repository_branch', 'git_repository_url', 'git_repository_branch']
 
-        for build in builds:
-            build.test_status = self.get_test_staus(build.id)
+        query = Query().from_table(Builds, build_fields).join(
+            'checkouts',
+            condition='checkouts.id = builds.checkout_id',
+            fields=checkout_fields
+        ).where(git_commit_hash__eq=commit_hash)
 
-        data = TreeDetailsSerializer(builds, many=True).data
-        summary = self.create_summary(data)
-        resp = {"builds": data, "summary": summary}
-        return JsonResponse(resp, safe=False)
+        for k in request.GET.keys():
+            if k.startswith('filter_'):
+                field = k[7:]
+                if field in build_fields or field in checkout_fields:
+                    filter_list = request.GET.getlist(k)
+                    query.where({field: filter_list})
+
+        records = query.select()
+        for r in records:
+            status = self.get_test_staus(r.get('id'))
+            r['status'] = status
+
+        summary = self.create_summary(records)
+
+        return JsonResponse({"builds": records, "summary": summary}, safe=False)
