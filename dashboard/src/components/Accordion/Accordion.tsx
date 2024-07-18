@@ -1,6 +1,8 @@
-import { ReactNode, useMemo } from 'react';
+import { ReactElement, ReactNode, useMemo } from 'react';
 
 import { MdCheck, MdClose } from 'react-icons/md';
+
+import { FormattedMessage } from 'react-intl';
 
 import { TableBody, TableCell, TableRow } from '../ui/table';
 import BaseTable from '../Table/BaseTable';
@@ -13,7 +15,7 @@ import ColoredCircle from '../ColoredCircle/ColoredCircle';
 import { ItemType } from '../ListingItem/ListingItem';
 
 export interface IAccordion {
-  headers: string[];
+  headers?: ReactElement[];
   items: IAccordionItems[];
   type: 'build' | 'test';
 }
@@ -44,11 +46,20 @@ export type AccordionItemTestsTrigger = {
   status?: 'valid' | 'invalid';
 };
 
-const Accordion = ({ headers, items, type }: IAccordion): JSX.Element => {
-  const accordionTableHeader = useMemo(
-    () => headers.map(header => <span key={header}>{header}</span>),
-    [headers],
-  );
+const headersBuilds = [
+  <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
+  <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
+  <FormattedMessage key="treeDetails.date" id="treeDetails.date" />,
+  <FormattedMessage
+    key="treeDetails.buildErrors"
+    id="treeDetails.buildErrors"
+  />,
+  <FormattedMessage key="treeDetails.buildTime" id="treeDetails.buildTime" />,
+  <FormattedMessage key="treeDetails.status" id="treeDetails.status" />,
+];
+
+const Accordion = ({ items, type }: IAccordion): JSX.Element => {
+  const accordionTableHeader = type === 'build' ? headersBuilds : [];
 
   return (
     <BaseTable

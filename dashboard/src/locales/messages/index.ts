@@ -3,9 +3,12 @@ import { LOCALES } from '../constants';
 export const messages = {
   [LOCALES.EN_US]: {
     global: {
-      filters: 'Filters',
+      all: 'All',
       cleanAll: 'Clean all',
+      errors: 'Errors',
+      filters: 'Filters',
       seconds: 'sec',
+      successful: 'Successful',
     },
     routes: {
       deviceMonitor: 'Devices',
@@ -22,11 +25,16 @@ export const messages = {
       arch: 'Arch',
       boots: 'Boots',
       builds: 'Builds',
+      buildErrors: 'Build errors',
       buildStatus: 'Build status',
+      buildTime: 'BuildTime',
+      config: 'Config',
       configs: 'Configs',
       compiler: 'Compiler',
+      date: 'Date',
       executed: 'Executed',
       summary: 'Summary',
+      status: 'Status',
       tests: 'Tests',
     },
     treeTable: {
