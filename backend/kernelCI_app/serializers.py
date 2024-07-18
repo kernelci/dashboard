@@ -74,7 +74,7 @@ class TreeDetailsSerializer(serializers.Serializer):
     architecture = serializers.CharField()
     config_name = serializers.CharField()
     valid = serializers.BooleanField()
-    start_time = serializers.CharField()
+    start_time = serializers.DateTimeField()
     duration = serializers.CharField()
     compiler = serializers.CharField()
     config_url = serializers.CharField()
