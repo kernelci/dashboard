@@ -121,11 +121,17 @@ class TreeDetails(View):
         ).where(git_commit_hash__eq=commit_hash)
 
         for k in request.GET.keys():
-            if k.startswith('filter_'):
-                field = k[7:]
-                if field in build_fields or field in checkout_fields:
-                    filter_list = request.GET.getlist(k)
-                    query.where({field: filter_list})
+            if not k.startswith('filter_'):
+                continue
+            field = k[7:]
+            table = None
+            if field in build_fields:
+                table = 'builds'
+            if field in checkout_fields:
+                table = 'checkouts'
+            if table:
+                filter_list = request.GET.getlist(k)
+                query.where(**{f'{table}.{field}__in': filter_list})
 
         records = query.select()
         for r in records:
