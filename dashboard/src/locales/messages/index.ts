@@ -2,11 +2,29 @@ import { LOCALES } from '../constants';
 
 export const messages = {
   [LOCALES.EN_US]: {
+    buildAccordion: {
+      buildLogs: 'Build logs',
+      dtb: 'Dtb',
+      dtbs: 'dtbs',
+      kernelConfig: 'Kernel config',
+      kernelConfigPath: 'config/kernel.config',
+      kernelImage: 'Kernel image',
+      logs: 'Logs',
+      modules: 'Modules',
+      modulesZip: 'modules.tar.xz',
+      systemMap: 'System map',
+      systemMapPath: 'kernel/System.map',
+      testError: 'Test failed',
+      testSkiped: 'Test skiped',
+      testSuccess: 'Test success',
+      testStatus: 'Test status',
+    },
     global: {
       all: 'All',
       cleanAll: 'Clean all',
       errors: 'Errors',
       filters: 'Filters',
+      none: 'None',
       seconds: 'sec',
       successful: 'Successful',
       architecture: 'Architecture',
@@ -38,9 +56,12 @@ export const messages = {
       compiler: 'Compiler',
       date: 'Date',
       executed: 'Executed',
+      invalid: 'Invalid',
+      null: 'Null',
       summary: 'Summary',
       status: 'Status',
       tests: 'Tests',
+      valid: 'Valid',
     },
     treeTable: {
       branch: 'Branch',
