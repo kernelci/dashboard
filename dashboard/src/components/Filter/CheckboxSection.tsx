@@ -4,27 +4,29 @@ import { useCallback, useMemo } from 'react';
 
 import Checkbox from '../Checkbox/Checkbox';
 
-type TOnClickItem = (itemIdx: number, isChecked: boolean) => void;
+type TOnClickItem = (value: string, isChecked: boolean) => void;
+
+type TItems = { [key: string]: boolean };
 
 interface ICheckboxSectionItem {
-  text: string;
+  value: string;
   onClickItem: TOnClickItem;
-  idx: number;
+  isSelected: boolean;
 }
 
 interface ICheckboxList {
-  items: string[];
+  items: TItems;
   onClickItem: TOnClickItem;
 }
 
 interface ICheckboxSubsection {
-  items: string[];
+  items: TItems;
   title: string;
   onClickItem: TOnClickItem;
 }
 
-interface ICheckboxSection {
-  items?: string[];
+export interface ICheckboxSection {
+  items?: TItems;
   title: string;
   subtitle?: string;
   subsections?: ICheckboxSubsection[];
@@ -33,26 +35,32 @@ interface ICheckboxSection {
 }
 
 const CheckboxSectionItem = ({
-  text,
+  value,
   onClickItem,
-  idx,
+  isSelected,
 }: ICheckboxSectionItem): JSX.Element => {
   const handleOnToggle = useCallback(
-    (isChecked: boolean) => onClickItem(idx, isChecked),
-    [idx, onClickItem],
+    (isChecked: boolean) => onClickItem(value, isChecked),
+    [value, onClickItem],
   );
-  return <Checkbox onToggle={handleOnToggle} text={text} />;
+  return (
+    <Checkbox
+      onToggle={handleOnToggle}
+      text={value}
+      startChecked={isSelected}
+    />
+  );
 };
 
 const CheckboxList = ({ items, onClickItem }: ICheckboxList): JSX.Element => {
   const itemComponents = useMemo(
     () =>
-      items.map((text, idx) => (
+      Object.keys(items).map(key => (
         <CheckboxSectionItem
-          key={text}
-          text={text}
-          idx={idx}
+          key={key}
+          value={key}
           onClickItem={onClickItem}
+          isSelected={items[key]}
         />
       )),
     [items, onClickItem],

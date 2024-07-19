@@ -16,13 +16,13 @@ import { Separator } from '../ui/separator';
 
 interface IDrawerLink {
   treeURL: string;
-  onRefresh: () => void;
+  onRefresh?: () => void;
 }
 
 interface IFilterDrawer extends IDrawerLink {
   children?: React.ReactNode;
-  onCancel: () => void;
-  onFilter: () => void;
+  onCancel?: () => void;
+  onFilter?: () => void;
 }
 
 const DrawerHeader = (): JSX.Element => {
@@ -77,7 +77,9 @@ const Drawer = ({
   return (
     <UIDrawer>
       <DrawerTrigger asChild>
-        <Button variant="outline">Open Drawer</Button>
+        <Button variant="outline">
+          <FormattedMessage id="global.filters" />
+        </Button>
       </DrawerTrigger>
 
       <DrawerContent className="flex items-center px-4 bg-lightGray max-h-screen">
