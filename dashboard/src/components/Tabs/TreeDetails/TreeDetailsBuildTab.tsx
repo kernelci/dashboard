@@ -22,7 +22,7 @@ const TreeDetailsBuildTab = ({
   const [filterBy, setFilterBy] = useState<'error' | 'success' | 'all'>('all');
   const accordionContent = useMemo(() => {
     return treeDetailsData?.builds.map(row => ({
-      trigger: {
+      accordionData: {
         ...row,
         config: row.config ?? '-',
         compiler: row.compiler ?? '-',
@@ -37,19 +37,26 @@ const TreeDetailsBuildTab = ({
           '-'
         ),
         date: row.date?.split('T')[0],
+        testStatus: {
+          failTests: row.testStatus?.failTests,
+          errorTests: row.testStatus?.errorTests,
+          passTests: row.testStatus?.passTests,
+          skipTests: row.testStatus?.skipTests,
+        },
       },
-      content: <></>,
     }));
   }, [treeDetailsData?.builds]);
 
   const filteredContent =
     filterBy === 'error'
       ? accordionContent?.filter(
-          row => row.trigger.buildErrors && row.trigger.buildErrors > 0,
+          row =>
+            row.accordionData.buildErrors && row.accordionData.buildErrors > 0,
         )
       : filterBy === 'success'
         ? accordionContent?.filter(
-            row => row.trigger.status && row.trigger.status === 'valid',
+            row =>
+              row.accordionData.status && row.accordionData.status === 'valid',
           )
         : accordionContent;
 
@@ -69,17 +76,17 @@ const TreeDetailsBuildTab = ({
         elements: [
           {
             value: treeDetailsData?.buildsSummary.valid ?? 0,
-            label: 'Valid',
+            label: <FormattedMessage id="treeDetails.valid" />,
             color: Colors.Green,
           },
           {
             value: treeDetailsData?.buildsSummary.invalid ?? 0,
-            label: 'Invalid',
+            label: <FormattedMessage id="treeDetails.invalid" />,
             color: Colors.Red,
           },
           {
             value: treeDetailsData?.buildsSummary.null ?? 0,
-            label: 'Null',
+            label: <FormattedMessage id="treeDetails.null" />,
             color: Colors.Gray,
           },
         ],

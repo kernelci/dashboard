@@ -19,8 +19,8 @@ const CardsGroup = ({ cards }: ICardsGroup): JSX.Element => {
   const cardsList = useMemo(() => {
     return cards.map(card => (
       <BaseCard
-        key={card.title.key}
-        title={card.title}
+        key={card.title?.key}
+        title={<span>{card.title}</span> ?? ''}
         content={<CardContent card={card} />}
       />
     ));
@@ -40,7 +40,8 @@ const CardContent = ({ card }: ICardContent): JSX.Element => {
       />
     );
   } else if (card.type === 'chart') {
-    return <StatusChartMemoized {...card} />;
+    const chartData = { ...card, title: undefined };
+    return <StatusChartMemoized {...chartData} />;
   } else {
     return <></>;
   }

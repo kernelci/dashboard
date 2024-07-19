@@ -10,8 +10,9 @@ import ColoredCircle from '../ColoredCircle/ColoredCircle';
 
 type StatusChartValues = {
   value: number;
-  label: string;
+  label: ReactElement;
   color: Colors;
+  showValue?: boolean;
 };
 
 export enum Colors {
@@ -28,7 +29,7 @@ export interface IStatusChart {
   decreaseElement?: StatusChartValues;
   pieCentralLabel?: string;
   pieCentralDescription?: ReactElement;
-  title: ReactElement;
+  title?: ReactElement;
   type: 'chart';
 }
 
@@ -52,13 +53,17 @@ const StatusChart = ({
   decreaseElement,
   pieCentralLabel,
   pieCentralDescription,
+  title,
 }: IStatusChart): JSX.Element => {
   const showChart = elements.some(element => element.value > 0);
 
   const dataSeries = useMemo(() => {
     return [
       {
-        data: elements,
+        data: elements.map(element => ({
+          ...element,
+          label: '',
+        })),
         innerRadius: 50,
         outerRadius: 80,
       },
@@ -69,28 +74,31 @@ const StatusChart = ({
     return <></>;
   }
   return (
-    <div className="flex items-center">
-      <PieChart
-        series={dataSeries}
-        width={200}
-        height={200}
-        slotProps={{
-          legend: {
-            hidden: true,
-          },
-        }}
-      >
-        <PieCenterLabel
-          label={pieCentralLabel ?? ''}
-          description={pieCentralDescription ?? <></>}
-        />
-      </PieChart>
-      <div className="flex flex-row gap-4 pt-5">
-        <ChartLegend chartValues={elements} />
-        <RegressionsStatus
-          increaseElement={increaseElement}
-          decreaseElement={decreaseElement}
-        />
+    <div>
+      <span className="font-bold">{title}</span>
+      <div className="flex items-center">
+        <PieChart
+          series={dataSeries}
+          width={200}
+          height={200}
+          slotProps={{
+            legend: {
+              hidden: true,
+            },
+          }}
+        >
+          <PieCenterLabel
+            label={pieCentralLabel ?? ''}
+            description={pieCentralDescription ?? <></>}
+          />
+        </PieChart>
+        <div className="flex flex-row gap-4 pt-5">
+          <ChartLegend chartValues={elements} />
+          <RegressionsStatus
+            increaseElement={increaseElement}
+            decreaseElement={decreaseElement}
+          />
+        </div>
       </div>
     </div>
   );
@@ -114,25 +122,26 @@ const getColorClassName = (color: Colors): string => {
 };
 
 const ChartLegend = ({ chartValues }: IChartLegend): JSX.Element => {
-  return (
-    <div className="flex flex-col gap-2">
-      {chartValues.map(chartValue => (
-        <div key={chartValue?.label} className="flex flex-row">
-          {chartValue && (
-            <div className="pt-1 pr-2">
-              <ColoredCircle
-                backgroundClassName={getColorClassName(chartValue.color)}
-              />
-            </div>
-          )}
-          <div className="flex flex-col gap-1">
-            <span className="font-bold">{chartValue?.value}</span>
-            <span>{chartValue?.label}</span>
+  const legend = useMemo(() => {
+    return chartValues.map(chartValue => (
+      <div key={chartValue?.color} className="flex flex-row">
+        {chartValue && (
+          <div className="pt-1 pr-2">
+            <ColoredCircle
+              backgroundClassName={getColorClassName(chartValue.color)}
+            />
           </div>
+        )}
+        <div className="flex flex-col gap-1">
+          {chartValue?.showValue && (
+            <span className="font-bold">{chartValue?.value}</span>
+          )}
+          <span>{chartValue?.label}</span>
         </div>
-      ))}
-    </div>
-  );
+      </div>
+    ));
+  }, [chartValues]);
+  return <div className="flex flex-col gap-2">{legend}</div>;
 };
 
 const RegressionsStatus = ({

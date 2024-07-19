@@ -1,8 +1,10 @@
-import { ReactElement, ReactNode, useMemo } from 'react';
+import { ReactElement, useMemo } from 'react';
 
 import { MdCheck, MdClose } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
+
+import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
 import { TableBody, TableCell, TableRow } from '../ui/table';
 import BaseTable from '../Table/BaseTable';
@@ -14,6 +16,8 @@ import {
 import ColoredCircle from '../ColoredCircle/ColoredCircle';
 import { ItemType } from '../ListingItem/ListingItem';
 
+import AccordionBuildContent from './BuildAccordionContent';
+
 export interface IAccordion {
   headers?: ReactElement[];
   items: IAccordionItems[];
@@ -21,23 +25,13 @@ export interface IAccordion {
 }
 
 export interface IAccordionItems {
-  trigger: AccordionItemBuildsTrigger | AccordionItemTestsTrigger;
-  content?: ReactNode;
+  accordionData: AccordionItemBuilds | AccordionItemTestsTrigger;
 }
 
 interface ICustomAccordionTableBody {
   items: IAccordionItems[];
   type: 'build' | 'test';
 }
-
-export type AccordionItemBuildsTrigger = {
-  config?: string;
-  compiler?: string;
-  date?: string;
-  buildErrors?: number;
-  buildTime?: string;
-  status?: 'valid' | 'invalid';
-};
 
 export type AccordionItemTestsTrigger = {
   testPlans?: string;
@@ -81,13 +75,21 @@ const AccordionTableBody = ({
             <CollapsibleTrigger asChild>
               <TableRow>
                 {type === 'build' ? (
-                  <AccordionBuildsTrigger trigger={item.trigger} />
+                  <AccordionBuildsTrigger accordionData={item.accordionData} />
                 ) : (
-                  <AccordionTestsTrigger trigger={item.trigger} />
+                  <AccordionTestsTrigger accordionData={item.accordionData} />
                 )}
               </TableRow>
             </CollapsibleTrigger>
-            <CollapsibleContent>{item.content}</CollapsibleContent>
+            <CollapsibleContent>
+              <div className="h-fit w-f p-8">
+                {type === 'build' ? (
+                  <AccordionBuildContent accordionData={item.accordionData} />
+                ) : (
+                  <></>
+                )}
+              </div>
+            </CollapsibleContent>
           </>
         </Collapsible>
       )),
@@ -97,8 +99,10 @@ const AccordionTableBody = ({
   return <TableBody>{accordionItems}</TableBody>;
 };
 
-const AccordionBuildsTrigger = ({ trigger }: IAccordionItems): JSX.Element => {
-  const triggerInfo = trigger as AccordionItemBuildsTrigger;
+const AccordionBuildsTrigger = ({
+  accordionData,
+}: IAccordionItems): JSX.Element => {
+  const triggerInfo = accordionData as AccordionItemBuilds;
   return (
     <>
       <TableCell>{triggerInfo.config}</TableCell>
@@ -123,8 +127,10 @@ const AccordionBuildsTrigger = ({ trigger }: IAccordionItems): JSX.Element => {
   );
 };
 
-const AccordionTestsTrigger = ({ trigger }: IAccordionItems): JSX.Element => {
-  const triggerInfo = trigger as AccordionItemTestsTrigger;
+const AccordionTestsTrigger = ({
+  accordionData,
+}: IAccordionItems): JSX.Element => {
+  const triggerInfo = accordionData as AccordionItemTestsTrigger;
   return (
     <>
       <TableCell>{triggerInfo.testPlans}</TableCell>

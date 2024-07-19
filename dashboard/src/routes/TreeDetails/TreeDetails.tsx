@@ -6,8 +6,8 @@ import { useTreeDetails } from '@/api/TreeDetails';
 import TreeDetailsTab from '@/components/Tabs/TreeDetailsTab';
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
-import { AccordionItemBuildsTrigger } from '@/components/Accordion/Accordion';
 import {
+  AccordionItemBuilds,
   Results,
   TTreeDetailsFilter,
   TreeDetails as TreeDetailsType,
@@ -19,7 +19,7 @@ export interface ITreeDetails {
   archs: ISummaryItem[];
   configs: IListingItem[];
   buildsSummary: Results;
-  builds: AccordionItemBuildsTrigger[];
+  builds: AccordionItemBuilds[];
 }
 
 const TreeDetails = (): JSX.Element => {
@@ -58,16 +58,28 @@ const TreeDetails = (): JSX.Element => {
         null: data.summary.builds.null,
       };
 
-      const buildsData: AccordionItemBuildsTrigger[] = Object.entries(
-        data.builds,
-      ).map(([, value]) => ({
-        config: value.config_name,
-        date: value.start_time,
-        buildTime: value.duration,
-        compiler: value.compiler,
-        buildErrors: value.test_status?.error ?? 0,
-        status: value.valid ? 'valid' : 'invalid',
-      }));
+      const buildsData: AccordionItemBuilds[] = Object.entries(data.builds).map(
+        ([, value]) => ({
+          config: value.config_name,
+          date: value.start_time,
+          buildTime: value.duration,
+          compiler: value.compiler,
+          buildErrors: value.test_status?.error_tests ?? 0,
+          status: value.valid ? 'valid' : 'invalid',
+          testStatus: {
+            failTests: value.test_status?.fail_tests ?? 0,
+            passTests: value.test_status?.pass_tests ?? 0,
+            errorTests: value.test_status?.error_tests ?? 0,
+            skipTests: value.test_status?.skip_tests ?? 0,
+          },
+          buildLogs: value.log_url,
+          kernelConfig: value.config_url,
+          kernelImage: value.misc ? value.misc['kernel_type'] : undefined,
+          dtb: value.misc ? value.misc['dtb'] : undefined,
+          systemMap: value.misc ? value.misc['system_map'] : undefined,
+          modules: value.misc ? value.misc['modules'] : undefined,
+        }),
+      );
 
       setTreeDetailsData({
         archs: archData,

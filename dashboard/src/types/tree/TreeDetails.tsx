@@ -11,16 +11,44 @@ type TreeDetailsBuild = {
   git_repository_branch: string;
   git_repository_url: string;
   test_status: {
-    fail: number;
-    error: number;
-    miss: number;
-    pass: number;
-    done: number;
-    skip: number;
-    null: number;
-    total: number;
+    fail_tests: number;
+    error_tests: number;
+    miss_tests: number;
+    pass_tests: number;
+    done_tests: number;
+    skip_tests: number;
+    null_tests: number;
+    total_tests: number;
   };
-  misc: JSON | null;
+  misc: ITreeDetailsMisc | null;
+};
+
+interface ITreeDetailsMisc {
+  kernel_type?: string;
+  dtb?: string;
+  modules?: string;
+  system_map?: string;
+}
+
+export type AccordionItemBuilds = {
+  config?: string;
+  compiler?: string;
+  date?: string;
+  buildErrors?: number;
+  buildTime?: string;
+  status?: 'valid' | 'invalid';
+  testStatus?: {
+    failTests: number;
+    errorTests: number;
+    passTests: number;
+    skipTests: number;
+  };
+  kernelImage?: string;
+  buildLogs?: string;
+  kernelConfig?: string;
+  dtb?: string;
+  systemMap?: string;
+  modules?: string;
 };
 
 export type TreeDetails = {
