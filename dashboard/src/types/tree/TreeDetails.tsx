@@ -8,6 +8,8 @@ type TreeDetailsBuild = {
   compiler: string;
   config_url: string;
   log_url: string;
+  git_repository_branch: string;
+  git_repository_url: string;
   test_status: {
     fail: number;
     error: number;
