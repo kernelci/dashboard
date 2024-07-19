@@ -64,7 +64,7 @@ const TreeDetails = (): JSX.Element => {
           date: value.start_time,
           buildTime: value.duration,
           compiler: value.compiler,
-          buildErrors: value.test_status?.error_tests ?? 0,
+          buildErrors: value.valid ? 0 : 1,
           status: value.valid ? 'valid' : 'invalid',
           testStatus: {
             failTests: value.test_status?.fail_tests ?? 0,
