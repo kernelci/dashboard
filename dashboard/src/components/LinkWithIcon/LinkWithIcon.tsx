@@ -16,7 +16,12 @@ const LinkWithIcon = ({
   return (
     <div className="flex flex-col gap-2">
       <span className="font-bold">{title}</span>
-      <a className="flex flex-row gap-1 items-center" href={link}>
+      <a
+        className="flex flex-row gap-1 items-center"
+        href={link}
+        target="_blank"
+        rel="noreferrer"
+      >
         {linkText}
         {icon}
       </a>

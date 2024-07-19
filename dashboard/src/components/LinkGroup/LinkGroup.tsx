@@ -23,6 +23,7 @@ const LinksGroup = ({ links }: ILinkGroup): JSX.Element => {
             icon={link.icon}
             linkText={link.linkText}
             key={link.link}
+            link={link.link}
           />
         ),
     );
