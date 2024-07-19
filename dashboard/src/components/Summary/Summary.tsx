@@ -47,7 +47,7 @@ const Summary = ({
 const SummaryItem = ({ arch, compilers }: ISummaryItem): JSX.Element => {
   const compilersElement = useMemo(
     () =>
-      compilers.map(compiler => (
+      compilers?.map(compiler => (
         <span key={compiler} className="line-clamp-1">
           {compiler}
         </span>
