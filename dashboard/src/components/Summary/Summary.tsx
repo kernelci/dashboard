@@ -25,7 +25,7 @@ const Summary = ({
 }: ISummaryTable): JSX.Element => {
   const summaryBodyRows = useMemo(
     () =>
-      summaryBody.map(row => (
+      summaryBody?.map(row => (
         <SummaryItem
           key={row.arch.text}
           arch={row.arch}
