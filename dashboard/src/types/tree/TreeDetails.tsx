@@ -37,3 +37,12 @@ export type Results = {
   invalid: number;
   null: number;
 };
+export interface TTreeDetailsFilter
+  extends Partial<{
+    [K in keyof Omit<
+      TreeDetailsBuild,
+      'test_status' | 'misc' | 'valid'
+    >]: TreeDetailsBuild[K][];
+  }> {
+  valid?: string[];
+}

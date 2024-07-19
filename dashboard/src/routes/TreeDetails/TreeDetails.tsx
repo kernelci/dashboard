@@ -1,19 +1,19 @@
 import { useParams } from 'react-router-dom';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
-import { FormattedMessage } from 'react-intl';
-
-import { MdExpandMore } from 'react-icons/md';
-
-import TreeDetailsTab from '@/components/Tabs/TreeDetailsTab';
-import ButtonWithIcon from '@/components/Button/ButtonWithIcon';
 import { useTreeDetails } from '@/api/TreeDetails';
-
+import TreeDetailsTab from '@/components/Tabs/TreeDetailsTab';
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
-import { Results } from '@/types/tree/TreeDetails';
 import { AccordionItemBuildsTrigger } from '@/components/Accordion/Accordion';
+import {
+  Results,
+  TTreeDetailsFilter,
+  TreeDetails as TreeDetailsType,
+} from '@/types/tree/TreeDetails';
+
+import TreeDetailsFilter from './TreeDetailsFilter';
 
 export interface ITreeDetails {
   archs: ISummaryItem[];
@@ -24,9 +24,16 @@ export interface ITreeDetails {
 
 const TreeDetails = (): JSX.Element => {
   const { treeId } = useParams();
-  const { data } = useTreeDetails(treeId ?? '');
+  const [filter, setFilter] = useState<
+    TTreeDetailsFilter | Record<string, never>
+  >({});
+  const { data } = useTreeDetails(treeId ?? '', filter);
 
   const [treeDetailsData, setTreeDetailsData] = useState<ITreeDetails>();
+  const initialDataRef = useRef<TreeDetailsType | undefined>();
+  if (!initialDataRef.current) {
+    initialDataRef.current = data;
+  }
 
   useEffect(() => {
     if (data) {
@@ -75,9 +82,9 @@ const TreeDetails = (): JSX.Element => {
     <div className="flex flex-col pt-8">
       <div className="flex flex-col pb-2">
         <div className="flex justify-end">
-          <ButtonWithIcon
-            icon={<MdExpandMore />}
-            label={<FormattedMessage id="global.filters" />}
+          <TreeDetailsFilter
+            data={initialDataRef.current}
+            onFilter={setFilter}
           />
         </div>
         <TreeDetailsTab treeDetailsData={treeDetailsData} />
