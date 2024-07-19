@@ -157,7 +157,7 @@ const TreeDetailsBuildTab = ({
             <TableInfo
               startIndex={startIndex + 1}
               endIndex={endIndex}
-              totalTrees={accordionContent?.length ?? 0}
+              totalTrees={filteredContent?.length ?? 0}
               itemsPerPage={ITEMS_PER_PAGE}
               onClickBack={onClickGoBack}
               onClickForward={onClickGoForward}
@@ -171,7 +171,7 @@ const TreeDetailsBuildTab = ({
             <TableInfo
               startIndex={startIndex + 1}
               endIndex={endIndex}
-              totalTrees={accordionContent?.length ?? 0}
+              totalTrees={filteredContent?.length ?? 0}
               itemsPerPage={ITEMS_PER_PAGE}
               onClickBack={onClickGoBack}
               onClickForward={onClickGoForward}
