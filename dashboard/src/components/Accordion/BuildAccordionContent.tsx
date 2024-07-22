@@ -55,7 +55,7 @@ const AccordionBuildContent = ({
             value:
               (contentData.testStatus?.failTests ?? 0) +
               (contentData.testStatus?.errorTests ?? 0),
-            label: <FormattedMessage id="buildAccordion.testFailed" />,
+            label: <FormattedMessage id="buildAccordion.testError" />,
             color: Colors.Red,
           },
           {

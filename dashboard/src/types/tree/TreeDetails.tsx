@@ -10,7 +10,7 @@ type TreeDetailsBuild = {
   log_url: string;
   git_repository_branch: string;
   git_repository_url: string;
-  test_status: {
+  status: {
     fail_tests: number;
     error_tests: number;
     miss_tests: number;
