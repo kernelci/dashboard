@@ -41,37 +41,25 @@ const AccordionBuildContent = ({
 }: IAccordionItems): JSX.Element => {
   const contentData = accordionData as AccordionItemBuilds;
   const chartElements = useMemo(() => {
-    return contentData.testStatus?.passTests ||
-      contentData.testStatus?.skipTests ||
-      contentData.testStatus?.errorTests ||
-      contentData.testStatus?.failTests
-      ? [
-          {
-            value: contentData.testStatus?.passTests ?? 0,
-            label: <FormattedMessage id="buildAccordion.testSuccess" />,
-            color: Colors.Green,
-          },
-          {
-            value:
-              (contentData.testStatus?.failTests ?? 0) +
-              (contentData.testStatus?.errorTests ?? 0),
-            label: <FormattedMessage id="buildAccordion.testError" />,
-            color: Colors.Red,
-          },
-          {
-            value: contentData.testStatus?.skipTests ?? 0,
-            label: <FormattedMessage id="buildAccordion.testSkiped" />,
-            color: Colors.Gray,
-          },
-        ]
-      : [
-          {
-            value: 1,
-            label: <FormattedMessage id="global.none" />,
-            color: Colors.Gray,
-            showValue: false,
-          },
-        ];
+    return [
+      {
+        value: contentData.testStatus?.passTests ?? 0,
+        label: <FormattedMessage id="buildAccordion.testSuccess" />,
+        color: Colors.Green,
+      },
+      {
+        value:
+          (contentData.testStatus?.failTests ?? 0) +
+          (contentData.testStatus?.errorTests ?? 0),
+        label: <FormattedMessage id="buildAccordion.testError" />,
+        color: Colors.Red,
+      },
+      {
+        value: contentData.testStatus?.skipTests ?? 0,
+        label: <FormattedMessage id="buildAccordion.testSkiped" />,
+        color: Colors.Gray,
+      },
+    ];
   }, [
     contentData.testStatus?.errorTests,
     contentData.testStatus?.failTests,
@@ -141,13 +129,15 @@ const AccordionBuildContent = ({
 
   return (
     <div className="flex flex-row justify-between">
-      <div className="min-w-[400px]">
-        <StatusChartMemoized
-          type="chart"
-          title={<FormattedMessage id="buildAccordion.testStatus" />}
-          elements={chartElements}
-        />
-      </div>
+      {chartElements.some(slice => slice.value > 0) && (
+        <div className="min-w-[400px]">
+          <StatusChartMemoized
+            type="chart"
+            title={<FormattedMessage id="buildAccordion.testStatus" />}
+            elements={chartElements}
+          />
+        </div>
+      )}
       <LinksGroup links={links} />
     </div>
   );
