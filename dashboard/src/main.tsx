@@ -18,6 +18,7 @@ import './index.css';
 import Root from './routes/Root/Root';
 import Trees from './routes/Trees/Trees';
 import TreeDetails from './routes/TreeDetails/TreeDetails';
+import BuildDetails from './routes/BuildDetails/BuildDetails';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,6 +48,7 @@ const router = createBrowserRouter([
         path: '/tree/:treeId',
         element: <TreeDetails />,
       },
+      { path: '/build/:buildId', element: <BuildDetails /> },
     ],
   },
 ]);
