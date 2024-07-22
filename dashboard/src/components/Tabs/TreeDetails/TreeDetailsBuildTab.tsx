@@ -76,18 +76,13 @@ const TreeDetailsBuildTab = ({
         elements: [
           {
             value: treeDetailsData?.buildsSummary.valid ?? 0,
-            label: <FormattedMessage id="treeDetails.valid" />,
+            label: <FormattedMessage id="treeDetails.success" />,
             color: Colors.Green,
           },
           {
             value: treeDetailsData?.buildsSummary.invalid ?? 0,
-            label: <FormattedMessage id="treeDetails.invalid" />,
+            label: <FormattedMessage id="treeDetails.failed" />,
             color: Colors.Red,
-          },
-          {
-            value: treeDetailsData?.buildsSummary.null ?? 0,
-            label: <FormattedMessage id="treeDetails.null" />,
-            color: Colors.Gray,
           },
         ],
       } as IStatusChart,

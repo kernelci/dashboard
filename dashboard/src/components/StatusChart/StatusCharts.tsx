@@ -12,7 +12,6 @@ type StatusChartValues = {
   value: number;
   label: ReactElement;
   color: Colors;
-  showValue?: boolean;
 };
 
 export enum Colors {
@@ -132,11 +131,9 @@ const ChartLegend = ({ chartValues }: IChartLegend): JSX.Element => {
             />
           </div>
         )}
-        <div className="flex flex-col gap-1">
-          {chartValue?.showValue && (
-            <span className="font-bold">{chartValue?.value}</span>
-          )}
-          <span>{chartValue?.label}</span>
+        <div className="flex flex-col">
+          <span className="font-bold">{chartValue?.value}</span>
+          <span className="text-darkGray2">{chartValue?.label}</span>
         </div>
       </div>
     ));
