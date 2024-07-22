@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
 
-interface ILinkWithIcon {
+export interface ILinkWithIcon {
   title?: string | ReactElement;
   linkText?: string | ReactElement;
   link?: string;
@@ -14,7 +14,7 @@ const LinkWithIcon = ({
   link,
 }: ILinkWithIcon): JSX.Element => {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 text-sm">
       <span className="font-bold">{title}</span>
       <a
         className="flex flex-row gap-1 items-center"
