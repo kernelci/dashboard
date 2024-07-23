@@ -16,6 +16,7 @@ export type TFilter =
 interface ITreeDetailsFilter {
   filter: TFilter;
   onFilter: (filter: TFilter) => void;
+  treeUrl: string;
 }
 
 export type TFilterKeys = (typeof filterFieldMap)[keyof typeof filterFieldMap];
@@ -87,6 +88,7 @@ const changeFilterValue = (
 const TreeDetailsFilter = ({
   filter,
   onFilter,
+  treeUrl,
 }: ITreeDetailsFilter): JSX.Element => {
   const intl = useIntl();
   const [diffFilter, setDiffFilter] = useState<TFilter>({});
@@ -105,6 +107,10 @@ const TreeDetailsFilter = ({
     onFilter(newFilter);
     setDiffFilter({});
   }, [filter, diffFilter, onFilter]);
+
+  const onClickCancel = useCallback(() => {
+    setDiffFilter({});
+  }, []);
 
   const checkboxSectionsProps: ICheckboxSection[] = useMemo(() => {
     return [
@@ -160,7 +166,11 @@ const TreeDetailsFilter = ({
   );
 
   return (
-    <FilterDrawer treeURL={treeUrl} onFilter={onClickFilterHandle}>
+    <FilterDrawer
+      treeURL={treeUrl}
+      onFilter={onClickFilterHandle}
+      onCancel={onClickCancel}
+    >
       <FilterSummarySection {...summarySectionProps} />
       {checkboxSectionsComponents}
     </FilterDrawer>
@@ -169,8 +179,6 @@ const TreeDetailsFilter = ({
 
 export default TreeDetailsFilter;
 
-const treeUrl =
-  'https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git';
 const summarySectionProps = {
   title: 'Tree',
   columns: [

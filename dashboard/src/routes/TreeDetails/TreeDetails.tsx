@@ -41,6 +41,19 @@ const TreeDetails = (): JSX.Element => {
     [filter],
   );
 
+  //TODO: at some point `treeUrl` should be returned in `data`
+  const treeUrl = useMemo(() => {
+    let url = '';
+    if (!data) return '';
+    Object.entries(data.builds).some(([, build]) => {
+      if (build.git_repository_url) {
+        url = build.git_repository_url;
+        return true;
+      }
+    });
+    return url;
+  }, [data]);
+
   useEffect(() => {
     if (data) {
       const configsData: IListingItem[] = Object.entries(
@@ -100,11 +113,15 @@ const TreeDetails = (): JSX.Element => {
     <div className="flex flex-col pt-8">
       <div className="flex flex-col pb-2">
         <div className="flex justify-end">
-          <TreeDetailsFilter filter={filter} onFilter={setFilter} />
+          <TreeDetailsFilter
+            filter={filter}
+            onFilter={setFilter}
+            treeUrl={treeUrl}
+          />
         </div>
         <TreeDetailsTab
           treeDetailsData={treeDetailsData}
-          FilterListElement={filterListElement}
+          filterListElement={filterListElement}
         />
       </div>
     </div>
