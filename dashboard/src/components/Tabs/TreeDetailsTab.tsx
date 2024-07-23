@@ -5,10 +5,12 @@ import TreeDetailsBuildTab from './TreeDetails/TreeDetailsBuildTab';
 
 export interface ITreeDetailsBuildTab {
   treeDetailsData?: ITreeDetails;
+  filterListElement?: JSX.Element;
 }
 
 const TreeDetailsTab = ({
   treeDetailsData,
+  filterListElement,
 }: ITreeDetailsBuildTab): JSX.Element => {
   const buildsTab: ITabItem = {
     name: 'treeDetails.builds',
@@ -29,8 +31,13 @@ const TreeDetailsTab = ({
   };
 
   const treeDetailsTab = [buildsTab, bootsTab, testsTab];
-
-  return <Tabs tabs={treeDetailsTab} defaultTab={treeDetailsTab[0]} />;
+  return (
+    <Tabs
+      tabs={treeDetailsTab}
+      defaultTab={treeDetailsTab[0]}
+      filterListElement={filterListElement}
+    />
+  );
 };
 
 export default TreeDetailsTab;

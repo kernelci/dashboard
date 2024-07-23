@@ -14,6 +14,7 @@ import TreeDetailsFilter, {
   TFilter,
 } from './TreeDetailsFilter';
 
+import TreeDetailsFilterList from './TreeDetailsFilterList';
 
 export interface ITreeDetails {
   archs: ISummaryItem[];
@@ -34,6 +35,11 @@ const TreeDetails = (): JSX.Element => {
   if (data && Object.keys(filter).length === 0) {
     setFilter(createFilter(data));
   }
+
+  const filterListElement = useMemo(
+    () => <TreeDetailsFilterList filter={filter} onFilter={setFilter} />,
+    [filter],
+  );
 
   useEffect(() => {
     if (data) {
@@ -96,7 +102,10 @@ const TreeDetails = (): JSX.Element => {
         <div className="flex justify-end">
           <TreeDetailsFilter filter={filter} onFilter={setFilter} />
         </div>
-        <TreeDetailsTab treeDetailsData={treeDetailsData} />
+        <TreeDetailsTab
+          treeDetailsData={treeDetailsData}
+          FilterListElement={filterListElement}
+        />
       </div>
     </div>
   );

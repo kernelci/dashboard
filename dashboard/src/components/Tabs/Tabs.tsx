@@ -15,9 +15,14 @@ export interface ITabItem {
 export interface ITabsComponent {
   tabs: ITabItem[];
   defaultTab: ITabItem;
+  filterListElement?: JSX.Element;
 }
 
-const TabsComponent = ({ defaultTab, tabs }: ITabsComponent): JSX.Element => {
+const TabsComponent = ({
+  defaultTab,
+  tabs,
+  filterListElement,
+}: ITabsComponent): JSX.Element => {
   const tabsTrigger = useMemo(
     () =>
       tabs.map(tab => (
@@ -48,6 +53,8 @@ const TabsComponent = ({ defaultTab, tabs }: ITabsComponent): JSX.Element => {
   return (
     <Tabs defaultValue={defaultTab.name} className="w-full">
       <TabsList className="w-full justify-start">{tabsTrigger}</TabsList>
+      <div className="py-6">{filterListElement}</div>
+
       {tabsContent}
     </Tabs>
   );
