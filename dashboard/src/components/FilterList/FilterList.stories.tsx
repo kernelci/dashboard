@@ -31,7 +31,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    itens: ['linux-5.15.y', 'Status:failed', 'Status: Warnings'],
+    items: ['linux-5.15.y', 'Status:failed', 'Status: Warnings'],
   },
   decorators: [
     (story): JSX.Element => (
@@ -47,7 +47,7 @@ export const Default: Story = {
 
 export const MultipleLines: Story = {
   args: {
-    itens: [
+    items: [
       'linux-5.15.y',
       'Status:failed',
       'Status: Warnings',

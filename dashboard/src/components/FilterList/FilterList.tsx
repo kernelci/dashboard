@@ -5,16 +5,16 @@ import { useIntl } from 'react-intl';
 
 import { Button } from '../ui/button';
 
-interface IFilterList {
-  itens: string[];
-  onClickItem: (itemIdx: number) => void;
+export interface IFilterList {
+  items: string[];
+  onClickItem: (item: string, itemIdx: number) => void;
   onClickCleanAll: () => void;
   removeOnEmpty?: boolean;
 }
 
 interface IFilterItem extends IFilterButton {
   idx: number;
-  onClickItem: (idx: number) => void;
+  onClickItem: (item: string, itemIdx: number) => void;
 }
 
 export interface IFilterButton
@@ -57,8 +57,8 @@ const FilterItem = ({
   ...props
 }: IFilterItem): JSX.Element => {
   const onClickHandler = useCallback(
-    () => onClickItem(idx),
-    [onClickItem, idx],
+    () => onClickItem(text, idx),
+    [text, onClickItem, idx],
   );
 
   return (
@@ -72,7 +72,7 @@ const FilterItem = ({
 };
 
 const FilterList = ({
-  itens,
+  items,
   onClickItem,
   onClickCleanAll,
   removeOnEmpty = false,
@@ -81,7 +81,7 @@ const FilterList = ({
 
   const buttonList = useMemo(
     () =>
-      itens.map((item, idx) => (
+      items.map((item, idx) => (
         <FilterItem
           key={idx + item}
           text={item}
@@ -89,10 +89,10 @@ const FilterList = ({
           idx={idx}
         />
       )),
-    [itens, onClickItem],
+    [items, onClickItem],
   );
 
-  if (removeOnEmpty && !itens) {
+  if (removeOnEmpty && !items.length) {
     return <></>;
   }
 
@@ -100,6 +100,7 @@ const FilterList = ({
     <div className="flex flex-wrap gap-4">
       {buttonList}
       <FilterButton
+        className="hover:bg-darkGray2"
         text={intl.formatMessage({ id: 'global.cleanAll' })}
         variant="primary"
         onClick={onClickCleanAll}
