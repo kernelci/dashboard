@@ -12,7 +12,7 @@ const fetchTreeDetailData = async (
 
   Object.keys(filter).forEach(key => {
     const filterList = filter[key as keyof TTreeDetailsFilter];
-    filterList?.map(value =>
+    filterList?.forEach(value =>
       filterParam.append(`filter_${key}`, value.toString()),
     );
   });
