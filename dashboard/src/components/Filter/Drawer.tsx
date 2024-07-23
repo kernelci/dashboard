@@ -16,7 +16,6 @@ import { Separator } from '../ui/separator';
 
 interface IDrawerLink {
   treeURL: string;
-  onRefresh?: () => void;
 }
 
 interface IFilterDrawer extends IDrawerLink {
@@ -41,10 +40,10 @@ const DrawerHeader = (): JSX.Element => {
   );
 };
 
-const DrawerLink = ({ treeURL, onRefresh }: IDrawerLink): JSX.Element => {
+const DrawerLink = ({ treeURL }: IDrawerLink): JSX.Element => {
   return (
     <div className="flex justify-between items-center mb-8">
-      <div className="w-[766px] h-[52px] px-4 py-2 bg-white border border-darkGray flex flex-col">
+      <div className="w-full h-[52px] px-4 py-2 bg-white border border-darkGray flex flex-col">
         <span className="text-xs text-darkGray2">
           <FormattedMessage id="filter.treeURL" />
         </span>
@@ -56,13 +55,6 @@ const DrawerLink = ({ treeURL, onRefresh }: IDrawerLink): JSX.Element => {
           {treeURL}
         </a>
       </div>
-      <Button
-        onClick={onRefresh}
-        variant="outline"
-        className="w-[200px] rounded-full border-2 border-black"
-      >
-        <FormattedMessage id="filter.refresh" />
-      </Button>
     </div>
   );
 };
@@ -70,7 +62,6 @@ const DrawerLink = ({ treeURL, onRefresh }: IDrawerLink): JSX.Element => {
 const Drawer = ({
   treeURL,
   children,
-  onRefresh,
   onCancel,
   onFilter,
 }: IFilterDrawer): JSX.Element => {
@@ -85,7 +76,7 @@ const Drawer = ({
       <DrawerContent className="flex items-center px-4 bg-lightGray max-h-screen">
         <DrawerHeader />
         <section className="overflow-y-auto max-h-full">
-          <DrawerLink treeURL={treeURL} onRefresh={onRefresh} />
+          <DrawerLink treeURL={treeURL} />
           <div className="w-[1000px] rounded-lg bg-white">
             {React.Children.map(children, (child, idx) => (
               <>
