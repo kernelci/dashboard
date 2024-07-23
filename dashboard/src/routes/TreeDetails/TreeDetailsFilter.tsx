@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 
 import FilterDrawer from '@/components/Filter/Drawer';
@@ -6,99 +6,150 @@ import FilterSummarySection from '@/components/Filter/SummarySection';
 import FilterCheckboxSection, {
   ICheckboxSection,
 } from '@/components/Filter/CheckboxSection';
-import {
-  TreeDetails as TreeDetailsType,
-  TTreeDetailsFilter,
-} from '@/types/tree/TreeDetails';
+import { TreeDetails as TreeDetailsType } from '@/types/tree/TreeDetails';
+
+type TFilterValues = { [key: string]: boolean };
+export type TFilter =
+  | { [key in TFilterKeys]: TFilterValues }
+  | Record<string, never>;
 
 interface ITreeDetailsFilter {
-  data?: TreeDetailsType;
-  onFilter: (filter: TTreeDetailsFilter) => void;
+  filter: TFilter;
+  onFilter: (filter: TFilter) => void;
 }
 
-type TFilterApplied = { [key: string]: boolean };
+export type TFilterKeys = (typeof filterFieldMap)[keyof typeof filterFieldMap];
 
-const sanitizeData = (
-  data: TreeDetailsType | undefined,
-): [TFilterApplied, TFilterApplied, TFilterApplied, TFilterApplied, string] => {
-  const status = { TRUE: false, FALSE: false };
-  const branches: TFilterApplied = {};
-  const configs: TFilterApplied = {};
-  const archs: TFilterApplied = {};
-  let treeUrl = '';
+const filterFieldMap = {
+  git_repository_branch: 'branches',
+  config_name: 'configs',
+  architecture: 'archs',
+  valid: 'status',
+} as const;
+
+export const mapFilterToReq = (
+  filter: TFilter,
+): { [key: string]: string[] } => {
+  const filterMapped: { [key: string]: string[] } = {};
+
+  Object.entries(filterFieldMap).forEach(([reqField, field]) => {
+    const values = filter[field];
+    if (!values) return;
+
+    Object.entries(values).forEach(([value, isSelected]) => {
+      if (isSelected) {
+        if (reqField == 'valid') {
+          value = value == 'Valid' ? 'true' : 'false';
+        }
+        if (!filterMapped[reqField]) filterMapped[reqField] = [];
+        filterMapped[reqField].push(value);
+      }
+    });
+  });
+
+  return filterMapped;
+};
+
+export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
+  const status = { Valid: false, Invalid: false };
+  const branches: TFilterValues = {};
+  const configs: TFilterValues = {};
+  const archs: TFilterValues = {};
 
   if (data)
     data.builds.forEach(b => {
       if (b.git_repository_branch) branches[b.git_repository_branch] = false;
       if (b.config_name) configs[b.config_name] = false;
       if (b.architecture) archs[b.architecture] = false;
-      if (!treeUrl && b.git_repository_url) treeUrl = b.git_repository_url;
     });
 
-  return [status, branches, configs, archs, treeUrl];
+  return { status, branches, configs, archs };
 };
 
-const getFilterListFromObj = (filterObj: TFilterApplied): string[] =>
-  Object.keys(filterObj).filter(key => filterObj[key]);
+const changeFilterValue = (
+  filter: TFilter,
+  filterField: TFilterKeys,
+  value: string,
+  isSelected: boolean,
+): TFilter => {
+  const newFilter = { ...filter };
+  if (newFilter[filterField]) {
+    newFilter[filterField][value] = isSelected;
+  } else {
+    newFilter[filterField] = {
+      [value]: isSelected,
+    };
+  }
+
+  return newFilter;
+};
 
 const TreeDetailsFilter = ({
-  data,
+  filter,
   onFilter,
 }: ITreeDetailsFilter): JSX.Element => {
   const intl = useIntl();
-
-  const [statusObj, branchObj, configObj, archObj, treeUrl] = useMemo(
-    () => sanitizeData(data),
-    [data],
-  );
+  const [diffFilter, setDiffFilter] = useState<TFilter>({});
 
   const onClickFilterHandle = useCallback(() => {
-    const filter: TTreeDetailsFilter = {};
+    const newFilter = { ...filter };
+    Object.entries(diffFilter).forEach(([key, value]) => {
+      const typedKey = key as keyof typeof diffFilter;
 
-    filter.config_name = getFilterListFromObj(configObj);
-    filter.git_repository_branch = getFilterListFromObj(branchObj);
-    filter.architecture = getFilterListFromObj(archObj);
-    filter.valid = getFilterListFromObj(statusObj);
+      newFilter[typedKey] = {
+        ...newFilter[typedKey],
+        ...value,
+      };
+    });
 
-    onFilter(filter);
-  }, [onFilter, configObj, branchObj, archObj, statusObj]);
+    onFilter(newFilter);
+    setDiffFilter({});
+  }, [filter, diffFilter, onFilter]);
 
   const checkboxSectionsProps: ICheckboxSection[] = useMemo(() => {
     return [
       {
         title: intl.formatMessage({ id: 'global.branch' }),
         subtitle: intl.formatMessage({ id: 'filter.branchSubtitle' }),
-        items: branchObj,
-        onClickItem: (branch: string, isChecked: boolean) =>
-          (branchObj[branch] = isChecked),
+        items: filter.branches,
+        onClickItem: (value: string, isChecked: boolean): void => {
+          setDiffFilter(old =>
+            changeFilterValue(old, 'branches', value, isChecked),
+          );
+        },
       },
       {
         title: intl.formatMessage({ id: 'global.status' }),
         subtitle: intl.formatMessage({ id: 'filter.statusSubtitle' }),
-        items: Object.keys(statusObj).reduce((acc, k) => {
-          const newKey = k == 'TRUE' ? 'valid' : 'invalid';
-          acc[newKey] = statusObj[k];
-          return acc;
-        }, {} as TFilterApplied),
-        onClickItem: (status: string, isChecked: boolean) =>
-          (statusObj[status == 'valid' ? 'TRUE' : 'FALSE'] = isChecked),
+        items: filter.status,
+        onClickItem: (value: string, isChecked: boolean): void => {
+          setDiffFilter(old =>
+            changeFilterValue(old, 'status', value, isChecked),
+          );
+        },
       },
       {
         title: intl.formatMessage({ id: 'global.configs' }),
         subtitle: intl.formatMessage({ id: 'filter.configsSubtitle' }),
-        items: configObj,
-        onClickItem: (config: string, isChecked: boolean) =>
-          (configObj[config] = isChecked),
+        items: filter.configs,
+        onClickItem: (value: string, isChecked: boolean): void => {
+          setDiffFilter(old =>
+            changeFilterValue(old, 'configs', value, isChecked),
+          );
+        },
       },
       {
         title: intl.formatMessage({ id: 'global.architecture' }),
         subtitle: intl.formatMessage({ id: 'filter.architectureSubtitle' }),
-        items: archObj,
-        onClickItem: (arch: string, isChecked: boolean) =>
-          (archObj[arch] = isChecked),
+        items: filter.archs,
+        onClickItem: (value: string, isChecked: boolean): void => {
+          setDiffFilter(old =>
+            changeFilterValue(old, 'archs', value, isChecked),
+          );
+        },
       },
     ];
-  }, [statusObj, branchObj, configObj, archObj, intl]);
+  }, [intl, filter]);
 
   const checkboxSectionsComponents = useMemo(
     () =>
@@ -118,6 +169,8 @@ const TreeDetailsFilter = ({
 
 export default TreeDetailsFilter;
 
+const treeUrl =
+  'https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git';
 const summarySectionProps = {
   title: 'Tree',
   columns: [
