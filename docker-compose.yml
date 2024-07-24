@@ -43,6 +43,7 @@ services:
             - DB_DEFAULT_PASSWORD_FILE=/run/secrets/postgres_password_secret
             - DB_DEFAULT_HOST=cloudsql-proxy
             - DB_DEFAULT_USER=${DB_DEFAULT_USER:-kernelci}
+            - DEBUG=False
 
     dashboard:
         build: ./dashboard

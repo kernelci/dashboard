@@ -22,7 +22,7 @@ def get_json_env_var(name, default):
     try:
         return json.loads(var)
     except json.JSONDecodeError:
-        if isinstance(default, str):
+        if isinstance(default, str) or isinstance(default, bool):
             return var
         raise
 
@@ -38,7 +38,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure--!70an0r@i00)oqf!3uq_)9dx2^%)xs+(ade0aie+l#6*rh-%#"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = get_json_env_var('DEBUG', True)
 
 ALLOWED_HOSTS = get_json_env_var(
     'ALLOWED_HOSTS',
