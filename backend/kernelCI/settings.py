@@ -48,6 +48,7 @@ ALLOWED_HOSTS = get_json_env_var(
 # Application definition
 
 INSTALLED_APPS = [
+    "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -59,6 +60,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -157,3 +159,10 @@ class DisableMigrations:
 
 
 MIGRATION_MODULES = DisableMigrations()
+
+CORS_ALLOW_ALL_ORIGINS = False
+
+if DEBUG:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^http://localhost",  # dashboard dev server
+    ]
