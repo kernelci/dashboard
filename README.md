@@ -18,6 +18,11 @@ A Python http server built with [Django](https://www.djangoproject.com/) + [DRF]
 
 # Build
 
+Create a .env file in /dashboard (Do not forget to check and set the variables and their values)
+```sh
+ cp ./dashboard/.env.example ./dashboard/.env
+```
+
 Add a `application_default_credentials.json` file with your ADC in the root of the project.
 ```sh
 gcloud auth application-default login
