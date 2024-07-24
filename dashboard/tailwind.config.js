@@ -42,6 +42,7 @@ module.exports = {
         "darkGray2": '#767676',
         "dimGray": '#454545',
         "dimBlack": '#333333',
+        "weakGray": '#B3B3B3',
         "black": '#000000',
         "lightRed": '#FFBBBB',
         "yellow": '#FFD27C',
