@@ -30,3 +30,6 @@ Finnaly execute the server with:
 ```sh
 poetry run python3 manage.py runserver
 ```
+
+# Requests
+In the `/requests` directory we have scripts that execute requests to endpoints using [httpie](https://httpie.io/)
