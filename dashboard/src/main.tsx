@@ -19,6 +19,7 @@ import Root from './routes/Root/Root';
 import Trees from './routes/Trees/Trees';
 import TreeDetails from './routes/TreeDetails/TreeDetails';
 import BuildDetails from './routes/BuildDetails/BuildDetails';
+import { isDev } from './lib/utils/vite';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,7 +33,7 @@ const queryClient = new QueryClient({
 });
 
 const persister = createSyncStoragePersister({
-  storage: window.localStorage,
+  storage: isDev ? window.sessionStorage : window.localStorage,
 });
 
 const router = createBrowserRouter([

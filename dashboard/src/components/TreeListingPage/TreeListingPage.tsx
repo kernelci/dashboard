@@ -31,10 +31,10 @@ const FilterButton = (): JSX.Element => {
 };
 
 const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
-  const { data } = useTreeTable();
+  const { data, error } = useTreeTable();
 
   const listItems: TreeTableBody[] = useMemo(() => {
-    if (!data) {
+    if (!data || error) {
       return [];
     } else {
       return (data as Tree[])
@@ -69,10 +69,14 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
             a.branch.localeCompare(b.branch, undefined, { numeric: true }),
         );
     }
-  }, [data, inputFilter]);
+  }, [data, error, inputFilter]);
 
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(listItems.length, ITEMS_PER_PAGE);
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
 
   return (
     <div className="flex flex-col gap-6">
