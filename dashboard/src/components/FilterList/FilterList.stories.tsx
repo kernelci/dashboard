@@ -15,7 +15,7 @@ const ActionsData = {
 };
 
 const meta: Meta<typeof FilterList> = {
-  title: 'FilterList',
+  title: 'Components/FilterList',
   component: FilterList,
   parameters: {
     layout: 'centered',
