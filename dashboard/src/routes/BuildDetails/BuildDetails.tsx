@@ -1,121 +1,157 @@
 import { ImTree } from 'react-icons/im';
 
-import { MdClose } from 'react-icons/md';
+import { MdClose, MdCheck, MdFolderOpen } from 'react-icons/md';
 
-import { ISection } from '@/components/Section/Section';
+import { useParams } from 'react-router-dom';
+import { BsFileEarmarkCode } from 'react-icons/bs';
+import { useIntl } from 'react-intl';
+
+import { useMemo } from 'react';
+
 import SectionGroup from '@/components/Section/SectionGroup';
+import { ISection } from '@/components/Section/Section';
+import { useBuildDetails } from '@/api/BuildDetails';
+
+const emptyValue = '-';
+const maxTextLength = 50;
+
+const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
+
+const truncateBigText = (text: string | undefined): string | undefined =>
+  text && text.length > maxTextLength
+    ? text.slice(0, maxTextLength) + '...'
+    : valueOrEmpty(text);
+
+const BlueFolderIcon = (): JSX.Element => (
+  <MdFolderOpen className="text-lightBlue" />
+);
 
 const BuildDetails = (): JSX.Element => {
-  return <SectionGroup sections={mockedData} />;
-};
+  const { buildId } = useParams();
+  const { data, error } = useBuildDetails(buildId || '');
+  const intl = useIntl();
 
-const mockedData: ISection[] = [
-  {
-    title: 'next-20240510',
-    eyebrow: 'Build Details',
-    subsections: [
+  const sectionsData: ISection[] = useMemo(() => {
+    if (!data) return [];
+    return [
       {
-        infos: [
+        title: valueOrEmpty(
+          data.git_commit_name
+            ? `${data.git_commit_name} • ${data.config_name}`
+            : data.config_name,
+        ),
+        eyebrow: intl.formatMessage({ id: 'buildDetails.buildDetails' }),
+        subsections: [
           {
-            title: 'Tree',
-            linkText: 'next',
-            icon: <ImTree className="text-lightBlue" />,
+            infos: [
+              {
+                title: intl.formatMessage({ id: 'global.tree' }),
+                linkText: valueOrEmpty(data.tree_name),
+                icon: <ImTree className="text-lightBlue" />,
+              },
+              {
+                title: intl.formatMessage({ id: 'buildDetails.gitUrl' }),
+                linkText: truncateBigText(data.git_repository_url),
+                link: data.git_repository_url,
+              },
+              {
+                title: intl.formatMessage({ id: 'buildDetails.gitBranch' }),
+                linkText: valueOrEmpty(data.git_repository_branch),
+                icon: <ImTree className="text-lightBlue" />,
+              },
+              {
+                title: intl.formatMessage({ id: 'buildDetails.gitCommit' }),
+                linkText: valueOrEmpty(data.git_commit_hash),
+              },
+              {
+                title: intl.formatMessage({ id: 'buildDetails.gitDescribe' }),
+                linkText: valueOrEmpty(data.git_commit_name),
+              },
+              {
+                title: intl.formatMessage({ id: 'global.date' }),
+                linkText: valueOrEmpty(data.timestamp),
+              },
+              {
+                title: intl.formatMessage({ id: 'global.defconfig' }),
+                linkText: valueOrEmpty(data.config_name),
+              },
+              {
+                title: intl.formatMessage({ id: 'global.status' }),
+                icon: data.valid ? (
+                  <MdCheck className="text-green" />
+                ) : (
+                  <MdClose className="text-red" />
+                ),
+              },
+              {
+                title: intl.formatMessage({ id: 'global.architecture' }),
+                linkText: valueOrEmpty(data.architecture),
+              },
+              {
+                title: intl.formatMessage({ id: 'buildDetails.buildTime' }),
+                linkText: data.duration ? `${data.duration} sec` : emptyValue,
+              },
+            ],
           },
           {
-            title: 'Git Branch',
-            linkText: 'master',
-            icon: <ImTree className="text-lightBlue" />,
+            infos: [
+              {
+                title: intl.formatMessage({ id: 'buildDetails.compiler' }),
+                linkText: valueOrEmpty(data.compiler),
+              },
+              {
+                title: intl.formatMessage({ id: 'global.command' }),
+                linkText: valueOrEmpty(valueOrEmpty(data.command)),
+              },
+            ],
           },
           {
-            title: 'Git Describe',
-            linkText: 'next-20240510',
-          },
-          {
-            title: 'Defconfig',
-            linkText: 'decstation_64_defconfig',
-          },
-          {
-            title: 'Architecture',
-            linkText: 'arm64',
-          },
-          {
-            title: 'Build time',
-            linkText: '108 sec',
-          },
-          {
-            title: 'Git URL',
-            linkText:
-              'https://linux.kernelci.org/build/id/6683c5ecce30ba42d47e70a4/',
-          },
-          {
-            title: 'Git commit',
-            linkText: '82e4255305c554b0bb18b7ccf2db86041b4c8b6e',
-          },
-          {
-            title: 'Date',
-            linkText: '2024-07-02 09:18:36 UTC',
-          },
-          {
-            title: 'Status',
-            icon: <MdClose className="text-red" />,
-          },
-          {
-            title: 'Build Errors',
-            linkText: '3',
-          },
-          {
-            title: 'Build warnings',
-            linkText: '28',
+            infos: [
+              {
+                title: intl.formatMessage({ id: 'buildDetails.buildLogs' }),
+                linkText: truncateBigText(data.log_url),
+                link: data.log_url,
+                icon: data.log_url ? (
+                  <BsFileEarmarkCode className="text-lightBlue" />
+                ) : undefined,
+              },
+              {
+                title: intl.formatMessage({ id: 'global.dtb' }),
+                linkText: valueOrEmpty(data.misc?.dtb),
+                icon: data.misc?.dtb ? <BlueFolderIcon /> : undefined,
+              },
+              {
+                title: intl.formatMessage({ id: 'buildDetails.kernelConfig' }),
+                linkText: truncateBigText(data.config_url),
+                link: data.config_url,
+                icon: data.config_url ? <BlueFolderIcon /> : undefined,
+              },
+              {
+                title: intl.formatMessage({ id: 'global.modules' }),
+                linkText: valueOrEmpty(data.misc?.modules),
+                icon: data.misc?.modules ? <BlueFolderIcon /> : undefined,
+              },
+              {
+                title: intl.formatMessage({ id: 'buildDetails.kernelImage' }),
+                linkText: valueOrEmpty(data.misc?.kernel_type),
+                icon: data.misc?.kernel_type ? <BlueFolderIcon /> : undefined,
+              },
+              {
+                title: intl.formatMessage({ id: 'buildDetails.systeMap' }),
+                linkText: valueOrEmpty(data.misc?.system_map),
+                icon: data.misc?.system_map ? <BlueFolderIcon /> : undefined,
+              },
+            ],
           },
         ],
       },
-      {
-        infos: [
-          {
-            title: 'Date',
-            linkText: '2024-07-02 09:18:36 UTC',
-          },
-          {
-            title: 'Status',
-            icon: <MdClose className="text-red" />,
-          },
-          {
-            title: 'Build Errors',
-            linkText: '3',
-          },
-          {
-            title: 'Build warnings',
-            linkText: '28',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'Build Platform',
-    subsections: [
-      {
-        infos: [
-          {
-            title: 'System',
-            linkText: 'linux',
-          },
-          {
-            title: 'Machine type',
-            linkText: 'x86_64',
-          },
-          {
-            title: 'Node name',
-            linkText: 'build-j252325-sparc-gcc-10-tinyconfig-8dtb5',
-          },
-          {
-            title: 'CPU',
-            linkText: 'AMD EPYC 7B12',
-          },
-        ],
-      },
-    ],
-  },
-];
+    ];
+  }, [data, intl]);
+
+  //TODO: loading and 404
+  if (!data || error) return <span></span>;
+
+  return <SectionGroup sections={sectionsData} />;
+};
 
 export default BuildDetails;
