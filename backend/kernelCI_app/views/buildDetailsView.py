@@ -17,7 +17,8 @@ class BuildDetails(View):
         query.join(
             'checkouts',
             fields=[
-                'git_repository_branch', 'git_commit_name', 'git_repository_url', 'git_commit_hash'
+                'tree_name', 'git_repository_branch', 'git_commit_name',
+                'git_repository_url', 'git_commit_hash'
             ],
             condition='checkouts.id = builds.checkout_id',
         )
