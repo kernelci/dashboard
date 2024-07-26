@@ -79,6 +79,7 @@ const TreeDetails = (): JSX.Element => {
 
       const buildsData: AccordionItemBuilds[] = Object.entries(data.builds).map(
         ([, value]) => ({
+          id: value.id,
           config: value.config_name,
           date: value.start_time,
           buildTime: value.duration,

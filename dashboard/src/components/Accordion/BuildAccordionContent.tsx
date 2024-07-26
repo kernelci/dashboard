@@ -1,14 +1,18 @@
 import { MdFolderOpen } from 'react-icons/md';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 
 import { FormattedMessage } from 'react-intl';
+
+import { useNavigate } from 'react-router-dom';
 
 import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
 import StatusChartMemoized, { Colors } from '../StatusChart/StatusCharts';
 
 import LinksGroup from '../LinkGroup/LinkGroup';
+
+import { Button } from '../ui/button';
 
 import { IAccordionItems } from './Accordion';
 
@@ -39,7 +43,14 @@ export interface ILinksGroup {
 const AccordionBuildContent = ({
   accordionData,
 }: IAccordionItems): JSX.Element => {
+  const navigate = useNavigate();
+
   const contentData = accordionData as AccordionItemBuilds;
+
+  const navigateToBuildDetails = useCallback(() => {
+    navigate(`/build/${contentData.id}`);
+  }, [navigate, contentData]);
+
   const chartElements = useMemo(() => {
     return [
       {
@@ -128,18 +139,29 @@ const AccordionBuildContent = ({
   );
 
   return (
-    <div className="flex flex-row justify-between">
-      {chartElements.some(slice => slice.value > 0) && (
-        <div className="min-w-[400px]">
-          <StatusChartMemoized
-            type="chart"
-            title={<FormattedMessage id="buildAccordion.testStatus" />}
-            elements={chartElements}
-          />
-        </div>
-      )}
-      <LinksGroup links={links} />
-    </div>
+    <>
+      <div className="flex flex-row justify-between">
+        {chartElements.some(slice => slice.value > 0) && (
+          <div className="min-w-[400px]">
+            <StatusChartMemoized
+              type="chart"
+              title={<FormattedMessage id="buildAccordion.testStatus" />}
+              elements={chartElements}
+            />
+          </div>
+        )}
+        <LinksGroup links={links} />
+      </div>
+      <div className="w-full flex flex-col items-center mt-6">
+        <Button
+          variant="outline"
+          className="w-min text-sm text-dimGray rounded-full border-2 border-black hover:bg-mediumGray"
+          onClick={navigateToBuildDetails}
+        >
+          <FormattedMessage id="buildAccordion.showMore" />
+        </Button>
+      </div>
+    </>
   );
 };
 

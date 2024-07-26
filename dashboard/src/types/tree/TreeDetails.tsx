@@ -31,6 +31,7 @@ interface ITreeDetailsMisc {
 }
 
 export type AccordionItemBuilds = {
+  id: string;
   config?: string;
   compiler?: string;
   date?: string;
