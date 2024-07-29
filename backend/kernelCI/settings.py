@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from utils.validation import isBooleanOrStringTrue
 import os
 import json
 
@@ -35,14 +36,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure--!70an0r@i00)oqf!3uq_)9dx2^%)xs+(ade0aie+l#6*rh-%#"
+SECRET_KEY = get_json_env_var(
+    "DJANGO_SECRET_KEY", "django-insecure--!70an0r@i00)oqf!3uq_)9dx2^%)"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = get_json_env_var('DEBUG', True)
+DEBUG = False
+
+ENV_DEBUG = get_json_env_var("DEBUG", False)
+
+if isBooleanOrStringTrue(ENV_DEBUG):
+    DEBUG = True
+
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = False
+SECURE_HSTS_SECONDS = 31536000
+
 
 ALLOWED_HOSTS = get_json_env_var(
-    'ALLOWED_HOSTS',
-    ['localhost'],
+    "ALLOWED_HOSTS",
+    ["localhost"],
 )
 
 # Application definition
@@ -55,8 +70,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'kernelCI_app',
-    'rest_framework'
+    "kernelCI_app",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -95,16 +110,19 @@ WSGI_APPLICATION = "kernelCI.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    "default": get_json_env_var("DB_DEFAULT", {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "kernelci",
-        "USER": "kernelci",
-        "PASSWORD": "kernelci-db-password",
-        "HOST": "127.0.0.1",
-        "OPTIONS": {
+    "default": get_json_env_var(
+        "DB_DEFAULT",
+        {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "kernelci",
+            "USER": "kernelci",
+            "PASSWORD": "kernelci-db-password",
+            "HOST": "127.0.0.1",
+            "OPTIONS": {
                 "connect_timeout": 5,
+            },
         },
-    })
+    )
 }
 
 
@@ -166,3 +184,7 @@ if DEBUG:
     CORS_ALLOWED_ORIGIN_REGEXES = [
         r"^http://localhost",  # dashboard dev server
     ]
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 3600

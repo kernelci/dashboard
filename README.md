@@ -23,6 +23,13 @@ Create a .env file in /dashboard (Do not forget to check and set the variables a
  cp ./dashboard/.env.example ./dashboard/.env
 ```
 
+Create a secret key for Django:
+```sh
+export DJANGO_SECRET_KEY=$(openssl rand -base64 22)
+```
+We are not using sessions or anything like that right now, so changing the secret key won't be a big deal.
+
+
 Add a `application_default_credentials.json` file with your ADC in the root of the project.
 ```sh
 gcloud auth application-default login
