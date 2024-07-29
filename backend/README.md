@@ -31,5 +31,25 @@ Finnaly execute the server with:
 poetry run python3 manage.py runserver
 ```
 
+# Deploy instructions
+
+To check if it is ready for a deploy you can run 
+```sh
+poetry run python3 manage.py check --deploy
+```
+
+To generate a `DJANGO_SECRET_KEY` 
+you can use
+```sh
+openssl rand -base64 22
+```
+
+or
+```sh
+export DJANGO_SECRET_KEY=$(openssl rand -base64 22)
+```
+We are not using sessions or anything like that right now, so changing the secret key won't be a big deal.
+
+
 # Requests
 In the `/requests` directory we have scripts that execute requests to endpoints using [httpie](https://httpie.io/)
