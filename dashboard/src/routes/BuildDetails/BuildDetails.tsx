@@ -12,6 +12,8 @@ import SectionGroup from '@/components/Section/SectionGroup';
 import { ISection } from '@/components/Section/Section';
 import { useBuildDetails } from '@/api/BuildDetails';
 
+import BuildDetailsTestSection from './BuildDetailsTestSection';
+
 const emptyValue = '-';
 const maxTextLength = 50;
 
@@ -151,7 +153,12 @@ const BuildDetails = (): JSX.Element => {
   //TODO: loading and 404
   if (!data || error) return <span></span>;
 
-  return <SectionGroup sections={sectionsData} />;
+  return (
+    <>
+      <SectionGroup sections={sectionsData} />
+      {buildId && <BuildDetailsTestSection buildId={buildId} />}
+    </>
+  );
 };
 
 export default BuildDetails;
