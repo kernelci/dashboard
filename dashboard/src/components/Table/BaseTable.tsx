@@ -4,13 +4,29 @@ import classNames from 'classnames';
 
 import { Table, TableHead, TableHeader, TableRow } from '../ui/table';
 
-interface IBaseTable {
+interface IBaseTableCommon {
   headers: ReactElement[];
-  body: ReactElement;
   className?: string;
 }
 
-const BaseTable = ({ headers, body, className }: IBaseTable): JSX.Element => {
+interface IBodyTable extends IBaseTableCommon {
+  body: React.ReactNode;
+  children?: never;
+}
+
+interface IChildrenTable extends IBaseTableCommon {
+  body?: never;
+  children: React.ReactNode;
+}
+
+type TBaseTable = IBodyTable | IChildrenTable;
+
+const BaseTable = ({
+  headers,
+  body,
+  children,
+  className,
+}: TBaseTable): JSX.Element => {
   return (
     <div className="h-full">
       <Table
@@ -28,7 +44,7 @@ const BaseTable = ({ headers, body, className }: IBaseTable): JSX.Element => {
             ))}
           </TableRow>
         </TableHeader>
-        {body}
+        {body || children}
       </Table>
     </div>
   );
