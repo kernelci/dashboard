@@ -43,7 +43,7 @@ eg:
 }
 ```
 
-- `environtment_misc` is a field called environment misc which has a JSON and we can use for things about the environment like detecting the platform, this is not set in stone and can change,  so we should double check the validation
+- `environtment_misc` a JSON field that we can use for things about the environment like detecting the platform, this is not set in stone and can change,  so we should double check the validation
 
 ```
 {
