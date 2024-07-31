@@ -80,9 +80,9 @@ class Boots(View):
         )
 
         errorCounts = defaultdict(int)
-        configCounts =  defaultdict(int)
+        configCounts = defaultdict(int)
         bootHistory = []
-        errorCountPerArchitecture =  defaultdict(int)
+        errorCountPerArchitecture = defaultdict(int)
         platforms = set()
         compilersPerArchitecture = defaultdict(set)
         errorMessageCounts = defaultdict(int)
