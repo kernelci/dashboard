@@ -64,6 +64,7 @@ export const messages = {
       missed: 'Missed',
       skiped: 'Skiped',
       total: 'Total',
+      somethingWrong: 'Sorry... something went wrong',
     },
     routes: {
       deviceMonitor: 'Devices',
