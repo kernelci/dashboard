@@ -103,6 +103,7 @@ const AccordionBuildsTrigger = ({
   accordionData,
 }: IAccordionItems): JSX.Element => {
   const triggerInfo = accordionData as AccordionItemBuilds;
+  const buildErrors = triggerInfo.buildErrors ?? 0;
   return (
     <>
       <TableCell>{triggerInfo.config}</TableCell>
@@ -111,8 +112,8 @@ const AccordionBuildsTrigger = ({
       <TableCell>
         <ColoredCircle
           className="max-w-6"
-          quantity={triggerInfo.buildErrors ?? 0}
-          backgroundClassName={ItemType.Error}
+          quantity={buildErrors}
+          backgroundClassName={buildErrors > 0 ? ItemType.Error : ItemType.None}
         />
       </TableCell>
       <TableCell>{triggerInfo.buildTime}</TableCell>
