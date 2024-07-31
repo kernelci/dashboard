@@ -5,12 +5,13 @@ import { MdClose, MdCheck, MdFolderOpen } from 'react-icons/md';
 import { useParams } from 'react-router-dom';
 import { BsFileEarmarkCode } from 'react-icons/bs';
 import { useIntl } from 'react-intl';
-
+import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo } from 'react';
 
 import SectionGroup from '@/components/Section/SectionGroup';
 import { ISection } from '@/components/Section/Section';
 import { useBuildDetails } from '@/api/BuildDetails';
+import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -151,13 +152,14 @@ const BuildDetails = (): JSX.Element => {
   }, [data, intl]);
 
   //TODO: loading and 404
-  if (!data || error) return <span></span>;
+  if (!data) return <span></span>;
+  if (error) return <UnexpectedError />;
 
   return (
-    <>
+    <ErrorBoundary FallbackComponent={UnexpectedError}>
       <SectionGroup sections={sectionsData} />
       {buildId && <BuildDetailsTestSection buildId={buildId} />}
-    </>
+    </ErrorBoundary>
   );
 };
 
