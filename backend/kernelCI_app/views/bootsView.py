@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing_extensions import Union
 from django.http import JsonResponse
 from django.views import View
@@ -38,8 +39,6 @@ class Boots(View):
         return "unknown error"
 
     def get(self, request, commit_hash: str | None):
-        print("commit_hash", commit_hash)
-
         names_map = {
             "c.id": "id",
             "c.git_repository_url": "git_repository_url",
@@ -88,10 +87,10 @@ class Boots(View):
         compilersPerArchitecture = {}
         errorMessageCounts = {}
         for record in query:
-            errorCounts[record.status] = errorCounts.get(record.status, 0) + 1
-            configCounts[record.config_name] = (
-                configCounts.get(record.config_name, 0) + 1
-            )
+            errorCounts = defaultdict(int)
+            errorCounts[record.status] += 1
+            configCounts = defaultdict(int)
+            configCounts[record.config_name] += 1
             bootHistory.append(
                 {"start_time": record.start_time, "status": record.status}
             )
@@ -100,19 +99,14 @@ class Boots(View):
                 or record.status == "ERROR"
                 or record.status == "FAIL"
             ):
-                errorCountPerArchitecture[record.architecture] = (
-                    errorCountPerArchitecture.get(record.architecture, 0) + 1
-                )
-                compilersPerArchitecture[record.architecture] = (
-                    compilersPerArchitecture.get(record.architecture, set())
-                )
+                errorCountPerArchitecture = defaultdict(int)
+                errorCountPerArchitecture[record.architecture] += 1
+                compilersPerArchitecture = defaultdict(set)
                 compilersPerArchitecture[record.architecture].add(record.compiler)
                 platforms.add(self.extract_platform(record.environment_misc))
                 currentErrorMessage = self.extract_error_message(record.misc)
-                errorMessageCounts[currentErrorMessage] = (
-                    errorMessageCounts.get(currentErrorMessage, 0) + 1
-                )
-
+                errorMessageCounts = defaultdict(int)
+                errorMessageCounts[currentErrorMessage] += 1
         for architecture in compilersPerArchitecture:
             compilersPerArchitecture[architecture] = list(
                 compilersPerArchitecture[architecture]
