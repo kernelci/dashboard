@@ -40,7 +40,7 @@ export const mapFilterToReq = (
     Object.entries(values).forEach(([value, isSelected]) => {
       if (isSelected) {
         if (reqField == 'valid') {
-          value = value == 'Valid' ? 'true' : 'false';
+          value = value == 'Sucess' ? 'true' : 'false';
         }
         if (!filterMapped[reqField]) filterMapped[reqField] = [];
         filterMapped[reqField].push(value);
@@ -52,7 +52,7 @@ export const mapFilterToReq = (
 };
 
 export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
-  const status = { Valid: false, Invalid: false };
+  const status = { Sucess: false, Failure: false };
   const branches: TFilterValues = {};
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};
@@ -183,8 +183,6 @@ const summarySectionProps = {
   title: 'Tree',
   columns: [
     { title: 'Tree', value: 'stable-rc' },
-    { title: 'Matainer', value: '' },
-    { title: 'Estimate to complete', value: '' },
     {
       title: 'Commit/tag',
       value: '5.15.150-rc1 - 3ab4d9c9e190217ee7e974c70b96795cd2f74611',
