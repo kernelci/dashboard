@@ -79,17 +79,15 @@ class Boots(View):
             translations=names_map,
         )
 
-        errorCounts = {}
-        configCounts = {}
+        errorCounts = defaultdict(int)
+        configCounts =  defaultdict(int)
         bootHistory = []
-        errorCountPerArchitecture = {}
+        errorCountPerArchitecture =  defaultdict(int)
         platforms = set()
-        compilersPerArchitecture = {}
-        errorMessageCounts = {}
+        compilersPerArchitecture = defaultdict(set)
+        errorMessageCounts = defaultdict(int)
         for record in query:
-            errorCounts = defaultdict(int)
             errorCounts[record.status] += 1
-            configCounts = defaultdict(int)
             configCounts[record.config_name] += 1
             bootHistory.append(
                 {"start_time": record.start_time, "status": record.status}
@@ -99,13 +97,11 @@ class Boots(View):
                 or record.status == "ERROR"
                 or record.status == "FAIL"
             ):
-                errorCountPerArchitecture = defaultdict(int)
                 errorCountPerArchitecture[record.architecture] += 1
-                compilersPerArchitecture = defaultdict(set)
                 compilersPerArchitecture[record.architecture].add(record.compiler)
                 platforms.add(self.extract_platform(record.environment_misc))
                 currentErrorMessage = self.extract_error_message(record.misc)
-                errorMessageCounts = defaultdict(int)
+                errorMessageCounts[currentErrorMessage] += 1
                 errorMessageCounts[currentErrorMessage] += 1
         for architecture in compilersPerArchitecture:
             compilersPerArchitecture[architecture] = list(
