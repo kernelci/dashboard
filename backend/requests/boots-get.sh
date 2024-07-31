@@ -1,5 +1,8 @@
+# Database tested - `playground_kcidb`
+# This should be empty
+http 'http://localhost:8000/api/tree/a-git-commit-hash-that-clearly-does-not-exist/boot/'
+# This should find something
 http 'http://localhost:8000/api/tree/1dd28064d4164a4dc9096fd1a7990d2de15f2bb6/boot/'
-
 
 # {
 #   "errorCounts": {

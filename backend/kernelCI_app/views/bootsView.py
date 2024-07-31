@@ -8,10 +8,12 @@ import json
 class Boots(View):
     # TODO misc_environment is not stable and should be used as a POC only
     # use the standardized field when that gets available
-    def extract_platform(self, misc_environment: Union[str, dict]):
+    def extract_platform(self, misc_environment: Union[str, dict, None]):
         parsedEnvMisc = None
         if isinstance(misc_environment, dict):
             parsedEnvMisc = misc_environment
+        elif misc_environment is None:
+            return "unknown"
         else:
             parsedEnvMisc = json.loads(misc_environment)
         platform = parsedEnvMisc.get("platform")
@@ -21,9 +23,11 @@ class Boots(View):
         return "unknown"
 
     # TODO misc is not stable and should be used as a POC only
-    def extract_error_message(self, misc: Union[str, dict]):
+    def extract_error_message(self, misc: Union[str, dict, None]):
         parsedEnv = None
-        if isinstance(misc, dict):
+        if misc is None:
+            return "unknown error"
+        elif isinstance(misc, dict):
             parsedEnv = misc
         else:
             parsedEnv = json.loads(misc)
@@ -31,7 +35,7 @@ class Boots(View):
         if error_message:
             return error_message
         print("unknown error_msg in misc", misc)
-        return "unknown"
+        return "unknown error"
 
     def get(self, request, commit_hash: str | None):
         print("commit_hash", commit_hash)
@@ -114,6 +118,7 @@ class Boots(View):
                 compilersPerArchitecture[architecture]
             )
 
+        # TODO Validate output
         return JsonResponse(
             {
                 "errorCounts": errorCounts,
