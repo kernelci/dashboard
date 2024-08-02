@@ -1,4 +1,4 @@
-import classNames from 'classnames';
+import { cn } from '../../lib/utils';
 
 interface IColoredCircle {
   tooltipText?: string;
@@ -16,8 +16,8 @@ const ColoredCircle = ({
   return (
     <div
       title={tooltipText}
-      className={classNames(
-        'rounded-full text-black h-6 min-w-6 flex justify-center px-1',
+      className={cn(
+        'inline-flex h-6 w-6 justify-center rounded-full px-1 text-black',
         className,
         backgroundClassName,
       )}

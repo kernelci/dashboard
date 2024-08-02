@@ -1,4 +1,4 @@
-import { ReactElement, useMemo } from 'react';
+import { ReactElement, ReactNode, useMemo } from 'react';
 
 import ListingItem, {
   IListingItem,
@@ -14,6 +14,15 @@ interface IListingCardContent {
   items: IListingItem[];
 }
 
+interface DumbListingContent {
+  children: ReactNode;
+}
+export const DumbListingContent = ({
+  children,
+}: DumbListingContent): JSX.Element => {
+  return <div className="flex flex-col gap-2 p-4">{children}</div>;
+};
+
 const ListingContent = ({ items }: IListingCardContent): JSX.Element => {
   const content = useMemo(() => {
     return items.map(item => (
@@ -26,7 +35,7 @@ const ListingContent = ({ items }: IListingCardContent): JSX.Element => {
       />
     ));
   }, [items]);
-  return <div className="flex flex-col gap-2 p-4">{content}</div>;
+  return <DumbListingContent>{content}</DumbListingContent>;
 };
 
 export default ListingContent;

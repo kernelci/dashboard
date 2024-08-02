@@ -8,7 +8,7 @@ import { styled } from '@mui/material';
 
 import ColoredCircle from '../ColoredCircle/ColoredCircle';
 
-type StatusChartValues = {
+export type StatusChartValues = {
   value: number;
   label: ReactElement;
   color: Colors;
@@ -125,7 +125,7 @@ const ChartLegend = ({ chartValues }: IChartLegend): JSX.Element => {
     return chartValues.map(chartValue => (
       <div key={chartValue?.color} className="flex flex-row">
         {chartValue && (
-          <div className="pt-1 pr-2">
+          <div className="pr-2 pt-1">
             <ColoredCircle
               backgroundClassName={getColorClassName(chartValue.color)}
             />

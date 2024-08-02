@@ -34,7 +34,7 @@ const CardContent = ({ card }: ICardContent): JSX.Element => {
   } else if (card.type === 'summary' && card.summaryBody) {
     return (
       <Summary
-        key=""
+        key={card.title.key}
         summaryHeaders={card?.summaryHeaders}
         summaryBody={card?.summaryBody}
       />

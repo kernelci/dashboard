@@ -19,6 +19,24 @@ export interface ISummaryItem {
   compilers: string[];
 }
 
+interface IDumbSummary {
+  children: ReactElement | ReactElement[];
+  summaryHeaders: ReactElement[];
+}
+
+export const DumbSummary = ({
+  children,
+  summaryHeaders,
+}: IDumbSummary): JSX.Element => {
+  return (
+    <BaseTable
+      className="!rounded-[0rem] bg-mediumGray"
+      headers={summaryHeaders}
+      body={<TableBody>{children}</TableBody>}
+    />
+  );
+};
+
 const Summary = ({
   summaryHeaders,
   summaryBody,
@@ -36,15 +54,13 @@ const Summary = ({
   );
 
   return (
-    <BaseTable
-      className="!rounded-[0rem] bg-mediumGray"
-      headers={summaryHeaders}
-      body={<TableBody>{summaryBodyRows}</TableBody>}
-    />
+    <DumbSummary summaryHeaders={summaryHeaders}>
+      <TableBody>{summaryBodyRows}</TableBody>
+    </DumbSummary>
   );
 };
 
-const SummaryItem = ({ arch, compilers }: ISummaryItem): JSX.Element => {
+export const SummaryItem = ({ arch, compilers }: ISummaryItem): JSX.Element => {
   const compilersElement = useMemo(
     () =>
       compilers?.map(compiler => (

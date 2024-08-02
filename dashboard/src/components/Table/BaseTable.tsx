@@ -32,13 +32,13 @@ const BaseTable = ({
       <Table
         className={classNames(
           className,
-          'rounded-lg text-black bg-white w-full',
+          'w-full rounded-lg bg-white text-black',
         )}
       >
         <TableHeader className="bg-mediumGray">
           <TableRow>
             {headers.map(column => (
-              <TableHead className="text-black border-b" key={column.key}>
+              <TableHead className="border-b text-black" key={column.key}>
                 {column}
               </TableHead>
             ))}
