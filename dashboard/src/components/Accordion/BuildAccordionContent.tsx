@@ -4,7 +4,7 @@ import { useMemo, useCallback } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
@@ -43,13 +43,17 @@ export interface ILinksGroup {
 const AccordionBuildContent = ({
   accordionData,
 }: IAccordionItems): JSX.Element => {
+  const { treeId } = useParams();
+
   const navigate = useNavigate();
 
   const contentData = accordionData as AccordionItemBuilds;
 
   const navigateToBuildDetails = useCallback(() => {
-    navigate(`/build/${contentData.id}`);
-  }, [navigate, contentData]);
+    navigate(`/build/${contentData.id}`, {
+      state: { treeId },
+    });
+  }, [navigate, contentData.id, treeId]);
 
   const chartElements = useMemo(() => {
     return [

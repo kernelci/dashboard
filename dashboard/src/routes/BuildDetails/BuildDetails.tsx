@@ -2,7 +2,7 @@ import { ImTree } from 'react-icons/im';
 
 import { MdClose, MdCheck, MdFolderOpen } from 'react-icons/md';
 
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { BsFileEarmarkCode } from 'react-icons/bs';
 import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -12,6 +12,15 @@ import SectionGroup from '@/components/Section/SectionGroup';
 import { ISection } from '@/components/Section/Section';
 import { useBuildDetails } from '@/api/BuildDetails';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
+
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/Breadcrumb/Breadcrumb';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -29,9 +38,13 @@ const BlueFolderIcon = (): JSX.Element => (
   <MdFolderOpen className="text-lightBlue" />
 );
 
+const isString = (value: unknown): value is string => typeof value === 'string';
+
 const BuildDetails = (): JSX.Element => {
   const { buildId } = useParams();
   const { data, error } = useBuildDetails(buildId || '');
+  const location = useLocation();
+  const treeId = location.state?.treeId;
   const intl = useIntl();
 
   const sectionsData: ISection[] = useMemo(() => {
@@ -157,6 +170,25 @@ const BuildDetails = (): JSX.Element => {
 
   return (
     <ErrorBoundary FallbackComponent={UnexpectedError}>
+      <Breadcrumb className="pb-6 pt-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/tree">Trees</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          {isString(treeId) ? (
+            <BreadcrumbLink href={`/tree/${treeId}`}>
+              Tree Details
+            </BreadcrumbLink>
+          ) : (
+            <BreadcrumbItem>Tree Details</BreadcrumbItem>
+          )}
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Build Details</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <SectionGroup sections={sectionsData} />
       {buildId && <BuildDetailsTestSection buildId={buildId} />}
     </ErrorBoundary>
