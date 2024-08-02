@@ -29,7 +29,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   const navigate = useNavigate();
 
   const navigateToTreeDetailPage = useCallback(() => {
-    navigate(`tree/${row.id}`);
+    navigate(`/tree/${row.id}`);
   }, [navigate, row.id]);
 
   return (

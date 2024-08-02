@@ -46,6 +46,10 @@ const router = createBrowserRouter([
         element: <Trees />,
       },
       {
+        path: '/tree',
+        element: <Trees />,
+      },
+      {
         path: '/tree/:treeId',
         element: <TreeDetails />,
       },
