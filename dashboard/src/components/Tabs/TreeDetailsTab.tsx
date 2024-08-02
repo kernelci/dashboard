@@ -2,6 +2,7 @@ import Tabs, { ITabItem } from '@/components/Tabs/Tabs';
 import { ITreeDetails } from '@/routes/TreeDetails/TreeDetails';
 
 import TreeDetailsBuildTab from './TreeDetails/TreeDetailsBuildTab';
+import BootsTab from './Boots';
 
 export interface ITreeDetailsBuildTab {
   treeDetailsData?: ITreeDetails;
@@ -20,8 +21,8 @@ const TreeDetailsTab = ({
 
   const bootsTab: ITabItem = {
     name: 'treeDetails.boots',
-    content: <></>,
-    disabled: true,
+    content: <BootsTab />,
+    disabled: false,
   };
 
   const testsTab: ITabItem = {

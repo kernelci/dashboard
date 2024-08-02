@@ -1,6 +1,10 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
-import { TreeDetails, TTreeDetailsFilter } from '@/types/tree/TreeDetails';
+import {
+  TBootsTabData,
+  TreeDetails,
+  TTreeDetailsFilter,
+} from '@/types/tree/TreeDetails';
 
 import http from './api';
 
@@ -28,5 +32,17 @@ export const useTreeDetails = (
   return useQuery({
     queryKey: ['treeData', treeId, filter],
     queryFn: () => fetchTreeDetailData(treeId, filter),
+  });
+};
+
+const fetchBootsTabData = async (treeId: string): Promise<TBootsTabData> => {
+  const res = await http.get<TBootsTabData>(`/api/tree/${treeId}/boot`, {});
+  return res.data;
+};
+
+export const useBootsTab = (treeId: string): UseQueryResult<TBootsTabData> => {
+  return useQuery({
+    queryKey: ['treeData', treeId],
+    queryFn: () => fetchBootsTabData(treeId),
   });
 };

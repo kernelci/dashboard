@@ -1,3 +1,5 @@
+import type { ErrorStatus, Status } from '../database';
+
 type TreeDetailsBuild = {
   id: string;
   architecture: string;
@@ -75,3 +77,43 @@ export interface TTreeDetailsFilter
   }> {
   valid?: string[];
 }
+
+type BootHistory = {
+  start_time: string;
+  status: string;
+};
+
+type ErrorCounts = {
+  [key in ErrorStatus]: number | undefined;
+};
+
+type ConfigCounts = {
+  [key: string]: number;
+};
+
+type ErrorCountPerArchitecture = {
+  [key: string]: number;
+};
+
+type CompilersPerArchitecture = {
+  [key: string]: string[];
+};
+
+type ErrorMessageCounts = {
+  [key: string]: number;
+};
+
+type StatusCounts = {
+  [key in Status]: number | undefined;
+};
+
+export type TBootsTabData = {
+  statusCounts: StatusCounts;
+  errorCounts: ErrorCounts;
+  configCounts: ConfigCounts;
+  bootHistory: BootHistory[];
+  errorCountPerArchitecture: ErrorCountPerArchitecture;
+  compilersPerArchitecture: CompilersPerArchitecture;
+  platformsWithError: string[];
+  errorMessageCounts: ErrorMessageCounts;
+};

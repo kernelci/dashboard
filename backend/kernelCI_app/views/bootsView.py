@@ -79,15 +79,16 @@ class Boots(View):
             translations=names_map,
         )
 
+        statusCounts = defaultdict(int)
         errorCounts = defaultdict(int)
         configCounts = defaultdict(int)
         bootHistory = []
         errorCountPerArchitecture = defaultdict(int)
-        platforms = set()
+        platformsWithError = set()
         compilersPerArchitecture = defaultdict(set)
         errorMessageCounts = defaultdict(int)
         for record in query:
-            errorCounts[record.status] += 1
+            statusCounts[record.status] += 1
             configCounts[record.config_name] += 1
             bootHistory.append(
                 {"start_time": record.start_time, "status": record.status}
@@ -97,9 +98,10 @@ class Boots(View):
                 or record.status == "ERROR"
                 or record.status == "FAIL"
             ):
+                errorCounts[record.status] += 1
                 errorCountPerArchitecture[record.architecture] += 1
                 compilersPerArchitecture[record.architecture].add(record.compiler)
-                platforms.add(self.extract_platform(record.environment_misc))
+                platformsWithError.add(self.extract_platform(record.environment_misc))
                 currentErrorMessage = self.extract_error_message(record.misc)
                 errorMessageCounts[currentErrorMessage] += 1
                 errorMessageCounts[currentErrorMessage] += 1
@@ -111,12 +113,13 @@ class Boots(View):
         # TODO Validate output
         return JsonResponse(
             {
+                "statusCounts": statusCounts,
                 "errorCounts": errorCounts,
                 "configCounts": configCounts,
                 "bootHistory": bootHistory,
                 "errorCountPerArchitecture": errorCountPerArchitecture,
                 "compilersPerArchitecture": compilersPerArchitecture,
-                "platforms": list(platforms),
+                "platformsWithError": list(platformsWithError),
                 "errorMessageCounts": errorMessageCounts,
             }
         )
