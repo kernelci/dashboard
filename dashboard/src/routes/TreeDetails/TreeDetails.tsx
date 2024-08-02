@@ -8,6 +8,15 @@ import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
 import { AccordionItemBuilds, Results } from '@/types/tree/TreeDetails';
 
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+
 import TreeDetailsFilter, {
   createFilter,
   mapFilterToReq,
@@ -112,6 +121,17 @@ const TreeDetails = (): JSX.Element => {
 
   return (
     <div className="flex flex-col pt-8">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/tree">Trees</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Tree Details</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <div className="flex flex-col pb-2">
         <div className="flex justify-end">
           <TreeDetailsFilter
