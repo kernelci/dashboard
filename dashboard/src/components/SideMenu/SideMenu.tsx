@@ -50,7 +50,7 @@ const NavLink = ({
   <NavigationMenuLink asChild>
     <a className="flex items-center no-underline hover:text-sky-500">
       <span className="mr-3">{icon}</span>
-      <span className="text-sm text-center">
+      <span className="text-center text-sm">
         <FormattedMessage id={idIntl} />{' '}
       </span>
     </a>
@@ -65,16 +65,16 @@ const SideMenu = (): JSX.Element => {
 
   return (
     <NavigationMenu
-      className="min-h-screen justify-start bg-bgSecondary pt-6 flex-col"
+      className="min-h-screen flex-col justify-start bg-bgSecondary pt-6"
       orientation="vertical"
     >
       <div className="w-full px-4">
-        <img src="kernelCI_logo.png" className="size-14 text-onSecondary" />
+        <img src="kernelCI_logo.png" className="text-onSecondary size-14" />
       </div>
 
       <Separator className="my-4 bg-onSecondary-10" />
 
-      <NavigationMenuList className="flex-col  w-52 space-y-4 space-x-0 ">
+      <NavigationMenuList className="w-52 flex-col space-x-0 space-y-4">
         {items.map(item => (
           <NavigationMenuItem
             className={

@@ -67,7 +67,7 @@ const CheckboxList = ({ items, onClickItem }: ICheckboxList): JSX.Element => {
   );
 
   return (
-    <div className="flex flex-wrap gap-y-6 gap-x-4 max-w-[1000px]">
+    <div className="flex max-w-[1000px] flex-wrap gap-x-4 gap-y-6">
       {itemComponents}
     </div>
   );
@@ -80,7 +80,7 @@ const CheckboxSubsection = ({
 }: ICheckboxSubsection): JSX.Element => {
   return (
     <div>
-      <h4 className="font-medium text-sm text-dimGray mb-2 mt-6">{title}</h4>
+      <h4 className="mb-2 mt-6 text-sm font-medium text-dimGray">{title}</h4>
       <CheckboxList items={items} onClickItem={onClickItem} />
     </div>
   );
@@ -109,8 +109,8 @@ const CheckboxSection = ({
 
   return (
     <div className={cls(className)}>
-      <h3 className="font-semibold text-xl text-dimGray mb-2">{title}</h3>
-      <h4 className="text-sm text-dimGray mb-6">{subtitle}</h4>
+      <h3 className="mb-2 text-xl font-semibold text-dimGray">{title}</h3>
+      <h4 className="mb-6 text-sm text-dimGray">{subtitle}</h4>
       {items && <CheckboxList items={items} onClickItem={onClickItem} />}
       {subsectionComponents}
     </div>

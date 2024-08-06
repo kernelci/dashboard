@@ -20,9 +20,9 @@ const FilterButton = (): JSX.Element => {
   return (
     <Button
       variant="outline"
-      className="rounded-full w-[128px] border-black text-black"
+      className="w-[128px] rounded-full border-black text-black"
     >
-      <div className="flex flex-row gap-1 items-center">
+      <div className="flex flex-row items-center gap-1">
         <FormattedMessage id="global.filters" />
         <MdExpandMore />
       </div>

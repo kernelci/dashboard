@@ -29,7 +29,7 @@ const LinksGroup = ({ links }: ILinkGroup): JSX.Element => {
     );
   }, [links]);
   return (
-    <div className="grid grid-cols-3 gap-4 min-w-[350px]">{linkGroup}</div>
+    <div className="grid min-w-[350px] grid-cols-3 gap-4">{linkGroup}</div>
   );
 };
 

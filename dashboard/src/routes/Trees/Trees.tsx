@@ -16,11 +16,11 @@ const Trees = (): JSX.Element => {
 
   return (
     <>
-      <div className="w-full px-16 pt-24 bg-lightGray">
+      <div className="w-full bg-lightGray px-16 pt-24">
         <TreeListingPage inputFilter={inputSearchText} />
       </div>
-      <div className="flex fixed top-0 mx-52 pl-6 pr-12 pt-5 w-full">
-        <div className="flex w-2/3 px-6 items-center">
+      <div className="fixed top-0 mx-52 flex w-full pl-6 pr-12 pt-5">
+        <div className="flex w-2/3 items-center px-6">
           {/* placeholder for search */}
           {/* TODO: use i18n for the input placeholder */}
           <DebounceInput

@@ -17,7 +17,7 @@ const LinkWithIcon = ({
     <div className="flex flex-col gap-2 text-sm">
       <span className="font-bold">{title}</span>
       <a
-        className="flex flex-row gap-1 items-center"
+        className="flex flex-row items-center gap-1"
         href={link}
         target="_blank"
         rel="noreferrer"

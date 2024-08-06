@@ -156,10 +156,10 @@ const AccordionBuildContent = ({
         )}
         <LinksGroup links={links} />
       </div>
-      <div className="w-full flex flex-col items-center mt-6">
+      <div className="mt-6 flex w-full flex-col items-center">
         <Button
           variant="outline"
-          className="w-min text-sm text-dimGray rounded-full border-2 border-black hover:bg-mediumGray"
+          className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
           onClick={navigateToBuildDetails}
         >
           <FormattedMessage id="buildAccordion.showMore" />
