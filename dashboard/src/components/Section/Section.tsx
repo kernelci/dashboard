@@ -27,7 +27,7 @@ const Subsection = ({ infos }: ISubsection): JSX.Element => {
     [infos],
   );
   return (
-    <div className="grid grid-cols-2 py-8 border-t border-darkGray gap-8">
+    <div className="grid grid-cols-2 gap-8 border-t border-darkGray py-8">
       {items}
     </div>
   );

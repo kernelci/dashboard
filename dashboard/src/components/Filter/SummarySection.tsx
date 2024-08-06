@@ -16,8 +16,8 @@ const SummarySectioncolumn = ({
 }: ISummarySectionColumn): JSX.Element => {
   return (
     <div>
-      <h5 className="font-medium text-sm mb-1">{title}</h5>
-      <span className="font-normal text-sm">{value}</span>
+      <h5 className="mb-1 text-sm font-medium">{title}</h5>
+      <span className="text-sm font-normal">{value}</span>
     </div>
   );
 };
@@ -33,8 +33,8 @@ const SummarySection = ({ title, columns }: ISummarySection): JSX.Element => {
 
   return (
     <div className="min-h-[100px] text-dimGray">
-      <h4 className="font-semibold text-xl mb-6">{title}</h4>
-      <div className="flex justify-between ">{columnComponents}</div>
+      <h4 className="mb-6 text-xl font-semibold">{title}</h4>
+      <div className="flex justify-between">{columnComponents}</div>
     </div>
   );
 };

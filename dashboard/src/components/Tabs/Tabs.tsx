@@ -27,7 +27,7 @@ const TabsComponent = ({
     () =>
       tabs.map(tab => (
         <TabsTrigger
-          className={classNames('text-lg px-4 bg-transparent', {
+          className={classNames('bg-transparent px-4 text-lg', {
             'border-b-2 border-lightBlue': !tab.disabled,
           })}
           disabled={tab.disabled}

@@ -42,7 +42,7 @@ export const TableInfo = ({
         <span className="font-bold">{itemsPerPage}</span>
         <MdExpandMore className={buttonsClassName} />
       </div>
-      <div className="flex flex-row gap-2 items-center">
+      <div className="flex flex-row items-center gap-2">
         <Button
           variant="outline"
           onClick={onClickBack}

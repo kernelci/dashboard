@@ -24,7 +24,7 @@ const TimeRangeSection = ({
 }: TimeRangeSection): JSX.Element => {
   return (
     <div className="flex flex-col gap-y-2 text-dimGray">
-      <h3 className="font-semibold text-xl mb-2">{title}</h3>
+      <h3 className="mb-2 text-xl font-semibold">{title}</h3>
       <h4 className="text-s mb-6">{subtitle}</h4>
       <div className={inputContainerClass}>
         <span className="w-8">

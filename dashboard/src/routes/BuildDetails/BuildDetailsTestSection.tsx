@@ -65,9 +65,9 @@ const testCellProps = [
 const ITEMS_PER_PAGE = 10;
 
 const NoTestFound = (): JSX.Element => (
-  <div className="flex flex-col items-center text-weakGray py-6">
-    <RiProhibited2Line className="w-14 h-14 " />
-    <h1 className="font-semibold text-2xl">
+  <div className="flex flex-col items-center py-6 text-weakGray">
+    <RiProhibited2Line className="h-14 w-14" />
+    <h1 className="text-2xl font-semibold">
       <FormattedMessage id={'buildDetails.noTestResults'} />
     </h1>
   </div>
@@ -136,10 +136,10 @@ const BuildDetailsTestSection = ({
   const hasTest = data && data.length > 0 && !error;
   return (
     <>
-      <span className="text-2xl font-bold ">
+      <span className="text-2xl font-bold">
         {intl.formatMessage({ id: 'buildDetails.testResults' })}
       </span>
-      <Separator className="bg-darkGray my-6" />
+      <Separator className="my-6 bg-darkGray" />
       {hasTest ? (
         <div className="flex flex-col gap-6">
           {tableInfoElement}

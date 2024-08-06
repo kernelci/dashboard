@@ -27,12 +27,12 @@ interface IFilterDrawer extends IDrawerLink {
 const DrawerHeader = (): JSX.Element => {
   return (
     <header className="mb-7 w-full">
-      <div className="w-[1400px] mx-auto flex items-center justify-between mb-4">
-        <span className="font-bold text-2xl/[42px]">
+      <div className="mx-auto mb-4 flex w-[1400px] items-center justify-between">
+        <span className="text-2xl/[42px] font-bold">
           <FormattedMessage id="filter.filtering" />
         </span>
         <DrawerClose asChild>
-          <IoClose className="w-6 h-6 cursor-pointer" />
+          <IoClose className="h-6 w-6 cursor-pointer" />
         </DrawerClose>
       </div>
       <Separator />
@@ -42,8 +42,8 @@ const DrawerHeader = (): JSX.Element => {
 
 const DrawerLink = ({ treeURL }: IDrawerLink): JSX.Element => {
   return (
-    <div className="flex justify-between items-center mb-8">
-      <div className="w-full h-[52px] px-4 py-2 bg-white border border-darkGray flex flex-col">
+    <div className="mb-8 flex items-center justify-between">
+      <div className="flex h-[52px] w-full flex-col border border-darkGray bg-white px-4 py-2">
         <span className="text-xs text-darkGray2">
           <FormattedMessage id="filter.treeURL" />
         </span>
@@ -73,9 +73,9 @@ const Drawer = ({
         </Button>
       </DrawerTrigger>
 
-      <DrawerContent className="flex items-center px-4 bg-lightGray max-h-screen">
+      <DrawerContent className="flex max-h-screen items-center bg-lightGray px-4">
         <DrawerHeader />
-        <section className="overflow-y-auto max-h-full">
+        <section className="max-h-full overflow-y-auto">
           <DrawerLink treeURL={treeURL} />
           <div className="w-[1000px] rounded-lg bg-white">
             {React.Children.map(children, (child, idx) => (
@@ -87,7 +87,7 @@ const Drawer = ({
           </div>
         </section>
 
-        <DrawerFooter className="flex flex-row justify-end w-full h-20 bg-white text-dimGray mt-6 gap-x-6">
+        <DrawerFooter className="mt-6 flex h-20 w-full flex-row justify-end gap-x-6 bg-white text-dimGray">
           <DrawerClose asChild>
             <Button variant="ghost" onClick={onCancel}>
               Cancel
