@@ -7,7 +7,7 @@ import { FormattedMessage } from 'react-intl';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export interface ITabItem {
-  name: string;
+  name: MessagesKey;
   content: ReactElement;
   disabled?: boolean;
 }

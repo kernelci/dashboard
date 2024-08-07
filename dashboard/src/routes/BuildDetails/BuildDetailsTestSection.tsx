@@ -12,12 +12,13 @@ import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { useBuildTests } from '@/api/buildTests';
 import { usePagination } from '@/hooks/usePagination';
 import { formatDate } from '@/utils/utils';
+import { MessagesKey } from '@/locales/messages';
 
 interface IBuildDetailsTestSection {
   buildId: string;
 }
 
-const headerLabelIds = [
+const headerLabelIds: MessagesKey[] = [
   'global.origins',
   'global.name',
   'buildDetails.testResults',

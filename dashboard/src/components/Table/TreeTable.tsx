@@ -4,6 +4,8 @@ import { FormattedMessage } from 'react-intl';
 
 import { useNavigate } from 'react-router-dom';
 
+import { MessagesKey } from '@/locales/messages';
+
 import { TableRow, TableCell } from '../ui/table';
 
 import { TreeTableBody } from '../../types/tree/Tree';
@@ -14,7 +16,7 @@ interface ITreeTable {
   treeTableRows: TreeTableBody[];
 }
 
-const treeTableColumnsLabelId = [
+const treeTableColumnsLabelId: MessagesKey[] = [
   'treeTable.tree',
   'treeTable.branch',
   'treeTable.commit',

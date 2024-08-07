@@ -5,8 +5,6 @@ import { QueryClient } from '@tanstack/react-query';
 
 import { IntlProvider } from 'react-intl';
 
-import { flatten } from 'flat';
-
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
@@ -20,6 +18,15 @@ import Trees from './routes/Trees/Trees';
 import TreeDetails from './routes/TreeDetails/TreeDetails';
 import BuildDetails from './routes/BuildDetails/BuildDetails';
 import { isDev } from './lib/utils/vite';
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace FormatjsIntl {
+    interface Message {
+      ids: keyof (typeof messages)['en-us'];
+    }
+  }
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,13 +65,19 @@ const router = createBrowserRouter([
   },
 ]);
 
+const currentMessages = messages[LOCALES.EN_US];
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <PersistQueryClientProvider
       client={queryClient}
       persistOptions={{ persister }}
     >
-      <IntlProvider messages={flatten(messages[LOCALES.EN_US])} locale="en">
+      <IntlProvider
+        messages={currentMessages}
+        locale={LOCALES.EN_US}
+        defaultLocale={LOCALES.EN_US}
+      >
         <RouterProvider router={router} />
       </IntlProvider>
     </PersistQueryClientProvider>
