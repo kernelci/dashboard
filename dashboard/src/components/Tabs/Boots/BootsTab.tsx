@@ -1,10 +1,8 @@
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import { memo } from 'react';
 
 import { useParams } from 'react-router-dom';
-
-import { LineChart } from '@mui/x-charts/LineChart';
 
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import { useBootsTab } from '@/api/TreeDetails';
@@ -18,14 +16,14 @@ import StatusChartMemoized, {
 } from '@/components/StatusChart/StatusCharts';
 import { errorStatusSet } from '@/utils/constants/database';
 import { ErrorStatus, Status } from '@/types/database';
-import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
+import { LineChart, LineChartLabel } from '@/components/LineChart';
 
 const ConfigsList = ({
   configCounts,
 }: Pick<TBootsTabData, 'configCounts'>): JSX.Element => {
   return (
     <BaseCard
-      title="Configs"
+      title={<FormattedMessage id="bootsTab.configs" />}
       content={
         <DumbListingContent>
           {Object.keys(configCounts).map(configName => {
@@ -51,7 +49,7 @@ const PlatformsWithError = ({
 }: Pick<TBootsTabData, 'platformsWithError'>): JSX.Element => {
   return (
     <BaseCard
-      title="Platforms failing at boot"
+      title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
       content={
         <DumbListingContent>
           {platformsWithError.map(platformWithErrorItem => {
@@ -103,13 +101,13 @@ const ErrorsSummary = ({
   'errorCountPerArchitecture' | 'compilersPerArchitecture'
 >): JSX.Element => {
   const summaryHeaders = [
-    <FormattedMessage key="treeDetails.arch" id="treeDetails.arch" />,
+    <FormattedMessage key="treeDetail.arch" id="treeDetails.arch" />,
     <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
   ];
 
   return (
     <BaseCard
-      title="Errors Summary"
+      title=<FormattedMessage id="bootsTab.errorsSummary" />
       content={
         <DumbSummary summaryHeaders={summaryHeaders}>
           {Object.keys(errorCountPerArchitecture).map(architecture => {
@@ -156,7 +154,7 @@ const StatusChart = ({
 
   const chartElements = [
     {
-      label: <div>Success</div>,
+      label: <FormattedMessage id="bootsTab.success" />,
       value: groupedStatus.success,
       color: Colors.Green,
     },
@@ -178,7 +176,7 @@ const StatusChart = ({
 
   return (
     <BaseCard
-      title="Boot Status"
+      title={<FormattedMessage id="bootsTab.bootStatus" />}
       content={
         <StatusChartMemoized type="chart" elements={filteredChartElements} />
       }
@@ -188,31 +186,11 @@ const StatusChart = ({
 
 const StatusChartMemo = memo(StatusChart);
 
-interface ILineChartLabel {
-  text: string;
-  backgroundColor: string;
-}
-
-//TODO Extract Line Chart to its own component
-
-const LineChartLabel = ({
-  text,
-  backgroundColor,
-}: ILineChartLabel): JSX.Element => {
-  return (
-    <div className="flex items-center gap-2 pr-6 font-medium text-gray-700">
-      <ColoredCircle
-        className="h-3 w-3"
-        backgroundClassName={backgroundColor}
-      />
-      <span>{text}</span>
-    </div>
-  );
-};
-
 const LineChartCard = ({
   bootHistory,
 }: Pick<TBootsTabData, 'bootHistory'>): JSX.Element => {
+  const { formatMessage } = useIntl();
+
   const allStartTimeStamps: number[] = [];
   const errorData: Array<number | null> = [];
   const skipData: Array<number | null> = [];
@@ -270,32 +248,39 @@ const LineChartCard = ({
   });
   return (
     <BaseCard
-      title="Boot history"
+      title={<FormattedMessage id="bootsTab.bootHistory" />}
       content={
-        <div className="px-4">
-          <div className="mb-0 mt-3 flex justify-end gap-2">
-            {lastErrorData && (
-              <LineChartLabel text="Error" backgroundColor="bg-red" />
-            )}
-            {lastSuccessData && (
-              <LineChartLabel text="Success" backgroundColor="bg-green" />
-            )}
-            {lastSkipData && (
-              <LineChartLabel text="Skip" backgroundColor="bg-yellow" />
-            )}
-          </div>
-          <LineChart
-            className="w-full bg-red"
-            xAxis={[
-              {
-                scaleType: 'time',
-                data: allStartTimeStamps,
-              },
-            ]}
-            series={filteredLineChartSeries}
-            height={300}
-          />
-        </div>
+        <LineChart
+          labels={
+            <>
+              {lastErrorData && (
+                <LineChartLabel
+                  text={formatMessage({ id: 'bootsTab.error' })}
+                  backgroundColor="bg-red"
+                />
+              )}
+              {lastSuccessData && (
+                <LineChartLabel
+                  text={formatMessage({ id: 'bootsTab.error' })}
+                  backgroundColor="bg-green"
+                />
+              )}
+              {lastSkipData && (
+                <LineChartLabel
+                  text={formatMessage({ id: 'bootsTab.skip' })}
+                  backgroundColor="bg-yellow"
+                />
+              )}
+            </>
+          }
+          xAxis={[
+            {
+              scaleType: 'time',
+              data: allStartTimeStamps,
+            },
+          ]}
+          series={filteredLineChartSeries}
+        />
       }
     />
   );
@@ -308,7 +293,11 @@ const BootsTab = (): JSX.Element => {
   const { isLoading, data, error } = useBootsTab(treeId ?? '');
 
   if (error || !treeId) {
-    return <div>Error</div>;
+    return (
+      <div>
+        <FormattedMessage id="bootsTab.success" />
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -320,10 +309,10 @@ const BootsTab = (): JSX.Element => {
   if (data.bootHistory.length < 1) {
     return (
       <BaseCard
-        title="Info"
+        title=<FormattedMessage id="bootsTab.info" />
         content={
           <p className="p-4 text-[1.3rem] text-darkGray">
-            ℹ️ There is no boot test data available for this tree
+            ℹ️ <FormattedMessage id="bootsTab.info.description" />
           </p>
         }
       />
