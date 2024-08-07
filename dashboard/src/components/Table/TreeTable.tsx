@@ -17,9 +17,8 @@ interface ITreeTable {
 }
 
 const treeTableColumnsLabelId: MessagesKey[] = [
-  'treeTable.tree',
-  'treeTable.branch',
   'treeTable.commit',
+  'treeTable.patchset',
   'treeTable.build',
   'treeTable.test',
 ];
@@ -36,14 +35,17 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
 
   return (
     <TableRow onClick={navigateToTreeDetailPage}>
-      <TableCell>{row.name}</TableCell>
-      <TableCell>{row.branch}</TableCell>
-      <TableCell>{row.commit}</TableCell>
+      <TableCell>{sanitizeTableValue(row.commit)}</TableCell>
+      <TableCell>{sanitizeTableValue(row.patchsetHash)}</TableCell>
       <TableCell>
-        <div className={backgroundClassName}>{row.buildStatus}</div>
+        <div className={backgroundClassName}>
+          {sanitizeTableValue(row.buildStatus)}
+        </div>
       </TableCell>
       <TableCell>
-        <div className={backgroundClassName}>{row.testStatus}</div>
+        <div className={backgroundClassName}>
+          {sanitizeTableValue(row.testStatus)}
+        </div>
       </TableCell>
     </TableRow>
   );
@@ -54,9 +56,8 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
     return treeTableRows.map((row: TreeTableBody) => (
       <TreeTableRow
         key={row.commit}
-        name={row.name}
-        branch={row.branch}
         commit={row.commit}
+        patchsetHash={row.patchsetHash}
         buildStatus={row.buildStatus}
         testStatus={row.testStatus}
         id={row.id}
@@ -75,3 +76,12 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
 };
 
 export default TreeTable;
+
+const MAX_NUMBER_CHAR = 12;
+
+const truncateTableValue = (value: string): string =>
+  value.substring(0, MAX_NUMBER_CHAR) +
+  (value.length > MAX_NUMBER_CHAR ? '...' : '');
+
+const sanitizeTableValue = (value: string): string =>
+  truncateTableValue(value) || '-';

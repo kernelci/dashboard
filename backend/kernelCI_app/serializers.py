@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from kernelCI_app.models import Checkouts
-from kernelCI_app.utils import get_visible_record_config
 
 
 class CheckoutsSerializer(serializers.ModelSerializer):
@@ -18,32 +17,11 @@ class CheckoutsSerializer(serializers.ModelSerializer):
 class TreeSerializer(serializers.Serializer):
     build_status = serializers.SerializerMethodField(method_name="get_build_status")
     test_status = serializers.SerializerMethodField(method_name="get_test_status")
-    tree_name = serializers.SerializerMethodField(method_name="get_tree_name")
-    git_commit_name = serializers.SerializerMethodField(method_name="get_git_commit_name")
-    git_repository_branch = serializers.SerializerMethodField(method_name="get_git_repository_branch")
     git_commit_hash = serializers.SerializerMethodField(method_name="get_git_commit_hash")
+    patchset_hash = serializers.CharField()
 
     class Meta():
-        fields = [
-            'tree_name', 'git_commit_name', 'git_repository_branch',
-            'build_status', 'test_status', 'git_commit_hash'
-        ]
-
-    def get_config(self, obj):
-        return get_visible_record_config('checkouts', obj.id)
-
-    def get_field_from_config(self, obj, field):
-        config = self.get_config(obj)
-        return config.get(field)
-
-    def get_tree_name(self, obj):
-        return self.get_field_from_config(obj, 'tree_name')
-
-    def get_git_commit_name(self, obj):
-        return self.get_field_from_config(obj, 'git_commit_name')
-
-    def get_git_repository_branch(self, obj):
-        return self.get_field_from_config(obj, 'git_repository_branch')
+        fields = ['build_status', 'test_status', 'git_commit_hash', 'patchset_hash']
 
     def get_git_commit_hash(self, obj):
         return obj.id

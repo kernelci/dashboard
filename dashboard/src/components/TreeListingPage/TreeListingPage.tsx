@@ -38,35 +38,16 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
       return [];
     } else {
       return (data as Tree[])
-        .filter(
-          tree =>
-            tree.tree_name?.includes(inputFilter) ||
-            tree.git_commit_hash?.includes(inputFilter) ||
-            tree.git_commit_name?.includes(inputFilter) ||
-            tree.git_repository_branch?.includes(inputFilter),
-        )
-        .map(tree => {
-          const fullHash = tree.git_commit_hash ?? '';
-          const commitHash =
-            fullHash.substring(0, NUMBER_CHAR_HASH) +
-            (fullHash.length > NUMBER_CHAR_HASH ? '...' : '');
-          const tagCommit = tree.git_commit_name
-            ? `${tree.git_commit_name} - ${commitHash}`
-            : commitHash;
-
-          return {
-            name: tree.tree_name ?? '',
-            branch: tree.git_repository_branch ?? '',
-            commit: tagCommit,
-            buildStatus: `${tree.build_status.invalid} / ${tree.build_status.invalid + tree.build_status.valid}`,
-            testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
-            id: tree.git_commit_hash ?? '',
-          };
-        })
-        .sort(
-          (a, b) =>
-            a.name.localeCompare(b.name, undefined, { numeric: true }) ||
-            a.branch.localeCompare(b.branch, undefined, { numeric: true }),
+        .filter(tree => tree.git_commit_hash?.includes(inputFilter))
+        .map(tree => ({
+          commit: tree.git_commit_hash ?? '',
+          patchsetHash: tree.patchset_hash ?? '',
+          buildStatus: `${tree.build_status.invalid} / ${tree.build_status.invalid + tree.build_status.valid}`,
+          testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
+          id: tree.git_commit_hash ?? '',
+        }))
+        .sort((a, b) =>
+          a.commit.localeCompare(b.commit, undefined, { numeric: true }),
         );
     }
   }, [data, error, inputFilter]);
@@ -107,6 +88,5 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
 };
 
 const ITEMS_PER_PAGE = 10;
-const NUMBER_CHAR_HASH = 12;
 
 export default TreeListingPage;

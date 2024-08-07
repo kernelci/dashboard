@@ -2,19 +2,16 @@ from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.models import Checkouts
 from kernelCI_app.serializers import TreeSerializer
-from kernelCI_app.utils import get_visible_record_identifiers
+from kernelCI_app.utils import getQueryTimeInterval
 
 
 class TreeView(View):
 
     def get(self, _):
-        commit_hashs = get_visible_record_identifiers('checkouts')
-        placeholders = ','.join(['%s'] * len(commit_hashs))
-
         checkouts = Checkouts.objects.raw(
-            f"""
+            """
             SELECT
-                checkouts.git_commit_hash AS id,
+                checkouts.git_commit_hash AS id, patchset_hash,
                 COUNT(DISTINCT CASE WHEN builds.valid = true THEN builds.id END) AS valid_builds,
                 COUNT(DISTINCT CASE WHEN builds.valid = false THEN builds.id END) AS invalid_builds,
                 COUNT(DISTINCT CASE WHEN builds.valid IS NULL AND builds.id IS NOT NULL THEN builds.id END)
@@ -35,11 +32,10 @@ class TreeView(View):
                 builds ON builds.checkout_id = checkouts.id
             LEFT JOIN
                 tests ON tests.build_id = builds.id
-            WHERE checkouts.git_commit_hash IN ({placeholders})
+            WHERE checkouts.start_time  >= TO_TIMESTAMP(%s)
             GROUP BY
-                checkouts.git_commit_hash;
-            """,
-            commit_hashs
+                checkouts.git_commit_hash, checkouts.patchset_hash;
+            """, [getQueryTimeInterval().timestamp()]
         )
 
         serializer = TreeSerializer(checkouts, many=True)
