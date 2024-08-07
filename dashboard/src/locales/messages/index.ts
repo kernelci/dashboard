@@ -114,3 +114,5 @@ export const messages = {
     'treeTable.tree': 'Tree',
   },
 };
+
+export type MessagesKey = keyof (typeof messages)['en-us'];

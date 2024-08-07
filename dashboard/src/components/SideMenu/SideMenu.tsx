@@ -4,6 +4,8 @@ import { ImTree, ImImages } from 'react-icons/im';
 
 import { FormattedMessage } from 'react-intl';
 
+import { MessagesKey } from '@/locales/messages';
+
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -15,7 +17,7 @@ import { Separator } from '../ui/separator';
 
 type MenuItems = {
   onClick: () => void;
-  idIntl: string;
+  idIntl: MessagesKey;
   icon: JSX.Element;
   selected: boolean;
 };

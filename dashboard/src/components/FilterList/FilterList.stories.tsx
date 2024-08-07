@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
 import { IntlProvider } from 'react-intl';
-import { flatten } from 'flat';
 
 import { LOCALES } from '../../locales/constants';
 
@@ -35,10 +34,7 @@ export const Default: Story = {
   },
   decorators: [
     (story): JSX.Element => (
-      <IntlProvider
-        messages={flatten(messages[LOCALES.EN_US])}
-        locale={LOCALES.EN_US}
-      >
+      <IntlProvider messages={messages[LOCALES.EN_US]} locale={LOCALES.EN_US}>
         {story()}
       </IntlProvider>
     ),
@@ -57,10 +53,7 @@ export const MultipleLines: Story = {
   },
   decorators: [
     (story): JSX.Element => (
-      <IntlProvider
-        messages={flatten(messages[LOCALES.EN_US])}
-        locale={LOCALES.EN_US}
-      >
+      <IntlProvider messages={messages[LOCALES.EN_US]} locale={LOCALES.EN_US}>
         <div className="w-[500px]">{story()}</div>
       </IntlProvider>
     ),
