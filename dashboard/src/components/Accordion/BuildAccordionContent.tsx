@@ -71,7 +71,7 @@ const AccordionBuildContent = ({
       },
       {
         value: contentData.testStatus?.skipTests ?? 0,
-        label: <FormattedMessage id="buildAccordion.testSkiped" />,
+        label: <FormattedMessage id="buildAccordion.testSkipped" />,
         color: Colors.Gray,
       },
     ];

@@ -153,7 +153,7 @@ const BuildDetails = (): JSX.Element => {
                 icon: data.misc?.kernel_type ? <BlueFolderIcon /> : undefined,
               },
               {
-                title: intl.formatMessage({ id: 'buildDetails.systeMap' }),
+                title: intl.formatMessage({ id: 'buildDetails.systemMap' }),
                 linkText: valueOrEmpty(data.misc?.system_map),
                 icon: data.misc?.system_map ? <BlueFolderIcon /> : undefined,
               },
