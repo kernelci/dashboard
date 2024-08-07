@@ -1,10 +1,9 @@
 import { ReactElement, useMemo } from 'react';
 
-import classNames from 'classnames';
-
 import { FormattedMessage } from 'react-intl';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { MessagesKey } from '@/locales/messages';
 
 export interface ITabItem {
   name: MessagesKey;
@@ -27,9 +26,7 @@ const TabsComponent = ({
     () =>
       tabs.map(tab => (
         <TabsTrigger
-          className={classNames('bg-transparent px-4 text-lg', {
-            'border-b-2 border-lightBlue': !tab.disabled,
-          })}
+          className="border-b-2 border-transparent bg-transparent px-4 text-lg data-[state=active]:border-lightBlue"
           disabled={tab.disabled}
           key={tab.name}
           value={tab.name}
