@@ -82,7 +82,7 @@ export interface TTreeDetailsFilter
   valid?: string[];
 }
 
-type BootHistory = {
+type TestHistory = {
   start_time: string;
   status: string;
 };
@@ -111,11 +111,11 @@ type StatusCounts = {
   [key in Status]: number | undefined;
 };
 
-export type TBootsTabData = {
+export type TTreeTestsData = {
   statusCounts: StatusCounts;
   errorCounts: ErrorCounts;
   configCounts: ConfigCounts;
-  bootHistory: BootHistory[];
+  testHistory: TestHistory[];
   errorCountPerArchitecture: ErrorCountPerArchitecture;
   compilersPerArchitecture: CompilersPerArchitecture;
   platformsWithError: string[];

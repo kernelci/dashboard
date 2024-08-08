@@ -1,7 +1,7 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
 import {
-  TBootsTabData,
+  TTreeTestsData,
   TreeDetails,
   TTreeDetailsFilter,
 } from '@/types/tree/TreeDetails';
@@ -35,14 +35,22 @@ export const useTreeDetails = (
   });
 };
 
-const fetchBootsTabData = async (treeId: string): Promise<TBootsTabData> => {
-  const res = await http.get<TBootsTabData>(`/api/tree/${treeId}/boot`, {});
+const fetchTreeTestsData = async (
+  treeId: string,
+  params?: { path?: string },
+): Promise<TTreeTestsData> => {
+  const res = await http.get<TTreeTestsData>(`/api/tree/${treeId}/tests`, {
+    params,
+  });
+
   return res.data;
 };
 
-export const useBootsTab = (treeId: string): UseQueryResult<TBootsTabData> => {
+export const useBootsTab = (treeId: string): UseQueryResult<TTreeTestsData> => {
+  const params = { path: 'boot.' };
+
   return useQuery({
-    queryKey: ['treeData', treeId],
-    queryFn: () => fetchBootsTabData(treeId),
+    queryKey: ['treeBootTests', treeId, params],
+    queryFn: () => fetchTreeTestsData(treeId, params),
   });
 };

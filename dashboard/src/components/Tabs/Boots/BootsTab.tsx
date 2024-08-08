@@ -8,7 +8,7 @@ import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import { useBootsTab } from '@/api/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 import ListingItem from '@/components/ListingItem/ListingItem';
-import { TBootsTabData } from '@/types/tree/TreeDetails';
+import { TTreeTestsData } from '@/types/tree/TreeDetails';
 import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
 import StatusChartMemoized, {
   Colors,
@@ -20,7 +20,7 @@ import { LineChart, LineChartLabel } from '@/components/LineChart';
 
 const ConfigsList = ({
   configCounts,
-}: Pick<TBootsTabData, 'configCounts'>): JSX.Element => {
+}: Pick<TTreeTestsData, 'configCounts'>): JSX.Element => {
   return (
     <BaseCard
       title={<FormattedMessage id="bootsTab.configs" />}
@@ -46,7 +46,7 @@ const MemoizedConfigList = memo(ConfigsList);
 
 const PlatformsWithError = ({
   platformsWithError,
-}: Pick<TBootsTabData, 'platformsWithError'>): JSX.Element => {
+}: Pick<TTreeTestsData, 'platformsWithError'>): JSX.Element => {
   return (
     <BaseCard
       title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
@@ -70,7 +70,7 @@ const MemoizedPlatformsWithError = memo(PlatformsWithError);
 
 const ErrorCountList = ({
   errorMessageCounts,
-}: Pick<TBootsTabData, 'errorMessageCounts'>): JSX.Element => {
+}: Pick<TTreeTestsData, 'errorMessageCounts'>): JSX.Element => {
   return (
     <BaseCard
       title={<>Fail</>}
@@ -97,7 +97,7 @@ const ErrorsSummary = ({
   errorCountPerArchitecture,
   compilersPerArchitecture,
 }: Pick<
-  TBootsTabData,
+  TTreeTestsData,
   'errorCountPerArchitecture' | 'compilersPerArchitecture'
 >): JSX.Element => {
   const summaryHeaders = [
@@ -134,7 +134,7 @@ const MemoizedErrorsSummary = memo(ErrorsSummary);
 
 const StatusChart = ({
   statusCounts,
-}: Pick<TBootsTabData, 'statusCounts'>): JSX.Element => {
+}: Pick<TTreeTestsData, 'statusCounts'>): JSX.Element => {
   const groupedStatus = {
     success: 0,
     fail: 0,
@@ -187,8 +187,8 @@ const StatusChart = ({
 const StatusChartMemo = memo(StatusChart);
 
 const LineChartCard = ({
-  bootHistory,
-}: Pick<TBootsTabData, 'bootHistory'>): JSX.Element => {
+  testHistory,
+}: Pick<TTreeTestsData, 'testHistory'>): JSX.Element => {
   const { formatMessage } = useIntl();
 
   const allStartTimeStamps: number[] = [];
@@ -199,7 +199,7 @@ const LineChartCard = ({
   let lastErrorData: null | number = null;
   let lastSuccessData: null | number = null;
 
-  bootHistory.forEach(boot => {
+  testHistory.forEach(boot => {
     allStartTimeStamps.push(new Date(boot.start_time).getTime());
 
     if (boot.status === 'SKIP') {
@@ -308,7 +308,7 @@ const BootsTab = (): JSX.Element => {
 
   if (!data) return <div />;
 
-  if (data.bootHistory.length < 1) {
+  if (data.testHistory.length < 1) {
     return (
       <BaseCard
         title=<FormattedMessage id="bootsTab.info" />
@@ -330,7 +330,7 @@ const BootsTab = (): JSX.Element => {
           errorCountPerArchitecture={data.errorCountPerArchitecture}
           compilersPerArchitecture={data.compilersPerArchitecture}
         />
-        <MemoizedLineChartCard bootHistory={data.bootHistory} />
+        <MemoizedLineChartCard testHistory={data.testHistory} />
         <MemoizedPlatformsWithError
           platformsWithError={data.platformsWithError}
         />

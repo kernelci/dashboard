@@ -6,7 +6,7 @@ from kernelCI_app.models import Checkouts
 import json
 
 
-class Boots(View):
+class TreeTestsView(View):
     # TODO misc_environment is not stable and should be used as a POC only
     # use the standardized field when that gets available
     def extract_platform(self, misc_environment: Union[str, dict, None]):
@@ -39,6 +39,14 @@ class Boots(View):
         return "unknown error"
 
     def get(self, request, commit_hash: str | None):
+        path_param = request.GET.get('path')
+        if path_param:
+            path_filter = "AND t.path LIKE %s"
+            params = [commit_hash, f'{path_param}%']
+        else:
+            path_filter = ""
+            params = [commit_hash]
+
         names_map = {
             "c.id": "id",
             "c.git_repository_url": "git_repository_url",
@@ -56,14 +64,14 @@ class Boots(View):
         }
 
         query = Checkouts.objects.raw(
-            """
+            f"""
                 SELECT DISTINCT ON (t.build_id) c.id, c.git_repository_url,
                 c.git_commit_hash, t.build_id, t.start_time,
                 t.status as status, t.path, b.architecture, b.config_name,
                 b.compiler, t.environment_misc, t.environment_comment, t.misc FROM checkouts AS c
                 INNER JOIN builds AS b ON c.id = b.checkout_id
                 INNER JOIN tests AS t ON t.build_id = b.id
-                WHERE c.git_commit_hash = %s AND t.path LIKE 'boot%%'
+                WHERE c.git_commit_hash = %s {path_filter}
                 ORDER BY
                 build_id,
                 CASE t.status
@@ -75,14 +83,14 @@ class Boots(View):
                 END,
                 t.id;
             """,
-            [commit_hash],
+            params,
             translations=names_map,
         )
 
         statusCounts = defaultdict(int)
         errorCounts = defaultdict(int)
         configCounts = defaultdict(int)
-        bootHistory = []
+        testHistory = []
         errorCountPerArchitecture = defaultdict(int)
         platformsWithError = set()
         compilersPerArchitecture = defaultdict(set)
@@ -90,7 +98,7 @@ class Boots(View):
         for record in query:
             statusCounts[record.status] += 1
             configCounts[record.config_name] += 1
-            bootHistory.append(
+            testHistory.append(
                 {"start_time": record.start_time, "status": record.status}
             )
             if (
@@ -116,7 +124,7 @@ class Boots(View):
                 "statusCounts": statusCounts,
                 "errorCounts": errorCounts,
                 "configCounts": configCounts,
-                "bootHistory": bootHistory,
+                "testHistory": testHistory,
                 "errorCountPerArchitecture": errorCountPerArchitecture,
                 "compilersPerArchitecture": compilersPerArchitecture,
                 "platformsWithError": list(platformsWithError),
