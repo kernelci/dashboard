@@ -35,8 +35,10 @@ export const useTreeDetails = (
   });
 };
 
-const fetchBootsTabData = async (treeId: string): Promise<TTreeTestsData> => {
-  const params = { path: 'boot.' };
+const fetchTreeTestsData = async (
+  treeId: string,
+  params?: { path?: string },
+): Promise<TTreeTestsData> => {
 
   const res = await http.get<TTreeTestsData>(`/api/tree/${treeId}/tests`, {
     params,
@@ -46,8 +48,17 @@ const fetchBootsTabData = async (treeId: string): Promise<TTreeTestsData> => {
 };
 
 export const useBootsTab = (treeId: string): UseQueryResult<TTreeTestsData> => {
+  const params = { path: 'boot.' };
+
   return useQuery({
-    queryKey: ['treeData', treeId],
-    queryFn: () => fetchBootsTabData(treeId),
+    queryKey: ['treeBootTests', treeId],
+    queryFn: () => fetchTreeTestsData(treeId, params),
+  });
+};
+
+export const useTestsTab = (treeId: string): UseQueryResult<TTreeTestsData> => {
+  return useQuery({
+    queryKey: ['treeTests', treeId],
+    queryFn: () => fetchTreeTestsData(treeId),
   });
 };

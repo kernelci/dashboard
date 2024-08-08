@@ -6,9 +6,9 @@ import { useParams } from 'react-router-dom';
 
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import { useBootsTab } from '@/api/TreeDetails';
-import BaseCard from '@/components/Cards/BaseCard';
+import BaseCard, { IBaseCard } from '@/components/Cards/BaseCard';
 import ListingItem from '@/components/ListingItem/ListingItem';
-import { TBootsTabData } from '@/types/tree/TreeDetails';
+import { TTreeTestsData } from '@/types/tree/TreeDetails';
 import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
 import StatusChartMemoized, {
   Colors,
@@ -18,12 +18,17 @@ import { errorStatusSet } from '@/utils/constants/database';
 import { ErrorStatus, Status } from '@/types/database';
 import { LineChart, LineChartLabel } from '@/components/LineChart';
 
+interface IConfigList extends Pick<TTreeTestsData, 'configCounts'> {
+  title: IBaseCard["title"]
+}
+
 const ConfigsList = ({
   configCounts,
-}: Pick<TBootsTabData, 'configCounts'>): JSX.Element => {
+  title
+}: IConfigList): JSX.Element => {
   return (
     <BaseCard
-      title={<FormattedMessage id="bootsTab.configs" />}
+      title={title}
       content={
         <DumbListingContent>
           {Object.keys(configCounts).map(configName => {
@@ -42,14 +47,19 @@ const ConfigsList = ({
     />
   );
 };
-const MemoizedConfigList = memo(ConfigsList);
+export const MemoizedConfigList = memo(ConfigsList);
+
+interface IPlatformsWithError extends Pick<TTreeTestsData, 'platformsWithError'> {
+  title: IBaseCard["title"]
+}
 
 const PlatformsWithError = ({
   platformsWithError,
-}: Pick<TBootsTabData, 'platformsWithError'>): JSX.Element => {
+  title
+}: IPlatformsWithError): JSX.Element => {
   return (
     <BaseCard
-      title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
+      title={title}
       content={
         <DumbListingContent>
           {platformsWithError.map(platformWithErrorItem => {
@@ -66,14 +76,19 @@ const PlatformsWithError = ({
     />
   );
 };
-const MemoizedPlatformsWithError = memo(PlatformsWithError);
+export const MemoizedPlatformsWithError = memo(PlatformsWithError);
+
+interface IErrorCountList extends Pick<TTreeTestsData, 'errorMessageCounts'> {
+  title: IBaseCard["title"]
+}
 
 const ErrorCountList = ({
   errorMessageCounts,
-}: Pick<TBootsTabData, 'errorMessageCounts'>): JSX.Element => {
+  title
+}: IErrorCountList): JSX.Element => {
   return (
     <BaseCard
-      title={<>Fail</>}
+      title={title}
       content={
         <DumbListingContent>
           {Object.keys(errorMessageCounts).map(errorMessage => {
@@ -91,15 +106,20 @@ const ErrorCountList = ({
     />
   );
 };
-const MemoizedErrorCountList = memo(ErrorCountList);
+export const MemoizedErrorCountList = memo(ErrorCountList);
+
+interface IErrorsSummary extends Pick<
+  TTreeTestsData,
+  'errorCountPerArchitecture' | 'compilersPerArchitecture'
+> {
+  title: IBaseCard["title"]
+}
 
 const ErrorsSummary = ({
   errorCountPerArchitecture,
   compilersPerArchitecture,
-}: Pick<
-  TBootsTabData,
-  'errorCountPerArchitecture' | 'compilersPerArchitecture'
->): JSX.Element => {
+  title
+}: IErrorsSummary): JSX.Element => {
   const summaryHeaders = [
     <FormattedMessage key="treeDetail.arch" id="treeDetails.arch" />,
     <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
@@ -107,7 +127,7 @@ const ErrorsSummary = ({
 
   return (
     <BaseCard
-      title=<FormattedMessage id="bootsTab.errorsSummary" />
+      title={title}
       content={
         <DumbSummary summaryHeaders={summaryHeaders}>
           {Object.keys(errorCountPerArchitecture).map(architecture => {
@@ -130,11 +150,16 @@ const ErrorsSummary = ({
   );
 };
 
-const MemoizedErrorsSummary = memo(ErrorsSummary);
+export const MemoizedErrorsSummary = memo(ErrorsSummary);
+
+interface IStatusChart extends Pick<TTreeTestsData, 'statusCounts'> {
+  title: IBaseCard["title"]
+}
 
 const StatusChart = ({
   statusCounts,
-}: Pick<TBootsTabData, 'statusCounts'>): JSX.Element => {
+  title
+}: IStatusChart): JSX.Element => {
   const groupedStatus = {
     success: 0,
     fail: 0,
@@ -176,7 +201,7 @@ const StatusChart = ({
 
   return (
     <BaseCard
-      title={<FormattedMessage id="bootsTab.bootStatus" />}
+      title={title}
       content={
         <StatusChartMemoized type="chart" elements={filteredChartElements} />
       }
@@ -184,11 +209,16 @@ const StatusChart = ({
   );
 };
 
-const StatusChartMemo = memo(StatusChart);
+export const StatusChartMemo = memo(StatusChart);
+
+interface ILineChartCard extends Pick<TTreeTestsData, 'testHistory'> {
+  title: IBaseCard["title"]
+}
 
 const LineChartCard = ({
   testHistory,
-}: Pick<TBootsTabData, 'testHistory'>): JSX.Element => {
+  title
+}: ILineChartCard): JSX.Element => {
   const { formatMessage } = useIntl();
 
   const allStartTimeStamps: number[] = [];
@@ -248,7 +278,7 @@ const LineChartCard = ({
   });
   return (
     <BaseCard
-      title={<FormattedMessage id="bootsTab.bootHistory" />}
+      title={title}
       content={
         <LineChart
           labels={
@@ -286,7 +316,7 @@ const LineChartCard = ({
   );
 };
 
-const MemoizedLineChartCard = memo(LineChartCard);
+export const MemoizedLineChartCard = memo(LineChartCard);
 
 const BootsTab = (): JSX.Element => {
   const { treeId } = useParams();
@@ -322,17 +352,19 @@ const BootsTab = (): JSX.Element => {
   return (
     <div className="flex flex-col gap-8 pt-4">
       <div className="md:columns-2">
-        <StatusChartMemo statusCounts={data.statusCounts} />
-        <MemoizedConfigList configCounts={data.configCounts} />
+        <StatusChartMemo title={<FormattedMessage id="bootsTab.bootStatus" />} statusCounts={data.statusCounts} />
+        <MemoizedConfigList title={<FormattedMessage id="bootsTab.configs" />} configCounts={data.configCounts} />
         <MemoizedErrorsSummary
+          title={<FormattedMessage id="bootsTab.errorsSummary" />}
           errorCountPerArchitecture={data.errorCountPerArchitecture}
           compilersPerArchitecture={data.compilersPerArchitecture}
         />
-        <MemoizedLineChartCard testHistory={data.testHistory} />
+        <MemoizedLineChartCard title={<FormattedMessage id="bootsTab.bootHistory" />} testHistory={data.testHistory} />
         <MemoizedPlatformsWithError
+          title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
           platformsWithError={data.platformsWithError}
         />
-        <MemoizedErrorCountList errorMessageCounts={data.errorMessageCounts} />
+        <MemoizedErrorCountList title={<>Fail</>} errorMessageCounts={data.errorMessageCounts} />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { ReactElement, ReactNode } from 'react';
 import classNames from 'classnames';
 
-interface IBaseCard {
+export interface IBaseCard {
   title: ReactNode;
   content: ReactElement;
   className?: string;
