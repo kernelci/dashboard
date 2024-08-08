@@ -187,8 +187,8 @@ const StatusChart = ({
 const StatusChartMemo = memo(StatusChart);
 
 const LineChartCard = ({
-  bootHistory,
-}: Pick<TBootsTabData, 'bootHistory'>): JSX.Element => {
+  testHistory,
+}: Pick<TBootsTabData, 'testHistory'>): JSX.Element => {
   const { formatMessage } = useIntl();
 
   const allStartTimeStamps: number[] = [];
@@ -199,7 +199,7 @@ const LineChartCard = ({
   let lastErrorData: null | number = null;
   let lastSuccessData: null | number = null;
 
-  bootHistory.forEach(boot => {
+  testHistory.forEach(boot => {
     allStartTimeStamps.push(new Date(boot.start_time).getTime());
 
     if (boot.status === 'SKIP') {
@@ -306,7 +306,7 @@ const BootsTab = (): JSX.Element => {
 
   if (!data) return <div />;
 
-  if (data.bootHistory.length < 1) {
+  if (data.testHistory.length < 1) {
     return (
       <BaseCard
         title=<FormattedMessage id="bootsTab.info" />
@@ -328,7 +328,7 @@ const BootsTab = (): JSX.Element => {
           errorCountPerArchitecture={data.errorCountPerArchitecture}
           compilersPerArchitecture={data.compilersPerArchitecture}
         />
-        <MemoizedLineChartCard bootHistory={data.bootHistory} />
+        <MemoizedLineChartCard testHistory={data.testHistory} />
         <MemoizedPlatformsWithError
           platformsWithError={data.platformsWithError}
         />
