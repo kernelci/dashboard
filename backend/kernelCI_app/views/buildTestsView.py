@@ -24,7 +24,7 @@ class BuildTests(View):
 
         result = (
             Tests.objects
-            .filter(filterQ, build_id=build_id,)
+            .filter(filterQ, build=build_id,)
             .values(
                 path_sublevel=Func(
                     F('path'), Value('.'), Value(path_level),

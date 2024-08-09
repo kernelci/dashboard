@@ -1,29 +1,6 @@
 from django.db import models
 
 
-class Tests(models.Model):
-    field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
-    build_id = models.TextField()
-    id = models.TextField(primary_key=True)
-    origin = models.TextField()
-    environment_comment = models.TextField(blank=True, null=True)
-    environment_misc = models.JSONField(blank=True, null=True)
-    path = models.TextField(blank=True, null=True)
-    comment = models.TextField(blank=True, null=True)
-    log_url = models.TextField(blank=True, null=True)
-    log_excerpt = models.CharField(max_length=16384, blank=True, null=True)
-    status = models.TextField(blank=True, null=True)  # This field type is a guess.
-    waived = models.BooleanField(blank=True, null=True)
-    start_time = models.DateTimeField(blank=True, null=True)
-    duration = models.FloatField(blank=True, null=True)
-    output_files = models.JSONField(blank=True, null=True)
-    misc = models.JSONField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'tests'
-
-
 class Issues(models.Model):
     field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
     id = models.TextField(primary_key=True)
@@ -43,23 +20,6 @@ class Issues(models.Model):
         managed = False
         db_table = 'issues'
         unique_together = (('id', 'version'),)
-
-
-class Incidents(models.Model):
-    field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
-    id = models.TextField(primary_key=True)
-    origin = models.TextField()
-    issue_id = models.TextField()
-    issue_version = models.IntegerField()
-    build_id = models.TextField(blank=True, null=True)
-    test_id = models.TextField(blank=True, null=True)
-    present = models.BooleanField(blank=True, null=True)
-    comment = models.TextField(blank=True, null=True)
-    misc = models.JSONField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'incidents'
 
 
 class Checkouts(models.Model):
@@ -89,7 +49,7 @@ class Checkouts(models.Model):
 
 class Builds(models.Model):
     field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
-    checkout_id = models.TextField()
+    checkout = models.ForeignKey(Checkouts, on_delete=models.DO_NOTHING)
     id = models.TextField(primary_key=True)
     origin = models.TextField()
     comment = models.TextField(blank=True, null=True)
@@ -110,3 +70,43 @@ class Builds(models.Model):
     class Meta:
         managed = False
         db_table = 'builds'
+
+
+class Tests(models.Model):
+    field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
+    build = models.ForeignKey(Builds, on_delete=models.DO_NOTHING)
+    id = models.TextField(primary_key=True)
+    origin = models.TextField()
+    environment_comment = models.TextField(blank=True, null=True)
+    environment_misc = models.JSONField(blank=True, null=True)
+    path = models.TextField(blank=True, null=True)
+    comment = models.TextField(blank=True, null=True)
+    log_url = models.TextField(blank=True, null=True)
+    log_excerpt = models.CharField(max_length=16384, blank=True, null=True)
+    status = models.TextField(blank=True, null=True)  # This field type is a guess.
+    waived = models.BooleanField(blank=True, null=True)
+    start_time = models.DateTimeField(blank=True, null=True)
+    duration = models.FloatField(blank=True, null=True)
+    output_files = models.JSONField(blank=True, null=True)
+    misc = models.JSONField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'tests'
+
+
+class Incidents(models.Model):
+    field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
+    id = models.TextField(primary_key=True)
+    origin = models.TextField()
+    issue = models.ForeignKey(Issues, on_delete=models.DO_NOTHING)
+    issue_version = models.IntegerField()
+    build = models.ForeignKey(Builds, on_delete=models.DO_NOTHING)
+    test = models.ForeignKey(Tests, on_delete=models.DO_NOTHING)
+    present = models.BooleanField(blank=True, null=True)
+    comment = models.TextField(blank=True, null=True)
+    misc = models.JSONField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'incidents'
