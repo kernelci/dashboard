@@ -1,16 +1,21 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
+
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import CardsGroup from '@/components/CardsGroup/CardsGroup';
 import { Colors, IStatusChart } from '@/components/StatusChart/StatusCharts';
-import { ITreeDetails } from '@/routes/TreeDetails/TreeDetails';
+
 import { TableInfo } from '@/components/Table/TableInfo';
 import { usePagination } from '@/hooks/usePagination';
 import Accordion from '@/components/Accordion/Accordion';
 import { Button } from '@/components/ui/button';
 import { IListingContent } from '@/components/ListingContent/ListingContent';
 import { ISummary } from '@/components/Summary/Summary';
+
+import { ITreeDetails } from '@/routes/~tree/~$treeId/TreeDetails';
+import { TableFilter } from '@/types/tree/TreeDetails';
 
 interface ITreeDetailsBuildTab {
   treeDetailsData?: ITreeDetails;
@@ -19,7 +24,13 @@ interface ITreeDetailsBuildTab {
 const TreeDetailsBuildTab = ({
   treeDetailsData,
 }: ITreeDetailsBuildTab): JSX.Element => {
-  const [filterBy, setFilterBy] = useState<'error' | 'success' | 'all'>('all');
+  const { tableFilter: filterBy } = useSearch({
+    from: '/tree/$treeId/',
+  });
+  const navigate = useNavigate({
+    from: '/tree/$treeId',
+  });
+
   const accordionContent = useMemo(() => {
     return treeDetailsData?.builds.map(row => ({
       accordionData: {
@@ -113,9 +124,19 @@ const TreeDetailsBuildTab = ({
     ],
   );
 
-  const onClickFilter = useCallback((type: 'error' | 'success' | 'all') => {
-    setFilterBy(type);
-  }, []);
+  const onClickFilter = useCallback(
+    (type: TableFilter) => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: type,
+          };
+        },
+      });
+    },
+    [navigate],
+  );
 
   return (
     <div className="flex flex-col gap-8 pt-4">

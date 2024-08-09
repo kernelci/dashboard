@@ -1,12 +1,12 @@
 import { useCallback, useMemo } from 'react';
 
-import FilterList from '@/components/FilterList/FilterList';
+import { useNavigate } from '@tanstack/react-router';
 
-import { TFilter, TFilterKeys } from './TreeDetailsFilter';
+import FilterList from '@/components/FilterList/FilterList';
+import { TFilter, TFilterKeys } from '@/types/tree/TreeDetails';
 
 interface ITreeDetailsFilterList {
   filter: TFilter;
-  onFilter: (filter: TFilter) => void;
 }
 
 const createFlatFilter = (filter: TFilter): string[] => {
@@ -22,18 +22,26 @@ const createFlatFilter = (filter: TFilter): string[] => {
 
 const TreeDetailsFilterList = ({
   filter,
-  onFilter,
 }: ITreeDetailsFilterList): JSX.Element => {
   const flatFilter = useMemo(() => createFlatFilter(filter), [filter]);
+  const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const onClickItem = useCallback(
     (flatValue: string, _: number) => {
       const [field, value] = flatValue.split(':');
       const newFilter = { ...filter };
       newFilter[field as TFilterKeys][value] = false;
-      onFilter(newFilter);
+
+      navigate({
+        search: previousSearch => {
+          return {
+            ...previousSearch,
+            diffFilter: newFilter,
+          };
+        },
+      });
     },
-    [filter, onFilter],
+    [filter, navigate],
   );
 
   const onClickCleanALl = useCallback(() => {
@@ -44,8 +52,15 @@ const TreeDetailsFilterList = ({
       newFilter[field as TFilterKeys][value] = false;
     });
 
-    onFilter(newFilter);
-  }, [filter, onFilter, flatFilter]);
+    navigate({
+      search: previousSearch => {
+        return {
+          ...previousSearch,
+          diffFilter: newFilter,
+        };
+      },
+    });
+  }, [filter, flatFilter, navigate]);
 
   return (
     <FilterList

@@ -2,11 +2,12 @@ import { ImTree } from 'react-icons/im';
 
 import { MdClose, MdCheck, MdFolderOpen } from 'react-icons/md';
 
-import { useLocation, useParams } from 'react-router-dom';
 import { BsFileEarmarkCode } from 'react-icons/bs';
 import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo } from 'react';
+
+import { useParams } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
 import { ISection } from '@/components/Section/Section';
@@ -41,10 +42,9 @@ const BlueFolderIcon = (): JSX.Element => (
 const isString = (value: unknown): value is string => typeof value === 'string';
 
 const BuildDetails = (): JSX.Element => {
-  const { buildId } = useParams();
+  const { buildId } = useParams({ from: '/tree/$treeId/build/$buildId/' });
   const { data, error } = useBuildDetails(buildId || '');
-  const location = useLocation();
-  const treeId = location.state?.treeId;
+  const treeId = { treeId: 'string' };
   const intl = useIntl();
 
   const sectionsData: ISection[] = useMemo(() => {

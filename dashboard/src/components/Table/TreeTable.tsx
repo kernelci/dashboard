@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
@@ -28,10 +28,13 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   const backgroundClassName =
     'flex flex-row bg-lightGray w-fit h-fit p-1 rounded-lg';
 
-  const navigate = useNavigate();
+  const navigate = useNavigate({ from: '/tree' });
 
   const navigateToTreeDetailPage = useCallback(() => {
-    navigate(`/tree/${row.id}`);
+    navigate({
+      to: '/tree/$treeId',
+      params: { treeId: row.id },
+    });
   }, [navigate, row.id]);
 
   return (

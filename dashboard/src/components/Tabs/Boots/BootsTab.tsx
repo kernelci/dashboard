@@ -2,7 +2,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { memo } from 'react';
 
-import { useParams } from 'react-router-dom';
+import { useParams } from '@tanstack/react-router';
 
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import { useBootsTab } from '@/api/TreeDetails';
@@ -289,7 +289,9 @@ const LineChartCard = ({
 const MemoizedLineChartCard = memo(LineChartCard);
 
 const BootsTab = (): JSX.Element => {
-  const { treeId } = useParams();
+  const { treeId } = useParams({
+    from: '/tree/$treeId/',
+  });
   const { isLoading, data, error } = useBootsTab(treeId ?? '');
 
   if (error || !treeId) {

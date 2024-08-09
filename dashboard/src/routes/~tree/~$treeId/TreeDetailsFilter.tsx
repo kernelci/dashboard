@@ -1,32 +1,35 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
+
+import { z } from 'zod';
+
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import FilterDrawer from '@/components/Filter/Drawer';
 import FilterSummarySection from '@/components/Filter/SummarySection';
 import FilterCheckboxSection, {
   ICheckboxSection,
 } from '@/components/Filter/CheckboxSection';
-import { TreeDetails as TreeDetailsType } from '@/types/tree/TreeDetails';
+import {
+  TFilter,
+  TFilterKeys,
+  TreeDetails as TreeDetailsType,
+} from '@/types/tree/TreeDetails';
 
-type TFilterValues = { [key: string]: boolean };
-export type TFilter =
-  | { [key in TFilterKeys]: TFilterValues }
-  | Record<string, never>;
+const zFilterValue = z.record(z.boolean());
+type TFilterValues = z.infer<typeof zFilterValue>;
 
 interface ITreeDetailsFilter {
   filter: TFilter;
-  onFilter: (filter: TFilter) => void;
   treeUrl: string;
 }
-
-export type TFilterKeys = (typeof filterFieldMap)[keyof typeof filterFieldMap];
 
 const filterFieldMap = {
   git_repository_branch: 'branches',
   config_name: 'configs',
   architecture: 'archs',
   valid: 'status',
-} as const;
+} as const satisfies Record<string, TFilterKeys>;
 
 export const mapFilterToReq = (
   filter: TFilter,
@@ -87,11 +90,15 @@ const changeFilterValue = (
 
 const TreeDetailsFilter = ({
   filter,
-  onFilter,
   treeUrl,
 }: ITreeDetailsFilter): JSX.Element => {
   const intl = useIntl();
-  const [diffFilter, setDiffFilter] = useState<TFilter>({});
+  const { diffFilter } = useSearch({
+    from: '/tree/$treeId/',
+  });
+  const navigate = useNavigate({
+    from: '/tree/$treeId',
+  });
 
   const onClickFilterHandle = useCallback(() => {
     const newFilter = { ...filter };
@@ -103,14 +110,18 @@ const TreeDetailsFilter = ({
         ...value,
       };
     });
-
-    onFilter(newFilter);
-    setDiffFilter({});
-  }, [filter, diffFilter, onFilter]);
+  }, [filter, diffFilter]);
 
   const onClickCancel = useCallback(() => {
-    setDiffFilter({});
-  }, []);
+    navigate({
+      search: previousSearch => {
+        return {
+          ...previousSearch,
+          diffFilter: {},
+        };
+      },
+    });
+  }, [navigate]);
 
   const checkboxSectionsProps: ICheckboxSection[] = useMemo(() => {
     return [
@@ -119,9 +130,20 @@ const TreeDetailsFilter = ({
         subtitle: intl.formatMessage({ id: 'filter.branchSubtitle' }),
         items: filter.branches,
         onClickItem: (value: string, isChecked: boolean): void => {
-          setDiffFilter(old =>
-            changeFilterValue(old, 'branches', value, isChecked),
-          );
+          navigate({
+            search: previousSearch => {
+              const oldDiffFilter = previousSearch.diffFilter;
+              return {
+                ...previousSearch,
+                diffFilter: changeFilterValue(
+                  oldDiffFilter,
+                  'branches',
+                  value,
+                  isChecked,
+                ),
+              };
+            },
+          });
         },
       },
       {
@@ -129,9 +151,20 @@ const TreeDetailsFilter = ({
         subtitle: intl.formatMessage({ id: 'filter.statusSubtitle' }),
         items: filter.status,
         onClickItem: (value: string, isChecked: boolean): void => {
-          setDiffFilter(old =>
-            changeFilterValue(old, 'status', value, isChecked),
-          );
+          navigate({
+            search: previousSearch => {
+              const oldDiffFilter = previousSearch.diffFilter;
+              return {
+                ...previousSearch,
+                diffFilter: changeFilterValue(
+                  oldDiffFilter,
+                  'status',
+                  value,
+                  isChecked,
+                ),
+              };
+            },
+          });
         },
       },
       {
@@ -139,9 +172,20 @@ const TreeDetailsFilter = ({
         subtitle: intl.formatMessage({ id: 'filter.configsSubtitle' }),
         items: filter.configs,
         onClickItem: (value: string, isChecked: boolean): void => {
-          setDiffFilter(old =>
-            changeFilterValue(old, 'configs', value, isChecked),
-          );
+          navigate({
+            search: previousSearch => {
+              const oldDiffFilter = previousSearch.diffFilter;
+              return {
+                ...previousSearch,
+                diffFilter: changeFilterValue(
+                  oldDiffFilter,
+                  'configs',
+                  value,
+                  isChecked,
+                ),
+              };
+            },
+          });
         },
       },
       {
@@ -149,13 +193,31 @@ const TreeDetailsFilter = ({
         subtitle: intl.formatMessage({ id: 'filter.architectureSubtitle' }),
         items: filter.archs,
         onClickItem: (value: string, isChecked: boolean): void => {
-          setDiffFilter(old =>
-            changeFilterValue(old, 'archs', value, isChecked),
-          );
+          navigate({
+            search: previousSearch => {
+              const oldDiffFilter = previousSearch.diffFilter;
+              return {
+                ...previousSearch,
+                diffFilter: changeFilterValue(
+                  oldDiffFilter,
+                  'archs',
+                  value,
+                  isChecked,
+                ),
+              };
+            },
+          });
         },
       },
     ];
-  }, [intl, filter]);
+  }, [
+    intl,
+    filter.branches,
+    filter.status,
+    filter.configs,
+    filter.archs,
+    navigate,
+  ]);
 
   const checkboxSectionsComponents = useMemo(
     () =>
@@ -179,6 +241,7 @@ const TreeDetailsFilter = ({
 
 export default TreeDetailsFilter;
 
+//TODO Double check hardcoded code
 const summarySectionProps = {
   title: 'Tree',
   columns: [

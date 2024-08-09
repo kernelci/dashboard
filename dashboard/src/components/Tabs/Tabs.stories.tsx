@@ -22,6 +22,6 @@ const tabs: ITabItem[] = [
 export const Default: Story = {
   args: {
     tabs: tabs,
-    defaultTab: tabs[0],
+    defaultTab: 'treeDetails.boots',
   },
 };

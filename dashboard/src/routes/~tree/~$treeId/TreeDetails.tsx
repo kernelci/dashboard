@@ -1,12 +1,15 @@
-import { useParams } from 'react-router-dom';
-
-import { useEffect, useState, useMemo } from 'react';
+import { useParams, useSearch } from '@tanstack/react-router';
+import { useMemo } from 'react';
 
 import { useTreeDetails } from '@/api/TreeDetails';
 import TreeDetailsTab from '@/components/Tabs/TreeDetailsTab';
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
-import { AccordionItemBuilds, Results } from '@/types/tree/TreeDetails';
+import {
+  AccordionItemBuilds,
+  Results,
+  TFilter,
+} from '@/types/tree/TreeDetails';
 
 import {
   Breadcrumb,
@@ -20,7 +23,6 @@ import {
 import TreeDetailsFilter, {
   createFilter,
   mapFilterToReq,
-  TFilter,
 } from './TreeDetailsFilter';
 
 import TreeDetailsFilterList from './TreeDetailsFilterList';
@@ -32,21 +34,25 @@ export interface ITreeDetails {
   builds: AccordionItemBuilds[];
 }
 
-const TreeDetails = (): JSX.Element => {
-  const { treeId } = useParams();
-  const [filter, setFilter] = useState<TFilter>({});
-  const reqFilter = mapFilterToReq(filter);
+function TreeDetails(): JSX.Element {
+  const { treeId } = useParams({ from: '/tree/$treeId/' });
+  const { diffFilter } = useSearch({ from: '/tree/$treeId/' });
+  console.log('diffFilter', diffFilter);
+
+  const reqFilter = mapFilterToReq(diffFilter);
+  console.log('reqFilter', reqFilter);
 
   const { data } = useTreeDetails(treeId ?? '', reqFilter);
 
-  const [treeDetailsData, setTreeDetailsData] = useState<ITreeDetails>();
-
-  if (data && Object.keys(filter).length === 0) {
-    setFilter(createFilter(data));
-  }
+  const filter: TFilter | undefined = useMemo(() => {
+    if (data && Object.keys(diffFilter).length === 0) {
+      return createFilter(data);
+    }
+    return createFilter(data);
+  }, [data, diffFilter]);
 
   const filterListElement = useMemo(
-    () => <TreeDetailsFilterList filter={filter} onFilter={setFilter} />,
+    () => <TreeDetailsFilterList filter={filter} />,
     [filter],
   );
 
@@ -63,7 +69,7 @@ const TreeDetails = (): JSX.Element => {
     return url;
   }, [data]);
 
-  useEffect(() => {
+  const treeDetailsData: ITreeDetails | undefined = useMemo(() => {
     if (data) {
       const configsData: IListingItem[] = Object.entries(
         data.summary.configs,
@@ -110,12 +116,12 @@ const TreeDetails = (): JSX.Element => {
         }),
       );
 
-      setTreeDetailsData({
+      return {
         archs: archData,
         configs: configsData,
         buildsSummary: buildSummaryData,
         builds: buildsData,
-      });
+      };
     }
   }, [data]);
 
@@ -134,11 +140,7 @@ const TreeDetails = (): JSX.Element => {
       </Breadcrumb>
       <div className="flex flex-col pb-2">
         <div className="flex justify-end">
-          <TreeDetailsFilter
-            filter={filter}
-            onFilter={setFilter}
-            treeUrl={treeUrl}
-          />
+          <TreeDetailsFilter filter={filter} treeUrl={treeUrl} />
         </div>
         <TreeDetailsTab
           treeDetailsData={treeDetailsData}
@@ -147,6 +149,6 @@ const TreeDetails = (): JSX.Element => {
       </div>
     </div>
   );
-};
+}
 
 export default TreeDetails;
