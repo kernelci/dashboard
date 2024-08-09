@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { QueryClient } from '@tanstack/react-query';
 
 import { IntlProvider } from 'react-intl';
@@ -9,14 +8,14 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 
+import { createRouter, RouterProvider } from '@tanstack/react-router';
+
 import { messages } from './locales/messages/index';
 import { LOCALES } from './locales/constants';
 
+import { routeTree } from './routeTree.gen';
+
 import './index.css';
-import Root from './routes/Root/Root';
-import Trees from './routes/Trees/Trees';
-import TreeDetails from './routes/TreeDetails/TreeDetails';
-import BuildDetails from './routes/BuildDetails/BuildDetails';
 import { isDev } from './lib/utils/vite';
 
 declare global {
@@ -25,6 +24,12 @@ declare global {
     interface Message {
       ids: keyof (typeof messages)['en-us'];
     }
+  }
+}
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
   }
 }
 
@@ -43,29 +48,9 @@ const persister = createSyncStoragePersister({
   storage: isDev ? window.sessionStorage : window.localStorage,
 });
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Root />,
-    children: [
-      {
-        path: '/',
-        element: <Trees />,
-      },
-      {
-        path: '/tree',
-        element: <Trees />,
-      },
-      {
-        path: '/tree/:treeId',
-        element: <TreeDetails />,
-      },
-      { path: '/build/:buildId', element: <BuildDetails /> },
-    ],
-  },
-]);
-
 const currentMessages = messages[LOCALES.EN_US];
+
+const router = createRouter({ routeTree });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

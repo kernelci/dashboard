@@ -24,13 +24,13 @@ export const Default: Story = {
       <BreadcrumbComponent {...args}>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="#">Home</BreadcrumbLink>
+            <BreadcrumbLink to="/">Home</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbEllipsis />
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="#">Page</BreadcrumbLink>
+            <BreadcrumbLink to="#">Page</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>

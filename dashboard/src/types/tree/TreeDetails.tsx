@@ -1,3 +1,7 @@
+import { z } from 'zod';
+
+import { MessagesKey } from '@/locales/messages';
+
 import type { ErrorStatus, Status } from '../database';
 
 type TreeDetailsBuild = {
@@ -117,3 +121,43 @@ export type TBootsTabData = {
   platformsWithError: string[];
   errorMessageCounts: ErrorMessageCounts;
 };
+
+export type PossibleTabs = Extract<
+  MessagesKey,
+  'treeDetails.builds' | 'treeDetails.boots'
+>;
+
+const possibleTabs = [
+  'treeDetails.builds',
+  'treeDetails.boots',
+] as const satisfies PossibleTabs[];
+
+export const zPossibleValidator = z
+  .enum(possibleTabs)
+  .catch('treeDetails.boots');
+
+const possibleTableFilter = ['error', 'success', 'all'] as const;
+
+export const zTableFilterValidator = z.enum(possibleTableFilter).catch('all');
+
+export type TableFilter = z.infer<typeof zTableFilterValidator>;
+
+const zFilterValue = z.record(z.boolean()).optional();
+export type TFilterValues = z.infer<typeof zFilterValue>;
+
+const filterKeys = ['branches', 'configs', 'archs', 'status'] as const;
+export type TFilterKeys = (typeof filterKeys)[number];
+
+export const zDiffFilter = z
+  .union([
+    z.object({
+      branches: zFilterValue,
+      configs: zFilterValue,
+      archs: zFilterValue,
+      status: zFilterValue,
+    } satisfies Record<TFilterKeys, unknown>),
+    z.record(z.never()),
+  ])
+  .catch({});
+
+export type TFilter = z.infer<typeof zDiffFilter>;

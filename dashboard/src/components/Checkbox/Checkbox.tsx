@@ -1,9 +1,8 @@
-import { useCallback, useState } from 'react';
 import cls from 'classnames';
 
 interface ICheckbox {
-  onToggle: (checked: boolean) => void;
-  startChecked?: boolean;
+  onToggle: () => void;
+  isChecked?: boolean;
   text: string;
   className?: string;
 }
@@ -15,25 +14,17 @@ const Checkbox = ({
   text,
   onToggle,
   className,
-  startChecked = false,
+  isChecked = false,
 }: ICheckbox): JSX.Element => {
-  const [isChecked, setIsChecked] = useState(startChecked);
-
-  const onClick = useCallback(() => {
-    setIsChecked(state => !state);
-    onToggle(!isChecked);
-  }, [isChecked, onToggle]);
-
   return (
-    <div
+    <label
       className={cls(containerClass, className, {
         'border-lightBlue': isChecked,
       })}
-      onClick={onClick}
     >
-      <input type="checkbox" checked={isChecked} />
+      <input type="checkbox" checked={isChecked} onClick={onToggle} />
       <span className="ml-4">{text}</span>
-    </div>
+    </label>
   );
 };
 

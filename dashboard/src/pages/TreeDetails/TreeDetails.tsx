@@ -1,6 +1,5 @@
-import { useParams } from 'react-router-dom';
-
-import { useEffect, useState, useMemo } from 'react';
+import { useParams, useSearch } from '@tanstack/react-router';
+import { useMemo } from 'react';
 
 import { useTreeDetails } from '@/api/TreeDetails';
 import TreeDetailsTab from '@/components/Tabs/TreeDetailsTab';
@@ -15,13 +14,9 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+} from '@/components/Breadcrumb/Breadcrumb';
 
-import TreeDetailsFilter, {
-  createFilter,
-  mapFilterToReq,
-  TFilter,
-} from './TreeDetailsFilter';
+import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
 
 import TreeDetailsFilterList from './TreeDetailsFilterList';
 
@@ -32,22 +27,17 @@ export interface ITreeDetails {
   builds: AccordionItemBuilds[];
 }
 
-const TreeDetails = (): JSX.Element => {
-  const { treeId } = useParams();
-  const [filter, setFilter] = useState<TFilter>({});
-  const reqFilter = mapFilterToReq(filter);
+function TreeDetails(): JSX.Element {
+  const { treeId } = useParams({ from: '/tree/$treeId/' });
+  const { diffFilter } = useSearch({ from: '/tree/$treeId/' });
+
+  const reqFilter = mapFilterToReq(diffFilter);
 
   const { data } = useTreeDetails(treeId ?? '', reqFilter);
 
-  const [treeDetailsData, setTreeDetailsData] = useState<ITreeDetails>();
-
-  if (data && Object.keys(filter).length === 0) {
-    setFilter(createFilter(data));
-  }
-
   const filterListElement = useMemo(
-    () => <TreeDetailsFilterList filter={filter} onFilter={setFilter} />,
-    [filter],
+    () => <TreeDetailsFilterList filter={diffFilter} />,
+    [diffFilter],
   );
 
   //TODO: at some point `treeUrl` should be returned in `data`
@@ -63,7 +53,7 @@ const TreeDetails = (): JSX.Element => {
     return url;
   }, [data]);
 
-  useEffect(() => {
+  const treeDetailsData: ITreeDetails | undefined = useMemo(() => {
     if (data) {
       const configsData: IListingItem[] = Object.entries(
         data.summary.configs,
@@ -110,12 +100,12 @@ const TreeDetails = (): JSX.Element => {
         }),
       );
 
-      setTreeDetailsData({
+      return {
         archs: archData,
         configs: configsData,
         buildsSummary: buildSummaryData,
         builds: buildsData,
-      });
+      };
     }
   }, [data]);
 
@@ -124,7 +114,7 @@ const TreeDetails = (): JSX.Element => {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/tree">Trees</BreadcrumbLink>
+            <BreadcrumbLink to="/tree">Trees</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -134,11 +124,7 @@ const TreeDetails = (): JSX.Element => {
       </Breadcrumb>
       <div className="flex flex-col pb-2">
         <div className="flex justify-end">
-          <TreeDetailsFilter
-            filter={filter}
-            onFilter={setFilter}
-            treeUrl={treeUrl}
-          />
+          <TreeDetailsFilter filter={diffFilter} treeUrl={treeUrl} />
         </div>
         <TreeDetailsTab
           treeDetailsData={treeDetailsData}
@@ -147,6 +133,6 @@ const TreeDetails = (): JSX.Element => {
       </div>
     </div>
   );
-};
+}
 
 export default TreeDetails;
