@@ -4,7 +4,7 @@ import { useCallback, useMemo } from 'react';
 
 import Checkbox from '../Checkbox/Checkbox';
 
-type TOnClickItem = (value: string, isChecked: boolean) => void;
+type TOnClickItem = (value: string) => void;
 
 type TItems = { [key: string]: boolean };
 
@@ -40,15 +40,11 @@ const CheckboxSectionItem = ({
   isSelected,
 }: ICheckboxSectionItem): JSX.Element => {
   const handleOnToggle = useCallback(
-    (isChecked: boolean) => onClickItem(value, isChecked),
+    () => onClickItem(value),
     [value, onClickItem],
   );
   return (
-    <Checkbox
-      onToggle={handleOnToggle}
-      text={value}
-      startChecked={isSelected}
-    />
+    <Checkbox onToggle={handleOnToggle} text={value} isChecked={isSelected} />
   );
 };
 

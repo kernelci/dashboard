@@ -7,8 +7,12 @@ import ListingContent, {
 } from '../ListingContent/ListingContent';
 import StatusChartMemoized, { IStatusChart } from '../StatusChart/StatusCharts';
 
+type TPossibleCard = (IListingContent | ISummary | IStatusChart) & {
+  key: string;
+};
+
 interface ICardsGroup {
-  cards: (IListingContent | ISummary | IStatusChart)[];
+  cards: TPossibleCard[];
 }
 
 interface ICardContent {
@@ -17,13 +21,15 @@ interface ICardContent {
 
 const CardsGroup = ({ cards }: ICardsGroup): JSX.Element => {
   const cardsList = useMemo(() => {
-    return cards.map(card => (
-      <BaseCard
-        key={card.title?.key}
-        title={<span>{card.title}</span> ?? ''}
-        content={<CardContent card={card} />}
-      />
-    ));
+    return cards.map(card => {
+      return (
+        <BaseCard
+          key={card.key}
+          title={<span>{card.title}</span> ?? ''}
+          content={<CardContent card={card} />}
+        />
+      );
+    });
   }, [cards]);
   return <div className="columns-2">{cardsList}</div>;
 };

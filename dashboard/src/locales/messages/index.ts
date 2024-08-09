@@ -68,6 +68,7 @@ export const messages = {
     'global.errors': 'Errors',
     'global.failed': 'Failed',
     'global.filters': 'Filters',
+    'global.loading': 'Loading...',
     'global.missed': 'Missed',
     'global.modules': 'Modules',
     'global.name': 'Name',

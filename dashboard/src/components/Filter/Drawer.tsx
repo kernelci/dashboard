@@ -19,6 +19,7 @@ interface IDrawerLink {
 }
 
 interface IFilterDrawer extends IDrawerLink {
+  onOpenChange?: (open: boolean) => void;
   children?: React.ReactNode;
   onCancel?: () => void;
   onFilter?: () => void;
@@ -59,14 +60,30 @@ const DrawerLink = ({ treeURL }: IDrawerLink): JSX.Element => {
   );
 };
 
+export const DrawerSection = ({
+  children,
+  hideSeparator = false,
+}: {
+  children: React.ReactNode;
+  hideSeparator?: boolean;
+}): JSX.Element => {
+  return (
+    <>
+      {!hideSeparator && <Separator />}
+      <div className="px-6 py-10">{children}</div>
+    </>
+  );
+};
+
 const Drawer = ({
   treeURL,
   children,
   onCancel,
   onFilter,
+  onOpenChange,
 }: IFilterDrawer): JSX.Element => {
   return (
-    <UIDrawer>
+    <UIDrawer onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>
         <Button variant="outline">
           <FormattedMessage id="global.filters" />
@@ -78,11 +95,8 @@ const Drawer = ({
         <section className="max-h-full overflow-y-auto">
           <DrawerLink treeURL={treeURL} />
           <div className="w-[1000px] rounded-lg bg-white">
-            {React.Children.map(children, (child, idx) => (
-              <>
-                {idx != 0 && <Separator />}
-                <div className="px-6 py-10">{child}</div>
-              </>
+            {React.Children.map(children, child => (
+              <>{child}</>
             ))}
           </div>
         </section>

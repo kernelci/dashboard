@@ -1,10 +1,11 @@
 import { ComponentProps } from 'react';
 
+import { Link } from '@tanstack/react-router';
+
 import {
   Breadcrumb,
   BreadcrumbList as BreadcrumbListComponent,
   BreadcrumbItem,
-  BreadcrumbLink as BreadcrumbLinkComponent,
   BreadcrumbPage,
   BreadcrumbSeparator as BreadcrumbSeparatorComponent,
   BreadcrumbEllipsis,
@@ -18,13 +19,23 @@ const BreadcrumbList = ({ ...props }: BreadcrumbListProps): JSX.Element => {
   return <BreadcrumbListComponent {...props} className="text-black" />;
 };
 
-type BreadcrumbLinkProps = Omit<
-  ComponentProps<typeof BreadcrumbLinkComponent>,
-  'className'
+type LinkComponent = ComponentProps<typeof Link>;
+type BreadcrumbLinkProps = Pick<
+  LinkComponent,
+  'to' | 'params' | 'from' | 'search' | 'children'
 >;
-const BreadcrumbLink = ({ ...props }: BreadcrumbLinkProps): JSX.Element => {
+
+const BreadcrumbLink = ({
+  children,
+  ...props
+}: BreadcrumbLinkProps): JSX.Element => {
   return (
-    <BreadcrumbLinkComponent {...props} className="hover:text-slate-500" />
+    <Link
+      {...props}
+      className="transition-colors hover:text-slate-500 dark:hover:text-slate-50"
+    >
+      {children}
+    </Link>
   );
 };
 

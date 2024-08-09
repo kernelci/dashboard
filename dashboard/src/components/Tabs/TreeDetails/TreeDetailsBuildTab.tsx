@@ -1,16 +1,21 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
+
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import CardsGroup from '@/components/CardsGroup/CardsGroup';
 import { Colors, IStatusChart } from '@/components/StatusChart/StatusCharts';
-import { ITreeDetails } from '@/routes/TreeDetails/TreeDetails';
+
 import { TableInfo } from '@/components/Table/TableInfo';
 import { usePagination } from '@/hooks/usePagination';
 import Accordion from '@/components/Accordion/Accordion';
 import { Button } from '@/components/ui/button';
 import { IListingContent } from '@/components/ListingContent/ListingContent';
 import { ISummary } from '@/components/Summary/Summary';
+
+import { TableFilter } from '@/types/tree/TreeDetails';
+import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
 interface ITreeDetailsBuildTab {
   treeDetailsData?: ITreeDetails;
@@ -19,7 +24,13 @@ interface ITreeDetailsBuildTab {
 const TreeDetailsBuildTab = ({
   treeDetailsData,
 }: ITreeDetailsBuildTab): JSX.Element => {
-  const [filterBy, setFilterBy] = useState<'error' | 'success' | 'all'>('all');
+  const { tableFilter: filterBy } = useSearch({
+    from: '/tree/$treeId/',
+  });
+  const navigate = useNavigate({
+    from: '/tree/$treeId',
+  });
+
   const accordionContent = useMemo(() => {
     return treeDetailsData?.builds.map(row => ({
       accordionData: {
@@ -66,6 +77,7 @@ const TreeDetailsBuildTab = ({
     () => [
       {
         title: <FormattedMessage id="treeDetails.buildStatus" />,
+        key: 'buildStatus',
         type: 'chart',
         pieCentralLabel: `${
           (treeDetailsData?.buildsSummary.invalid ?? 0) +
@@ -85,15 +97,17 @@ const TreeDetailsBuildTab = ({
             color: Colors.Red,
           },
         ],
-      } as IStatusChart,
+      } as IStatusChart & { key: string },
       {
         items: treeDetailsData?.configs ?? [],
         title: <FormattedMessage id="treeDetails.configs" />,
+        key: 'configs',
         type: 'listing',
-      } as IListingContent,
+      } as IListingContent & { key: string },
       {
         summaryBody: treeDetailsData?.archs ?? [],
         title: <FormattedMessage id="treeDetails.summary" />,
+        key: 'summary',
         summaryHeaders: [
           <FormattedMessage key="treeDetails.arch" id="treeDetails.arch" />,
           <FormattedMessage
@@ -102,7 +116,7 @@ const TreeDetailsBuildTab = ({
           />,
         ],
         type: 'summary',
-      } as ISummary,
+      } as ISummary & { key: string },
     ],
     [
       treeDetailsData?.archs,
@@ -113,9 +127,19 @@ const TreeDetailsBuildTab = ({
     ],
   );
 
-  const onClickFilter = useCallback((type: 'error' | 'success' | 'all') => {
-    setFilterBy(type);
-  }, []);
+  const onClickFilter = useCallback(
+    (type: TableFilter) => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: type,
+          };
+        },
+      });
+    },
+    [navigate],
+  );
 
   return (
     <div className="flex flex-col gap-8 pt-4">

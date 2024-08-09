@@ -1,4 +1,4 @@
-import { ReactElement, useMemo } from 'react';
+import { ComponentProps, ReactElement, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -11,16 +11,22 @@ export interface ITabItem {
   disabled?: boolean;
 }
 
+type TabsProp = ComponentProps<typeof Tabs>;
+
 export interface ITabsComponent {
   tabs: ITabItem[];
-  defaultTab: ITabItem;
+  defaultTab?: string;
   filterListElement?: JSX.Element;
+  onValueChange?: TabsProp['onValueChange'];
+  value?: TabsProp['value'];
 }
 
 const TabsComponent = ({
   defaultTab,
   tabs,
   filterListElement,
+  onValueChange,
+  value,
 }: ITabsComponent): JSX.Element => {
   const tabsTrigger = useMemo(
     () =>
@@ -48,7 +54,12 @@ const TabsComponent = ({
   );
 
   return (
-    <Tabs defaultValue={defaultTab.name} className="w-full">
+    <Tabs
+      onValueChange={onValueChange}
+      value={value}
+      defaultValue={defaultTab}
+      className="w-full"
+    >
       <TabsList className="w-full justify-start">{tabsTrigger}</TabsList>
       <div className="py-6">{filterListElement}</div>
 

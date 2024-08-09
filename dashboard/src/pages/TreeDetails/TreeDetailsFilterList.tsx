@@ -1,12 +1,12 @@
 import { useCallback, useMemo } from 'react';
 
-import FilterList from '@/components/FilterList/FilterList';
+import { useNavigate } from '@tanstack/react-router';
 
-import { TFilter, TFilterKeys } from './TreeDetailsFilter';
+import FilterList from '@/components/FilterList/FilterList';
+import { TFilter, TFilterKeys } from '@/types/tree/TreeDetails';
 
 interface ITreeDetailsFilterList {
   filter: TFilter;
-  onFilter: (filter: TFilter) => void;
 }
 
 const createFlatFilter = (filter: TFilter): string[] => {
@@ -22,30 +22,41 @@ const createFlatFilter = (filter: TFilter): string[] => {
 
 const TreeDetailsFilterList = ({
   filter,
-  onFilter,
 }: ITreeDetailsFilterList): JSX.Element => {
   const flatFilter = useMemo(() => createFlatFilter(filter), [filter]);
+  const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const onClickItem = useCallback(
     (flatValue: string, _: number) => {
       const [field, value] = flatValue.split(':');
-      const newFilter = { ...filter };
-      newFilter[field as TFilterKeys][value] = false;
-      onFilter(newFilter);
+
+      const newFilter = JSON.parse(JSON.stringify(filter ?? {}));
+      const fieldSection = newFilter[field as TFilterKeys];
+
+      delete fieldSection[value];
+
+      navigate({
+        search: previousSearch => {
+          return {
+            ...previousSearch,
+            diffFilter: newFilter,
+          };
+        },
+      });
     },
-    [filter, onFilter],
+    [filter, navigate],
   );
 
   const onClickCleanALl = useCallback(() => {
-    const newFilter = { ...filter };
-
-    flatFilter.forEach(flatValue => {
-      const [field, value] = flatValue.split(':');
-      newFilter[field as TFilterKeys][value] = false;
+    navigate({
+      search: previousSearch => {
+        return {
+          ...previousSearch,
+          diffFilter: {},
+        };
+      },
     });
-
-    onFilter(newFilter);
-  }, [filter, onFilter, flatFilter]);
+  }, [navigate]);
 
   return (
     <FilterList

@@ -25,4 +25,3 @@ So we should use the URL to manage state as much as possible.
 Also, we are using file based routing in the tanstack router, only files that starts with ~ are read by the Vite plugin.
 
 
-

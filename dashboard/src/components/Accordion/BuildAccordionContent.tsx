@@ -4,7 +4,7 @@ import { useMemo, useCallback } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from '@tanstack/react-router';
 
 import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
@@ -43,17 +43,20 @@ export interface ILinksGroup {
 const AccordionBuildContent = ({
   accordionData,
 }: IAccordionItems): JSX.Element => {
-  const { treeId } = useParams();
+  const { treeId } = useParams({ from: '/tree/$treeId/' });
 
-  const navigate = useNavigate();
+  const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const contentData = accordionData as AccordionItemBuilds;
 
   const navigateToBuildDetails = useCallback(() => {
-    navigate(`/build/${contentData.id}`, {
-      state: { treeId },
+    navigate({
+      to: `/tree/${treeId}/build/${contentData.id}`,
+      params: { treeId },
+      // TODO Remove this after making search params optional
+      search: prev => prev,
     });
-  }, [navigate, contentData.id, treeId]);
+  }, [contentData.id, navigate, treeId]);
 
   const chartElements = useMemo(() => {
     return [
