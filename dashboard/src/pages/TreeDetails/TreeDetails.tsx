@@ -2,11 +2,9 @@ import { useParams, useSearch } from '@tanstack/react-router';
 import { useMemo } from 'react';
 
 import { useTreeDetails } from '@/api/TreeDetails';
-import TreeDetailsTab from '@/components/Tabs/TreeDetailsTab';
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
 import { AccordionItemBuilds, Results } from '@/types/tree/TreeDetails';
-
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,6 +15,7 @@ import {
 } from '@/components/Breadcrumb/Breadcrumb';
 
 import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
+import TreeDetailsTab from './Tabs/TreeDetailsTab';
 
 import TreeDetailsFilterList from './TreeDetailsFilterList';
 

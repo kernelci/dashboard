@@ -8,10 +8,10 @@ import { zPossibleValidator } from '@/types/tree/TreeDetails';
 
 import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
-import TreeDetailsBuildTab from './TreeDetails/TreeDetailsBuildTab';
+import BuildTab from './Build';
 import BootsTab from './Boots';
 
-export interface ITreeDetailsBuildTab {
+export interface ITreeDetailsTab {
   treeDetailsData?: ITreeDetails;
   filterListElement?: JSX.Element;
 }
@@ -19,14 +19,14 @@ export interface ITreeDetailsBuildTab {
 const TreeDetailsTab = ({
   treeDetailsData,
   filterListElement,
-}: ITreeDetailsBuildTab): JSX.Element => {
+}: ITreeDetailsTab): JSX.Element => {
   const { currentTreeDetailsTab } = useSearch({
     from: '/tree/$treeId/',
   });
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const buildsTab: ITabItem = {
     name: 'treeDetails.builds',
-    content: <TreeDetailsBuildTab treeDetailsData={treeDetailsData} />,
+    content: <BuildTab treeDetailsData={treeDetailsData} />,
     disabled: false,
   };
 

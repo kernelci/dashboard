@@ -6,7 +6,6 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import CardsGroup from '@/components/CardsGroup/CardsGroup';
 import { Colors, IStatusChart } from '@/components/StatusChart/StatusCharts';
-
 import { TableInfo } from '@/components/Table/TableInfo';
 import { usePagination } from '@/hooks/usePagination';
 import Accordion from '@/components/Accordion/Accordion';
@@ -17,13 +16,11 @@ import { ISummary } from '@/components/Summary/Summary';
 import { TableFilter } from '@/types/tree/TreeDetails';
 import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
-interface ITreeDetailsBuildTab {
+interface BuildTab {
   treeDetailsData?: ITreeDetails;
 }
 
-const TreeDetailsBuildTab = ({
-  treeDetailsData,
-}: ITreeDetailsBuildTab): JSX.Element => {
+const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   const { tableFilter: filterBy } = useSearch({
     from: '/tree/$treeId/',
   });
@@ -204,4 +201,4 @@ const TreeDetailsBuildTab = ({
 
 const ITEMS_PER_PAGE = 10;
 
-export default TreeDetailsBuildTab;
+export default BuildTab;
