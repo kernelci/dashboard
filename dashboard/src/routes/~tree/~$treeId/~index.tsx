@@ -14,6 +14,7 @@ const treeDetailsSearchSchema = z.object({
   currentTreeDetailsTab: zPossibleValidator,
   tableFilter: zTableFilterValidator,
   diffFilter: zDiffFilter,
+  testPath: z.string().optional().catch(''),
 });
 
 export const Route = createFileRoute('/tree/$treeId/')({

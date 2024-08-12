@@ -10,6 +10,7 @@ import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
 import BuildTab from './Build';
 import BootsTab from './Boots';
+import TestsTab from './Tests';
 
 export interface ITreeDetailsTab {
   treeDetailsData?: ITreeDetails;
@@ -30,6 +31,18 @@ const TreeDetailsTab = ({
     disabled: false,
   };
 
+  const bootsTab: ITabItem = {
+    name: 'treeDetails.boots',
+    content: <BootsTab />,
+    disabled: false,
+  };
+
+  const testsTab: ITabItem = {
+    name: 'treeDetails.tests',
+    content: <TestsTab />,
+    disabled: false,
+  };
+
   const onValueChange: (value: string) => void = useCallback(
     value => {
       const validatedValue = zPossibleValidator.parse(value);
@@ -44,18 +57,6 @@ const TreeDetailsTab = ({
     },
     [navigate],
   );
-
-  const bootsTab: ITabItem = {
-    name: 'treeDetails.boots',
-    content: <BootsTab />,
-    disabled: false,
-  };
-
-  const testsTab: ITabItem = {
-    name: 'treeDetails.tests',
-    content: <></>,
-    disabled: true,
-  };
 
   const treeDetailsTab = [buildsTab, bootsTab, testsTab];
   return (

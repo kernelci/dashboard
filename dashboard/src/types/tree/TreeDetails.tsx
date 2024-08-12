@@ -124,12 +124,13 @@ export type TTreeTestsData = {
 
 export type PossibleTabs = Extract<
   MessagesKey,
-  'treeDetails.builds' | 'treeDetails.boots'
+  'treeDetails.builds' | 'treeDetails.boots' | 'treeDetails.tests'
 >;
 
 const possibleTabs = [
   'treeDetails.builds',
   'treeDetails.boots',
+  'treeDetails.tests',
 ] as const satisfies PossibleTabs[];
 
 export const zPossibleValidator = z
