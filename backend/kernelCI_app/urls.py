@@ -8,4 +8,5 @@ urlpatterns = [
     path('build/<str:build_id>', views.BuildDetails.as_view(), name='buildDetails'),
     path('build/<str:build_id>/tests', views.BuildTests.as_view(), name='buildTests'),
     path('tree/<str:commit_hash>/boot/', views.Boots.as_view(), name='boots'),
+    path('tree/<str:commit_hash>/tests/', views.Test.as_view(), name='test'),
 ]
