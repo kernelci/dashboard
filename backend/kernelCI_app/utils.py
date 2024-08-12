@@ -1,3 +1,4 @@
+import json
 from django.utils import timezone
 from datetime import timedelta
 
@@ -8,3 +9,7 @@ def getQueryTimeInterval(**kwargs):
     if not kwargs:
         return timezone.now() - timedelta(**DEFAULT_QUERY_TIME_INTERVAL)
     return timezone.now() - timedelta(**kwargs)
+
+
+def getErrorResponseBody(reason):
+    return json.dumps({"error": True, "reason": reason})
