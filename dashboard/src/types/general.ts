@@ -1,4 +1,4 @@
-export type TBuildTests = {
+export type TPathTests = {
   current_path: string;
   start_time: string;
   origins: string[];
