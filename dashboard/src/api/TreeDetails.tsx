@@ -6,6 +6,8 @@ import {
   TTreeDetailsFilter,
 } from '@/types/tree/TreeDetails';
 
+import { TPathTests } from '@/types/general';
+
 import http from './api';
 
 const fetchTreeDetailData = async (
@@ -52,5 +54,39 @@ export const useBootsTab = (treeId: string): UseQueryResult<TTreeTestsData> => {
   return useQuery({
     queryKey: ['treeBootTests', treeId, params],
     queryFn: () => fetchTreeTestsData(treeId, params),
+  });
+};
+
+export const useTestsTab = (treeId: string): UseQueryResult<TTreeTestsData> => {
+  return useQuery({
+    queryKey: ['treeTests', treeId],
+    queryFn: () => fetchTreeTestsData(treeId),
+  });
+};
+
+type TRevisionData = {
+  git_commit_hash?: string;
+  patchset?: string;
+  path?: string;
+};
+
+const fetchRevisionTestData = async (
+  params?: TRevisionData,
+): Promise<TPathTests[]> => {
+  const res = await http.get<TPathTests[]>(`/api/revision/tests/`, {
+    params,
+  });
+
+  return res.data;
+};
+
+export const useRevisionTest = (
+  git_commit_hash: TRevisionData['git_commit_hash'],
+  patchset: TRevisionData['patchset'],
+  path: TRevisionData['path'],
+): UseQueryResult<TPathTests[]> => {
+  return useQuery({
+    queryKey: ['treeRevisionTests', git_commit_hash, patchset, path],
+    queryFn: () => fetchRevisionTestData({ git_commit_hash, patchset, path }),
   });
 };
