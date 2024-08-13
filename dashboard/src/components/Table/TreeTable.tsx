@@ -17,7 +17,7 @@ interface ITreeTable {
 }
 
 const treeTableColumnsLabelId: MessagesKey[] = [
-  'treeTable.commit',
+  'global.commit',
   'treeTable.patchset',
   'treeTable.build',
   'treeTable.test',

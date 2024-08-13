@@ -33,6 +33,7 @@ type TFilterValues = z.infer<typeof zFilterValue>;
 interface ITreeDetailsFilter {
   filter: TFilter;
   treeUrl: string;
+  commit: string;
 }
 
 const filterFieldMap = {
@@ -201,7 +202,10 @@ const MemoizedCheckboxSection = memo(CheckboxSection);
 const TreeDetailsFilter = ({
   filter,
   treeUrl,
+  commit,
 }: ITreeDetailsFilter): JSX.Element => {
+  const intl = useIntl();
+
   const navigate = useNavigate({
     from: '/tree/$treeId',
   });
@@ -231,6 +235,13 @@ const TreeDetailsFilter = ({
     [filter],
   );
 
+  const filterSummaryColumns = useMemo(
+    () => [
+      { title: intl.formatMessage({ id: 'global.commit' }), value: commit },
+    ],
+    [intl, commit],
+  );
+
   return (
     <FilterDrawer
       treeURL={treeUrl}
@@ -239,7 +250,10 @@ const TreeDetailsFilter = ({
       onCancel={onClickCancel}
     >
       <DrawerSection hideSeparator>
-        <FilterSummarySection {...summarySectionProps} />
+        <FilterSummarySection
+          title={intl.formatMessage({ id: 'global.revision' })}
+          columns={filterSummaryColumns}
+        />
       </DrawerSection>
       <MemoizedCheckboxSection
         setDiffFilter={setDiffFilter}
@@ -250,15 +264,3 @@ const TreeDetailsFilter = ({
 };
 
 export default TreeDetailsFilter;
-
-//TODO Double check hardcoded code
-const summarySectionProps = {
-  title: 'Tree',
-  columns: [
-    { title: 'Tree', value: 'stable-rc' },
-    {
-      title: 'Commit/tag',
-      value: '5.15.150-rc1 - 3ab4d9c9e190217ee7e974c70b96795cd2f74611',
-    },
-  ],
-};

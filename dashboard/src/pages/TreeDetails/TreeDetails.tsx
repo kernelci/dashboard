@@ -124,7 +124,11 @@ function TreeDetails(): JSX.Element {
       </Breadcrumb>
       <div className="flex flex-col pb-2">
         <div className="flex justify-end">
-          <TreeDetailsFilter filter={diffFilter} treeUrl={treeUrl} />
+          <TreeDetailsFilter
+            filter={diffFilter}
+            treeUrl={treeUrl}
+            commit={treeId}
+          />
         </div>
         <TreeDetailsTab
           treeDetailsData={treeDetailsData}

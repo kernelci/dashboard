@@ -10,7 +10,7 @@ export interface ISummarySection {
   columns: ISummarySectionColumn[];
 }
 
-const SummarySectioncolumn = ({
+const SummarySectionColumn = ({
   title,
   value,
 }: ISummarySectionColumn): JSX.Element => {
@@ -26,7 +26,7 @@ const SummarySection = ({ title, columns }: ISummarySection): JSX.Element => {
   const columnComponents = useMemo(
     () =>
       columns.map(column => (
-        <SummarySectioncolumn key={column.title} {...column} />
+        <SummarySectionColumn key={column.title} {...column} />
       )),
     [columns],
   );
