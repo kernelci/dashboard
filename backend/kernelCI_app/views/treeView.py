@@ -10,6 +10,21 @@ class TreeView(View):
     def get(self, _):
         checkouts = Checkouts.objects.raw(
             """
+            WITH
+                selection AS (
+                    SELECT
+                        start_time
+                    FROM (
+                        SELECT DISTINCT ON (git_commit_hash)
+                            start_time
+                        FROM
+                            checkouts
+                        WHERE start_time  >= TO_TIMESTAMP(%s)
+                        ) AS selection
+                    ORDER BY
+                        start_time DESC
+                )
+
             SELECT
                 checkouts.git_commit_hash AS id, patchset_hash,
                 COUNT(DISTINCT CASE WHEN builds.valid = true THEN builds.id END) AS valid_builds,
@@ -32,9 +47,11 @@ class TreeView(View):
                 builds ON builds.checkout_id = checkouts.id
             LEFT JOIN
                 tests ON tests.build_id = builds.id
-            WHERE checkouts.start_time  >= TO_TIMESTAMP(%s)
+            WHERE checkouts.start_time
+                BETWEEN (SELECT MIN(start_time) FROM selection) AND (SELECT MAX(start_time) FROM selection)
             GROUP BY
-                checkouts.git_commit_hash, checkouts.patchset_hash;
+                checkouts.git_commit_hash, checkouts.patchset_hash
+            ;
             """, [getQueryTimeInterval().timestamp()]
         )
 
