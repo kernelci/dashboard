@@ -8,7 +8,7 @@ import { usePagination } from '@/hooks/usePagination';
 
 import TreeTable from '../Table/TreeTable';
 import { Button } from '../ui/button';
-import { Tree, TreeTableBody } from '../../types/tree/Tree';
+import { TreeTableBody } from '../../types/tree/Tree';
 import { useTreeTable } from '../../api/Tree';
 import { TableInfo } from '../Table/TableInfo';
 
@@ -37,15 +37,18 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
     if (!data || error) {
       return [];
     } else {
-      return (data as Tree[])
+      return data
         .filter(tree => tree.git_commit_hash?.includes(inputFilter))
-        .map(tree => ({
-          commit: tree.git_commit_hash ?? '',
-          patchsetHash: tree.patchset_hash ?? '',
-          buildStatus: `${tree.build_status.invalid} / ${tree.build_status.invalid + tree.build_status.valid}`,
-          testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
-          id: tree.git_commit_hash ?? '',
-        }))
+        .map(
+          (tree): TreeTableBody => ({
+            commit: tree.git_commit_hash ?? '',
+            patchsetHash: tree.patchset_hash ?? '',
+            buildStatus: `${tree.build_status.invalid} / ${tree.build_status.invalid + tree.build_status.valid}`,
+            testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
+            id: tree.git_commit_hash ?? '',
+            tree_names: tree.tree_names,
+          }),
+        )
         .sort((a, b) =>
           a.commit.localeCompare(b.commit, undefined, { numeric: true }),
         );

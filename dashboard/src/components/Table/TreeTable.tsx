@@ -19,6 +19,7 @@ interface ITreeTable {
 const treeTableColumnsLabelId: MessagesKey[] = [
   'global.commit',
   'treeTable.patchset',
+  'treeTable.tree',
   'treeTable.build',
   'treeTable.test',
 ];
@@ -46,6 +47,9 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       <TableCell>{sanitizeTableValue(row.commit)}</TableCell>
       <TableCell>{sanitizeTableValue(row.patchsetHash)}</TableCell>
       <TableCell>
+        {sanitizeTableValue(row.tree_names.join(', '), false)}
+      </TableCell>
+      <TableCell>
         <div className={backgroundClassName}>
           {sanitizeTableValue(row.buildStatus)}
         </div>
@@ -68,6 +72,7 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
         patchsetHash={row.patchsetHash}
         buildStatus={row.buildStatus}
         testStatus={row.testStatus}
+        tree_names={row.tree_names}
         id={row.id}
       />
     ));
@@ -91,5 +96,5 @@ const truncateTableValue = (value: string): string =>
   value.substring(0, MAX_NUMBER_CHAR) +
   (value.length > MAX_NUMBER_CHAR ? '...' : '');
 
-const sanitizeTableValue = (value: string): string =>
-  truncateTableValue(value) || '-';
+const sanitizeTableValue = (value: string, truncate = true): string =>
+  (truncate ? truncateTableValue(value) : value) || '-';

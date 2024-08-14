@@ -40,7 +40,11 @@ class TreeView(View):
                 COUNT(CASE WHEN tests.status = 'SKIP' THEN 1 END) AS skip_tests,
                 SUM(CASE WHEN tests.status IS NULL AND tests.id IS NOT NULL THEN 1 ELSE 0 END)
                     AS null_tests,
-                COUNT(tests.id) AS total_tests
+                COUNT(tests.id) AS total_tests,
+                COALESCE(
+                    ARRAY_AGG(DISTINCT tree_name) FILTER (WHERE tree_name IS NOT NULL),
+                    ARRAY[]::text[]
+                ) AS tree_names
             FROM
                 checkouts
             LEFT JOIN

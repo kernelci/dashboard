@@ -19,6 +19,7 @@ class TreeSerializer(serializers.Serializer):
     test_status = serializers.SerializerMethodField(method_name="get_test_status")
     git_commit_hash = serializers.SerializerMethodField(method_name="get_git_commit_hash")
     patchset_hash = serializers.CharField()
+    tree_names = serializers.ListField()
 
     class Meta():
         fields = ['build_status', 'test_status', 'git_commit_hash', 'patchset_hash']

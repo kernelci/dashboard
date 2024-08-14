@@ -9,6 +9,6 @@ const fetchTreeCheckoutData = async (): Promise<Tree[]> => {
   return res.data;
 };
 
-export const useTreeTable = (): UseQueryResult => {
+export const useTreeTable = (): UseQueryResult<Tree[]> => {
   return useQuery({ queryKey: ['treeData'], queryFn: fetchTreeCheckoutData });
 };
