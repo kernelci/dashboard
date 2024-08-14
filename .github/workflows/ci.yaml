@@ -125,3 +125,29 @@ jobs:
       - name: Lint
         run: poetry run flake8
         working-directory: ./backend
+
+  deploy-staging:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs:
+      - lint-js
+      - build-front
+      - build-django
+    steps:
+      - name: Configure staging host authenticity
+        run: |
+          mkdir -p ~/.ssh/ && chmod 700 ~/.ssh/
+          touch ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts
+          echo "$SSH_HOSTKEY" > ~/.ssh/known_hosts
+        env:
+          SSH_HOSTKEY: ${{ secrets.STAGING_HOSTKEY }}
+
+      - name: Deploy to staging
+        run: |
+          eval $(ssh-agent -s)
+          echo "$SSH_KEY" | ssh-add - >/dev/null
+          ssh "${SSH_USER}@${SSH_HOST}" "deploy ${GITHUB_SHA}"
+        env:
+          SSH_USER: ${{ secrets.STAGING_USER }}
+          SSH_HOST: ${{ secrets.STAGING_HOST }}
+          SSH_KEY: ${{ secrets.STAGING_KEY }}
