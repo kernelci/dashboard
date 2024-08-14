@@ -81,15 +81,21 @@ const AccordionTableBody = ({
                 )}
               </TableRow>
             </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="w-f h-fit p-8">
-                {type === 'build' ? (
-                  <AccordionBuildContent accordionData={item.accordionData} />
-                ) : (
-                  <></>
-                )}
-              </div>
-            </CollapsibleContent>
+            <TableRow>
+              <TableCell colSpan={6} className="p-0">
+                <CollapsibleContent>
+                  <div className="h-fit w-full border-b border-darkGray bg-lightGray p-8">
+                    {type === 'build' ? (
+                      <AccordionBuildContent
+                        accordionData={item.accordionData}
+                      />
+                    ) : (
+                      <></>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </TableCell>
+            </TableRow>
           </>
         </Collapsible>
       )),
