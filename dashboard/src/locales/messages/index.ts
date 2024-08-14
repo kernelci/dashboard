@@ -6,7 +6,7 @@ export const messages = {
     'bootsTab.bootHistory': 'Boot History',
     'bootsTab.bootStatus': 'BootStatus',
     'bootsTab.configs': 'Configs',
-    'bootsTab.error': 'error',
+    'bootsTab.error': 'Error',
     'bootsTab.errorsSummary': 'Errors Summary',
     'bootsTab.info': 'Info',
     'bootsTab.info.description':
