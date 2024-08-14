@@ -27,6 +27,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   const navigate = useNavigate({
     from: '/tree/$treeId',
   });
+  const { diffFilter } = useSearch({ from: '/tree/$treeId/' });
 
   const accordionContent = useMemo(() => {
     return treeDetailsData?.builds.map(row => ({
@@ -69,7 +70,12 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         : accordionContent;
 
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
-    usePagination(filteredContent?.length ?? 0, ITEMS_PER_PAGE);
+    usePagination(
+      filteredContent?.length ?? 0,
+      ITEMS_PER_PAGE,
+      diffFilter,
+      filterBy,
+    );
   const intl = useIntl();
   const cards = useMemo(
     () => [
