@@ -261,7 +261,7 @@ const LineChartCard = ({
               )}
               {lastSuccessData && (
                 <LineChartLabel
-                  text={formatMessage({ id: 'bootsTab.error' })}
+                  text={formatMessage({ id: 'bootsTab.success' })}
                   backgroundColor="bg-green"
                 />
               )}
