@@ -60,8 +60,10 @@ const TabsComponent = ({
       defaultValue={defaultTab}
       className="w-full"
     >
-      <TabsList className="w-full justify-start">{tabsTrigger}</TabsList>
-      <div className="py-6">{filterListElement}</div>
+      <TabsList className="w-full justify-start bg-transparent">
+        {tabsTrigger}
+      </TabsList>
+      <div className="border-t border-darkGray py-6">{filterListElement}</div>
 
       {tabsContent}
     </Tabs>
