@@ -55,7 +55,7 @@ export const mapFilterToReq = (
     Object.entries(values).forEach(([value, isSelected]) => {
       if (isSelected) {
         if (reqField == 'valid') {
-          value = value == 'Sucess' ? 'true' : 'false';
+          value = value == 'Success' ? 'true' : 'false';
         }
         if (!filterMapped[reqField]) filterMapped[reqField] = [];
         filterMapped[reqField].push(value);
@@ -67,7 +67,7 @@ export const mapFilterToReq = (
 };
 
 export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
-  const status = { Sucess: false, Failure: false };
+  const status = { Success: false, Failure: false };
   const branches: TFilterValues = {};
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};

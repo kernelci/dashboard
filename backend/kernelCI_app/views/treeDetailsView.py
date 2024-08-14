@@ -36,7 +36,7 @@ class TreeDetails(View):
 
         return {"builds": build_summ, "configs": config_summ, "architectures": arch_summ}
 
-    def get_test_staus(self, build_id):
+    def get_test_status(self, build_id):
         status_keys = ["fail_tests", "error_tests", "miss_tests", "pass_tests",
                        "done_tests", "skip_tests", "null_tests", "total_tests"]
         builds = Builds.objects.raw(
@@ -91,7 +91,7 @@ class TreeDetails(View):
 
         records = query.select()
         for r in records:
-            status = self.get_test_staus(r.get('id'))
+            status = self.get_test_status(r.get('id'))
             r['status'] = status
 
         summary = self.create_summary(records)
