@@ -157,16 +157,16 @@ const AccordionBuildContent = ({
             />
           </div>
         )}
-        <LinksGroup links={links} />
-      </div>
-      <div className="mt-6 flex w-full flex-col items-center">
-        <Button
-          variant="outline"
-          className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
-          onClick={navigateToBuildDetails}
-        >
-          <FormattedMessage id="buildAccordion.showMore" />
-        </Button>
+        <div className="flex flex-col gap-8">
+          <LinksGroup links={links} />
+          <Button
+            variant="outline"
+            className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
+            onClick={navigateToBuildDetails}
+          >
+            <FormattedMessage id="buildAccordion.showMore" />
+          </Button>
+        </div>
       </div>
     </>
   );
