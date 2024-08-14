@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 
+import { TFilter, TableFilter } from '@/types/tree/TreeDetails';
+
 export const usePagination = (
   totalItems: number,
   itemsPerPage: number,
+  filters?: TFilter,
+  tableFilter?: TableFilter,
 ): {
   startIndex: number;
   endIndex: number;
@@ -13,8 +17,9 @@ export const usePagination = (
   const [endIndex, setEndIndex] = useState(0);
 
   useEffect(() => {
+    setStartIndex(0); //restart the index whenever there is a change in filters
     setEndIndex(totalItems > itemsPerPage ? itemsPerPage : totalItems);
-  }, [itemsPerPage, totalItems]);
+  }, [itemsPerPage, totalItems, filters, tableFilter]);
 
   const onClickGoForward = useCallback(() => {
     setStartIndex(endIndex);
