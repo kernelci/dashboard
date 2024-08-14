@@ -54,9 +54,7 @@ const Summary = ({
   );
 
   return (
-    <DumbSummary summaryHeaders={summaryHeaders}>
-      <TableBody>{summaryBodyRows}</TableBody>
-    </DumbSummary>
+    <DumbSummary summaryHeaders={summaryHeaders}>{summaryBodyRows}</DumbSummary>
   );
 };
 
