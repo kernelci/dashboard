@@ -196,7 +196,13 @@ const PieCenterLabel = ({
       <StyledText x={xPosition} y={top + yPositionLabel * height}>
         {label}
       </StyledText>
-      <StyledText x={xPosition} y={top + yPositionDescription * height}>
+      <StyledText
+        sx={{
+          fontWeight: 'bold',
+        }}
+        x={xPosition}
+        y={top + yPositionDescription * height}
+      >
         {description}
       </StyledText>
     </>

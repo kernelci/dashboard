@@ -16,7 +16,7 @@ import {
   MemoizedPlatformsWithError,
 } from '@/pages/TreeDetails/Tabs/TestCards';
 
-import TestsTable from './TestsTable';
+import TestsTable from './ImprovisedTestsTable';
 
 const TestsTab = (): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });

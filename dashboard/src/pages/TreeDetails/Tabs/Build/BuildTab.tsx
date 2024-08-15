@@ -1,4 +1,4 @@
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useCallback, useMemo } from 'react';
 
@@ -70,18 +70,21 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
 
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(filteredContent?.length ?? 0, ITEMS_PER_PAGE);
+  const intl = useIntl();
   const cards = useMemo(
     () => [
       {
         title: <FormattedMessage id="treeDetails.buildStatus" />,
         key: 'buildStatus',
         type: 'chart',
-        pieCentralLabel: `${
-          (treeDetailsData?.buildsSummary.invalid ?? 0) +
-          (treeDetailsData?.buildsSummary.valid ?? 0) +
-          (treeDetailsData?.buildsSummary.null ?? 0)
-        }`,
-        pieCentralDescription: <FormattedMessage id="treeDetails.executed" />,
+        pieCentralDescription: (
+          <>
+            {(treeDetailsData?.buildsSummary.invalid ?? 0) +
+              (treeDetailsData?.buildsSummary.valid ?? 0) +
+              (treeDetailsData?.buildsSummary.null ?? 0)}
+          </>
+        ),
+        pieCentralLabel: intl.formatMessage({ id: 'treeDetails.executed' }),
         elements: [
           {
             value: treeDetailsData?.buildsSummary.valid ?? 0,
@@ -116,6 +119,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
       } as ISummary & { key: string },
     ],
     [
+      intl,
       treeDetailsData?.archs,
       treeDetailsData?.buildsSummary.invalid,
       treeDetailsData?.buildsSummary.null,

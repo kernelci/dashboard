@@ -1,5 +1,5 @@
 # Database tested - `playground_kcidb`
-http 'http://localhost:8000/api/tests/kernelci:staging.kernelci.org:662be1c98baa75de59ce77b0'
+http 'http://localhost:8000/api/tests/maestro:66b4883fd22b231086764dc2'
 #TODO, find a better test ID which showcase a test with descendants
 
 

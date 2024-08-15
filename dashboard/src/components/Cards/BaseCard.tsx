@@ -1,5 +1,6 @@
 import { ReactElement, ReactNode } from 'react';
-import classNames from 'classnames';
+
+import { cn } from '@/lib/utils';
 
 export interface IBaseCard {
   title: ReactNode;
@@ -7,18 +8,18 @@ export interface IBaseCard {
   className?: string;
 }
 
-const containerClassName =
-  'flex flex-col rounded-xl bg-white w-full h-fit border border-darkGray text-black break-inside-avoid-column mb-6';
-
 const BaseCard = ({ title, content, className }: IBaseCard): JSX.Element => {
   return (
-    <div className={classNames(containerClassName, className)}>
-      <div className="flex h-full w-full flex-col gap-2 pt-4">
-        <span className="border-b border-darkGray pb-2 pl-3 font-bold">
-          {title}
-        </span>
-        {content}
+    <div
+      className={cn(
+        'mb-6 flex h-fit w-full break-inside-avoid-column flex-col gap-2 rounded-xl border border-darkGray bg-white pt-4 text-black',
+        className,
+      )}
+    >
+      <div className="border-b border-darkGray pb-2 pl-3 font-bold">
+        {title}
       </div>
+      <div>{content}</div>
     </div>
   );
 };

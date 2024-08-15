@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/~__root'
 import { Route as IndexImport } from './routes/~index'
 import { Route as TreeIndexImport } from './routes/~tree/~index'
 import { Route as TreeTreeIdIndexImport } from './routes/~tree/~$treeId/~index'
+import { Route as TreeTreeIdTestTestIdIndexImport } from './routes/~tree/~$treeId/~test/~$testId/~index'
 import { Route as TreeTreeIdBuildBuildIdIndexImport } from './routes/~tree/~$treeId/~build/~$buildId/~index'
 
 // Create/Update Routes
@@ -30,6 +31,11 @@ const TreeIndexRoute = TreeIndexImport.update({
 
 const TreeTreeIdIndexRoute = TreeTreeIdIndexImport.update({
   path: '/tree/$treeId/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const TreeTreeIdTestTestIdIndexRoute = TreeTreeIdTestTestIdIndexImport.update({
+  path: '/tree/$treeId/test/$testId/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -71,6 +77,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TreeTreeIdBuildBuildIdIndexImport
       parentRoute: typeof rootRoute
     }
+    '/tree/$treeId/test/$testId/': {
+      id: '/tree/$treeId/test/$testId/'
+      path: '/tree/$treeId/test/$testId'
+      fullPath: '/tree/$treeId/test/$testId'
+      preLoaderRoute: typeof TreeTreeIdTestTestIdIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -81,6 +94,7 @@ export const routeTree = rootRoute.addChildren({
   TreeIndexRoute,
   TreeTreeIdIndexRoute,
   TreeTreeIdBuildBuildIdIndexRoute,
+  TreeTreeIdTestTestIdIndexRoute,
 })
 
 /* prettier-ignore-end */
@@ -94,7 +108,8 @@ export const routeTree = rootRoute.addChildren({
         "/",
         "/tree/",
         "/tree/$treeId/",
-        "/tree/$treeId/build/$buildId/"
+        "/tree/$treeId/build/$buildId/",
+        "/tree/$treeId/test/$testId/"
       ]
     },
     "/": {
@@ -108,6 +123,9 @@ export const routeTree = rootRoute.addChildren({
     },
     "/tree/$treeId/build/$buildId/": {
       "filePath": "~tree/~$treeId/~build/~$buildId/~index.tsx"
+    },
+    "/tree/$treeId/test/$testId/": {
+      "filePath": "~tree/~$treeId/~test/~$testId/~index.tsx"
     }
   }
 }

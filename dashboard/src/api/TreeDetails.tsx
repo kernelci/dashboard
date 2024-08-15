@@ -4,6 +4,7 @@ import {
   TTreeTestsData,
   TreeDetails,
   TTreeDetailsFilter,
+  TTestByCommitHashResponse,
 } from '@/types/tree/TreeDetails';
 
 import { TPathTests } from '@/types/general';
@@ -61,6 +62,25 @@ export const useTestsTab = (treeId: string): UseQueryResult<TTreeTestsData> => {
   return useQuery({
     queryKey: ['treeTests', treeId],
     queryFn: () => fetchTreeTestsData(treeId),
+  });
+};
+
+const fetchTestsByCommitHash = async (
+  commitHash: string,
+): Promise<TTestByCommitHashResponse> => {
+  const res = await http.get<TTestByCommitHashResponse>(
+    `/api/improv/${commitHash}`,
+  );
+
+  return res.data;
+};
+
+export const useTestsByCommitHash = (
+  commitHash: string,
+): UseQueryResult<TTestByCommitHashResponse> => {
+  return useQuery({
+    queryKey: ['testsByCommitHash', commitHash],
+    queryFn: () => fetchTestsByCommitHash(commitHash),
   });
 };
 

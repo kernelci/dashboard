@@ -12,12 +12,12 @@ export interface ISubsection {
   infos: ILinkWithIcon[];
 }
 
-const Subsection = ({ infos }: ISubsection): JSX.Element => {
+export const Subsection = ({ infos }: ISubsection): JSX.Element => {
   const items = useMemo(
     () =>
       infos.map(info => (
         <LinkWithIcon
-          key={info.link}
+          key={info.title?.toString()}
           title={info.title}
           link={info.link}
           linkText={info.linkText}
