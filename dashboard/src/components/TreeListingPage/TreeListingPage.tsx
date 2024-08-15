@@ -38,7 +38,11 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
       return [];
     } else {
       return data
-        .filter(tree => tree.git_commit_hash?.includes(inputFilter))
+        .filter(
+          tree =>
+            tree.git_commit_hash?.includes(inputFilter) ||
+            tree.tree_names.some(name => name.includes(inputFilter)),
+        )
         .map(
           (tree): TreeTableBody => ({
             commit: tree.git_commit_hash ?? '',
