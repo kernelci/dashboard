@@ -63,6 +63,7 @@ const PlatformsWithError = ({
                 hasBottomBorder
                 key={platformWithErrorItem}
                 text={platformWithErrorItem}
+                showNumber={false}
               />
             );
           })}

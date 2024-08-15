@@ -8,6 +8,7 @@ export interface IListingItem {
   success?: number;
   text?: string;
   hasBottomBorder?: boolean;
+  showNumber?: boolean;
 }
 
 export enum ItemType {
@@ -23,14 +24,15 @@ const ListingItem = ({
   text,
   success,
   hasBottomBorder,
+  showNumber = true,
 }: IListingItem): JSX.Element => {
   const hasBorder = hasBottomBorder
     ? '[&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2 [&:not(:last-child)]:mb-2'
     : '';
-  const hasErrors = errors && errors > 0;
-  const hasWarnings = warnings && warnings > 0;
-  const hasSuccess = success && success > 0;
-  const hasNone = !hasErrors && !hasWarnings && !hasSuccess;
+  const hasErrors = errors && errors > 0 && showNumber;
+  const hasWarnings = warnings && warnings > 0 && showNumber;
+  const hasSuccess = success && success > 0 && showNumber;
+  const hasNone = !hasErrors && !hasWarnings && !hasSuccess && showNumber;
 
   const itemError = hasErrors ? (
     <ColoredCircle quantity={errors} backgroundClassName={ItemType.Error} />
