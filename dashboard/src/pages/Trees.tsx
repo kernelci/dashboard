@@ -1,5 +1,7 @@
 import { ChangeEvent, useCallback, useState } from 'react';
 
+import { useIntl } from 'react-intl';
+
 import TreeListingPage from '@/components/TreeListingPage/TreeListingPage';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
@@ -14,20 +16,20 @@ const Trees = (): JSX.Element => {
     [],
   );
 
+  const intl = useIntl();
+
   return (
     <>
       <div className="w-full bg-lightGray px-16 pt-24">
         <TreeListingPage inputFilter={inputSearchText} />
       </div>
-      <div className="fixed top-0 mx-52 flex w-full pl-6 pr-12 pt-5">
+      <div className="fixed top-0 z-10 mx-52 flex w-full pl-6 pr-12 pt-5">
         <div className="flex w-2/3 items-center px-6">
-          {/* placeholder for search */}
-          {/* TODO: use i18n for the input placeholder */}
           <DebounceInput
             onChange={onInputSearchTextChange}
             className="w-2/3"
             type="text"
-            placeholder="Search by tree, branch or tag"
+            placeholder={intl.formatMessage({ id: 'global.placeholderSearch' })}
             interval={DEBOUNCE_INTERVAL}
           />
         </div>

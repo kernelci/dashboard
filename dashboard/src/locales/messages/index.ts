@@ -77,6 +77,7 @@ export const messages = {
     'global.none': 'None',
     'global.origins': 'Origins',
     'global.pass': 'Pass',
+    'global.placeholderSearch': 'Search by tree, branch or tag',
     'global.revision': 'Revision',
     'global.seconds': 'sec',
     'global.skiped': 'Skipped',
