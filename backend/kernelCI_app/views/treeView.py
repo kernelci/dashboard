@@ -5,9 +5,13 @@ from kernelCI_app.serializers import TreeSerializer
 from kernelCI_app.utils import getQueryTimeInterval
 
 
-class TreeView(View):
+DEFAULT_ORIGIN = '0dayci'
 
-    def get(self, _):
+
+class TreeView(View):
+    def get(self, request):
+        origin = request.GET.get('origin', DEFAULT_ORIGIN)
+
         checkouts = Checkouts.objects.raw(
             """
             WITH
@@ -19,7 +23,7 @@ class TreeView(View):
                             start_time
                         FROM
                             checkouts
-                        WHERE start_time  >= TO_TIMESTAMP(%s)
+                        WHERE origin = %s AND start_time  >= TO_TIMESTAMP(%s)
                         ) AS selection
                     ORDER BY
                         start_time DESC
@@ -56,7 +60,7 @@ class TreeView(View):
             GROUP BY
                 checkouts.git_commit_hash, checkouts.patchset_hash
             ;
-            """, [getQueryTimeInterval().timestamp()]
+            """, [origin, getQueryTimeInterval().timestamp()]
         )
 
         serializer = TreeSerializer(checkouts, many=True)
