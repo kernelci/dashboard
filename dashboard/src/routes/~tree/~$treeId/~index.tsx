@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { z } from 'zod';
 
+import { zOrigin } from '@/types/tree/Tree';
+
 import {
   zPossibleValidator,
   zTableFilterValidator,
@@ -15,6 +17,7 @@ const treeDetailsSearchSchema = z.object({
   tableFilter: zTableFilterValidator,
   diffFilter: zDiffFilter,
   testPath: z.string().optional().catch(''),
+  origin: zOrigin,
 });
 
 export const Route = createFileRoute('/tree/$treeId/')({

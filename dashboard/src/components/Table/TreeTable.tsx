@@ -2,13 +2,13 @@ import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
 import { TableRow, TableCell } from '../ui/table';
 
-import { TreeTableBody } from '../../types/tree/Tree';
+import { TreeTableBody, zOrigin } from '../../types/tree/Tree';
 
 import BaseTable from './BaseTable';
 
@@ -25,6 +25,9 @@ const treeTableColumnsLabelId: MessagesKey[] = [
 ];
 
 const TreeTableRow = (row: TreeTableBody): JSX.Element => {
+  const { origin: unsafeOrigin } = useSearch({ strict: false });
+  const origin = zOrigin.parse(unsafeOrigin);
+
   const backgroundClassName =
     'flex flex-row bg-lightGray w-fit h-fit p-1 rounded-lg';
 
@@ -36,11 +39,12 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       params: { treeId: row.id },
       search: {
         tableFilter: 'all',
+        origin: origin,
         currentTreeDetailsTab: 'treeDetails.builds',
         diffFilter: {},
       },
     });
-  }, [navigate, row.id]);
+  }, [navigate, row.id, origin]);
 
   return (
     <TableRow onClick={navigateToTreeDetailPage}>

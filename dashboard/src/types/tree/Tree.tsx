@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export type TreeTableBody = {
   commit: string;
   patchsetHash: string;
@@ -28,3 +30,17 @@ export type Tree = {
     total: number;
   };
 };
+
+const origins = [
+  '0dayci',
+  'broonie',
+  'kernelci',
+  'maestro',
+  'microsoft',
+  'redhat',
+  'syzbot',
+  'tuxsuite',
+] as const;
+
+export const zOriginEnum = z.enum(origins);
+export const zOrigin = zOriginEnum.catch(origins[0]);

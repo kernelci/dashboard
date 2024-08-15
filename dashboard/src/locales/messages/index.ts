@@ -75,6 +75,7 @@ export const messages = {
     'global.modules': 'Modules',
     'global.name': 'Name',
     'global.none': 'None',
+    'global.origin': 'Origin',
     'global.origins': 'Origins',
     'global.pass': 'Pass',
     'global.placeholderSearch': 'Search by tree, branch or tag',

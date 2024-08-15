@@ -1,8 +1,11 @@
 import { FormattedMessage } from 'react-intl';
 
 import { MdExpandMore } from 'react-icons/md';
+import { useSearch } from '@tanstack/react-router';
 
 import { useMemo } from 'react';
+
+import { zOrigin } from '@/types/tree/Tree';
 
 import { usePagination } from '@/hooks/usePagination';
 
@@ -31,7 +34,10 @@ const FilterButton = (): JSX.Element => {
 };
 
 const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
-  const { data, error } = useTreeTable();
+  const { origin: unsafeOrigin } = useSearch({ strict: false });
+  const origin = zOrigin.parse(unsafeOrigin);
+
+  const { data, error } = useTreeTable(origin);
 
   const listItems: TreeTableBody[] = useMemo(() => {
     if (!data || error) {
