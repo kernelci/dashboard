@@ -86,6 +86,8 @@ export const messages = {
     'global.timing': 'Timing',
     'global.total': 'Total',
     'global.tree': 'Tree',
+    'revisions.details': 'Revision Details',
+    'revisions.path': 'Revisions',
     'routes.deviceMonitor': 'Devices',
     'routes.labsMonitor': 'Labs',
     'routes.treeMonitor': 'Revisions',

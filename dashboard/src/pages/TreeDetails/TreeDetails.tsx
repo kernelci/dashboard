@@ -1,6 +1,8 @@
 import { useParams, useSearch } from '@tanstack/react-router';
 import { useMemo } from 'react';
 
+import { FormattedMessage } from 'react-intl';
+
 import { useTreeDetails } from '@/api/TreeDetails';
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
@@ -113,11 +115,15 @@ function TreeDetails(): JSX.Element {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink to="/tree">Trees</BreadcrumbLink>
+            <BreadcrumbLink to="/tree">
+              <FormattedMessage id="revisions.path" />
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Tree Details</BreadcrumbPage>
+            <BreadcrumbPage>
+              <FormattedMessage id="revisions.details" />
+            </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
