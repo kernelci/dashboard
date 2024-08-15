@@ -3,7 +3,7 @@ import { ImTree } from 'react-icons/im';
 import { MdClose, MdCheck, MdFolderOpen } from 'react-icons/md';
 
 import { BsFileEarmarkCode } from 'react-icons/bs';
-import { useIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo } from 'react';
 
@@ -172,11 +172,13 @@ const BuildDetails = (): JSX.Element => {
       <Breadcrumb className="pb-6 pt-6">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink to="/tree">Trees</BreadcrumbLink>
+            <BreadcrumbLink to="/tree">
+              <FormattedMessage id="revisions.path" />
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbLink to={`/tree/$treeId`} params={{ treeId: treeId }}>
-            Tree Details
+            <FormattedMessage id="revisions.details" />
           </BreadcrumbLink>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
