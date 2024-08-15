@@ -20,7 +20,7 @@ const Trees = (): JSX.Element => {
 
   return (
     <>
-      <div className="w-full bg-lightGray px-16 pt-24">
+      <div className="w-full bg-lightGray py-10">
         <TreeListingPage inputFilter={inputSearchText} />
       </div>
       <div className="fixed top-0 z-10 mx-52 flex w-full pl-6 pr-12 pt-5">
