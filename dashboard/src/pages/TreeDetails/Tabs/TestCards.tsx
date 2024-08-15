@@ -193,11 +193,21 @@ const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
     return chartElement.value > 0;
   });
 
+  const totalCount = Object.values(statusCounts).reduce(
+    (accumulator: number, count) => accumulator + (count ?? 0),
+    0,
+  );
+
   return (
     <BaseCard
       title={title}
       content={
-        <StatusChartMemoized type="chart" elements={filteredChartElements} />
+        <StatusChartMemoized
+          type="chart"
+          elements={filteredChartElements}
+          pieCentralLabel="Statuses"
+          pieCentralDescription={<>{totalCount}</>}
+        />
       }
     />
   );
@@ -300,7 +310,7 @@ const LineChartCard = ({ testHistory, title }: ILineChartCard): JSX.Element => {
               data: allStartTimeStamps,
             },
           ]}
-          series={filteredLineChartSeries}
+          series={[...filteredLineChartSeries]}
         />
       }
     />

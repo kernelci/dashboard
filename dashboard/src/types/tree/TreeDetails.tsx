@@ -162,3 +162,15 @@ export const zDiffFilter = z
   .catch({});
 
 export type TFilter = z.infer<typeof zDiffFilter>;
+
+export type TestByCommitHash = {
+  id: string;
+  architecture: string | null;
+  compiler: string | null;
+  path: string | null;
+  status: string;
+};
+
+export type TTestByCommitHashResponse = {
+  tests: TestByCommitHash[];
+};

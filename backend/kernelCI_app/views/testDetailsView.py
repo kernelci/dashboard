@@ -1,3 +1,4 @@
+from collections import defaultdict
 from django.http import JsonResponse
 from django.db import connection
 from django.views import View
@@ -84,6 +85,7 @@ class TestDetails(View):
             """
 
         response_data = []
+        statusCount = defaultdict(int)
         with connection.cursor() as cursor:
             cursor.execute(query, [test_id, test_id])
             rows = cursor.fetchall()
@@ -91,6 +93,10 @@ class TestDetails(View):
             for row in rows:
                 item = {}
                 for idx, key in enumerate(names_map.keys()):
+                    if key == "status":
+                        statusCount[row[idx]] += 1
                     item[key] = row[idx]
                 response_data.append(item)
-        return JsonResponse({"tests": response_data}, safe=False)
+        return JsonResponse(
+            {"tests": response_data, "statusCount": statusCount}, safe=False
+        )

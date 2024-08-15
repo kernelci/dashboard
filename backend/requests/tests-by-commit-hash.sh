@@ -2,7 +2,7 @@
 # This should be empty
 # http 'http://localhost:8000/api/tree/a-git-commit-hash-that-clearly-does-not-exist/boot/'
 # This should find something
-http 'http://localhost:8000/api/tree/1dd28064d4164a4dc9096fd1a7990d2de15f2bb6/tests/'
+http 'http://localhost:8000/api/improv/0a33b8afe07a366222228559e4dd1de564dbdf13'
 
 # {
 #   "errorCounts": {
