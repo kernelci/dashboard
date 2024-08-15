@@ -282,7 +282,7 @@ const LineChartCard = ({ testHistory, title }: ILineChartCard): JSX.Element => {
               )}
               {lastSuccessData && (
                 <LineChartLabel
-                  text={formatMessage({ id: 'bootsTab.error' })}
+                  text={formatMessage({ id: 'bootsTab.success' })}
                   backgroundColor="bg-green"
                 />
               )}
