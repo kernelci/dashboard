@@ -17,9 +17,8 @@ interface ITreeTable {
 }
 
 const treeTableColumnsLabelId: MessagesKey[] = [
-  'global.commit',
-  'treeTable.patchset',
   'treeTable.tree',
+  'global.commit',
   'treeTable.build',
   'treeTable.test',
 ];
@@ -48,11 +47,10 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
 
   return (
     <TableRow onClick={navigateToTreeDetailPage}>
-      <TableCell>{sanitizeTableValue(row.commit)}</TableCell>
-      <TableCell>{sanitizeTableValue(row.patchsetHash)}</TableCell>
       <TableCell>
         {sanitizeTableValue(row.tree_names.join(', '), false)}
       </TableCell>
+      <TableCell>{sanitizeTableValue(row.commit)}</TableCell>
       <TableCell>
         <div className={backgroundClassName}>
           {sanitizeTableValue(row.buildStatus)}
