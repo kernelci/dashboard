@@ -57,6 +57,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
             testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
             id: tree.git_commit_hash ?? '',
             tree_names: tree.tree_names,
+            branch: tree.git_repository_branch ?? '',
           }),
         )
         .sort((a, b) =>
