@@ -17,14 +17,17 @@ class CheckoutsSerializer(serializers.ModelSerializer):
 class TreeSerializer(serializers.Serializer):
     build_status = serializers.SerializerMethodField(method_name="get_build_status")
     test_status = serializers.SerializerMethodField(method_name="get_test_status")
-    git_commit_hash = serializers.SerializerMethodField(method_name="get_git_commit_hash")
+    git_commit_hash = serializers.CharField()
     patchset_hash = serializers.CharField()
     tree_names = serializers.ListField()
+    git_repository_branch = serializers.CharField()
+    git_repository_url = serializers.CharField()
+    start_time = serializers.DateTimeField()
 
     class Meta():
         fields = ['build_status', 'test_status', 'git_commit_hash', 'patchset_hash']
 
-    def get_git_commit_hash(self, obj):
+    def get_repository_url(self, obj):
         return obj.id
 
     def get_build_status(self, obj):
