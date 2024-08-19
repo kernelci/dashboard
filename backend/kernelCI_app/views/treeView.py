@@ -14,23 +14,33 @@ class TreeView(View):
 
         checkouts = Checkouts.objects.raw(
             """
-            WITH
-                selection AS (
-                    SELECT
-                        start_time
-                    FROM (
-                        SELECT DISTINCT ON (git_commit_hash)
+            WITH selection AS (
+                SELECT
+                    git_repository_url,
+                    git_repository_branch,
+                    MAX(start_time) AS start_time
+                FROM
+                    (
+                        SELECT
+                            git_repository_url,
+                            git_repository_branch,
+                            origin,
                             start_time
                         FROM
                             checkouts
-                        WHERE origin = %s AND start_time  >= TO_TIMESTAMP(%s)
-                        ) AS selection
-                    ORDER BY
-                        start_time DESC
-                )
+                        WHERE
+                            origin = %s AND start_time  >= TO_TIMESTAMP(%s)
+                        ORDER BY
+                            start_time DESC
+                    ) AS selection_sorted
+                GROUP BY
+                    git_repository_url, git_repository_branch
+                ORDER BY
+                    start_time DESC
+            )
 
             SELECT
-                checkouts.git_commit_hash AS id, patchset_hash,
+                checkouts.*,
                 COUNT(DISTINCT CASE WHEN builds.valid = true THEN builds.id END) AS valid_builds,
                 COUNT(DISTINCT CASE WHEN builds.valid = false THEN builds.id END) AS invalid_builds,
                 COUNT(DISTINCT CASE WHEN builds.valid IS NULL AND builds.id IS NOT NULL THEN builds.id END)
@@ -50,15 +60,19 @@ class TreeView(View):
                     ARRAY[]::text[]
                 ) AS tree_names
             FROM
-                checkouts
+                selection
+            JOIN checkouts ON
+                checkouts.git_repository_url = selection.git_repository_url AND
+                checkouts.git_repository_branch = selection.git_repository_branch AND
+                checkouts.start_time = selection.start_time
             LEFT JOIN
                 builds ON builds.checkout_id = checkouts.id
             LEFT JOIN
                 tests ON tests.build_id = builds.id
-            WHERE checkouts.start_time
-                BETWEEN (SELECT MIN(start_time) FROM selection) AND (SELECT MAX(start_time) FROM selection)
             GROUP BY
-                checkouts.git_commit_hash, checkouts.patchset_hash
+                checkouts.id
+            ORDER BY
+                checkouts.start_time DESC;
             ;
             """, [origin, getQueryTimeInterval().timestamp()]
         )
