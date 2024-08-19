@@ -180,11 +180,7 @@ function TreeDetails(): JSX.Element {
       </div>
       <div className="relative mt-10 flex flex-col pb-2">
         <div className="absolute right-0 top-0">
-          <TreeDetailsFilter
-            filter={diffFilter}
-            treeUrl={treeUrl}
-            commit={treeId}
-          />
+          <TreeDetailsFilter filter={diffFilter} treeUrl={treeUrl} />
         </div>
         <TreeDetailsTab
           treeDetailsData={treeDetailsData}

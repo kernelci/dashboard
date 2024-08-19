@@ -46,7 +46,6 @@ export const messages = {
     'buildDetails.systemMap': 'System Map',
     'buildDetails.testResults': 'Test Results',
     'filter.architectureSubtitle': 'Please select one or more Architectures:',
-    'filter.branchSubtitle': 'Please select one or more Branches:',
     'filter.configsSubtitle': 'Please select one or more configs:',
     'filter.filtering': 'Filtering',
     'filter.max': 'Max',
