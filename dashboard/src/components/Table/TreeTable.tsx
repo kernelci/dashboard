@@ -18,6 +18,7 @@ interface ITreeTable {
 
 const treeTableColumnsLabelId: MessagesKey[] = [
   'treeTable.tree',
+  'treeTable.branch',
   'global.commit',
   'treeTable.build',
   'treeTable.test',
@@ -50,6 +51,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       <TableCell>
         {sanitizeTableValue(row.tree_names.join(', '), false)}
       </TableCell>
+      <TableCell>{sanitizeTableValue(row.branch, false)}</TableCell>
       <TableCell>{sanitizeTableValue(row.commit)}</TableCell>
       <TableCell>
         <div className={backgroundClassName}>
@@ -76,6 +78,7 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
         testStatus={row.testStatus}
         tree_names={row.tree_names}
         id={row.id}
+        branch={row.branch}
       />
     ));
     // eslint-disable-next-line react-hooks/exhaustive-deps

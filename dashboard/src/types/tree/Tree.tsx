@@ -7,12 +7,14 @@ export type TreeTableBody = {
   tree_names: string[];
   testStatus: string;
   id: string;
+  branch: string;
 };
 
 export type Tree = {
   git_commit_hash: string | null;
   patchset_hash: string | null;
   tree_names: string[];
+  git_repository_branch: string | null;
   build_status: {
     valid: number;
     invalid: number;
