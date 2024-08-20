@@ -20,6 +20,7 @@ const treeTableColumnsLabelId: MessagesKey[] = [
   'treeTable.tree',
   'treeTable.branch',
   'global.commit',
+  'filter.treeURL',
   'global.date',
   'treeTable.build',
   'treeTable.test',
@@ -54,6 +55,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       </TableCell>
       <TableCell>{sanitizeTableValue(row.branch, false)}</TableCell>
       <TableCell>{sanitizeTableValue(row.commit)}</TableCell>
+      <TableCell>{sanitizeTableValue(row.url, false)}</TableCell>
       <TableCell>{sanitizeTableValue(row.date.split('T')[0] ?? '')}</TableCell>
       <TableCell>
         <div className={backgroundClassName}>
@@ -82,6 +84,7 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
         id={row.id}
         branch={row.branch}
         date={row.date}
+        url={row.url}
       />
     ));
     // eslint-disable-next-line react-hooks/exhaustive-deps

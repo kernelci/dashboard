@@ -9,6 +9,7 @@ export type TreeTableBody = {
   id: string;
   branch: string;
   date: string;
+  url: string;
 };
 
 export type Tree = {
@@ -17,6 +18,7 @@ export type Tree = {
   tree_names: string[];
   git_repository_branch: string | null;
   start_time: string | null;
+  git_repository_url: string | null;
   build_status: {
     valid: number;
     invalid: number;
