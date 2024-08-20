@@ -36,12 +36,19 @@ const CardsGroup = ({ cards }: ICardsGroup): JSX.Element => {
 
 const CardContent = ({ card }: ICardContent): JSX.Element => {
   if (card.type === 'listing' && card.items) {
-    return <ListingContent key={card.title.key} items={card.items} />;
+    return (
+      <ListingContent
+        key={card.title.key}
+        items={card.items}
+        onClickItem={card.onClickItem}
+      />
+    );
   } else if (card.type === 'summary' && card.summaryBody) {
     return (
       <Summary
         key={card.title.key}
         summaryHeaders={card?.summaryHeaders}
+        onClickKey={card?.onClickKey}
         summaryBody={card?.summaryBody}
       />
     );

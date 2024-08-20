@@ -12,10 +12,12 @@ export interface ISummary extends ISummaryTable {
 export interface ISummaryTable {
   summaryHeaders: ReactElement[];
   summaryBody: ISummaryItem[];
+  onClickKey?: (key: string) => void;
 }
 
 export interface ISummaryItem {
   arch: IListingItem;
+  onClickKey?: (key: string) => void;
   compilers: string[];
 }
 
@@ -40,17 +42,19 @@ export const DumbSummary = ({
 const Summary = ({
   summaryHeaders,
   summaryBody,
+  onClickKey,
 }: ISummaryTable): JSX.Element => {
   const summaryBodyRows = useMemo(
     () =>
       summaryBody?.map(row => (
         <SummaryItem
+          onClickKey={onClickKey}
           key={row.arch.text}
           arch={row.arch}
           compilers={row.compilers}
         />
       )),
-    [summaryBody],
+    [onClickKey, summaryBody],
   );
 
   return (
@@ -58,7 +62,11 @@ const Summary = ({
   );
 };
 
-export const SummaryItem = ({ arch, compilers }: ISummaryItem): JSX.Element => {
+export const SummaryItem = ({
+  arch,
+  compilers,
+  onClickKey,
+}: ISummaryItem): JSX.Element => {
   const compilersElement = useMemo(
     () =>
       compilers?.map(compiler => (
@@ -73,6 +81,7 @@ export const SummaryItem = ({ arch, compilers }: ISummaryItem): JSX.Element => {
       <TableCell>
         <ListingItem
           errors={arch.errors}
+          onClick={onClickKey}
           warnings={arch.warnings}
           text={arch.text}
           success={arch.success}
