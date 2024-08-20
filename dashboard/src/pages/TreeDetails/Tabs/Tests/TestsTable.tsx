@@ -11,7 +11,7 @@ import { usePagination } from '@/hooks/usePagination';
 import { formatDate } from '@/utils/utils';
 import { MessagesKey } from '@/locales/messages';
 
-import { useRevisionTest } from '@/api/TreeDetails';
+import { useTreeTest } from '@/api/TreeDetails';
 
 const headerLabelIds: MessagesKey[] = [
   'global.origins',
@@ -69,7 +69,7 @@ const TestsTable = ({ treeId, patchset = '' }: ITestsTable): JSX.Element => {
   const intl = useIntl();
   const { testPath } = useSearch({ from: '/tree/$treeId/' });
   const navigate = useNavigate({ from: '/tree/$treeId' });
-  const { data, error } = useRevisionTest(treeId, patchset, testPath);
+  const { data, error } = useTreeTest(treeId, patchset, testPath);
   const data_len = data?.length || 0;
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(data_len, ITEMS_PER_PAGE);

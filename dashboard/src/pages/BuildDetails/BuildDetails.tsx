@@ -173,12 +173,12 @@ const BuildDetails = (): JSX.Element => {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink to="/tree">
-              <FormattedMessage id="revisions.path" />
+              <FormattedMessage id="tree.path" />
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbLink to={`/tree/$treeId`} params={{ treeId: treeId }}>
-            <FormattedMessage id="revisions.details" />
+            <FormattedMessage id="tree.details" />
           </BreadcrumbLink>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
