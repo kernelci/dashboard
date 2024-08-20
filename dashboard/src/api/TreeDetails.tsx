@@ -84,29 +84,27 @@ export const useTestsByCommitHash = (
   });
 };
 
-type TRevisionData = {
+type TTreeData = {
   git_commit_hash?: string;
   patchset?: string;
   path?: string;
 };
 
-const fetchRevisionTestData = async (
-  params?: TRevisionData,
-): Promise<TPathTests[]> => {
-  const res = await http.get<TPathTests[]>(`/api/revision/tests/`, {
+const fetchTreeTestData = async (params?: TTreeData): Promise<TPathTests[]> => {
+  const res = await http.get<TPathTests[]>(`/api/tree/tests/`, {
     params,
   });
 
   return res.data;
 };
 
-export const useRevisionTest = (
-  git_commit_hash: TRevisionData['git_commit_hash'],
-  patchset: TRevisionData['patchset'],
-  path: TRevisionData['path'],
+export const useTreeTest = (
+  git_commit_hash: TTreeData['git_commit_hash'],
+  patchset: TTreeData['patchset'],
+  path: TTreeData['path'],
 ): UseQueryResult<TPathTests[]> => {
   return useQuery({
     queryKey: ['treeRevisionTests', git_commit_hash, patchset, path],
-    queryFn: () => fetchRevisionTestData({ git_commit_hash, patchset, path }),
+    queryFn: () => fetchTreeTestData({ git_commit_hash, patchset, path }),
   });
 };
