@@ -1,8 +1,13 @@
-import type { ReactElement } from 'react';
+import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
 import classNames from 'classnames';
 
-import { Table, TableHead, TableHeader, TableRow } from '../ui/table';
+import {
+  Table,
+  TableHead as TableHeadComponent,
+  TableHeader,
+  TableRow,
+} from '../ui/table';
 
 interface IBaseTableCommon {
   headers: ReactElement[];
@@ -21,6 +26,44 @@ interface IChildrenTable extends IBaseTableCommon {
 
 type TBaseTable = IBodyTable | IChildrenTable;
 
+export const DumbBaseTable = ({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}): JSX.Element => {
+  return (
+    <Table
+      className={classNames(className, 'w-full rounded-lg bg-white text-black')}
+    >
+      {children}
+    </Table>
+  );
+};
+
+export const DumbTableHeader = ({
+  children,
+}: {
+  children: ReactNode;
+}): JSX.Element => {
+  return (
+    <TableHeader className="bg-mediumGray">
+      <TableRow>{children}</TableRow>
+    </TableHeader>
+  );
+};
+
+export const TableHead = ({
+  children,
+}: ComponentProps<typeof TableHeadComponent>): JSX.Element => {
+  return (
+    <TableHeadComponent className="border-b font-bold text-black">
+      {children}
+    </TableHeadComponent>
+  );
+};
+
 const BaseTable = ({
   headers,
   body,
@@ -29,23 +72,16 @@ const BaseTable = ({
 }: TBaseTable): JSX.Element => {
   return (
     <div className="h-full">
-      <Table
-        className={classNames(
-          className,
-          'w-full rounded-lg bg-white text-black',
-        )}
-      >
-        <TableHeader className="bg-mediumGray">
-          <TableRow>
-            {headers.map(column => (
-              <TableHead className="border-b text-black" key={column.key}>
-                {column}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
+      <DumbBaseTable className={className}>
+        <DumbTableHeader>
+          {headers.map(column => (
+            <TableHead className="border-b text-black" key={column.key}>
+              {column}
+            </TableHead>
+          ))}
+        </DumbTableHeader>
         {body || children}
-      </Table>
+      </DumbBaseTable>
     </div>
   );
 };

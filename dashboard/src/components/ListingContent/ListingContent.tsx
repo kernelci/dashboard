@@ -7,10 +7,12 @@ import ListingItem, {
 export interface IListingContent {
   items: IListingItem[];
   title: ReactElement;
+  onClickItem: (item: string) => void;
   type: 'listing';
 }
 
 interface IListingCardContent {
+  onClickItem?: (item: string) => void;
   items: IListingItem[];
 }
 
@@ -23,7 +25,10 @@ export const DumbListingContent = ({
   return <div className="flex flex-col gap-2 p-4">{children}</div>;
 };
 
-const ListingContent = ({ items }: IListingCardContent): JSX.Element => {
+const ListingContent = ({
+  items,
+  onClickItem,
+}: IListingCardContent): JSX.Element => {
   const content = useMemo(() => {
     return items.map(item => (
       <ListingItem
@@ -32,9 +37,10 @@ const ListingContent = ({ items }: IListingCardContent): JSX.Element => {
         errors={item.errors}
         success={item.success}
         text={item.text}
+        onClick={onClickItem}
       />
     ));
-  }, [items]);
+  }, [items, onClickItem]);
   return <DumbListingContent>{content}</DumbListingContent>;
 };
 

@@ -8,7 +8,10 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 
 import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
-import StatusChartMemoized, { Colors } from '../StatusChart/StatusCharts';
+import StatusChartMemoized, {
+  Colors,
+  IStatusChart,
+} from '../StatusChart/StatusCharts';
 
 import LinksGroup from '../LinkGroup/LinkGroup';
 
@@ -58,23 +61,23 @@ const AccordionBuildContent = ({
     });
   }, [contentData.id, navigate, treeId]);
 
-  const chartElements = useMemo(() => {
+  const chartElements: IStatusChart['elements'] = useMemo(() => {
     return [
       {
         value: contentData.testStatus?.passTests ?? 0,
-        label: <FormattedMessage id="buildAccordion.testSuccess" />,
+        label: 'buildAccordion.testSuccess',
         color: Colors.Green,
       },
       {
         value:
           (contentData.testStatus?.failTests ?? 0) +
           (contentData.testStatus?.errorTests ?? 0),
-        label: <FormattedMessage id="buildAccordion.testError" />,
+        label: 'buildAccordion.testError',
         color: Colors.Red,
       },
       {
         value: contentData.testStatus?.skipTests ?? 0,
-        label: <FormattedMessage id="buildAccordion.testSkipped" />,
+        label: 'buildAccordion.testSkipped',
         color: Colors.Gray,
       },
     ];
