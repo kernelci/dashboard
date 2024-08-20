@@ -4,7 +4,7 @@ import { LOCALES } from '../constants';
 export const messages = {
   [LOCALES.EN_US]: {
     'bootsTab.bootHistory': 'Boot History',
-    'bootsTab.bootStatus': 'BootStatus',
+    'bootsTab.bootStatus': 'Boot Status',
     'bootsTab.configs': 'Configs',
     'bootsTab.error': 'Error',
     'bootsTab.errorsSummary': 'Errors Summary',
