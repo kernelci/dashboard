@@ -8,6 +8,7 @@ export const messages = {
     'bootsTab.configs': 'Configs',
     'bootsTab.error': 'Error',
     'bootsTab.errorsSummary': 'Errors Summary',
+    'bootsTab.fail': 'Fail',
     'bootsTab.info': 'Info',
     'bootsTab.info.description':
       'ℹ️ There is no boot test data available for this tree',
