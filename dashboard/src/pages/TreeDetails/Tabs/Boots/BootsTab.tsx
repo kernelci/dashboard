@@ -29,7 +29,7 @@ const BootsTab = (): JSX.Element => {
   }
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <FormattedMessage id="global.loading" />;
   }
 
   if (!data) return <div />;
@@ -37,7 +37,7 @@ const BootsTab = (): JSX.Element => {
   if (data.testHistory.length < 1) {
     return (
       <BaseCard
-        title=<FormattedMessage id="bootsTab.info" />
+        title={<FormattedMessage id="bootsTab.info" />}
         content={
           <p className="p-4 text-[1.3rem] text-darkGray">
             ℹ️ <FormattedMessage id="bootsTab.info.description" />
@@ -72,7 +72,7 @@ const BootsTab = (): JSX.Element => {
           platformsWithError={data.platformsWithError}
         />
         <MemoizedErrorCountList
-          title={<>Fail</>}
+          title={<FormattedMessage id="bootsTab.fail" />}
           errorMessageCounts={data.errorMessageCounts}
         />
       </div>
