@@ -1,6 +1,3 @@
-import { FormattedMessage } from 'react-intl';
-
-import { MdExpandMore } from 'react-icons/md';
 import { useSearch } from '@tanstack/react-router';
 
 import { useMemo } from 'react';
@@ -10,7 +7,6 @@ import { zOrigin } from '@/types/tree/Tree';
 import { usePagination } from '@/hooks/usePagination';
 
 import TreeTable from '../Table/TreeTable';
-import { Button } from '../ui/button';
 import { TreeTableBody } from '../../types/tree/Tree';
 import { useTreeTable } from '../../api/Tree';
 import { TableInfo } from '../Table/TableInfo';
@@ -18,20 +14,6 @@ import { TableInfo } from '../Table/TableInfo';
 interface ITreeListingPage {
   inputFilter: string;
 }
-
-const FilterButton = (): JSX.Element => {
-  return (
-    <Button
-      variant="outline"
-      className="w-[128px] rounded-full border-black text-black"
-    >
-      <div className="flex flex-row items-center gap-1">
-        <FormattedMessage id="global.filters" />
-        <MdExpandMore />
-      </div>
-    </Button>
-  );
-};
 
 const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
@@ -77,7 +59,6 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-end gap-4">
-        <FilterButton />
         <TableInfo
           startIndex={startIndex + 1}
           endIndex={endIndex}
