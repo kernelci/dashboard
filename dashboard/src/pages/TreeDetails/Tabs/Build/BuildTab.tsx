@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { IListingContent } from '@/components/ListingContent/ListingContent';
 import { ISummary } from '@/components/Summary/Summary';
 
-import { TableFilter } from '@/types/tree/TreeDetails';
+import { TableFilter, TFilterKeys } from '@/types/tree/TreeDetails';
 import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
 interface BuildTab {
@@ -71,12 +71,40 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(filteredContent?.length ?? 0, ITEMS_PER_PAGE);
   const intl = useIntl();
-  const cards = useMemo(
-    () => [
+  const cards = useMemo(() => {
+    const toggleFilterBySection = (
+      filterSectionKey: string,
+      filterSection: TFilterKeys,
+    ): void => {
+      navigate({
+        search: previousParams => {
+          const { diffFilter } = previousParams;
+          const newFilter = structuredClone(diffFilter);
+          // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
+          newFilter[filterSection] = newFilter[filterSection] ?? {};
+          const configs = newFilter[filterSection];
+          if (configs[filterSectionKey]) {
+            delete configs[filterSectionKey];
+          } else {
+            configs[filterSectionKey] = true;
+          }
+
+          return {
+            ...previousParams,
+            diffFilter: newFilter,
+          };
+        },
+      });
+    };
+
+    return [
       {
         title: <FormattedMessage id="treeDetails.buildStatus" />,
         key: 'buildStatus',
         type: 'chart',
+        onLegendClick: (value: string) => {
+          toggleFilterBySection(value, 'status');
+        },
         pieCentralDescription: (
           <>
             {(treeDetailsData?.buildsSummary.invalid ?? 0) +
@@ -88,12 +116,12 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         elements: [
           {
             value: treeDetailsData?.buildsSummary.valid ?? 0,
-            label: <FormattedMessage id="treeDetails.success" />,
+            label: 'treeDetails.success',
             color: Colors.Green,
           },
           {
             value: treeDetailsData?.buildsSummary.invalid ?? 0,
-            label: <FormattedMessage id="treeDetails.failed" />,
+            label: 'treeDetails.failed',
             color: Colors.Red,
           },
         ],
@@ -103,6 +131,9 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         title: <FormattedMessage id="treeDetails.configs" />,
         key: 'configs',
         type: 'listing',
+        onClickItem: (value: string) => {
+          toggleFilterBySection(value, 'configs');
+        },
       } as IListingContent & { key: string },
       {
         summaryBody: treeDetailsData?.archs ?? [],
@@ -116,17 +147,20 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           />,
         ],
         type: 'summary',
+        onClickKey: (key: string) => {
+          toggleFilterBySection(key, 'archs');
+        },
       } as ISummary & { key: string },
-    ],
-    [
-      intl,
-      treeDetailsData?.archs,
-      treeDetailsData?.buildsSummary.invalid,
-      treeDetailsData?.buildsSummary.null,
-      treeDetailsData?.buildsSummary.valid,
-      treeDetailsData?.configs,
-    ],
-  );
+    ];
+  }, [
+    intl,
+    navigate,
+    treeDetailsData?.archs,
+    treeDetailsData?.buildsSummary.invalid,
+    treeDetailsData?.buildsSummary.null,
+    treeDetailsData?.buildsSummary.valid,
+    treeDetailsData?.configs,
+  ]);
 
   const onClickFilter = useCallback(
     (type: TableFilter) => {

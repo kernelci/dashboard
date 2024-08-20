@@ -6,11 +6,15 @@ import React, { ReactElement, useMemo } from 'react';
 import { useDrawingArea } from '@mui/x-charts';
 import { styled } from '@mui/material';
 
+import { useIntl } from 'react-intl';
+
+import { MessagesKey } from '@/locales/messages';
+
 import ColoredCircle from '../ColoredCircle/ColoredCircle';
 
 export type StatusChartValues = {
   value: number;
-  label: ReactElement;
+  label: MessagesKey;
   color: Colors;
 };
 
@@ -22,6 +26,7 @@ export enum Colors {
 }
 
 export interface IStatusChart {
+  onLegendClick?: (value: string) => void;
   elements: StatusChartValues[];
   insideText?: StatusChartValues;
   increaseElement?: StatusChartValues;
@@ -33,6 +38,7 @@ export interface IStatusChart {
 }
 
 interface IChartLegend {
+  onClick?: (value: string) => void;
   chartValues: (StatusChartValues | undefined)[];
 }
 
@@ -53,6 +59,7 @@ const StatusChart = ({
   pieCentralLabel,
   pieCentralDescription,
   title,
+  onLegendClick,
 }: IStatusChart): JSX.Element => {
   const showChart = elements.some(element => element.value > 0);
 
@@ -92,7 +99,7 @@ const StatusChart = ({
           />
         </PieChart>
         <div className="flex flex-row gap-4 pt-5">
-          <ChartLegend chartValues={elements} />
+          <ChartLegend chartValues={elements} onClick={onLegendClick} />
           <RegressionsStatus
             increaseElement={increaseElement}
             decreaseElement={decreaseElement}
@@ -120,24 +127,43 @@ const getColorClassName = (color: Colors): string => {
   }
 };
 
-const ChartLegend = ({ chartValues }: IChartLegend): JSX.Element => {
+const ChartLegend = ({ chartValues, onClick }: IChartLegend): JSX.Element => {
+  const intl = useIntl();
   const legend = useMemo(() => {
-    return chartValues.map(chartValue => (
-      <div key={chartValue?.color} className="flex flex-row">
-        {chartValue && (
-          <div className="pr-2 pt-1">
-            <ColoredCircle
-              backgroundClassName={getColorClassName(chartValue.color)}
-            />
+    return chartValues.map(chartValue => {
+      const WrapperElement = onClick ? 'button' : 'div';
+      const status = intl.formatMessage({ id: chartValue?.label });
+
+      if (!chartValue?.label) {
+        return (
+          <div key={chartValue?.color} className="hidden">
+            Invalid chart value
+            <pre>{JSON.stringify(chartValue)}</pre>
           </div>
-        )}
-        <div className="flex flex-col">
-          <span className="font-bold">{chartValue?.value}</span>
-          <span className="text-darkGray2">{chartValue?.label}</span>
-        </div>
-      </div>
-    ));
-  }, [chartValues]);
+        );
+      }
+
+      return (
+        <WrapperElement
+          onClick={(): void => onClick?.(status)}
+          key={chartValue?.color}
+          className="flex flex-row"
+        >
+          {chartValue && (
+            <div className="pr-2 pt-1">
+              <ColoredCircle
+                backgroundClassName={getColorClassName(chartValue.color)}
+              />
+            </div>
+          )}
+          <div className="flex flex-col">
+            <span className="font-bold">{chartValue?.value}</span>
+            <span className="text-darkGray2">{status}</span>
+          </div>
+        </WrapperElement>
+      );
+    });
+  }, [chartValues, intl, onClick]);
   return <div className="flex flex-col gap-2">{legend}</div>;
 };
 

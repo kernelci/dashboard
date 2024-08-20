@@ -1,14 +1,17 @@
 import classNames from 'classnames';
 
+import { useCallback } from 'react';
+
 import ColoredCircle from '../ColoredCircle/ColoredCircle';
 
 export interface IListingItem {
   warnings?: number;
   errors?: number;
   success?: number;
-  text?: string;
+  text: string;
   hasBottomBorder?: boolean;
   showNumber?: boolean;
+  onClick?: (item: string) => void;
 }
 
 export enum ItemType {
@@ -25,6 +28,7 @@ const ListingItem = ({
   success,
   hasBottomBorder,
   showNumber = true,
+  onClick,
 }: IListingItem): JSX.Element => {
   const hasBorder = hasBottomBorder
     ? '[&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2 [&:not(:last-child)]:mb-2'
@@ -33,6 +37,12 @@ const ListingItem = ({
   const hasWarnings = warnings && warnings > 0 && showNumber;
   const hasSuccess = success && success > 0 && showNumber;
   const hasNone = !hasErrors && !hasWarnings && !hasSuccess && showNumber;
+
+  const handleOnClick = useCallback(() => {
+    if (onClick) {
+      onClick(text);
+    }
+  }, [onClick, text]);
 
   const itemError = hasErrors ? (
     <ColoredCircle quantity={errors} backgroundClassName={ItemType.Error} />
@@ -60,14 +70,19 @@ const ListingItem = ({
     <></>
   );
 
+  const WrapperComponent = onClick ? 'button' : 'div';
+
   return (
-    <div className={classNames('flex flex-row gap-2 pb-1', hasBorder)}>
+    <WrapperComponent
+      className={classNames('flex flex-row gap-2 pb-1', hasBorder)}
+      onClick={handleOnClick}
+    >
       {itemError}
       {itemWarning}
       {itemSuccess}
       {itemNeutral}
       <span className="text-sm text-black">{text}</span>
-    </div>
+    </WrapperComponent>
   );
 };
 

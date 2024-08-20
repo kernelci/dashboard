@@ -173,17 +173,17 @@ const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
 
   const chartElements = [
     {
-      label: <FormattedMessage id="bootsTab.success" />,
+      label: 'bootsTab.success',
       value: groupedStatus.success,
       color: Colors.Green,
     },
     {
-      label: <div>Fail</div>,
+      label: 'global.failed',
       value: groupedStatus.fail,
       color: Colors.Red,
     },
     {
-      label: <div>Skip</div>,
+      label: 'bootsTab.skip',
       value: groupedStatus.skip,
       color: Colors.Yellow,
     },
