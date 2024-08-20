@@ -236,15 +236,19 @@ const TestDetails = (): JSX.Element => {
         <Breadcrumb className="pb-6 pt-6">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink to="/tree">Revisions</BreadcrumbLink>
+              <BreadcrumbLink to="/tree">
+                <FormattedMessage id="tree.path" />
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbLink to={`/tree/$treeId`} params={{ treeId: treeId }}>
-              Tree Details
+              <FormattedMessage id="tree.details" />
             </BreadcrumbLink>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Test Details</BreadcrumbPage>
+              <BreadcrumbPage>
+                <FormattedMessage id="tree.details" />
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>

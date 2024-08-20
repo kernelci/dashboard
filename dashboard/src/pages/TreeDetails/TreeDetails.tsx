@@ -116,13 +116,13 @@ function TreeDetails(): JSX.Element {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink to="/tree">
-              <FormattedMessage id="revisions.path" />
+              <FormattedMessage id="tree.path" />
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>
-              <FormattedMessage id="revisions.details" />
+              <FormattedMessage id="tree.details" />
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>

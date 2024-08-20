@@ -92,8 +92,8 @@ const changeFilterValue = (
     newFilter[filterField] = {};
   }
   const filterSection = newFilter[filterField];
-  const filterValue = filterSection[value] ?? false;
-  filterSection[value] = !filterValue;
+  const filterValue = filterSection?.[value] ?? false;
+  filterSection ? (filterSection[value] = !filterValue) : undefined;
 
   return newFilter;
 };
@@ -251,7 +251,7 @@ const TreeDetailsFilter = ({
     >
       <DrawerSection hideSeparator>
         <FilterSummarySection
-          title={intl.formatMessage({ id: 'global.revision' })}
+          title={intl.formatMessage({ id: 'global.tree' })}
           columns={filterSummaryColumns}
         />
       </DrawerSection>
