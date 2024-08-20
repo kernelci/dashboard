@@ -8,6 +8,7 @@ export type TreeTableBody = {
   testStatus: string;
   id: string;
   branch: string;
+  date: string;
 };
 
 export type Tree = {
@@ -15,6 +16,7 @@ export type Tree = {
   patchset_hash: string | null;
   tree_names: string[];
   git_repository_branch: string | null;
+  start_time: string | null;
   build_status: {
     valid: number;
     invalid: number;
