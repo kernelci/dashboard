@@ -58,6 +58,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
             id: tree.git_commit_hash ?? '',
             tree_names: tree.tree_names,
             branch: tree.git_repository_branch ?? '',
+            date: tree.start_time ?? '',
           }),
         )
         .sort((a, b) =>
