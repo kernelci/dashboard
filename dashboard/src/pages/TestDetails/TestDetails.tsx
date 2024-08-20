@@ -60,32 +60,32 @@ const StatusChart = ({ statusCount, title }: IStatusChart): JSX.Element => {
   );
   const chartElements = [
     {
-      label: <FormattedMessage id="bootsTab.success" />,
+      label: 'bootsTab.success',
       value: statusCount['PASS'] ?? 0,
       color: Colors.Green,
     },
     {
-      label: <div>Fail</div>,
+      label: 'global.failed',
       value: statusCount['FAIL'] ?? 0,
       color: Colors.Red,
     },
     {
-      label: <div>Skip</div>,
+      label: 'global.skiped',
       value: statusCount['SKIP'] ?? 0,
       color: Colors.Yellow,
     },
     {
-      label: <div>Skip</div>,
+      label: 'global.missed',
       value: statusCount['MISS'] ?? 0,
       color: Colors.Yellow,
     },
     {
-      label: <div>Done</div>,
+      label: 'global.done',
       value: statusCount['DONE'] ?? 0,
       color: Colors.Yellow,
     },
     {
-      label: <div>Error</div>,
+      label: 'global.error',
       value: statusCount['ERROR'] ?? 0,
       color: Colors.Red,
     },
