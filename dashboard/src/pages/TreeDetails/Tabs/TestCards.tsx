@@ -12,7 +12,7 @@ import StatusChartMemoized, {
   StatusChartValues,
 } from '@/components/StatusChart/StatusCharts';
 import { errorStatusSet } from '@/utils/constants/database';
-import { ErrorStatus, Status } from '@/types/database';
+import { ErrorStatus } from '@/types/database';
 import { LineChart, LineChartLabel } from '@/components/LineChart';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configCounts'> {
@@ -154,38 +154,36 @@ interface IStatusChart extends Pick<TTreeTestsData, 'statusCounts'> {
 }
 
 const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
-  const groupedStatus = {
-    success: 0,
-    fail: 0,
-    skip: 0,
-  };
-
-  const statusKeys = Object.keys(statusCounts) as Status[];
-  statusKeys.forEach(status => {
-    if (errorStatusSet.has(status as ErrorStatus)) {
-      groupedStatus.fail += statusCounts[status] ?? 0;
-    } else if (status === 'SKIP') {
-      groupedStatus.skip += 1;
-    } else {
-      groupedStatus.success += statusCounts[status] ?? 0;
-    }
-  });
-
   const chartElements = [
     {
       label: 'bootsTab.success',
-      value: groupedStatus.success,
+      value: statusCounts['PASS'] ?? 0,
       color: Colors.Green,
     },
     {
       label: 'global.failed',
-      value: groupedStatus.fail,
-      color: Colors.Red,
+      value: statusCounts['FAIL'] ?? 0,
+      color: Colors.Yellow,
     },
     {
       label: 'bootsTab.skip',
-      value: groupedStatus.skip,
-      color: Colors.Yellow,
+      value: statusCounts['SKIP'] ?? 0,
+      color: Colors.DimGray,
+    },
+    {
+      label: 'global.missed',
+      value: statusCounts['MISS'] ?? 0,
+      color: Colors.Gray,
+    },
+    {
+      label: 'global.done',
+      value: statusCounts['DONE'] ?? 0,
+      color: Colors.Blue,
+    },
+    {
+      label: 'bootsTab.error',
+      value: statusCounts['ERROR'] ?? 0,
+      color: Colors.Red,
     },
   ] satisfies StatusChartValues[];
 

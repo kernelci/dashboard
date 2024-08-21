@@ -151,6 +151,8 @@ function TreeDetails(): JSX.Element {
             passTests: value.status?.pass_tests,
             errorTests: value.status?.error_tests,
             skipTests: value.status?.skip_tests,
+            missTests: value.status?.miss_tests,
+            doneTests: value.status?.done_tests,
           },
           buildLogs: value.log_url,
           kernelConfig: value.config_url,

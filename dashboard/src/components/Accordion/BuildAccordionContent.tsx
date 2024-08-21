@@ -69,16 +69,29 @@ const AccordionBuildContent = ({
         color: Colors.Green,
       },
       {
-        value:
-          (contentData.testStatus?.failTests ?? 0) +
-          (contentData.testStatus?.errorTests ?? 0),
+        value: contentData.testStatus?.errorTests ?? 0,
         label: 'buildAccordion.testError',
         color: Colors.Red,
       },
       {
         value: contentData.testStatus?.skipTests ?? 0,
         label: 'buildAccordion.testSkipped',
+        color: Colors.DimGray,
+      },
+      {
+        value: contentData.testStatus?.missTests ?? 0,
+        label: 'buildAccordion.testMiss',
         color: Colors.Gray,
+      },
+      {
+        value: contentData.testStatus?.failTests ?? 0,
+        label: 'buildAccordion.testFail',
+        color: Colors.Yellow,
+      },
+      {
+        value: contentData.testStatus?.doneTests ?? 0,
+        label: 'buildAccordion.testDone',
+        color: Colors.Blue,
       },
     ];
   }, [
@@ -86,6 +99,8 @@ const AccordionBuildContent = ({
     contentData.testStatus?.failTests,
     contentData.testStatus?.passTests,
     contentData.testStatus?.skipTests,
+    contentData.testStatus?.doneTests,
+    contentData.testStatus?.missTests,
   ]);
 
   const links = useMemo(

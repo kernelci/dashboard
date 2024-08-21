@@ -49,6 +49,8 @@ export type AccordionItemBuilds = {
     errorTests: number;
     passTests: number;
     skipTests: number;
+    missTests: number;
+    doneTests: number;
   };
   kernelImage?: string;
   buildLogs?: string;
