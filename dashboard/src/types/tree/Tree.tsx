@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 export type TreeTableBody = {
-  commit: string;
+  commitHash: string;
+  commitName: string;
   patchsetHash: string;
   buildStatus: string;
   tree_names: string[];
@@ -19,6 +20,7 @@ export type Tree = {
   git_repository_branch: string | null;
   start_time: string | null;
   git_repository_url: string | null;
+  git_commit_name: string | null;
   build_status: {
     valid: number;
     invalid: number;
