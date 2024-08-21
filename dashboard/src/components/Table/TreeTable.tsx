@@ -33,9 +33,6 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
 
-  const backgroundClassName =
-    'flex flex-row bg-lightGray w-fit h-fit p-1 rounded-lg';
-
   const navigate = useNavigate({ from: '/tree' });
 
   const navigateToTreeDetailPage = useCallback(() => {
@@ -95,8 +92,31 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         </div>
       </TableCell>
       <TableCell>
-        <div className={backgroundClassName}>
-          {sanitizeTableValue(row.testStatus)}
+        <div className="flex flex-row gap-1">
+          <ColoredCircle
+            quantity={row.testStatus.pass}
+            backgroundClassName="bg-lightGreen"
+          />
+          <ColoredCircle
+            quantity={row.testStatus.error}
+            backgroundClassName="bg-lightRed"
+          />
+          <ColoredCircle
+            quantity={row.testStatus.miss}
+            backgroundClassName="bg-lightGray"
+          />
+          <ColoredCircle
+            quantity={row.testStatus.fail}
+            backgroundClassName="bg-yellow"
+          />
+          <ColoredCircle
+            quantity={row.testStatus.done}
+            backgroundClassName="bg-lightBlue"
+          />
+          <ColoredCircle
+            quantity={row.testStatus.skip}
+            backgroundClassName="bg-mediumGray"
+          />
         </div>
       </TableCell>
     </TableRow>
