@@ -26,7 +26,7 @@ export interface IFilterButton
 
 const baseButtonClassNames =
   'text-sm h-10 pr-2 rounded-md flex items-center bg-darkGray hover:bg-mediumGray';
-const primaryClassNames = 'bg-lightBlue text-white';
+const primaryClassNames = 'bg-blue text-white';
 const secondaryClassNames = 'bg-darkGray text-black';
 
 const FilterButton = ({

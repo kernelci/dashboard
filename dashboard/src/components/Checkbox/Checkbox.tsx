@@ -19,7 +19,7 @@ const Checkbox = ({
   return (
     <label
       className={cls(containerClass, className, {
-        'border-lightBlue': isChecked,
+        'border-blue': isChecked,
       })}
     >
       <input type="checkbox" checked={isChecked} onClick={onToggle} />

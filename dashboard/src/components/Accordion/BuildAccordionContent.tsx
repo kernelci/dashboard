@@ -43,6 +43,8 @@ export interface ILinksGroup {
   modules?: string;
 }
 
+const blueText = 'text-blue';
+
 const AccordionBuildContent = ({
   accordionData,
 }: IAccordionItems): JSX.Element => {
@@ -108,14 +110,14 @@ const AccordionBuildContent = ({
       contentData.kernelImage
         ? {
             title: <FormattedMessage id="buildAccordion.kernelImage" />,
-            icon: <MdFolderOpen className="text-lightBlue" />,
+            icon: <MdFolderOpen className={blueText} />,
             linkText: <span>{`kernel/${contentData.kernelImage}`}</span>,
           }
         : undefined,
       contentData.kernelConfig
         ? {
             title: <FormattedMessage id="buildAccordion.kernelConfig" />,
-            icon: <MdFolderOpen className="text-lightBlue" />,
+            icon: <MdFolderOpen className={blueText} />,
             link: contentData.kernelConfig,
             linkText: <FormattedMessage id="buildAccordion.kernelConfigPath" />,
           }
@@ -123,7 +125,7 @@ const AccordionBuildContent = ({
       contentData.dtb
         ? {
             title: <FormattedMessage id="buildAccordion.dtb" />,
-            icon: <MdFolderOpen className="text-lightBlue" />,
+            icon: <MdFolderOpen className={blueText} />,
             link: contentData.dtb,
             linkText: <FormattedMessage id="buildAccordion.dtbs" />,
           }
@@ -131,7 +133,7 @@ const AccordionBuildContent = ({
       contentData.buildLogs
         ? {
             title: <FormattedMessage id="buildAccordion.buildLogs" />,
-            icon: <MdFolderOpen className="text-lightBlue" />,
+            icon: <MdFolderOpen className={blueText} />,
             link: contentData.buildLogs,
             linkText: <FormattedMessage id="buildAccordion.logs" />,
           }
@@ -139,7 +141,7 @@ const AccordionBuildContent = ({
       contentData.systemMap
         ? {
             title: <FormattedMessage id="buildAccordion.systemMap" />,
-            icon: <MdFolderOpen className="text-lightBlue" />,
+            icon: <MdFolderOpen className={blueText} />,
             link: contentData.systemMap,
             linkText: <FormattedMessage id="buildAccordion.systemMapPath" />,
           }
@@ -147,7 +149,7 @@ const AccordionBuildContent = ({
       contentData.modules
         ? {
             title: <FormattedMessage id="buildAccordion.modules" />,
-            icon: <MdFolderOpen className="text-lightBlue" />,
+            icon: <MdFolderOpen className={blueText} />,
             link: contentData.modules,
             linkText: <FormattedMessage id="buildAccordion.modulesZip" />,
           }
