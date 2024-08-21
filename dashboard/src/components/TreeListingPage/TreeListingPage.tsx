@@ -33,7 +33,8 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
         )
         .map(
           (tree): TreeTableBody => ({
-            commit: tree.git_commit_hash ?? '',
+            commitHash: tree.git_commit_hash ?? '',
+            commitName: tree.git_commit_name ?? '',
             patchsetHash: tree.patchset_hash ?? '',
             buildStatus: `${tree.build_status.invalid} / ${tree.build_status.invalid + tree.build_status.valid}`,
             testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
@@ -45,7 +46,9 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
           }),
         )
         .sort((a, b) =>
-          a.commit.localeCompare(b.commit, undefined, { numeric: true }),
+          a.commitHash.localeCompare(b.commitHash, undefined, {
+            numeric: true,
+          }),
         );
     }
   }, [data, error, inputFilter]);

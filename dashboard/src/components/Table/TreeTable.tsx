@@ -11,6 +11,7 @@ import { TableRow, TableCell } from '../ui/table';
 import { TreeTableBody, zOrigin } from '../../types/tree/Tree';
 
 import BaseTable from './BaseTable';
+import { sanitizeTableValue } from './tableUtils';
 
 interface ITreeTable {
   treeTableRows: TreeTableBody[];
@@ -44,9 +45,23 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         origin: origin,
         currentTreeDetailsTab: 'treeDetails.builds',
         diffFilter: {},
+        treeInfo: {
+          gitUrl: row.url,
+          gitBranch: row.branch,
+          treeName: row.tree_names[0],
+          commitName: row.commitName,
+        },
       },
     });
-  }, [navigate, row.id, origin]);
+  }, [
+    navigate,
+    row.id,
+    origin,
+    row.url,
+    row.branch,
+    row.tree_names,
+    row.commitName,
+  ]);
 
   return (
     <TableRow onClick={navigateToTreeDetailPage}>
@@ -54,7 +69,11 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         {sanitizeTableValue(row.tree_names.join(', '), false)}
       </TableCell>
       <TableCell>{sanitizeTableValue(row.branch, false)}</TableCell>
-      <TableCell>{sanitizeTableValue(row.commit)}</TableCell>
+      <TableCell>
+        {sanitizeTableValue(
+          row.commitName !== '' ? row.commitName : row.commitHash,
+        )}
+      </TableCell>
       <TableCell>{sanitizeTableValue(row.url, false)}</TableCell>
       <TableCell>{sanitizeTableValue(row.date.split('T')[0] ?? '')}</TableCell>
       <TableCell>
@@ -75,8 +94,8 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
   const treeTableBody = useMemo(() => {
     return treeTableRows.map((row: TreeTableBody) => (
       <TreeTableRow
-        key={row.commit}
-        commit={row.commit}
+        key={row.commitHash}
+        commitHash={row.commitHash}
         patchsetHash={row.patchsetHash}
         buildStatus={row.buildStatus}
         testStatus={row.testStatus}
@@ -85,9 +104,9 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
         branch={row.branch}
         date={row.date}
         url={row.url}
+        commitName={row.commitName}
       />
     ));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [treeTableRows]);
 
   const treeTableHeaders = useMemo(() => {
@@ -100,12 +119,3 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
 };
 
 export default TreeTable;
-
-const MAX_NUMBER_CHAR = 12;
-
-const truncateTableValue = (value: string): string =>
-  value.substring(0, MAX_NUMBER_CHAR) +
-  (value.length > MAX_NUMBER_CHAR ? '...' : '');
-
-const sanitizeTableValue = (value: string, truncate = true): string =>
-  (truncate ? truncateTableValue(value) : value) || '-';

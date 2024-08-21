@@ -163,6 +163,15 @@ export const zDiffFilter = z
 
 export type TFilter = z.infer<typeof zDiffFilter>;
 
+export const zTreeInformation = z
+  .object({
+    gitBranch: z.string().optional().catch(''),
+    gitUrl: z.string().optional().catch(''),
+    treeName: z.string().optional().catch(''),
+    commitName: z.string().optional().catch(''),
+  })
+  .catch({});
+
 export type TestByCommitHash = {
   id: string;
   architecture: string | null;
