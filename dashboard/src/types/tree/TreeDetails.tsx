@@ -1,14 +1,16 @@
 import { z } from 'zod';
 
+import { ReactNode } from 'react';
+
 import { MessagesKey } from '@/locales/messages';
 
 import type { ErrorStatus, Status } from '../database';
 
-type TreeDetailsBuild = {
+export type TreeDetailsBuild = {
   id: string;
   architecture: string;
   config_name: string;
-  valid: boolean;
+  valid: boolean | null;
   start_time: string;
   duration: string;
   compiler: string;
@@ -42,8 +44,8 @@ export type AccordionItemBuilds = {
   compiler?: string;
   date?: string;
   buildErrors?: number;
-  buildTime?: string;
-  status?: 'valid' | 'invalid';
+  buildTime?: string | ReactNode;
+  status?: 'valid' | 'invalid' | 'null';
   testStatus?: {
     failTests: number;
     errorTests: number;

@@ -150,23 +150,25 @@ const ChartLegend = ({ chartValues, onClick }: IChartLegend): JSX.Element => {
       }
 
       return (
-        <WrapperElement
-          onClick={(): void => onClick?.(status)}
-          key={chartValue?.color}
-          className="flex flex-row"
-        >
-          {chartValue && (
-            <div className="pr-2 pt-1">
-              <ColoredCircle
-                backgroundClassName={getColorClassName(chartValue.color)}
-              />
+        chartValue.value !== 0 && (
+          <WrapperElement
+            onClick={(): void => onClick?.(status)}
+            key={chartValue?.color}
+            className="flex flex-row"
+          >
+            {chartValue && (
+              <div className="pr-2 pt-1">
+                <ColoredCircle
+                  backgroundClassName={getColorClassName(chartValue.color)}
+                />
+              </div>
+            )}
+            <div className="flex flex-col">
+              <span className="font-bold">{chartValue?.value}</span>
+              <span className="text-darkGray2">{status}</span>
             </div>
-          )}
-          <div className="flex flex-col">
-            <span className="font-bold">{chartValue?.value}</span>
-            <span className="text-darkGray2">{status}</span>
-          </div>
-        </WrapperElement>
+          </WrapperElement>
+        )
       );
     });
   }, [chartValues, intl, onClick]);
