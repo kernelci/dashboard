@@ -17,7 +17,7 @@ const ColoredCircle = ({
     <div
       title={tooltipText}
       className={cn(
-        'inline-flex h-6 w-6 justify-center rounded-full px-1 text-black',
+        'inline-flex h-6 w-fit min-w-6 justify-center rounded-full px-1 text-black',
         className,
         backgroundClassName,
       )}

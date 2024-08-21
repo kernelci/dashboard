@@ -36,7 +36,11 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
             commitHash: tree.git_commit_hash ?? '',
             commitName: tree.git_commit_name ?? '',
             patchsetHash: tree.patchset_hash ?? '',
-            buildStatus: `${tree.build_status.invalid} / ${tree.build_status.invalid + tree.build_status.valid}`,
+            buildStatus: {
+              valid: tree.build_status.valid,
+              invalid: tree.build_status.invalid,
+              null: tree.build_status.null,
+            },
             testStatus: `${tree.test_status.fail} / ${tree.test_status.total}`,
             id: tree.git_commit_hash ?? '',
             tree_names: tree.tree_names,

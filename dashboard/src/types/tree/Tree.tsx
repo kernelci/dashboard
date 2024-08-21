@@ -4,7 +4,11 @@ export type TreeTableBody = {
   commitHash: string;
   commitName: string;
   patchsetHash: string;
-  buildStatus: string;
+  buildStatus: {
+    valid: number;
+    invalid: number;
+    null: number;
+  };
   tree_names: string[];
   testStatus: string;
   id: string;
