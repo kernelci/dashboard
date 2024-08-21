@@ -141,7 +141,7 @@ const TestDetailsSection = ({
       {
         title: intl.formatMessage({ id: 'testDetails.arch' }),
         linkText: valueOrEmpty(test.architecture),
-        icon: <PiComputerTowerThin className="text-lightBlue" />,
+        icon: <PiComputerTowerThin className="text-blue" />,
       },
       {
         title: intl.formatMessage({ id: 'testDetails.compiler' }),
@@ -171,7 +171,7 @@ const TestDetailsSection = ({
           test.misc?.platform ??
           test.environment_misc?.platform ??
           intl.formatMessage({ id: 'global.unknown' }),
-        icon: <GiFlatPlatform className="text-lightBlue" />,
+        icon: <GiFlatPlatform className="text-blue" />,
       },
     ];
     return baseInfo;

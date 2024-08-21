@@ -24,7 +24,7 @@ export const TableInfo = ({
   onClickForward,
   onClickBack,
 }: ITableInformation): JSX.Element => {
-  const buttonsClassName = 'text-lightBlue font-bold';
+  const buttonsClassName = 'text-blue font-bold';
   const groupsClassName = 'flex flex-row items-center gap-2';
   return (
     <div className="flex flex-row gap-4 text-sm text-black">

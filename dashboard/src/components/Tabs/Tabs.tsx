@@ -32,7 +32,7 @@ const TabsComponent = ({
     () =>
       tabs.map(tab => (
         <TabsTrigger
-          className="border-b-2 border-transparent bg-transparent px-4 text-lg data-[state=active]:border-lightBlue"
+          className="border-b-2 border-transparent bg-transparent px-4 text-lg data-[state=active]:border-blue"
           disabled={tab.disabled}
           key={tab.name}
           value={tab.name}

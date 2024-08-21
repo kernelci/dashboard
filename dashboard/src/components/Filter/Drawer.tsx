@@ -109,7 +109,7 @@ const Drawer = ({
           </DrawerClose>
           <DrawerClose
             asChild
-            className="w-[200px] rounded-full bg-lightBlue text-white"
+            className="w-[200px] rounded-full bg-blue text-white"
           >
             <Button variant="outline" onClick={onFilter}>
               Filter

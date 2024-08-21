@@ -36,7 +36,7 @@ const truncateBigText = (text: string | undefined): string | undefined =>
     : valueOrEmpty(text);
 
 const BlueFolderIcon = (): JSX.Element => (
-  <MdFolderOpen className="text-lightBlue" />
+  <MdFolderOpen className="text-blue" />
 );
 
 const BuildDetails = (): JSX.Element => {
@@ -62,7 +62,7 @@ const BuildDetails = (): JSX.Element => {
               {
                 title: intl.formatMessage({ id: 'global.tree' }),
                 linkText: valueOrEmpty(data.tree_name),
-                icon: <ImTree className="text-lightBlue" />,
+                icon: <ImTree className="text-blue" />,
               },
               {
                 title: intl.formatMessage({ id: 'buildDetails.gitUrl' }),
@@ -72,7 +72,7 @@ const BuildDetails = (): JSX.Element => {
               {
                 title: intl.formatMessage({ id: 'buildDetails.gitBranch' }),
                 linkText: valueOrEmpty(data.git_repository_branch),
-                icon: <ImTree className="text-lightBlue" />,
+                icon: <ImTree className="text-bslue" />,
               },
               {
                 title: intl.formatMessage({ id: 'buildDetails.gitCommit' }),
@@ -127,7 +127,7 @@ const BuildDetails = (): JSX.Element => {
                 linkText: truncateBigText(data.log_url),
                 link: data.log_url,
                 icon: data.log_url ? (
-                  <BsFileEarmarkCode className="text-lightBlue" />
+                  <BsFileEarmarkCode className="text-blue" />
                 ) : undefined,
               },
               {

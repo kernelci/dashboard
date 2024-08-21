@@ -33,7 +33,7 @@ module.exports = {
       },
       colors: {
         bgSecondary: '#343638',
-        lightBlue: '#11B3E6',
+        lightBlue: '#E7F7FC',
         'onSecondary-10': '#FFFFFF1A',
         white: '#FFFFFF',
         lightGray: '#F4F4F4',
