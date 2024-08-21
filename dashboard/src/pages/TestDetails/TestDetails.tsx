@@ -67,22 +67,22 @@ const StatusChart = ({ statusCount, title }: IStatusChart): JSX.Element => {
     {
       label: 'global.failed',
       value: statusCount['FAIL'] ?? 0,
-      color: Colors.Red,
+      color: Colors.Yellow,
     },
     {
       label: 'global.skiped',
       value: statusCount['SKIP'] ?? 0,
-      color: Colors.Yellow,
+      color: Colors.DimGray,
     },
     {
       label: 'global.missed',
       value: statusCount['MISS'] ?? 0,
-      color: Colors.Yellow,
+      color: Colors.Gray,
     },
     {
       label: 'global.done',
       value: statusCount['DONE'] ?? 0,
-      color: Colors.Yellow,
+      color: Colors.Blue,
     },
     {
       label: 'global.error',
@@ -115,7 +115,7 @@ export const MemoizedStatusChart = memo(StatusChart);
 const LogExcerpt = ({ test }: TTestDetailsDefaultProps): JSX.Element => {
   return (
     <BaseCard
-      title=<FormattedMessage id="testDetails.logExcerpt" />
+      title={<FormattedMessage id="testDetails.logExcerpt" />}
       className="gap-0"
       content={<CodeBlock code={test.log_excerpt ?? ''} />}
     />
@@ -257,7 +257,7 @@ const TestDetails = (): JSX.Element => {
         </h1>
         <MemoizedStatusChart
           statusCount={data?.statusCount ?? ({} as StatusCount)}
-          title="Test Status"
+          title={<FormattedMessage id="testsTab.testStatus" />}
         />
         <LogExcerpt test={currentTest} />
         <TestDetailsSection test={currentTest} />

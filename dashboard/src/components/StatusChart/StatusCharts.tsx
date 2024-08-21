@@ -23,6 +23,8 @@ export enum Colors {
   Green = '#53D07C',
   Yellow = '#FFD27C',
   Gray = '#EAEAEA',
+  Blue = '#11B3E6',
+  DimGray = '454545',
 }
 
 export interface IStatusChart {
@@ -122,6 +124,10 @@ const getColorClassName = (color: Colors): string => {
       return 'bg-yellow';
     case Colors.Gray:
       return 'bg-mediumGray';
+    case Colors.DimGray:
+      return 'bg-dimGray';
+    case Colors.Blue:
+      return 'bg-blue';
     default:
       return '';
   }

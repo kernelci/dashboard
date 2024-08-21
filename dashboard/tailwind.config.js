@@ -49,6 +49,7 @@ module.exports = {
         lightGreen: '#C9FADA',
         green: '#53D07C',
         red: '#E15739',
+        blue: '#11B3E6',
       },
     },
   },
