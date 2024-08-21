@@ -47,10 +47,12 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         ),
         date: row.date?.split('T')[0],
         testStatus: {
-          failTests: row.testStatus?.failTests,
-          errorTests: row.testStatus?.errorTests,
-          passTests: row.testStatus?.passTests,
-          skipTests: row.testStatus?.skipTests,
+          failTests: row.testStatus?.failTests ?? 0,
+          errorTests: row.testStatus?.errorTests ?? 0,
+          passTests: row.testStatus?.passTests ?? 0,
+          skipTests: row.testStatus?.skipTests ?? 0,
+          doneTests: row.testStatus?.doneTests ?? 0,
+          missTests: row.testStatus?.missTests ?? 0,
         },
       },
     }));
@@ -129,6 +131,11 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
             value: treeDetailsData?.buildsSummary.invalid ?? 0,
             label: 'treeDetails.failed',
             color: Colors.Red,
+          },
+          {
+            value: treeDetailsData?.buildsSummary.null ?? 0,
+            label: 'treeDetails.unknown',
+            color: Colors.Gray,
           },
         ],
       } as IStatusChart & { key: string },

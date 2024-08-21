@@ -110,6 +110,9 @@ const AccordionBuildsTrigger = ({
 }: IAccordionItems): JSX.Element => {
   const triggerInfo = accordionData as AccordionItemBuilds;
   const buildErrors = triggerInfo.buildErrors ?? 0;
+  const isBuildValid = triggerInfo.status === 'valid';
+  const isBuildInvalid = triggerInfo.status === 'invalid';
+  const isBuildUnknown = triggerInfo.status === 'null';
   return (
     <>
       <TableCell>{triggerInfo.config}</TableCell>
@@ -124,11 +127,9 @@ const AccordionBuildsTrigger = ({
       </TableCell>
       <TableCell>{triggerInfo.buildTime}</TableCell>
       <TableCell>
-        {triggerInfo.status === 'valid' ? (
-          <MdCheck className="text-green" />
-        ) : (
-          <MdClose className="text-red" />
-        )}
+        {isBuildValid && <MdCheck className="text-green" />}
+        {isBuildInvalid && <MdClose className="text-red" />}
+        {isBuildUnknown && <span>-</span>}
       </TableCell>
     </>
   );

@@ -6,7 +6,11 @@ import { FormattedMessage } from 'react-intl';
 import { useTreeDetails } from '@/api/TreeDetails';
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
-import { AccordionItemBuilds, Results } from '@/types/tree/TreeDetails';
+import {
+  AccordionItemBuilds,
+  Results,
+  TreeDetailsBuild,
+} from '@/types/tree/TreeDetails';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -86,6 +90,10 @@ const TreeHeader = ({
   );
 };
 
+const isBuildError = (build: TreeDetailsBuild): number => {
+  return build.valid || build.valid === null ? 0 : 1;
+};
+
 function TreeDetails(): JSX.Element {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
   const { diffFilter, treeInfo } = useSearch({
@@ -144,8 +152,9 @@ function TreeDetails(): JSX.Element {
           date: value.start_time,
           buildTime: value.duration,
           compiler: value.compiler,
-          buildErrors: value.valid ? 0 : 1,
-          status: value.valid ? 'valid' : 'invalid',
+          buildErrors: isBuildError(value),
+          status:
+            value.valid === null ? 'null' : value.valid ? 'valid' : 'invalid',
           testStatus: {
             failTests: value.status?.fail_tests,
             passTests: value.status?.pass_tests,
