@@ -144,7 +144,7 @@ export const messages = {
     'treeTable.branch': 'Branch',
     'treeTable.build': 'Build Status',
     'treeTable.patchset': 'Patchset hash',
-    'treeTable.test': 'Test Status (Failed / Total)',
+    'treeTable.test': 'Test Status',
     'treeTable.tree': 'Tree',
   },
 };

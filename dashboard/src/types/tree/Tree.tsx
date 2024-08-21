@@ -10,7 +10,14 @@ export type TreeTableBody = {
     null: number;
   };
   tree_names: string[];
-  testStatus: string;
+  testStatus: {
+    done: number;
+    pass: number;
+    error: number;
+    fail: number;
+    skip: number;
+    miss: number;
+  };
   id: string;
   branch: string;
   date: string;
