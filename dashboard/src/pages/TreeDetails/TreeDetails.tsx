@@ -24,6 +24,8 @@ import {
 
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
+import { sanitizeTableValue } from '@/components/Table/tableUtils';
+
 import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
 
@@ -36,7 +38,21 @@ export interface ITreeDetails {
   builds: AccordionItemBuilds[];
 }
 
-const TreeHeader = (): JSX.Element => {
+interface ITreeHeader {
+  commit?: string;
+  treeNames?: string;
+  tag?: string;
+  gitUrl?: string;
+  gitBranch?: string;
+}
+
+const TreeHeader = ({
+  commit,
+  treeNames,
+  tag,
+  gitUrl,
+  gitBranch,
+}: ITreeHeader): JSX.Element => {
   return (
     <DumbBaseTable>
       <DumbTableHeader>
@@ -52,24 +68,18 @@ const TreeHeader = (): JSX.Element => {
         <TableHead>
           <FormattedMessage id="global.url" />
         </TableHead>
-        <TableHead>
-          <FormattedMessage id="global.estimate" />
-        </TableHead>
-        <TableHead>
-          <FormattedMessage id="global.status" />
-        </TableHead>
       </DumbTableHeader>
       <TableBody>
         <TableRow>
           {/** TODO: Replace with real data */}
-          <TableCell>stable-rc</TableCell>
-          <TableCell>linux-5.15.y</TableCell>
-          <TableCell>5.15.150-rc1 </TableCell>
+          <TableCell>{treeNames ?? '-'}</TableCell>
+          <TableCell>{gitBranch ?? '-'}</TableCell>
           <TableCell>
-            git.kernel.org/pub/.../stable/linux-stable-rc.git
+            {sanitizeTableValue(
+              tag && tag !== '' ? tag : commit && commit !== '' ? commit : '-',
+            )}
           </TableCell>
-          <TableCell>2 hours</TableCell>
-          <TableCell>Running</TableCell>
+          <TableCell>{gitUrl ?? '-'}</TableCell>
         </TableRow>
       </TableBody>
     </DumbBaseTable>
@@ -78,7 +88,9 @@ const TreeHeader = (): JSX.Element => {
 
 function TreeDetails(): JSX.Element {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
-  const { diffFilter } = useSearch({ from: '/tree/$treeId/' });
+  const { diffFilter, treeInfo } = useSearch({
+    from: '/tree/$treeId/',
+  });
 
   const reqFilter = mapFilterToReq(diffFilter);
 
@@ -176,7 +188,13 @@ function TreeDetails(): JSX.Element {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="mt-5">
-        <TreeHeader />
+        <TreeHeader
+          gitBranch={treeInfo?.gitBranch}
+          commit={treeId}
+          treeNames={treeInfo?.treeName}
+          tag={treeInfo?.commitName}
+          gitUrl={treeInfo?.gitUrl}
+        />
       </div>
       <div className="relative mt-10 flex flex-col pb-2">
         <div className="absolute right-0 top-0">
