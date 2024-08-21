@@ -6,6 +6,8 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
+import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
+
 import { TableRow, TableCell } from '../ui/table';
 
 import { TreeTableBody, zOrigin } from '../../types/tree/Tree';
@@ -77,8 +79,19 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       <TableCell>{sanitizeTableValue(row.url, false)}</TableCell>
       <TableCell>{sanitizeTableValue(row.date.split('T')[0] ?? '')}</TableCell>
       <TableCell>
-        <div className={backgroundClassName}>
-          {sanitizeTableValue(row.buildStatus)}
+        <div className="flex flex-row gap-1">
+          <ColoredCircle
+            quantity={row.buildStatus.valid}
+            backgroundClassName="bg-lightGreen"
+          />
+          <ColoredCircle
+            quantity={row.buildStatus.invalid}
+            backgroundClassName="bg-lightRed"
+          />
+          <ColoredCircle
+            quantity={row.buildStatus.null}
+            backgroundClassName="bg-lightGray"
+          />
         </div>
       </TableCell>
       <TableCell>

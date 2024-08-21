@@ -146,7 +146,7 @@ export const messages = {
     'treeDetails.tests': 'Tests',
     'treeDetails.unknown': 'Unknown',
     'treeTable.branch': 'Branch',
-    'treeTable.build': 'Build Status (Failed / Total)',
+    'treeTable.build': 'Build Status',
     'treeTable.patchset': 'Patchset hash',
     'treeTable.test': 'Test Status (Failed / Total)',
     'treeTable.tree': 'Tree',
