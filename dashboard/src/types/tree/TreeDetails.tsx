@@ -146,7 +146,14 @@ export type TableFilter = z.infer<typeof zTableFilterValidator>;
 const zFilterValue = z.record(z.boolean()).optional();
 export type TFilterValues = z.infer<typeof zFilterValue>;
 
-const filterKeys = ['branches', 'configs', 'archs', 'status'] as const;
+const filterKeys = [
+  'branches',
+  'configs',
+  'archs',
+  'status',
+  'bootStatus',
+  'testStatus',
+] as const;
 export type TFilterKeys = (typeof filterKeys)[number];
 
 export const zDiffFilter = z
@@ -156,6 +163,8 @@ export const zDiffFilter = z
       configs: zFilterValue,
       archs: zFilterValue,
       status: zFilterValue,
+      bootStatus: zFilterValue,
+      testStatus: zFilterValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])

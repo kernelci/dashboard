@@ -65,6 +65,9 @@ export const mapFilterToReq = (
 
 export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
   const status = { Success: false, Failure: false };
+  const bootStatus = { Success: false, Failure: false };
+  const testStatus = { Success: false, Failure: false };
+  const branches: TFilterValues = {};
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};
 
@@ -75,6 +78,7 @@ export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
     });
 
   return { status, configs, archs };
+  return { status, branches, configs, archs, bootStatus, testStatus };
 };
 
 const changeFilterValue = (
@@ -133,11 +137,35 @@ const CheckboxSection = ({
   const checkboxSectionsProps: ICheckboxSection[] = useMemo(() => {
     return [
       {
-        title: intl.formatMessage({ id: 'global.status' }),
+        title: intl.formatMessage({ id: 'global.branch' }),
+        subtitle: intl.formatMessage({ id: 'filter.branchSubtitle' }),
+        items: parsedFilter.branches,
+        onClickItem: (value: string): void => {
+          setDiffFilter(old => changeFilterValue(old, 'branches', value));
+        },
+      },
+      {
+        title: intl.formatMessage({ id: 'filter.buildStatus' }),
         subtitle: intl.formatMessage({ id: 'filter.statusSubtitle' }),
         items: parsedFilter.status,
         onClickItem: (value: string): void => {
           setDiffFilter(old => changeFilterValue(old, 'status', value));
+        },
+      },
+      {
+        title: intl.formatMessage({ id: 'filter.bootStatus' }),
+        subtitle: intl.formatMessage({ id: 'filter.statusSubtitle' }),
+        items: parsedFilter.bootStatus,
+        onClickItem: (value: string): void => {
+          setDiffFilter(old => changeFilterValue(old, 'bootStatus', value));
+        },
+      },
+      {
+        title: intl.formatMessage({ id: 'filter.testStatus' }),
+        subtitle: intl.formatMessage({ id: 'filter.statusSubtitle' }),
+        items: parsedFilter.testStatus,
+        onClickItem: (value: string): void => {
+          setDiffFilter(old => changeFilterValue(old, 'testStatus', value));
         },
       },
       {
@@ -162,6 +190,9 @@ const CheckboxSection = ({
     parsedFilter.status,
     parsedFilter.configs,
     parsedFilter.archs,
+    parsedFilter.bootStatus,
+    parsedFilter.testStatus,
+    parsedFilter.branches,
     setDiffFilter,
   ]);
 
