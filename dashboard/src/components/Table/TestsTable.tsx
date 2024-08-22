@@ -18,6 +18,8 @@ const headerLabelIds: string[] = [
   'Path',
   'Compiler',
   'Architecture',
+  'Start time',
+  'Duration',
   '', //extra one to add the chevron icon
 ];
 
@@ -74,6 +76,8 @@ const TestsTable = ({
         <TableCell>{test.path}</TableCell>
         <TableCell>{test.compiler}</TableCell>
         <TableCell>{test.architecture}</TableCell>
+        <TableCell>{test.startTime ?? '-'}</TableCell>
+        <TableCell>{test.duration ?? '-'}</TableCell>
         <TableCell>
           <MdChevronRight />
         </TableCell>
