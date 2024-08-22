@@ -65,7 +65,7 @@ export const useTestsTab = (treeId: string): UseQueryResult<TTreeTestsData> => {
   });
 };
 
-const fetchTestsByCommitHash = async (
+const fetchTestsByTreeAndCommitHash = async (
   commitHash: string,
   params?: {
     path?: string;
@@ -75,14 +75,14 @@ const fetchTestsByCommitHash = async (
   },
 ): Promise<TTestByCommitHashResponse> => {
   const res = await http.get<TTestByCommitHashResponse>(
-    `/api/improv/${commitHash}`,
+    `/api/tests/${commitHash}`,
     { params },
   );
 
   return res.data;
 };
 
-export const useTestsByCommitHash = (
+export const useTestsByTreeAndCommitHash = (
   commitHash: string,
   isBoot: boolean,
   origin?: string,
@@ -96,8 +96,8 @@ export const useTestsByCommitHash = (
     path: isBoot ? 'boot' : '',
   };
   return useQuery({
-    queryKey: ['testsByCommitHash', commitHash, params],
-    queryFn: () => fetchTestsByCommitHash(commitHash, params),
+    queryKey: ['testsByTreeAndCommitHash', commitHash, params],
+    queryFn: () => fetchTestsByTreeAndCommitHash(commitHash, params),
   });
 };
 

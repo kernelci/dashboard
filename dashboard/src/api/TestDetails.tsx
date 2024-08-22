@@ -5,7 +5,7 @@ import { TTestDetails } from '@/types/tree/TestDetails';
 import http from './api';
 
 const fetchTestDetails = async (testId: string): Promise<TTestDetails> => {
-  const res = await http.get<TTestDetails>(`/api/tests/${testId}`);
+  const res = await http.get<TTestDetails>(`/api/tests/test/${testId}`);
   return res.data;
 };
 

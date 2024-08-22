@@ -3,7 +3,7 @@ from django.views import View
 from kernelCI_app.models import Tests
 
 
-class TestsByCommitHash(View):
+class TestsByTreeAndCommitHash(View):
     def get(self, request, commit_hash: str | None):
         path_param = request.GET.get("path")
         origin_param = request.GET.get("origin")

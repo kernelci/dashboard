@@ -8,7 +8,7 @@ import { TableInfo } from '@/components/Table/TableInfo';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { usePagination } from '@/hooks/usePagination';
 
-import { useTestsByCommitHash } from '@/api/TreeDetails';
+import { useTestsByTreeAndCommitHash } from '@/api/TreeDetails';
 
 const headerLabelIds: string[] = [
   'ID',
@@ -33,7 +33,7 @@ const TestsTable = ({
   const { origin, treeInfo } = useSearch({
     from: '/tree/$treeId/',
   });
-  const { data, error, isLoading } = useTestsByCommitHash(
+  const { data, error, isLoading } = useTestsByTreeAndCommitHash(
     treeId,
     isBootTable,
     origin,
