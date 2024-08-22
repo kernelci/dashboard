@@ -15,8 +15,7 @@ import {
   MemoizedLineChartCard,
   MemoizedPlatformsWithError,
 } from '@/pages/TreeDetails/Tabs/TestCards';
-
-import TestsTable from './ImprovisedTestsTable';
+import TestsTable from '@/components/Table/TestsTable';
 
 const TestsTab = (): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
@@ -42,7 +41,7 @@ const TestsTab = (): JSX.Element => {
   if (data.testHistory.length < 1) {
     return (
       <BaseCard
-        title=<FormattedMessage id="global.info" />
+        title={<FormattedMessage id="global.info" />}
         content={
           <p className="p-4 text-[1.3rem] text-darkGray">
             <FormattedMessage id="testsTab.noTest" />
