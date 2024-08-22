@@ -3,6 +3,8 @@ import { FormattedMessage } from 'react-intl';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
+import { MdChevronRight } from 'react-icons/md';
+
 import BaseTable from '@/components/Table/BaseTable';
 import { TableInfo } from '@/components/Table/TableInfo';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -16,6 +18,7 @@ const headerLabelIds: string[] = [
   'Path',
   'Compiler',
   'Architecture',
+  '', //extra one to add the chevron icon
 ];
 
 const ITEMS_PER_PAGE = 10;
@@ -71,6 +74,9 @@ const TestsTable = ({
         <TableCell>{test.path}</TableCell>
         <TableCell>{test.compiler}</TableCell>
         <TableCell>{test.architecture}</TableCell>
+        <TableCell>
+          <MdChevronRight />
+        </TableCell>
       </TableRow>
     ));
   }, [data, error, startIndex, endIndex, onClickName]);
