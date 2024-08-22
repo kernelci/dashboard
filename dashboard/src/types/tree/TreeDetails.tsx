@@ -207,6 +207,8 @@ export type TestByCommitHash = {
   compiler: string | null;
   path: string | null;
   status: string;
+  duration: string;
+  startTime: string;
 };
 
 export type TTestByCommitHashResponse = {

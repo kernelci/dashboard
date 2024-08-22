@@ -40,7 +40,7 @@ class TestsByTreeAndCommitHash(View):
         query = Tests.objects.raw(
             f"""
                 SELECT t.id, c.git_repository_url,
-                c.git_commit_hash, t.id, t.build_id, t.start_time,
+                c.git_commit_hash, t.id, t.build_id, t.start_time, t.duration,
                 t.status as status, t.path, b.architecture, b.config_name,
                 b.compiler, t.environment_misc,
                 t.environment_comment, t.misc FROM checkouts AS c
@@ -72,6 +72,8 @@ class TestsByTreeAndCommitHash(View):
                     "compiler": record.compiler,
                     "status": record.status,
                     "path": record.path,
+                    "duration": record.duration,
+                    "startTime": record.start_time,
                 }
             )
 
