@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import BaseTable from '@/components/Table/BaseTable';
 import { TableInfo } from '@/components/Table/TableInfo';
@@ -22,11 +22,24 @@ const ITEMS_PER_PAGE = 10;
 
 export interface ITestsTable {
   treeId: string;
+  isBootTable?: boolean;
 }
 
-const ImprovisedTestsTable = ({ treeId }: ITestsTable): JSX.Element => {
-  const { data, error, isLoading } = useTestsByCommitHash(treeId);
+const TestsTable = ({
+  treeId,
+  isBootTable = false,
+}: ITestsTable): JSX.Element => {
   const navigate = useNavigate({ from: '/tree/$treeId' });
+  const { origin, treeInfo } = useSearch({
+    from: '/tree/$treeId/',
+  });
+  const { data, error, isLoading } = useTestsByCommitHash(
+    treeId,
+    isBootTable,
+    origin,
+    treeInfo.gitUrl,
+    treeInfo.gitBranch,
+  );
   const data_len = data?.tests.length || 0;
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(data_len, ITEMS_PER_PAGE);
@@ -88,4 +101,4 @@ const ImprovisedTestsTable = ({ treeId }: ITestsTable): JSX.Element => {
   );
 };
 
-export default ImprovisedTestsTable;
+export default TestsTable;

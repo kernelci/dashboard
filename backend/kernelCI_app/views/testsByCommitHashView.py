@@ -6,13 +6,19 @@ from kernelCI_app.models import Tests
 class TestsByCommitHash(View):
     def get(self, request, commit_hash: str | None):
         path_param = request.GET.get("path")
-        path_param = "boot"
-        if path_param:
-            path_filter = "AND t.path NOT LIKE %s"
-            params = [commit_hash, f"{path_param}%"]
+        origin_param = request.GET.get("origin")
+        git_url_param = request.GET.get("git_url")
+        git_branch_param = request.GET.get("git_branch")
+        boot_param_with_wildcard = "boot.%"
+        boot_param_exact = "boot"
+        if path_param == 'boot':
+            path_filter = "AND (t.path LIKE %s OR t.path = %s)"
+            params = ([commit_hash, origin_param, git_url_param,
+                       git_branch_param, boot_param_with_wildcard, boot_param_exact])
         else:
-            path_filter = ""
-            params = [commit_hash]
+            path_filter = "AND (t.path NOT LIKE %s AND t.path != %s)"
+            params = ([commit_hash, origin_param, git_url_param,
+                       git_branch_param, boot_param_with_wildcard, boot_param_exact])
 
         names_map = {
             "t.id": "id",
@@ -40,9 +46,10 @@ class TestsByCommitHash(View):
                 t.environment_comment, t.misc FROM checkouts AS c
                 INNER JOIN builds AS b ON c.id = b.checkout_id
                 INNER JOIN tests AS t ON t.build_id = b.id
-                WHERE c.git_commit_hash = %s {path_filter}
+                WHERE c.git_commit_hash = %s AND c.origin = %s AND c.git_repository_url = %s
+                  AND c.git_repository_branch = %s {path_filter}
                 ORDER BY
-                build_id,
+                t.path,
                 CASE t.status
                     WHEN 'FAIL' THEN 1
                     WHEN 'ERROR' THEN 2
