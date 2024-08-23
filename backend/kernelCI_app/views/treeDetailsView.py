@@ -1,7 +1,8 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.views import View
 from querybuilder.query import Query
 from kernelCI_app.models import Builds
+from kernelCI_app.utils import FilterParams, InvalidComparisonOP, getErrorResponseBody
 
 
 class TreeDetails(View):
@@ -76,18 +77,20 @@ class TreeDetails(View):
             fields=checkout_fields
         ).where(git_commit_hash__eq=commit_hash)
 
-        for k in request.GET.keys():
-            if not k.startswith('filter_'):
-                continue
-            field = k[7:]
+        try:
+            filter_params = FilterParams(request)
+        except InvalidComparisonOP as e:
+            return HttpResponseBadRequest(getErrorResponseBody(str(e)))
+
+        for f in filter_params.filters:
+            field = f['field']
             table = None
             if field in build_fields:
                 table = 'builds'
-            if field in checkout_fields:
+            elif field in checkout_fields:
                 table = 'checkouts'
             if table:
-                filter_list = request.GET.getlist(k)
-                query.where(**{f'{table}.{field}__in': filter_list})
+                query.where(**{f'{table}.{field}__{f['comparison_op']}': f['value']})
 
         records = query.select()
         for r in records:
