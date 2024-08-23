@@ -33,7 +33,7 @@ const zFilterValue = z.record(z.boolean());
 type TFilterValues = z.infer<typeof zFilterValue>;
 
 interface ITreeDetailsFilter {
-  filter: TFilter;
+  paramFilter: TFilter;
   treeUrl: string;
 }
 
@@ -134,20 +134,17 @@ type SectionsProps = {
   setDiffFilter: Dispatch<SetStateAction<TFilter>>;
 };
 
+interface ICheckboxSectionProps extends SectionsProps {
+  filter: TFilter;
+}
+
 // TODO: Remove useState for this forms, use something like react hook forms or tanstack forms (when it gets released)
 const CheckboxSection = ({
   diffFilter,
   setDiffFilter,
-}: SectionsProps): JSX.Element => {
+  filter,
+}: ICheckboxSectionProps): JSX.Element => {
   const intl = useIntl();
-
-  const { treeId } = useParams({ from: '/tree/$treeId/' });
-
-  const { data, isLoading } = useTreeDetails(treeId);
-
-  const filter: TFilter = useMemo(() => {
-    return createFilter(data);
-  }, [data]);
 
   const parsedFilter: TFilter = useMemo(
     () => parseCheckboxFilter(filter, diffFilter),
@@ -224,13 +221,6 @@ const CheckboxSection = ({
     setDiffFilter,
   ]);
 
-  if (isLoading)
-    return (
-      <Skeleton className="grid h-[400px] place-items-center">
-        <FormattedMessage id="global.loading" />
-      </Skeleton>
-    );
-
   return (
     <>
       {checkboxSectionsProps.map((props, i) => (
@@ -281,14 +271,22 @@ const TimeRangeSection = ({
 };
 
 const TreeDetailsFilter = ({
-  filter,
+  paramFilter,
   treeUrl,
 }: ITreeDetailsFilter): JSX.Element => {
+  const { treeId } = useParams({ from: '/tree/$treeId/' });
+
+  const { data, isLoading } = useTreeDetails(treeId);
+
   const navigate = useNavigate({
     from: '/tree/$treeId',
   });
 
-  const [diffFilter, setDiffFilter] = useState<TFilter>(filter);
+  const filter: TFilter = useMemo(() => {
+    return createFilter(data);
+  }, [data]);
+
+  const [diffFilter, setDiffFilter] = useState<TFilter>(paramFilter);
 
   const onClickFilterHandle = useCallback(() => {
     const cleanedFilter = cleanFalseFilters(diffFilter);
@@ -303,14 +301,14 @@ const TreeDetailsFilter = ({
   }, [diffFilter, navigate]);
 
   const onClickCancel = useCallback(() => {
-    setDiffFilter(filter);
-  }, [filter]);
+    setDiffFilter(paramFilter);
+  }, [paramFilter]);
 
   const handleOpenChange = useCallback(
     (_open: boolean) => {
-      setDiffFilter(filter);
+      setDiffFilter(paramFilter);
     },
-    [filter],
+    [paramFilter],
   );
 
   return (
@@ -320,11 +318,23 @@ const TreeDetailsFilter = ({
       onOpenChange={handleOpenChange}
       onCancel={onClickCancel}
     >
-      <MemoizedCheckboxSection
-        setDiffFilter={setDiffFilter}
-        diffFilter={diffFilter}
-      />
-      <TimeRangeSection setDiffFilter={setDiffFilter} diffFilter={diffFilter} />
+      {isLoading ? (
+        <Skeleton className="grid h-[400px] place-items-center">
+          <FormattedMessage id="global.loading" />
+        </Skeleton>
+      ) : (
+        <>
+          <MemoizedCheckboxSection
+            setDiffFilter={setDiffFilter}
+            diffFilter={diffFilter}
+            filter={filter}
+          />
+          <TimeRangeSection
+            setDiffFilter={setDiffFilter}
+            diffFilter={diffFilter}
+          />
+        </>
+      )}
     </FilterDrawer>
   );
 };
