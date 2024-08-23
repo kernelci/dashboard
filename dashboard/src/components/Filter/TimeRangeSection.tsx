@@ -5,8 +5,8 @@ import { Input } from '../ui/input';
 interface TimeRangeSection {
   title: string;
   subtitle: string;
-  min: number;
-  max: number;
+  min: number | undefined;
+  max: number | undefined;
   onMinChange: (e: React.FormEvent<HTMLInputElement>) => void;
   onMaxChange: (e: React.FormEvent<HTMLInputElement>) => void;
 }
@@ -33,7 +33,8 @@ const TimeRangeSection = ({
         <Input
           className={inputClass}
           onChange={onMinChange}
-          value={min}
+          value={min || ''}
+          min={0}
           type="number"
         />
       </div>
@@ -46,7 +47,8 @@ const TimeRangeSection = ({
         <Input
           className={inputClass}
           onChange={onMaxChange}
-          value={max}
+          value={max || ''}
+          min={0}
           type="number"
         />
       </div>
