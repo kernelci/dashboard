@@ -6,7 +6,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
-import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
+import { BuildStatus, TestStatus } from '@/components/Status/Status';
 
 import { TableRow, TableCell } from '../ui/table';
 
@@ -26,6 +26,7 @@ const treeTableColumnsLabelId: MessagesKey[] = [
   'filter.treeURL',
   'global.date',
   'treeTable.build',
+  'treeTable.bootStatus',
   'treeTable.test',
 ];
 
@@ -76,48 +77,31 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       <TableCell>{sanitizeTableValue(row.url, false)}</TableCell>
       <TableCell>{sanitizeTableValue(row.date.split('T')[0] ?? '')}</TableCell>
       <TableCell>
-        <div className="flex flex-row gap-1">
-          <ColoredCircle
-            quantity={row.buildStatus.valid}
-            backgroundClassName="bg-lightGreen"
-          />
-          <ColoredCircle
-            quantity={row.buildStatus.invalid}
-            backgroundClassName="bg-lightRed"
-          />
-          <ColoredCircle
-            quantity={row.buildStatus.null}
-            backgroundClassName="bg-lightGray"
-          />
-        </div>
+        <BuildStatus
+          valid={row.buildStatus.valid}
+          invalid={row.buildStatus.invalid}
+          unknown={row.buildStatus.null}
+        />
       </TableCell>
       <TableCell>
-        <div className="flex flex-row gap-1">
-          <ColoredCircle
-            quantity={row.testStatus.pass}
-            backgroundClassName="bg-lightGreen"
-          />
-          <ColoredCircle
-            quantity={row.testStatus.error}
-            backgroundClassName="bg-lightRed"
-          />
-          <ColoredCircle
-            quantity={row.testStatus.miss}
-            backgroundClassName="bg-lightGray"
-          />
-          <ColoredCircle
-            quantity={row.testStatus.fail}
-            backgroundClassName="bg-yellow"
-          />
-          <ColoredCircle
-            quantity={row.testStatus.done}
-            backgroundClassName="bg-lightBlue"
-          />
-          <ColoredCircle
-            quantity={row.testStatus.skip}
-            backgroundClassName="bg-mediumGray"
-          />
-        </div>
+        <TestStatus
+          pass={row.bootStatus.pass}
+          skip={row.bootStatus.skip}
+          fail={row.bootStatus.fail}
+          miss={row.bootStatus.miss}
+          done={row.bootStatus.done}
+          error={row.bootStatus.error}
+        />
+      </TableCell>
+      <TableCell>
+        <TestStatus
+          pass={row.testStatus.pass}
+          skip={row.testStatus.skip}
+          fail={row.testStatus.fail}
+          miss={row.testStatus.miss}
+          done={row.testStatus.done}
+          error={row.testStatus.error}
+        />
       </TableCell>
     </TableRow>
   );
