@@ -4,6 +4,7 @@ from kernelCI_app import views
 
 urlpatterns = [
     path("tree/", views.TreeView.as_view(), name="tree"),
+    path("tree/<str:commit_hash>/commits", views.TreeCommitsHistory.as_view(), name="treeCommits"),
     path("tree/tests/", views.revisionTests.as_view(), name="treeRevisionTests"),
     path("tree/<str:commit_hash>", views.TreeDetails.as_view(), name="treeDetails"),
     path(
