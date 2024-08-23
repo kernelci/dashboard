@@ -53,7 +53,6 @@ export type Tree = {
 const origins = [
   '0dayci',
   'broonie',
-  'kernelci',
   'maestro',
   'microsoft',
   'redhat',
