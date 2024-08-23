@@ -30,6 +30,7 @@ class TestsByCommitHash(View):
             "t.misc": "misc",
         }
 
+        # TODO: Remove the f string here and use parametrized queries
         query = Tests.objects.raw(
             f"""
                 SELECT t.id, c.git_repository_url,

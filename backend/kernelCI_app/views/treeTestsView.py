@@ -63,6 +63,7 @@ class TreeTestsView(View):
             "t.misc": "misc",
         }
 
+        # TODO - Remove the f string here and use parametrized queries
         query = Checkouts.objects.raw(
             f"""
                 SELECT DISTINCT ON (t.build_id) c.id, c.git_repository_url,
