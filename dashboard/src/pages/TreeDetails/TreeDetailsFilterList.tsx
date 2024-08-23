@@ -12,10 +12,14 @@ interface ITreeDetailsFilterList {
 const createFlatFilter = (filter: TFilter): string[] => {
   const flatFilter: string[] = [];
 
-  Object.entries(filter).forEach(([field, values]) => {
-    Object.entries(values).forEach(([value, isSelected]) => {
-      if (isSelected) flatFilter.push(`${field}:${value}`);
-    });
+  Object.entries(filter).forEach(([field, fieldValue]) => {
+    if (typeof fieldValue === 'object') {
+      Object.entries(fieldValue).forEach(([value, isSelected]) => {
+        if (isSelected) flatFilter.push(`${field}:${value}`);
+      });
+    } else {
+      flatFilter.push(`${field}:${fieldValue}`);
+    }
   });
   return flatFilter;
 };
@@ -33,7 +37,11 @@ const TreeDetailsFilterList = ({
       const newFilter = JSON.parse(JSON.stringify(filter ?? {}));
       const fieldSection = newFilter[field as TFilterKeys];
 
-      delete fieldSection[value];
+      if (typeof fieldSection === 'object') {
+        delete fieldSection[value];
+      } else {
+        delete newFilter[field];
+      }
 
       navigate({
         search: previousSearch => {

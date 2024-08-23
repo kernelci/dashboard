@@ -16,9 +16,12 @@ import FilterDrawer, { DrawerSection } from '@/components/Filter/Drawer';
 import FilterCheckboxSection, {
   ICheckboxSection,
 } from '@/components/Filter/CheckboxSection';
+import FilterTimeRangeSection from '@/components/Filter/TimeRangeSection';
 import {
   TFilter,
   TFilterKeys,
+  TFilterObjectsKeys,
+  isTFilterObjectKeys,
   TreeDetails as TreeDetailsType,
 } from '@/types/tree/TreeDetails';
 import { useTreeDetails } from '@/api/TreeDetails';
@@ -38,6 +41,8 @@ const filterFieldMap = {
   config_name: 'configs',
   architecture: 'archs',
   valid: 'status',
+  'duration_[gte]': 'duration_min',
+  'duration_[lte]': 'duration_max',
 } as const satisfies Record<string, TFilterKeys>;
 
 export const mapFilterToReq = (
@@ -49,15 +54,21 @@ export const mapFilterToReq = (
     const values = filter[field];
     if (!values) return;
 
-    Object.entries(values).forEach(([value, isSelected]) => {
-      if (isSelected) {
-        if (reqField == 'valid') {
-          value = value == 'Success' ? 'true' : 'false';
+    if (typeof values === 'object') {
+      Object.entries(values).forEach(([value, isSelected]) => {
+        if (isSelected) {
+          if (reqField === 'valid') {
+            value = value === 'Success' ? 'true' : 'false';
+          }
+          if (!filterMapped[reqField]) {
+            filterMapped[reqField] = [];
+          }
+          filterMapped[reqField].push(value);
         }
-        if (!filterMapped[reqField]) filterMapped[reqField] = [];
-        filterMapped[reqField].push(value);
-      }
-    });
+      });
+    } else {
+      filterMapped[reqField] = [values.toString()];
+    }
   });
 
   return filterMapped;
@@ -77,13 +88,34 @@ export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
       if (b.architecture) archs[b.architecture] = false;
     });
 
-  return { status, configs, archs };
   return { status, branches, configs, archs, bootStatus, testStatus };
 };
 
-const changeFilterValue = (
+const parseCheckboxFilter = (filter: TFilter, diffFilter: TFilter): TFilter => {
+  const result = structuredClone(filter);
+  Object.keys(result).forEach(key => {
+    const currentFilterSection = result[key as TFilterObjectsKeys];
+
+    if (!currentFilterSection || !isTFilterObjectKeys(key)) {
+      return;
+    }
+
+    const diffFilterSection = diffFilter[key];
+
+    if (diffFilterSection) {
+      Object.keys(diffFilterSection).forEach(filterSectionKey => {
+        currentFilterSection[filterSectionKey] =
+          diffFilterSection[filterSectionKey];
+      });
+    }
+  });
+
+  return result;
+};
+
+const changeCheckboxFilterValue = (
   filter: TFilter,
-  filterField: TFilterKeys,
+  filterField: TFilterObjectsKeys,
   value: string,
 ): TFilter => {
   const newFilter: TFilter = JSON.parse(JSON.stringify(filter ?? {}));
@@ -97,7 +129,7 @@ const changeFilterValue = (
   return newFilter;
 };
 
-type CheckboxSectionProps = {
+type SectionsProps = {
   diffFilter: TFilter;
   setDiffFilter: Dispatch<SetStateAction<TFilter>>;
 };
@@ -106,7 +138,7 @@ type CheckboxSectionProps = {
 const CheckboxSection = ({
   diffFilter,
   setDiffFilter,
-}: CheckboxSectionProps): JSX.Element => {
+}: SectionsProps): JSX.Element => {
   const intl = useIntl();
 
   const { treeId } = useParams({ from: '/tree/$treeId/' });
@@ -117,22 +149,10 @@ const CheckboxSection = ({
     return createFilter(data);
   }, [data]);
 
-  const parsedFilter: TFilter = useMemo(() => {
-    const result = structuredClone(filter);
-    Object.keys(result).forEach(key => {
-      const currentFilterSection = result[key as TFilterKeys];
-      const diffFilterSection = diffFilter[key as TFilterKeys];
-      if (diffFilterSection) {
-        Object.keys(diffFilterSection).forEach(filterSectionKey => {
-          if (currentFilterSection)
-            currentFilterSection[filterSectionKey] =
-              diffFilterSection[filterSectionKey];
-        });
-      }
-    });
-
-    return result;
-  }, [diffFilter, filter]);
+  const parsedFilter: TFilter = useMemo(
+    () => parseCheckboxFilter(filter, diffFilter),
+    [diffFilter, filter],
+  );
 
   const checkboxSectionsProps: ICheckboxSection[] = useMemo(() => {
     return [
@@ -141,7 +161,9 @@ const CheckboxSection = ({
         subtitle: intl.formatMessage({ id: 'filter.branchSubtitle' }),
         items: parsedFilter.branches,
         onClickItem: (value: string): void => {
-          setDiffFilter(old => changeFilterValue(old, 'branches', value));
+          setDiffFilter(old =>
+            changeCheckboxFilterValue(old, 'branches', value),
+          );
         },
       },
       {
@@ -149,7 +171,7 @@ const CheckboxSection = ({
         subtitle: intl.formatMessage({ id: 'filter.statusSubtitle' }),
         items: parsedFilter.status,
         onClickItem: (value: string): void => {
-          setDiffFilter(old => changeFilterValue(old, 'status', value));
+          setDiffFilter(old => changeCheckboxFilterValue(old, 'status', value));
         },
       },
       {
@@ -157,7 +179,9 @@ const CheckboxSection = ({
         subtitle: intl.formatMessage({ id: 'filter.statusSubtitle' }),
         items: parsedFilter.bootStatus,
         onClickItem: (value: string): void => {
-          setDiffFilter(old => changeFilterValue(old, 'bootStatus', value));
+          setDiffFilter(old =>
+            changeCheckboxFilterValue(old, 'bootStatus', value),
+          );
         },
       },
       {
@@ -165,7 +189,9 @@ const CheckboxSection = ({
         subtitle: intl.formatMessage({ id: 'filter.statusSubtitle' }),
         items: parsedFilter.testStatus,
         onClickItem: (value: string): void => {
-          setDiffFilter(old => changeFilterValue(old, 'testStatus', value));
+          setDiffFilter(old =>
+            changeCheckboxFilterValue(old, 'testStatus', value),
+          );
         },
       },
       {
@@ -173,7 +199,9 @@ const CheckboxSection = ({
         subtitle: intl.formatMessage({ id: 'filter.configsSubtitle' }),
         items: parsedFilter.configs,
         onClickItem: (value: string): void => {
-          setDiffFilter(old => changeFilterValue(old, 'configs', value));
+          setDiffFilter(old =>
+            changeCheckboxFilterValue(old, 'configs', value),
+          );
         },
       },
       {
@@ -181,7 +209,7 @@ const CheckboxSection = ({
         subtitle: intl.formatMessage({ id: 'filter.architectureSubtitle' }),
         items: parsedFilter.archs,
         onClickItem: (value: string): void => {
-          setDiffFilter(old => changeFilterValue(old, 'archs', value));
+          setDiffFilter(old => changeCheckboxFilterValue(old, 'archs', value));
         },
       },
     ];
@@ -215,6 +243,42 @@ const CheckboxSection = ({
 };
 
 const MemoizedCheckboxSection = memo(CheckboxSection);
+
+const TimeRangeSection = ({
+  diffFilter,
+  setDiffFilter,
+}: SectionsProps): JSX.Element => {
+  const intl = useIntl();
+
+  const minChangeHandler = useCallback(
+    (e: React.FormEvent<HTMLInputElement>) => {
+      const value = e.currentTarget.value;
+      setDiffFilter(old => ({ ...old, duration_min: parseInt(value) }));
+    },
+    [setDiffFilter],
+  );
+
+  const maxChangeHandler = useCallback(
+    (e: React.FormEvent<HTMLInputElement>) => {
+      const value = e.currentTarget.value;
+      setDiffFilter(old => ({ ...old, duration_max: parseInt(value) }));
+    },
+    [setDiffFilter],
+  );
+
+  return (
+    <DrawerSection>
+      <FilterTimeRangeSection
+        title={intl.formatMessage({ id: 'filter.buildDuration' })}
+        subtitle={intl.formatMessage({ id: 'filter.buildDurationSubtitle' })}
+        min={diffFilter.duration_min}
+        max={diffFilter.duration_max}
+        onMaxChange={maxChangeHandler}
+        onMinChange={minChangeHandler}
+      />
+    </DrawerSection>
+  );
+};
 
 const TreeDetailsFilter = ({
   filter,
@@ -260,6 +324,7 @@ const TreeDetailsFilter = ({
         setDiffFilter={setDiffFilter}
         diffFilter={diffFilter}
       />
+      <TimeRangeSection setDiffFilter={setDiffFilter} diffFilter={diffFilter} />
     </FilterDrawer>
   );
 };

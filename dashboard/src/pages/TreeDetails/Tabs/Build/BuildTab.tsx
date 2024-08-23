@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { IListingContent } from '@/components/ListingContent/ListingContent';
 import { ISummary } from '@/components/Summary/Summary';
 
-import { TableFilter, TFilterKeys } from '@/types/tree/TreeDetails';
+import { TableFilter, TFilterObjectsKeys } from '@/types/tree/TreeDetails';
 import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
 interface BuildTab {
@@ -82,7 +82,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   const cards = useMemo(() => {
     const toggleFilterBySection = (
       filterSectionKey: string,
-      filterSection: TFilterKeys,
+      filterSection: TFilterObjectsKeys,
     ): void => {
       navigate({
         search: previousParams => {

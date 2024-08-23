@@ -147,34 +147,52 @@ export const zTableFilterValidator = z.enum(possibleTableFilter).catch('all');
 
 export type TableFilter = z.infer<typeof zTableFilterValidator>;
 
-const zFilterValue = z.record(z.boolean()).optional();
-export type TFilterValues = z.infer<typeof zFilterValue>;
+const zFilterBoolValue = z.record(z.boolean()).optional();
+const zFilterNumberValue = z.number().optional();
 
-const filterKeys = [
+export const zFilterObjectsKeys = z.enum([
   'branches',
   'configs',
   'archs',
   'status',
   'bootStatus',
   'testStatus',
+]);
+export const zFilterNumberKeys = z.enum(['duration_min', 'duration_max']);
+const filterKeys = [
+  ...zFilterObjectsKeys.options,
+  ...zFilterNumberKeys.options,
 ] as const;
+
 export type TFilterKeys = (typeof filterKeys)[number];
 
 export const zDiffFilter = z
   .union([
     z.object({
-      branches: zFilterValue,
-      configs: zFilterValue,
-      archs: zFilterValue,
-      status: zFilterValue,
-      bootStatus: zFilterValue,
-      testStatus: zFilterValue,
+      branches: zFilterBoolValue,
+      configs: zFilterBoolValue,
+      archs: zFilterBoolValue,
+      status: zFilterBoolValue,
+      bootStatus: zFilterBoolValue,
+      testStatus: zFilterBoolValue,
+      duration_min: zFilterNumberValue,
+      duration_max: zFilterNumberValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])
   .catch({});
 
 export type TFilter = z.infer<typeof zDiffFilter>;
+export type TFilterObjectsKeys = z.infer<typeof zFilterObjectsKeys>;
+export type TFilterNumberKeys = z.infer<typeof zFilterNumberKeys>;
+
+export const isTFilterObjectKeys = (key: string): key is TFilterObjectsKeys => {
+  return zFilterObjectsKeys.safeParse(key).success;
+};
+
+export const isTFilterNumberKeys = (key: string): key is TFilterNumberKeys => {
+  return zFilterNumberKeys.safeParse(key).success;
+};
 
 export const zTreeInformation = z
   .object({
