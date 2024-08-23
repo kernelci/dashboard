@@ -18,6 +18,14 @@ export type TreeTableBody = {
     skip: number;
     miss: number;
   };
+  bootStatus: {
+    done: number;
+    pass: number;
+    error: number;
+    fail: number;
+    skip: number;
+    miss: number;
+  };
   id: string;
   branch: string;
   date: string;
@@ -47,6 +55,14 @@ export type Tree = {
     skip: number;
     null: number;
     total: number;
+  };
+  boot_status: {
+    done: number;
+    pass: number;
+    error: number;
+    fail: number;
+    skip: number;
+    miss: number;
   };
 };
 
