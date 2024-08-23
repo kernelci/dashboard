@@ -22,7 +22,7 @@ interface ITreeTable {
 const treeTableColumnsLabelId: MessagesKey[] = [
   'treeTable.tree',
   'treeTable.branch',
-  'global.commit',
+  'treeTable.commitTag',
   'filter.treeURL',
   'global.date',
   'treeTable.build',

@@ -147,6 +147,7 @@ export const messages = {
     'treeDetails.unknown': 'Unknown',
     'treeTable.branch': 'Branch',
     'treeTable.build': 'Build Status',
+    'treeTable.commitTag': 'Commit/Tag',
     'treeTable.patchset': 'Patchset hash',
     'treeTable.test': 'Test Status',
     'treeTable.tree': 'Tree',

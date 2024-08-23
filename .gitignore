@@ -1,3 +1,5 @@
 # Credentials
 application_default_credentials.json
 .vscode
+.env
+.idea
