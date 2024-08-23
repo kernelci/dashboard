@@ -50,15 +50,35 @@ class TreeView(View):
                 COUNT(DISTINCT CASE WHEN builds.valid IS NULL AND builds.id IS NOT NULL THEN builds.id END)
                     AS null_builds,
                 COUNT(DISTINCT builds.id) AS total_builds,
-                COUNT(CASE WHEN tests.status = 'FAIL' THEN 1 END) AS fail_tests,
-                COUNT(CASE WHEN tests.status = 'ERROR' THEN 1 END) AS error_tests,
-                COUNT(CASE WHEN tests.status = 'MISS' THEN 1 END) AS miss_tests,
-                COUNT(CASE WHEN tests.status = 'PASS' THEN 1 END) AS pass_tests,
-                COUNT(CASE WHEN tests.status = 'DONE' THEN 1 END) AS done_tests,
-                COUNT(CASE WHEN tests.status = 'SKIP' THEN 1 END) AS skip_tests,
+                COUNT(CASE WHEN (tests.path <> 'boot' OR tests.path NOT LIKE 'boot.%%')
+                    AND tests.status = 'FAIL' THEN 1 END) AS fail_tests,
+                COUNT(CASE WHEN (tests.path <> 'boot' OR tests.path NOT LIKE 'boot.%%')
+                    AND tests.status = 'ERROR' THEN 1 END) AS error_tests,
+                COUNT(CASE WHEN (tests.path <> 'boot' OR tests.path NOT LIKE 'boot.%%')
+                    AND tests.status = 'MISS' THEN 1 END) AS miss_tests,
+                COUNT(CASE WHEN (tests.path <> 'boot' OR tests.path NOT LIKE 'boot.%%')
+                    AND tests.status = 'PASS' THEN 1 END) AS pass_tests,
+                COUNT(CASE WHEN (tests.path <> 'boot' OR tests.path NOT LIKE 'boot.%%')
+                    AND tests.status = 'DONE' THEN 1 END) AS done_tests,
+                COUNT(CASE WHEN (tests.path <> 'boot' OR tests.path NOT LIKE 'boot.%%')
+                    AND tests.status = 'SKIP' THEN 1 END) AS skip_tests,
                 SUM(CASE WHEN tests.status IS NULL AND tests.id IS NOT NULL THEN 1 ELSE 0 END)
                     AS null_tests,
                 COUNT(tests.id) AS total_tests,
+
+                COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
+                    AND tests.status = 'FAIL' THEN 1 END) AS fail_boots,
+                COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
+                    AND tests.status = 'ERROR' THEN 1 END) AS error_boots,
+                COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
+                    AND tests.status = 'MISS' THEN 1 END) AS miss_boots,
+                COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
+                    AND tests.status = 'PASS' THEN 1 END) AS pass_boots,
+                COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
+                    AND tests.status = 'DONE' THEN 1 END) AS done_boots,
+                COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
+                    AND tests.status = 'SKIP' THEN 1 END) AS skip_boots,
+
                 COALESCE(
                     ARRAY_AGG(DISTINCT tree_name) FILTER (WHERE tree_name IS NOT NULL),
                     ARRAY[]::text[]

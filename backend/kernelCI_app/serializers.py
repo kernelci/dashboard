@@ -17,6 +17,7 @@ class CheckoutsSerializer(serializers.ModelSerializer):
 class TreeSerializer(serializers.Serializer):
     build_status = serializers.SerializerMethodField(method_name="get_build_status")
     test_status = serializers.SerializerMethodField(method_name="get_test_status")
+    boot_status = serializers.SerializerMethodField(method_name="get_boot_status")
     git_commit_hash = serializers.CharField()
     patchset_hash = serializers.CharField()
     tree_names = serializers.ListField()
@@ -48,6 +49,16 @@ class TreeSerializer(serializers.Serializer):
             "skip": obj.skip_tests,
             "null": obj.null_tests,
             "total": obj.total_tests
+        }
+
+    def get_boot_status(self, obj):
+        return {
+            "fail": obj.fail_boots,
+            "error": obj.error_boots,
+            "miss": obj.miss_boots,
+            "pass": obj.pass_boots,
+            "done": obj.done_boots,
+            "skip": obj.skip_boots,
         }
 
 

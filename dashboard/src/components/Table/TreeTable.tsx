@@ -138,6 +138,7 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
         date={row.date}
         url={row.url}
         commitName={row.commitName}
+        bootStatus={row.bootStatus}
       />
     ));
   }, [treeTableRows]);
