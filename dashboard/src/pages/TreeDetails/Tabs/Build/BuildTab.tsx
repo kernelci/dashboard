@@ -13,7 +13,7 @@ import { IListingContent } from '@/components/ListingContent/ListingContent';
 import { ISummary } from '@/components/Summary/Summary';
 
 import {
-  possibleTableFilter,
+  possibleBuildsTableFilter,
   TableFilter,
   TFilterObjectsKeys,
 } from '@/types/tree/TreeDetails';
@@ -210,15 +210,15 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
               filters={[
                 {
                   label: intl.formatMessage({ id: 'global.all' }),
-                  value: possibleTableFilter[2],
+                  value: possibleBuildsTableFilter[2],
                 },
                 {
                   label: intl.formatMessage({ id: 'global.successful' }),
-                  value: possibleTableFilter[1],
+                  value: possibleBuildsTableFilter[1],
                 },
                 {
                   label: intl.formatMessage({ id: 'global.errors' }),
-                  value: possibleTableFilter[0],
+                  value: possibleBuildsTableFilter[0],
                 },
               ]}
             />
