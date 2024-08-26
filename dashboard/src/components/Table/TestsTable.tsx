@@ -89,7 +89,7 @@ const TestsTable = ({
     if (filteredData?.length === 0) {
       return (
         <div className="flex h-8 items-center px-4">
-          <FormattedMessage id="testDetails.noResults" />
+          <FormattedMessage id="global.noResults" />
         </div>
       );
     }

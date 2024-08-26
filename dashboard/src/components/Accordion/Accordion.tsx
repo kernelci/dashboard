@@ -67,40 +67,43 @@ const AccordionTableBody = ({
   items,
   type,
 }: ICustomAccordionTableBody): JSX.Element => {
-  const accordionItems = useMemo(
-    () =>
-      items.map((item, index) => (
-        <Collapsible key={index} asChild>
-          <>
-            <CollapsibleTrigger asChild>
-              <TableRow>
-                {type === 'build' ? (
-                  <AccordionBuildsTrigger accordionData={item.accordionData} />
-                ) : (
-                  <AccordionTestsTrigger accordionData={item.accordionData} />
-                )}
-              </TableRow>
-            </CollapsibleTrigger>
+  const accordionItems = useMemo(() => {
+    if (items.length === 0) {
+      return (
+        <div className="flex h-8 items-center px-4">
+          <FormattedMessage id="global.noResults" />
+        </div>
+      );
+    }
+    return items.map((item, index) => (
+      <Collapsible key={index} asChild>
+        <>
+          <CollapsibleTrigger asChild>
             <TableRow>
-              <TableCell colSpan={6} className="p-0">
-                <CollapsibleContent>
-                  <div className="h-fit w-full border-b border-darkGray bg-lightGray p-8">
-                    {type === 'build' ? (
-                      <AccordionBuildContent
-                        accordionData={item.accordionData}
-                      />
-                    ) : (
-                      <></>
-                    )}
-                  </div>
-                </CollapsibleContent>
-              </TableCell>
+              {type === 'build' ? (
+                <AccordionBuildsTrigger accordionData={item.accordionData} />
+              ) : (
+                <AccordionTestsTrigger accordionData={item.accordionData} />
+              )}
             </TableRow>
-          </>
-        </Collapsible>
-      )),
-    [items, type],
-  );
+          </CollapsibleTrigger>
+          <TableRow>
+            <TableCell colSpan={6} className="p-0">
+              <CollapsibleContent>
+                <div className="h-fit w-full border-b border-darkGray bg-lightGray p-8">
+                  {type === 'build' ? (
+                    <AccordionBuildContent accordionData={item.accordionData} />
+                  ) : (
+                    <></>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </TableCell>
+          </TableRow>
+        </>
+      </Collapsible>
+    ));
+  }, [items, type]);
 
   return <TableBody>{accordionItems}</TableBody>;
 };
