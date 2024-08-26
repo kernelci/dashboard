@@ -40,6 +40,7 @@ interface ITreeDetailsFilter {
 const filterFieldMap = {
   config_name: 'configs',
   architecture: 'archs',
+  compiler: 'compilers',
   valid: 'status',
   'duration_[gte]': 'duration_min',
   'duration_[lte]': 'duration_max',
@@ -80,14 +81,16 @@ export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
   const testStatus = { Success: false, Failure: false };
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};
+  const compilers: TFilterValues = {};
 
   if (data)
     data.builds.forEach(b => {
       if (b.config_name) configs[b.config_name] = false;
       if (b.architecture) archs[b.architecture] = false;
+      if (b.compiler) compilers[b.compiler] = false;
     });
 
-  return { status, configs, archs, bootStatus, testStatus };
+  return { status, configs, archs, compilers, bootStatus, testStatus };
 };
 
 const parseCheckboxFilter = (filter: TFilter, diffFilter: TFilter): TFilter => {
@@ -198,12 +201,23 @@ const CheckboxSection = ({
           setDiffFilter(old => changeCheckboxFilterValue(old, 'archs', value));
         },
       },
+      {
+        title: intl.formatMessage({ id: 'global.compilers' }),
+        subtitle: intl.formatMessage({ id: 'filter.compilersSubtitle' }),
+        items: parsedFilter.compilers,
+        onClickItem: (value: string): void => {
+          setDiffFilter(old =>
+            changeCheckboxFilterValue(old, 'compilers', value),
+          );
+        },
+      },
     ];
   }, [
     intl,
     parsedFilter.status,
     parsedFilter.configs,
     parsedFilter.archs,
+    parsedFilter.compilers,
     parsedFilter.bootStatus,
     parsedFilter.testStatus,
     setDiffFilter,

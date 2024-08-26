@@ -50,6 +50,7 @@ const CardContent = ({ card }: ICardContent): JSX.Element => {
         summaryHeaders={card?.summaryHeaders}
         onClickKey={card?.onClickKey}
         summaryBody={card?.summaryBody}
+        onClickCompiler={card?.onClickCompiler}
       />
     );
   } else if (card.type === 'chart') {

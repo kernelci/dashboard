@@ -13,11 +13,13 @@ export interface ISummaryTable {
   summaryHeaders: ReactElement[];
   summaryBody: ISummaryItem[];
   onClickKey?: (key: string) => void;
+  onClickCompiler?: (compiler: string) => void;
 }
 
 export interface ISummaryItem {
   arch: IListingItem;
   onClickKey?: (key: string) => void;
+  onClickCompiler?: (compiler: string) => void;
   compilers: string[];
 }
 
@@ -43,6 +45,7 @@ const Summary = ({
   summaryHeaders,
   summaryBody,
   onClickKey,
+  onClickCompiler,
 }: ISummaryTable): JSX.Element => {
   const summaryBodyRows = useMemo(
     () =>
@@ -52,9 +55,10 @@ const Summary = ({
           key={row.arch.text}
           arch={row.arch}
           compilers={row.compilers}
+          onClickCompiler={onClickCompiler}
         />
       )),
-    [onClickKey, summaryBody],
+    [onClickKey, summaryBody, onClickCompiler],
   );
 
   return (
@@ -66,16 +70,20 @@ export const SummaryItem = ({
   arch,
   compilers,
   onClickKey,
+  onClickCompiler,
 }: ISummaryItem): JSX.Element => {
-  const compilersElement = useMemo(
-    () =>
-      compilers?.map(compiler => (
-        <span key={compiler} className="line-clamp-1">
-          {compiler}
-        </span>
-      )),
-    [compilers],
-  );
+  const compilersElement = useMemo(() => {
+    return compilers?.map(compiler => (
+      <button
+        key={compiler}
+        className="line-clamp-1"
+        onClick={() => onClickCompiler?.(compiler)}
+      >
+        {compiler}
+      </button>
+    ));
+  }, [compilers, onClickCompiler]);
+
   return (
     <TableRow>
       <TableCell>

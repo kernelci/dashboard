@@ -153,6 +153,7 @@ const zFilterNumberValue = z.number().optional();
 export const zFilterObjectsKeys = z.enum([
   'configs',
   'archs',
+  'compilers',
   'status',
   'bootStatus',
   'testStatus',
@@ -171,6 +172,7 @@ export const zDiffFilter = z
       configs: zFilterBoolValue,
       archs: zFilterBoolValue,
       status: zFilterBoolValue,
+      compilers: zFilterBoolValue,
       bootStatus: zFilterBoolValue,
       testStatus: zFilterBoolValue,
       duration_min: zFilterNumberValue,

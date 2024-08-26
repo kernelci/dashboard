@@ -163,6 +163,9 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         onClickKey: (key: string) => {
           toggleFilterBySection(key, 'archs');
         },
+        onClickCompiler: compiler => {
+          toggleFilterBySection(compiler, 'compilers');
+        },
       } as ISummary & { key: string },
     ];
   }, [
