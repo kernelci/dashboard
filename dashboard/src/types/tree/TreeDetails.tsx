@@ -141,11 +141,28 @@ export const zPossibleValidator = z
   .enum(possibleTabs)
   .catch('treeDetails.boots');
 
-export const possibleTableFilter = ['error', 'success', 'all'] as const;
+export const possibleBuildsTableFilter = ['error', 'success', 'all'] as const;
 
-export const zTableFilterValidator = z.enum(possibleTableFilter).catch('all');
+export const possibleTestsTableFilter = [
+  'all',
+  'done',
+  'error',
+  'fail',
+  'miss',
+  'pass',
+  'skip',
+] as const;
 
-export type TableFilter = z.infer<typeof zTableFilterValidator>;
+export const zBuildsTableFilterValidator = z
+  .enum(possibleBuildsTableFilter)
+  .catch('all');
+export const zTestsTableFilterValidator = z
+  .enum(possibleTestsTableFilter)
+  .catch('all');
+
+export type TableFilter = z.infer<
+  typeof zBuildsTableFilterValidator | typeof zTestsTableFilterValidator
+>;
 
 const zFilterBoolValue = z.record(z.boolean()).optional();
 const zFilterNumberValue = z.number().optional();

@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
@@ -9,6 +9,13 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { usePagination } from '@/hooks/usePagination';
 
 import { useTestsByTreeAndCommitHash } from '@/api/TreeDetails';
+
+import {
+  TableFilter,
+  possibleTestsTableFilter,
+} from '@/types/tree/TreeDetails';
+
+import TableStatusFilter from './TableStatusFilter';
 
 const headerLabelIds: string[] = [
   'ID',
@@ -30,7 +37,11 @@ const TestsTable = ({
   isBootTable = false,
 }: ITestsTable): JSX.Element => {
   const navigate = useNavigate({ from: '/tree/$treeId' });
-  const { origin, treeInfo } = useSearch({
+  const intl = useIntl();
+  const { origin, treeInfo, diffFilter } = useSearch({
+    from: '/tree/$treeId/',
+  });
+  const { tableFilter: filterBy } = useSearch({
     from: '/tree/$treeId/',
   });
   const { data, error, isLoading } = useTestsByTreeAndCommitHash(
@@ -40,9 +51,6 @@ const TestsTable = ({
     treeInfo.gitUrl,
     treeInfo.gitBranch,
   );
-  const data_len = data?.tests.length || 0;
-  const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
-    usePagination(data_len, ITEMS_PER_PAGE);
 
   const onClickName = useCallback(
     (id: string) => {
@@ -57,6 +65,18 @@ const TestsTable = ({
     [navigate, treeId],
   );
 
+  const filteredData = useMemo(() => {
+    if (filterBy === 'all') {
+      return data?.tests;
+    }
+    return data?.tests.filter(test => test.status.toLowerCase() === filterBy);
+  }, [data?.tests, filterBy]);
+
+  const data_len = filteredData?.length || 0;
+
+  const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
+    usePagination(data_len, ITEMS_PER_PAGE, diffFilter, filterBy);
+
   const headers = useMemo(() => {
     return headerLabelIds.map(labelId => <p key={labelId}>{labelId}</p>);
   }, []);
@@ -64,7 +84,15 @@ const TestsTable = ({
   const rows = useMemo(() => {
     if (!data || error) return <></>;
 
-    return data.tests.slice(startIndex, endIndex).map(test => (
+    if (filteredData?.length === 0) {
+      return (
+        <div className="flex h-8 items-center px-4">
+          <FormattedMessage id="testDetails.noResults" />
+        </div>
+      );
+    }
+
+    return filteredData?.slice(startIndex, endIndex).map(test => (
       <TableRow onClick={() => onClickName(test.id)} key={test.id}>
         <TableCell>{test.id}</TableCell>
         <TableCell>{test.status}</TableCell>
@@ -73,7 +101,7 @@ const TestsTable = ({
         <TableCell>{test.architecture}</TableCell>
       </TableRow>
     ));
-  }, [data, error, startIndex, endIndex, onClickName]);
+  }, [filteredData, data, error, startIndex, endIndex, onClickName]);
 
   const tableInfoElement = (
     <div className="flex flex-col items-end">
@@ -88,13 +116,64 @@ const TestsTable = ({
     </div>
   );
 
+  const onClickFilter = useCallback(
+    (filter: TableFilter) => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: filter,
+          };
+        },
+      });
+    },
+    [navigate],
+  );
+
+  const filters = useMemo(
+    () => [
+      {
+        label: intl.formatMessage({ id: 'global.all' }),
+        value: possibleTestsTableFilter[0],
+      },
+      {
+        label: intl.formatMessage({ id: 'testStatus.pass' }),
+        value: possibleTestsTableFilter[5],
+      },
+      {
+        label: intl.formatMessage({ id: 'testStatus.fail' }),
+        value: possibleTestsTableFilter[3],
+      },
+      {
+        label: intl.formatMessage({ id: 'testStatus.skip' }),
+        value: possibleTestsTableFilter[6],
+      },
+      {
+        label: intl.formatMessage({ id: 'testStatus.done' }),
+        value: possibleTestsTableFilter[1],
+      },
+      {
+        label: intl.formatMessage({ id: 'testStatus.error' }),
+        value: possibleTestsTableFilter[2],
+      },
+      {
+        label: intl.formatMessage({ id: 'testStatus.miss' }),
+        value: possibleTestsTableFilter[4],
+      },
+    ],
+    [intl],
+  );
+
   if (error) return <FormattedMessage id="global.error" />;
 
   if (isLoading) return <FormattedMessage id="global.loading" />;
 
   return (
     <div className="flex flex-col gap-6">
-      {tableInfoElement}
+      <div className="flex flex-row justify-between">
+        <TableStatusFilter filters={filters} onClick={onClickFilter} />
+        {tableInfoElement}
+      </div>
       <BaseTable headers={headers}>{rows}</BaseTable>
       {tableInfoElement}
     </div>
