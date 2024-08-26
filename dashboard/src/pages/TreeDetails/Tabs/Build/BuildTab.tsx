@@ -1,6 +1,6 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
@@ -32,6 +32,8 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
     from: '/tree/$treeId',
   });
   const { diffFilter } = useSearch({ from: '/tree/$treeId/' });
+
+  const [selectedFilter, setSelectedFilter] = useState<TableFilter>('all');
 
   const accordionContent = useMemo(() => {
     return treeDetailsData?.builds.map(row => ({
@@ -181,6 +183,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
 
   const onClickFilter = useCallback(
     (type: TableFilter) => {
+      setSelectedFilter(type);
       navigate({
         search: previousParams => {
           return {
@@ -208,14 +211,17 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
                 {
                   label: intl.formatMessage({ id: 'global.all' }),
                   value: possibleBuildsTableFilter[2],
+                  isSelected: selectedFilter === possibleBuildsTableFilter[2],
                 },
                 {
                   label: intl.formatMessage({ id: 'global.successful' }),
                   value: possibleBuildsTableFilter[1],
+                  isSelected: selectedFilter === possibleBuildsTableFilter[1],
                 },
                 {
                   label: intl.formatMessage({ id: 'global.errors' }),
                   value: possibleBuildsTableFilter[0],
+                  isSelected: selectedFilter === possibleBuildsTableFilter[0],
                 },
               ]}
             />

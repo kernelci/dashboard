@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -77,6 +77,8 @@ const TestsTable = ({
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(data_len, ITEMS_PER_PAGE, diffFilter, filterBy);
 
+  const [selectedFilter, setSelectedFilter] = useState<TableFilter>('all');
+
   const headers = useMemo(() => {
     return headerLabelIds.map(labelId => <p key={labelId}>{labelId}</p>);
   }, []);
@@ -118,6 +120,7 @@ const TestsTable = ({
 
   const onClickFilter = useCallback(
     (filter: TableFilter) => {
+      setSelectedFilter(filter);
       navigate({
         search: previousParams => {
           return {
@@ -135,33 +138,40 @@ const TestsTable = ({
       {
         label: intl.formatMessage({ id: 'global.all' }),
         value: possibleTestsTableFilter[0],
+        isSelected: selectedFilter === possibleTestsTableFilter[0],
       },
       {
         label: intl.formatMessage({ id: 'testStatus.pass' }),
         value: possibleTestsTableFilter[5],
+        isSelected: selectedFilter === possibleTestsTableFilter[5],
       },
       {
         label: intl.formatMessage({ id: 'testStatus.fail' }),
         value: possibleTestsTableFilter[3],
+        isSelected: selectedFilter === possibleTestsTableFilter[3],
       },
       {
         label: intl.formatMessage({ id: 'testStatus.skip' }),
         value: possibleTestsTableFilter[6],
+        isSelected: selectedFilter === possibleTestsTableFilter[6],
       },
       {
         label: intl.formatMessage({ id: 'testStatus.done' }),
         value: possibleTestsTableFilter[1],
+        isSelected: selectedFilter === possibleTestsTableFilter[1],
       },
       {
         label: intl.formatMessage({ id: 'testStatus.error' }),
         value: possibleTestsTableFilter[2],
+        isSelected: selectedFilter === possibleTestsTableFilter[2],
       },
       {
         label: intl.formatMessage({ id: 'testStatus.miss' }),
         value: possibleTestsTableFilter[4],
+        isSelected: selectedFilter === possibleTestsTableFilter[4],
       },
     ],
-    [intl],
+    [intl, selectedFilter],
   );
 
   if (error) return <FormattedMessage id="global.error" />;
