@@ -12,7 +12,10 @@ interface ITableStatusFilter {
   }[];
 }
 
-const TableStatusFilter = ({ filters, onClick }: ITableStatusFilter): JSX.Element => {
+const TableStatusFilter = ({
+  filters,
+  onClick,
+}: ITableStatusFilter): JSX.Element => {
   const filterButtons = useMemo(
     () =>
       filters.map((filter, index) => (
@@ -29,7 +32,7 @@ const TableStatusFilter = ({ filters, onClick }: ITableStatusFilter): JSX.Elemen
           {filter.label}
         </Button>
       )),
-    [filters],
+    [filters, onClick],
   );
   return <div>{filterButtons}</div>;
 };

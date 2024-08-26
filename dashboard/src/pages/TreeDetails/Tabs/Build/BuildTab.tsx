@@ -9,12 +9,16 @@ import { Colors, IStatusChart } from '@/components/StatusChart/StatusCharts';
 import { TableInfo } from '@/components/Table/TableInfo';
 import { usePagination } from '@/hooks/usePagination';
 import Accordion from '@/components/Accordion/Accordion';
-import { Button } from '@/components/ui/button';
 import { IListingContent } from '@/components/ListingContent/ListingContent';
 import { ISummary } from '@/components/Summary/Summary';
 
-import { TableFilter, TFilterObjectsKeys } from '@/types/tree/TreeDetails';
+import {
+  possibleTableFilter,
+  TableFilter,
+  TFilterObjectsKeys,
+} from '@/types/tree/TreeDetails';
 import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
+import TableStatusFilter from '@/components/Table/TableStatusFilter';
 
 interface BuildTab {
   treeDetailsData?: ITreeDetails;
@@ -201,29 +205,23 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
             <FormattedMessage id="treeDetails.builds" />
           </div>
           <div className="flex flex-row justify-between">
-            <div>
-              <Button
-                variant="outline"
-                className="rounded-l-full border border-black"
-                onClick={() => onClickFilter('all')}
-              >
-                <FormattedMessage id="global.all" />
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-none border border-black"
-                onClick={() => onClickFilter('success')}
-              >
-                <FormattedMessage id="global.successful" />
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-r-full border border-black"
-                onClick={() => onClickFilter('error')}
-              >
-                <FormattedMessage id="global.errors" />
-              </Button>
-            </div>
+            <TableStatusFilter
+              onClick={onClickFilter}
+              filters={[
+                {
+                  label: intl.formatMessage({ id: 'global.all' }),
+                  value: possibleTableFilter[2],
+                },
+                {
+                  label: intl.formatMessage({ id: 'global.successful' }),
+                  value: possibleTableFilter[1],
+                },
+                {
+                  label: intl.formatMessage({ id: 'global.errors' }),
+                  value: possibleTableFilter[0],
+                },
+              ]}
+            />
             <TableInfo
               startIndex={startIndex + 1}
               endIndex={endIndex}
