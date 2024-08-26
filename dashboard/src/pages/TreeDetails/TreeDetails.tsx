@@ -30,6 +30,8 @@ import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 import { sanitizeTableValue } from '@/components/Table/tableUtils';
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
+
 import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
 
@@ -79,9 +81,18 @@ const TreeHeader = ({
           <TableCell>{treeNames ?? '-'}</TableCell>
           <TableCell>{gitBranch ?? '-'}</TableCell>
           <TableCell>
-            {sanitizeTableValue(
-              tag && tag !== '' ? tag : commit && commit !== '' ? commit : '-',
-            )}
+            <Tooltip>
+              <TooltipTrigger>
+                {sanitizeTableValue(
+                  tag && tag !== ''
+                    ? tag
+                    : commit && commit !== ''
+                      ? commit
+                      : '-',
+                )}
+              </TooltipTrigger>
+              <TooltipContent>{tag ?? commit}</TooltipContent>
+            </Tooltip>
           </TableCell>
           <TableCell>{gitUrl ?? '-'}</TableCell>
         </TableRow>

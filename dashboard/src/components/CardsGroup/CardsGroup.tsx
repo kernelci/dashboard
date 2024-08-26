@@ -31,7 +31,7 @@ const CardsGroup = ({ cards }: ICardsGroup): JSX.Element => {
       );
     });
   }, [cards]);
-  return <div className="columns-2">{cardsList}</div>;
+  return <>{cardsList}</>;
 };
 
 const CardContent = ({ card }: ICardContent): JSX.Element => {
