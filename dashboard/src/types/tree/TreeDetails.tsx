@@ -227,8 +227,6 @@ export const zTreeInformation = z
 
 export type TestByCommitHash = {
   id: string;
-  architecture: string | null;
-  compiler: string | null;
   path: string | null;
   status: string;
   duration: string;

@@ -63,6 +63,7 @@ class TestsByTreeAndCommitHash(View):
         # Format the results as JSON
         results = [
             {
+                "id": row[0],
                 "status": row[7],
                 "path": row[8],
                 "duration": row[6],
