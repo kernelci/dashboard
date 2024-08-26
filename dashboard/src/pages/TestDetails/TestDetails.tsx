@@ -144,16 +144,8 @@ const TestDetails = (): JSX.Element => {
     );
   }
 
-  // const descendants = unsafeDescendants ?? [];
-
   return (
     <>
-      {/*
-      <pre className="overflow-x-auto">
-        {JSON.stringify(currentTest, null, 2)}
-      </pre>
-      */}
-
       <div className="w-100 px-5">
         <Breadcrumb className="pb-6 pt-6">
           <BreadcrumbList>
@@ -177,9 +169,6 @@ const TestDetails = (): JSX.Element => {
         <h1 className="mb-4 border-b border-gray-300 pb-3 text-2xl font-bold">
           {data.path}
         </h1>
-        {/*
-      <TestDetailsTable tests={descendants} />;
-      */}
         <LogExcerpt test={data} />
         <TestDetailsSection test={data} />
       </div>
