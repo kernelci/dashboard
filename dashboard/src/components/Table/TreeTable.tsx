@@ -69,9 +69,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       </TableCell>
       <TableCell>{sanitizeTableValue(row.branch, false)}</TableCell>
       <TableCell>
-        {sanitizeTableValue(
-          row.commitName !== '' ? row.commitName : row.commitHash,
-        )}
+        {sanitizeTableValue(row.commitName ? row.commitName : row.commitHash)}
       </TableCell>
       <TableCell>{sanitizeTableValue(row.url, false)}</TableCell>
       <TableCell>{sanitizeTableValue(row.date.split('T')[0] ?? '')}</TableCell>

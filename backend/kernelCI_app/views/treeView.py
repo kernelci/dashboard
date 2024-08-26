@@ -40,11 +40,7 @@ class TreeView(View):
             )
 
             SELECT
-                checkouts._timestamp, checkouts.id, checkouts.origin, checkouts.tree_name,
-                checkouts.git_repository_url, checkouts.git_repository_branch, checkouts.patchset_files,
-                checkouts.patchset_hash, checkouts.message_id, checkouts.comment, checkouts.start_time,
-                checkouts.contacts, checkouts.log_url, checkouts.log_excerpt, checkouts.valid, checkouts.misc,
-                CONCAT(checkouts.git_commit_hash, '/', checkouts.git_commit_name) AS git_commit_hash,
+                checkouts.*,
                 COUNT(DISTINCT CASE WHEN builds.valid = true THEN builds.id END) AS valid_builds,
                 COUNT(DISTINCT CASE WHEN builds.valid = false THEN builds.id END) AS invalid_builds,
                 COUNT(DISTINCT CASE WHEN builds.valid IS NULL AND builds.id IS NOT NULL THEN builds.id END)

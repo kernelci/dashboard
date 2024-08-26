@@ -203,7 +203,7 @@ function TreeDetails(): JSX.Element {
           gitBranch={treeInfo?.gitBranch}
           commit={treeId}
           treeNames={treeInfo?.treeName}
-          tag={treeInfo?.commitName}
+          tag={treeInfo?.commitName ? treeInfo?.commitName : treeId}
           gitUrl={treeInfo?.gitUrl}
         />
       </div>
