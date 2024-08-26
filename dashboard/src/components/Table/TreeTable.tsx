@@ -59,6 +59,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
           gitBranch: row.branch,
           treeName: row.tree_names[0],
           commitName: row.commitName,
+          headCommitHash: row.id,
         },
       },
     });
