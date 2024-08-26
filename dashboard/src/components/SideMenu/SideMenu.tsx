@@ -4,7 +4,11 @@ import { ImTree, ImImages } from 'react-icons/im';
 
 import { FormattedMessage } from 'react-intl';
 
+import { useRouter, useSearch } from '@tanstack/react-router';
+
 import { MessagesKey } from '@/locales/messages';
+
+import { zOrigin } from '@/types/tree/Tree';
 
 import {
   NavigationMenu,
@@ -23,27 +27,6 @@ type MenuItems = {
 };
 
 const emptyFunc = (): void => {};
-
-const items: MenuItems[] = [
-  {
-    onClick: emptyFunc,
-    idIntl: 'routes.treeMonitor',
-    icon: <ImTree className="size-5" />,
-    selected: true,
-  },
-  {
-    onClick: emptyFunc,
-    idIntl: 'routes.deviceMonitor',
-    icon: <MdOutlineMonitorHeart className="size-5" />,
-    selected: false,
-  },
-  {
-    onClick: emptyFunc,
-    idIntl: 'routes.labsMonitor',
-    icon: <ImImages className="size-5" />,
-    selected: false,
-  },
-];
 
 const NavLink = ({
   icon,
@@ -65,6 +48,45 @@ const SideMenu = (): JSX.Element => {
   const notSelectedItemClassName =
     'w-full flex pl-5 py-4 cursor-pointer text-white';
 
+  const useNavigateTo = (path: string): (() => void) => {
+    const router = useRouter();
+    const { origin: unsafeOrigin } = useSearch({ strict: false });
+    const origin = zOrigin.parse(unsafeOrigin);
+
+    let finalPath = path;
+    if (!finalPath.endsWith('/')) {
+      finalPath = finalPath + '/';
+    }
+
+    return () => {
+      const newPath = `${finalPath}?origin=${origin}`;
+      router.navigate({
+        to: newPath,
+      });
+    };
+  };
+
+  const items: MenuItems[] = [
+    {
+      onClick: useNavigateTo('/'),
+      idIntl: 'routes.treeMonitor',
+      icon: <ImTree className="size-5" />,
+      selected: true,
+    },
+    {
+      onClick: emptyFunc,
+      idIntl: 'routes.deviceMonitor',
+      icon: <MdOutlineMonitorHeart className="size-5" />,
+      selected: false,
+    },
+    {
+      onClick: emptyFunc,
+      idIntl: 'routes.labsMonitor',
+      icon: <ImImages className="size-5" />,
+      selected: false,
+    },
+  ];
+
   return (
     <NavigationMenu
       className="min-h-screen flex-col justify-start bg-bgSecondary pt-6"
@@ -83,6 +105,7 @@ const SideMenu = (): JSX.Element => {
               item.selected ? selectedItemClassName : notSelectedItemClassName
             }
             key={item.idIntl}
+            onClick={item.onClick}
           >
             <NavLink icon={item.icon} idIntl={item.idIntl} />
           </NavigationMenuItem>
