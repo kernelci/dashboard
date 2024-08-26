@@ -5,6 +5,7 @@ import {
   TreeDetails,
   TTreeDetailsFilter,
   TTestByCommitHashResponse,
+  TTreeCommitHistoryResponse,
 } from '@/types/tree/TreeDetails';
 
 import { TPathTests } from '@/types/general';
@@ -123,5 +124,46 @@ export const useTreeTest = (
   return useQuery({
     queryKey: ['treeRevisionTests', git_commit_hash, patchset, path],
     queryFn: () => fetchTreeTestData({ git_commit_hash, patchset, path }),
+  });
+};
+
+const fetchTreeCommitHistory = async (
+  commitHash: string,
+  origin: string,
+  gitUrl: string,
+  gitBranch: string,
+): Promise<TTreeCommitHistoryResponse> => {
+  const res = await http.get<TTreeCommitHistoryResponse>(
+    `/api/tree/${commitHash}/commits`,
+    {
+      params: {
+        origin,
+        git_url: gitUrl,
+        git_branch: gitBranch,
+      },
+    },
+  );
+  return res.data;
+};
+
+export const useTreeCommitHistory = (
+  {
+    commitHash,
+    origin,
+    gitUrl,
+    gitBranch,
+  }: {
+    commitHash: string;
+    origin: string;
+    gitUrl: string;
+    gitBranch: string;
+  },
+  { enabled = true },
+): UseQueryResult<TTreeCommitHistoryResponse> => {
+  return useQuery({
+    queryKey: ['treeCommitHistory', commitHash, origin, gitUrl, gitBranch],
+    enabled,
+    queryFn: () =>
+      fetchTreeCommitHistory(commitHash, origin, gitUrl, gitBranch),
   });
 };
