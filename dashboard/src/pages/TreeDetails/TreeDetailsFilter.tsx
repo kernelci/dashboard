@@ -78,7 +78,6 @@ export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
   const status = { Success: false, Failure: false };
   const bootStatus = { Success: false, Failure: false };
   const testStatus = { Success: false, Failure: false };
-  const branches: TFilterValues = {};
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};
 
@@ -88,7 +87,7 @@ export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
       if (b.architecture) archs[b.architecture] = false;
     });
 
-  return { status, branches, configs, archs, bootStatus, testStatus };
+  return { status, configs, archs, bootStatus, testStatus };
 };
 
 const parseCheckboxFilter = (filter: TFilter, diffFilter: TFilter): TFilter => {
@@ -154,16 +153,6 @@ const CheckboxSection = ({
   const checkboxSectionsProps: ICheckboxSection[] = useMemo(() => {
     return [
       {
-        title: intl.formatMessage({ id: 'global.branch' }),
-        subtitle: intl.formatMessage({ id: 'filter.branchSubtitle' }),
-        items: parsedFilter.branches,
-        onClickItem: (value: string): void => {
-          setDiffFilter(old =>
-            changeCheckboxFilterValue(old, 'branches', value),
-          );
-        },
-      },
-      {
         title: intl.formatMessage({ id: 'filter.buildStatus' }),
         subtitle: intl.formatMessage({ id: 'filter.statusSubtitle' }),
         items: parsedFilter.status,
@@ -217,7 +206,6 @@ const CheckboxSection = ({
     parsedFilter.archs,
     parsedFilter.bootStatus,
     parsedFilter.testStatus,
-    parsedFilter.branches,
     setDiffFilter,
   ]);
 

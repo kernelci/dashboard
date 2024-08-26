@@ -50,7 +50,6 @@ export const messages = {
     'buildDetails.testResults': 'Test Results',
     'filter.architectureSubtitle': 'Please select one or more Architectures:',
     'filter.bootStatus': 'Boot Status',
-    'filter.branchSubtitle': 'Please select one or more Branches:',
     'filter.buildDuration': 'Build duration',
     'filter.buildDurationSubtitle': 'Please select the build duration range:',
     'filter.buildStatus': 'Build Status',

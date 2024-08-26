@@ -151,7 +151,6 @@ const zFilterBoolValue = z.record(z.boolean()).optional();
 const zFilterNumberValue = z.number().optional();
 
 export const zFilterObjectsKeys = z.enum([
-  'branches',
   'configs',
   'archs',
   'status',
@@ -169,7 +168,6 @@ export type TFilterKeys = (typeof filterKeys)[number];
 export const zDiffFilter = z
   .union([
     z.object({
-      branches: zFilterBoolValue,
       configs: zFilterBoolValue,
       archs: zFilterBoolValue,
       status: zFilterBoolValue,
