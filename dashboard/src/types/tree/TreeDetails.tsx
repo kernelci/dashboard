@@ -141,7 +141,7 @@ export const zPossibleValidator = z
   .enum(possibleTabs)
   .catch('treeDetails.boots');
 
-const possibleTableFilter = ['error', 'success', 'all'] as const;
+export const possibleTableFilter = ['error', 'success', 'all'] as const;
 
 export const zTableFilterValidator = z.enum(possibleTableFilter).catch('all');
 
