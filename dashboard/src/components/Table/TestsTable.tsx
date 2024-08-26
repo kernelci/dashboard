@@ -13,11 +13,8 @@ import { usePagination } from '@/hooks/usePagination';
 import { useTestsByTreeAndCommitHash } from '@/api/TreeDetails';
 
 const headerLabelIds: string[] = [
-  'ID',
-  'Status',
   'Path',
-  'Compiler',
-  'Architecture',
+  'Status',
   'Start time',
   'Duration',
   '', //extra one to add the chevron icon
@@ -71,11 +68,8 @@ const TestsTable = ({
 
     return data.tests.slice(startIndex, endIndex).map(test => (
       <TableRow onClick={() => onClickName(test.id)} key={test.id}>
-        <TableCell>{test.id}</TableCell>
-        <TableCell>{test.status}</TableCell>
         <TableCell>{test.path}</TableCell>
-        <TableCell>{test.compiler}</TableCell>
-        <TableCell>{test.architecture}</TableCell>
+        <TableCell>{test.status}</TableCell>
         <TableCell>{test.startTime ?? '-'}</TableCell>
         <TableCell>{test.duration ?? '-'}</TableCell>
         <TableCell>
