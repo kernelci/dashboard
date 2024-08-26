@@ -31,6 +31,7 @@ class TreeCommitsHistory(APIView):
         WITH earliest_commits AS (
             SELECT
                 git_commit_hash,
+                git_commit_name,
                 MIN(start_time) AS earliest_start_time
             FROM
                 checkouts
@@ -39,7 +40,8 @@ class TreeCommitsHistory(APIView):
                 AND git_repository_url = %(git_url_param)s
                 AND origin = %(origin_param)s
             GROUP BY
-                git_commit_hash
+                git_commit_hash,
+                git_commit_name
         ),
         build_counts AS (
             SELECT
@@ -61,6 +63,7 @@ class TreeCommitsHistory(APIView):
         )
         SELECT
             ec.git_commit_hash,
+            ec.git_commit_name,
             ec.earliest_start_time,
             bc.valid_builds,
             bc.invalid_builds,
@@ -81,7 +84,7 @@ class TreeCommitsHistory(APIView):
             )
         ORDER BY
             ec.earliest_start_time DESC
-        LIMIT 5;
+        LIMIT 6;
         """
 
         # Execute the query
@@ -101,10 +104,11 @@ class TreeCommitsHistory(APIView):
         results = [
             {
                 "git_commit_hash": row[0],
-                "earliest_start_time": row[1],
-                "valid_builds": row[2],
-                "invalid_builds": row[3],
-                "null_builds": row[4],
+                "git_commit_name": row[1],
+                "earliest_start_time": row[2],
+                "valid_builds": row[3],
+                "invalid_builds": row[4],
+                "null_builds": row[5],
             }
             for row in rows
         ]
