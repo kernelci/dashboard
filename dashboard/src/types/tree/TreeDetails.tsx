@@ -230,6 +230,7 @@ export const zTreeInformation = z
     gitUrl: z.string().optional().catch(''),
     treeName: z.string().optional().catch(''),
     commitName: z.string().optional().catch(''),
+    headCommitHash: z.string().optional().catch(undefined),
   })
   .catch({});
 
@@ -244,3 +245,14 @@ export type TestByCommitHash = {
 export type TTestByCommitHashResponse = {
   tests: TestByCommitHash[];
 };
+
+export type PaginatedCommitHistoryByTree = {
+  earliest_start_time: string;
+  git_commit_hash: string;
+  git_commit_name?: string;
+  invalid_builds: number;
+  null_builds: number;
+  valid_builds: number;
+};
+
+export type TTreeCommitHistoryResponse = PaginatedCommitHistoryByTree[];
