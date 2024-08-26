@@ -9,6 +9,7 @@ interface ITableStatusFilter {
   filters: {
     label: string;
     value: TableFilter;
+    isSelected: boolean;
   }[];
 }
 
@@ -23,9 +24,12 @@ const TableStatusFilter = ({
           variant="outline"
           key={filter.label}
           className={classNames(
-            'border border-black',
+            'border border-black hover:bg-lightBlue',
             index === 0 ? 'rounded-l-full' : 'rounded-l-none',
             index === filters.length - 1 ? 'rounded-r-full' : 'rounded-r-none',
+            filter.isSelected
+              ? 'bg-blue text-white'
+              : 'bg-transparent text-black',
           )}
           onClick={() => onClick(filter.value)}
         >
