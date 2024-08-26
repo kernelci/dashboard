@@ -1,4 +1,3 @@
-from collections import defaultdict
 from django.http import JsonResponse
 from django.db import connection
 from django.views import View
@@ -25,78 +24,36 @@ class TestDetails(View):
         }
 
         query = """
-            WITH current_test AS (
-                SELECT *
-                FROM tests
-                WHERE id = %s
-                LIMIT 1
-            )
             SELECT
-                combined_tests.id,
-                combined_tests.build_id,
-                combined_tests.status,
-                combined_tests.path,
-                combined_tests.log_excerpt,
-                combined_tests.log_url,
-                combined_tests.misc,
-                combined_tests.environment_misc,
-                combined_tests.start_time,
+                tests.id,
+                tests.build_id,
+                tests.status,
+                tests.path,
+                tests.log_excerpt,
+                tests.log_url,
+                tests.misc,
+                tests.environment_misc,
+                tests.start_time,
                 builds.compiler,
                 builds.architecture,
                 builds.config_name,
                 checkouts.git_commit_hash,
                 checkouts.git_repository_branch,
                 checkouts.git_repository_url
-            FROM (
-                SELECT
-                    id,
-                    build_id,
-                    status,
-                    path,
-                    log_excerpt,
-                    log_url,
-                    misc,
-                    environment_misc,
-                    start_time
-                FROM tests
-                WHERE build_id = (SELECT build_id FROM current_test)
-                -- A dot to get only descendants of this test
-                  AND path LIKE (SELECT path FROM current_test) || '.%%'
-                UNION
-                SELECT
-                    id,
-                    build_id,
-                    status,
-                    path,
-                    log_excerpt,
-                    log_url,
-                    misc,
-                    environment_misc,
-                    start_time
-                FROM current_test
-            ) AS combined_tests
+            FROM tests
             INNER JOIN builds
-                ON combined_tests.build_id = builds.id
+                ON tests.build_id = builds.id
             INNER JOIN checkouts
                 ON builds.checkout_id = checkouts.id
-            ORDER BY
-                (combined_tests.id = %s) DESC,
-                combined_tests.id;
+            WHERE tests.id = %s
             """
 
-        response_data = []
-        statusCount = defaultdict(int)
+        response = {}
         with connection.cursor() as cursor:
-            cursor.execute(query, [test_id, test_id])
+            cursor.execute(query, [test_id])
             rows = cursor.fetchall()
-
-            for row in rows:
-                item = {}
+            if rows:
                 for idx, key in enumerate(names_map.keys()):
-                    if key == "status":
-                        statusCount[row[idx]] += 1
-                    item[key] = row[idx]
-                response_data.append(item)
-        return JsonResponse(
-            {"tests": response_data, "statusCount": statusCount}, safe=False
-        )
+                    response[key] = rows[0][idx]
+
+        return JsonResponse(response, safe=False)

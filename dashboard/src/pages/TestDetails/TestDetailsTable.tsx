@@ -1,9 +1,9 @@
 import { ErrorBoundary } from 'react-error-boundary';
 
-import type { TTestFromTestDetails } from '@/types/tree/TestDetails';
+import type { TTestDetails } from '@/types/tree/TestDetails';
 
 type TTestDetailsTableProps = {
-  tests: TTestFromTestDetails[];
+  tests: TTestDetails[];
 };
 
 const TestDetailsTable = ({ tests }: TTestDetailsTableProps): JSX.Element => {

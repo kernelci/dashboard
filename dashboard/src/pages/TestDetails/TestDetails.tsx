@@ -2,7 +2,7 @@ import { useParams } from '@tanstack/react-router';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { memo, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { PiComputerTowerThin } from 'react-icons/pi';
 
@@ -10,20 +10,12 @@ import { GiFlatPlatform } from 'react-icons/gi';
 
 import { useTestDetails } from '@/api/TestDetails';
 
-import type {
-  StatusCount,
-  TTestDetails,
-  TTestFromTestDetails,
-} from '@/types/tree/TestDetails';
+import type { TTestDetails } from '@/types/tree/TestDetails';
 
-import BaseCard, { IBaseCard } from '@/components/Cards/BaseCard';
+import BaseCard from '@/components/Cards/BaseCard';
 
 import CodeBlock from '@/components/Filter/CodeBlock';
 
-import StatusChartMemoized, {
-  Colors,
-  StatusChartValues,
-} from '@/components/StatusChart/StatusCharts';
 import { ISubsection, Subsection } from '@/components/Section/Section';
 
 import {
@@ -36,12 +28,8 @@ import {
 } from '@/components/Breadcrumb/Breadcrumb';
 
 type TTestDetailsDefaultProps = {
-  test: TTestFromTestDetails;
+  test: TTestDetails;
 };
-
-interface IStatusChart extends Pick<TTestDetails, 'statusCount'> {
-  title: IBaseCard['title'];
-}
 
 const emptyValue = '-';
 const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
@@ -53,65 +41,6 @@ const truncateBigText = (text: string | undefined): string | undefined =>
     ? text.slice(0, maxTextLength) + '...'
     : valueOrEmpty(text);
 
-const StatusChart = ({ statusCount, title }: IStatusChart): JSX.Element => {
-  const totalCount = Object.values(statusCount).reduce(
-    (accumulator: number, count) => accumulator + (count ?? 0),
-    0,
-  );
-  const chartElements = [
-    {
-      label: 'bootsTab.success',
-      value: statusCount['PASS'] ?? 0,
-      color: Colors.Green,
-    },
-    {
-      label: 'global.failed',
-      value: statusCount['FAIL'] ?? 0,
-      color: Colors.Yellow,
-    },
-    {
-      label: 'global.skiped',
-      value: statusCount['SKIP'] ?? 0,
-      color: Colors.DimGray,
-    },
-    {
-      label: 'global.missed',
-      value: statusCount['MISS'] ?? 0,
-      color: Colors.Gray,
-    },
-    {
-      label: 'global.done',
-      value: statusCount['DONE'] ?? 0,
-      color: Colors.Blue,
-    },
-    {
-      label: 'global.error',
-      value: statusCount['ERROR'] ?? 0,
-      color: Colors.Red,
-    },
-  ] satisfies StatusChartValues[];
-
-  const filteredChartElements = chartElements.filter(chartElement => {
-    return chartElement.value > 0;
-  });
-
-  return (
-    <BaseCard
-      title={title}
-      content={
-        <StatusChartMemoized
-          type="chart"
-          elements={filteredChartElements}
-          pieCentralLabel="Statuses"
-          pieCentralDescription={<>{totalCount}</>}
-        />
-      }
-    />
-  );
-};
-
-export const MemoizedStatusChart = memo(StatusChart);
-
 const LogExcerpt = ({ test }: TTestDetailsDefaultProps): JSX.Element => {
   return (
     <BaseCard
@@ -122,11 +51,7 @@ const LogExcerpt = ({ test }: TTestDetailsDefaultProps): JSX.Element => {
   );
 };
 
-const TestDetailsSection = ({
-  test,
-}: {
-  test: TTestFromTestDetails;
-}): JSX.Element => {
+const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
   const intl = useIntl();
   const infos: ISubsection['infos'] = useMemo(() => {
     const baseInfo = [
@@ -211,10 +136,7 @@ const TestDetails = (): JSX.Element => {
     );
   }
 
-  // TODO Split the test already in the backend, both are unsafe
-  const [currentTest, ..._unsafeDescendants] = data?.tests ?? [];
-
-  if (!currentTest) {
+  if (!data) {
     return (
       <div>
         <FormattedMessage id="testDetails.notFound" />
@@ -253,17 +175,13 @@ const TestDetails = (): JSX.Element => {
           </BreadcrumbList>
         </Breadcrumb>
         <h1 className="mb-4 border-b border-gray-300 pb-3 text-2xl font-bold">
-          {currentTest.path}
+          {data.path}
         </h1>
-        <MemoizedStatusChart
-          statusCount={data?.statusCount ?? ({} as StatusCount)}
-          title={<FormattedMessage id="testsTab.testStatus" />}
-        />
-        <LogExcerpt test={currentTest} />
-        <TestDetailsSection test={currentTest} />
         {/*
       <TestDetailsTable tests={descendants} />;
       */}
+        <LogExcerpt test={data} />
+        <TestDetailsSection test={data} />
       </div>
     </>
   );

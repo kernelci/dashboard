@@ -1,6 +1,4 @@
-import { Status } from '../database';
-
-export type TTestFromTestDetails = {
+export type TTestDetails = {
   architecture: string;
   build_id: string;
   compiler: string;
@@ -16,11 +14,4 @@ export type TTestFromTestDetails = {
   path: string;
   start_time: string;
   status: string;
-};
-
-export type StatusCount = Record<Status, number | undefined>;
-
-export type TTestDetails = {
-  statusCount: StatusCount;
-  tests: TTestFromTestDetails[];
 };
