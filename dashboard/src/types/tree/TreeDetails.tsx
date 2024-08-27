@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { object, z } from 'zod';
 
 import { ReactNode } from 'react';
 
@@ -160,9 +160,14 @@ export const zTestsTableFilterValidator = z
   .enum(possibleTestsTableFilter)
   .catch('all');
 
-export type TableFilter = z.infer<
-  typeof zBuildsTableFilterValidator | typeof zTestsTableFilterValidator
->;
+export type BuildsTableFilter = z.infer<typeof zBuildsTableFilterValidator>;
+export type TestsTableFilter = z.infer<typeof zTestsTableFilterValidator>;
+
+export const zTableFilterInfo = object({
+  buildsTable: zBuildsTableFilterValidator,
+  bootsTable: zTestsTableFilterValidator,
+  testsTable: zTestsTableFilterValidator,
+});
 
 const zFilterBoolValue = z.record(z.boolean()).optional();
 const zFilterNumberValue = z.number().optional();

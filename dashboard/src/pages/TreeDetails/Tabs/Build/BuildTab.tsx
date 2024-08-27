@@ -13,8 +13,8 @@ import { IListingContent } from '@/components/ListingContent/ListingContent';
 import { ISummary } from '@/components/Summary/Summary';
 
 import {
+  BuildsTableFilter,
   possibleBuildsTableFilter,
-  TableFilter,
   TFilterObjectsKeys,
 } from '@/types/tree/TreeDetails';
 import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
@@ -33,7 +33,8 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   });
   const { diffFilter } = useSearch({ from: '/tree/$treeId/' });
 
-  const [selectedFilter, setSelectedFilter] = useState<TableFilter>('all');
+  const [selectedFilter, setSelectedFilter] =
+    useState<BuildsTableFilter>('all');
 
   const accordionContent = useMemo(() => {
     return treeDetailsData?.builds.map(row => ({
@@ -65,12 +66,12 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   }, [treeDetailsData?.builds]);
 
   const filteredContent =
-    filterBy === 'error'
+    filterBy.buildsTable === 'error'
       ? accordionContent?.filter(
           row =>
             row.accordionData.buildErrors && row.accordionData.buildErrors > 0,
         )
-      : filterBy === 'success'
+      : filterBy.buildsTable === 'success'
         ? accordionContent?.filter(
             row =>
               row.accordionData.status && row.accordionData.status === 'valid',
@@ -81,8 +82,10 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
     usePagination(
       filteredContent?.length ?? 0,
       ITEMS_PER_PAGE,
+      filterBy.bootsTable,
+      filterBy.testsTable,
+      filterBy.buildsTable,
       diffFilter,
-      filterBy,
     );
   const intl = useIntl();
   const cards = useMemo(() => {
@@ -185,13 +188,17 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   ]);
 
   const onClickFilter = useCallback(
-    (type: TableFilter) => {
+    (type: BuildsTableFilter) => {
       setSelectedFilter(type);
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
-            tableFilter: type,
+            tableFilter: {
+              buildsTable: type,
+              bootsTable: previousParams.tableFilter.bootsTable,
+              testsTable: previousParams.tableFilter.testsTable,
+            },
           };
         },
       });
@@ -209,7 +216,9 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           </div>
           <div className="flex flex-row justify-between">
             <TableStatusFilter
-              onClick={onClickFilter}
+              onClickBuild={(filter: BuildsTableFilter) =>
+                onClickFilter(filter)
+              }
               filters={[
                 {
                   label: intl.formatMessage({ id: 'global.all' }),
