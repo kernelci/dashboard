@@ -10,12 +10,12 @@
 
 // Import Routes
 
-import { Route as rootRoute } from './routes/~__root'
-import { Route as IndexImport } from './routes/~index'
-import { Route as TreeIndexImport } from './routes/~tree/~index'
-import { Route as TreeTreeIdIndexImport } from './routes/~tree/~$treeId/~index'
-import { Route as TreeTreeIdTestTestIdIndexImport } from './routes/~tree/~$treeId/~test/~$testId/~index'
-import { Route as TreeTreeIdBuildBuildIdIndexImport } from './routes/~tree/~$treeId/~build/~$buildId/~index'
+import { Route as rootRoute } from './routes/__root'
+import { Route as IndexImport } from './routes/index'
+import { Route as TreeIndexImport } from './routes/tree/index'
+import { Route as TreeTreeIdIndexImport } from './routes/tree/$treeId/index'
+import { Route as TreeTreeIdTestTestIdIndexImport } from './routes/tree/$treeId/test/$testId/index'
+import { Route as TreeTreeIdBuildBuildIdIndexImport } from './routes/tree/$treeId/build/$buildId/index'
 
 // Create/Update Routes
 
@@ -103,7 +103,7 @@ export const routeTree = rootRoute.addChildren({
 {
   "routes": {
     "__root__": {
-      "filePath": "~__root.tsx",
+      "filePath": "__root.tsx",
       "children": [
         "/",
         "/tree/",
@@ -113,19 +113,19 @@ export const routeTree = rootRoute.addChildren({
       ]
     },
     "/": {
-      "filePath": "~index.tsx"
+      "filePath": "index.tsx"
     },
     "/tree/": {
-      "filePath": "~tree/~index.tsx"
+      "filePath": "tree/index.tsx"
     },
     "/tree/$treeId/": {
-      "filePath": "~tree/~$treeId/~index.tsx"
+      "filePath": "tree/$treeId/index.tsx"
     },
     "/tree/$treeId/build/$buildId/": {
-      "filePath": "~tree/~$treeId/~build/~$buildId/~index.tsx"
+      "filePath": "tree/$treeId/build/$buildId/index.tsx"
     },
     "/tree/$treeId/test/$testId/": {
-      "filePath": "~tree/~$treeId/~test/~$testId/~index.tsx"
+      "filePath": "tree/$treeId/test/$testId/index.tsx"
     }
   }
 }
