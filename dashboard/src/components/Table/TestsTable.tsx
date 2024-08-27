@@ -62,6 +62,7 @@ const TestsTable = ({
           treeId,
           testId: id,
         },
+        search: s => s,
       });
     },
     [navigate, treeId],

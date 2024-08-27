@@ -11,13 +11,22 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as TreeRouteImport } from './routes/tree/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as TreeIndexImport } from './routes/tree/index'
+import { Route as TreeTreeIdRouteImport } from './routes/tree/$treeId/route'
 import { Route as TreeTreeIdIndexImport } from './routes/tree/$treeId/index'
+import { Route as TreeTreeIdTestRouteImport } from './routes/tree/$treeId/test/route'
+import { Route as TreeTreeIdTestTestIdRouteImport } from './routes/tree/$treeId/test/$testId/route'
 import { Route as TreeTreeIdTestTestIdIndexImport } from './routes/tree/$treeId/test/$testId/index'
 import { Route as TreeTreeIdBuildBuildIdIndexImport } from './routes/tree/$treeId/build/$buildId/index'
 
 // Create/Update Routes
+
+const TreeRouteRoute = TreeRouteImport.update({
+  path: '/tree',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const IndexRoute = IndexImport.update({
   path: '/',
@@ -25,24 +34,39 @@ const IndexRoute = IndexImport.update({
 } as any)
 
 const TreeIndexRoute = TreeIndexImport.update({
-  path: '/tree/',
-  getParentRoute: () => rootRoute,
+  path: '/',
+  getParentRoute: () => TreeRouteRoute,
+} as any)
+
+const TreeTreeIdRouteRoute = TreeTreeIdRouteImport.update({
+  path: '/$treeId',
+  getParentRoute: () => TreeRouteRoute,
 } as any)
 
 const TreeTreeIdIndexRoute = TreeTreeIdIndexImport.update({
-  path: '/tree/$treeId/',
-  getParentRoute: () => rootRoute,
+  path: '/',
+  getParentRoute: () => TreeTreeIdRouteRoute,
+} as any)
+
+const TreeTreeIdTestRouteRoute = TreeTreeIdTestRouteImport.update({
+  path: '/test',
+  getParentRoute: () => TreeTreeIdRouteRoute,
+} as any)
+
+const TreeTreeIdTestTestIdRouteRoute = TreeTreeIdTestTestIdRouteImport.update({
+  path: '/$testId',
+  getParentRoute: () => TreeTreeIdTestRouteRoute,
 } as any)
 
 const TreeTreeIdTestTestIdIndexRoute = TreeTreeIdTestTestIdIndexImport.update({
-  path: '/tree/$treeId/test/$testId/',
-  getParentRoute: () => rootRoute,
+  path: '/',
+  getParentRoute: () => TreeTreeIdTestTestIdRouteRoute,
 } as any)
 
 const TreeTreeIdBuildBuildIdIndexRoute =
   TreeTreeIdBuildBuildIdIndexImport.update({
-    path: '/tree/$treeId/build/$buildId/',
-    getParentRoute: () => rootRoute,
+    path: '/build/$buildId/',
+    getParentRoute: () => TreeTreeIdRouteRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -56,33 +80,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/tree/': {
-      id: '/tree/'
+    '/tree': {
+      id: '/tree'
       path: '/tree'
       fullPath: '/tree'
-      preLoaderRoute: typeof TreeIndexImport
+      preLoaderRoute: typeof TreeRouteImport
       parentRoute: typeof rootRoute
+    }
+    '/tree/$treeId': {
+      id: '/tree/$treeId'
+      path: '/$treeId'
+      fullPath: '/tree/$treeId'
+      preLoaderRoute: typeof TreeTreeIdRouteImport
+      parentRoute: typeof TreeRouteImport
+    }
+    '/tree/': {
+      id: '/tree/'
+      path: '/'
+      fullPath: '/tree/'
+      preLoaderRoute: typeof TreeIndexImport
+      parentRoute: typeof TreeRouteImport
+    }
+    '/tree/$treeId/test': {
+      id: '/tree/$treeId/test'
+      path: '/test'
+      fullPath: '/tree/$treeId/test'
+      preLoaderRoute: typeof TreeTreeIdTestRouteImport
+      parentRoute: typeof TreeTreeIdRouteImport
     }
     '/tree/$treeId/': {
       id: '/tree/$treeId/'
-      path: '/tree/$treeId'
-      fullPath: '/tree/$treeId'
+      path: '/'
+      fullPath: '/tree/$treeId/'
       preLoaderRoute: typeof TreeTreeIdIndexImport
-      parentRoute: typeof rootRoute
+      parentRoute: typeof TreeTreeIdRouteImport
+    }
+    '/tree/$treeId/test/$testId': {
+      id: '/tree/$treeId/test/$testId'
+      path: '/$testId'
+      fullPath: '/tree/$treeId/test/$testId'
+      preLoaderRoute: typeof TreeTreeIdTestTestIdRouteImport
+      parentRoute: typeof TreeTreeIdTestRouteImport
     }
     '/tree/$treeId/build/$buildId/': {
       id: '/tree/$treeId/build/$buildId/'
-      path: '/tree/$treeId/build/$buildId'
+      path: '/build/$buildId'
       fullPath: '/tree/$treeId/build/$buildId'
       preLoaderRoute: typeof TreeTreeIdBuildBuildIdIndexImport
-      parentRoute: typeof rootRoute
+      parentRoute: typeof TreeTreeIdRouteImport
     }
     '/tree/$treeId/test/$testId/': {
       id: '/tree/$treeId/test/$testId/'
-      path: '/tree/$treeId/test/$testId'
-      fullPath: '/tree/$treeId/test/$testId'
+      path: '/'
+      fullPath: '/tree/$treeId/test/$testId/'
       preLoaderRoute: typeof TreeTreeIdTestTestIdIndexImport
-      parentRoute: typeof rootRoute
+      parentRoute: typeof TreeTreeIdTestTestIdRouteImport
     }
   }
 }
@@ -91,10 +143,19 @@ declare module '@tanstack/react-router' {
 
 export const routeTree = rootRoute.addChildren({
   IndexRoute,
-  TreeIndexRoute,
-  TreeTreeIdIndexRoute,
-  TreeTreeIdBuildBuildIdIndexRoute,
-  TreeTreeIdTestTestIdIndexRoute,
+  TreeRouteRoute: TreeRouteRoute.addChildren({
+    TreeTreeIdRouteRoute: TreeTreeIdRouteRoute.addChildren({
+      TreeTreeIdTestRouteRoute: TreeTreeIdTestRouteRoute.addChildren({
+        TreeTreeIdTestTestIdRouteRoute:
+          TreeTreeIdTestTestIdRouteRoute.addChildren({
+            TreeTreeIdTestTestIdIndexRoute,
+          }),
+      }),
+      TreeTreeIdIndexRoute,
+      TreeTreeIdBuildBuildIdIndexRoute,
+    }),
+    TreeIndexRoute,
+  }),
 })
 
 /* prettier-ignore-end */
@@ -106,26 +167,57 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/tree/",
-        "/tree/$treeId/",
-        "/tree/$treeId/build/$buildId/",
-        "/tree/$treeId/test/$testId/"
+        "/tree"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
+    "/tree": {
+      "filePath": "tree/route.tsx",
+      "children": [
+        "/tree/$treeId",
+        "/tree/"
+      ]
+    },
+    "/tree/$treeId": {
+      "filePath": "tree/$treeId/route.tsx",
+      "parent": "/tree",
+      "children": [
+        "/tree/$treeId/test",
+        "/tree/$treeId/",
+        "/tree/$treeId/build/$buildId/"
+      ]
+    },
     "/tree/": {
-      "filePath": "tree/index.tsx"
+      "filePath": "tree/index.tsx",
+      "parent": "/tree"
+    },
+    "/tree/$treeId/test": {
+      "filePath": "tree/$treeId/test/route.tsx",
+      "parent": "/tree/$treeId",
+      "children": [
+        "/tree/$treeId/test/$testId"
+      ]
     },
     "/tree/$treeId/": {
-      "filePath": "tree/$treeId/index.tsx"
+      "filePath": "tree/$treeId/index.tsx",
+      "parent": "/tree/$treeId"
+    },
+    "/tree/$treeId/test/$testId": {
+      "filePath": "tree/$treeId/test/$testId/route.tsx",
+      "parent": "/tree/$treeId/test",
+      "children": [
+        "/tree/$treeId/test/$testId/"
+      ]
     },
     "/tree/$treeId/build/$buildId/": {
-      "filePath": "tree/$treeId/build/$buildId/index.tsx"
+      "filePath": "tree/$treeId/build/$buildId/index.tsx",
+      "parent": "/tree/$treeId"
     },
     "/tree/$treeId/test/$testId/": {
-      "filePath": "tree/$treeId/test/$testId/index.tsx"
+      "filePath": "tree/$treeId/test/$testId/index.tsx",
+      "parent": "/tree/$treeId/test/$testId"
     }
   }
 }
