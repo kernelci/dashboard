@@ -1,4 +1,4 @@
-import { useParams } from '@tanstack/react-router';
+import { useParams, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
@@ -117,6 +117,7 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
 };
 
 const TestDetails = (): JSX.Element => {
+  const searchParams = useSearch({ from: '/tree/$treeId/test/$testId/' });
   const { testId, treeId } = useParams({ from: '/tree/$treeId/test/$testId/' });
   const { data, error, isLoading } = useTestDetails(testId ?? '');
 
@@ -150,12 +151,16 @@ const TestDetails = (): JSX.Element => {
         <Breadcrumb className="pb-6 pt-6">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink to="/tree">
+              <BreadcrumbLink to="/tree" search={searchParams}>
                 <FormattedMessage id="tree.path" />
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            <BreadcrumbLink to={`/tree/$treeId`} params={{ treeId: treeId }}>
+            <BreadcrumbLink
+              to={`/tree/$treeId`}
+              params={{ treeId: treeId }}
+              search={searchParams}
+            >
               <FormattedMessage id="tree.details" />
             </BreadcrumbLink>
             <BreadcrumbSeparator />

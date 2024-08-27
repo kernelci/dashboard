@@ -96,9 +96,8 @@ const isBuildError = (build: TreeDetailsBuild): number => {
 
 function TreeDetails(): JSX.Element {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
-  const { diffFilter, treeInfo } = useSearch({
-    from: '/tree/$treeId/',
-  });
+  const searchParams = useSearch({ from: '/tree/$treeId/' });
+  const { diffFilter, treeInfo } = searchParams;
 
   const reqFilter = mapFilterToReq(diffFilter);
 
@@ -186,7 +185,7 @@ function TreeDetails(): JSX.Element {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink to="/tree">
+            <BreadcrumbLink to="/tree" search={searchParams}>
               <FormattedMessage id="tree.path" />
             </BreadcrumbLink>
           </BreadcrumbItem>

@@ -7,7 +7,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo } from 'react';
 
-import { useParams } from '@tanstack/react-router';
+import { useParams, useSearch } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
 import { ISection } from '@/components/Section/Section';
@@ -40,6 +40,7 @@ const BlueFolderIcon = (): JSX.Element => (
 );
 
 const BuildDetails = (): JSX.Element => {
+  const searchParams = useSearch({ from: '/tree/$treeId/build/$buildId/' });
   const { buildId, treeId } = useParams({
     from: '/tree/$treeId/build/$buildId/',
   });
@@ -172,12 +173,16 @@ const BuildDetails = (): JSX.Element => {
       <Breadcrumb className="pb-6 pt-6">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink to="/tree">
+            <BreadcrumbLink to="/tree" search={searchParams}>
               <FormattedMessage id="tree.path" />
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          <BreadcrumbLink to={`/tree/$treeId`} params={{ treeId: treeId }}>
+          <BreadcrumbLink
+            to={`/tree/$treeId`}
+            params={{ treeId: treeId }}
+            search={searchParams}
+          >
             <FormattedMessage id="tree.details" />
           </BreadcrumbLink>
           <BreadcrumbSeparator />

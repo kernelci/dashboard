@@ -58,7 +58,6 @@ const AccordionBuildContent = ({
     navigate({
       to: `/tree/${treeId}/build/${contentData.id}`,
       params: { treeId },
-      // TODO Remove this after making search params optional
       search: prev => prev,
     });
   }, [contentData.id, navigate, treeId]);
