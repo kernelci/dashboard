@@ -187,7 +187,9 @@ const BuildDetails = (): JSX.Element => {
           </BreadcrumbLink>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Build Details</BreadcrumbPage>
+            <BreadcrumbPage>
+              <FormattedMessage id="buildDetails.buildDetails" />
+            </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
