@@ -1,22 +1,32 @@
 import classNames from 'classnames';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { TableFilter } from '@/types/tree/TreeDetails';
+import { BuildsTableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
 
 interface ITableStatusFilter {
-  onClick: (value: TableFilter) => void;
+  onClickBuild?: (value: BuildsTableFilter) => void;
+  onClickTest?: (value: TestsTableFilter) => void;
   filters: {
     label: string;
-    value: TableFilter;
+    value: BuildsTableFilter | TestsTableFilter;
     isSelected: boolean;
   }[];
 }
 
 const TableStatusFilter = ({
   filters,
-  onClick,
+  onClickBuild,
+  onClickTest,
 }: ITableStatusFilter): JSX.Element => {
+  const onClickFilter = useCallback(
+    (filter: BuildsTableFilter | TestsTableFilter) => {
+      onClickBuild?.(filter as BuildsTableFilter);
+      onClickTest?.(filter as TestsTableFilter);
+    },
+    [onClickBuild, onClickTest],
+  );
+
   const filterButtons = useMemo(
     () =>
       filters.map((filter, index) => (
@@ -31,12 +41,12 @@ const TableStatusFilter = ({
               ? 'bg-blue text-white'
               : 'bg-transparent text-black',
           )}
-          onClick={() => onClick(filter.value)}
+          onClick={() => onClickFilter(filter.value)}
         >
           {filter.label}
         </Button>
       )),
-    [filters, onClick],
+    [filters, onClickFilter],
   );
   return <div>{filterButtons}</div>;
 };

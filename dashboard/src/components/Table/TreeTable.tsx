@@ -8,6 +8,11 @@ import { MessagesKey } from '@/locales/messages';
 
 import { BuildStatus, TestStatus } from '@/components/Status/Status';
 
+import {
+  possibleBuildsTableFilter,
+  possibleTestsTableFilter,
+} from '@/types/tree/TreeDetails';
+
 import { TableRow, TableCell } from '../ui/table';
 
 import { TreeTableBody, zOrigin } from '../../types/tree/Tree';
@@ -41,7 +46,11 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       to: '/tree/$treeId',
       params: { treeId: row.id },
       search: {
-        tableFilter: 'all',
+        tableFilter: {
+          bootsTable: possibleTestsTableFilter[0],
+          buildsTable: possibleBuildsTableFilter[2],
+          testsTable: possibleTestsTableFilter[0],
+        },
         origin: origin,
         currentTreeDetailsTab: 'treeDetails.builds',
         diffFilter: {},

@@ -11,7 +11,7 @@ import { usePagination } from '@/hooks/usePagination';
 import { useTestsByTreeAndCommitHash } from '@/api/TreeDetails';
 
 import {
-  TableFilter,
+  TestsTableFilter,
   possibleTestsTableFilter,
 } from '@/types/tree/TreeDetails';
 
@@ -41,7 +41,7 @@ const TestsTable = ({
   const { origin, treeInfo, diffFilter } = useSearch({
     from: '/tree/$treeId/',
   });
-  const { tableFilter: filterBy } = useSearch({
+  const { tableFilter, currentTreeDetailsTab } = useSearch({
     from: '/tree/$treeId/',
   });
   const { data, error, isLoading } = useTestsByTreeAndCommitHash(
@@ -65,19 +65,39 @@ const TestsTable = ({
     [navigate, treeId],
   );
 
+  const isTestsTab = currentTreeDetailsTab === 'treeDetails.tests';
+  const isBootsTab = currentTreeDetailsTab === 'treeDetails.boots';
+
   const filteredData = useMemo(() => {
-    if (filterBy === 'all') {
+    const filterToApply = isTestsTab
+      ? tableFilter.testsTable
+      : isBootsTab
+        ? tableFilter.bootsTable
+        : '';
+    if (filterToApply === 'all') {
       return data?.tests;
     }
-    return data?.tests.filter(test => test.status.toLowerCase() === filterBy);
-  }, [data?.tests, filterBy]);
+    return data?.tests.filter(
+      test => test.status.toLowerCase() === filterToApply,
+    );
+  }, [data?.tests, tableFilter, isBootsTab, isTestsTab]);
 
   const data_len = filteredData?.length || 0;
 
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
-    usePagination(data_len, ITEMS_PER_PAGE, diffFilter, filterBy);
+    usePagination(
+      data_len,
+      ITEMS_PER_PAGE,
+      tableFilter.bootsTable,
+      tableFilter.testsTable,
+      tableFilter.buildsTable,
+      diffFilter,
+    );
 
-  const [selectedFilter, setSelectedFilter] = useState<TableFilter>('all');
+  const [bootsSelectedFilter, setBootsSelectedFilter] =
+    useState<TestsTableFilter>(tableFilter.bootsTable);
+  const [testsSelectedFilter, setTestsSelectedFilter] =
+    useState<TestsTableFilter>(tableFilter.testsTable);
 
   const headers = useMemo(() => {
     return headerLabelIds.map(labelId => <p key={labelId}>{labelId}</p>);
@@ -118,19 +138,36 @@ const TestsTable = ({
     </div>
   );
 
-  const onClickFilter = useCallback(
-    (filter: TableFilter) => {
-      setSelectedFilter(filter);
-      navigate({
-        search: previousParams => {
-          return {
-            ...previousParams,
-            tableFilter: filter,
-          };
-        },
-      });
+  const onClickFilter = (filter: TestsTableFilter): void => {
+    isBootsTab
+      ? setBootsSelectedFilter(filter)
+      : setTestsSelectedFilter(filter);
+    navigate({
+      search: previousParams => {
+        return {
+          ...previousParams,
+          tableFilter: {
+            testsTable: isTestsTab
+              ? filter
+              : previousParams.tableFilter.testsTable,
+            buildsTable: previousParams.tableFilter.buildsTable,
+            bootsTable: isBootsTab
+              ? filter
+              : previousParams.tableFilter.bootsTable,
+          },
+        };
+      },
+    });
+  };
+
+  const checkIfFilterIsSelected = useCallback(
+    (filter: TestsTableFilter): boolean => {
+      return (
+        (isBootsTab && bootsSelectedFilter === filter) ||
+        (isTestsTab && testsSelectedFilter === filter)
+      );
     },
-    [navigate],
+    [isBootsTab, bootsSelectedFilter, isTestsTab, testsSelectedFilter],
   );
 
   const filters = useMemo(
@@ -138,40 +175,40 @@ const TestsTable = ({
       {
         label: intl.formatMessage({ id: 'global.all' }),
         value: possibleTestsTableFilter[0],
-        isSelected: selectedFilter === possibleTestsTableFilter[0],
+        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[0]),
       },
       {
         label: intl.formatMessage({ id: 'testStatus.pass' }),
         value: possibleTestsTableFilter[5],
-        isSelected: selectedFilter === possibleTestsTableFilter[5],
+        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[5]),
       },
       {
         label: intl.formatMessage({ id: 'testStatus.fail' }),
         value: possibleTestsTableFilter[3],
-        isSelected: selectedFilter === possibleTestsTableFilter[3],
+        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[3]),
       },
       {
         label: intl.formatMessage({ id: 'testStatus.skip' }),
         value: possibleTestsTableFilter[6],
-        isSelected: selectedFilter === possibleTestsTableFilter[6],
+        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[6]),
       },
       {
         label: intl.formatMessage({ id: 'testStatus.done' }),
         value: possibleTestsTableFilter[1],
-        isSelected: selectedFilter === possibleTestsTableFilter[1],
+        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[1]),
       },
       {
         label: intl.formatMessage({ id: 'testStatus.error' }),
         value: possibleTestsTableFilter[2],
-        isSelected: selectedFilter === possibleTestsTableFilter[2],
+        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[2]),
       },
       {
         label: intl.formatMessage({ id: 'testStatus.miss' }),
         value: possibleTestsTableFilter[4],
-        isSelected: selectedFilter === possibleTestsTableFilter[4],
+        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[4]),
       },
     ],
-    [intl, selectedFilter],
+    [intl, checkIfFilterIsSelected],
   );
 
   if (error) return <FormattedMessage id="global.error" />;
@@ -181,7 +218,10 @@ const TestsTable = ({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-row justify-between">
-        <TableStatusFilter filters={filters} onClick={onClickFilter} />
+        <TableStatusFilter
+          filters={filters}
+          onClickTest={(filter: TestsTableFilter) => onClickFilter(filter)}
+        />
         {tableInfoElement}
       </div>
       <BaseTable headers={headers}>{rows}</BaseTable>
