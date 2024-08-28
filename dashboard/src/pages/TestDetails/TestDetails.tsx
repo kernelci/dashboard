@@ -129,13 +129,7 @@ const TestDetails = (): JSX.Element => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div>
-        <FormattedMessage id="global.loading" />
-      </div>
-    );
-  }
+  if (isLoading) return <FormattedMessage id="global.loading" />;
 
   if (!data) {
     return (

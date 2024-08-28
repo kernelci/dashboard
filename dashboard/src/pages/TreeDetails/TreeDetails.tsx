@@ -11,6 +11,7 @@ import {
   BuildStatus,
   TreeDetailsBuild,
 } from '@/types/tree/TreeDetails';
+import { Skeleton } from '@/components/Skeleton';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -112,7 +113,7 @@ function TreeDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const { data } = useTreeDetails(treeId ?? '', reqFilter);
+  const { isLoading, data } = useTreeDetails(treeId ?? '', reqFilter);
 
   const filterListElement = useMemo(
     () => <TreeDetailsFilterList filter={diffFilter} />,
@@ -196,6 +197,13 @@ function TreeDetails(): JSX.Element {
       };
     }
   }, [data]);
+
+  if (isLoading)
+    return (
+      <Skeleton>
+        <FormattedMessage id="global.loading" />
+      </Skeleton>
+    );
 
   return (
     <div className="flex flex-col pt-8">

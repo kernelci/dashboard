@@ -25,7 +25,7 @@ import {
   TreeDetails as TreeDetailsType,
 } from '@/types/tree/TreeDetails';
 import { useTreeDetails } from '@/api/TreeDetails';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/Skeleton';
 
 import { cleanFalseFilters } from './treeDetailsUtils';
 
@@ -321,7 +321,7 @@ const TreeDetailsFilter = ({
       onCancel={onClickCancel}
     >
       {isLoading ? (
-        <Skeleton className="grid h-[400px] place-items-center">
+        <Skeleton>
           <FormattedMessage id="global.loading" />
         </Skeleton>
       ) : (

@@ -4,6 +4,7 @@ import { useParams } from '@tanstack/react-router';
 
 import { useBootsTab } from '@/api/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
+import { Skeleton } from '@/components/Skeleton';
 
 import {
   MemoizedConfigList,
@@ -29,9 +30,12 @@ const BootsTab = (): JSX.Element => {
     );
   }
 
-  if (isLoading) {
-    return <FormattedMessage id="global.loading" />;
-  }
+  if (isLoading)
+    return (
+      <Skeleton>
+        <FormattedMessage id="global.loading" />
+      </Skeleton>
+    );
 
   if (!data) return <div />;
 

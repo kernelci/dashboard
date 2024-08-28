@@ -13,9 +13,9 @@ import {
   possibleTestsTableFilter,
 } from '@/types/tree/TreeDetails';
 
-import { TableRow, TableCell } from '../ui/table';
+import { TreeTableBody, zOrigin } from '@/types/tree/Tree';
 
-import { TreeTableBody, zOrigin } from '../../types/tree/Tree';
+import { TableRow, TableCell } from '@/components/ui/table';
 
 import BaseTable from './BaseTable';
 import { sanitizeTableValue } from './tableUtils';

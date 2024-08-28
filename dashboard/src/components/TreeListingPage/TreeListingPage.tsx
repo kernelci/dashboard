@@ -2,9 +2,13 @@ import { useSearch } from '@tanstack/react-router';
 
 import { useMemo } from 'react';
 
+import { FormattedMessage } from 'react-intl';
+
 import { zOrigin } from '@/types/tree/Tree';
 
 import { usePagination } from '@/hooks/usePagination';
+
+import { Skeleton } from '@/components/Skeleton';
 
 import TreeTable from '../Table/TreeTable';
 import { TreeTableBody } from '../../types/tree/Tree';
@@ -19,7 +23,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
 
-  const { data, error } = useTreeTable(origin);
+  const { data, error, isLoading } = useTreeTable(origin);
 
   const listItems: TreeTableBody[] = useMemo(() => {
     if (!data || error) {
@@ -78,6 +82,13 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   if (error) {
     return <div>Error: {error.message}</div>;
   }
+
+  if (isLoading)
+    return (
+      <Skeleton>
+        <FormattedMessage id="global.loading" />
+      </Skeleton>
+    );
 
   return (
     <div className="flex flex-col gap-6">

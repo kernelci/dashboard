@@ -2,7 +2,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { useParams } from '@tanstack/react-router';
 
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/Skeleton';
 
 import { useTestsTab } from '@/api/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
@@ -32,7 +32,7 @@ const TestsTab = (): JSX.Element => {
 
   if (isLoading)
     return (
-      <Skeleton className="grid h-[400px] place-items-center">
+      <Skeleton>
         <FormattedMessage id="global.loading" />
       </Skeleton>
     );
