@@ -17,6 +17,7 @@ import { routeTree } from './routeTree.gen';
 
 import './index.css';
 import { isDev } from './lib/utils/vite';
+import { TooltipProvider } from './components/Tooltip';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -63,7 +64,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         locale={LOCALES.EN_US}
         defaultLocale={LOCALES.EN_US}
       >
-        <RouterProvider router={router} />
+        <TooltipProvider>
+          <RouterProvider router={router} />
+        </TooltipProvider>
       </IntlProvider>
     </PersistQueryClientProvider>
   </React.StrictMode>,
