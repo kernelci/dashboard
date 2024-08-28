@@ -8,6 +8,7 @@ export interface IListingItem {
   warnings?: number;
   errors?: number;
   success?: number;
+  unknown?: number;
   text: string;
   hasBottomBorder?: boolean;
   showNumber?: boolean;
@@ -18,7 +19,8 @@ export enum ItemType {
   Warning = 'bg-yellow',
   Error = 'bg-lightRed',
   Success = 'bg-lightGreen',
-  None = 'bg-mediumGray',
+  Unknown = 'bg-mediumGray',
+  None = 'bg-lightGray',
 }
 
 const ListingItem = ({
@@ -26,6 +28,7 @@ const ListingItem = ({
   errors,
   text,
   success,
+  unknown,
   hasBottomBorder,
   showNumber = true,
   onClick,
@@ -36,7 +39,9 @@ const ListingItem = ({
   const hasErrors = errors && errors > 0 && showNumber;
   const hasWarnings = warnings && warnings > 0 && showNumber;
   const hasSuccess = success && success > 0 && showNumber;
-  const hasNone = !hasErrors && !hasWarnings && !hasSuccess && showNumber;
+  const hasUnknown = unknown && unknown > 0 && showNumber;
+  const hasNone =
+    !hasErrors && !hasWarnings && !hasSuccess && !hasUnknown && showNumber;
 
   const handleOnClick = useCallback(() => {
     if (onClick) {
@@ -70,6 +75,12 @@ const ListingItem = ({
     <></>
   );
 
+  const itemUnknown = hasUnknown ? (
+    <ColoredCircle quantity={unknown} backgroundClassName={ItemType.Unknown} />
+  ) : (
+    <></>
+  );
+
   const WrapperComponent = onClick ? 'button' : 'div';
 
   return (
@@ -80,6 +91,7 @@ const ListingItem = ({
       {itemError}
       {itemWarning}
       {itemSuccess}
+      {itemUnknown}
       {itemNeutral}
       <span className="text-sm text-black">{text}</span>
     </WrapperComponent>

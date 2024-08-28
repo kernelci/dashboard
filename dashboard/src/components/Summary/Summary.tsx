@@ -93,6 +93,7 @@ export const SummaryItem = ({
           warnings={arch.warnings}
           text={arch.text}
           success={arch.success}
+          unknown={arch.unknown}
         />
       </TableCell>
       <TableCell>

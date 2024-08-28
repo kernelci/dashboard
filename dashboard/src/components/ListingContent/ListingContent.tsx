@@ -36,6 +36,7 @@ const ListingContent = ({
         warnings={item.warnings}
         errors={item.errors}
         success={item.success}
+        unknown={item.unknown}
         text={item.text}
         onClick={onClickItem}
       />

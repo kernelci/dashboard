@@ -129,12 +129,18 @@ function TreeDetails(): JSX.Element {
         text: key,
         errors: value.invalid,
         success: value.valid,
+        unknown: value.null,
       }));
 
       const archData: ISummaryItem[] = Object.entries(
         data.summary.architectures,
       ).map(([key, value]) => ({
-        arch: { text: key, errors: value.invalid, success: value.valid },
+        arch: {
+          text: key,
+          errors: value.invalid,
+          success: value.valid,
+          unknown: value.null,
+        },
         compilers: value.compilers,
       }));
 
