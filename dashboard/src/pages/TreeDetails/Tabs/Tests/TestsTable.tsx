@@ -67,9 +67,16 @@ export interface ITestsTable {
 
 const TestsTable = ({ treeId, patchset = '' }: ITestsTable): JSX.Element => {
   const intl = useIntl();
-  const { testPath } = useSearch({ from: '/tree/$treeId/' });
+  const { testPath, treeInfo, origin } = useSearch({ from: '/tree/$treeId/' });
   const navigate = useNavigate({ from: '/tree/$treeId' });
-  const { data, error } = useTreeTest(treeId, patchset, testPath);
+  const { data, error } = useTreeTest(
+    treeId,
+    patchset,
+    testPath,
+    treeInfo.gitBranch ?? '',
+    treeInfo.gitUrl ?? '',
+    origin,
+  );
   const data_len = data?.length || 0;
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(data_len, ITEMS_PER_PAGE);
@@ -112,7 +119,7 @@ const TestsTable = ({ treeId, patchset = '' }: ITestsTable): JSX.Element => {
             />
           ))}
         </TableCell>
-        <TableCell>{formatDate(test.start_time)}</TableCell>
+        <TableCell>{formatDate(test.start_time ?? '')}</TableCell>
       </TableRow>
     ));
   }, [data, error, intl, onClickName, startIndex, endIndex]);
