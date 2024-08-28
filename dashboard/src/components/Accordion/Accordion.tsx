@@ -1,10 +1,20 @@
-import { ReactElement, useMemo } from 'react';
+import { ReactElement, useCallback, useMemo } from 'react';
 
-import { MdCheck, MdClose } from 'react-icons/md';
+import { MdCheck, MdChevronRight, MdClose } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
 
+import { useNavigate } from '@tanstack/react-router';
+
 import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+
+import { TIndividualTest, TPathTests } from '@/types/general';
+
+import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
+
+import { ItemType } from '@/components/ListingItem/ListingItem';
+
+import { TestStatus } from '@/components/Status/Status';
 
 import { TableBody, TableCell, TableRow } from '../ui/table';
 import BaseTable from '../Table/BaseTable';
@@ -13,32 +23,27 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../ui/collapsible';
-import ColoredCircle from '../ColoredCircle/ColoredCircle';
-import { ItemType } from '../ListingItem/ListingItem';
 
 import AccordionBuildContent from './BuildAccordionContent';
 
 export interface IAccordion {
   headers?: ReactElement[];
-  items: IAccordionItems[];
+  items: AccordionItemBuilds[] | TPathTests[];
   type: 'build' | 'test';
 }
 
 export interface IAccordionItems {
-  accordionData: AccordionItemBuilds | AccordionItemTestsTrigger;
+  accordionData: AccordionItemBuilds | TPathTests;
 }
 
 interface ICustomAccordionTableBody {
-  items: IAccordionItems[];
+  items: AccordionItemBuilds[] | TPathTests[];
   type: 'build' | 'test';
 }
 
-export type AccordionItemTestsTrigger = {
-  testPlans?: string;
-  testSuccessfull?: number;
-  testErrors?: number;
-  status?: 'valid' | 'invalid';
-};
+interface IAccordionTestContent {
+  data: TIndividualTest[];
+}
 
 const headersBuilds = [
   <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
@@ -52,8 +57,22 @@ const headersBuilds = [
   <FormattedMessage key="treeDetails.status" id="treeDetails.status" />,
 ];
 
+const headersTests = [
+  <FormattedMessage key="testDetails.path" id="testDetails.path" />,
+  <FormattedMessage key="testDetails.status" id="testDetails.status" />,
+  <span key="chevron"></span>, //empty cell to add the chevron
+];
+
+const headerTestsDetails = [
+  <FormattedMessage key="testDetails.path" id="testDetails.path" />,
+  <FormattedMessage key="testDetails.status" id="testDetails.status" />,
+  <FormattedMessage key="global.date" id="global.date" />,
+  <FormattedMessage key="treeDetails.duration" id="testDetails.duration" />,
+  <span key="chevron2"></span>, //extra one to add the chevron icon
+];
+
 const Accordion = ({ items, type }: IAccordion): JSX.Element => {
-  const accordionTableHeader = type === 'build' ? headersBuilds : [];
+  const accordionTableHeader = type === 'build' ? headersBuilds : headersTests;
 
   return (
     <BaseTable
@@ -79,22 +98,24 @@ const AccordionTableBody = ({
       <Collapsible key={index} asChild>
         <>
           <CollapsibleTrigger asChild>
-            <TableRow>
+            <TableRow className="cursor-pointer hover:bg-lightBlue">
               {type === 'build' ? (
-                <AccordionBuildsTrigger accordionData={item.accordionData} />
+                <AccordionBuildsTrigger accordionData={item} />
               ) : (
-                <AccordionTestsTrigger accordionData={item.accordionData} />
+                <AccordionTestsTrigger accordionData={item} />
               )}
             </TableRow>
           </CollapsibleTrigger>
           <TableRow>
             <TableCell colSpan={6} className="p-0">
               <CollapsibleContent>
-                <div className="h-fit w-full border-b border-darkGray bg-lightGray p-8">
+                <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
                   {type === 'build' ? (
-                    <AccordionBuildContent accordionData={item.accordionData} />
+                    <AccordionBuildContent accordionData={item} />
                   ) : (
-                    <></>
+                    <AccordionTestsContent
+                      data={(item as TPathTests).individual_tests}
+                    />
                   )}
                 </div>
               </CollapsibleContent>
@@ -141,28 +162,71 @@ const AccordionBuildsTrigger = ({
 const AccordionTestsTrigger = ({
   accordionData,
 }: IAccordionItems): JSX.Element => {
-  const triggerInfo = accordionData as AccordionItemTestsTrigger;
+  const triggerInfo = accordionData as TPathTests;
   return (
     <>
-      <TableCell>{triggerInfo.testPlans}</TableCell>
+      <TableCell>{triggerInfo.path_group}</TableCell>
       <TableCell className="flex flex-row gap-1">
-        <ColoredCircle
-          quantity={triggerInfo.testErrors ?? 0}
-          backgroundClassName={ItemType.Error}
-        />
-        <ColoredCircle
-          quantity={triggerInfo.testSuccessfull ?? 0}
-          backgroundClassName={ItemType.Warning}
+        <TestStatus
+          pass={triggerInfo.pass_tests}
+          done={triggerInfo.done_tests}
+          miss={triggerInfo.miss_tests}
+          fail={triggerInfo.fail_tests}
+          skip={triggerInfo.skip_tests}
+          error={triggerInfo.error_tests}
         />
       </TableCell>
       <TableCell>
-        {triggerInfo.status === 'valid' ? (
-          <MdCheck className="text-green" />
-        ) : (
-          <MdClose className="text-red" />
-        )}
+        <MdChevronRight />
       </TableCell>
     </>
+  );
+};
+
+const AccordionTestsContent = ({
+  data,
+}: IAccordionTestContent): JSX.Element => {
+  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const onClickName = useCallback(
+    (e: React.MouseEvent<HTMLTableRowElement>) => {
+      const newTestPath = e.currentTarget.querySelector(
+        'td:first-child',
+      ) as HTMLTableCellElement;
+      if (newTestPath) {
+        navigate({
+          to: '/tree/$treeId/test/$testId',
+          params: {
+            testId: newTestPath.innerText,
+          },
+          search: s => s,
+        });
+      }
+    },
+    [navigate],
+  );
+
+  const rows = useMemo(() => {
+    return data.map(test => (
+      <TableRow
+        className="cursor-pointer hover:bg-lightBlue"
+        onClick={onClickName}
+        key={test.path}
+      >
+        <TableCell>{test.path}</TableCell>
+        <TableCell>{test.status}</TableCell>
+        <TableCell>{test.start_time ?? '-'}</TableCell>
+        <TableCell>{test.duration ?? '-'}</TableCell>
+        <TableCell>
+          <MdChevronRight />
+        </TableCell>
+      </TableRow>
+    ));
+  }, [data, onClickName]);
+
+  return (
+    <div className="h-max-12 overflow-scroll">
+      <BaseTable headers={headerTestsDetails}>{rows}</BaseTable>
+    </div>
   );
 };
 

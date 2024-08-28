@@ -331,44 +331,36 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
 
   const accordionContent = useMemo(() => {
     return treeDetailsData?.builds.map(row => ({
-      accordionData: {
-        ...row,
-        config: row.config ?? '-',
-        compiler: row.compiler ?? '-',
-        buildTime: row.buildTime ? (
-          <span>
-            {typeof row.buildTime === 'number'
-              ? Math.floor(row.buildTime) + ' '
-              : row.buildTime}
-            <FormattedMessage id="global.seconds" />
-          </span>
-        ) : (
-          '-'
-        ),
-        date: row.date?.split('T')[0],
-        testStatus: {
-          failTests: row.testStatus?.failTests ?? 0,
-          errorTests: row.testStatus?.errorTests ?? 0,
-          passTests: row.testStatus?.passTests ?? 0,
-          skipTests: row.testStatus?.skipTests ?? 0,
-          doneTests: row.testStatus?.doneTests ?? 0,
-          missTests: row.testStatus?.missTests ?? 0,
-        },
+      ...row,
+      config: row.config ?? '-',
+      compiler: row.compiler ?? '-',
+      buildTime: row.buildTime ? (
+        <span>
+          {typeof row.buildTime === 'number'
+            ? Math.floor(row.buildTime) + ' '
+            : row.buildTime}
+          <FormattedMessage id="global.seconds" />
+        </span>
+      ) : (
+        '-'
+      ),
+      date: row.date?.split('T')[0],
+      testStatus: {
+        failTests: row.testStatus?.failTests ?? 0,
+        errorTests: row.testStatus?.errorTests ?? 0,
+        passTests: row.testStatus?.passTests ?? 0,
+        skipTests: row.testStatus?.skipTests ?? 0,
+        doneTests: row.testStatus?.doneTests ?? 0,
+        missTests: row.testStatus?.missTests ?? 0,
       },
     }));
   }, [treeDetailsData?.builds]);
 
   const filteredContent =
     filterBy.buildsTable === 'error'
-      ? accordionContent?.filter(
-          row =>
-            row.accordionData.buildErrors && row.accordionData.buildErrors > 0,
-        )
+      ? accordionContent?.filter(row => row.buildErrors && row.buildErrors > 0)
       : filterBy.buildsTable === 'success'
-        ? accordionContent?.filter(
-            row =>
-              row.accordionData.status && row.accordionData.status === 'valid',
-          )
+        ? accordionContent?.filter(row => row.status && row.status === 'valid')
         : accordionContent;
 
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =

@@ -113,6 +113,7 @@ export const messages = {
     'table.tree': 'Tree',
     'testDetails.arch': 'Arch',
     'testDetails.compiler': 'Compiler',
+    'testDetails.duration': 'Duration',
     'testDetails.errorMessage': 'Error message',
     'testDetails.failedToFetch': 'Failed to fetch test details',
     'testDetails.gitCommitHash': 'Git Commit Hash',
