@@ -65,17 +65,25 @@ export type AccordionItemBuilds = {
 export type TreeDetails = {
   builds: TreeDetailsBuild[];
   summary: {
-    builds: Results;
-    configs: object;
-    architectures: object;
+    builds: BuildStatus;
+    configs: Record<string, BuildStatus>;
+    architectures: TArch;
   };
 };
 
-export type Results = {
+export type BuildStatus = {
   valid: number;
   invalid: number;
   null: number;
 };
+
+type TArch = Record<
+  string,
+  BuildStatus & {
+    compilers: string[];
+  }
+>;
+
 export interface TTreeDetailsFilter
   extends Partial<{
     [K in keyof Omit<

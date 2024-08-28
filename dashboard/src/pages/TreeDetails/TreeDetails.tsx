@@ -8,7 +8,7 @@ import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
 import {
   AccordionItemBuilds,
-  Results,
+  BuildStatus,
   TreeDetailsBuild,
 } from '@/types/tree/TreeDetails';
 import {
@@ -38,7 +38,7 @@ import TreeDetailsFilterList from './TreeDetailsFilterList';
 export interface ITreeDetails {
   archs: ISummaryItem[];
   configs: IListingItem[];
-  buildsSummary: Results;
+  buildsSummary: BuildStatus;
   builds: AccordionItemBuilds[];
 }
 
@@ -138,7 +138,7 @@ function TreeDetails(): JSX.Element {
         compilers: value.compilers,
       }));
 
-      const buildSummaryData: Results = {
+      const buildSummaryData: BuildStatus = {
         valid: data.summary.builds.valid,
         invalid: data.summary.builds.invalid,
         null: data.summary.builds.null,
