@@ -1,0 +1,1 @@
+http 'http://localhost:8000/api/tree/tests' git_commit_hash==0ec2cf1e20adc2c8dcc5f58f3ebd40111c280944 origin==maestro git_repository_url==https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git git_repository_branch==linux-6.6.y
