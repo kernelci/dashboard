@@ -16,6 +16,15 @@ const fetchTreeDetailData = async (
   treeId: string,
   filter: TTreeDetailsFilter | Record<string, never>,
 ): Promise<TreeDetails> => {
+  const filterParam = mapFiltersToUrlSearchParams(filter);
+
+  const res = await http.get(`/api/tree/${treeId}`, { params: filterParam });
+  return res.data;
+};
+
+const mapFiltersToUrlSearchParams = (
+  filter: TTreeDetailsFilter | Record<string, never>,
+): URLSearchParams => {
   const filterParam = new URLSearchParams();
 
   Object.keys(filter).forEach(key => {
@@ -25,8 +34,7 @@ const fetchTreeDetailData = async (
     );
   });
 
-  const res = await http.get(`/api/tree/${treeId}`, { params: filterParam });
-  return res.data;
+  return filterParam;
 };
 
 export const useTreeDetails = (
@@ -47,9 +55,16 @@ const fetchTreeTestsData = async (
     git_branch: string;
     git_url: string;
   },
+  filter: TTreeDetailsFilter = {},
 ): Promise<TTreeTestsData> => {
+  const urlParams = mapFiltersToUrlSearchParams(filter);
+  if (params !== undefined) {
+    Object.entries(params).forEach(([k, v]) =>
+      urlParams.append(k, v.toString()),
+    );
+  }
   const res = await http.get<TTreeTestsData>(`/api/tree/${treeId}/tests`, {
-    params,
+    params: urlParams,
   });
 
   return res.data;
@@ -60,6 +75,7 @@ export const useBootsTab = (
   origin: string,
   git_branch: string,
   git_url: string,
+  filter: TTreeDetailsFilter,
 ): UseQueryResult<TTreeTestsData> => {
   const params = {
     path: 'boot.',
@@ -68,8 +84,8 @@ export const useBootsTab = (
     git_url: git_url,
   };
   return useQuery({
-    queryKey: ['treeBootTests', treeId, params],
-    queryFn: () => fetchTreeTestsData(treeId, params),
+    queryKey: ['treeBootTests', treeId, filter, params],
+    queryFn: () => fetchTreeTestsData(treeId, params, filter),
   });
 };
 
@@ -78,6 +94,7 @@ export const useTestsTab = (
   origin: string,
   git_branch: string,
   git_url: string,
+  filter: TTreeDetailsFilter,
 ): UseQueryResult<TTreeTestsData> => {
   const params = {
     isBoot: false,
@@ -86,8 +103,8 @@ export const useTestsTab = (
     git_url: git_url,
   };
   return useQuery({
-    queryKey: ['treeTests', treeId, params],
-    queryFn: () => fetchTreeTestsData(treeId, params),
+    queryKey: ['treeTests', treeId, params, filter],
+    queryFn: () => fetchTreeTestsData(treeId, params, filter),
   });
 };
 

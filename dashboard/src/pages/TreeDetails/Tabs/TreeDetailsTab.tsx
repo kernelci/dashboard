@@ -15,11 +15,13 @@ import TestsTab from './Tests';
 export interface ITreeDetailsTab {
   treeDetailsData?: ITreeDetails;
   filterListElement?: JSX.Element;
+  reqFilter: Record<string, string[]>;
 }
 
 const TreeDetailsTab = ({
   treeDetailsData,
   filterListElement,
+  reqFilter,
 }: ITreeDetailsTab): JSX.Element => {
   const { currentTreeDetailsTab } = useSearch({
     from: '/tree/$treeId/',
@@ -33,13 +35,13 @@ const TreeDetailsTab = ({
 
   const bootsTab: ITabItem = {
     name: 'treeDetails.boots',
-    content: <BootsTab />,
+    content: <BootsTab reqFilter={reqFilter} />,
     disabled: false,
   };
 
   const testsTab: ITabItem = {
     name: 'treeDetails.tests',
-    content: <TestsTab />,
+    content: <TestsTab reqFilter={reqFilter} />,
     disabled: false,
   };
 

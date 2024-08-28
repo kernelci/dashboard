@@ -18,7 +18,11 @@ import {
 
 import TestsTable from '@/components/Table/TestsTable';
 
-const TestsTab = (): JSX.Element => {
+interface TestsTabProps {
+  reqFilter: Record<string, string[]>;
+}
+
+const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
   const { origin, treeInfo } = useSearch({
     from: '/tree/$treeId/',
@@ -28,6 +32,7 @@ const TestsTab = (): JSX.Element => {
     origin,
     treeInfo.gitBranch ?? '',
     treeInfo.gitUrl ?? '',
+    reqFilter,
   );
 
   if (error || !treeId) {

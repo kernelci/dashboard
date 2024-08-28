@@ -12,6 +12,7 @@ import { z } from 'zod';
 
 import { useNavigate, useParams } from '@tanstack/react-router';
 
+import { status as testStatuses } from '@/utils/constants/database';
 import FilterDrawer, { DrawerSection } from '@/components/Filter/Drawer';
 import FilterCheckboxSection, {
   ICheckboxSection,
@@ -41,7 +42,9 @@ const filterFieldMap = {
   config_name: 'configs',
   architecture: 'archs',
   compiler: 'compilers',
-  valid: 'status',
+  bootStatus: 'bootStatus',
+  testStatus: 'testStatus',
+  buildStatus: 'buildStatus',
   'duration_[gte]': 'duration_min',
   'duration_[lte]': 'duration_max',
 } as const satisfies Record<string, TFilterKeys>;
@@ -71,14 +74,19 @@ export const mapFilterToReq = (
       filterMapped[reqField] = [values.toString()];
     }
   });
-
   return filterMapped;
 };
 
 export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
-  const status = { Success: false, Failure: false };
-  const bootStatus = { Success: false, Failure: false };
-  const testStatus = { Success: false, Failure: false };
+  const buildStatus = { Success: false, Failure: false };
+
+  const bootStatus: TFilterValues = {};
+  const testStatus: TFilterValues = {};
+  testStatuses.forEach(s => {
+    bootStatus[s] = false;
+    testStatus[s] = false;
+  });
+
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};
   const compilers: TFilterValues = {};
@@ -90,7 +98,7 @@ export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
       if (b.compiler) compilers[b.compiler] = false;
     });
 
-  return { status, configs, archs, compilers, bootStatus, testStatus };
+  return { buildStatus, configs, archs, compilers, bootStatus, testStatus };
 };
 
 const parseCheckboxFilter = (filter: TFilter, diffFilter: TFilter): TFilter => {
@@ -158,9 +166,11 @@ const CheckboxSection = ({
       {
         title: intl.formatMessage({ id: 'filter.buildStatus' }),
         subtitle: intl.formatMessage({ id: 'filter.statusSubtitle' }),
-        items: parsedFilter.status,
+        items: parsedFilter.buildStatus,
         onClickItem: (value: string): void => {
-          setDiffFilter(old => changeCheckboxFilterValue(old, 'status', value));
+          setDiffFilter(old =>
+            changeCheckboxFilterValue(old, 'buildStatus', value),
+          );
         },
       },
       {
@@ -214,7 +224,7 @@ const CheckboxSection = ({
     ];
   }, [
     intl,
-    parsedFilter.status,
+    parsedFilter.buildStatus,
     parsedFilter.configs,
     parsedFilter.archs,
     parsedFilter.compilers,

@@ -1,7 +1,8 @@
 from collections import defaultdict
 from typing_extensions import Union
-from django.http import JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.views import View
+from kernelCI_app.utils import FilterParams, InvalidComparisonOP, getErrorResponseBody
 from kernelCI_app.models import Checkouts
 import json
 
@@ -38,6 +39,30 @@ class TreeTestsView(View):
         print("unknown error_msg in misc", misc)
         return "unknown error"
 
+    def __paramsFromBootAndFilters(self, commit_hash, path_param, filter_params, params):
+        if path_param:
+            # TODO: 'boot' and 'boot.', right now is only using 'boot.'
+            path_filter = "AND t.path LIKE %s"
+            params.append(path_filter)
+            params = [commit_hash, f'{path_param}%']
+            target_field = 'bootStatus'
+        else:
+            path_filter = ""
+            params = [commit_hash]
+            target_field = 'testStatus'
+
+        for f in filter_params.filters:
+            if f['field'] != target_field:
+                continue
+            value = f['value']
+            value_list = value if isinstance(value, list) else [value]
+            placeholders = ",".join(['%s' for i in value_list])
+            path_filter += "AND t.status IN (" + placeholders + ")"
+            for value in value_list:
+                params.append(value)
+
+        return path_filter, params
+
     def get(self, request, commit_hash: str | None):
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
@@ -46,10 +71,13 @@ class TreeTestsView(View):
         path_filter = ''
         params = [commit_hash, origin_param, git_url_param, git_branch_param]
 
-        if path_param:
-            # TODO: 'boot' and 'boot.', right now is only using 'boot.'
-            path_filter = "AND t.path LIKE %s"
-            params.append(path_filter)
+        try:
+            filter_params = FilterParams(request)
+        except InvalidComparisonOP as e:
+            return HttpResponseBadRequest(getErrorResponseBody(str(e)))
+
+        path_filter, params = self.__paramsFromBootAndFilters(
+            commit_hash, path_param, filter_params, params)
 
         names_map = {
             "c.id": "id",
@@ -114,8 +142,10 @@ class TreeTestsView(View):
             ):
                 errorCounts[record.status] += 1
                 errorCountPerArchitecture[record.architecture] += 1
-                compilersPerArchitecture[record.architecture].add(record.compiler)
-                platformsWithError.add(self.extract_platform(record.environment_misc))
+                compilersPerArchitecture[record.architecture].add(
+                    record.compiler)
+                platformsWithError.add(
+                    self.extract_platform(record.environment_misc))
                 currentErrorMessage = self.extract_error_message(record.misc)
                 errorMessageCounts[currentErrorMessage] += 1
                 errorMessageCounts[currentErrorMessage] += 1

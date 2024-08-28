@@ -29,7 +29,8 @@ class TreeDetails(View):
                 status[status_key] += 1
 
             if arch := build['architecture']:
-                status = arch_summ.setdefault(arch, self.create_default_status())
+                status = arch_summ.setdefault(
+                    arch, self.create_default_status())
                 status[status_key] += 1
                 compiler = build['compiler']
                 if compiler and compiler not in status.setdefault('compilers', []):
@@ -89,8 +90,13 @@ class TreeDetails(View):
                 table = 'builds'
             elif field in checkout_fields:
                 table = 'checkouts'
+            elif field == 'buildStatus':
+                table = 'builds'
+                field = 'valid'
+                f['value'] = f['value'] == 'Success'
             if table:
-                query.where(**{f'{table}.{field}__{f['comparison_op']}': f['value']})
+                query.where(
+                    **{f'{table}.{field}__{f['comparison_op']}': f['value']})
 
         records = query.select()
         for r in records:

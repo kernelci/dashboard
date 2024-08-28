@@ -58,7 +58,7 @@ const StatusCard = ({
             </>
           }
           onLegendClick={(value: string) => {
-            toggleFilterBySection(value, 'status');
+            toggleFilterBySection(value, 'buildStatus');
           }}
           elements={[
             {

@@ -238,6 +238,7 @@ function TreeDetails(): JSX.Element {
         <TreeDetailsTab
           treeDetailsData={treeDetailsData}
           filterListElement={filterListElement}
+          reqFilter={reqFilter}
         />
       </div>
     </div>

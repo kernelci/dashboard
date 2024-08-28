@@ -16,7 +16,11 @@ import {
 } from '@/pages/TreeDetails/Tabs/TestCards';
 import BootsTable from '@/components/Table/BootsTable';
 
-const BootsTab = (): JSX.Element => {
+interface BootsTabProps {
+  reqFilter: Record<string, string[]>;
+}
+
+const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
   const { treeId } = useParams({
     from: '/tree/$treeId/',
   });
@@ -28,6 +32,7 @@ const BootsTab = (): JSX.Element => {
     origin,
     treeInfo.gitBranch ?? '',
     treeInfo.gitUrl ?? '',
+    reqFilter,
   );
 
   if (error || !treeId) {
