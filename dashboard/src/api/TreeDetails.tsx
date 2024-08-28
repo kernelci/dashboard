@@ -120,7 +120,6 @@ const fetchTreeTestData = async (params?: TTreeData): Promise<TPathTests[]> => {
 
 export const useTreeTest = (
   git_commit_hash: TTreeData['git_commit_hash'],
-  patchset: TTreeData['patchset'],
   path: TTreeData['path'],
   git_repository_branch: TTreeData['git_repository_branch'],
   git_repository_url: TTreeData['git_repository_url'],
@@ -130,7 +129,6 @@ export const useTreeTest = (
     queryKey: [
       'treeGroupedTests',
       git_commit_hash,
-      patchset,
       path,
       git_repository_url,
       git_repository_branch,
@@ -139,7 +137,6 @@ export const useTreeTest = (
     queryFn: () =>
       fetchTreeTestData({
         git_commit_hash,
-        patchset,
         path,
         git_repository_url,
         git_repository_branch,

@@ -8,11 +8,10 @@ import { Separator } from '@/components/ui/separator';
 import BaseTable from '@/components/Table/BaseTable';
 import { TableInfo } from '@/components/Table/TableInfo';
 import { TableCell, TableRow } from '@/components/ui/table';
-import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { useBuildTests } from '@/api/buildTests';
 import { usePagination } from '@/hooks/usePagination';
-import { formatDate } from '@/utils/utils';
 import { MessagesKey } from '@/locales/messages';
+import { TestStatus } from '@/components/Status/Status';
 
 interface IBuildDetailsTestSection {
   buildId: string;
@@ -24,44 +23,6 @@ const headerLabelIds: MessagesKey[] = [
   'buildDetails.testResults',
   'buildDetails.startTime',
 ];
-
-const testCellProps = [
-  {
-    name: 'pass_tests',
-    colorClass: 'bg-lightGreen',
-    tooltipLabelId: 'global.pass',
-  },
-  {
-    name: 'done_tests',
-    colorClass: 'bg-green',
-    tooltipLabelId: 'global.done',
-  },
-  {
-    name: 'fail_tests',
-    colorClass: 'bg-lightRed',
-    tooltipLabelId: 'global.failed',
-  },
-  {
-    name: 'error_tests',
-    colorClass: 'bg-red',
-    tooltipLabelId: 'global.error',
-  },
-  {
-    name: 'miss_tests',
-    colorClass: 'bg-yellow',
-    tooltipLabelId: 'global.missed',
-  },
-  {
-    name: 'skip_tests',
-    colorClass: 'bg-darkGray',
-    tooltipLabelId: 'global.skiped',
-  },
-  {
-    name: 'total_tests',
-    colorClass: 'bg-darkGray2',
-    tooltipLabelId: 'global.total',
-  },
-] as const;
 
 const ITEMS_PER_PAGE = 10;
 
@@ -103,23 +64,21 @@ const BuildDetailsTestSection = ({
     if (!data || error) return <></>;
 
     return data.slice(startIndex, endIndex).map(test => (
-      <TableRow key={test.current_path}>
-        <TableCell>{test.origins.join(', ')}</TableCell>
-        <TableCell onClick={onClickName}>{test.current_path}</TableCell>
+      <TableRow key={test.path_group}>
+        <TableCell onClick={onClickName}>{test.path_group}</TableCell>
         <TableCell className="flex flex-row gap-1">
-          {testCellProps.map(props => (
-            <ColoredCircle
-              key={test[props.name]}
-              tooltipText={intl.formatMessage({ id: props.tooltipLabelId })}
-              quantity={test[props.name]}
-              backgroundClassName={props.colorClass}
-            />
-          ))}
+          <TestStatus
+            pass={test.pass_tests}
+            done={test.done_tests}
+            miss={test.miss_tests}
+            fail={test.fail_tests}
+            skip={test.skip_tests}
+            error={test.error_tests}
+          />
         </TableCell>
-        <TableCell>{formatDate(test.start_time)}</TableCell>
       </TableRow>
     ));
-  }, [data, error, intl, onClickName, startIndex, endIndex]);
+  }, [data, error, onClickName, startIndex, endIndex]);
 
   const tableInfoElement = (
     <div className="flex flex-col items-end">

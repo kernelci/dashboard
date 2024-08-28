@@ -1,7 +1,5 @@
 export type TPathTests = {
-  current_path: string;
-  start_time: string;
-  origins: string[];
+  path_group: string;
   fail_tests: number;
   error_tests: number;
   miss_tests: number;
@@ -10,4 +8,12 @@ export type TPathTests = {
   skip_tests: number;
   null_tests: number;
   total_tests: number;
+  individual_tests: TIndividualTest[];
+};
+
+export type TIndividualTest = {
+  path: string;
+  status: string;
+  start_time: string;
+  duration: string;
 };
