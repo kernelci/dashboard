@@ -1,14 +1,18 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, ComponentProps } from 'react';
 
 import { Skeleton as SkeletonComponent } from '@/components/ui/skeleton'; //to avoid name conflict we rename the import
 
-type SkeletonProps = {
+import { cn } from '@/lib/utils';
+
+type SkeletonProps = ComponentProps<typeof SkeletonComponent> & {
   children: ReactNode;
 };
 
-const Skeleton = ({ children }: SkeletonProps): JSX.Element => {
+const Skeleton = ({ children, className }: SkeletonProps): JSX.Element => {
   return (
-    <SkeletonComponent className="grid h-[400px] place-items-center">
+    <SkeletonComponent
+      className={cn('grid h-[400px] place-items-center', className)}
+    >
       {children}
     </SkeletonComponent>
   );

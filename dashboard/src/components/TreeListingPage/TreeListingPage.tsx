@@ -90,7 +90,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
       </Skeleton>
     );
 
-  return (
+  return data && data.length > 0 ? (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-end gap-4">
         <TableInfo
@@ -113,6 +113,10 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
           onClickForward={onClickGoForward}
         />
       </div>
+    </div>
+  ) : (
+    <div className="grid h-[400px] place-items-center rounded-md bg-slate-100 dark:bg-slate-800">
+      <FormattedMessage id="global.noData" />
     </div>
   );
 };

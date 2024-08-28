@@ -86,6 +86,7 @@ export const messages = {
     'global.missed': 'Missed',
     'global.modules': 'Modules',
     'global.name': 'Name',
+    'global.noData': 'No data.',
     'global.noDataAvailable': 'No data available',
     'global.noResults': 'No results were found',
     'global.none': 'None',
