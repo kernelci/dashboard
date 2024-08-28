@@ -15,6 +15,7 @@ import {
   MemoizedLineChartCard,
   MemoizedPlatformsWithError,
 } from '@/pages/TreeDetails/Tabs/TestCards';
+
 import TestsTable from '@/components/Table/TestsTable';
 
 const TestsTab = (): JSX.Element => {

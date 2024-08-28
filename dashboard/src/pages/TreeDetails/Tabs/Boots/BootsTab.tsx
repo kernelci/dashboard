@@ -13,7 +13,7 @@ import {
   MemoizedPlatformsWithError,
   MemoizedStatusChart,
 } from '@/pages/TreeDetails/Tabs/TestCards';
-import TestsTable from '@/components/Table/TestsTable';
+import BootsTable from '@/components/Table/BootsTable';
 
 const BootsTab = (): JSX.Element => {
   const { treeId } = useParams({
@@ -77,7 +77,7 @@ const BootsTab = (): JSX.Element => {
           errorMessageCounts={data.errorMessageCounts}
         />
       </div>
-      <TestsTable treeId={treeId} isBootTable={true} />
+      <BootsTable treeId={treeId} isBootTable={true} />
     </div>
   );
 };
