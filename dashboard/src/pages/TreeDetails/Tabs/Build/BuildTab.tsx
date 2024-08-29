@@ -357,11 +357,11 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   }, [treeDetailsData?.builds]);
 
   const filteredContent =
-    filterBy.buildsTable === 'error'
-      ? accordionContent?.filter(row => row.buildErrors && row.buildErrors > 0)
-      : filterBy.buildsTable === 'success'
-        ? accordionContent?.filter(row => row.status && row.status === 'valid')
-        : accordionContent;
+    filterBy.buildsTable === 'all'
+      ? accordionContent
+      : accordionContent?.filter(
+          row => row.status && row.status === filterBy.buildsTable,
+        );
 
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(
@@ -497,6 +497,11 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
                   label: intl.formatMessage({ id: 'global.errors' }),
                   value: possibleBuildsTableFilter[0],
                   isSelected: selectedFilter === possibleBuildsTableFilter[0],
+                },
+                {
+                  label: intl.formatMessage({ id: 'global.unknown' }),
+                  value: possibleBuildsTableFilter[3],
+                  isSelected: selectedFilter === possibleBuildsTableFilter[3],
                 },
               ]}
             />
