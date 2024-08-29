@@ -2,7 +2,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { useMemo } from 'react';
 
-import { useIntl } from 'react-intl';
+import { useIntl, FormattedMessage } from 'react-intl';
 
 import { TableInfo } from '@/components/Table/TableInfo';
 import { usePagination } from '@/hooks/usePagination';
@@ -13,6 +13,8 @@ import {
   TestsTableFilter,
   possibleTestsTableFilter,
 } from '@/types/tree/TreeDetails';
+
+import { Skeleton } from '@/components/Skeleton';
 
 import Accordion from '../Accordion/Accordion';
 
@@ -29,7 +31,7 @@ const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
     from: '/tree/$treeId/',
   });
   const navigate = useNavigate({ from: '/tree/$treeId' });
-  const { data } = useTreeTest(
+  const { data, isLoading } = useTreeTest(
     treeId,
     testPath,
     treeInfo.gitBranch ?? '',
@@ -170,6 +172,13 @@ const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
           }));
     }
   }, [tableFilter.testsTable, data]);
+
+  if (isLoading)
+    return (
+      <Skeleton>
+        <FormattedMessage id="global.loading" />
+      </Skeleton>
+    );
 
   return (
     <div className="flex flex-col gap-6">
