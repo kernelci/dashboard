@@ -149,7 +149,12 @@ export const zPossibleValidator = z
   .enum(possibleTabs)
   .catch('treeDetails.boots');
 
-export const possibleBuildsTableFilter = ['error', 'success', 'all'] as const;
+export const possibleBuildsTableFilter = [
+  'invalid',
+  'valid',
+  'all',
+  'null',
+] as const;
 
 export const possibleTestsTableFilter = [
   'all',
