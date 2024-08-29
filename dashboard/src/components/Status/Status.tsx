@@ -41,6 +41,19 @@ export const BuildStatus = ({
   unknown,
 }: IBuildStatus): JSX.Element => {
   return (
-    <TestStatus pass={valid ?? 0} error={invalid ?? 0} miss={unknown ?? 0} />
+    <div className="flex flex-row gap-1">
+      <ColoredCircle
+        quantity={valid ?? 0}
+        backgroundClassName="bg-lightGreen"
+      />
+      <ColoredCircle
+        quantity={invalid ?? 0}
+        backgroundClassName="bg-lightRed"
+      />
+      <ColoredCircle
+        quantity={unknown ?? 0}
+        backgroundClassName="bg-lightGray"
+      />
+    </div>
   );
 };
