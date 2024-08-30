@@ -101,7 +101,8 @@ class TreeTestsView(View):
                 SELECT c.id, c.git_repository_url,
                 c.git_commit_hash, t.build_id, t.start_time,
                 t.status as status, t.path, b.architecture, b.config_name,
-                b.compiler, t.environment_misc, t.environment_comment, t.misc FROM checkouts AS c
+                b.compiler, t.environment_misc, t.environment_comment, t.misc
+                FROM checkouts AS c
                 INNER JOIN builds AS b ON c.id = b.checkout_id
                 INNER JOIN tests AS t ON t.build_id = b.id
                 WHERE c.git_commit_hash = %s AND c.origin = %s AND c.git_repository_url = %s AND
@@ -123,7 +124,7 @@ class TreeTestsView(View):
 
         statusCounts = defaultdict(int)
         errorCounts = defaultdict(int)
-        configCounts = defaultdict(int)
+        configStatusCounts = defaultdict(lambda: defaultdict(int))
         testHistory = []
         errorCountPerArchitecture = defaultdict(int)
         platformsWithError = set()
@@ -131,7 +132,7 @@ class TreeTestsView(View):
         errorMessageCounts = defaultdict(int)
         for record in query:
             statusCounts[record.status] += 1
-            configCounts[record.config_name] += 1
+            configStatusCounts[record.config_name][record.status] += 1
             testHistory.append(
                 {"start_time": record.start_time, "status": record.status}
             )
@@ -159,7 +160,7 @@ class TreeTestsView(View):
             {
                 "statusCounts": statusCounts,
                 "errorCounts": errorCounts,
-                "configCounts": configCounts,
+                "configStatusCounts": configStatusCounts,
                 "testHistory": testHistory,
                 "errorCountPerArchitecture": errorCountPerArchitecture,
                 "compilersPerArchitecture": compilersPerArchitecture,

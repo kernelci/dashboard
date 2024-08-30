@@ -7,6 +7,7 @@ interface ITestStatus {
   fail?: number;
   done?: number;
   skip?: number;
+  forceNumber?: boolean;
 }
 
 interface IBuildStatus {
@@ -22,39 +23,52 @@ export const TestStatus = ({
   fail,
   done,
   skip,
+  forceNumber = true,
 }: ITestStatus): JSX.Element => {
   return (
     <div className="flex flex-row gap-1">
-      <ColoredCircle
-        quantity={pass ?? 0}
-        tooltipText="global.pass"
-        backgroundClassName="bg-lightGreen"
-      />
-      <ColoredCircle
-        quantity={error ?? 0}
-        tooltipText="global.error"
-        backgroundClassName="bg-lightRed"
-      />
-      <ColoredCircle
-        quantity={miss ?? 0}
-        tooltipText="global.missed"
-        backgroundClassName="bg-lightGray"
-      />
-      <ColoredCircle
-        quantity={fail ?? 0}
-        tooltipText="global.failed"
-        backgroundClassName="bg-yellow"
-      />
-      <ColoredCircle
-        quantity={done ?? 0}
-        backgroundClassName="bg-lightBlue"
-        tooltipText="global.done"
-      />
-      <ColoredCircle
-        quantity={skip ?? 0}
-        tooltipText="global.skipped"
-        backgroundClassName="bg-mediumGray"
-      />
+      {(forceNumber || pass) && (
+        <ColoredCircle
+          quantity={pass ?? 0}
+          tooltipText="global.pass"
+          backgroundClassName="bg-lightGreen"
+        />
+      )}
+      {(forceNumber || error) && (
+        <ColoredCircle
+          quantity={error ?? 0}
+          tooltipText="global.error"
+          backgroundClassName="bg-lightRed"
+        />
+      )}
+      {(forceNumber || miss) && (
+        <ColoredCircle
+          quantity={miss ?? 0}
+          tooltipText="global.missed"
+          backgroundClassName="bg-lightGray"
+        />
+      )}
+      {(forceNumber || fail) && (
+        <ColoredCircle
+          quantity={fail ?? 0}
+          tooltipText="global.failed"
+          backgroundClassName="bg-yellow"
+        />
+      )}
+      {(forceNumber || done) && (
+        <ColoredCircle
+          quantity={done ?? 0}
+          tooltipText="global.done"
+          backgroundClassName="bg-lightBlue"
+        />
+      )}
+      {(forceNumber || done) && (
+        <ColoredCircle
+          quantity={skip ?? 0}
+          tooltipText="global.skipped"
+          backgroundClassName="bg-mediumGray"
+        />
+      )}
     </div>
   );
 };

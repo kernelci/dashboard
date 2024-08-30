@@ -6,6 +6,8 @@ import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import BaseCard, { IBaseCard } from '@/components/Cards/BaseCard';
 import ListingItem from '@/components/ListingItem/ListingItem';
 import { TTreeTestsData } from '@/types/tree/TreeDetails';
+import { TestStatus } from '@/components/Status/Status';
+
 import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
 import StatusChartMemoized, {
   Colors,
@@ -15,24 +17,38 @@ import { errorStatusSet } from '@/utils/constants/database';
 import { ErrorStatus } from '@/types/database';
 import { LineChart, LineChartLabel } from '@/components/LineChart';
 
-interface IConfigList extends Pick<TTreeTestsData, 'configCounts'> {
+interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
 }
 
-const ConfigsList = ({ configCounts, title }: IConfigList): JSX.Element => {
+const ConfigsList = ({
+  configStatusCounts,
+  title,
+}: IConfigList): JSX.Element => {
   return (
     <BaseCard
       title={title}
       content={
         <DumbListingContent>
-          {Object.keys(configCounts).map(configName => {
-            const currentConfigCount = configCounts[configName];
+          {Object.keys(configStatusCounts).map(configName => {
+            const { DONE, FAIL, ERROR, MISS, PASS, SKIP } =
+              configStatusCounts[configName];
             return (
               <ListingItem
                 hasBottomBorder
                 key={configName}
                 text={configName}
-                success={currentConfigCount}
+                leftIcon={
+                  <TestStatus
+                    done={DONE}
+                    fail={FAIL}
+                    error={ERROR}
+                    miss={MISS}
+                    pass={PASS}
+                    skip={SKIP}
+                    forceNumber={false}
+                  />
+                }
               />
             );
           })}

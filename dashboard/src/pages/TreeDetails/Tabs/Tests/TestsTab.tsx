@@ -74,7 +74,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
         />
         <MemoizedConfigList
           title={<FormattedMessage id="global.configs" />}
-          configCounts={data.configCounts}
+          configStatusCounts={data.configStatusCounts}
         />
         <MemoizedErrorsSummary
           title={<FormattedMessage id="testsTab.errorsSummary" />}

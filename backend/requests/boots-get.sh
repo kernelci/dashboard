@@ -5,19 +5,33 @@
 http 'http://localhost:8000/api/tree/1dd28064d4164a4dc9096fd1a7990d2de15f2bb6/tests/'
 
 # {
-#   "errorCounts": {
-#     "MISS": 2,
+#   "statusCounts": {
+#     "FAIL": 2,
+#     "MISS": 1,
 #     "PASS": 1,
 #     "ERROR": 1
 #   },
-#   "configCounts": {
-#     "defconfig": 3,
-#     "multi_v7_defconfig": 1
+#   "errorCounts": {
+#     "FAIL": 2,
+#     "MISS": 1,
+#     "ERROR": 1
 #   },
-#   "bootHistory": [
+#   "configStatusCounts": {
+#     "defconfig": {
+#       "FAIL": 2,
+#       "PASS": 1
+#     },
+#     "multi_v7_defconfig": {
+#       "MISS": 1
+#     },
+#     "null": {
+#       "ERROR": 1
+#     }
+#   },
+#   "testHistory": [
 #     {
-#       "start_time": "2024-07-06T00:58:14.830Z",
-#       "status": "MISS"
+#       "start_time": "2024-07-06T00:58:20.149Z",
+#       "status": "FAIL"
 #     },
 #     {
 #       "start_time": "2024-07-06T00:48:55.924Z",
@@ -28,13 +42,18 @@ http 'http://localhost:8000/api/tree/1dd28064d4164a4dc9096fd1a7990d2de15f2bb6/te
 #       "status": "PASS"
 #     },
 #     {
-#       "start_time": "2024-07-06T00:56:49.278Z",
+#       "start_time": "2024-07-06T00:56:56.659Z",
+#       "status": "FAIL"
+#     },
+#     {
+#       "start_time": "2024-07-06T00:26:44.970Z",
 #       "status": "ERROR"
 #     }
 #   ],
 #   "errorCountPerArchitecture": {
 #     "arm64": 2,
-#     "arm": 1
+#     "arm": 1,
+#     "null": 1
 #   },
 #   "compilersPerArchitecture": {
 #     "arm64": [
@@ -42,17 +61,20 @@ http 'http://localhost:8000/api/tree/1dd28064d4164a4dc9096fd1a7990d2de15f2bb6/te
 #     ],
 #     "arm": [
 #       "gcc-12"
+#     ],
+#     "null": [
+#       null
 #     ]
 #   },
-#   "platforms": [
-#     "bcm2836-rpi-2-b",
-#     "meson-g12b-a311d-khadas-vim3",
-#     "sc7180-trogdor-lazor-limozeen"
+#   "platformsWithError": [
+#     "mt8183-kukui-jacuzzi-juniper-sku16",
+#     "kubernetes",
+#     "bcm2711-rpi-4-b",
+#     "bcm2836-rpi-2-b"
 #   ],
 #   "errorMessageCounts": {
-#     "400 Client Error: Bad Request for url: https://lava.infra.foundries.io/api/v0.2/jobs/?format=json&limit=256": 1,
-#     "No time left for remaining 1 retries. 2 retries out of 3 failed for auto-login-action": 1,
-#     "Invalid TESTCASE signal": 1
+#     "unknown error": 4,
+#     "No time left for remaining 1 retries. 2 retries out of 3 failed for auto-login-action": 2,
+#     "Node timed-out": 2
 #   }
 # }
-

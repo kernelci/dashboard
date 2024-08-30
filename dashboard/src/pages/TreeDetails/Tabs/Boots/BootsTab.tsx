@@ -74,7 +74,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
         />
         <MemoizedConfigList
           title={<FormattedMessage id="bootsTab.configs" />}
-          configCounts={data.configCounts}
+          configStatusCounts={data.configStatusCounts}
         />
         <MemoizedErrorsSummary
           title={<FormattedMessage id="bootsTab.errorsSummary" />}

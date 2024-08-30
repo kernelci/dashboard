@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import ColoredCircle from '../ColoredCircle/ColoredCircle';
 
 export interface IListingItem {
+  leftIcon?: React.ReactNode;
   warnings?: number;
   errors?: number;
   success?: number;
@@ -25,6 +26,7 @@ export enum ItemType {
 
 // TODO Add Tooltip text
 const ListingItem = ({
+  leftIcon,
   warnings,
   errors,
   text,
@@ -42,7 +44,12 @@ const ListingItem = ({
   const hasSuccess = success && success > 0 && showNumber;
   const hasUnknown = unknown && unknown > 0 && showNumber;
   const hasNone =
-    !hasErrors && !hasWarnings && !hasSuccess && !hasUnknown && showNumber;
+    !leftIcon &&
+    !hasErrors &&
+    !hasWarnings &&
+    !hasSuccess &&
+    !hasUnknown &&
+    showNumber;
 
   const handleOnClick = useCallback(() => {
     if (onClick) {
@@ -94,6 +101,7 @@ const ListingItem = ({
       {itemSuccess}
       {itemUnknown}
       {itemNeutral}
+      {leftIcon}
       <span className="text-sm text-black">{text}</span>
     </WrapperComponent>
   );
