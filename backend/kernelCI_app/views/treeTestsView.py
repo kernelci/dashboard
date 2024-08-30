@@ -39,13 +39,17 @@ class TreeTestsView(View):
         return "unknown error"
 
     def get(self, request, commit_hash: str | None):
+        origin_param = request.GET.get("origin")
+        git_url_param = request.GET.get("git_url")
+        git_branch_param = request.GET.get("git_branch")
         path_param = request.GET.get('path')
+        path_filter = ''
+        params = [commit_hash, origin_param, git_url_param, git_branch_param]
+
         if path_param:
+            # TODO: 'boot' and 'boot.', right now is only using 'boot.'
             path_filter = "AND t.path LIKE %s"
-            params = [commit_hash, f'{path_param}%']
-        else:
-            path_filter = ""
-            params = [commit_hash]
+            params.append(path_filter)
 
         names_map = {
             "c.id": "id",
@@ -66,13 +70,14 @@ class TreeTestsView(View):
         # TODO - Remove the f string here and use parametrized queries
         query = Checkouts.objects.raw(
             f"""
-                SELECT DISTINCT ON (t.build_id) c.id, c.git_repository_url,
+                SELECT c.id, c.git_repository_url,
                 c.git_commit_hash, t.build_id, t.start_time,
                 t.status as status, t.path, b.architecture, b.config_name,
                 b.compiler, t.environment_misc, t.environment_comment, t.misc FROM checkouts AS c
                 INNER JOIN builds AS b ON c.id = b.checkout_id
                 INNER JOIN tests AS t ON t.build_id = b.id
-                WHERE c.git_commit_hash = %s {path_filter}
+                WHERE c.git_commit_hash = %s AND c.origin = %s AND c.git_repository_url = %s AND
+                    c.git_repository_branch = %s {path_filter}
                 ORDER BY
                 build_id,
                 CASE t.status

@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useParams } from '@tanstack/react-router';
+import { useParams, useSearch } from '@tanstack/react-router';
 
 import { Skeleton } from '@/components/Skeleton';
 
@@ -20,7 +20,15 @@ import TestsTable from '@/components/Table/TestsTable';
 
 const TestsTab = (): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
-  const { isLoading, data, error } = useTestsTab(treeId ?? '');
+  const { origin, treeInfo } = useSearch({
+    from: '/tree/$treeId/',
+  });
+  const { isLoading, data, error } = useTestsTab(
+    treeId ?? '',
+    origin,
+    treeInfo.gitBranch ?? '',
+    treeInfo.gitUrl ?? '',
+  );
 
   if (error || !treeId) {
     return (

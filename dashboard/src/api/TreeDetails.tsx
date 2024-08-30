@@ -41,7 +41,12 @@ export const useTreeDetails = (
 
 const fetchTreeTestsData = async (
   treeId: string,
-  params?: { path?: string },
+  params?: {
+    isBoot?: boolean;
+    origin: string;
+    git_branch: string;
+    git_url: string;
+  },
 ): Promise<TTreeTestsData> => {
   const res = await http.get<TTreeTestsData>(`/api/tree/${treeId}/tests`, {
     params,
@@ -50,19 +55,39 @@ const fetchTreeTestsData = async (
   return res.data;
 };
 
-export const useBootsTab = (treeId: string): UseQueryResult<TTreeTestsData> => {
-  const params = { path: 'boot.' };
-
+export const useBootsTab = (
+  treeId: string,
+  origin: string,
+  git_branch: string,
+  git_url: string,
+): UseQueryResult<TTreeTestsData> => {
+  const params = {
+    path: 'boot.',
+    origin: origin,
+    git_branch: git_branch,
+    git_url: git_url,
+  };
   return useQuery({
     queryKey: ['treeBootTests', treeId, params],
     queryFn: () => fetchTreeTestsData(treeId, params),
   });
 };
 
-export const useTestsTab = (treeId: string): UseQueryResult<TTreeTestsData> => {
+export const useTestsTab = (
+  treeId: string,
+  origin: string,
+  git_branch: string,
+  git_url: string,
+): UseQueryResult<TTreeTestsData> => {
+  const params = {
+    isBoot: false,
+    origin: origin,
+    git_branch: git_branch,
+    git_url: git_url,
+  };
   return useQuery({
-    queryKey: ['treeTests', treeId],
-    queryFn: () => fetchTreeTestsData(treeId),
+    queryKey: ['treeTests', treeId, params],
+    queryFn: () => fetchTreeTestsData(treeId, params),
   });
 };
 
