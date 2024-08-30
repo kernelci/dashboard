@@ -23,6 +23,7 @@ export enum ItemType {
   None = 'bg-lightGray',
 }
 
+// TODO Add Tooltip text
 const ListingItem = ({
   warnings,
   errors,

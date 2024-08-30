@@ -25,12 +25,36 @@ export const TestStatus = ({
 }: ITestStatus): JSX.Element => {
   return (
     <div className="flex flex-row gap-1">
-      <ColoredCircle quantity={pass ?? 0} backgroundClassName="bg-lightGreen" />
-      <ColoredCircle quantity={error ?? 0} backgroundClassName="bg-lightRed" />
-      <ColoredCircle quantity={miss ?? 0} backgroundClassName="bg-lightGray" />
-      <ColoredCircle quantity={fail ?? 0} backgroundClassName="bg-yellow" />
-      <ColoredCircle quantity={done ?? 0} backgroundClassName="bg-lightBlue" />
-      <ColoredCircle quantity={skip ?? 0} backgroundClassName="bg-mediumGray" />
+      <ColoredCircle
+        quantity={pass ?? 0}
+        tooltipText="global.pass"
+        backgroundClassName="bg-lightGreen"
+      />
+      <ColoredCircle
+        quantity={error ?? 0}
+        tooltipText="global.error"
+        backgroundClassName="bg-lightRed"
+      />
+      <ColoredCircle
+        quantity={miss ?? 0}
+        tooltipText="global.missed"
+        backgroundClassName="bg-lightGray"
+      />
+      <ColoredCircle
+        quantity={fail ?? 0}
+        tooltipText="global.failed"
+        backgroundClassName="bg-yellow"
+      />
+      <ColoredCircle
+        quantity={done ?? 0}
+        backgroundClassName="bg-lightBlue"
+        tooltipText="global.done"
+      />
+      <ColoredCircle
+        quantity={skip ?? 0}
+        tooltipText="global.skipped"
+        backgroundClassName="bg-mediumGray"
+      />
     </div>
   );
 };
@@ -45,13 +69,16 @@ export const BuildStatus = ({
       <ColoredCircle
         quantity={valid ?? 0}
         backgroundClassName="bg-lightGreen"
+        tooltipText="global.valid"
       />
       <ColoredCircle
         quantity={invalid ?? 0}
         backgroundClassName="bg-lightRed"
+        tooltipText="global.invalid"
       />
       <ColoredCircle
         quantity={unknown ?? 0}
+        tooltipText="global.unknown"
         backgroundClassName="bg-lightGray"
       />
     </div>
