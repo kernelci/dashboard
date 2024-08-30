@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useParams } from '@tanstack/react-router';
+import { useParams, useSearch } from '@tanstack/react-router';
 
 import { useBootsTab } from '@/api/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
@@ -20,12 +20,20 @@ const BootsTab = (): JSX.Element => {
   const { treeId } = useParams({
     from: '/tree/$treeId/',
   });
-  const { isLoading, data, error } = useBootsTab(treeId ?? '');
+  const { origin, treeInfo } = useSearch({
+    from: '/tree/$treeId/',
+  });
+  const { isLoading, data, error } = useBootsTab(
+    treeId ?? '',
+    origin,
+    treeInfo.gitBranch ?? '',
+    treeInfo.gitUrl ?? '',
+  );
 
   if (error || !treeId) {
     return (
       <div>
-        <FormattedMessage id="bootsTab.success" />
+        <FormattedMessage id="bootsTab.error" />
       </div>
     );
   }
