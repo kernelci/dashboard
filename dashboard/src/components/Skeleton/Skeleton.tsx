@@ -11,7 +11,10 @@ type SkeletonProps = ComponentProps<typeof SkeletonComponent> & {
 const Skeleton = ({ children, className }: SkeletonProps): JSX.Element => {
   return (
     <SkeletonComponent
-      className={cn('grid h-[400px] place-items-center', className)}
+      className={cn(
+        'animation-none grid h-[400px] place-items-center',
+        className,
+      )}
     >
       {children}
     </SkeletonComponent>

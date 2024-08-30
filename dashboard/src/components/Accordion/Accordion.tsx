@@ -1,6 +1,6 @@
 import { ReactElement, useCallback, useMemo } from 'react';
 
-import { MdCheck, MdChevronRight, MdClose } from 'react-icons/md';
+import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -82,6 +82,12 @@ const Accordion = ({ items, type }: IAccordion): JSX.Element => {
   );
 };
 
+const ChevronRightAnimate = (): JSX.Element => {
+  return (
+    <MdChevronRight className="transition group-data-[state='open']:rotate-90" />
+  );
+};
+
 const AccordionTableBody = ({
   items,
   type,
@@ -98,7 +104,7 @@ const AccordionTableBody = ({
       <Collapsible key={index} asChild>
         <>
           <CollapsibleTrigger asChild>
-            <TableRow className="cursor-pointer hover:bg-lightBlue">
+            <TableRow className="group cursor-pointer hover:bg-lightBlue">
               {type === 'build' ? (
                 <AccordionBuildsTrigger accordionData={item} />
               ) : (
@@ -109,7 +115,7 @@ const AccordionTableBody = ({
           <TableRow>
             <TableCell colSpan={6} className="p-0">
               <CollapsibleContent>
-                <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
+                <div className="group max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
                   {type === 'build' ? (
                     <AccordionBuildContent accordionData={item} />
                   ) : (
@@ -177,7 +183,7 @@ const AccordionTestsTrigger = ({
         />
       </TableCell>
       <TableCell>
-        <MdChevronRight />
+        <ChevronRightAnimate />
       </TableCell>
     </>
   );
@@ -187,6 +193,7 @@ const AccordionTestsContent = ({
   data,
 }: IAccordionTestContent): JSX.Element => {
   const navigate = useNavigate({ from: '/tree/$treeId' });
+
   const onClickName = useCallback(
     (e: React.MouseEvent<HTMLTableRowElement>) => {
       const newTestPath = e.currentTarget.querySelector(
@@ -217,7 +224,7 @@ const AccordionTestsContent = ({
         <TableCell>{test.start_time ?? '-'}</TableCell>
         <TableCell>{test.duration ?? '-'}</TableCell>
         <TableCell>
-          <MdChevronRight />
+          <ChevronRightAnimate />
         </TableCell>
       </TableRow>
     ));
