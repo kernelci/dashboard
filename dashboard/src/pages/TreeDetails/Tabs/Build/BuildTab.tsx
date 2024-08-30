@@ -95,25 +95,19 @@ const ConfigsCard = ({
     filterSection: TFilterObjectsKeys,
   ) => void;
 }): JSX.Element => {
-  const { formatMessage } = useIntl();
   return (
-    <BaseCard
-      title={formatMessage({ id: 'treeDetails.configs' })}
-      content={
-        <CardsGroup
-          cards={[
-            {
-              items: treeDetailsData?.configs ?? [],
-              title: <FormattedMessage id="treeDetails.configs" />,
-              key: 'configs',
-              type: 'listing',
-              onClickItem: (value: string) => {
-                toggleFilterBySection(value, 'configs');
-              },
-            } as IListingContent & { key: string },
-          ]}
-        />
-      }
+    <CardsGroup
+      cards={[
+        {
+          items: treeDetailsData?.configs ?? [],
+          title: <FormattedMessage id="treeDetails.configs" />,
+          key: 'configs',
+          type: 'listing',
+          onClickItem: (value: string) => {
+            toggleFilterBySection(value, 'configs');
+          },
+        } as IListingContent & { key: string },
+      ]}
     />
   );
 };
