@@ -43,12 +43,10 @@ class TreeTestsView(View):
         if path_param:
             # TODO: 'boot' and 'boot.', right now is only using 'boot.'
             path_filter = "AND t.path LIKE %s"
-            params.append(path_filter)
-            params = [commit_hash, f'{path_param}%']
+            params.append(f'{path_param}%')
             target_field = 'bootStatus'
         else:
             path_filter = ""
-            params = [commit_hash]
             target_field = 'testStatus'
 
         for f in filter_params.filters:
@@ -76,8 +74,10 @@ class TreeTestsView(View):
         except InvalidComparisonOP as e:
             return HttpResponseBadRequest(getErrorResponseBody(str(e)))
 
+        print("####", params, path_filter)
         path_filter, params = self.__paramsFromBootAndFilters(
             commit_hash, path_param, filter_params, params)
+        print("@@@@", params, path_filter)
 
         names_map = {
             "c.id": "id",
