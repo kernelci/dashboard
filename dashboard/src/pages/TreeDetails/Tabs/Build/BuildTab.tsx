@@ -465,11 +465,13 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           toggleFilterBySection={toggleFilterBySection}
           treeDetailsData={treeDetailsData}
         />
-        <CardsGroup cards={cards} />
-        <MemoizedConfigsCard
-          treeDetailsData={treeDetailsData}
-          toggleFilterBySection={toggleFilterBySection}
-        />
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <CardsGroup cards={cards} />
+          <MemoizedConfigsCard
+            treeDetailsData={treeDetailsData}
+            toggleFilterBySection={toggleFilterBySection}
+          />
+        </div>
       </div>
 
       {filteredContent && (
