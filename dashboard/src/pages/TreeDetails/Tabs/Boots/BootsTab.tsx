@@ -77,8 +77,8 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           configStatusCounts={data.configStatusCounts}
         />
         <MemoizedErrorsSummary
-          title={<FormattedMessage id="bootsTab.errorsSummary" />}
-          errorCountPerArchitecture={data.errorCountPerArchitecture}
+          title={<FormattedMessage id="global.summary" />}
+          architectureStatusCounts={data.architectureStatusCounts}
           compilersPerArchitecture={data.compilersPerArchitecture}
         />
         <MemoizedLineChartCard

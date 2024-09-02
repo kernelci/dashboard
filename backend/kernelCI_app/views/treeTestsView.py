@@ -125,14 +125,15 @@ class TreeTestsView(View):
         statusCounts = defaultdict(int)
         errorCounts = defaultdict(int)
         configStatusCounts = defaultdict(lambda: defaultdict(int))
+        architectureStatusCounts = defaultdict(lambda: defaultdict(int))
         testHistory = []
-        errorCountPerArchitecture = defaultdict(int)
         platformsWithError = set()
         compilersPerArchitecture = defaultdict(set)
         errorMessageCounts = defaultdict(int)
         for record in query:
             statusCounts[record.status] += 1
             configStatusCounts[record.config_name][record.status] += 1
+            architectureStatusCounts[record.architecture][record.status] += 1
             testHistory.append(
                 {"start_time": record.start_time, "status": record.status}
             )
@@ -142,7 +143,6 @@ class TreeTestsView(View):
                 or record.status == "FAIL"
             ):
                 errorCounts[record.status] += 1
-                errorCountPerArchitecture[record.architecture] += 1
                 compilersPerArchitecture[record.architecture].add(
                     record.compiler)
                 platformsWithError.add(
@@ -162,7 +162,7 @@ class TreeTestsView(View):
                 "errorCounts": errorCounts,
                 "configStatusCounts": configStatusCounts,
                 "testHistory": testHistory,
-                "errorCountPerArchitecture": errorCountPerArchitecture,
+                "architectureStatusCounts": architectureStatusCounts,
                 "compilersPerArchitecture": compilersPerArchitecture,
                 "platformsWithError": list(platformsWithError),
                 "errorMessageCounts": errorMessageCounts,

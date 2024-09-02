@@ -103,10 +103,6 @@ type ErrorCounts = {
   [key in ErrorStatus]: number | undefined;
 };
 
-type ErrorCountPerArchitecture = {
-  [key: string]: number;
-};
-
 type CompilersPerArchitecture = {
   [key: string]: string[];
 };
@@ -119,14 +115,14 @@ type StatusCounts = {
   [key in Status]: number | undefined;
 };
 
-type ConfigStatusCounts = Record<string, StatusCounts>;
+type PropertyStatusCounts = Record<string, StatusCounts>;
 
 export type TTreeTestsData = {
   statusCounts: StatusCounts;
   errorCounts: ErrorCounts;
-  configStatusCounts: ConfigStatusCounts;
+  configStatusCounts: PropertyStatusCounts;
   testHistory: TestHistory[];
-  errorCountPerArchitecture: ErrorCountPerArchitecture;
+  architectureStatusCounts: PropertyStatusCounts;
   compilersPerArchitecture: CompilersPerArchitecture;
   platformsWithError: string[];
   errorMessageCounts: ErrorMessageCounts;

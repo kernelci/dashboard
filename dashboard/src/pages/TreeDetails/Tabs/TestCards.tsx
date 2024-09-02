@@ -123,13 +123,13 @@ export const MemoizedErrorCountList = memo(ErrorCountList);
 interface IErrorsSummary
   extends Pick<
     TTreeTestsData,
-    'errorCountPerArchitecture' | 'compilersPerArchitecture'
+    'architectureStatusCounts' | 'compilersPerArchitecture'
   > {
   title: IBaseCard['title'];
 }
 
 const ErrorsSummary = ({
-  errorCountPerArchitecture,
+  architectureStatusCounts,
   compilersPerArchitecture,
   title,
 }: IErrorsSummary): JSX.Element => {
@@ -143,16 +143,26 @@ const ErrorsSummary = ({
       title={title}
       content={
         <DumbSummary summaryHeaders={summaryHeaders}>
-          {Object.keys(errorCountPerArchitecture).map(architecture => {
-            const currentErrorCount = errorCountPerArchitecture[architecture];
+          {Object.keys(architectureStatusCounts).map(architecture => {
+            const statusCounts = architectureStatusCounts[architecture];
             const currentCompilers = compilersPerArchitecture[architecture];
             return (
               <SummaryItem
                 key={architecture}
                 arch={{
                   text: architecture,
-                  errors: currentErrorCount,
                 }}
+                leftIcon={
+                  <TestStatus
+                    forceNumber={false}
+                    done={statusCounts.DONE}
+                    fail={statusCounts.FAIL}
+                    error={statusCounts.ERROR}
+                    miss={statusCounts.MISS}
+                    pass={statusCounts.PASS}
+                    skip={statusCounts.SKIP}
+                  />
+                }
                 compilers={currentCompilers}
               />
             );

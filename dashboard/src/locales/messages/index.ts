@@ -7,7 +7,6 @@ export const messages = {
     'bootsTab.bootStatus': 'Boot Status',
     'bootsTab.configs': 'Configs',
     'bootsTab.error': 'Error',
-    'bootsTab.errorsSummary': 'Errors Summary',
     'bootsTab.fail': 'Fail',
     'bootsTab.info': 'Info',
     'bootsTab.info.description':
@@ -100,6 +99,7 @@ export const messages = {
     'global.somethingWrong': 'Sorry... something went wrong',
     'global.status': 'Status',
     'global.successful': 'Successful',
+    'global.summary': 'Summary',
     'global.timing': 'Timing',
     'global.total': 'Total',
     'global.tree': 'Tree',

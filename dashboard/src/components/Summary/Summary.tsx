@@ -17,7 +17,8 @@ export interface ISummaryTable {
 }
 
 export interface ISummaryItem {
-  arch: IListingItem;
+  arch: Omit<IListingItem, 'leftIcon'>;
+  leftIcon?: IListingItem['leftIcon'];
   onClickKey?: (key: string) => void;
   onClickCompiler?: (compiler: string) => void;
   compilers: string[];
@@ -53,7 +54,7 @@ const Summary = ({
         <SummaryItem
           onClickKey={onClickKey}
           key={row.arch.text}
-          arch={row.arch}
+          arch={{ text: row.arch.text }}
           compilers={row.compilers}
           onClickCompiler={onClickCompiler}
         />
@@ -71,6 +72,7 @@ export const SummaryItem = ({
   compilers,
   onClickKey,
   onClickCompiler,
+  leftIcon,
 }: ISummaryItem): JSX.Element => {
   const compilersElement = useMemo(() => {
     return compilers?.map(compiler => (
@@ -88,12 +90,10 @@ export const SummaryItem = ({
     <TableRow>
       <TableCell>
         <ListingItem
-          errors={arch.errors}
           onClick={onClickKey}
           warnings={arch.warnings}
           text={arch.text}
-          success={arch.success}
-          unknown={arch.unknown}
+          leftIcon={leftIcon}
         />
       </TableCell>
       <TableCell>
