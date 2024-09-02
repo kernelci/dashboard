@@ -26,54 +26,53 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   const { data, error, isLoading } = useTreeTable(origin);
 
   const listItems: TreeTableBody[] = useMemo(() => {
-    if (!data || error) {
-      return [];
-    } else {
-      return data
-        .filter(
-          tree =>
-            tree.git_commit_hash?.includes(inputFilter) ||
-            tree.tree_names.some(name => name.includes(inputFilter)),
-        )
-        .map(
-          (tree): TreeTableBody => ({
-            commitHash: tree.git_commit_hash ?? '',
-            commitName: tree.git_commit_name ?? '',
-            patchsetHash: tree.patchset_hash ?? '',
-            buildStatus: {
-              valid: tree.build_status.valid,
-              invalid: tree.build_status.invalid,
-              null: tree.build_status.null,
-            },
-            testStatus: {
-              done: tree.test_status.done,
-              error: tree.test_status.error,
-              fail: tree.test_status.fail,
-              miss: tree.test_status.miss,
-              pass: tree.test_status.pass,
-              skip: tree.test_status.skip,
-            },
-            bootStatus: {
-              done: tree.boot_status.done,
-              error: tree.boot_status.error,
-              fail: tree.boot_status.fail,
-              miss: tree.boot_status.miss,
-              pass: tree.boot_status.pass,
-              skip: tree.boot_status.skip,
-            },
-            id: tree.git_commit_hash ?? '',
-            tree_names: tree.tree_names,
-            branch: tree.git_repository_branch ?? '',
-            date: tree.start_time ?? '',
-            url: tree.git_repository_url ?? '',
-          }),
-        )
-        .sort((a, b) =>
-          a.commitHash.localeCompare(b.commitHash, undefined, {
-            numeric: true,
-          }),
-        );
-    }
+    if (!data || error) return [];
+
+    return data
+      .filter(
+        tree =>
+          tree.git_commit_hash?.includes(inputFilter) ||
+          tree.tree_names.some(name => name.includes(inputFilter)) ||
+          tree.git_repository_branch?.includes(inputFilter),
+      )
+      .map(
+        (tree): TreeTableBody => ({
+          commitHash: tree.git_commit_hash ?? '',
+          commitName: tree.git_commit_name ?? '',
+          patchsetHash: tree.patchset_hash ?? '',
+          buildStatus: {
+            valid: tree.build_status.valid,
+            invalid: tree.build_status.invalid,
+            null: tree.build_status.null,
+          },
+          testStatus: {
+            done: tree.test_status.done,
+            error: tree.test_status.error,
+            fail: tree.test_status.fail,
+            miss: tree.test_status.miss,
+            pass: tree.test_status.pass,
+            skip: tree.test_status.skip,
+          },
+          bootStatus: {
+            done: tree.boot_status.done,
+            error: tree.boot_status.error,
+            fail: tree.boot_status.fail,
+            miss: tree.boot_status.miss,
+            pass: tree.boot_status.pass,
+            skip: tree.boot_status.skip,
+          },
+          id: tree.git_commit_hash ?? '',
+          tree_names: tree.tree_names,
+          branch: tree.git_repository_branch ?? '',
+          date: tree.start_time ?? '',
+          url: tree.git_repository_url ?? '',
+        }),
+      )
+      .sort((a, b) =>
+        a.commitHash.localeCompare(b.commitHash, undefined, {
+          numeric: true,
+        }),
+      );
   }, [data, error, inputFilter]);
 
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
