@@ -58,7 +58,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
         title={<FormattedMessage id="bootsTab.info" />}
         content={
           <p className="p-4 text-[1.3rem] text-darkGray">
-            ℹ️ <FormattedMessage id="bootsTab.info.description" />
+            <FormattedMessage id="bootsTab.info.description" />
           </p>
         }
       />
