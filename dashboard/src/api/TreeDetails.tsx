@@ -10,6 +10,8 @@ import {
 
 import { TPathTests } from '@/types/general';
 
+import { getTargetFilter } from '@/utils/filters';
+
 import http from './api';
 
 const fetchTreeDetailData = async (
@@ -41,9 +43,11 @@ export const useTreeDetails = (
   treeId: string,
   filter: TTreeDetailsFilter | Record<string, never> = {},
 ): UseQueryResult<TreeDetails> => {
+  const detailsFilter = getTargetFilter(filter, 'treeDetails');
+
   return useQuery({
-    queryKey: ['treeData', treeId, filter],
-    queryFn: () => fetchTreeDetailData(treeId, filter),
+    queryKey: ['treeData', treeId, detailsFilter],
+    queryFn: () => fetchTreeDetailData(treeId, detailsFilter),
   });
 };
 
@@ -82,9 +86,12 @@ export const useBootsTab = (
     git_branch: git_branch,
     git_url: git_url,
   };
+
+  const bootsFilter = getTargetFilter(filter, 'boot');
+
   return useQuery({
-    queryKey: ['treeBootTests', treeId, filter, params],
-    queryFn: () => fetchTreeTestsData(treeId, params, filter),
+    queryKey: ['treeBootTests', treeId, bootsFilter, params],
+    queryFn: () => fetchTreeTestsData(treeId, params, bootsFilter),
   });
 };
 
@@ -100,9 +107,11 @@ export const useTestsTab = (
     git_branch: git_branch,
     git_url: git_url,
   };
+  const testFilter = getTargetFilter(filter, 'test');
+
   return useQuery({
-    queryKey: ['treeTests', treeId, params, filter],
-    queryFn: () => fetchTreeTestsData(treeId, params, filter),
+    queryKey: ['treeTests', treeId, params, testFilter],
+    queryFn: () => fetchTreeTestsData(treeId, params, testFilter),
   });
 };
 

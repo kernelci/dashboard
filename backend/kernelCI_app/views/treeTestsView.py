@@ -44,14 +44,10 @@ class TreeTestsView(View):
             # TODO: 'boot' and 'boot.', right now is only using 'boot.'
             path_filter = "AND t.path LIKE %s"
             params.append(f'{path_param}%')
-            target_field = 'bootStatus'
         else:
             path_filter = ""
-            target_field = 'testStatus'
 
         for f in filter_params.filters:
-            if f['field'] != target_field:
-                continue
             value = f['value']
             value_list = value if isinstance(value, list) else [value]
             placeholders = ",".join(['%s' for i in value_list])

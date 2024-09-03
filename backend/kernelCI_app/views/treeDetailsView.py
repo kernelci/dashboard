@@ -90,10 +90,6 @@ class TreeDetails(View):
                 table = 'builds'
             elif field in checkout_fields:
                 table = 'checkouts'
-            elif field == 'buildStatus':
-                table = 'builds'
-                field = 'valid'
-                f['value'] = f['value'] == 'Success'
             if table:
                 query.where(
                     **{f'{table}.{field}__{f['comparison_op']}': f['value']})

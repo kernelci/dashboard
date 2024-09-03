@@ -27,6 +27,7 @@ import {
 } from '@/types/tree/TreeDetails';
 import { useTreeDetails } from '@/api/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
+import { TRequestFiltersValues } from '@/utils/filters';
 
 import { cleanFalseFilters } from './treeDetailsUtils';
 
@@ -39,15 +40,15 @@ interface ITreeDetailsFilter {
 }
 
 const filterFieldMap = {
-  config_name: 'configs',
-  architecture: 'archs',
-  compiler: 'compilers',
-  bootStatus: 'bootStatus',
-  testStatus: 'testStatus',
-  buildStatus: 'buildStatus',
-  'duration_[gte]': 'duration_min',
-  'duration_[lte]': 'duration_max',
-} as const satisfies Record<string, TFilterKeys>;
+  'treeDetails.config_name': 'configs',
+  'treeDetails.architecture': 'archs',
+  'treeDetails.compiler': 'compilers',
+  'treeDetails.duration_[gte]': 'duration_min',
+  'treeDetails.duration_[lte]': 'duration_max',
+  'treeDetails.valid': 'buildStatus',
+  'boot.status': 'bootStatus',
+  'test.status': 'testStatus',
+} as const satisfies Record<TRequestFiltersValues, TFilterKeys>;
 
 export const mapFilterToReq = (
   filter: TFilter,
@@ -61,7 +62,7 @@ export const mapFilterToReq = (
     if (typeof values === 'object') {
       Object.entries(values).forEach(([value, isSelected]) => {
         if (isSelected) {
-          if (reqField === 'valid') {
+          if (reqField === 'treeDetails.valid') {
             value = value === 'Success' ? 'true' : 'false';
           }
           if (!filterMapped[reqField]) {
