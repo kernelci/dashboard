@@ -50,7 +50,6 @@ export const useTreeDetails = (
 const fetchTreeTestsData = async (
   treeId: string,
   params?: {
-    isBoot?: boolean;
     origin: string;
     git_branch: string;
     git_url: string;
@@ -97,7 +96,6 @@ export const useTestsTab = (
   filter: TTreeDetailsFilter,
 ): UseQueryResult<TTreeTestsData> => {
   const params = {
-    isBoot: false,
     origin: origin,
     git_branch: git_branch,
     git_url: git_url,
