@@ -91,8 +91,9 @@ class TreeDetails(View):
             elif field in checkout_fields:
                 table = 'checkouts'
             if table:
+                op = filter_params.get_comparison_op(f, 'orm')
                 query.where(
-                    **{f'{table}.{field}__{f['comparison_op']}': f['value']})
+                    **{f'{table}.{field}__{op}': f['value']})
 
         records = query.select()
         for r in records:

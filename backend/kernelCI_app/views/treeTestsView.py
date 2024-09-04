@@ -10,6 +10,8 @@ import json
 class TreeTestsView(View):
     # TODO misc_environment is not stable and should be used as a POC only
     # use the standardized field when that gets available
+    valid_filter_fields = ['status', 'duration']
+
     def extract_platform(self, misc_environment: Union[str, dict, None]):
         parsedEnvMisc = None
         if isinstance(misc_environment, dict):
@@ -48,11 +50,18 @@ class TreeTestsView(View):
             path_filter = ""
 
         for f in filter_params.filters:
+            field = f['field']
+            if field not in self.valid_filter_fields:
+                continue
             value = f['value']
-            value_list = value if isinstance(value, list) else [value]
-            placeholders = ",".join(['%s' for i in value_list])
-            path_filter += "AND t.status IN (" + placeholders + ")"
-            for value in value_list:
+            value_is_list = isinstance(value, list)
+            if value_is_list:
+                placeholder = ",".join(['%s' for i in value]) if value_is_list else '%s'
+                path_filter += f" AND t.{field} IN ({placeholder})"
+                params.extend(value)
+            else:
+                comparison_op = filter_params.get_comparison_op(f, 'raw')
+                path_filter += f" AND t.{field} {comparison_op} %s"
                 params.append(value)
 
         return path_filter, params

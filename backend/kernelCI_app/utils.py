@@ -31,13 +31,18 @@ class FilterParams():
     '''
     filter_reg = re.compile(r"^(.*)_\[(.*)\]$")
     filter_param_prefix = 'filter_'
+    comparison_op_type_idx = {
+        'orm': 0,
+        'raw': 1
+    }
+
     comparison_ops = {
-        'exact': 'exact',
-        'in': 'in',
-        'gt': 'gt',
-        'gte': 'gte',
-        'lt': 'lt',
-        'lte': 'lte',
+        'exact': ['exact', '='],
+        'in': ['in', 'IN'],
+        'gt': ['gt', '>'],
+        'gte': ['gte', '>='],
+        'lt': ['lt', '<'],
+        'lte': ['lte', '<='],
     }
 
     def __init__(self, request):
@@ -71,5 +76,9 @@ class FilterParams():
         self.filters.append({'field': field, 'value': value, 'comparison_op': comparison_op})
 
     def validate_comparison_op(self, op):
-        if op not in self.comparison_ops.values():
+        if op not in self.comparison_ops.keys():
             raise InvalidComparisonOP(f'Filter with invalid comparison operator `{op}` found`')
+
+    def get_comparison_op(self, filter, op_type='orm'):
+        idx = self.comparison_op_type_idx[op_type]
+        return self.comparison_ops[filter['comparison_op']][idx]
