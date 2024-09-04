@@ -38,9 +38,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       // eslint-disable-next-line no-magic-numbers
-      gcTime: 1000 * 60 * 30, // 30 minutes,
-      // eslint-disable-next-line no-magic-numbers
-      staleTime: 1000 * 60 * 30, // 30 minutes,
+      staleTime: 1000 * 60 * 5, // 5 minutes,
     },
   },
 });
