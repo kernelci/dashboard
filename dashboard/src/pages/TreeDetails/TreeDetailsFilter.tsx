@@ -22,6 +22,7 @@ import {
   TFilter,
   TFilterKeys,
   TFilterObjectsKeys,
+  TFilterNumberKeys,
   isTFilterObjectKeys,
   TreeDetails as TreeDetailsType,
 } from '@/types/tree/TreeDetails';
@@ -43,11 +44,15 @@ const filterFieldMap = {
   'treeDetails.config_name': 'configs',
   'treeDetails.architecture': 'archs',
   'treeDetails.compiler': 'compilers',
-  'treeDetails.duration_[gte]': 'duration_min',
-  'treeDetails.duration_[lte]': 'duration_max',
   'treeDetails.valid': 'buildStatus',
+  'treeDetails.duration_[gte]': 'buildDurationMin',
+  'treeDetails.duration_[lte]': 'buildDurationMax',
   'boot.status': 'bootStatus',
+  'boot.duration_[gte]': 'bootDurationMin',
+  'boot.duration_[lte]': 'bootDurationMax',
   'test.status': 'testStatus',
+  'test.duration_[gte]': 'testDurationMin',
+  'test.duration_[lte]': 'testDurationMax',
 } as const satisfies Record<TRequestFiltersValues, TFilterKeys>;
 
 export const mapFilterToReq = (
@@ -253,35 +258,67 @@ const TimeRangeSection = ({
 }: SectionsProps): JSX.Element => {
   const intl = useIntl();
 
-  const minChangeHandler = useCallback(
-    (e: React.FormEvent<HTMLInputElement>) => {
+  const timeChangeHandler = useCallback(
+    (e: React.FormEvent<HTMLInputElement>, field: TFilterNumberKeys) => {
       const value = e.currentTarget.value;
-      setDiffFilter(old => ({ ...old, duration_min: parseInt(value) }));
+      setDiffFilter(old => ({ ...old, [field]: parseInt(value) }));
     },
     [setDiffFilter],
   );
 
-  const maxChangeHandler = useCallback(
-    (e: React.FormEvent<HTMLInputElement>) => {
-      const value = e.currentTarget.value;
-      setDiffFilter(old => ({ ...old, duration_max: parseInt(value) }));
-    },
-    [setDiffFilter],
+  const checkboxSectionsProps: React.ComponentProps<
+    typeof FilterTimeRangeSection
+  >[] = useMemo(
+    () => [
+      {
+        title: intl.formatMessage({ id: 'filter.buildDuration' }),
+        subtitle: intl.formatMessage({ id: 'filter.durationSubtitle' }),
+        min: diffFilter.buildDurationMin,
+        max: diffFilter.buildDurationMax,
+        onMaxChange: e => timeChangeHandler(e, 'buildDurationMax'),
+        onMinChange: e => timeChangeHandler(e, 'buildDurationMin'),
+      },
+      {
+        title: intl.formatMessage({ id: 'filter.bootDuration' }),
+        subtitle: intl.formatMessage({ id: 'filter.durationSubtitle' }),
+        min: diffFilter.bootDurationMin,
+        max: diffFilter.bootDurationMax,
+        onMaxChange: e => timeChangeHandler(e, 'bootDurationMax'),
+        onMinChange: e => timeChangeHandler(e, 'bootDurationMin'),
+      },
+      {
+        title: intl.formatMessage({ id: 'filter.testDuration' }),
+        subtitle: intl.formatMessage({ id: 'filter.durationSubtitle' }),
+        min: diffFilter.testDurationMin,
+        max: diffFilter.testDurationMax,
+        onMaxChange: e => timeChangeHandler(e, 'testDurationMax'),
+        onMinChange: e => timeChangeHandler(e, 'testDurationMin'),
+      },
+    ],
+    [
+      diffFilter.bootDurationMax,
+      diffFilter.bootDurationMin,
+      diffFilter.buildDurationMax,
+      diffFilter.buildDurationMin,
+      diffFilter.testDurationMax,
+      diffFilter.testDurationMin,
+      intl,
+      timeChangeHandler,
+    ],
   );
 
   return (
-    <DrawerSection>
-      <FilterTimeRangeSection
-        title={intl.formatMessage({ id: 'filter.buildDuration' })}
-        subtitle={intl.formatMessage({ id: 'filter.buildDurationSubtitle' })}
-        min={diffFilter.duration_min}
-        max={diffFilter.duration_max}
-        onMaxChange={maxChangeHandler}
-        onMinChange={minChangeHandler}
-      />
-    </DrawerSection>
+    <>
+      {checkboxSectionsProps.map(props => (
+        <DrawerSection key={props.title}>
+          <FilterTimeRangeSection {...props} />
+        </DrawerSection>
+      ))}
+    </>
   );
 };
+
+const MemoizedTimeRangeSection = memo(TimeRangeSection);
 
 const TreeDetailsFilter = ({
   paramFilter,
@@ -342,7 +379,7 @@ const TreeDetailsFilter = ({
             diffFilter={diffFilter}
             filter={filter}
           />
-          <TimeRangeSection
+          <MemoizedTimeRangeSection
             setDiffFilter={setDiffFilter}
             diffFilter={diffFilter}
           />

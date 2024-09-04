@@ -187,7 +187,14 @@ export const zFilterObjectsKeys = z.enum([
   'bootStatus',
   'testStatus',
 ]);
-export const zFilterNumberKeys = z.enum(['duration_min', 'duration_max']);
+export const zFilterNumberKeys = z.enum([
+  'buildDurationMin',
+  'buildDurationMax',
+  'bootDurationMin',
+  'bootDurationMax',
+  'testDurationMin',
+  'testDurationMax',
+]);
 const filterKeys = [
   ...zFilterObjectsKeys.options,
   ...zFilterNumberKeys.options,
@@ -204,8 +211,12 @@ export const zDiffFilter = z
       compilers: zFilterBoolValue,
       bootStatus: zFilterBoolValue,
       testStatus: zFilterBoolValue,
-      duration_min: zFilterNumberValue,
-      duration_max: zFilterNumberValue,
+      buildDurationMax: zFilterNumberValue,
+      buildDurationMin: zFilterNumberValue,
+      bootDurationMin: zFilterNumberValue,
+      bootDurationMax: zFilterNumberValue,
+      testDurationMin: zFilterNumberValue,
+      testDurationMax: zFilterNumberValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])
