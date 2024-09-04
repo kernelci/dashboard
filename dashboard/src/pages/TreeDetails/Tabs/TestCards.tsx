@@ -1,4 +1,4 @@
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 
 import { memo } from 'react';
 
@@ -13,9 +13,6 @@ import StatusChartMemoized, {
   Colors,
   StatusChartValues,
 } from '@/components/StatusChart/StatusCharts';
-import { errorStatusSet } from '@/utils/constants/database';
-import { ErrorStatus } from '@/types/database';
-import { LineChart, LineChartLabel } from '@/components/LineChart';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
@@ -238,107 +235,3 @@ const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
 };
 
 export const MemoizedStatusChart = memo(StatusChart);
-
-interface ILineChartCard extends Pick<TTreeTestsData, 'testHistory'> {
-  title: IBaseCard['title'];
-}
-
-const LineChartCard = ({ testHistory, title }: ILineChartCard): JSX.Element => {
-  const { formatMessage } = useIntl();
-
-  const allStartTimeStamps: number[] = [];
-  const errorData: Array<number | null> = [];
-  const skipData: Array<number | null> = [];
-  const successData: Array<number | null> = [];
-  let lastSkipData: null | number = null;
-  let lastErrorData: null | number = null;
-  let lastSuccessData: null | number = null;
-
-  testHistory.forEach(boot => {
-    allStartTimeStamps.push(new Date(boot.start_time).getTime());
-
-    if (boot.status === 'SKIP') {
-      lastSkipData = (lastSkipData ?? 0) + 1;
-      skipData.push(lastSkipData);
-      successData.push(null);
-      errorData.push(null);
-    } else if (errorStatusSet.has(boot.status as ErrorStatus)) {
-      lastErrorData = (lastErrorData ?? 0) + 1;
-      errorData.push(lastErrorData);
-      successData.push(null);
-      skipData.push(null);
-    } else {
-      lastSuccessData = (lastSuccessData ?? 0) + 1;
-      successData.push(lastSuccessData);
-      skipData.push(null);
-      errorData.push(null);
-    }
-  });
-
-  allStartTimeStamps.sort((a, b) => a - b);
-
-  const lineChartSeries = [
-    {
-      color: Colors.Red,
-      data: errorData,
-      connectNulls: true,
-      lastData: lastErrorData,
-    },
-    {
-      color: Colors.Green,
-      data: successData,
-      connectNulls: true,
-      lastData: lastSuccessData,
-    },
-    {
-      color: Colors.Yellow,
-      data: skipData,
-      connectNulls: true,
-      lastData: lastSkipData,
-    },
-  ];
-
-  const filteredLineChartSeries = lineChartSeries.filter(series => {
-    return series.data.some(data => data !== null);
-  });
-  return (
-    <BaseCard
-      title={title}
-      content={
-        <LineChart
-          labels={
-            <>
-              {lastErrorData && (
-                <LineChartLabel
-                  text={formatMessage({ id: 'bootsTab.error' })}
-                  backgroundColor="bg-red"
-                />
-              )}
-              {lastSuccessData && (
-                <LineChartLabel
-                  text={formatMessage({ id: 'bootsTab.success' })}
-                  backgroundColor="bg-green"
-                />
-              )}
-              {lastSkipData && (
-                <LineChartLabel
-                  text={formatMessage({ id: 'bootsTab.skip' })}
-                  backgroundColor="bg-yellow"
-                />
-              )}
-            </>
-          }
-          xAxis={[
-            {
-              scaleType: 'time',
-              data: allStartTimeStamps,
-            },
-          ]}
-          series={[...filteredLineChartSeries]}
-        />
-      }
-    />
-  );
-};
-
-export const MemoizedLineChartCard = memo(LineChartCard);
