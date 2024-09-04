@@ -2,9 +2,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { memo, useCallback, useMemo } from 'react';
 
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
-
-import { z } from 'zod';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import CardsGroup from '@/components/CardsGroup/CardsGroup';
 import StatusChartMemoized, {
@@ -23,10 +21,11 @@ import {
 } from '@/types/tree/TreeDetails';
 import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 import TableStatusFilter from '@/components/Table/TableStatusFilter';
-import { LineChart } from '@/components/LineChart';
 import BaseCard from '@/components/Cards/BaseCard';
-import { useTreeCommitHistory } from '@/api/TreeDetails';
-import { TLineChartProps } from '@/components/LineChart/LineChart';
+
+import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
+
+import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
 interface BuildTab {
   treeDetailsData?: ITreeDetails;
@@ -112,202 +111,6 @@ const ConfigsCard = ({
   );
 };
 const MemoizedConfigsCard = memo(ConfigsCard);
-
-const graphDisplaySize = 7;
-const LineChartNavigationCard = (): JSX.Element => {
-  const { formatMessage } = useIntl();
-  const {
-    origin,
-    treeInfo: { gitUrl, gitBranch, headCommitHash },
-  } = useSearch({ from: '/tree/$treeId/' });
-
-  const { treeId } = useParams({
-    from: '/tree/$treeId/',
-  });
-
-  const navigate = useNavigate({
-    from: '/tree/$treeId',
-  });
-
-  const { data, isLoading } = useTreeCommitHistory(
-    {
-      gitBranch: gitBranch ?? '',
-      gitUrl: gitUrl ?? '',
-      commitHash: headCommitHash ?? '',
-      origin: origin,
-    },
-    {
-      enabled: !!gitBranch && !!gitUrl,
-    },
-  );
-
-  if (isLoading) {
-    return <div>{formatMessage({ id: 'global.loading' })}</div>;
-  }
-
-  if (!data || !headCommitHash) {
-    return <div>{formatMessage({ id: 'global.noDataAvailable' })}</div>;
-  }
-
-  // Transform the data to fit the format required by the MUI LineChart component
-  const series: TLineChartProps['series'] = [
-    {
-      id: 'valid_builds',
-      label: formatMessage({ id: 'treeDetails.validBuilds' }),
-      data: [],
-      color: Colors.Green,
-    },
-    {
-      label: formatMessage({ id: 'treeDetails.invalidBuilds' }),
-      id: 'invalid_builds',
-      data: [],
-      color: Colors.Red,
-    },
-    {
-      label: formatMessage({
-        id: 'treeDetails.nullBuilds',
-      }),
-      id: 'null_builds',
-      data: [],
-      color: Colors.Gray,
-      highlightScope: {
-        highlight: 'item',
-      },
-    },
-  ];
-
-  type TCommitValue = {
-    commitHash: string;
-    commitName?: string;
-  };
-
-  const commitData: TCommitValue[] = [];
-  const xAxisIndexes: number[] = [];
-  data.forEach((item, index) => {
-    series[0].data?.unshift(item.valid_builds);
-    series[1].data?.unshift(item.invalid_builds);
-    series[2].data?.unshift(item.null_builds);
-    commitData.unshift({
-      commitHash: item.git_commit_hash,
-      commitName: item.git_commit_name,
-    });
-    xAxisIndexes.push(index);
-  });
-
-  const xAxis: TLineChartProps['xAxis'] = [
-    {
-      scaleType: 'point',
-      min: 100,
-      data: xAxisIndexes,
-      valueFormatter: (value: number, context): string => {
-        if (context.location == 'tooltip') {
-          const currentCommitData = commitData[value];
-          return currentCommitData.commitName ?? currentCommitData.commitHash;
-        }
-
-        return `commitIndex-${value}`;
-      },
-    },
-  ];
-  return (
-    <BaseCard
-      title={formatMessage({ id: 'buildDetails.buildsHistory' })}
-      content={
-        <LineChart
-          xAxis={xAxis}
-          series={series}
-          slots={{
-            axisTickLabel: chartTextProps => {
-              let displayText = chartTextProps.text;
-              const splitResult = chartTextProps.text.split('-');
-
-              const possibleIdentifier = splitResult[0];
-
-              let isCurrentCommit = false;
-              if (possibleIdentifier === 'commitIndex') {
-                const possibleIndex = splitResult[1];
-                const possibleIndexNumber = parseInt(possibleIndex);
-                const parsedPossibleIndex = z
-                  .number()
-                  .catch(error => {
-                    console.error('Error parsing index', error);
-                    return 0;
-                  })
-                  .parse(possibleIndexNumber);
-
-                const name = commitData[parsedPossibleIndex].commitName;
-                isCurrentCommit =
-                  treeId === commitData[parsedPossibleIndex].commitHash;
-                displayText = (
-                  name ?? commitData[parsedPossibleIndex].commitHash
-                ).slice(0, graphDisplaySize);
-              }
-
-              return (
-                <>
-                  {isCurrentCommit && (
-                    <>
-                      <polygon points="-5,-200 5,-200 0,-190" fill="blue" />
-                      <line
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="-200"
-                        stroke="blue"
-                        strokeWidth="1.2"
-                        strokeDasharray="5,5"
-                      />
-                    </>
-                  )}
-
-                  <text
-                    className="MuiChartsAxis-tickLabel"
-                    x="0"
-                    y="9"
-                    textAnchor="middle"
-                    dominantBaseline="hanging"
-                    style={{ fontSize: '0.9rem' }}
-                  >
-                    <tspan x="0" dy="0px" dominantBaseline="hanging">
-                      {displayText}
-                    </tspan>
-                  </text>
-                </>
-              );
-            },
-          }}
-          onMarkClick={(_event, payload) => {
-            const commitIndex = payload.dataIndex ?? 0;
-            const commitHash = commitData[commitIndex].commitHash;
-            const commitName = commitData[commitIndex].commitName;
-            if (commitHash) {
-              navigate({
-                to: '/tree/$treeId',
-                params: {
-                  treeId: commitHash,
-                },
-                search: previousParams => {
-                  previousParams;
-
-                  return {
-                    ...previousParams,
-                    treeInfo: {
-                      ...previousParams.treeInfo,
-                      commitName: commitName,
-                      commitHash: commitHash,
-                    },
-                  };
-                },
-              });
-            }
-          }}
-        />
-      }
-    />
-  );
-};
-
-export const MemoizedLineChartCard = memo(LineChartNavigationCard);
 
 const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   const { tableFilter: filterBy } = useSearch({
@@ -436,7 +239,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
 
   return (
     <div className="flex flex-col gap-8 pt-4">
-      <div className="hidden grid-cols-2 gap-4 min-[1652px]:grid">
+      <DesktopGrid>
         <div>
           <MemoizedStatusCard
             toggleFilterBySection={toggleFilterBySection}
@@ -446,27 +249,27 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           <CardsGroup cards={cards} />
         </div>
         <div>
-          <MemoizedLineChartCard />
+          <CommitNavigationGraph />
           <MemoizedConfigsCard
             treeDetailsData={treeDetailsData}
             toggleFilterBySection={toggleFilterBySection}
           />
         </div>
-      </div>
-      <div className="min-[1652px]:hidden">
-        <MemoizedLineChartCard />
+      </DesktopGrid>
+      <MobileGrid>
+        <CommitNavigationGraph />
         <MemoizedStatusCard
           toggleFilterBySection={toggleFilterBySection}
           treeDetailsData={treeDetailsData}
         />
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <InnerMobileGrid>
           <CardsGroup cards={cards} />
           <MemoizedConfigsCard
             treeDetailsData={treeDetailsData}
             toggleFilterBySection={toggleFilterBySection}
           />
-        </div>
-      </div>
+        </InnerMobileGrid>
+      </MobileGrid>
 
       {filteredContent && (
         <div className="flex flex-col gap-4">

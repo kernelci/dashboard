@@ -12,11 +12,17 @@ import {
   MemoizedErrorCountList,
   MemoizedConfigList,
   MemoizedErrorsSummary,
-  MemoizedLineChartCard,
   MemoizedPlatformsWithError,
 } from '@/pages/TreeDetails/Tabs/TestCards';
 
 import TestsTable from '@/components/Table/TestsTable';
+
+import {
+  DesktopGrid,
+  InnerMobileGrid,
+  MobileGrid,
+} from '@/pages/TreeDetails/Tabs/TabGrid';
+import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
 
 interface TestsTabProps {
   reqFilter: Record<string, string[]>;
@@ -67,33 +73,64 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
 
   return (
     <div className="flex flex-col gap-8 pt-4">
-      <div className="md:columns-2">
+      <DesktopGrid>
+        <div>
+          <MemoizedStatusChart
+            title={<FormattedMessage id="testsTab.testStatus" />}
+            statusCounts={data.statusCounts}
+          />
+          <MemoizedConfigList
+            title={<FormattedMessage id="global.configs" />}
+            configStatusCounts={data.configStatusCounts}
+          />
+          <MemoizedErrorsSummary
+            title={<FormattedMessage id="global.summary" />}
+            architectureStatusCounts={data.architectureStatusCounts}
+            compilersPerArchitecture={data.compilersPerArchitecture}
+          />
+        </div>
+        <div>
+          <CommitNavigationGraph />
+          <MemoizedPlatformsWithError
+            title={<FormattedMessage id="testsTab.platformsErrors" />}
+            platformsWithError={data.platformsWithError}
+          />
+          <MemoizedErrorCountList
+            title={<FormattedMessage id="testsTab.fail" />}
+            errorMessageCounts={data.errorMessageCounts}
+          />
+        </div>
+      </DesktopGrid>
+      <MobileGrid>
         <MemoizedStatusChart
           title={<FormattedMessage id="testsTab.testStatus" />}
           statusCounts={data.statusCounts}
         />
-        <MemoizedConfigList
-          title={<FormattedMessage id="global.configs" />}
-          configStatusCounts={data.configStatusCounts}
-        />
-        <MemoizedErrorsSummary
-          title={<FormattedMessage id="global.summary" />}
-          architectureStatusCounts={data.architectureStatusCounts}
-          compilersPerArchitecture={data.compilersPerArchitecture}
-        />
-        <MemoizedLineChartCard
-          title={<FormattedMessage id="testsTab.testHistory" />}
-          testHistory={data.testHistory}
-        />
-        <MemoizedPlatformsWithError
-          title={<FormattedMessage id="testsTab.platformsErrors" />}
-          platformsWithError={data.platformsWithError}
-        />
-        <MemoizedErrorCountList
-          title={<FormattedMessage id="testsTab.fail" />}
-          errorMessageCounts={data.errorMessageCounts}
-        />
-      </div>
+        <CommitNavigationGraph />
+        <InnerMobileGrid>
+          <div>
+            <MemoizedConfigList
+              title={<FormattedMessage id="global.configs" />}
+              configStatusCounts={data.configStatusCounts}
+            />
+            <MemoizedErrorsSummary
+              title={<FormattedMessage id="global.summary" />}
+              architectureStatusCounts={data.architectureStatusCounts}
+              compilersPerArchitecture={data.compilersPerArchitecture}
+            />
+          </div>
+          <div>
+            <MemoizedPlatformsWithError
+              title={<FormattedMessage id="testsTab.platformsErrors" />}
+              platformsWithError={data.platformsWithError}
+            />
+            <MemoizedErrorCountList
+              title={<FormattedMessage id="testsTab.fail" />}
+              errorMessageCounts={data.errorMessageCounts}
+            />
+          </div>
+        </InnerMobileGrid>
+      </MobileGrid>
 
       <TestsTable treeId={treeId} />
     </div>

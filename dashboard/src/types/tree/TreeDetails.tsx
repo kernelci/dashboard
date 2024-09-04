@@ -246,12 +246,30 @@ export type TTestByCommitHashResponse = {
 };
 
 export type PaginatedCommitHistoryByTree = {
-  earliest_start_time: string;
   git_commit_hash: string;
   git_commit_name?: string;
-  invalid_builds: number;
-  null_builds: number;
-  valid_builds: number;
+  earliest_start_time: string;
+  builds: {
+    valid_builds: number;
+    invalid_builds: number;
+    null_builds: number;
+  };
+  boots_tests: {
+    fail_count: number;
+    error_count: number;
+    miss_count: number;
+    pass_count: number;
+    done_count: number;
+    skip_count: number;
+  };
+  non_boots_tests: {
+    fail_count: number;
+    error_count: number;
+    miss_count: number;
+    pass_count: number;
+    done_count: number;
+    skip_count: number;
+  };
 };
 
 export type TTreeCommitHistoryResponse = PaginatedCommitHistoryByTree[];
