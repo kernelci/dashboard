@@ -78,3 +78,4 @@ const origins = [
 
 export const zOriginEnum = z.enum(origins);
 export const zOrigin = zOriginEnum.catch(origins[0]);
+export const zSection = z.string();
