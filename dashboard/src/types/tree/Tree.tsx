@@ -75,6 +75,7 @@ const origins = [
   'syzbot',
   'tuxsuite',
 ] as const;
+const DEFAULT_ORIGIN = 'maestro';
 
 export const zOriginEnum = z.enum(origins);
-export const zOrigin = zOriginEnum.catch(origins[0]);
+export const zOrigin = zOriginEnum.catch(DEFAULT_ORIGIN);
