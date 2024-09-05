@@ -7,7 +7,7 @@ import {
   TableHead as TableHeadComponent,
   TableHeader,
   TableRow,
-} from '../ui/table';
+} from '@/components/ui/table';
 
 interface IBaseTableCommon {
   headers: ReactElement[];
