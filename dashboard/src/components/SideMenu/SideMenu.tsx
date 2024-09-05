@@ -16,6 +16,8 @@ import {
 
 import { Separator } from '../ui/separator';
 
+import SendFeedback from './SendFeedback';
+
 import NavLink from './NavLink';
 
 type MenuItems = {
@@ -95,6 +97,7 @@ const SideMenu = (): JSX.Element => {
             <NavLink icon={item.icon} idIntl={item.idIntl} />
           </NavigationMenuItem>
         ))}
+        <SendFeedback className={notSelectedItemClassName} />
       </NavigationMenuList>
     </NavigationMenu>
   );
