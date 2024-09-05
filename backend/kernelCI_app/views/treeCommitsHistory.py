@@ -28,20 +28,38 @@ class TreeCommitsHistory(APIView):
             )
 
         query = """
-        WITH earliest_commits AS (
+        WITH
+        relevant_checkouts AS (
             SELECT
+                id,
                 git_commit_hash,
                 git_commit_name,
-                MIN(start_time) AS earliest_start_time
+                git_repository_branch,
+                git_repository_url,
+                origin,
+                start_time
             FROM
                 checkouts
             WHERE
                 git_repository_branch = %(git_branch_param)s
                 AND git_repository_url = %(git_url_param)s
                 AND origin = %(origin_param)s
+            ORDER BY
+                start_time DESC
+        ),
+        earliest_commits AS (
+            SELECT
+                git_commit_hash,
+                git_commit_name,
+                MAX(start_time) AS earliest_start_time
+            FROM
+                relevant_checkouts
             GROUP BY
                 git_commit_hash,
                 git_commit_name
+            ORDER BY
+                earliest_start_time DESC
+            LIMIT 6
         ),
         build_counts AS (
             SELECT
@@ -50,7 +68,7 @@ class TreeCommitsHistory(APIView):
                 SUM(CASE WHEN b.valid = false THEN 1 ELSE 0 END) AS invalid_builds,
                 SUM(CASE WHEN b.valid IS NULL THEN 1 ELSE 0 END) AS null_builds
             FROM
-                checkouts AS c
+                relevant_checkouts AS c
             INNER JOIN
                 builds AS b
                 ON c.id = b.checkout_id
@@ -83,21 +101,28 @@ class TreeCommitsHistory(APIView):
             SUM(CASE WHEN t.status = 'SKIP' AND t.path NOT LIKE 'boot%%' THEN 1 ELSE 0 END)
             AS non_boots_skip_count
         FROM
-            checkouts AS c
+            relevant_checkouts AS c
         INNER JOIN
             builds AS b
-            on
+            ON
             c.id = b.checkout_id
         LEFT JOIN
             tests AS t
             ON b.id = t.build_id
         WHERE
-            c.git_repository_branch = %(git_branch_param)s
-            AND c.git_repository_url = %(git_url_param)s
-            AND c.origin = %(origin_param)s
+            b.start_time >= (
+                SELECT
+                    MIN(earliest_start_time)
+                FROM earliest_commits
+            )
+            AND t.start_time >= (
+                SELECT
+                    MIN(earliest_start_time)
+                FROM earliest_commits
+            )
         GROUP BY
             c.git_commit_hash
-    )
+        )
         SELECT
             ec.git_commit_hash,
             ec.git_commit_name,
@@ -125,15 +150,6 @@ class TreeCommitsHistory(APIView):
         INNER JOIN
             test_counts AS tc
             ON ec.git_commit_hash = tc.git_commit_hash
-        WHERE
-            ec.earliest_start_time <= (
-                SELECT
-                    earliest_start_time
-                FROM
-                    earliest_commits
-                WHERE
-                    git_commit_hash = %(commit_hash)s
-            )
         ORDER BY
             ec.earliest_start_time DESC
         LIMIT 6;
