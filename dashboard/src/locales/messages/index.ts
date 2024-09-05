@@ -76,6 +76,7 @@ export const messages = {
     'global.configs': 'Configs',
     'global.date': 'Date',
     'global.defconfig': 'Defconfig',
+    'global.documentation': 'Documentation',
     'global.done': 'Done',
     'global.dtb': 'Dtb',
     'global.email': 'Email',

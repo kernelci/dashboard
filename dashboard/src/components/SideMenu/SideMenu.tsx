@@ -1,12 +1,17 @@
 import { MdOutlineMonitorHeart } from 'react-icons/md';
 
 import { ImTree, ImImages } from 'react-icons/im';
+import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
 import { useRouter, useSearch } from '@tanstack/react-router';
+
+import { useMemo } from 'react';
 
 import { MessagesKey } from '@/locales/messages';
 
 import { zOrigin } from '@/types/tree/Tree';
+
+import { DOCUMENTATION_URL } from '@/utils/constants/general';
 
 import {
   NavigationMenu,
@@ -20,12 +25,26 @@ import SendFeedback from './SendFeedback';
 
 import NavLink from './NavLink';
 
-type MenuItems = {
+type RouteMenuItems = {
   onClick: () => void;
   idIntl: MessagesKey;
   icon: JSX.Element;
   selected: boolean;
 };
+
+type LinkMenuItems = {
+  url: string;
+  idIntl: MessagesKey;
+  icon: JSX.Element;
+};
+
+const linkItems: LinkMenuItems[] = [
+  {
+    url: DOCUMENTATION_URL,
+    idIntl: 'global.documentation',
+    icon: <HiOutlineDocumentSearch />,
+  },
+];
 
 const emptyFunc = (): void => {};
 
@@ -53,7 +72,7 @@ const SideMenu = (): JSX.Element => {
     };
   };
 
-  const items: MenuItems[] = [
+  const routeItems: RouteMenuItems[] = [
     {
       onClick: useNavigateTo('/'),
       idIntl: 'routes.treeMonitor',
@@ -74,6 +93,24 @@ const SideMenu = (): JSX.Element => {
     },
   ];
 
+  const linksItemElements = useMemo(
+    () =>
+      linkItems.map(item => (
+        <NavigationMenuItem
+          className={notSelectedItemClassName}
+          key={item.idIntl}
+        >
+          <NavLink
+            icon={item.icon}
+            idIntl={item.idIntl}
+            href={item.url}
+            target="_blank"
+          />
+        </NavigationMenuItem>
+      )),
+    [],
+  );
+
   return (
     <NavigationMenu
       className="min-h-screen flex-col justify-start bg-bgSecondary pt-6"
@@ -86,7 +123,7 @@ const SideMenu = (): JSX.Element => {
       <Separator className="my-4 bg-onSecondary-10" />
 
       <NavigationMenuList className="w-52 flex-col space-x-0 space-y-4">
-        {items.map(item => (
+        {routeItems.map(item => (
           <NavigationMenuItem
             className={
               item.selected ? selectedItemClassName : notSelectedItemClassName
@@ -97,6 +134,8 @@ const SideMenu = (): JSX.Element => {
             <NavLink icon={item.icon} idIntl={item.idIntl} />
           </NavigationMenuItem>
         ))}
+        <Separator className="my-4 bg-onSecondary-10" />
+        {linksItemElements}
         <SendFeedback className={notSelectedItemClassName} />
       </NavigationMenuList>
     </NavigationMenu>
