@@ -2,8 +2,6 @@ import { MdOutlineMonitorHeart } from 'react-icons/md';
 
 import { ImTree, ImImages } from 'react-icons/im';
 
-import { FormattedMessage } from 'react-intl';
-
 import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
@@ -13,11 +11,12 @@ import { zOrigin } from '@/types/tree/Tree';
 import {
   NavigationMenu,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
 } from '../ui/navigation-menu';
 
 import { Separator } from '../ui/separator';
+
+import NavLink from './NavLink';
 
 type MenuItems = {
   onClick: () => void;
@@ -27,20 +26,6 @@ type MenuItems = {
 };
 
 const emptyFunc = (): void => {};
-
-const NavLink = ({
-  icon,
-  idIntl,
-}: Pick<MenuItems, 'icon' | 'idIntl'>): JSX.Element => (
-  <NavigationMenuLink asChild>
-    <a className="flex items-center no-underline hover:text-sky-500">
-      <span className="mr-3">{icon}</span>
-      <span className="text-center text-sm">
-        <FormattedMessage id={idIntl} />{' '}
-      </span>
-    </a>
-  </NavigationMenuLink>
-);
 
 const SideMenu = (): JSX.Element => {
   const selectedItemClassName =
