@@ -44,12 +44,12 @@ const ColoredCircle = ({
     <TooltipWrapper tooltipText={tooltipText}>
       <div
         className={cn(
-          'inline-flex h-6 w-fit min-w-6 justify-center rounded-full px-1 text-black',
+          'inline-flex h-6 w-fit min-w-6 items-center justify-center rounded-full px-2 text-sm text-black',
           className,
           backgroundClassName,
         )}
       >
-        <span className="text-sm">{quantity}</span>
+        {quantity}
       </div>
     </TooltipWrapper>
   );
