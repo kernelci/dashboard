@@ -1,19 +1,14 @@
 import { ReactElement, useCallback, useMemo } from 'react';
-
 import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
-
 import { FormattedMessage } from 'react-intl';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import { useNavigate } from '@tanstack/react-router';
+import { zSection } from '@/types/tree/Tree';
 
 import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
-
 import { TIndividualTest, TPathTests } from '@/types/general';
-
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
-
 import { ItemType } from '@/components/ListingItem/ListingItem';
-
 import { TestStatus } from '@/components/Status/Status';
 
 import { TableBody, TableCell, TableRow } from '../ui/table';
@@ -39,6 +34,8 @@ export interface IAccordionItems {
 interface ICustomAccordionTableBody {
   items: AccordionItemBuilds[] | TPathTests[];
   type: 'build' | 'test';
+  openItem: string | null;
+  onToggle: (id: string) => void;
 }
 
 interface IAccordionTestContent {
@@ -72,12 +69,38 @@ const headerTestsDetails = [
 ];
 
 const Accordion = ({ items, type }: IAccordion): JSX.Element => {
+  const navigate = useNavigate({ from: '/tree/$treeId' });
+
+  const { section: unsafeSearch } = useSearch({ strict: false });
+  const section = zSection.parse(unsafeSearch);
+
   const accordionTableHeader = type === 'build' ? headersBuilds : headersTests;
+
+  const handleToggle = useCallback(
+    (id: string) => {
+      const newOpenItem = id === section ? null : id;
+
+      navigate({
+        search: prev => ({
+          ...prev,
+          section: newOpenItem ?? undefined,
+        }),
+      });
+    },
+    [navigate, section],
+  );
 
   return (
     <BaseTable
       headers={accordionTableHeader}
-      body={<AccordionTableBody items={items} type={type} />}
+      body={
+        <AccordionTableBody
+          items={items}
+          type={type}
+          openItem={section}
+          onToggle={handleToggle}
+        />
+      }
     />
   );
 };
@@ -91,6 +114,8 @@ const ChevronRightAnimate = (): JSX.Element => {
 const AccordionTableBody = ({
   items,
   type,
+  openItem,
+  onToggle,
 }: ICustomAccordionTableBody): JSX.Element => {
   const accordionItems = useMemo(() => {
     if (items.length === 0) {
@@ -100,37 +125,47 @@ const AccordionTableBody = ({
         </div>
       );
     }
-    return items.map((item, index) => (
-      <Collapsible key={index} asChild>
-        <>
-          <CollapsibleTrigger asChild>
-            <TableRow className="group cursor-pointer hover:bg-lightBlue">
-              {type === 'build' ? (
-                <AccordionBuildsTrigger accordionData={item} />
-              ) : (
-                <AccordionTestsTrigger accordionData={item} />
-              )}
+    return items.map((item, index) => {
+      const itemId = `accordion-item-${index}`;
+      const isOpen = itemId === openItem;
+
+      return (
+        <Collapsible
+          key={index}
+          asChild
+          open={isOpen}
+          onOpenChange={() => onToggle(itemId)}
+        >
+          <>
+            <CollapsibleTrigger asChild>
+              <TableRow className="group cursor-pointer hover:bg-lightBlue">
+                {type === 'build' ? (
+                  <AccordionBuildsTrigger accordionData={item} />
+                ) : (
+                  <AccordionTestsTrigger accordionData={item} />
+                )}
+              </TableRow>
+            </CollapsibleTrigger>
+            <TableRow>
+              <TableCell colSpan={6} className="p-0">
+                <CollapsibleContent>
+                  <div className="group max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
+                    {type === 'build' ? (
+                      <AccordionBuildContent accordionData={item} />
+                    ) : (
+                      <AccordionTestsContent
+                        data={(item as TPathTests).individual_tests}
+                      />
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </TableCell>
             </TableRow>
-          </CollapsibleTrigger>
-          <TableRow>
-            <TableCell colSpan={6} className="p-0">
-              <CollapsibleContent>
-                <div className="group max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
-                  {type === 'build' ? (
-                    <AccordionBuildContent accordionData={item} />
-                  ) : (
-                    <AccordionTestsContent
-                      data={(item as TPathTests).individual_tests}
-                    />
-                  )}
-                </div>
-              </CollapsibleContent>
-            </TableCell>
-          </TableRow>
-        </>
-      </Collapsible>
-    ));
-  }, [items, type]);
+          </>
+        </Collapsible>
+      );
+    });
+  }, [items, type, openItem, onToggle]);
 
   return <TableBody>{accordionItems}</TableBody>;
 };
