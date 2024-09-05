@@ -1,32 +1,46 @@
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
-import { useDebounce } from '../../hooks/useDebounce';
-import { Input, InputProps } from '../ui/input';
+import { useDebounce } from '@/hooks/useDebounce';
+import { Input, InputProps } from '@/components/ui/input';
 
-interface IDebounceInput extends InputProps {
-  interval: number;
+interface IDebounceInput extends Omit<InputProps, 'onChange' | 'value'> {
+  debouncedInterval: number;
+  debouncedSideEffect: (value: React.ChangeEvent<HTMLInputElement>) => void;
+  startingValue?: string;
 }
 
 const DebounceInput = ({
-  interval,
-  onChange,
+  debouncedInterval,
+  debouncedSideEffect,
+  startingValue = '',
   ...props
 }: IDebounceInput): JSX.Element => {
-  const [inputEvent, setInputEvent] =
-    useState<React.ChangeEvent<HTMLInputElement>>();
-  const eDebounced = useDebounce(inputEvent, interval);
+  const [inputValue, setInputValue] = useState<string>(startingValue);
+  const [inputEvent, setInputEvent] = useState<ChangeEvent<HTMLInputElement>>();
+  const isThisComponentMounted = useRef(true);
+  const debouncedInputEvent = useDebounce(inputEvent, debouncedInterval);
 
-  const onInputSearchTextChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ): void => {
+  const onInputSearchTextChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setInputValue(e.target.value);
     setInputEvent(e);
   };
 
   useEffect(() => {
-    if (eDebounced && onChange) onChange(eDebounced);
-  }, [eDebounced, onChange]);
+    //For double rendering
+    isThisComponentMounted.current = true;
 
-  return <Input {...props} onChange={onInputSearchTextChange} />;
+    if (debouncedInputEvent && isThisComponentMounted.current) {
+      debouncedSideEffect(debouncedInputEvent);
+    }
+    return (): void => {
+      //Prevents from being called in another page after the input is no longer relevant
+      isThisComponentMounted.current = false;
+    };
+  }, [debouncedInputEvent, debouncedSideEffect]);
+
+  return (
+    <Input {...props} onChange={onInputSearchTextChange} value={inputValue} />
+  );
 };
 
 export default DebounceInput;
