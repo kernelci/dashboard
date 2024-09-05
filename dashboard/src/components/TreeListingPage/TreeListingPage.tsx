@@ -4,16 +4,16 @@ import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { zOrigin } from '@/types/tree/Tree';
+import { zOrigin, TreeTableBody } from '@/types/tree/Tree';
 
 import { usePagination } from '@/hooks/usePagination';
 
 import { Skeleton } from '@/components/Skeleton';
 
-import TreeTable from '../Table/TreeTable';
-import { TreeTableBody } from '../../types/tree/Tree';
-import { useTreeTable } from '../../api/Tree';
-import { TableInfo } from '../Table/TableInfo';
+import TreeTable from '@/components/Table/TreeTable';
+
+import { useTreeTable } from '@/api/Tree';
+import { TableInfo } from '@/components/Table/TableInfo';
 
 interface ITreeListingPage {
   inputFilter: string;
@@ -33,7 +33,8 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
         tree =>
           tree.git_commit_hash?.includes(inputFilter) ||
           tree.tree_names.some(name => name.includes(inputFilter)) ||
-          tree.git_repository_branch?.includes(inputFilter),
+          tree.git_repository_branch?.includes(inputFilter) ||
+          tree.git_repository_url?.includes(inputFilter),
       )
       .map(
         (tree): TreeTableBody => ({
@@ -68,11 +69,19 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
           url: tree.git_repository_url ?? '',
         }),
       )
-      .sort((a, b) =>
-        a.commitHash.localeCompare(b.commitHash, undefined, {
-          numeric: true,
-        }),
-      );
+      .sort((a, b) => {
+        const currentATreeName = a.tree_names[0] ?? '';
+        const currentBTreeName = b.tree_names[0] ?? '';
+        const treeNameComparison =
+          currentATreeName.localeCompare(currentBTreeName);
+
+        if (treeNameComparison !== 0) return treeNameComparison;
+
+        const branchComparison = a.branch.localeCompare(b.branch);
+        if (branchComparison !== 0) return branchComparison;
+
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
   }, [data, error, inputFilter]);
 
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
