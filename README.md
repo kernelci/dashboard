@@ -1,6 +1,8 @@
 # KernelCI Dashboard
-The goal of this project is to create a new KernelCI Web Dashboard to replace
-the existing one available at https://linux.kernelci.org/.  
+
+Our Web Dashboard to evaluate test results from the common results database([KCIDB](https://docs.kernelci.org/kcidb/)).
+Available at [dashboard.kernelci.org](https://dashboard.kernelci.org).
+
 The new KernelCI Web Dashboard is a web application created to provide access
 to static checks, build logs, boot logs and test results related for the Linux kernel
 CI/test ecosystem. All that data will be provided by [KCIDB](https://docs.kernelci.org/kcidb/)
