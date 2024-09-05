@@ -76,5 +76,7 @@ const origins = [
   'tuxsuite',
 ] as const;
 
+export type TOrigins = (typeof origins)[number];
+
 export const zOriginEnum = z.enum(origins);
 export const zOrigin = zOriginEnum.catch(origins[0]);

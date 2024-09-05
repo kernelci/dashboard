@@ -1,12 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { zOrigin } from '@/types/tree/Tree';
-
-import Trees from '../pages/Trees';
+import Trees from '@/pages/Trees';
 
 export const HomeSearchSchema = z.object({
-  origin: zOrigin,
+  treeSearch: z.string().optional().catch(undefined),
 });
 
 export const Route = createFileRoute('/')({

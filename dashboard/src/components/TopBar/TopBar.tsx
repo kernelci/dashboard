@@ -4,7 +4,7 @@ import { useSearch, useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import Select, { SelectItem } from '@/components/Select/Select';
-import { zOrigin, zOriginEnum } from '@/types/tree/Tree';
+import { TOrigins, zOrigin, zOriginEnum } from '@/types/tree/Tree';
 
 const OriginSelect = (): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
@@ -13,7 +13,7 @@ const OriginSelect = (): JSX.Element => {
   const navigate = useNavigate({ from: '/' });
 
   const onValueChange = useCallback(
-    (value: string) => {
+    (value: TOrigins) => {
       navigate({
         to: '/',
         search: previousSearch => ({ ...previousSearch, origin: value }),
