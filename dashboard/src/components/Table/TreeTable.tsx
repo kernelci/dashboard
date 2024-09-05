@@ -15,7 +15,9 @@ import {
 
 import { TreeTableBody, zOrigin } from '@/types/tree/Tree';
 
-import { TableRow, TableCell } from '@/components/ui/table';
+import { TableRow, TableCell, TableBody } from '@/components/ui/table';
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import BaseTable from './BaseTable';
 import { sanitizeTableValue } from './tableUtils';
@@ -28,7 +30,6 @@ const treeTableColumnsLabelId: MessagesKey[] = [
   'treeTable.tree',
   'treeTable.branch',
   'treeTable.commitTag',
-  'filter.treeURL',
   'global.date',
   'treeTable.build',
   'treeTable.bootStatus',
@@ -76,13 +77,21 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   return (
     <TableRow onClick={navigateToTreeDetailPage}>
       <TableCell>
-        {sanitizeTableValue(row.tree_names.join(', '), false)}
+        <Tooltip>
+          <TooltipTrigger>
+            <div>{sanitizeTableValue(row.tree_names.join(', '), false)}</div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <a href={row.url} target="_blank" rel="noreferrer">
+              {sanitizeTableValue(row.url, false)}
+            </a>
+          </TooltipContent>
+        </Tooltip>
       </TableCell>
       <TableCell>{sanitizeTableValue(row.branch, false)}</TableCell>
       <TableCell>
         {sanitizeTableValue(row.commitName ? row.commitName : row.commitHash)}
       </TableCell>
-      <TableCell>{sanitizeTableValue(row.url, false)}</TableCell>
       <TableCell>{sanitizeTableValue(row.date.split('T')[0] ?? '')}</TableCell>
       <TableCell>
         <BuildStatus
@@ -141,7 +150,12 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
     ));
   }, []);
 
-  return <BaseTable headers={treeTableHeaders} body={<>{treeTableBody}</>} />;
+  return (
+    <BaseTable
+      headers={treeTableHeaders}
+      body={<TableBody>{treeTableBody}</TableBody>}
+    />
+  );
 };
 
 export default TreeTable;
