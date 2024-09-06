@@ -232,7 +232,7 @@ function TreeDetails(): JSX.Element {
         />
       </div>
       <div className="relative mt-10 flex flex-col pb-2">
-        <div className="absolute right-0 top-0">
+        <div className="absolute right-0 top-[-16px]">
           <TreeDetailsFilter paramFilter={diffFilter} treeUrl={treeUrl} />
         </div>
         <TreeDetailsTab

@@ -1,7 +1,6 @@
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
-
-import { IoClose } from 'react-icons/io5';
+import { IoChevronDown, IoClose } from 'react-icons/io5';
 
 import { Button } from '../ui/button';
 
@@ -13,6 +12,7 @@ import {
   DrawerTrigger,
 } from '../ui/drawer';
 import { Separator } from '../ui/separator';
+import ButtonWithIcon from '../Button/ButtonWithIcon';
 
 interface IDrawerLink {
   treeURL: string;
@@ -85,9 +85,10 @@ const Drawer = ({
   return (
     <UIDrawer onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>
-        <Button variant="outline">
-          <FormattedMessage id="global.filters" />
-        </Button>
+        <ButtonWithIcon
+          label={<FormattedMessage id="global.filters" />}
+          icon={<IoChevronDown />}
+        />
       </DrawerTrigger>
 
       <DrawerContent className="flex max-h-screen items-center bg-lightGray px-4">
