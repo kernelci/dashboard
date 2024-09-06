@@ -129,6 +129,7 @@ export const messages = {
     'global.timing': 'Timing',
     'global.total': 'Total',
     'global.tree': 'Tree',
+    'global.underDevelopment': 'Under Development',
     'global.unknown': 'Unknown',
     'global.url': 'URL',
     'global.valid': 'Valid',
