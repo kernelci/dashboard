@@ -1,5 +1,9 @@
+import React from 'react';
+
 import { LOCALES } from '../constants';
 /*eslint sort-keys: "error"*/
+
+export const formattedBreakLineValue = { br: React.createElement('br') };
 
 export const messages = {
   [LOCALES.EN_US]: {
@@ -13,6 +17,11 @@ export const messages = {
       'ℹ️ There is no boot test data available for this tree',
     'bootsTab.platformsFailingAtBoot': 'Platforms failing at boot',
     'bootsTab.skip': 'Skip',
+    'bootsTab.statusTooltip':
+      'Success - boots with PASS status{br}' +
+      'Failed - boots with FAIL status{br}' +
+      'Inconclusive - boot concluded with inconclusive results such as infrastructure errors.{br}{br}' +
+      'Inconclusive groups boots with ERROR, MISS, SKIP, DONE, and unknown statuses defined by KCIDB.',
     'bootsTab.success': 'Success',
     'buildAccordion.buildLogs': 'Build logs',
     'buildAccordion.dtb': 'Dtb',
@@ -48,6 +57,10 @@ export const messages = {
     'buildDetails.startTime': 'Start Time',
     'buildDetails.systemMap': 'System Map',
     'buildDetails.testResults': 'Test Results',
+    'buildTab.statusTooltip':
+      'Success - builds completed successfully{br}' +
+      'Failed - builds failed{br}' +
+      "Inconclusive - builds with unknown status, including ongoing builds that didn't finish yet.",
     'filter.architectureSubtitle': 'Please select one or more Architectures:',
     'filter.bootDuration': 'Boot duration',
     'filter.bootStatus': 'Boot Status',
@@ -149,6 +162,11 @@ export const messages = {
     'testsTab.fail': 'Fails',
     'testsTab.noTest': 'ℹ️ There is no test data available for this tree',
     'testsTab.platformsErrors': 'Platforms with errors',
+    'testsTab.statusTooltip':
+      'Success - tests with PASS status{br}' +
+      'Failed - tests with FAIL status{br}' +
+      'Inconclusive - test concluded with inconclusive results such as infrastructure errors.{br}{br}' +
+      'Inconclusive groups tests with ERROR, MISS, SKIP, DONE, and unknown statuses defined by KCIDB.',
     'testsTab.testHistory': 'Test history',
     'testsTab.testStatus': 'Test status',
     'tree.details': 'Trees Details',

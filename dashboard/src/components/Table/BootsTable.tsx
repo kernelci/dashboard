@@ -1,6 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { MdChevronRight } from 'react-icons/md';
@@ -17,15 +16,25 @@ import {
   possibleTestsTableFilter,
 } from '@/types/tree/TreeDetails';
 
+import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
+
 import TableStatusFilter from './TableStatusFilter';
 
-const headerLabelIds: string[] = [
+const headerLabelOrElement: (string | ReactElement)[] = [
   'Path',
-  'Status',
+  <HeaderWithInfo
+    key={'status'}
+    labelId="global.status"
+    tooltipId="bootsTab.statusTooltip"
+  />,
   'Start time',
   'Duration',
   '', //extra one to add the chevron icon
 ];
+
+const headerElements = headerLabelOrElement.map(item =>
+  typeof item === 'string' ? <p key={item}>{item}</p> : item,
+);
 
 const ITEMS_PER_PAGE = 10;
 
@@ -92,10 +101,6 @@ const BootsTable = ({
 
   const [bootsSelectedFilter, setBootsSelectedFilter] =
     useState<TestsTableFilter>(tableFilter.bootsTable);
-
-  const headers = useMemo(() => {
-    return headerLabelIds.map(labelId => <p key={labelId}>{labelId}</p>);
-  }, []);
 
   const rows = useMemo(() => {
     if (!data || error) return <></>;
@@ -211,7 +216,7 @@ const BootsTable = ({
         />
         {tableInfoElement}
       </div>
-      <BaseTable headers={headers}>{rows}</BaseTable>
+      <BaseTable headers={headerElements}>{rows}</BaseTable>
       {tableInfoElement}
     </div>
   );

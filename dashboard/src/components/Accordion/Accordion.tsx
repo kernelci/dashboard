@@ -16,6 +16,8 @@ import { ItemType } from '@/components/ListingItem/ListingItem';
 
 import { TestStatus } from '@/components/Status/Status';
 
+import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
+
 import { TableBody, TableCell, TableRow } from '../ui/table';
 import BaseTable from '../Table/BaseTable';
 import {
@@ -54,12 +56,20 @@ const headersBuilds = [
     id="treeDetails.buildErrors"
   />,
   <FormattedMessage key="treeDetails.buildTime" id="treeDetails.buildTime" />,
-  <FormattedMessage key="treeDetails.status" id="treeDetails.status" />,
+  <HeaderWithInfo
+    key="treeDetails.status"
+    labelId="treeDetails.status"
+    tooltipId="buildTab.statusTooltip"
+  />,
 ];
 
 const headersTests = [
   <FormattedMessage key="testDetails.path" id="testDetails.path" />,
-  <FormattedMessage key="testDetails.status" id="testDetails.status" />,
+  <HeaderWithInfo
+    key="treeDetails.status"
+    labelId="testDetails.status"
+    tooltipId="testsTab.statusTooltip"
+  />,
   <span key="chevron"></span>, //empty cell to add the chevron
 ];
 

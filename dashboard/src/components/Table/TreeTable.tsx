@@ -19,6 +19,8 @@ import { TableRow, TableCell, TableBody } from '@/components/ui/table';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
+import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
+
 import BaseTable from './BaseTable';
 import { sanitizeTableValue } from './tableUtils';
 
@@ -26,15 +28,31 @@ interface ITreeTable {
   treeTableRows: TreeTableBody[];
 }
 
-const treeTableColumnsLabelId: MessagesKey[] = [
+const headerLabelOrElement: (JSX.Element | MessagesKey)[] = [
   'treeTable.tree',
   'treeTable.branch',
   'treeTable.commitTag',
   'global.date',
-  'treeTable.build',
-  'treeTable.bootStatus',
-  'treeTable.test',
+  <HeaderWithInfo
+    key="buildStatus"
+    labelId="treeTable.build"
+    tooltipId="buildTab.statusTooltip"
+  />,
+  <HeaderWithInfo
+    key="bootStatus"
+    labelId="treeTable.bootStatus"
+    tooltipId="bootsTab.statusTooltip"
+  />,
+  <HeaderWithInfo
+    key="testStatus"
+    labelId="treeTable.test"
+    tooltipId="testsTab.statusTooltip"
+  />,
 ];
+
+const treeTableHeaders = headerLabelOrElement.map(item =>
+  typeof item === 'string' ? <FormattedMessage key={item} id={item} /> : item,
+);
 
 const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
@@ -143,12 +161,6 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
       />
     ));
   }, [treeTableRows]);
-
-  const treeTableHeaders = useMemo(() => {
-    return treeTableColumnsLabelId.map(columnLabelId => (
-      <FormattedMessage key={columnLabelId} id={columnLabelId} />
-    ));
-  }, []);
 
   return (
     <BaseTable
