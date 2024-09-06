@@ -5,7 +5,7 @@ from kernelCI_app.serializers import TreeSerializer
 from kernelCI_app.utils import getQueryTimeInterval
 
 
-DEFAULT_ORIGIN = '0dayci'
+DEFAULT_ORIGIN = 'maestro'
 
 
 class TreeView(View):
