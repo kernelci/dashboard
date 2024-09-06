@@ -10,6 +10,8 @@ import {
   DrawerFooter,
   DrawerClose,
   DrawerTrigger,
+  DrawerTitle,
+  DrawerDescription,
 } from '../ui/drawer';
 import { Separator } from '../ui/separator';
 import ButtonWithIcon from '../Button/ButtonWithIcon';
@@ -28,14 +30,17 @@ interface IFilterDrawer extends IDrawerLink {
 const DrawerHeader = (): JSX.Element => {
   return (
     <header className="mb-7 w-full">
-      <div className="mx-auto mb-4 flex w-[1400px] items-center justify-between">
-        <span className="text-2xl/[42px] font-bold">
-          <FormattedMessage id="filter.filtering" />
-        </span>
-        <DrawerClose asChild>
-          <IoClose className="h-6 w-6 cursor-pointer" />
-        </DrawerClose>
-      </div>
+      <DrawerTitle>
+        <div className="mx-auto mb-4 flex w-[1400px] items-center justify-between">
+          <span className="text-2xl/[42px] font-bold">
+            <FormattedMessage id="filter.filtering" />
+          </span>
+          <DrawerClose asChild>
+            <IoClose className="h-6 w-6 cursor-pointer" />
+          </DrawerClose>
+        </div>
+      </DrawerTitle>
+      <DrawerDescription />
       <Separator />
     </header>
   );
