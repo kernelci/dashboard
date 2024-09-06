@@ -6,7 +6,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
-import { BuildStatus, TestStatus } from '@/components/Status/Status';
+import { BuildStatus, GroupedTestStatus } from '@/components/Status/Status';
 
 import {
   possibleBuildsTableFilter,
@@ -101,7 +101,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         />
       </TableCell>
       <TableCell>
-        <TestStatus
+        <GroupedTestStatus
           pass={row.bootStatus.pass}
           skip={row.bootStatus.skip}
           fail={row.bootStatus.fail}
@@ -111,7 +111,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         />
       </TableCell>
       <TableCell>
-        <TestStatus
+        <GroupedTestStatus
           pass={row.testStatus.pass}
           skip={row.testStatus.skip}
           fail={row.testStatus.fail}
