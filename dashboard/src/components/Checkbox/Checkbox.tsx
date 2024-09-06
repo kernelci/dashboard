@@ -22,7 +22,7 @@ const Checkbox = ({
         'border-blue': isChecked,
       })}
     >
-      <input type="checkbox" checked={isChecked} onClick={onToggle} />
+      <input type="checkbox" checked={isChecked} onChange={onToggle} />
       <span className="ml-4">{text}</span>
     </label>
   );
