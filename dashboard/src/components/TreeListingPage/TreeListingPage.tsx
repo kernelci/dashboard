@@ -15,6 +15,8 @@ import TreeTable from '@/components/Table/TreeTable';
 import { useTreeTable } from '@/api/Tree';
 import { TableInfo } from '@/components/Table/TableInfo';
 
+import { formattedBreakLineValue } from '@/locales/messages';
+
 interface ITreeListingPage {
   inputFilter: string;
 }
@@ -100,15 +102,23 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
 
   return data && data.length > 0 ? (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col items-end gap-4">
-        <TableInfo
-          startIndex={startIndex + 1}
-          endIndex={endIndex}
-          totalTrees={listItems.length}
-          itemsPerPage={ITEMS_PER_PAGE}
-          onClickBack={onClickGoBack}
-          onClickForward={onClickGoForward}
-        />
+      <div className="flex items-center justify-between gap-4">
+        <span className="text-left text-sm text-dimGray">
+          <FormattedMessage
+            id="global.projectUnderDevelopment"
+            values={formattedBreakLineValue}
+          />
+        </span>
+        <div className="flex items-end gap-4">
+          <TableInfo
+            startIndex={startIndex + 1}
+            endIndex={endIndex}
+            totalTrees={listItems.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onClickBack={onClickGoBack}
+            onClickForward={onClickGoForward}
+          />
+        </div>
       </div>
       <TreeTable treeTableRows={listItems.slice(startIndex, endIndex)} />
       <div className="flex flex-col items-end">

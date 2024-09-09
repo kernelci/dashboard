@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { FEEDBACK_EMAIL_TO } from '@/utils/constants/general';
+
 import { LOCALES } from '../constants';
 /*eslint sort-keys: "error"*/
 
@@ -114,6 +116,9 @@ export const messages = {
     'global.origins': 'Origins',
     'global.pass': 'Pass',
     'global.placeholderSearch': 'Search by tree, branch or tag',
+    'global.projectUnderDevelopment':
+      'This is an ongoing project.{br}' +
+      `Please report bugs and suggestions to ${FEEDBACK_EMAIL_TO}.`,
     'global.seconds': 'sec',
     'global.skipped': 'Skipped',
     'global.somethingWrong': 'Sorry... something went wrong',
