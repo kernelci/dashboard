@@ -154,7 +154,7 @@ const ChartLegend = ({ chartValues, onClick }: IChartLegend): JSX.Element => {
           <WrapperElement
             onClick={(): void => onClick?.(status)}
             key={chartValue?.color}
-            className="flex flex-row"
+            className="flex flex-row text-left"
           >
             {chartValue && (
               <div className="pr-2 pt-1">
