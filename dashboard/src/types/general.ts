@@ -1,3 +1,5 @@
+import { Status } from './database';
+
 export type TPathTests = {
   path_group: string;
   fail_tests: number;
@@ -13,7 +15,7 @@ export type TPathTests = {
 
 export type TIndividualTest = {
   path: string;
-  status: string;
+  status: Status;
   start_time: string;
   duration: string;
 };

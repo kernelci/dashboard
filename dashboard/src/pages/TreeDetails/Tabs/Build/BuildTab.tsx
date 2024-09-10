@@ -293,12 +293,12 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
                   isSelected: selectedFilter === possibleBuildsTableFilter[1],
                 },
                 {
-                  label: intl.formatMessage({ id: 'global.errors' }),
+                  label: intl.formatMessage({ id: 'global.failed' }),
                   value: possibleBuildsTableFilter[0],
                   isSelected: selectedFilter === possibleBuildsTableFilter[0],
                 },
                 {
-                  label: intl.formatMessage({ id: 'global.unknown' }),
+                  label: intl.formatMessage({ id: 'global.inconclusive' }),
                   value: possibleBuildsTableFilter[3],
                   isSelected: selectedFilter === possibleBuildsTableFilter[3],
                 },

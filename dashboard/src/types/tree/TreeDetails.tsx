@@ -152,12 +152,9 @@ export const possibleBuildsTableFilter = [
 
 export const possibleTestsTableFilter = [
   'all',
-  'done',
-  'error',
-  'fail',
-  'miss',
-  'pass',
-  'skip',
+  'success',
+  'failed',
+  'inconclusive',
 ] as const;
 
 export const zBuildsTableFilterValidator = z
@@ -247,7 +244,7 @@ export const zTreeInformation = z
 export type TestByCommitHash = {
   id: string;
   path: string | null;
-  status: string;
+  status: Status;
   duration: string;
   startTime: string;
 };

@@ -18,6 +18,8 @@ import {
 
 import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
 
+import { getStatusGroup } from '@/utils/status';
+
 import TableStatusFilter from './TableStatusFilter';
 
 const headerLabelOrElement: (string | ReactElement)[] = [
@@ -82,9 +84,9 @@ const BootsTable = ({
     if (filterToApply === 'all') {
       return data?.tests;
     }
-    return data?.tests.filter(
-      test => test.status.toLowerCase() === filterToApply,
-    );
+    return data?.tests.filter(test => {
+      return getStatusGroup(test.status) === filterToApply;
+    });
   }, [data?.tests, tableFilter]);
 
   const data_len = filteredData?.length || 0;
@@ -146,8 +148,7 @@ const BootsTable = ({
         return {
           ...previousParams,
           tableFilter: {
-            testsTable: previousParams.tableFilter.testsTable,
-            buildsTable: previousParams.tableFilter.buildsTable,
+            ...previousParams.tableFilter,
             bootsTable: filter,
           },
         };
@@ -170,34 +171,19 @@ const BootsTable = ({
         isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[0]),
       },
       {
-        label: intl.formatMessage({ id: 'testStatus.pass' }),
-        value: possibleTestsTableFilter[5],
-        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[5]),
-      },
-      {
-        label: intl.formatMessage({ id: 'testStatus.fail' }),
-        value: possibleTestsTableFilter[3],
-        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[3]),
-      },
-      {
-        label: intl.formatMessage({ id: 'testStatus.skip' }),
-        value: possibleTestsTableFilter[6],
-        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[6]),
-      },
-      {
-        label: intl.formatMessage({ id: 'testStatus.done' }),
+        label: intl.formatMessage({ id: 'global.success' }),
         value: possibleTestsTableFilter[1],
         isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[1]),
       },
       {
-        label: intl.formatMessage({ id: 'testStatus.error' }),
+        label: intl.formatMessage({ id: 'global.failed' }),
         value: possibleTestsTableFilter[2],
         isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[2]),
       },
       {
-        label: intl.formatMessage({ id: 'testStatus.miss' }),
-        value: possibleTestsTableFilter[4],
-        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[4]),
+        label: intl.formatMessage({ id: 'global.inconclusive' }),
+        value: possibleTestsTableFilter[3],
+        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[3]),
       },
     ],
     [intl, checkIfFilterIsSelected],

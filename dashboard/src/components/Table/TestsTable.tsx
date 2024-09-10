@@ -16,6 +16,8 @@ import {
 
 import { Skeleton } from '@/components/Skeleton';
 
+import { getStatusGroup } from '@/utils/status';
+
 import Accordion from '../Accordion/Accordion';
 
 import TableStatusFilter from './TableStatusFilter';
@@ -66,34 +68,19 @@ const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
         isSelected: tableFilter.testsTable === possibleTestsTableFilter[0],
       },
       {
-        label: intl.formatMessage({ id: 'testStatus.pass' }),
-        value: possibleTestsTableFilter[5],
-        isSelected: tableFilter.testsTable === possibleTestsTableFilter[5],
-      },
-      {
-        label: intl.formatMessage({ id: 'testStatus.fail' }),
-        value: possibleTestsTableFilter[3],
-        isSelected: tableFilter.testsTable === possibleTestsTableFilter[3],
-      },
-      {
-        label: intl.formatMessage({ id: 'testStatus.skip' }),
-        value: possibleTestsTableFilter[6],
-        isSelected: tableFilter.testsTable === possibleTestsTableFilter[6],
-      },
-      {
-        label: intl.formatMessage({ id: 'testStatus.done' }),
+        label: intl.formatMessage({ id: 'global.success' }),
         value: possibleTestsTableFilter[1],
         isSelected: tableFilter.testsTable === possibleTestsTableFilter[1],
       },
       {
-        label: intl.formatMessage({ id: 'testStatus.error' }),
+        label: intl.formatMessage({ id: 'global.failed' }),
         value: possibleTestsTableFilter[2],
         isSelected: tableFilter.testsTable === possibleTestsTableFilter[2],
       },
       {
-        label: intl.formatMessage({ id: 'testStatus.miss' }),
-        value: possibleTestsTableFilter[4],
-        isSelected: tableFilter.testsTable === possibleTestsTableFilter[4],
+        label: intl.formatMessage({ id: 'global.inconclusive' }),
+        value: possibleTestsTableFilter[3],
+        isSelected: tableFilter.testsTable === possibleTestsTableFilter[3],
       },
     ],
     [intl, tableFilter.testsTable],
@@ -116,58 +103,38 @@ const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
     switch (tableFilter.testsTable) {
       case 'all':
         return data;
-      case 'done':
+      case 'success':
         return data
-          ?.filter(tests => tests.done_tests > 0)
+          ?.filter(tests => tests.pass_tests > 0)
           .map(test => ({
             ...test,
             individual_tests: test.individual_tests.filter(
-              t => t.status.toLowerCase() === possibleTestsTableFilter[1],
+              t => getStatusGroup(t.status) === possibleTestsTableFilter[1],
             ),
           }));
-      case 'error':
+      case 'failed':
         return data
-          ?.filter(tests => tests.done_tests > 0)
+          ?.filter(tests => tests.error_tests > 0)
           .map(test => ({
             ...test,
             individual_tests: test.individual_tests.filter(
               t => t.status.toLowerCase() === possibleTestsTableFilter[2],
             ),
           }));
-      case 'fail':
+      case 'inconclusive':
         return data
-          ?.filter(tests => tests.fail_tests > 0)
+          ?.filter(
+            tests =>
+              tests.done_tests > 0 ||
+              tests.fail_tests > 0 ||
+              tests.miss_tests > 0 ||
+              tests.skip_tests > 0 ||
+              tests.null_tests > 0,
+          )
           .map(test => ({
             ...test,
             individual_tests: test.individual_tests.filter(
               t => t.status.toLowerCase() === possibleTestsTableFilter[3],
-            ),
-          }));
-      case 'miss':
-        return data
-          ?.filter(tests => tests.miss_tests > 0)
-          .map(test => ({
-            ...test,
-            individual_tests: test.individual_tests.filter(
-              t => t.status.toLowerCase() === possibleTestsTableFilter[4],
-            ),
-          }));
-      case 'skip':
-        return data
-          ?.filter(tests => tests.skip_tests > 0)
-          .map(test => ({
-            ...test,
-            individual_tests: test.individual_tests.filter(
-              t => t.status.toLowerCase() === possibleTestsTableFilter[6],
-            ),
-          }));
-      case 'pass':
-        return data
-          ?.filter(tests => tests.pass_tests > 0)
-          .map(test => ({
-            ...test,
-            individual_tests: test.individual_tests.filter(
-              t => t.status.toLowerCase() === possibleTestsTableFilter[5],
             ),
           }));
     }

@@ -1,3 +1,7 @@
+import { Status } from '@/types/database';
+
+type StatusGroups = 'success' | 'failed' | 'inconclusive';
+
 type StatusCount = {
   doneCount: number;
   missCount: number;
@@ -24,3 +28,9 @@ export function groupStatus(counts: StatusCount): GroupedStatus {
       counts.skipCount,
   };
 }
+
+export const getStatusGroup = (status: Status): StatusGroups => {
+  if (status === 'PASS') return 'success';
+  if (status === 'ERROR') return 'failed';
+  return 'inconclusive';
+};
