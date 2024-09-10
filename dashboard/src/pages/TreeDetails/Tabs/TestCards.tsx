@@ -5,7 +5,7 @@ import { memo } from 'react';
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import BaseCard, { IBaseCard } from '@/components/Cards/BaseCard';
 import ListingItem from '@/components/ListingItem/ListingItem';
-import { GroupedTestStatus, TestStatus } from '@/components/Status/Status';
+import { GroupedTestStatus } from '@/components/Status/Status';
 import { ArchCompilerStatus, TTreeTestsData } from '@/types/tree/TreeDetails';
 
 import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
@@ -128,7 +128,7 @@ const ErrorsSummary = ({
   title,
 }: IErrorsSummary): JSX.Element => {
   const summaryHeaders = [
-    <FormattedMessage key="treeDetail.arch" id="treeDetails.arch" />,
+    <FormattedMessage key="treeDetails.arch" id="treeDetails.arch" />,
     <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
   ];
 
@@ -147,7 +147,7 @@ const ErrorsSummary = ({
                   text: e.arch,
                 }}
                 leftIcon={
-                  <TestStatus
+                  <GroupedTestStatus
                     forceNumber={false}
                     done={statusCounts.DONE}
                     fail={statusCounts.FAIL}

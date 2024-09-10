@@ -7,15 +7,15 @@ import ListingContent, {
 } from '../ListingContent/ListingContent';
 import StatusChartMemoized, { IStatusChart } from '../StatusChart/StatusCharts';
 
-type TPossibleCard = (IListingContent | ISummary | IStatusChart) & {
+export type TPossibleCard = (IListingContent | ISummary | IStatusChart) & {
   key: string;
 };
 
-interface ICardsGroup {
+export interface ICardsGroup {
   cards: TPossibleCard[];
 }
 
-interface ICardContent {
+export interface ICardContent {
   card: IListingContent | ISummary | IStatusChart;
 }
 

@@ -4,7 +4,6 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import CardsGroup from '@/components/CardsGroup/CardsGroup';
 import StatusChartMemoized, {
   Colors,
 } from '@/components/StatusChart/StatusCharts';
@@ -12,7 +11,6 @@ import { TableInfo } from '@/components/Table/TableInfo';
 import { usePagination } from '@/hooks/usePagination';
 import Accordion from '@/components/Accordion/Accordion';
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
-import { ISummary } from '@/components/Summary/Summary';
 
 import {
   BuildsTableFilter,
@@ -24,6 +22,7 @@ import TableStatusFilter from '@/components/Table/TableStatusFilter';
 import BaseCard from '@/components/Cards/BaseCard';
 
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
+import { MemoizedErrorsSummaryBuild } from '@/pages/TreeDetails/Tabs/BuildCards';
 
 import { BuildStatus } from '@/components/Status/Status';
 
@@ -203,30 +202,6 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
     [navigate],
   );
 
-  const cards = useMemo(() => {
-    return [
-      {
-        summaryBody: treeDetailsData?.archs ?? [],
-        title: <FormattedMessage id="treeDetails.summary" />,
-        key: 'summary',
-        summaryHeaders: [
-          <FormattedMessage key="treeDetails.arch" id="treeDetails.arch" />,
-          <FormattedMessage
-            key="treeDetails.compiler"
-            id="treeDetails.compiler"
-          />,
-        ],
-        type: 'summary',
-        onClickKey: (key: string) => {
-          toggleFilterBySection(key, 'archs');
-        },
-        onClickCompiler: compiler => {
-          toggleFilterBySection(compiler, 'compilers');
-        },
-      } as ISummary & { key: string },
-    ];
-  }, [toggleFilterBySection, treeDetailsData?.archs]);
-
   const onClickFilter = useCallback(
     (type: BuildsTableFilter) => {
       navigate({
@@ -253,8 +228,10 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
             toggleFilterBySection={toggleFilterBySection}
             treeDetailsData={treeDetailsData}
           />
-          {/* TODO Kill the CardGroups component once and for all */}
-          <CardsGroup cards={cards} />
+          <MemoizedErrorsSummaryBuild
+            summaryBody={treeDetailsData?.archs ?? []}
+            toggleFilterBySection={toggleFilterBySection}
+          />
         </div>
         <div>
           <CommitNavigationGraph />
@@ -271,7 +248,10 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           treeDetailsData={treeDetailsData}
         />
         <InnerMobileGrid>
-          <CardsGroup cards={cards} />
+          <MemoizedErrorsSummaryBuild
+            summaryBody={treeDetailsData?.archs ?? []}
+            toggleFilterBySection={toggleFilterBySection}
+          />
           <MemoizedConfigsCard
             treeDetailsData={treeDetailsData}
             toggleFilterBySection={toggleFilterBySection}
