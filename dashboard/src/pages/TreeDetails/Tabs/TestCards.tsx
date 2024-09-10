@@ -13,6 +13,7 @@ import StatusChartMemoized, {
   Colors,
   StatusChartValues,
 } from '@/components/StatusChart/StatusCharts';
+import { groupStatus } from '@/utils/status';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
@@ -177,36 +178,30 @@ interface IStatusChart extends Pick<TTreeTestsData, 'statusCounts'> {
 }
 
 const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
+  const groupedStatusCounts = groupStatus({
+    doneCount: statusCounts.DONE ?? 0,
+    errorCount: statusCounts.ERROR ?? 0,
+    failCount: statusCounts.FAIL ?? 0,
+    missCount: statusCounts.MISS ?? 0,
+    passCount: statusCounts.PASS ?? 0,
+    skipCount: statusCounts.SKIP ?? 0,
+  });
+
   const chartElements = [
     {
       label: 'bootsTab.success',
-      value: statusCounts['PASS'] ?? 0,
+      value: groupedStatusCounts.successCount,
       color: Colors.Green,
     },
     {
       label: 'global.failed',
-      value: statusCounts['FAIL'] ?? 0,
-      color: Colors.Yellow,
-    },
-    {
-      label: 'bootsTab.skip',
-      value: statusCounts['SKIP'] ?? 0,
-      color: Colors.DimGray,
-    },
-    {
-      label: 'global.missed',
-      value: statusCounts['MISS'] ?? 0,
-      color: Colors.Gray,
-    },
-    {
-      label: 'global.done',
-      value: statusCounts['DONE'] ?? 0,
-      color: Colors.Blue,
-    },
-    {
-      label: 'bootsTab.error',
-      value: statusCounts['ERROR'] ?? 0,
+      value: groupedStatusCounts.failedCount,
       color: Colors.Red,
+    },
+    {
+      label: 'global.inconclusive',
+      value: groupedStatusCounts.inconclusiveCount ?? 0,
+      color: Colors.Gray,
     },
   ] satisfies StatusChartValues[];
 

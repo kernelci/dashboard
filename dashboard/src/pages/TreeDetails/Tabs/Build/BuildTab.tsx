@@ -72,7 +72,7 @@ const StatusCard = ({
             },
             {
               value: treeDetailsData?.buildsSummary.null ?? 0,
-              label: 'treeDetails.unknown',
+              label: 'global.inconclusive',
               color: Colors.Gray,
             },
           ]}
