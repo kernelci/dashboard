@@ -53,6 +53,11 @@ const LogExcerpt = ({ test }: TTestDetailsDefaultProps): JSX.Element => {
 
 const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
   const intl = useIntl();
+  const misc = test.environment_misc ?? test.misc;
+  const platform: string = misc
+    ? JSON.parse(misc).platform
+    : intl.formatMessage({ id: 'global.unknown' });
+
   const infos: ISubsection['infos'] = useMemo(() => {
     const baseInfo = [
       {
@@ -92,10 +97,7 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
       },
       {
         title: intl.formatMessage({ id: 'testDetails.platform' }),
-        linkText:
-          test.misc?.platform ??
-          test.environment_misc?.platform ??
-          intl.formatMessage({ id: 'global.unknown' }),
+        linkText: platform,
         icon: <GiFlatPlatform className="text-blue" />,
       },
     ];
@@ -104,14 +106,13 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
     intl,
     test.architecture,
     test.compiler,
-    test.environment_misc?.platform,
     test.git_commit_hash,
     test.git_repository_branch,
     test.git_repository_url,
     test.log_url,
-    test.misc?.platform,
     test.path,
     test.status,
+    platform,
   ]);
   return <Subsection infos={infos} />;
 };
