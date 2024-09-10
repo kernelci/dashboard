@@ -54,4 +54,10 @@ Startup the services:
  ```sh
  docker compose up --build -d
  ```
+
+## Deploying to production
+
+To deploy to prod you need to push a tag in the `release/YYYYMMDD.N` format
+like: `release/20240910.0`
+
  
