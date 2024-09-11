@@ -54,7 +54,7 @@ const Summary = ({
         <SummaryItem
           onClickKey={onClickKey}
           key={row.arch.text}
-          arch={{ text: row.arch.text }}
+          arch={row.arch}
           compilers={row.compilers}
           onClickCompiler={onClickCompiler}
         />
@@ -94,6 +94,9 @@ export const SummaryItem = ({
           warnings={arch.warnings}
           text={arch.text}
           leftIcon={leftIcon}
+          success={arch.success}
+          unknown={arch.unknown}
+          errors={arch.errors}
         />
       </TableCell>
       <TableCell>

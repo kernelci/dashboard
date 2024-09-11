@@ -28,42 +28,42 @@ export const TestStatus = ({
 }: ITestStatus): JSX.Element => {
   return (
     <div className="flex flex-row gap-1">
-      {(forceNumber || pass) && (
+      {(forceNumber || Boolean(pass)) && (
         <ColoredCircle
           quantity={pass ?? 0}
           tooltipText="global.pass"
           backgroundClassName="bg-lightGreen"
         />
       )}
-      {(forceNumber || error) && (
+      {(forceNumber || Boolean(error)) && (
         <ColoredCircle
           quantity={error ?? 0}
           tooltipText="global.error"
           backgroundClassName="bg-lightRed"
         />
       )}
-      {(forceNumber || miss) && (
+      {(forceNumber || Boolean(miss)) && (
         <ColoredCircle
           quantity={miss ?? 0}
           tooltipText="global.missed"
           backgroundClassName="bg-lightGray"
         />
       )}
-      {(forceNumber || fail) && (
+      {(forceNumber || Boolean(fail)) && (
         <ColoredCircle
           quantity={fail ?? 0}
           tooltipText="global.failed"
           backgroundClassName="bg-yellow"
         />
       )}
-      {(forceNumber || done) && (
+      {(forceNumber || Boolean(done)) && (
         <ColoredCircle
           quantity={done ?? 0}
           tooltipText="global.done"
           backgroundClassName="bg-lightBlue"
         />
       )}
-      {(forceNumber || done) && (
+      {(forceNumber || Boolean(skip)) && (
         <ColoredCircle
           quantity={skip ?? 0}
           tooltipText="global.skipped"
