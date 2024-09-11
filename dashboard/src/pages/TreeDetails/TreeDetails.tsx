@@ -9,7 +9,7 @@ import { ISummaryItem } from '@/components/Summary/Summary';
 import {
   AccordionItemBuilds,
   BuildStatus,
-  BuildsTab,
+  BuildsTabBuild,
 } from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
 import {
@@ -102,7 +102,7 @@ const TreeHeader = ({
   );
 };
 
-const isBuildError = (build: BuildsTab): number => {
+const isBuildError = (build: BuildsTabBuild): number => {
   return build.valid || build.valid === null ? 0 : 1;
 };
 

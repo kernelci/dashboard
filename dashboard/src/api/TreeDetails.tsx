@@ -2,7 +2,7 @@ import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
 import {
   TTreeTestsData,
-  BootsTab,
+  BuildsTab,
   TTreeDetailsFilter,
   TTestByCommitHashResponse,
   TTreeCommitHistoryResponse,
@@ -18,7 +18,7 @@ import http from './api';
 const fetchTreeDetailData = async (
   treeId: string,
   filter: TTreeDetailsFilter | Record<string, never>,
-): Promise<BootsTab> => {
+): Promise<BuildsTab> => {
   const filterParam = mapFiltersToUrlSearchParams(filter);
 
   const res = await http.get(`/api/tree/${treeId}`, { params: filterParam });
@@ -43,7 +43,7 @@ const mapFiltersToUrlSearchParams = (
 export const useBuildsTab = (
   treeId: string,
   filter: TTreeDetailsFilter | Record<string, never> = {},
-): UseQueryResult<BootsTab> => {
+): UseQueryResult<BuildsTab> => {
   const detailsFilter = getTargetFilter(filter, 'treeDetails');
 
   return useQuery({

@@ -91,6 +91,4 @@ class TreeDetails(View):
 
         summary = self.create_summary(records)
 
-        print("Summary: ", summary)
-
         return JsonResponse({"builds": records, "summary": summary}, safe=False)
