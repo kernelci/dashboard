@@ -11,6 +11,7 @@ import { BuildStatus, GroupedTestStatus } from '@/components/Status/Status';
 import {
   possibleBuildsTableFilter,
   possibleTestsTableFilter,
+  zPossibleValidator,
 } from '@/types/tree/TreeDetails';
 
 import { TreeTableBody, zOrigin } from '@/types/tree/Tree';
@@ -60,41 +61,52 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
 
   const navigate = useNavigate({ from: '/tree' });
 
-  const navigateToTreeDetailPage = useCallback(() => {
-    navigate({
-      to: '/tree/$treeId',
-      params: { treeId: row.id },
-      search: {
-        tableFilter: {
-          bootsTable: possibleTestsTableFilter[0],
-          buildsTable: possibleBuildsTableFilter[2],
-          testsTable: possibleTestsTableFilter[0],
+  const navigateToTreeDetailPage = useCallback(
+    (event: React.MouseEvent<HTMLTableCellElement>) => {
+      const el = event.currentTarget;
+      const target = el.getAttribute('data-target');
+
+      const safeTarget = zPossibleValidator.parse(target);
+
+      navigate({
+        to: '/tree/$treeId',
+        params: { treeId: row.id },
+        search: {
+          tableFilter: {
+            bootsTable: possibleTestsTableFilter[0],
+            buildsTable: possibleBuildsTableFilter[2],
+            testsTable: possibleTestsTableFilter[0],
+          },
+          origin: origin,
+          currentTreeDetailsTab: safeTarget,
+          diffFilter: {},
+          treeInfo: {
+            gitUrl: row.url,
+            gitBranch: row.branch,
+            treeName: row.tree_names[0],
+            commitName: row.commitName,
+            headCommitHash: row.id,
+          },
         },
-        origin: origin,
-        currentTreeDetailsTab: 'treeDetails.builds',
-        diffFilter: {},
-        treeInfo: {
-          gitUrl: row.url,
-          gitBranch: row.branch,
-          treeName: row.tree_names[0],
-          commitName: row.commitName,
-          headCommitHash: row.id,
-        },
-      },
-    });
-  }, [
-    navigate,
-    row.id,
-    origin,
-    row.url,
-    row.branch,
-    row.tree_names,
-    row.commitName,
-  ]);
+      });
+    },
+    [
+      navigate,
+      row.id,
+      origin,
+      row.url,
+      row.branch,
+      row.tree_names,
+      row.commitName,
+    ],
+  );
 
   return (
-    <TableRow onClick={navigateToTreeDetailPage}>
-      <TableCell>
+    <TableRow>
+      <TableCell
+        onClick={navigateToTreeDetailPage}
+        data-target="treeDetails.builds"
+      >
         <Tooltip>
           <TooltipTrigger>
             <div>{sanitizeTableValue(row.tree_names.join(', '), false)}</div>
@@ -106,19 +118,38 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
           </TooltipContent>
         </Tooltip>
       </TableCell>
-      <TableCell>{sanitizeTableValue(row.branch, false)}</TableCell>
-      <TableCell>
+      <TableCell
+        onClick={navigateToTreeDetailPage}
+        data-target="treeDetails.builds"
+      >
+        {sanitizeTableValue(row.branch, false)}
+      </TableCell>
+      <TableCell
+        onClick={navigateToTreeDetailPage}
+        data-target="treeDetails.builds"
+      >
         {sanitizeTableValue(row.commitName ? row.commitName : row.commitHash)}
       </TableCell>
-      <TableCell>{sanitizeTableValue(row.date.split('T')[0] ?? '')}</TableCell>
-      <TableCell>
+      <TableCell
+        onClick={navigateToTreeDetailPage}
+        data-target="treeDetails.builds"
+      >
+        {sanitizeTableValue(row.date.split('T')[0] ?? '')}
+      </TableCell>
+      <TableCell
+        onClick={navigateToTreeDetailPage}
+        data-target="treeDetails.builds"
+      >
         <BuildStatus
           valid={row.buildStatus.valid}
           invalid={row.buildStatus.invalid}
           unknown={row.buildStatus.null}
         />
       </TableCell>
-      <TableCell>
+      <TableCell
+        onClick={navigateToTreeDetailPage}
+        data-target="treeDetails.boots"
+      >
         <GroupedTestStatus
           pass={row.bootStatus.pass}
           skip={row.bootStatus.skip}
@@ -128,7 +159,10 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
           error={row.bootStatus.error}
         />
       </TableCell>
-      <TableCell>
+      <TableCell
+        onClick={navigateToTreeDetailPage}
+        data-target="treeDetails.tests"
+      >
         <GroupedTestStatus
           pass={row.testStatus.pass}
           skip={row.testStatus.skip}
