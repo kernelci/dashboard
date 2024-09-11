@@ -24,9 +24,9 @@ import {
   TFilterObjectsKeys,
   TFilterNumberKeys,
   isTFilterObjectKeys,
-  TreeDetails as TreeDetailsType,
+  BuildsTab as TreeDetailsType,
 } from '@/types/tree/TreeDetails';
-import { useTreeDetails } from '@/api/TreeDetails';
+import { useBuildsTab } from '@/api/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
 import { TRequestFiltersValues } from '@/utils/filters';
 
@@ -326,7 +326,7 @@ const TreeDetailsFilter = ({
 }: ITreeDetailsFilter): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
 
-  const { data, isLoading } = useTreeDetails(treeId);
+  const { data, isLoading } = useBuildsTab(treeId);
 
   const navigate = useNavigate({
     from: '/tree/$treeId',

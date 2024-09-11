@@ -3,13 +3,13 @@ import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useTreeDetails } from '@/api/TreeDetails';
+import { useBuildsTab } from '@/api/TreeDetails';
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
 import {
   AccordionItemBuilds,
   BuildStatus,
-  TreeDetailsBuild,
+  BuildsTab,
 } from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
 import {
@@ -102,7 +102,7 @@ const TreeHeader = ({
   );
 };
 
-const isBuildError = (build: TreeDetailsBuild): number => {
+const isBuildError = (build: BuildsTab): number => {
   return build.valid || build.valid === null ? 0 : 1;
 };
 
@@ -113,7 +113,7 @@ function TreeDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const { isLoading, data } = useTreeDetails(treeId ?? '', reqFilter);
+  const { isLoading, data } = useBuildsTab(treeId ?? '', reqFilter);
 
   const filterListElement = useMemo(
     () => <TreeDetailsFilterList filter={diffFilter} />,
@@ -172,14 +172,6 @@ function TreeDetails(): JSX.Element {
           buildErrors: isBuildError(value),
           status:
             value.valid === null ? 'null' : value.valid ? 'valid' : 'invalid',
-          testStatus: {
-            failTests: value.status?.fail_tests,
-            passTests: value.status?.pass_tests,
-            errorTests: value.status?.error_tests,
-            skipTests: value.status?.skip_tests,
-            missTests: value.status?.miss_tests,
-            doneTests: value.status?.done_tests,
-          },
           buildLogs: value.log_url,
           kernelConfig: value.config_url,
           kernelImage: value.misc ? value.misc['kernel_type'] : undefined,

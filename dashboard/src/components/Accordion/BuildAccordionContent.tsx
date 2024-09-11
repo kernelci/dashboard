@@ -6,7 +6,12 @@ import { FormattedMessage } from 'react-intl';
 
 import { useNavigate, useParams } from '@tanstack/react-router';
 
-import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+import {
+  AccordionItemBuilds,
+  BuildCountsResponse,
+} from '@/types/tree/TreeDetails';
+
+import { useBuildStatusCount } from '@/api/TreeDetails';
 
 import StatusChartMemoized, {
   Colors,
@@ -16,6 +21,8 @@ import StatusChartMemoized, {
 import LinksGroup from '../LinkGroup/LinkGroup';
 
 import { Button } from '../ui/button';
+
+import QuerySwitcher from '../QuerySwitcher/QuerySwitcher';
 
 import { IAccordionItems } from './Accordion';
 
@@ -45,14 +52,86 @@ export interface ILinksGroup {
 
 const blueText = 'text-blue';
 
+const AccordBuildStatusChart = ({
+  buildCountsData,
+}: {
+  buildCountsData: BuildCountsResponse;
+}): JSX.Element => {
+  const { build_counts } = buildCountsData;
+
+  const chartElements: IStatusChart['elements'] = useMemo(() => {
+    return [
+      {
+        value: build_counts.pass_tests ?? 0,
+        label: 'buildAccordion.testSuccess',
+        color: Colors.Green,
+      },
+      {
+        value: build_counts.error_tests ?? 0,
+        label: 'buildAccordion.testError',
+        color: Colors.Red,
+      },
+      {
+        value: build_counts.skip_tests ?? 0,
+        label: 'buildAccordion.testSkipped',
+        color: Colors.DimGray,
+      },
+      {
+        value: build_counts.miss_tests ?? 0,
+        label: 'buildAccordion.testMiss',
+        color: Colors.Gray,
+      },
+      {
+        value: build_counts.fail_tests ?? 0,
+        label: 'buildAccordion.testFail',
+        color: Colors.Yellow,
+      },
+      {
+        value: build_counts.done_tests ?? 0,
+        label: 'buildAccordion.testDone',
+        color: Colors.Blue,
+      },
+    ];
+  }, [
+    build_counts.done_tests,
+    build_counts.error_tests,
+    build_counts.fail_tests,
+    build_counts.miss_tests,
+    build_counts.pass_tests,
+    build_counts.skip_tests,
+  ]);
+
+  return (
+    <>
+      {chartElements.some(slice => slice.value > 0) && (
+        <div className="min-w-[400px]">
+          <StatusChartMemoized
+            type="chart"
+            title={<FormattedMessage id="buildAccordion.testStatus" />}
+            elements={chartElements}
+          />
+        </div>
+      )}
+    </>
+  );
+};
+
 const AccordionBuildContent = ({
   accordionData,
 }: IAccordionItems): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
 
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  console.log('oii', accordionData);
 
+  //TODO: Fix the typing for not using as
   const contentData = accordionData as AccordionItemBuilds;
+
+  const { data, status } = useBuildStatusCount(
+    { buildId: contentData.id ?? '' },
+    { enabled: !!contentData.id },
+  );
+
+  const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const navigateToBuildDetails = useCallback(() => {
     navigate({
@@ -61,48 +140,6 @@ const AccordionBuildContent = ({
       search: prev => prev,
     });
   }, [contentData.id, navigate, treeId]);
-
-  const chartElements: IStatusChart['elements'] = useMemo(() => {
-    return [
-      {
-        value: contentData.testStatus?.passTests ?? 0,
-        label: 'buildAccordion.testSuccess',
-        color: Colors.Green,
-      },
-      {
-        value: contentData.testStatus?.errorTests ?? 0,
-        label: 'buildAccordion.testError',
-        color: Colors.Red,
-      },
-      {
-        value: contentData.testStatus?.skipTests ?? 0,
-        label: 'buildAccordion.testSkipped',
-        color: Colors.DimGray,
-      },
-      {
-        value: contentData.testStatus?.missTests ?? 0,
-        label: 'buildAccordion.testMiss',
-        color: Colors.Gray,
-      },
-      {
-        value: contentData.testStatus?.failTests ?? 0,
-        label: 'buildAccordion.testFail',
-        color: Colors.Yellow,
-      },
-      {
-        value: contentData.testStatus?.doneTests ?? 0,
-        label: 'buildAccordion.testDone',
-        color: Colors.Blue,
-      },
-    ];
-  }, [
-    contentData.testStatus?.errorTests,
-    contentData.testStatus?.failTests,
-    contentData.testStatus?.passTests,
-    contentData.testStatus?.skipTests,
-    contentData.testStatus?.doneTests,
-    contentData.testStatus?.missTests,
-  ]);
 
   const links = useMemo(
     () => [
@@ -167,15 +204,9 @@ const AccordionBuildContent = ({
   return (
     <>
       <div className="flex flex-row justify-between">
-        {chartElements.some(slice => slice.value > 0) && (
-          <div className="min-w-[400px]">
-            <StatusChartMemoized
-              type="chart"
-              title={<FormattedMessage id="buildAccordion.testStatus" />}
-              elements={chartElements}
-            />
-          </div>
-        )}
+        <QuerySwitcher data={data} status={status} skeletonClassname="h-[60px]">
+          {data && <AccordBuildStatusChart buildCountsData={data} />}
+        </QuerySwitcher>
         <div className="flex flex-col gap-8">
           <LinksGroup links={links} />
           <Button

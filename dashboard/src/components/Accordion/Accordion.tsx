@@ -110,36 +110,42 @@ const AccordionTableBody = ({
         </div>
       );
     }
-    return items.map((item, index) => (
-      <Collapsible key={index} asChild>
-        <>
-          <CollapsibleTrigger asChild>
-            <TableRow className="group cursor-pointer hover:bg-lightBlue">
-              {type === 'build' ? (
-                <AccordionBuildsTrigger accordionData={item} />
-              ) : (
-                <AccordionTestsTrigger accordionData={item} />
-              )}
+    return items.map(item => {
+      const itemKey =
+        type === 'build'
+          ? (item as AccordionItemBuilds).id
+          : (item as TPathTests).path_group;
+      return (
+        <Collapsible key={itemKey} asChild>
+          <>
+            <CollapsibleTrigger asChild>
+              <TableRow className="group cursor-pointer hover:bg-lightBlue">
+                {type === 'build' ? (
+                  <AccordionBuildsTrigger accordionData={item} />
+                ) : (
+                  <AccordionTestsTrigger accordionData={item} />
+                )}
+              </TableRow>
+            </CollapsibleTrigger>
+            <TableRow>
+              <TableCell colSpan={6} className="p-0">
+                <CollapsibleContent>
+                  <div className="group max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
+                    {type === 'build' ? (
+                      <AccordionBuildContent accordionData={item} />
+                    ) : (
+                      <AccordionTestsContent
+                        data={(item as TPathTests).individual_tests}
+                      />
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </TableCell>
             </TableRow>
-          </CollapsibleTrigger>
-          <TableRow>
-            <TableCell colSpan={6} className="p-0">
-              <CollapsibleContent>
-                <div className="group max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
-                  {type === 'build' ? (
-                    <AccordionBuildContent accordionData={item} />
-                  ) : (
-                    <AccordionTestsContent
-                      data={(item as TPathTests).individual_tests}
-                    />
-                  )}
-                </div>
-              </CollapsibleContent>
-            </TableCell>
-          </TableRow>
-        </>
-      </Collapsible>
-    ));
+          </>
+        </Collapsible>
+      );
+    });
   }, [items, type]);
 
   return <TableBody>{accordionItems}</TableBody>;

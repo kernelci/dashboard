@@ -6,7 +6,7 @@ import { MessagesKey } from '@/locales/messages';
 
 import type { ErrorStatus, Status } from '../database';
 
-export type TreeDetailsBuild = {
+export type BuildsTab = {
   id: string;
   architecture: string;
   config_name: string;
@@ -18,16 +18,6 @@ export type TreeDetailsBuild = {
   log_url: string;
   git_repository_branch: string;
   git_repository_url: string;
-  status: {
-    fail_tests: number;
-    error_tests: number;
-    miss_tests: number;
-    pass_tests: number;
-    done_tests: number;
-    skip_tests: number;
-    null_tests: number;
-    total_tests: number;
-  };
   misc: ITreeDetailsMisc | null;
 };
 
@@ -46,14 +36,6 @@ export type AccordionItemBuilds = {
   buildErrors?: number;
   buildTime?: string | ReactNode;
   status?: 'valid' | 'invalid' | 'null';
-  testStatus?: {
-    failTests: number;
-    errorTests: number;
-    passTests: number;
-    skipTests: number;
-    missTests: number;
-    doneTests: number;
-  };
   kernelImage?: string;
   buildLogs?: string;
   kernelConfig?: string;
@@ -62,8 +44,8 @@ export type AccordionItemBuilds = {
   modules?: string;
 };
 
-export type TreeDetails = {
-  builds: TreeDetailsBuild[];
+export type BootsTab = {
+  builds: BuildsTab[];
   summary: {
     builds: BuildStatus;
     configs: Record<string, BuildStatus>;
@@ -87,9 +69,9 @@ type TArch = Record<
 export interface TTreeDetailsFilter
   extends Partial<{
     [K in keyof Omit<
-      TreeDetailsBuild,
+      BuildsTab,
       'test_status' | 'misc' | 'valid'
-    >]: TreeDetailsBuild[K][];
+    >]: BuildsTab[K][];
   }> {
   valid?: string[];
 }
@@ -277,6 +259,20 @@ export type PaginatedCommitHistoryByTree = {
     pass_count: number;
     done_count: number;
     skip_count: number;
+  };
+};
+
+export type BuildCountsResponse = {
+  build_counts: {
+    build_id: string;
+    fail_tests: number;
+    error_tests: number;
+    miss_tests: number;
+    pass_tests: number;
+    done_tests: number;
+    skip_tests: number;
+    null_tests: number;
+    total_tests: number;
   };
 };
 
