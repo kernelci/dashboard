@@ -1,45 +1,15 @@
 from collections import defaultdict
-from typing_extensions import Union
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.views import View
-from kernelCI_app.utils import FilterParams, InvalidComparisonOP, getErrorResponseBody
+from kernelCI_app.utils import (FilterParams, InvalidComparisonOP,
+                                extract_error_message, extract_platform, getErrorResponseBody)
 from kernelCI_app.models import Checkouts
-import json
 
 
 class TreeTestsView(View):
     # TODO misc_environment is not stable and should be used as a POC only
     # use the standardized field when that gets available
     valid_filter_fields = ['status', 'duration']
-
-    def extract_platform(self, misc_environment: Union[str, dict, None]):
-        parsedEnvMisc = None
-        if isinstance(misc_environment, dict):
-            parsedEnvMisc = misc_environment
-        elif misc_environment is None:
-            return "unknown"
-        else:
-            parsedEnvMisc = json.loads(misc_environment)
-        platform = parsedEnvMisc.get("platform")
-        if platform:
-            return platform
-        print("unknown platform in misc_environment", misc_environment)
-        return "unknown"
-
-    # TODO misc is not stable and should be used as a POC only
-    def extract_error_message(self, misc: Union[str, dict, None]):
-        parsedEnv = None
-        if misc is None:
-            return "unknown error"
-        elif isinstance(misc, dict):
-            parsedEnv = misc
-        else:
-            parsedEnv = json.loads(misc)
-        error_message = parsedEnv.get("error_msg")
-        if error_message:
-            return error_message
-        print("unknown error_msg in misc", misc)
-        return "unknown error"
 
     def __paramsFromBootAndFilters(self, commit_hash, path_param, filter_params, params):
         if path_param:
@@ -56,7 +26,8 @@ class TreeTestsView(View):
             value = f['value']
             value_is_list = isinstance(value, list)
             if value_is_list:
-                placeholder = ",".join(['%s' for i in value]) if value_is_list else '%s'
+                placeholder = ",".join(
+                    ['%s' for i in value]) if value_is_list else '%s'
                 path_filter += f" AND t.{field} IN ({placeholder})"
                 params.extend(value)
             else:
@@ -151,8 +122,8 @@ class TreeTestsView(View):
                 compilersPerArchitecture[record.architecture].add(
                     record.compiler)
                 platformsWithError.add(
-                    self.extract_platform(record.environment_misc))
-                currentErrorMessage = self.extract_error_message(record.misc)
+                    extract_platform(record.environment_misc))
+                currentErrorMessage = extract_error_message(record.misc)
                 errorMessageCounts[currentErrorMessage] += 1
                 errorMessageCounts[currentErrorMessage] += 1
         for architecture in compilersPerArchitecture:

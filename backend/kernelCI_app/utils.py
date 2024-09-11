@@ -1,9 +1,41 @@
 import json
+from typing import Union
 from django.utils import timezone
 from datetime import timedelta
 import re
 
 DEFAULT_QUERY_TIME_INTERVAL = {'days': 7}
+
+
+def extract_platform(misc_environment: Union[str, dict, None]):
+    parsedEnvMisc = None
+    if isinstance(misc_environment, dict):
+        parsedEnvMisc = misc_environment
+    elif misc_environment is None:
+        return "unknown"
+    else:
+        parsedEnvMisc = json.loads(misc_environment)
+    platform = parsedEnvMisc.get("platform")
+    if platform:
+        return platform
+    print("unknown platform in misc_environment", misc_environment)
+    return "unknown"
+
+
+# TODO misc is not stable and should be used as a POC only
+def extract_error_message(misc: Union[str, dict, None]):
+    parsedEnv = None
+    if misc is None:
+        return "unknown error"
+    elif isinstance(misc, dict):
+        parsedEnv = misc
+    else:
+        parsedEnv = json.loads(misc)
+    error_message = parsedEnv.get("error_msg")
+    if error_message:
+        return error_message
+    print("unknown error_msg in misc", misc)
+    return "unknown error"
 
 
 def getQueryTimeInterval(**kwargs):
