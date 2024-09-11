@@ -6,7 +6,7 @@ import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import BaseCard, { IBaseCard } from '@/components/Cards/BaseCard';
 import ListingItem from '@/components/ListingItem/ListingItem';
 import { TTreeTestsData } from '@/types/tree/TreeDetails';
-import { TestStatus } from '@/components/Status/Status';
+import { GroupedTestStatus, TestStatus } from '@/components/Status/Status';
 
 import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
 import StatusChartMemoized, {
@@ -37,7 +37,7 @@ const ConfigsList = ({
                 key={configName}
                 text={configName}
                 leftIcon={
-                  <TestStatus
+                  <GroupedTestStatus
                     done={DONE}
                     fail={FAIL}
                     error={ERROR}

@@ -11,7 +11,7 @@ import StatusChartMemoized, {
 import { TableInfo } from '@/components/Table/TableInfo';
 import { usePagination } from '@/hooks/usePagination';
 import Accordion from '@/components/Accordion/Accordion';
-import { IListingContent } from '@/components/ListingContent/ListingContent';
+import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import { ISummary } from '@/components/Summary/Summary';
 
 import {
@@ -24,6 +24,10 @@ import TableStatusFilter from '@/components/Table/TableStatusFilter';
 import BaseCard from '@/components/Cards/BaseCard';
 
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
+
+import { BuildStatus } from '@/components/Status/Status';
+
+import ListingItem from '@/components/ListingItem/ListingItem';
 
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
@@ -94,19 +98,31 @@ const ConfigsCard = ({
     filterSection: TFilterObjectsKeys,
   ) => void;
 }): JSX.Element => {
+  const content = useMemo(() => {
+    return (
+      <DumbListingContent>
+        {treeDetailsData?.configs.map((item, i) => (
+          <ListingItem
+            key={i}
+            text={item.text}
+            onClick={() => toggleFilterBySection(item.text, 'configs')}
+            leftIcon={
+              <BuildStatus
+                valid={item.success}
+                invalid={item.errors}
+                unknown={item.unknown}
+              />
+            }
+          />
+        ))}
+      </DumbListingContent>
+    );
+  }, [toggleFilterBySection, treeDetailsData?.configs]);
+
   return (
-    <CardsGroup
-      cards={[
-        {
-          items: treeDetailsData?.configs ?? [],
-          title: <FormattedMessage id="treeDetails.configs" />,
-          key: 'configs',
-          type: 'listing',
-          onClickItem: (value: string) => {
-            toggleFilterBySection(value, 'configs');
-          },
-        } as IListingContent & { key: string },
-      ]}
+    <BaseCard
+      title={<FormattedMessage id="treeDetails.configs" />}
+      content={content}
     />
   );
 };
