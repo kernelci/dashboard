@@ -2,10 +2,11 @@ import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
 import {
   TTreeTestsData,
-  TreeDetails,
+  BootsTab,
   TTreeDetailsFilter,
   TTestByCommitHashResponse,
   TTreeCommitHistoryResponse,
+  BuildCountsResponse,
 } from '@/types/tree/TreeDetails';
 
 import { TPathTests } from '@/types/general';
@@ -17,7 +18,7 @@ import http from './api';
 const fetchTreeDetailData = async (
   treeId: string,
   filter: TTreeDetailsFilter | Record<string, never>,
-): Promise<TreeDetails> => {
+): Promise<BootsTab> => {
   const filterParam = mapFiltersToUrlSearchParams(filter);
 
   const res = await http.get(`/api/tree/${treeId}`, { params: filterParam });
@@ -39,10 +40,10 @@ const mapFiltersToUrlSearchParams = (
   return filterParam;
 };
 
-export const useTreeDetails = (
+export const useBuildsTab = (
   treeId: string,
   filter: TTreeDetailsFilter | Record<string, never> = {},
-): UseQueryResult<TreeDetails> => {
+): UseQueryResult<BootsTab> => {
   const detailsFilter = getTargetFilter(filter, 'treeDetails');
 
   return useQuery({
@@ -233,5 +234,29 @@ export const useTreeCommitHistory = (
     enabled,
     queryFn: () =>
       fetchTreeCommitHistory(commitHash, origin, gitUrl, gitBranch),
+  });
+};
+
+const fetchBuildStatusCount = async (
+  buildId: string,
+): Promise<BuildCountsResponse> => {
+  const res = await http.get<BuildCountsResponse>(
+    `/api/build/${buildId}/status-count`,
+  );
+  return res.data;
+};
+
+export const useBuildStatusCount = (
+  {
+    buildId,
+  }: {
+    buildId: string;
+  },
+  { enabled = true },
+): UseQueryResult<BuildCountsResponse> => {
+  return useQuery({
+    queryKey: [buildId],
+    enabled,
+    queryFn: () => fetchBuildStatusCount(buildId),
   });
 };

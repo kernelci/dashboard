@@ -10,6 +10,7 @@ urlpatterns = [
     path(
         "tree/<str:commit_hash>/tests/", views.TreeTestsView.as_view(), name="treeTests"
     ),
+    path("build/<str:build_id>/status-count", views.BuildStatusCountView.as_view(), name="buildStatusCount"),
     path("build/<str:build_id>", views.BuildDetails.as_view(), name="buildDetails"),
     path("build/<str:build_id>/tests", views.BuildTests.as_view(), name="buildTests"),
     path("tests/test/<str:test_id>", views.TestDetails.as_view(), name="testDetails"),
