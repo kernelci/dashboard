@@ -131,6 +131,7 @@ const BootsTable = ({
   const tableInfoElement = (
     <div className="flex flex-col items-end">
       <TableInfo
+        itemName="global.boots"
         startIndex={startIndex + 1}
         endIndex={endIndex}
         totalTrees={data_len}

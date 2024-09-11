@@ -297,6 +297,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
               ]}
             />
             <TableInfo
+              itemName="global.build"
               startIndex={startIndex + 1}
               endIndex={endIndex}
               totalTrees={filteredContent?.length ?? 0}
@@ -311,6 +312,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           />
           <div className="flex justify-end">
             <TableInfo
+              itemName="global.build"
               startIndex={startIndex + 1}
               endIndex={endIndex}
               totalTrees={filteredContent?.length ?? 0}

@@ -89,6 +89,7 @@ const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
   const tableInfoElement = (
     <div className="flex flex-col items-end">
       <TableInfo
+        itemName="global.tests"
         startIndex={startIndex + 1}
         endIndex={endIndex}
         totalTrees={data_len}

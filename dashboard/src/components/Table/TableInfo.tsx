@@ -5,9 +5,12 @@ import {
 } from 'react-icons/md';
 import { FormattedMessage } from 'react-intl';
 
+import { MessagesKey } from '@/locales/messages';
+
 import { Button } from '../ui/button';
 
 interface ITableInformation {
+  itemName: MessagesKey;
   startIndex: number;
   endIndex: number;
   totalTrees: number;
@@ -17,6 +20,7 @@ interface ITableInformation {
 }
 
 export const TableInfo = ({
+  itemName,
   startIndex,
   endIndex,
   totalTrees,
@@ -35,7 +39,7 @@ export const TableInfo = ({
         </span>
         <FormattedMessage id="table.of" />
         <span className="font-bold">{totalTrees}</span>
-        <FormattedMessage id="table.tree" />
+        <FormattedMessage id={itemName} />
       </div>
       <div className={groupsClassName}>
         <FormattedMessage id="table.itemsPerPage" />

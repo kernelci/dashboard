@@ -111,6 +111,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
         </span>
         <div className="flex items-end gap-4">
           <TableInfo
+            itemName="global.tree"
             startIndex={startIndex + 1}
             endIndex={endIndex}
             totalTrees={listItems.length}
@@ -123,6 +124,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
       <TreeTable treeTableRows={listItems.slice(startIndex, endIndex)} />
       <div className="flex flex-col items-end">
         <TableInfo
+          itemName="global.tree"
           startIndex={startIndex + 1}
           endIndex={endIndex}
           totalTrees={listItems.length}
