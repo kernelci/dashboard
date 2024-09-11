@@ -6,7 +6,7 @@ import { MessagesKey } from '@/locales/messages';
 
 import type { ErrorStatus, Status } from '../database';
 
-export type BuildsTab = {
+export type BuildsTabBuild = {
   id: string;
   architecture: string;
   config_name: string;
@@ -44,8 +44,8 @@ export type AccordionItemBuilds = {
   modules?: string;
 };
 
-export type BootsTab = {
-  builds: BuildsTab[];
+export type BuildsTab = {
+  builds: BuildsTabBuild[];
   summary: {
     builds: BuildStatus;
     configs: Record<string, BuildStatus>;
@@ -69,9 +69,9 @@ type TArch = Record<
 export interface TTreeDetailsFilter
   extends Partial<{
     [K in keyof Omit<
-      BuildsTab,
+      BuildsTabBuild,
       'test_status' | 'misc' | 'valid'
-    >]: BuildsTab[K][];
+    >]: BuildsTabBuild[K][];
   }> {
   valid?: string[];
 }

@@ -121,8 +121,6 @@ const AccordionBuildContent = ({
 }: IAccordionItems): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
 
-  console.log('oii', accordionData);
-
   //TODO: Fix the typing for not using as
   const contentData = accordionData as AccordionItemBuilds;
 
