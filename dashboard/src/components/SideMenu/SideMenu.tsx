@@ -62,7 +62,7 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
   const notSelectedItemClassName =
     'w-full flex pl-5 py-4 cursor-pointer text-white';
 
-  const isCurrentPath = pathname === item.navigateTo;
+  const isCurrentPath = pathname.startsWith(item.navigateTo);
 
   const navigate = (): void => {
     const origin = zOrigin.parse(unsafeOrigin);
@@ -92,7 +92,7 @@ const SideMenu = (): JSX.Element => {
 
   const routeItems: RouteMenuItems[] = [
     {
-      navigateTo: '/',
+      navigateTo: '/tree',
       idIntl: 'routes.treeMonitor',
       icon: <ImTree className="size-5" />,
       selected: true,
