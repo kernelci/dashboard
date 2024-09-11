@@ -1,7 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
-
-import Trees from '@/pages/Trees';
 
 export const HomeSearchSchema = z.object({
   treeSearch: z.string().optional().catch(undefined),
@@ -9,5 +7,7 @@ export const HomeSearchSchema = z.object({
 
 export const Route = createFileRoute('/')({
   validateSearch: HomeSearchSchema,
-  component: Trees,
+  loader: ctx => {
+    return redirect({ to: '/tree', search: ctx.location.search });
+  },
 });
