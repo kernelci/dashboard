@@ -12,6 +12,7 @@ import { useBuildTests } from '@/api/buildTests';
 import { usePagination } from '@/hooks/usePagination';
 import { MessagesKey } from '@/locales/messages';
 import { GroupedTestStatus } from '@/components/Status/Status';
+import { formatDate } from '@/utils/utils';
 
 interface IBuildDetailsTestSection {
   buildId: string;
@@ -62,10 +63,11 @@ const BuildDetailsTestSection = ({
 
   const rows = useMemo(() => {
     if (!data || error) return <></>;
-
     return data.slice(startIndex, endIndex).map(test => (
-      <TableRow key={test.path_group}>
-        <TableCell onClick={onClickName}>{test.path_group}</TableCell>
+      <TableRow key={test.current_path}>
+        <TableCell>{test.origins.join(', ')}</TableCell>
+        <TableCell onClick={onClickName}>{test.current_path}</TableCell>
+
         <TableCell className="flex flex-row gap-1">
           <GroupedTestStatus
             pass={test.pass_tests}
@@ -76,6 +78,7 @@ const BuildDetailsTestSection = ({
             error={test.error_tests}
           />
         </TableCell>
+        <TableCell>{formatDate(test.start_time)}</TableCell>
       </TableRow>
     ));
   }, [data, error, onClickName, startIndex, endIndex]);
