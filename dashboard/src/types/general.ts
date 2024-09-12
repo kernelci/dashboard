@@ -14,6 +14,7 @@ export type TPathTests = {
 };
 
 export type TIndividualTest = {
+  id: string;
   path: string;
   status: Status;
   start_time: string;
