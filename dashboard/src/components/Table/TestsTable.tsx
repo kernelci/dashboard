@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useIntl, FormattedMessage } from 'react-intl';
 
@@ -45,20 +45,23 @@ const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
     usePagination(data_len, ITEMS_PER_PAGE);
   const intl = useIntl();
 
-  const onClickFilter = (filter: TestsTableFilter): void => {
-    navigate({
-      search: previousParams => {
-        return {
-          ...previousParams,
-          tableFilter: {
-            bootsTable: previousParams.tableFilter.bootsTable,
-            buildsTable: previousParams.tableFilter.buildsTable,
-            testsTable: filter,
-          },
-        };
-      },
-    });
-  };
+  const onClickFilter = useCallback(
+    (filter: TestsTableFilter): void => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: {
+              bootsTable: previousParams.tableFilter.bootsTable,
+              buildsTable: previousParams.tableFilter.buildsTable,
+              testsTable: filter,
+            },
+          };
+        },
+      });
+    },
+    [navigate],
+  );
 
   const filters = useMemo(
     () => [
@@ -151,10 +154,7 @@ const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-row justify-between">
-        <TableStatusFilter
-          onClickTest={(filter: TestsTableFilter) => onClickFilter(filter)}
-          filters={filters}
-        />
+        <TableStatusFilter onClickTest={onClickFilter} filters={filters} />
         {tableInfoElement}
       </div>
       <Accordion type="test" items={filteredData ?? []} />
