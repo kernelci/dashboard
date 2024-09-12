@@ -18,13 +18,15 @@ import { TestStatus } from '@/components/Status/Status';
 
 import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
 
-import { TableBody, TableCell, TableRow } from '../ui/table';
-import BaseTable from '../Table/BaseTable';
+import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+
+import BaseTable from '@/components/Table/BaseTable';
+
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '../ui/collapsible';
+} from '@/components/ui/collapsible';
 
 import AccordionBuildContent from './BuildAccordionContent';
 
@@ -233,7 +235,7 @@ const AccordionTestsContent = ({
       <TableRow
         className="cursor-pointer hover:bg-lightBlue"
         onClick={onClickName}
-        key={test.path}
+        key={test.id}
       >
         <TableCell>{test.path}</TableCell>
         <TableCell>{test.status}</TableCell>
@@ -248,7 +250,9 @@ const AccordionTestsContent = ({
 
   return (
     <div className="h-max-12 overflow-scroll">
-      <BaseTable headers={headerTestsDetails}>{rows}</BaseTable>
+      <BaseTable headers={headerTestsDetails}>
+        <TableBody>{rows}</TableBody>
+      </BaseTable>
     </div>
   );
 };

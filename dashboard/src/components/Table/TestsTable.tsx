@@ -56,6 +56,7 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
       }
       groups[group].total_tests++;
       groups[group].individual_tests.push({
+        id: e.id,
         duration: e.duration?.toString() ?? '',
         path: e.path,
         start_time: e.startTime,
