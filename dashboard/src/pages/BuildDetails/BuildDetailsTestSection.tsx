@@ -11,7 +11,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { useBuildTests } from '@/api/buildTests';
 import { usePagination } from '@/hooks/usePagination';
 import { MessagesKey } from '@/locales/messages';
-import { TestStatus } from '@/components/Status/Status';
+import { GroupedTestStatus } from '@/components/Status/Status';
 
 interface IBuildDetailsTestSection {
   buildId: string;
@@ -67,7 +67,7 @@ const BuildDetailsTestSection = ({
       <TableRow key={test.path_group}>
         <TableCell onClick={onClickName}>{test.path_group}</TableCell>
         <TableCell className="flex flex-row gap-1">
-          <TestStatus
+          <GroupedTestStatus
             pass={test.pass_tests}
             done={test.done_tests}
             miss={test.miss_tests}

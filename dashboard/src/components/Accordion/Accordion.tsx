@@ -14,7 +14,7 @@ import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 
 import { ItemType } from '@/components/ListingItem/ListingItem';
 
-import { TestStatus } from '@/components/Status/Status';
+import { GroupedTestStatus } from '@/components/Status/Status';
 
 import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
 
@@ -189,7 +189,7 @@ const AccordionTestsTrigger = ({
     <>
       <TableCell>{triggerInfo.path_group}</TableCell>
       <TableCell className="flex flex-row gap-1">
-        <TestStatus
+        <GroupedTestStatus
           pass={triggerInfo.pass_tests}
           done={triggerInfo.done_tests}
           miss={triggerInfo.miss_tests}
