@@ -3,12 +3,12 @@ import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { useSearch } from '@tanstack/react-router';
 
 import {
-  TTreeTestsData,
   BuildsTab,
   TTreeDetailsFilter,
   TTestByCommitHashResponse,
   TTreeCommitHistoryResponse,
   BuildCountsResponse,
+  TTreeTestsFullData,
 } from '@/types/tree/TreeDetails';
 
 import { TPathTests } from '@/types/general';
@@ -99,40 +99,18 @@ const fetchTreeTestsData = async (
     git_url: string;
   },
   filter: TTreeDetailsFilter = {},
-): Promise<TTreeTestsData> => {
+): Promise<TTreeTestsFullData> => {
   const urlParams = mapFiltersToUrlSearchParams(filter);
   if (params !== undefined) {
     Object.entries(params).forEach(([k, v]) =>
       urlParams.append(k, v.toString()),
     );
   }
-  const res = await http.get<TTreeTestsData>(`/api/tree/${treeId}/tests`, {
+  const res = await http.get<TTreeTestsFullData>(`/api/tree/${treeId}/full`, {
     params: urlParams,
   });
 
   return res.data;
-};
-
-export const useBootsTab = (
-  treeId: string,
-  origin: string,
-  git_branch: string,
-  git_url: string,
-  filter: TTreeDetailsFilter,
-): UseQueryResult<TTreeTestsData> => {
-  const params = {
-    path: 'boot.',
-    origin: origin,
-    git_branch: git_branch,
-    git_url: git_url,
-  };
-
-  const bootsFilter = getTargetFilter(filter, 'boot');
-
-  return useQuery({
-    queryKey: ['treeBootTests', treeId, bootsFilter, params],
-    queryFn: () => fetchTreeTestsData(treeId, params, bootsFilter),
-  });
 };
 
 export const useTestsTab = (
@@ -141,7 +119,7 @@ export const useTestsTab = (
   git_branch: string,
   git_url: string,
   filter: TTreeDetailsFilter,
-): UseQueryResult<TTreeTestsData> => {
+): UseQueryResult<TTreeTestsFullData> => {
   const params = {
     origin: origin,
     git_branch: git_branch,

@@ -76,9 +76,12 @@ export interface TTreeDetailsFilter
   valid?: string[];
 }
 
-type TestHistory = {
-  start_time: string;
-  status: string;
+export type TestHistory = {
+  startTime: string;
+  status: Status;
+  path: string;
+  id: string;
+  duration?: number;
 };
 
 type ErrorCounts = {
@@ -97,6 +100,12 @@ type StatusCounts = {
   [key in Status]: number | undefined;
 };
 
+export type ArchCompilerStatus = {
+  arch: string;
+  compiler: string;
+  status: StatusCounts;
+};
+
 type PropertyStatusCounts = Record<string, StatusCounts>;
 
 export type TTreeTestsData = {
@@ -108,6 +117,21 @@ export type TTreeTestsData = {
   compilersPerArchitecture: CompilersPerArchitecture;
   platformsWithError: string[];
   errorMessageCounts: ErrorMessageCounts;
+};
+
+export type TTreeTestsFullData = {
+  bootArchSummary: ArchCompilerStatus[];
+  testArchSummary: ArchCompilerStatus[];
+  bootFailReasons: ErrorMessageCounts;
+  testFailReasons: ErrorMessageCounts;
+  testPlatformsWithErrors: string[];
+  bootPlatformsFailing: string[];
+  testConfigs: PropertyStatusCounts;
+  bootConfigs: PropertyStatusCounts;
+  testStatusSummary: StatusCounts;
+  bootStatusSummary: StatusCounts;
+  bootHistory: TestHistory[];
+  testHistory: TestHistory[];
 };
 
 export type PossibleTabs = Extract<

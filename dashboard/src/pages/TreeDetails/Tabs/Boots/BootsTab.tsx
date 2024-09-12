@@ -2,7 +2,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { useParams, useSearch } from '@tanstack/react-router';
 
-import { useBootsTab } from '@/api/TreeDetails';
+import { useTestsTab } from '@/api/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 import { Skeleton } from '@/components/Skeleton';
 
@@ -34,7 +34,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
   const { origin, treeInfo } = useSearch({
     from: '/tree/$treeId/',
   });
-  const { isLoading, data, error } = useBootsTab(
+  const { isLoading, data, error } = useTestsTab(
     treeId ?? '',
     origin,
     treeInfo.gitBranch ?? '',
@@ -78,61 +78,59 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
         <div>
           <MemoizedStatusChart
             title={<FormattedMessage id="bootsTab.bootStatus" />}
-            statusCounts={data.statusCounts}
+            statusCounts={data.bootStatusSummary}
           />
           <MemoizedConfigList
             title={<FormattedMessage id="bootsTab.configs" />}
-            configStatusCounts={data.configStatusCounts}
+            configStatusCounts={data.bootConfigs}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
-            architectureStatusCounts={data.architectureStatusCounts}
-            compilersPerArchitecture={data.compilersPerArchitecture}
+            archCompilerErrors={data.bootArchSummary}
           />
         </div>
         <div>
           <CommitNavigationGraph />
           <MemoizedPlatformsWithError
             title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
-            platformsWithError={data.platformsWithError}
+            platformsWithError={data.bootPlatformsFailing}
           />
           <MemoizedErrorCountList
             title={<FormattedMessage id="bootsTab.fail" />}
-            errorMessageCounts={data.errorMessageCounts}
+            errorMessageCounts={data.bootFailReasons}
           />
         </div>
       </DesktopGrid>
       <MobileGrid>
         <MemoizedStatusChart
           title={<FormattedMessage id="bootsTab.bootStatus" />}
-          statusCounts={data.statusCounts}
+          statusCounts={data.bootStatusSummary}
         />
         <CommitNavigationGraph />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList
               title={<FormattedMessage id="bootsTab.configs" />}
-              configStatusCounts={data.configStatusCounts}
+              configStatusCounts={data.bootConfigs}
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
-              architectureStatusCounts={data.architectureStatusCounts}
-              compilersPerArchitecture={data.compilersPerArchitecture}
+              archCompilerErrors={data.bootArchSummary}
             />
           </div>
           <div>
             <MemoizedPlatformsWithError
               title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
-              platformsWithError={data.platformsWithError}
+              platformsWithError={data.bootPlatformsFailing}
             />
             <MemoizedErrorCountList
               title={<FormattedMessage id="bootsTab.fail" />}
-              errorMessageCounts={data.errorMessageCounts}
+              errorMessageCounts={data.bootFailReasons}
             />
           </div>
         </InnerMobileGrid>
       </MobileGrid>
-      <BootsTable treeId={treeId} isBootTable={true} />
+      <BootsTable treeId={treeId} testHistory={data.bootHistory} />
     </div>
   );
 };
