@@ -5,7 +5,7 @@ import { memo } from 'react';
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import BaseCard, { IBaseCard } from '@/components/Cards/BaseCard';
 import ListingItem from '@/components/ListingItem/ListingItem';
-import { TTreeTestsData } from '@/types/tree/TreeDetails';
+import { ArchCompilerStatus, TTreeTestsData } from '@/types/tree/TreeDetails';
 import { TestStatus } from '@/components/Status/Status';
 
 import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
@@ -118,17 +118,13 @@ const ErrorCountList = ({
 };
 export const MemoizedErrorCountList = memo(ErrorCountList);
 
-interface IErrorsSummary
-  extends Pick<
-    TTreeTestsData,
-    'architectureStatusCounts' | 'compilersPerArchitecture'
-  > {
+interface IErrorsSummary {
+  archCompilerErrors: ArchCompilerStatus[];
   title: IBaseCard['title'];
 }
 
 const ErrorsSummary = ({
-  architectureStatusCounts,
-  compilersPerArchitecture,
+  archCompilerErrors,
   title,
 }: IErrorsSummary): JSX.Element => {
   const summaryHeaders = [
@@ -141,14 +137,14 @@ const ErrorsSummary = ({
       title={title}
       content={
         <DumbSummary summaryHeaders={summaryHeaders}>
-          {Object.keys(architectureStatusCounts).map(architecture => {
-            const statusCounts = architectureStatusCounts[architecture];
-            const currentCompilers = compilersPerArchitecture[architecture];
+          {archCompilerErrors.map(e => {
+            const statusCounts = e.status;
+            const currentCompilers = [e.compiler];
             return (
               <SummaryItem
-                key={architecture}
+                key={e.arch}
                 arch={{
-                  text: architecture,
+                  text: e.arch,
                 }}
                 leftIcon={
                   <TestStatus

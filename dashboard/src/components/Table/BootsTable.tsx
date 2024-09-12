@@ -9,9 +9,10 @@ import { TableInfo } from '@/components/Table/TableInfo';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { usePagination } from '@/hooks/usePagination';
 
-import { useTestsByTreeAndCommitHash } from '@/api/TreeDetails';
-
 import {
+  TTestByCommitHashResponse,
+  TestByCommitHash,
+  TestHistory,
   TestsTableFilter,
   possibleTestsTableFilter,
 } from '@/types/tree/TreeDetails';
@@ -42,27 +43,31 @@ const ITEMS_PER_PAGE = 10;
 
 export interface ITestsTable {
   treeId: string;
-  isBootTable?: boolean;
+  testHistory: TestHistory[];
 }
 
-const BootsTable = ({
-  treeId,
-  isBootTable = false,
-}: ITestsTable): JSX.Element => {
+const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const intl = useIntl();
-  const { origin, treeInfo, diffFilter } = useSearch({
+  const { diffFilter } = useSearch({
     from: '/tree/$treeId/',
   });
   const { tableFilter } = useSearch({
     from: '/tree/$treeId/',
   });
-  const { data, error, isLoading } = useTestsByTreeAndCommitHash(
-    treeId,
-    isBootTable,
-    origin,
-    treeInfo.gitUrl,
-    treeInfo.gitBranch,
+  const data = useMemo(
+    (): TTestByCommitHashResponse => ({
+      tests: testHistory.map(
+        (e): TestByCommitHash => ({
+          duration: e.duration?.toString() ?? '',
+          id: e.id,
+          path: e.path,
+          startTime: e.startTime,
+          status: e.status,
+        }),
+      ),
+    }),
+    [testHistory],
   );
 
   const onClickName = useCallback(
@@ -105,7 +110,7 @@ const BootsTable = ({
     useState<TestsTableFilter>(tableFilter.bootsTable);
 
   const rows = useMemo(() => {
-    if (!data || error) return <></>;
+    if (!data) return <></>;
 
     if (filteredData?.length === 0) {
       return (
@@ -126,7 +131,7 @@ const BootsTable = ({
         </TableCell>
       </TableRow>
     ));
-  }, [filteredData, data, error, startIndex, endIndex, onClickName]);
+  }, [filteredData, data, startIndex, endIndex, onClickName]);
 
   const tableInfoElement = (
     <div className="flex flex-col items-end">
@@ -189,10 +194,6 @@ const BootsTable = ({
     ],
     [intl, checkIfFilterIsSelected],
   );
-
-  if (error) return <FormattedMessage id="global.error" />;
-
-  if (isLoading) return <FormattedMessage id="global.loading" />;
 
   return (
     <div className="flex flex-col gap-6">

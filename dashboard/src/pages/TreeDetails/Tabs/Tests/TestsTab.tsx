@@ -77,62 +77,60 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
         <div>
           <MemoizedStatusChart
             title={<FormattedMessage id="testsTab.testStatus" />}
-            statusCounts={data.statusCounts}
+            statusCounts={data.testStatusSummary}
           />
           <MemoizedConfigList
             title={<FormattedMessage id="global.configs" />}
-            configStatusCounts={data.configStatusCounts}
+            configStatusCounts={data.testConfigs}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
-            architectureStatusCounts={data.architectureStatusCounts}
-            compilersPerArchitecture={data.compilersPerArchitecture}
+            archCompilerErrors={data.testArchSummary}
           />
         </div>
         <div>
           <CommitNavigationGraph />
           <MemoizedPlatformsWithError
             title={<FormattedMessage id="testsTab.platformsErrors" />}
-            platformsWithError={data.platformsWithError}
+            platformsWithError={data.testPlatformsWithErrors}
           />
           <MemoizedErrorCountList
             title={<FormattedMessage id="testsTab.fail" />}
-            errorMessageCounts={data.errorMessageCounts}
+            errorMessageCounts={data.testFailReasons}
           />
         </div>
       </DesktopGrid>
       <MobileGrid>
         <MemoizedStatusChart
           title={<FormattedMessage id="testsTab.testStatus" />}
-          statusCounts={data.statusCounts}
+          statusCounts={data.testStatusSummary}
         />
         <CommitNavigationGraph />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList
               title={<FormattedMessage id="global.configs" />}
-              configStatusCounts={data.configStatusCounts}
+              configStatusCounts={data.testConfigs}
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
-              architectureStatusCounts={data.architectureStatusCounts}
-              compilersPerArchitecture={data.compilersPerArchitecture}
+              archCompilerErrors={data.testArchSummary}
             />
           </div>
           <div>
             <MemoizedPlatformsWithError
               title={<FormattedMessage id="testsTab.platformsErrors" />}
-              platformsWithError={data.platformsWithError}
+              platformsWithError={data.testPlatformsWithErrors}
             />
             <MemoizedErrorCountList
               title={<FormattedMessage id="testsTab.fail" />}
-              errorMessageCounts={data.errorMessageCounts}
+              errorMessageCounts={data.testFailReasons}
             />
           </div>
         </InnerMobileGrid>
       </MobileGrid>
 
-      <TestsTable treeId={treeId} />
+      <TestsTable testHistory={data.testHistory} />
     </div>
   );
 };

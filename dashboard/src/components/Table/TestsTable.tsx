@@ -2,21 +2,19 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { useMemo } from 'react';
 
-import { useIntl, FormattedMessage } from 'react-intl';
+import { useIntl } from 'react-intl';
 
 import { TableInfo } from '@/components/Table/TableInfo';
 import { usePagination } from '@/hooks/usePagination';
 
-import { useTreeTest } from '@/api/TreeDetails';
-
 import {
+  TestHistory,
   TestsTableFilter,
   possibleTestsTableFilter,
 } from '@/types/tree/TreeDetails';
 
-import { Skeleton } from '@/components/Skeleton';
-
 import { getStatusGroup } from '@/utils/status';
+import { TPathTests } from '@/types/general';
 
 import Accordion from '../Accordion/Accordion';
 
@@ -25,21 +23,68 @@ import TableStatusFilter from './TableStatusFilter';
 const ITEMS_PER_PAGE = 10;
 
 export interface ITestsTable {
-  treeId: string;
+  testHistory: TestHistory[];
 }
 
-const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
-  const { testPath, treeInfo, origin, tableFilter } = useSearch({
+const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
+  const { tableFilter } = useSearch({
     from: '/tree/$treeId/',
   });
   const navigate = useNavigate({ from: '/tree/$treeId' });
-  const { data, isLoading } = useTreeTest(
-    treeId,
-    testPath,
-    treeInfo.gitBranch ?? '',
-    treeInfo.gitUrl ?? '',
-    origin,
-  );
+
+  const data = useMemo((): TPathTests[] => {
+    type Groups = {
+      [K: string]: TPathTests;
+    };
+    const groups: Groups = {};
+    testHistory.forEach(e => {
+      const parts = e.path.split('.', 1);
+      const group = parts.length > 0 ? parts[0] : '-';
+      if (!(group in groups)) {
+        groups[group] = {
+          done_tests: 0,
+          fail_tests: 0,
+          miss_tests: 0,
+          pass_tests: 0,
+          null_tests: 0,
+          skip_tests: 0,
+          error_tests: 0,
+          total_tests: 0,
+          path_group: group,
+          individual_tests: [],
+        };
+      }
+      groups[group].total_tests++;
+      groups[group].individual_tests.push({
+        duration: e.duration?.toString() ?? '',
+        path: e.path,
+        start_time: e.startTime,
+        status: e.status,
+      });
+      switch (e.status) {
+        case 'DONE':
+          groups[group].done_tests++;
+          break;
+        case 'ERROR':
+          groups[group].error_tests++;
+          break;
+        case 'FAIL':
+          groups[group].fail_tests++;
+          break;
+        case 'MISS':
+          groups[group].miss_tests++;
+          break;
+        case 'PASS':
+          groups[group].pass_tests++;
+          break;
+        case 'SKIP':
+          groups[group].skip_tests++;
+          break;
+      }
+    });
+    return Object.values(groups);
+  }, [testHistory]);
+
   const data_len = data?.length || 0;
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(data_len, ITEMS_PER_PAGE);
@@ -140,13 +185,6 @@ const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
           }));
     }
   }, [tableFilter.testsTable, data]);
-
-  if (isLoading)
-    return (
-      <Skeleton>
-        <FormattedMessage id="global.loading" />
-      </Skeleton>
-    );
 
   return (
     <div className="flex flex-col gap-6">
