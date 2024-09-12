@@ -101,6 +101,9 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
     ],
   );
 
+  const date = row.date.split('T')[0] ?? '';
+  const time = row.date.split('T')[1].split('.')[0] ?? '';
+
   return (
     <TableRow>
       <TableCell
@@ -134,7 +137,18 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         onClick={navigateToTreeDetailPage}
         data-target="treeDetails.builds"
       >
-        {sanitizeTableValue(row.date.split('T')[0] ?? '')}
+        <Tooltip>
+          <TooltipTrigger>
+            <div>{date}</div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="text-center">
+              {date}
+              <br />
+              {time}
+            </div>
+          </TooltipContent>
+        </Tooltip>
       </TableCell>
       <TableCell
         onClick={navigateToTreeDetailPage}
