@@ -20,8 +20,10 @@ class groupedTests(View):
         get_required_params = [
             "git_commit_hash",
             "git_repository_branch",
-            "git_repository_url" "origin",
+            "git_repository_url",
+            "origin"
         ]
+
         errorResponse = validate_required_params(request, get_required_params)
 
         if errorResponse:

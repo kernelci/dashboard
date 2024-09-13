@@ -31,6 +31,6 @@ export function groupStatus(counts: StatusCount): GroupedStatus {
 
 export const getStatusGroup = (status: Status): StatusGroups => {
   if (status === 'PASS') return 'success';
-  if (status === 'ERROR') return 'failed';
+  if (status === 'FAIL') return 'failed';
   return 'inconclusive';
 };
