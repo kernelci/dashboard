@@ -12,7 +12,7 @@ def isBooleanOrStringTrue(value: Union[bool, str]) -> bool:
         raise ValueError("Value must be a boolean or string")
 
 
-def validate_required_params(request, required_params):
+def validate_required_params(request, required_params: list[str]):
     for p in required_params:
         if not request.GET.get(p):
             return HttpResponseBadRequest(

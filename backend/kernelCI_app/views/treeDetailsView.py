@@ -3,6 +3,7 @@ from django.views import View
 from querybuilder.query import Query
 from kernelCI_app.models import Builds
 from kernelCI_app.utils import FilterParams, InvalidComparisonOP, getErrorResponseBody
+from utils.validation import validate_required_params
 
 
 class TreeDetails(View):
@@ -41,7 +42,17 @@ class TreeDetails(View):
             "architectures": arch_summ,
         }
 
+    # TODO, Remove this query builder, use Django ORM or raw SQL
     def get(self, request, commit_hash):
+        git_url_param = request.GET.get("git_url")
+        git_branch_param = request.GET.get("git_branch")
+
+        errorResponse = validate_required_params(
+            request, ["origin", "git_url", "git_branch"]
+        )
+        if errorResponse:
+            return errorResponse
+
         build_fields = [
             "id",
             "architecture",
@@ -55,7 +66,6 @@ class TreeDetails(View):
             "start_time",
         ]
         checkout_fields = [
-            "git_repository_branch",
             "git_repository_url",
             "git_repository_branch",
         ]
@@ -69,6 +79,8 @@ class TreeDetails(View):
                 fields=checkout_fields,
             )
             .where(git_commit_hash__eq=commit_hash)
+            .where(git_repository_url__eq=git_url_param)
+            .where(git_repository_branch__eq=git_branch_param)
         )
 
         try:
