@@ -1,14 +1,50 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.views import View
-from kernelCI_app.utils import extract_error_message, extract_platform
+from kernelCI_app.utils import (FilterParams, extract_error_message,
+                                extract_platform, InvalidComparisonOP, getErrorResponseBody, toIntOrDefault)
 from django.db import connection
 
 
 class TreeDetailsSlow(View):
+    def __processFilters(self, request):
+        filterTestStatus = ["FAIL", "MISS", "PASS", "DONE", "ERROR", "SKIP"]
+        filterTestDurationMin, filterTestDurationMax = None, None
+        filterBootStatus = ["FAIL", "MISS", "PASS", "DONE", "ERROR", "SKIP"]
+        filterBootDurationMin, filterBootDurationMax = None, None
+
+        try:
+            filter_params = FilterParams(request)
+            for f in filter_params.filters:
+                field = f["field"]
+                value = f["value"]
+                operation = f["comparison_op"]
+                if field == "boot.status":
+                    filterBootStatus = value
+                elif field == "boot.duration":
+                    if operation == "lte":
+                        filterBootDurationMax = toIntOrDefault(value, None)
+                    else:
+                        filterBootDurationMin = toIntOrDefault(value, None)
+                if field == "test.status":
+                    filterTestStatus = value
+                elif field == "test.duration":
+                    if operation == "lte":
+                        filterTestDurationMax = toIntOrDefault(value, None)
+                    else:
+                        filterTestDurationMin = toIntOrDefault(value, None)
+        except InvalidComparisonOP as e:
+            return HttpResponseBadRequest(getErrorResponseBody(str(e)))
+        return (filterTestStatus, filterTestDurationMin, filterTestDurationMax, filterBootStatus,
+                filterBootDurationMin, filterBootDurationMax)
+
     def get(self, request, commit_hash: str | None):
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
+
+        (filterTestStatus, filterTestDurationMin, filterTestDurationMax, filterBootStatus,
+         filterBootDurationMin, filterBootDurationMax) = self.__processFilters(request)
+
         query = """
         SELECT
                 tests.build_id AS tests_build_id,
@@ -65,15 +101,12 @@ class TreeDetailsSlow(View):
             tests.origin = %(origin_param)s
         """
         with connection.cursor() as cursor:
-            cursor.execute(
-                query,
-                {
-                    "commit_hash": commit_hash,
-                    "origin_param": origin_param,
-                    "git_url_param": git_url_param,
-                    "git_branch_param": git_branch_param,
-                },
-            )
+            cursor.execute(query, {
+                "commit_hash": commit_hash,
+                "origin_param": origin_param,
+                "git_url_param": git_url_param,
+                "git_branch_param": git_branch_param,
+            })
             rows = cursor.fetchall()
 
         testHistory = []
@@ -121,11 +154,12 @@ class TreeDetailsSlow(View):
             path = r[t["tests_path"]]
             testId = r[t["tests_id"]]
             testStatus = r[t["tests_status"]]
+            testDuration = r[t["tests_duration"]]
             buildConfig = r[t["builds_config_name"]]
             buildArch = r[t["builds_architecture"]]
             buildCompiler = r[t["builds_compiler"]]
 
-            testPlatform = extract_platform(r[t["tests_misc"]])
+            testPlatform = extract_platform(r[t["tests_enviroment_misc"]])
             testError = extract_error_message(r[t["tests_misc"]])
 
             #  Test history for boot and non boot
@@ -133,10 +167,21 @@ class TreeDetailsSlow(View):
                 "id": testId,
                 "status": testStatus,
                 "path": path,
-                "duration": r[t["tests_duration"]],
+                "duration": testDuration,
                 "startTime": r[t["tests_start_time"]],
             }
             if path.startswith("boot"):
+                if testStatus not in filterBootStatus:
+                    continue
+                if (
+                    filterBootDurationMax is not None
+                    and (testStatus is None or toIntOrDefault(testStatus, 0) > filterBootDurationMax)
+                ) and (
+                    filterBootDurationMin is not None
+                    and (testStatus is None or toIntOrDefault(testStatus, 0) < filterBootDurationMin)
+                ):
+                    continue
+
                 bootHistory.append(historyItem)
                 bootStatusSummary[testStatus] = bootStatusSummary.get(
                     testStatus, 0) + 1
@@ -147,7 +192,8 @@ class TreeDetailsSlow(View):
                     "compiler": buildCompiler,
                     "status": {}
                 })
-                archSummary["status"][testStatus] = archSummary["status"].get(testStatus, 0) + 1
+                archSummary["status"][testStatus] = archSummary["status"].get(
+                    testStatus, 0) + 1
                 bootArchSummary[archKey] = archSummary
 
                 configSummary = bootConfigs.get(buildConfig, {})
@@ -160,6 +206,16 @@ class TreeDetailsSlow(View):
                     bootFailReasons[testError] = bootFailReasons.get(
                         testError, 0) + 1
             else:
+                if testStatus not in filterTestStatus:
+                    continue
+                if (
+                    filterTestDurationMax is not None
+                    and (testStatus is None or toIntOrDefault(testStatus, 0) > filterTestDurationMax)
+                ) and (
+                    filterTestDurationMin is not None
+                    and (testStatus is None or toIntOrDefault(testStatus, 0) < filterTestDurationMin)
+                ):
+                    continue
                 testHistory.append(historyItem)
                 testStatusSummary[testStatus] = testStatusSummary.get(
                     testStatus, 0) + 1
@@ -170,7 +226,8 @@ class TreeDetailsSlow(View):
                     "compiler": buildCompiler,
                     "status": {}
                 })
-                archSummary["status"][testStatus] = archSummary["status"].get(testStatus, 0) + 1
+                archSummary["status"][testStatus] = archSummary["status"].get(
+                    testStatus, 0) + 1
                 testArchSummary[archKey] = archSummary
 
                 configSummary = testConfigs.get(buildConfig, {})

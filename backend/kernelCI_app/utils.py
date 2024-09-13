@@ -7,6 +7,13 @@ import re
 DEFAULT_QUERY_TIME_INTERVAL = {'days': 7}
 
 
+def toIntOrDefault(value, default):
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
 def extract_platform(misc_environment: Union[str, dict, None]):
     parsedEnvMisc = None
     if isinstance(misc_environment, dict):
@@ -105,11 +112,13 @@ class FilterParams():
 
     def add_filter(self, field, value, comparison_op):
         self.validate_comparison_op(comparison_op)
-        self.filters.append({'field': field, 'value': value, 'comparison_op': comparison_op})
+        self.filters.append({'field': field, 'value': value,
+                            'comparison_op': comparison_op})
 
     def validate_comparison_op(self, op):
         if op not in self.comparison_ops.keys():
-            raise InvalidComparisonOP(f'Filter with invalid comparison operator `{op}` found`')
+            raise InvalidComparisonOP(
+                f'Filter with invalid comparison operator `{op}` found`')
 
     def get_comparison_op(self, filter, op_type='orm'):
         idx = self.comparison_op_type_idx[op_type]

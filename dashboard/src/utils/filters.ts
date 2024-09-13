@@ -2,8 +2,14 @@ import { TTreeDetailsFilter } from '@/types/tree/TreeDetails';
 
 // TODO: We can improve this idea and replace mapFilterToReq entirely
 const requestFilters = {
-  boot: ['boot.status', 'boot.duration_[gte]', 'boot.duration_[lte]'],
-  test: ['test.status', 'test.duration_[gte]', 'test.duration_[lte]'],
+  test: [
+    'test.status',
+    'test.duration_[gte]',
+    'test.duration_[lte]',
+    'boot.status',
+    'boot.duration_[gte]',
+    'boot.duration_[lte]',
+  ],
   treeDetails: [
     'treeDetails.config_name',
     'treeDetails.architecture',
@@ -30,7 +36,11 @@ export const getTargetFilter = (
 
     const splitted = k.split('.');
     const field = splitted[splitted.length - 1];
-    acc[field] = v;
+    if (target == 'test') {
+      acc[k] = v;
+    } else {
+      acc[field] = v;
+    }
   });
 
   return acc;
