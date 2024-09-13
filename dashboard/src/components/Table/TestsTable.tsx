@@ -118,7 +118,7 @@ const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
           }));
       case 'failed':
         return data
-          ?.filter(tests => tests.error_tests > 0)
+          ?.filter(tests => tests.fail_tests > 0)
           .map(test => ({
             ...test,
             individual_tests: test.individual_tests.filter(
@@ -130,7 +130,7 @@ const TestsTable = ({ treeId }: ITestsTable): JSX.Element => {
           ?.filter(
             tests =>
               tests.done_tests > 0 ||
-              tests.fail_tests > 0 ||
+              tests.error_tests > 0 ||
               tests.miss_tests > 0 ||
               tests.skip_tests > 0 ||
               tests.null_tests > 0,
