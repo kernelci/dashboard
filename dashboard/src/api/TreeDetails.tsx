@@ -1,5 +1,7 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
+import { useSearch } from '@tanstack/react-router';
+
 import {
   TTreeTestsData,
   BuildsTab,
@@ -15,13 +17,47 @@ import { getTargetFilter } from '@/utils/filters';
 
 import http from './api';
 
+type TreeSearchParameters = {
+  origin: string;
+  gitUrl?: string;
+  gitBranch?: string;
+};
+
+const useTreeSearchParameters = (): TreeSearchParameters => {
+  const {
+    origin,
+    treeInfo: { gitUrl, gitBranch },
+  } = useSearch({ from: '/tree/$treeId' });
+
+  return { origin, gitUrl, gitBranch };
+};
+
+function assertTreeSearchParameters(
+  treeSearchParameters: TreeSearchParameters,
+  locationMessage: string,
+): asserts treeSearchParameters is Required<TreeSearchParameters> {
+  if (!treeSearchParameters.gitUrl) {
+    throw new Error(`Git URL is required in ${locationMessage}`);
+  }
+  if (!treeSearchParameters.gitBranch) {
+    throw new Error(`Git Branch is required in ${locationMessage}`);
+  }
+}
+
 const fetchTreeDetailData = async (
   treeId: string,
+  treeSearchParameters: TreeSearchParameters,
   filter: TTreeDetailsFilter | Record<string, never>,
 ): Promise<BuildsTab> => {
-  const filterParam = mapFiltersToUrlSearchParams(filter);
+  const searchParam = mapFiltersToUrlSearchParams(filter);
 
-  const res = await http.get(`/api/tree/${treeId}`, { params: filterParam });
+  assertTreeSearchParameters(treeSearchParameters, 'useBuildsTab');
+
+  searchParam.append('origin', treeSearchParameters.origin);
+  searchParam.append('git_url', treeSearchParameters.gitUrl);
+  searchParam.append('git_branch', treeSearchParameters.gitBranch);
+
+  const res = await http.get(`/api/tree/${treeId}`, { params: searchParam });
   return res.data;
 };
 
@@ -46,9 +82,12 @@ export const useBuildsTab = (
 ): UseQueryResult<BuildsTab> => {
   const detailsFilter = getTargetFilter(filter, 'treeDetails');
 
+  const treeSearchParameters = useTreeSearchParameters();
+
   return useQuery({
-    queryKey: ['treeData', treeId, detailsFilter],
-    queryFn: () => fetchTreeDetailData(treeId, detailsFilter),
+    queryKey: ['treeData', treeId, detailsFilter, treeSearchParameters],
+    queryFn: () =>
+      fetchTreeDetailData(treeId, treeSearchParameters, detailsFilter),
   });
 };
 

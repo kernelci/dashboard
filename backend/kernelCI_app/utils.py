@@ -12,7 +12,7 @@ def getQueryTimeInterval(**kwargs):
     return timezone.now() - timedelta(**kwargs)
 
 
-def getErrorResponseBody(reason):
+def getErrorResponseBody(reason: str):
     return json.dumps({"error": True, "reason": reason})
 
 
