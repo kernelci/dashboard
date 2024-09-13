@@ -101,8 +101,9 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
     ],
   );
 
-  const date = row.date.split('T')[0] ?? '';
-  const time = row.date.split('T')[1].split('.')[0] ?? '';
+  const dateObj = new Date(row.date);
+  const date = dateObj.toLocaleDateString();
+  const time = dateObj.toLocaleTimeString();
 
   return (
     <TableRow>
