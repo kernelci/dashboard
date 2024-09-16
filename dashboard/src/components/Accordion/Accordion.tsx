@@ -212,41 +212,24 @@ const AccordionTestsContent = ({
 }: IAccordionTestContent): JSX.Element => {
   const navigate = useNavigate({ from: '/tree/$treeId' });
 
-  const onClickName = useCallback(
-    (e: React.MouseEvent<HTMLTableRowElement>) => {
-      const newTestPath = e.currentTarget.querySelector(
-        'td:first-child',
-      ) as HTMLTableCellElement;
-      if (newTestPath) {
-        navigate({
-          to: '/tree/$treeId/test/$testId',
-          params: {
-            testId: newTestPath.innerText,
-          },
-          search: s => s,
-        });
-      }
+  const onClickRow = useCallback(
+    (testId: string) => {
+      navigate({
+        to: '/tree/$treeId/test/$testId',
+        params: {
+          testId: testId,
+        },
+        search: s => s,
+      });
     },
     [navigate],
   );
 
   const rows = useMemo(() => {
     return data.map(test => (
-      <TableRow
-        className="cursor-pointer hover:bg-lightBlue"
-        onClick={onClickName}
-        key={test.id}
-      >
-        <TableCell>{test.path}</TableCell>
-        <TableCell>{test.status}</TableCell>
-        <TableCell>{test.start_time ?? '-'}</TableCell>
-        <TableCell>{test.duration ?? '-'}</TableCell>
-        <TableCell>
-          <ChevronRightAnimate />
-        </TableCell>
-      </TableRow>
+      <TestTableRow key={test.id} test={test} onClick={onClickRow} />
     ));
-  }, [data, onClickName]);
+  }, [data, onClickRow]);
 
   return (
     <div className="h-max-12 overflow-scroll">
@@ -254,6 +237,30 @@ const AccordionTestsContent = ({
         <TableBody>{rows}</TableBody>
       </BaseTable>
     </div>
+  );
+};
+
+interface ITestTableRow {
+  test: TIndividualTest;
+  onClick: (testId: string) => void;
+}
+
+const TestTableRow = ({ test, onClick }: ITestTableRow): JSX.Element => {
+  const onClickHandle = useCallback(() => onClick(test.id), [onClick, test.id]);
+  return (
+    <TableRow
+      className="cursor-pointer hover:bg-lightBlue"
+      onClick={onClickHandle}
+      key={test.id}
+    >
+      <TableCell>{test.path}</TableCell>
+      <TableCell>{test.status}</TableCell>
+      <TableCell>{test.start_time ?? '-'}</TableCell>
+      <TableCell>{test.duration ?? '-'}</TableCell>
+      <TableCell>
+        <ChevronRightAnimate />
+      </TableCell>
+    </TableRow>
   );
 };
 
