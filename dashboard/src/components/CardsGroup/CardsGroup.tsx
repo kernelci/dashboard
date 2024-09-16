@@ -25,7 +25,7 @@ const CardsGroup = ({ cards }: ICardsGroup): JSX.Element => {
       return (
         <BaseCard
           key={card.key}
-          title={<span>{card.title}</span> ?? ''}
+          title={<span>{card.title}</span>}
           content={<CardContent card={card} />}
         />
       );
