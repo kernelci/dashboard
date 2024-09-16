@@ -58,6 +58,11 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
     ? JSON.parse(misc).platform
     : intl.formatMessage({ id: 'global.unknown' });
 
+  const buildDetailsLink =
+    `${window.location.origin}` +
+    `/tree/${test.git_commit_hash}/build/${test.build_id}` +
+    `${window.location.search}`;
+
   const infos: ISubsection['infos'] = useMemo(() => {
     const baseInfo = [
       {
@@ -80,7 +85,7 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
       {
         title: intl.formatMessage({ id: 'testDetails.logUrl' }),
         linkText: truncateBigText(valueOrEmpty(test.log_url)),
-        link: valueOrEmpty(test.log_url),
+        link: test.log_url,
       },
       {
         title: intl.formatMessage({ id: 'testDetails.gitCommitHash' }),
@@ -89,11 +94,16 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
       {
         title: intl.formatMessage({ id: 'testDetails.gitRepositoryUrl' }),
         linkText: truncateBigText(valueOrEmpty(test.git_repository_url)),
-        link: valueOrEmpty(test.git_repository_url),
+        link: test.git_repository_url,
       },
       {
         title: intl.formatMessage({ id: 'testDetails.gitRepositoryBranch' }),
         linkText: valueOrEmpty(test.git_repository_branch),
+      },
+      {
+        title: intl.formatMessage({ id: 'testDetails.buildInfo' }),
+        linkText: truncateBigText(test.build_id),
+        link: buildDetailsLink,
       },
       {
         title: intl.formatMessage({ id: 'testDetails.platform' }),
@@ -105,6 +115,7 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
   }, [
     intl,
     test.architecture,
+    test.build_id,
     test.compiler,
     test.git_commit_hash,
     test.git_repository_branch,
@@ -113,6 +124,7 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
     test.path,
     test.status,
     platform,
+    buildDetailsLink,
   ]);
   return <Subsection infos={infos} />;
 };

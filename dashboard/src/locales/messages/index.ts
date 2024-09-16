@@ -148,6 +148,7 @@ export const messages = {
     'table.showing': 'Showing:',
     'table.tree': 'Tree',
     'testDetails.arch': 'Arch',
+    'testDetails.buildInfo': 'Build Info',
     'testDetails.compiler': 'Compiler',
     'testDetails.duration': 'Duration',
     'testDetails.errorMessage': 'Error message',

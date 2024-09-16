@@ -1,3 +1,5 @@
+import { FiLink } from 'react-icons/fi';
+
 import { ReactElement, useMemo } from 'react';
 
 import LinkWithIcon, { ILinkWithIcon } from '../LinkWithIcon/LinkWithIcon';
@@ -21,7 +23,13 @@ export const Subsection = ({ infos }: ISubsection): JSX.Element => {
           title={info.title}
           link={info.link}
           linkText={info.linkText}
-          icon={info.icon}
+          icon={
+            info.link && !info.icon ? (
+              <FiLink className="text-blue" />
+            ) : (
+              info.icon
+            )
+          }
         />
       )),
     [infos],
