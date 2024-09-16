@@ -156,7 +156,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
       ) : (
         '-'
       ),
-      date: row.date?.split('T')[0],
+      date: row.date,
     }));
   }, [treeDetailsData?.builds]);
 

@@ -5,6 +5,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { MdChevronRight } from 'react-icons/md';
 
 import BaseTable from '@/components/Table/BaseTable';
+import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { TableInfo } from '@/components/Table/TableInfo';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { usePagination } from '@/hooks/usePagination';
@@ -124,7 +125,14 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
       <TableRow onClick={() => onClickName(test.id)} key={test.id}>
         <TableCell>{test.path}</TableCell>
         <TableCell>{test.status}</TableCell>
-        <TableCell>{test.startTime ?? '-'}</TableCell>
+        <TableCell>
+          <TooltipDateTime
+            dateTime={test.startTime}
+            lineBreak={true}
+            showLabelTime={true}
+            showLabelTZ={true}
+          />
+        </TableCell>
         <TableCell>{test.duration ?? '-'}</TableCell>
         <TableCell>
           <MdChevronRight />

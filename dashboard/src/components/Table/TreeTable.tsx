@@ -18,6 +18,8 @@ import { TreeTableBody, zOrigin } from '@/types/tree/Tree';
 
 import { TableRow, TableCell, TableBody } from '@/components/ui/table';
 
+import { TooltipDateTime } from '@/components/TooltipDateTime';
+
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
@@ -101,10 +103,6 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
     ],
   );
 
-  const dateObj = new Date(row.date);
-  const date = dateObj.toLocaleDateString();
-  const time = dateObj.toLocaleTimeString();
-
   return (
     <TableRow>
       <TableCell
@@ -138,18 +136,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         onClick={navigateToTreeDetailPage}
         data-target="treeDetails.builds"
       >
-        <Tooltip>
-          <TooltipTrigger>
-            <div>{date}</div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <div className="text-center">
-              {date}
-              <br />
-              {time}
-            </div>
-          </TooltipContent>
-        </Tooltip>
+        <TooltipDateTime dateTime={row.date} lineBreak={true} />
       </TableCell>
       <TableCell
         onClick={navigateToTreeDetailPage}

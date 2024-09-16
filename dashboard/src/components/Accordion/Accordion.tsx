@@ -28,6 +28,8 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 
+import { TooltipDateTime } from '@/components/TooltipDateTime';
+
 import AccordionBuildContent from './BuildAccordionContent';
 
 export interface IAccordion {
@@ -165,7 +167,18 @@ const AccordionBuildsTrigger = ({
     <>
       <TableCell>{triggerInfo.config}</TableCell>
       <TableCell>{triggerInfo.compiler}</TableCell>
-      <TableCell>{triggerInfo.date}</TableCell>
+      <TableCell>
+        {triggerInfo.date ? (
+          <TooltipDateTime
+            dateTime={triggerInfo.date}
+            lineBreak={true}
+            showLabelTime={true}
+            showLabelTZ={true}
+          />
+        ) : (
+          '-'
+        )}
+      </TableCell>
       <TableCell>
         <ColoredCircle
           className="max-w-6"
@@ -255,7 +268,14 @@ const TestTableRow = ({ test, onClick }: ITestTableRow): JSX.Element => {
     >
       <TableCell>{test.path}</TableCell>
       <TableCell>{test.status}</TableCell>
-      <TableCell>{test.start_time ?? '-'}</TableCell>
+      <TableCell>
+        <TooltipDateTime
+          dateTime={test.start_time}
+          lineBreak={true}
+          showLabelTime={true}
+          showLabelTZ={true}
+        />
+      </TableCell>
       <TableCell>{test.duration ?? '-'}</TableCell>
       <TableCell>
         <ChevronRightAnimate />

@@ -14,6 +14,8 @@ import { ISection } from '@/components/Section/Section';
 import { useBuildDetails } from '@/api/BuildDetails';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
+import { formatDate } from '@/utils/utils';
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -85,7 +87,7 @@ const BuildDetails = (): JSX.Element => {
               },
               {
                 title: intl.formatMessage({ id: 'global.date' }),
-                linkText: valueOrEmpty(data.timestamp),
+                linkText: formatDate(valueOrEmpty(data.start_time)),
               },
               {
                 title: intl.formatMessage({ id: 'global.defconfig' }),

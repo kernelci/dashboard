@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+
 export function formatDate(date: Date | string): string {
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -14,3 +16,7 @@ export function formatDate(date: Date | string): string {
 
   return new Intl.DateTimeFormat('en-US', options).format(date);
 }
+
+export const getDateOffset = (date: Date): string => {
+  return format(date, 'z');
+};
