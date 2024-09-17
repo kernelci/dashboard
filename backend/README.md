@@ -53,3 +53,10 @@ We are not using sessions or anything like that right now, so changing the secre
 
 # Requests
 In the `/requests` directory we have scripts that execute requests to endpoints using [httpie](https://httpie.io/)
+
+
+# Debug
+
+For debugging we have two env variables
+
+`DEBUG` and `DEBUG_SQL_QUERY` that can be set to `True` to enable debugging. The reason `DEBUG_SQL_QUERY` is separated is that it can be very verbose.
