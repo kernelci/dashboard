@@ -47,6 +47,12 @@ const ColoredCircle = ({
           'inline-flex h-6 w-fit min-w-6 items-center justify-center rounded-full px-2 text-sm text-black',
           className,
           backgroundClassName,
+          {
+            ['bg-opacity-20']:
+              quantity == 0 &&
+              (tooltipText == 'global.failed' ||
+                tooltipText == 'global.inconclusive'),
+          },
         )}
       >
         {quantity}
