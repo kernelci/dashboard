@@ -13,6 +13,7 @@ import { useTreeCommitHistory } from '@/api/TreeDetails';
 import type { TLineChartProps } from '@/components/LineChart/LineChart';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MessagesKey } from '@/locales/messages';
+import { formatDate } from '@/utils/utils';
 
 const graphDisplaySize = 7;
 
@@ -94,9 +95,7 @@ const CommitNavigationGraph = (): JSX.Element => {
       color: Colors.Red,
     },
     {
-      label: formatMessage({
-        id: messagesId.mid,
-      }),
+      label: formatMessage({ id: messagesId.mid }),
       id: 'mid',
       data: [],
       color: Colors.Gray,
@@ -109,6 +108,7 @@ const CommitNavigationGraph = (): JSX.Element => {
   type TCommitValue = {
     commitHash: string;
     commitName?: string;
+    earliestStartTime?: string;
   };
 
   const commitData: TCommitValue[] = [];
@@ -143,6 +143,7 @@ const CommitNavigationGraph = (): JSX.Element => {
     commitData.unshift({
       commitHash: item.git_commit_hash,
       commitName: item.git_commit_name,
+      earliestStartTime: item.earliest_start_time,
     });
     xAxisIndexes.push(index);
   });
@@ -153,12 +154,21 @@ const CommitNavigationGraph = (): JSX.Element => {
       min: 100,
       data: xAxisIndexes,
       valueFormatter: (value: number, context): string => {
+        const currentCommitData = commitData[value];
+        const currentCommitDateTime = formatDate(
+          currentCommitData.earliestStartTime ?? '-',
+          true,
+        );
+
         if (context.location == 'tooltip') {
-          const currentCommitData = commitData[value];
-          return currentCommitData.commitName ?? currentCommitData.commitHash;
+          return (
+            (currentCommitData.commitName ?? currentCommitData.commitHash) +
+            ' - ' +
+            currentCommitDateTime
+          );
         }
 
-        return `commitIndex-${value}`;
+        return `commitIndex-${value} - ${currentCommitDateTime}`;
       },
     },
   ];
