@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useParams, useSearch } from '@tanstack/react-router';
+import { useParams } from '@tanstack/react-router';
 
 import { Skeleton } from '@/components/Skeleton';
 
@@ -30,16 +30,7 @@ interface TestsTabProps {
 
 const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
-  const { origin, treeInfo } = useSearch({
-    from: '/tree/$treeId/',
-  });
-  const { isLoading, data, error } = useTestsTab(
-    treeId ?? '',
-    origin,
-    treeInfo.gitBranch ?? '',
-    treeInfo.gitUrl ?? '',
-    reqFilter,
-  );
+  const { isLoading, data, error } = useTestsTab(treeId ?? '', reqFilter);
 
   if (error || !treeId) {
     return (
