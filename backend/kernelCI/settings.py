@@ -193,6 +193,8 @@ MIGRATION_MODULES = DisableMigrations()
 
 CORS_ALLOW_ALL_ORIGINS = False
 
+CACHE_TIMEOUT = int(get_json_env_var("CACHE_TIMEOUT", "600"))
+
 if DEBUG:
     CORS_ALLOWED_ORIGIN_REGEXES = [
         r"^http://localhost",  # dashboard dev server
@@ -201,6 +203,7 @@ if DEBUG:
     CSRF_COOKIE_SECURE = False
     SECURE_SSL_REDIRECT = False
     SECURE_HSTS_SECONDS = 3600
+    CACHE_TIMEOUT = 0
 
 if DEBUG_SQL_QUERY:
     LOGGING = {
@@ -229,6 +232,3 @@ if DEBUG_SQL_QUERY:
             },
         },
     }
-
-
-CACHE_TIMEOUT = int(get_json_env_var("CACHE_TIMEOUT", "600"))
