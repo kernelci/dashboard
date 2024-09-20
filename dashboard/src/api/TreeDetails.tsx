@@ -76,6 +76,22 @@ const mapFiltersToUrlSearchParams = (
   return filterParam;
 };
 
+// TODO, remove this function, is just a step further towards the final implementation
+const mapFiltersKeysToBackendCompatible = (
+  filter: TTreeDetailsFilter | Record<string, never>,
+): Record<string, string> => {
+  const filterParam: { [key: string]: string } = {};
+
+  Object.keys(filter).forEach(key => {
+    const filterList = filter[key as keyof TTreeDetailsFilter];
+    filterList?.forEach(
+      value => (filterParam[`filter_${key}`] = value.toString()),
+    );
+  });
+
+  return filterParam;
+};
+
 export const useBuildsTab = (
   treeId: string,
   filter: TTreeDetailsFilter | Record<string, never> = {},
@@ -93,21 +109,26 @@ export const useBuildsTab = (
 
 const fetchTreeTestsData = async (
   treeId: string,
-  params?: {
-    origin: string;
-    git_branch: string;
-    git_url: string;
-  },
+  treeSearchParameters: TreeSearchParameters,
   filter: TTreeDetailsFilter = {},
 ): Promise<TTreeTestsFullData> => {
-  const urlParams = mapFiltersToUrlSearchParams(filter);
-  if (params !== undefined) {
-    Object.entries(params).forEach(([k, v]) =>
-      urlParams.append(k, v.toString()),
-    );
-  }
+  assertTreeSearchParameters(
+    treeSearchParameters,
+    'fetchTreeTestsData - useSearchTab',
+  );
+
+  const params = {
+    git_branch: treeSearchParameters.gitBranch,
+    git_url: treeSearchParameters.gitUrl,
+    origin: treeSearchParameters.origin,
+    ...mapFiltersKeysToBackendCompatible(filter),
+  };
+
   const res = await http.get<TTreeTestsFullData>(`/api/tree/${treeId}/full`, {
-    params: urlParams,
+    params: params,
+    paramsSerializer: {
+      indexes: null,
+    },
   });
 
   return res.data;
@@ -115,21 +136,25 @@ const fetchTreeTestsData = async (
 
 export const useTestsTab = (
   treeId: string,
-  origin: string,
-  git_branch: string,
-  git_url: string,
   filter: TTreeDetailsFilter,
 ): UseQueryResult<TTreeTestsFullData> => {
-  const params = {
-    origin: origin,
-    git_branch: git_branch,
-    git_url: git_url,
-  };
   const testFilter = getTargetFilter(filter, 'test');
+  const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
+  const treeSearchParameters = useTreeSearchParameters();
 
   return useQuery({
-    queryKey: ['treeTests', treeId, params, testFilter],
-    queryFn: () => fetchTreeTestsData(treeId, params, testFilter),
+    queryKey: [
+      'treeTests',
+      treeId,
+      treeSearchParameters,
+      testFilter,
+      treeDetailsFilter,
+    ],
+    queryFn: () =>
+      fetchTreeTestsData(treeId, treeSearchParameters, {
+        ...testFilter,
+        ...treeDetailsFilter,
+      }),
   });
 };
 

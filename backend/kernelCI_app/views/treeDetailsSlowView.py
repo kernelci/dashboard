@@ -1,32 +1,47 @@
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views import View
-from kernelCI_app.utils import (FilterParams, extract_error_message,
-                                extract_platform, InvalidComparisonOP, getErrorResponseBody, toIntOrDefault)
+from kernelCI_app.utils import (
+    FilterParams,
+    extract_error_message,
+    extract_platform,
+    InvalidComparisonOP,
+    getErrorResponseBody,
+    toIntOrDefault,
+)
 from django.db import connection
 
 
 class TreeDetailsSlow(View):
-    def __processFilters(self, request):
-        filterTestStatus = ["FAIL", "MISS", "PASS", "DONE", "ERROR", "SKIP"]
+    def __processFilters(self, request):  # noqa: max-complexity=13
+        filterTestStatus = set()
         filterTestDurationMin, filterTestDurationMax = None, None
-        filterBootStatus = ["FAIL", "MISS", "PASS", "DONE", "ERROR", "SKIP"]
+        filterBootStatus = set()
         filterBootDurationMin, filterBootDurationMax = None, None
+        filterTreeDetailsConfigs = set()
+        filterTreeDetailsCompiler = set()
+        filterArchitecture = set()
 
         try:
             filter_params = FilterParams(request)
-            for f in filter_params.filters:
-                field = f["field"]
-                value = f["value"]
-                operation = f["comparison_op"]
+            for current_filter in filter_params.filters:
+                field = current_filter["field"]
+                value = current_filter["value"]
+                operation = current_filter["comparison_op"]
                 if field == "boot.status":
-                    filterBootStatus = value
+                    filterBootStatus.add(value)
                 elif field == "boot.duration":
                     if operation == "lte":
                         filterBootDurationMax = toIntOrDefault(value, None)
                     else:
                         filterBootDurationMin = toIntOrDefault(value, None)
                 if field == "test.status":
-                    filterTestStatus = value
+                    filterTestStatus.add(value)
+                if field == "config_name":
+                    filterTreeDetailsConfigs.add(value)
+                if field == "compiler":
+                    filterTreeDetailsCompiler.add(value)
+                if field == "architecture":
+                    filterArchitecture.add(value)
                 elif field == "test.duration":
                     if operation == "lte":
                         filterTestDurationMax = toIntOrDefault(value, None)
@@ -34,16 +49,34 @@ class TreeDetailsSlow(View):
                         filterTestDurationMin = toIntOrDefault(value, None)
         except InvalidComparisonOP as e:
             return HttpResponseBadRequest(getErrorResponseBody(str(e)))
-        return (filterTestStatus, filterTestDurationMin, filterTestDurationMax, filterBootStatus,
-                filterBootDurationMin, filterBootDurationMax)
+        return (
+            filterTestStatus,
+            filterTestDurationMin,
+            filterTestDurationMax,
+            filterBootStatus,
+            filterBootDurationMin,
+            filterBootDurationMax,
+            filterTreeDetailsConfigs,
+            filterTreeDetailsCompiler,
+            filterArchitecture,
+        )
 
-    def get(self, request, commit_hash: str | None):
+    def get(self, request, commit_hash: str | None):  # noqa: max-complexity=13
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
 
-        (filterTestStatus, filterTestDurationMin, filterTestDurationMax, filterBootStatus,
-         filterBootDurationMin, filterBootDurationMax) = self.__processFilters(request)
+        (
+            filterTestStatus,
+            filterTestDurationMin,
+            filterTestDurationMax,
+            filterBootStatus,
+            filterBootDurationMin,
+            filterBootDurationMax,
+            filterTreeDetailsConfigs,
+            filterTreeDetailsCompiler,
+            filterArchitecture,
+        ) = self.__processFilters(request)
 
         query = """
         SELECT
@@ -101,12 +134,15 @@ class TreeDetailsSlow(View):
             tests.origin = %(origin_param)s
         """
         with connection.cursor() as cursor:
-            cursor.execute(query, {
-                "commit_hash": commit_hash,
-                "origin_param": origin_param,
-                "git_url_param": git_url_param,
-                "git_branch_param": git_branch_param,
-            })
+            cursor.execute(
+                query,
+                {
+                    "commit_hash": commit_hash,
+                    "origin_param": origin_param,
+                    "git_url_param": git_url_param,
+                    "git_branch_param": git_branch_param,
+                },
+            )
             rows = cursor.fetchall()
 
         testHistory = []
@@ -149,18 +185,32 @@ class TreeDetailsSlow(View):
             "builds_log_url": 24,
             "builds_valid": 25,
         }
-        t = tempColumnDict
-        for r in rows:
-            path = r[t["tests_path"]]
-            testId = r[t["tests_id"]]
-            testStatus = r[t["tests_status"]]
-            testDuration = r[t["tests_duration"]]
-            buildConfig = r[t["builds_config_name"]]
-            buildArch = r[t["builds_architecture"]]
-            buildCompiler = r[t["builds_compiler"]]
+        for currentRow in rows:
+            path = currentRow[tempColumnDict["tests_path"]]
+            testId = currentRow[tempColumnDict["tests_id"]]
+            testStatus = currentRow[tempColumnDict["tests_status"]]
+            testDuration = currentRow[tempColumnDict["tests_duration"]]
+            buildConfig = currentRow[tempColumnDict["builds_config_name"]]
+            buildArch = currentRow[tempColumnDict["builds_architecture"]]
+            buildCompiler = currentRow[tempColumnDict["builds_compiler"]]
 
-            testPlatform = extract_platform(r[t["tests_enviroment_misc"]])
-            testError = extract_error_message(r[t["tests_misc"]])
+            testPlatform = extract_platform(
+                currentRow[tempColumnDict["tests_enviroment_misc"]]
+            )
+            testError = extract_error_message(currentRow[tempColumnDict["tests_misc"]])
+
+            if (
+                (len(filterArchitecture) > 0 and (buildArch not in filterArchitecture))
+                or (
+                    len(filterTreeDetailsCompiler) > 0
+                    and (buildCompiler not in filterTreeDetailsCompiler)
+                )
+                or (
+                    len(filterTreeDetailsConfigs) > 0
+                    and (buildConfig not in filterTreeDetailsConfigs)
+                )
+            ):
+                continue
 
             #  Test history for boot and non boot
             historyItem = {
@@ -168,77 +218,80 @@ class TreeDetailsSlow(View):
                 "status": testStatus,
                 "path": path,
                 "duration": testDuration,
-                "startTime": r[t["tests_start_time"]],
+                "startTime": currentRow[tempColumnDict["tests_start_time"]],
             }
             if path.startswith("boot"):
-                if testStatus not in filterBootStatus:
+                if len(filterBootStatus) > 0 and (testStatus not in filterBootStatus):
                     continue
-                if (
-                    filterBootDurationMax is not None
-                    and (testStatus is None or toIntOrDefault(testStatus, 0) > filterBootDurationMax)
-                ) and (
-                    filterBootDurationMin is not None
-                    and (testStatus is None or toIntOrDefault(testStatus, 0) < filterBootDurationMin)
+                if filterBootDurationMax is not None and (
+                    toIntOrDefault(testDuration, 0) > filterBootDurationMax
+                ):
+                    continue
+
+                if filterBootDurationMin is not None and (
+                    toIntOrDefault(testDuration, 0) < filterBootDurationMin
                 ):
                     continue
 
                 bootHistory.append(historyItem)
-                bootStatusSummary[testStatus] = bootStatusSummary.get(
-                    testStatus, 0) + 1
+                bootStatusSummary[testStatus] = bootStatusSummary.get(testStatus, 0) + 1
 
                 archKey = "%s-%s" % (buildArch, buildCompiler)
-                archSummary = bootArchSummary.get(archKey, {
-                    "arch": buildArch,
-                    "compiler": buildCompiler,
-                    "status": {}
-                })
-                archSummary["status"][testStatus] = archSummary["status"].get(
-                    testStatus, 0) + 1
+                archSummary = bootArchSummary.get(
+                    archKey,
+                    {"arch": buildArch, "compiler": buildCompiler, "status": {}},
+                )
+                archSummary["status"][testStatus] = (
+                    archSummary["status"].get(testStatus, 0) + 1
+                )
                 bootArchSummary[archKey] = archSummary
 
                 configSummary = bootConfigs.get(buildConfig, {})
-                configSummary[testStatus] = configSummary.get(
-                    testStatus, 0) + 1
+                configSummary[testStatus] = configSummary.get(testStatus, 0) + 1
                 bootConfigs[buildConfig] = configSummary
 
-                if testStatus == "ERROR" or testStatus == "FAIL" or testStatus == "MISS":
-                    bootPlatformsFailing.add(testPlatform)
-                    bootFailReasons[testError] = bootFailReasons.get(
-                        testError, 0) + 1
-            else:
-                if testStatus not in filterTestStatus:
-                    continue
                 if (
-                    filterTestDurationMax is not None
-                    and (testStatus is None or toIntOrDefault(testStatus, 0) > filterTestDurationMax)
-                ) and (
-                    filterTestDurationMin is not None
-                    and (testStatus is None or toIntOrDefault(testStatus, 0) < filterTestDurationMin)
+                    testStatus == "ERROR"
+                    or testStatus == "FAIL"
+                    or testStatus == "MISS"
+                ):
+                    bootPlatformsFailing.add(testPlatform)
+                    bootFailReasons[testError] = bootFailReasons.get(testError, 0) + 1
+            else:
+                if len(filterTestStatus) > 0 and (testStatus not in filterTestStatus):
+                    continue
+                if filterTestDurationMax is not None and (
+                    toIntOrDefault(testDuration, 0) > filterTestDurationMax
+                ):
+                    continue
+                if filterTestDurationMin is not None and (
+                    toIntOrDefault(testDuration, 0) < filterTestDurationMin
                 ):
                     continue
                 testHistory.append(historyItem)
-                testStatusSummary[testStatus] = testStatusSummary.get(
-                    testStatus, 0) + 1
+                testStatusSummary[testStatus] = testStatusSummary.get(testStatus, 0) + 1
 
                 archKey = "%s-%s" % (buildArch, buildCompiler)
-                archSummary = testArchSummary.get(archKey, {
-                    "arch": buildArch,
-                    "compiler": buildCompiler,
-                    "status": {}
-                })
-                archSummary["status"][testStatus] = archSummary["status"].get(
-                    testStatus, 0) + 1
+                archSummary = testArchSummary.get(
+                    archKey,
+                    {"arch": buildArch, "compiler": buildCompiler, "status": {}},
+                )
+                archSummary["status"][testStatus] = (
+                    archSummary["status"].get(testStatus, 0) + 1
+                )
                 testArchSummary[archKey] = archSummary
 
                 configSummary = testConfigs.get(buildConfig, {})
-                configSummary[testStatus] = configSummary.get(
-                    testStatus, 0) + 1
+                configSummary[testStatus] = configSummary.get(testStatus, 0) + 1
                 testConfigs[buildConfig] = configSummary
 
-                if testStatus == "ERROR" or testStatus == "FAIL" or testStatus == "MISS":
+                if (
+                    testStatus == "ERROR"
+                    or testStatus == "FAIL"
+                    or testStatus == "MISS"
+                ):
                     testPlatformsWithErrors.add(testPlatform)
-                    testFailReasons[testError] = testFailReasons.get(
-                        testError, 0) + 1
+                    testFailReasons[testError] = testFailReasons.get(testError, 0) + 1
 
         return JsonResponse(
             {
@@ -253,7 +306,7 @@ class TreeDetailsSlow(View):
                 "testStatusSummary": testStatusSummary,
                 "bootStatusSummary": bootStatusSummary,
                 "bootHistory": bootHistory,
-                "testHistory": testHistory
+                "testHistory": testHistory,
             },
-            safe=False
+            safe=False,
         )
