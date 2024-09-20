@@ -1,6 +1,6 @@
 import { useSearch } from '@tanstack/react-router';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -16,6 +16,7 @@ import { useTreeTable } from '@/api/Tree';
 import { TableInfo } from '@/components/Table/TableInfo';
 
 import { formattedBreakLineValue } from '@/locales/messages';
+import { ItemsPerPageValues } from '@/utils/constants/general';
 
 interface ITreeListingPage {
   inputFilter: string;
@@ -24,6 +25,7 @@ interface ITreeListingPage {
 const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
+  const [itemsPerPage, setItemsPerPage] = useState(ItemsPerPageValues[0]);
 
   const { data, error, isLoading } = useTreeTable(origin);
 
@@ -87,7 +89,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   }, [data, error, inputFilter]);
 
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
-    usePagination(listItems.length, ITEMS_PER_PAGE);
+    usePagination(listItems.length, itemsPerPage);
 
   if (error) {
     return <div>Error: {error.message}</div>;
@@ -100,6 +102,20 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
       </Skeleton>
     );
 
+  const tableInfoElement = (
+    <TableInfo
+      itemName="global.tree"
+      startIndex={startIndex + 1}
+      endIndex={endIndex}
+      totalTrees={listItems.length}
+      itemsPerPageValues={ItemsPerPageValues}
+      itemsPerPageSelected={itemsPerPage}
+      onChangeItemsPerPage={setItemsPerPage}
+      onClickBack={onClickGoBack}
+      onClickForward={onClickGoForward}
+    />
+  );
+
   return data && data.length > 0 ? (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
@@ -109,30 +125,10 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
             values={formattedBreakLineValue}
           />
         </span>
-        <div className="flex items-end gap-4">
-          <TableInfo
-            itemName="global.tree"
-            startIndex={startIndex + 1}
-            endIndex={endIndex}
-            totalTrees={listItems.length}
-            itemsPerPage={ITEMS_PER_PAGE}
-            onClickBack={onClickGoBack}
-            onClickForward={onClickGoForward}
-          />
-        </div>
+        {tableInfoElement}
       </div>
       <TreeTable treeTableRows={listItems.slice(startIndex, endIndex)} />
-      <div className="flex flex-col items-end">
-        <TableInfo
-          itemName="global.tree"
-          startIndex={startIndex + 1}
-          endIndex={endIndex}
-          totalTrees={listItems.length}
-          itemsPerPage={ITEMS_PER_PAGE}
-          onClickBack={onClickGoBack}
-          onClickForward={onClickGoForward}
-        />
-      </div>
+      <div className="flex flex-col items-end">{tableInfoElement}</div>
     </div>
   ) : (
     <div className="grid h-[400px] place-items-center rounded-md bg-slate-100 dark:bg-slate-800">
@@ -140,7 +136,5 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
     </div>
   );
 };
-
-const ITEMS_PER_PAGE = 10;
 
 export default TreeListingPage;

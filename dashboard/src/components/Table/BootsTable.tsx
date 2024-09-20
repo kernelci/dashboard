@@ -22,6 +22,8 @@ import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
 
 import { getStatusGroup } from '@/utils/status';
 
+import { ItemsPerPageValues } from '@/utils/constants/general';
+
 import TableStatusFilter from './TableStatusFilter';
 
 const headerLabelOrElement: (string | ReactElement)[] = [
@@ -40,14 +42,14 @@ const headerElements = headerLabelOrElement.map(item =>
   typeof item === 'string' ? <p key={item}>{item}</p> : item,
 );
 
-const ITEMS_PER_PAGE = 10;
-
 export interface ITestsTable {
   treeId: string;
   testHistory: TestHistory[];
 }
 
 const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
+  const [itemsPerPage, setItemsPerPage] = useState(ItemsPerPageValues[0]);
+
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const intl = useIntl();
   const { diffFilter } = useSearch({
@@ -100,7 +102,7 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(
       data_len,
-      ITEMS_PER_PAGE,
+      itemsPerPage,
       tableFilter.bootsTable,
       tableFilter.testsTable,
       tableFilter.buildsTable,
@@ -148,7 +150,9 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
         startIndex={startIndex + 1}
         endIndex={endIndex}
         totalTrees={data_len}
-        itemsPerPage={ITEMS_PER_PAGE}
+        itemsPerPageValues={ItemsPerPageValues}
+        itemsPerPageSelected={itemsPerPage}
+        onChangeItemsPerPage={setItemsPerPage}
         onClickBack={onClickGoBack}
         onClickForward={onClickGoForward}
       />

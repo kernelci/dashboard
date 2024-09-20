@@ -1,20 +1,67 @@
-import {
-  MdExpandMore,
-  MdArrowBackIos,
-  MdArrowForwardIos,
-} from 'react-icons/md';
+import { MdArrowBackIos, MdArrowForwardIos } from 'react-icons/md';
 import { FormattedMessage } from 'react-intl';
+
+import { useCallback, useMemo } from 'react';
 
 import { MessagesKey } from '@/locales/messages';
 
+import {
+  Select,
+  SelectItem,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 import { Button } from '../ui/button';
+
+interface IItemsPerPageSelector {
+  onValueChange: (value: number) => void;
+  values: number[];
+  selected: number;
+}
+
+const ItemsPerPageSelector = ({
+  onValueChange,
+  values,
+  selected,
+}: IItemsPerPageSelector): JSX.Element => {
+  const onChangeHandle = useCallback(
+    (v: string) => onValueChange(parseInt(v)),
+    [onValueChange],
+  );
+
+  const selectItems = useMemo(
+    () =>
+      values.map(v => (
+        <SelectItem key={v} value={v.toString()}>
+          {v}
+        </SelectItem>
+      )),
+    [values],
+  );
+
+  return (
+    <div className="flex flex-row items-center gap-2">
+      <FormattedMessage id="table.itemsPerPage" />
+      <Select value={selected.toString()} onValueChange={onChangeHandle}>
+        <SelectTrigger className="w-16">
+          <SelectValue placeholder="" />
+        </SelectTrigger>
+        <SelectContent>{selectItems}</SelectContent>
+      </Select>
+    </div>
+  );
+};
 
 interface ITableInformation {
   itemName: MessagesKey;
   startIndex: number;
   endIndex: number;
   totalTrees: number;
-  itemsPerPage: number;
+  itemsPerPageValues: number[];
+  itemsPerPageSelected: number;
+  onChangeItemsPerPage: (value: number) => void;
   onClickForward: () => void;
   onClickBack: () => void;
 }
@@ -24,7 +71,9 @@ export const TableInfo = ({
   startIndex,
   endIndex,
   totalTrees,
-  itemsPerPage,
+  itemsPerPageValues,
+  itemsPerPageSelected,
+  onChangeItemsPerPage,
   onClickForward,
   onClickBack,
 }: ITableInformation): JSX.Element => {
@@ -41,11 +90,11 @@ export const TableInfo = ({
         <span className="font-bold">{totalTrees}</span>
         <FormattedMessage id={itemName} />
       </div>
-      <div className={groupsClassName}>
-        <FormattedMessage id="table.itemsPerPage" />
-        <span className="font-bold">{itemsPerPage}</span>
-        <MdExpandMore className={buttonsClassName} />
-      </div>
+      <ItemsPerPageSelector
+        onValueChange={onChangeItemsPerPage}
+        values={itemsPerPageValues}
+        selected={itemsPerPageSelected}
+      />
       <div className="flex flex-row items-center gap-2">
         <Button
           variant="outline"

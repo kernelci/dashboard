@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useIntl } from 'react-intl';
 
@@ -16,17 +16,19 @@ import {
 import { getStatusGroup } from '@/utils/status';
 import { TPathTests } from '@/types/general';
 
+import { ItemsPerPageValues } from '@/utils/constants/general';
+
 import Accordion from '../Accordion/Accordion';
 
 import TableStatusFilter from './TableStatusFilter';
-
-const ITEMS_PER_PAGE = 10;
 
 export interface ITestsTable {
   testHistory: TestHistory[];
 }
 
 const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
+  const [itemsPerPage, setItemsPerPage] = useState(ItemsPerPageValues[0]);
+
   const { tableFilter } = useSearch({
     from: '/tree/$treeId/',
   });
@@ -88,7 +90,7 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
 
   const data_len = data?.length || 0;
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
-    usePagination(data_len, ITEMS_PER_PAGE);
+    usePagination(data_len, itemsPerPage);
   const intl = useIntl();
 
   const onClickFilter = useCallback(
@@ -142,7 +144,9 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
         startIndex={startIndex + 1}
         endIndex={endIndex}
         totalTrees={data_len}
-        itemsPerPage={ITEMS_PER_PAGE}
+        itemsPerPageValues={ItemsPerPageValues}
+        itemsPerPageSelected={itemsPerPage}
+        onChangeItemsPerPage={setItemsPerPage}
         onClickBack={onClickGoBack}
         onClickForward={onClickGoForward}
       />

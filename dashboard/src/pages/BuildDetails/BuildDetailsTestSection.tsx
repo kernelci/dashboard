@@ -13,6 +13,7 @@ import { usePagination } from '@/hooks/usePagination';
 import { MessagesKey } from '@/locales/messages';
 import { GroupedTestStatus } from '@/components/Status/Status';
 import { formatDate } from '@/utils/utils';
+import { ItemsPerPageValues } from '@/utils/constants/general';
 
 interface IBuildDetailsTestSection {
   buildId: string;
@@ -40,6 +41,7 @@ const BuildDetailsTestSection = ({
   buildId,
 }: IBuildDetailsTestSection): JSX.Element => {
   const intl = useIntl();
+  const [itemsPerPage, setItemsPerPage] = useState(ItemsPerPageValues[0]);
   const [pathParam, setPathParam] = useState('');
   const { data, error } = useBuildTests(buildId, pathParam);
   const data_len = data?.length || 0;
@@ -90,7 +92,9 @@ const BuildDetailsTestSection = ({
         startIndex={startIndex + 1}
         endIndex={endIndex}
         totalTrees={data_len}
-        itemsPerPage={ITEMS_PER_PAGE}
+        itemsPerPageValues={ItemsPerPageValues}
+        itemsPerPageSelected={itemsPerPage}
+        onChangeItemsPerPage={setItemsPerPage}
         onClickBack={onClickGoBack}
         onClickForward={onClickGoForward}
       />

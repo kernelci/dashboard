@@ -1,6 +1,6 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
@@ -27,6 +27,8 @@ import { MemoizedErrorsSummaryBuild } from '@/pages/TreeDetails/Tabs/BuildCards'
 import { BuildStatus } from '@/components/Status/Status';
 
 import ListingItem from '@/components/ListingItem/ListingItem';
+
+import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
@@ -128,6 +130,8 @@ const ConfigsCard = ({
 const MemoizedConfigsCard = memo(ConfigsCard);
 
 const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
+  const [itemsPerPage, setItemsPerPage] = useState(ItemsPerPageValues[0]);
+
   const { tableFilter: filterBy } = useSearch({
     from: '/tree/$treeId/',
   });
@@ -170,7 +174,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(
       filteredContent?.length ?? 0,
-      ITEMS_PER_PAGE,
+      itemsPerPage,
       filterBy.bootsTable,
       filterBy.testsTable,
       filterBy.buildsTable,
@@ -218,6 +222,20 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
       });
     },
     [navigate],
+  );
+
+  const tableInfoElement = (
+    <TableInfo
+      itemName="global.build"
+      startIndex={startIndex + 1}
+      endIndex={endIndex}
+      totalTrees={filteredContent?.length ?? 0}
+      itemsPerPageValues={ItemsPerPageValues}
+      itemsPerPageSelected={itemsPerPage}
+      onChangeItemsPerPage={setItemsPerPage}
+      onClickBack={onClickGoBack}
+      onClickForward={onClickGoForward}
+    />
   );
 
   return (
@@ -292,37 +310,17 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
                 },
               ]}
             />
-            <TableInfo
-              itemName="global.build"
-              startIndex={startIndex + 1}
-              endIndex={endIndex}
-              totalTrees={filteredContent?.length ?? 0}
-              itemsPerPage={ITEMS_PER_PAGE}
-              onClickBack={onClickGoBack}
-              onClickForward={onClickGoForward}
-            />
+            {tableInfoElement}
           </div>
           <Accordion
             type="build"
             items={filteredContent.slice(startIndex, endIndex)}
           />
-          <div className="flex justify-end">
-            <TableInfo
-              itemName="global.build"
-              startIndex={startIndex + 1}
-              endIndex={endIndex}
-              totalTrees={filteredContent?.length ?? 0}
-              itemsPerPage={ITEMS_PER_PAGE}
-              onClickBack={onClickGoBack}
-              onClickForward={onClickGoForward}
-            />
-          </div>
+          <div className="flex justify-end">{tableInfoElement}</div>
         </div>
       )}
     </div>
   );
 };
-
-const ITEMS_PER_PAGE = 10;
 
 export default BuildTab;
