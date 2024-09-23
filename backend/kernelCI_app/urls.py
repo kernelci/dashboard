@@ -1,59 +1,49 @@
 from django.urls import path
-from django.views.decorators.cache import cache_page
-from django.conf import settings
 from kernelCI_app import views
-
-timeout = settings.CACHE_TIMEOUT
-cache = cache_page(timeout)
-
-
-def viewCache(view):
-    return cache(view.as_view())
-
 
 urlpatterns = [
     path("tests/<str:commit_hash>",
-         viewCache(views.TestsByTreeAndCommitHash),
+         views.TestsByTreeAndCommitHash.as_view(),
          name="testsByTreeAndCommitHash"
          ),
     path("tests/test/<str:test_id>",
-         viewCache(views.TestDetails),
+         views.TestDetails.as_view(),
          name="testDetails"
          ),
     path("tree/",
-         viewCache(views.TreeView),
+         views.TreeView.as_view(),
          name="tree"
          ),
     path("tree/tests/",
-         viewCache(views.groupedTests),
+         views.groupedTests.as_view(),
          name="treeGroupedTests"
          ),
     path("tree/<str:commit_hash>",
-         viewCache(views.TreeDetails),
+         views.TreeDetails.as_view(),
          name="treeDetails"
          ),
     path("tree/<str:commit_hash>/full",
-         viewCache(views.TreeDetailsSlow),
+         views.TreeDetailsSlow.as_view(),
          name="TreeDetailsSlow"
          ),
     path("tree/<str:commit_hash>/commits",
-         viewCache(views.TreeCommitsHistory),
+         views.TreeCommitsHistory.as_view(),
          name="treeCommits"
          ),
     path("tree/<str:commit_hash>/tests/",
-         viewCache(views.TreeTestsView),
+         views.TreeTestsView.as_view(),
          name="treeTests"
          ),
     path("build/<str:build_id>",
-         viewCache(views.BuildDetails),
+         views.BuildDetails.as_view(),
          name="buildDetails"
          ),
     path("build/<str:build_id>/tests",
-         viewCache(views.BuildTests),
+         views.BuildTests.as_view(),
          name="buildTests"
          ),
     path("build/<str:build_id>/status-count",
-         viewCache(views.BuildStatusCountView),
+         views.BuildStatusCountView.as_view(),
          name="buildStatusCount"
          ),
 ]

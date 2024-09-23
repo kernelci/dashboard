@@ -5,6 +5,7 @@ from django.core.cache import cache
 from datetime import timedelta
 import re
 
+
 DEFAULT_QUERY_TIME_INTERVAL = {'days': 7}
 DEFAULT_QUERY_CACHE = 180
 
