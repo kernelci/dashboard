@@ -1,10 +1,30 @@
 import json
 from typing import Union
 from django.utils import timezone
+from django.core.cache import cache
 from datetime import timedelta
 import re
 
+
 DEFAULT_QUERY_TIME_INTERVAL = {'days': 7}
+DEFAULT_QUERY_CACHE = 180
+
+
+def createCacheParamsHash(params: dict):
+    params_list = list(params.items())
+    params_list.sort(key=lambda x: x[0])
+    params_string = ",".join([i[1] for i in params_list])
+    return hash(params_string)
+
+
+def setQueryCache(key, params, rows):
+    params_hash = createCacheParamsHash(params)
+    return cache.set("%s-%s" % (key, hash(params_hash)), rows, DEFAULT_QUERY_CACHE)
+
+
+def getQueryCache(key, params: dict):
+    params_hash = createCacheParamsHash(params)
+    return cache.get("%s-%s" % (key, hash(params_hash)))
 
 
 def toIntOrDefault(value, default):
