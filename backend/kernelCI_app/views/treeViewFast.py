@@ -29,6 +29,7 @@ class TreeViewFast(View):
                     checkouts
                 WHERE
                     origin = %s
+                    AND start_time >= NOW() - INTERVAL '7 days'
             )
             SELECT
                 id,
@@ -49,6 +50,7 @@ class TreeViewFast(View):
             [origin],
         )
 
+        # TODO Use django serializer
         response_data = [
             {
                 "id": checkout.id,
