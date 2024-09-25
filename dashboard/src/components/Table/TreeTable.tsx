@@ -85,7 +85,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
           treeInfo: {
             gitUrl: row.url,
             gitBranch: row.branch,
-            treeName: row.tree_names[0],
+            treeName: row.tree_name ?? undefined,
             commitName: row.commitName,
             headCommitHash: row.id,
           },
@@ -95,11 +95,11 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
     [
       navigate,
       row.id,
-      origin,
       row.url,
       row.branch,
-      row.tree_names,
+      row.tree_name,
       row.commitName,
+      origin,
     ],
   );
 
@@ -111,7 +111,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       >
         <Tooltip>
           <TooltipTrigger>
-            <div>{sanitizeTableValue(row.tree_names.join(', '), false)}</div>
+            <div>{sanitizeTableValue(row.tree_name ?? '', false)}</div>
           </TooltipTrigger>
           <TooltipContent>
             <a href={row.url} target="_blank" rel="noreferrer">
@@ -142,37 +142,49 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         onClick={navigateToTreeDetailPage}
         data-target="treeDetails.builds"
       >
-        <BuildStatus
-          valid={row.buildStatus.valid}
-          invalid={row.buildStatus.invalid}
-          unknown={row.buildStatus.null}
-        />
+        {row.buildStatus ? (
+          <BuildStatus
+            valid={row.buildStatus.valid}
+            invalid={row.buildStatus.invalid}
+            unknown={row.buildStatus.null}
+          />
+        ) : (
+          <div>Loading...</div>
+        )}
       </TableCell>
       <TableCell
         onClick={navigateToTreeDetailPage}
         data-target="treeDetails.boots"
       >
-        <GroupedTestStatus
-          pass={row.bootStatus.pass}
-          skip={row.bootStatus.skip}
-          fail={row.bootStatus.fail}
-          miss={row.bootStatus.miss}
-          done={row.bootStatus.done}
-          error={row.bootStatus.error}
-        />
+        {row.bootStatus ? (
+          <GroupedTestStatus
+            pass={row.bootStatus.pass}
+            skip={row.bootStatus.skip}
+            fail={row.bootStatus.fail}
+            miss={row.bootStatus.miss}
+            done={row.bootStatus.done}
+            error={row.bootStatus.error}
+          />
+        ) : (
+          <div>Loading...</div>
+        )}
       </TableCell>
       <TableCell
         onClick={navigateToTreeDetailPage}
         data-target="treeDetails.tests"
       >
-        <GroupedTestStatus
-          pass={row.testStatus.pass}
-          skip={row.testStatus.skip}
-          fail={row.testStatus.fail}
-          miss={row.testStatus.miss}
-          done={row.testStatus.done}
-          error={row.testStatus.error}
-        />
+        {row.testStatus ? (
+          <GroupedTestStatus
+            pass={row.testStatus.pass}
+            skip={row.testStatus.skip}
+            fail={row.testStatus.fail}
+            miss={row.testStatus.miss}
+            done={row.testStatus.done}
+            error={row.testStatus.error}
+          />
+        ) : (
+          <div>Loading...</div>
+        )}
       </TableCell>
     </TableRow>
   );
@@ -187,7 +199,7 @@ const TreeTable = ({ treeTableRows }: ITreeTable): JSX.Element => {
         patchsetHash={row.patchsetHash}
         buildStatus={row.buildStatus}
         testStatus={row.testStatus}
-        tree_names={row.tree_names}
+        tree_name={row.tree_name}
         id={row.id}
         branch={row.branch}
         date={row.date}
