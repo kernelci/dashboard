@@ -24,6 +24,10 @@ urlpatterns = [
          viewCache(views.TreeView),
          name="tree"
          ),
+    path("tree-fast/",
+         viewCache(views.TreeViewFast),
+         name="tree-fast"
+         ),
     path("tree/tests/",
          viewCache(views.groupedTests),
          name="treeGroupedTests"
