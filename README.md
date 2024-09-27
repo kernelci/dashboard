@@ -38,6 +38,13 @@ gcloud auth application-default login
 cp ~/.config/gcloud/application_default_credentials.json .
 ```
 
+After setting up your connection with Google Cloud with the following commands:
+
+```sh
+cloud-sql-proxy kernelci-production:us-central1:postgresql2 &
+gcloud auth application-default login
+```
+
  If it doesn't work, check the [Configure ADC with your Google Account](https://cloud.google.com/docs/authentication/provide-credentials-adc#google-idp) documentation.
 
 Create a secret file with the database password:
