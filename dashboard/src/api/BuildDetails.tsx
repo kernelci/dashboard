@@ -2,6 +2,8 @@ import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
 import { TBuildDetails } from '@/types/tree/BuildDetails';
 
+import { TIssue } from '@/types/general';
+
 import http from './api';
 
 const fetchTreeDetailData = async (buildId: string): Promise<TBuildDetails> => {
@@ -18,5 +20,17 @@ export const useBuildDetails = (
   return useQuery({
     queryKey: ['treeData', buildId],
     queryFn: () => fetchTreeDetailData(buildId),
+  });
+};
+
+const fetchBuildIssues = async (buildId: string): Promise<TIssue[]> => {
+  const res = await http.get<TIssue[]>(`/api/build/${buildId}/issues`);
+  return res.data;
+};
+
+export const useBuildIssues = (buildId: string): UseQueryResult<TIssue[]> => {
+  return useQuery({
+    queryKey: ['buildIssues', buildId],
+    queryFn: () => fetchBuildIssues(buildId),
   });
 };

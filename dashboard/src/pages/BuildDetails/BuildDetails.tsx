@@ -11,7 +11,7 @@ import { useParams, useSearch } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
 import { ISection } from '@/components/Section/Section';
-import { useBuildDetails } from '@/api/BuildDetails';
+import { useBuildDetails, useBuildIssues } from '@/api/BuildDetails';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
 import { formatDate } from '@/utils/utils';
@@ -24,6 +24,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/Breadcrumb/Breadcrumb';
+
+import IssueSection from '@/components/Issue/IssueSection';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -47,6 +49,8 @@ const BuildDetails = (): JSX.Element => {
     from: '/tree/$treeId/build/$buildId/',
   });
   const { data, error } = useBuildDetails(buildId || '');
+  const issuesQueryResult = useBuildIssues(buildId);
+
   const intl = useIntl();
 
   const sectionsData: ISection[] = useMemo(() => {
@@ -197,6 +201,7 @@ const BuildDetails = (): JSX.Element => {
       </Breadcrumb>
       <SectionGroup sections={sectionsData} />
       {buildId && <BuildDetailsTestSection buildId={buildId} />}
+      <IssueSection {...issuesQueryResult} />
     </ErrorBoundary>
   );
 };

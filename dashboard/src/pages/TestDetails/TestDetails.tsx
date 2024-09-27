@@ -8,7 +8,7 @@ import { PiComputerTowerThin } from 'react-icons/pi';
 
 import { GiFlatPlatform } from 'react-icons/gi';
 
-import { useTestDetails } from '@/api/TestDetails';
+import { useTestDetails, useTestIssues } from '@/api/TestDetails';
 
 import type { TTestDetails } from '@/types/tree/TestDetails';
 
@@ -26,6 +26,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/Breadcrumb/Breadcrumb';
+import IssueSection from '@/components/Issue/IssueSection';
 
 type TTestDetailsDefaultProps = {
   test: TTestDetails;
@@ -133,6 +134,7 @@ const TestDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/tree/$treeId/test/$testId/' });
   const { testId, treeId } = useParams({ from: '/tree/$treeId/test/$testId/' });
   const { data, error, isLoading } = useTestDetails(testId ?? '');
+  const issuesQueryResult = useTestIssues(testId);
 
   if (error) {
     return (
@@ -153,38 +155,37 @@ const TestDetails = (): JSX.Element => {
   }
 
   return (
-    <>
-      <div className="w-100 px-5">
-        <Breadcrumb className="pb-6 pt-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink to="/tree" search={searchParams}>
-                <FormattedMessage id="tree.path" />
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbLink
-              to={`/tree/$treeId`}
-              params={{ treeId: treeId }}
-              search={searchParams}
-            >
-              <FormattedMessage id="tree.details" />
+    <div className="w-100 px-5 pb-8">
+      <Breadcrumb className="pb-6 pt-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink to="/tree" search={searchParams}>
+              <FormattedMessage id="tree.path" />
             </BreadcrumbLink>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>
-                <FormattedMessage id="tree.details" />
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <h1 className="mb-4 border-b border-gray-300 pb-3 text-2xl font-bold">
-          {data.path}
-        </h1>
-        <LogExcerpt test={data} />
-        <TestDetailsSection test={data} />
-      </div>
-    </>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbLink
+            to={`/tree/$treeId`}
+            params={{ treeId: treeId }}
+            search={searchParams}
+          >
+            <FormattedMessage id="tree.details" />
+          </BreadcrumbLink>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>
+              <FormattedMessage id="tree.details" />
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <h1 className="mb-4 border-b border-gray-300 pb-3 text-2xl font-bold">
+        {data.path}
+      </h1>
+      <LogExcerpt test={data} />
+      <TestDetailsSection test={data} />
+      <IssueSection {...issuesQueryResult} />
+    </div>
   );
 };
 
