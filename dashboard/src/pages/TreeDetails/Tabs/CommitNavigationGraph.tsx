@@ -168,7 +168,7 @@ const CommitNavigationGraph = (): JSX.Element => {
           );
         }
 
-        return `commitIndex-${value} - ${currentCommitDateTime}`;
+        return `commitIndex-${value}`;
       },
     },
   ];
