@@ -1,10 +1,12 @@
 import { FormattedMessage } from 'react-intl';
-
+import { FaRegDotCircle, FaRegCircle } from 'react-icons/fa';
 import { memo } from 'react';
+
+import { Link } from '@tanstack/react-router';
 
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import BaseCard, { IBaseCard } from '@/components/Cards/BaseCard';
-import ListingItem from '@/components/ListingItem/ListingItem';
+import ListingItem, { ItemType } from '@/components/ListingItem/ListingItem';
 import { GroupedTestStatus } from '@/components/Status/Status';
 import { ArchCompilerStatus, TTreeTestsData } from '@/types/tree/TreeDetails';
 
@@ -14,6 +16,9 @@ import StatusChartMemoized, {
   StatusChartValues,
 } from '@/components/StatusChart/StatusCharts';
 import { groupStatus } from '@/utils/status';
+import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
+import { TIssue } from '@/types/general';
+import { NoIssueFound } from '@/components/Issue/IssueSection';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
@@ -226,3 +231,51 @@ const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
 };
 
 export const MemoizedStatusChart = memo(StatusChart);
+
+interface IIssuesList {
+  issues: TIssue[];
+  title: IBaseCard['title'];
+}
+
+const IssuesList = ({ issues, title }: IIssuesList): JSX.Element => {
+  const hasIssue = issues.length > 0;
+
+  const titleElement = (
+    <span>
+      {title}
+      {hasIssue && (
+        <ColoredCircle
+          className="ml-2 font-normal"
+          backgroundClassName={ItemType.Error}
+          quantity={issues.length}
+        />
+      )}
+    </span>
+  );
+
+  const contentElement = !hasIssue ? (
+    <NoIssueFound />
+  ) : (
+    <DumbListingContent>
+      {issues.map(issue => {
+        return (
+          <Link key={issue.incident_id} to={issue.report_url} target="_blank">
+            <ListingItem
+              hasBottomBorder
+              text={issue.comment ?? ''}
+              leftIcon={
+                <div className="text-darkGray2">
+                  {issue.present ? <FaRegDotCircle /> : <FaRegCircle />}
+                </div>
+              }
+            />
+          </Link>
+        );
+      })}
+    </DumbListingContent>
+  );
+
+  return <BaseCard title={titleElement} content={contentElement} />;
+};
+
+export const MemoizedIssuesList = memo(IssuesList);
