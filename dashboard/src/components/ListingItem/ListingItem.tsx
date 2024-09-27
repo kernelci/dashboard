@@ -93,7 +93,7 @@ const ListingItem = ({
 
   return (
     <WrapperComponent
-      className={classNames('flex flex-row gap-2 pb-1', hasBorder)}
+      className={classNames('flex flex-row items-center gap-2 pb-1', hasBorder)}
       onClick={handleOnClick}
     >
       {itemError}
@@ -102,7 +102,7 @@ const ListingItem = ({
       {itemUnknown}
       {itemNeutral}
       {leftIcon}
-      <span className="text-sm text-black">{text}</span>
+      <span className="truncate text-sm text-black">{text}</span>
     </WrapperComponent>
   );
 };

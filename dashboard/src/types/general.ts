@@ -34,3 +34,11 @@ export type TBuildTests = {
   null_tests: number;
   total_tests: number;
 };
+
+export type TIssue = {
+  id: string;
+  comment?: string;
+  report_url?: string;
+  present?: boolean;
+  incident_id: string;
+};
