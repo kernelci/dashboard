@@ -13,6 +13,7 @@ import {
   MemoizedConfigList,
   MemoizedErrorsSummary,
   MemoizedPlatformsWithError,
+  MemoizedIssuesList,
 } from '@/pages/TreeDetails/Tabs/TestCards';
 
 import TestsTable from '@/components/Table/TestsTable';
@@ -78,6 +79,10 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             title={<FormattedMessage id="global.summary" />}
             archCompilerErrors={data.testArchSummary}
           />
+          <MemoizedIssuesList
+            title={<FormattedMessage id="global.issues" />}
+            issues={data.testIssues}
+          />
         </div>
         <div>
           <CommitNavigationGraph />
@@ -106,6 +111,10 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
               archCompilerErrors={data.testArchSummary}
+            />
+            <MemoizedIssuesList
+              title={<FormattedMessage id="global.issues" />}
+              issues={data.testIssues}
             />
           </div>
           <div>

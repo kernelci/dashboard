@@ -10,6 +10,7 @@ import {
   MemoizedConfigList,
   MemoizedErrorCountList,
   MemoizedErrorsSummary,
+  MemoizedIssuesList,
   MemoizedPlatformsWithError,
   MemoizedStatusChart,
 } from '@/pages/TreeDetails/Tabs/TestCards';
@@ -79,6 +80,10 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
             title={<FormattedMessage id="global.summary" />}
             archCompilerErrors={data.bootArchSummary}
           />
+          <MemoizedIssuesList
+            title={<FormattedMessage id="global.issues" />}
+            issues={data.bootIssues}
+          />
         </div>
         <div>
           <CommitNavigationGraph />
@@ -107,6 +112,10 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
               archCompilerErrors={data.bootArchSummary}
+            />
+            <MemoizedIssuesList
+              title={<FormattedMessage id="global.issues" />}
+              issues={data.bootIssues}
             />
           </div>
           <div>

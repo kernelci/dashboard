@@ -4,6 +4,8 @@ import { ReactNode } from 'react';
 
 import { MessagesKey } from '@/locales/messages';
 
+import { TIssue } from '@/types/general';
+
 import type { ErrorStatus, Status } from '../database';
 
 export type BuildsTabBuild = {
@@ -51,6 +53,7 @@ export type BuildsTab = {
     configs: Record<string, BuildStatus>;
     architectures: TArch;
   };
+  issues: TIssue[];
 };
 
 export type BuildStatus = {
@@ -132,6 +135,8 @@ export type TTreeTestsFullData = {
   bootStatusSummary: StatusCounts;
   bootHistory: TestHistory[];
   testHistory: TestHistory[];
+  bootIssues: TIssue[];
+  testIssues: TIssue[];
 };
 
 export type PossibleTabs = Extract<

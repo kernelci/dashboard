@@ -7,12 +7,14 @@ from kernelCI_app.utils import (
     InvalidComparisonOP,
     getErrorResponseBody,
     toIntOrDefault,
+    create_issue
 )
 from django.db import connection
 
 
 class TreeDetailsSlow(View):
     def __init__(self):
+        self.processedTests = set()
         self.filterTestDurationMin, self.filterTestDurationMax = None, None
         self.filterBootDurationMin, self.filterBootDurationMax = None, None
         self.filterBootStatus = set()
@@ -36,12 +38,14 @@ class TreeDetailsSlow(View):
         self.testPlatformsWithErrors = set()
         self.testFailReasons = {}
         self.testArchSummary = {}
+        self.testIssues = []
         self.bootHistory = []
         self.bootStatusSummary = {}
         self.bootConfigs = {}
         self.bootPlatformsFailing = set()
         self.bootFailReasons = {}
         self.bootArchSummary = {}
+        self.bootIssues = []
 
     def __handle_boot_status(self, current_filter):
         self.filterBootStatus.add(current_filter["value"])
@@ -112,8 +116,18 @@ class TreeDetailsSlow(View):
             "builds_config_url": 23,
             "builds_log_url": 24,
             "builds_valid": 25,
+            "incident_id": 27,
+            "incident_present": 28,
+            "issue_id": 29,
+            "issue_comment": 30,
+            "issue_report_url": 31
         }
 
+        incident_id = currentRow[tempColumnDict["incident_id"]]
+        incident_present = currentRow[tempColumnDict["incident_present"]]
+        issue_id = currentRow[tempColumnDict["issue_id"]]
+        issue_comment = currentRow[tempColumnDict["issue_comment"]]
+        issue_report_url = currentRow[tempColumnDict["issue_report_url"]]
         path = currentRow[tempColumnDict["tests_path"]]
         testId = currentRow[tempColumnDict["tests_id"]]
         testStatus = currentRow[tempColumnDict["tests_status"]]
@@ -147,6 +161,11 @@ class TreeDetailsSlow(View):
             testError,
             startTime,
             historyItem,
+            incident_id,
+            incident_present,
+            issue_id,
+            issue_comment,
+            issue_report_url
         )
 
     def __processBootsTest(self, currentRowData):
@@ -162,6 +181,11 @@ class TreeDetailsSlow(View):
             testError,
             startTime,
             historyItem,
+            incident_id,
+            incident_present,
+            issue_id,
+            issue_comment,
+            issue_report_url
         ) = currentRowData
 
         if len(self.filterBootStatus) > 0 and (testStatus not in self.filterBootStatus):
@@ -175,6 +199,18 @@ class TreeDetailsSlow(View):
             toIntOrDefault(testDuration, 0) < self.filterBootDurationMin
         ):
             return
+
+        if (issue_id):
+            self.bootIssues.append(create_issue(
+                issue_id=issue_id,
+                issue_comment=issue_comment,
+                issue_report_url=issue_report_url,
+                incident_id=incident_id,
+                incident_present=incident_present
+            ))
+        if testId in self.processedTests:
+            return
+        self.processedTests.add(testId)
 
         self.bootHistory.append(historyItem)
         self.bootStatusSummary[testStatus] = (
@@ -210,6 +246,11 @@ class TreeDetailsSlow(View):
             testError,
             startTime,
             historyItem,
+            incident_id,
+            incident_present,
+            issue_id,
+            issue_comment,
+            issue_report_url
         ) = currentRowData
 
         if len(self.filterTestStatus) > 0 and (testStatus not in self.filterTestStatus):
@@ -222,6 +263,19 @@ class TreeDetailsSlow(View):
             toIntOrDefault(testDuration, 0) < self.filterTestDurationMin
         ):
             return
+
+        if (issue_id):
+            self.testIssues.append(create_issue(
+                issue_id=issue_id,
+                issue_comment=issue_comment,
+                issue_report_url=issue_report_url,
+                incident_id=incident_id,
+                incident_present=incident_present
+            ))
+        if testId in self.processedTests:
+            return
+        self.processedTests.add(testId)
+
         self.testHistory.append(historyItem)
         self.testStatusSummary[testStatus] = (
             self.testStatusSummary.get(testStatus, 0) + 1
@@ -265,7 +319,12 @@ class TreeDetailsSlow(View):
                 tests.duration AS tests_duration,
                 tests.number_value AS tests_number_value,
                 tests.misc AS tests_misc,
-                builds_filter.*
+                builds_filter.*,
+                incidents.id,
+                incidents.present,
+                issues.id,
+                issues.comment,
+                issues.report_url
         FROM
             (
                 SELECT
@@ -301,6 +360,10 @@ class TreeDetailsSlow(View):
             ) AS builds_filter
         LEFT JOIN tests
             ON builds_filter.builds_id = tests.build_id
+        LEFT JOIN incidents
+            ON tests.id = incidents.test_id
+        LEFT JOIN issues
+            ON incidents.issue_id = issues.id
         WHERE
             tests.origin = %(origin_param)s
         """
@@ -331,6 +394,11 @@ class TreeDetailsSlow(View):
                 testError,
                 startTime,
                 historyItem,
+                incident_id,
+                incident_present,
+                issue_id,
+                issue_comment,
+                issue_report_url
             ) = currentRowData
 
             if (
@@ -368,6 +436,8 @@ class TreeDetailsSlow(View):
                 "bootStatusSummary": self.bootStatusSummary,
                 "bootHistory": self.bootHistory,
                 "testHistory": self.testHistory,
+                "bootIssues": self.bootIssues,
+                "testIssues": self.testIssues
             },
             safe=False,
         )

@@ -9,6 +9,7 @@ import { ISummaryItem } from '@/components/Summary/Summary';
 import {
   AccordionItemBuilds,
   BuildStatus,
+  BuildsTab,
   BuildsTabBuild,
 } from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
@@ -43,6 +44,7 @@ export interface ITreeDetails {
   configs: IListingItem[];
   buildsSummary: BuildStatus;
   builds: AccordionItemBuilds[];
+  issues: BuildsTab['issues'];
 }
 
 interface ITreeHeader {
@@ -186,6 +188,7 @@ function TreeDetails(): JSX.Element {
         configs: configsData,
         buildsSummary: buildSummaryData,
         builds: buildsData,
+        issues: data.issues,
       };
     }
   }, [data]);

@@ -30,6 +30,8 @@ import ListingItem from '@/components/ListingItem/ListingItem';
 
 import { ItemsPerPageValues } from '@/utils/constants/general';
 
+import { MemoizedIssuesList } from '@/pages/TreeDetails/Tabs/TestCards';
+
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
 interface BuildTab {
@@ -250,6 +252,10 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
             summaryBody={treeDetailsData?.archs ?? []}
             toggleFilterBySection={toggleFilterBySection}
           />
+          <MemoizedIssuesList
+            title={<FormattedMessage id="global.issues" />}
+            issues={treeDetailsData?.issues || []}
+          />
         </div>
         <div>
           <CommitNavigationGraph />
@@ -275,6 +281,10 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
             toggleFilterBySection={toggleFilterBySection}
           />
         </InnerMobileGrid>
+        <MemoizedIssuesList
+          title={<FormattedMessage id="global.issues" />}
+          issues={treeDetailsData?.issues || []}
+        />
       </MobileGrid>
 
       {filteredContent && (
