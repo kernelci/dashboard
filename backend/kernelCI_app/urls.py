@@ -60,4 +60,12 @@ urlpatterns = [
          viewCache(views.BuildStatusCountView),
          name="buildStatusCount"
          ),
+    path("build/<str:build_id>/issues",
+         viewCache(views.IssueView),
+         name="issues",
+         ),
+    path("test/<str:test_id>/issues",
+         viewCache(views.IssueView),
+         name="issues",
+         )
 ]

@@ -7,6 +7,16 @@ import re
 DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
 
 
+def create_issue(*, issue_id, issue_comment, issue_report_url, incident_id, incident_present):
+    return {
+        "id": issue_id,
+        "comment": issue_comment,
+        "report_url": issue_report_url,
+        "incident_id": incident_id,
+        "present": incident_present,
+    }
+
+
 def toIntOrDefault(value, default):
     try:
         return int(value)
