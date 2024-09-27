@@ -60,4 +60,7 @@ Startup the services:
 To deploy to prod you need to push a tag in the `release/YYYYMMDD.N` format
 like: `release/20240910.0`
 
- 
+## Contributing 
+
+There is an [onboarding guide](docs/Onboarding.md) to help get acquainted with the project.
+
