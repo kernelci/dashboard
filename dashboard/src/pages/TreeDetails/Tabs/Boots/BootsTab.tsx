@@ -86,7 +86,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           />
         </div>
         <div>
-          <CommitNavigationGraph />
+          <CommitNavigationGraph reqFilter={reqFilter} />
           <MemoizedPlatformsWithError
             title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
             platformsWithError={data.bootPlatformsFailing}
@@ -102,7 +102,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           title={<FormattedMessage id="bootsTab.bootStatus" />}
           statusCounts={data.bootStatusSummary}
         />
-        <CommitNavigationGraph />
+        <CommitNavigationGraph reqFilter={reqFilter} />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList

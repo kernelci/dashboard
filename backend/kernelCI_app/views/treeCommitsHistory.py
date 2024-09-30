@@ -12,6 +12,7 @@ class TreeCommitsHistory(APIView):
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
+        print('params:', request.GET)
 
         missing_params = []
         if not origin_param:
