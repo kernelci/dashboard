@@ -29,7 +29,9 @@ const TreeDetailsTab = ({
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const buildsTab: ITabItem = {
     name: 'treeDetails.builds',
-    content: <BuildTab treeDetailsData={treeDetailsData} />,
+    content: (
+      <BuildTab treeDetailsData={treeDetailsData} reqFilter={reqFilter} />
+    ),
     disabled: false,
   };
 

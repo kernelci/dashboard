@@ -32,10 +32,13 @@ import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import { MemoizedIssuesList } from '@/pages/TreeDetails/Tabs/TestCards';
 
+import { getTargetFilter } from '@/utils/filters';
+
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
 interface BuildTab {
   treeDetailsData?: ITreeDetails;
+  reqFilter: Record<string, string[]>;
 }
 
 const StatusCard = ({
@@ -131,8 +134,13 @@ const ConfigsCard = ({
 };
 const MemoizedConfigsCard = memo(ConfigsCard);
 
-const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
+const BuildTab = ({ treeDetailsData, reqFilter }: BuildTab): JSX.Element => {
   const [itemsPerPage, setItemsPerPage] = useState(ItemsPerPageValues[0]);
+
+  const buildFilter = useMemo(
+    () => getTargetFilter(reqFilter, 'treeDetails'),
+    [reqFilter],
+  );
 
   const { tableFilter: filterBy } = useSearch({
     from: '/tree/$treeId/',
@@ -258,7 +266,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           />
         </div>
         <div>
-          <CommitNavigationGraph />
+          <CommitNavigationGraph reqFilter={buildFilter} />
           <MemoizedConfigsCard
             treeDetailsData={treeDetailsData}
             toggleFilterBySection={toggleFilterBySection}
@@ -266,7 +274,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         </div>
       </DesktopGrid>
       <MobileGrid>
-        <CommitNavigationGraph />
+        <CommitNavigationGraph reqFilter={buildFilter} />
         <MemoizedStatusCard
           toggleFilterBySection={toggleFilterBySection}
           treeDetailsData={treeDetailsData}

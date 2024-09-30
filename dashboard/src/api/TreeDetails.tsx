@@ -243,6 +243,7 @@ const fetchTreeCommitHistory = async (
   origin: string,
   gitUrl: string,
   gitBranch: string,
+  filter: TTreeDetailsFilter,
 ): Promise<TTreeCommitHistoryResponse> => {
   const res = await http.get<TTreeCommitHistoryResponse>(
     `/api/tree/${commitHash}/commits`,
@@ -251,6 +252,7 @@ const fetchTreeCommitHistory = async (
         origin,
         git_url: gitUrl,
         git_branch: gitBranch,
+        ...mapFiltersKeysToBackendCompatible(filter),
       },
     },
   );
@@ -263,19 +265,28 @@ export const useTreeCommitHistory = (
     origin,
     gitUrl,
     gitBranch,
+    filter,
   }: {
     commitHash: string;
     origin: string;
     gitUrl: string;
     gitBranch: string;
+    filter: TTreeDetailsFilter;
   },
   { enabled = true },
 ): UseQueryResult<TTreeCommitHistoryResponse> => {
   return useQuery({
-    queryKey: ['treeCommitHistory', commitHash, origin, gitUrl, gitBranch],
+    queryKey: [
+      'treeCommitHistory',
+      commitHash,
+      origin,
+      gitUrl,
+      gitBranch,
+      filter,
+    ],
     enabled,
     queryFn: () =>
-      fetchTreeCommitHistory(commitHash, origin, gitUrl, gitBranch),
+      fetchTreeCommitHistory(commitHash, origin, gitUrl, gitBranch, filter),
   });
 };
 

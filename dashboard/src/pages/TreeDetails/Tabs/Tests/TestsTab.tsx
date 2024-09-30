@@ -85,7 +85,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
           />
         </div>
         <div>
-          <CommitNavigationGraph />
+          <CommitNavigationGraph reqFilter={reqFilter} />
           <MemoizedPlatformsWithError
             title={<FormattedMessage id="testsTab.platformsErrors" />}
             platformsWithError={data.testPlatformsWithErrors}
@@ -101,7 +101,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
           title={<FormattedMessage id="testsTab.testStatus" />}
           statusCounts={data.testStatusSummary}
         />
-        <CommitNavigationGraph />
+        <CommitNavigationGraph reqFilter={reqFilter} />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList
