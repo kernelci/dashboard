@@ -26,3 +26,9 @@ A big part of this project is to have shareable links
 So we should use the URL to manage state as much as possible.
 
 Also, we are using file based routing in the tanstack router, only files that starts with ~ are read by the Vite plugin.
+
+# Feature Flags
+
+They are used when we want to hide a feature for some users, without having to do branch manipulation.
+Right now the only feature flag is for Dev only and it is controlled by the env 
+`FEATURE_FLAG_SHOW_DEV=false` it is a boolean.
