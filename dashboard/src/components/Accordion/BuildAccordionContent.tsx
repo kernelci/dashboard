@@ -13,6 +13,10 @@ import {
 
 import { useBuildStatusCount } from '@/api/TreeDetails';
 
+import { SheetTrigger } from '@/components/Sheet';
+
+import { DevOnly } from '@/components/FeatureFlag';
+
 import StatusChartMemoized, {
   Colors,
   IStatusChart,
@@ -207,13 +211,19 @@ const AccordionBuildContent = ({
         </QuerySwitcher>
         <div className="flex flex-col gap-8">
           <LinksGroup links={links} />
-          <Button
-            variant="outline"
-            className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
-            onClick={navigateToBuildDetails}
-          >
-            <FormattedMessage id="buildAccordion.showMore" />
-          </Button>
+          <div className="flex flex-row gap-4">
+            <Button
+              variant="outline"
+              className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
+              onClick={navigateToBuildDetails}
+            >
+              <FormattedMessage id="buildAccordion.showMore" />
+            </Button>
+            <DevOnly>
+              {/* TODO: Transform the trigger in the real show logs button when the Log Excerpt preview arrives */}
+              <SheetTrigger>Show Logs</SheetTrigger>
+            </DevOnly>
+          </div>
         </div>
       </div>
     </>

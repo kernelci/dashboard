@@ -1,14 +1,30 @@
-import { ReactElement, ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
-export interface IBaseCard {
+type CommonProps = {
   title: ReactNode;
-  content: ReactElement;
   className?: string;
-}
+};
 
-const BaseCard = ({ title, content, className }: IBaseCard): JSX.Element => {
+type WithChildren = {
+  children: ReactNode;
+  content?: never;
+} & CommonProps;
+
+type WithContent = {
+  children?: never;
+  content: ReactNode;
+} & CommonProps;
+
+export type IBaseCard = WithChildren | WithContent;
+
+export const BaseCard = ({
+  title,
+  content,
+  className,
+  children,
+}: IBaseCard): JSX.Element => {
   return (
     <div
       className={cn(
@@ -19,7 +35,7 @@ const BaseCard = ({ title, content, className }: IBaseCard): JSX.Element => {
       <div className="border-b border-darkGray pb-2 pl-3 font-bold">
         {title}
       </div>
-      <div>{content}</div>
+      <div>{children ? children : content}</div>
     </div>
   );
 };
