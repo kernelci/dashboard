@@ -294,6 +294,7 @@ export type PaginatedCommitHistoryByTree = {
 export type BuildCountsResponse = {
   build_counts: {
     build_id: string;
+    log_excerpt: string;
     fail_tests: number;
     error_tests: number;
     miss_tests: number;
