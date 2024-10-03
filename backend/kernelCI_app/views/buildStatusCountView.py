@@ -8,7 +8,7 @@ class BuildStatusCountView(APIView):
         builds = Builds.objects.raw(
             """
             SELECT
-                builds.id,
+                builds.id, builds.log_excerpt,
                 COUNT(CASE WHEN tests.status = 'FAIL' THEN 1 END) AS fail_tests,
                 COUNT(CASE WHEN tests.status = 'ERROR' THEN 1 END) AS error_tests,
                 COUNT(CASE WHEN tests.status = 'MISS' THEN 1 END) AS miss_tests,
@@ -23,7 +23,7 @@ class BuildStatusCountView(APIView):
             LEFT JOIN
                 tests ON tests.build_id = builds.id
             WHERE builds.id = %s
-            GROUP BY builds.id;
+            GROUP BY builds.id, builds.log_excerpt;
             """,
             [build_id],
         )
@@ -33,6 +33,7 @@ class BuildStatusCountView(APIView):
             return JsonResponse({"error": "Build not found"}, status=404)
 
         build_status = build_status_counts[0]
+        log_excerpt = build_status.log_excerpt
         build_counts = {
             "build_id": build_status.id,
             "fail_tests": build_status.fail_tests,
@@ -45,4 +46,4 @@ class BuildStatusCountView(APIView):
             "total_tests": build_status.total_tests,
         }
 
-        return JsonResponse({"build_counts": build_counts})
+        return JsonResponse({"log_excerpt": log_excerpt, "build_counts": build_counts})
