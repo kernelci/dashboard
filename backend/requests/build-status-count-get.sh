@@ -1,4 +1,4 @@
-http GET 'http://localhost:8000/api/build/kernelci:kernelci.org:666ce37cab1bab49d17e7074/status-count'
+http GET 'http://localhost:8000/api/build/maestro:66fd98545acad1231036a15a/status-count'
 # HTTP/1.1 200 OK
 # Content-Length: 625
 # Content-Type: application/json
