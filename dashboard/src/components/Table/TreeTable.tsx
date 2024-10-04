@@ -1,8 +1,10 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { useSearch } from '@tanstack/react-router';
+
+import { LinkComponentProps } from 'node_modules/@tanstack/react-router/dist/esm/link';
 
 import { MessagesKey } from '@/locales/messages';
 
@@ -16,7 +18,7 @@ import {
 
 import { TreeTableBody, zOrigin } from '@/types/tree/Tree';
 
-import { TableRow, TableCell, TableBody } from '@/components/ui/table';
+import { TableRow, TableBody, TableCellWithLink } from '@/components/ui/table';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
@@ -57,13 +59,71 @@ const treeTableHeaders = headerLabelOrElement.map(item =>
   typeof item === 'string' ? <FormattedMessage key={item} id={item} /> : item,
 );
 
+/*const LinkItem: React.FC<PropsWithChildren<{ target: string, row: TreeTableBody, unsafeOrigin: string | undefined }>> =
+({ children, target, row, unsafeOrigin }) => {
+  const [linkTarget, setLinkTarget] = useState<string | undefined>(undefined);
+  const linkRef = useRef<HTMLAnchorElement>(null);
+
+  const origin = zOrigin.parse(unsafeOrigin);
+
+  
+
+  useEffect(() => {
+    if(linkTarget) {
+      setLinkTarget(undefined);
+      linkRef.current?.click();
+    }
+  }, [linkTarget]);
+
+  return (
+    <Link
+      {...linkProps}
+      ref={linkRef}
+      target={linkTarget}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setLinkTarget("_blank");
+      }}
+    >
+      {children}
+    </Link>
+  );
+}*/
+
 const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
 
-  const navigate = useNavigate({ from: '/tree' });
+  // const navigate = useNavigate({ from: '/tree' });
 
-  const navigateToTreeDetailPage = useCallback(
+  const linkProps = (target: string): LinkComponentProps<'a'> => ({
+    to: '/tree/$treeId',
+    params: { treeId: row.id },
+    style: {
+      width: '100%',
+      display: 'inline-block',
+      height: '100%',
+    },
+    search: {
+      tableFilter: {
+        bootsTable: possibleTestsTableFilter[0],
+        buildsTable: possibleBuildsTableFilter[2],
+        testsTable: possibleTestsTableFilter[0],
+      },
+      origin: origin,
+      currentTreeDetailsTab: zPossibleValidator.parse(target),
+      diffFilter: {},
+      treeInfo: {
+        gitUrl: row.url,
+        gitBranch: row.branch,
+        treeName: row.tree_name ?? undefined,
+        commitName: row.commitName,
+        headCommitHash: row.id,
+      },
+    },
+  });
+
+  /*const navigateToTreeDetailPage = useCallback(
     (event: React.MouseEvent<HTMLTableCellElement>) => {
       const el = event.currentTarget;
       const target = el.getAttribute('data-target');
@@ -101,13 +161,14 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       row.commitName,
       origin,
     ],
-  );
+  );*/
 
   return (
     <TableRow>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      <TableCellWithLink
+        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.builds"
+        linkProps={linkProps('treeDetails.builds')}
       >
         <Tooltip>
           <TooltipTrigger>
@@ -119,28 +180,32 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
             </a>
           </TooltipContent>
         </Tooltip>
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
+        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.builds"
+        linkProps={linkProps('treeDetails.builds')}
       >
         {sanitizeTableValue(row.branch, false)}
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
+        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.builds"
+        linkProps={linkProps('treeDetails.builds')}
       >
         {sanitizeTableValue(row.commitName ? row.commitName : row.commitHash)}
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
+        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.builds"
+        linkProps={linkProps('treeDetails.builds')}
       >
         <TooltipDateTime dateTime={row.date} lineBreak={true} />
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
+        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.builds"
+        linkProps={linkProps('treeDetails.builds')}
       >
         {row.buildStatus ? (
           <BuildStatus
@@ -151,10 +216,11 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         ) : (
           <div>Loading...</div>
         )}
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
+        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.boots"
+        linkProps={linkProps('treeDetails.boots')}
       >
         {row.bootStatus ? (
           <GroupedTestStatus
@@ -168,10 +234,11 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         ) : (
           <div>Loading...</div>
         )}
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
+        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.tests"
+        linkProps={linkProps('treeDetails.tests')}
       >
         {row.testStatus ? (
           <GroupedTestStatus
@@ -185,7 +252,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         ) : (
           <div>Loading...</div>
         )}
-      </TableCell>
+      </TableCellWithLink>
     </TableRow>
   );
 };
