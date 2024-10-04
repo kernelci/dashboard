@@ -54,6 +54,12 @@ module.exports = {
     "@typescript-eslint",
   ],
   rules: {
+    "no-console": [
+      "error",
+      {
+        allow: ["error"]
+      }
+    ],
     "no-duplicate-imports": "warn",
     "no-magic-numbers": [
       "error",
