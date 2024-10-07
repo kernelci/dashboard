@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.models import Checkouts
-
+from kernelCI_app.utils import getQueryTimeInterval
 
 DEFAULT_ORIGIN = "maestro"
 
@@ -9,6 +9,9 @@ DEFAULT_ORIGIN = "maestro"
 class TreeViewFast(View):
     def get(self, request):
         origin = request.GET.get("origin", DEFAULT_ORIGIN)
+        time = int(request.GET.get("time", "7"))
+
+        timedata = {"days": time}
 
         checkouts = Checkouts.objects.raw(
             """
@@ -29,7 +32,7 @@ class TreeViewFast(View):
                     checkouts
                 WHERE
                     origin = %s
-                    AND start_time >= NOW() - INTERVAL '7 days'
+                    AND start_time >= TO_TIMESTAMP(%s)
             )
             SELECT
                 id,
@@ -47,7 +50,7 @@ class TreeViewFast(View):
             ORDER BY
                 tree_name ASC;
             """,
-            [origin],
+            [origin, getQueryTimeInterval(**timedata).timestamp()],
         )
 
         # TODO Use django serializer
