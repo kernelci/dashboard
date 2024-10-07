@@ -11,11 +11,12 @@ DEFAULT_ORIGIN = 'maestro'
 class TreeView(View):
     def get(self, request):
         origin_param = request.GET.get('origin', DEFAULT_ORIGIN)
-        interval_param = getQueryTimeInterval().timestamp()
+        interval_days = int(request.GET.get('intervalInDays', '7'))
+        interval_days_data = {"days": interval_days}
 
         params = {
             "origin_param": origin_param,
-            "interval_param": interval_param
+            "interval_param": getQueryTimeInterval(**interval_days_data).timestamp()
         }
 
         checkouts = Checkouts.objects.raw(
