@@ -2,9 +2,7 @@ import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useSearch } from '@tanstack/react-router';
-
-import { LinkComponentProps } from 'node_modules/@tanstack/react-router/dist/esm/link';
+import { useSearch, LinkComponent } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
@@ -96,7 +94,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
 
   // const navigate = useNavigate({ from: '/tree' });
 
-  const linkProps = (target: string): LinkComponentProps<'a'> => ({
+  const linkProps = (target: string): LinkComponent<'a'> => ({
     to: '/tree/$treeId',
     params: { treeId: row.id },
     style: {

@@ -1,8 +1,7 @@
 import * as React from 'react';
 
 import { cn } from '../../lib/utils';
-import { LinkComponentProps } from 'node_modules/@tanstack/react-router/dist/esm/link';
-import { Link } from '@tanstack/react-router';
+import { Link, LinkProps } from '@tanstack/react-router';
 
 const Table = React.forwardRef<
   HTMLTableElement,
@@ -96,7 +95,7 @@ const TableCell = React.forwardRef<
 TableCell.displayName = 'TableCell';
 
 type TableCellAttributes = React.TdHTMLAttributes<HTMLTableCellElement> & {
-  linkProps?: LinkComponentProps<"a">
+  linkProps?: LinkProps
 }
 
 const TableCellWithLink = React.forwardRef<
