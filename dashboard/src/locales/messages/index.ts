@@ -143,6 +143,7 @@ export const messages = {
     'logSheet.errorsFound': 'Errors found on Kernel.log',
     'logSheet.fileName': 'File Name',
     'logSheet.fileSize': 'File Size',
+    'logSheet.indexOf': 'Index of {link}',
     'routes.deviceMonitor': 'Devices',
     'routes.labsMonitor': 'Labs',
     'routes.sendFeedback': 'Send us Feedback',

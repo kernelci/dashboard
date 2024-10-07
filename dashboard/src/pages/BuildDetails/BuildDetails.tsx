@@ -27,17 +27,13 @@ import {
 
 import IssueSection from '@/components/Issue/IssueSection';
 
+import { truncateBigText } from '@/lib/string';
+
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
 const emptyValue = '-';
-const maxTextLength = 50;
 
 const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
-
-const truncateBigText = (text: string | undefined): string | undefined =>
-  text && text.length > maxTextLength
-    ? text.slice(0, maxTextLength) + '...'
-    : valueOrEmpty(text);
 
 const BlueFolderIcon = (): JSX.Element => (
   <MdFolderOpen className="text-blue" />
@@ -67,38 +63,38 @@ const BuildDetails = (): JSX.Element => {
           {
             infos: [
               {
-                title: intl.formatMessage({ id: 'global.tree' }),
+                title: 'global.tree',
                 linkText: valueOrEmpty(data.tree_name),
                 icon: <ImTree className="text-blue" />,
               },
               {
-                title: intl.formatMessage({ id: 'buildDetails.gitUrl' }),
+                title: 'buildDetails.gitUrl',
                 linkText: truncateBigText(data.git_repository_url),
                 link: data.git_repository_url,
               },
               {
-                title: intl.formatMessage({ id: 'buildDetails.gitBranch' }),
+                title: 'buildDetails.gitBranch',
                 linkText: valueOrEmpty(data.git_repository_branch),
                 icon: <ImTree className="text-bslue" />,
               },
               {
-                title: intl.formatMessage({ id: 'buildDetails.gitCommit' }),
+                title: 'buildDetails.gitCommit',
                 linkText: valueOrEmpty(data.git_commit_hash),
               },
               {
-                title: intl.formatMessage({ id: 'buildDetails.gitDescribe' }),
+                title: 'buildDetails.gitDescribe',
                 linkText: valueOrEmpty(data.git_commit_name),
               },
               {
-                title: intl.formatMessage({ id: 'global.date' }),
+                title: 'global.date',
                 linkText: formatDate(valueOrEmpty(data.start_time)),
               },
               {
-                title: intl.formatMessage({ id: 'global.defconfig' }),
+                title: 'global.defconfig',
                 linkText: valueOrEmpty(data.config_name),
               },
               {
-                title: intl.formatMessage({ id: 'global.status' }),
+                title: 'global.status',
                 icon: data.valid ? (
                   <MdCheck className="text-green" />
                 ) : (
@@ -106,11 +102,11 @@ const BuildDetails = (): JSX.Element => {
                 ),
               },
               {
-                title: intl.formatMessage({ id: 'global.architecture' }),
+                title: 'global.architecture',
                 linkText: valueOrEmpty(data.architecture),
               },
               {
-                title: intl.formatMessage({ id: 'buildDetails.buildTime' }),
+                title: 'buildDetails.buildTime',
                 linkText: data.duration ? `${data.duration} sec` : emptyValue,
               },
             ],
@@ -118,11 +114,11 @@ const BuildDetails = (): JSX.Element => {
           {
             infos: [
               {
-                title: intl.formatMessage({ id: 'buildDetails.compiler' }),
+                title: 'buildDetails.compiler',
                 linkText: valueOrEmpty(data.compiler),
               },
               {
-                title: intl.formatMessage({ id: 'global.command' }),
+                title: 'global.command',
                 linkText: valueOrEmpty(valueOrEmpty(data.command)),
               },
             ],
@@ -130,7 +126,7 @@ const BuildDetails = (): JSX.Element => {
           {
             infos: [
               {
-                title: intl.formatMessage({ id: 'buildDetails.buildLogs' }),
+                title: 'buildDetails.buildLogs',
                 linkText: truncateBigText(data.log_url),
                 link: data.log_url,
                 icon: data.log_url ? (
@@ -138,28 +134,28 @@ const BuildDetails = (): JSX.Element => {
                 ) : undefined,
               },
               {
-                title: intl.formatMessage({ id: 'global.dtb' }),
+                title: 'global.dtb',
                 linkText: valueOrEmpty(data.misc?.dtb),
                 icon: data.misc?.dtb ? <BlueFolderIcon /> : undefined,
               },
               {
-                title: intl.formatMessage({ id: 'buildDetails.kernelConfig' }),
+                title: 'buildDetails.kernelConfig',
                 linkText: truncateBigText(data.config_url),
                 link: data.config_url,
                 icon: data.config_url ? <BlueFolderIcon /> : undefined,
               },
               {
-                title: intl.formatMessage({ id: 'global.modules' }),
+                title: 'global.modules',
                 linkText: valueOrEmpty(data.misc?.modules),
                 icon: data.misc?.modules ? <BlueFolderIcon /> : undefined,
               },
               {
-                title: intl.formatMessage({ id: 'buildDetails.kernelImage' }),
+                title: 'buildDetails.kernelImage',
                 linkText: valueOrEmpty(data.misc?.kernel_type),
                 icon: data.misc?.kernel_type ? <BlueFolderIcon /> : undefined,
               },
               {
-                title: intl.formatMessage({ id: 'buildDetails.systemMap' }),
+                title: 'buildDetails.systemMap',
                 linkText: valueOrEmpty(data.misc?.system_map),
                 icon: data.misc?.system_map ? <BlueFolderIcon /> : undefined,
               },

@@ -13,20 +13,20 @@ import {
 
 import { useBuildStatusCount } from '@/api/TreeDetails';
 
-import { SheetTrigger } from '@/components/Sheet';
-
-import { DevOnly } from '@/components/FeatureFlag';
+import { Sheet, SheetTrigger } from '@/components/Sheet';
 
 import StatusChartMemoized, {
   Colors,
   IStatusChart,
-} from '../StatusChart/StatusCharts';
+} from '@/components/StatusChart/StatusCharts';
 
-import LinksGroup from '../LinkGroup/LinkGroup';
+import LinksGroup, { ILinkGroup } from '@/components/LinkGroup/LinkGroup';
 
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
-import QuerySwitcher from '../QuerySwitcher/QuerySwitcher';
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+
+import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
 
 import { IAccordionItems } from './Accordion';
 
@@ -143,18 +143,18 @@ const AccordionBuildContent = ({
     });
   }, [contentData.id, navigate, treeId]);
 
-  const links = useMemo(
+  const links: ILinkGroup['links'] = useMemo(
     () => [
       contentData.kernelImage
         ? {
-            title: <FormattedMessage id="buildAccordion.kernelImage" />,
+            title: 'buildAccordion.kernelImage',
             icon: <MdFolderOpen className={blueText} />,
             linkText: <span>{`kernel/${contentData.kernelImage}`}</span>,
           }
         : undefined,
       contentData.kernelConfig
         ? {
-            title: <FormattedMessage id="buildAccordion.kernelConfig" />,
+            title: 'buildAccordion.kernelConfig',
             icon: <MdFolderOpen className={blueText} />,
             link: contentData.kernelConfig,
             linkText: <FormattedMessage id="buildAccordion.kernelConfigPath" />,
@@ -162,7 +162,7 @@ const AccordionBuildContent = ({
         : undefined,
       contentData.dtb
         ? {
-            title: <FormattedMessage id="buildAccordion.dtb" />,
+            title: 'buildAccordion.dtb',
             icon: <MdFolderOpen className={blueText} />,
             link: contentData.dtb,
             linkText: <FormattedMessage id="buildAccordion.dtbs" />,
@@ -170,15 +170,15 @@ const AccordionBuildContent = ({
         : undefined,
       contentData.buildLogs
         ? {
-            title: <FormattedMessage id="buildAccordion.buildLogs" />,
+            title: 'buildAccordion.buildLogs',
             icon: <MdFolderOpen className={blueText} />,
-            link: contentData.buildLogs,
             linkText: <FormattedMessage id="buildAccordion.logs" />,
+            wrapperComponent: SheetTrigger,
           }
         : undefined,
       contentData.systemMap
         ? {
-            title: <FormattedMessage id="buildAccordion.systemMap" />,
+            title: 'buildAccordion.systemMap',
             icon: <MdFolderOpen className={blueText} />,
             link: contentData.systemMap,
             linkText: <FormattedMessage id="buildAccordion.systemMapPath" />,
@@ -186,7 +186,7 @@ const AccordionBuildContent = ({
         : undefined,
       contentData.modules
         ? {
-            title: <FormattedMessage id="buildAccordion.modules" />,
+            title: 'buildAccordion.modules',
             icon: <MdFolderOpen className={blueText} />,
             link: contentData.modules,
             linkText: <FormattedMessage id="buildAccordion.modulesZip" />,
@@ -205,27 +205,33 @@ const AccordionBuildContent = ({
 
   return (
     <>
-      <div className="flex flex-row justify-between">
-        <QuerySwitcher data={data} status={status} skeletonClassname="h-[60px]">
-          {data && <AccordBuildStatusChart buildCountsData={data} />}
-        </QuerySwitcher>
-        <div className="flex flex-col gap-8">
-          <LinksGroup links={links} />
-          <div className="flex flex-row gap-4">
-            <Button
-              variant="outline"
-              className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
-              onClick={navigateToBuildDetails}
-            >
-              <FormattedMessage id="buildAccordion.showMore" />
-            </Button>
-            <DevOnly>
-              {/* TODO: Transform the trigger in the real show logs button when the Log Excerpt preview arrives */}
-              <SheetTrigger>Show Logs</SheetTrigger>
-            </DevOnly>
+      <Sheet>
+        <div className="flex flex-row justify-between">
+          <QuerySwitcher
+            data={data}
+            status={status}
+            skeletonClassname="h-[60px]"
+          >
+            {data && <AccordBuildStatusChart buildCountsData={data} />}
+          </QuerySwitcher>
+          <div className="flex flex-col gap-8">
+            <LinksGroup links={links} />
+            <div className="flex flex-row gap-4">
+              <Button
+                variant="outline"
+                className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
+                onClick={navigateToBuildDetails}
+              >
+                <FormattedMessage id="buildAccordion.showMore" />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+        <LogSheet
+          logExcerpt={data?.log_excerpt}
+          logUrl={contentData.buildLogs}
+        />
+      </Sheet>
     </>
   );
 };

@@ -27,6 +27,8 @@ import {
   BreadcrumbSeparator,
 } from '@/components/Breadcrumb/Breadcrumb';
 import IssueSection from '@/components/Issue/IssueSection';
+import { truncateBigText } from '@/lib/string';
+import { ILinkWithIcon } from '@/components/LinkWithIcon/LinkWithIcon';
 
 type TTestDetailsDefaultProps = {
   test: TTestDetails;
@@ -34,13 +36,6 @@ type TTestDetailsDefaultProps = {
 
 const emptyValue = '-';
 const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
-
-const maxTextLength = 50;
-
-const truncateBigText = (text: string | undefined): string | undefined =>
-  text && text.length > maxTextLength
-    ? text.slice(0, maxTextLength) + '...'
-    : valueOrEmpty(text);
 
 const LogExcerpt = ({ test }: TTestDetailsDefaultProps): JSX.Element => {
   return (
@@ -65,56 +60,56 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
     `${window.location.search}`;
 
   const infos: ISubsection['infos'] = useMemo(() => {
-    const baseInfo = [
+    const baseInfo: ILinkWithIcon[] = [
       {
-        title: intl.formatMessage({ id: 'testDetails.status' }),
+        title: 'testDetails.status',
         linkText: truncateBigText(test.status),
       },
       {
-        title: intl.formatMessage({ id: 'testDetails.path' }),
+        title: 'testDetails.path',
         linkText: valueOrEmpty(test.path),
       },
       {
-        title: intl.formatMessage({ id: 'testDetails.arch' }),
+        title: 'testDetails.arch',
         linkText: valueOrEmpty(test.architecture),
         icon: <PiComputerTowerThin className="text-blue" />,
       },
       {
-        title: intl.formatMessage({ id: 'testDetails.compiler' }),
+        title: 'testDetails.compiler',
         linkText: valueOrEmpty(test.compiler),
       },
       {
-        title: intl.formatMessage({ id: 'testDetails.logUrl' }),
+        title: 'testDetails.logUrl',
         linkText: truncateBigText(valueOrEmpty(test.log_url)),
         link: test.log_url,
       },
       {
-        title: intl.formatMessage({ id: 'testDetails.gitCommitHash' }),
+        title: 'testDetails.gitCommitHash',
         linkText: valueOrEmpty(test.git_commit_hash),
       },
       {
-        title: intl.formatMessage({ id: 'testDetails.gitRepositoryUrl' }),
+        title: 'testDetails.gitRepositoryUrl',
         linkText: truncateBigText(valueOrEmpty(test.git_repository_url)),
         link: test.git_repository_url,
       },
       {
-        title: intl.formatMessage({ id: 'testDetails.gitRepositoryBranch' }),
+        title: 'testDetails.gitRepositoryBranch',
         linkText: valueOrEmpty(test.git_repository_branch),
       },
       {
-        title: intl.formatMessage({ id: 'testDetails.buildInfo' }),
+        title: 'testDetails.buildInfo',
         linkText: truncateBigText(test.build_id),
         link: buildDetailsLink,
       },
       {
-        title: intl.formatMessage({ id: 'testDetails.platform' }),
+        title: 'testDetails.platform',
         linkText: platform,
         icon: <GiFlatPlatform className="text-blue" />,
       },
     ];
+
     return baseInfo;
   }, [
-    intl,
     test.architecture,
     test.build_id,
     test.compiler,

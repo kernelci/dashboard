@@ -1,35 +1,58 @@
-import { ReactElement, useMemo } from 'react';
+import { ElementType, Fragment, memo, ReactElement, ReactNode } from 'react';
 
-import LinkWithIcon from '../LinkWithIcon/LinkWithIcon';
+import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
+import { MessagesKey } from '@/locales/messages';
 
-interface ILinkGroup {
+export interface ILinkGroup {
   links: (ILink | undefined)[];
 }
 
 interface ILink {
   linkText: JSX.Element;
-  title?: ReactElement;
+  title: MessagesKey;
   link?: string;
   icon?: ReactElement;
+  wrapperComponent?: ElementType<{ children: ReactNode }>;
 }
 
-const LinksGroup = ({ links }: ILinkGroup): JSX.Element => {
-  const linkGroup = useMemo(() => {
-    return links?.map(
-      link =>
-        link && (
-          <LinkWithIcon
-            title={link.title}
-            icon={link.icon}
-            linkText={link.linkText}
-            key={link.link}
-            link={link.link}
-          />
-        ),
-    );
-  }, [links]);
+type LinkGroupContainerProps = {
+  children: ReactNode;
+};
+
+export const LinkGroupFilling = ({ links }: ILinkGroup): JSX.Element => {
   return (
-    <div className="grid min-w-[350px] grid-cols-3 gap-4">{linkGroup}</div>
+    <>
+      {links?.map(link => {
+        if (link) {
+          const WrapperComponent = link.wrapperComponent ?? Fragment;
+          return (
+            <WrapperComponent key={link.title}>
+              <LinkWithIcon
+                title={link.title}
+                icon={link.icon}
+                linkText={link.linkText}
+                link={link.link}
+              />
+            </WrapperComponent>
+          );
+        }
+      })}
+    </>
+  );
+};
+
+const MemoizedLinkGroupFilling = memo(LinkGroupFilling);
+
+export const LinkGroupContainer = ({
+  children,
+}: LinkGroupContainerProps): JSX.Element => {
+  return <div className="grid min-w-[350px] grid-cols-3 gap-4">{children}</div>;
+};
+const LinksGroup = ({ links }: ILinkGroup): JSX.Element => {
+  return (
+    <LinkGroupContainer>
+      <MemoizedLinkGroupFilling links={links} />
+    </LinkGroupContainer>
   );
 };
 
