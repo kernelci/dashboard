@@ -1,10 +1,10 @@
 import { MdFolderOpen } from 'react-icons/md';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { useParams, Link } from '@tanstack/react-router';
 
 import {
   AccordionItemBuilds,
@@ -129,7 +129,7 @@ const AccordionBuildContent = ({
     { enabled: !!contentData.id },
   );
 
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  /*const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const navigateToBuildDetails = useCallback(() => {
     navigate({
@@ -137,7 +137,7 @@ const AccordionBuildContent = ({
       params: { treeId },
       search: prev => prev,
     });
-  }, [contentData.id, navigate, treeId]);
+  }, [contentData.id, navigate, treeId]);*/
 
   const links = useMemo(
     () => [
@@ -207,13 +207,19 @@ const AccordionBuildContent = ({
         </QuerySwitcher>
         <div className="flex flex-col gap-8">
           <LinksGroup links={links} />
-          <Button
-            variant="outline"
-            className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
-            onClick={navigateToBuildDetails}
+
+          <Link
+            to={`/tree/${treeId}/build/${contentData.id}`}
+            params={{ treeId }}
+            search={prev => prev}
           >
-            <FormattedMessage id="buildAccordion.showMore" />
-          </Button>
+            <Button
+              variant="outline"
+              className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
+            >
+              <FormattedMessage id="buildAccordion.showMore" />
+            </Button>
+          </Link>
         </div>
       </div>
     </>
