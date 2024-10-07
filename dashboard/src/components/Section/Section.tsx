@@ -2,7 +2,9 @@ import { FiLink } from 'react-icons/fi';
 
 import { ReactElement, useMemo } from 'react';
 
-import LinkWithIcon, { ILinkWithIcon } from '../LinkWithIcon/LinkWithIcon';
+import LinkWithIcon, {
+  ILinkWithIcon,
+} from '@/components/LinkWithIcon/LinkWithIcon';
 
 export interface ISection {
   title: string;

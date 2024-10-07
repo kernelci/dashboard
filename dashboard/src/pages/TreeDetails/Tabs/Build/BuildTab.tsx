@@ -11,7 +11,6 @@ import { TableInfo } from '@/components/Table/TableInfo';
 import { usePagination } from '@/hooks/usePagination';
 import Accordion from '@/components/Accordion/Accordion';
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
-import { DevOnly } from '@/components/FeatureFlag/DevOnly';
 
 import {
   BuildsTableFilter,
@@ -32,9 +31,6 @@ import ListingItem from '@/components/ListingItem/ListingItem';
 import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import { MemoizedIssuesList } from '@/pages/TreeDetails/Tabs/TestCards';
-import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
-
-import { Sheet } from '@/components/Sheet';
 
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
@@ -245,100 +241,95 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   );
 
   return (
-    <Sheet>
-      <div className="flex flex-col gap-8 pt-4">
-        <DesktopGrid>
-          <div>
-            <MemoizedStatusCard
-              toggleFilterBySection={toggleFilterBySection}
-              treeDetailsData={treeDetailsData}
-            />
-            <MemoizedErrorsSummaryBuild
-              summaryBody={treeDetailsData?.archs ?? []}
-              toggleFilterBySection={toggleFilterBySection}
-            />
-            <MemoizedIssuesList
-              title={<FormattedMessage id="global.issues" />}
-              issues={treeDetailsData?.issues || []}
-            />
-          </div>
-          <div>
-            <CommitNavigationGraph />
-            <MemoizedConfigsCard
-              treeDetailsData={treeDetailsData}
-              toggleFilterBySection={toggleFilterBySection}
-            />
-          </div>
-        </DesktopGrid>
-        <MobileGrid>
-          <CommitNavigationGraph />
+    <div className="flex flex-col gap-8 pt-4">
+      <DesktopGrid>
+        <div>
           <MemoizedStatusCard
             toggleFilterBySection={toggleFilterBySection}
             treeDetailsData={treeDetailsData}
           />
-          <InnerMobileGrid>
-            <MemoizedErrorsSummaryBuild
-              summaryBody={treeDetailsData?.archs ?? []}
-              toggleFilterBySection={toggleFilterBySection}
-            />
-            <MemoizedConfigsCard
-              treeDetailsData={treeDetailsData}
-              toggleFilterBySection={toggleFilterBySection}
-            />
-          </InnerMobileGrid>
+          <MemoizedErrorsSummaryBuild
+            summaryBody={treeDetailsData?.archs ?? []}
+            toggleFilterBySection={toggleFilterBySection}
+          />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
             issues={treeDetailsData?.issues || []}
           />
-        </MobileGrid>
+        </div>
+        <div>
+          <CommitNavigationGraph />
+          <MemoizedConfigsCard
+            treeDetailsData={treeDetailsData}
+            toggleFilterBySection={toggleFilterBySection}
+          />
+        </div>
+      </DesktopGrid>
+      <MobileGrid>
+        <CommitNavigationGraph />
+        <MemoizedStatusCard
+          toggleFilterBySection={toggleFilterBySection}
+          treeDetailsData={treeDetailsData}
+        />
+        <InnerMobileGrid>
+          <MemoizedErrorsSummaryBuild
+            summaryBody={treeDetailsData?.archs ?? []}
+            toggleFilterBySection={toggleFilterBySection}
+          />
+          <MemoizedConfigsCard
+            treeDetailsData={treeDetailsData}
+            toggleFilterBySection={toggleFilterBySection}
+          />
+        </InnerMobileGrid>
+        <MemoizedIssuesList
+          title={<FormattedMessage id="global.issues" />}
+          issues={treeDetailsData?.issues || []}
+        />
+      </MobileGrid>
 
-        {filteredContent && (
-          <div className="flex flex-col gap-4">
-            <div className="text-lg">
-              <FormattedMessage id="treeDetails.builds" />
-            </div>
-            <div className="flex flex-row justify-between">
-              <TableStatusFilter
-                onClickBuild={(filter: BuildsTableFilter) =>
-                  onClickFilter(filter)
-                }
-                filters={[
-                  {
-                    label: intl.formatMessage({ id: 'global.all' }),
-                    value: possibleBuildsTableFilter[2],
-                    isSelected: selectedFilter === possibleBuildsTableFilter[2],
-                  },
-                  {
-                    label: intl.formatMessage({ id: 'global.successful' }),
-                    value: possibleBuildsTableFilter[1],
-                    isSelected: selectedFilter === possibleBuildsTableFilter[1],
-                  },
-                  {
-                    label: intl.formatMessage({ id: 'global.failed' }),
-                    value: possibleBuildsTableFilter[0],
-                    isSelected: selectedFilter === possibleBuildsTableFilter[0],
-                  },
-                  {
-                    label: intl.formatMessage({ id: 'global.inconclusive' }),
-                    value: possibleBuildsTableFilter[3],
-                    isSelected: selectedFilter === possibleBuildsTableFilter[3],
-                  },
-                ]}
-              />
-              {tableInfoElement}
-            </div>
-            <Accordion
-              type="build"
-              items={filteredContent.slice(startIndex, endIndex)}
-            />
-            <div className="flex justify-end">{tableInfoElement}</div>
+      {filteredContent && (
+        <div className="flex flex-col gap-4">
+          <div className="text-lg">
+            <FormattedMessage id="treeDetails.builds" />
           </div>
-        )}
-        <DevOnly>
-          <LogSheet />
-        </DevOnly>
-      </div>
-    </Sheet>
+          <div className="flex flex-row justify-between">
+            <TableStatusFilter
+              onClickBuild={(filter: BuildsTableFilter) =>
+                onClickFilter(filter)
+              }
+              filters={[
+                {
+                  label: intl.formatMessage({ id: 'global.all' }),
+                  value: possibleBuildsTableFilter[2],
+                  isSelected: selectedFilter === possibleBuildsTableFilter[2],
+                },
+                {
+                  label: intl.formatMessage({ id: 'global.successful' }),
+                  value: possibleBuildsTableFilter[1],
+                  isSelected: selectedFilter === possibleBuildsTableFilter[1],
+                },
+                {
+                  label: intl.formatMessage({ id: 'global.failed' }),
+                  value: possibleBuildsTableFilter[0],
+                  isSelected: selectedFilter === possibleBuildsTableFilter[0],
+                },
+                {
+                  label: intl.formatMessage({ id: 'global.inconclusive' }),
+                  value: possibleBuildsTableFilter[3],
+                  isSelected: selectedFilter === possibleBuildsTableFilter[3],
+                },
+              ]}
+            />
+            {tableInfoElement}
+          </div>
+          <Accordion
+            type="build"
+            items={filteredContent.slice(startIndex, endIndex)}
+          />
+          <div className="flex justify-end">{tableInfoElement}</div>
+        </div>
+      )}
+    </div>
   );
 };
 
