@@ -11,6 +11,10 @@ DEFAULT_ORIGIN = 'maestro'
 class TreeView(View):
     def get(self, request):
         origin = request.GET.get('origin', DEFAULT_ORIGIN)
+        unit = request.GET.get('unit', "days")
+        value = int(request.GET.get('value', '7'))
+
+        time = { unit: value }
 
         checkouts = Checkouts.objects.raw(
             """
@@ -94,7 +98,7 @@ class TreeView(View):
             ORDER BY
                 checkouts.start_time DESC;
             ;
-            """, [origin, getQueryTimeInterval().timestamp()]
+            """, [origin, getQueryTimeInterval(**time).timestamp()]
         )
 
         serializer = TreeSerializer(checkouts, many=True)
