@@ -1,6 +1,8 @@
 import { MdOutlineFeedback } from 'react-icons/md';
 import { FormattedMessage } from 'react-intl';
 
+import { Link } from '@tanstack/react-router';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,14 +70,14 @@ const SendFeedback = (
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction asChild>
-              <a onClick={onGitHubClick}>
+              <Link onClick={onGitHubClick}>
                 <FormattedMessage id="global.github" />
-              </a>
+              </Link>
             </AlertDialogAction>
             <AlertDialogAction asChild>
-              <a onClick={onEmailClick}>
+              <Link onClick={onEmailClick}>
                 <FormattedMessage id="global.email" />
-              </a>
+              </Link>
             </AlertDialogAction>
             <AlertDialogCancel>
               <FormattedMessage id="global.cancel" />

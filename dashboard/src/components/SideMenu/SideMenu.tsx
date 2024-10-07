@@ -5,7 +5,7 @@ import { MdOutlineMonitorHeart } from 'react-icons/md';
 import { ImTree, ImImages } from 'react-icons/im';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
-import { useRouter, useSearch, useLocation } from '@tanstack/react-router';
+import { useSearch, useLocation } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
@@ -53,7 +53,7 @@ type SideMenuItemProps = {
 const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
   const { pathname } = useLocation();
 
-  const router = useRouter();
+  //const router = useRouter();
 
   const { origin: unsafeOrigin } = useSearch({ strict: false });
 
@@ -64,14 +64,16 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
 
   const isCurrentPath = pathname.startsWith(item.navigateTo);
 
-  const navigate = (): void => {
+  const navigate = (): string => {
     const origin = zOrigin.parse(unsafeOrigin);
     const finalPath = item.navigateTo;
     const newPath = `${finalPath}?origin=${origin}`;
 
-    router.navigate({
+    return newPath;
+
+    /*router.navigate({
       to: newPath,
-    });
+    });*/
   };
 
   return (
@@ -81,7 +83,11 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
       }
       key={item.idIntl}
     >
-      <NavLink icon={item.icon} idIntl={item.idIntl} onClick={navigate} />
+      <NavLink
+        to={navigate()}
+        icon={item.icon}
+        idIntl={item.idIntl} /*onClick={navigate}*/
+      />
     </NavigationMenuItem>
   );
 };

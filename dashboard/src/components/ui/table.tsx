@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 import { cn } from '../../lib/utils';
-import HandleLink from '../HandleLink/HandleLink';
 import { LinkComponentProps } from 'node_modules/@tanstack/react-router/dist/esm/link';
+import { Link } from '@tanstack/react-router';
 
 const Table = React.forwardRef<
   HTMLTableElement,
@@ -108,13 +108,12 @@ const TableCellWithLink = React.forwardRef<
       /*className={cn('p-4 align-middle [&:has([role=checkbox])]:pr-0', className)}*/
       {...props}
     >
-      <HandleLink
+      <Link
         className={cn('p-4 flex flex-1')}
-        disabled={!linkProps}
         {...linkProps}
       >
         {children}
-      </HandleLink>
+      </Link>
     </td>
 ));
 TableCellWithLink.displayName = 'TableCellWithLink';

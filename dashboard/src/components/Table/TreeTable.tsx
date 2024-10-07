@@ -2,9 +2,7 @@ import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useSearch } from '@tanstack/react-router';
-
-import { LinkComponentProps } from 'node_modules/@tanstack/react-router/dist/esm/link';
+import { LinkProps, useSearch } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
