@@ -10,20 +10,23 @@ type INavLink = LinkProps & {
   idIntl: MessagesKey;
   icon: JSX.Element;
   href?: string;
+  asTag?: string;
 };
 
-const NavLink = ({ icon, idIntl, ...props }: INavLink): JSX.Element => {
+const NavLink = ({ icon, idIntl, asTag, ...props }: INavLink): JSX.Element => {
+  const LinkElement = asTag ?? Link;
+
   return (
     <NavigationMenuLink asChild>
-      <Link
+      <LinkElement
         className="flex items-center no-underline hover:text-sky-500"
         {...props}
       >
         <span className="mr-3">{icon}</span>
         <span className="text-center text-sm">
-          <FormattedMessage id={idIntl} />{' '}
+          <FormattedMessage id={idIntl} />
         </span>
-      </Link>
+      </LinkElement>
     </NavigationMenuLink>
   );
 };

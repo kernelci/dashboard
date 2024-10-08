@@ -123,6 +123,7 @@ const SideMenu = (): JSX.Element => {
           key={item.idIntl}
         >
           <NavLink
+            asTag="a"
             icon={item.icon}
             idIntl={item.idIntl}
             href={item.url}
