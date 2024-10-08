@@ -295,6 +295,7 @@ export type BuildCountsResponse = {
   log_excerpt?: string;
   build_counts: {
     build_id: string;
+    log_excerpt: string;
     fail_tests: number;
     error_tests: number;
     miss_tests: number;

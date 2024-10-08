@@ -12,11 +12,9 @@ import { useTestDetails, useTestIssues } from '@/api/TestDetails';
 
 import type { TTestDetails } from '@/types/tree/TestDetails';
 
-import BaseCard from '@/components/Cards/BaseCard';
-
-import CodeBlock from '@/components/Filter/CodeBlock';
-
 import { ISubsection, Subsection } from '@/components/Section/Section';
+
+import LogExcerpt from '@/components/Cards/LogExcerptCard';
 
 import {
   Breadcrumb,
@@ -28,10 +26,6 @@ import {
 } from '@/components/Breadcrumb/Breadcrumb';
 import IssueSection from '@/components/Issue/IssueSection';
 
-type TTestDetailsDefaultProps = {
-  test: TTestDetails;
-};
-
 const emptyValue = '-';
 const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
 
@@ -41,16 +35,6 @@ const truncateBigText = (text: string | undefined): string | undefined =>
   text && text.length > maxTextLength
     ? text.slice(0, maxTextLength) + '...'
     : valueOrEmpty(text);
-
-const LogExcerpt = ({ test }: TTestDetailsDefaultProps): JSX.Element => {
-  return (
-    <BaseCard
-      title={<FormattedMessage id="testDetails.logExcerpt" />}
-      className="gap-0"
-      content={<CodeBlock code={test.log_excerpt ?? ''} />}
-    />
-  );
-};
 
 const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
   const intl = useIntl();
@@ -182,7 +166,7 @@ const TestDetails = (): JSX.Element => {
       <h1 className="mb-4 border-b border-gray-300 pb-3 text-2xl font-bold">
         {data.path}
       </h1>
-      <LogExcerpt test={data} />
+      <LogExcerpt data={data} />
       <TestDetailsSection test={data} />
       <IssueSection {...issuesQueryResult} />
     </div>

@@ -30,6 +30,8 @@ import QuerySwitcher from '../QuerySwitcher/QuerySwitcher';
 
 import { IAccordionItems } from './Accordion';
 
+import LogExcerpt from '@/components/Cards/LogExcerptCard';
+
 export interface IBuildAccordionContent {
   testStatus: {
     failTests: number;
@@ -225,6 +227,9 @@ const AccordionBuildContent = ({
             </DevOnly>
           </div>
         </div>
+      </div>
+      <div className="flex-row">
+        <LogExcerpt data={data?.build_counts} />
       </div>
     </>
   );

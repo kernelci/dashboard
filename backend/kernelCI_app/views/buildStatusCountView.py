@@ -36,6 +36,7 @@ class BuildStatusCountView(APIView):
         log_excerpt = build_status.log_excerpt
         build_counts = {
             "build_id": build_status.id,
+            "log_excerpt": build_status.log_excerpt,
             "fail_tests": build_status.fail_tests,
             "error_tests": build_status.error_tests,
             "miss_tests": build_status.miss_tests,
