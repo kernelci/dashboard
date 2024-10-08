@@ -9,10 +9,9 @@ DEFAULT_ORIGIN = "maestro"
 class TreeViewFast(View):
     def get(self, request):
         origin = request.GET.get("origin", DEFAULT_ORIGIN)
-        unit = request.GET.get("unit", "days")
         value = int(request.GET.get("value", "7"))
-        
-        time = { unit: value }
+
+        time = {"days": value}
 
         checkouts = Checkouts.objects.raw(
             """

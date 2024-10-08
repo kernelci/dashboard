@@ -3,4 +3,4 @@
 http 'http://localhost:8000/api/tree-fast/' origin==maestro
 
 # If you want to provide another limit to query:
-# http 'http://localhost:8000/api/tree-fast/' origin==maestro unit==weeks value==8
+# http 'http://localhost:8000/api/tree-fast/' origin==maestro value==8
