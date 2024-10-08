@@ -174,7 +174,6 @@ const TestDetails = (): JSX.Element => {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>
-              {/* TODO: Change to test.details*/}
               <FormattedMessage id="tree.details" />
             </BreadcrumbPage>
           </BreadcrumbItem>
