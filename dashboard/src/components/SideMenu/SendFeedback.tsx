@@ -57,7 +57,11 @@ const SendFeedback = (
     <NavigationMenuItem {...props}>
       <AlertDialog>
         <AlertDialogTrigger>
-          <NavLink icon={<MdOutlineFeedback />} idIntl="routes.sendFeedback" />
+          <NavLink
+            as="a"
+            icon={<MdOutlineFeedback />}
+            idIntl="routes.sendFeedback"
+          />
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
