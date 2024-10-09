@@ -2,7 +2,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 
 import StatusChartMemoized, {
   Colors,
@@ -93,7 +93,6 @@ const MemoizedStatusCard = memo(StatusCard);
 
 const ConfigsCard = ({
   treeDetailsData,
-  toggleFilterBySection,
 }: {
   treeDetailsData?: ITreeDetails;
   toggleFilterBySection: (
@@ -105,22 +104,42 @@ const ConfigsCard = ({
     return (
       <DumbListingContent>
         {treeDetailsData?.configs.map((item, i) => (
-          <ListingItem
+          <Link
             key={i}
-            text={item.text}
-            onClick={() => toggleFilterBySection(item.text, 'configs')}
-            leftIcon={
-              <BuildStatus
-                valid={item.success}
-                invalid={item.errors}
-                unknown={item.unknown}
-              />
-            }
-          />
+            search={previousParams => {
+              const { diffFilter: currentDiffFilter } = previousParams;
+              const newFilter = structuredClone(currentDiffFilter) || {};
+              // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
+              newFilter['configs'] = newFilter['configs'] ?? {};
+
+              const configs = newFilter['configs'];
+              if (configs[item.text]) {
+                delete configs[item.text];
+              } else {
+                configs[item.text] = true;
+              }
+
+              return {
+                ...previousParams,
+                diffFilter: newFilter,
+              };
+            }}
+          >
+            <ListingItem
+              text={item.text}
+              leftIcon={
+                <BuildStatus
+                  valid={item.success}
+                  invalid={item.errors}
+                  unknown={item.unknown}
+                />
+              }
+            />
+          </Link>
         ))}
       </DumbListingContent>
     );
-  }, [toggleFilterBySection, treeDetailsData?.configs]);
+  }, [treeDetailsData?.configs]);
 
   return (
     <BaseCard

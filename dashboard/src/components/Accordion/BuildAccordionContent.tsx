@@ -129,16 +129,6 @@ const AccordionBuildContent = ({
     { enabled: !!contentData.id },
   );
 
-  /*const navigate = useNavigate({ from: '/tree/$treeId' });
-
-  const navigateToBuildDetails = useCallback(() => {
-    navigate({
-      to: `/tree/${treeId}/build/${contentData.id}`,
-      params: { treeId },
-      search: prev => prev,
-    });
-  }, [contentData.id, navigate, treeId]);*/
-
   const links = useMemo(
     () => [
       contentData.kernelImage

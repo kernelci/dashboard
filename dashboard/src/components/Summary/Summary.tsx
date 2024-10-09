@@ -1,7 +1,9 @@
 import { ReactElement, useMemo } from 'react';
 
+import { Link } from '@tanstack/react-router';
+
 import BaseTable from '../Table/BaseTable';
-import { TableBody, TableCell, TableRow } from '../ui/table';
+import { TableBody, TableCell, TableCellWithLink, TableRow } from '../ui/table';
 import ListingItem, { IListingItem } from '../ListingItem/ListingItem';
 
 export interface ISummary extends ISummaryTable {
@@ -71,24 +73,60 @@ export const SummaryItem = ({
   arch,
   compilers,
   onClickKey,
-  onClickCompiler,
   leftIcon,
 }: ISummaryItem): JSX.Element => {
   const compilersElement = useMemo(() => {
     return compilers?.map(compiler => (
-      <button
+      <Link
+        search={previousParams => {
+          const { diffFilter: currentDiffFilter } = previousParams;
+          const newFilter = structuredClone(currentDiffFilter) || {};
+          // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
+          newFilter['compilers'] = newFilter['compilers'] ?? {};
+
+          const configs = newFilter['compilers'];
+          if (configs[compiler]) {
+            delete configs[compiler];
+          } else {
+            configs[compiler] = true;
+          }
+
+          return {
+            ...previousParams,
+            diffFilter: newFilter,
+          };
+        }}
         key={compiler}
         className="line-clamp-1"
-        onClick={() => onClickCompiler?.(compiler)}
       >
         {compiler}
-      </button>
+      </Link>
     ));
-  }, [compilers, onClickCompiler]);
+  }, [compilers]);
 
   return (
     <TableRow>
-      <TableCell>
+      <TableCellWithLink
+        linkProps={{
+          search: previousParams => {
+            const { diffFilter: currentDiffFilter } = previousParams;
+            const newFilter = structuredClone(currentDiffFilter) || {};
+            // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
+            newFilter['archs'] = newFilter['archs'] ?? {};
+            const configs = newFilter['archs'];
+            if (configs[arch.text]) {
+              delete configs[arch.text];
+            } else {
+              configs[arch.text] = true;
+            }
+
+            return {
+              ...previousParams,
+              diffFilter: newFilter,
+            };
+          },
+        }}
+      >
         <ListingItem
           onClick={onClickKey}
           warnings={arch.warnings}
@@ -98,7 +136,7 @@ export const SummaryItem = ({
           unknown={arch.unknown}
           errors={arch.errors}
         />
-      </TableCell>
+      </TableCellWithLink>
       <TableCell>
         <div className="flex flex-col gap-1">{compilersElement}</div>
       </TableCell>

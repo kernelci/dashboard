@@ -7,7 +7,7 @@ import { MdChevronRight } from 'react-icons/md';
 import BaseTable from '@/components/Table/BaseTable';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { TableInfo } from '@/components/Table/TableInfo';
-import { TableCell, TableRow } from '@/components/ui/table';
+import { TableCell, TableRowWithLink } from '@/components/ui/table';
 import { usePagination } from '@/hooks/usePagination';
 
 import {
@@ -73,20 +73,6 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
     [testHistory],
   );
 
-  const onClickName = useCallback(
-    (id: string) => {
-      navigate({
-        to: '/tree/$treeId/test/$testId',
-        params: {
-          treeId,
-          testId: id,
-        },
-        search: s => s,
-      });
-    },
-    [navigate, treeId],
-  );
-
   const filteredData = useMemo(() => {
     const filterToApply = tableFilter.bootsTable;
     if (filterToApply === 'all') {
@@ -124,10 +110,21 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
     }
 
     return filteredData?.slice(startIndex, endIndex).map(test => (
-      <TableRow onClick={() => onClickName(test.id)} key={test.id}>
-        <TableCell>{test.path}</TableCell>
-        <TableCell>{test.status}</TableCell>
-        <TableCell>
+      <TableRowWithLink
+        key={test.id}
+        linkProps={{
+          to: '/tree/$treeId/test/$testId',
+          className: 'grid grid-cols-[25%_15%_15%_25%_15%]',
+          params: {
+            treeId,
+            testId: test.id,
+          },
+          search: s => s,
+        }}
+      >
+        <TableCell className="">{test.path}</TableCell>
+        <TableCell className="">{test.status}</TableCell>
+        <TableCell className="">
           <TooltipDateTime
             dateTime={test.startTime}
             lineBreak={true}
@@ -135,13 +132,13 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
             showLabelTZ={true}
           />
         </TableCell>
-        <TableCell>{test.duration ?? '-'}</TableCell>
-        <TableCell>
+        <TableCell className="">{test.duration || '-'}</TableCell>
+        <TableCell className="flex items-center justify-end">
           <MdChevronRight />
         </TableCell>
-      </TableRow>
+      </TableRowWithLink>
     ));
-  }, [filteredData, data, startIndex, endIndex, onClickName]);
+  }, [filteredData, data, startIndex, endIndex, treeId]);
 
   const tableInfoElement = (
     <div className="flex flex-col items-end">
@@ -216,7 +213,13 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
         />
         {tableInfoElement}
       </div>
-      <BaseTable headers={headerElements}>{rows}</BaseTable>
+      <BaseTable
+        gridClassName="grid grid-cols-[25%_15%_15%_25%_15%]"
+        className="flex flex-col"
+        headers={headerElements}
+      >
+        {rows}
+      </BaseTable>
       {tableInfoElement}
     </div>
   );

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useSearch, LinkComponent } from '@tanstack/react-router';
+import { useSearch, LinkProps } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
@@ -94,7 +94,9 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
 
   // const navigate = useNavigate({ from: '/tree' });
 
-  const linkProps = (target: string): LinkComponent<'a'> => ({
+  const linkProps = (
+    target: string,
+  ): LinkProps & { style: React.CSSProperties } => ({
     to: '/tree/$treeId',
     params: { treeId: row.id },
     style: {
@@ -120,46 +122,6 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       },
     },
   });
-
-  /*const navigateToTreeDetailPage = useCallback(
-    (event: React.MouseEvent<HTMLTableCellElement>) => {
-      const el = event.currentTarget;
-      const target = el.getAttribute('data-target');
-
-      const safeTarget = zPossibleValidator.parse(target);
-
-      navigate({
-        to: '/tree/$treeId',
-        params: { treeId: row.id },
-        search: {
-          tableFilter: {
-            bootsTable: possibleTestsTableFilter[0],
-            buildsTable: possibleBuildsTableFilter[2],
-            testsTable: possibleTestsTableFilter[0],
-          },
-          origin: origin,
-          currentTreeDetailsTab: safeTarget,
-          diffFilter: {},
-          treeInfo: {
-            gitUrl: row.url,
-            gitBranch: row.branch,
-            treeName: row.tree_name ?? undefined,
-            commitName: row.commitName,
-            headCommitHash: row.id,
-          },
-        },
-      });
-    },
-    [
-      navigate,
-      row.id,
-      row.url,
-      row.branch,
-      row.tree_name,
-      row.commitName,
-      origin,
-    ],
-  );*/
 
   return (
     <TableRow>
