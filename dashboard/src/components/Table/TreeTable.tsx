@@ -90,46 +90,6 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
     },
   });
 
-  /*const navigateToTreeDetailPage = useCallback(
-    (event: React.MouseEvent<HTMLTableCellElement>) => {
-      const el = event.currentTarget;
-      const target = el.getAttribute('data-target');
-
-      const safeTarget = zPossibleValidator.parse(target);
-
-      navigate({
-        to: '/tree/$treeId',
-        params: { treeId: row.id },
-        search: {
-          tableFilter: {
-            bootsTable: possibleTestsTableFilter[0],
-            buildsTable: possibleBuildsTableFilter[2],
-            testsTable: possibleTestsTableFilter[0],
-          },
-          origin: origin,
-          currentTreeDetailsTab: safeTarget,
-          diffFilter: {},
-          treeInfo: {
-            gitUrl: row.url,
-            gitBranch: row.branch,
-            treeName: row.tree_name ?? undefined,
-            commitName: row.commitName,
-            headCommitHash: row.id,
-          },
-        },
-      });
-    },
-    [
-      navigate,
-      row.id,
-      row.url,
-      row.branch,
-      row.tree_name,
-      row.commitName,
-      origin,
-    ],
-  );*/
-
   return (
     <TableRow>
       <TableCellWithLink

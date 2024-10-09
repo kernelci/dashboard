@@ -1,10 +1,8 @@
-import { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useMemo } from 'react';
 
 import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
-
-import { useNavigate } from '@tanstack/react-router';
 
 import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
@@ -18,7 +16,12 @@ import { GroupedTestStatus } from '@/components/Status/Status';
 
 import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
 
-import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import {
+  TableBody,
+  TableCell,
+  TableRow,
+  TableRowWithLink,
+} from '@/components/ui/table';
 
 import BaseTable from '@/components/Table/BaseTable';
 
@@ -50,6 +53,8 @@ interface ICustomAccordionTableBody {
 interface IAccordionTestContent {
   data: TIndividualTest[];
 }
+
+const gridClasses = 'grid grid-cols-[70%_5%_15%_5%_5%]';
 
 const headersBuilds = [
   <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
@@ -223,31 +228,18 @@ const AccordionTestsTrigger = ({
 const AccordionTestsContent = ({
   data,
 }: IAccordionTestContent): JSX.Element => {
-  const navigate = useNavigate({ from: '/tree/$treeId' });
-
-  const onClickRow = useCallback(
-    (testId: string) => {
-      navigate({
-        to: '/tree/$treeId/test/$testId',
-        params: {
-          testId: testId,
-        },
-        search: s => s,
-      });
-    },
-    [navigate],
-  );
-
   const rows = useMemo(() => {
-    return data.map(test => (
-      <TestTableRow key={test.id} test={test} onClick={onClickRow} />
-    ));
-  }, [data, onClickRow]);
+    return data.map(test => <TestTableRow key={test.id} test={test} />);
+  }, [data]);
 
   return (
     <div className="h-max-12 overflow-scroll">
-      <BaseTable headers={headerTestsDetails}>
-        <TableBody>{rows}</TableBody>
+      <BaseTable
+        gridClassName={gridClasses}
+        className="flex flex-col"
+        headers={headerTestsDetails}
+      >
+        {rows}
       </BaseTable>
     </div>
   );
@@ -255,15 +247,20 @@ const AccordionTestsContent = ({
 
 interface ITestTableRow {
   test: TIndividualTest;
-  onClick: (testId: string) => void;
 }
 
-const TestTableRow = ({ test, onClick }: ITestTableRow): JSX.Element => {
-  const onClickHandle = useCallback(() => onClick(test.id), [onClick, test.id]);
+const TestTableRow = ({ test }: ITestTableRow): JSX.Element => {
   return (
-    <TableRow
+    <TableRowWithLink
       className="cursor-pointer hover:bg-lightBlue"
-      onClick={onClickHandle}
+      linkProps={{
+        className: gridClasses,
+        to: '/tree/$treeId/test/$testId',
+        params: {
+          testId: test.id,
+        },
+        search: s => s,
+      }}
       key={test.id}
     >
       <TableCell>{test.path}</TableCell>
@@ -276,11 +273,11 @@ const TestTableRow = ({ test, onClick }: ITestTableRow): JSX.Element => {
           showLabelTZ={true}
         />
       </TableCell>
-      <TableCell>{test.duration ?? '-'}</TableCell>
-      <TableCell>
+      <TableCell>{test.duration || '-'}</TableCell>
+      <TableCell className="flex items-center justify-end">
         <ChevronRightAnimate />
       </TableCell>
-    </TableRow>
+    </TableRowWithLink>
   );
 };
 

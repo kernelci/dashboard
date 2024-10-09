@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { cn } from '../../lib/utils';
-import { Link, LinkProps } from '@tanstack/react-router';
+import { Link, LinkProps as RouterLinkProps } from '@tanstack/react-router';
 
 const Table = React.forwardRef<
   HTMLTableElement,
@@ -67,6 +67,34 @@ const TableRow = React.forwardRef<
 ));
 TableRow.displayName = 'TableRow';
 
+type LinkProps = RouterLinkProps & { className?: string }
+
+type TableRowWithLinkAttributes = React.TdHTMLAttributes<HTMLTableRowElement> & {
+  linkProps: LinkProps
+}
+
+const TableRowWithLink = React.forwardRef<
+  HTMLTableRowElement,
+  TableRowWithLinkAttributes
+>(({ className, children, linkProps, ...props }, ref) => (
+  <tr
+    ref={ref}
+    className={cn(
+      'border-b transition-colors hover:bg-slate-100/50 data-[state=selected]:bg-slate-100 dark:hover:bg-slate-800/50 dark:data-[state=selected]:bg-slate-800',
+      className,
+    )}
+    {...props}
+  >
+    <Link
+      className={cn('flex flex-1')}
+      {...linkProps}
+    >
+        {children}
+      </Link>
+  </tr>
+));
+TableRowWithLink.displayName = 'TableRowWithLink';
+
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
@@ -94,17 +122,17 @@ const TableCell = React.forwardRef<
 ));
 TableCell.displayName = 'TableCell';
 
-type TableCellAttributes = React.TdHTMLAttributes<HTMLTableCellElement> & {
-  linkProps?: LinkProps
+type TableCellWithLinkAttributes = React.TdHTMLAttributes<HTMLTableCellElement> & {
+  linkProps: LinkProps
 }
 
 const TableCellWithLink = React.forwardRef<
   HTMLTableCellElement,
-  TableCellAttributes
+  TableCellWithLinkAttributes
 >(({ className, children, linkProps, ...props }, ref) => (
     <td
       ref={ref}
-      /*className={cn('p-4 align-middle [&:has([role=checkbox])]:pr-0', className)}*/
+      className={cn('align-middle [&:has([role=checkbox])]:pr-0', className)}
       {...props}
     >
       <Link
@@ -136,6 +164,7 @@ export {
   TableFooter,
   TableHead,
   TableRow,
+  TableRowWithLink,
   TableCell,
   TableCellWithLink,
   TableCaption,

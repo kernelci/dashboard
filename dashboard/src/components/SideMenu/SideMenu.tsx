@@ -9,7 +9,7 @@ import { useSearch, useLocation } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
-import { zOrigin } from '@/types/tree/Tree';
+import { TPaths, zOrigin, zPath } from '@/types/tree/Tree';
 
 import { DOCUMENTATION_URL } from '@/utils/constants/general';
 
@@ -62,16 +62,10 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
 
   const isCurrentPath = pathname.startsWith(item.navigateTo);
 
-  const navigate = (): string => {
-    const origin = zOrigin.parse(unsafeOrigin);
+  const navigate = (): TPaths => {
     const finalPath = item.navigateTo;
-    const newPath = `${finalPath}?origin=${origin}`;
 
-    return newPath;
-
-    /*router.navigate({
-      to: newPath,
-    });*/
+    return zPath.parse(finalPath);
   };
 
   return (
@@ -83,6 +77,9 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
     >
       <NavLink
         to={navigate()}
+        search={{
+          origin: zOrigin.parse(unsafeOrigin),
+        }}
         icon={item.icon}
         idIntl={item.idIntl}
       />
