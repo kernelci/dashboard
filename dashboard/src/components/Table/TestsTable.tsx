@@ -13,10 +13,11 @@ import {
   possibleTestsTableFilter,
 } from '@/types/tree/TreeDetails';
 
-import { getStatusGroup } from '@/utils/status';
 import { TPathTests } from '@/types/general';
 
 import { ItemsPerPageValues } from '@/utils/constants/general';
+
+import { StatusTable } from '@/utils/constants/database';
 
 import Accordion from '../Accordion/Accordion';
 
@@ -163,7 +164,7 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
           .map(test => ({
             ...test,
             individual_tests: test.individual_tests.filter(
-              t => getStatusGroup(t.status) === possibleTestsTableFilter[1],
+              t => t.status.toUpperCase() === StatusTable.PASS,
             ),
           }));
       case 'failed':
@@ -171,9 +172,11 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
           ?.filter(tests => tests.fail_tests > 0)
           .map(test => ({
             ...test,
-            individual_tests: test.individual_tests.filter(
-              t => t.status.toLowerCase() === possibleTestsTableFilter[2],
-            ),
+            individual_tests: test.individual_tests.filter(t => {
+              const result = t.status.toUpperCase() === StatusTable.FAIL;
+
+              return result;
+            }),
           }));
       case 'inconclusive':
         return data
@@ -187,9 +190,13 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
           )
           .map(test => ({
             ...test,
-            individual_tests: test.individual_tests.filter(
-              t => t.status.toLowerCase() === possibleTestsTableFilter[3],
-            ),
+            individual_tests: test.individual_tests.filter(t => {
+              const uppercaseTestStatus = t.status.toUpperCase();
+              const result =
+                uppercaseTestStatus !== StatusTable.PASS &&
+                uppercaseTestStatus !== StatusTable.FAIL;
+              return result;
+            }),
           }));
     }
   }, [tableFilter.testsTable, data]);

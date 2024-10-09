@@ -6,7 +6,7 @@ import { MessagesKey } from '@/locales/messages';
 
 import { TIssue } from '@/types/general';
 
-import type { ErrorStatus, Status } from '../database';
+import type { Status } from '@/types/database';
 
 export type BuildsTabBuild = {
   id: string;
@@ -87,10 +87,6 @@ export type TestHistory = {
   duration?: number;
 };
 
-type ErrorCounts = {
-  [key in ErrorStatus]: number | undefined;
-};
-
 type CompilersPerArchitecture = {
   [key: string]: string[];
 };
@@ -113,7 +109,6 @@ type PropertyStatusCounts = Record<string, StatusCounts>;
 
 export type TTreeTestsData = {
   statusCounts: StatusCounts;
-  errorCounts: ErrorCounts;
   configStatusCounts: PropertyStatusCounts;
   testHistory: TestHistory[];
   architectureStatusCounts: PropertyStatusCounts;

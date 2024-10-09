@@ -1,4 +1,4 @@
-import type { ErrorStatus } from '@/types/database';
+import type { InconclusiveStatus } from '@/types/database';
 
 export const status = [
   'MISS',
@@ -9,6 +9,20 @@ export const status = [
   'DONE',
 ] as const;
 
-const errorStatus = ['MISS', 'ERROR', 'FAIL'] as const satisfies ErrorStatus[];
+export const StatusTable = {
+  MISS: 'MISS',
+  ERROR: 'ERROR',
+  FAIL: 'FAIL',
+  PASS: 'PASS',
+  SKIP: 'SKIP',
+  DONE: 'DONE',
+} as const;
 
-export const errorStatusSet = new Set(errorStatus);
+const inconclusiveStatus = [
+  'ERROR',
+  'SKIP',
+  'DONE',
+  'MISS',
+] as const satisfies InconclusiveStatus[];
+
+export const errorStatusSet = new Set(inconclusiveStatus);

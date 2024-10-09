@@ -1,5 +1,5 @@
-import { status } from '../utils/constants/database';
+import { status } from '@/utils/constants/database';
 
 export type Status = (typeof status)[number];
 
-export type ErrorStatus = Exclude<Status, 'PASS' | 'SKIP' | 'DONE'>;
+export type InconclusiveStatus = Exclude<Status, 'PASS' | 'FAIL'>;
