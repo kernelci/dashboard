@@ -26,17 +26,21 @@ const CodeBlock = ({
 
   // highlights fails and errors
   code = code.replace(
-    /^.*((\berror(:|\s*-*[1-9]|))|([^\n]\bfailed(\sto|\swith|\b|:|\s*[1-9]))|(fail(\b|[1-9]))).*$/gim,
+    /^.*((\berror(:|\s*-*[0-9]|))|(\bfailed(\sto|\swith|\b|:|\s*[0-9]))|(fail(\b|[0-9]))).*$/gim,
     match => {
       highlightCount++;
       if (match.search(/fail/i) !== -1) {
         // ignores .failed files and fail flags
-        if (match.search(/(.failed|[|/]fail\b)/i) !== -1) {
+        if (match.search(/(\.+failed|failed(\s*0)+|[|/]fail\b)/i) !== -1) {
           return '<span class="text-blue">' + match + '</span>';
         }
         failCount++;
         return '<span class="text-red">' + match + '</span>';
       } else {
+        // ignores error flags
+        if (match.search(/((0\s*\t*)+error|error"+)/i) !== -1) {
+          return '<span class="text-sky-600">' + match + '</span>';
+        }
         errorCount++;
         return '<span class="text-orange-500">' + match + '</span>';
       }
