@@ -37,22 +37,44 @@ const ConfigsList = ({
             const { DONE, FAIL, ERROR, MISS, PASS, SKIP } =
               configStatusCounts[configName];
             return (
-              <ListingItem
-                hasBottomBorder
+              <Link
                 key={configName}
-                text={configName}
-                leftIcon={
-                  <GroupedTestStatus
-                    done={DONE}
-                    fail={FAIL}
-                    error={ERROR}
-                    miss={MISS}
-                    pass={PASS}
-                    skip={SKIP}
-                    forceNumber={false}
-                  />
-                }
-              />
+                search={previousParams => {
+                  const { diffFilter: currentDiffFilter } = previousParams;
+                  const newFilter = structuredClone(currentDiffFilter) || {};
+                  // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
+                  newFilter['configs'] = newFilter['configs'] ?? {};
+
+                  const configs = newFilter['configs'];
+                  if (configs[configName]) {
+                    delete configs[configName];
+                  } else {
+                    configs[configName] = true;
+                  }
+
+                  return {
+                    ...previousParams,
+                    diffFilter: newFilter,
+                  };
+                }}
+              >
+                <ListingItem
+                  hasBottomBorder
+                  key={configName}
+                  text={configName}
+                  leftIcon={
+                    <GroupedTestStatus
+                      done={DONE}
+                      fail={FAIL}
+                      error={ERROR}
+                      miss={MISS}
+                      pass={PASS}
+                      skip={SKIP}
+                      forceNumber={false}
+                    />
+                  }
+                />
+              </Link>
             );
           })}
         </DumbListingContent>
