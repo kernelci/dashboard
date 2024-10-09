@@ -1,8 +1,12 @@
 import { LiaInfoCircleSolid } from 'react-icons/lia';
 
+import { FormattedMessage } from 'react-intl';
+
 import { cn } from '@/lib/utils';
 
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/Tooltip';
+
+import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 
 type TCodeBlockProps = {
   code: string;
@@ -53,23 +57,49 @@ const CodeBlock = ({
         <div dangerouslySetInnerHTML={{ __html: code }}></div>
       </pre>
       {highlightCount > 0 ? (
-        <ul className={cn('py-2 pl-3', highlightsClassname)}>
+        <ul className={cn('flex gap-2 py-4 pl-3', highlightsClassname)}>
           <li>
-            {/* TODO: add locale, add better description */}
-            <span className="flex items-center gap-1">
-              {highlightCount} Highlighted
+            <span className="flex items-center gap-1 font-bold">
               <Tooltip>
                 <TooltipTrigger>
                   <LiaInfoCircleSolid />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Highlighted items are any lines citing fails or errors.</p>
+                  <FormattedMessage
+                    id="codeBlock.highlightsTooltip"
+                    defaultMessage={
+                      'Highlighted items accounts for any lines citing fails or errors.'
+                    }
+                  />
                 </TooltipContent>
               </Tooltip>
+              <FormattedMessage
+                id="codeBlock.highlights"
+                defaultMessage={'Highlights:'}
+              />
             </span>
           </li>
-          <li>{failCount} Fails</li>
-          <li>{errorCount} Errors</li>
+          <li className="flex gap-1">
+            <ColoredCircle
+              quantity={failCount}
+              backgroundClassName="bg-lightRed"
+            />
+            <FormattedMessage id="global.fails" defaultMessage={'Fails'} />
+          </li>
+          <li className="flex gap-1">
+            <ColoredCircle
+              quantity={errorCount}
+              backgroundClassName="bg-orange-200"
+            />
+            <FormattedMessage id="global.errors" defaultMessage={'Errors'} />
+          </li>
+          <li className="flex gap-1">
+            <ColoredCircle
+              quantity={highlightCount - failCount - errorCount}
+              backgroundClassName="bg-mediumGray"
+            />
+            <FormattedMessage id="global.others" defaultMessage={'Others'} />
+          </li>
         </ul>
       ) : null}
     </div>
