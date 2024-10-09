@@ -25,7 +25,6 @@ const NavLink = ({ icon, idIntl, as, ...props }: INavLink): JSX.Element => {
   return (
     <NavigationMenuLink asChild>
       <LinkElement
-        contextMenu=""
         className="flex items-center no-underline hover:text-sky-500"
         {...props}
       >
