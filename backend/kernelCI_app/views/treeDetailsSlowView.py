@@ -303,6 +303,8 @@ class TreeDetailsSlow(View):
         git_branch_param = request.GET.get("git_branch")
         self.__processFilters(request)
 
+        # Right now this query is only using for showing test data so it is doing inner joins
+        # in case it is needed for builds data they should become left join and the logic should be updated
         query = """
         SELECT
                 tests.build_id AS tests_build_id,
@@ -353,12 +355,12 @@ class TreeDetailsSlow(View):
                             checkouts.git_repository_branch = %(git_branch_param)s AND
                             checkouts.origin = %(origin_param)s
                     ) AS tree_head
-                LEFT JOIN builds
+                INNER JOIN builds
                     ON tree_head.checkout_id = builds.checkout_id
                 WHERE
                     builds.origin = %(origin_param)s
             ) AS builds_filter
-        LEFT JOIN tests
+        INNER JOIN tests
             ON builds_filter.builds_id = tests.build_id
         LEFT JOIN incidents
             ON tests.id = incidents.test_id
