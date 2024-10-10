@@ -60,6 +60,9 @@ export DB_DEFAULT="{
 poetry run python3 manage.py runserver
 ```
 
+> Note:
+> It is possible to have authentication issues escaping special characters. In some cases, it is necessary to add more than one backslash, while in others, no addition is needed. To assist with this, when `DEBUG` is set to `True`, the default database will be printed in the terminal, allowing you to determine the best approach.
+
 Definition of Done: You have the KernelCI Dashboard backend running locally.
 
 

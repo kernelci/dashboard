@@ -131,6 +131,9 @@ DATABASES = {
     )
 }
 
+if DEBUG:
+    print("DEBUG: DEFAULT DATABASE:", DATABASES)
+
 
 CACHES = {
     "default": {
