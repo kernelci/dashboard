@@ -29,14 +29,22 @@ def scrape_log_data(url):
                 continue
             columns = row.find_all('td')
             if len(columns) == 3:
-                file_name = columns[0].text.strip()
+                file_name_cell = columns[0]
+                file_name = file_name_cell.text.strip()
+                if file_name.lower().startswith('parent directory'):
+                    continue
+                link = file_name_cell.find('a')
+                url = link['href']
                 file_size = columns[1].text.strip()
                 date = columns[2].text.strip()
                 log_data.append({
+                    'specific_log_url': url,
                     'file_name': file_name,
                     'file_size': file_size,
                     'date': date
                 })
+            else: 
+                return {"error": "Invalid number of columns in table row (probably not a log website)"}
 
         return {"log_files": log_data}
     except Exception as e:
