@@ -1,9 +1,10 @@
+import os
 from django.core.cache import cache
 from django.db import connection
 from threading import Thread
 
 
-DEFAULT_QUERY_CACHE = 180
+CACHE_TIMEOUT = int(os.environ.get('CACHE_TIMEOUT', '180'))
 NOTIFY_CHANNEL = "teste"
 
 __commit_lookup = {}
@@ -19,9 +20,9 @@ def __createCacheParamsHash(params: dict):
 
 
 def setQueryCache(key, params, rows, commit_hash=None, build_id=None, test_id=None,
-                  timeout=DEFAULT_QUERY_CACHE):
+                  timeout=CACHE_TIMEOUT):
     params_hash = __createCacheParamsHash(params)
-    hash_key = "%s-%s" % (key, hash(params_hash))
+    hash_key = "%s-%s" % (key, params_hash)
 
     __addToLookup(hash_key, commit_hash, __commit_lookup)
     __addToLookup(hash_key, build_id, __build_lookup)
@@ -32,7 +33,7 @@ def setQueryCache(key, params, rows, commit_hash=None, build_id=None, test_id=No
 
 def getQueryCache(key, params: dict):
     params_hash = __createCacheParamsHash(params)
-    return cache.get("%s-%s" % (key, hash(params_hash)))
+    return cache.get("%s-%s" % (key, params_hash))
 
 
 def runCacheInvalidator():
@@ -75,9 +76,9 @@ def __listenWorker():
         print(ex)
 
 
-def __addToLookup(key, value, lookup):
-    if value is None:
+def __addToLookup(cacheKey, propertyKey, lookup):
+    if propertyKey is None:
         return
-    if lookup[value] is None:
-        lookup[value] = set()
-    lookup[value].append(key)
+    if lookup[propertyKey] is None:
+        lookup[propertyKey] = set()
+    lookup[propertyKey].append(cacheKey)

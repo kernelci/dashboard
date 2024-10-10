@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Union
 from django.utils import timezone
 from django.core.cache import cache
@@ -7,7 +8,7 @@ import re
 
 
 DEFAULT_QUERY_TIME_INTERVAL = {'days': 7}
-DEFAULT_QUERY_CACHE = 180
+CACHE_TIMEOUT = int(os.environ.get('CACHE_TIMEOUT', '180'))
 
 
 def createCacheParamsHash(params: dict):
@@ -19,12 +20,12 @@ def createCacheParamsHash(params: dict):
 
 def setQueryCache(key, params, rows):
     params_hash = createCacheParamsHash(params)
-    return cache.set("%s-%s" % (key, hash(params_hash)), rows, DEFAULT_QUERY_CACHE)
+    return cache.set("%s-%s" % (key, params_hash), rows, CACHE_TIMEOUT)
 
 
 def getQueryCache(key, params: dict):
     params_hash = createCacheParamsHash(params)
-    return cache.get("%s-%s" % (key, hash(params_hash)))
+    return cache.get("%s-%s" % (key, params_hash))
 
 
 def toIntOrDefault(value, default):
