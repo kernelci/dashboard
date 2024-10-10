@@ -39,25 +39,28 @@ const CodeBlock = ({
     });
 
     newCode = newCode.replace(
-      // matches any occurrence of error or failed
-      /^.*((\berror(:|\s*-*[0-9]|))|(\bfailed(\sto|\swith|\b|:|\s*[0-9]))|(fail(\b|[0-9]))).*$/gim,
+      // matches any line with the occurrence of error or fail
+      /^.*(error|fail).*$/gim,
       match => {
         highlights++;
         if (match.search(/fail/i) !== -1) {
-          // matches .failed files, failed 0, or fail flags
-          if (match.search(/(\.+failed|failed(\s*0)+|[|/]fail\b)/i) !== -1) {
-            return '<span class="text-blue">' + match + '</span>';
+          if (
+            // matches failed to/with, more than 0 fails/faileds and no flags
+            match.search(
+              /.*((\bfailed(\s*to|\s*with|([\b:]\s*[1-9])))|fail(\b|:|\s*[1-9])(?![|/]))/i,
+            ) !== -1
+          ) {
+            fails++;
+            return '<span class="text-red">' + match + '</span>';
           }
-          fails++;
-          return '<span class="text-red">' + match + '</span>';
         } else {
-          // matches error flags or 0 errors
-          if (match.search(/((0\s*\t*)+error|error"+)/i) !== -1) {
-            return '<span class="text-sky-600">' + match + '</span>';
+          // matches error codes greater than 0 or more than 0 errors
+          if (match.search(/(error(:|\s*[1-9]))|([1-9]\s*error)/i) !== -1) {
+            errors++;
+            return '<span class="text-orange-500">' + match + '</span>';
           }
-          errors++;
-          return '<span class="text-orange-500">' + match + '</span>';
         }
+        return '<span class="text-sky-600">' + match + '</span>';
       },
     );
     return {
@@ -78,7 +81,7 @@ const CodeBlock = ({
       {highlightedCode.highlightCount > 0 && (
         <ul className={cn('flex gap-2 py-4 pl-3', highlightsClassname)}>
           <li>
-            <span className="flex items-center gap-1 font-bold">
+            <span className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger>
                   <LiaInfoCircleSolid />
@@ -92,10 +95,12 @@ const CodeBlock = ({
                   />
                 </TooltipContent>
               </Tooltip>
-              <FormattedMessage
-                id="codeBlock.highlights"
-                defaultMessage={'Highlights:'}
-              />
+              <span className="font-bold">
+                <FormattedMessage
+                  id="codeBlock.highlights"
+                  defaultMessage={'Highlights:'}
+                />
+              </span>
             </span>
           </li>
           <li className="flex gap-1">
