@@ -61,9 +61,7 @@ poetry run python3 manage.py runserver
 ```
 
 > Note:
-> It is possible to have authentication issues escaping special characters. In some cases, it is necessary to add more than one backslash, while in others, no addition is needed. One way to see how your computer is handling the escapes is to add a print statement for the environment variable `DB_DEFAULT` in the `manage.py` file with `print(os.getenv('DB_DEFAULT'))`.
-
-Definition of Done: You have the KernelCI Dashboard backend running locally.
+> It is possible to have authentication issues escaping special characters. In some cases, it is necessary to add more than one backslash, while in others, no addition is needed. To assist with this, when `DEBUG` is set to `True`, the default database will be printed in the terminal, allowing you to determine the best approach.
 
 
 ### Task 2: Get acquainted with the backend
