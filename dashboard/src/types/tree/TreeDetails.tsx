@@ -301,4 +301,15 @@ export type BuildCountsResponse = {
   };
 };
 
+export type LogFile = {
+  specific_log_url: string;
+  file_name: string;
+  file_size: string;
+  date: string;
+};
+
+export type LogFilesResponse = {
+  log_files: LogFile[];
+};
+
 export type TTreeCommitHistoryResponse = PaginatedCommitHistoryByTree[];
