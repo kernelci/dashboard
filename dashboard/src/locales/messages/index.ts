@@ -63,6 +63,10 @@ export const messages = {
       'Success - builds completed successfully{br}' +
       'Failed - builds failed{br}' +
       "Inconclusive - builds with unknown status, including ongoing builds that didn't finish yet.",
+    'codeBlock.highlights': 'Highlights:',
+    'codeBlock.highlightsTooltip':
+      'Highlighted items accounts for any lines citing fails or errors.{br}' +
+      'That includes real failures, real errors and other information messages containing those words',
     'filter.architectureSubtitle': 'Please select one or more Architectures:',
     'filter.bootDuration': 'Boot duration',
     'filter.bootStatus': 'Boot Status',
@@ -102,6 +106,7 @@ export const messages = {
     'global.errors': 'Errors',
     'global.estimate': 'Estimate',
     'global.failed': 'Failed',
+    'global.fails': 'Fails',
     'global.filters': 'Filters',
     'global.github': 'GitHub',
     'global.inconclusive': 'Inconclusive',
@@ -118,6 +123,7 @@ export const messages = {
     'global.none': 'None',
     'global.origin': 'Origin',
     'global.origins': 'Origins',
+    'global.others': 'Others',
     'global.pass': 'Pass',
     'global.placeholderSearch': 'Search by tree, branch or tag',
     'global.projectUnderDevelopment':
