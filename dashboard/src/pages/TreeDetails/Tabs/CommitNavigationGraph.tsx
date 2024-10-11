@@ -14,10 +14,18 @@ import type { TLineChartProps } from '@/components/LineChart/LineChart';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MessagesKey } from '@/locales/messages';
 import { formatDate } from '@/utils/utils';
+import { TTreeDetailsFilter } from '@/types/tree/TreeDetails';
 
 const graphDisplaySize = 7;
 
-const CommitNavigationGraph = (): JSX.Element => {
+interface CommitNavigationGraph {
+  reqFilter: TTreeDetailsFilter;
+}
+
+const CommitNavigationGraph = ({
+  reqFilter,
+}: CommitNavigationGraph): JSX.Element => {
+  console.log('reqFilter:', reqFilter);
   const { formatMessage } = useIntl();
   const {
     origin,
@@ -39,6 +47,7 @@ const CommitNavigationGraph = (): JSX.Element => {
       gitUrl: gitUrl ?? '',
       commitHash: headCommitHash ?? '',
       origin: origin,
+      filter: reqFilter,
     },
     {
       enabled: !!gitBranch && !!gitUrl,
