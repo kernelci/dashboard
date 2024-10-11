@@ -14,6 +14,7 @@ type QuerySwitcherProps = {
   children: ReactNode;
   skeletonClassname?: string;
   data?: unknown;
+  customError?: ReactNode;
 };
 
 const QuerySwitcher = ({
@@ -21,6 +22,7 @@ const QuerySwitcher = ({
   children,
   skeletonClassname,
   data,
+  customError,
 }: QuerySwitcherProps): JSX.Element => {
   switch (status) {
     case 'pending':
@@ -33,9 +35,15 @@ const QuerySwitcher = ({
       );
     case 'error':
       return (
-        <div>
-          <FormattedMessage id="global.error" />
-        </div>
+        <>
+          {customError ? (
+            customError
+          ) : (
+            <div>
+              <FormattedMessage id="global.error" />
+            </div>
+          )}
+        </>
       );
   }
 
