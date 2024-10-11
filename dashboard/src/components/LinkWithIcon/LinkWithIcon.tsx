@@ -19,7 +19,7 @@ const LinkWithIcon = ({
 }: ILinkWithIcon): JSX.Element => {
   const WrapperLink = link ? 'a' : 'div';
   return (
-    <div className="flex flex-col gap-2 text-sm">
+    <div className="flex flex-col items-start gap-2 text-sm">
       <span className="font-bold">
         <FormattedMessage id={title} />
       </span>
