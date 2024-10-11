@@ -64,9 +64,7 @@ export const messages = {
       'Failed - builds failed{br}' +
       "Inconclusive - builds with unknown status, including ongoing builds that didn't finish yet.",
     'codeBlock.highlights': 'Highlights:',
-    'codeBlock.highlightsTooltip':
-      'Highlighted items accounts for any lines citing fails or errors.{br}' +
-      'That includes real failures, real errors and other information messages containing those words',
+    'codeBlock.highlightsTooltip': 'Counting estimated based on text output',
     'filter.architectureSubtitle': 'Please select one or more Architectures:',
     'filter.bootDuration': 'Boot duration',
     'filter.bootStatus': 'Boot Status',
