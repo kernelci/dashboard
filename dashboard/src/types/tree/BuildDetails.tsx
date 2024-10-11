@@ -18,6 +18,7 @@ export type TBuildDetails = {
   git_repository_branch?: string;
   git_repository_url?: string;
   origin?: string;
+  log_excerpt?: string;
   misc: IBuildDetailsMisc | null;
 };
 
