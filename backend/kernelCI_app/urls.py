@@ -67,5 +67,9 @@ urlpatterns = [
     path("test/<str:test_id>/issues",
          viewCache(views.IssueView),
          name="issues",
+         ),
+    path("log-downloader/",
+         viewCache(views.LogDownloaderView),
+         name="logDownloader"
          )
 ]
