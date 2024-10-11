@@ -9,6 +9,7 @@ import {
   TTreeCommitHistoryResponse,
   BuildCountsResponse,
   TTreeTestsFullData,
+  LogFilesResponse,
 } from '@/types/tree/TreeDetails';
 
 import { TPathTests } from '@/types/general';
@@ -300,5 +301,34 @@ export const useBuildStatusCount = (
     queryKey: [buildId],
     enabled,
     queryFn: () => fetchBuildStatusCount(buildId),
+  });
+};
+
+const fetchLogFiles = async (logUrl: string): Promise<BuildCountsResponse> => {
+  const res = await http.get<BuildCountsResponse>(`/api/log-downloader/`, {
+    params: {
+      log_download_url: logUrl,
+    },
+  });
+  return res.data;
+};
+
+type Config = {
+  enabled?: boolean;
+};
+
+export const useLogFiles = (
+  {
+    logUrl,
+  }: {
+    logUrl: string;
+  },
+  { enabled }: Config = { enabled: true },
+): UseQueryResult<LogFilesResponse> => {
+  return useQuery({
+    queryKey: [logUrl],
+    enabled,
+    retry: 1,
+    queryFn: () => fetchLogFiles(logUrl),
   });
 };
