@@ -6,10 +6,7 @@ import { useMemo } from 'react';
 
 import { cn } from '@/lib/utils';
 
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/Tooltip';
-
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
-import { formattedBreakLineValue } from '@/locales/messages';
 
 type TCodeBlockProps = {
   code: string;
@@ -88,58 +85,54 @@ const CodeBlock = ({
         ></div>
       </pre>
       {highlightedCode.highlightCount > 0 && (
-        <ul className={cn('flex gap-2 py-4 pl-3', highlightsClassname)}>
-          <li>
-            <span className="flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger>
-                  <LiaInfoCircleSolid />
-                </TooltipTrigger>
-                <TooltipContent>
+        <div className="py-4 pl-3">
+          <ul className={cn('flex gap-2 pb-2', highlightsClassname)}>
+            <li>
+              <span className="flex gap-1">
+                <span className="font-bold">
                   <FormattedMessage
-                    id="codeBlock.highlightsTooltip"
-                    defaultMessage={
-                      'Highlighted items accounts for any lines citing fails or errors.{br}' +
-                      'That includes real failures, real errors and other information messages containing those words.'
-                    }
-                    values={formattedBreakLineValue}
+                    id="codeBlock.highlights"
+                    defaultMessage={'Highlights:'}
                   />
-                </TooltipContent>
-              </Tooltip>
-              <span className="font-bold">
-                <FormattedMessage
-                  id="codeBlock.highlights"
-                  defaultMessage={'Highlights:'}
-                />
+                </span>
               </span>
-            </span>
-          </li>
-          <li className="flex gap-1">
-            <ColoredCircle
-              quantity={highlightedCode.failCount}
-              backgroundClassName="bg-lightRed"
-            />
-            <FormattedMessage id="global.fails" defaultMessage={'Fails'} />
-          </li>
-          <li className="flex gap-1">
-            <ColoredCircle
-              quantity={highlightedCode.errorCount}
-              backgroundClassName="bg-orange-200"
-            />
-            <FormattedMessage id="global.errors" defaultMessage={'Errors'} />
-          </li>
-          <li className="flex gap-1">
-            <ColoredCircle
-              quantity={
-                highlightedCode.highlightCount -
-                highlightedCode.failCount -
-                highlightedCode.errorCount
-              }
-              backgroundClassName="bg-mediumGray"
-            />
-            <FormattedMessage id="global.others" defaultMessage={'Others'} />
-          </li>
-        </ul>
+            </li>
+            <li className="flex gap-1">
+              <ColoredCircle
+                quantity={highlightedCode.failCount}
+                backgroundClassName="bg-lightRed"
+              />
+              <FormattedMessage id="global.fails" defaultMessage={'Fails'} />
+            </li>
+            <li className="flex gap-1">
+              <ColoredCircle
+                quantity={highlightedCode.errorCount}
+                backgroundClassName="bg-orange-200"
+              />
+              <FormattedMessage id="global.errors" defaultMessage={'Errors'} />
+            </li>
+            <li className="flex gap-1">
+              <ColoredCircle
+                quantity={
+                  highlightedCode.highlightCount -
+                  highlightedCode.failCount -
+                  highlightedCode.errorCount
+                }
+                backgroundClassName="bg-mediumGray"
+              />
+              <FormattedMessage id="global.others" defaultMessage={'Others'} />
+            </li>
+          </ul>
+          <div className="flex items-center">
+            <LiaInfoCircleSolid />
+            <p className="pl-1 text-sm">
+              <FormattedMessage
+                id="codeBlock.highlightsTooltip"
+                defaultMessage="Teste"
+              />
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
