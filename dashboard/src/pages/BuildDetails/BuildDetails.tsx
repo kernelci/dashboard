@@ -2,7 +2,6 @@ import { ImTree } from 'react-icons/im';
 
 import { MdClose, MdCheck, MdFolderOpen } from 'react-icons/md';
 
-import { BsFileEarmarkCode } from 'react-icons/bs';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo } from 'react';
@@ -29,6 +28,10 @@ import IssueSection from '@/components/Issue/IssueSection';
 
 import { truncateBigText } from '@/lib/string';
 
+import { Sheet, SheetTrigger } from '@/components/Sheet';
+
+import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
+
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
 const emptyValue = '-';
@@ -48,6 +51,8 @@ const BuildDetails = (): JSX.Element => {
   const issuesQueryResult = useBuildIssues(buildId);
 
   const intl = useIntl();
+
+  const hasUsefulLogInfo = data?.log_url || data?.log_excerpt;
 
   const sectionsData: ISection[] = useMemo(() => {
     if (!data) return [];
@@ -75,7 +80,7 @@ const BuildDetails = (): JSX.Element => {
               {
                 title: 'buildDetails.gitBranch',
                 linkText: valueOrEmpty(data.git_repository_branch),
-                icon: <ImTree className="text-bslue" />,
+                icon: <ImTree className="text-blue" />,
               },
               {
                 title: 'buildDetails.gitCommit',
@@ -128,10 +133,8 @@ const BuildDetails = (): JSX.Element => {
               {
                 title: 'buildDetails.buildLogs',
                 linkText: truncateBigText(data.log_url),
-                link: data.log_url,
-                icon: data.log_url ? (
-                  <BsFileEarmarkCode className="text-blue" />
-                ) : undefined,
+                icon: hasUsefulLogInfo ? <BlueFolderIcon /> : undefined,
+                wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
               },
               {
                 title: 'global.dtb',
@@ -164,7 +167,7 @@ const BuildDetails = (): JSX.Element => {
         ],
       },
     ];
-  }, [data, intl]);
+  }, [data, hasUsefulLogInfo, intl]);
 
   //TODO: loading and 404
   if (!data) return <span></span>;
@@ -172,32 +175,35 @@ const BuildDetails = (): JSX.Element => {
 
   return (
     <ErrorBoundary FallbackComponent={UnexpectedError}>
-      <Breadcrumb className="pb-6 pt-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink to="/tree" search={searchParams}>
-              <FormattedMessage id="tree.path" />
+      <Sheet>
+        <Breadcrumb className="pb-6 pt-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink to="/tree" search={searchParams}>
+                <FormattedMessage id="tree.path" />
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbLink
+              to={`/tree/$treeId`}
+              params={{ treeId: treeId }}
+              search={searchParams}
+            >
+              <FormattedMessage id="tree.details" />
             </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbLink
-            to={`/tree/$treeId`}
-            params={{ treeId: treeId }}
-            search={searchParams}
-          >
-            <FormattedMessage id="tree.details" />
-          </BreadcrumbLink>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              <FormattedMessage id="buildDetails.buildDetails" />
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <SectionGroup sections={sectionsData} />
-      {buildId && <BuildDetailsTestSection buildId={buildId} />}
-      <IssueSection {...issuesQueryResult} />
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                <FormattedMessage id="buildDetails.buildDetails" />
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <SectionGroup sections={sectionsData} />
+        {buildId && <BuildDetailsTestSection buildId={buildId} />}
+        <IssueSection {...issuesQueryResult} />
+        <LogSheet logUrl={data.log_url} logExcerpt={data.log_excerpt} />
+      </Sheet>
     </ErrorBoundary>
   );
 };
