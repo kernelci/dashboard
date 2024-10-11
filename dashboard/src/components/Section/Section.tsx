@@ -1,6 +1,6 @@
 import { FiLink } from 'react-icons/fi';
 
-import { ReactElement, useMemo } from 'react';
+import { ReactElement, useMemo, Fragment, ReactNode, ElementType } from 'react';
 
 import LinkWithIcon, {
   ILinkWithIcon,
@@ -12,28 +12,36 @@ export interface ISection {
   eyebrow?: string | ReactElement;
 }
 
+interface SubsectionLink extends ILinkWithIcon {
+  wrapperComponent?: ElementType<{ children: ReactNode }>;
+}
 export interface ISubsection {
-  infos: ILinkWithIcon[];
+  infos: SubsectionLink[];
 }
 
 export const Subsection = ({ infos }: ISubsection): JSX.Element => {
   const items = useMemo(
     () =>
-      infos.map(info => (
-        <LinkWithIcon
-          key={info.title?.toString()}
-          title={info.title}
-          link={info.link}
-          linkText={info.linkText}
-          icon={
-            info.link && !info.icon ? (
-              <FiLink className="text-blue" />
-            ) : (
-              info.icon
-            )
-          }
-        />
-      )),
+      infos.map(info => {
+        const WrapperComponent = info.wrapperComponent ?? Fragment;
+        return (
+          <WrapperComponent key={info.title}>
+            <LinkWithIcon
+              key={info.title?.toString()}
+              title={info.title}
+              link={info.link}
+              linkText={info.linkText}
+              icon={
+                info.link && !info.icon ? (
+                  <FiLink className="text-blue" />
+                ) : (
+                  info.icon
+                )
+              }
+            />
+          </WrapperComponent>
+        );
+      }),
     [infos],
   );
   return (
