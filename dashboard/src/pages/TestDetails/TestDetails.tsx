@@ -8,13 +8,11 @@ import { PiComputerTowerThin } from 'react-icons/pi';
 
 import { GiFlatPlatform } from 'react-icons/gi';
 
+import { MdFolderOpen } from 'react-icons/md';
+
 import { useTestDetails, useTestIssues } from '@/api/TestDetails';
 
 import type { TTestDetails } from '@/types/tree/TestDetails';
-
-import BaseCard from '@/components/Cards/BaseCard';
-
-import CodeBlock from '@/components/Filter/CodeBlock';
 
 import { ISubsection, Subsection } from '@/components/Section/Section';
 
@@ -28,24 +26,12 @@ import {
 } from '@/components/Breadcrumb/Breadcrumb';
 import IssueSection from '@/components/Issue/IssueSection';
 import { truncateBigText } from '@/lib/string';
-import { ILinkWithIcon } from '@/components/LinkWithIcon/LinkWithIcon';
+import { Sheet, SheetTrigger } from '@/components/Sheet';
 
-type TTestDetailsDefaultProps = {
-  test: TTestDetails;
-};
+import { LogSheet } from '../TreeDetails/Tabs/LogSheet';
 
 const emptyValue = '-';
 const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
-
-const LogExcerpt = ({ test }: TTestDetailsDefaultProps): JSX.Element => {
-  return (
-    <BaseCard
-      title={<FormattedMessage id="testDetails.logExcerpt" />}
-      className="gap-0"
-      content={<CodeBlock code={test.log_excerpt ?? ''} />}
-    />
-  );
-};
 
 const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
   const intl = useIntl();
@@ -59,8 +45,10 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
     `/tree/${test.git_commit_hash}/build/${test.build_id}` +
     `${window.location.search}`;
 
+  const hasUsefulLogInfo = test.log_url || test.log_excerpt;
+
   const infos: ISubsection['infos'] = useMemo(() => {
-    const baseInfo: ILinkWithIcon[] = [
+    const baseInfo: ISubsection['infos'] = [
       {
         title: 'testDetails.status',
         linkText: truncateBigText(test.status),
@@ -79,9 +67,12 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
         linkText: valueOrEmpty(test.compiler),
       },
       {
-        title: 'testDetails.logUrl',
+        title: 'global.logs',
+        icon: hasUsefulLogInfo ? (
+          <MdFolderOpen className="text-blue" />
+        ) : undefined,
         linkText: truncateBigText(valueOrEmpty(test.log_url)),
-        link: test.log_url,
+        wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
       },
       {
         title: 'testDetails.gitCommitHash',
@@ -110,17 +101,18 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
 
     return baseInfo;
   }, [
-    test.architecture,
-    test.build_id,
-    test.compiler,
-    test.git_commit_hash,
-    test.git_repository_branch,
-    test.git_repository_url,
-    test.log_url,
-    test.path,
     test.status,
-    platform,
+    test.path,
+    test.architecture,
+    test.compiler,
+    test.log_url,
+    test.git_commit_hash,
+    test.git_repository_url,
+    test.git_repository_branch,
+    test.build_id,
+    hasUsefulLogInfo,
     buildDetailsLink,
+    platform,
   ]);
   return <Subsection infos={infos} />;
 };
@@ -150,37 +142,37 @@ const TestDetails = (): JSX.Element => {
   }
 
   return (
-    <div className="w-100 px-5 pb-8">
-      <Breadcrumb className="pb-6 pt-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink to="/tree" search={searchParams}>
-              <FormattedMessage id="tree.path" />
+    <Sheet>
+      <div className="w-100 px-5 pb-8">
+        <Breadcrumb className="pb-6 pt-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink to="/tree" search={searchParams}>
+                <FormattedMessage id="tree.path" />
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbLink
+              to={`/tree/$treeId`}
+              params={{ treeId: treeId }}
+              search={searchParams}
+            >
+              <FormattedMessage id="tree.details" />
             </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbLink
-            to={`/tree/$treeId`}
-            params={{ treeId: treeId }}
-            search={searchParams}
-          >
-            <FormattedMessage id="tree.details" />
-          </BreadcrumbLink>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              <FormattedMessage id="test.details" />
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <h1 className="mb-4 border-b border-gray-300 pb-3 text-2xl font-bold">
-        {data.path}
-      </h1>
-      <LogExcerpt test={data} />
-      <TestDetailsSection test={data} />
-      <IssueSection {...issuesQueryResult} />
-    </div>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                <FormattedMessage id="test.details" />
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <h1 className="mb-4 text-2xl font-bold">{data.path}</h1>
+        <TestDetailsSection test={data} />
+        <IssueSection {...issuesQueryResult} />
+      </div>
+      <LogSheet logUrl={data.log_url} logExcerpt={data.log_excerpt} />
+    </Sheet>
   );
 };
 
