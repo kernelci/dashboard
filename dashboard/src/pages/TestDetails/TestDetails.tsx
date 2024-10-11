@@ -169,7 +169,7 @@ const TestDetails = (): JSX.Element => {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>
-              <FormattedMessage id="tree.details" />
+              <FormattedMessage id="test.details" />
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>

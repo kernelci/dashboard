@@ -155,6 +155,7 @@ export const messages = {
     'table.of': 'of',
     'table.showing': 'Showing:',
     'table.tree': 'Tree',
+    'test.details': 'Test Details',
     'testDetails.arch': 'Arch',
     'testDetails.buildInfo': 'Build Info',
     'testDetails.compiler': 'Compiler',
