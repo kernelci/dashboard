@@ -1,10 +1,12 @@
-import { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useCallback, useMemo, useRef } from 'react';
 
 import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
 
 import { useNavigate } from '@tanstack/react-router';
+
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
@@ -224,6 +226,16 @@ const AccordionTestsContent = ({
   data,
 }: IAccordionTestContent): JSX.Element => {
   const navigate = useNavigate({ from: '/tree/$treeId' });
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: data.length,
+    getScrollElement: () => parentRef.current,
+    // eslint-disable-next-line no-magic-numbers
+    estimateSize: () => 10,
+    overscan: 5,
+  });
+  const virtualizedItems = rowVirtualizer.getVirtualItems();
 
   const onClickRow = useCallback(
     (testId: string) => {
@@ -239,13 +251,27 @@ const AccordionTestsContent = ({
   );
 
   const rows = useMemo(() => {
-    return data.map(test => (
-      <TestTableRow key={test.id} test={test} onClick={onClickRow} />
+    console.log(virtualizedItems.length);
+    // if (virtualizedItems.length == 0) {
+    //   // console.log("returning empty");
+    //   return (
+    //     <TableRow>
+    //       <TableCell>Loading...</TableCell>
+    //     </TableRow>
+    //   );
+    // }
+    const mapped = virtualizedItems.map(virtualTest => (
+      <TestTableRow
+        key={data[virtualTest.index].id}
+        test={data[virtualTest.index]}
+        onClick={onClickRow}
+      />
     ));
-  }, [data, onClickRow]);
+    return mapped;
+  }, [data, onClickRow, virtualizedItems]);
 
   return (
-    <div className="h-max-12 overflow-scroll">
+    <div className="h-max-11 overflow-scroll" ref={parentRef}>
       <BaseTable headers={headerTestsDetails}>
         <TableBody>{rows}</TableBody>
       </BaseTable>
