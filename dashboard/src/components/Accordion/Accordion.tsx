@@ -1,4 +1,11 @@
-import { ReactElement, useCallback, useMemo, useRef } from 'react';
+import {
+  ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
 
@@ -250,25 +257,51 @@ const AccordionTestsContent = ({
     [navigate],
   );
 
-  const rows = useMemo(() => {
-    console.log(virtualizedItems.length);
-    // if (virtualizedItems.length == 0) {
-    //   // console.log("returning empty");
-    //   return (
-    //     <TableRow>
-    //       <TableCell>Loading...</TableCell>
-    //     </TableRow>
-    //   );
-    // }
-    const mapped = virtualizedItems.map(virtualTest => (
-      <TestTableRow
-        key={data[virtualTest.index].id}
-        test={data[virtualTest.index]}
-        onClick={onClickRow}
-      />
-    ));
-    return mapped;
-  }, [data, onClickRow, virtualizedItems]);
+  const [rows, setRows] = useState<JSX.Element[]>([]);
+
+  useEffect(() => {
+    const loadMore = async (): Promise<void> => {
+      const startIndex = rows.length;
+      const endIndex =
+        // eslint-disable-next-line no-magic-numbers
+        rows.length + 100 < data.length ? rows.length + 100 : data.length;
+      if (startIndex != endIndex) {
+        const mapped = virtualizedItems
+          .slice(startIndex, endIndex)
+          .map(virtualTest => (
+            <TestTableRow
+              key={data[virtualTest.index].id}
+              test={data[virtualTest.index]}
+              onClick={onClickRow}
+            />
+          ));
+        console.log('set ' + rows.length);
+        setRows([...rows, ...mapped]);
+      }
+    };
+
+    loadMore();
+  }, [data, onClickRow, rows, virtualizedItems]);
+
+  // const rows = useMemo(() => {
+  //   console.log(virtualizedItems.length);
+  //   // if (virtualizedItems.length == 0) {
+  //   //   // console.log("returning empty");
+  //   //   return (
+  //   //     <TableRow>
+  //   //       <TableCell>Loading...</TableCell>
+  //   //     </TableRow>
+  //   //   );
+  //   // }
+  //   const mapped = virtualizedItems.map(virtualTest => (
+  //     <TestTableRow
+  //       key={data[virtualTest.index].id}
+  //       test={data[virtualTest.index]}
+  //       onClick={onClickRow}
+  //     />
+  //   ));
+  //   return mapped;
+  // }, [data, onClickRow, virtualizedItems]);
 
   return (
     <div className="h-max-11 overflow-scroll" ref={parentRef}>
