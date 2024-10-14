@@ -32,7 +32,8 @@ const TreeDetailsFilterList = ({
 
   const onClickItem = useCallback(
     (flatValue: string, _: number) => {
-      const [field, value] = flatValue.split(':');
+      const [field, ...rest] = flatValue.split(':');
+      const value = rest.join(':');
 
       const newFilter = JSON.parse(JSON.stringify(filter ?? {}));
       const fieldSection = newFilter[field as TFilterKeys];
