@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import { memo, useCallback, useMemo, useState } from 'react';
@@ -13,6 +14,7 @@ import Accordion from '@/components/Accordion/Accordion';
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 
 import {
+  AccordionItemBuildsKeys,
   BuildsTableFilter,
   possibleBuildsTableFilter,
   TFilterObjectsKeys,
@@ -241,6 +243,41 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
     />
   );
 
+  const [sortedItems, setSortedItems] = useState(filteredContent);
+
+  // config?: string;
+  // compiler?: string;
+  // date?: string;
+  // buildErrors?: number;
+  // buildTime?: string | ReactNode;
+  // status?: 'valid' | 'invalid' | 'null';
+
+  const sortTableContent = useCallback(
+    (what?: AccordionItemBuildsKeys) => {
+      console.log('sorting ');
+      console.log(what);
+      const sorted = (filteredContent ?? []).sort((a, b) => {
+        switch (what) {
+          case 'config':
+            return a.config > b.config ? 1 : -1;
+          case 'compiler':
+            return a.compiler > b.compiler ? 1 : -1;
+          case 'date':
+            return (a.date ?? '') > (b.date ?? '') ? 1 : -1;
+          case 'buildErrors':
+            return (b.buildErrors ?? 0) - (a.buildErrors ?? 0);
+          // buildTime: get value from JSX element
+          // status: valid or not
+        }
+        return 0;
+      });
+      setSortedItems(sorted.slice()); // force rerender with slice
+      console.log('sorted');
+    },
+    [filteredContent],
+  );
+
+  console.log('rendering buildtab');
   return (
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
@@ -325,7 +362,10 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           </div>
           <Accordion
             type="build"
-            items={filteredContent.slice(startIndex, endIndex)}
+            items={(sortedItems ?? filteredContent).slice(startIndex, endIndex)}
+            headerOnClick={(what: AccordionItemBuildsKeys) => {
+              sortTableContent(what);
+            }}
           />
           <div className="flex justify-end">{tableInfoElement}</div>
         </div>

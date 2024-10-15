@@ -11,6 +11,7 @@ import {
 
 interface IBaseTableCommon {
   headers: ReactElement[];
+  headerComponents?: JSX.Element[];
   className?: string;
 }
 
@@ -56,9 +57,13 @@ export const DumbTableHeader = ({
 
 export const TableHead = ({
   children,
+  onClick,
 }: ComponentProps<typeof TableHeadComponent>): JSX.Element => {
   return (
-    <TableHeadComponent className="border-b font-bold text-black">
+    <TableHeadComponent
+      className="border-b font-bold text-black"
+      onClick={onClick}
+    >
       {children}
     </TableHeadComponent>
   );
@@ -66,6 +71,7 @@ export const TableHead = ({
 
 const BaseTable = ({
   headers,
+  headerComponents,
   body,
   children,
   className,
@@ -74,9 +80,12 @@ const BaseTable = ({
     <div className="h-full">
       <DumbBaseTable className={className}>
         <DumbTableHeader>
-          {headers.map(column => (
-            <TableHead key={column.key}>{column}</TableHead>
-          ))}
+          {headerComponents ??
+            headers.map(column => (
+              <TableHead className="border-b text-black" key={column.key}>
+                {column}
+              </TableHead>
+            ))}
         </DumbTableHeader>
         {body || children}
       </DumbBaseTable>

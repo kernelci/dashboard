@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 import { Link, LinkProps as RouterLinkProps } from '@tanstack/react-router';
 
 const Table = React.forwardRef<
