@@ -7,9 +7,11 @@ import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
 import { useSearch, useLocation } from '@tanstack/react-router';
 
+import { z } from 'zod';
+
 import { MessagesKey } from '@/locales/messages';
 
-import { TPaths, zOrigin, zPath } from '@/types/tree/Tree';
+import { zOrigin } from '@/types/tree/Tree';
 
 import { DOCUMENTATION_URL } from '@/utils/constants/general';
 
@@ -62,11 +64,12 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
 
   const isCurrentPath = pathname.startsWith(item.navigateTo);
 
-  const navigate = (): TPaths => {
-    const finalPath = item.navigateTo;
+  const paths = ['/tree', '/devices', '/labs'] as const;
 
-    return zPath.parse(finalPath);
-  };
+  const zPathEnum = z.enum(paths);
+  const zPath = zPathEnum.catch('/tree');
+
+  const safeNavigateTo = zPath.parse(item.navigateTo);
 
   return (
     <NavigationMenuItem
@@ -76,7 +79,7 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
       key={item.idIntl}
     >
       <NavLink
-        to={navigate()}
+        to={safeNavigateTo}
         search={{
           origin: zOrigin.parse(unsafeOrigin),
         }}

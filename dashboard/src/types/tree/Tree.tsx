@@ -91,28 +91,9 @@ const origins = [
   'tuxsuite',
 ] as const;
 
-const paths = [
-  '',
-  '/',
-  '/tree',
-  '/devices',
-  '/labs',
-  '/tree/$treeId',
-  '/tree/$treeId/test',
-  '/tree/$treeId/test/$testId',
-  './',
-  '../',
-  '/tree/$treeId/build/$buildId',
-] as const;
-
 const DEFAULT_ORIGIN = 'maestro';
-const DEFAULT_PATH = '/tree';
 
 export type TOrigins = (typeof origins)[number];
-export type TPaths = (typeof paths)[number];
 
 export const zOriginEnum = z.enum(origins);
 export const zOrigin = zOriginEnum.catch(DEFAULT_ORIGIN);
-
-export const zPathEnum = z.enum(paths);
-export const zPath = zPathEnum.catch(DEFAULT_PATH);

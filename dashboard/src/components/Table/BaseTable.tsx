@@ -12,7 +12,6 @@ import {
 interface IBaseTableCommon {
   headers: ReactElement[];
   className?: string;
-  gridClassName?: string;
 }
 
 interface IBodyTable extends IBaseTableCommon {
@@ -45,14 +44,12 @@ export const DumbBaseTable = ({
 
 export const DumbTableHeader = ({
   children,
-  gridClassName,
 }: {
   children: ReactNode;
-  gridClassName?: string;
 }): JSX.Element => {
   return (
     <TableHeader className="bg-mediumGray">
-      <TableRow className={gridClassName}>{children}</TableRow>
+      <TableRow>{children}</TableRow>
     </TableHeader>
   );
 };
@@ -75,19 +72,13 @@ const BaseTable = ({
   body,
   children,
   className,
-  gridClassName,
 }: TBaseTable): JSX.Element => {
   return (
     <div className="h-full">
       <DumbBaseTable className={className}>
-        <DumbTableHeader gridClassName={gridClassName}>
+        <DumbTableHeader>
           {headers.map(column => (
-            <TableHead
-              className={gridClassName ? 'flex items-center' : ''}
-              /*className={`flex flex-col justify-center w-[${fieldSizes[index]}%]`}*/ key={
-                column.key
-              }
-            >
+            <TableHead className="border-b text-black" key={column.key}>
               {column}
             </TableHead>
           ))}

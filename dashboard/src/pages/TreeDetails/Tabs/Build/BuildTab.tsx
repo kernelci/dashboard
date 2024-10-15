@@ -32,6 +32,8 @@ import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import { MemoizedIssuesList } from '@/pages/TreeDetails/Tabs/TestCards';
 
+import { useDiffFilterParams } from '@/utils/filters';
+
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
 interface BuildTab {
@@ -91,6 +93,31 @@ const StatusCard = ({
 
 const MemoizedStatusCard = memo(StatusCard);
 
+const LinkWrapper = ({
+  filterSection,
+  filterValue,
+  children,
+}: {
+  filterSection: TFilterObjectsKeys;
+  filterValue: string;
+  children?: JSX.Element;
+}): JSX.Element => {
+  const diffFilter = useDiffFilterParams(filterValue, filterSection);
+
+  return (
+    <Link
+      search={previousParams => ({
+        ...previousParams,
+        diffFilter,
+      })}
+      key={filterValue}
+      className="line-clamp-1"
+    >
+      {children}
+    </Link>
+  );
+};
+
 const ConfigsCard = ({
   treeDetailsData,
 }: {
@@ -104,27 +131,7 @@ const ConfigsCard = ({
     return (
       <DumbListingContent>
         {treeDetailsData?.configs.map((item, i) => (
-          <Link
-            key={i}
-            search={previousParams => {
-              const { diffFilter: currentDiffFilter } = previousParams;
-              const newFilter = structuredClone(currentDiffFilter) || {};
-              // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
-              newFilter['configs'] = newFilter['configs'] ?? {};
-
-              const configs = newFilter['configs'];
-              if (configs[item.text]) {
-                delete configs[item.text];
-              } else {
-                configs[item.text] = true;
-              }
-
-              return {
-                ...previousParams,
-                diffFilter: newFilter,
-              };
-            }}
-          >
+          <LinkWrapper key={i} filterSection="configs" filterValue={item.text}>
             <ListingItem
               text={item.text}
               leftIcon={
@@ -135,7 +142,7 @@ const ConfigsCard = ({
                 />
               }
             />
-          </Link>
+          </LinkWrapper>
         ))}
       </DumbListingContent>
     );

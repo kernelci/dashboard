@@ -2,6 +2,10 @@ import { ReactElement, useMemo } from 'react';
 
 import { Link } from '@tanstack/react-router';
 
+import { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
+
+import { useDiffFilterParams } from '@/utils/filters';
+
 import BaseTable from '../Table/BaseTable';
 import { TableBody, TableCell, TableCellWithLink, TableRow } from '../ui/table';
 import ListingItem, { IListingItem } from '../ListingItem/ListingItem';
@@ -69,38 +73,44 @@ const Summary = ({
   );
 };
 
+const LinkWrapper = ({
+  filterSection,
+  filterValue,
+}: {
+  filterSection: TFilterObjectsKeys;
+  filterValue: string;
+}): JSX.Element => {
+  const diffFilter = useDiffFilterParams(filterValue, filterSection);
+
+  return (
+    <Link
+      search={previousParams => ({
+        ...previousParams,
+        diffFilter,
+      })}
+      key={filterValue}
+      className="line-clamp-1"
+    >
+      {filterValue}
+    </Link>
+  );
+};
+
 export const SummaryItem = ({
   arch,
   compilers,
   onClickKey,
   leftIcon,
 }: ISummaryItem): JSX.Element => {
+  const diffFilter = useDiffFilterParams(arch.text, 'archs');
+
   const compilersElement = useMemo(() => {
     return compilers?.map(compiler => (
-      <Link
-        search={previousParams => {
-          const { diffFilter: currentDiffFilter } = previousParams;
-          const newFilter = structuredClone(currentDiffFilter) || {};
-          // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
-          newFilter['compilers'] = newFilter['compilers'] ?? {};
-
-          const configs = newFilter['compilers'];
-          if (configs[compiler]) {
-            delete configs[compiler];
-          } else {
-            configs[compiler] = true;
-          }
-
-          return {
-            ...previousParams,
-            diffFilter: newFilter,
-          };
-        }}
+      <LinkWrapper
         key={compiler}
-        className="line-clamp-1"
-      >
-        {compiler}
-      </Link>
+        filterSection="compilers"
+        filterValue={compiler}
+      />
     ));
   }, [compilers]);
 
@@ -108,23 +118,10 @@ export const SummaryItem = ({
     <TableRow>
       <TableCellWithLink
         linkProps={{
-          search: previousParams => {
-            const { diffFilter: currentDiffFilter } = previousParams;
-            const newFilter = structuredClone(currentDiffFilter) || {};
-            // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
-            newFilter['archs'] = newFilter['archs'] ?? {};
-            const configs = newFilter['archs'];
-            if (configs[arch.text]) {
-              delete configs[arch.text];
-            } else {
-              configs[arch.text] = true;
-            }
-
-            return {
-              ...previousParams,
-              diffFilter: newFilter,
-            };
-          },
+          search: previousParams => ({
+            ...previousParams,
+            diffFilter,
+          }),
         }}
       >
         <ListingItem

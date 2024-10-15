@@ -1,13 +1,13 @@
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { LinkProps, useNavigate, useSearch } from '@tanstack/react-router';
 
 import { MdChevronRight } from 'react-icons/md';
 
 import BaseTable from '@/components/Table/BaseTable';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { TableInfo } from '@/components/Table/TableInfo';
-import { TableCell, TableRowWithLink } from '@/components/ui/table';
+import { TableCellWithLink, TableRow } from '@/components/ui/table';
 import { usePagination } from '@/hooks/usePagination';
 
 import {
@@ -109,35 +109,41 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
       );
     }
 
-    return filteredData?.slice(startIndex, endIndex).map(test => (
-      <TableRowWithLink
-        key={test.id}
-        linkProps={{
-          to: '/tree/$treeId/test/$testId',
-          className: 'grid grid-cols-[25%_15%_15%_25%_15%]',
-          params: {
-            treeId,
-            testId: test.id,
-          },
-          search: s => s,
-        }}
-      >
-        <TableCell className="">{test.path}</TableCell>
-        <TableCell className="">{test.status}</TableCell>
-        <TableCell className="">
-          <TooltipDateTime
-            dateTime={test.startTime}
-            lineBreak={true}
-            showLabelTime={true}
-            showLabelTZ={true}
-          />
-        </TableCell>
-        <TableCell className="">{test.duration || '-'}</TableCell>
-        <TableCell className="flex items-center justify-end">
-          <MdChevronRight />
-        </TableCell>
-      </TableRowWithLink>
-    ));
+    return filteredData?.slice(startIndex, endIndex).map(test => {
+      const linkProps: LinkProps = {
+        to: '/tree/$treeId/test/$testId',
+        params: {
+          treeId,
+          testId: test.id,
+        },
+        search: s => s,
+      };
+
+      return (
+        <TableRow key={test.id}>
+          <TableCellWithLink linkProps={linkProps}>
+            {test.path}
+          </TableCellWithLink>
+          <TableCellWithLink linkProps={linkProps}>
+            {test.status}
+          </TableCellWithLink>
+          <TableCellWithLink linkProps={linkProps}>
+            <TooltipDateTime
+              dateTime={test.startTime}
+              lineBreak={true}
+              showLabelTime={true}
+              showLabelTZ={true}
+            />
+          </TableCellWithLink>
+          <TableCellWithLink linkProps={linkProps}>
+            {test.duration ?? '-'}
+          </TableCellWithLink>
+          <TableCellWithLink linkProps={linkProps}>
+            <MdChevronRight />
+          </TableCellWithLink>
+        </TableRow>
+      );
+    });
   }, [filteredData, data, startIndex, endIndex, treeId]);
 
   const tableInfoElement = (
@@ -213,13 +219,7 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
         />
         {tableInfoElement}
       </div>
-      <BaseTable
-        gridClassName="grid grid-cols-[25%_15%_15%_25%_15%]"
-        className="flex flex-col"
-        headers={headerElements}
-      >
-        {rows}
-      </BaseTable>
+      <BaseTable headers={headerElements}>{rows}</BaseTable>
       {tableInfoElement}
     </div>
   );

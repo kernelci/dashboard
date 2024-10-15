@@ -1,4 +1,10 @@
-import { TTreeDetailsFilter } from '@/types/tree/TreeDetails';
+import { useSearch } from '@tanstack/react-router';
+
+import {
+  TFilter,
+  TFilterObjectsKeys,
+  TTreeDetailsFilter,
+} from '@/types/tree/TreeDetails';
 
 // TODO: We can improve this idea and replace mapFilterToReq entirely
 const requestFilters = {
@@ -44,4 +50,26 @@ export const getTargetFilter = (
   });
 
   return acc;
+};
+
+export const useDiffFilterParams = (
+  filterValue: string,
+  filterSection: TFilterObjectsKeys,
+): TFilter => {
+  const { diffFilter: currentDiffFilter } = useSearch({
+    from: '/tree/$treeId',
+  });
+
+  const newFilter = structuredClone(currentDiffFilter) || {};
+  // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
+  newFilter[filterSection] = newFilter[filterSection] ?? {};
+
+  const configs = newFilter[filterSection];
+  if (configs[filterValue]) {
+    delete configs[filterValue];
+  } else {
+    configs[filterValue] = true;
+  }
+
+  return newFilter;
 };

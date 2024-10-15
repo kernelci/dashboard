@@ -4,6 +4,8 @@ import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
 
+import { LinkProps } from '@tanstack/react-router';
+
 import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
 import { TIndividualTest, TPathTests } from '@/types/general';
@@ -19,8 +21,8 @@ import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
 import {
   TableBody,
   TableCell,
+  TableCellWithLink,
   TableRow,
-  TableRowWithLink,
 } from '@/components/ui/table';
 
 import BaseTable from '@/components/Table/BaseTable';
@@ -53,8 +55,6 @@ interface ICustomAccordionTableBody {
 interface IAccordionTestContent {
   data: TIndividualTest[];
 }
-
-const gridClasses = 'grid grid-cols-[70%_5%_15%_5%_5%]';
 
 const headersBuilds = [
   <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
@@ -234,13 +234,7 @@ const AccordionTestsContent = ({
 
   return (
     <div className="h-max-12 overflow-scroll">
-      <BaseTable
-        gridClassName={gridClasses}
-        className="flex flex-col"
-        headers={headerTestsDetails}
-      >
-        {rows}
-      </BaseTable>
+      <BaseTable headers={headerTestsDetails}>{rows}</BaseTable>
     </div>
   );
 };
@@ -250,34 +244,36 @@ interface ITestTableRow {
 }
 
 const TestTableRow = ({ test }: ITestTableRow): JSX.Element => {
+  const linkProps: LinkProps = {
+    to: '/tree/$treeId/test/$testId',
+    params: {
+      testId: test.id,
+    },
+    search: s => s,
+  };
+
   return (
-    <TableRowWithLink
-      className="cursor-pointer hover:bg-lightBlue"
-      linkProps={{
-        className: gridClasses,
-        to: '/tree/$treeId/test/$testId',
-        params: {
-          testId: test.id,
-        },
-        search: s => s,
-      }}
-      key={test.id}
-    >
-      <TableCell>{test.path}</TableCell>
-      <TableCell>{test.status}</TableCell>
-      <TableCell>
+    <TableRow className="cursor-pointer hover:bg-lightBlue" key={test.id}>
+      <TableCellWithLink linkProps={linkProps}>{test.path}</TableCellWithLink>
+      <TableCellWithLink linkProps={linkProps}>{test.status}</TableCellWithLink>
+      <TableCellWithLink linkProps={linkProps}>
         <TooltipDateTime
           dateTime={test.start_time}
           lineBreak={true}
           showLabelTime={true}
           showLabelTZ={true}
         />
-      </TableCell>
-      <TableCell>{test.duration || '-'}</TableCell>
-      <TableCell className="flex items-center justify-end">
+      </TableCellWithLink>
+      <TableCellWithLink linkProps={linkProps}>
+        {test.duration ?? '-'}
+      </TableCellWithLink>
+      <TableCellWithLink
+        linkProps={linkProps}
+        className="flex items-center justify-end"
+      >
         <ChevronRightAnimate />
-      </TableCell>
-    </TableRowWithLink>
+      </TableCellWithLink>
+    </TableRow>
   );
 };
 

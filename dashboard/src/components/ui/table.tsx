@@ -69,32 +69,6 @@ TableRow.displayName = 'TableRow';
 
 type LinkProps = RouterLinkProps & { className?: string }
 
-type TableRowWithLinkAttributes = React.TdHTMLAttributes<HTMLTableRowElement> & {
-  linkProps: LinkProps
-}
-
-const TableRowWithLink = React.forwardRef<
-  HTMLTableRowElement,
-  TableRowWithLinkAttributes
->(({ className, children, linkProps, ...props }, ref) => (
-  <tr
-    ref={ref}
-    className={cn(
-      'border-b transition-colors hover:bg-slate-100/50 data-[state=selected]:bg-slate-100 dark:hover:bg-slate-800/50 dark:data-[state=selected]:bg-slate-800',
-      className,
-    )}
-    {...props}
-  >
-    <Link
-      className={cn('flex flex-1')}
-      {...linkProps}
-    >
-        {children}
-      </Link>
-  </tr>
-));
-TableRowWithLink.displayName = 'TableRowWithLink';
-
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
@@ -164,7 +138,6 @@ export {
   TableFooter,
   TableHead,
   TableRow,
-  TableRowWithLink,
   TableCell,
   TableCellWithLink,
   TableCaption,
