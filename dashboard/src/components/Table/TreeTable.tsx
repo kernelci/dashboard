@@ -57,37 +57,6 @@ const treeTableHeaders = headerLabelOrElement.map(item =>
   typeof item === 'string' ? <FormattedMessage key={item} id={item} /> : item,
 );
 
-/*const LinkItem: React.FC<PropsWithChildren<{ target: string, row: TreeTableBody, unsafeOrigin: string | undefined }>> =
-({ children, target, row, unsafeOrigin }) => {
-  const [linkTarget, setLinkTarget] = useState<string | undefined>(undefined);
-  const linkRef = useRef<HTMLAnchorElement>(null);
-
-  const origin = zOrigin.parse(unsafeOrigin);
-
-  
-
-  useEffect(() => {
-    if(linkTarget) {
-      setLinkTarget(undefined);
-      linkRef.current?.click();
-    }
-  }, [linkTarget]);
-
-  return (
-    <Link
-      {...linkProps}
-      ref={linkRef}
-      target={linkTarget}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        setLinkTarget("_blank");
-      }}
-    >
-      {children}
-    </Link>
-  );
-}*/
-
 const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
@@ -164,7 +133,6 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   return (
     <TableRow>
       <TableCellWithLink
-        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.builds"
         linkProps={linkProps('treeDetails.builds')}
       >
@@ -180,28 +148,24 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         </Tooltip>
       </TableCellWithLink>
       <TableCellWithLink
-        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.builds"
         linkProps={linkProps('treeDetails.builds')}
       >
         {sanitizeTableValue(row.branch, false)}
       </TableCellWithLink>
       <TableCellWithLink
-        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.builds"
         linkProps={linkProps('treeDetails.builds')}
       >
         {sanitizeTableValue(row.commitName ? row.commitName : row.commitHash)}
       </TableCellWithLink>
       <TableCellWithLink
-        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.builds"
         linkProps={linkProps('treeDetails.builds')}
       >
         <TooltipDateTime dateTime={row.date} lineBreak={true} />
       </TableCellWithLink>
       <TableCellWithLink
-        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.builds"
         linkProps={linkProps('treeDetails.builds')}
       >
@@ -216,7 +180,6 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         )}
       </TableCellWithLink>
       <TableCellWithLink
-        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.boots"
         linkProps={linkProps('treeDetails.boots')}
       >
@@ -234,7 +197,6 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         )}
       </TableCellWithLink>
       <TableCellWithLink
-        /*onClick={navigateToTreeDetailPage}*/
         data-target="treeDetails.tests"
         linkProps={linkProps('treeDetails.tests')}
       >

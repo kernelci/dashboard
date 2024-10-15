@@ -6,12 +6,6 @@ import { MessagesKey } from '@/locales/messages';
 
 import { NavigationMenuLink } from '../ui/navigation-menu';
 
-/*interface INavLink extends AnchorHTMLAttributes<HTMLAnchorElement> {
-  idIntl: MessagesKey;
-  icon: JSX.Element;
-  to?: string;
-}*/
-
 type INavLink = LinkProps & {
   idIntl: MessagesKey;
   icon: JSX.Element;

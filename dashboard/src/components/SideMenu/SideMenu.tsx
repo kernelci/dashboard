@@ -53,8 +53,6 @@ type SideMenuItemProps = {
 const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
   const { pathname } = useLocation();
 
-  //const router = useRouter();
-
   const { origin: unsafeOrigin } = useSearch({ strict: false });
 
   const selectedItemClassName =
@@ -86,7 +84,7 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
       <NavLink
         to={navigate()}
         icon={item.icon}
-        idIntl={item.idIntl} /*onClick={navigate}*/
+        idIntl={item.idIntl}
       />
     </NavigationMenuItem>
   );
