@@ -14,10 +14,10 @@ export const messages = {
     'bootsTab.configs': 'Configs',
     'bootsTab.error': 'Error',
     'bootsTab.fail': 'Fail',
+    'bootsTab.hardwareTested': 'Hardware tested',
     'bootsTab.info': 'Info',
     'bootsTab.info.description':
       'ℹ️ There is no boot test data available for this tree',
-    'bootsTab.platformsFailingAtBoot': 'Platforms failing at boot',
     'bootsTab.skip': 'Skip',
     'bootsTab.statusTooltip':
       'Success - boots with PASS status{br}' +
@@ -171,11 +171,11 @@ export const messages = {
     'testDetails.gitCommitHash': 'Git Commit Hash',
     'testDetails.gitRepositoryBranch': 'Git Repository Branch',
     'testDetails.gitRepositoryUrl': 'Git Repository Url',
+    'testDetails.hardware': 'Hardware',
     'testDetails.logExcerpt': 'Log Excerpt',
     'testDetails.logUrl': 'Show Logs',
     'testDetails.notFound': 'Test not found',
     'testDetails.path': 'Path',
-    'testDetails.platform': 'Platform',
     'testDetails.status': 'Status',
     'testStatus.done': 'Done',
     'testStatus.error': 'Error',
@@ -185,8 +185,8 @@ export const messages = {
     'testStatus.skip': 'Skip',
     'testsTab.errorsSummary': 'Errors Summary',
     'testsTab.fail': 'Fails',
+    'testsTab.hardwareTested': 'Hardware tested',
     'testsTab.noTest': 'ℹ️ There is no test data available for this tree',
-    'testsTab.platformsErrors': 'Platforms with errors',
     'testsTab.statusTooltip':
       'Success - tests with PASS status{br}' +
       'Failed - tests with FAIL status{br}' +

@@ -11,6 +11,7 @@ from kernelCI_app.utils import (
 )
 from kernelCI_app.cache import (getQueryCache, setQueryCache)
 from django.db import connection
+from collections import defaultdict
 
 
 class TreeDetailsSlow(View):
@@ -40,6 +41,7 @@ class TreeDetailsSlow(View):
         self.testFailReasons = {}
         self.testArchSummary = {}
         self.testIssues = []
+        self.testEnvironmentCompatible = defaultdict(int)
         self.bootHistory = []
         self.bootStatusSummary = {}
         self.bootConfigs = {}
@@ -47,6 +49,7 @@ class TreeDetailsSlow(View):
         self.bootFailReasons = {}
         self.bootArchSummary = {}
         self.bootIssues = []
+        self.bootEnvironmentCompatible = defaultdict(int)
 
     def __handle_boot_status(self, current_filter):
         self.filterBootStatus.add(current_filter["value"])
@@ -105,23 +108,24 @@ class TreeDetailsSlow(View):
             "tests_duration": 11,
             "tests_number_value": 12,
             "tests_misc": 13,
-            "builds_checkout_id": 14,
-            "builds_id": 15,
-            "builds_comment": 16,
-            "builds_start_time": 17,
-            "builds_duration": 18,
-            "builds_architecture": 19,
-            "builds_command": 20,
-            "builds_compiler": 21,
-            "builds_config_name": 22,
-            "builds_config_url": 23,
-            "builds_log_url": 24,
-            "builds_valid": 25,
-            "incident_id": 27,
-            "incident_present": 28,
-            "issue_id": 29,
-            "issue_comment": 30,
-            "issue_report_url": 31
+            "tests_environment_compatible": 14,
+            "builds_checkout_id": 15,
+            "builds_id": 16,
+            "builds_comment": 17,
+            "builds_start_time": 18,
+            "builds_duration": 19,
+            "builds_architecture": 20,
+            "builds_command": 21,
+            "builds_compiler": 22,
+            "builds_config_name": 23,
+            "builds_config_url": 24,
+            "builds_log_url": 25,
+            "builds_valid": 26,
+            "incident_id": 28,
+            "incident_present": 29,
+            "issue_id": 30,
+            "issue_comment": 31,
+            "issue_report_url": 32
         }
 
         incident_id = currentRow[tempColumnDict["incident_id"]]
@@ -141,6 +145,7 @@ class TreeDetailsSlow(View):
             currentRow[tempColumnDict["tests_environment_misc"]]
         )
         testError = extract_error_message(currentRow[tempColumnDict["tests_misc"]])
+        testEnvironmentCompatible = currentRow[tempColumnDict["tests_environment_compatible"]]
 
         historyItem = {
             "id": testId,
@@ -166,7 +171,8 @@ class TreeDetailsSlow(View):
             incident_present,
             issue_id,
             issue_comment,
-            issue_report_url
+            issue_report_url,
+            testEnvironmentCompatible
         )
 
     def __processBootsTest(self, currentRowData):
@@ -186,7 +192,8 @@ class TreeDetailsSlow(View):
             incident_present,
             issue_id,
             issue_comment,
-            issue_report_url
+            issue_report_url,
+            testEnvironmentCompatible
         ) = currentRowData
 
         if len(self.filterBootStatus) > 0 and (testStatus not in self.filterBootStatus):
@@ -234,6 +241,9 @@ class TreeDetailsSlow(View):
             self.bootPlatformsFailing.add(testPlatform)
             self.bootFailReasons[testError] = self.bootFailReasons.get(testError, 0) + 1
 
+        if testEnvironmentCompatible is not None:
+            self.bootEnvironmentCompatible[testEnvironmentCompatible] += 1
+
     def __processNonBootsTest(self, currentRowData):
         (
             path,
@@ -251,7 +261,8 @@ class TreeDetailsSlow(View):
             incident_present,
             issue_id,
             issue_comment,
-            issue_report_url
+            issue_report_url,
+            testEnvironmentCompatible
         ) = currentRowData
 
         if len(self.filterTestStatus) > 0 and (testStatus not in self.filterTestStatus):
@@ -298,6 +309,9 @@ class TreeDetailsSlow(View):
             self.testPlatformsWithErrors.add(testPlatform)
             self.testFailReasons[testError] = self.testFailReasons.get(testError, 0) + 1
 
+        if testEnvironmentCompatible is not None:
+            self.testEnvironmentCompatible[testEnvironmentCompatible] += 1
+
     def get(self, request, commit_hash: str | None):
         cache_key = "treeDetailsSlow"
         origin_param = request.GET.get("origin")
@@ -322,8 +336,8 @@ class TreeDetailsSlow(View):
                     tests.build_id AS tests_build_id,
                     tests.id AS tests_id,
                     tests.origin AS tests_origin,
-                    tests.environment_comment AS tests_enviroment_comment,
-                    tests.environment_misc AS tests_enviroment_misc,
+                    tests.environment_comment AS tests_environment_comment,
+                    tests.environment_misc AS tests_environment_misc,
                     tests.path AS tests_path,
                     tests.comment AS tests_comment,
                     tests.log_url AS tests_log_url,
@@ -333,6 +347,7 @@ class TreeDetailsSlow(View):
                     tests.duration AS tests_duration,
                     tests.number_value AS tests_number_value,
                     tests.misc AS tests_misc,
+                    tests.environment_compatible[1] AS tests_environment_compatible,
                     builds_filter.*,
                     incidents.id,
                     incidents.present,
@@ -405,7 +420,8 @@ class TreeDetailsSlow(View):
                 incident_present,
                 issue_id,
                 issue_comment,
-                issue_report_url
+                issue_report_url,
+                testEnvironmentCompatible
             ) = currentRowData
 
             if (
@@ -444,7 +460,9 @@ class TreeDetailsSlow(View):
                 "bootHistory": self.bootHistory,
                 "testHistory": self.testHistory,
                 "bootIssues": self.bootIssues,
-                "testIssues": self.testIssues
+                "testIssues": self.testIssues,
+                "testEnvironmentCompatible": self.testEnvironmentCompatible,
+                "bootEnvironmentCompatible": self.bootEnvironmentCompatible
             },
             safe=False,
         )

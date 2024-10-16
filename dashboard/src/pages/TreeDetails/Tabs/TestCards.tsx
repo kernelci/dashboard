@@ -19,6 +19,7 @@ import { groupStatus } from '@/utils/status';
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { TIssue } from '@/types/general';
 import { NoIssueFound } from '@/components/Issue/IssueSection';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 import FilterLink from '../TreeDetailsFilterLink';
 
@@ -70,36 +71,42 @@ const ConfigsList = ({
 };
 export const MemoizedConfigList = memo(ConfigsList);
 
-interface IPlatformsWithError
-  extends Pick<TTreeTestsData, 'platformsWithError'> {
+interface IHardwareTested
+  extends Pick<TTreeTestsData, 'environmentCompatible'> {
   title: IBaseCard['title'];
 }
 
-const PlatformsWithError = ({
-  platformsWithError,
+const HardwareTested = ({
+  environmentCompatible,
   title,
-}: IPlatformsWithError): JSX.Element => {
+}: IHardwareTested): JSX.Element => {
   return (
     <BaseCard
       title={title}
       content={
-        <DumbListingContent>
-          {platformsWithError.map(platformWithErrorItem => {
-            return (
-              <ListingItem
-                hasBottomBorder
-                key={platformWithErrorItem}
-                text={platformWithErrorItem}
-                showNumber={false}
-              />
-            );
-          })}
-        </DumbListingContent>
+        <ScrollArea className="h-[350px]">
+          <DumbListingContent>
+            {environmentCompatible &&
+              Object.entries(environmentCompatible).map(
+                ([hardwareTestedItem, hardwareTestedCount]) => {
+                  return (
+                    <ListingItem
+                      hasBottomBorder
+                      key={hardwareTestedItem}
+                      errors={hardwareTestedCount}
+                      text={hardwareTestedItem}
+                      showNumber={true}
+                    />
+                  );
+                },
+              )}
+          </DumbListingContent>
+        </ScrollArea>
       }
     />
   );
 };
-export const MemoizedPlatformsWithError = memo(PlatformsWithError);
+export const MemoizedHardwareTested = memo(HardwareTested);
 
 interface IErrorCountList extends Pick<TTreeTestsData, 'errorMessageCounts'> {
   title: IBaseCard['title'];

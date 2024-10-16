@@ -9,8 +9,8 @@ import { Skeleton } from '@/components/Skeleton';
 import {
   MemoizedConfigList,
   MemoizedErrorsSummary,
+  MemoizedHardwareTested,
   MemoizedIssuesList,
-  MemoizedPlatformsWithError,
   MemoizedStatusChart,
 } from '@/pages/TreeDetails/Tabs/TestCards';
 import BootsTable from '@/components/Table/BootsTable';
@@ -86,9 +86,9 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
         </div>
         <div>
           <CommitNavigationGraph />
-          <MemoizedPlatformsWithError
-            title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
-            platformsWithError={data.bootPlatformsFailing}
+          <MemoizedHardwareTested
+            title={<FormattedMessage id="bootsTab.hardwareTested" />}
+            environmentCompatible={data.bootEnvironmentCompatible}
           />
         </div>
       </DesktopGrid>
@@ -114,9 +114,9 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
             />
           </div>
           <div>
-            <MemoizedPlatformsWithError
-              title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
-              platformsWithError={data.bootPlatformsFailing}
+            <MemoizedHardwareTested
+              title={<FormattedMessage id="bootsTab.hardwareTested" />}
+              environmentCompatible={data.bootEnvironmentCompatible}
             />
           </div>
         </InnerMobileGrid>
