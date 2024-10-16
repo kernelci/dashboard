@@ -14,4 +14,5 @@ export type TTestDetails = {
   path: string;
   start_time: string;
   status: string;
+  environment_compatible?: string[];
 };

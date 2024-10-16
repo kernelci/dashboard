@@ -35,10 +35,9 @@ const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
 
 const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
   const intl = useIntl();
-  const misc = test.environment_misc ?? test.misc;
-  const platform: string = misc
-    ? JSON.parse(misc).platform
-    : intl.formatMessage({ id: 'global.unknown' });
+  const hardware: string =
+    test.environment_compatible?.join(' | ') ??
+    intl.formatMessage({ id: 'global.unknown' });
 
   const buildDetailsLink =
     `${window.location.origin}` +
@@ -93,8 +92,8 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
         link: buildDetailsLink,
       },
       {
-        title: 'testDetails.platform',
-        linkText: platform,
+        title: 'testDetails.hardware',
+        linkText: hardware,
         icon: <GiFlatPlatform className="text-blue" />,
       },
     ];
@@ -112,7 +111,7 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
     test.build_id,
     hasUsefulLogInfo,
     buildDetailsLink,
-    platform,
+    hardware,
   ]);
   return <Subsection infos={infos} />;
 };

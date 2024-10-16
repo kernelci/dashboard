@@ -74,6 +74,16 @@ so we should double check the validation
 >CI system ("origin"), or even by the originating CI system itself, over time.
 >The most it could be used for is a proof-of-concept.
 
+In the tests table, the `environment_compatibles` column contains a 
+sorted list of strings starting with the exact name of the machine, followed 
+by an optional list of boards it is compatible with sorted from most compatible 
+to least.
+
+>NOTE: For more information about `environment_compatibles` these resources can 
+be used as a reference:
+> - [Platform Identification](https://docs.kernel.org/devicetree/usage-model.html#platform-identification)
+> - [Compatible Description](https://github.com/kernelci/kcidb-io/blob/21ddf852d1de6740e8fdf3696d9ddd8b3fd53bcc/kcidb_io/schema/v04_05.py#L611)
+
 
 ## Revision
 
