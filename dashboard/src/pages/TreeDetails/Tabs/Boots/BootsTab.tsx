@@ -8,7 +8,6 @@ import { Skeleton } from '@/components/Skeleton';
 
 import {
   MemoizedConfigList,
-  MemoizedErrorCountList,
   MemoizedErrorsSummary,
   MemoizedIssuesList,
   MemoizedPlatformsWithError,
@@ -91,10 +90,6 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
             title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
             platformsWithError={data.bootPlatformsFailing}
           />
-          <MemoizedErrorCountList
-            title={<FormattedMessage id="bootsTab.fail" />}
-            errorMessageCounts={data.bootFailReasons}
-          />
         </div>
       </DesktopGrid>
       <MobileGrid>
@@ -122,10 +117,6 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
             <MemoizedPlatformsWithError
               title={<FormattedMessage id="bootsTab.platformsFailingAtBoot" />}
               platformsWithError={data.bootPlatformsFailing}
-            />
-            <MemoizedErrorCountList
-              title={<FormattedMessage id="bootsTab.fail" />}
-              errorMessageCounts={data.bootFailReasons}
             />
           </div>
         </InnerMobileGrid>

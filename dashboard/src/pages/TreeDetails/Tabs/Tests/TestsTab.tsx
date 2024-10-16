@@ -9,7 +9,6 @@ import BaseCard from '@/components/Cards/BaseCard';
 
 import {
   MemoizedStatusChart,
-  MemoizedErrorCountList,
   MemoizedConfigList,
   MemoizedErrorsSummary,
   MemoizedPlatformsWithError,
@@ -90,10 +89,6 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             title={<FormattedMessage id="testsTab.platformsErrors" />}
             platformsWithError={data.testPlatformsWithErrors}
           />
-          <MemoizedErrorCountList
-            title={<FormattedMessage id="testsTab.fail" />}
-            errorMessageCounts={data.testFailReasons}
-          />
         </div>
       </DesktopGrid>
       <MobileGrid>
@@ -121,10 +116,6 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             <MemoizedPlatformsWithError
               title={<FormattedMessage id="testsTab.platformsErrors" />}
               platformsWithError={data.testPlatformsWithErrors}
-            />
-            <MemoizedErrorCountList
-              title={<FormattedMessage id="testsTab.fail" />}
-              errorMessageCounts={data.testFailReasons}
             />
           </div>
         </InnerMobileGrid>
