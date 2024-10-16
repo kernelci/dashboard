@@ -81,6 +81,7 @@ class TreeDetails(View):
     def get(self, request, commit_hash):
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
+        origin = request.GET.get("origin")
 
         errorResponse = validate_required_params(
             request, ["origin", "git_url", "git_branch"]
@@ -119,6 +120,7 @@ class TreeDetails(View):
             .where(git_commit_hash__eq=commit_hash)
             .where(git_repository_url__eq=git_url_param)
             .where(git_repository_branch__eq=git_branch_param)
+            .where(**{"checkouts.origin__exact": origin})
             .join(
                 "incidents",
                 join_type="LEFT JOIN",
