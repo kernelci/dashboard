@@ -196,7 +196,7 @@ MIGRATION_MODULES = DisableMigrations()
 
 CORS_ALLOW_ALL_ORIGINS = False
 
-CACHE_TIMEOUT = int(get_json_env_var("CACHE_TIMEOUT", "600"))
+CACHE_TIMEOUT = int(get_json_env_var("CACHE_TIMEOUT", "180"))
 
 if DEBUG:
     CORS_ALLOWED_ORIGIN_REGEXES = [
