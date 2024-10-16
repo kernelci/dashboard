@@ -319,6 +319,7 @@ class TreeDetailsSlow(View):
         rows = getQueryCache(cache_key, params)
 
         if rows is None:
+            print("NO CACHE\n\n\n\n\n\n\n")
             # Right now this query is only using for showing test data so it is doing inner joins
             # in case it is needed for builds data they should become left join and the logic should be updated
             query = """
@@ -389,6 +390,8 @@ class TreeDetailsSlow(View):
                 cursor.execute(query, params)
                 rows = cursor.fetchall()
                 setQueryCache(cache_key, params, rows)
+        else:
+            print("Got cache for TreeDetailsSlow\n\n\n\n")
 
         for currentRow in rows:
             currentRowData = self.__getCurrentRowData(currentRow)

@@ -7,8 +7,8 @@ from datetime import timedelta
 import re
 
 DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
-CACHE_TIMEOUT = int(os.environ.get('CACHE_TIMEOUT', '180'))
-
+timeout = int(os.environ.get("CACHE_TIMEOUT", "60"))
+print("TIMEOUT is " + str(timeout))
 
 def create_issue(*, issue_id, issue_comment, issue_report_url, incident_id, incident_present):
     return {
@@ -29,7 +29,7 @@ def createCacheParamsHash(params: dict):
 
 def setQueryCache(key, params, rows):
     params_hash = createCacheParamsHash(params)
-    return cache.set("%s-%s" % (key, params_hash), rows, CACHE_TIMEOUT)
+    return cache.set("%s-%s" % (key, params_hash), rows, timeout)
 
 
 def getQueryCache(key, params: dict):

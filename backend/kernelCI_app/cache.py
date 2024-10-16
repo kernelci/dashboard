@@ -3,8 +3,8 @@ from django.core.cache import cache
 from django.db import connection
 from threading import Thread
 
-
-CACHE_TIMEOUT = int(os.environ.get('CACHE_TIMEOUT', '180'))
+timeout = int(os.environ.get("CACHE_TIMEOUT", "70"))
+print("TIMEOUT is " + str(timeout))
 NOTIFY_CHANNEL = "teste"
 
 __commit_lookup = {}
@@ -20,7 +20,7 @@ def __createCacheParamsHash(params: dict):
 
 
 def setQueryCache(key, params, rows, commit_hash=None, build_id=None, test_id=None,
-                  timeout=CACHE_TIMEOUT):
+                  timeout=timeout):
     params_hash = __createCacheParamsHash(params)
     hash_key = "%s-%s" % (key, params_hash)
 

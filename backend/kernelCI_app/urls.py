@@ -1,13 +1,24 @@
 from django.urls import path
+from django.views.decorators.cache import cache_page
+from django.conf import settings
 from kernelCI_app import views
 
+timeout = settings.CACHE_TIMEOUT
+print("TIMEOUT is " + str(timeout))
+cache = cache_page(timeout)
+
+
+def viewCache(view):
+    return cache(view.as_view())
+
+# colocar cache em cada página
 urlpatterns = [
     path("tests/<str:commit_hash>",
-         views.TestsByTreeAndCommitHash.as_view(),
+         viewCache(views.TestsByTreeAndCommitHash),
          name="testsByTreeAndCommitHash"
          ),
     path("tests/test/<str:test_id>",
-         views.TestDetails.as_view(),
+         viewCache(views.TestDetails),
          name="testDetails"
          ),
     path("tree/",
@@ -19,11 +30,11 @@ urlpatterns = [
          name="tree-fast"
          ),
     path("tree/tests/",
-         views.groupedTests.as_view(),
+         viewCache(views.groupedTests),
          name="treeGroupedTests"
          ),
     path("tree/<str:commit_hash>",
-         views.TreeDetails.as_view(),
+         viewCache(views.TreeDetails),
          name="treeDetails"
          ),
     path("tree/<str:commit_hash>/full",
@@ -31,23 +42,23 @@ urlpatterns = [
          name="TreeDetailsSlow"
          ),
     path("tree/<str:commit_hash>/commits",
-         views.TreeCommitsHistory.as_view(),
+         viewCache(views.TreeCommitsHistory),
          name="treeCommits"
          ),
     path("tree/<str:commit_hash>/tests/",
-         views.TreeTestsView.as_view(),
+         viewCache(views.TreeTestsView),
          name="treeTests"
          ),
     path("build/<str:build_id>",
-         views.BuildDetails.as_view(),
+         viewCache(views.BuildDetails),
          name="buildDetails"
          ),
     path("build/<str:build_id>/tests",
-         views.BuildTests.as_view(),
+         viewCache(views.BuildTests),
          name="buildTests"
          ),
     path("build/<str:build_id>/status-count",
-         views.BuildStatusCountView.as_view(),
+         viewCache(views.BuildStatusCountView),
          name="buildStatusCount"
          ),
     path("build/<str:build_id>/issues",
