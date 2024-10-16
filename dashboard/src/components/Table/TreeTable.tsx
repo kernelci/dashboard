@@ -61,34 +61,38 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
 
-  const linkProps = (
-    target: string,
-  ): LinkProps & { style: React.CSSProperties } => ({
-    to: '/tree/$treeId',
-    params: { treeId: row.id },
-    style: {
-      width: '100%',
-      display: 'inline-block',
-      height: '100%',
-    },
-    search: {
-      tableFilter: {
-        bootsTable: possibleTestsTableFilter[0],
-        buildsTable: possibleBuildsTableFilter[2],
-        testsTable: possibleTestsTableFilter[0],
-      },
-      origin: origin,
-      currentTreeDetailsTab: zPossibleValidator.parse(target),
-      diffFilter: {},
-      treeInfo: {
-        gitUrl: row.url,
-        gitBranch: row.branch,
-        treeName: row.tree_name ?? undefined,
-        commitName: row.commitName,
-        headCommitHash: row.id,
-      },
-    },
-  });
+  type ILinkProps = LinkProps & { style: React.CSSProperties };
+
+  const linkProps = useMemo(
+    () =>
+      (target: string): ILinkProps => ({
+        to: '/tree/$treeId',
+        params: { treeId: row.id },
+        style: {
+          width: '100%',
+          display: 'inline-block',
+          height: '100%',
+        },
+        search: {
+          tableFilter: {
+            bootsTable: possibleTestsTableFilter[0],
+            buildsTable: possibleBuildsTableFilter[2],
+            testsTable: possibleTestsTableFilter[0],
+          },
+          origin: origin,
+          currentTreeDetailsTab: zPossibleValidator.parse(target),
+          diffFilter: {},
+          treeInfo: {
+            gitUrl: row.url,
+            gitBranch: row.branch,
+            treeName: row.tree_name ?? undefined,
+            commitName: row.commitName,
+            headCommitHash: row.id,
+          },
+        },
+      }),
+    [row, origin],
+  );
 
   return (
     <TableRow>

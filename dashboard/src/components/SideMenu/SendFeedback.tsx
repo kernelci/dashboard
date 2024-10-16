@@ -1,7 +1,9 @@
 import { MdOutlineFeedback } from 'react-icons/md';
 import { FormattedMessage } from 'react-intl';
 
-import { Link } from '@tanstack/react-router';
+import { useEffect, useMemo, useState } from 'react';
+
+import { useLocation } from '@tanstack/react-router';
 
 import {
   AlertDialog,
@@ -24,35 +26,41 @@ import { NavigationMenuItem } from '@/components/ui/navigation-menu';
 
 import NavLink from './NavLink';
 
-const get_github_body = (): string =>
-  encodeURIComponent(`# Feedback Description:
-
-## URL used to send feedback:
-${window.location.href}
-`);
-
-const get_email_body = (): string =>
-  encodeURIComponent(`Feedback Description:
-
-URL used to send feedback:
-${window.location.href}
-`);
-
-const onGitHubClick = (): void => {
-  window.open(`${FEEDBACK_ISSUE_URL}&body=${get_github_body()}`, '_blank');
-};
-
-const onEmailClick = (): void => {
-  const subject = 'Dashboard Feedback';
-  window.open(
-    `mailto:${FEEDBACK_EMAIL_TO}?body=${get_email_body()}&subject=${subject}`,
-    '_blank',
-  );
-};
-
 const SendFeedback = (
   props: React.ComponentProps<typeof NavigationMenuItem>,
 ): JSX.Element => {
+  const location = useLocation();
+
+  const [fullLocation, setFullLocation] = useState(
+    `${window.location.origin}${location.pathname}${location.search}${location.hash}`,
+  );
+
+  useEffect(() => {
+    const newUrl = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
+    setFullLocation(newUrl);
+  }, [location]);
+
+  const github_href = useMemo(() => {
+    const github_body = encodeURIComponent(`# Feedback Description:
+  
+## URL used to send feedback:
+${fullLocation}
+    `);
+
+    return `${FEEDBACK_ISSUE_URL}&body=${github_body}`;
+  }, [fullLocation]);
+
+  const email_href = useMemo(() => {
+    const subject = 'Dashboard Feedback';
+    const email_body = encodeURIComponent(`Feedback Description:
+  
+URL used to send feedback:
+${fullLocation}
+      `);
+
+    return `mailto:${FEEDBACK_EMAIL_TO}?body=${email_body}&subject=${subject}`;
+  }, [fullLocation]);
+
   return (
     <NavigationMenuItem {...props}>
       <AlertDialog>
@@ -74,14 +82,14 @@ const SendFeedback = (
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction asChild>
-              <Link onClick={onGitHubClick}>
+              <a href={github_href} target="_blank" rel="noreferrer">
                 <FormattedMessage id="global.github" />
-              </Link>
+              </a>
             </AlertDialogAction>
             <AlertDialogAction asChild>
-              <Link onClick={onEmailClick}>
+              <a href={email_href} target="_blank" rel="noreferrer">
                 <FormattedMessage id="global.email" />
-              </Link>
+              </a>
             </AlertDialogAction>
             <AlertDialogCancel>
               <FormattedMessage id="global.cancel" />

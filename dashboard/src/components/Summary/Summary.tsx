@@ -1,10 +1,8 @@
 import { ReactElement, useMemo } from 'react';
 
-import { Link } from '@tanstack/react-router';
+import { useDiffFilterParams } from '@/pages/TreeDetails/treeDetailsUtils';
 
-import { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
-
-import { useDiffFilterParams } from '@/utils/filters';
+import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
 
 import BaseTable from '../Table/BaseTable';
 import { TableBody, TableCell, TableCellWithLink, TableRow } from '../ui/table';
@@ -73,29 +71,6 @@ const Summary = ({
   );
 };
 
-const LinkWrapper = ({
-  filterSection,
-  filterValue,
-}: {
-  filterSection: TFilterObjectsKeys;
-  filterValue: string;
-}): JSX.Element => {
-  const diffFilter = useDiffFilterParams(filterValue, filterSection);
-
-  return (
-    <Link
-      search={previousParams => ({
-        ...previousParams,
-        diffFilter,
-      })}
-      key={filterValue}
-      className="line-clamp-1"
-    >
-      {filterValue}
-    </Link>
-  );
-};
-
 export const SummaryItem = ({
   arch,
   compilers,
@@ -106,11 +81,13 @@ export const SummaryItem = ({
 
   const compilersElement = useMemo(() => {
     return compilers?.map(compiler => (
-      <LinkWrapper
+      <FilterLink
         key={compiler}
         filterSection="compilers"
         filterValue={compiler}
-      />
+      >
+        {compiler}
+      </FilterLink>
     ));
   }, [compilers]);
 

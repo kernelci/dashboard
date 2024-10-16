@@ -8,11 +8,7 @@ import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import BaseCard, { IBaseCard } from '@/components/Cards/BaseCard';
 import ListingItem, { ItemType } from '@/components/ListingItem/ListingItem';
 import { GroupedTestStatus } from '@/components/Status/Status';
-import {
-  ArchCompilerStatus,
-  TFilterObjectsKeys,
-  TTreeTestsData,
-} from '@/types/tree/TreeDetails';
+import { ArchCompilerStatus, TTreeTestsData } from '@/types/tree/TreeDetails';
 
 import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
 import StatusChartMemoized, {
@@ -23,36 +19,12 @@ import { groupStatus } from '@/utils/status';
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { TIssue } from '@/types/general';
 import { NoIssueFound } from '@/components/Issue/IssueSection';
-import { useDiffFilterParams } from '@/utils/filters';
+
+import FilterLink from '../TreeDetailsFilterLink';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
 }
-
-const LinkWrapper = ({
-  filterSection,
-  filterValue,
-  children,
-}: {
-  filterSection: TFilterObjectsKeys;
-  filterValue: string;
-  children?: JSX.Element;
-}): JSX.Element => {
-  const diffFilter = useDiffFilterParams(filterValue, filterSection);
-
-  return (
-    <Link
-      search={previousParams => ({
-        ...previousParams,
-        diffFilter,
-      })}
-      key={filterValue}
-      className="line-clamp-1"
-    >
-      {children}
-    </Link>
-  );
-};
 
 const ConfigsList = ({
   configStatusCounts,
@@ -67,7 +39,7 @@ const ConfigsList = ({
             const { DONE, FAIL, ERROR, MISS, PASS, SKIP } =
               configStatusCounts[configName];
             return (
-              <LinkWrapper
+              <FilterLink
                 key={configName}
                 filterSection="configs"
                 filterValue={configName}
@@ -88,7 +60,7 @@ const ConfigsList = ({
                     />
                   }
                 />
-              </LinkWrapper>
+              </FilterLink>
             );
           })}
         </DumbListingContent>

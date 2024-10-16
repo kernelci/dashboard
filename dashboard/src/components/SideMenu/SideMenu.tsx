@@ -7,8 +7,6 @@ import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
 import { useSearch, useLocation } from '@tanstack/react-router';
 
-import { z } from 'zod';
-
 import { MessagesKey } from '@/locales/messages';
 
 import { zOrigin } from '@/types/tree/Tree';
@@ -28,7 +26,7 @@ import SendFeedback from './SendFeedback';
 import NavLink from './NavLink';
 
 type RouteMenuItems = {
-  navigateTo: string;
+  navigateTo: '/tree' | '/devices' | '/labs';
   idIntl: MessagesKey;
   icon: JSX.Element;
   selected: boolean;
@@ -64,13 +62,6 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
 
   const isCurrentPath = pathname.startsWith(item.navigateTo);
 
-  const paths = ['/tree', '/devices', '/labs'] as const;
-
-  const zPathEnum = z.enum(paths);
-  const zPath = zPathEnum.catch('/tree');
-
-  const safeNavigateTo = zPath.parse(item.navigateTo);
-
   return (
     <NavigationMenuItem
       className={
@@ -79,7 +70,7 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
       key={item.idIntl}
     >
       <NavLink
-        to={safeNavigateTo}
+        to={item.navigateTo}
         search={{
           origin: zOrigin.parse(unsafeOrigin),
         }}

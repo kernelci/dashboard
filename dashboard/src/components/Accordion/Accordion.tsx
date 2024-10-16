@@ -234,7 +234,9 @@ const AccordionTestsContent = ({
 
   return (
     <div className="h-max-12 overflow-scroll">
-      <BaseTable headers={headerTestsDetails}>{rows}</BaseTable>
+      <BaseTable headers={headerTestsDetails}>
+        <TableBody>{rows}</TableBody>
+      </BaseTable>
     </div>
   );
 };
@@ -244,13 +246,16 @@ interface ITestTableRow {
 }
 
 const TestTableRow = ({ test }: ITestTableRow): JSX.Element => {
-  const linkProps: LinkProps = {
-    to: '/tree/$treeId/test/$testId',
-    params: {
-      testId: test.id,
-    },
-    search: s => s,
-  };
+  const linkProps: LinkProps = useMemo(
+    () => ({
+      to: '/tree/$treeId/test/$testId',
+      params: {
+        testId: test.id,
+      },
+      search: s => s,
+    }),
+    [test],
+  );
 
   return (
     <TableRow className="cursor-pointer hover:bg-lightBlue" key={test.id}>

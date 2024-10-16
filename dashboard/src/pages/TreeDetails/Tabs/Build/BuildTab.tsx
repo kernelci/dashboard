@@ -2,7 +2,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import StatusChartMemoized, {
   Colors,
@@ -32,7 +32,7 @@ import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import { MemoizedIssuesList } from '@/pages/TreeDetails/Tabs/TestCards';
 
-import { useDiffFilterParams } from '@/utils/filters';
+import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
 
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
@@ -93,31 +93,6 @@ const StatusCard = ({
 
 const MemoizedStatusCard = memo(StatusCard);
 
-const LinkWrapper = ({
-  filterSection,
-  filterValue,
-  children,
-}: {
-  filterSection: TFilterObjectsKeys;
-  filterValue: string;
-  children?: JSX.Element;
-}): JSX.Element => {
-  const diffFilter = useDiffFilterParams(filterValue, filterSection);
-
-  return (
-    <Link
-      search={previousParams => ({
-        ...previousParams,
-        diffFilter,
-      })}
-      key={filterValue}
-      className="line-clamp-1"
-    >
-      {children}
-    </Link>
-  );
-};
-
 const ConfigsCard = ({
   treeDetailsData,
 }: {
@@ -131,7 +106,7 @@ const ConfigsCard = ({
     return (
       <DumbListingContent>
         {treeDetailsData?.configs.map((item, i) => (
-          <LinkWrapper key={i} filterSection="configs" filterValue={item.text}>
+          <FilterLink key={i} filterSection="configs" filterValue={item.text}>
             <ListingItem
               text={item.text}
               leftIcon={
@@ -142,7 +117,7 @@ const ConfigsCard = ({
                 />
               }
             />
-          </LinkWrapper>
+          </FilterLink>
         ))}
       </DumbListingContent>
     );

@@ -1,4 +1,4 @@
-import { ReactElement, useCallback, useMemo, useState } from 'react';
+import { memo, ReactElement, useCallback, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { LinkProps, useNavigate, useSearch } from '@tanstack/react-router';
 
@@ -98,6 +98,45 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
   const [bootsSelectedFilter, setBootsSelectedFilter] =
     useState<TestsTableFilter>(tableFilter.bootsTable);
 
+  const TestTableRow = ({ test }: { test: TestByCommitHash }): JSX.Element => {
+    const linkProps: LinkProps = useMemo(
+      () => ({
+        to: '/tree/$treeId/test/$testId',
+        params: {
+          treeId,
+          testId: test.id,
+        },
+        search: s => s,
+      }),
+      [test],
+    );
+
+    return (
+      <TableRow key={test.id}>
+        <TableCellWithLink linkProps={linkProps}>{test.path}</TableCellWithLink>
+        <TableCellWithLink linkProps={linkProps}>
+          {test.status}
+        </TableCellWithLink>
+        <TableCellWithLink linkProps={linkProps}>
+          <TooltipDateTime
+            dateTime={test.startTime}
+            lineBreak={true}
+            showLabelTime={true}
+            showLabelTZ={true}
+          />
+        </TableCellWithLink>
+        <TableCellWithLink linkProps={linkProps}>
+          {test.duration ?? '-'}
+        </TableCellWithLink>
+        <TableCellWithLink linkProps={linkProps}>
+          <MdChevronRight />
+        </TableCellWithLink>
+      </TableRow>
+    );
+  };
+
+  const MemoizedTestTableRow = memo(TestTableRow);
+
   const rows = useMemo(() => {
     if (!data) return <></>;
 
@@ -109,42 +148,10 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
       );
     }
 
-    return filteredData?.slice(startIndex, endIndex).map(test => {
-      const linkProps: LinkProps = {
-        to: '/tree/$treeId/test/$testId',
-        params: {
-          treeId,
-          testId: test.id,
-        },
-        search: s => s,
-      };
-
-      return (
-        <TableRow key={test.id}>
-          <TableCellWithLink linkProps={linkProps}>
-            {test.path}
-          </TableCellWithLink>
-          <TableCellWithLink linkProps={linkProps}>
-            {test.status}
-          </TableCellWithLink>
-          <TableCellWithLink linkProps={linkProps}>
-            <TooltipDateTime
-              dateTime={test.startTime}
-              lineBreak={true}
-              showLabelTime={true}
-              showLabelTZ={true}
-            />
-          </TableCellWithLink>
-          <TableCellWithLink linkProps={linkProps}>
-            {test.duration ?? '-'}
-          </TableCellWithLink>
-          <TableCellWithLink linkProps={linkProps}>
-            <MdChevronRight />
-          </TableCellWithLink>
-        </TableRow>
-      );
-    });
-  }, [filteredData, data, startIndex, endIndex, treeId]);
+    return filteredData
+      ?.slice(startIndex, endIndex)
+      .map(test => <MemoizedTestTableRow key={test.id} test={test} />);
+  }, [filteredData, data, startIndex, endIndex, MemoizedTestTableRow]);
 
   const tableInfoElement = (
     <div className="flex flex-col items-end">
