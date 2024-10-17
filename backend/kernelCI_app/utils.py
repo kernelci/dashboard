@@ -1,14 +1,11 @@
 import json
-import os
 from typing import Union
 from django.utils import timezone
-from django.core.cache import cache
 from datetime import timedelta
 import re
 
 DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
-timeout = int(os.environ.get("CACHE_TIMEOUT", "60"))
-print("TIMEOUT is " + str(timeout))
+
 
 def create_issue(*, issue_id, issue_comment, issue_report_url, incident_id, incident_present):
     return {
@@ -18,23 +15,6 @@ def create_issue(*, issue_id, issue_comment, issue_report_url, incident_id, inci
         "incident_id": incident_id,
         "present": incident_present,
     }
-
-
-def createCacheParamsHash(params: dict):
-    params_list = list(params.items())
-    params_list.sort(key=lambda x: x[0])
-    params_string = ",".join([i[1] for i in params_list])
-    return hash(params_string)
-
-
-def setQueryCache(key, params, rows):
-    params_hash = createCacheParamsHash(params)
-    return cache.set("%s-%s" % (key, params_hash), rows, timeout)
-
-
-def getQueryCache(key, params: dict):
-    params_hash = createCacheParamsHash(params)
-    return cache.get("%s-%s" % (key, params_hash))
 
 
 def toIntOrDefault(value, default):

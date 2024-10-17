@@ -2,11 +2,8 @@ from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.models import Checkouts
 from kernelCI_app.serializers import TreeSerializer
-from kernelCI_app.utils import (
-    getQueryTimeInterval,
-    getQueryCache,
-    setQueryCache
-)
+from kernelCI_app.utils import getQueryTimeInterval
+from kernelCI_app.cache import getQueryCache, setQueryCache
 
 
 DEFAULT_ORIGIN = 'maestro'
@@ -58,8 +55,8 @@ class TreeView(View):
                     checkouts.*,
                     COUNT(DISTINCT CASE WHEN builds.valid = true THEN builds.id END) AS valid_builds,
                     COUNT(DISTINCT CASE WHEN builds.valid = false THEN builds.id END) AS invalid_builds,
-                    COUNT(DISTINCT CASE WHEN builds.valid IS NULL AND builds.id IS NOT NULL THEN builds.id END)
-                        AS null_builds,
+                    COUNT(DISTINCT CASE WHEN builds.valid IS NULL
+                        AND builds.id IS NOT NULL THEN builds.id END) AS null_builds,
                     COUNT(DISTINCT builds.id) AS total_builds,
                     COUNT(CASE WHEN (tests.path <> 'boot' OR tests.path NOT LIKE 'boot.%%')
                         AND tests.status = 'FAIL' THEN 1 END) AS fail_tests,

@@ -6,11 +6,10 @@ from kernelCI_app.utils import (
     extract_platform,
     InvalidComparisonOP,
     getErrorResponseBody,
-    getQueryCache,
-    setQueryCache,
     toIntOrDefault,
     create_issue
 )
+from kernelCI_app.cache import (getQueryCache, setQueryCache)
 from django.db import connection
 
 
@@ -313,15 +312,11 @@ class TreeDetailsSlow(View):
             "git_branch_param": git_branch_param,
         }
 
-        (filterTestStatus, filterTestDurationMin, filterTestDurationMax, filterBootStatus,
-         filterBootDurationMin, filterBootDurationMax) = self.__processFilters(request)
-
         rows = getQueryCache(cache_key, params)
 
         if rows is None:
-            print("NO CACHE\n\n\n\n\n\n\n")
             # Right now this query is only using for showing test data so it is doing inner joins
-            # in case it is needed for builds data they should become left join and the logic should be updated
+            # if it is needed for builds data they should become left join and the logic should be updated
             query = """
             SELECT
                     tests.build_id AS tests_build_id,
@@ -390,8 +385,6 @@ class TreeDetailsSlow(View):
                 cursor.execute(query, params)
                 rows = cursor.fetchall()
                 setQueryCache(cache_key, params, rows)
-        else:
-            print("Got cache for TreeDetailsSlow\n\n\n\n")
 
         for currentRow in rows:
             currentRowData = self.__getCurrentRowData(currentRow)

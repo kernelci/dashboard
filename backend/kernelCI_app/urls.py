@@ -4,14 +4,13 @@ from django.conf import settings
 from kernelCI_app import views
 
 timeout = settings.CACHE_TIMEOUT
-print("TIMEOUT is " + str(timeout))
 cache = cache_page(timeout)
 
 
 def viewCache(view):
     return cache(view.as_view())
 
-# colocar cache em cada página
+
 urlpatterns = [
     path("tests/<str:commit_hash>",
          viewCache(views.TestsByTreeAndCommitHash),

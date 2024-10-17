@@ -1,11 +1,10 @@
-import os
 from django.core.cache import cache
 from django.db import connection
 from threading import Thread
+from django.conf import settings
 
-timeout = int(os.environ.get("CACHE_TIMEOUT", "70"))
-print("TIMEOUT is " + str(timeout))
 NOTIFY_CHANNEL = "teste"
+timeout = settings.CACHE_TIMEOUT
 
 __commit_lookup = {}
 __build_lookup = {}
@@ -15,7 +14,7 @@ __test_lookup = {}
 def __createCacheParamsHash(params: dict):
     params_list = list(params.items())
     params_list.sort(key=lambda x: x[0])
-    params_string = ",".join([i[1] for i in params_list])
+    params_string = ",".join([str(i[1]) for i in params_list])
     return hash(params_string)
 
 
