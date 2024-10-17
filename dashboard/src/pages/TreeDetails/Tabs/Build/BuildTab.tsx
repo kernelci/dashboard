@@ -253,11 +253,11 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   // status?: 'valid' | 'invalid' | 'null';
 
   const sortTableContent = useCallback(
-    (what?: AccordionItemBuildsKeys) => {
+    (sortProperty?: AccordionItemBuildsKeys) => {
       console.log('sorting ');
-      console.log(what);
+      console.log(sortProperty);
       const sorted = (filteredContent ?? []).sort((a, b) => {
-        switch (what) {
+        switch (sortProperty) {
           case 'config':
             return a.config > b.config ? 1 : -1;
           case 'compiler':
@@ -325,7 +325,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         />
       </MobileGrid>
 
-      {filteredContent && (
+      {sortedItems && (
         <div className="flex flex-col gap-4">
           <div className="text-lg">
             <FormattedMessage id="treeDetails.builds" />
@@ -362,7 +362,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           </div>
           <Accordion
             type="build"
-            items={(sortedItems ?? filteredContent).slice(startIndex, endIndex)}
+            items={sortedItems.slice(startIndex, endIndex)}
             headerOnClick={(what: AccordionItemBuildsKeys) => {
               sortTableContent(what);
             }}

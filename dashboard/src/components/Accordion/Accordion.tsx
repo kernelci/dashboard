@@ -1,10 +1,12 @@
 import { ReactElement, useMemo } from 'react';
 
-import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
+import { MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
 
 import { LinkProps } from '@tanstack/react-router';
+
+import { useNavigate } from '@tanstack/react-router';
 
 import {
   AccordionItemBuilds,
@@ -38,7 +40,10 @@ import {
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
+import { individualTestColumns } from './TanstackAccordion';
+
 import AccordionBuildContent from './BuildAccordionContent';
+import { NewTable } from './TanstackAccordion';
 
 export interface IAccordion {
   headers?: ReactElement[];
@@ -116,7 +121,7 @@ const headerTestsDetails = [
   <FormattedMessage key="testDetails.path" id="testDetails.path" />,
   <FormattedMessage key="testDetails.status" id="testDetails.status" />,
   <FormattedMessage key="global.date" id="global.date" />,
-  <FormattedMessage key="treeDetails.duration" id="testDetails.duration" />,
+  <FormattedMessage key="testDetails.duration" id="testDetails.duration" />,
   <span key="chevron2"></span>, //extra one to add the chevron icon
 ];
 
@@ -124,8 +129,8 @@ const Accordion = ({ items, type, headerOnClick }: IAccordion): JSX.Element => {
   const accordionTableHeader = type === 'build' ? headersBuilds : headersTests;
 
   const onClickSort = useCallback(
-    (what: AccordionItemBuildsKeys) => {
-      headerOnClick?.(what);
+    (sortProperty: AccordionItemBuildsKeys) => {
+      headerOnClick?.(sortProperty);
     },
     [headerOnClick],
   );
@@ -190,8 +195,12 @@ const AccordionTableBody = ({
                     {type === 'build' ? (
                       <AccordionBuildContent accordionData={item} />
                     ) : (
-                      <AccordionTestsContent
+                      // <AccordionTestsContent
+                      //   data={(item as TPathTests).individual_tests}
+                      // />
+                      <NewTable
                         data={(item as TPathTests).individual_tests}
+                        columnDefinition={individualTestColumns}
                       />
                     )}
                   </div>
@@ -240,8 +249,18 @@ const AccordionBuildsTrigger = ({
       </TableCell>
       <TableCell>{triggerInfo.buildTime}</TableCell>
       <TableCell>
-        {isBuildValid && <MdCheck className="text-green" />}
-        {isBuildInvalid && <MdClose className="text-red" />}
+        {isBuildValid && (
+          <FormattedMessage
+            id="global.pass"
+            defaultMessage={'Pass'}
+          ></FormattedMessage>
+        )}
+        {isBuildInvalid && (
+          <FormattedMessage
+            id="global.invalid"
+            defaultMessage={'Invalid'}
+          ></FormattedMessage>
+        )}
         {isBuildUnknown && <span>-</span>}
       </TableCell>
     </>
