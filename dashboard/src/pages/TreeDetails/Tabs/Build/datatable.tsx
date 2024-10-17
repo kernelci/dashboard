@@ -6,7 +6,6 @@ import {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -14,11 +13,11 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
+// import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -27,17 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  // eslint-disable-next-line import/extensions
-} from '@/components/ui/dropdown-menu';
 
 export type Payment = {
   id: string;
@@ -70,6 +58,42 @@ const data: Payment[] = [
     amount: 874,
     status: 'success',
     email: 'Silas22@gmail.com',
+  },
+  {
+    id: 'bhqecj4p',
+    amount: 721,
+    status: 'failed',
+    email: 'carmella@hotmail.com',
+  },
+  {
+    id: 'bhqecj4p',
+    amount: 721,
+    status: 'failed',
+    email: 'carmella@hotmail.com',
+  },
+  {
+    id: 'bhqecj4p',
+    amount: 721,
+    status: 'failed',
+    email: 'carmella@hotmail.com',
+  },
+  {
+    id: 'bhqecj4p',
+    amount: 721,
+    status: 'failed',
+    email: 'carmella@hotmail.com',
+  },
+  {
+    id: 'bhqecj4p',
+    amount: 721,
+    status: 'failed',
+    email: 'carmella@hotmail.com',
+  },
+  {
+    id: 'bhqecj4p',
+    amount: 721,
+    status: 'failed',
+    email: 'carmella@hotmail.com',
   },
   {
     id: 'bhqecj4p',
@@ -139,35 +163,6 @@ export const columns: ColumnDef<Payment>[] = [
       return <div className="text-right font-medium">{formatted}</div>;
     },
   },
-  {
-    id: 'actions',
-    enableHiding: false,
-    cell: ({ row }) => {
-      const payment = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
 ];
 
 export function DataTableDemo() {
@@ -175,9 +170,6 @@ export function DataTableDemo() {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
     data,
@@ -188,19 +180,15 @@ export function DataTableDemo() {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
-      columnVisibility,
-      rowSelection,
     },
   });
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      {/* <div className="flex items-center py-4">
         <Input
           placeholder="Filter emails..."
           value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
@@ -209,33 +197,7 @@ export function DataTableDemo() {
           }
           className="max-w-sm"
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter(column => column.getCanHide())
-              .map(column => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value: unknown) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      </div> */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
