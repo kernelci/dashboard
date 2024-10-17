@@ -1,10 +1,10 @@
 import { MdFolderOpen } from 'react-icons/md';
 
-import { useMemo, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { useParams, useNavigate } from '@tanstack/react-router';
 
 import {
   AccordionItemBuilds,

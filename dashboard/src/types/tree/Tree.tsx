@@ -90,6 +90,7 @@ const origins = [
   'syzbot',
   'tuxsuite',
 ] as const;
+
 const DEFAULT_ORIGIN = 'maestro';
 
 export type TOrigins = (typeof origins)[number];

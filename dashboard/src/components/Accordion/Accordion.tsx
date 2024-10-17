@@ -1,10 +1,10 @@
-import { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useMemo } from 'react';
 
 import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate } from '@tanstack/react-router';
+import { LinkProps } from '@tanstack/react-router';
 
 import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
@@ -18,7 +18,12 @@ import { GroupedTestStatus } from '@/components/Status/Status';
 
 import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
 
-import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import {
+  TableBody,
+  TableCell,
+  TableCellWithLink,
+  TableRow,
+} from '@/components/ui/table';
 
 import BaseTable from '@/components/Table/BaseTable';
 
@@ -223,26 +228,9 @@ const AccordionTestsTrigger = ({
 const AccordionTestsContent = ({
   data,
 }: IAccordionTestContent): JSX.Element => {
-  const navigate = useNavigate({ from: '/tree/$treeId' });
-
-  const onClickRow = useCallback(
-    (testId: string) => {
-      navigate({
-        to: '/tree/$treeId/test/$testId',
-        params: {
-          testId: testId,
-        },
-        search: s => s,
-      });
-    },
-    [navigate],
-  );
-
   const rows = useMemo(() => {
-    return data.map(test => (
-      <TestTableRow key={test.id} test={test} onClick={onClickRow} />
-    ));
-  }, [data, onClickRow]);
+    return data.map(test => <TestTableRow key={test.id} test={test} />);
+  }, [data]);
 
   return (
     <div className="h-max-12 overflow-scroll">
@@ -255,31 +243,41 @@ const AccordionTestsContent = ({
 
 interface ITestTableRow {
   test: TIndividualTest;
-  onClick: (testId: string) => void;
 }
 
-const TestTableRow = ({ test, onClick }: ITestTableRow): JSX.Element => {
-  const onClickHandle = useCallback(() => onClick(test.id), [onClick, test.id]);
+const TestTableRow = ({ test }: ITestTableRow): JSX.Element => {
+  const linkProps: LinkProps = useMemo(
+    () => ({
+      to: '/tree/$treeId/test/$testId',
+      params: {
+        testId: test.id,
+      },
+      search: s => s,
+    }),
+    [test],
+  );
+
   return (
-    <TableRow
-      className="cursor-pointer hover:bg-lightBlue"
-      onClick={onClickHandle}
-      key={test.id}
-    >
-      <TableCell>{test.path}</TableCell>
-      <TableCell>{test.status}</TableCell>
-      <TableCell>
+    <TableRow className="cursor-pointer hover:bg-lightBlue" key={test.id}>
+      <TableCellWithLink linkProps={linkProps}>{test.path}</TableCellWithLink>
+      <TableCellWithLink linkProps={linkProps}>{test.status}</TableCellWithLink>
+      <TableCellWithLink linkProps={linkProps}>
         <TooltipDateTime
           dateTime={test.start_time}
           lineBreak={true}
           showLabelTime={true}
           showLabelTZ={true}
         />
-      </TableCell>
-      <TableCell>{test.duration ?? '-'}</TableCell>
-      <TableCell>
+      </TableCellWithLink>
+      <TableCellWithLink linkProps={linkProps}>
+        {test.duration ?? '-'}
+      </TableCellWithLink>
+      <TableCellWithLink
+        linkProps={linkProps}
+        className="flex items-center justify-end"
+      >
         <ChevronRightAnimate />
-      </TableCell>
+      </TableCellWithLink>
     </TableRow>
   );
 };
