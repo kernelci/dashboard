@@ -21,7 +21,7 @@ urlpatterns = [
          name="testDetails"
          ),
     path("tree/",
-         viewCache(views.TreeView),
+         views.TreeView.as_view(),
          name="tree"
          ),
     path("tree-fast/",
@@ -37,7 +37,7 @@ urlpatterns = [
          name="treeDetails"
          ),
     path("tree/<str:commit_hash>/full",
-         viewCache(views.TreeDetailsSlow),
+         views.TreeDetailsSlow.as_view(),
          name="TreeDetailsSlow"
          ),
     path("tree/<str:commit_hash>/commits",
