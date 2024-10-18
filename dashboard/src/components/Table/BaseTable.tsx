@@ -75,9 +75,7 @@ const BaseTable = ({
       <DumbBaseTable className={className}>
         <DumbTableHeader>
           {headers.map(column => (
-            <TableHead className="border-b text-black" key={column.key}>
-              {column}
-            </TableHead>
+            <TableHead key={column.key}>{column}</TableHead>
           ))}
         </DumbTableHeader>
         {body || children}
