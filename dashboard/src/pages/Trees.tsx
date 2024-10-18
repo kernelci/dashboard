@@ -9,6 +9,7 @@ import { z } from 'zod';
 import TreeListingPage from '@/components/TreeListingPage/TreeListingPage';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
+import { DEBOUNCE_INTERVAL } from '@/pages/treeConstants';
 
 const Trees = (): JSX.Element => {
   const { treeSearch: unsafeTreeSearch } = useSearch({
@@ -53,7 +54,5 @@ const Trees = (): JSX.Element => {
     </>
   );
 };
-
-const DEBOUNCE_INTERVAL = 666;
 
 export default Trees;
