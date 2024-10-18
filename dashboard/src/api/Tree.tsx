@@ -6,8 +6,11 @@ import type { Tree, TreeFastPathResponse } from '@/types/tree/Tree';
 
 import http from './api';
 
-const fetchTreeCheckoutData = async (origin: string): Promise<Tree[]> => {
-  const res = await http.get('/api/tree/', { params: { origin } });
+const fetchTreeCheckoutData = async (
+  origin: string,
+  time?: number,
+): Promise<Tree[]> => {
+  const res = await http.get('/api/tree/', { params: { origin, time } });
   return res.data;
 };
 
@@ -16,26 +19,32 @@ export const useTreeTable = ({
 }: {
   enabled: boolean;
 }): UseQueryResult<Tree[]> => {
-  const { origin } = useSearch({ from: '/tree' });
+  const { origin, time } = useSearch({ from: '/tree' });
+
+  const queryKey = ['treeTable', origin, time];
 
   return useQuery({
-    queryKey: ['treeTable', origin],
-    queryFn: () => fetchTreeCheckoutData(origin),
+    queryKey,
+    queryFn: () => fetchTreeCheckoutData(origin, time),
     enabled,
   });
 };
 
 const fetchTreeFastCheckoutData = async (
   origin: string,
+  time?: number,
 ): Promise<TreeFastPathResponse> => {
-  const res = await http.get('/api/tree-fast/', { params: { origin } });
+  const res = await http.get('/api/tree-fast/', { params: { origin, time } });
   return res.data;
 };
 
 export const useTreeTableFast = (): UseQueryResult<TreeFastPathResponse> => {
-  const { origin } = useSearch({ from: '/tree' });
+  const { origin, time } = useSearch({ from: '/tree' });
+
+  const queryKey = ['treeTableFast', origin, time];
+
   return useQuery({
-    queryKey: ['treeTableFAst', origin],
-    queryFn: () => fetchTreeFastCheckoutData(origin),
+    queryKey,
+    queryFn: () => fetchTreeFastCheckoutData(origin, time),
   });
 };
