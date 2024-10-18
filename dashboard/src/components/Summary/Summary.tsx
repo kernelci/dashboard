@@ -1,7 +1,11 @@
 import { ReactElement, useMemo } from 'react';
 
+import { useDiffFilterParams } from '@/pages/TreeDetails/treeDetailsUtils';
+
+import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
+
 import BaseTable from '../Table/BaseTable';
-import { TableBody, TableCell, TableRow } from '../ui/table';
+import { TableBody, TableCell, TableCellWithLink, TableRow } from '../ui/table';
 import ListingItem, { IListingItem } from '../ListingItem/ListingItem';
 
 export interface ISummary extends ISummaryTable {
@@ -71,24 +75,32 @@ export const SummaryItem = ({
   arch,
   compilers,
   onClickKey,
-  onClickCompiler,
   leftIcon,
 }: ISummaryItem): JSX.Element => {
+  const diffFilter = useDiffFilterParams(arch.text, 'archs');
+
   const compilersElement = useMemo(() => {
     return compilers?.map(compiler => (
-      <button
+      <FilterLink
         key={compiler}
-        className="line-clamp-1"
-        onClick={() => onClickCompiler?.(compiler)}
+        filterSection="compilers"
+        filterValue={compiler}
       >
         {compiler}
-      </button>
+      </FilterLink>
     ));
-  }, [compilers, onClickCompiler]);
+  }, [compilers]);
 
   return (
     <TableRow>
-      <TableCell>
+      <TableCellWithLink
+        linkProps={{
+          search: previousParams => ({
+            ...previousParams,
+            diffFilter,
+          }),
+        }}
+      >
         <ListingItem
           onClick={onClickKey}
           warnings={arch.warnings}
@@ -98,7 +110,7 @@ export const SummaryItem = ({
           unknown={arch.unknown}
           errors={arch.errors}
         />
-      </TableCell>
+      </TableCellWithLink>
       <TableCell>
         <div className="flex flex-col gap-1">{compilersElement}</div>
       </TableCell>
