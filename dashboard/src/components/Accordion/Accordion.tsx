@@ -1,12 +1,17 @@
 import { ReactElement, useCallback, useMemo } from 'react';
 
-import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
+import { MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
 
+// import { useNavigate } from '@tanstack/react-router';
+
 import { useNavigate } from '@tanstack/react-router';
 
-import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+import {
+  AccordionItemBuilds,
+  AccordionItemBuildsKeys,
+} from '@/types/tree/TreeDetails';
 
 import { TIndividualTest, TPathTests } from '@/types/general';
 
@@ -18,7 +23,12 @@ import { GroupedTestStatus } from '@/components/Status/Status';
 
 import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
 
-import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import {
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from '@/components/ui/table';
 
 import BaseTable from '@/components/Table/BaseTable';
 
@@ -30,12 +40,16 @@ import {
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
+import { individualTestColumns } from './TanstackAccordion';
+
 import AccordionBuildContent from './BuildAccordionContent';
+import { NewTable } from './TanstackAccordion';
 
 export interface IAccordion {
   headers?: ReactElement[];
   items: AccordionItemBuilds[] | TPathTests[];
   type: 'build' | 'test';
+  headerOnClick?: (what: AccordionItemBuildsKeys) => void;
 }
 
 export interface IAccordionItems {
@@ -51,48 +65,91 @@ interface IAccordionTestContent {
   data: TIndividualTest[];
 }
 
-const headersBuilds = [
-  <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
-  <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
-  <FormattedMessage key="treeDetails.date" id="treeDetails.date" />,
-  <FormattedMessage
-    key="treeDetails.buildErrors"
-    id="treeDetails.buildErrors"
-  />,
-  <FormattedMessage key="treeDetails.buildTime" id="treeDetails.buildTime" />,
-  <HeaderWithInfo
-    key="treeDetails.status"
-    labelId="treeDetails.status"
-    tooltipId="buildTab.statusTooltip"
-  />,
-];
+// const headersBuilds = [
+//   <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
+//   <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
+//   <FormattedMessage key="treeDetails.date" id="treeDetails.date" />,
+//   <FormattedMessage
+//     key="treeDetails.buildErrors"
+//     id="treeDetails.buildErrors"
+//   />,
+//   <FormattedMessage key="treeDetails.buildTime" id="treeDetails.buildTime" />,
+//   <HeaderWithInfo
+//     key="treeDetails.status"
+//     labelId="treeDetails.status"
+//     tooltipId="buildTab.statusTooltip"
+//   />,
+// ];
 
-const headersTests = [
-  <FormattedMessage key="testDetails.path" id="testDetails.path" />,
-  <HeaderWithInfo
-    key="treeDetails.status"
-    labelId="testDetails.status"
-    tooltipId="testsTab.statusTooltip"
-  />,
-  <span key="chevron"></span>, //empty cell to add the chevron
-];
+const headersBuilds = {
+  config: <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
+  compiler: (
+    <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />
+  ),
+  date: <FormattedMessage key="treeDetails.date" id="treeDetails.date" />,
+  buildErrors: (
+    <FormattedMessage
+      key="treeDetails.buildErrors"
+      id="treeDetails.buildErrors"
+    />
+  ),
+  buildTime: (
+    <FormattedMessage key="treeDetails.buildTime" id="treeDetails.buildTime" />
+  ),
+  status: (
+    <HeaderWithInfo
+      key="treeDetails.status"
+      labelId="treeDetails.status"
+      tooltipId="buildTab.statusTooltip"
+    />
+  ),
+};
+
+const headersTests = {
+  path: <FormattedMessage key="testDetails.path" id="testDetails.path" />,
+  status: (
+    <HeaderWithInfo
+      key="treeDetails.status"
+      labelId="testDetails.status"
+      tooltipId="testsTab.statusTooltip"
+    />
+  ),
+  chevron: <span key="chevron"></span>, //empty cell to add the chevron}
+};
 
 const headerTestsDetails = [
   <FormattedMessage key="testDetails.path" id="testDetails.path" />,
   <FormattedMessage key="testDetails.status" id="testDetails.status" />,
   <FormattedMessage key="global.date" id="global.date" />,
-  <FormattedMessage key="treeDetails.duration" id="testDetails.duration" />,
+  <FormattedMessage key="testDetails.duration" id="testDetails.duration" />,
   <span key="chevron2"></span>, //extra one to add the chevron icon
 ];
 
-const Accordion = ({ items, type }: IAccordion): JSX.Element => {
+const Accordion = ({ items, type, headerOnClick }: IAccordion): JSX.Element => {
   const accordionTableHeader = type === 'build' ? headersBuilds : headersTests;
+
+  const onClickSort = useCallback(
+    (sortProperty: AccordionItemBuildsKeys) => {
+      headerOnClick?.(sortProperty);
+    },
+    [headerOnClick],
+  );
 
   return (
     <BaseTable
-      headers={accordionTableHeader}
-      body={<AccordionTableBody items={items} type={type} />}
-    />
+      headers={Object.values(accordionTableHeader)}
+      headerComponents={Object.entries(accordionTableHeader).map(column => (
+        <TableHead
+          className="border-b text-sky-700"
+          key={column[1].key}
+          onClick={() => onClickSort(column[0] as AccordionItemBuildsKeys)}
+        >
+          {column[1]}
+        </TableHead>
+      ))}
+    >
+      <AccordionTableBody items={items} type={type} />
+    </BaseTable>
   );
 };
 
@@ -138,8 +195,12 @@ const AccordionTableBody = ({
                     {type === 'build' ? (
                       <AccordionBuildContent accordionData={item} />
                     ) : (
-                      <AccordionTestsContent
+                      // <AccordionTestsContent
+                      //   data={(item as TPathTests).individual_tests}
+                      // />
+                      <NewTable
                         data={(item as TPathTests).individual_tests}
+                        columnDefinition={individualTestColumns}
                       />
                     )}
                   </div>
@@ -188,8 +249,18 @@ const AccordionBuildsTrigger = ({
       </TableCell>
       <TableCell>{triggerInfo.buildTime}</TableCell>
       <TableCell>
-        {isBuildValid && <MdCheck className="text-green" />}
-        {isBuildInvalid && <MdClose className="text-red" />}
+        {isBuildValid && (
+          <FormattedMessage
+            id="global.pass"
+            defaultMessage={'Pass'}
+          ></FormattedMessage>
+        )}
+        {isBuildInvalid && (
+          <FormattedMessage
+            id="global.invalid"
+            defaultMessage={'Invalid'}
+          ></FormattedMessage>
+        )}
         {isBuildUnknown && <span>-</span>}
       </TableCell>
     </>
@@ -220,6 +291,7 @@ const AccordionTestsTrigger = ({
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const AccordionTestsContent = ({
   data,
 }: IAccordionTestContent): JSX.Element => {
@@ -262,7 +334,7 @@ const TestTableRow = ({ test, onClick }: ITestTableRow): JSX.Element => {
   const onClickHandle = useCallback(() => onClick(test.id), [onClick, test.id]);
   return (
     <TableRow
-      className="cursor-pointer hover:bg-lightBlue"
+      className="cursor-pointer hover:bg-red"
       onClick={onClickHandle}
       key={test.id}
     >
