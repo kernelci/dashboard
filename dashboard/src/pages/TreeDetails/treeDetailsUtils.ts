@@ -1,7 +1,10 @@
+import { useSearch } from '@tanstack/react-router';
+
 import {
   TFilter,
   isTFilterObjectKeys,
   isTFilterNumberKeys,
+  TFilterObjectsKeys,
 } from '@/types/tree/TreeDetails';
 
 export const cleanFalseFilters = (diffFilter: TFilter): TFilter => {
@@ -28,4 +31,26 @@ export const cleanFalseFilters = (diffFilter: TFilter): TFilter => {
   );
 
   return cleanedFilter;
+};
+
+export const useDiffFilterParams = (
+  filterValue: string,
+  filterSection: TFilterObjectsKeys,
+): TFilter => {
+  const { diffFilter: currentDiffFilter } = useSearch({
+    from: '/tree/$treeId',
+  });
+
+  const newFilter = structuredClone(currentDiffFilter) || {};
+  // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
+  newFilter[filterSection] = newFilter[filterSection] ?? {};
+
+  const configs = newFilter[filterSection];
+  if (configs[filterValue]) {
+    delete configs[filterValue];
+  } else {
+    configs[filterValue] = true;
+  }
+
+  return newFilter;
 };
