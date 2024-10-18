@@ -37,7 +37,7 @@ urlpatterns = [
          name="treeDetails"
          ),
     path("tree/<str:commit_hash>/full",
-         viewCache(views.TreeDetailsSlow),
+         views.TreeDetailsSlow.as_view(),
          name="TreeDetailsSlow"
          ),
     path("tree/<str:commit_hash>/commits",
