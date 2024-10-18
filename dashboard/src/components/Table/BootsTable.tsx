@@ -1,13 +1,13 @@
-import { ReactElement, useCallback, useMemo, useState } from 'react';
+import { memo, ReactElement, useCallback, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { LinkProps, useNavigate, useSearch } from '@tanstack/react-router';
 
 import { MdChevronRight } from 'react-icons/md';
 
 import BaseTable from '@/components/Table/BaseTable';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { TableInfo } from '@/components/Table/TableInfo';
-import { TableCell, TableRow } from '@/components/ui/table';
+import { TableCellWithLink, TableRow } from '@/components/ui/table';
 import { usePagination } from '@/hooks/usePagination';
 
 import {
@@ -73,20 +73,6 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
     [testHistory],
   );
 
-  const onClickName = useCallback(
-    (id: string) => {
-      navigate({
-        to: '/tree/$treeId/test/$testId',
-        params: {
-          treeId,
-          testId: id,
-        },
-        search: s => s,
-      });
-    },
-    [navigate, treeId],
-  );
-
   const filteredData = useMemo(() => {
     const filterToApply = tableFilter.bootsTable;
     if (filterToApply === 'all') {
@@ -112,6 +98,45 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
   const [bootsSelectedFilter, setBootsSelectedFilter] =
     useState<TestsTableFilter>(tableFilter.bootsTable);
 
+  const TestTableRow = ({ test }: { test: TestByCommitHash }): JSX.Element => {
+    const linkProps: LinkProps = useMemo(
+      () => ({
+        to: '/tree/$treeId/test/$testId',
+        params: {
+          treeId,
+          testId: test.id,
+        },
+        search: s => s,
+      }),
+      [test],
+    );
+
+    return (
+      <TableRow key={test.id}>
+        <TableCellWithLink linkProps={linkProps}>{test.path}</TableCellWithLink>
+        <TableCellWithLink linkProps={linkProps}>
+          {test.status}
+        </TableCellWithLink>
+        <TableCellWithLink linkProps={linkProps}>
+          <TooltipDateTime
+            dateTime={test.startTime}
+            lineBreak={true}
+            showLabelTime={true}
+            showLabelTZ={true}
+          />
+        </TableCellWithLink>
+        <TableCellWithLink linkProps={linkProps}>
+          {test.duration ?? '-'}
+        </TableCellWithLink>
+        <TableCellWithLink linkProps={linkProps}>
+          <MdChevronRight />
+        </TableCellWithLink>
+      </TableRow>
+    );
+  };
+
+  const MemoizedTestTableRow = memo(TestTableRow);
+
   const rows = useMemo(() => {
     if (!data) return <></>;
 
@@ -123,25 +148,10 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
       );
     }
 
-    return filteredData?.slice(startIndex, endIndex).map(test => (
-      <TableRow onClick={() => onClickName(test.id)} key={test.id}>
-        <TableCell>{test.path}</TableCell>
-        <TableCell>{test.status}</TableCell>
-        <TableCell>
-          <TooltipDateTime
-            dateTime={test.startTime}
-            lineBreak={true}
-            showLabelTime={true}
-            showLabelTZ={true}
-          />
-        </TableCell>
-        <TableCell>{test.duration ?? '-'}</TableCell>
-        <TableCell>
-          <MdChevronRight />
-        </TableCell>
-      </TableRow>
-    ));
-  }, [filteredData, data, startIndex, endIndex, onClickName]);
+    return filteredData
+      ?.slice(startIndex, endIndex)
+      .map(test => <MemoizedTestTableRow key={test.id} test={test} />);
+  }, [filteredData, data, startIndex, endIndex, MemoizedTestTableRow]);
 
   const tableInfoElement = (
     <div className="flex flex-col items-end">
