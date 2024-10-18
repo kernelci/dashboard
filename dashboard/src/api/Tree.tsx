@@ -35,7 +35,7 @@ const fetchTreeFastCheckoutData = async (
 export const useTreeTableFast = (): UseQueryResult<TreeFastPathResponse> => {
   const { origin } = useSearch({ from: '/tree' });
   return useQuery({
-    queryKey: ['treeTableFAst', origin],
+    queryKey: ['treeTableFast', origin],
     queryFn: () => fetchTreeFastCheckoutData(origin),
   });
 };
