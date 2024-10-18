@@ -5,7 +5,7 @@ import { MdOutlineMonitorHeart } from 'react-icons/md';
 import { ImTree, ImImages } from 'react-icons/im';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
-import { useRouter, useSearch, useLocation } from '@tanstack/react-router';
+import { useSearch, useLocation } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
@@ -26,7 +26,7 @@ import SendFeedback from './SendFeedback';
 import NavLink from './NavLink';
 
 type RouteMenuItems = {
-  navigateTo: string;
+  navigateTo: '/tree' | '/devices' | '/labs';
   idIntl: MessagesKey;
   icon: JSX.Element;
   selected: boolean;
@@ -53,8 +53,6 @@ type SideMenuItemProps = {
 const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
   const { pathname } = useLocation();
 
-  const router = useRouter();
-
   const { origin: unsafeOrigin } = useSearch({ strict: false });
 
   const selectedItemClassName =
@@ -64,16 +62,6 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
 
   const isCurrentPath = pathname.startsWith(item.navigateTo);
 
-  const navigate = (): void => {
-    const origin = zOrigin.parse(unsafeOrigin);
-    const finalPath = item.navigateTo;
-    const newPath = `${finalPath}?origin=${origin}`;
-
-    router.navigate({
-      to: newPath,
-    });
-  };
-
   return (
     <NavigationMenuItem
       className={
@@ -81,7 +69,14 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
       }
       key={item.idIntl}
     >
-      <NavLink icon={item.icon} idIntl={item.idIntl} onClick={navigate} />
+      <NavLink
+        to={item.navigateTo}
+        search={{
+          origin: zOrigin.parse(unsafeOrigin),
+        }}
+        icon={item.icon}
+        idIntl={item.idIntl}
+      />
     </NavigationMenuItem>
   );
 };
@@ -119,6 +114,7 @@ const SideMenu = (): JSX.Element => {
           key={item.idIntl}
         >
           <NavLink
+            asTag="a"
             icon={item.icon}
             idIntl={item.idIntl}
             href={item.url}
