@@ -6,12 +6,14 @@ import { FormattedMessage } from 'react-intl';
 
 // import { useNavigate } from '@tanstack/react-router';
 
+import { useNavigate } from '@tanstack/react-router';
+
 import {
   AccordionItemBuilds,
   AccordionItemBuildsKeys,
 } from '@/types/tree/TreeDetails';
 
-import { TPathTests } from '@/types/general';
+import { TIndividualTest, TPathTests } from '@/types/general';
 
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 
@@ -38,8 +40,10 @@ import {
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
+import { individualTestColumns } from './TanstackAccordion';
+
 import AccordionBuildContent from './BuildAccordionContent';
-import { IndividualTestsTable } from './TanstackAccordion';
+import { NewTable } from './TanstackAccordion';
 
 export interface IAccordion {
   headers?: ReactElement[];
@@ -57,9 +61,9 @@ interface ICustomAccordionTableBody {
   type: 'build' | 'test';
 }
 
-// interface IAccordionTestContent {
-//   data: TIndividualTest[];
-// }
+interface IAccordionTestContent {
+  data: TIndividualTest[];
+}
 
 // const headersBuilds = [
 //   <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
@@ -113,13 +117,13 @@ const headersTests = {
   chevron: <span key="chevron"></span>, //empty cell to add the chevron}
 };
 
-// const headerTestsDetails = [
-//   <FormattedMessage key="testDetails.path" id="testDetails.path" />,
-//   <FormattedMessage key="testDetails.status" id="testDetails.status" />,
-//   <FormattedMessage key="global.date" id="global.date" />,
-//   <FormattedMessage key="testDetails.duration" id="testDetails.duration" />,
-//   <span key="chevron2"></span>, //extra one to add the chevron icon
-// ];
+const headerTestsDetails = [
+  <FormattedMessage key="testDetails.path" id="testDetails.path" />,
+  <FormattedMessage key="testDetails.status" id="testDetails.status" />,
+  <FormattedMessage key="global.date" id="global.date" />,
+  <FormattedMessage key="testDetails.duration" id="testDetails.duration" />,
+  <span key="chevron2"></span>, //extra one to add the chevron icon
+];
 
 const Accordion = ({ items, type, headerOnClick }: IAccordion): JSX.Element => {
   const accordionTableHeader = type === 'build' ? headersBuilds : headersTests;
@@ -194,8 +198,9 @@ const AccordionTableBody = ({
                       // <AccordionTestsContent
                       //   data={(item as TPathTests).individual_tests}
                       // />
-                      <IndividualTestsTable
+                      <NewTable
                         data={(item as TPathTests).individual_tests}
+                        columnDefinition={individualTestColumns}
                       />
                     )}
                   </div>
@@ -286,68 +291,69 @@ const AccordionTestsTrigger = ({
   );
 };
 
-// const AccordionTestsContent = ({
-//   data,
-// }: IAccordionTestContent): JSX.Element => {
-//   const navigate = useNavigate({ from: '/tree/$treeId' });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const AccordionTestsContent = ({
+  data,
+}: IAccordionTestContent): JSX.Element => {
+  const navigate = useNavigate({ from: '/tree/$treeId' });
 
-//   const onClickRow = useCallback(
-//     (testId: string) => {
-//       navigate({
-//         to: '/tree/$treeId/test/$testId',
-//         params: {
-//           testId: testId,
-//         },
-//         search: s => s,
-//       });
-//     },
-//     [navigate],
-//   );
+  const onClickRow = useCallback(
+    (testId: string) => {
+      navigate({
+        to: '/tree/$treeId/test/$testId',
+        params: {
+          testId: testId,
+        },
+        search: s => s,
+      });
+    },
+    [navigate],
+  );
 
-//   const rows = useMemo(() => {
-//     return data.map(test => (
-//       <TestTableRow key={test.id} test={test} onClick={onClickRow} />
-//     ));
-//   }, [data, onClickRow]);
+  const rows = useMemo(() => {
+    return data.map(test => (
+      <TestTableRow key={test.id} test={test} onClick={onClickRow} />
+    ));
+  }, [data, onClickRow]);
 
-//   return (
-//     <div className="h-max-12 overflow-scroll">
-//       <BaseTable headers={headerTestsDetails}>
-//         <TableBody>{rows}</TableBody>
-//       </BaseTable>
-//     </div>
-//   );
-// };
+  return (
+    <div className="h-max-12 overflow-scroll">
+      <BaseTable headers={headerTestsDetails}>
+        <TableBody>{rows}</TableBody>
+      </BaseTable>
+    </div>
+  );
+};
 
-// interface ITestTableRow {
-//   test: TIndividualTest;
-//   onClick: (testId: string) => void;
-// }
+interface ITestTableRow {
+  test: TIndividualTest;
+  onClick: (testId: string) => void;
+}
 
-// const TestTableRow = ({ test, onClick }: ITestTableRow): JSX.Element => {
-//   const onClickHandle = useCallback(() => onClick(test.id), [onClick, test.id]);
-//   return (
-//     <TableRow
-//       className="cursor-pointer hover:bg-red"
-//       onClick={onClickHandle}
-//       key={test.id}
-//     >
-//       <TableCell>{test.path}</TableCell>
-//       <TableCell>{test.status}</TableCell>
-//       <TableCell>
-//         <TooltipDateTime
-//           dateTime={test.start_time}
-//           lineBreak={true}
-//           showLabelTime={true}
-//           showLabelTZ={true}
-//         />
-//       </TableCell>
-//       <TableCell>{test.duration ?? '-'}</TableCell>
-//       <TableCell>
-//         <ChevronRightAnimate />
-//       </TableCell>
-//     </TableRow>
-//   );
-// };
+const TestTableRow = ({ test, onClick }: ITestTableRow): JSX.Element => {
+  const onClickHandle = useCallback(() => onClick(test.id), [onClick, test.id]);
+  return (
+    <TableRow
+      className="cursor-pointer hover:bg-red"
+      onClick={onClickHandle}
+      key={test.id}
+    >
+      <TableCell>{test.path}</TableCell>
+      <TableCell>{test.status}</TableCell>
+      <TableCell>
+        <TooltipDateTime
+          dateTime={test.start_time}
+          lineBreak={true}
+          showLabelTime={true}
+          showLabelTZ={true}
+        />
+      </TableCell>
+      <TableCell>{test.duration ?? '-'}</TableCell>
+      <TableCell>
+        <ChevronRightAnimate />
+      </TableCell>
+    </TableRow>
+  );
+};
 
 export default Accordion;

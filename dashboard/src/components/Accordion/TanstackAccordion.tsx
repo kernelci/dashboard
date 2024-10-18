@@ -2,6 +2,7 @@
 // O corpo deve ser apenas uma tabela com os valores
 
 import {
+  Column,
   ColumnDef,
   ColumnFiltersState,
   flexRender,
@@ -11,7 +12,7 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { ArrowUpDown } from 'lucide-react';
 
@@ -33,6 +34,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+import { MessagesKey } from '@/locales/messages';
+
 import { TooltipDateTime } from '../TooltipDateTime';
 
 const ChevronRightAnimate = (): JSX.Element => {
@@ -41,94 +44,89 @@ const ChevronRightAnimate = (): JSX.Element => {
   );
 };
 
-// o corpo vai ser uma tabela normal sem os headers
-
-interface ITanstackAccordion {
+interface INewTable {
   data: TIndividualTest[];
+  columnDefinition: ColumnDef<TIndividualTest>[];
 }
 
-const columns: ColumnDef<TIndividualTest>[] = [
+interface INewTableColumnHeader {
+  column: Column<TIndividualTest>;
+  sortable: boolean;
+  intlKey: MessagesKey;
+  intlDefaultMessage: string;
+}
+
+function NewTableColumnHeader({
+  column,
+  sortable,
+  intlKey,
+  intlDefaultMessage,
+}: INewTableColumnHeader): JSX.Element {
+  return (
+    <Button
+      variant="ghost"
+      className="w-full justify-start px-2"
+      onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+    >
+      <FormattedMessage
+        key={intlKey}
+        id={intlKey}
+        defaultMessage={intlDefaultMessage}
+      ></FormattedMessage>
+      {sortable && <ArrowUpDown className="ml-2 h-4 w-4" />}
+    </Button>
+  );
+}
+
+export const individualTestColumns: ColumnDef<TIndividualTest>[] = [
   {
     accessorKey: 'path',
-    header: ({ column }): JSX.Element => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          <FormattedMessage
-            key="testDetails.path"
-            id="testDetails.path"
-            defaultMessage="Path"
-          ></FormattedMessage>
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: ({ column }): JSX.Element =>
+      NewTableColumnHeader({
+        column: column,
+        sortable: true,
+        intlKey: 'testDetails.path',
+        intlDefaultMessage: 'Path',
+      }),
+    // if there is no cell, it will default to simple text
   },
   {
     accessorKey: 'status',
-    header: ({ column }): JSX.Element => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          <FormattedMessage
-            key="testDetails.status"
-            id="testDetails.status"
-            defaultMessage="Status"
-          ></FormattedMessage>
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: ({ column }): JSX.Element =>
+      NewTableColumnHeader({
+        column: column,
+        sortable: false,
+        intlKey: 'testDetails.status',
+        intlDefaultMessage: 'Status',
+      }),
   },
   {
     accessorKey: 'start_time',
-    header: ({ column }): JSX.Element => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          <FormattedMessage
-            key="global.date"
-            id="global.date"
-            defaultMessage="Date"
-          ></FormattedMessage>
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: ({ column }): JSX.Element =>
+      NewTableColumnHeader({
+        column: column,
+        sortable: true,
+        intlKey: 'global.date',
+        intlDefaultMessage: 'Date',
+      }),
     cell: ({ row }): JSX.Element => (
-      <TableCell>
-        <TooltipDateTime
-          dateTime={row.getValue('start_time')}
-          lineBreak={true}
-          showLabelTime={true}
-          showLabelTZ={true}
-        />
-      </TableCell>
+      <TooltipDateTime
+        dateTime={row.getValue('start_time')}
+        lineBreak={true}
+        showLabelTime={true}
+        showLabelTZ={true}
+      />
     ),
   },
   {
     accessorKey: 'duration',
-    header: ({ column }): JSX.Element => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          <FormattedMessage
-            key="testDetails.duration"
-            id="testDetails.duration"
-            defaultMessage="Duration"
-          ></FormattedMessage>
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: ({ column }): JSX.Element =>
+      NewTableColumnHeader({
+        column: column,
+        sortable: true,
+        intlKey: 'testDetails.duration',
+        intlDefaultMessage: 'Duration',
+      }),
     cell: ({ row }): string =>
       row.getValue('duration') ? row.getValue('duration') : '-',
   },
@@ -138,13 +136,15 @@ const columns: ColumnDef<TIndividualTest>[] = [
   },
 ];
 
-export function IndividualTestsTable({
-  data,
-}: ITanstackAccordion): JSX.Element {
+export function NewTable({ data, columnDefinition }: INewTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const navigate = useNavigate({ from: '/tree/$treeId' });
+
+  const columns = useMemo(() => {
+    return columnDefinition;
+  }, [columnDefinition]);
 
   const onClickRow = useCallback(
     (testId: string) => {
@@ -179,7 +179,10 @@ export function IndividualTestsTable({
       headers={[]}
       headerComponents={table.getHeaderGroups()[0].headers.map(header => {
         return (
-          <TableHead key={header.id}>
+          <TableHead
+            key={header.id}
+            className="border-b px-2 font-bold text-black"
+          >
             {header.isPlaceholder
               ? null
               : flexRender(header.column.columnDef.header, header.getContext())}
