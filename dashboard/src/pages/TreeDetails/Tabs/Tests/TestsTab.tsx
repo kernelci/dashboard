@@ -11,8 +11,8 @@ import {
   MemoizedStatusChart,
   MemoizedConfigList,
   MemoizedErrorsSummary,
-  MemoizedPlatformsWithError,
   MemoizedIssuesList,
+  MemoizedHardwareTested,
 } from '@/pages/TreeDetails/Tabs/TestCards';
 
 import TestsTable from '@/components/Table/TestsTable';
@@ -85,9 +85,9 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
         </div>
         <div>
           <CommitNavigationGraph />
-          <MemoizedPlatformsWithError
-            title={<FormattedMessage id="testsTab.platformsErrors" />}
-            platformsWithError={data.testPlatformsWithErrors}
+          <MemoizedHardwareTested
+            title={<FormattedMessage id="testsTab.hardwareTested" />}
+            environmentCompatible={data.testEnvironmentCompatible}
           />
         </div>
       </DesktopGrid>
@@ -113,9 +113,9 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             />
           </div>
           <div>
-            <MemoizedPlatformsWithError
-              title={<FormattedMessage id="testsTab.platformsErrors" />}
-              platformsWithError={data.testPlatformsWithErrors}
+            <MemoizedHardwareTested
+              title={<FormattedMessage id="testsTab.hardwareTested" />}
+              environmentCompatible={data.testEnvironmentCompatible}
             />
           </div>
         </InnerMobileGrid>
