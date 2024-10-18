@@ -32,6 +32,8 @@ import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import { MemoizedIssuesList } from '@/pages/TreeDetails/Tabs/TestCards';
 
+import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
+
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
 interface BuildTab {
@@ -93,7 +95,6 @@ const MemoizedStatusCard = memo(StatusCard);
 
 const ConfigsCard = ({
   treeDetailsData,
-  toggleFilterBySection,
 }: {
   treeDetailsData?: ITreeDetails;
   toggleFilterBySection: (
@@ -105,22 +106,22 @@ const ConfigsCard = ({
     return (
       <DumbListingContent>
         {treeDetailsData?.configs.map((item, i) => (
-          <ListingItem
-            key={i}
-            text={item.text}
-            onClick={() => toggleFilterBySection(item.text, 'configs')}
-            leftIcon={
-              <BuildStatus
-                valid={item.success}
-                invalid={item.errors}
-                unknown={item.unknown}
-              />
-            }
-          />
+          <FilterLink key={i} filterSection="configs" filterValue={item.text}>
+            <ListingItem
+              text={item.text}
+              leftIcon={
+                <BuildStatus
+                  valid={item.success}
+                  invalid={item.errors}
+                  unknown={item.unknown}
+                />
+              }
+            />
+          </FilterLink>
         ))}
       </DumbListingContent>
     );
-  }, [toggleFilterBySection, treeDetailsData?.configs]);
+  }, [treeDetailsData?.configs]);
 
   return (
     <BaseCard

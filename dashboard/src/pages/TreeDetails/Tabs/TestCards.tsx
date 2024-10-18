@@ -20,6 +20,8 @@ import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { TIssue } from '@/types/general';
 import { NoIssueFound } from '@/components/Issue/IssueSection';
 
+import FilterLink from '../TreeDetailsFilterLink';
+
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
 }
@@ -37,22 +39,28 @@ const ConfigsList = ({
             const { DONE, FAIL, ERROR, MISS, PASS, SKIP } =
               configStatusCounts[configName];
             return (
-              <ListingItem
-                hasBottomBorder
+              <FilterLink
                 key={configName}
-                text={configName}
-                leftIcon={
-                  <GroupedTestStatus
-                    done={DONE}
-                    fail={FAIL}
-                    error={ERROR}
-                    miss={MISS}
-                    pass={PASS}
-                    skip={SKIP}
-                    forceNumber={false}
-                  />
-                }
-              />
+                filterSection="configs"
+                filterValue={configName}
+              >
+                <ListingItem
+                  hasBottomBorder
+                  key={configName}
+                  text={configName}
+                  leftIcon={
+                    <GroupedTestStatus
+                      done={DONE}
+                      fail={FAIL}
+                      error={ERROR}
+                      miss={MISS}
+                      pass={PASS}
+                      skip={SKIP}
+                      forceNumber={false}
+                    />
+                  }
+                />
+              </FilterLink>
             );
           })}
         </DumbListingContent>

@@ -1,8 +1,8 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { LinkProps, useSearch } from '@tanstack/react-router';
 
 import { MessagesKey } from '@/locales/messages';
 
@@ -16,7 +16,7 @@ import {
 
 import { TreeTableBody, zOrigin } from '@/types/tree/Tree';
 
-import { TableRow, TableCell, TableBody } from '@/components/ui/table';
+import { TableRow, TableBody, TableCellWithLink } from '@/components/ui/table';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
@@ -61,18 +61,18 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
 
-  const navigate = useNavigate({ from: '/tree' });
+  type ILinkProps = LinkProps & { style: React.CSSProperties };
 
-  const navigateToTreeDetailPage = useCallback(
-    (event: React.MouseEvent<HTMLTableCellElement>) => {
-      const el = event.currentTarget;
-      const target = el.getAttribute('data-target');
-
-      const safeTarget = zPossibleValidator.parse(target);
-
-      navigate({
+  const linkProps = useMemo(
+    () =>
+      (target: string): ILinkProps => ({
         to: '/tree/$treeId',
         params: { treeId: row.id },
+        style: {
+          width: '100%',
+          display: 'inline-block',
+          height: '100%',
+        },
         search: {
           tableFilter: {
             bootsTable: possibleTestsTableFilter[0],
@@ -80,7 +80,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
             testsTable: possibleTestsTableFilter[0],
           },
           origin: origin,
-          currentTreeDetailsTab: safeTarget,
+          currentTreeDetailsTab: zPossibleValidator.parse(target),
           diffFilter: {},
           treeInfo: {
             gitUrl: row.url,
@@ -90,24 +90,15 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
             headCommitHash: row.id,
           },
         },
-      });
-    },
-    [
-      navigate,
-      row.id,
-      row.url,
-      row.branch,
-      row.tree_name,
-      row.commitName,
-      origin,
-    ],
+      }),
+    [row.id, row.url, row.branch, row.tree_name, row.commitName, origin],
   );
 
   return (
     <TableRow>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      <TableCellWithLink
         data-target="treeDetails.builds"
+        linkProps={linkProps('treeDetails.builds')}
       >
         <Tooltip>
           <TooltipTrigger>
@@ -119,28 +110,28 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
             </a>
           </TooltipContent>
         </Tooltip>
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
         data-target="treeDetails.builds"
+        linkProps={linkProps('treeDetails.builds')}
       >
         {sanitizeTableValue(row.branch, false)}
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
         data-target="treeDetails.builds"
+        linkProps={linkProps('treeDetails.builds')}
       >
         {sanitizeTableValue(row.commitName ? row.commitName : row.commitHash)}
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
         data-target="treeDetails.builds"
+        linkProps={linkProps('treeDetails.builds')}
       >
         <TooltipDateTime dateTime={row.date} lineBreak={true} />
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
         data-target="treeDetails.builds"
+        linkProps={linkProps('treeDetails.builds')}
       >
         {row.buildStatus ? (
           <BuildStatus
@@ -151,10 +142,10 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         ) : (
           <div>Loading...</div>
         )}
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
         data-target="treeDetails.boots"
+        linkProps={linkProps('treeDetails.boots')}
       >
         {row.bootStatus ? (
           <GroupedTestStatus
@@ -168,10 +159,10 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         ) : (
           <div>Loading...</div>
         )}
-      </TableCell>
-      <TableCell
-        onClick={navigateToTreeDetailPage}
+      </TableCellWithLink>
+      <TableCellWithLink
         data-target="treeDetails.tests"
+        linkProps={linkProps('treeDetails.tests')}
       >
         {row.testStatus ? (
           <GroupedTestStatus
@@ -185,7 +176,7 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
         ) : (
           <div>Loading...</div>
         )}
-      </TableCell>
+      </TableCellWithLink>
     </TableRow>
   );
 };
