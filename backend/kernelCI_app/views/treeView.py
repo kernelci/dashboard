@@ -10,7 +10,13 @@ DEFAULT_ORIGIN = 'maestro'
 
 class TreeView(View):
     def get(self, request):
-        origin = request.GET.get('origin', DEFAULT_ORIGIN)
+        origin_param = request.GET.get('origin', DEFAULT_ORIGIN)
+        interval_param = getQueryTimeInterval().timestamp()
+
+        params = {
+            "origin_param": origin_param,
+            "interval_param": interval_param
+        }
 
         checkouts = Checkouts.objects.raw(
             """
@@ -29,7 +35,7 @@ class TreeView(View):
                         FROM
                             checkouts
                         WHERE
-                            origin = %s AND start_time  >= TO_TIMESTAMP(%s)
+                            origin = %(origin_param)s AND start_time  >= TO_TIMESTAMP(%(interval_param)s)
                         ORDER BY
                             start_time DESC
                     ) AS selection_sorted
@@ -94,9 +100,8 @@ class TreeView(View):
             ORDER BY
                 checkouts.start_time DESC;
             ;
-            """, [origin, getQueryTimeInterval().timestamp()]
+            """, params
         )
-
         serializer = TreeSerializer(checkouts, many=True)
         resp = JsonResponse(serializer.data, safe=False)
         return resp
