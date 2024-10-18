@@ -10,6 +10,8 @@ import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persist
 
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 
+import { TooltipProvider } from '@/components/Tooltip';
+
 import { messages } from './locales/messages/index';
 import { LOCALES } from './locales/constants';
 
@@ -17,8 +19,7 @@ import { routeTree } from './routeTree.gen';
 
 import './index.css';
 import { isDev } from './lib/utils/vite';
-import { TooltipProvider } from './components/Tooltip';
-
+import { ToastProvider } from './components/ui/toast';
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace FormatjsIntl {
@@ -62,9 +63,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         locale={LOCALES.EN_US}
         defaultLocale={LOCALES.EN_US}
       >
-        <TooltipProvider>
-          <RouterProvider router={router} />
-        </TooltipProvider>
+        <ToastProvider>
+          <TooltipProvider>
+            <RouterProvider router={router} />
+          </TooltipProvider>
+        </ToastProvider>
       </IntlProvider>
     </PersistQueryClientProvider>
   </React.StrictMode>,
