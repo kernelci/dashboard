@@ -164,7 +164,7 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
           .map(test => ({
             ...test,
             individual_tests: test.individual_tests.filter(
-              t => t.status.toUpperCase() === StatusTable.PASS,
+              t => t.status?.toUpperCase() === StatusTable.PASS,
             ),
           }));
       case 'failed':
@@ -173,7 +173,7 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
           .map(test => ({
             ...test,
             individual_tests: test.individual_tests.filter(t => {
-              const result = t.status.toUpperCase() === StatusTable.FAIL;
+              const result = t.status?.toUpperCase() === StatusTable.FAIL;
 
               return result;
             }),
@@ -191,7 +191,7 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
           .map(test => ({
             ...test,
             individual_tests: test.individual_tests.filter(t => {
-              const uppercaseTestStatus = t.status.toUpperCase();
+              const uppercaseTestStatus = t.status?.toUpperCase();
               const result =
                 uppercaseTestStatus !== StatusTable.PASS &&
                 uppercaseTestStatus !== StatusTable.FAIL;
