@@ -57,6 +57,7 @@ class TreeDetailsSlow(View):
         self.incidentsIssueRelationship = defaultdict(
             lambda: IncidentInfo(incidentsCount=0)
         )
+        self.hardwareUsed = set()
 
     def __handle_boot_status(self, current_filter):
         self.filterBootStatus.add(current_filter["value"])
@@ -440,6 +441,9 @@ class TreeDetailsSlow(View):
                 testEnvironmentCompatible,
             ) = currentRowData
 
+            if testEnvironmentCompatible is not None:
+                self.hardwareUsed.add(testEnvironmentCompatible)
+
             if (
                 (
                     len(self.filterArchitecture) > 0
@@ -483,6 +487,7 @@ class TreeDetailsSlow(View):
                 "testEnvironmentCompatible": self.testEnvironmentCompatible,
                 "bootEnvironmentCompatible": self.bootEnvironmentCompatible,
                 "incidentsIssueRelationship": self.incidentsIssueRelationship,
+                "hardwareUsed": list(self.hardwareUsed),
             },
             safe=False,
         )

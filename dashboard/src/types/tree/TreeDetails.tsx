@@ -99,7 +99,7 @@ type StatusCounts = {
   [key in Status]: number | undefined;
 };
 
-type EnvironmentCompatibleCounts = {
+export type EnvironmentCompatibleCounts = {
   [key: string]: number;
 };
 
@@ -139,6 +139,7 @@ export type TTreeTestsFullData = {
   testIssues: TIssue[];
   testEnvironmentCompatible: EnvironmentCompatibleCounts;
   bootEnvironmentCompatible: EnvironmentCompatibleCounts;
+  hardwareUsed: string[];
 };
 
 export type PossibleTabs = Extract<

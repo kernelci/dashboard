@@ -326,7 +326,7 @@ const TreeDetailsFilter = ({
 }: ITreeDetailsFilter): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
 
-  const { data, isLoading } = useBuildsTab(treeId);
+  const { data, isLoading } = useBuildsTab({ treeId });
 
   const navigate = useNavigate({
     from: '/tree/$treeId',

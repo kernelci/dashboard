@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useBuildsTab } from '@/api/TreeDetails';
+import { useBuildsTab, useTestsTab } from '@/api/TreeDetails';
 import { IListingItem } from '@/components/ListingItem/ListingItem';
 import { ISummaryItem } from '@/components/Summary/Summary';
 import {
@@ -34,10 +34,13 @@ import { sanitizeTableValue } from '@/components/Table/tableUtils';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+
 import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
 
 import TreeDetailsFilterList from './TreeDetailsFilterList';
+import { MemoizedHardwareUsed } from './Tabs/TestCards';
 
 export interface ITreeDetails {
   archs: ISummaryItem[];
@@ -112,7 +115,32 @@ function TreeDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const { isLoading, data } = useBuildsTab(treeId ?? '', reqFilter);
+  const isBuildTab =
+    searchParams.currentTreeDetailsTab === 'treeDetails.builds';
+
+  const {
+    isLoading: buildIsLoading,
+    data: buildData,
+    status: buildStatus,
+  } = useBuildsTab({
+    treeId: treeId ?? '',
+    filter: reqFilter,
+    enabled: isBuildTab,
+  });
+
+  const {
+    isLoading: testsIsLoading,
+    data: testsData,
+    status: testStatus,
+  } = useTestsTab({
+    treeId: treeId ?? '',
+    filter: reqFilter,
+    enabled: !isBuildTab || (buildStatus === 'success' && !!buildData),
+  });
+
+  const isLoading = useMemo(() => {
+    return isBuildTab ? buildIsLoading : testsIsLoading;
+  }, [isBuildTab, testsIsLoading, buildIsLoading]);
 
   const filterListElement = useMemo(
     () => <TreeDetailsFilterList filter={diffFilter} />,
@@ -122,20 +150,20 @@ function TreeDetails(): JSX.Element {
   //TODO: at some point `treeUrl` should be returned in `data`
   const treeUrl = useMemo(() => {
     let url = '';
-    if (!data) return '';
-    Object.entries(data.builds).some(([, build]) => {
+    if (!buildData) return '';
+    Object.entries(buildData.builds).some(([, build]) => {
       if (build.git_repository_url) {
         url = build.git_repository_url;
         return true;
       }
     });
     return url;
-  }, [data]);
+  }, [buildData]);
 
   const treeDetailsData: ITreeDetails | undefined = useMemo(() => {
-    if (data) {
+    if (buildData) {
       const configsData: IListingItem[] = Object.entries(
-        data.summary.configs,
+        buildData.summary.configs,
       ).map(([key, value]) => ({
         text: key,
         errors: value.invalid,
@@ -144,7 +172,7 @@ function TreeDetails(): JSX.Element {
       }));
 
       const archData: ISummaryItem[] = Object.entries(
-        data.summary.architectures,
+        buildData.summary.architectures,
       ).map(([key, value]) => ({
         arch: {
           text: key,
@@ -156,39 +184,39 @@ function TreeDetails(): JSX.Element {
       }));
 
       const buildSummaryData: BuildStatus = {
-        valid: data.summary.builds.valid,
-        invalid: data.summary.builds.invalid,
-        null: data.summary.builds.null,
+        valid: buildData.summary.builds.valid,
+        invalid: buildData.summary.builds.invalid,
+        null: buildData.summary.builds.null,
       };
 
-      const buildsData: AccordionItemBuilds[] = Object.entries(data.builds).map(
-        ([, value]) => ({
-          id: value.id,
-          config: value.config_name,
-          date: value.start_time,
-          buildTime: value.duration,
-          compiler: value.compiler,
-          buildErrors: isBuildError(value),
-          status:
-            value.valid === null ? 'null' : value.valid ? 'valid' : 'invalid',
-          buildLogs: value.log_url,
-          kernelConfig: value.config_url,
-          kernelImage: value.misc ? value.misc['kernel_type'] : undefined,
-          dtb: value.misc ? value.misc['dtb'] : undefined,
-          systemMap: value.misc ? value.misc['system_map'] : undefined,
-          modules: value.misc ? value.misc['modules'] : undefined,
-        }),
-      );
+      const buildsData: AccordionItemBuilds[] = Object.entries(
+        buildData.builds,
+      ).map(([, value]) => ({
+        id: value.id,
+        config: value.config_name,
+        date: value.start_time,
+        buildTime: value.duration,
+        compiler: value.compiler,
+        buildErrors: isBuildError(value),
+        status:
+          value.valid === null ? 'null' : value.valid ? 'valid' : 'invalid',
+        buildLogs: value.log_url,
+        kernelConfig: value.config_url,
+        kernelImage: value.misc ? value.misc['kernel_type'] : undefined,
+        dtb: value.misc ? value.misc['dtb'] : undefined,
+        systemMap: value.misc ? value.misc['system_map'] : undefined,
+        modules: value.misc ? value.misc['modules'] : undefined,
+      }));
 
       return {
         archs: archData,
         configs: configsData,
         buildsSummary: buildSummaryData,
         builds: buildsData,
-        issues: data.issues,
+        issues: buildData.issues,
       };
     }
-  }, [data]);
+  }, [buildData]);
 
   if (isLoading)
     return (
@@ -223,6 +251,18 @@ function TreeDetails(): JSX.Element {
           gitUrl={treeInfo?.gitUrl}
         />
       </div>
+      <QuerySwitcher
+        status={testStatus}
+        data={testsData}
+        skeletonClassname="h-[200px] bg-lightGray"
+      >
+        <div className="mt-5">
+          <MemoizedHardwareUsed
+            title={<FormattedMessage id="treeDetails.hardwareUsed" />}
+            hardwareUsed={testsData?.hardwareUsed}
+          />
+        </div>
+      </QuerySwitcher>
       <div className="relative mt-10 flex flex-col pb-2">
         <div className="absolute right-0 top-[-16px]">
           <TreeDetailsFilter paramFilter={diffFilter} treeUrl={treeUrl} />

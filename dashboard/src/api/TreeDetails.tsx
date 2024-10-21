@@ -93,10 +93,15 @@ const mapFiltersKeysToBackendCompatible = (
   return filterParam;
 };
 
-export const useBuildsTab = (
-  treeId: string,
-  filter: TTreeDetailsFilter | Record<string, never> = {},
-): UseQueryResult<BuildsTab> => {
+export const useBuildsTab = ({
+  treeId,
+  filter = {},
+  enabled = true,
+}: {
+  treeId: string;
+  filter?: TTreeDetailsFilter | Record<string, never>;
+  enabled?: boolean;
+}): UseQueryResult<BuildsTab> => {
   const detailsFilter = getTargetFilter(filter, 'treeDetails');
 
   const treeSearchParameters = useTreeSearchParameters();
@@ -105,6 +110,7 @@ export const useBuildsTab = (
     queryKey: ['treeData', treeId, detailsFilter, treeSearchParameters],
     queryFn: () =>
       fetchTreeDetailData(treeId, treeSearchParameters, detailsFilter),
+    enabled,
   });
 };
 
@@ -135,10 +141,15 @@ const fetchTreeTestsData = async (
   return res.data;
 };
 
-export const useTestsTab = (
-  treeId: string,
-  filter: TTreeDetailsFilter,
-): UseQueryResult<TTreeTestsFullData> => {
+export const useTestsTab = ({
+  treeId,
+  filter,
+  enabled = true,
+}: {
+  treeId: string;
+  filter: TTreeDetailsFilter;
+  enabled?: boolean;
+}): UseQueryResult<TTreeTestsFullData> => {
   const testFilter = getTargetFilter(filter, 'test');
   const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
   const treeSearchParameters = useTreeSearchParameters();
@@ -156,6 +167,7 @@ export const useTestsTab = (
         ...testFilter,
         ...treeDetailsFilter,
       }),
+    enabled,
   });
 };
 

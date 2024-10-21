@@ -1,5 +1,5 @@
 import { FormattedMessage } from 'react-intl';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Link } from '@tanstack/react-router';
 
@@ -19,6 +19,8 @@ import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { TIssue } from '@/types/general';
 import { NoIssueFound } from '@/components/Issue/IssueSection';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+import { Badge } from '@/components/ui/badge';
 
 import FilterLink from '../TreeDetailsFilterLink';
 
@@ -289,3 +291,32 @@ const IssuesList = ({ issues, title }: IIssuesList): JSX.Element => {
 };
 
 export const MemoizedIssuesList = memo(IssuesList);
+
+interface IHardwareUsed {
+  title: IBaseCard['title'];
+  hardwareUsed?: string[];
+}
+
+const HardwareUsed = ({ hardwareUsed, title }: IHardwareUsed): JSX.Element => {
+  const hardwareSorted = useMemo(() => {
+    return hardwareUsed?.sort().map(hardware => {
+      return (
+        <Badge key={hardware} variant="outline" className="text-sm font-normal">
+          {hardware}
+        </Badge>
+      );
+    });
+  }, [hardwareUsed]);
+
+  return (
+    <BaseCard
+      title={title}
+      content={
+        <div className="flex flex-row flex-wrap gap-4 p-4">
+          {hardwareSorted}
+        </div>
+      }
+    />
+  );
+};
+export const MemoizedHardwareUsed = memo(HardwareUsed);

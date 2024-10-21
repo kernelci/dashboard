@@ -30,7 +30,10 @@ interface TestsTabProps {
 
 const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
-  const { isLoading, data, error } = useTestsTab(treeId ?? '', reqFilter);
+  const { isLoading, data, error } = useTestsTab({
+    treeId: treeId ?? '',
+    filter: reqFilter,
+  });
 
   if (error || !treeId) {
     return (
