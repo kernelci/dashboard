@@ -8,7 +8,12 @@ import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { Controller, useForm } from 'react-hook-form';
+import {
+  Controller,
+  ControllerRenderProps,
+  FieldError,
+  useForm,
+} from 'react-hook-form';
 
 import { Tree, TreeFastPathResponse, TreeTableBody } from '@/types/tree/Tree';
 
@@ -201,6 +206,39 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
     />
   );
 
+  const InputTime = ({
+    field: { onChange, ...rest },
+    fieldError,
+  }: {
+    field: ControllerRenderProps<
+      z.infer<typeof InputTimeSchema>,
+      'intervalInDays'
+    >;
+    fieldError: FieldError | undefined;
+  }): JSX.Element => {
+    const handleInputChange = useCallback(
+      (e: ChangeEvent<HTMLInputElement>) => {
+        onChange(e);
+        onInputTimeTextChange(e);
+      },
+      [onChange],
+    );
+
+    return (
+      <DebounceInput
+        debouncedSideEffect={handleInputChange}
+        type="number"
+        min={1}
+        className={`${fieldError ? 'border-red' : 'border-gray'} mx-[10px] flex w-[100px] flex-1 rounded-md border`}
+        startingValue={
+          interval ? interval.toString() : `${DEFAULT_TIME_SEARCH}`
+        }
+        placeholder="7"
+        {...rest}
+      />
+    );
+  };
+
   return (
     <QuerySwitcher status={fastStatus} data={fastData}>
       <Toaster />
@@ -220,27 +258,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
               control={control}
               name="intervalInDays"
               render={({ field, fieldState: { error: fieldError } }) => (
-                <div
-                  className={
-                    fieldError
-                      ? 'mx-[10px] flex w-[100px] flex-1 border border-red'
-                      : 'border-gray mx-[10px] flex w-[100px] flex-1 border'
-                  }
-                >
-                  <DebounceInput
-                    debouncedInterval={DEBOUNCE_INTERVAL}
-                    debouncedSideEffect={onInputTimeTextChange}
-                    type="number"
-                    min={1}
-                    startingValue={
-                      timeSearch
-                        ? timeSearch.toString()
-                        : `${DEFAULT_TIME_SEARCH}`
-                    }
-                    placeholder="7"
-                    {...field}
-                  />
-                </div>
+                <InputTime field={field} fieldError={fieldError} />
               )}
             />
             <FormattedMessage id="global.days" />
