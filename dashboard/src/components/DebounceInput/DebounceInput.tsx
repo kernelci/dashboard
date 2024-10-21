@@ -3,8 +3,7 @@ import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Input, InputProps } from '@/components/ui/input';
 
-interface IDebounceInput extends Omit<InputProps, 'value'> {
-  debouncedInterval: number;
+interface IDebounceInput extends Omit<InputProps, 'onChange' | 'value'> {
   debouncedSideEffect: (value: React.ChangeEvent<HTMLInputElement>) => void;
   startingValue?: string;
 }
