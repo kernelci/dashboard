@@ -24,8 +24,9 @@ import { getStatusGroup } from '@/utils/status';
 
 import { ItemsPerPageValues } from '@/utils/constants/general';
 
+// import { DataTableDemo } from '@/pages/TreeDetails/Tabs/Build/datatable';
+
 import TableStatusFilter from './TableStatusFilter';
-import { DataTableDemo } from '@/pages/TreeDetails/Tabs/Build/datatable';
 
 const headerLabelOrElement: (string | ReactElement)[] = [
   'Path',
@@ -227,11 +228,11 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
         />
         {tableInfoElement}
       </div>
-      {/* <BaseTable headers={headerElements}>
+      <BaseTable headers={headerElements}>
         <TableBody>{rows}</TableBody>
       </BaseTable>
-      {tableInfoElement} */}
-      <DataTableDemo></DataTableDemo>
+      {tableInfoElement}
+      {/* <DataTableDemo></DataTableDemo> */}
     </div>
   );
 };

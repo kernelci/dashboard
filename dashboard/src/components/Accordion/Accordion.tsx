@@ -1,6 +1,4 @@
-import { ReactElement, useMemo } from 'react';
-
-import { MdChevronRight } from 'react-icons/md';
+import { ReactElement, useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -13,7 +11,7 @@ import {
   AccordionItemBuildsKeys,
 } from '@/types/tree/TreeDetails';
 
-import { TIndividualTest, TPathTests } from '@/types/general';
+import { TPathTests } from '@/types/general';
 
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 
@@ -40,10 +38,11 @@ import {
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
-import { individualTestColumns } from './TanstackAccordion';
+import { ChevronRightAnimate } from '@/components/ui/chevron';
+
+import { IndividualTestsTable } from '../NewTables/IndividualTestsTable';
 
 import AccordionBuildContent from './BuildAccordionContent';
-import { NewTable } from './TanstackAccordion';
 
 export interface IAccordion {
   headers?: ReactElement[];
@@ -59,10 +58,6 @@ export interface IAccordionItems {
 interface ICustomAccordionTableBody {
   items: AccordionItemBuilds[] | TPathTests[];
   type: 'build' | 'test';
-}
-
-interface IAccordionTestContent {
-  data: TIndividualTest[];
 }
 
 // const headersBuilds = [
@@ -117,14 +112,6 @@ const headersTests = {
   chevron: <span key="chevron"></span>, //empty cell to add the chevron}
 };
 
-const headerTestsDetails = [
-  <FormattedMessage key="testDetails.path" id="testDetails.path" />,
-  <FormattedMessage key="testDetails.status" id="testDetails.status" />,
-  <FormattedMessage key="global.date" id="global.date" />,
-  <FormattedMessage key="testDetails.duration" id="testDetails.duration" />,
-  <span key="chevron2"></span>, //extra one to add the chevron icon
-];
-
 const Accordion = ({ items, type, headerOnClick }: IAccordion): JSX.Element => {
   const accordionTableHeader = type === 'build' ? headersBuilds : headersTests;
 
@@ -150,12 +137,6 @@ const Accordion = ({ items, type, headerOnClick }: IAccordion): JSX.Element => {
     >
       <AccordionTableBody items={items} type={type} />
     </BaseTable>
-  );
-};
-
-const ChevronRightAnimate = (): JSX.Element => {
-  return (
-    <MdChevronRight className="transition group-data-[state='open']:rotate-90" />
   );
 };
 
@@ -195,12 +176,8 @@ const AccordionTableBody = ({
                     {type === 'build' ? (
                       <AccordionBuildContent accordionData={item} />
                     ) : (
-                      // <AccordionTestsContent
-                      //   data={(item as TPathTests).individual_tests}
-                      // />
-                      <NewTable
+                      <IndividualTestsTable
                         data={(item as TPathTests).individual_tests}
-                        columnDefinition={individualTestColumns}
                       />
                     )}
                   </div>

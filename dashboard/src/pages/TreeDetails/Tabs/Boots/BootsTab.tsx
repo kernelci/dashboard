@@ -13,7 +13,7 @@ import {
   MemoizedIssuesList,
   MemoizedStatusChart,
 } from '@/pages/TreeDetails/Tabs/TestCards';
-import BootsTable from '@/components/Table/BootsTable';
+// import BootsTable from '@/components/Table/BootsTable';
 
 import {
   DesktopGrid,
@@ -22,6 +22,7 @@ import {
 } from '@/pages/TreeDetails/Tabs/TabGrid';
 
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
+import { NewBootsTable } from '@/components/NewTables/NewBootsTable';
 
 interface BootsTabProps {
   reqFilter: Record<string, string[]>;
@@ -121,7 +122,10 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           </div>
         </InnerMobileGrid>
       </MobileGrid>
-      <BootsTable treeId={treeId} testHistory={data.bootHistory} />
+      <div>
+        {/* <BootsTable treeId={treeId} testHistory={data.bootHistory} /> */}
+        <NewBootsTable treeId={treeId} testHistory={data.bootHistory} />
+      </div>
     </div>
   );
 };

@@ -21,7 +21,7 @@ interface IItemsPerPageSelector {
   selected: number;
 }
 
-const ItemsPerPageSelector = ({
+export const ItemsPerPageSelector = ({
   onValueChange,
   values,
   selected,

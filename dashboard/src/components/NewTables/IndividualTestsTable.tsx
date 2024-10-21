@@ -2,7 +2,6 @@
 // O corpo deve ser apenas uma tabela com os valores
 
 import {
-  Column,
   ColumnDef,
   ColumnFiltersState,
   flexRender,
@@ -12,19 +11,13 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { useCallback, useMemo, useState } from 'react';
-
-import { ArrowUpDown } from 'lucide-react';
-
-import { FormattedMessage } from 'react-intl';
-
-import { MdChevronRight } from 'react-icons/md';
+import { useCallback, useState } from 'react';
 
 import { useNavigate } from '@tanstack/react-router';
 
-import { TIndividualTest } from '@/types/general';
+import { FormattedMessage } from 'react-intl';
 
-import { Button } from '@/components/ui/button';
+import { TIndividualTest } from '@/types/general';
 
 import BaseTable from '@/components/Table/BaseTable';
 import {
@@ -34,55 +27,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { MessagesKey } from '@/locales/messages';
+import { NewTableHeader } from '@/components/NewTables/NewTableHeader';
 
-import { TooltipDateTime } from '../TooltipDateTime';
+import { TooltipDateTime } from '@/components/TooltipDateTime';
 
-const ChevronRightAnimate = (): JSX.Element => {
-  return (
-    <MdChevronRight className="transition group-data-[state='open']:rotate-90" />
-  );
-};
+import { ChevronRightAnimate } from '@/components/ui/chevron';
 
-interface INewTable {
-  data: TIndividualTest[];
-  columnDefinition: ColumnDef<TIndividualTest>[];
-}
-
-interface INewTableColumnHeader {
-  column: Column<TIndividualTest>;
-  sortable: boolean;
-  intlKey: MessagesKey;
-  intlDefaultMessage: string;
-}
-
-function NewTableColumnHeader({
-  column,
-  sortable,
-  intlKey,
-  intlDefaultMessage,
-}: INewTableColumnHeader): JSX.Element {
-  return (
-    <Button
-      variant="ghost"
-      className="w-full justify-start px-2"
-      onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-    >
-      <FormattedMessage
-        key={intlKey}
-        id={intlKey}
-        defaultMessage={intlDefaultMessage}
-      ></FormattedMessage>
-      {sortable && <ArrowUpDown className="ml-2 h-4 w-4" />}
-    </Button>
-  );
-}
-
-export const individualTestColumns: ColumnDef<TIndividualTest>[] = [
+const columns: ColumnDef<TIndividualTest>[] = [
   {
     accessorKey: 'path',
     header: ({ column }): JSX.Element =>
-      NewTableColumnHeader({
+      NewTableHeader({
         column: column,
         sortable: true,
         intlKey: 'testDetails.path',
@@ -93,9 +48,9 @@ export const individualTestColumns: ColumnDef<TIndividualTest>[] = [
   {
     accessorKey: 'status',
     header: ({ column }): JSX.Element =>
-      NewTableColumnHeader({
+      NewTableHeader({
         column: column,
-        sortable: false,
+        sortable: true,
         intlKey: 'testDetails.status',
         intlDefaultMessage: 'Status',
       }),
@@ -103,7 +58,7 @@ export const individualTestColumns: ColumnDef<TIndividualTest>[] = [
   {
     accessorKey: 'start_time',
     header: ({ column }): JSX.Element =>
-      NewTableColumnHeader({
+      NewTableHeader({
         column: column,
         sortable: true,
         intlKey: 'global.date',
@@ -121,7 +76,7 @@ export const individualTestColumns: ColumnDef<TIndividualTest>[] = [
   {
     accessorKey: 'duration',
     header: ({ column }): JSX.Element =>
-      NewTableColumnHeader({
+      NewTableHeader({
         column: column,
         sortable: true,
         intlKey: 'testDetails.duration',
@@ -136,15 +91,15 @@ export const individualTestColumns: ColumnDef<TIndividualTest>[] = [
   },
 ];
 
-export function NewTable({ data, columnDefinition }: INewTable): JSX.Element {
+export function IndividualTestsTable({
+  data,
+}: {
+  data: TIndividualTest[];
+}): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const navigate = useNavigate({ from: '/tree/$treeId' });
-
-  const columns = useMemo(() => {
-    return columnDefinition;
-  }, [columnDefinition]);
 
   const onClickRow = useCallback(
     (testId: string) => {
@@ -201,6 +156,9 @@ export function NewTable({ data, columnDefinition }: INewTable): JSX.Element {
               }}
             >
               {row.getVisibleCells().map(cell => (
+                // TODO: change to table cell with link
+                // can't place a Link over TableRow because a Link can't be a direct child of TableBody
+                // can't place a Link over the row mapping because that would mean one child for the entire row
                 <TableCell key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
@@ -210,7 +168,7 @@ export function NewTable({ data, columnDefinition }: INewTable): JSX.Element {
         ) : (
           <TableRow>
             <TableCell colSpan={columns.length} className="h-24 text-center">
-              No results.
+              <FormattedMessage id="global.noResults" />
             </TableCell>
           </TableRow>
         )}
