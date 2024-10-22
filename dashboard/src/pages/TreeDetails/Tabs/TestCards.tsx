@@ -1,5 +1,4 @@
 import { FormattedMessage } from 'react-intl';
-import { FaRegDotCircle, FaRegCircle } from 'react-icons/fa';
 import { memo } from 'react';
 
 import { Link } from '@tanstack/react-router';
@@ -274,15 +273,11 @@ const IssuesList = ({ issues, title }: IIssuesList): JSX.Element => {
     <DumbListingContent>
       {issues.map(issue => {
         return (
-          <Link key={issue.incident_id} to={issue.report_url} target="_blank">
+          <Link key={issue.id} to={issue.report_url} target="_blank">
             <ListingItem
+              unknown={issue.incidents_info.incidentsCount}
               hasBottomBorder
               text={issue.comment ?? ''}
-              leftIcon={
-                <div className="text-darkGray2">
-                  {issue.present ? <FaRegDotCircle /> : <FaRegCircle />}
-                </div>
-              }
             />
           </Link>
         );

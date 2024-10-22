@@ -1,5 +1,5 @@
 import json
-from typing import Union
+from typing import Union, TypedDict, List, Optional, Dict
 from django.utils import timezone
 from datetime import timedelta
 import re
@@ -7,14 +7,30 @@ import re
 DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
 
 
-def create_issue(*, issue_id, issue_comment, issue_report_url, incident_id, incident_present):
+class IncidentInfo(TypedDict):
+    incidentsCount: int
+
+
+class Issue(TypedDict):
+    id: str
+    comment: Optional[str]
+    report_url: Optional[str]
+    incidents_info: IncidentInfo
+
+
+def create_issue(
+    *, issue_id: str, issue_comment: Optional[str], issue_report_url: Optional[str]
+) -> Issue:
     return {
         "id": issue_id,
         "comment": issue_comment,
         "report_url": issue_report_url,
-        "incident_id": incident_id,
-        "present": incident_present,
+        "incidents_info": {"incidentsCount": 0},
     }
+
+
+def convert_issues_dict_to_list(issues_dict: Dict[str, Issue]) -> List[Issue]:
+    return list(issues_dict.values())
 
 
 def toIntOrDefault(value, default):

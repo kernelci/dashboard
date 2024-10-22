@@ -1,5 +1,7 @@
 import { Status } from './database';
 
+type IncidentsInfo = { incidentsCount: number };
+
 export type TPathTests = {
   path_group: string;
   fail_tests: number;
@@ -39,6 +41,5 @@ export type TIssue = {
   id: string;
   comment?: string;
   report_url?: string;
-  present?: boolean;
-  incident_id: string;
+  incidents_info: IncidentsInfo;
 };
