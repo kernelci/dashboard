@@ -83,6 +83,20 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
     });
   }, [data?.tests, tableFilter]);
 
+  const filterCount: Record<(typeof possibleTestsTableFilter)[number], number> =
+    useMemo(() => {
+      const count = {
+        all: 0,
+        success: 0,
+        failed: 0,
+        inconclusive: 0,
+      };
+      count.all = data.tests.length;
+      data.tests.forEach(test => count[getStatusGroup(test.status)]++);
+
+      return count;
+    }, [data.tests]);
+
   const data_len = filteredData?.length || 0;
 
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
@@ -194,27 +208,39 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
   const filters = useMemo(
     () => [
       {
-        label: intl.formatMessage({ id: 'global.all' }),
+        label: intl.formatMessage(
+          { id: 'global.allCount' },
+          { count: filterCount[possibleTestsTableFilter[0]] },
+        ),
         value: possibleTestsTableFilter[0],
         isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[0]),
       },
       {
-        label: intl.formatMessage({ id: 'global.success' }),
+        label: intl.formatMessage(
+          { id: 'global.successCount' },
+          { count: filterCount[possibleTestsTableFilter[1]] },
+        ),
         value: possibleTestsTableFilter[1],
         isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[1]),
       },
       {
-        label: intl.formatMessage({ id: 'global.failed' }),
+        label: intl.formatMessage(
+          { id: 'global.failedCount' },
+          { count: filterCount[possibleTestsTableFilter[2]] },
+        ),
         value: possibleTestsTableFilter[2],
         isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[2]),
       },
       {
-        label: intl.formatMessage({ id: 'global.inconclusive' }),
+        label: intl.formatMessage(
+          { id: 'global.inconclusiveCount' },
+          { count: filterCount[possibleTestsTableFilter[3]] },
+        ),
         value: possibleTestsTableFilter[3],
         isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[3]),
       },
     ],
-    [intl, checkIfFilterIsSelected],
+    [intl, filterCount, checkIfFilterIsSelected],
   );
 
   return (

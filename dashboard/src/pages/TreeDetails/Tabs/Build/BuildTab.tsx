@@ -174,6 +174,23 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           row => row.status && row.status === filterBy.buildsTable,
         );
 
+  const filterCount = useMemo(() => {
+    const count = possibleBuildsTableFilter.reduce(
+      (acc, filter) => {
+        if (accordionContent)
+          acc[filter] = accordionContent?.reduce(
+            (total, row) => (row.status === filter ? total + 1 : total),
+            0,
+          );
+        return acc;
+      },
+      {} as Record<(typeof possibleBuildsTableFilter)[number], number>,
+    );
+    count.all = accordionContent ? accordionContent.length : 0;
+
+    return count;
+  }, [accordionContent]);
+
   const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
     usePagination(
       filteredContent?.length ?? 0,
@@ -300,22 +317,34 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
               }
               filters={[
                 {
-                  label: intl.formatMessage({ id: 'global.all' }),
+                  label: intl.formatMessage(
+                    { id: 'global.allCount' },
+                    { count: filterCount[possibleBuildsTableFilter[2]] },
+                  ),
                   value: possibleBuildsTableFilter[2],
                   isSelected: selectedFilter === possibleBuildsTableFilter[2],
                 },
                 {
-                  label: intl.formatMessage({ id: 'global.successful' }),
+                  label: intl.formatMessage(
+                    { id: 'global.successCount' },
+                    { count: filterCount[possibleBuildsTableFilter[1]] },
+                  ),
                   value: possibleBuildsTableFilter[1],
                   isSelected: selectedFilter === possibleBuildsTableFilter[1],
                 },
                 {
-                  label: intl.formatMessage({ id: 'global.failed' }),
+                  label: intl.formatMessage(
+                    { id: 'global.failedCount' },
+                    { count: filterCount[possibleBuildsTableFilter[0]] },
+                  ),
                   value: possibleBuildsTableFilter[0],
                   isSelected: selectedFilter === possibleBuildsTableFilter[0],
                 },
                 {
-                  label: intl.formatMessage({ id: 'global.inconclusive' }),
+                  label: intl.formatMessage(
+                    { id: 'global.inconclusiveCount' },
+                    { count: filterCount[possibleBuildsTableFilter[3]] },
+                  ),
                   value: possibleBuildsTableFilter[3],
                   isSelected: selectedFilter === possibleBuildsTableFilter[3],
                 },

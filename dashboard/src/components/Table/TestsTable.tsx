@@ -112,30 +112,62 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
     [navigate],
   );
 
+  const filterCount: Record<(typeof possibleTestsTableFilter)[number], number> =
+    useMemo(() => {
+      const count = {
+        all: 0,
+        success: 0,
+        failed: 0,
+        inconclusive: 0,
+      };
+
+      data.forEach(tests => {
+        count.all += tests.total_tests;
+        count.success += tests.pass_tests;
+        count.failed += tests.fail_tests;
+        count.inconclusive +=
+          tests.total_tests - tests.pass_tests - tests.fail_tests;
+      });
+
+      return count;
+    }, [data]);
+
   const filters = useMemo(
     () => [
       {
-        label: intl.formatMessage({ id: 'global.all' }),
+        label: intl.formatMessage(
+          { id: 'global.allCount' },
+          { count: filterCount[possibleTestsTableFilter[0]] },
+        ),
         value: possibleTestsTableFilter[0],
         isSelected: tableFilter.testsTable === possibleTestsTableFilter[0],
       },
       {
-        label: intl.formatMessage({ id: 'global.success' }),
+        label: intl.formatMessage(
+          { id: 'global.successCount' },
+          { count: filterCount[possibleTestsTableFilter[1]] },
+        ),
         value: possibleTestsTableFilter[1],
         isSelected: tableFilter.testsTable === possibleTestsTableFilter[1],
       },
       {
-        label: intl.formatMessage({ id: 'global.failed' }),
+        label: intl.formatMessage(
+          { id: 'global.failedCount' },
+          { count: filterCount[possibleTestsTableFilter[2]] },
+        ),
         value: possibleTestsTableFilter[2],
         isSelected: tableFilter.testsTable === possibleTestsTableFilter[2],
       },
       {
-        label: intl.formatMessage({ id: 'global.inconclusive' }),
+        label: intl.formatMessage(
+          { id: 'global.inconclusiveCount' },
+          { count: filterCount[possibleTestsTableFilter[3]] },
+        ),
         value: possibleTestsTableFilter[3],
         isSelected: tableFilter.testsTable === possibleTestsTableFilter[3],
       },
     ],
-    [intl, tableFilter.testsTable],
+    [filterCount, intl, tableFilter.testsTable],
   );
 
   const tableInfoElement = (
