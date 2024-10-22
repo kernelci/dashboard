@@ -99,10 +99,6 @@ type StatusCounts = {
   [key in Status]: number | undefined;
 };
 
-export type EnvironmentCompatibleCounts = {
-  [key: string]: number;
-};
-
 export type ArchCompilerStatus = {
   arch: string;
   compiler: string;
@@ -119,7 +115,7 @@ export type TTreeTestsData = {
   compilersPerArchitecture: CompilersPerArchitecture;
   platformsWithError: string[];
   errorMessageCounts: ErrorMessageCounts;
-  environmentCompatible: EnvironmentCompatibleCounts;
+  environmentCompatible: PropertyStatusCounts;
 };
 
 export type TTreeTestsFullData = {
@@ -137,8 +133,8 @@ export type TTreeTestsFullData = {
   testHistory: TestHistory[];
   bootIssues: TIssue[];
   testIssues: TIssue[];
-  testEnvironmentCompatible: EnvironmentCompatibleCounts;
-  bootEnvironmentCompatible: EnvironmentCompatibleCounts;
+  testEnvironmentCompatible: PropertyStatusCounts;
+  bootEnvironmentCompatible: PropertyStatusCounts;
   hardwareUsed: string[];
 };
 

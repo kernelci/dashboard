@@ -8,6 +8,7 @@ interface ITestStatus {
   fail?: number;
   done?: number;
   skip?: number;
+  nullStatus?: number;
   forceNumber?: boolean;
 }
 
@@ -81,6 +82,7 @@ export const GroupedTestStatus = ({
   fail,
   done,
   skip,
+  nullStatus,
 }: ITestStatus): JSX.Element => {
   const { successCount, inconclusiveCount, failedCount } = groupStatus({
     doneCount: done ?? 0,
@@ -89,6 +91,7 @@ export const GroupedTestStatus = ({
     missCount: miss ?? 0,
     passCount: pass ?? 0,
     skipCount: skip ?? 0,
+    nullCount: nullStatus ?? 0,
   });
   return (
     <div className="flex flex-row gap-1">

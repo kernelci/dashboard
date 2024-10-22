@@ -44,7 +44,7 @@ class TreeDetailsSlow(View):
         self.testArchSummary = {}
         self.testIssues = []
         self.testIssuesTable = {}
-        self.testEnvironmentCompatible = defaultdict(int)
+        self.testEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
         self.bootHistory = []
         self.bootStatusSummary = {}
         self.bootConfigs = {}
@@ -53,7 +53,7 @@ class TreeDetailsSlow(View):
         self.bootArchSummary = {}
         self.bootIssues = []
         self.bootsIssuesTable = {}
-        self.bootEnvironmentCompatible = defaultdict(int)
+        self.bootEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
         self.incidentsIssueRelationship = defaultdict(
             lambda: IncidentInfo(incidentsCount=0)
         )
@@ -255,7 +255,10 @@ class TreeDetailsSlow(View):
             self.bootFailReasons[testError] = self.bootFailReasons.get(testError, 0) + 1
 
         if testEnvironmentCompatible is not None:
-            self.bootEnvironmentCompatible[testEnvironmentCompatible] += 1
+            if testStatus is None:
+                self.bootEnvironmentCompatible[testEnvironmentCompatible]["NULL"] += 1
+            else:
+                self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
 
             self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
@@ -327,7 +330,10 @@ class TreeDetailsSlow(View):
             self.testFailReasons[testError] = self.testFailReasons.get(testError, 0) + 1
 
         if testEnvironmentCompatible is not None:
-            self.testEnvironmentCompatible[testEnvironmentCompatible] += 1
+            if testStatus is None:
+                self.testEnvironmentCompatible[testEnvironmentCompatible]["NULL"] += 1
+            else:
+                self.testEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
 
     def get(self, request, commit_hash: str | None):
         cache_key = "treeDetailsSlow"

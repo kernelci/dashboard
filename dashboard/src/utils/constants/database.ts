@@ -7,6 +7,7 @@ export const status = [
   'PASS',
   'SKIP',
   'DONE',
+  'NULL',
 ] as const;
 
 export const StatusTable = {

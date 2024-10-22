@@ -9,6 +9,7 @@ type StatusCount = {
   errorCount: number;
   failCount: number;
   passCount: number;
+  nullCount?: number;
 };
 
 type GroupedStatus = {
@@ -25,7 +26,8 @@ export function groupStatus(counts: StatusCount): GroupedStatus {
       counts.doneCount +
       counts.errorCount +
       counts.missCount +
-      counts.skipCount,
+      counts.skipCount +
+      (counts.nullCount ?? 0),
   };
 }
 

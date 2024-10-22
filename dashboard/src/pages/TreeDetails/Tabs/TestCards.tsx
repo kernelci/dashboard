@@ -87,20 +87,29 @@ const HardwareTested = ({
       content={
         <ScrollArea className="h-[350px]">
           <DumbListingContent>
-            {environmentCompatible &&
-              Object.entries(environmentCompatible).map(
-                ([hardwareTestedItem, hardwareTestedCount]) => {
-                  return (
-                    <ListingItem
-                      hasBottomBorder
-                      key={hardwareTestedItem}
-                      errors={hardwareTestedCount}
-                      text={hardwareTestedItem}
-                      showNumber={true}
+            {Object.keys(environmentCompatible).map(hardwareTestedName => {
+              const { DONE, FAIL, ERROR, MISS, PASS, SKIP, NULL } =
+                environmentCompatible[hardwareTestedName];
+
+              return (
+                <ListingItem
+                  hasBottomBorder
+                  key={hardwareTestedName}
+                  text={hardwareTestedName}
+                  leftIcon={
+                    <GroupedTestStatus
+                      done={DONE}
+                      fail={FAIL}
+                      error={ERROR}
+                      miss={MISS}
+                      pass={PASS}
+                      skip={SKIP}
+                      nullStatus={NULL}
                     />
-                  );
-                },
-              )}
+                  }
+                />
+              );
+            })}
           </DumbListingContent>
         </ScrollArea>
       }
