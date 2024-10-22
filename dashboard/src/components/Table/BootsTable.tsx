@@ -7,7 +7,7 @@ import { MdChevronRight } from 'react-icons/md';
 import BaseTable from '@/components/Table/BaseTable';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { TableInfo } from '@/components/Table/TableInfo';
-import { TableCellWithLink, TableRow } from '@/components/ui/table';
+import { TableCellWithLink, TableBody, TableRow } from '@/components/ui/table';
 import { usePagination } from '@/hooks/usePagination';
 
 import {
@@ -23,6 +23,8 @@ import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
 import { getStatusGroup } from '@/utils/status';
 
 import { ItemsPerPageValues } from '@/utils/constants/general';
+
+// import { DataTableDemo } from '@/pages/TreeDetails/Tabs/Build/datatable';
 
 import TableStatusFilter from './TableStatusFilter';
 
@@ -252,8 +254,11 @@ const BootsTable = ({ treeId, testHistory }: ITestsTable): JSX.Element => {
         />
         {tableInfoElement}
       </div>
-      <BaseTable headers={headerElements}>{rows}</BaseTable>
+      <BaseTable headers={headerElements}>
+        <TableBody>{rows}</TableBody>
+      </BaseTable>
       {tableInfoElement}
+      {/* <DataTableDemo></DataTableDemo> */}
     </div>
   );
 };

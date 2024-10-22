@@ -1,14 +1,13 @@
-import { ReactElement, useMemo } from 'react';
-
-import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
+import { ReactElement, useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { LinkProps } from '@tanstack/react-router';
+import {
+  AccordionItemBuilds,
+  AccordionItemBuildsKeys,
+} from '@/types/tree/TreeDetails';
 
-import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
-
-import { TIndividualTest, TPathTests } from '@/types/general';
+import { TPathTests } from '@/types/general';
 
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 
@@ -21,7 +20,7 @@ import HeaderWithInfo from '@/pages/TreeDetails/Tabs/HeaderWithInfo';
 import {
   TableBody,
   TableCell,
-  TableCellWithLink,
+  TableHead,
   TableRow,
 } from '@/components/ui/table';
 
@@ -35,12 +34,17 @@ import {
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
+import { ChevronRightAnimate } from '@/components/ui/chevron';
+
+import { IndividualTestsTable } from '../NewTables/IndividualTestsTable';
+
 import AccordionBuildContent from './BuildAccordionContent';
 
 export interface IAccordion {
   headers?: ReactElement[];
   items: AccordionItemBuilds[] | TPathTests[];
   type: 'build' | 'test';
+  headerOnClick?: (what: AccordionItemBuildsKeys) => void;
 }
 
 export interface IAccordionItems {
@@ -52,58 +56,83 @@ interface ICustomAccordionTableBody {
   type: 'build' | 'test';
 }
 
-interface IAccordionTestContent {
-  data: TIndividualTest[];
-}
+// const headersBuilds = [
+//   <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
+//   <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
+//   <FormattedMessage key="treeDetails.date" id="treeDetails.date" />,
+//   <FormattedMessage
+//     key="treeDetails.buildErrors"
+//     id="treeDetails.buildErrors"
+//   />,
+//   <FormattedMessage key="treeDetails.buildTime" id="treeDetails.buildTime" />,
+//   <HeaderWithInfo
+//     key="treeDetails.status"
+//     labelId="treeDetails.status"
+//     tooltipId="buildTab.statusTooltip"
+//   />,
+// ];
 
-const headersBuilds = [
-  <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
-  <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
-  <FormattedMessage key="treeDetails.date" id="treeDetails.date" />,
-  <FormattedMessage
-    key="treeDetails.buildErrors"
-    id="treeDetails.buildErrors"
-  />,
-  <FormattedMessage key="treeDetails.buildTime" id="treeDetails.buildTime" />,
-  <HeaderWithInfo
-    key="treeDetails.status"
-    labelId="treeDetails.status"
-    tooltipId="buildTab.statusTooltip"
-  />,
-];
+const headersBuilds = {
+  config: <FormattedMessage key="treeDetails.config" id="treeDetails.config" />,
+  compiler: (
+    <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />
+  ),
+  date: <FormattedMessage key="treeDetails.date" id="treeDetails.date" />,
+  buildErrors: (
+    <FormattedMessage
+      key="treeDetails.buildErrors"
+      id="treeDetails.buildErrors"
+    />
+  ),
+  buildTime: (
+    <FormattedMessage key="treeDetails.buildTime" id="treeDetails.buildTime" />
+  ),
+  status: (
+    <HeaderWithInfo
+      key="treeDetails.status"
+      labelId="treeDetails.status"
+      tooltipId="buildTab.statusTooltip"
+    />
+  ),
+};
 
-const headersTests = [
-  <FormattedMessage key="testDetails.path" id="testDetails.path" />,
-  <HeaderWithInfo
-    key="treeDetails.status"
-    labelId="testDetails.status"
-    tooltipId="testsTab.statusTooltip"
-  />,
-  <span key="chevron"></span>, //empty cell to add the chevron
-];
+const headersTests = {
+  path: <FormattedMessage key="testDetails.path" id="testDetails.path" />,
+  status: (
+    <HeaderWithInfo
+      key="treeDetails.status"
+      labelId="testDetails.status"
+      tooltipId="testsTab.statusTooltip"
+    />
+  ),
+  chevron: <span key="chevron"></span>, //empty cell to add the chevron}
+};
 
-const headerTestsDetails = [
-  <FormattedMessage key="testDetails.path" id="testDetails.path" />,
-  <FormattedMessage key="testDetails.status" id="testDetails.status" />,
-  <FormattedMessage key="global.date" id="global.date" />,
-  <FormattedMessage key="treeDetails.duration" id="testDetails.duration" />,
-  <span key="chevron2"></span>, //extra one to add the chevron icon
-];
-
-const Accordion = ({ items, type }: IAccordion): JSX.Element => {
+const Accordion = ({ items, type, headerOnClick }: IAccordion): JSX.Element => {
   const accordionTableHeader = type === 'build' ? headersBuilds : headersTests;
+
+  const onClickSort = useCallback(
+    (sortProperty: AccordionItemBuildsKeys) => {
+      headerOnClick?.(sortProperty);
+    },
+    [headerOnClick],
+  );
 
   return (
     <BaseTable
-      headers={accordionTableHeader}
-      body={<AccordionTableBody items={items} type={type} />}
-    />
-  );
-};
-
-const ChevronRightAnimate = (): JSX.Element => {
-  return (
-    <MdChevronRight className="transition group-data-[state='open']:rotate-90" />
+      headers={Object.values(accordionTableHeader)}
+      headerComponents={Object.entries(accordionTableHeader).map(column => (
+        <TableHead
+          className="border-b text-black"
+          key={column[1].key}
+          onClick={() => onClickSort(column[0] as AccordionItemBuildsKeys)}
+        >
+          {column[1]}
+        </TableHead>
+      ))}
+    >
+      <AccordionTableBody items={items} type={type} />
+    </BaseTable>
   );
 };
 
@@ -143,7 +172,7 @@ const AccordionTableBody = ({
                     {type === 'build' ? (
                       <AccordionBuildContent accordionData={item} />
                     ) : (
-                      <AccordionTestsContent
+                      <IndividualTestsTable
                         data={(item as TPathTests).individual_tests}
                       />
                     )}
@@ -193,8 +222,18 @@ const AccordionBuildsTrigger = ({
       </TableCell>
       <TableCell>{triggerInfo.buildTime}</TableCell>
       <TableCell>
-        {isBuildValid && <MdCheck className="text-green" />}
-        {isBuildInvalid && <MdClose className="text-red" />}
+        {isBuildValid && (
+          <FormattedMessage
+            id="global.pass"
+            defaultMessage={'Pass'}
+          ></FormattedMessage>
+        )}
+        {isBuildInvalid && (
+          <FormattedMessage
+            id="global.invalid"
+            defaultMessage={'Invalid'}
+          ></FormattedMessage>
+        )}
         {isBuildUnknown && <span>-</span>}
       </TableCell>
     </>
@@ -222,63 +261,6 @@ const AccordionTestsTrigger = ({
         <ChevronRightAnimate />
       </TableCell>
     </>
-  );
-};
-
-const AccordionTestsContent = ({
-  data,
-}: IAccordionTestContent): JSX.Element => {
-  const rows = useMemo(() => {
-    return data.map(test => <TestTableRow key={test.id} test={test} />);
-  }, [data]);
-
-  return (
-    <div className="h-max-12 overflow-scroll">
-      <BaseTable headers={headerTestsDetails}>
-        <TableBody>{rows}</TableBody>
-      </BaseTable>
-    </div>
-  );
-};
-
-interface ITestTableRow {
-  test: TIndividualTest;
-}
-
-const TestTableRow = ({ test }: ITestTableRow): JSX.Element => {
-  const linkProps: LinkProps = useMemo(
-    () => ({
-      to: '/tree/$treeId/test/$testId',
-      params: {
-        testId: test.id,
-      },
-      search: s => s,
-    }),
-    [test],
-  );
-
-  return (
-    <TableRow className="cursor-pointer hover:bg-lightBlue" key={test.id}>
-      <TableCellWithLink linkProps={linkProps}>{test.path}</TableCellWithLink>
-      <TableCellWithLink linkProps={linkProps}>{test.status}</TableCellWithLink>
-      <TableCellWithLink linkProps={linkProps}>
-        <TooltipDateTime
-          dateTime={test.start_time}
-          lineBreak={true}
-          showLabelTime={true}
-          showLabelTZ={true}
-        />
-      </TableCellWithLink>
-      <TableCellWithLink linkProps={linkProps}>
-        {test.duration ?? '-'}
-      </TableCellWithLink>
-      <TableCellWithLink
-        linkProps={linkProps}
-        className="flex items-center justify-end"
-      >
-        <ChevronRightAnimate />
-      </TableCellWithLink>
-    </TableRow>
   );
 };
 
