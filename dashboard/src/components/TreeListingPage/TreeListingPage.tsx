@@ -29,7 +29,7 @@ import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
-import { DEBOUNCE_INTERVAL, DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
+import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { toast } from '@/hooks/useToast';
