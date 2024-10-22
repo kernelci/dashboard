@@ -85,19 +85,16 @@ const TreeHeader = ({
           <TableCell>{gitBranch ?? '-'}</TableCell>
           <TableCell>
             <Tooltip>
-              <TooltipTrigger>
-                {sanitizeTableValue(
-                  tag && tag !== ''
-                    ? tag
-                    : commit && commit !== ''
-                      ? commit
-                      : '-',
-                )}
-              </TooltipTrigger>
-              <TooltipContent>{tag ?? commit}</TooltipContent>
+              <TooltipTrigger>{sanitizeTableValue(tag, false)}</TooltipTrigger>
+              <TooltipContent>{commit}</TooltipContent>
             </Tooltip>
           </TableCell>
-          <TableCell>{gitUrl ?? '-'}</TableCell>
+          <TableCell>
+            <Tooltip>
+              <TooltipTrigger>{sanitizeTableValue(gitUrl)} </TooltipTrigger>
+              <TooltipContent>{gitUrl}</TooltipContent>
+            </Tooltip>
+          </TableCell>
         </TableRow>
       </TableBody>
     </DumbBaseTable>
