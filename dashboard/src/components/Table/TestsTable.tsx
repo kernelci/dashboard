@@ -84,6 +84,8 @@ const TestsTable = ({ testHistory }: ITestsTable): JSX.Element => {
         case 'SKIP':
           groups[group].skip_tests++;
           break;
+        default:
+          if (!e.status) groups[group].null_tests++;
       }
     });
     return Object.values(groups);
