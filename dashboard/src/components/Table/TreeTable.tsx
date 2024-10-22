@@ -94,6 +94,8 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
     [row.id, row.url, row.branch, row.tree_name, row.commitName, origin],
   );
 
+  const tagOrCommitHash = row.commitName ? row.commitName : row.commitHash;
+
   return (
     <TableRow>
       <TableCellWithLink
@@ -117,12 +119,17 @@ const TreeTableRow = (row: TreeTableBody): JSX.Element => {
       >
         {sanitizeTableValue(row.branch, false)}
       </TableCellWithLink>
-      <TableCellWithLink
-        data-target="treeDetails.builds"
-        linkProps={linkProps('treeDetails.builds')}
-      >
-        {sanitizeTableValue(row.commitName ? row.commitName : row.commitHash)}
-      </TableCellWithLink>
+      <Tooltip>
+        <TooltipTrigger>
+          <TableCellWithLink
+            data-target="treeDetails.builds"
+            linkProps={linkProps('treeDetails.builds')}
+          >
+            {sanitizeTableValue(tagOrCommitHash)}
+          </TableCellWithLink>
+        </TooltipTrigger>
+        <TooltipContent>{tagOrCommitHash}</TooltipContent>
+      </Tooltip>
       <TableCellWithLink
         data-target="treeDetails.builds"
         linkProps={linkProps('treeDetails.builds')}
