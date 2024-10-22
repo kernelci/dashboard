@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { MdOutlineMonitorHeart } from 'react-icons/md';
 
-import { ImTree, ImImages } from 'react-icons/im';
+import { ImTree } from 'react-icons/im';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
 import { useSearch, useLocation } from '@tanstack/react-router';
@@ -26,7 +26,7 @@ import SendFeedback from './SendFeedback';
 import NavLink from './NavLink';
 
 type RouteMenuItems = {
-  navigateTo: '/tree' | '/devices' | '/labs';
+  navigateTo: '/tree' | '/devices';
   idIntl: MessagesKey;
   icon: JSX.Element;
   selected: boolean;
@@ -96,12 +96,6 @@ const SideMenu = (): JSX.Element => {
       navigateTo: '/devices',
       idIntl: 'routes.deviceMonitor',
       icon: <MdOutlineMonitorHeart className="size-5" />,
-      selected: false,
-    },
-    {
-      navigateTo: '/labs',
-      idIntl: 'routes.labsMonitor',
-      icon: <ImImages className="size-5" />,
       selected: false,
     },
   ];

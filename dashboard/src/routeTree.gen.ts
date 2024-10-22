@@ -11,7 +11,6 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as LabsImport } from './routes/labs'
 import { Route as DevicesImport } from './routes/devices'
 import { Route as TreeRouteImport } from './routes/tree/route'
 import { Route as IndexImport } from './routes/index'
@@ -24,11 +23,6 @@ import { Route as TreeTreeIdTestTestIdIndexImport } from './routes/tree/$treeId/
 import { Route as TreeTreeIdBuildBuildIdIndexImport } from './routes/tree/$treeId/build/$buildId/index'
 
 // Create/Update Routes
-
-const LabsRoute = LabsImport.update({
-  path: '/labs',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const DevicesRoute = DevicesImport.update({
   path: '/devices',
@@ -106,13 +100,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevicesImport
       parentRoute: typeof rootRoute
     }
-    '/labs': {
-      id: '/labs'
-      path: '/labs'
-      fullPath: '/labs'
-      preLoaderRoute: typeof LabsImport
-      parentRoute: typeof rootRoute
-    }
     '/tree/$treeId': {
       id: '/tree/$treeId'
       path: '/$treeId'
@@ -183,7 +170,6 @@ export const routeTree = rootRoute.addChildren({
     TreeIndexRoute,
   }),
   DevicesRoute,
-  LabsRoute,
 })
 
 /* prettier-ignore-end */
@@ -196,8 +182,7 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/",
         "/tree",
-        "/devices",
-        "/labs"
+        "/devices"
       ]
     },
     "/": {
@@ -212,9 +197,6 @@ export const routeTree = rootRoute.addChildren({
     },
     "/devices": {
       "filePath": "devices.tsx"
-    },
-    "/labs": {
-      "filePath": "labs.tsx"
     },
     "/tree/$treeId": {
       "filePath": "tree/$treeId/route.tsx",
