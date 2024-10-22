@@ -24,6 +24,8 @@ import {
 } from '@/pages/TreeDetails/Tabs/TabGrid';
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
 
+import { NewTestsTable } from '@/components/NewTables/NewTestsTable';
+
 interface TestsTabProps {
   reqFilter: Record<string, string[]>;
 }
@@ -122,6 +124,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
       </MobileGrid>
 
       <TestsTable testHistory={data.testHistory} />
+      <NewTestsTable testHistory={data.testHistory} />
     </div>
   );
 };

@@ -9,12 +9,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import { Button } from '@/components/ui/button';
 
-import { TIndividualTest } from '@/types/general';
+import { TIndividualTest, TPathTests } from '@/types/general';
 import { formattedBreakLineValue, MessagesKey } from '@/locales/messages';
 import { TestByCommitHash } from '@/types/tree/TreeDetails';
 
 interface INewTableHeader {
-  column: Column<TIndividualTest> | Column<TestByCommitHash>;
+  column:
+    | Column<TIndividualTest>
+    | Column<TestByCommitHash>
+    | Column<TPathTests>;
   sortable: boolean;
   intlKey: MessagesKey;
   intlDefaultMessage: string;

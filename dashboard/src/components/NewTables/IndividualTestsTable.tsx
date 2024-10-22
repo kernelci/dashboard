@@ -151,6 +151,7 @@ export function IndividualTestsTable({
             <TableRow
               key={row.id}
               data-state={row.getIsSelected() && 'selected'}
+              className="cursor-pointer hover:bg-lightBlue"
               onClick={() => {
                 onClickRow(data[row.index].id);
               }}

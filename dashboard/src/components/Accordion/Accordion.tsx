@@ -127,7 +127,7 @@ const Accordion = ({ items, type, headerOnClick }: IAccordion): JSX.Element => {
       headers={Object.values(accordionTableHeader)}
       headerComponents={Object.entries(accordionTableHeader).map(column => (
         <TableHead
-          className="border-b text-sky-700"
+          className="border-b text-black"
           key={column[1].key}
           onClick={() => onClickSort(column[0] as AccordionItemBuildsKeys)}
         >

@@ -126,6 +126,7 @@ export function NewBootsTable({
   const [bootsSelectedFilter, setBootsSelectedFilter] =
     useState<TestsTableFilter>(tableFilter.bootsTable);
 
+  const navigate = useNavigate({ from: '/tree/$treeId' });
   const intl = useIntl();
   const buttonsClassName = 'text-blue font-bold';
 
@@ -153,8 +154,6 @@ export function NewBootsTable({
       return getStatusGroup(test.status) === filterToApply;
     });
   }, [rawData?.tests, tableFilter]);
-
-  const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const onClickRow = useCallback(
     (id: string) => {
