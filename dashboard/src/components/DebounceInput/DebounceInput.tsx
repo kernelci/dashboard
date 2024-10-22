@@ -8,8 +8,9 @@ interface IDebounceInput extends Omit<InputProps, 'onChange' | 'value'> {
   startingValue?: string;
 }
 
+const DEBOUNCE_INTERVAL = 666;
+
 const DebounceInput = ({
-  debouncedInterval,
   debouncedSideEffect,
   startingValue = '',
   ...props
@@ -17,7 +18,7 @@ const DebounceInput = ({
   const [inputValue, setInputValue] = useState<string>(startingValue);
   const [inputEvent, setInputEvent] = useState<ChangeEvent<HTMLInputElement>>();
   const isThisComponentMounted = useRef(true);
-  const debouncedInputEvent = useDebounce(inputEvent, debouncedInterval);
+  const debouncedInputEvent = useDebounce(inputEvent, DEBOUNCE_INTERVAL);
 
   const onInputSearchTextChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setInputValue(e.target.value);
