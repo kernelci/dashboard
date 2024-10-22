@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
 
-import { FaRegCircle, FaRegDotCircle } from 'react-icons/fa';
-
 import { FormattedMessage } from 'react-intl';
 
 import { UseQueryResult } from '@tanstack/react-query';
@@ -34,18 +32,14 @@ const IssueSection = ({
     () =>
       data?.map(issue => (
         <Link
-          key={issue.incident_id}
+          key={issue.id}
           to={issue.report_url}
           target="_blank"
           className="flex [&:not(:last-child)]:mb-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2"
         >
           <ListingItem
+            unknown={issue.incidents_info.incidentsCount}
             text={issue.comment ?? ''}
-            leftIcon={
-              <div className="text-darkGray2">
-                {issue.present ? <FaRegDotCircle /> : <FaRegCircle />}
-              </div>
-            }
           />
         </Link>
       )),
