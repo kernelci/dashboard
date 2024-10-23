@@ -16,11 +16,7 @@ import {
 import { Fragment, useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import {
-  MdArrowBackIos,
-  MdArrowForwardIos,
-  MdChevronRight,
-} from 'react-icons/md';
+import { MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
@@ -30,8 +26,6 @@ import {
   TestsTableFilter,
 } from '@/types/tree/TreeDetails';
 
-import { ItemsPerPageValues } from '@/utils/constants/general';
-
 import { TPathTests } from '@/types/general';
 
 import { StatusTable } from '@/utils/constants/database';
@@ -39,16 +33,13 @@ import { StatusTable } from '@/utils/constants/database';
 import BaseTable, { TableHead } from '../Table/BaseTable';
 import { TableBody, TableCell, TableRow } from '../ui/table';
 
-import { Button } from '../ui/button';
-
-import { ItemsPerPageSelector } from '../Table/TableInfo';
-
 import TableStatusFilter from '../Table/TableStatusFilter';
 
 import { GroupedTestStatus } from '../Status/Status';
 
 import { NewTableHeader } from './NewTableHeader';
 import { IndividualTestsTable } from './IndividualTestsTable';
+import { PaginationInfo } from './PaginationInfo';
 
 export interface ITestsTable {
   testHistory: TestHistory[];
@@ -108,7 +99,6 @@ export function NewTestsTable({ testHistory }: ITestsTable): JSX.Element {
 
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const intl = useIntl();
-  const buttonsClassName = 'text-blue font-bold';
 
   const rawData = useMemo((): TPathTests[] => {
     type Groups = {
@@ -282,6 +272,12 @@ export function NewTestsTable({ testHistory }: ITestsTable): JSX.Element {
         filters={filters}
         onClickTest={(filter: TestsTableFilter) => onClickFilter(filter)}
       />
+      <PaginationInfo
+        table={table}
+        pagination={pagination}
+        data={data}
+        label="tests"
+      />
       <BaseTable
         headers={[]}
         headerComponents={table.getHeaderGroups()[0].headers.map(header => {
@@ -302,7 +298,6 @@ export function NewTestsTable({ testHistory }: ITestsTable): JSX.Element {
             table.getRowModel().rows.map(row => (
               <Fragment key={row.id}>
                 <TableRow
-                  data-state={row.getIsSelected() && 'selected'}
                   className="cursor-pointer hover:bg-lightBlue"
                   onClick={() => {
                     if (row.getCanExpand()) row.toggleExpanded();
@@ -339,39 +334,12 @@ export function NewTestsTable({ testHistory }: ITestsTable): JSX.Element {
           )}
         </TableBody>
       </BaseTable>
-      <div className="flex flex-row justify-evenly text-sm">
-        <div className="flex flex-row items-center gap-2">
-          <FormattedMessage id="table.showing" />
-          <span className="font-bold">
-            {table.getState().pagination.pageIndex * pagination.pageSize} -{' '}
-            {(table.getState().pagination.pageIndex + 1) * pagination.pageSize}
-          </span>
-          <FormattedMessage id="table.of" />
-          <span className="font-bold">{data.length}</span>
-          <FormattedMessage id="global.boots" defaultMessage="Boots" />
-        </div>
-        <ItemsPerPageSelector
-          selected={table.getState().pagination.pageSize}
-          onValueChange={table.setPageSize}
-          values={ItemsPerPageValues}
-        />
-        <div className="flex flex-row items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <MdArrowBackIos className={buttonsClassName} />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <MdArrowForwardIos className={buttonsClassName} />
-          </Button>
-        </div>
-      </div>
+      <PaginationInfo
+        table={table}
+        pagination={pagination}
+        data={data}
+        label="tests"
+      />
     </div>
   );
 }

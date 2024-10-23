@@ -1,11 +1,8 @@
-import { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import {
-  AccordionItemBuilds,
-  AccordionItemBuildsKeys,
-} from '@/types/tree/TreeDetails';
+import { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
 import { TPathTests } from '@/types/general';
 
@@ -44,7 +41,6 @@ export interface IAccordion {
   headers?: ReactElement[];
   items: AccordionItemBuilds[] | TPathTests[];
   type: 'build' | 'test';
-  headerOnClick?: (what: AccordionItemBuildsKeys) => void;
 }
 
 export interface IAccordionItems {
@@ -108,25 +104,14 @@ const headersTests = {
   chevron: <span key="chevron"></span>, //empty cell to add the chevron}
 };
 
-const Accordion = ({ items, type, headerOnClick }: IAccordion): JSX.Element => {
+const Accordion = ({ items, type }: IAccordion): JSX.Element => {
   const accordionTableHeader = type === 'build' ? headersBuilds : headersTests;
-
-  const onClickSort = useCallback(
-    (sortProperty: AccordionItemBuildsKeys) => {
-      headerOnClick?.(sortProperty);
-    },
-    [headerOnClick],
-  );
 
   return (
     <BaseTable
       headers={Object.values(accordionTableHeader)}
       headerComponents={Object.entries(accordionTableHeader).map(column => (
-        <TableHead
-          className="border-b text-black"
-          key={column[1].key}
-          onClick={() => onClickSort(column[0] as AccordionItemBuildsKeys)}
-        >
+        <TableHead className="border-b text-black" key={column[1].key}>
           {column[1]}
         </TableHead>
       ))}

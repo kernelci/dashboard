@@ -14,11 +14,7 @@ import {
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import {
-  MdArrowBackIos,
-  MdArrowForwardIos,
-  MdChevronRight,
-} from 'react-icons/md';
+import { MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
@@ -32,25 +28,15 @@ import {
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
-import { ItemsPerPageValues } from '@/utils/constants/general';
-
 import { getStatusGroup } from '@/utils/status';
 
 import BaseTable, { TableHead } from '../Table/BaseTable';
 import { TableBody, TableCell, TableRow } from '../ui/table';
 
-import { Button } from '../ui/button';
-
-import { ItemsPerPageSelector } from '../Table/TableInfo';
-
 import TableStatusFilter from '../Table/TableStatusFilter';
 
 import { NewTableHeader } from './NewTableHeader';
-
-export interface IBootsTable {
-  treeId: string;
-  testHistory: TestHistory[];
-}
+import { PaginationInfo } from './PaginationInfo';
 
 const columns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -110,6 +96,11 @@ const columns: ColumnDef<TestByCommitHash>[] = [
   },
 ];
 
+interface IBootsTable {
+  treeId: string;
+  testHistory: TestHistory[];
+}
+
 export function NewBootsTable({
   treeId,
   testHistory,
@@ -128,7 +119,6 @@ export function NewBootsTable({
 
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const intl = useIntl();
-  const buttonsClassName = 'text-blue font-bold';
 
   const rawData = useMemo(
     (): TTestByCommitHashResponse => ({
@@ -240,11 +230,17 @@ export function NewBootsTable({
         filters={filters}
         onClickTest={(filter: TestsTableFilter) => onClickFilter(filter)}
       />
+      <PaginationInfo
+        table={table}
+        pagination={pagination}
+        data={data}
+        label="boots"
+      />
       <BaseTable
         headers={[]}
         headerComponents={table.getHeaderGroups()[0].headers.map(header => {
           return (
-            <TableHead key={header.id} className="border-b text-black">
+            <TableHead key={header.id}>
               {header.isPlaceholder
                 ? null
                 : flexRender(
@@ -260,7 +256,6 @@ export function NewBootsTable({
             table.getRowModel().rows.map(row => (
               <TableRow
                 key={row.id}
-                data-state={row.getIsSelected() && 'selected'}
                 onClick={() => {
                   onClickRow(data[row.index].id);
                 }}
@@ -281,39 +276,12 @@ export function NewBootsTable({
           )}
         </TableBody>
       </BaseTable>
-      <div className="flex flex-row justify-evenly text-sm">
-        <div className="flex flex-row items-center gap-2">
-          <FormattedMessage id="table.showing" />
-          <span className="font-bold">
-            {table.getState().pagination.pageIndex * pagination.pageSize} -{' '}
-            {(table.getState().pagination.pageIndex + 1) * pagination.pageSize}
-          </span>
-          <FormattedMessage id="table.of" />
-          <span className="font-bold">{data.length}</span>
-          <FormattedMessage id="global.boots" defaultMessage="Boots" />
-        </div>
-        <ItemsPerPageSelector
-          selected={table.getState().pagination.pageSize}
-          onValueChange={table.setPageSize}
-          values={ItemsPerPageValues}
-        />
-        <div className="flex flex-row items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <MdArrowBackIos className={buttonsClassName} />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <MdArrowForwardIos className={buttonsClassName} />
-          </Button>
-        </div>
-      </div>
+      <PaginationInfo
+        table={table}
+        pagination={pagination}
+        data={data}
+        label="boots"
+      />
     </div>
   );
 }

@@ -15,8 +15,6 @@ import {
   MemoizedHardwareTested,
 } from '@/pages/TreeDetails/Tabs/TestCards';
 
-import TestsTable from '@/components/Table/TestsTable';
-
 import {
   DesktopGrid,
   InnerMobileGrid,
@@ -123,7 +121,6 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
         </InnerMobileGrid>
       </MobileGrid>
 
-      <TestsTable testHistory={data.testHistory} />
       <NewTestsTable testHistory={data.testHistory} />
     </div>
   );

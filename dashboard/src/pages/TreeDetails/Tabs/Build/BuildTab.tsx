@@ -1,20 +1,18 @@
-/* eslint-disable no-console */
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import StatusChartMemoized, {
   Colors,
 } from '@/components/StatusChart/StatusCharts';
-import { TableInfo } from '@/components/Table/TableInfo';
-import { usePagination } from '@/hooks/usePagination';
-import Accordion from '@/components/Accordion/Accordion';
+// import { TableInfo } from '@/components/Table/TableInfo';
+// import { usePagination } from '@/hooks/usePagination';
+// import Accordion from '@/components/Accordion/Accordion';
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 
 import {
-  AccordionItemBuildsKeys,
   BuildsTableFilter,
   possibleBuildsTableFilter,
   TFilterObjectsKeys,
@@ -30,11 +28,13 @@ import { BuildStatus } from '@/components/Status/Status';
 
 import ListingItem from '@/components/ListingItem/ListingItem';
 
-import { ItemsPerPageValues } from '@/utils/constants/general';
+// import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import { MemoizedIssuesList } from '@/pages/TreeDetails/Tabs/TestCards';
 
 import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
+
+import { NewBuildsTable } from '@/components/NewTables/NewBuildsTable';
 
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
@@ -135,21 +135,24 @@ const ConfigsCard = ({
 const MemoizedConfigsCard = memo(ConfigsCard);
 
 const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
-  const [itemsPerPage, setItemsPerPage] = useState(ItemsPerPageValues[0]);
+  // const [itemsPerPage, setItemsPerPage] = useState(ItemsPerPageValues[0]);
 
-  const { tableFilter: filterBy } = useSearch({
-    from: '/tree/$treeId/',
-  });
   const navigate = useNavigate({
     from: '/tree/$treeId',
   });
+
+  // what's the difference?
+  const { tableFilter: filterBy } = useSearch({
+    from: '/tree/$treeId/',
+  });
   const {
-    diffFilter,
+    // diffFilter,
     tableFilter: { buildsTable: selectedFilter },
   } = useSearch({ from: '/tree/$treeId/' });
 
   const intl = useIntl();
 
+  // done
   const accordionContent = useMemo(() => {
     return treeDetailsData?.builds.map(row => ({
       ...row,
@@ -169,6 +172,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
     }));
   }, [treeDetailsData?.builds]);
 
+  // done
   const filteredContent =
     filterBy.buildsTable === 'all'
       ? accordionContent
@@ -176,16 +180,18 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           row => row.status && row.status === filterBy.buildsTable,
         );
 
-  const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
-    usePagination(
-      filteredContent?.length ?? 0,
-      itemsPerPage,
-      filterBy.bootsTable,
-      filterBy.testsTable,
-      filterBy.buildsTable,
-      diffFilter,
-    );
+  // will convert
+  // const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
+  //   usePagination(
+  //     filteredContent?.length ?? 0,
+  //     itemsPerPage,
+  //     filterBy.bootsTable,
+  //     filterBy.testsTable,
+  //     filterBy.buildsTable,
+  //     diffFilter,
+  //   );
 
+  // stays
   const toggleFilterBySection = useCallback(
     (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
       navigate({
@@ -211,6 +217,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
     [navigate],
   );
 
+  // done
   const onClickFilter = useCallback(
     (type: BuildsTableFilter) => {
       navigate({
@@ -229,55 +236,21 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
     [navigate],
   );
 
-  const tableInfoElement = (
-    <TableInfo
-      itemName="global.build"
-      startIndex={startIndex + 1}
-      endIndex={endIndex}
-      totalTrees={filteredContent?.length ?? 0}
-      itemsPerPageValues={ItemsPerPageValues}
-      itemsPerPageSelected={itemsPerPage}
-      onChangeItemsPerPage={setItemsPerPage}
-      onClickBack={onClickGoBack}
-      onClickForward={onClickGoForward}
-    />
-  );
+  // will convert
+  // const tableInfoElement = (
+  //   <TableInfo
+  //     itemName="global.build"
+  //     startIndex={startIndex + 1}
+  //     endIndex={endIndex}
+  //     totalTrees={filteredContent?.length ?? 0}
+  //     itemsPerPageValues={ItemsPerPageValues}
+  //     itemsPerPageSelected={itemsPerPage}
+  //     onChangeItemsPerPage={setItemsPerPage}
+  //     onClickBack={onClickGoBack}
+  //     onClickForward={onClickGoForward}
+  //   />
+  // );
 
-  const [sortedItems, setSortedItems] = useState(filteredContent);
-
-  // config?: string;
-  // compiler?: string;
-  // date?: string;
-  // buildErrors?: number;
-  // buildTime?: string | ReactNode;
-  // status?: 'valid' | 'invalid' | 'null';
-
-  const sortTableContent = useCallback(
-    (sortProperty?: AccordionItemBuildsKeys) => {
-      console.log('sorting ');
-      console.log(sortProperty);
-      const sorted = (filteredContent ?? []).sort((a, b) => {
-        switch (sortProperty) {
-          case 'config':
-            return a.config > b.config ? 1 : -1;
-          case 'compiler':
-            return a.compiler > b.compiler ? 1 : -1;
-          case 'date':
-            return (a.date ?? '') > (b.date ?? '') ? 1 : -1;
-          case 'buildErrors':
-            return (b.buildErrors ?? 0) - (a.buildErrors ?? 0);
-          // buildTime: get value from JSX element
-          // status: valid or not
-        }
-        return 0;
-      });
-      setSortedItems(sorted.slice()); // force rerender with slice
-      console.log('sorted');
-    },
-    [filteredContent],
-  );
-
-  console.log('rendering buildtab');
   return (
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
@@ -325,12 +298,12 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         />
       </MobileGrid>
 
-      {sortedItems && (
+      {filteredContent && (
         <div className="flex flex-col gap-4">
           <div className="text-lg">
             <FormattedMessage id="treeDetails.builds" />
           </div>
-          <div className="flex flex-row justify-between">
+          {/* <div className="flex flex-row justify-between">
             <TableStatusFilter
               onClickBuild={(filter: BuildsTableFilter) =>
                 onClickFilter(filter)
@@ -359,15 +332,18 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
               ]}
             />
             {tableInfoElement}
-          </div>
-          <Accordion
+          </div> */}
+          {/* <Accordion
             type="build"
-            items={sortedItems.slice(startIndex, endIndex)}
-            headerOnClick={(what: AccordionItemBuildsKeys) => {
-              sortTableContent(what);
-            }}
+            items={filteredContent.slice(startIndex, endIndex)}
+          /> */}
+          {/* <div className="flex justify-end">{tableInfoElement}</div> */}
+
+          <NewBuildsTable
+            buildItems={
+              treeDetailsData !== undefined ? treeDetailsData.builds : []
+            }
           />
-          <div className="flex justify-end">{tableInfoElement}</div>
         </div>
       )}
     </div>

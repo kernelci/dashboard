@@ -46,8 +46,6 @@ export type AccordionItemBuilds = {
   modules?: string;
 };
 
-export type AccordionItemBuildsKeys = keyof AccordionItemBuilds;
-
 export type BuildsTab = {
   builds: BuildsTabBuild[];
   summary: {

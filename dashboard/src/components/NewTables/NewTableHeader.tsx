@@ -11,13 +11,17 @@ import { Button } from '@/components/ui/button';
 
 import { TIndividualTest, TPathTests } from '@/types/general';
 import { formattedBreakLineValue, MessagesKey } from '@/locales/messages';
-import { TestByCommitHash } from '@/types/tree/TreeDetails';
+import {
+  AccordionItemBuilds,
+  TestByCommitHash,
+} from '@/types/tree/TreeDetails';
 
 interface INewTableHeader {
   column:
     | Column<TIndividualTest>
     | Column<TestByCommitHash>
-    | Column<TPathTests>;
+    | Column<TPathTests>
+    | Column<AccordionItemBuilds>;
   sortable: boolean;
   intlKey: MessagesKey;
   intlDefaultMessage: string;
@@ -35,7 +39,7 @@ export function NewTableHeader({
     <span className="flex">
       <Button
         variant="ghost"
-        className="w-full justify-start px-2"
+        className="justify-start px-2"
         onClick={() => {
           if (sortable)
             if (column.getIsSorted() === 'asc') {
@@ -52,7 +56,6 @@ export function NewTableHeader({
           id={intlKey}
           defaultMessage={intlDefaultMessage}
         ></FormattedMessage>
-        {/* {sortable && <ArrowUpDown className="ml-2 h-4 w-4" />} */}
 
         {(column.getIsSorted() as string) === 'asc' ? (
           <ArrowUp className="ml-1 h-4 w-4" />
@@ -62,13 +65,12 @@ export function NewTableHeader({
           <ArrowUpDown className="ml-1 h-4 w-4" color="gray" />
         )}
       </Button>
-      {/* TODO: fix ui to not show tooltip at the end of the column */}
       {tooltipId && (
         <Tooltip>
           <TooltipTrigger>
             <LiaQuestionCircle />
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent className="font-normal">
             <FormattedMessage id={tooltipId} values={formattedBreakLineValue} />
           </TooltipContent>
         </Tooltip>
