@@ -98,19 +98,20 @@ TableCell.displayName = 'TableCell';
 
 type TableCellWithLinkAttributes = React.TdHTMLAttributes<HTMLTableCellElement> & {
   linkProps: LinkProps
+  linkClassName?: string
 }
 
 const TableCellWithLink = React.forwardRef<
   HTMLTableCellElement,
   TableCellWithLinkAttributes
->(({ className, children, linkProps, ...props }, ref) => (
+>(({ className, children, linkProps, linkClassName, ...props }, ref) => (
     <td
       ref={ref}
       className={cn('align-middle [&:has([role=checkbox])]:pr-0', className)}
       {...props}
     >
       <Link
-        className={cn('p-4 flex flex-1')}
+        className={cn('p-4 flex flex-1', linkClassName)}
         {...linkProps}
       >
         {children}

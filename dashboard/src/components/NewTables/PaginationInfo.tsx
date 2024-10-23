@@ -15,6 +15,8 @@ import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import { TPathTests } from '@/types/general';
 
+import { TreeTableBody } from '@/types/tree/Tree';
+
 import { ItemsPerPageSelector } from '../Table/TableInfo';
 import { Button } from '../ui/button';
 
@@ -22,10 +24,11 @@ interface IPaginationInfo {
   table:
     | Table<TestByCommitHash>
     | Table<TPathTests>
-    | Table<AccordionItemBuilds>;
+    | Table<AccordionItemBuilds>
+    | Table<TreeTableBody>;
   pagination: PaginationState;
   data: TestByCommitHash[] | TPathTests[] | AccordionItemBuilds[];
-  label: 'builds' | 'boots' | 'tests';
+  label: 'builds' | 'boots' | 'tests' | 'trees';
 }
 
 export function PaginationInfo({
@@ -57,11 +60,13 @@ export function PaginationInfo({
         return (
           <FormattedMessage id="treeDetails.tests" defaultMessage="Tests" />
         );
+      case 'trees':
+        return <FormattedMessage id="global.trees" defaultMessage="Trees" />;
     }
   }, [label]);
 
   return (
-    <div className="flex flex-row justify-end gap-10 text-sm">
+    <div className="flex flex-row justify-end gap-4 text-sm">
       <div className="flex flex-row items-center gap-2">
         <FormattedMessage id="table.showing" />
         <span className="font-bold">

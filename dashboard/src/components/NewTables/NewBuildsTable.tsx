@@ -176,16 +176,16 @@ export function NewBuildsTable({ buildItems }: IBuildsTable): JSX.Element {
     }));
   }, [buildItems]);
 
-  const data: AccordionItemBuilds[] =
-    filterBy.buildsTable === 'all'
+  const data = useMemo((): AccordionItemBuilds[] => {
+    return filterBy.buildsTable === 'all'
       ? rawData
       : rawData?.filter(
           row => row.status && row.status === filterBy.buildsTable,
         );
+  }, [filterBy.buildsTable, rawData]);
 
   const onClickFilter = useCallback(
     (type: BuildsTableFilter) => {
-      console.log('clicked on ' + type);
       navigate({
         search: previousParams => {
           return {

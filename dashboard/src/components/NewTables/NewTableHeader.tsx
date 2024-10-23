@@ -15,13 +15,15 @@ import {
   AccordionItemBuilds,
   TestByCommitHash,
 } from '@/types/tree/TreeDetails';
+import { TreeTableBody } from '@/types/tree/Tree';
 
 interface INewTableHeader {
   column:
     | Column<TIndividualTest>
     | Column<TestByCommitHash>
     | Column<TPathTests>
-    | Column<AccordionItemBuilds>;
+    | Column<AccordionItemBuilds>
+    | Column<TreeTableBody>;
   sortable: boolean;
   intlKey: MessagesKey;
   intlDefaultMessage: string;

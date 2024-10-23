@@ -16,6 +16,8 @@ import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
+import { NewTreeTable } from '../NewTables/NewTreeTable';
+
 interface ITreeListingPage {
   inputFilter: string;
 }
@@ -137,19 +139,20 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
 
   return (
     <QuerySwitcher status={fastStatus} data={fastData}>
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-left text-sm text-dimGray">
-            <FormattedMessage
-              id="global.projectUnderDevelopment"
-              values={formattedBreakLineValue}
-            />
-          </span>
+      {/* <div className="flex flex-col gap-6"> */}
+      {/* <span className="text-left text-sm text-dimGray">
+          <FormattedMessage
+            id="global.projectUnderDevelopment"
+            values={formattedBreakLineValue}
+          />
+        </span> */}
+      {/* <div className="flex items-center justify-between gap-4">
           {tableInfoElement}
         </div>
         <TreeTable treeTableRows={listItems.slice(startIndex, endIndex)} />
-        <div className="flex flex-col items-end">{tableInfoElement}</div>
-      </div>
+        <div className="flex flex-col items-end">{tableInfoElement}</div> */}
+      {/* </div> */}
+      <NewTreeTable treeTableRows={listItems} />
     </QuerySwitcher>
   );
 };
