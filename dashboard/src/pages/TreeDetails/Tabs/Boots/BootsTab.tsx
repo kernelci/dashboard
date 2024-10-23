@@ -13,7 +13,6 @@ import {
   MemoizedIssuesList,
   MemoizedStatusChart,
 } from '@/pages/TreeDetails/Tabs/TestCards';
-import BootsTable from '@/components/Table/BootsTable';
 
 import {
   DesktopGrid,
@@ -22,6 +21,8 @@ import {
 } from '@/pages/TreeDetails/Tabs/TabGrid';
 
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
+
+import { BootsTable } from './BootsTable';
 
 interface BootsTabProps {
   reqFilter: Record<string, string[]>;
