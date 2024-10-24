@@ -80,14 +80,16 @@ const mapFiltersToUrlSearchParams = (
 // TODO, remove this function, is just a step further towards the final implementation
 const mapFiltersKeysToBackendCompatible = (
   filter: TTreeDetailsFilter | Record<string, never>,
-): Record<string, string> => {
-  const filterParam: { [key: string]: string } = {};
+): Record<string, string[]> => {
+  const filterParam: { [key: string]: string[] } = {};
 
   Object.keys(filter).forEach(key => {
     const filterList = filter[key as keyof TTreeDetailsFilter];
-    filterList?.forEach(
-      value => (filterParam[`filter_${key}`] = value.toString()),
-    );
+    filterList?.forEach(value => {
+      if (!filterParam[`filter_${key}`])
+        filterParam[`filter_${key}`] = [value.toString()];
+      else filterParam[`filter_${key}`].push(value.toString());
+    });
   });
 
   return filterParam;
@@ -124,11 +126,13 @@ const fetchTreeTestsData = async (
     'fetchTreeTestsData - useSearchTab',
   );
 
+  const backendCompatibleFilters = mapFiltersKeysToBackendCompatible(filter);
+
   const params = {
     git_branch: treeSearchParameters.gitBranch,
     git_url: treeSearchParameters.gitUrl,
     origin: treeSearchParameters.origin,
-    ...mapFiltersKeysToBackendCompatible(filter),
+    ...backendCompatibleFilters,
   };
 
   const res = await http.get<TTreeTestsFullData>(`/api/tree/${treeId}/full`, {

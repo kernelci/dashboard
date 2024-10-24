@@ -25,8 +25,10 @@ import {
   TFilterNumberKeys,
   isTFilterObjectKeys,
   BuildsTab as TreeDetailsType,
+  TTreeTestsFullData,
+  TTreeDetailsFilter,
 } from '@/types/tree/TreeDetails';
-import { useBuildsTab } from '@/api/TreeDetails';
+import { useBuildsTab, useTestsTab } from '@/api/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
 import { TRequestFiltersValues } from '@/utils/filters';
 
@@ -53,6 +55,7 @@ const filterFieldMap = {
   'test.status': 'testStatus',
   'test.duration_[gte]': 'testDurationMin',
   'test.duration_[lte]': 'testDurationMax',
+  'test.hardware': 'hardware',
 } as const satisfies Record<TRequestFiltersValues, TFilterKeys>;
 
 export const mapFilterToReq = (
@@ -83,7 +86,10 @@ export const mapFilterToReq = (
   return filterMapped;
 };
 
-export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
+export const createFilter = (
+  data: TreeDetailsType | undefined,
+  testData: TTreeTestsFullData | undefined,
+): TFilter => {
   const buildStatus = { Success: false, Failure: false };
 
   const bootStatus: TFilterValues = {};
@@ -97,6 +103,8 @@ export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
   const archs: TFilterValues = {};
   const compilers: TFilterValues = {};
 
+  const hardware: TFilterValues = {};
+
   if (data)
     data.builds.forEach(b => {
       if (b.config_name) configs[b.config_name] = false;
@@ -104,7 +112,17 @@ export const createFilter = (data: TreeDetailsType | undefined): TFilter => {
       if (b.compiler) compilers[b.compiler] = false;
     });
 
-  return { buildStatus, configs, archs, compilers, bootStatus, testStatus };
+  if (testData) testData.hardwareUsed.forEach(h => (hardware[h] = false));
+
+  return {
+    buildStatus,
+    configs,
+    archs,
+    compilers,
+    bootStatus,
+    testStatus,
+    hardware,
+  };
 };
 
 const parseCheckboxFilter = (filter: TFilter, diffFilter: TFilter): TFilter => {
@@ -200,6 +218,16 @@ const CheckboxSection = ({
         },
       },
       {
+        title: intl.formatMessage({ id: 'filter.hardware' }),
+        subtitle: intl.formatMessage({ id: 'filter.hardwareSubtitle' }),
+        items: parsedFilter.hardware,
+        onClickItem: (value: string): void => {
+          setDiffFilter(old =>
+            changeCheckboxFilterValue(old, 'hardware', value),
+          );
+        },
+      },
+      {
         title: intl.formatMessage({ id: 'global.configs' }),
         subtitle: intl.formatMessage({ id: 'filter.configsSubtitle' }),
         items: parsedFilter.configs,
@@ -236,6 +264,7 @@ const CheckboxSection = ({
     parsedFilter.compilers,
     parsedFilter.bootStatus,
     parsedFilter.testStatus,
+    parsedFilter.hardware,
     setDiffFilter,
   ]);
 
@@ -328,13 +357,18 @@ const TreeDetailsFilter = ({
 
   const { data, isLoading } = useBuildsTab({ treeId });
 
+  const { data: testData, isLoading: testIsLoading } = useTestsTab({
+    treeId,
+    filter: {} as TTreeDetailsFilter,
+  });
+
   const navigate = useNavigate({
     from: '/tree/$treeId',
   });
 
   const filter: TFilter = useMemo(() => {
-    return createFilter(data);
-  }, [data]);
+    return createFilter(data, testData);
+  }, [data, testData]);
 
   const [diffFilter, setDiffFilter] = useState<TFilter>(paramFilter);
 
@@ -368,7 +402,7 @@ const TreeDetailsFilter = ({
       onOpenChange={handleOpenChange}
       onCancel={onClickCancel}
     >
-      {isLoading ? (
+      {isLoading || testIsLoading ? (
         <Skeleton>
           <FormattedMessage id="global.loading" />
         </Skeleton>

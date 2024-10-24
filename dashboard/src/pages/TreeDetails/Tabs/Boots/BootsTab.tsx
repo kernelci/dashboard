@@ -54,7 +54,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
 
   if (!data) return <div />;
 
-  if (data.testHistory.length < 1) {
+  if (data.bootHistory.length < 1) {
     return (
       <BaseCard
         title={<FormattedMessage id="bootsTab.info" />}
