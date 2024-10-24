@@ -1,6 +1,6 @@
 import { ReactElement, useMemo } from 'react';
 
-import { MdCheck, MdClose, MdChevronRight } from 'react-icons/md';
+import { MdCheck, MdClose } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -34,6 +34,8 @@ import {
 } from '@/components/ui/collapsible';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
+
+import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 
 import AccordionBuildContent from './BuildAccordionContent';
 
@@ -98,12 +100,6 @@ const Accordion = ({ items, type }: IAccordion): JSX.Element => {
       headers={accordionTableHeader}
       body={<AccordionTableBody items={items} type={type} />}
     />
-  );
-};
-
-const ChevronRightAnimate = (): JSX.Element => {
-  return (
-    <MdChevronRight className="transition group-data-[state='open']:rotate-90" />
   );
 };
 
