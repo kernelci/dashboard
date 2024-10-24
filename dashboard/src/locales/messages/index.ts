@@ -74,6 +74,8 @@ export const messages = {
     'filter.configsSubtitle': 'Please select one or more configs:',
     'filter.durationSubtitle': 'Please select the duration range:',
     'filter.filtering': 'Filtering',
+    'filter.hardware': 'Hardware',
+    'filter.hardwareSubtitle': 'Please select one or more hardwares:',
     'filter.invalid': 'Please provide a time limit, in days, greater than 0',
     'filter.max': 'Max',
     'filter.min': 'Min',

@@ -26,6 +26,7 @@ class TreeDetailsSlow(View):
         self.filterTreeDetailsConfigs = set()
         self.filterTreeDetailsCompiler = set()
         self.filterArchitecture = set()
+        self.filterHardware = set()
         self.filter_handlers = {
             "boot.status": self.__handle_boot_status,
             "boot.duration": self.__handle_boot_duration,
@@ -34,6 +35,7 @@ class TreeDetailsSlow(View):
             "config_name": self.__handle_config_name,
             "compiler": self.__handle_compiler,
             "architecture": self.__handle_architecture,
+            "test.hardware": self.__handle_hardware,
         }
 
         self.testHistory = []
@@ -89,6 +91,9 @@ class TreeDetailsSlow(View):
 
     def __handle_architecture(self, current_filter):
         self.filterArchitecture.add(current_filter["value"])
+
+    def __handle_hardware(self, current_filter):
+        self.filterHardware.add(current_filter["value"])
 
     def __processFilters(self, request):
         try:
@@ -213,6 +218,10 @@ class TreeDetailsSlow(View):
 
         if len(self.filterBootStatus) > 0 and (testStatus not in self.filterBootStatus):
             return
+        if (
+            self.filterBootDurationMax is not None or self.filterBootDurationMin is not None
+        ) and testDuration is None:
+            return
         if self.filterBootDurationMax is not None and (
             toIntOrDefault(testDuration, 0) > self.filterBootDurationMax
         ):
@@ -264,6 +273,23 @@ class TreeDetailsSlow(View):
 
             self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
+    def __nonBootsGuard(self, testStatus, testDuration):
+        if len(self.filterTestStatus) > 0 and (testStatus not in self.filterTestStatus):
+            return False
+        if (
+            self.filterTestDurationMax is not None or self.filterTestDurationMin is not None
+        ) and testDuration is None:
+            return False
+        if self.filterTestDurationMax is not None and (
+            toIntOrDefault(testDuration, 0) > self.filterTestDurationMax
+        ):
+            return False
+        if self.filterTestDurationMin is not None and (
+            toIntOrDefault(testDuration, 0) < self.filterTestDurationMin
+        ):
+            return False
+        return True
+
     def __processNonBootsTest(self, currentRowData):
         (
             path,
@@ -285,15 +311,7 @@ class TreeDetailsSlow(View):
             testEnvironmentCompatible,
         ) = currentRowData
 
-        if len(self.filterTestStatus) > 0 and (testStatus not in self.filterTestStatus):
-            return
-        if self.filterTestDurationMax is not None and (
-            toIntOrDefault(testDuration, 0) > self.filterTestDurationMax
-        ):
-            return
-        if self.filterTestDurationMin is not None and (
-            toIntOrDefault(testDuration, 0) < self.filterTestDurationMin
-        ):
+        if not self.__nonBootsGuard(testStatus, testDuration):
             return
 
         if issue_id:
@@ -448,6 +466,12 @@ class TreeDetailsSlow(View):
                 issue_report_url,
                 testEnvironmentCompatible,
             ) = currentRowData
+
+            if (
+                len(self.filterHardware) > 0
+                and (testEnvironmentCompatible not in self.filterHardware)
+            ):
+                continue
 
             if testEnvironmentCompatible is not None:
                 self.hardwareUsed.add(testEnvironmentCompatible)
