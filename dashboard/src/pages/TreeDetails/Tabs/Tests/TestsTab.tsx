@@ -15,14 +15,14 @@ import {
   MemoizedHardwareTested,
 } from '@/pages/TreeDetails/Tabs/TestCards';
 
-import TestsTable from '@/components/Table/TestsTable';
-
 import {
   DesktopGrid,
   InnerMobileGrid,
   MobileGrid,
 } from '@/pages/TreeDetails/Tabs/TabGrid';
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
+
+import { TestsTable } from './TestsTable';
 
 interface TestsTabProps {
   reqFilter: Record<string, string[]>;
