@@ -10,21 +10,32 @@ import {
 } from '@/components/ui/table';
 
 interface IBaseTableCommon {
-  headers: ReactElement[];
   className?: string;
 }
 
-interface IBodyTable extends IBaseTableCommon {
+interface IBodyTable {
   body: React.ReactNode;
   children?: never;
 }
 
-interface IChildrenTable extends IBaseTableCommon {
+interface IChildrenTable {
   body?: never;
   children: React.ReactNode;
 }
 
-type TBaseTable = IBodyTable | IChildrenTable;
+interface IHeaderTable {
+  headers: ReactElement[];
+  headerComponents?: never;
+}
+
+interface IHeaderComponentsTable {
+  headers?: never;
+  headerComponents: JSX.Element[];
+}
+
+type TBaseTable = (IBodyTable | IChildrenTable) &
+  (IHeaderTable | IHeaderComponentsTable) &
+  IBaseTableCommon;
 
 export const DumbBaseTable = ({
   children,
@@ -66,6 +77,7 @@ export const TableHead = ({
 
 const BaseTable = ({
   headers,
+  headerComponents,
   body,
   children,
   className,
@@ -74,9 +86,12 @@ const BaseTable = ({
     <div className="h-full">
       <DumbBaseTable className={className}>
         <DumbTableHeader>
-          {headers.map(column => (
-            <TableHead key={column.key}>{column}</TableHead>
-          ))}
+          {headerComponents ??
+            headers.map(column => (
+              <TableHead className="border-b text-black" key={column.key}>
+                {column}
+              </TableHead>
+            ))}
         </DumbTableHeader>
         {body || children}
       </DumbBaseTable>
