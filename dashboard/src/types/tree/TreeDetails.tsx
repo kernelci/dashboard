@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 
 import { MessagesKey } from '@/locales/messages';
 
-import { TIssue } from '@/types/general';
+import { TestHistory, TIssue } from '@/types/general';
 
 import type { Status } from '@/types/database';
 
@@ -78,14 +78,6 @@ export interface TTreeDetailsFilter
   }> {
   valid?: string[];
 }
-
-export type TestHistory = {
-  startTime: string;
-  status: Status;
-  path: string;
-  id: string;
-  duration?: number;
-};
 
 type CompilersPerArchitecture = {
   [key: string]: string[];

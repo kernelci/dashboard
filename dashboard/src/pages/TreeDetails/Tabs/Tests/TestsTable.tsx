@@ -20,11 +20,10 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import {
   possibleTestsTableFilter,
-  TestHistory,
   TestsTableFilter,
 } from '@/types/tree/TreeDetails';
 
-import { TPathTests } from '@/types/general';
+import { TestHistory, TPathTests } from '@/types/general';
 
 import { StatusTable } from '@/utils/constants/database';
 
@@ -99,6 +98,8 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
   const { tableFilter } = useSearch({
     from: '/tree/$treeId/',
   });
+
+  console.log('testHistory:', testHistory);
 
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const intl = useIntl();
@@ -302,6 +303,31 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
       expanded,
     },
   });
+
+  const tableHeaders = useMemo((): JSX.Element[] => {
+    return table.getHeaderGroups()[0].headers.map(header => {
+      return (
+        <TableHead key={header.id}>
+          {header.isPlaceholder
+            ? null
+            : flexRender(header.column.columnDef.header, header.getContext())}
+        </TableHead>
+      );
+    });
+  }, [table]);
+
+  const headers = table.getHeaderGroups()[0].headers;
+  const tableHeaderss = useMemo((): JSX.Element[] => {
+    return headers.map(header => {
+      return (
+        <TableHead key={header.id}>
+          {header.isPlaceholder
+            ? null
+            : flexRender(header.column.columnDef.header, header.getContext())}
+        </TableHead>
+      );
+    });
+  }, [headers]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
