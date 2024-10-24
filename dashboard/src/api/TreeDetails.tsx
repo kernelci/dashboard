@@ -62,6 +62,7 @@ const fetchTreeDetailData = async (
   return res.data;
 };
 
+/** @deprecated */
 const mapFiltersToUrlSearchParams = (
   filter: TTreeDetailsFilter | Record<string, never>,
 ): URLSearchParams => {
@@ -256,15 +257,19 @@ const fetchTreeCommitHistory = async (
   origin: string,
   gitUrl: string,
   gitBranch: string,
+  filters: TTreeDetailsFilter,
 ): Promise<TTreeCommitHistoryResponse> => {
+  // TODO: remove deprecated function
+  const searchParam = mapFiltersToUrlSearchParams(filters);
+
+  searchParam.append('origin', origin);
+  searchParam.append('git_url', gitUrl);
+  searchParam.append('git_branch', gitBranch);
+
   const res = await http.get<TTreeCommitHistoryResponse>(
     `/api/tree/${commitHash}/commits`,
     {
-      params: {
-        origin,
-        git_url: gitUrl,
-        git_branch: gitBranch,
-      },
+      params: searchParam,
     },
   );
   return res.data;
@@ -276,19 +281,36 @@ export const useTreeCommitHistory = (
     origin,
     gitUrl,
     gitBranch,
+    filter,
   }: {
     commitHash: string;
     origin: string;
     gitUrl: string;
     gitBranch: string;
+    filter: TTreeDetailsFilter;
   },
   { enabled = true },
 ): UseQueryResult<TTreeCommitHistoryResponse> => {
+  const testFilter = getTargetFilter(filter, 'test');
+  const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
+
+  const filters = {
+    ...treeDetailsFilter,
+    ...testFilter,
+  };
+
   return useQuery({
-    queryKey: ['treeCommitHistory', commitHash, origin, gitUrl, gitBranch],
+    queryKey: [
+      'treeCommitHistory',
+      commitHash,
+      origin,
+      gitUrl,
+      gitBranch,
+      filters,
+    ],
     enabled,
     queryFn: () =>
-      fetchTreeCommitHistory(commitHash, origin, gitUrl, gitBranch),
+      fetchTreeCommitHistory(commitHash, origin, gitUrl, gitBranch, filters),
   });
 };
 

@@ -14,6 +14,7 @@ import type { TLineChartProps } from '@/components/LineChart/LineChart';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MessagesKey } from '@/locales/messages';
 import { formatDate } from '@/utils/utils';
+import { mapFilterToReq } from '@/pages/TreeDetails/TreeDetailsFilter';
 
 const graphDisplaySize = 7;
 
@@ -22,6 +23,7 @@ const CommitNavigationGraph = (): JSX.Element => {
   const {
     origin,
     currentTreeDetailsTab,
+    diffFilter,
     treeInfo: { gitUrl, gitBranch, headCommitHash },
   } = useSearch({ from: '/tree/$treeId/' });
 
@@ -33,12 +35,15 @@ const CommitNavigationGraph = (): JSX.Element => {
     from: '/tree/$treeId',
   });
 
+  const reqFilter = mapFilterToReq(diffFilter);
+
   const { data, status } = useTreeCommitHistory(
     {
       gitBranch: gitBranch ?? '',
       gitUrl: gitUrl ?? '',
       commitHash: headCommitHash ?? '',
       origin: origin,
+      filter: reqFilter,
     },
     {
       enabled: !!gitBranch && !!gitUrl,
