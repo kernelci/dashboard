@@ -12,35 +12,26 @@ http 'http://localhost:8000/api/build/kernelci:kernelci.org:66a1d00e546da93e297e
 # X-Frame-Options: DENY
 
 # [
-#   {
-#     "current_path": "baseline",
-#     "start_time": "2024-07-25T04:12:19.892000Z",
-#     "fail_tests": 0,
-#     "error_tests": 0,
-#     "miss_tests": 0,
-#     "pass_tests": 88,
-#     "done_tests": 0,
-#     "skip_tests": 0,
-#     "null_tests": 0,
-#     "total_tests": 88,
-#     "origins": [
-#       "kernelci"
-#     ]
-#   },
-#   {
-#     "current_path": "baseline_fvp",
-#     "start_time": "2024-07-25T04:20:06.543000Z",
-#     "fail_tests": 0,
-#     "error_tests": 0,
-#     "miss_tests": 0,
-#     "pass_tests": 4,
-#     "done_tests": 0,
-#     "skip_tests": 0,
-#     "null_tests": 0,
-#     "total_tests": 4,
-#     "origins": [
-#       "kernelci"
-#     ]
-#   }
-# ...
-# ]
+  #   {
+  #     "id": "kernelci:kernelci.org:66a1d0d262f8cae67a7e7095",
+  #     "duration": null,
+  #     "status": "PASS",
+  #     "path": "baseline.login",
+  #     "startTime": "2024-07-25T04:13:06.105Z"
+  #   },
+  #   {
+  #     "id": "kernelci:kernelci.org:66a1d0a38e8d1053a47e707c",
+  #     "duration": null,
+  #     "status": "PASS",
+  #     "path": "baseline.login",
+  #     "startTime": "2024-07-25T04:12:19.892Z"
+  #   },
+  #   {
+  #     "id": "kernelci:kernelci.org:66a1d0a38e8d1053a47e707e",
+  #     "duration": null,
+  #     "status": "PASS",
+  #     "path": "baseline.dmesg.emerg",
+  #     "startTime": "2024-07-25T04:12:19.927Z"
+  #   },
+  #   ...
+  # ]

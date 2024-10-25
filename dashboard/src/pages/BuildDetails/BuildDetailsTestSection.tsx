@@ -1,32 +1,22 @@
-import { useCallback, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import { RiProhibited2Line } from 'react-icons/ri';
 
+import { useNavigate, useSearch } from '@tanstack/react-router';
+
+import { useCallback } from 'react';
+
 import { Separator } from '@/components/ui/separator';
 
-import BaseTable from '@/components/Table/BaseTable';
-import { TableInfo } from '@/components/Table/TableInfo';
-import { TableCell, TableRow } from '@/components/ui/table';
 import { useBuildTests } from '@/api/buildTests';
-import { usePagination } from '@/hooks/usePagination';
-import { MessagesKey } from '@/locales/messages';
-import { GroupedTestStatus } from '@/components/Status/Status';
-import { formatDate } from '@/utils/utils';
-import { ItemsPerPageValues } from '@/utils/constants/general';
+
+import { TestsTableFilter } from '@/types/tree/TreeDetails';
+
+import { TestsTable } from '../TreeDetails/Tabs/Tests/TestsTable';
 
 interface IBuildDetailsTestSection {
   buildId: string;
 }
-
-const headerLabelIds: MessagesKey[] = [
-  'global.origins',
-  'global.name',
-  'buildDetails.testResults',
-  'buildDetails.startTime',
-];
-
-const ITEMS_PER_PAGE = 10;
 
 const NoTestFound = (): JSX.Element => (
   <div className="flex flex-col items-center py-6 text-weakGray">
@@ -41,64 +31,29 @@ const BuildDetailsTestSection = ({
   buildId,
 }: IBuildDetailsTestSection): JSX.Element => {
   const intl = useIntl();
-  const [itemsPerPage, setItemsPerPage] = useState(ItemsPerPageValues[0]);
-  const [pathParam, setPathParam] = useState('');
-  const { data, error } = useBuildTests(buildId, pathParam);
-  const data_len = data?.length || 0;
-  const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
-    usePagination(data_len, ITEMS_PER_PAGE);
+  const { data, error } = useBuildTests(buildId);
+  const { tableFilter } = useSearch({
+    from: '/tree/$treeId/build/$buildId/',
+  });
 
-  const onClickName = useCallback(
-    (e: React.MouseEvent<HTMLTableCellElement>) => {
-      if (e.target instanceof HTMLTableCellElement) {
-        setPathParam(e.target.innerText);
-      }
+  const navigate = useNavigate({ from: '/tree/$treeId/build/$buildId' });
+
+  const onClickFilter = useCallback(
+    (filter: TestsTableFilter): void => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: {
+              bootsTable: previousParams.tableFilter.bootsTable,
+              buildsTable: previousParams.tableFilter.buildsTable,
+              testsTable: filter,
+            },
+          };
+        },
+      });
     },
-    [],
-  );
-
-  const headers = useMemo(() => {
-    return headerLabelIds.map(labelId => (
-      <FormattedMessage key={labelId} id={labelId} />
-    ));
-  }, []);
-
-  const rows = useMemo(() => {
-    if (!data || error) return <></>;
-    return data.slice(startIndex, endIndex).map(test => (
-      <TableRow key={test.current_path}>
-        <TableCell>{test.origins.join(', ')}</TableCell>
-        <TableCell onClick={onClickName}>{test.current_path}</TableCell>
-
-        <TableCell className="flex flex-row gap-1">
-          <GroupedTestStatus
-            pass={test.pass_tests}
-            done={test.done_tests}
-            miss={test.miss_tests}
-            fail={test.fail_tests}
-            skip={test.skip_tests}
-            error={test.error_tests}
-          />
-        </TableCell>
-        <TableCell>{formatDate(test.start_time)}</TableCell>
-      </TableRow>
-    ));
-  }, [data, error, onClickName, startIndex, endIndex]);
-
-  const tableInfoElement = (
-    <div className="flex flex-col items-end">
-      <TableInfo
-        itemName="global.tests"
-        startIndex={startIndex + 1}
-        endIndex={endIndex}
-        totalTrees={data_len}
-        itemsPerPageValues={ItemsPerPageValues}
-        itemsPerPageSelected={itemsPerPage}
-        onChangeItemsPerPage={setItemsPerPage}
-        onClickBack={onClickGoBack}
-        onClickForward={onClickGoForward}
-      />
-    </div>
+    [navigate],
   );
 
   const hasTest = data && data.length > 0 && !error;
@@ -110,9 +65,11 @@ const BuildDetailsTestSection = ({
       <Separator className="my-6 bg-darkGray" />
       {hasTest ? (
         <div className="flex flex-col gap-6">
-          {tableInfoElement}
-          <BaseTable headers={headers}>{rows}</BaseTable>
-          {tableInfoElement}
+          <TestsTable
+            testHistory={data}
+            onClickFilter={onClickFilter}
+            tableFilter={tableFilter}
+          />
         </div>
       ) : (
         <NoTestFound />

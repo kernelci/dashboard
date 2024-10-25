@@ -20,7 +20,6 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import {
   possibleTestsTableFilter,
   TestByCommitHash,
-  TestHistory,
   TestsTableFilter,
   TTestByCommitHashResponse,
 } from '@/types/tree/TreeDetails';
@@ -35,6 +34,8 @@ import {
   TableCellWithLink,
   TableRow,
 } from '@/components/ui/table';
+
+import { TestHistory } from '@/types/general';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
