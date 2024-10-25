@@ -9,6 +9,7 @@ export interface ITabItem {
   name: MessagesKey;
   content: ReactElement;
   disabled?: boolean;
+  rightElement?: ReactElement;
 }
 
 type TabsProp = ComponentProps<typeof Tabs>;
@@ -37,7 +38,8 @@ const TabsComponent = ({
           key={tab.name}
           value={tab.name}
         >
-          <FormattedMessage id={tab.name} />
+          <FormattedMessage id={tab.name} />{' '}
+          <div className="pl-2">{tab.rightElement}</div>
         </TabsTrigger>
       )),
     [tabs],
