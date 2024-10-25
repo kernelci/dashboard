@@ -27,8 +27,7 @@ import { Button } from '@/components/ui/button';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
-
-import { IAccordionItems } from './Accordion';
+import { TPathTests } from '@/types/general';
 
 export interface IBuildAccordionContent {
   testStatus: {
@@ -119,6 +118,10 @@ const AccordBuildStatusChart = ({
     </>
   );
 };
+
+interface IAccordionItems {
+  accordionData: AccordionItemBuilds | TPathTests;
+}
 
 const AccordionBuildContent = ({
   accordionData,
