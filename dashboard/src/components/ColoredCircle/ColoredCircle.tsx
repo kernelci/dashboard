@@ -26,7 +26,7 @@ const TooltipWrapper = ({
   }
   return (
     <Tooltip>
-      <TooltipTrigger>{children}</TooltipTrigger>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
       {tooltipText && (
         <TooltipContent>{formatMessage({ id: tooltipText })}</TooltipContent>
       )}
