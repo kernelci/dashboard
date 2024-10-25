@@ -36,8 +36,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
+import {
+  BuildStatus as BuildStatusComponent,
+  GroupedTestStatus,
+} from '@/components/Status/Status';
+
 import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
-import TreeDetailsTab from './Tabs/TreeDetailsTab';
+import TreeDetailsTab, {
+  TreeDetailsTabRightElement,
+} from './Tabs/TreeDetailsTab';
 
 import TreeDetailsFilterList from './TreeDetailsFilterList';
 import { MemoizedHardwareUsed } from './Tabs/TestCards';
@@ -146,6 +153,43 @@ function TreeDetails(): JSX.Element {
     () => <TreeDetailsFilterList filter={diffFilter} />,
     [diffFilter],
   );
+
+  const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
+    const { valid, invalid } = buildData?.summary.builds ?? {};
+    const { testStatusSummary } = testsData ?? {};
+
+    const { bootStatusSummary } = testsData ?? {};
+
+    return {
+      'treeDetails.tests': testStatusSummary ? (
+        <GroupedTestStatus
+          fail={testStatusSummary.FAIL}
+          pass={testStatusSummary.PASS}
+          hideInconclusive
+        />
+      ) : (
+        <></>
+      ),
+      'treeDetails.boots': bootStatusSummary ? (
+        <GroupedTestStatus
+          fail={bootStatusSummary.FAIL}
+          pass={bootStatusSummary.PASS}
+          hideInconclusive
+        />
+      ) : (
+        <></>
+      ),
+      'treeDetails.builds': buildData ? (
+        <BuildStatusComponent
+          valid={valid}
+          invalid={invalid}
+          hideInconclusive
+        />
+      ) : (
+        <></>
+      ),
+    };
+  }, [buildData, testsData]);
 
   //TODO: at some point `treeUrl` should be returned in `data`
   const treeUrl = useMemo(() => {
@@ -271,6 +315,7 @@ function TreeDetails(): JSX.Element {
           treeDetailsData={treeDetailsData}
           filterListElement={filterListElement}
           reqFilter={reqFilter}
+          countElements={tabsCounts}
         />
       </div>
     </div>

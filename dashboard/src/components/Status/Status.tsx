@@ -10,70 +10,8 @@ interface ITestStatus {
   skip?: number;
   nullStatus?: number;
   forceNumber?: boolean;
+  hideInconclusive?: boolean;
 }
-
-interface IBuildStatus {
-  valid?: number;
-  invalid?: number;
-  unknown?: number;
-}
-
-export const TestStatus = ({
-  pass,
-  error,
-  miss,
-  fail,
-  done,
-  skip,
-  forceNumber = true,
-}: ITestStatus): JSX.Element => {
-  return (
-    <div className="flex flex-row gap-1">
-      {(forceNumber || Boolean(pass)) && (
-        <ColoredCircle
-          quantity={pass ?? 0}
-          tooltipText="global.pass"
-          backgroundClassName="bg-lightGreen"
-        />
-      )}
-      {(forceNumber || Boolean(error)) && (
-        <ColoredCircle
-          quantity={error ?? 0}
-          tooltipText="global.error"
-          backgroundClassName="bg-lightRed"
-        />
-      )}
-      {(forceNumber || Boolean(miss)) && (
-        <ColoredCircle
-          quantity={miss ?? 0}
-          tooltipText="global.missed"
-          backgroundClassName="bg-lightGray"
-        />
-      )}
-      {(forceNumber || Boolean(fail)) && (
-        <ColoredCircle
-          quantity={fail ?? 0}
-          tooltipText="global.failed"
-          backgroundClassName="bg-yellow"
-        />
-      )}
-      {(forceNumber || Boolean(done)) && (
-        <ColoredCircle
-          quantity={done ?? 0}
-          tooltipText="global.done"
-          backgroundClassName="bg-lightBlue"
-        />
-      )}
-      {(forceNumber || Boolean(skip)) && (
-        <ColoredCircle
-          quantity={skip ?? 0}
-          tooltipText="global.skipped"
-          backgroundClassName="bg-mediumGray"
-        />
-      )}
-    </div>
-  );
-};
 
 export const GroupedTestStatus = ({
   pass,
@@ -83,6 +21,7 @@ export const GroupedTestStatus = ({
   done,
   skip,
   nullStatus,
+  hideInconclusive = false,
 }: ITestStatus): JSX.Element => {
   const { successCount, inconclusiveCount, failedCount } = groupStatus({
     doneCount: done ?? 0,
@@ -109,21 +48,29 @@ export const GroupedTestStatus = ({
           backgroundClassName="bg-lightRed"
         />
       }
-      {
+      {!hideInconclusive && (
         <ColoredCircle
           quantity={inconclusiveCount ?? 0}
           tooltipText="global.inconclusive"
           backgroundClassName="bg-mediumGray"
         />
-      }
+      )}
     </div>
   );
 };
+
+interface IBuildStatus {
+  valid?: number;
+  invalid?: number;
+  unknown?: number;
+  hideInconclusive?: boolean;
+}
 
 export const BuildStatus = ({
   valid,
   invalid,
   unknown,
+  hideInconclusive = false,
 }: IBuildStatus): JSX.Element => {
   return (
     <div className="flex flex-row gap-1">
@@ -137,11 +84,13 @@ export const BuildStatus = ({
         backgroundClassName="bg-lightRed"
         tooltipText="global.failed"
       />
-      <ColoredCircle
-        quantity={unknown ?? 0}
-        tooltipText="global.inconclusive"
-        backgroundClassName="bg-lightGray"
-      />
+      {!hideInconclusive && (
+        <ColoredCircle
+          quantity={unknown ?? 0}
+          tooltipText="global.inconclusive"
+          backgroundClassName="bg-lightGray"
+        />
+      )}
     </div>
   );
 };
