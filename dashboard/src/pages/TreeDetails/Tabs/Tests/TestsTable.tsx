@@ -204,24 +204,6 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
     }
   }, [tableFilter.testsTable, rawData]);
 
-  const onClickFilter = useCallback(
-    (filter: TestsTableFilter): void => {
-      navigate({
-        search: previousParams => {
-          return {
-            ...previousParams,
-            tableFilter: {
-              bootsTable: previousParams.tableFilter.bootsTable,
-              buildsTable: previousParams.tableFilter.buildsTable,
-              testsTable: filter,
-            },
-          };
-        },
-      });
-    },
-    [navigate],
-  );
-
   const filterCount: Record<(typeof possibleTestsTableFilter)[number], number> =
     useMemo(() => {
       const count = {
@@ -241,6 +223,24 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
 
       return count;
     }, [rawData]);
+
+  const onClickFilter = useCallback(
+    (filter: TestsTableFilter): void => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: {
+              bootsTable: previousParams.tableFilter.bootsTable,
+              buildsTable: previousParams.tableFilter.buildsTable,
+              testsTable: filter,
+            },
+          };
+        },
+      });
+    },
+    [navigate],
+  );
 
   const filters = useMemo(
     () => [
@@ -315,43 +315,43 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
   }, [groupHeaders, sorting]);
 
   const modelRows = table.getRowModel().rows;
-  const tableRows = useMemo((): JSX.Element[] => {
-    return modelRows?.length
-      ? modelRows.map(row => (
-          <Fragment key={row.id}>
-            <TableRow
-              className="group cursor-pointer hover:bg-lightBlue"
-              onClick={() => {
-                if (row.getCanExpand()) row.toggleExpanded();
-              }}
-              data-state={row.getIsExpanded() ? 'open' : 'closed'}
-            >
-              {row.getVisibleCells().map(cell => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
+  const tableRows = useMemo((): JSX.Element[] | JSX.Element => {
+    return modelRows?.length ? (
+      modelRows.map(row => (
+        <Fragment key={row.id}>
+          <TableRow
+            className="group cursor-pointer hover:bg-lightBlue"
+            onClick={() => {
+              if (row.getCanExpand()) row.toggleExpanded();
+            }}
+            data-state={row.getIsExpanded() ? 'open' : 'closed'}
+          >
+            {row.getVisibleCells().map(cell => (
+              <TableCell key={cell.id}>
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
+          </TableRow>
+          {row.getIsExpanded() && (
+            <TableRow>
+              <TableCell colSpan={6} className="p-0">
+                <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
+                  <IndividualTestsTable
+                    data={data[row.index].individual_tests}
+                  />
+                </div>
+              </TableCell>
             </TableRow>
-            {row.getIsExpanded() && (
-              <TableRow>
-                <TableCell colSpan={6} className="p-0">
-                  <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
-                    <IndividualTestsTable
-                      data={data[row.index].individual_tests}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </Fragment>
-        ))
-      : [
-          <TableRow key={'no-results'}>
-            <TableCell colSpan={columns.length} className="h-24 text-center">
-              <FormattedMessage id="global.noResults" />
-            </TableCell>
-          </TableRow>,
-        ];
+          )}
+        </Fragment>
+      ))
+    ) : (
+      <TableRow>
+        <TableCell colSpan={columns.length} className="h-24 text-center">
+          <FormattedMessage id="global.noResults" />
+        </TableCell>
+      </TableRow>
+    );
   }, [data, modelRows]);
 
   return (
@@ -365,7 +365,7 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
         />
       </div>
       <BaseTable headerComponents={tableHeaders}>
-        <TableBody>{...tableRows}</TableBody>
+        <TableBody>{tableRows}</TableBody>
       </BaseTable>
       <PaginationInfo table={table} data={data} intlLabel="treeDetails.tests" />
     </div>
