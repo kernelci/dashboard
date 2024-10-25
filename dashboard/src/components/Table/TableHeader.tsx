@@ -65,7 +65,7 @@ export function TableHeader({
     <span className="flex">
       <Button
         variant="ghost"
-        className="justify-start px-2"
+        className="justify-start px-0"
         onClick={headerSort}
       >
         <FormattedMessage
@@ -78,7 +78,7 @@ export function TableHeader({
       </Button>
       {tooltipId && (
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger className="ml-2">
             <LiaQuestionCircle />
           </TooltipTrigger>
           <TooltipContent className="font-normal">

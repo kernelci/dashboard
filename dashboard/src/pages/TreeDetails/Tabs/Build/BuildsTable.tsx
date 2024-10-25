@@ -12,10 +12,12 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { Fragment, useCallback, useMemo, useState } from 'react';
+import { Fragment, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage, useIntl } from 'react-intl';
+
+import { MdCheck, MdClose } from 'react-icons/md';
 
 import {
   AccordionItemBuilds,
@@ -35,6 +37,14 @@ import AccordionBuildContent from '@/pages/TreeDetails/Tabs/Build/BuildAccordion
 export interface IBuildsTable {
   buildItems: AccordionItemBuilds[];
 }
+
+type BuildStatus = Record<AccordionItemBuilds['status'], ReactElement>;
+
+const buildStatusMap: BuildStatus = {
+  valid: <MdCheck className="text-green" />,
+  invalid: <MdClose className="text-red" />,
+  null: <span>-</span>,
+};
 
 const columns: ColumnDef<AccordionItemBuilds>[] = [
   {
@@ -116,19 +126,9 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
         intlDefaultMessage: 'Status',
         tooltipId: 'buildTab.statusTooltip',
       }),
+
     cell: ({ row }): JSX.Element => {
-      if (row.getValue('status') === 'valid') {
-        return <FormattedMessage id="global.pass" defaultMessage={'Pass'} />;
-      } else if (row.getValue('status') === 'invalid') {
-        return (
-          <FormattedMessage id="global.invalid" defaultMessage={'Invalid'} />
-        );
-      } else if (row.getValue('status') === 'null') {
-        return <span>-</span>;
-      }
-      return (
-        <FormattedMessage id="global.unknown" defaultMessage={'Unknown'} />
-      );
+      return buildStatusMap[row.getValue('status') as keyof BuildStatus];
     },
   },
 ];
