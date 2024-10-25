@@ -77,20 +77,6 @@ class TreeDetailsSerializer(serializers.Serializer):
     misc = serializers.JSONField()
 
 
-class BuildTestsSerializer(serializers.Serializer):
-    current_path = serializers.CharField()
-    start_time = serializers.DateTimeField()
-    fail_tests = serializers.IntegerField()
-    error_tests = serializers.IntegerField()
-    miss_tests = serializers.IntegerField()
-    pass_tests = serializers.IntegerField()
-    done_tests = serializers.IntegerField()
-    skip_tests = serializers.IntegerField()
-    null_tests = serializers.IntegerField()
-    total_tests = serializers.IntegerField()
-    origins = serializers.ListField()
-
-
 class GroupedTestsSerializer(serializers.Serializer):
     path_group = serializers.CharField()
     fail_tests = serializers.IntegerField()

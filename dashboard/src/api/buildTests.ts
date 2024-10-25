@@ -1,25 +1,20 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
-import { TBuildTests } from '@/types/general';
+import { TestHistory } from '@/types/general';
 
 import http from './api';
 
-const fetchBuildTestsData = async (
-  buildId: string,
-  path: string,
-): Promise<TBuildTests[]> => {
-  const params = path ? { path } : {};
-  const res = await http.get(`/api/build/${buildId}/tests`, { params });
+const fetchBuildTestsData = async (buildId: string): Promise<TestHistory[]> => {
+  const res = await http.get(`/api/build/${buildId}/tests`);
 
   return res.data;
 };
 
 export const useBuildTests = (
   buildId: string,
-  path = '',
-): UseQueryResult<TBuildTests[]> => {
+): UseQueryResult<TestHistory[]> => {
   return useQuery({
-    queryKey: ['buildTests', buildId, path],
-    queryFn: () => fetchBuildTestsData(buildId, path),
+    queryKey: ['buildTests', buildId],
+    queryFn: () => fetchBuildTestsData(buildId),
   });
 };
