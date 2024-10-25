@@ -1,11 +1,15 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useParams } from '@tanstack/react-router';
+import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
+
+import { useCallback } from 'react';
 
 import { Skeleton } from '@/components/Skeleton';
 
 import { useTestsTab } from '@/api/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
+
+import { TestsTableFilter } from '@/types/tree/TreeDetails';
 
 import {
   MemoizedStatusChart,
@@ -34,6 +38,30 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
     treeId: treeId ?? '',
     filter: reqFilter,
   });
+
+  const { tableFilter } = useSearch({
+    from: '/tree/$treeId/',
+  });
+
+  const navigate = useNavigate({ from: '/tree/$treeId' });
+
+  const onClickFilter = useCallback(
+    (filter: TestsTableFilter): void => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: {
+              bootsTable: previousParams.tableFilter.bootsTable,
+              buildsTable: previousParams.tableFilter.buildsTable,
+              testsTable: filter,
+            },
+          };
+        },
+      });
+    },
+    [navigate],
+  );
 
   if (error || !treeId) {
     return (
@@ -124,7 +152,11 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
         </InnerMobileGrid>
       </MobileGrid>
 
-      <TestsTable testHistory={data.testHistory} />
+      <TestsTable
+        testHistory={data.testHistory}
+        onClickFilter={onClickFilter}
+        tableFilter={tableFilter}
+      />
     </div>
   );
 };

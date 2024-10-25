@@ -127,7 +127,6 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
         intlDefaultMessage: 'Status',
         tooltipId: 'buildTab.statusTooltip',
       }),
-
     cell: ({ row }): JSX.Element => {
       return buildStatusMap[row.getValue('status') as keyof BuildStatus];
     },

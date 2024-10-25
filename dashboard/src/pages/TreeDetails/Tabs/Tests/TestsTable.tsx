@@ -13,17 +13,16 @@ import {
 } from '@tanstack/react-table';
 
 import { Fragment, useCallback, useMemo, useState } from 'react';
-import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import {
   possibleTestsTableFilter,
-  TestHistory,
+  TableFilter,
   TestsTableFilter,
 } from '@/types/tree/TreeDetails';
 
-import { TPathTests } from '@/types/general';
+import { TestHistory, TPathTests } from '@/types/general';
 
 import { StatusTable } from '@/utils/constants/database';
 
@@ -47,6 +46,8 @@ import { IndividualTestsTable } from './IndividualTestsTable';
 
 export interface ITestsTable {
   testHistory: TestHistory[];
+  onClickFilter: (filter: TestsTableFilter) => void;
+  tableFilter: TableFilter;
 }
 
 const columns: ColumnDef<TPathTests>[] = [
@@ -89,18 +90,18 @@ const columns: ColumnDef<TPathTests>[] = [
   },
 ];
 
-export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
+export function TestsTable({
+  testHistory,
+  onClickFilter,
+  tableFilter,
+}: ITestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
-  const { tableFilter } = useSearch({
-    from: '/tree/$treeId/',
-  });
 
-  const navigate = useNavigate({ from: '/tree/$treeId' });
   const intl = useIntl();
 
   const rawData = useMemo((): TPathTests[] => {
@@ -226,24 +227,6 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
 
       return count;
     }, [rawData]);
-
-  const onClickFilter = useCallback(
-    (filter: TestsTableFilter): void => {
-      navigate({
-        search: previousParams => {
-          return {
-            ...previousParams,
-            tableFilter: {
-              bootsTable: previousParams.tableFilter.bootsTable,
-              buildsTable: previousParams.tableFilter.buildsTable,
-              testsTable: filter,
-            },
-          };
-        },
-      });
-    },
-    [navigate],
-  );
 
   const filters = useMemo(
     () => [
