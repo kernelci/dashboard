@@ -85,6 +85,7 @@ export type TestHistory = {
   path: string;
   id: string;
   duration?: number;
+  hardware?: string[];
 };
 
 type CompilersPerArchitecture = {

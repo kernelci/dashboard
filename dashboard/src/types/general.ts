@@ -21,6 +21,7 @@ export type TIndividualTest = {
   status?: Status;
   start_time: string;
   duration: string;
+  hardware?: string[];
 };
 
 export type TBuildTests = {

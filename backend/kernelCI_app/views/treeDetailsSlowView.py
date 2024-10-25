@@ -155,7 +155,9 @@ class TreeDetailsSlow(View):
         testError = extract_error_message(currentRow[tempColumnDict["tests_misc"]])
         testEnvironmentCompatible = currentRow[
             tempColumnDict["tests_environment_compatible"]
-        ]
+        ][0] if currentRow[
+            tempColumnDict["tests_environment_compatible"]
+        ] is not None else None
 
         historyItem = {
             "id": testId,
@@ -163,6 +165,7 @@ class TreeDetailsSlow(View):
             "path": path,
             "duration": testDuration,
             "startTime": currentRow[tempColumnDict["tests_start_time"]],
+            "hardware": currentRow[tempColumnDict["tests_environment_compatible"]]
         }
 
         return (
@@ -370,7 +373,7 @@ class TreeDetailsSlow(View):
                     tests.duration AS tests_duration,
                     tests.number_value AS tests_number_value,
                     tests.misc AS tests_misc,
-                    tests.environment_compatible[1] AS tests_environment_compatible,
+                    tests.environment_compatible AS tests_environment_compatible,
                     builds_filter.*,
                     incidents.id,
                     incidents.present,
