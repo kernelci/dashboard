@@ -217,6 +217,7 @@ export const messages = {
     'treeDetails.executed': 'Executed',
     'treeDetails.failed': 'Failed',
     'treeDetails.failedBoots': 'Failed boots',
+    'treeDetails.hardware': 'Hardware',
     'treeDetails.hardwareUsed': 'Hardware Used',
     'treeDetails.inconclusiveBoots': 'Inconclusive Boots',
     'treeDetails.inconclusiveBuilds': 'Inconclusive Builds',

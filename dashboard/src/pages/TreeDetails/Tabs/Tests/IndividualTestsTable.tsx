@@ -27,6 +27,8 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 
 import { TableHeader } from '@/components/Table/TableHeader';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
+import { sanitizeTableValue } from '@/components/Table/tableUtils';
 
 const columns: ColumnDef<TIndividualTest>[] = [
   {
@@ -80,10 +82,50 @@ const columns: ColumnDef<TIndividualTest>[] = [
       row.getValue('duration') ? row.getValue('duration') : '-',
   },
   {
+    id: 'hardware',
+    accessorKey: 'hardware',
+    header: ({ column }): JSX.Element =>
+      TableHeader({
+        column: column,
+        sortable: true,
+        intlKey: 'treeDetails.hardware',
+        intlDefaultMessage: 'Hardware',
+      }),
+    cell: ({ row }): JSX.Element => (
+      <TooltipHardware hardwares={row.getValue('hardware')} />
+    ),
+  },
+  {
     id: 'chevron',
     cell: (): JSX.Element => <ChevronRightAnimate />,
   },
 ];
+
+const TooltipHardware = ({
+  hardwares,
+}: {
+  hardwares: string[] | undefined;
+}): JSX.Element => {
+  const hardwaresTooltip = useMemo(() => {
+    return hardwares
+      ? hardwares.map(hardware => (
+          <div key={hardware} className="text-center">
+            <span>{hardware}</span>
+            <br />
+          </div>
+        ))
+      : '-';
+  }, [hardwares]);
+
+  return (
+    <Tooltip>
+      <TooltipTrigger>
+        {sanitizeTableValue(hardwares?.[0], false)}
+      </TooltipTrigger>
+      <TooltipContent>{hardwaresTooltip}</TooltipContent>
+    </Tooltip>
+  );
+};
 
 export function IndividualTestsTable({
   data,

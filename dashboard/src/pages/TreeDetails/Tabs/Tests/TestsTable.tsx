@@ -130,6 +130,7 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
         path: e.path,
         start_time: e.startTime,
         status: e.status,
+        hardware: e.hardware,
       });
       switch (e.status) {
         case 'DONE':
