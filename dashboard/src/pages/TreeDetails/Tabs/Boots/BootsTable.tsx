@@ -287,8 +287,14 @@ export function BootsTable({ treeId, testHistory }: IBootsTable): JSX.Element {
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
-      <PaginationInfo table={table} data={data} intlLabel="treeDetails.boots" />
+      <div className="flex justify-between">
+        <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
+        <PaginationInfo
+          table={table}
+          data={data}
+          intlLabel="treeDetails.boots"
+        />
+      </div>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableRows}</TableBody>
       </BaseTable>

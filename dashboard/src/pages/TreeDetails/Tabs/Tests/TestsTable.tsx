@@ -356,8 +356,14 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
-      <PaginationInfo table={table} data={data} intlLabel="treeDetails.tests" />
+      <div className="flex justify-between">
+        <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
+        <PaginationInfo
+          table={table}
+          data={data}
+          intlLabel="treeDetails.tests"
+        />
+      </div>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{...tableRows}</TableBody>
       </BaseTable>
