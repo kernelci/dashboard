@@ -9,7 +9,10 @@ import { z } from 'zod';
 
 import { useCallback } from 'react';
 
-import { TestByCommitHash } from '@/types/tree/TreeDetails';
+import {
+  AccordionItemBuilds,
+  TestByCommitHash,
+} from '@/types/tree/TreeDetails';
 import { TIndividualTest, TPathTests } from '@/types/general';
 import { formattedBreakLineValue, MessagesKey } from '@/locales/messages';
 
@@ -20,7 +23,8 @@ interface ITableHeader {
   column:
     | Column<TIndividualTest>
     | Column<TestByCommitHash>
-    | Column<TPathTests>;
+    | Column<TPathTests>
+    | Column<AccordionItemBuilds>;
   sortable: boolean;
   intlKey: MessagesKey;
   intlDefaultMessage: string;

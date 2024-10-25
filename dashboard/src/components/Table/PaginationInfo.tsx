@@ -20,7 +20,10 @@ import { Button } from '../ui/button';
 import { ItemsPerPageSelector } from './TableInfo';
 
 interface IPaginationInfo {
-  table: Table<TestByCommitHash> | Table<TPathTests>;
+  table:
+    | Table<TestByCommitHash>
+    | Table<TPathTests>
+    | Table<AccordionItemBuilds>;
   data: TestByCommitHash[] | TPathTests[] | AccordionItemBuilds[];
   intlLabel: MessagesKey;
 }
