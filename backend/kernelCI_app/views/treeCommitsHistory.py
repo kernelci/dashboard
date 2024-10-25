@@ -40,6 +40,10 @@ class TreeCommitsHistory(APIView):
 
             table, field = split_filter
 
+            # TODO: ADD Support for hardware filter
+            if (field == "hardware"):
+                continue
+
             value_name = f"{table}{field.capitalize()}{filter_params.get_comparison_op(f)}"
 
             op = filter_params.get_comparison_op(f, "raw")
