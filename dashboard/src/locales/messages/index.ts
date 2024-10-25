@@ -133,6 +133,7 @@ export const messages = {
     'global.projectUnderDevelopment':
       'This is an ongoing project.{br}' +
       `Please report bugs and suggestions to ${FEEDBACK_EMAIL_TO}.`,
+    'global.search': 'Search',
     'global.seconds': 'sec',
     'global.skipped': 'Skipped',
     'global.somethingWrong': 'Sorry... something went wrong',

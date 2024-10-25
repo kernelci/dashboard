@@ -33,6 +33,7 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { ItemType } from '@/components/ListingItem/ListingItem';
 import AccordionBuildContent from '@/pages/TreeDetails/Tabs/Build/BuildAccordionContent';
+import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
 export interface IBuildsTable {
   buildItems: AccordionItemBuilds[];
@@ -265,6 +266,12 @@ export function BuildsTable({ buildItems }: IBuildsTable): JSX.Element {
     },
   });
 
+  const onSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      table.setGlobalFilter(String(e.target.value)),
+    [table],
+  );
+
   const groupHeaders = table.getHeaderGroups()[0]?.headers;
   const tableHeaders = useMemo((): JSX.Element[] => {
     return groupHeaders.map(header => {
@@ -326,10 +333,11 @@ export function BuildsTable({ buildItems }: IBuildsTable): JSX.Element {
     <div className="flex flex-col gap-6 pb-4">
       <div className="flex justify-between">
         <TableStatusFilter filters={filters} onClickBuild={onClickFilter} />
-        <PaginationInfo
-          table={table}
-          data={data}
-          intlLabel="treeDetails.boots"
+        <DebounceInput
+          debouncedSideEffect={onSearchChange}
+          className="w-50"
+          type="text"
+          placeholder={intl.formatMessage({ id: 'global.search' })}
         />
       </div>
       <BaseTable headerComponents={tableHeaders}>

@@ -43,6 +43,7 @@ import TableStatusFilter from '@/components/Table/TableStatusFilter';
 import { TableHeader } from '@/components/Table/TableHeader';
 
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
+import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
 const columns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -239,6 +240,12 @@ export function BootsTable({ treeId, testHistory }: IBootsTable): JSX.Element {
     },
   });
 
+  const onSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      table.setGlobalFilter(String(e.target.value)),
+    [table],
+  );
+
   const groupHeaders = table.getHeaderGroups()[0]?.headers;
   const tableHeaders = useMemo((): JSX.Element[] => {
     return groupHeaders.map(header => {
@@ -289,10 +296,11 @@ export function BootsTable({ treeId, testHistory }: IBootsTable): JSX.Element {
     <div className="flex flex-col gap-6 pb-4">
       <div className="flex justify-between">
         <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
-        <PaginationInfo
-          table={table}
-          data={data}
-          intlLabel="treeDetails.boots"
+        <DebounceInput
+          debouncedSideEffect={onSearchChange}
+          className="w-50"
+          type="text"
+          placeholder={intl.formatMessage({ id: 'global.search' })}
         />
       </div>
       <BaseTable headerComponents={tableHeaders}>
