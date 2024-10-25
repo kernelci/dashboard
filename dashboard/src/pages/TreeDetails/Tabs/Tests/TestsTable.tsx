@@ -231,7 +231,7 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
         inconclusive: 0,
       };
 
-      data.forEach(tests => {
+      rawData.forEach(tests => {
         count.all += tests.total_tests;
         count.success += tests.pass_tests;
         count.failed += tests.fail_tests;
@@ -240,7 +240,7 @@ export function TestsTable({ testHistory }: ITestsTable): JSX.Element {
       });
 
       return count;
-    }, [data]);
+    }, [rawData]);
 
   const filters = useMemo(
     () => [
