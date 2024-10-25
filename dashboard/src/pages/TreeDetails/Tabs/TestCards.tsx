@@ -38,7 +38,7 @@ const ConfigsList = ({
       content={
         <DumbListingContent>
           {Object.keys(configStatusCounts).map(configName => {
-            const { DONE, FAIL, ERROR, MISS, PASS, SKIP } =
+            const { DONE, FAIL, ERROR, MISS, PASS, SKIP, NULL } =
               configStatusCounts[configName];
             return (
               <FilterLink
@@ -58,7 +58,7 @@ const ConfigsList = ({
                       miss={MISS}
                       pass={PASS}
                       skip={SKIP}
-                      forceNumber={false}
+                      nullStatus={NULL}
                     />
                   }
                 />
@@ -185,6 +185,7 @@ const ErrorsSummary = ({
                     miss={statusCounts.MISS}
                     pass={statusCounts.PASS}
                     skip={statusCounts.SKIP}
+                    nullStatus={statusCounts.NULL}
                   />
                 }
                 compilers={currentCompilers}
@@ -211,6 +212,7 @@ const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
     missCount: statusCounts.MISS ?? 0,
     passCount: statusCounts.PASS ?? 0,
     skipCount: statusCounts.SKIP ?? 0,
+    nullCount: statusCounts.NULL ?? 0,
   });
 
   const chartElements = [

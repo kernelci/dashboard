@@ -144,6 +144,8 @@ class TreeDetailsSlow(View):
         path = currentRow[tempColumnDict["tests_path"]]
         testId = currentRow[tempColumnDict["tests_id"]]
         testStatus = currentRow[tempColumnDict["tests_status"]]
+        if (testStatus is None):
+            testStatus = "NULL"
         testDuration = currentRow[tempColumnDict["tests_duration"]]
         buildConfig = currentRow[tempColumnDict["builds_config_name"]]
         buildArch = currentRow[tempColumnDict["builds_architecture"]]
@@ -255,10 +257,7 @@ class TreeDetailsSlow(View):
             self.bootFailReasons[testError] = self.bootFailReasons.get(testError, 0) + 1
 
         if testEnvironmentCompatible is not None:
-            if testStatus is None:
-                self.bootEnvironmentCompatible[testEnvironmentCompatible]["NULL"] += 1
-            else:
-                self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
+            self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
 
             self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
