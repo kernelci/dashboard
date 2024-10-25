@@ -44,3 +44,12 @@ export type TIssue = {
   report_url?: string;
   incidents_info: IncidentsInfo;
 };
+
+export type TestHistory = {
+  startTime: string;
+  status: Status;
+  path: string;
+  id: string;
+  duration?: number;
+  hardware?: string[];
+};

@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 
 import { MessagesKey } from '@/locales/messages';
 
-import { TIssue } from '@/types/general';
+import { TestHistory, TIssue } from '@/types/general';
 
 import type { Status } from '@/types/database';
 
@@ -78,15 +78,6 @@ export interface TTreeDetailsFilter
   }> {
   valid?: string[];
 }
-
-export type TestHistory = {
-  startTime: string;
-  status: Status;
-  path: string;
-  id: string;
-  duration?: number;
-  hardware?: string[];
-};
 
 type CompilersPerArchitecture = {
   [key: string]: string[];
@@ -183,6 +174,8 @@ export const zTableFilterInfo = object({
   bootsTable: zTestsTableFilterValidator,
   testsTable: zTestsTableFilterValidator,
 });
+
+export type TableFilter = z.infer<typeof zTableFilterInfo>;
 
 const zFilterBoolValue = z.record(z.boolean()).optional();
 const zFilterNumberValue = z.number().optional();
