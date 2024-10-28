@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
 class Issues(models.Model):
@@ -78,6 +79,7 @@ class Tests(models.Model):
     id = models.TextField(primary_key=True)
     origin = models.TextField()
     environment_comment = models.TextField(blank=True, null=True)
+    environment_compatible = ArrayField(models.TextField(), blank=True, default=list, null=True)
     environment_misc = models.JSONField(blank=True, null=True)
     path = models.TextField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)

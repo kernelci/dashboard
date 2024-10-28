@@ -8,7 +8,7 @@ class BuildTests(View):
 
     def get(self, request, build_id):
         result = Tests.objects.filter(build_id=build_id).values(
-            'id', 'duration', 'status', 'path', 'start_time'
+            'id', 'duration', 'status', 'path', 'start_time', 'environment_compatible'
         )
 
         camel_case_result = [
@@ -18,6 +18,7 @@ class BuildTests(View):
                 'status': test['status'],
                 'path': test['path'],
                 'startTime': test['start_time'],
+                'hardware': test['environment_compatible']
             }
             for test in result
         ]

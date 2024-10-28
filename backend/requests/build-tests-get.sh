@@ -17,21 +17,33 @@ http 'http://localhost:8000/api/build/kernelci:kernelci.org:66a1d00e546da93e297e
   #     "duration": null,
   #     "status": "PASS",
   #     "path": "baseline.login",
-  #     "startTime": "2024-07-25T04:13:06.105Z"
+  #     "startTime": "2024-07-25T04:13:06.105Z",
+  #     "hardware": [
+  #               "google,veyron-jaq-rev5",
+  #               "google,veyron-jaq-rev4"
+  #      ]
   #   },
   #   {
   #     "id": "kernelci:kernelci.org:66a1d0a38e8d1053a47e707c",
   #     "duration": null,
   #     "status": "PASS",
   #     "path": "baseline.login",
-  #     "startTime": "2024-07-25T04:12:19.892Z"
+  #     "startTime": "2024-07-25T04:12:19.892Z",
+  #      "hardware": [
+  #                "google,veyron-jaq-rev5",
+  #                "google,veyron-jaq-rev4"
+  #            ]
   #   },
   #   {
   #     "id": "kernelci:kernelci.org:66a1d0a38e8d1053a47e707e",
   #     "duration": null,
   #     "status": "PASS",
   #     "path": "baseline.dmesg.emerg",
-  #     "startTime": "2024-07-25T04:12:19.927Z"
+  #     "startTime": "2024-07-25T04:12:19.927Z",
+  #     "hardware": [
+  #               "google,veyron-jaq-rev5",
+  #               "google,veyron-jaq-rev4"
+  #      ]
   #   },
   #   ...
   # ]
