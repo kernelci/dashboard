@@ -116,6 +116,9 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
         intlKey: 'treeDetails.buildTime',
         intlDefaultMessage: 'Build Time',
       }),
+    cell: ({ row }): JSX.Element => {
+      return row.getValue('buildTime');
+    },
   },
   {
     accessorKey: 'status',
