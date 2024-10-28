@@ -158,7 +158,7 @@ export const messages = {
     'logSheet.fileSize': 'File Size',
     'logSheet.indexOf': 'Index of {link}',
     'logSheet.title': 'Logs Viewer',
-    'routes.deviceMonitor': 'Devices',
+    'routes.hardwareMonitor': 'Hardware',
     'routes.labsMonitor': 'Labs',
     'routes.sendFeedback': 'Send us Feedback',
     'routes.sendFeedbackMsg':

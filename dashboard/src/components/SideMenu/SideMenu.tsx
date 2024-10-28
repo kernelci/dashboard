@@ -26,7 +26,7 @@ import SendFeedback from './SendFeedback';
 import NavLink from './NavLink';
 
 type RouteMenuItems = {
-  navigateTo: '/tree' | '/devices';
+  navigateTo: '/tree' | '/hardware';
   idIntl: MessagesKey;
   icon: JSX.Element;
   selected: boolean;
@@ -93,8 +93,8 @@ const SideMenu = (): JSX.Element => {
       selected: true,
     },
     {
-      navigateTo: '/devices',
-      idIntl: 'routes.deviceMonitor',
+      navigateTo: '/hardware',
+      idIntl: 'routes.hardwareMonitor',
       icon: <MdOutlineMonitorHeart className="size-5" />,
       selected: false,
     },

@@ -11,7 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as DevicesImport } from './routes/devices'
+import { Route as HardwareImport } from './routes/hardware'
 import { Route as TreeRouteImport } from './routes/tree/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as TreeIndexImport } from './routes/tree/index'
@@ -24,8 +24,8 @@ import { Route as TreeTreeIdBuildBuildIdIndexImport } from './routes/tree/$treeI
 
 // Create/Update Routes
 
-const DevicesRoute = DevicesImport.update({
-  path: '/devices',
+const HardwareRoute = HardwareImport.update({
+  path: '/hardware',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -93,11 +93,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TreeRouteImport
       parentRoute: typeof rootRoute
     }
-    '/devices': {
-      id: '/devices'
-      path: '/devices'
-      fullPath: '/devices'
-      preLoaderRoute: typeof DevicesImport
+    '/hardware': {
+      id: '/hardware'
+      path: '/hardware'
+      fullPath: '/hardware'
+      preLoaderRoute: typeof HardwareImport
       parentRoute: typeof rootRoute
     }
     '/tree/$treeId': {
@@ -169,7 +169,7 @@ export const routeTree = rootRoute.addChildren({
     }),
     TreeIndexRoute,
   }),
-  DevicesRoute,
+  HardwareRoute,
 })
 
 /* prettier-ignore-end */
@@ -182,7 +182,7 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/",
         "/tree",
-        "/devices"
+        "/hardware"
       ]
     },
     "/": {
@@ -195,8 +195,8 @@ export const routeTree = rootRoute.addChildren({
         "/tree/"
       ]
     },
-    "/devices": {
-      "filePath": "devices.tsx"
+    "/hardware": {
+      "filePath": "hardware.tsx"
     },
     "/tree/$treeId": {
       "filePath": "tree/$treeId/route.tsx",
