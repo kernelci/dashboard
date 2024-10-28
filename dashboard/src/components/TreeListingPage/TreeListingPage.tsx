@@ -1,40 +1,14 @@
-import { ChangeEvent, useCallback, useMemo, useState } from 'react';
-
-import { FormattedMessage, useIntl } from 'react-intl';
-
-import { useNavigate, useSearch } from '@tanstack/react-router';
-
-import { z } from 'zod';
-
-import { zodResolver } from '@hookform/resolvers/zod';
-
-import {
-  Controller,
-  ControllerRenderProps,
-  FieldError,
-  useForm,
-} from 'react-hook-form';
+import { useMemo } from 'react';
 
 import { Tree, TreeFastPathResponse, TreeTableBody } from '@/types/tree/Tree';
 
-import { usePagination } from '@/hooks/usePagination';
-
-import TreeTable from '@/components/Table/TreeTable';
-
 import { useTreeTable, useTreeTableFast } from '@/api/Tree';
-import { TableInfo } from '@/components/Table/TableInfo';
-
-import { formattedBreakLineValue } from '@/locales/messages';
-import { ItemsPerPageValues } from '@/utils/constants/general';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
-import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
-
-import DebounceInput from '@/components/DebounceInput/DebounceInput';
-import { toast } from '@/hooks/useToast';
-
 import { Toaster } from '@/components/ui/toaster';
+
+import { TreeTable } from './TreeTable';
 
 interface ITreeListingPage {
   inputFilter: string;
@@ -46,65 +20,12 @@ function isCompleteTree(
   return 'build_status' in data;
 }
 
-function validateString(val: string): boolean {
-  const convertedNumber = parseInt(val);
-  return !Number.isNaN(convertedNumber) && convertedNumber > 0;
-}
-
 const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
-  const { formatMessage } = useIntl();
-
-  const navigate = useNavigate({ from: '/' });
-  const { intervalInDays: interval } = useSearch({ from: '/tree' });
-
-  const [itemsPerPage, setItemsPerPage] = useState(ItemsPerPageValues[0]);
-
   //TODO: Combine these 2 hooks inside a single hook
   const { data: fastData, status: fastStatus } = useTreeTableFast();
   const { data, error, isLoading } = useTreeTable({
     enabled: fastStatus === 'success' && !!fastData,
   });
-
-  const InputTimeSchema = z.object({
-    intervalInDays: z.string().refine(validateString, {
-      message: formatMessage({ id: 'filter.invalid' }),
-    }),
-  });
-
-  const { handleSubmit, control } = useForm<z.infer<typeof InputTimeSchema>>({
-    resolver: zodResolver(InputTimeSchema),
-    defaultValues: {
-      intervalInDays: `${DEFAULT_TIME_SEARCH}`,
-    },
-  });
-
-  const onSubmit = handleSubmit(
-    ({ intervalInDays }) => {
-      navigate({
-        search: previousSearch => ({
-          ...previousSearch,
-          intervalInDays: Number(intervalInDays),
-        }),
-      });
-    },
-    e => {
-      const { dismiss } = toast({
-        title: e.intervalInDays?.message,
-        className: 'border-red bg-red text-slate-50 shadow-xl',
-      });
-
-      // eslint-disable-next-line no-magic-numbers
-      setTimeout(dismiss, 3000);
-    },
-  );
-
-  const onInputTimeTextChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      if (!e.target.value) return;
-      onSubmit();
-    },
-    [onSubmit],
-  );
 
   const listItems: TreeTableBody[] = useMemo(() => {
     if (!fastData || fastStatus == 'error') return [];
@@ -112,7 +33,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
     const hasCompleteData = !isLoading && !!data;
     const currentData = hasCompleteData ? data : fastData;
 
-    // TODO remove tree_names since is a filed that should not exist
+    // TODO remove tree_names since is a field that should not exist
 
     return currentData
       .filter(tree => {
@@ -185,89 +106,15 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
       });
   }, [data, fastData, inputFilter, isLoading, fastStatus]);
 
-  const { startIndex, endIndex, onClickGoForward, onClickGoBack } =
-    usePagination(listItems.length, itemsPerPage);
-
   if (error) {
     return <div>Error: {error.message}</div>;
   }
 
-  const tableInfoElement = (
-    <TableInfo
-      itemName="global.tree"
-      startIndex={startIndex + 1}
-      endIndex={endIndex}
-      totalTrees={listItems.length}
-      itemsPerPageValues={ItemsPerPageValues}
-      itemsPerPageSelected={itemsPerPage}
-      onChangeItemsPerPage={setItemsPerPage}
-      onClickBack={onClickGoBack}
-      onClickForward={onClickGoForward}
-    />
-  );
-
-  const InputTime = ({
-    field: { onChange, ...rest },
-    fieldError,
-  }: {
-    field: ControllerRenderProps<
-      z.infer<typeof InputTimeSchema>,
-      'intervalInDays'
-    >;
-    fieldError: FieldError | undefined;
-  }): JSX.Element => {
-    const handleInputChange = useCallback(
-      (e: ChangeEvent<HTMLInputElement>) => {
-        onChange(e);
-        onInputTimeTextChange(e);
-      },
-      [onChange],
-    );
-
-    return (
-      <DebounceInput
-        debouncedSideEffect={handleInputChange}
-        type="number"
-        min={1}
-        className={`${fieldError ? 'border-red' : 'border-gray'} mx-[10px] flex w-[100px] flex-1 rounded-md border`}
-        startingValue={
-          interval ? interval.toString() : `${DEFAULT_TIME_SEARCH}`
-        }
-        placeholder="7"
-        {...rest}
-      />
-    );
-  };
-
   return (
     <QuerySwitcher status={fastStatus} data={fastData}>
       <Toaster />
-
       <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-left text-sm text-dimGray">
-            <FormattedMessage
-              id="global.projectUnderDevelopment"
-              values={formattedBreakLineValue}
-            />
-          </span>
-
-          <div className="row flex items-center text-sm">
-            <FormattedMessage id="global.last" />
-            <Controller
-              control={control}
-              name="intervalInDays"
-              render={({ field, fieldState: { error: fieldError } }) => (
-                <InputTime field={field} fieldError={fieldError} />
-              )}
-            />
-            <FormattedMessage id="global.days" />
-
-            <div className="ml-10">{tableInfoElement}</div>
-          </div>
-        </div>
-        <TreeTable treeTableRows={listItems.slice(startIndex, endIndex)} />
-        <div className="flex flex-col items-end">{tableInfoElement}</div>
+        <TreeTable treeTableRows={listItems} />
       </div>
     </QuerySwitcher>
   );
