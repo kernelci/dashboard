@@ -16,6 +16,8 @@ import {
 import { TIndividualTest, TPathTests } from '@/types/general';
 import { formattedBreakLineValue, MessagesKey } from '@/locales/messages';
 
+import { TreeTableBody } from '@/types/tree/Tree';
+
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../Tooltip';
 
@@ -24,7 +26,8 @@ interface ITableHeader {
     | Column<TIndividualTest>
     | Column<TestByCommitHash>
     | Column<TPathTests>
-    | Column<AccordionItemBuilds>;
+    | Column<AccordionItemBuilds>
+    | Column<TreeTableBody>;
   sortable: boolean;
   intlKey: MessagesKey;
   intlDefaultMessage: string;

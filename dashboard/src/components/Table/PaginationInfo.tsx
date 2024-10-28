@@ -15,6 +15,8 @@ import { TPathTests } from '@/types/general';
 
 import { MessagesKey } from '@/locales/messages';
 
+import { TreeTableBody } from '@/types/tree/Tree';
+
 import { Button } from '../ui/button';
 
 import { ItemsPerPageSelector } from './TableInfo';
@@ -23,8 +25,13 @@ interface IPaginationInfo {
   table:
     | Table<TestByCommitHash>
     | Table<TPathTests>
-    | Table<AccordionItemBuilds>;
-  data: TestByCommitHash[] | TPathTests[] | AccordionItemBuilds[];
+    | Table<AccordionItemBuilds>
+    | Table<TreeTableBody>;
+  data:
+    | TestByCommitHash[]
+    | TPathTests[]
+    | AccordionItemBuilds[]
+    | TreeTableBody[];
   intlLabel: MessagesKey;
 }
 
