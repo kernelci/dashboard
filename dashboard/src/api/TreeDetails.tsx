@@ -265,16 +265,19 @@ const fetchTreeCommitHistory = async (
   filters: TTreeDetailsFilter,
 ): Promise<TTreeCommitHistoryResponse> => {
   // TODO: remove deprecated function
-  const searchParam = mapFiltersToUrlSearchParams(filters);
+  const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
 
-  searchParam.append('origin', origin);
-  searchParam.append('git_url', gitUrl);
-  searchParam.append('git_branch', gitBranch);
+  const params = {
+    origin,
+    git_url: gitUrl,
+    git_branch: gitBranch,
+    ...filtersFormatted,
+  };
 
   const res = await http.get<TTreeCommitHistoryResponse>(
     `/api/tree/${commitHash}/commits`,
     {
-      params: searchParam,
+      params,
     },
   );
   return res.data;

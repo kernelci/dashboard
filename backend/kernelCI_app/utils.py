@@ -124,6 +124,7 @@ class FilterParams:
             if len(request.GET.getlist(k)) > 1:
                 field = filter_term
                 values = request.GET.getlist(k)
+
                 for value in values:
                     self.add_filter(field, value, "in")
                 continue
