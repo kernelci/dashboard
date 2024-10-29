@@ -30,26 +30,37 @@ class TreeCommitsHistory(APIView):
         }
         self.field_values = dict()
 
+    def __format_field_operation(self, f, filter_params):
+        split_filter = f['field'].split('.')
+
+        if len(split_filter) == 1:
+            split_filter.insert(0, 'build')
+
+        table, field = split_filter
+
+        field = field.replace("[]", "")
+
+        if (field == "hardware"):
+            field = "environment_compatible"
+            op = "&&"
+
+            if isinstance(f['value'], str):
+                f['value'] = [f['value']]
+        else:
+            op = filter_params.get_comparison_op(f, "raw")
+
+        return table, field, op
+
     # TODO: unite the filters logic
     def __get_filters(self, filter_params):
         grouped_filters = filter_params.get_grouped_filters()
 
-        for field, filter in grouped_filters.items():
-            split_filter = field.split('.')
-
-            if len(split_filter) == 1:
-                split_filter.insert(0, 'build')
-
-            table, field = split_filter
-
-            # TODO: ADD Support for hardware filter
-            if (field == "hardware"):
-                continue
+        for _, filter in grouped_filters.items():
+            table, field, op = self.__format_field_operation(filter, filter_params)
 
             value_name = f"{table}{field.capitalize()}{filter_params.get_comparison_op(filter)}"
-
-            op = filter_params.get_comparison_op(filter, "raw")
             self.field_values[value_name] = filter['value']
+
             clause = f"{self.filters_options[table]['table_alias']}.{field}"
 
             if filter['value'] == 'NULL':
@@ -59,7 +70,11 @@ class TreeCommitsHistory(APIView):
             else:
                 clause += f" {op} %({value_name})s"
 
-            self.filters_options[table]['filters'].append(clause)
+            if field == "environment_compatible":
+                self.filters_options['test']['filters'].append(clause)
+                self.filters_options['boot']['filters'].append(clause)
+            else:
+                self.filters_options[table]['filters'].append(clause)
 
             if field in ["config_name", "architecture", "compiler"]:
                 self.filters_options['test']['filters'].append(clause)
@@ -319,27 +334,27 @@ class TreeCommitsHistory(APIView):
                 "git_commit_name": row[1],
                 "earliest_start_time": row[2],
                 "builds": {
-                    "valid_builds": row[3],
-                    "invalid_builds": row[4],
-                    "null_builds": row[5],
+                    "valid_builds": row[3] or 0,
+                    "invalid_builds": row[4] or 0,
+                    "null_builds": row[5] or 0,
                 },
                 "boots_tests": {
-                    "fail_count": row[6],
-                    "error_count": row[7],
-                    "miss_count": row[8],
-                    "pass_count": row[9],
-                    "done_count": row[10],
-                    "skip_count": row[11],
-                    "null_count": row[12],
+                    "fail_count": row[6] or 0,
+                    "error_count": row[7] or 0,
+                    "miss_count": row[8] or 0,
+                    "pass_count": row[9] or 0,
+                    "done_count": row[10] or 0,
+                    "skip_count": row[11] or 0,
+                    "null_count": row[12] or 0,
                 },
                 "non_boots_tests": {
-                    "fail_count": row[13],
-                    "error_count": row[14],
-                    "miss_count": row[15],
-                    "pass_count": row[16],
-                    "done_count": row[17],
-                    "skip_count": row[18],
-                    "null_count": row[19],
+                    "fail_count": row[13] or 0,
+                    "error_count": row[14] or 0,
+                    "miss_count": row[15] or 0,
+                    "pass_count": row[16] or 0,
+                    "done_count": row[17] or 0,
+                    "skip_count": row[18] or 0,
+                    "null_count": row[19] or 0,
                 },
             }
             for row in rows
