@@ -93,6 +93,21 @@ class TreeDetails(View):
             "architectures": arch_summ,
         }
 
+    def __get_filtered_tree_details_query(self, query, filter_params, build_fields, checkout_fields):
+        grouped_filters = filter_params.get_grouped_filters()
+
+        for field, filter in grouped_filters.items():
+            table = None
+            if field in build_fields:
+                table = "builds"
+            elif field in checkout_fields:
+                table = "checkouts"
+            if table:
+                op = filter_params.get_comparison_op(filter, "orm")
+                query.where(**{f"{table}.{field}__{op}": filter["value"]})
+
+        return query
+
     # TODO, Remove this query builder, use Django ORM or raw SQL
     def get(self, request, commit_hash):
         git_url_param = request.GET.get("git_url")
@@ -160,16 +175,7 @@ class TreeDetails(View):
         except InvalidComparisonOP as e:
             return HttpResponseBadRequest(getErrorResponseBody(str(e)))
 
-        for f in filter_params.filters:
-            field = f["field"]
-            table = None
-            if field in build_fields:
-                table = "builds"
-            elif field in checkout_fields:
-                table = "checkouts"
-            if table:
-                op = filter_params.get_comparison_op(f, "orm")
-                query.where(**{f"{table}.{field}__{op}": f["value"]})
+        query = self.__get_filtered_tree_details_query(query, filter_params, build_fields, checkout_fields)
 
         records = query.select()
         builds, summary, issues = self.sanitize_records(records)
