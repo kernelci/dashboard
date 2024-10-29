@@ -152,3 +152,18 @@ class FilterParams:
     def get_comparison_op(self, filter, op_type="orm"):
         idx = self.comparison_op_type_idx[op_type]
         return self.comparison_ops[filter["comparison_op"]][idx]
+
+    def get_grouped_filters(self):
+        grouped_filters = {}
+
+        for f in self.filters:
+            field = f["field"]
+            value = f['value']
+            if field not in grouped_filters:
+                grouped_filters[field] = f
+            elif type(grouped_filters[field]['value']) is str:
+                grouped_filters[field]['value'] = [grouped_filters[field]['value'], value]
+            else:
+                grouped_filters[field]['value'].append(value)
+
+        return grouped_filters

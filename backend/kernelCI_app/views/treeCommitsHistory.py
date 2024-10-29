@@ -31,9 +31,11 @@ class TreeCommitsHistory(APIView):
         self.field_values = dict()
 
     # TODO: unite the filters logic
-    def _get_filters(self, filter_params):
-        for f in filter_params.filters:
-            split_filter = f['field'].split('.')
+    def __get_filters(self, filter_params):
+        grouped_filters = filter_params.get_grouped_filters()
+
+        for field, filter in grouped_filters.items():
+            split_filter = field.split('.')
 
             if len(split_filter) == 1:
                 split_filter.insert(0, 'build')
@@ -44,14 +46,13 @@ class TreeCommitsHistory(APIView):
             if (field == "hardware"):
                 continue
 
-            value_name = f"{table}{field.capitalize()}{filter_params.get_comparison_op(f)}"
+            value_name = f"{table}{field.capitalize()}{filter_params.get_comparison_op(filter)}"
 
-            op = filter_params.get_comparison_op(f, "raw")
-
-            self.field_values[value_name] = f['value']
+            op = filter_params.get_comparison_op(filter, "raw")
+            self.field_values[value_name] = filter['value']
             clause = f"{self.filters_options[table]['table_alias']}.{field}"
 
-            if f['value'] == 'NULL':
+            if filter['value'] == 'NULL':
                 clause += " IS NULL"
             elif op == "IN":
                 clause += f" = ANY(%({value_name})s)"
@@ -145,7 +146,7 @@ class TreeCommitsHistory(APIView):
             "git_branch_param": git_branch_param,
         }
 
-        build_counts_where, boot_counts_where, test_counts_where = self._get_filters(filter_params)
+        build_counts_where, boot_counts_where, test_counts_where = self.__get_filters(filter_params)
 
         query = f"""
         WITH
