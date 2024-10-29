@@ -28,6 +28,8 @@ import IssueSection from '@/components/Issue/IssueSection';
 import { truncateBigText } from '@/lib/string';
 import { Sheet, SheetTrigger } from '@/components/Sheet';
 
+import { TooltipDateTime } from '@/components/TooltipDateTime';
+
 import { LogSheet } from '../TreeDetails/Tabs/LogSheet';
 
 const emptyValue = '-';
@@ -96,6 +98,17 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
         linkText: hardware,
         icon: <GiFlatPlatform className="text-blue" />,
       },
+      {
+        title: 'global.startTime',
+        linkText: (
+          <TooltipDateTime
+            dateTime={test.start_time}
+            lineBreak={true}
+            showLabelTime={true}
+            showLabelTZ={true}
+          />
+        ),
+      },
     ];
 
     return baseInfo;
@@ -109,6 +122,7 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
     test.git_repository_url,
     test.git_repository_branch,
     test.build_id,
+    test.start_time,
     hasUsefulLogInfo,
     buildDetailsLink,
     hardware,

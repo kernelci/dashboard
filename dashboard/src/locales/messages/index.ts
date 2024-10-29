@@ -139,6 +139,7 @@ export const messages = {
     'global.seconds': 'sec',
     'global.skipped': 'Skipped',
     'global.somethingWrong': 'Sorry... something went wrong',
+    'global.startTime': 'Start Time',
     'global.status': 'Status',
     'global.success': 'Success',
     'global.successCount': 'Success: {count}',
