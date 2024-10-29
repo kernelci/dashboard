@@ -2,10 +2,11 @@ import * as React from "react"
 import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/lib/utils"
+import { TooltipProps } from "@radix-ui/react-tooltip"
 
 const TooltipProvider = TooltipPrimitive.Provider
 
-const Tooltip = TooltipPrimitive.Root
+const Tooltip = ({delayDuration = 100, ...props}: TooltipProps)=> <TooltipPrimitive.Root delayDuration={delayDuration} {...props}/>
 
 const TooltipTrigger = TooltipPrimitive.Trigger
 
