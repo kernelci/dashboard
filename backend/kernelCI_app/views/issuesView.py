@@ -2,32 +2,42 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from django.db import connection
 from django.views import View
 
-from kernelCI_app.utils import getErrorResponseBody
+from kernelCI_app.utils import convert_issues_dict_to_list, create_issue, getErrorResponseBody
 
 
 class IssueView(View):
     fields = [
         "incident_id",
-        "present",
         "id",
         "comment",
         "report_url"
     ]
 
+    def get_dict_record(self, row):
+        record = {}
+        for idx, field in enumerate(self.fields):
+            record[field] = row[idx]
+        return record
+
     def sanitize_rows(self, rows):
-        result = []
+        result = {}
         for row in rows:
-            record = {}
-            for idx, field in enumerate(self.fields):
-                record[field] = row[idx]
-            result.append(record)
-        return result
+            record = self.get_dict_record(row)
+            currentIssue = result.get(record["id"])
+            if currentIssue is None:
+                currentIssue = create_issue(
+                    issue_id=record['id'],
+                    issue_comment=record['comment'],
+                    issue_report_url=record['report_url'],
+                )
+            result[record["id"]] = currentIssue
+            currentIssue["incidents_info"]["incidentsCount"] += 1
+        return convert_issues_dict_to_list(result)
 
     def get_test_issues(self, test_id):
         query = """
             SELECT
                 incidents.id,
-                incidents.present,
                 issues.id,
                 issues.comment,
                 issues.report_url
