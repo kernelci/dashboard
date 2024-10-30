@@ -130,7 +130,8 @@ const CommitNavigationGraph = (): JSX.Element => {
         item.boots_tests.miss_count +
         item.boots_tests.skip_count +
         item.boots_tests.error_count +
-        item.boots_tests.done_count;
+        item.boots_tests.done_count +
+        item.boots_tests.null_count;
       series[0].data?.unshift(item.boots_tests.pass_count);
       series[1].data?.unshift(item.boots_tests.fail_count);
       series[2].data?.unshift(inconclusiveCount);
@@ -140,7 +141,8 @@ const CommitNavigationGraph = (): JSX.Element => {
         item.non_boots_tests.miss_count +
         item.non_boots_tests.skip_count +
         item.non_boots_tests.error_count +
-        item.non_boots_tests.done_count;
+        item.non_boots_tests.done_count +
+        item.non_boots_tests.null_count;
       series[0].data?.unshift(item.non_boots_tests.pass_count);
       series[1].data?.unshift(item.non_boots_tests.fail_count);
       series[2].data?.unshift(inconclusiveCount);

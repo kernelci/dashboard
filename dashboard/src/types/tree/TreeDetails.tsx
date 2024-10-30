@@ -275,6 +275,7 @@ export type PaginatedCommitHistoryByTree = {
     pass_count: number;
     done_count: number;
     skip_count: number;
+    null_count: number;
   };
   non_boots_tests: {
     fail_count: number;
@@ -283,6 +284,7 @@ export type PaginatedCommitHistoryByTree = {
     pass_count: number;
     done_count: number;
     skip_count: number;
+    null_count: number;
   };
 };
 
