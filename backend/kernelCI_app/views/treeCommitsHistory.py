@@ -47,13 +47,17 @@ class TreeCommitsHistory(APIView):
             value_name = f"{table}{field.capitalize()}{filter_params.get_comparison_op(f)}"
 
             op = filter_params.get_comparison_op(f, "raw")
+
             self.field_values[value_name] = f['value']
             clause = f"{self.filters_options[table]['table_alias']}.{field}"
 
-            if op == "IN":
+            if f['value'] == 'NULL':
+                clause += " IS NULL"
+            elif op == "IN":
                 clause += f" = ANY(%({value_name})s)"
             else:
                 clause += f" {op} %({value_name})s"
+
             self.filters_options[table]['filters'].append(clause)
 
             if field in ["config_name", "architecture", "compiler"]:
@@ -196,18 +200,27 @@ class TreeCommitsHistory(APIView):
         boots_counts AS (
             SELECT
                 c.git_commit_hash,
-                SUM(CASE WHEN t.status = 'FAIL' AND t.path LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS boots_fail_count,
-                SUM(CASE WHEN t.status = 'ERROR' AND t.path LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS boots_error_count,
-                SUM(CASE WHEN t.status = 'MISS' AND t.path LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS boots_miss_count,
-                SUM(CASE WHEN t.status = 'PASS' AND t.path LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS boots_pass_count,
-                SUM(CASE WHEN t.status = 'DONE' AND t.path LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS boots_done_count,
-                SUM(CASE WHEN t.status = 'SKIP' AND t.path LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS boots_skip_count
+                SUM(CASE WHEN t.status = 'FAIL'
+                    AND (t.path = 'boot' OR t.path LIKE 'boot.%%') THEN 1 ELSE 0 END)
+                    AS boots_fail_count,
+                SUM(CASE WHEN t.status = 'ERROR'
+                    AND (t.path = 'boot' OR t.path LIKE 'boot.%%') THEN 1 ELSE 0 END)
+                    AS boots_error_count,
+                SUM(CASE WHEN t.status = 'MISS'
+                    AND (t.path = 'boot' OR t.path LIKE 'boot.%%') THEN 1 ELSE 0 END)
+                    AS boots_miss_count,
+                SUM(CASE WHEN t.status = 'PASS'
+                    AND (t.path = 'boot' OR t.path LIKE 'boot.%%') THEN 1 ELSE 0 END)
+                    AS boots_pass_count,
+                SUM(CASE WHEN t.status = 'DONE'
+                    AND (t.path = 'boot' OR t.path LIKE 'boot.%%') THEN 1 ELSE 0 END)
+                    AS boots_done_count,
+                SUM(CASE WHEN t.status = 'SKIP'
+                    AND (t.path = 'boot' OR t.path LIKE 'boot.%%') THEN 1 ELSE 0 END)
+                    AS boots_skip_count,
+                SUM(CASE WHEN t.status IS NULL
+                    AND (t.path = 'boot' OR t.path LIKE 'boot.%%') THEN 1 ELSE 0 END)
+                    AS boots_null_count
             FROM
                 relevant_checkouts AS c
             INNER JOIN
@@ -225,18 +238,20 @@ class TreeCommitsHistory(APIView):
         test_counts AS (
             SELECT
                 c.git_commit_hash,
-                SUM(CASE WHEN t.status = 'FAIL' AND t.path NOT LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS non_boots_fail_count,
-                SUM(CASE WHEN t.status = 'ERROR' AND t.path NOT LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS non_boots_error_count,
-                SUM(CASE WHEN t.status = 'MISS' AND t.path NOT LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS non_boots_miss_count,
-                SUM(CASE WHEN t.status = 'PASS' AND t.path NOT LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS non_boots_pass_count,
-                SUM(CASE WHEN t.status = 'DONE' AND t.path NOT LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS non_boots_done_count,
-                SUM(CASE WHEN t.status = 'SKIP' AND t.path NOT LIKE 'boot%%' THEN 1 ELSE 0 END)
-                AS non_boots_skip_count
+                SUM(CASE WHEN t.status = 'FAIL' AND (t.path <> 'boot' AND t.path NOT LIKE 'boot.%%')
+                    THEN 1 ELSE 0 END) AS non_boots_fail_count,
+                SUM(CASE WHEN t.status = 'ERROR' AND (t.path <> 'boot' AND t.path NOT LIKE 'boot.%%')
+                    THEN 1 ELSE 0 END) AS non_boots_error_count,
+                SUM(CASE WHEN t.status = 'MISS' AND (t.path <> 'boot' AND t.path NOT LIKE 'boot.%%')
+                    THEN 1 ELSE 0 END) AS non_boots_miss_count,
+                SUM(CASE WHEN t.status = 'PASS' AND (t.path <> 'boot' AND t.path NOT LIKE 'boot.%%')
+                    THEN 1 ELSE 0 END) AS non_boots_pass_count,
+                SUM(CASE WHEN t.status = 'DONE' AND (t.path <> 'boot' AND t.path NOT LIKE 'boot.%%')
+                    THEN 1 ELSE 0 END) AS non_boots_done_count,
+                SUM(CASE WHEN t.status = 'SKIP' AND (t.path <> 'boot' AND t.path NOT LIKE 'boot.%%')
+                    THEN 1 ELSE 0 END) AS non_boots_skip_count,
+                SUM(CASE WHEN t.status IS NULL AND (t.path <> 'boot' AND t.path NOT LIKE 'boot.%%')
+                    THEN 1 ELSE 0 END) AS non_boots_null_count
             FROM
                 relevant_checkouts AS c
             INNER JOIN
@@ -264,12 +279,14 @@ class TreeCommitsHistory(APIView):
             boc.boots_pass_count,
             boc.boots_done_count,
             boc.boots_skip_count,
+            boc.boots_null_count,
             tc.non_boots_fail_count,
             tc.non_boots_error_count,
             tc.non_boots_miss_count,
             tc.non_boots_pass_count,
             tc.non_boots_done_count,
-            tc.non_boots_skip_count
+            tc.non_boots_skip_count,
+            tc.non_boots_null_count
         FROM
             earliest_commits AS ec
         LEFT JOIN
@@ -312,14 +329,16 @@ class TreeCommitsHistory(APIView):
                     "pass_count": row[9],
                     "done_count": row[10],
                     "skip_count": row[11],
+                    "null_count": row[12],
                 },
                 "non_boots_tests": {
-                    "fail_count": row[12],
-                    "error_count": row[13],
-                    "miss_count": row[14],
-                    "pass_count": row[15],
-                    "done_count": row[16],
-                    "skip_count": row[17],
+                    "fail_count": row[13],
+                    "error_count": row[14],
+                    "miss_count": row[15],
+                    "pass_count": row[16],
+                    "done_count": row[17],
+                    "skip_count": row[18],
+                    "null_count": row[19],
                 },
             }
             for row in rows
