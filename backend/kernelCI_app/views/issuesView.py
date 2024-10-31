@@ -24,14 +24,14 @@ class IssueView(View):
         for row in rows:
             record = self.get_dict_record(row)
             currentIssue = result.get(record["id"])
-            if currentIssue is None:
-                currentIssue = create_issue(
+            if currentIssue:
+                currentIssue["incidents_info"]["incidentsCount"] += 1
+            else:
+                result[record["id"]] = create_issue(
                     issue_id=record['id'],
                     issue_comment=record['comment'],
                     issue_report_url=record['report_url'],
                 )
-            result[record["id"]] = currentIssue
-            currentIssue["incidents_info"]["incidentsCount"] += 1
         return convert_issues_dict_to_list(result)
 
     def get_test_issues(self, test_id):

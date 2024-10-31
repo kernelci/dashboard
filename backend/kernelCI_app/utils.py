@@ -25,7 +25,7 @@ def create_issue(
         "id": issue_id,
         "comment": issue_comment,
         "report_url": issue_report_url,
-        "incidents_info": {"incidentsCount": 0},
+        "incidents_info": {"incidentsCount": 1},
     }
 
 
