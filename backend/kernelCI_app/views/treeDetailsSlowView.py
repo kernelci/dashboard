@@ -242,14 +242,14 @@ class TreeDetailsSlow(View):
 
         if issue_id:
             currentIssue = self.bootsIssuesTable.get(issue_id)
-            if currentIssue is None:
-                currentIssue = create_issue(
+            if currentIssue:
+                currentIssue["incidents_info"]["incidentsCount"] += 1
+            else:
+                self.testIssuesTable[issue_id] = create_issue(
                     issue_id=issue_id,
                     issue_comment=issue_comment,
                     issue_report_url=issue_report_url,
                 )
-                self.bootsIssuesTable[issue_id] = currentIssue
-            currentIssue["incidents_info"]["incidentsCount"] += 1
 
         if testId in self.processedTests:
             return
@@ -322,14 +322,14 @@ class TreeDetailsSlow(View):
 
         if issue_id:
             currentIssue = self.testIssuesTable.get(issue_id)
-            if currentIssue is None:
-                currentIssue = create_issue(
+            if currentIssue:
+                currentIssue["incidents_info"]["incidentsCount"] += 1
+            else:
+                self.testIssuesTable[issue_id] = create_issue(
                     issue_id=issue_id,
                     issue_comment=issue_comment,
                     issue_report_url=issue_report_url,
                 )
-                self.testIssuesTable[issue_id] = currentIssue
-            currentIssue["incidents_info"]["incidentsCount"] += 1
         if testId in self.processedTests:
             return
         self.processedTests.add(testId)
