@@ -4,23 +4,16 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  Row,
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { useMemo, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { CSSProperties, memo, useMemo, useRef, useState } from 'react';
 
-import { FormattedMessage } from 'react-intl';
+import { Link, LinkProps } from '@tanstack/react-router';
 
 import { TIndividualTest } from '@/types/general';
-
-import BaseTable from '@/components/Table/BaseTable';
-import {
-  TableBody,
-  TableCell,
-  TableCellWithLink,
-  TableHead,
-  TableRow,
-} from '@/components/ui/table';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
@@ -29,6 +22,8 @@ import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { sanitizeTableValue } from '@/components/Table/tableUtils';
+import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
+import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 const columns: ColumnDef<TIndividualTest>[] = [
   {
@@ -40,6 +35,18 @@ const columns: ColumnDef<TIndividualTest>[] = [
         intlKey: 'testDetails.path',
         intlDefaultMessage: 'Path',
       }),
+    cell: ({ row }): JSX.Element => {
+      return (
+        <Tooltip>
+          <TooltipTrigger>
+            <div className="max-w-80 overflow-clip text-ellipsis text-nowrap">
+              {row.getValue('path')}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>{row.getValue('path')}</TooltipContent>
+        </Tooltip>
+      );
+    },
   },
   {
     accessorKey: 'status',
@@ -61,12 +68,12 @@ const columns: ColumnDef<TIndividualTest>[] = [
         intlDefaultMessage: 'Date',
       }),
     cell: ({ row }): JSX.Element => (
-      <TooltipDateTime
-        dateTime={row.getValue('start_time')}
-        lineBreak={true}
-        showLabelTime={true}
-        showLabelTZ={true}
-      />
+      <div className="text-nowrap">
+        <TooltipDateTime
+          dateTime={row.getValue('start_time')}
+          showLabelTime={true}
+        />
+      </div>
     ),
   },
   {
@@ -92,7 +99,9 @@ const columns: ColumnDef<TIndividualTest>[] = [
         intlDefaultMessage: 'Hardware',
       }),
     cell: ({ row }): JSX.Element => (
-      <TooltipHardware hardwares={row.getValue('hardware')} />
+      <div className="text-nowrap">
+        <TooltipHardware hardwares={row.getValue('hardware')} />
+      </div>
     ),
   },
   {
@@ -127,6 +136,39 @@ const TooltipHardware = ({
   );
 };
 
+const TableRowComponent = ({
+  row,
+}: {
+  row: Row<TIndividualTest>;
+}): JSX.Element => {
+  const linkProps: LinkProps = useMemo(() => {
+    return {
+      to: '/tree/$treeId/test/$testId',
+      params: {
+        testId: row.original.id,
+      },
+      search: s => s,
+    };
+  }, [row.original.id]);
+
+  return (
+    <TableRow key={row.id} className="border-b-0 hover:bg-lightBlue">
+      {row.getVisibleCells().map(cell => {
+        return (
+          <TableCell key={cell.id}>
+            <Link {...linkProps}>
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </Link>
+          </TableCell>
+        );
+      })}
+    </TableRow>
+  );
+};
+const TableRowMemoized = memo(TableRowComponent);
+
+const ESTIMATED_ROW_HEIGHT = 60;
+
 export function IndividualTestsTable({
   data,
 }: {
@@ -151,10 +193,7 @@ export function IndividualTestsTable({
   const tableHeaders = useMemo((): JSX.Element[] => {
     return groupHeaders.map(header => {
       return (
-        <TableHead
-          key={header.id}
-          className="border-b px-2 font-bold text-black"
-        >
+        <TableHead key={header.id} className="px-2">
           {header.isPlaceholder
             ? null
             : flexRender(header.column.columnDef.header, header.getContext())}
@@ -165,43 +204,55 @@ export function IndividualTestsTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupHeaders, sorting]);
 
-  const modelRows = table.getRowModel().rows;
+  const { rows } = useMemo(() => {
+    return table.getRowModel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [table, sorting]);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    getScrollElement: () => parentRef.current,
+    overscan: 5,
+  });
+  const virtualItems = virtualizer.getVirtualItems();
+
   const tableRows = useMemo((): JSX.Element[] => {
-    return modelRows?.length
-      ? modelRows.map(row => (
-          <TableRow
-            key={row.id}
-            data-state={row.getIsSelected() && 'selected'}
-            className="cursor-pointer hover:bg-lightBlue"
-          >
-            {row.getVisibleCells().map(cell => (
-              <TableCellWithLink
-                key={cell.id}
-                linkProps={{
-                  to: '/tree/$treeId/test/$testId',
-                  params: {
-                    testId: row.original.id,
-                  },
-                  search: s => s,
-                }}
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCellWithLink>
-            ))}
-          </TableRow>
-        ))
-      : [
-          <TableRow key="no-results">
-            <TableCell colSpan={columns.length} className="h-24 text-center">
-              <FormattedMessage id="global.noResults" />
-            </TableCell>
-          </TableRow>,
-        ];
-  }, [modelRows]);
+    return virtualItems.map(virtualRow => {
+      const row = rows[virtualRow.index] as Row<TIndividualTest>;
+      return <TableRowMemoized row={row} key={row.id} />;
+    });
+  }, [rows, virtualItems]);
+
+  // if more performance is needed, try using translate as in the example from tanstack virtual instead of padding
+  // https://tanstack.com/virtual/latest/docs/framework/react/examples/table
+  const [firstRowStyle, lastRowStyle]: [CSSProperties, CSSProperties] =
+    useMemo(() => {
+      if (virtualItems.length === 0) return [{}, {}];
+      return [
+        { paddingTop: virtualItems[0].start },
+        {
+          paddingBottom:
+            virtualizer.getTotalSize() -
+            virtualItems[virtualItems.length - 1].end,
+        },
+      ];
+    }, [virtualItems, virtualizer]);
 
   return (
-    <BaseTable headerComponents={tableHeaders}>
-      <TableBody>{...tableRows}</TableBody>
-    </BaseTable>
+    <div
+      ref={parentRef}
+      className="max-h-[400px] max-w-full overflow-auto bg-lightGray p-8"
+    >
+      <div className="rounded-lg border-x border-t border-darkGray bg-white text-sm text-black">
+        <div style={firstRowStyle} />
+        <table className="w-full">
+          <DumbTableHeader>{tableHeaders}</DumbTableHeader>
+          <TableBody>{tableRows}</TableBody>
+        </table>
+        <div style={lastRowStyle} />
+      </div>
+    </div>
   );
 }

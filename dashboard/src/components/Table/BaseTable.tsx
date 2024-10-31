@@ -67,9 +67,12 @@ export const DumbTableHeader = ({
 
 export const TableHead = ({
   children,
+  className,
 }: ComponentProps<typeof TableHeadComponent>): JSX.Element => {
   return (
-    <TableHeadComponent className="border-b font-bold text-black">
+    <TableHeadComponent
+      className={classNames(className, 'border-b font-bold text-black')}
+    >
       {children}
     </TableHeadComponent>
   );

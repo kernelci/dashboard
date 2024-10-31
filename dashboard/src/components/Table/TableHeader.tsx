@@ -68,7 +68,7 @@ export function TableHeader({
     <span className="flex">
       <Button
         variant="ghost"
-        className="justify-start px-0"
+        className="justify-start px-2"
         onClick={headerSort}
       >
         <FormattedMessage

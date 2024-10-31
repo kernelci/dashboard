@@ -327,11 +327,7 @@ export function TestsTable({
           {row.getIsExpanded() && (
             <TableRow>
               <TableCell colSpan={6} className="p-0">
-                <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
-                  <IndividualTestsTable
-                    data={data[row.index].individual_tests}
-                  />
-                </div>
+                <IndividualTestsTable data={data[row.index].individual_tests} />
               </TableCell>
             </TableRow>
           )}
