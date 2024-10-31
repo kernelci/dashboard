@@ -71,5 +71,9 @@ urlpatterns = [
     path("log-downloader/",
          viewCache(views.LogDownloaderView),
          name="logDownloader"
-         )
+         ),
+    path("hardware/<str:hardware_id>",
+         viewCache(views.HardwareDetails),
+         name="hardwareDetails"
+         ),
 ]
