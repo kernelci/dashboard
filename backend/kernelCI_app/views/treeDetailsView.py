@@ -6,92 +6,56 @@ from kernelCI_app.utils import (
     FilterParams,
     InvalidComparisonOP,
     convert_issues_dict_to_list,
-    create_issue,
     getErrorResponseBody,
 )
+from kernelCI_app.viewCommon import create_details_build_summary, get_details_issue
 from utils.validation import validate_required_params
 
 
-class TreeDetails(View):
+def get_build(record):
+    return {
+        "id": record["id"],
+        "architecture": record["architecture"],
+        "config_name": record["config_name"],
+        "misc": record["misc"],
+        "config_url": record["config_url"],
+        "compiler": record["compiler"],
+        "valid": record["valid"],
+        "duration": record["duration"],
+        "log_url": record["log_url"],
+        "start_time": record["start_time"],
+        "git_repository_url": record["git_repository_url"],
+        "git_repository_branch": record["git_repository_branch"],
+    }
 
+
+class TreeDetails(View):
     def sanitize_records(self, records):
         builds = []
         processedBuilds = set()
-        issuesTable = {}
-        issues = []
+        issues_dict = {}
+
         for r in records:
             if r["issue_id"]:
-                currentIssue = issuesTable.get(r["issue_id"])
-                if currentIssue is None:
-                    currentIssue = create_issue(
-                        issue_id=r["issue_id"],
-                        issue_comment=r["issue_comment"],
-                        issue_report_url=r["issue_report_url"],
-                    )
-                    issuesTable[r["issue_id"]] = currentIssue
-                currentIssue["incidents_info"]["incidentsCount"] += 1
+                currentIssue = issues_dict.get(r["issue_id"])
+                if currentIssue:
+                    currentIssue["incidents_info"]["incidentsCount"] += 1
+                else:
+                    issues_dict[r["issue_id"]] = get_details_issue(r)
 
-            if r["id"] in processedBuilds:
+            build_id = r["id"]
+            if build_id in processedBuilds:
                 continue
-            processedBuilds.add(r["id"])
+            processedBuilds.add(build_id)
+            builds.append(get_build(r))
 
-            builds.append(
-                {
-                    "id": r["id"],
-                    "architecture": r["architecture"],
-                    "config_name": r["config_name"],
-                    "misc": r["misc"],
-                    "config_url": r["config_url"],
-                    "compiler": r["compiler"],
-                    "valid": r["valid"],
-                    "duration": r["duration"],
-                    "log_url": r["log_url"],
-                    "start_time": r["start_time"],
-                    "git_repository_url": r["git_repository_url"],
-                    "git_repository_branch": r["git_repository_branch"],
-                }
-            )
-        summary = self.create_summary(records)
-        issues = convert_issues_dict_to_list(issuesTable)
+        summary = create_details_build_summary(builds)
+        issues = convert_issues_dict_to_list(issues_dict)
         return (
             builds,
             summary,
             issues,
         )
-
-    def create_default_status(self):
-        return {"valid": 0, "invalid": 0, "null": 0}
-
-    def create_summary(self, builds_dict):
-        status_map = {True: "valid", False: "invalid", None: "null"}
-
-        build_summ = self.create_default_status()
-        config_summ = {}
-        arch_summ = {}
-
-        for build in builds_dict:
-            status_key = status_map[build["valid"]]
-            build_summ[status_key] += 1
-
-            if config := build["config_name"]:
-                status = config_summ.get(config)
-                if not status:
-                    status = self.create_default_status()
-                    config_summ[config] = status
-                status[status_key] += 1
-
-            if arch := build["architecture"]:
-                status = arch_summ.setdefault(arch, self.create_default_status())
-                status[status_key] += 1
-                compiler = build["compiler"]
-                if compiler and compiler not in status.setdefault("compilers", []):
-                    status["compilers"].append(compiler)
-
-        return {
-            "builds": build_summ,
-            "configs": config_summ,
-            "architectures": arch_summ,
-        }
 
     def __get_filtered_tree_details_query(self, query, filter_params, build_fields, checkout_fields):
         grouped_filters = filter_params.get_grouped_filters()
