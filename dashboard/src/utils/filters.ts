@@ -37,7 +37,7 @@ export const getTargetFilter = (
 
     const splitted = k.split('.');
     const field = splitted[splitted.length - 1];
-    if (target == 'test') {
+    if (target === 'test') {
       acc[k] = v;
     } else {
       acc[field] = v;

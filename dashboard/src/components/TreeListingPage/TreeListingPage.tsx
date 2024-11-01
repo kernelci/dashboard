@@ -32,7 +32,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   });
 
   const listItems: TreeTableBody[] = useMemo(() => {
-    if (!fastData || fastStatus == 'error') return [];
+    if (!fastData || fastStatus === 'error') return [];
 
     const hasCompleteData = !isLoading && !!data;
     const currentData = hasCompleteData ? data : fastData;

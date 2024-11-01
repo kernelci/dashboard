@@ -54,6 +54,7 @@ module.exports = {
     "@typescript-eslint",
   ],
   rules: {
+    "eqeqeq": "error",
      "@typescript-eslint/consistent-type-imports": "error",
     "no-console": [
       "error",

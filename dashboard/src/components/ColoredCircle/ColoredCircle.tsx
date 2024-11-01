@@ -49,9 +49,9 @@ const ColoredCircle = ({
           backgroundClassName,
           {
             ['bg-opacity-20']:
-              quantity == 0 &&
-              (tooltipText == 'global.failed' ||
-                tooltipText == 'global.inconclusive'),
+              quantity === 0 &&
+              (tooltipText === 'global.failed' ||
+                tooltipText === 'global.inconclusive'),
           },
         )}
       >

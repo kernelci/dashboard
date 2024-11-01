@@ -167,7 +167,7 @@ const CommitNavigationGraph = (): JSX.Element => {
           true,
         );
 
-        if (context.location == 'tooltip') {
+        if (context.location === 'tooltip') {
           return (
             (currentCommitData.commitName ?? currentCommitData.commitHash) +
             ' - ' +
