@@ -1,4 +1,4 @@
-import { ComponentProps, ReactElement } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { LineChart as LineChartComponent } from '@mui/x-charts/LineChart';
 
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';

@@ -1,6 +1,10 @@
 import { useMemo } from 'react';
 
-import { Tree, TreeFastPathResponse, TreeTableBody } from '@/types/tree/Tree';
+import type {
+  Tree,
+  TreeFastPathResponse,
+  TreeTableBody,
+} from '@/types/tree/Tree';
 
 import { useTreeTable, useTreeTableFast } from '@/api/Tree';
 

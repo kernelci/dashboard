@@ -1,4 +1,5 @@
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import type { UseQueryResult } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { useSearch } from '@tanstack/react-router';
 

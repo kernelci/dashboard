@@ -1,4 +1,4 @@
-import { Column } from '@tanstack/react-table';
+import type { Column } from '@tanstack/react-table';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -9,14 +9,15 @@ import { z } from 'zod';
 
 import { useCallback } from 'react';
 
-import {
+import type {
   AccordionItemBuilds,
   TestByCommitHash,
 } from '@/types/tree/TreeDetails';
-import { TIndividualTest, TPathTests } from '@/types/general';
-import { formattedBreakLineValue, MessagesKey } from '@/locales/messages';
+import type { TIndividualTest, TPathTests } from '@/types/general';
+import type { MessagesKey } from '@/locales/messages';
+import { formattedBreakLineValue } from '@/locales/messages';
 
-import { TreeTableBody } from '@/types/tree/Tree';
+import type { TreeTableBody } from '@/types/tree/Tree';
 
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../Tooltip';

@@ -54,13 +54,14 @@ module.exports = {
     "@typescript-eslint",
   ],
   rules: {
+     "@typescript-eslint/consistent-type-imports": "error",
     "no-console": [
       "error",
       {
         allow: ["error"]
       }
     ],
-    "no-duplicate-imports": "warn",
+    "import/no-duplicates": ["error"],
     "no-magic-numbers": [
       "error",
       {

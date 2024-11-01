@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 
 import { useBuildTests } from '@/api/buildTests';
 
-import { TestsTableFilter } from '@/types/tree/TreeDetails';
+import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 
 import { TestsTable } from '../TreeDetails/Tabs/Tests/TestsTable';
 

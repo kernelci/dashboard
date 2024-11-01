@@ -1,5 +1,5 @@
 import type { UseQueryResult } from '@tanstack/react-query';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 

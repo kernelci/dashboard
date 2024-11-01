@@ -12,7 +12,7 @@ import BaseCard from '@/components/Cards/BaseCard';
 import { useTreeCommitHistory } from '@/api/TreeDetails';
 import type { TLineChartProps } from '@/components/LineChart/LineChart';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
-import { MessagesKey } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 import { formatDate } from '@/utils/utils';
 import { mapFilterToReq } from '@/pages/TreeDetails/TreeDetailsFilter';
 

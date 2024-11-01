@@ -1,14 +1,15 @@
 import { PieChart } from '@mui/x-charts/PieChart';
 
 import { MdArrowDownward, MdArrowUpward } from 'react-icons/md';
-import React, { ReactElement, useMemo } from 'react';
+import type { ReactElement } from 'react';
+import React, { useMemo } from 'react';
 
 import { useDrawingArea } from '@mui/x-charts';
 import { styled } from '@mui/material';
 
 import { useIntl } from 'react-intl';
 
-import { MessagesKey } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 
 import ColoredCircle from '../ColoredCircle/ColoredCircle';
 

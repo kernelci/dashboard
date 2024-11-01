@@ -1,4 +1,4 @@
-import { TTreeDetailsFilter } from '@/types/tree/TreeDetails';
+import type { TTreeDetailsFilter } from '@/types/tree/TreeDetails';
 
 // TODO: We can improve this idea and replace mapFilterToReq entirely
 const requestFilters = {

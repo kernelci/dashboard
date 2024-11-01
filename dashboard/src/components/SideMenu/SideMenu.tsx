@@ -7,7 +7,7 @@ import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
 import { useSearch, useLocation } from '@tanstack/react-router';
 
-import { MessagesKey } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 
 import { zOrigin } from '@/types/tree/Tree';
 

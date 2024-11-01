@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/Skeleton';
 import { useTestsTab } from '@/api/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 
-import { TestsTableFilter } from '@/types/tree/TreeDetails';
+import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 
 import {
   MemoizedStatusChart,

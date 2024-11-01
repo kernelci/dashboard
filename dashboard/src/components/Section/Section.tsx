@@ -1,10 +1,10 @@
 import { FiLink } from 'react-icons/fi';
 
-import { ReactElement, useMemo, Fragment, ReactNode, ElementType } from 'react';
+import type { ReactElement, ReactNode, ElementType } from 'react';
+import { useMemo, Fragment } from 'react';
 
-import LinkWithIcon, {
-  ILinkWithIcon,
-} from '@/components/LinkWithIcon/LinkWithIcon';
+import type { ILinkWithIcon } from '@/components/LinkWithIcon/LinkWithIcon';
+import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
 
 export interface ISection {
   title: string;

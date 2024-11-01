@@ -1,10 +1,9 @@
 import { useSearch } from '@tanstack/react-router';
 
+import type { TFilter, TFilterObjectsKeys } from '@/types/tree/TreeDetails';
 import {
-  TFilter,
   isTFilterObjectKeys,
   isTFilterNumberKeys,
-  TFilterObjectsKeys,
 } from '@/types/tree/TreeDetails';
 
 export const cleanFalseFilters = (diffFilter: TFilter): TFilter => {

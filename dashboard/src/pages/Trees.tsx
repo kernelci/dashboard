@@ -1,4 +1,5 @@
-import { ChangeEvent, useCallback } from 'react';
+import type { ChangeEvent } from 'react';
+import { useCallback } from 'react';
 
 import { useIntl } from 'react-intl';
 

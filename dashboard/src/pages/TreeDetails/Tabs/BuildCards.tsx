@@ -5,12 +5,9 @@ import { memo, useMemo } from 'react';
 import BaseCard from '@/components/Cards/BaseCard';
 import { GroupedTestStatus } from '@/components/Status/Status';
 
-import {
-  DumbSummary,
-  SummaryItem,
-  ISummaryTable,
-} from '@/components/Summary/Summary';
-import { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
+import type { ISummaryTable } from '@/components/Summary/Summary';
+import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
+import type { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
 
 interface IErrorsSummaryBuild extends Pick<ISummaryTable, 'summaryBody'> {
   toggleFilterBySection: (

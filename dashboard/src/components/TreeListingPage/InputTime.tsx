@@ -6,14 +6,11 @@ import { z } from 'zod';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import {
-  Controller,
-  ControllerRenderProps,
-  FieldError,
-  useForm,
-} from 'react-hook-form';
+import type { ControllerRenderProps, FieldError } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 
-import { ChangeEvent, useCallback } from 'react';
+import type { ChangeEvent } from 'react';
+import { useCallback } from 'react';
 
 import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
 import { toast } from '@/hooks/useToast';

@@ -1,21 +1,21 @@
-import { Table } from '@tanstack/react-table';
+import type { Table } from '@tanstack/react-table';
 
 import { FormattedMessage } from 'react-intl';
 
 import { MdArrowBackIos, MdArrowForwardIos } from 'react-icons/md';
 
-import {
+import type {
   AccordionItemBuilds,
   TestByCommitHash,
 } from '@/types/tree/TreeDetails';
 
 import { ItemsPerPageValues } from '@/utils/constants/general';
 
-import { TPathTests } from '@/types/general';
+import type { TPathTests } from '@/types/general';
 
-import { MessagesKey } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 
-import { TreeTableBody } from '@/types/tree/Tree';
+import type { TreeTableBody } from '@/types/tree/Tree';
 
 import { Button } from '../ui/button';
 

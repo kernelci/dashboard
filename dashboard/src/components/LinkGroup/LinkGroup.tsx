@@ -1,7 +1,8 @@
-import { ElementType, Fragment, memo, ReactElement, ReactNode } from 'react';
+import type { ElementType, ReactElement, ReactNode } from 'react';
+import { Fragment, memo } from 'react';
 
 import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
-import { MessagesKey } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 
 export interface ILinkGroup {
   links: (ILink | undefined)[];

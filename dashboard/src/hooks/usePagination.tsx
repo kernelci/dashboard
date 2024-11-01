@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-import {
+import type {
   BuildsTableFilter,
   TFilter,
   TestsTableFilter,

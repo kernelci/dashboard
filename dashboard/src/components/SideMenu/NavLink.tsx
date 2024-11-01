@@ -1,8 +1,9 @@
 import { FormattedMessage } from 'react-intl';
 
-import { Link, LinkProps } from '@tanstack/react-router';
+import type { LinkProps } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 
-import { MessagesKey } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 
 import { NavigationMenuLink } from '../ui/navigation-menu';
 

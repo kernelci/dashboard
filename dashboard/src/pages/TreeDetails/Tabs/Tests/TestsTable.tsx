@@ -1,14 +1,16 @@
-import {
+import type {
   ColumnDef,
   ExpandedState,
+  PaginationState,
+  SortingState,
+} from '@tanstack/react-table';
+import {
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  PaginationState,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 
@@ -16,13 +18,10 @@ import { Fragment, useCallback, useMemo, useState } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import {
-  possibleTestsTableFilter,
-  TableFilter,
-  TestsTableFilter,
-} from '@/types/tree/TreeDetails';
+import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
+import { possibleTestsTableFilter } from '@/types/tree/TreeDetails';
 
-import { TestHistory, TPathTests } from '@/types/general';
+import type { TestHistory, TPathTests } from '@/types/general';
 
 import { StatusTable } from '@/utils/constants/database';
 

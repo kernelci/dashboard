@@ -1,8 +1,8 @@
-import { ReactElement } from 'react';
+import type { ReactElement } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { MessagesKey } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 
 export interface ILinkWithIcon {
   title?: MessagesKey;

@@ -1,10 +1,10 @@
 import { object, z } from 'zod';
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-import { MessagesKey } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 
-import { TestHistory, TIssue } from '@/types/general';
+import type { TestHistory, TIssue } from '@/types/general';
 
 import type { Status } from '@/types/database';
 

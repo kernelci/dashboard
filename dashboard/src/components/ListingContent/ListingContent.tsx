@@ -1,8 +1,8 @@
-import { ReactElement, ReactNode, useMemo } from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import { useMemo } from 'react';
 
-import ListingItem, {
-  IListingItem,
-} from '@/components/ListingItem/ListingItem';
+import type { IListingItem } from '@/components/ListingItem/ListingItem';
+import ListingItem from '@/components/ListingItem/ListingItem';
 
 export interface IListingContent {
   items: IListingItem[];

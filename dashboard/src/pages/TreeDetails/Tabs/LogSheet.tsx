@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { truncateBigText } from '@/lib/string';
 import { useLogFiles } from '@/api/TreeDetails';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
-import { LogFile } from '@/types/tree/TreeDetails';
+import type { LogFile } from '@/types/tree/TreeDetails';
 
 //TODO Localize the fallback string
 const FallbackLog = `

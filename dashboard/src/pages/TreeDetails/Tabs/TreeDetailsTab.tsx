@@ -1,14 +1,16 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import { ReactElement, useCallback } from 'react';
+import type { ReactElement } from 'react';
+import { useCallback } from 'react';
 
-import Tabs, { ITabItem } from '@/components/Tabs/Tabs';
+import type { ITabItem } from '@/components/Tabs/Tabs';
+import Tabs from '@/components/Tabs/Tabs';
 
 import { zPossibleValidator } from '@/types/tree/TreeDetails';
 
-import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
+import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
-import { MessagesKey } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 
 import BuildTab from './Build';
 import BootsTab from './Boots';

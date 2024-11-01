@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { useParams, useSearch } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
-import { ISection } from '@/components/Section/Section';
+import type { ISection } from '@/components/Section/Section';
 import { useBuildDetails, useBuildIssues } from '@/api/BuildDetails';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 

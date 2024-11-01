@@ -1,14 +1,16 @@
-import {
+import type {
   ColumnDef,
   ColumnFiltersState,
+  PaginationState,
+  Row,
+  SortingState,
+} from '@tanstack/react-table';
+import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  PaginationState,
-  Row,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 
@@ -16,11 +18,13 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { LinkProps, useSearch } from '@tanstack/react-router';
+import type { LinkProps } from '@tanstack/react-router';
+import { useSearch } from '@tanstack/react-router';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
-import { TreeTableBody, zOrigin } from '@/types/tree/Tree';
+import type { TreeTableBody } from '@/types/tree/Tree';
+import { zOrigin } from '@/types/tree/Tree';
 
 import { formattedBreakLineValue } from '@/locales/messages';
 

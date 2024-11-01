@@ -1,4 +1,4 @@
-import { status } from '@/utils/constants/database';
+import type { status } from '@/utils/constants/database';
 
 export type Status = (typeof status)[number];
 

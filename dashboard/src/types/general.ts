@@ -1,4 +1,4 @@
-import { Status } from './database';
+import type { Status } from './database';
 
 type IncidentsInfo = { incidentsCount: number };
 

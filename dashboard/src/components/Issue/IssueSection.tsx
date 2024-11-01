@@ -2,14 +2,14 @@ import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { UseQueryResult } from '@tanstack/react-query';
+import type { UseQueryResult } from '@tanstack/react-query';
 
 import { Link } from '@tanstack/react-router';
 
 import { RiProhibited2Line } from 'react-icons/ri';
 
 import ListingItem from '@/components/ListingItem/ListingItem';
-import { TIssue } from '@/types/general';
+import type { TIssue } from '@/types/general';
 
 import QuerySwitcher from '../QuerySwitcher/QuerySwitcher';
 

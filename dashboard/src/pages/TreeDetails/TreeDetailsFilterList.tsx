@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 
 import FilterList from '@/components/FilterList/FilterList';
-import { TFilter, TFilterKeys } from '@/types/tree/TreeDetails';
+import type { TFilter, TFilterKeys } from '@/types/tree/TreeDetails';
 
 interface ITreeDetailsFilterList {
   filter: TFilter;

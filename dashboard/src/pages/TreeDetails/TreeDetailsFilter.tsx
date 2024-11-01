@@ -1,34 +1,27 @@
-import {
-  Dispatch,
-  memo,
-  SetStateAction,
-  useCallback,
-  useMemo,
-  useState,
-} from 'react';
+import type { Dispatch, SetStateAction } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useNavigate, useParams } from '@tanstack/react-router';
 
 import { status as testStatuses } from '@/utils/constants/database';
 import FilterDrawer, { DrawerSection } from '@/components/Filter/Drawer';
-import FilterCheckboxSection, {
-  ICheckboxSection,
-} from '@/components/Filter/CheckboxSection';
+import type { ICheckboxSection } from '@/components/Filter/CheckboxSection';
+import FilterCheckboxSection from '@/components/Filter/CheckboxSection';
 import FilterTimeRangeSection from '@/components/Filter/TimeRangeSection';
-import {
+import type {
   TFilter,
   TFilterKeys,
   TFilterObjectsKeys,
   TFilterNumberKeys,
-  isTFilterObjectKeys,
   BuildsTab as TreeDetailsType,
   TTreeTestsFullData,
   TTreeDetailsFilter,
 } from '@/types/tree/TreeDetails';
+import { isTFilterObjectKeys } from '@/types/tree/TreeDetails';
 import { useBuildsTab, useTestsTab } from '@/api/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
-import { TRequestFiltersValues } from '@/utils/filters';
+import type { TRequestFiltersValues } from '@/utils/filters';
 
 import { cleanFalseFilters } from './treeDetailsUtils';
 

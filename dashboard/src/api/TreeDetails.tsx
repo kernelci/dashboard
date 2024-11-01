@@ -1,8 +1,9 @@
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import type { UseQueryResult } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { useSearch } from '@tanstack/react-router';
 
-import {
+import type {
   BuildsTab,
   TTreeDetailsFilter,
   TTestByCommitHashResponse,
@@ -12,7 +13,7 @@ import {
   LogFilesResponse,
 } from '@/types/tree/TreeDetails';
 
-import { TPathTests } from '@/types/general';
+import type { TPathTests } from '@/types/general';
 
 import { getTargetFilter } from '@/utils/filters';
 

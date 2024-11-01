@@ -4,9 +4,9 @@ import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import { useBuildsTab, useTestsTab } from '@/api/TreeDetails';
-import { IListingItem } from '@/components/ListingItem/ListingItem';
-import { ISummaryItem } from '@/components/Summary/Summary';
-import {
+import type { IListingItem } from '@/components/ListingItem/ListingItem';
+import type { ISummaryItem } from '@/components/Summary/Summary';
+import type {
   AccordionItemBuilds,
   BuildStatus,
   BuildsTab,
@@ -42,9 +42,8 @@ import {
 } from '@/components/Status/Status';
 
 import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
-import TreeDetailsTab, {
-  TreeDetailsTabRightElement,
-} from './Tabs/TreeDetailsTab';
+import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
+import TreeDetailsTab from './Tabs/TreeDetailsTab';
 
 import TreeDetailsFilterList from './TreeDetailsFilterList';
 import { MemoizedHardwareUsed } from './Tabs/TestCards';

@@ -1,4 +1,4 @@
-import { Status } from '@/types/database';
+import type { Status } from '@/types/database';
 
 type StatusGroups = 'success' | 'failed' | 'inconclusive';
 

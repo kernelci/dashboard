@@ -1,19 +1,19 @@
+import type { ColumnDef, Row, SortingState } from '@tanstack/react-table';
 import {
-  ColumnDef,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
-  Row,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { CSSProperties, memo, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 
-import { Link, LinkProps } from '@tanstack/react-router';
+import type { LinkProps } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 
-import { TIndividualTest } from '@/types/general';
+import type { TIndividualTest } from '@/types/general';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 

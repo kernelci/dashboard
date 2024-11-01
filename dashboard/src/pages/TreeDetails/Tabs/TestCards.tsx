@@ -4,19 +4,23 @@ import { memo, useMemo } from 'react';
 import { Link } from '@tanstack/react-router';
 
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
-import BaseCard, { IBaseCard } from '@/components/Cards/BaseCard';
+import type { IBaseCard } from '@/components/Cards/BaseCard';
+import BaseCard from '@/components/Cards/BaseCard';
 import ListingItem, { ItemType } from '@/components/ListingItem/ListingItem';
 import { GroupedTestStatus } from '@/components/Status/Status';
-import { ArchCompilerStatus, TTreeTestsData } from '@/types/tree/TreeDetails';
+import type {
+  ArchCompilerStatus,
+  TTreeTestsData,
+} from '@/types/tree/TreeDetails';
 
 import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
+import type { StatusChartValues } from '@/components/StatusChart/StatusCharts';
 import StatusChartMemoized, {
   Colors,
-  StatusChartValues,
 } from '@/components/StatusChart/StatusCharts';
 import { groupStatus } from '@/utils/status';
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
-import { TIssue } from '@/types/general';
+import type { TIssue } from '@/types/general';
 import { NoIssueFound } from '@/components/Issue/IssueSection';
 import { ScrollArea } from '@/components/ui/scroll-area';
 

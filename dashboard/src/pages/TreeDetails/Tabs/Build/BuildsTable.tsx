@@ -1,29 +1,32 @@
-import {
+import type {
   ColumnDef,
   ExpandedState,
+  PaginationState,
+  SortingState,
+} from '@tanstack/react-table';
+import {
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  PaginationState,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 
-import { Fragment, ReactElement, useCallback, useMemo, useState } from 'react';
+import type { ReactElement } from 'react';
+import { Fragment, useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import { MdCheck, MdClose } from 'react-icons/md';
 
-import {
+import type {
   AccordionItemBuilds,
   BuildsTableFilter,
-  possibleBuildsTableFilter,
 } from '@/types/tree/TreeDetails';
+import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
 import { TableHeader } from '@/components/Table/TableHeader';
 import TableStatusFilter from '@/components/Table/TableStatusFilter';
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';

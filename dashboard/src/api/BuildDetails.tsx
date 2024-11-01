@@ -1,8 +1,9 @@
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import type { UseQueryResult } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
-import { TBuildDetails } from '@/types/tree/BuildDetails';
+import type { TBuildDetails } from '@/types/tree/BuildDetails';
 
-import { TIssue } from '@/types/general';
+import type { TIssue } from '@/types/general';
 
 import http from './api';
 

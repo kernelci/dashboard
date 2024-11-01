@@ -4,7 +4,8 @@ import { useSearch, useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import Select, { SelectItem } from '@/components/Select/Select';
-import { TOrigins, zOrigin, zOriginEnum } from '@/types/tree/Tree';
+import type { TOrigins } from '@/types/tree/Tree';
+import { zOrigin, zOriginEnum } from '@/types/tree/Tree';
 
 const OriginSelect = (): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });

@@ -1,7 +1,9 @@
-import { ChangeEvent, useEffect, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useDebounce } from '@/hooks/useDebounce';
-import { Input, InputProps } from '@/components/ui/input';
+import type { InputProps } from '@/components/ui/input';
+import { Input } from '@/components/ui/input';
 
 interface IDebounceInput extends Omit<InputProps, 'onChange' | 'value'> {
   debouncedSideEffect: (value: React.ChangeEvent<HTMLInputElement>) => void;

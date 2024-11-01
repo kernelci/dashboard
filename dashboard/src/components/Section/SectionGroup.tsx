@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
-import Section, { ISection } from './Section';
+import type { ISection } from './Section';
+import Section from './Section';
 
 interface ISectionGroup {
   sections: ISection[];

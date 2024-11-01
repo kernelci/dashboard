@@ -1,4 +1,5 @@
-import { ReactElement, useMemo } from 'react';
+import type { ReactElement } from 'react';
+import { useMemo } from 'react';
 
 import { useDiffFilterParams } from '@/pages/TreeDetails/treeDetailsUtils';
 
@@ -6,7 +7,8 @@ import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
 
 import BaseTable from '../Table/BaseTable';
 import { TableBody, TableCell, TableCellWithLink, TableRow } from '../ui/table';
-import ListingItem, { IListingItem } from '../ListingItem/ListingItem';
+import type { IListingItem } from '../ListingItem/ListingItem';
+import ListingItem from '../ListingItem/ListingItem';
 
 export interface ISummary extends ISummaryTable {
   title: ReactElement;

@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { useCallback, useMemo } from 'react';
 
-import { MessagesKey } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 
 import {
   Select,

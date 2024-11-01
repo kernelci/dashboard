@@ -6,7 +6,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { useNavigate, useParams } from '@tanstack/react-router';
 
-import {
+import type {
   AccordionItemBuilds,
   BuildCountsResponse,
 } from '@/types/tree/TreeDetails';
@@ -15,19 +15,20 @@ import { useBuildStatusCount } from '@/api/TreeDetails';
 
 import { Sheet, SheetTrigger } from '@/components/Sheet';
 
+import type { IStatusChart } from '@/components/StatusChart/StatusCharts';
 import StatusChartMemoized, {
   Colors,
-  IStatusChart,
 } from '@/components/StatusChart/StatusCharts';
 
-import LinksGroup, { ILinkGroup } from '@/components/LinkGroup/LinkGroup';
+import type { ILinkGroup } from '@/components/LinkGroup/LinkGroup';
+import LinksGroup from '@/components/LinkGroup/LinkGroup';
 
 import { Button } from '@/components/ui/button';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
-import { TPathTests } from '@/types/general';
+import type { TPathTests } from '@/types/general';
 
 export interface IBuildAccordionContent {
   testStatus: {

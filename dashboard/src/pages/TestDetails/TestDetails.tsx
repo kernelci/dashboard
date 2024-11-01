@@ -14,7 +14,8 @@ import { useTestDetails, useTestIssues } from '@/api/TestDetails';
 
 import type { TTestDetails } from '@/types/tree/TestDetails';
 
-import { ISubsection, Subsection } from '@/components/Section/Section';
+import type { ISubsection } from '@/components/Section/Section';
+import { Subsection } from '@/components/Section/Section';
 
 import {
   Breadcrumb,

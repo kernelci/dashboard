@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 
-import { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
+import type { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
 
 import { useDiffFilterParams } from './treeDetailsUtils';
 

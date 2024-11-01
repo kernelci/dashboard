@@ -1,6 +1,7 @@
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import type { UseQueryResult } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
-import { TestHistory } from '@/types/general';
+import type { TestHistory } from '@/types/general';
 
 import http from './api';
 

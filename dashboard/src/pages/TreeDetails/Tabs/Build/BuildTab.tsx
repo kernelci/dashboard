@@ -9,8 +9,8 @@ import StatusChartMemoized, {
 } from '@/components/StatusChart/StatusCharts';
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 
-import { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
-import { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
+import type { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
+import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';

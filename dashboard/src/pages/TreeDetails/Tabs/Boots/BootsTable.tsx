@@ -1,12 +1,14 @@
-import {
+import type {
   ColumnDef,
+  PaginationState,
+  SortingState,
+} from '@tanstack/react-table';
+import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  PaginationState,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 
@@ -17,12 +19,12 @@ import { MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import {
-  possibleTestsTableFilter,
+import type {
   TestByCommitHash,
   TestsTableFilter,
   TTestByCommitHashResponse,
 } from '@/types/tree/TreeDetails';
+import { possibleTestsTableFilter } from '@/types/tree/TreeDetails';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
@@ -35,7 +37,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { TestHistory } from '@/types/general';
+import type { TestHistory } from '@/types/general';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
