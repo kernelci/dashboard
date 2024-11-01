@@ -76,4 +76,7 @@ urlpatterns = [
          viewCache(views.HardwareDetails),
          name="hardwareDetails"
          ),
+    path("hardware/",
+         viewCache(views.HardwareView),
+         name="hardware"),
 ]
