@@ -1,19 +1,15 @@
 import { z } from 'zod';
 
-const TreeFastPathResponseSchema = z.array(
-  z.object({
-    id: z.string(),
-    tree_name: z.string().nullable(),
-    git_repository_branch: z.string(),
-    git_repository_url: z.string(),
-    git_commit_hash: z.string(),
-    git_commit_name: z.string().nullable(),
-    patchset_hash: z.string().nullable(),
-    start_time: z.string(),
-  }),
-);
-
-export type TreeFastPathResponse = z.infer<typeof TreeFastPathResponseSchema>;
+export type TreeFastPathResponse = Array<{
+  id: string;
+  tree_name: string | null;
+  git_repository_branch: string;
+  git_repository_url: string;
+  git_commit_hash: string;
+  git_commit_name: string | null;
+  patchset_hash: string | null;
+  start_time: string;
+}>;
 
 export type TreeTableBody = {
   commitHash: string;

@@ -8,8 +8,6 @@ import {
 } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { z } from 'zod';
-
 import { useNavigate, useParams } from '@tanstack/react-router';
 
 import { status as testStatuses } from '@/utils/constants/database';
@@ -34,8 +32,7 @@ import { TRequestFiltersValues } from '@/utils/filters';
 
 import { cleanFalseFilters } from './treeDetailsUtils';
 
-const zFilterValue = z.record(z.boolean());
-type TFilterValues = z.infer<typeof zFilterValue>;
+type TFilterValues = Record<string, boolean>;
 
 interface ITreeDetailsFilter {
   paramFilter: TFilter;
@@ -157,8 +154,8 @@ const changeCheckboxFilterValue = (
     newFilter[filterField] = {};
   }
   const filterSection = newFilter[filterField];
-  const filterValue = filterSection?.[value] ?? false;
-  filterSection ? (filterSection[value] = !filterValue) : undefined;
+  const filterValue = filterSection[value] ?? false;
+  filterSection[value] = !filterValue;
 
   return newFilter;
 };

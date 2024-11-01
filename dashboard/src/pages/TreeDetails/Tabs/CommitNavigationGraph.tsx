@@ -257,18 +257,14 @@ const CommitNavigationGraph = (): JSX.Element => {
                   params: {
                     treeId: commitHash,
                   },
-                  search: previousParams => {
-                    previousParams;
-
-                    return {
-                      ...previousParams,
-                      treeInfo: {
-                        ...previousParams.treeInfo,
-                        commitName: commitName,
-                        commitHash: commitHash,
-                      },
-                    };
-                  },
+                  search: previousParams => ({
+                    ...previousParams,
+                    treeInfo: {
+                      ...previousParams.treeInfo,
+                      commitName: commitName,
+                      commitHash: commitHash,
+                    },
+                  }),
                 });
               }
             }}

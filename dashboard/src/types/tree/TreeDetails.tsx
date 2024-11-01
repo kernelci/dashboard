@@ -197,12 +197,10 @@ export const zFilterNumberKeys = z.enum([
   'testDurationMin',
   'testDurationMax',
 ]);
-const filterKeys = [
-  ...zFilterObjectsKeys.options,
-  ...zFilterNumberKeys.options,
-] as const;
 
-export type TFilterKeys = (typeof filterKeys)[number];
+export type TFilterKeys =
+  | z.infer<typeof zFilterObjectsKeys>
+  | z.infer<typeof zFilterNumberKeys>;
 
 export const zDiffFilter = z
   .union([
