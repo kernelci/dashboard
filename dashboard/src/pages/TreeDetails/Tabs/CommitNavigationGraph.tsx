@@ -61,13 +61,6 @@ const CommitNavigationGraph = (): JSX.Element => {
 
   const messagesId: MessagesID = useMemo(() => {
     switch (currentTreeDetailsTab) {
-      case 'treeDetails.builds':
-        return {
-          graphName: 'treeDetails.buildsHistory',
-          good: 'treeDetails.validBuilds',
-          bad: 'treeDetails.invalidBuilds',
-          mid: 'treeDetails.inconclusiveBuilds',
-        } as MessagesID;
       case 'treeDetails.boots':
         return {
           graphName: 'treeDetails.bootsHistory',
@@ -81,6 +74,13 @@ const CommitNavigationGraph = (): JSX.Element => {
           good: 'treeDetails.testsSuccess',
           bad: 'treeDetails.testsFailed',
           mid: 'treeDetails.testsInconclusive',
+        } as MessagesID;
+      default:
+        return {
+          graphName: 'treeDetails.buildsHistory',
+          good: 'treeDetails.validBuilds',
+          bad: 'treeDetails.invalidBuilds',
+          mid: 'treeDetails.inconclusiveBuilds',
         } as MessagesID;
     }
   }, [currentTreeDetailsTab]);
