@@ -3,6 +3,8 @@ from django.views import View
 from kernelCI_app.models import Checkouts
 from kernelCI_app.serializers import TreeSerializer
 from kernelCI_app.utils import getQueryTimeInterval
+from kernelCI_app.helpers.errorHandling import ExceptionWithJsonResponse
+from kernelCI_app.helpers.date import parseIntervalInDaysGetParameter
 
 
 DEFAULT_ORIGIN = 'maestro'
@@ -11,7 +13,13 @@ DEFAULT_ORIGIN = 'maestro'
 class TreeView(View):
     def get(self, request):
         origin_param = request.GET.get('origin', DEFAULT_ORIGIN)
-        interval_days = int(request.GET.get('intervalInDays', '7'))
+        try:
+            interval_days = parseIntervalInDaysGetParameter(
+                request.GET.get("intervalInDays", 3)
+            )
+        except ExceptionWithJsonResponse as e:
+            return e.getJsonResponse()
+
         interval_days_data = {"days": interval_days}
 
         params = {
