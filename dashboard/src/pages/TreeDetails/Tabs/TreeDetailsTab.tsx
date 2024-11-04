@@ -25,7 +25,7 @@ export type TreeDetailsTabRightElement = Record<
 >;
 
 export interface ITreeDetailsTab {
-  treeDetailsData?: ITreeDetails;
+  treeDetailsData: ITreeDetails;
   filterListElement?: JSX.Element;
   reqFilter: Record<string, string[]>;
   countElements: TreeDetailsTabRightElement;
