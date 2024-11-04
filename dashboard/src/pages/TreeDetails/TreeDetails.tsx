@@ -10,7 +10,6 @@ import type {
   AccordionItemBuilds,
   BuildStatus,
   BuildsTab,
-  BuildsTabBuild,
 } from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
 import {
@@ -41,6 +40,13 @@ import {
   GroupedTestStatus,
 } from '@/components/Status/Status';
 
+import {
+  sanitizeArchs,
+  sanitizeBuilds,
+  sanitizeBuildsSummary,
+  sanitizeConfigs,
+} from '@/utils/utils';
+
 import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
@@ -49,7 +55,7 @@ import TreeDetailsFilterList from './TreeDetailsFilterList';
 import { MemoizedHardwareUsed } from './Tabs/TestCards';
 
 export interface ITreeDetails {
-  archs: ISummaryItem[];
+  architectures: ISummaryItem[];
   configs: IListingItem[];
   buildsSummary: BuildStatus;
   builds: AccordionItemBuilds[];
@@ -108,10 +114,6 @@ const TreeHeader = ({
       </TableBody>
     </DumbBaseTable>
   );
-};
-
-const isBuildError = (build: BuildsTabBuild): number => {
-  return build.valid || build.valid === null ? 0 : 1;
 };
 
 function TreeDetails(): JSX.Element {
@@ -203,63 +205,16 @@ function TreeDetails(): JSX.Element {
     return url;
   }, [buildData]);
 
-  const treeDetailsData: ITreeDetails | undefined = useMemo(() => {
-    if (buildData) {
-      const configsData: IListingItem[] = Object.entries(
-        buildData.summary.configs,
-      ).map(([key, value]) => ({
-        text: key,
-        errors: value.invalid,
-        success: value.valid,
-        unknown: value.null,
-      }));
-
-      const archData: ISummaryItem[] = Object.entries(
-        buildData.summary.architectures,
-      ).map(([key, value]) => ({
-        arch: {
-          text: key,
-          errors: value.invalid,
-          success: value.valid,
-          unknown: value.null,
-        },
-        compilers: value.compilers,
-      }));
-
-      const buildSummaryData: BuildStatus = {
-        valid: buildData.summary.builds.valid,
-        invalid: buildData.summary.builds.invalid,
-        null: buildData.summary.builds.null,
-      };
-
-      const buildsData: AccordionItemBuilds[] = Object.entries(
-        buildData.builds,
-      ).map(([, value]) => ({
-        id: value.id,
-        config: value.config_name,
-        date: value.start_time,
-        buildTime: value.duration,
-        compiler: value.compiler,
-        buildErrors: isBuildError(value),
-        status:
-          value.valid === null ? 'null' : value.valid ? 'valid' : 'invalid',
-        buildLogs: value.log_url,
-        kernelConfig: value.config_url,
-        kernelImage: value.misc ? value.misc['kernel_type'] : undefined,
-        dtb: value.misc ? value.misc['dtb'] : undefined,
-        systemMap: value.misc ? value.misc['system_map'] : undefined,
-        modules: value.misc ? value.misc['modules'] : undefined,
-      }));
-
-      return {
-        archs: archData,
-        configs: configsData,
-        buildsSummary: buildSummaryData,
-        builds: buildsData,
-        issues: buildData.issues,
-      };
-    }
-  }, [buildData]);
+  const treeDetailsData: ITreeDetails = useMemo(
+    () => ({
+      architectures: sanitizeArchs(buildData?.summary.architectures),
+      configs: sanitizeConfigs(buildData?.summary.configs),
+      builds: sanitizeBuilds(buildData?.builds),
+      buildsSummary: sanitizeBuildsSummary(buildData?.summary.builds),
+      issues: buildData?.issues || [],
+    }),
+    [buildData],
+  );
 
   if (isLoading)
     return (
