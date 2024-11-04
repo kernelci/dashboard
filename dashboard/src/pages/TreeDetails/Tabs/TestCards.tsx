@@ -96,22 +96,28 @@ const HardwareTested = ({
                 environmentCompatible[hardwareTestedName];
 
               return (
-                <ListingItem
-                  hasBottomBorder
+                <FilterLink
                   key={hardwareTestedName}
-                  text={hardwareTestedName}
-                  leftIcon={
-                    <GroupedTestStatus
-                      done={DONE}
-                      fail={FAIL}
-                      error={ERROR}
-                      miss={MISS}
-                      pass={PASS}
-                      skip={SKIP}
-                      nullStatus={NULL}
-                    />
-                  }
-                />
+                  filterSection="hardware"
+                  filterValue={hardwareTestedName}
+                >
+                  <ListingItem
+                    hasBottomBorder
+                    key={hardwareTestedName}
+                    text={hardwareTestedName}
+                    leftIcon={
+                      <GroupedTestStatus
+                        done={DONE}
+                        fail={FAIL}
+                        error={ERROR}
+                        miss={MISS}
+                        pass={PASS}
+                        skip={SKIP}
+                        nullStatus={NULL}
+                      />
+                    }
+                  />
+                </FilterLink>
               );
             })}
           </DumbListingContent>
