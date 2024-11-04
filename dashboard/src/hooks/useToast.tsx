@@ -19,28 +19,28 @@ function genId(): string {
   return count.toString();
 }
 
-type ActionType = {
-  ADD_TOAST: 'ADD_TOAST';
-  UPDATE_TOAST: 'UPDATE_TOAST';
-  DISMISS_TOAST: 'DISMISS_TOAST';
-  REMOVE_TOAST: 'REMOVE_TOAST';
-};
+enum ActionType {
+  ADD_TOAST = 'ADD_TOAST',
+  UPDATE_TOAST = 'UPDATE_TOAST',
+  DISMISS_TOAST = 'DISMISS_TOAST',
+  REMOVE_TOAST = 'REMOVE_TOAST',
+}
 
 type Action =
   | {
-      type: ActionType['ADD_TOAST'];
+      type: ActionType.ADD_TOAST;
       toast: ToasterToast;
     }
   | {
-      type: ActionType['UPDATE_TOAST'];
+      type: ActionType.UPDATE_TOAST;
       toast: Partial<ToasterToast>;
     }
   | {
-      type: ActionType['DISMISS_TOAST'];
+      type: ActionType.DISMISS_TOAST;
       toastId?: ToasterToast['id'];
     }
   | {
-      type: ActionType['REMOVE_TOAST'];
+      type: ActionType.REMOVE_TOAST;
       toastId?: ToasterToast['id'];
     };
 
@@ -58,7 +58,7 @@ const addToRemoveQueue = (toastId: string): void => {
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId);
     dispatch({
-      type: 'REMOVE_TOAST',
+      type: ActionType.REMOVE_TOAST,
       toastId: toastId,
     });
   }, TOAST_REMOVE_DELAY);
@@ -118,6 +118,8 @@ export const reducer = (state: State, action: Action): State => {
         ...state,
         toasts: state.toasts.filter(t => t.id !== action.toastId),
       };
+    default:
+      return state;
   }
 };
 
@@ -145,13 +147,14 @@ function toast({ ...props }: Toast): ToastStateProps {
 
   const update = (toastProps: ToasterToast): void =>
     dispatch({
-      type: 'UPDATE_TOAST',
+      type: ActionType.UPDATE_TOAST,
       toast: { ...toastProps, id },
     });
-  const dismiss = (): void => dispatch({ type: 'DISMISS_TOAST', toastId: id });
+  const dismiss = (): void =>
+    dispatch({ type: ActionType.DISMISS_TOAST, toastId: id });
 
   dispatch({
-    type: 'ADD_TOAST',
+    type: ActionType.ADD_TOAST,
     toast: {
       ...props,
       id,
@@ -191,7 +194,8 @@ function useToast(): UseToastType {
   return {
     ...state,
     toast,
-    dismiss: (toastId?: string) => dispatch({ type: 'DISMISS_TOAST', toastId }),
+    dismiss: (toastId?: string) =>
+      dispatch({ type: ActionType.DISMISS_TOAST, toastId }),
   };
 }
 
