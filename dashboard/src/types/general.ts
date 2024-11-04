@@ -39,3 +39,38 @@ export type TestHistory = {
   duration?: number;
   hardware?: string[];
 };
+
+interface ITreeDetailsMisc {
+  kernel_type?: string;
+  dtb?: string;
+  modules?: string;
+  system_map?: string;
+}
+
+export type BuildsTabBuild = {
+  id: string;
+  architecture: string;
+  config_name: string;
+  valid: boolean | null;
+  start_time: string;
+  duration: string;
+  compiler: string;
+  config_url: string;
+  log_url: string;
+  git_repository_branch: string;
+  git_repository_url: string;
+  misc: ITreeDetailsMisc | null;
+};
+
+export type BuildStatus = {
+  valid: number;
+  invalid: number;
+  null: number;
+};
+
+export type Architecture = Record<
+  string,
+  BuildStatus & {
+    compilers: string[];
+  }
+>;

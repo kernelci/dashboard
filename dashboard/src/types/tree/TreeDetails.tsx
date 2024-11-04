@@ -4,31 +4,15 @@ import type { ReactNode } from 'react';
 
 import type { MessagesKey } from '@/locales/messages';
 
-import type { TestHistory, TIssue } from '@/types/general';
+import type {
+  BuildsTabBuild,
+  BuildStatus,
+  Architecture,
+  TestHistory,
+  TIssue,
+} from '@/types/general';
 
 import type { Status } from '@/types/database';
-
-export type BuildsTabBuild = {
-  id: string;
-  architecture: string;
-  config_name: string;
-  valid: boolean | null;
-  start_time: string;
-  duration: string;
-  compiler: string;
-  config_url: string;
-  log_url: string;
-  git_repository_branch: string;
-  git_repository_url: string;
-  misc: ITreeDetailsMisc | null;
-};
-
-interface ITreeDetailsMisc {
-  kernel_type?: string;
-  dtb?: string;
-  modules?: string;
-  system_map?: string;
-}
 
 export type AccordionItemBuilds = {
   id: string;
@@ -51,23 +35,10 @@ export type BuildsTab = {
   summary: {
     builds: BuildStatus;
     configs: Record<string, BuildStatus>;
-    architectures: TArch;
+    architectures: Architecture;
   };
   issues: TIssue[];
 };
-
-export type BuildStatus = {
-  valid: number;
-  invalid: number;
-  null: number;
-};
-
-type TArch = Record<
-  string,
-  BuildStatus & {
-    compilers: string[];
-  }
->;
 
 export interface TTreeDetailsFilter
   extends Partial<{

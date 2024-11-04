@@ -2,12 +2,12 @@ import { format } from 'date-fns';
 
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
 import type { ISummaryItem } from '@/components/Summary/Summary';
+import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 import type {
+  Architecture,
   BuildsTabBuild,
   BuildStatus,
-  TArch,
-  AccordionItemBuilds,
-} from '@/types/tree/TreeDetails';
+} from '@/types/general';
 
 export function formatDate(date: Date | string, short?: boolean): string {
   const options: Intl.DateTimeFormatOptions = {
@@ -30,7 +30,9 @@ export const getDateOffset = (date: Date): string => {
   return format(date, 'z');
 };
 
-export const sanitizeArchs = (archs: TArch | undefined): ISummaryItem[] => {
+export const sanitizeArchs = (
+  archs: Architecture | undefined,
+): ISummaryItem[] => {
   if (!archs) return [];
   return Object.entries(archs).map(([key, value]) => ({
     arch: {
