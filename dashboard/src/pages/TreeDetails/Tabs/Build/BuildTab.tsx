@@ -29,7 +29,7 @@ import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 import { BuildsTable } from './BuildsTable';
 
 interface BuildTab {
-  treeDetailsData?: ITreeDetails;
+  treeDetailsData: ITreeDetails;
 }
 
 const StatusCard = ({
@@ -163,12 +163,12 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
             treeDetailsData={treeDetailsData}
           />
           <MemoizedErrorsSummaryBuild
-            summaryBody={treeDetailsData?.archs ?? []}
+            summaryBody={treeDetailsData.architectures}
             toggleFilterBySection={toggleFilterBySection}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
-            issues={treeDetailsData?.issues || []}
+            issues={treeDetailsData.issues || []}
           />
         </div>
         <div>
@@ -187,7 +187,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         />
         <InnerMobileGrid>
           <MemoizedErrorsSummaryBuild
-            summaryBody={treeDetailsData?.archs ?? []}
+            summaryBody={treeDetailsData.architectures}
             toggleFilterBySection={toggleFilterBySection}
           />
           <MemoizedConfigsCard
@@ -197,7 +197,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         </InnerMobileGrid>
         <MemoizedIssuesList
           title={<FormattedMessage id="global.issues" />}
-          issues={treeDetailsData?.issues || []}
+          issues={treeDetailsData.issues}
         />
       </MobileGrid>
 
