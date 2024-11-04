@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import type { BuildStatus } from '@/types/general';
+
 export type TreeFastPathResponse = Array<{
   id: string;
   tree_name: string | null;
@@ -15,11 +17,7 @@ export type TreeTableBody = {
   commitHash: string;
   commitName: string;
   patchsetHash: string;
-  buildStatus?: {
-    valid: number;
-    invalid: number;
-    null: number;
-  };
+  buildStatus?: BuildStatus;
   tree_name?: string | null;
   testStatus?: {
     done: number;

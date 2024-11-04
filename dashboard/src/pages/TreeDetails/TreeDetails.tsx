@@ -6,11 +6,7 @@ import { FormattedMessage } from 'react-intl';
 import { useBuildsTab, useTestsTab } from '@/api/TreeDetails';
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
 import type { ISummaryItem } from '@/components/Summary/Summary';
-import type {
-  AccordionItemBuilds,
-  BuildStatus,
-  BuildsTab,
-} from '@/types/tree/TreeDetails';
+import type { AccordionItemBuilds, BuildsTab } from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
 import {
   Breadcrumb,
@@ -46,6 +42,8 @@ import {
   sanitizeBuildsSummary,
   sanitizeConfigs,
 } from '@/utils/utils';
+
+import type { BuildStatus } from '@/types/general';
 
 import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
