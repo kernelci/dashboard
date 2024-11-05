@@ -26,7 +26,7 @@ import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
 
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
-import { BuildsTable } from './BuildsTable';
+import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
 interface BuildTab {
   treeDetailsData: ITreeDetails;
@@ -210,7 +210,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
             <FormattedMessage id="treeDetails.builds" />
           </div>
 
-          <BuildsTable buildItems={treeDetailsData.builds} />
+          <TreeDetailsBuildsTable buildItems={treeDetailsData.builds} />
         </div>
       )}
     </div>
