@@ -26,7 +26,10 @@ import type {
   AccordionItemBuilds,
   BuildsTableFilter,
 } from '@/types/tree/TreeDetails';
-import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
+import {
+  possibleBuildsTableFilter,
+  zBuildsTableFilterValidator,
+} from '@/types/tree/TreeDetails';
 import { TableHeader } from '@/components/Table/TableHeader';
 import TableStatusFilter from '@/components/Table/TableStatusFilter';
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
@@ -146,10 +149,11 @@ export function BuildsTable({ buildItems }: IBuildsTable): JSX.Element {
     pageIndex: 0,
     pageSize: 10,
   });
-  const { tableFilter } = useSearch({
-    from: '/tree/$treeId/',
+  const { tableFilter: unsafeTableFilter } = useSearch({
+    strict: false,
   });
-  const selectedFilter = tableFilter.buildsTable;
+
+  const selectedFilter = zBuildsTableFilterValidator.parse(unsafeTableFilter);
 
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const intl = useIntl();
