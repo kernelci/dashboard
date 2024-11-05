@@ -153,6 +153,7 @@ export const messages = {
     'global.unknown': 'Unknown',
     'global.url': 'URL',
     'global.valid': 'Valid',
+    'hardwareDetails.treeBranch': 'Tree / Branch',
     'issue.failedToFetch': 'Failed to fetch issues',
     'issue.noIssueFound': 'No issue found.',
     'logSheet.errorsFound': 'Errors found on Kernel.log',
