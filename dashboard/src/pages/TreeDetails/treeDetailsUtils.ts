@@ -37,8 +37,10 @@ export const useDiffFilterParams = (
   filterSection: TFilterObjectsKeys,
 ): TFilter => {
   const { diffFilter: currentDiffFilter } = useSearch({
-    from: '/tree/$treeId',
+    strict: false,
   });
+
+  if (!currentDiffFilter) return {};
 
   const newFilter = structuredClone(currentDiffFilter) || {};
   // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
