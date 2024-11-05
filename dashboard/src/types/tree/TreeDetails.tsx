@@ -28,6 +28,7 @@ export type AccordionItemBuilds = {
   dtb?: string;
   systemMap?: string;
   modules?: string;
+  treeBranch?: string;
 };
 
 export type BuildsTab = {
