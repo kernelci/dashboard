@@ -8,6 +8,7 @@ import type {
   BuildsTabBuild,
   BuildStatus,
 } from '@/types/general';
+import { sanitizeTableValue } from '@/components/Table/tableUtils';
 
 export function formatDate(date: Date | string, short?: boolean): string {
   const options: Intl.DateTimeFormatOptions = {
@@ -81,6 +82,7 @@ export const sanitizeBuilds = (
     dtb: build.misc ? build.misc['dtb'] : undefined,
     systemMap: build.misc ? build.misc['system_map'] : undefined,
     modules: build.misc ? build.misc['modules'] : undefined,
+    treeBranch: `${sanitizeTableValue(build.tree_name)} / ${sanitizeTableValue(build.git_repository_branch)}`,
   }));
 };
 
