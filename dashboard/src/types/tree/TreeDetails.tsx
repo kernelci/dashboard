@@ -44,7 +44,7 @@ export interface TTreeDetailsFilter
   extends Partial<{
     [K in keyof Omit<
       BuildsTabBuild,
-      'test_status' | 'misc' | 'valid'
+      'test_status' | 'misc' | 'valid' | 'tree_name'
     >]: BuildsTabBuild[K][];
   }> {
   valid?: string[];
