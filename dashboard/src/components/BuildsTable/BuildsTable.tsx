@@ -14,14 +14,17 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import type { ReactElement } from 'react';
-import { Fragment, useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
+import { Fragment, useCallback, useMemo, useState } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { MdCheck, MdClose } from 'react-icons/md';
-
+import DebounceInput from '@/components/DebounceInput/DebounceInput';
+import BaseTable, { TableHead } from '@/components/Table/BaseTable';
+import { PaginationInfo } from '@/components/Table/PaginationInfo';
+import TableStatusFilter from '@/components/Table/TableStatusFilter';
+import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import AccordionBuildContent from '@/pages/TreeDetails/Tabs/Build/BuildAccordionContent';
 import type {
   AccordionItemBuilds,
   BuildsTableFilter,
@@ -30,119 +33,16 @@ import {
   possibleBuildsTableFilter,
   zBuildsTableFilterValidator,
 } from '@/types/tree/TreeDetails';
-import { TableHeader } from '@/components/Table/TableHeader';
-import TableStatusFilter from '@/components/Table/TableStatusFilter';
-import BaseTable, { TableHead } from '@/components/Table/BaseTable';
-import { TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { PaginationInfo } from '@/components/Table/PaginationInfo';
-import { TooltipDateTime } from '@/components/TooltipDateTime';
-import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
-import { ItemType } from '@/components/ListingItem/ListingItem';
-import AccordionBuildContent from '@/pages/TreeDetails/Tabs/Build/BuildAccordionContent';
-import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
 export interface IBuildsTable {
   buildItems: AccordionItemBuilds[];
+  columns: ColumnDef<AccordionItemBuilds>[];
 }
 
-type BuildStatus = Record<AccordionItemBuilds['status'], ReactElement>;
-
-const buildStatusMap: BuildStatus = {
-  valid: <MdCheck className="text-green" />,
-  invalid: <MdClose className="text-red" />,
-  null: <span>-</span>,
-};
-
-const columns: ColumnDef<AccordionItemBuilds>[] = [
-  {
-    accessorKey: 'config',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'treeDetails.config',
-        intlDefaultMessage: 'Config',
-      }),
-  },
-  {
-    accessorKey: 'compiler',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'treeDetails.compiler',
-        intlDefaultMessage: 'Compiler',
-      }),
-  },
-  {
-    accessorKey: 'date',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'treeDetails.date',
-        intlDefaultMessage: 'Date',
-      }),
-    cell: ({ row }): JSX.Element => (
-      <TooltipDateTime
-        dateTime={row.getValue('date')}
-        lineBreak={true}
-        showLabelTime={true}
-        showLabelTZ={true}
-      />
-    ),
-  },
-  {
-    accessorKey: 'buildErrors',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'treeDetails.buildErrors',
-        intlDefaultMessage: 'Build Errors',
-      }),
-    cell: ({ row }): JSX.Element => (
-      <ColoredCircle
-        className="max-w-6"
-        quantity={row.getValue('buildErrors')}
-        backgroundClassName={
-          (row.getValue('buildErrors') as number) > 0
-            ? ItemType.Error
-            : ItemType.None
-        }
-      />
-    ),
-  },
-  {
-    accessorKey: 'buildTime',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'treeDetails.buildTime',
-        intlDefaultMessage: 'Build Time',
-      }),
-    cell: ({ row }): JSX.Element => {
-      return row.getValue('buildTime');
-    },
-  },
-  {
-    accessorKey: 'status',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'treeDetails.status',
-        intlDefaultMessage: 'Status',
-        tooltipId: 'buildTab.statusTooltip',
-      }),
-    cell: ({ row }): JSX.Element => {
-      return buildStatusMap[row.getValue('status') as keyof BuildStatus];
-    },
-  },
-];
-
-export function BuildsTable({ buildItems }: IBuildsTable): JSX.Element {
+export function BuildsTable({
+  buildItems,
+  columns,
+}: IBuildsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [pagination, setPagination] = useState<PaginationState>({
@@ -336,7 +236,7 @@ export function BuildsTable({ buildItems }: IBuildsTable): JSX.Element {
         </TableRow>
       );
     }
-  }, [modelRows]);
+  }, [columns.length, modelRows]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
