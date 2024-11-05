@@ -32,6 +32,7 @@ def get_build(record):
         "start_time": record["build_start_time"],
         "git_repository_url": record["checkout_git_repository_url"],
         "git_repository_branch": record["checkout_git_repository_branch"],
+        "tree_name": record["checkout_tree_name"],
     }
 
 
@@ -152,6 +153,7 @@ class HardwareDetails(View):
             build_start_time=F("build__start_time"),
             checkout_git_repository_url=F("build__checkout__git_repository_url"),
             checkout_git_repository_branch=F("build__checkout__git_repository_branch"),
+            checkout_tree_name=F("build__checkout__tree_name"),
             issue_id=F("build__incidents__issue__id"),
             issue_comment=F("build__incidents__issue__comment"),
             issue_report_url=F("build__incidents__issue__report_url"),
