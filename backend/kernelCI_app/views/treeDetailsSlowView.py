@@ -141,6 +141,8 @@ class TreeDetailsSlow(View):
             "issue_report_url": 32,
         }
 
+        UNKNOWN_STRING = "Unknown"
+
         incident_id = currentRow[tempColumnDict["incident_id"]]
         incident_present = currentRow[tempColumnDict["incident_present"]]
         issue_id = currentRow[tempColumnDict["issue_id"]]
@@ -153,8 +155,14 @@ class TreeDetailsSlow(View):
             testStatus = "NULL"
         testDuration = currentRow[tempColumnDict["tests_duration"]]
         buildConfig = currentRow[tempColumnDict["builds_config_name"]]
+        if (buildConfig is None):
+            buildConfig = UNKNOWN_STRING
         buildArch = currentRow[tempColumnDict["builds_architecture"]]
+        if (buildArch is None):
+            buildArch = UNKNOWN_STRING
         buildCompiler = currentRow[tempColumnDict["builds_compiler"]]
+        if (buildCompiler is None):
+            buildCompiler = UNKNOWN_STRING
         startTime = tempColumnDict["tests_start_time"]
         testPlatform = extract_platform(
             currentRow[tempColumnDict["tests_environment_misc"]]
@@ -164,7 +172,7 @@ class TreeDetailsSlow(View):
             tempColumnDict["tests_environment_compatible"]
         ][0] if currentRow[
             tempColumnDict["tests_environment_compatible"]
-        ] is not None else None
+        ] is not None else UNKNOWN_STRING
 
         historyItem = {
             "id": testId,
@@ -268,10 +276,8 @@ class TreeDetailsSlow(View):
             self.bootPlatformsFailing.add(testPlatform)
             self.bootFailReasons[testError] = self.bootFailReasons.get(testError, 0) + 1
 
-        if testEnvironmentCompatible is not None:
-            self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
-
-            self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
+        self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
+        self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
     def __nonBootsGuard(self, testStatus, testDuration):
         if len(self.filterTestStatus) > 0 and (testStatus not in self.filterTestStatus):
@@ -349,11 +355,7 @@ class TreeDetailsSlow(View):
             self.testPlatformsWithErrors.add(testPlatform)
             self.testFailReasons[testError] = self.testFailReasons.get(testError, 0) + 1
 
-        if testEnvironmentCompatible is not None:
-            if testStatus is None:
-                self.testEnvironmentCompatible[testEnvironmentCompatible]["NULL"] += 1
-            else:
-                self.testEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
+        self.testEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
 
     def get(self, request, commit_hash: str | None):
         cache_key = "treeDetailsSlow"
@@ -467,17 +469,13 @@ class TreeDetailsSlow(View):
                 testEnvironmentCompatible,
             ) = currentRowData
 
-            if (
-                len(self.filterHardware) > 0
-                and (testEnvironmentCompatible not in self.filterHardware)
-            ):
-                continue
-
-            if testEnvironmentCompatible is not None:
-                self.hardwareUsed.add(testEnvironmentCompatible)
-
+            self.hardwareUsed.add(testEnvironmentCompatible)
             if (
                 (
+                    len(self.filterHardware) > 0
+                    and (testEnvironmentCompatible not in self.filterHardware)
+                )
+                or (
                     len(self.filterArchitecture) > 0
                     and (buildArch not in self.filterArchitecture)
                 )

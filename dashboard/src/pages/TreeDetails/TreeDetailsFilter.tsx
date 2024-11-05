@@ -97,9 +97,9 @@ export const createFilter = (
 
   if (data)
     data.builds.forEach(b => {
-      if (b.config_name) configs[b.config_name] = false;
-      if (b.architecture) archs[b.architecture] = false;
-      if (b.compiler) compilers[b.compiler] = false;
+      configs[b.config_name ?? 'Unknown'] = false;
+      archs[b.architecture ?? 'Unknown'] = false;
+      compilers[b.compiler ?? 'Unknown'] = false;
     });
 
   if (testData) testData.hardwareUsed.forEach(h => (hardware[h] = false));

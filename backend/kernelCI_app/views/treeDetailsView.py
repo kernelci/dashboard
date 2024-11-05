@@ -1,5 +1,6 @@
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views import View
+from django.db.models import Q
 from querybuilder.query import Query
 from kernelCI_app.models import Builds
 from kernelCI_app.utils import (
@@ -10,6 +11,8 @@ from kernelCI_app.utils import (
     getErrorResponseBody,
 )
 from utils.validation import validate_required_params
+
+UNKNOWN_STRING = "Unknown"
 
 
 class TreeDetails(View):
@@ -73,19 +76,20 @@ class TreeDetails(View):
             status_key = status_map[build["valid"]]
             build_summ[status_key] += 1
 
-            if config := build["config_name"]:
-                status = config_summ.get(config)
-                if not status:
-                    status = self.create_default_status()
-                    config_summ[config] = status
-                status[status_key] += 1
+            config = build.get("config_name", UNKNOWN_STRING)
+            status = config_summ.get(config)
+            if not status:
+                status = self.create_default_status()
+                config_summ[config] = status
+            status[status_key] += 1
 
-            if arch := build["architecture"]:
-                status = arch_summ.setdefault(arch, self.create_default_status())
-                status[status_key] += 1
-                compiler = build["compiler"]
-                if compiler and compiler not in status.setdefault("compilers", []):
-                    status["compilers"].append(compiler)
+            arch = build.get("architecture", UNKNOWN_STRING)
+            status = arch_summ.setdefault(arch, self.create_default_status())
+            status[status_key] += 1
+
+            compiler = build.get("compiler", UNKNOWN_STRING)
+            if compiler not in status.setdefault("compilers", []):
+                status["compilers"].append(compiler)
 
         return {
             "builds": build_summ,
@@ -93,7 +97,7 @@ class TreeDetails(View):
             "architectures": arch_summ,
         }
 
-    def __get_filtered_tree_details_query(self, query, filter_params, build_fields, checkout_fields):
+    def __get_filtered_tree_details_query(self, query: Query, filter_params, build_fields, checkout_fields):
         grouped_filters = filter_params.get_grouped_filters()
 
         for field, filter in grouped_filters.items():
@@ -104,7 +108,21 @@ class TreeDetails(View):
                 table = "checkouts"
             if table:
                 op = filter_params.get_comparison_op(filter, "orm")
-                query.where(**{f"{table}.{field}__{op}": filter["value"]})
+                if (isinstance(filter["value"], str)):
+                    if (filter["value"] == UNKNOWN_STRING):
+                        query.where(**{f"{table}.{field}__{op}": None})
+                    else:
+                        query.where(**{f"{table}.{field}__{op}": filter["value"]})
+                else:
+                    if (UNKNOWN_STRING in filter["value"]):
+                        filter["value"].remove(UNKNOWN_STRING)
+                        if (len(filter["value"]) == 1):
+                            op = "exact"
+                            filter["value"] = filter["value"][0]
+                        query.where(Q(**{f"{table}.{field}__{op}": filter["value"]})
+                                    | Q(**{f"{table}.{field}__exact": None}))
+                    else:
+                        query.where(**{f"{table}.{field}__{op}": filter["value"]})
 
         return query
 

@@ -43,13 +43,39 @@ class TreeCommitsHistory(APIView):
         if (field == "hardware"):
             field = "environment_compatible"
             op = "&&"
-
             if isinstance(f['value'], str):
                 f['value'] = [f['value']]
         else:
             op = filter_params.get_comparison_op(f, "raw")
 
         return table, field, op
+
+    def __treat_unknown_filter(self, table_field, op, value_name, filter):
+        clause = table_field
+        is_null_clause = f"{table_field} IS NULL"
+        has_null_value = False
+        if (isinstance(filter['value'], str)):
+            filter['value'] = '' if filter['value'] in ['NULL', 'Unknown'] else filter['value']
+        else:
+            if ('NULL' in filter['value']):
+                has_null_value = True
+                filter['value'].remove('NULL')
+            elif ('Unknown' in filter['value']):
+                has_null_value = True
+                filter['value'].remove('Unknown')
+
+        if (len(filter['value']) == 0):
+            clause = is_null_clause
+        else:
+            self.field_values[value_name] = filter['value']
+            if op == "IN":
+                clause += f" = ANY(%({value_name})s)"
+            else:
+                clause += f" {op} %({value_name})s"
+
+            if has_null_value:
+                clause += f" OR {is_null_clause}"
+        return clause
 
     # TODO: unite the filters logic
     def __get_filters(self, filter_params):
@@ -58,25 +84,14 @@ class TreeCommitsHistory(APIView):
         for _, filter in grouped_filters.items():
             table, field, op = self.__format_field_operation(filter, filter_params)
 
+            table_field = f"{self.filters_options[table]['table_alias']}.{field}"
             value_name = f"{table}{field.capitalize()}{filter_params.get_comparison_op(filter)}"
-            self.field_values[value_name] = filter['value']
+            clause = self.__treat_unknown_filter(table_field, op, value_name, filter)
 
-            clause = f"{self.filters_options[table]['table_alias']}.{field}"
-
-            if filter['value'] == 'NULL':
-                clause += " IS NULL"
-            elif op == "IN":
-                clause += f" = ANY(%({value_name})s)"
-            else:
-                clause += f" {op} %({value_name})s"
-
-            if field == "environment_compatible":
-                self.filters_options['test']['filters'].append(clause)
-                self.filters_options['boot']['filters'].append(clause)
-            else:
+            if field != "environment_compatible":
                 self.filters_options[table]['filters'].append(clause)
 
-            if field in ["config_name", "architecture", "compiler"]:
+            if field in ["config_name", "architecture", "compiler", "environment_compatible"]:
                 self.filters_options['test']['filters'].append(clause)
                 self.filters_options['boot']['filters'].append(clause)
 
