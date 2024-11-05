@@ -33,16 +33,17 @@ interface BuildTab {
 }
 
 const StatusCard = ({
-  treeDetailsData,
+  buildsSummary,
   toggleFilterBySection,
 }: {
   toggleFilterBySection: (
     value: string,
     filterSection: TFilterObjectsKeys,
   ) => void;
-  treeDetailsData?: ITreeDetails;
+  buildsSummary?: ITreeDetails['buildsSummary'];
 }): JSX.Element => {
   const { formatMessage } = useIntl();
+  if (!buildsSummary) return <></>;
   return (
     <BaseCard
       title={formatMessage({ id: 'treeDetails.buildStatus' })}
@@ -52,9 +53,9 @@ const StatusCard = ({
           pieCentralLabel={formatMessage({ id: 'treeDetails.executed' })}
           pieCentralDescription={
             <>
-              {(treeDetailsData?.buildsSummary.invalid ?? 0) +
-                (treeDetailsData?.buildsSummary.valid ?? 0) +
-                (treeDetailsData?.buildsSummary.null ?? 0)}
+              {(buildsSummary.invalid ?? 0) +
+                (buildsSummary.valid ?? 0) +
+                (buildsSummary.null ?? 0)}
             </>
           }
           onLegendClick={(value: string) => {
@@ -62,17 +63,17 @@ const StatusCard = ({
           }}
           elements={[
             {
-              value: treeDetailsData?.buildsSummary.valid ?? 0,
+              value: buildsSummary.valid ?? 0,
               label: 'treeDetails.success',
               color: Colors.Green,
             },
             {
-              value: treeDetailsData?.buildsSummary.invalid ?? 0,
+              value: buildsSummary.invalid ?? 0,
               label: 'treeDetails.failed',
               color: Colors.Red,
             },
             {
-              value: treeDetailsData?.buildsSummary.null ?? 0,
+              value: buildsSummary.null ?? 0,
               label: 'global.inconclusive',
               color: Colors.Gray,
             },
@@ -83,12 +84,13 @@ const StatusCard = ({
   );
 };
 
-const MemoizedStatusCard = memo(StatusCard);
+//TODO: put it in other file to be reused
+export const MemoizedStatusCard = memo(StatusCard);
 
 const ConfigsCard = ({
-  treeDetailsData,
+  configs,
 }: {
-  treeDetailsData?: ITreeDetails;
+  configs: ITreeDetails['configs'];
   toggleFilterBySection: (
     value: string,
     filterSection: TFilterObjectsKeys,
@@ -97,7 +99,7 @@ const ConfigsCard = ({
   const content = useMemo(() => {
     return (
       <DumbListingContent>
-        {treeDetailsData?.configs.map((item, i) => (
+        {configs.map((item, i) => (
           <FilterLink key={i} filterSection="configs" filterValue={item.text}>
             <ListingItem
               text={item.text}
@@ -113,7 +115,7 @@ const ConfigsCard = ({
         ))}
       </DumbListingContent>
     );
-  }, [treeDetailsData?.configs]);
+  }, [configs]);
 
   return (
     <BaseCard
@@ -122,7 +124,8 @@ const ConfigsCard = ({
     />
   );
 };
-const MemoizedConfigsCard = memo(ConfigsCard);
+//TODO: put it in other file to be reused
+export const MemoizedConfigsCard = memo(ConfigsCard);
 
 const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   const navigate = useNavigate({
@@ -160,7 +163,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         <div>
           <MemoizedStatusCard
             toggleFilterBySection={toggleFilterBySection}
-            treeDetailsData={treeDetailsData}
+            buildsSummary={treeDetailsData.buildsSummary}
           />
           <MemoizedErrorsSummaryBuild
             summaryBody={treeDetailsData.architectures}
@@ -174,7 +177,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         <div>
           <CommitNavigationGraph />
           <MemoizedConfigsCard
-            treeDetailsData={treeDetailsData}
+            configs={treeDetailsData.configs}
             toggleFilterBySection={toggleFilterBySection}
           />
         </div>
@@ -183,7 +186,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         <CommitNavigationGraph />
         <MemoizedStatusCard
           toggleFilterBySection={toggleFilterBySection}
-          treeDetailsData={treeDetailsData}
+          buildsSummary={treeDetailsData.buildsSummary}
         />
         <InnerMobileGrid>
           <MemoizedErrorsSummaryBuild
@@ -191,7 +194,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
             toggleFilterBySection={toggleFilterBySection}
           />
           <MemoizedConfigsCard
-            treeDetailsData={treeDetailsData}
+            configs={treeDetailsData.configs}
             toggleFilterBySection={toggleFilterBySection}
           />
         </InnerMobileGrid>
