@@ -1,89 +1,70 @@
 import { useIntl } from 'react-intl';
 
-import { memo, useMemo } from 'react';
-
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
-
 import { z } from 'zod';
 
-import { Colors } from '@/components/StatusChart/StatusCharts';
-import { LineChart } from '@/components/LineChart';
-import BaseCard from '@/components/Cards/BaseCard';
-import { useTreeCommitHistory } from '@/api/TreeDetails';
+import { useMemo } from 'react';
+
 import type { TLineChartProps } from '@/components/LineChart/LineChart';
-import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import { LineChart } from '@/components/LineChart';
 import type { MessagesKey } from '@/locales/messages';
+import type { TTreeCommitHistoryResponse } from '@/types/tree/TreeDetails';
+import { Colors } from '@/components/StatusChart/StatusCharts';
 import { formatDate } from '@/utils/utils';
-import { mapFilterToReq } from '@/pages/TreeDetails/TreeDetailsFilter';
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import BaseCard from '@/components/Cards/BaseCard';
+
+type MessagesID = {
+  graphName: MessagesKey;
+  good: MessagesKey;
+  bad: MessagesKey;
+  mid: MessagesKey;
+};
+
+interface CommitNavigationChartProps {
+  data: TTreeCommitHistoryResponse | undefined;
+  currentDetailsTab: string;
+  currentCommitHash: string;
+  commitNavigate: (commitHash: string, commitName: string) => void;
+  status: 'error' | 'success' | 'pending';
+}
 
 const graphDisplaySize = 7;
 
-const CommitNavigationGraph = (): JSX.Element => {
+const CommitNavigationChart = ({
+  data,
+  currentDetailsTab,
+  currentCommitHash,
+  status,
+  commitNavigate,
+}: CommitNavigationChartProps): JSX.Element => {
   const { formatMessage } = useIntl();
-  const {
-    origin,
-    currentTreeDetailsTab,
-    diffFilter,
-    treeInfo: { gitUrl, gitBranch, headCommitHash },
-  } = useSearch({ from: '/tree/$treeId/' });
-
-  const { treeId } = useParams({
-    from: '/tree/$treeId/',
-  });
-
-  const navigate = useNavigate({
-    from: '/tree/$treeId',
-  });
-
-  const reqFilter = mapFilterToReq(diffFilter);
-
-  const { data, status } = useTreeCommitHistory(
-    {
-      gitBranch: gitBranch ?? '',
-      gitUrl: gitUrl ?? '',
-      commitHash: headCommitHash ?? '',
-      origin: origin,
-      filter: reqFilter,
-    },
-    {
-      enabled: !!gitBranch && !!gitUrl,
-    },
-  );
-
   const displayableData = data ? data : null;
 
-  type MessagesID = {
-    graphName: MessagesKey;
-    good: MessagesKey;
-    bad: MessagesKey;
-    mid: MessagesKey;
-  };
-
   const messagesId: MessagesID = useMemo(() => {
-    switch (currentTreeDetailsTab) {
-      case 'treeDetails.boots':
+    switch (currentDetailsTab) {
+      case 'boots':
         return {
-          graphName: 'treeDetails.bootsHistory',
-          good: 'treeDetails.successBoots',
-          bad: 'treeDetails.failedBoots',
-          mid: 'treeDetails.inconclusiveBoots',
+          graphName: 'commitChart.bootsHistory',
+          good: 'commitChart.successBoots',
+          bad: 'commitChart.failedBoots',
+          mid: 'commitChart.inconclusiveBoots',
         } as MessagesID;
-      case 'treeDetails.tests':
+      case 'tests':
         return {
-          graphName: 'treeDetails.testsHistory',
-          good: 'treeDetails.testsSuccess',
-          bad: 'treeDetails.testsFailed',
-          mid: 'treeDetails.testsInconclusive',
+          graphName: 'commitChart.testsHistory',
+          good: 'commitChart.testsSuccess',
+          bad: 'commitChart.testsFailed',
+          mid: 'commitChart.testsInconclusive',
         } as MessagesID;
       default:
         return {
-          graphName: 'treeDetails.buildsHistory',
-          good: 'treeDetails.validBuilds',
-          bad: 'treeDetails.invalidBuilds',
-          mid: 'treeDetails.inconclusiveBuilds',
+          graphName: 'commitChart.buildsHistory',
+          good: 'commitChart.validBuilds',
+          bad: 'commitChart.invalidBuilds',
+          mid: 'commitChart.inconclusiveBuilds',
         } as MessagesID;
     }
-  }, [currentTreeDetailsTab]);
+  }, [currentDetailsTab]);
 
   // Transform the data to fit the format required by the MUI LineChart component
   const series: TLineChartProps['series'] = [
@@ -120,12 +101,12 @@ const CommitNavigationGraph = (): JSX.Element => {
   const xAxisIndexes: number[] = [];
   // TODO Extract the magic code to outside the component
   data?.forEach((item, index) => {
-    if (currentTreeDetailsTab === 'treeDetails.builds') {
+    if (currentDetailsTab === 'builds') {
       series[0].data?.unshift(item.builds.valid_builds);
       series[1].data?.unshift(item.builds.invalid_builds);
       series[2].data?.unshift(item.builds.null_builds);
     }
-    if (currentTreeDetailsTab === 'treeDetails.boots') {
+    if (currentDetailsTab === 'boots') {
       const inconclusiveCount =
         item.boots_tests.miss_count +
         item.boots_tests.skip_count +
@@ -136,7 +117,7 @@ const CommitNavigationGraph = (): JSX.Element => {
       series[1].data?.unshift(item.boots_tests.fail_count);
       series[2].data?.unshift(inconclusiveCount);
     }
-    if (currentTreeDetailsTab === 'treeDetails.tests') {
+    if (currentDetailsTab === 'tests') {
       const inconclusiveCount =
         item.non_boots_tests.miss_count +
         item.non_boots_tests.skip_count +
@@ -179,6 +160,7 @@ const CommitNavigationGraph = (): JSX.Element => {
       },
     },
   ];
+
   return (
     <QuerySwitcher status={status} data={displayableData}>
       <BaseCard
@@ -208,7 +190,8 @@ const CommitNavigationGraph = (): JSX.Element => {
 
                   const name = commitData[parsedPossibleIndex].commitName;
                   isCurrentCommit =
-                    treeId === commitData[parsedPossibleIndex].commitHash;
+                    currentCommitHash ===
+                    commitData[parsedPossibleIndex].commitHash;
                   displayText = (
                     name ?? commitData[parsedPossibleIndex].commitHash
                   ).slice(0, graphDisplaySize);
@@ -251,22 +234,7 @@ const CommitNavigationGraph = (): JSX.Element => {
               const commitIndex = payload.dataIndex ?? 0;
               const commitHash = commitData[commitIndex].commitHash;
               const commitName = commitData[commitIndex].commitName;
-              if (commitHash) {
-                navigate({
-                  to: '/tree/$treeId',
-                  params: {
-                    treeId: commitHash,
-                  },
-                  search: previousParams => ({
-                    ...previousParams,
-                    treeInfo: {
-                      ...previousParams.treeInfo,
-                      commitName: commitName,
-                      commitHash: commitHash,
-                    },
-                  }),
-                });
-              }
+              if (commitHash) commitNavigate(commitHash, commitName ?? '');
             }}
           />
         }
@@ -275,4 +243,4 @@ const CommitNavigationGraph = (): JSX.Element => {
   );
 };
 
-export default memo(CommitNavigationGraph);
+export default CommitNavigationChart;
