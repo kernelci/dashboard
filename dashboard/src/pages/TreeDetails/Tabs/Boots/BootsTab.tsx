@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useParams } from '@tanstack/react-router';
+import { useParams, useSearch } from '@tanstack/react-router';
 
 import { useTestsTab } from '@/api/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
@@ -32,6 +32,10 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
   const { treeId } = useParams({
     from: '/tree/$treeId/',
   });
+  const { tableFilter } = useSearch({
+    from: '/tree/$treeId/',
+  });
+
   const { isLoading, data, error } = useTestsTab({
     treeId: treeId ?? '',
     filter: reqFilter,
@@ -125,7 +129,11 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           </div>
         </InnerMobileGrid>
       </MobileGrid>
-      <BootsTable treeId={treeId} testHistory={data.bootHistory} />
+      <BootsTable
+        treeId={treeId}
+        filter={tableFilter.bootsTable}
+        testHistory={data.bootHistory}
+      />
     </div>
   );
 };
