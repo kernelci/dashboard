@@ -21,8 +21,7 @@ import {
 } from '@/pages/TreeDetails/Tabs/TabGrid';
 
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
-
-import { BootsTable } from './BootsTable';
+import { BootsTable } from '@/components/BootsTable/BootsTable';
 
 interface BootsTabProps {
   reqFilter: Record<string, string[]>;
