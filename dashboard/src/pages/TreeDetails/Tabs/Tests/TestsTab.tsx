@@ -12,19 +12,17 @@ import BaseCard from '@/components/Cards/BaseCard';
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 
 import {
-  MemoizedStatusChart,
-  MemoizedConfigList,
-  MemoizedErrorsSummary,
-  MemoizedIssuesList,
-  MemoizedHardwareTested,
-} from '@/pages/TreeDetails/Tabs/TestCards';
-
-import {
   DesktopGrid,
   InnerMobileGrid,
   MobileGrid,
 } from '@/pages/TreeDetails/Tabs/TabGrid';
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
+
+import MemoizedStatusChart from '@/components/Cards/StatusChart';
+import MemoizedConfigList from '@/components/Cards/ConfigsList';
+import MemoizedErrorsSummary from '@/components/Cards/ErrorsSummary';
+import MemoizedIssuesList from '@/components/Cards/IssuesList';
+import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
 
 import { TestsTable } from './TestsTable';
 
