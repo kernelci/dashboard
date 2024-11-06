@@ -13,7 +13,7 @@ import {
 } from '@tanstack/react-table';
 
 import { useCallback, useMemo, useState } from 'react';
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 
 import { MdChevronRight } from 'react-icons/md';
 
@@ -109,21 +109,21 @@ const columns: ColumnDef<TestByCommitHash>[] = [
 interface IBootsTable {
   treeId: string;
   testHistory: TestHistory[];
+  filter: TestsTableFilter;
 }
 
-export function BootsTable({ treeId, testHistory }: IBootsTable): JSX.Element {
+export function BootsTable({
+  treeId,
+  testHistory,
+  filter,
+}: IBootsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
-  const { tableFilter } = useSearch({
-    from: '/tree/$treeId/',
-  });
-  const [bootsSelectedFilter, setBootsSelectedFilter] =
-    useState<TestsTableFilter>(tableFilter.bootsTable);
 
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const navigate = useNavigate();
   const intl = useIntl();
 
   const rawData = useMemo(
@@ -142,14 +142,14 @@ export function BootsTable({ treeId, testHistory }: IBootsTable): JSX.Element {
   );
 
   const data = useMemo((): TestByCommitHash[] => {
-    const filterToApply = tableFilter.bootsTable;
+    const filterToApply = filter;
     if (filterToApply === 'all') {
       return rawData?.tests;
     }
     return rawData?.tests.filter(test => {
       return getStatusGroup(test.status) === filterToApply;
     });
-  }, [rawData?.tests, tableFilter]);
+  }, [filter, rawData?.tests]);
 
   const filterCount: Record<(typeof possibleTestsTableFilter)[number], number> =
     useMemo(() => {
@@ -166,15 +166,15 @@ export function BootsTable({ treeId, testHistory }: IBootsTable): JSX.Element {
     }, [rawData.tests]);
 
   const onClickFilter = useCallback(
-    (filter: TestsTableFilter): void => {
-      setBootsSelectedFilter(filter);
+    (newFilter: TestsTableFilter): void => {
       navigate({
+        from: '/tree/$treeId',
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...previousParams.tableFilter,
-              bootsTable: filter,
+              bootsTable: newFilter,
             },
           };
         },
@@ -184,10 +184,10 @@ export function BootsTable({ treeId, testHistory }: IBootsTable): JSX.Element {
   );
 
   const checkIfFilterIsSelected = useCallback(
-    (filter: TestsTableFilter): boolean => {
-      return bootsSelectedFilter === filter;
+    (possibleFilter: TestsTableFilter): boolean => {
+      return possibleFilter === filter;
     },
-    [bootsSelectedFilter],
+    [filter],
   );
 
   const filters = useMemo(
