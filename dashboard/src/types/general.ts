@@ -75,3 +75,13 @@ export type Architecture = Record<
     compilers: string[];
   }
 >;
+
+export type StatusCounts = {
+  [key in Status]: number | undefined;
+};
+
+export type ArchCompilerStatus = {
+  arch: string;
+  compiler: string;
+  status: StatusCounts;
+};
