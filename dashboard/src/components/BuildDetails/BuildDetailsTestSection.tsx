@@ -2,20 +2,17 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { RiProhibited2Line } from 'react-icons/ri';
 
-import { useNavigate, useSearch } from '@tanstack/react-router';
-
-import { useCallback } from 'react';
-
 import { Separator } from '@/components/ui/separator';
 
 import { useBuildTests } from '@/api/buildTests';
 
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
-
-import { TestsTable } from '../TreeDetails/Tabs/Tests/TestsTable';
+import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
+import { TestsTable } from '@/pages/TreeDetails/Tabs/Tests/TestsTable';
 
 interface IBuildDetailsTestSection {
   buildId: string;
+  onClickFilter: (filter: TestsTableFilter) => void;
+  tableFilter: TableFilter;
 }
 
 const NoTestFound = (): JSX.Element => (
@@ -29,32 +26,11 @@ const NoTestFound = (): JSX.Element => (
 
 const BuildDetailsTestSection = ({
   buildId,
+  onClickFilter,
+  tableFilter,
 }: IBuildDetailsTestSection): JSX.Element => {
   const intl = useIntl();
   const { data, error } = useBuildTests(buildId);
-  const { tableFilter } = useSearch({
-    from: '/tree/$treeId/build/$buildId/',
-  });
-
-  const navigate = useNavigate({ from: '/tree/$treeId/build/$buildId' });
-
-  const onClickFilter = useCallback(
-    (filter: TestsTableFilter): void => {
-      navigate({
-        search: previousParams => {
-          return {
-            ...previousParams,
-            tableFilter: {
-              bootsTable: previousParams.tableFilter.bootsTable,
-              buildsTable: previousParams.tableFilter.buildsTable,
-              testsTable: filter,
-            },
-          };
-        },
-      });
-    },
-    [navigate],
-  );
 
   const hasTest = data && data.length > 0 && !error;
   return (
