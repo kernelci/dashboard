@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import TestDetails from '@/pages/TestDetails/TestDetails';
+import TreeTestDetails from '@/pages/TreeTestDetails/TreeTestDetails';
 
 export const Route = createFileRoute('/tree/$treeId/test/$testId/')({
-  component: () => <TestDetails />,
+  component: () => <TreeTestDetails />,
 });
