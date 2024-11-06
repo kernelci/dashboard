@@ -1,42 +1,34 @@
-import { useParams, useSearch } from '@tanstack/react-router';
-
 import { FormattedMessage, useIntl } from 'react-intl';
+
+import { GiFlatPlatform } from 'react-icons/gi';
 
 import { useMemo } from 'react';
 
 import { PiComputerTowerThin } from 'react-icons/pi';
-
-import { GiFlatPlatform } from 'react-icons/gi';
-
 import { MdFolderOpen } from 'react-icons/md';
 
+import { truncateBigText } from '@/lib/string';
+import type { TTestDetails } from '@/types/tree/TestDetails';
+import { Sheet, SheetTrigger } from '@/components/Sheet';
 import { useTestDetails, useTestIssues } from '@/api/TestDetails';
 
-import type { TTestDetails } from '@/types/tree/TestDetails';
+import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
 
-import type { ISubsection } from '@/components/Section/Section';
-import { Subsection } from '@/components/Section/Section';
-
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/Breadcrumb/Breadcrumb';
-import IssueSection from '@/components/Issue/IssueSection';
-import { truncateBigText } from '@/lib/string';
-import { Sheet, SheetTrigger } from '@/components/Sheet';
-
-import { TooltipDateTime } from '@/components/TooltipDateTime';
-
-import { LogSheet } from '../TreeDetails/Tabs/LogSheet';
+import { Subsection } from '../Section/Section';
+import type { ISubsection } from '../Section/Section';
+import { TooltipDateTime } from '../TooltipDateTime';
+import IssueSection from '../Issue/IssueSection';
 
 const emptyValue = '-';
 const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
 
-const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
+const TestDetailsSection = ({
+  test,
+  context,
+}: {
+  test: TTestDetails;
+  context: string;
+}): JSX.Element => {
   const intl = useIntl();
   const hardware: string =
     test.environment_compatible?.join(' | ') ??
@@ -44,7 +36,7 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
 
   const buildDetailsLink =
     `${window.location.origin}` +
-    `/tree/${test.git_commit_hash}/build/${test.build_id}` +
+    `/${context}/${test.git_commit_hash}/build/${test.build_id}` +
     `${window.location.search}`;
 
   const hasUsefulLogInfo = test.log_url || test.log_excerpt;
@@ -131,11 +123,19 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
   return <Subsection infos={infos} />;
 };
 
-const TestDetails = (): JSX.Element => {
-  const searchParams = useSearch({ from: '/tree/$treeId/test/$testId/' });
-  const { testId, treeId } = useParams({ from: '/tree/$treeId/test/$testId/' });
+interface TestsDetailsProps {
+  breadcrumb: JSX.Element;
+  testId?: string;
+  context: string;
+}
+
+const TestDetails = ({
+  breadcrumb,
+  testId,
+  context,
+}: TestsDetailsProps): JSX.Element => {
   const { data, error, isLoading } = useTestDetails(testId ?? '');
-  const issuesQueryResult = useTestIssues(testId);
+  const issuesQueryResult = useTestIssues(testId ?? '');
 
   if (error) {
     return (
@@ -158,31 +158,10 @@ const TestDetails = (): JSX.Element => {
   return (
     <Sheet>
       <div className="w-100 px-5 pb-8">
-        <Breadcrumb className="pb-6 pt-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink to="/tree" search={searchParams}>
-                <FormattedMessage id="tree.path" />
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbLink
-              to={`/tree/$treeId`}
-              params={{ treeId: treeId }}
-              search={searchParams}
-            >
-              <FormattedMessage id="tree.details" />
-            </BreadcrumbLink>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>
-                <FormattedMessage id="test.details" />
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        {breadcrumb}
+
         <h1 className="mb-4 text-2xl font-bold">{data.path}</h1>
-        <TestDetailsSection test={data} />
+        <TestDetailsSection test={data} context={context} />
         <IssueSection {...issuesQueryResult} />
       </div>
       <LogSheet logUrl={data.log_url} logExcerpt={data.log_excerpt} />
