@@ -45,12 +45,13 @@ import {
 
 import type { BuildStatus } from '@/types/general';
 
+import MemoizedHardwareUsed from '@/components/Cards/HardwareUsed';
+
 import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
 
 import TreeDetailsFilterList from './TreeDetailsFilterList';
-import { MemoizedHardwareUsed } from './Tabs/TestCards';
 
 export interface ITreeDetails {
   architectures: ISummaryItem[];

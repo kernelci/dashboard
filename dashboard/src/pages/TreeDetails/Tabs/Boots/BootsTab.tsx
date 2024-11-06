@@ -7,14 +7,6 @@ import BaseCard from '@/components/Cards/BaseCard';
 import { Skeleton } from '@/components/Skeleton';
 
 import {
-  MemoizedConfigList,
-  MemoizedErrorsSummary,
-  MemoizedHardwareTested,
-  MemoizedIssuesList,
-  MemoizedStatusChart,
-} from '@/pages/TreeDetails/Tabs/TestCards';
-
-import {
   DesktopGrid,
   InnerMobileGrid,
   MobileGrid,
@@ -22,6 +14,11 @@ import {
 
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
 import { BootsTable } from '@/components/BootsTable/BootsTable';
+import MemoizedStatusChart from '@/components/Cards/StatusChart';
+import MemoizedConfigList from '@/components/Cards/ConfigsList';
+import MemoizedErrorsSummary from '@/components/Cards/ErrorsSummary';
+import MemoizedIssuesList from '@/components/Cards/IssuesList';
+import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
 
 interface BootsTabProps {
   reqFilter: Record<string, string[]>;

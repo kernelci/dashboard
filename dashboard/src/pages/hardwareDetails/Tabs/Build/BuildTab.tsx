@@ -4,8 +4,6 @@ import { useMemo } from 'react';
 
 import { MemoizedErrorsSummaryBuild } from '@/pages/TreeDetails/Tabs/BuildCards';
 
-import { MemoizedIssuesList } from '@/pages/TreeDetails/Tabs/TestCards';
-
 import {
   MemoizedConfigsCard,
   MemoizedStatusCard,
@@ -17,6 +15,8 @@ import {
 } from '@/pages/TreeDetails/Tabs/TabGrid';
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 import { sanitizeArchs, sanitizeBuilds, sanitizeConfigs } from '@/utils/utils';
+
+import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 

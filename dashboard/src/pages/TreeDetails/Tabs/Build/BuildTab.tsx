@@ -20,9 +20,9 @@ import { BuildStatus } from '@/components/Status/Status';
 
 import ListingItem from '@/components/ListingItem/ListingItem';
 
-import { MemoizedIssuesList } from '@/pages/TreeDetails/Tabs/TestCards';
-
 import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
+
+import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
 import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
 
