@@ -6,23 +6,12 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo } from 'react';
 
-import { useParams, useSearch } from '@tanstack/react-router';
-
 import SectionGroup from '@/components/Section/SectionGroup';
 import type { ISection } from '@/components/Section/Section';
 import { useBuildDetails, useBuildIssues } from '@/api/BuildDetails';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
 import { formatDate } from '@/utils/utils';
-
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/Breadcrumb/Breadcrumb';
 
 import IssueSection from '@/components/Issue/IssueSection';
 
@@ -31,6 +20,8 @@ import { truncateBigText } from '@/lib/string';
 import { Sheet, SheetTrigger } from '@/components/Sheet';
 
 import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
+
+import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -42,13 +33,21 @@ const BlueFolderIcon = (): JSX.Element => (
   <MdFolderOpen className="text-blue" />
 );
 
-const BuildDetails = (): JSX.Element => {
-  const searchParams = useSearch({ from: '/tree/$treeId/build/$buildId/' });
-  const { buildId, treeId } = useParams({
-    from: '/tree/$treeId/build/$buildId/',
-  });
-  const { data, error } = useBuildDetails(buildId || '');
-  const issuesQueryResult = useBuildIssues(buildId);
+interface BuildDetailsProps {
+  breadcrumb: JSX.Element;
+  buildId?: string;
+  onClickFilter: (filter: TestsTableFilter) => void;
+  tableFilter: TableFilter;
+}
+
+const BuildDetails = ({
+  breadcrumb,
+  buildId,
+  onClickFilter,
+  tableFilter,
+}: BuildDetailsProps): JSX.Element => {
+  const { data, error, isLoading } = useBuildDetails(buildId ?? '');
+  const issuesQueryResult = useBuildIssues(buildId ?? '');
 
   const intl = useIntl();
 
@@ -169,38 +168,35 @@ const BuildDetails = (): JSX.Element => {
     ];
   }, [data, hasUsefulLogInfo, intl]);
 
-  //TODO: loading and 404
-  if (!data) return <span></span>;
-  if (error) return <UnexpectedError />;
+  if (error) {
+    return (
+      <div>
+        <FormattedMessage id="buildDetails.failedToFetch" />
+      </div>
+    );
+  }
+
+  if (isLoading) return <FormattedMessage id="global.loading" />;
+
+  if (!data) {
+    return (
+      <div>
+        <FormattedMessage id="buildDetails.notFound" />
+      </div>
+    );
+  }
 
   return (
     <ErrorBoundary FallbackComponent={UnexpectedError}>
       <Sheet>
-        <Breadcrumb className="pb-6 pt-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink to="/tree" search={searchParams}>
-                <FormattedMessage id="tree.path" />
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbLink
-              to={`/tree/$treeId`}
-              params={{ treeId: treeId }}
-              search={searchParams}
-            >
-              <FormattedMessage id="tree.details" />
-            </BreadcrumbLink>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>
-                <FormattedMessage id="buildDetails.buildDetails" />
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        {breadcrumb}
+
         <SectionGroup sections={sectionsData} />
-        {buildId && <BuildDetailsTestSection buildId={buildId} />}
+        <BuildDetailsTestSection
+          buildId={buildId ?? ''}
+          onClickFilter={onClickFilter}
+          tableFilter={tableFilter}
+        />
         <IssueSection {...issuesQueryResult} />
         <LogSheet logUrl={data.log_url} logExcerpt={data.log_excerpt} />
       </Sheet>
