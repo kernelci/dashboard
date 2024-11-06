@@ -10,6 +10,8 @@ import type {
   Architecture,
   TestHistory,
   TIssue,
+  StatusCounts,
+  ArchCompilerStatus,
 } from '@/types/general';
 
 import type { Status } from '@/types/database';
@@ -57,16 +59,6 @@ type CompilersPerArchitecture = {
 
 type ErrorMessageCounts = {
   [key: string]: number;
-};
-
-type StatusCounts = {
-  [key in Status]: number | undefined;
-};
-
-export type ArchCompilerStatus = {
-  arch: string;
-  compiler: string;
-  status: StatusCounts;
 };
 
 type PropertyStatusCounts = Record<string, StatusCounts>;

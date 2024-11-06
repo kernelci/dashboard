@@ -1,6 +1,8 @@
 import type {
+  ArchCompilerStatus,
   BuildsTabBuild,
   BuildStatus,
+  StatusCounts,
   TestHistory,
   TIssue,
 } from '@/types/general';
@@ -26,11 +28,12 @@ type BuildsData = {
 };
 
 type Tests = {
+  archSummary: ArchCompilerStatus[];
   history: TestHistory[];
   platformsFailing: string[];
-  statusSummary: Record<string, number>;
+  statusSummary: StatusCounts;
   failReasons: Record<string, unknown>;
-  configs: Record<string, Record<string, number>>;
+  configs: Record<string, StatusCounts>;
   issues: TIssue[];
 };
 

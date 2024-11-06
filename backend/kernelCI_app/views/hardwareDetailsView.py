@@ -7,7 +7,6 @@ from django.http import JsonResponse
 from kernelCI_app.viewCommon import create_details_build_summary, get_details_issue
 from kernelCI_app.models import Tests
 from kernelCI_app.utils import (
-    convert_issues_dict_to_list,
     extract_error_message,
     extract_platform,
 )
@@ -16,6 +15,23 @@ from kernelCI_app.helpers.errorHandling import ExceptionWithJsonResponse
 
 
 DEFAULT_DAYS_INTERVAL = 7
+
+
+def properties2List(d, keys):
+    for k in keys:
+        v = d[k]
+        if type(v) is dict:
+            d[k] = list(v.values())
+        elif type(v) is set:
+            d[k] = list(v)
+
+
+def get_arch_summary(record):
+    return {
+        "arch": record["build_architecture"],
+        "compiler": record["build_compiler"],
+        "status": defaultdict(int)
+    }
 
 
 def get_build(record):
@@ -61,6 +77,7 @@ def is_boot(record):
 def generate_test_dict():
     return {
         "history": [],
+        "archSummary": {},
         "platformsFailing": set(),
         "statusSummary": defaultdict(int),
         "failReasons": defaultdict(int),
@@ -94,6 +111,13 @@ class HardwareDetails(View):
                 )
                 tests_or_boots["failReasons"][extract_error_message(r["misc"])] += 1
 
+            archKey = f'{r["build_architecture"]}{r["build_compiler"]}'
+            archSummary = tests_or_boots["archSummary"].get(archKey)
+            if not archSummary:
+                archSummary = get_arch_summary(r)
+                tests_or_boots["archSummary"][archKey] = archSummary
+            archSummary["status"][status] += 1
+
             if build_id not in processed_builds:
                 processed_builds.add(build_id)
                 builds["items"].append(get_build(r))
@@ -104,11 +128,9 @@ class HardwareDetails(View):
                 update_issues(tests_or_boots["issues"], currentIssue)
 
         builds["summary"] = create_details_build_summary(builds["items"])
-        builds["issues"] = convert_issues_dict_to_list(builds["issues"])
-        tests["platformsFailing"] = list(tests["platformsFailing"])
-        tests["issues"] = convert_issues_dict_to_list(tests["issues"])
-        boots["platformsFailing"] = list(boots["platformsFailing"])
-        boots["issues"] = convert_issues_dict_to_list(boots["issues"])
+        properties2List(builds, ["issues"])
+        properties2List(tests, ["issues", "platformsFailing", "archSummary"])
+        properties2List(boots, ["issues", "platformsFailing", "archSummary"])
 
         return (builds, tests, boots)
 
