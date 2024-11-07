@@ -15,126 +15,8 @@ import { Link } from '@tanstack/react-router';
 
 import type { TIndividualTest } from '@/types/general';
 
-import { TooltipDateTime } from '@/components/TooltipDateTime';
-
-import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
-
-import { TableHeader } from '@/components/Table/TableHeader';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
-import { sanitizeTableValue } from '@/components/Table/tableUtils';
 import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
-
-const columns: ColumnDef<TIndividualTest>[] = [
-  {
-    accessorKey: 'path',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'testDetails.path',
-        intlDefaultMessage: 'Path',
-      }),
-    cell: ({ row }): JSX.Element => {
-      return (
-        <Tooltip>
-          <TooltipTrigger>
-            <div className="max-w-80 overflow-clip text-ellipsis text-nowrap">
-              {row.getValue('path')}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>{row.getValue('path')}</TooltipContent>
-        </Tooltip>
-      );
-    },
-  },
-  {
-    accessorKey: 'status',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'testDetails.status',
-        intlDefaultMessage: 'Status',
-      }),
-  },
-  {
-    accessorKey: 'start_time',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.date',
-        intlDefaultMessage: 'Date',
-      }),
-    cell: ({ row }): JSX.Element => (
-      <div className="text-nowrap">
-        <TooltipDateTime
-          dateTime={row.getValue('start_time')}
-          showLabelTime={true}
-        />
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'duration',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'testDetails.duration',
-        intlDefaultMessage: 'Duration',
-      }),
-    cell: ({ row }): string =>
-      row.getValue('duration') ? row.getValue('duration') : '-',
-  },
-  {
-    id: 'hardware',
-    accessorKey: 'hardware',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'treeDetails.hardware',
-        intlDefaultMessage: 'Hardware',
-      }),
-    cell: ({ row }): JSX.Element => (
-      <div className="text-nowrap">
-        <TooltipHardware hardwares={row.getValue('hardware')} />
-      </div>
-    ),
-  },
-  {
-    id: 'chevron',
-    cell: (): JSX.Element => <ChevronRightAnimate />,
-  },
-];
-
-const TooltipHardware = ({
-  hardwares,
-}: {
-  hardwares: string[] | undefined;
-}): JSX.Element => {
-  const hardwaresTooltip = useMemo(() => {
-    return hardwares
-      ? hardwares.map(hardware => (
-          <div key={hardware} className="text-center">
-            <span>{hardware}</span>
-            <br />
-          </div>
-        ))
-      : '-';
-  }, [hardwares]);
-
-  return (
-    <Tooltip>
-      <TooltipTrigger>
-        {sanitizeTableValue(hardwares?.[0], false)}
-      </TooltipTrigger>
-      <TooltipContent>{hardwaresTooltip}</TooltipContent>
-    </Tooltip>
-  );
-};
 
 const TableRowComponent = ({
   row,
@@ -169,11 +51,15 @@ const TableRowMemoized = memo(TableRowComponent);
 
 const ESTIMATED_ROW_HEIGHT = 60;
 
+interface IIndividualTestsTable {
+  columns: ColumnDef<TIndividualTest>[];
+  data: TIndividualTest[];
+}
+
 export function IndividualTestsTable({
   data,
-}: {
-  data: TIndividualTest[];
-}): JSX.Element {
+  columns,
+}: IIndividualTestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const table = useReactTable({

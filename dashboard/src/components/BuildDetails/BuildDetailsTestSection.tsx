@@ -7,7 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { useBuildTests } from '@/api/buildTests';
 
 import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
-import { TestsTable } from '@/pages/TreeDetails/Tabs/Tests/TestsTable';
+
+import { TestsTable } from '@/components/TestsTable/TestsTable';
 
 interface IBuildDetailsTestSection {
   buildId: string;
@@ -44,7 +45,7 @@ const BuildDetailsTestSection = ({
           <TestsTable
             testHistory={data}
             onClickFilter={onClickFilter}
-            tableFilter={tableFilter}
+            filter={tableFilter.testsTable}
           />
         </div>
       ) : (
