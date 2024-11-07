@@ -107,7 +107,7 @@ const possibleTabs = [
 
 export const zPossibleValidator = z
   .enum(possibleTabs)
-  .catch('treeDetails.boots');
+  .catch('treeDetails.builds');
 
 export const possibleBuildsTableFilter = [
   'invalid',
