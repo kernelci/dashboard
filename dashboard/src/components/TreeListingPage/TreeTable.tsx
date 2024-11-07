@@ -225,7 +225,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
             testsTable: possibleTestsTableFilter[0],
           },
           origin: origin,
-          currentTreeDetailsTab: zPossibleValidator.parse(target),
+          currentPageTab: zPossibleValidator.parse(target),
           diffFilter: {},
           treeInfo: {
             gitUrl: row.original.url,

@@ -122,8 +122,7 @@ function TreeDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const isBuildTab =
-    searchParams.currentTreeDetailsTab === 'treeDetails.builds';
+  const isBuildTab = searchParams.currentPageTab === 'treeDetails.builds';
 
   const {
     isLoading: buildIsLoading,

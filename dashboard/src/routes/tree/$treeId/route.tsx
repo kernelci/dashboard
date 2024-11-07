@@ -5,19 +5,19 @@ import { z } from 'zod';
 import { zOrigin } from '@/types/tree/Tree';
 
 import {
+  zDiffFilter,
   zPossibleValidator,
   zTableFilterInfo,
-  zDiffFilter,
   zTreeInformation,
 } from '@/types/tree/TreeDetails';
 
 const treeDetailsSearchSchema = z.object({
-  currentTreeDetailsTab: zPossibleValidator,
-  tableFilter: zTableFilterInfo,
   diffFilter: zDiffFilter,
   testPath: z.string().optional().catch(''),
   origin: zOrigin,
   treeInfo: zTreeInformation,
+  currentPageTab: zPossibleValidator,
+  tableFilter: zTableFilterInfo,
 });
 
 export const Route = createFileRoute('/tree/$treeId')({
