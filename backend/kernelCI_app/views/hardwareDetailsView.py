@@ -14,7 +14,7 @@ from kernelCI_app.helpers.date import parseIntervalInDaysGetParameter
 from kernelCI_app.helpers.errorHandling import ExceptionWithJsonResponse
 
 
-DEFAULT_DAYS_INTERVAL = 7
+DEFAULT_DAYS_INTERVAL = 3
 
 
 def properties2List(d, keys):

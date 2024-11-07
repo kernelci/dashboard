@@ -5,11 +5,9 @@ import { MdOutlineMonitorHeart } from 'react-icons/md';
 import { ImTree } from 'react-icons/im';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
-import { useSearch, useLocation } from '@tanstack/react-router';
+import { useLocation } from '@tanstack/react-router';
 
 import type { MessagesKey } from '@/locales/messages';
-
-import { zOrigin } from '@/types/tree/Tree';
 
 import { DOCUMENTATION_URL } from '@/utils/constants/general';
 
@@ -17,9 +15,9 @@ import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuList,
-} from '../ui/navigation-menu';
+} from '@/components/ui/navigation-menu';
 
-import { Separator } from '../ui/separator';
+import { Separator } from '@/components/ui/separator';
 
 import SendFeedback from './SendFeedback';
 
@@ -53,8 +51,6 @@ type SideMenuItemProps = {
 const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
   const { pathname } = useLocation();
 
-  const { origin: unsafeOrigin } = useSearch({ strict: false });
-
   const selectedItemClassName =
     'w-full flex pl-5 py-4 cursor-pointer text-sky-500 bg-black border-l-4 border-sky-500';
   const notSelectedItemClassName =
@@ -71,9 +67,7 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
     >
       <NavLink
         to={item.navigateTo}
-        search={{
-          origin: zOrigin.parse(unsafeOrigin),
-        }}
+        search={prevSearch => prevSearch}
         icon={item.icon}
         idIntl={item.idIntl}
       />

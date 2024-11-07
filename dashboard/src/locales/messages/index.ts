@@ -114,6 +114,7 @@ export const messages = {
     'global.fails': 'Fails',
     'global.filters': 'Filters',
     'global.github': 'GitHub',
+    'global.hardware': 'Hardware',
     'global.inconclusive': 'Inconclusive',
     'global.inconclusiveCount': 'Inconclusive: {count}',
     'global.info': 'Info',
@@ -157,6 +158,7 @@ export const messages = {
     'global.valid': 'Valid',
     'hardware.details': 'Hardware Details',
     'hardware.path': 'Hardware',
+    'hardware.searchPlaceholder': 'Search by hardware name',
     'hardwareDetails.treeBranch': 'Tree / Branch',
     'issue.failedToFetch': 'Failed to fetch issues',
     'issue.noIssueFound': 'No issue found.',
@@ -171,6 +173,7 @@ export const messages = {
     'routes.sendFeedbackMsg':
       'Thank you for your feedback!\nWe greatly appreciate your input. You are welcome to send us the feedback via email or by creating an issue on our GitHub repository.',
     'routes.treeMonitor': 'Trees',
+    'routes.unknown': 'Unknown',
     'tab.name': 'Name',
     'table.itemsPerPage': 'Items per page:',
     'table.of': 'of',
