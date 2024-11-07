@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import type { ReactElement } from 'react';
 import { useCallback, useMemo } from 'react';
@@ -29,16 +29,20 @@ export interface IHardwareDetailsTab {
 const HardwareDetailsTabs = ({
   HardwareDetailsData,
 }: IHardwareDetailsTab): JSX.Element => {
+  const { currentPageTab } = useSearch({
+    from: '/hardware/$hardwareId/',
+  });
+
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
-  const onValueChange: (value: string) => void = useCallback(
+  const onTabChange: (value: string) => void = useCallback(
     value => {
       const validatedValue = zPossibleValidator.parse(value);
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
-            currentTreeDetailsTab: validatedValue,
+            currentPageTab: validatedValue,
           };
         },
       });
@@ -68,11 +72,7 @@ const HardwareDetailsTabs = ({
   );
 
   return (
-    <Tabs
-      tabs={tabs}
-      value="treeDetails.builds"
-      onValueChange={onValueChange}
-    />
+    <Tabs tabs={tabs} value={currentPageTab} onValueChange={onTabChange} />
   );
 };
 
