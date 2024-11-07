@@ -13,6 +13,7 @@ interface ILink {
   title: MessagesKey;
   link?: string;
   icon?: ReactElement;
+  onClick?: () => void;
   wrapperComponent?: ElementType<{ children: ReactNode }>;
 }
 
@@ -33,6 +34,7 @@ export const LinkGroupFilling = ({ links }: ILinkGroup): JSX.Element => {
                 icon={link.icon}
                 linkText={link.linkText}
                 link={link.link}
+                onClick={link.onClick}
               />
             </WrapperComponent>
           );

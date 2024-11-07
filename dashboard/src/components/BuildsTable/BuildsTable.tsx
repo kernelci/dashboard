@@ -31,6 +31,10 @@ import type {
 } from '@/types/tree/TreeDetails';
 import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
 
+import { Sheet } from '@/components/Sheet';
+import { useBuildStatusCount } from '@/api/TreeDetails';
+import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
+
 export interface IBuildsTable {
   buildItems: AccordionItemBuilds[];
   columns: ColumnDef<AccordionItemBuilds>[];
@@ -176,10 +180,21 @@ export function BuildsTable({
   }, [groupHeaders, sorting]);
 
   const modelRows = table.getRowModel().rows;
+
+  const sortedItems = useMemo(
+    (): AccordionItemBuilds[] => modelRows.map(row => row.original),
+    [modelRows],
+  );
+
+  const [currentLog, setLog] = useState<number | null>(null);
+
+  const onOpenChange = useCallback(() => setLog(null), [setLog]);
+  const openLogSheet = useCallback((index: number) => setLog(index), [setLog]);
+
   const tableBody = useMemo((): JSX.Element[] | JSX.Element => {
     {
       return modelRows?.length ? (
-        modelRows.map(row => {
+        modelRows.map((row, index) => {
           return (
             <Fragment key={row.id}>
               <TableRow
@@ -202,6 +217,7 @@ export function BuildsTable({
                       <AccordionBuildContent
                         accordionData={row.original}
                         onClickShowBuild={onClickShowBuild}
+                        openLogSheet={() => openLogSheet(index)}
                       />
                     </div>
                   </TableCell>
@@ -218,7 +234,51 @@ export function BuildsTable({
         </TableRow>
       );
     }
-  }, [columns.length, groupHeaders.length, modelRows, onClickShowBuild]);
+  }, [
+    columns.length,
+    groupHeaders.length,
+    modelRows,
+    onClickShowBuild,
+    openLogSheet,
+  ]);
+
+  const handlePreviousItem = useCallback(() => {
+    setLog(c => {
+      if (c !== null && c > 0) return c - 1;
+
+      return c;
+    });
+  }, [setLog]);
+
+  const handleNextItem = useCallback(() => {
+    setLog(c => {
+      if (c !== null && c < sortedItems.length - 1) return c + 1;
+
+      return c;
+    });
+  }, [setLog, sortedItems.length]);
+
+  const { data: dataBuildCount, isLoading } = useBuildStatusCount(
+    { buildId: sortedItems[currentLog ?? 0].id ?? '' },
+    { enabled: !!sortedItems[currentLog ?? 0].id },
+  );
+
+  const navigationLogsActions = useMemo(
+    () => ({
+      nextItem: handleNextItem,
+      hasNext: currentLog !== null && currentLog < sortedItems.length - 1,
+      previousItem: handlePreviousItem,
+      hasPrevious: currentLog !== null && currentLog > 0,
+      isLoading,
+    }),
+    [
+      currentLog,
+      isLoading,
+      sortedItems.length,
+      handleNextItem,
+      handlePreviousItem,
+    ],
+  );
 
   return (
     <div className="flex flex-col gap-6 pb-4">
@@ -233,6 +293,14 @@ export function BuildsTable({
       </div>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
+
+        <Sheet open={currentLog !== null} onOpenChange={onOpenChange}>
+          <LogSheet
+            logExcerpt={dataBuildCount?.log_excerpt}
+            logUrl={sortedItems[currentLog ?? 0].buildLogs}
+            navigationLogsActions={navigationLogsActions}
+          />
+        </Sheet>
       </BaseTable>
       <PaginationInfo
         table={table}

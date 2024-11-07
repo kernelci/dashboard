@@ -128,6 +128,7 @@ export const messages = {
     'global.missed': 'Missed',
     'global.modules': 'Modules',
     'global.name': 'Name',
+    'global.next': 'Next',
     'global.noData': 'No data.',
     'global.noDataAvailable': 'No data available',
     'global.noResults': 'No results were found',
@@ -137,6 +138,7 @@ export const messages = {
     'global.others': 'Others',
     'global.pass': 'Pass',
     'global.placeholderSearch': 'Search by tree, branch or tag',
+    'global.prev': 'Prev',
     'global.projectUnderDevelopment':
       'This is an ongoing project.{br}' +
       `Please report bugs and suggestions to ${FEEDBACK_EMAIL_TO}.`,
@@ -164,7 +166,6 @@ export const messages = {
     'hardwareDetails.treeBranch': 'Tree / Branch',
     'issue.failedToFetch': 'Failed to fetch issues',
     'issue.noIssueFound': 'No issue found.',
-    'logSheet.errorsFound': 'Errors found on Kernel.log',
     'logSheet.fileName': 'File Name',
     'logSheet.fileSize': 'File Size',
     'logSheet.indexOf': 'Index of {link}',
