@@ -14,6 +14,7 @@ import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
 import BuildTab from './Build';
 import BootsTab from './Boots';
+import TestsTab from './Tests';
 
 export type TreeDetailsTabRightElement = Record<
   Extract<
@@ -65,7 +66,7 @@ const HardwareDetailsTabs = ({
       },
       {
         name: 'treeDetails.tests',
-        content: <h1>Tests Tab</h1>,
+        content: <TestsTab tests={HardwareDetailsData.tests} />,
         disabled: false,
       },
     ],
