@@ -19,16 +19,19 @@ import { formattedBreakLineValue } from '@/locales/messages';
 
 import type { TreeTableBody } from '@/types/tree/Tree';
 
-import { Button } from '../ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../Tooltip';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
+import type { HardwareTableItem } from '@/types/hardware';
 
 interface ITableHeader {
+  // TODO Use Generic
   column:
     | Column<TIndividualTest>
     | Column<TestByCommitHash>
     | Column<TPathTests>
     | Column<AccordionItemBuilds>
-    | Column<TreeTableBody>;
+    | Column<TreeTableBody>
+    | Column<HardwareTableItem>;
   sortable: boolean;
   intlKey: MessagesKey;
   intlDefaultMessage: string;

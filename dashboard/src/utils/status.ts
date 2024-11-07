@@ -1,8 +1,9 @@
 import type { Status } from '@/types/database';
+import type { StatusCount, BuildStatus } from '@/types/general';
 
 type StatusGroups = 'success' | 'failed' | 'inconclusive';
 
-type StatusCount = {
+type GroupStatusCount = {
   doneCount: number;
   missCount: number;
   skipCount: number;
@@ -18,7 +19,7 @@ type GroupedStatus = {
   failedCount: number;
 };
 
-export function groupStatus(counts: StatusCount): GroupedStatus {
+export function groupStatus(counts: GroupStatusCount): GroupedStatus {
   return {
     successCount: counts.passCount,
     failedCount: counts.failCount,
@@ -36,3 +37,12 @@ export const getStatusGroup = (status: Status): StatusGroups => {
   if (status === 'FAIL') return 'failed';
   return 'inconclusive';
 };
+
+type FlexibleStatus = BuildStatus | GroupStatusCount | StatusCount;
+
+export function sumStatus(status: FlexibleStatus): number {
+  return Object.values(status).reduce(
+    (accumulator: number, current) => accumulator + (current ?? 0),
+    0,
+  );
+}

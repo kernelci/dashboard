@@ -1,7 +1,7 @@
+import { z } from 'zod';
+
 import type { Status } from './database';
-
 type IncidentsInfo = { incidentsCount: number };
-
 export type TPathTests = {
   path_group: string;
   fail_tests: number;
@@ -69,6 +69,16 @@ export type BuildStatus = {
   null: number;
 };
 
+export interface StatusCount {
+  PASS?: number;
+  FAIL?: number;
+  MISS?: number;
+  SKIP?: number;
+  ERROR?: number;
+  NULL?: number;
+  DONE?: number;
+}
+
 export type Architecture = Record<
   string,
   BuildStatus & {
@@ -76,6 +86,9 @@ export type Architecture = Record<
   }
 >;
 
+/**
+ * @deprecated use StatusCount
+ */
 export type StatusCounts = {
   [key in Status]: number | undefined;
 };
@@ -85,3 +98,9 @@ export type ArchCompilerStatus = {
   compiler: string;
   status: StatusCounts;
 };
+
+const zIntervalInDaysUncatched = z.number().min(1);
+
+export const makeZIntervalInDays = (
+  defaultValue: number,
+): z.ZodCatch<z.ZodNumber> => zIntervalInDaysUncatched.catch(defaultValue);

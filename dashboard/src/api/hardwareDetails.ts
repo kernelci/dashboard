@@ -7,9 +7,9 @@ import http from './api';
 
 const fetchHardwareDetails = async (
   hardwareId: string,
-  daysInterval: number,
+  intervalInDays: number,
 ): Promise<THardwareDetails> => {
-  const params = { daysInterval };
+  const params = { intervalInDays };
   const res = await http.get<THardwareDetails>(`/api/hardware/${hardwareId}`, {
     params,
   });
@@ -19,10 +19,10 @@ const fetchHardwareDetails = async (
 
 export const useHardwareDetails = (
   hardwareId: string,
-  daysInterval: number,
+  intervalInDays: number,
 ): UseQueryResult<THardwareDetails> => {
   return useQuery({
-    queryKey: ['HardwareDetails', hardwareId, daysInterval],
-    queryFn: () => fetchHardwareDetails(hardwareId, daysInterval),
+    queryKey: ['HardwareDetails', hardwareId, intervalInDays],
+    queryFn: () => fetchHardwareDetails(hardwareId, intervalInDays),
   });
 };

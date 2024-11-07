@@ -1,4 +1,4 @@
-import { useParams } from '@tanstack/react-router';
+import { useParams, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -8,14 +8,10 @@ import { Skeleton } from '@/components/Skeleton';
 
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 
-const DEFAULT_DAYS_INTERVAL = 1;
-
 function HardwareDetails(): JSX.Element {
   const { hardwareId } = useParams({ from: '/hardware/$hardwareId' });
-  const { data, isLoading } = useHardwareDetails(
-    hardwareId,
-    DEFAULT_DAYS_INTERVAL,
-  );
+  const { intervalInDays } = useSearch({ from: '/hardware' });
+  const { data, isLoading } = useHardwareDetails(hardwareId, intervalInDays);
 
   if (isLoading || !data)
     return (

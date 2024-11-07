@@ -1,0 +1,1 @@
+export const DEFAULT_HARDWARE_INTERVAL_IN_DAYS = 3;

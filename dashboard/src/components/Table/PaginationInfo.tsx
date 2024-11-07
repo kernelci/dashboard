@@ -17,21 +17,26 @@ import type { MessagesKey } from '@/locales/messages';
 
 import type { TreeTableBody } from '@/types/tree/Tree';
 
-import { Button } from '../ui/button';
+import type { HardwareTableItem } from '@/types/hardware';
+
+import { Button } from '@/components/ui/button';
 
 import { ItemsPerPageSelector } from './TableInfo';
 
 interface IPaginationInfo {
+  //TODO Use Generic
   table:
     | Table<TestByCommitHash>
     | Table<TPathTests>
     | Table<AccordionItemBuilds>
-    | Table<TreeTableBody>;
+    | Table<TreeTableBody>
+    | Table<HardwareTableItem>;
   data:
     | TestByCommitHash[]
     | TPathTests[]
     | AccordionItemBuilds[]
-    | TreeTableBody[];
+    | TreeTableBody[]
+    | HardwareTableItem[];
   intlLabel: MessagesKey;
 }
 
