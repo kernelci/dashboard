@@ -31,6 +31,7 @@ export const messages = {
     'buildAccordion.kernelConfig': 'Kernel config',
     'buildAccordion.kernelConfigPath': 'config/kernel.config',
     'buildAccordion.kernelImage': 'Kernel image',
+    'buildAccordion.logExcerpt': 'Log Excerpt',
     'buildAccordion.logs': 'Logs',
     'buildAccordion.modules': 'Modules',
     'buildAccordion.modulesZip': 'modules.tar.xz',
