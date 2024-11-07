@@ -1,10 +1,10 @@
 import { useParams } from '@tanstack/react-router';
 
-import { Skeleton } from '@mui/material';
-
 import { FormattedMessage } from 'react-intl';
 
 import { useHardwareDetails } from '@/api/hardwareDetails';
+
+import { Skeleton } from '@/components/Skeleton';
 
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 
