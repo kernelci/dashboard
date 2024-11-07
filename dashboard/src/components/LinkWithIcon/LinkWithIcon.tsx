@@ -9,6 +9,7 @@ export interface ILinkWithIcon {
   linkText?: string | ReactElement;
   link?: string;
   icon?: ReactElement;
+  onClick?: () => void;
 }
 
 const LinkWithIcon = ({
@@ -16,6 +17,7 @@ const LinkWithIcon = ({
   linkText,
   icon,
   link,
+  onClick,
 }: ILinkWithIcon): JSX.Element => {
   const WrapperLink = link ? 'a' : 'div';
   return (
@@ -28,6 +30,7 @@ const LinkWithIcon = ({
         href={link}
         target="_blank"
         rel="noreferrer"
+        onClick={onClick}
       >
         {linkText}
         {icon}

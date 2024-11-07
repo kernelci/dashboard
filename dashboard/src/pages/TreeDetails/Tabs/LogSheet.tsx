@@ -5,7 +5,6 @@ import { GrDocumentDownload } from 'react-icons/gr';
 import { memo } from 'react';
 
 import BaseCard from '@/components/Cards/BaseCard';
-import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import CodeBlock from '@/components/Filter/CodeBlock';
 import {
   SheetContent,
@@ -20,6 +19,7 @@ import { truncateBigText } from '@/lib/string';
 import { useLogFiles } from '@/api/TreeDetails';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { LogFile } from '@/types/tree/TreeDetails';
+import { Skeleton } from '@/components/ui/skeleton';
 
 //TODO Localize the fallback string
 const FallbackLog = `
@@ -36,6 +36,13 @@ const FallbackLog = `
 type LogSheetProps = {
   logExcerpt?: string;
   logUrl?: string;
+  navigationLogsActions?: {
+    previousItem: () => void;
+    nextItem: () => void;
+    hasPrevious: boolean;
+    hasNext: boolean;
+    isLoading: boolean;
+  };
 };
 
 type LogFilesTableProps = {
@@ -108,6 +115,7 @@ const MemoizedLogFilesTable = memo(LogFilesTable);
 export const LogSheet = ({
   logExcerpt,
   logUrl,
+  navigationLogsActions,
 }: LogSheetProps): JSX.Element => {
   const { data: logFilesData, status } = useLogFiles(
     { logUrl: logUrl ?? '' },
@@ -157,17 +165,35 @@ export const LogSheet = ({
           </Table>
         </QuerySwitcher>
       </BaseCard>
-      <div className="my-4 flex flex-row gap-2">
-        <ColoredCircle quantity={3} backgroundClassName="bg-lightRed" />
-        <h2>
-          <FormattedMessage
-            id="logSheet.errorsFound"
-            defaultMessage="Errors found on Kernel.log"
-          />
-        </h2>
-      </div>
-      <CodeBlock code={logExcerpt ?? FallbackLog} />
+
+      {navigationLogsActions?.isLoading ? (
+        <Skeleton className="grid h-[400px] place-items-center">
+          <FormattedMessage id="global.loading" />
+        </Skeleton>
+      ) : (
+        <CodeBlock code={logExcerpt ?? FallbackLog} />
+      )}
+
       <div className="mt-auto flex justify-end">
+        {navigationLogsActions && (
+          <>
+            <Button
+              onClick={navigationLogsActions.previousItem}
+              disabled={!navigationLogsActions.hasPrevious}
+              className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
+            >
+              <FormattedMessage id="global.prev" defaultMessage="Previous" />
+            </Button>
+            <Button
+              onClick={navigationLogsActions.nextItem}
+              disabled={!navigationLogsActions.hasNext}
+              className="mx-5 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
+            >
+              <FormattedMessage id="global.next" defaultMessage="Next" />
+            </Button>
+          </>
+        )}
+
         <SheetTrigger>
           <Button className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white">
             <FormattedMessage id="global.close" defaultMessage="Close" />

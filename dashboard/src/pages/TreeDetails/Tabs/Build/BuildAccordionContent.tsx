@@ -11,8 +11,6 @@ import type {
 
 import { useBuildStatusCount } from '@/api/TreeDetails';
 
-import { Sheet, SheetTrigger } from '@/components/Sheet';
-
 import type { IStatusChart } from '@/components/StatusChart/StatusCharts';
 import StatusChartMemoized, {
   Colors,
@@ -25,7 +23,6 @@ import { Button } from '@/components/ui/button';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
-import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
 import type { TPathTests } from '@/types/general';
 
 export interface IBuildAccordionContent {
@@ -121,11 +118,13 @@ const AccordBuildStatusChart = ({
 export interface IAccordionItems {
   accordionData: AccordionItemBuilds | TPathTests;
   onClickShowBuild: (buildId: AccordionItemBuilds['id']) => void;
+  openLogSheet?: () => void;
 }
 
 const AccordionBuildContent = ({
   accordionData,
   onClickShowBuild,
+  openLogSheet,
 }: IAccordionItems): JSX.Element => {
   //TODO: Fix the typing for not using as
   const contentData = accordionData as AccordionItemBuilds;
@@ -170,7 +169,7 @@ const AccordionBuildContent = ({
             title: 'buildAccordion.buildLogs',
             icon: <MdFolderOpen className={blueText} />,
             linkText: <FormattedMessage id="buildAccordion.logs" />,
-            wrapperComponent: SheetTrigger,
+            onClick: openLogSheet,
           }
         : undefined,
       contentData.systemMap
@@ -197,39 +196,28 @@ const AccordionBuildContent = ({
       contentData.kernelImage,
       contentData.modules,
       contentData.systemMap,
+      openLogSheet,
     ],
   );
 
   return (
-    <>
-      <Sheet>
-        <div className="flex flex-row justify-between">
-          <QuerySwitcher
-            data={data}
-            status={status}
-            skeletonClassname="h-[60px]"
+    <div className="flex flex-row justify-between">
+      <QuerySwitcher data={data} status={status} skeletonClassname="h-[60px]">
+        {data && <AccordBuildStatusChart buildCountsData={data} />}
+      </QuerySwitcher>
+      <div className="flex flex-col gap-8">
+        <LinksGroup links={links} />
+        <div className="flex flex-row gap-4">
+          <Button
+            variant="outline"
+            className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
+            onClick={onClickShowBuildHandler}
           >
-            {data && <AccordBuildStatusChart buildCountsData={data} />}
-          </QuerySwitcher>
-          <div className="flex flex-col gap-8">
-            <LinksGroup links={links} />
-            <div className="flex flex-row gap-4">
-              <Button
-                variant="outline"
-                className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
-                onClick={onClickShowBuildHandler}
-              >
-                <FormattedMessage id="buildAccordion.showMore" />
-              </Button>
-            </div>
-          </div>
+            <FormattedMessage id="buildAccordion.showMore" />
+          </Button>
         </div>
-        <LogSheet
-          logExcerpt={data?.log_excerpt}
-          logUrl={contentData.buildLogs}
-        />
-      </Sheet>
-    </>
+      </div>
+    </div>
   );
 };
 
