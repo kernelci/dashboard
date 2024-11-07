@@ -24,7 +24,7 @@ import MemoizedErrorsSummary from '@/components/Cards/ErrorsSummary';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
 
-import { TestsTable } from './TestsTable';
+import { TestsTable } from '@/components/TestsTable/TestsTable';
 
 interface TestsTabProps {
   reqFilter: Record<string, string[]>;
@@ -153,7 +153,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
       <TestsTable
         testHistory={data.testHistory}
         onClickFilter={onClickFilter}
-        tableFilter={tableFilter}
+        filter={tableFilter.testsTable}
       />
     </div>
   );

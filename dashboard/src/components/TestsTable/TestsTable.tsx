@@ -18,81 +18,40 @@ import { Fragment, useCallback, useMemo, useState } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
+import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 import { possibleTestsTableFilter } from '@/types/tree/TreeDetails';
 
-import type { TestHistory, TPathTests } from '@/types/general';
+import type { TestHistory, TIndividualTest, TPathTests } from '@/types/general';
 
 import { StatusTable } from '@/utils/constants/database';
 
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
-import { GroupedTestStatus } from '@/components/Status/Status';
-
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
 import TableStatusFilter from '@/components/Table/TableStatusFilter';
 
-import { TableHeader } from '@/components/Table/TableHeader';
-
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
-
-import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
 import { IndividualTestsTable } from './IndividualTestsTable';
+import { defaultColumns, defaultInnerColumns } from './DefaultTestsColumns';
 
 export interface ITestsTable {
   testHistory: TestHistory[];
   onClickFilter: (filter: TestsTableFilter) => void;
-  tableFilter: TableFilter;
+  filter: TestsTableFilter;
+  columns?: ColumnDef<TPathTests>[];
+  innerColumns?: ColumnDef<TIndividualTest>[];
 }
-
-const columns: ColumnDef<TPathTests>[] = [
-  {
-    accessorKey: 'path_group',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'testDetails.path',
-        intlDefaultMessage: 'Path',
-      }),
-  },
-  {
-    accessorKey: 'pass_tests',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'testDetails.status',
-        intlDefaultMessage: 'Status',
-        tooltipId: 'bootsTab.statusTooltip',
-      }),
-    cell: ({ row }): JSX.Element => {
-      return (
-        <GroupedTestStatus
-          pass={row.original.pass_tests}
-          done={row.original.done_tests}
-          miss={row.original.miss_tests}
-          fail={row.original.fail_tests}
-          skip={row.original.skip_tests}
-          error={row.original.error_tests}
-        />
-      );
-    },
-  },
-  {
-    id: 'chevron',
-    cell: (): JSX.Element => <ChevronRightAnimate />,
-  },
-];
 
 export function TestsTable({
   testHistory,
   onClickFilter,
-  tableFilter,
+  filter,
+  columns = defaultColumns,
+  innerColumns = defaultInnerColumns,
 }: ITestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
@@ -161,7 +120,7 @@ export function TestsTable({
   }, [testHistory]);
 
   const data = useMemo((): TPathTests[] => {
-    switch (tableFilter.testsTable) {
+    switch (filter) {
       case 'all':
         return rawData;
       case 'success':
@@ -205,7 +164,7 @@ export function TestsTable({
             }),
           }));
     }
-  }, [tableFilter.testsTable, rawData]);
+  }, [filter, rawData]);
 
   const filterCount: Record<(typeof possibleTestsTableFilter)[number], number> =
     useMemo(() => {
@@ -235,7 +194,7 @@ export function TestsTable({
           { count: filterCount[possibleTestsTableFilter[0]] },
         ),
         value: possibleTestsTableFilter[0],
-        isSelected: tableFilter.testsTable === possibleTestsTableFilter[0],
+        isSelected: filter === possibleTestsTableFilter[0],
       },
       {
         label: intl.formatMessage(
@@ -243,7 +202,7 @@ export function TestsTable({
           { count: filterCount[possibleTestsTableFilter[1]] },
         ),
         value: possibleTestsTableFilter[1],
-        isSelected: tableFilter.testsTable === possibleTestsTableFilter[1],
+        isSelected: filter === possibleTestsTableFilter[1],
       },
       {
         label: intl.formatMessage(
@@ -251,7 +210,7 @@ export function TestsTable({
           { count: filterCount[possibleTestsTableFilter[2]] },
         ),
         value: possibleTestsTableFilter[2],
-        isSelected: tableFilter.testsTable === possibleTestsTableFilter[2],
+        isSelected: filter === possibleTestsTableFilter[2],
       },
       {
         label: intl.formatMessage(
@@ -259,10 +218,10 @@ export function TestsTable({
           { count: filterCount[possibleTestsTableFilter[3]] },
         ),
         value: possibleTestsTableFilter[3],
-        isSelected: tableFilter.testsTable === possibleTestsTableFilter[3],
+        isSelected: filter === possibleTestsTableFilter[3],
       },
     ],
-    [filterCount, intl, tableFilter.testsTable],
+    [filterCount, intl, filter],
   );
 
   const table = useReactTable({
@@ -326,7 +285,10 @@ export function TestsTable({
           {row.getIsExpanded() && (
             <TableRow>
               <TableCell colSpan={6} className="p-0">
-                <IndividualTestsTable data={data[row.index].individual_tests} />
+                <IndividualTestsTable
+                  data={data[row.index].individual_tests}
+                  columns={innerColumns}
+                />
               </TableCell>
             </TableRow>
           )}
@@ -339,7 +301,7 @@ export function TestsTable({
         </TableCell>
       </TableRow>
     );
-  }, [data, modelRows]);
+  }, [columns.length, data, innerColumns, modelRows]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
