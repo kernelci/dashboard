@@ -37,7 +37,7 @@ const TreeDetailsTab = ({
   reqFilter,
   countElements,
 }: ITreeDetailsTab): JSX.Element => {
-  const { currentTreeDetailsTab } = useSearch({
+  const { currentPageTab } = useSearch({
     from: '/tree/$treeId/',
   });
   const navigate = useNavigate({ from: '/tree/$treeId' });
@@ -69,7 +69,7 @@ const TreeDetailsTab = ({
         search: previousParams => {
           return {
             ...previousParams,
-            currentTreeDetailsTab: validatedValue,
+            currentPageTab: validatedValue,
           };
         },
       });
@@ -82,7 +82,7 @@ const TreeDetailsTab = ({
     <Tabs
       tabs={treeDetailsTab}
       filterListElement={filterListElement}
-      value={currentTreeDetailsTab}
+      value={currentPageTab}
       onValueChange={onValueChange}
     />
   );

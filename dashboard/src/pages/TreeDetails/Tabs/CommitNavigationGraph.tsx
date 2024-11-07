@@ -22,7 +22,7 @@ const CommitNavigationGraph = (): JSX.Element => {
   const { formatMessage } = useIntl();
   const {
     origin,
-    currentTreeDetailsTab,
+    currentPageTab,
     diffFilter,
     treeInfo: { gitUrl, gitBranch, headCommitHash },
   } = useSearch({ from: '/tree/$treeId/' });
@@ -60,7 +60,7 @@ const CommitNavigationGraph = (): JSX.Element => {
   };
 
   const messagesId: MessagesID = useMemo(() => {
-    switch (currentTreeDetailsTab) {
+    switch (currentPageTab) {
       case 'treeDetails.boots':
         return {
           graphName: 'treeDetails.bootsHistory',
@@ -83,7 +83,7 @@ const CommitNavigationGraph = (): JSX.Element => {
           mid: 'treeDetails.inconclusiveBuilds',
         } as MessagesID;
     }
-  }, [currentTreeDetailsTab]);
+  }, [currentPageTab]);
 
   // Transform the data to fit the format required by the MUI LineChart component
   const series: TLineChartProps['series'] = [
@@ -120,12 +120,12 @@ const CommitNavigationGraph = (): JSX.Element => {
   const xAxisIndexes: number[] = [];
   // TODO Extract the magic code to outside the component
   data?.forEach((item, index) => {
-    if (currentTreeDetailsTab === 'treeDetails.builds') {
+    if (currentPageTab === 'treeDetails.builds') {
       series[0].data?.unshift(item.builds.valid_builds);
       series[1].data?.unshift(item.builds.invalid_builds);
       series[2].data?.unshift(item.builds.null_builds);
     }
-    if (currentTreeDetailsTab === 'treeDetails.boots') {
+    if (currentPageTab === 'treeDetails.boots') {
       const inconclusiveCount =
         item.boots_tests.miss_count +
         item.boots_tests.skip_count +
@@ -136,7 +136,7 @@ const CommitNavigationGraph = (): JSX.Element => {
       series[1].data?.unshift(item.boots_tests.fail_count);
       series[2].data?.unshift(inconclusiveCount);
     }
-    if (currentTreeDetailsTab === 'treeDetails.tests') {
+    if (currentPageTab === 'treeDetails.tests') {
       const inconclusiveCount =
         item.non_boots_tests.miss_count +
         item.non_boots_tests.skip_count +
