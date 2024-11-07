@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useSearch, useNavigate } from '@tanstack/react-router';
+import { useSearch, useNavigate, useLocation } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import Select, { SelectItem } from '@/components/Select/Select';
@@ -52,14 +52,29 @@ const OriginSelect = (): JSX.Element => {
   );
 };
 
+const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
+  switch (basePath) {
+    case 'tree':
+      return <FormattedMessage id="routes.treeMonitor" />;
+    case 'hardware':
+      return <FormattedMessage id="routes.hardwareMonitor" />;
+    default:
+      return <FormattedMessage id="routes.unknown" />;
+  }
+};
+
 const TopBar = (): JSX.Element => {
+  const { pathname } = useLocation();
+
+  const basePath = pathname.split('/')[1] ?? '';
+
   return (
     <div className="fixed top-0 z-10 mx-52 flex h-20 w-full bg-white px-16">
       <div className="flex flex-row items-center justify-between">
         <span className="mr-14 text-2xl">
-          <FormattedMessage id="routes.treeMonitor" />
+          <TitleName basePath={basePath} />
         </span>
-        <OriginSelect />
+        {basePath === 'tree' && <OriginSelect />}
       </div>
     </div>
   );

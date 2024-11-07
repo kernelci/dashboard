@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import Hardware from '@/pages/Hardware';
+
 export const Route = createFileRoute('/hardware/')({
-  component: () => <div>Hello /hardware/!</div>,
+  component: Hardware,
 });

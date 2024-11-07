@@ -15,7 +15,7 @@ class HardwareView(View):
     def __getSlowResult(self, start_date):
         tests = Tests.objects.filter(
             start_time__gte=start_date, environment_compatible__isnull=False
-        ).values("environment_compatible", "status", "build__valid")
+        ).values("environment_compatible", "status", "build__valid", "path")
 
         hardware = {}
         for test in tests:
@@ -23,13 +23,17 @@ class HardwareView(View):
                 if hardware.get(compatible) is None:
                     hardware[compatible] = {
                         "hardwareName": compatible,
-                        "statusCount": defaultdict(int),
+                        "testStatusCount": defaultdict(int),
+                        "bootStatusCount": defaultdict(int),
                         "buildCount": {"valid": 0, "invalid": 0, "null": 0},
                     }
+                statusCount = "testStatusCount"
+                if test["path"].startswith("boot.") or test["path"] == "boot":
+                    statusCount = "bootStatusCount"
                 if test["status"] is None:
-                    hardware[compatible]["statusCount"]["NULL"] += 1
+                    hardware[compatible][statusCount]["NULL"] += 1
                 else:
-                    hardware[compatible]["statusCount"][test["status"]] += 1
+                    hardware[compatible][statusCount][test["status"]] += 1
 
                 build_status = build_status_map.get(test["build__valid"])
                 if build_status is not None:
@@ -49,7 +53,10 @@ class HardwareView(View):
             for compatible in test["environment_compatible"]:
                 hardwares.add(compatible)
 
-        result = {"hardware": list(hardwares)}
+        hardwareResult = []
+        for hardware in hardwares:
+            hardwareResult.append({"hardwareName": hardware})
+        result = {"hardware": hardwareResult}
         return result
 
     def get(self, request):
