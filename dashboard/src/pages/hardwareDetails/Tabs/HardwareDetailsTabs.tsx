@@ -13,6 +13,7 @@ import type { MessagesKey } from '@/locales/messages';
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
 import BuildTab from './Build';
+import BootsTab from './Boots';
 
 export type TreeDetailsTabRightElement = Record<
   Extract<
@@ -59,7 +60,7 @@ const HardwareDetailsTabs = ({
       },
       {
         name: 'treeDetails.boots',
-        content: <h1>Boots Tab</h1>,
+        content: <BootsTab boots={HardwareDetailsData.boots} />,
         disabled: false,
       },
       {
