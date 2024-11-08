@@ -1,5 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
+import type { LinkProps } from '@tanstack/react-router';
 import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
 
 import { useCallback } from 'react';
@@ -42,6 +43,20 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
   });
 
   const navigate = useNavigate({ from: '/tree/$treeId' });
+
+  const getRowLink = useCallback(
+    (bootId: string): LinkProps => {
+      return {
+        to: '/tree/$treeId/test/$testId',
+        params: {
+          testId: bootId,
+          treeId: treeId,
+        },
+        search: s => s,
+      };
+    },
+    [treeId],
+  );
 
   const onClickFilter = useCallback(
     (filter: TestsTableFilter): void => {
@@ -154,6 +169,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
         testHistory={data.testHistory}
         onClickFilter={onClickFilter}
         filter={tableFilter.testsTable}
+        getRowLink={getRowLink}
       />
     </div>
   );

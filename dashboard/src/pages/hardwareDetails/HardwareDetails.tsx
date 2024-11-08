@@ -54,7 +54,10 @@ function HardwareDetails(): JSX.Element {
       </Breadcrumb>
       <div className="mt-5">
         <HardwareHeader treeItems={data.trees} />
-        <HardwareDetailsTabs HardwareDetailsData={data} />
+        <HardwareDetailsTabs
+          HardwareDetailsData={data}
+          hardwareId={hardwareId}
+        />
       </div>
     </div>
   );

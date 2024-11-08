@@ -13,25 +13,23 @@ import { memo, useMemo, useRef, useState } from 'react';
 import type { LinkProps } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
 
-import type { TIndividualTest } from '@/types/general';
+import type { TestHistory, TIndividualTest } from '@/types/general';
 
 import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
+type GetRowLink = (testId: TestHistory['id']) => LinkProps;
+
 const TableRowComponent = ({
   row,
+  getRowLink,
 }: {
   row: Row<TIndividualTest>;
+  getRowLink: GetRowLink;
 }): JSX.Element => {
   const linkProps: LinkProps = useMemo(() => {
-    return {
-      to: '/tree/$treeId/test/$testId',
-      params: {
-        testId: row.original.id,
-      },
-      search: s => s,
-    };
-  }, [row.original.id]);
+    return getRowLink(row.original.id);
+  }, [getRowLink, row.original.id]);
 
   return (
     <TableRow key={row.id} className="border-b-0 hover:bg-lightBlue">
@@ -54,11 +52,13 @@ const ESTIMATED_ROW_HEIGHT = 60;
 interface IIndividualTestsTable {
   columns: ColumnDef<TIndividualTest>[];
   data: TIndividualTest[];
+  getRowLink: GetRowLink;
 }
 
 export function IndividualTestsTable({
   data,
   columns,
+  getRowLink,
 }: IIndividualTestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -107,9 +107,11 @@ export function IndividualTestsTable({
   const tableRows = useMemo((): JSX.Element[] => {
     return virtualItems.map(virtualRow => {
       const row = rows[virtualRow.index] as Row<TIndividualTest>;
-      return <TableRowMemoized row={row} key={row.id} />;
+      return (
+        <TableRowMemoized row={row} key={row.id} getRowLink={getRowLink} />
+      );
     });
-  }, [rows, virtualItems]);
+  }, [getRowLink, rows, virtualItems]);
 
   // if more performance is needed, try using translate as in the example from tanstack virtual instead of padding
   // https://tanstack.com/virtual/latest/docs/framework/react/examples/table

@@ -18,6 +18,8 @@ import { Fragment, useCallback, useMemo, useState } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
+import type { LinkProps } from '@tanstack/react-router';
+
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 import { possibleTestsTableFilter } from '@/types/tree/TreeDetails';
 
@@ -44,12 +46,14 @@ export interface ITestsTable {
   filter: TestsTableFilter;
   columns?: ColumnDef<TPathTests>[];
   innerColumns?: ColumnDef<TIndividualTest>[];
+  getRowLink: (testId: TestHistory['id']) => LinkProps;
 }
 
 export function TestsTable({
   testHistory,
   onClickFilter,
   filter,
+  getRowLink,
   columns = defaultColumns,
   innerColumns = defaultInnerColumns,
 }: ITestsTable): JSX.Element {
@@ -286,6 +290,7 @@ export function TestsTable({
             <TableRow>
               <TableCell colSpan={6} className="p-0">
                 <IndividualTestsTable
+                  getRowLink={getRowLink}
                   data={data[row.index].individual_tests}
                   columns={innerColumns}
                 />
@@ -301,7 +306,7 @@ export function TestsTable({
         </TableCell>
       </TableRow>
     );
-  }, [columns.length, data, innerColumns, modelRows]);
+  }, [columns.length, data, getRowLink, innerColumns, modelRows]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
