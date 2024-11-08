@@ -137,12 +137,10 @@ export const zTableFilterInfo = object({
   buildsTable: zBuildsTableFilterValidator,
   bootsTable: zTestsTableFilterValidator,
   testsTable: zTestsTableFilterValidator,
-});
-
-export const zTableFilterInfoValidator = zTableFilterInfo.catch({
-  buildsTable: zBuildsTableFilterValidator.parse(''),
-  bootsTable: zTestsTableFilterValidator.parse(''),
-  testsTable: zTestsTableFilterValidator.parse(''),
+}).catch({
+  buildsTable: 'all',
+  bootsTable: 'all',
+  testsTable: 'all',
 });
 
 export type TableFilter = z.infer<typeof zTableFilterInfo>;

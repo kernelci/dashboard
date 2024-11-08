@@ -65,12 +65,7 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
       }
       key={item.idIntl}
     >
-      <NavLink
-        to={item.navigateTo}
-        search={prevSearch => prevSearch}
-        icon={item.icon}
-        idIntl={item.idIntl}
-      />
+      <NavLink to={item.navigateTo} icon={item.icon} idIntl={item.idIntl} />
     </NavigationMenuItem>
   );
 };

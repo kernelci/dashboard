@@ -23,7 +23,9 @@ export function InputTime(): JSX.Element {
   const { formatMessage } = useIntl();
 
   const navigate = useNavigate({ from: '/hardware' });
-  const { intervalInDays: interval } = useSearch({ from: '/hardware' });
+  const {
+    hardware: { intervalInDays: interval },
+  } = useSearch({ from: '/hardware' });
 
   function validateString(val: string): boolean {
     const convertedNumber = parseInt(val);
@@ -46,9 +48,11 @@ export function InputTime(): JSX.Element {
   const onSubmit = handleSubmit(
     ({ intervalInDays }) => {
       navigate({
+        from: '/hardware',
+        to: '/hardware',
         search: previousSearch => ({
           ...previousSearch,
-          intervalInDays: Number(intervalInDays),
+          hardware: { intervalInDays: Number(intervalInDays) },
         }),
       });
     },

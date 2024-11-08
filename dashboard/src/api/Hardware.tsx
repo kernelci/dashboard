@@ -23,7 +23,9 @@ export const useHardwareListingSlow = ({
 }: {
   enabled: boolean;
 }): UseQueryResult<HardwareListingResponse> => {
-  const { intervalInDays } = useSearch({ from: '/hardware' });
+  const {
+    hardware: { intervalInDays },
+  } = useSearch({ from: '/hardware' });
 
   const queryKey = ['hardwareListing', intervalInDays];
 
@@ -45,7 +47,9 @@ const fetchHardwareListingFastData = async (
 
 export const useHardwareListingFast =
   (): UseQueryResult<HardwareFastResponse> => {
-    const { intervalInDays } = useSearch({ from: '/hardware' });
+    const {
+      hardware: { intervalInDays },
+    } = useSearch({ from: '/hardware' });
     const queryKey = ['hardwareListingFast', intervalInDays];
 
     return useQuery({
