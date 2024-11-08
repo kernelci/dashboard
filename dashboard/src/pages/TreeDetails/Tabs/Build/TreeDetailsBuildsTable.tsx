@@ -1,8 +1,10 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
-import type { ReactElement } from 'react';
+import { useCallback, type ReactElement } from 'react';
 
 import { MdCheck, MdClose } from 'react-icons/md';
+
+import { useNavigate, useParams } from '@tanstack/react-router';
 
 import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
@@ -115,5 +117,26 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
 export function TreeDetailsBuildsTable({
   buildItems,
 }: TTreeDetailsBuildsTable): JSX.Element {
-  return <BuildsTable buildItems={buildItems} columns={columns} />;
+  const { treeId } = useParams({ from: '/tree/$treeId/' });
+
+  const navigate = useNavigate({ from: '/tree/$treeId' });
+
+  const navigateToBuildDetails = useCallback(
+    (buildId: string) => {
+      navigate({
+        to: `/tree/${treeId}/build/${buildId}`,
+        params: { treeId },
+        search: prev => prev,
+      });
+    },
+    [navigate, treeId],
+  );
+
+  return (
+    <BuildsTable
+      buildItems={buildItems}
+      columns={columns}
+      onClickShowBuild={navigateToBuildDetails}
+    />
+  );
 }
