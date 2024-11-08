@@ -222,7 +222,7 @@ export function BuildsTable({
               </TableRow>
               {row.getIsExpanded() && (
                 <TableRow>
-                  <TableCell colSpan={6} className="p-0">
+                  <TableCell colSpan={groupHeaders.length} className="p-0">
                     <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
                       <AccordionBuildContent
                         accordionData={row.original}
@@ -243,7 +243,7 @@ export function BuildsTable({
         </TableRow>
       );
     }
-  }, [columns.length, modelRows, onClickShowBuild]);
+  }, [columns.length, groupHeaders.length, modelRows, onClickShowBuild]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
