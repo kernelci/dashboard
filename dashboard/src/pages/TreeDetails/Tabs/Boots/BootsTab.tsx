@@ -1,7 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
-import { useParams, useSearch } from '@tanstack/react-router';
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { useCallback } from 'react';
 
@@ -22,6 +22,7 @@ import MemoizedConfigList from '@/components/Cards/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Cards/ErrorsSummary';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
+import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 
 interface BootsTabProps {
   reqFilter: Record<string, string[]>;
@@ -34,6 +35,25 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
   const { tableFilter } = useSearch({
     from: '/tree/$treeId/',
   });
+
+  const navigate = useNavigate({ from: '/tree/$treeId/' });
+
+  const onClickFilter = useCallback(
+    (newFilter: TestsTableFilter): void => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: {
+              ...previousParams.tableFilter,
+              bootsTable: newFilter,
+            },
+          };
+        },
+      });
+    },
+    [navigate],
+  );
 
   const { isLoading, data, error } = useTestsTab({
     treeId: treeId ?? '',
@@ -142,6 +162,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
       </MobileGrid>
       <BootsTable
         filter={tableFilter.bootsTable}
+        onClickFilter={onClickFilter}
         testHistory={data.bootHistory}
         getRowLink={getRowLink}
       />
