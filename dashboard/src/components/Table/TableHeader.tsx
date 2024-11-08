@@ -9,15 +9,16 @@ import { z } from 'zod';
 
 import { useCallback } from 'react';
 
+import type { MessagesKey } from '@/locales/messages';
+import { formattedBreakLineValue } from '@/locales/messages';
+
+import type { TIndividualTest, TPathTests } from '@/types/general';
 import type {
   AccordionItemBuilds,
   TestByCommitHash,
 } from '@/types/tree/TreeDetails';
-import type { TIndividualTest, TPathTests } from '@/types/general';
-import type { MessagesKey } from '@/locales/messages';
-import { formattedBreakLineValue } from '@/locales/messages';
-
 import type { TreeTableBody } from '@/types/tree/Tree';
+import type { Trees } from '@/types/hardware/hardwareDetails';
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
@@ -31,7 +32,8 @@ interface ITableHeader {
     | Column<TPathTests>
     | Column<AccordionItemBuilds>
     | Column<TreeTableBody>
-    | Column<HardwareTableItem>;
+    | Column<HardwareTableItem>
+    | Column<Trees>;
   sortable: boolean;
   intlKey: MessagesKey;
   intlDefaultMessage: string;
