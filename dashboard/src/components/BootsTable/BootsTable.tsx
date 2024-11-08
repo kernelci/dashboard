@@ -13,6 +13,7 @@ import {
 } from '@tanstack/react-table';
 
 import { useCallback, useMemo, useState } from 'react';
+import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate } from '@tanstack/react-router';
 
 import { MdChevronRight } from 'react-icons/md';
@@ -107,15 +108,15 @@ const columns: ColumnDef<TestByCommitHash>[] = [
 ];
 
 interface IBootsTable {
-  treeId: string;
   testHistory: TestHistory[];
   filter: TestsTableFilter;
+  getRowLink: (testId: TestHistory['id']) => LinkProps;
 }
 
 export function BootsTable({
-  treeId,
   testHistory,
   filter,
+  getRowLink,
 }: IBootsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -165,6 +166,7 @@ export function BootsTable({
       return count;
     }, [rawData.tests]);
 
+  // TODO: this component should not use a specif route
   const onClickFilter = useCallback(
     (newFilter: TestsTableFilter): void => {
       navigate({
@@ -272,14 +274,7 @@ export function BootsTable({
           {row.getVisibleCells().map(cell => (
             <TableCellWithLink
               key={cell.id}
-              linkProps={{
-                to: '/tree/$treeId/test/$testId',
-                params: {
-                  treeId,
-                  testId: row.original.id,
-                },
-                search: s => s,
-              }}
+              linkProps={getRowLink(row.original.id)}
             >
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
             </TableCellWithLink>
@@ -293,7 +288,7 @@ export function BootsTable({
         </TableCell>
       </TableRow>
     );
-  }, [modelRows, treeId]);
+  }, [getRowLink, modelRows]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">

@@ -1,5 +1,9 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
+import { useCallback } from 'react';
+
+import type { LinkProps } from '@tanstack/react-router';
+
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import type { ITestsTable } from '@/components/TestsTable/TestsTable';
@@ -80,17 +84,36 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
   },
 ];
 
+interface IHardwareDetailsTestTable
+  extends Omit<ITestsTable, 'columns' | 'innerColumns ' | 'getRowLink'> {
+  hardwareId: string;
+}
+
 const HardwareDetailsTestTable = ({
   filter,
   onClickFilter,
   testHistory,
-}: Omit<ITestsTable, 'columns' | 'innerColumns'>): JSX.Element => {
+  hardwareId,
+}: IHardwareDetailsTestTable): JSX.Element => {
+  const getRowLink = useCallback(
+    (bootId: string): LinkProps => ({
+      to: '/hardware/$hardwareId/test/$testId',
+      params: {
+        testId: bootId,
+        hardwareId: hardwareId,
+      },
+      search: s => s,
+    }),
+    [hardwareId],
+  );
+
   return (
     <TestsTable
       filter={filter}
       onClickFilter={onClickFilter}
       testHistory={testHistory}
       innerColumns={innerColumns}
+      getRowLink={getRowLink}
     />
   );
 };

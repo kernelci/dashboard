@@ -1,5 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
+import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { useCallback } from 'react';
@@ -23,6 +24,18 @@ const TreeBuildDetails = (): JSX.Element => {
   });
 
   const navigate = useNavigate({ from: '/tree/$treeId/build/$buildId' });
+
+  const getTestTableRowLink = useCallback(
+    (testId: string): LinkProps => ({
+      to: '/tree/$treeId/test/$testId',
+      params: {
+        testId: testId,
+        treeId: treeId,
+      },
+      search: s => s,
+    }),
+    [treeId],
+  );
 
   const onClickFilter = useCallback(
     (filter: TestsTableFilter): void => {
@@ -74,6 +87,7 @@ const TreeBuildDetails = (): JSX.Element => {
       breadcrumb={breadcrumbElement}
       onClickFilter={onClickFilter}
       tableFilter={searchParams.tableFilter}
+      getTestTableRowLink={getTestTableRowLink}
     />
   );
 };

@@ -2,6 +2,8 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { RiProhibited2Line } from 'react-icons/ri';
 
+import type { LinkProps } from '@tanstack/react-router';
+
 import { Separator } from '@/components/ui/separator';
 
 import { useBuildTests } from '@/api/buildTests';
@@ -14,6 +16,7 @@ interface IBuildDetailsTestSection {
   buildId: string;
   onClickFilter: (filter: TestsTableFilter) => void;
   tableFilter: TableFilter;
+  getRowLink: (testId: string) => LinkProps;
 }
 
 const NoTestFound = (): JSX.Element => (
@@ -29,6 +32,7 @@ const BuildDetailsTestSection = ({
   buildId,
   onClickFilter,
   tableFilter,
+  getRowLink,
 }: IBuildDetailsTestSection): JSX.Element => {
   const intl = useIntl();
   const { data, error } = useBuildTests(buildId);
@@ -46,6 +50,7 @@ const BuildDetailsTestSection = ({
             testHistory={data}
             onClickFilter={onClickFilter}
             filter={tableFilter.testsTable}
+            getRowLink={getRowLink}
           />
         </div>
       ) : (

@@ -22,11 +22,12 @@ import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
 interface TBuildTab {
   builds: THardwareDetails['builds'];
+  hardwareId: string;
 }
 
 const toggleFilterBySection = console.error;
 
-const BuildTab = ({ builds }: TBuildTab): JSX.Element => {
+const BuildTab = ({ builds, hardwareId }: TBuildTab): JSX.Element => {
   const archSummary = useMemo(
     () => sanitizeArchs(builds.summary.architectures),
     [builds.summary.architectures],
@@ -89,7 +90,10 @@ const BuildTab = ({ builds }: TBuildTab): JSX.Element => {
         <div className="text-lg">
           <FormattedMessage id="global.build" />
         </div>
-        <HardwareDetailsBuildsTable buildItems={buildItems} />
+        <HardwareDetailsBuildsTable
+          buildItems={buildItems}
+          hardwareId={hardwareId}
+        />
       </div>
     </div>
   );

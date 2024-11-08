@@ -1,5 +1,9 @@
 import { FormattedMessage } from 'react-intl';
 
+import { useCallback } from 'react';
+
+import type { LinkProps } from '@tanstack/react-router';
+
 import { BootsTable } from '@/components/BootsTable/BootsTable';
 import MemoizedStatusChart from '@/components/Cards/StatusChart';
 import MemoizedConfigList from '@/components/Cards/ConfigsList';
@@ -16,9 +20,22 @@ import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
 interface TBootsTab {
   boots: THardwareDetails['boots'];
+  hardwareId: string;
 }
 
-const BootsTab = ({ boots }: TBootsTab): JSX.Element => {
+const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
+  const getRowLink = useCallback(
+    (bootId: string): LinkProps => ({
+      to: '/hardware/$hardwareId/test/$testId',
+      params: {
+        testId: bootId,
+        hardwareId: hardwareId,
+      },
+      search: s => s,
+    }),
+    [hardwareId],
+  );
+
   return (
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
@@ -63,7 +80,11 @@ const BootsTab = ({ boots }: TBootsTab): JSX.Element => {
           </div>
         </InnerMobileGrid>
       </MobileGrid>
-      <BootsTable treeId={'goo'} filter="all" testHistory={boots.history} />
+      <BootsTable
+        getRowLink={getRowLink}
+        filter="all"
+        testHistory={boots.history}
+      />
     </div>
   );
 };
