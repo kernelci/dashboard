@@ -20,6 +20,7 @@ import type { TreeTableBody } from '@/types/tree/Tree';
 import type { HardwareTableItem } from '@/types/hardware';
 
 import { Button } from '@/components/ui/button';
+import type { Trees } from '@/types/hardware/hardwareDetails';
 
 import { ItemsPerPageSelector } from './TableInfo';
 
@@ -30,13 +31,15 @@ interface IPaginationInfo {
     | Table<TPathTests>
     | Table<AccordionItemBuilds>
     | Table<TreeTableBody>
-    | Table<HardwareTableItem>;
+    | Table<HardwareTableItem>
+    | Table<Trees>;
   data:
     | TestByCommitHash[]
     | TPathTests[]
     | AccordionItemBuilds[]
     | TreeTableBody[]
-    | HardwareTableItem[];
+    | HardwareTableItem[]
+    | Trees[];
   intlLabel: MessagesKey;
 }
 
