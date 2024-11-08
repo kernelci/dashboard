@@ -1,5 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
+import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { useCallback } from 'react';
@@ -27,6 +28,18 @@ const HardwareBuildDetails = (): JSX.Element => {
   const navigate = useNavigate({
     from: '/hardware/$hardwareId/build/$buildId',
   });
+
+  const getTestTableRowLink = useCallback(
+    (testId: string): LinkProps => ({
+      to: '/hardware/$hardwareId/test/$testId',
+      params: {
+        testId: testId,
+        hardwareId: hardwareId,
+      },
+      search: s => s,
+    }),
+    [hardwareId],
+  );
 
   const onClickFilter = useCallback(
     (filter: TestsTableFilter): void => {
@@ -78,6 +91,7 @@ const HardwareBuildDetails = (): JSX.Element => {
       breadcrumb={breadcrumbElement}
       onClickFilter={onClickFilter}
       tableFilter={searchParams.tableFilter}
+      getTestTableRowLink={getTestTableRowLink}
     />
   );
 };

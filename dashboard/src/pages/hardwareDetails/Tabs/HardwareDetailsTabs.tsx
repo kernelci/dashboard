@@ -26,10 +26,12 @@ export type TreeDetailsTabRightElement = Record<
 
 export interface IHardwareDetailsTab {
   HardwareDetailsData: THardwareDetails;
+  hardwareId: string;
 }
 
 const HardwareDetailsTabs = ({
   HardwareDetailsData,
+  hardwareId,
 }: IHardwareDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
     from: '/hardware/$hardwareId/',
@@ -56,21 +58,30 @@ const HardwareDetailsTabs = ({
     () => [
       {
         name: 'treeDetails.builds',
-        content: <BuildTab builds={HardwareDetailsData.builds} />,
+        content: (
+          <BuildTab
+            builds={HardwareDetailsData.builds}
+            hardwareId={hardwareId}
+          />
+        ),
         disabled: false,
       },
       {
         name: 'treeDetails.boots',
-        content: <BootsTab boots={HardwareDetailsData.boots} />,
+        content: (
+          <BootsTab boots={HardwareDetailsData.boots} hardwareId={hardwareId} />
+        ),
         disabled: false,
       },
       {
         name: 'treeDetails.tests',
-        content: <TestsTab tests={HardwareDetailsData.tests} />,
+        content: (
+          <TestsTab tests={HardwareDetailsData.tests} hardwareId={hardwareId} />
+        ),
         disabled: false,
       },
     ],
-    [HardwareDetailsData],
+    [HardwareDetailsData, hardwareId],
   );
 
   return (

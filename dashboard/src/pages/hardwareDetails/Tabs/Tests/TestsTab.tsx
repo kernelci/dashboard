@@ -21,9 +21,10 @@ import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
 interface TTestsTab {
   tests: THardwareDetails['tests'];
+  hardwareId: string;
 }
 
-const TestsTab = ({ tests }: TTestsTab): JSX.Element => {
+const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
   const onClickFilter = useCallback(
     (filter: TestsTableFilter) => console.error('filter:', filter),
     [],
@@ -75,6 +76,7 @@ const TestsTab = ({ tests }: TTestsTab): JSX.Element => {
       </MobileGrid>
       <HardwareDetailsTestTable
         testHistory={tests.history}
+        hardwareId={hardwareId}
         filter={'all'}
         onClickFilter={onClickFilter}
       />

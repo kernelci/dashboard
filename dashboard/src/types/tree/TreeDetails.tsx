@@ -139,6 +139,12 @@ export const zTableFilterInfo = object({
   testsTable: zTestsTableFilterValidator,
 });
 
+export const zTableFilterInfoValidator = zTableFilterInfo.catch({
+  buildsTable: zBuildsTableFilterValidator.parse(''),
+  bootsTable: zTestsTableFilterValidator.parse(''),
+  testsTable: zTestsTableFilterValidator.parse(''),
+});
+
 export type TableFilter = z.infer<typeof zTableFilterInfo>;
 
 const zFilterBoolValue = z.record(z.boolean()).optional();

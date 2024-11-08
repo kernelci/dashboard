@@ -1,6 +1,9 @@
 import { FormattedMessage } from 'react-intl';
 
+import type { LinkProps } from '@tanstack/react-router';
 import { useParams, useSearch } from '@tanstack/react-router';
+
+import { useCallback } from 'react';
 
 import { useTestsTab } from '@/api/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
@@ -36,6 +39,18 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
     treeId: treeId ?? '',
     filter: reqFilter,
   });
+
+  const getRowLink = useCallback(
+    (bootId: string): LinkProps => ({
+      to: '/tree/$treeId/test/$testId',
+      params: {
+        testId: bootId,
+        treeId: treeId,
+      },
+      search: s => s,
+    }),
+    [treeId],
+  );
 
   if (error || !treeId) {
     return (
@@ -126,9 +141,9 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
         </InnerMobileGrid>
       </MobileGrid>
       <BootsTable
-        treeId={treeId}
         filter={tableFilter.bootsTable}
         testHistory={data.bootHistory}
+        getRowLink={getRowLink}
       />
     </div>
   );

@@ -2,7 +2,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 
 import { MdCheck, MdClose } from 'react-icons/md';
 
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 
 import { useCallback } from 'react';
 
@@ -16,6 +16,7 @@ import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
 export interface THardwareDetailsBuildsTable {
   buildItems: AccordionItemBuilds[];
+  hardwareId: string;
 }
 
 const buildStatusMap = {
@@ -128,9 +129,8 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
 
 export function HardwareDetailsBuildsTable({
   buildItems,
+  hardwareId,
 }: THardwareDetailsBuildsTable): JSX.Element {
-  const { hardwareId } = useParams({ from: '/hardware/$hardwareId/' });
-
   const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
 
   const navigateToBuildDetails = useCallback(
