@@ -2,6 +2,10 @@ import type { ColumnDef } from '@tanstack/react-table';
 
 import { MdCheck, MdClose } from 'react-icons/md';
 
+import { useNavigate, useParams } from '@tanstack/react-router';
+
+import { useCallback } from 'react';
+
 import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { ItemType } from '@/components/ListingItem/ListingItem';
@@ -125,5 +129,25 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
 export function HardwareDetailsBuildsTable({
   buildItems,
 }: THardwareDetailsBuildsTable): JSX.Element {
-  return <BuildsTable buildItems={buildItems} columns={columns} />;
+  const { hardwareId } = useParams({ from: '/hardware/$hardwareId/' });
+
+  const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
+
+  const navigateToBuildDetails = useCallback(
+    (buildId: string) => {
+      navigate({
+        to: `/hardware/${hardwareId}/build/${buildId}`,
+        params: { hardwareId },
+        search: prev => prev,
+      });
+    },
+    [navigate, hardwareId],
+  );
+  return (
+    <BuildsTable
+      buildItems={buildItems}
+      columns={columns}
+      onClickShowBuild={navigateToBuildDetails}
+    />
+  );
 }

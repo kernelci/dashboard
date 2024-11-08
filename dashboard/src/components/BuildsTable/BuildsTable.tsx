@@ -24,6 +24,7 @@ import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import TableStatusFilter from '@/components/Table/TableStatusFilter';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import type { IAccordionItems } from '@/pages/TreeDetails/Tabs/Build/BuildAccordionContent';
 import AccordionBuildContent from '@/pages/TreeDetails/Tabs/Build/BuildAccordionContent';
 import type {
   AccordionItemBuilds,
@@ -37,11 +38,13 @@ import {
 export interface IBuildsTable {
   buildItems: AccordionItemBuilds[];
   columns: ColumnDef<AccordionItemBuilds>[];
+  onClickShowBuild: IAccordionItems['onClickShowBuild'];
 }
 
 export function BuildsTable({
   buildItems,
   columns,
+  onClickShowBuild,
 }: IBuildsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
@@ -55,6 +58,7 @@ export function BuildsTable({
 
   const selectedFilter = zBuildsTableFilterValidator.parse(unsafeTableFilter);
 
+  // TODO: this component should not use a specif route
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const intl = useIntl();
 
@@ -220,7 +224,10 @@ export function BuildsTable({
                 <TableRow>
                   <TableCell colSpan={6} className="p-0">
                     <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
-                      <AccordionBuildContent accordionData={row.original} />
+                      <AccordionBuildContent
+                        accordionData={row.original}
+                        onClickShowBuild={onClickShowBuild}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -236,7 +243,7 @@ export function BuildsTable({
         </TableRow>
       );
     }
-  }, [columns.length, modelRows]);
+  }, [columns.length, modelRows, onClickShowBuild]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
