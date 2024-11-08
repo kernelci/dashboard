@@ -1,10 +1,8 @@
 import { MdFolderOpen } from 'react-icons/md';
 
-import { useMemo, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
-
-import { useNavigate, useParams } from '@tanstack/react-router';
 
 import type {
   AccordionItemBuilds,
@@ -120,15 +118,15 @@ const AccordBuildStatusChart = ({
   );
 };
 
-interface IAccordionItems {
+export interface IAccordionItems {
   accordionData: AccordionItemBuilds | TPathTests;
+  onClickShowBuild: (buildId: AccordionItemBuilds['id']) => void;
 }
 
 const AccordionBuildContent = ({
   accordionData,
+  onClickShowBuild,
 }: IAccordionItems): JSX.Element => {
-  const { treeId } = useParams({ from: '/tree/$treeId/' });
-
   //TODO: Fix the typing for not using as
   const contentData = accordionData as AccordionItemBuilds;
 
@@ -137,15 +135,10 @@ const AccordionBuildContent = ({
     { enabled: !!contentData.id },
   );
 
-  const navigate = useNavigate({ from: '/tree/$treeId' });
-
-  const navigateToBuildDetails = useCallback(() => {
-    navigate({
-      to: `/tree/${treeId}/build/${contentData.id}`,
-      params: { treeId },
-      search: prev => prev,
-    });
-  }, [contentData.id, navigate, treeId]);
+  const onClickShowBuildHandler = useCallback(
+    () => onClickShowBuild(contentData.id),
+    [contentData.id, onClickShowBuild],
+  );
 
   const links: ILinkGroup['links'] = useMemo(
     () => [
@@ -224,7 +217,7 @@ const AccordionBuildContent = ({
               <Button
                 variant="outline"
                 className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
-                onClick={navigateToBuildDetails}
+                onClick={onClickShowBuildHandler}
               >
                 <FormattedMessage id="buildAccordion.showMore" />
               </Button>
