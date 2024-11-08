@@ -52,6 +52,22 @@ def get_build(record):
     }
 
 
+def get_tree_key(record):
+    return record["checkout_tree_name"] + \
+        record["checkout_git_repository_branch"] + \
+        record["checkout_git_repository_url"]
+
+
+def get_tree(record):
+    return {
+        "tree_name": record["checkout_tree_name"],
+        "git_repository_branch": record["checkout_git_repository_branch"],
+        "git_repository_url": record["checkout_git_repository_url"],
+        "git_commit_name": record["checkout_git_commit_name"],
+        "git_commit_hash": record["checkout_git_commit_hash"],
+    }
+
+
 def get_history(record):
     return {
         "id": record["id"],
@@ -93,6 +109,7 @@ class HardwareDetails(View):
 
         tests = generate_test_dict()
         boots = generate_test_dict()
+        trees = defaultdict(lambda: defaultdict(str))
 
         for r in records:
             build_id = r["build_id"]
@@ -122,6 +139,8 @@ class HardwareDetails(View):
                 processed_builds.add(build_id)
                 builds["items"].append(get_build(r))
 
+            tree_key = get_tree_key(r)
+            trees[tree_key] = get_tree(r)
             if issue_id:
                 currentIssue = get_details_issue(r)
                 update_issues(builds["issues"], currentIssue)
@@ -131,8 +150,9 @@ class HardwareDetails(View):
         properties2List(builds, ["issues"])
         properties2List(tests, ["issues", "platformsFailing", "archSummary"])
         properties2List(boots, ["issues", "platformsFailing", "archSummary"])
+        trees = list(trees.values())
 
-        return (builds, tests, boots)
+        return (builds, tests, boots, trees)
 
     def get(self, request, hardware_id):
         try:
@@ -175,13 +195,15 @@ class HardwareDetails(View):
             build_start_time=F("build__start_time"),
             checkout_git_repository_url=F("build__checkout__git_repository_url"),
             checkout_git_repository_branch=F("build__checkout__git_repository_branch"),
+            checkout_git_commit_name=F("build__checkout__git_commit_name"),
+            checkout_git_commit_hash=F("build__checkout__git_commit_hash"),
             checkout_tree_name=F("build__checkout__tree_name"),
             issue_id=F("build__incidents__issue__id"),
             issue_comment=F("build__incidents__issue__comment"),
             issue_report_url=F("build__incidents__issue__report_url"),
         )
-        builds, tests, boots = self.sanitize_records(records)
+        builds, tests, boots, trees = self.sanitize_records(records)
 
         return JsonResponse(
-            {"builds": builds, "tests": tests, "boots": boots}, safe=False
+            {"builds": builds, "tests": tests, "boots": boots, "trees": trees}, safe=False
         )
