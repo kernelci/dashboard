@@ -37,8 +37,17 @@ type Tests = {
   issues: TIssue[];
 };
 
+export type Trees = {
+  treeName?: string;
+  gitRepositoryBranch?: string;
+  gitRepositoryUrl?: string;
+  gitCommitName?: string;
+  gitCommitHash?: string;
+};
+
 export type THardwareDetails = {
   builds: BuildsData;
   tests: Tests;
   boots: Tests;
+  trees: Trees[];
 };
