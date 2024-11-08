@@ -14,7 +14,6 @@ import {
 
 import { useCallback, useMemo, useState } from 'react';
 import type { LinkProps } from '@tanstack/react-router';
-import { useNavigate } from '@tanstack/react-router';
 
 import { MdChevronRight } from 'react-icons/md';
 
@@ -111,12 +110,14 @@ interface IBootsTable {
   testHistory: TestHistory[];
   filter: TestsTableFilter;
   getRowLink: (testId: TestHistory['id']) => LinkProps;
+  onClickFilter: (newFilter: TestsTableFilter) => void;
 }
 
 export function BootsTable({
   testHistory,
   filter,
   getRowLink,
+  onClickFilter,
 }: IBootsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -124,7 +125,6 @@ export function BootsTable({
     pageSize: 10,
   });
 
-  const navigate = useNavigate();
   const intl = useIntl();
 
   const rawData = useMemo(
@@ -165,25 +165,6 @@ export function BootsTable({
 
       return count;
     }, [rawData.tests]);
-
-  // TODO: this component should not use a specif route
-  const onClickFilter = useCallback(
-    (newFilter: TestsTableFilter): void => {
-      navigate({
-        from: '/tree/$treeId',
-        search: previousParams => {
-          return {
-            ...previousParams,
-            tableFilter: {
-              ...previousParams.tableFilter,
-              bootsTable: newFilter,
-            },
-          };
-        },
-      });
-    },
-    [navigate],
-  );
 
   const checkIfFilterIsSelected = useCallback(
     (possibleFilter: TestsTableFilter): boolean => {

@@ -14,7 +14,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Fragment, useCallback, useMemo, useState } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -30,21 +29,22 @@ import type {
   AccordionItemBuilds,
   BuildsTableFilter,
 } from '@/types/tree/TreeDetails';
-import {
-  possibleBuildsTableFilter,
-  zBuildsTableFilterValidator,
-} from '@/types/tree/TreeDetails';
+import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
 
 export interface IBuildsTable {
   buildItems: AccordionItemBuilds[];
   columns: ColumnDef<AccordionItemBuilds>[];
   onClickShowBuild: IAccordionItems['onClickShowBuild'];
+  filter: BuildsTableFilter;
+  onClickFilter: (filter: BuildsTableFilter) => void;
 }
 
 export function BuildsTable({
   buildItems,
   columns,
   onClickShowBuild,
+  filter,
+  onClickFilter,
 }: IBuildsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
@@ -52,14 +52,7 @@ export function BuildsTable({
     pageIndex: 0,
     pageSize: 10,
   });
-  const { tableFilter: unsafeTableFilter } = useSearch({
-    strict: false,
-  });
 
-  const selectedFilter = zBuildsTableFilterValidator.parse(unsafeTableFilter);
-
-  // TODO: this component should not use a specif route
-  const navigate = useNavigate({ from: '/tree/$treeId' });
   const intl = useIntl();
 
   const rawData = useMemo((): AccordionItemBuilds[] => {
@@ -82,17 +75,17 @@ export function BuildsTable({
   }, [buildItems]);
 
   const data = useMemo((): AccordionItemBuilds[] => {
-    return selectedFilter === 'all'
+    return filter === 'all'
       ? rawData
-      : rawData?.filter(row => row.status && row.status === selectedFilter);
-  }, [selectedFilter, rawData]);
+      : rawData?.filter(row => row.status && row.status === filter);
+  }, [filter, rawData]);
 
   const filterCount = useMemo(() => {
     const count = possibleBuildsTableFilter.reduce(
-      (acc, filter) => {
+      (acc, currentFilter) => {
         if (rawData)
-          acc[filter] = rawData?.reduce(
-            (total, row) => (row.status === filter ? total + 1 : total),
+          acc[currentFilter] = rawData?.reduce(
+            (total, row) => (row.status === currentFilter ? total + 1 : total),
             0,
           );
         return acc;
@@ -104,24 +97,6 @@ export function BuildsTable({
     return count;
   }, [rawData]);
 
-  const onClickFilter = useCallback(
-    (filter: BuildsTableFilter) => {
-      navigate({
-        search: previousParams => {
-          return {
-            ...previousParams,
-            tableFilter: {
-              buildsTable: filter,
-              bootsTable: previousParams.tableFilter.bootsTable,
-              testsTable: previousParams.tableFilter.testsTable,
-            },
-          };
-        },
-      });
-    },
-    [navigate],
-  );
-
   const filters = useMemo(
     () => [
       {
@@ -130,7 +105,7 @@ export function BuildsTable({
           { count: filterCount[possibleBuildsTableFilter[2]] },
         ),
         value: possibleBuildsTableFilter[2],
-        isSelected: selectedFilter === possibleBuildsTableFilter[2],
+        isSelected: filter === possibleBuildsTableFilter[2],
       },
       {
         label: intl.formatMessage(
@@ -138,7 +113,7 @@ export function BuildsTable({
           { count: filterCount[possibleBuildsTableFilter[1]] },
         ),
         value: possibleBuildsTableFilter[1],
-        isSelected: selectedFilter === possibleBuildsTableFilter[1],
+        isSelected: filter === possibleBuildsTableFilter[1],
       },
       {
         label: intl.formatMessage(
@@ -146,7 +121,7 @@ export function BuildsTable({
           { count: filterCount[possibleBuildsTableFilter[0]] },
         ),
         value: possibleBuildsTableFilter[0],
-        isSelected: selectedFilter === possibleBuildsTableFilter[0],
+        isSelected: filter === possibleBuildsTableFilter[0],
       },
       {
         label: intl.formatMessage(
@@ -154,10 +129,10 @@ export function BuildsTable({
           { count: filterCount[possibleBuildsTableFilter[3]] },
         ),
         value: possibleBuildsTableFilter[3],
-        isSelected: selectedFilter === possibleBuildsTableFilter[3],
+        isSelected: filter === possibleBuildsTableFilter[3],
       },
     ],
-    [intl, filterCount, selectedFilter],
+    [intl, filterCount, filter],
   );
 
   const table = useReactTable({

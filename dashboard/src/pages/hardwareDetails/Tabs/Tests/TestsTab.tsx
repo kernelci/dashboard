@@ -2,6 +2,8 @@ import { FormattedMessage } from 'react-intl';
 
 import { useCallback } from 'react';
 
+import { useNavigate, useSearch } from '@tanstack/react-router';
+
 import MemoizedStatusChart from '@/components/Cards/StatusChart';
 import MemoizedConfigList from '@/components/Cards/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Cards/ErrorsSummary';
@@ -25,9 +27,25 @@ interface TTestsTab {
 }
 
 const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
+  const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
+
+  const navigate = useNavigate({ from: '/hardware/$hardwareId' });
+
   const onClickFilter = useCallback(
-    (filter: TestsTableFilter) => console.error('filter:', filter),
-    [],
+    (newFilter: TestsTableFilter): void => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: {
+              ...previousParams.tableFilter,
+              testsTable: newFilter,
+            },
+          };
+        },
+      });
+    },
+    [navigate],
   );
 
   return (
@@ -76,8 +94,8 @@ const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
       </MobileGrid>
       <HardwareDetailsTestTable
         testHistory={tests.history}
+        filter={tableFilter.testsTable}
         hardwareId={hardwareId}
-        filter={'all'}
         onClickFilter={onClickFilter}
       />
     </div>

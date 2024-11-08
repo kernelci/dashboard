@@ -2,7 +2,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 
 import { MdCheck, MdClose } from 'react-icons/md';
 
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { useCallback } from 'react';
 
@@ -12,7 +12,10 @@ import { ItemType } from '@/components/ListingItem/ListingItem';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
-import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+import type {
+  AccordionItemBuilds,
+  BuildsTableFilter,
+} from '@/types/tree/TreeDetails';
 
 export interface THardwareDetailsBuildsTable {
   buildItems: AccordionItemBuilds[];
@@ -131,6 +134,8 @@ export function HardwareDetailsBuildsTable({
   buildItems,
   hardwareId,
 }: THardwareDetailsBuildsTable): JSX.Element {
+  const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
+
   const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
 
   const navigateToBuildDetails = useCallback(
@@ -143,10 +148,31 @@ export function HardwareDetailsBuildsTable({
     },
     [navigate, hardwareId],
   );
+
+  const onClickFilter = useCallback(
+    (filter: BuildsTableFilter) => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: {
+              buildsTable: filter,
+              bootsTable: previousParams.tableFilter?.bootsTable ?? 'all',
+              testsTable: previousParams.tableFilter?.testsTable ?? 'all',
+            },
+          };
+        },
+      });
+    },
+    [navigate],
+  );
+
   return (
     <BuildsTable
+      filter={tableFilter.buildsTable}
       buildItems={buildItems}
       columns={columns}
+      onClickFilter={onClickFilter}
       onClickShowBuild={navigateToBuildDetails}
     />
   );

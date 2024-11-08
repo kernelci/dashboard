@@ -4,14 +4,17 @@ import { useCallback, type ReactElement } from 'react';
 
 import { MdCheck, MdClose } from 'react-icons/md';
 
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { ItemType } from '@/components/ListingItem/ListingItem';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
-import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+import type {
+  AccordionItemBuilds,
+  BuildsTableFilter,
+} from '@/types/tree/TreeDetails';
 
 export interface TTreeDetailsBuildsTable {
   buildItems: AccordionItemBuilds[];
@@ -118,8 +121,8 @@ export function TreeDetailsBuildsTable({
   buildItems,
 }: TTreeDetailsBuildsTable): JSX.Element {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
-
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const { tableFilter } = useSearch({ from: '/tree/$treeId/' });
+  const navigate = useNavigate({ from: '/tree/$treeId/' });
 
   const navigateToBuildDetails = useCallback(
     (buildId: string) => {
@@ -132,11 +135,31 @@ export function TreeDetailsBuildsTable({
     [navigate, treeId],
   );
 
+  const onClickFilter = useCallback(
+    (newFilter: BuildsTableFilter): void => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: {
+              buildsTable: newFilter,
+              bootsTable: previousParams.tableFilter?.bootsTable ?? 'all',
+              testsTable: previousParams.tableFilter?.testsTable ?? 'all',
+            },
+          };
+        },
+      });
+    },
+    [navigate],
+  );
+
   return (
     <BuildsTable
+      onClickShowBuild={navigateToBuildDetails}
+      filter={tableFilter.buildsTable}
       buildItems={buildItems}
       columns={columns}
-      onClickShowBuild={navigateToBuildDetails}
+      onClickFilter={onClickFilter}
     />
   );
 }
