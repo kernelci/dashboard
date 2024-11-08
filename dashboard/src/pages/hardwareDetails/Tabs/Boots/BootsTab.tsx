@@ -4,6 +4,8 @@ import { useCallback } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 
+import { useNavigate, useSearch } from '@tanstack/react-router';
+
 import { BootsTable } from '@/components/BootsTable/BootsTable';
 import MemoizedStatusChart from '@/components/Cards/StatusChart';
 import MemoizedConfigList from '@/components/Cards/ConfigsList';
@@ -18,12 +20,16 @@ import {
 
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
+import type { TestsTableFilter } from '@/types/tree/TreeDetails';
+
 interface TBootsTab {
   boots: THardwareDetails['boots'];
   hardwareId: string;
 }
 
 const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
+  const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
+
   const getRowLink = useCallback(
     (bootId: string): LinkProps => ({
       to: '/hardware/$hardwareId/test/$testId',
@@ -34,6 +40,25 @@ const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
       search: s => s,
     }),
     [hardwareId],
+  );
+
+  const navigate = useNavigate({ from: '/hardware/$hardwareId' });
+
+  const onClickFilter = useCallback(
+    (newFilter: TestsTableFilter): void => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: {
+              ...previousParams.tableFilter,
+              bootsTable: newFilter,
+            },
+          };
+        },
+      });
+    },
+    [navigate],
   );
 
   return (
@@ -82,8 +107,9 @@ const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
       </MobileGrid>
       <BootsTable
         getRowLink={getRowLink}
-        filter="all"
+        filter={tableFilter.bootsTable}
         testHistory={boots.history}
+        onClickFilter={onClickFilter}
       />
     </div>
   );
