@@ -1,7 +1,9 @@
 import type {
+  Cell,
   ColumnDef,
   ExpandedState,
   PaginationState,
+  Row,
   SortingState,
 } from '@tanstack/react-table';
 import {
@@ -14,7 +16,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { Fragment, useCallback, useMemo, useState } from 'react';
+import { Fragment, memo, useCallback, useMemo, useState } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
@@ -31,9 +33,8 @@ import type {
 } from '@/types/tree/TreeDetails';
 import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
 
-import { Sheet } from '@/components/Sheet';
 import { useBuildStatusCount } from '@/api/TreeDetails';
-import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
+import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
 
 export interface IBuildsTable {
   buildItems: AccordionItemBuilds[];
@@ -42,6 +43,60 @@ export interface IBuildsTable {
   filter: BuildsTableFilter;
   onClickFilter: (filter: BuildsTableFilter) => void;
 }
+
+const TableCellComponent = ({
+  row,
+  cell,
+  rowIndex,
+  openLogSheet,
+}: {
+  row: Row<AccordionItemBuilds>;
+  cell: Cell<AccordionItemBuilds, unknown>;
+  rowIndex: number;
+  openLogSheet: (index: number) => void;
+}): JSX.Element => {
+  const handleClickCell = useCallback(() => {
+    if (cell.column.id === 'status') {
+      openLogSheet(rowIndex);
+    } else if (row.getCanExpand()) {
+      row.toggleExpanded();
+    }
+  }, [cell, row, rowIndex, openLogSheet]);
+
+  return (
+    <TableCell key={cell.id} onClick={handleClickCell}>
+      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+    </TableCell>
+  );
+};
+
+const AccordionBuildContentComponent = ({
+  row,
+  rowIndex,
+  openLogSheet,
+  onClickShowBuild,
+}: {
+  row: Row<AccordionItemBuilds>;
+  rowIndex: number;
+  openLogSheet: (index: number) => void;
+  onClickShowBuild: IAccordionItems['onClickShowBuild'];
+}): JSX.Element => {
+  const handleOpenLogSheet = useCallback(
+    () => openLogSheet(rowIndex),
+    [rowIndex, openLogSheet],
+  );
+
+  return (
+    <AccordionBuildContent
+      accordionData={row.original}
+      onClickShowBuild={onClickShowBuild}
+      openLogSheet={handleOpenLogSheet}
+    />
+  );
+};
+
+const TableCellMemoized = memo(TableCellComponent);
+const AccordionBuildContentMemoized = memo(AccordionBuildContentComponent);
 
 export function BuildsTable({
   buildItems,
@@ -191,41 +246,55 @@ export function BuildsTable({
   const onOpenChange = useCallback(() => setLog(null), [setLog]);
   const openLogSheet = useCallback((index: number) => setLog(index), [setLog]);
 
+  const TableRowComponent = ({
+    index,
+    row,
+  }: {
+    index: number;
+    row: Row<AccordionItemBuilds>;
+  }): JSX.Element => {
+    return (
+      <Fragment key={row.id}>
+        <TableRow
+          className="cursor-pointer hover:bg-lightBlue"
+          data-state={row.getIsExpanded() ? 'open' : 'closed'}
+        >
+          {row.getVisibleCells().map((cell, cellIdx) => (
+            <TableCellMemoized
+              key={cellIdx}
+              cell={cell}
+              rowIndex={index}
+              row={row}
+              openLogSheet={openLogSheet}
+            />
+          ))}
+        </TableRow>
+        {row.getIsExpanded() && (
+          <TableRow>
+            <TableCell colSpan={groupHeaders.length} className="p-0">
+              <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
+                <AccordionBuildContentMemoized
+                  row={row}
+                  rowIndex={index}
+                  onClickShowBuild={onClickShowBuild}
+                  openLogSheet={openLogSheet}
+                />
+              </div>
+            </TableCell>
+          </TableRow>
+        )}
+      </Fragment>
+    );
+  };
+
+  const TableRowMemoized = memo(TableRowComponent);
+
   const tableBody = useMemo((): JSX.Element[] | JSX.Element => {
     {
       return modelRows?.length ? (
-        modelRows.map((row, index) => {
-          return (
-            <Fragment key={row.id}>
-              <TableRow
-                className="cursor-pointer hover:bg-lightBlue"
-                onClick={() => {
-                  if (row.getCanExpand()) row.toggleExpanded();
-                }}
-                data-state={row.getIsExpanded() ? 'open' : 'closed'}
-              >
-                {row.getVisibleCells().map(cell => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-              {row.getIsExpanded() && (
-                <TableRow>
-                  <TableCell colSpan={groupHeaders.length} className="p-0">
-                    <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
-                      <AccordionBuildContent
-                        accordionData={row.original}
-                        onClickShowBuild={onClickShowBuild}
-                        openLogSheet={() => openLogSheet(index)}
-                      />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </Fragment>
-          );
-        })
+        modelRows.map((row, index) => (
+          <TableRowMemoized key={index} index={index} row={row} />
+        ))
       ) : (
         <TableRow>
           <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -234,41 +303,41 @@ export function BuildsTable({
         </TableRow>
       );
     }
-  }, [
-    columns.length,
-    groupHeaders.length,
-    modelRows,
-    onClickShowBuild,
-    openLogSheet,
-  ]);
+  }, [columns.length, modelRows, TableRowMemoized]);
 
   const handlePreviousItem = useCallback(() => {
-    setLog(c => {
-      if (c !== null && c > 0) return c - 1;
+    setLog(previousLog => {
+      if (typeof previousLog === 'number' && previousLog > 0)
+        return previousLog - 1;
 
-      return c;
+      return previousLog;
     });
   }, [setLog]);
 
   const handleNextItem = useCallback(() => {
-    setLog(c => {
-      if (c !== null && c < sortedItems.length - 1) return c + 1;
+    setLog(previousLog => {
+      if (
+        typeof previousLog === 'number' &&
+        previousLog < sortedItems.length - 1
+      )
+        return previousLog + 1;
 
-      return c;
+      return previousLog;
     });
   }, [setLog, sortedItems.length]);
 
   const { data: dataBuildCount, isLoading } = useBuildStatusCount(
-    { buildId: sortedItems[currentLog ?? 0]?.id ?? '' },
-    { enabled: !!sortedItems[currentLog ?? 0]?.id },
+    { buildId: sortedItems.length > 0 ? sortedItems[currentLog ?? 0]?.id : '' },
+    { enabled: sortedItems.length > 0 && !!sortedItems[currentLog ?? 0]?.id },
   );
 
   const navigationLogsActions = useMemo(
     () => ({
       nextItem: handleNextItem,
-      hasNext: currentLog !== null && currentLog < sortedItems.length - 1,
+      hasNext:
+        typeof currentLog === 'number' && currentLog < sortedItems.length - 1,
       previousItem: handlePreviousItem,
-      hasPrevious: currentLog !== null && currentLog > 0,
+      hasPrevious: !!currentLog,
       isLoading,
     }),
     [
@@ -281,7 +350,15 @@ export function BuildsTable({
   );
 
   return (
-    <div className="flex flex-col gap-6 pb-4">
+    <WrapperTable
+      currentLog={currentLog ?? undefined}
+      logExcerpt={dataBuildCount?.log_excerpt}
+      logUrl={
+        sortedItems.length > 0 ? sortedItems[currentLog ?? 0].buildLogs : ''
+      }
+      navigationLogsActions={navigationLogsActions}
+      onOpenChange={onOpenChange}
+    >
       <div className="flex justify-between">
         <TableStatusFilter filters={filters} onClickBuild={onClickFilter} />
         <DebounceInput
@@ -293,20 +370,12 @@ export function BuildsTable({
       </div>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
-
-        <Sheet open={currentLog !== null} onOpenChange={onOpenChange}>
-          <LogSheet
-            logExcerpt={dataBuildCount?.log_excerpt}
-            logUrl={sortedItems[currentLog ?? 0]?.buildLogs}
-            navigationLogsActions={navigationLogsActions}
-          />
-        </Sheet>
       </BaseTable>
       <PaginationInfo
         table={table}
         data={data}
         intlLabel="treeDetails.builds"
       />
-    </div>
+    </WrapperTable>
   );
 }
