@@ -109,11 +109,12 @@ class HardwareDetails(View):
 
     def sanitize_records(self, records):
         processed_builds = set()
+        processed_trees = set()
         builds = {"items": [], "issues": {}}
 
         tests = generate_test_dict()
         boots = generate_test_dict()
-        trees = defaultdict(lambda: defaultdict(str))
+        trees = []
 
         for r in records:
             build_id = r["build_id"]
@@ -144,7 +145,10 @@ class HardwareDetails(View):
                 builds["items"].append(get_build(r))
 
             tree_key = get_tree_key(r)
-            trees[tree_key] = get_tree(r)
+            if tree_key not in processed_trees:
+                processed_trees.add(tree_key)
+                trees.append(get_tree(r))
+
             if issue_id:
                 currentIssue = get_details_issue(r)
                 update_issues(builds["issues"], currentIssue)
@@ -154,7 +158,6 @@ class HardwareDetails(View):
         properties2List(builds, ["issues"])
         properties2List(tests, ["issues", "platformsFailing", "archSummary"])
         properties2List(boots, ["issues", "platformsFailing", "archSummary"])
-        trees = list(trees.values())
 
         return (builds, tests, boots, trees)
 
