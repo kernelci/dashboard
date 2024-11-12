@@ -1,4 +1,4 @@
-import type { ColumnDef, Row, SortingState } from '@tanstack/react-table';
+import type { Cell, ColumnDef, Row, SortingState } from '@tanstack/react-table';
 import {
   flexRender,
   getCoreRowModel,
@@ -8,24 +8,63 @@ import {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { CSSProperties } from 'react';
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
-import { Link } from '@tanstack/react-router';
 
 import type { TestHistory, TIndividualTest } from '@/types/general';
 
 import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
-import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { TableBody, TableCellWithLink, TableRow } from '@/components/ui/table';
+
+import { useTestDetails } from '@/api/TestDetails';
+import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
 
 type GetRowLink = (testId: TestHistory['id']) => LinkProps;
+
+const TableCellComponent = ({
+  cell,
+  rowIdx,
+  linkProps,
+  openLogSheet,
+}: {
+  cell: Cell<TIndividualTest, unknown>;
+  rowIdx: number;
+  linkProps: LinkProps;
+  openLogSheet: (index: number) => void;
+}): JSX.Element => {
+  const handleClick = useCallback(() => {
+    openLogSheet(rowIdx);
+  }, [rowIdx, openLogSheet]);
+
+  const parsedHandleClick =
+    cell.column.id === 'status' ? handleClick : undefined;
+  const parsedLinkProps: LinkProps =
+    cell.column.id === 'status' ? { search: s => s } : linkProps;
+
+  return (
+    <TableCellWithLink
+      onClick={parsedHandleClick}
+      key={cell.id}
+      linkProps={parsedLinkProps}
+    >
+      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+    </TableCellWithLink>
+  );
+};
+
+const TableCellMemoized = memo(TableCellComponent);
 
 const TableRowComponent = ({
   row,
   getRowLink,
+  rowIdx,
+  openLogSheet,
 }: {
   row: Row<TIndividualTest>;
+  rowIdx: number;
   getRowLink: GetRowLink;
+  openLogSheet: (index: number) => void;
 }): JSX.Element => {
   const linkProps: LinkProps = useMemo(() => {
     return getRowLink(row.original.id);
@@ -33,15 +72,15 @@ const TableRowComponent = ({
 
   return (
     <TableRow key={row.id} className="border-b-0 hover:bg-lightBlue">
-      {row.getVisibleCells().map(cell => {
-        return (
-          <TableCell key={cell.id}>
-            <Link {...linkProps}>
-              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </Link>
-          </TableCell>
-        );
-      })}
+      {row.getVisibleCells().map((cell, idx) => (
+        <TableCellMemoized
+          key={idx}
+          cell={cell}
+          linkProps={linkProps}
+          openLogSheet={openLogSheet}
+          rowIdx={rowIdx}
+        />
+      ))}
     </TableRow>
   );
 };
@@ -104,14 +143,31 @@ export function IndividualTestsTable({
   });
   const virtualItems = virtualizer.getVirtualItems();
 
+  const sortedItems = useMemo(
+    (): TIndividualTest[] => rows.map(row => row.original),
+    [rows],
+  );
+
+  const [currentLog, setLog] = useState<number | null>(null);
+
+  const onOpenChange = useCallback(() => setLog(null), [setLog]);
+  const openLogSheet = useCallback((index: number) => setLog(index), [setLog]);
+
   const tableRows = useMemo((): JSX.Element[] => {
-    return virtualItems.map(virtualRow => {
+    return virtualItems.map((virtualRow, idx) => {
       const row = rows[virtualRow.index] as Row<TIndividualTest>;
+
       return (
-        <TableRowMemoized row={row} key={row.id} getRowLink={getRowLink} />
+        <TableRowMemoized
+          openLogSheet={openLogSheet}
+          getRowLink={getRowLink}
+          row={row}
+          rowIdx={idx}
+          key={row.id}
+        />
       );
     });
-  }, [getRowLink, rows, virtualItems]);
+  }, [rows, virtualItems, openLogSheet, getRowLink]);
 
   // if more performance is needed, try using translate as in the example from tanstack virtual instead of padding
   // https://tanstack.com/virtual/latest/docs/framework/react/examples/table
@@ -128,19 +184,70 @@ export function IndividualTestsTable({
       ];
     }, [virtualItems, virtualizer]);
 
+  const handlePreviousItem = useCallback(() => {
+    setLog(previousLog => {
+      if (typeof previousLog === 'number' && previousLog > 0)
+        return previousLog - 1;
+
+      return previousLog;
+    });
+  }, [setLog]);
+
+  const handleNextItem = useCallback(() => {
+    setLog(previousLog => {
+      if (
+        typeof previousLog === 'number' &&
+        previousLog < sortedItems.length - 1
+      )
+        return previousLog + 1;
+
+      return previousLog;
+    });
+  }, [setLog, sortedItems.length]);
+
+  const { data: dataTest, isLoading } = useTestDetails(
+    sortedItems.length > 0 ? sortedItems[currentLog ?? 0].id : '',
+  );
+
+  const navigationLogsActions = useMemo(
+    () => ({
+      nextItem: handleNextItem,
+      hasNext:
+        typeof currentLog === 'number' && currentLog < sortedItems.length - 1,
+      previousItem: handlePreviousItem,
+      hasPrevious: !!currentLog,
+      isLoading,
+    }),
+    [
+      currentLog,
+      isLoading,
+      sortedItems.length,
+      handleNextItem,
+      handlePreviousItem,
+    ],
+  );
+
   return (
-    <div
-      ref={parentRef}
-      className="max-h-[400px] max-w-full overflow-auto bg-lightGray p-8"
+    <WrapperTable
+      currentLog={currentLog ?? undefined}
+      logExcerpt={dataTest?.log_excerpt}
+      logUrl={dataTest?.log_url}
+      navigationLogsActions={navigationLogsActions}
+      onOpenChange={onOpenChange}
     >
-      <div className="rounded-lg border-x border-t border-darkGray bg-white text-sm text-black">
-        <div style={firstRowStyle} />
-        <table className="w-full">
-          <DumbTableHeader>{tableHeaders}</DumbTableHeader>
-          <TableBody>{tableRows}</TableBody>
-        </table>
-        <div style={lastRowStyle} />
+      <div
+        ref={parentRef}
+        className="max-h-[400px] max-w-full overflow-auto bg-lightGray p-8"
+      >
+        <div className="rounded-lg border-x border-t border-darkGray bg-white text-sm text-black">
+          <div style={firstRowStyle} />
+          <table className="w-full">
+            <DumbTableHeader>{tableHeaders}</DumbTableHeader>
+            <TableBody>{tableRows}</TableBody>
+          </table>
+          <div style={lastRowStyle} />
+        </div>
       </div>
-    </div>
+    </WrapperTable>
   );
 }

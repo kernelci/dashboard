@@ -1,4 +1,5 @@
 import type {
+  Cell,
   ColumnDef,
   PaginationState,
   SortingState,
@@ -12,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import type { LinkProps } from '@tanstack/react-router';
 
 import { MdChevronRight } from 'react-icons/md';
@@ -47,6 +48,8 @@ import { TableHeader } from '@/components/Table/TableHeader';
 
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
+import { useTestDetails } from '@/api/TestDetails';
+import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
 
 const columns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -112,6 +115,42 @@ interface IBootsTable {
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   onClickFilter: (newFilter: TestsTableFilter) => void;
 }
+
+const TableCellComponent = ({
+  cell,
+  rowId,
+  rowIdx,
+  openLogSheet,
+  getRowLink,
+}: {
+  cell: Cell<TestByCommitHash, unknown>;
+  rowId: TestHistory['id'];
+  rowIdx: number;
+  getRowLink: (testId: TestHistory['id']) => LinkProps;
+  openLogSheet: (index: number) => void;
+}): JSX.Element => {
+  const handleClick = useCallback(
+    () => openLogSheet(rowIdx),
+    [rowIdx, openLogSheet],
+  );
+
+  const parsedHandleClick =
+    cell.column.id === 'status' ? handleClick : undefined;
+  const parsedLinkProps: LinkProps =
+    cell.column.id === 'status' ? { search: s => s } : getRowLink(rowId);
+
+  return (
+    <TableCellWithLink
+      onClick={parsedHandleClick}
+      key={cell.id}
+      linkProps={parsedLinkProps}
+    >
+      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+    </TableCellWithLink>
+  );
+};
+
+const TableCellMemoized = memo(TableCellComponent);
 
 export function BootsTable({
   testHistory,
@@ -248,17 +287,30 @@ export function BootsTable({
   }, [groupHeaders, sorting]);
 
   const modelRows = table.getRowModel().rows;
+
+  const sortedItems = useMemo(
+    (): TestByCommitHash[] => modelRows.map(row => row.original),
+    [modelRows],
+  );
+
+  const [currentLog, setLog] = useState<number | null>(null);
+
+  const onOpenChange = useCallback(() => setLog(null), [setLog]);
+  const openLogSheet = useCallback((index: number) => setLog(index), [setLog]);
+
   const tableRows = useMemo((): JSX.Element[] | JSX.Element => {
     return modelRows?.length ? (
-      modelRows.map(row => (
+      modelRows.map((row, idx) => (
         <TableRow key={row.id}>
-          {row.getVisibleCells().map(cell => (
-            <TableCellWithLink
-              key={cell.id}
-              linkProps={getRowLink(row.original.id)}
-            >
-              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </TableCellWithLink>
+          {row.getVisibleCells().map((cell, cellIdx) => (
+            <TableCellMemoized
+              key={cellIdx}
+              cell={cell}
+              rowId={row.original.id}
+              rowIdx={idx}
+              getRowLink={getRowLink}
+              openLogSheet={openLogSheet}
+            />
           ))}
         </TableRow>
       ))
@@ -269,10 +321,59 @@ export function BootsTable({
         </TableCell>
       </TableRow>
     );
-  }, [getRowLink, modelRows]);
+  }, [modelRows, getRowLink, openLogSheet]);
+
+  const handlePreviousItem = useCallback(() => {
+    setLog(previousLog => {
+      if (typeof previousLog === 'number' && previousLog > 0)
+        return previousLog - 1;
+
+      return previousLog;
+    });
+  }, [setLog]);
+
+  const handleNextItem = useCallback(() => {
+    setLog(previousLog => {
+      if (
+        typeof previousLog === 'number' &&
+        previousLog < sortedItems.length - 1
+      )
+        return previousLog + 1;
+
+      return previousLog;
+    });
+  }, [setLog, sortedItems.length]);
+
+  const { data: dataTest, isLoading } = useTestDetails(
+    sortedItems.length > 0 ? sortedItems[currentLog ?? 0].id : '',
+  );
+
+  const navigationLogsActions = useMemo(
+    () => ({
+      nextItem: handleNextItem,
+      hasNext:
+        typeof currentLog === 'number' && currentLog < sortedItems.length - 1,
+      previousItem: handlePreviousItem,
+      hasPrevious: !!currentLog,
+      isLoading,
+    }),
+    [
+      currentLog,
+      isLoading,
+      sortedItems.length,
+      handleNextItem,
+      handlePreviousItem,
+    ],
+  );
 
   return (
-    <div className="flex flex-col gap-6 pb-4">
+    <WrapperTable
+      currentLog={currentLog ?? undefined}
+      logExcerpt={dataTest?.log_excerpt}
+      logUrl={dataTest?.log_url}
+      navigationLogsActions={navigationLogsActions}
+      onOpenChange={onOpenChange}
+    >
       <div className="flex justify-between">
         <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
         <DebounceInput
@@ -286,6 +387,6 @@ export function BootsTable({
         <TableBody>{tableRows}</TableBody>
       </BaseTable>
       <PaginationInfo table={table} data={data} intlLabel="treeDetails.boots" />
-    </div>
+    </WrapperTable>
   );
 }
