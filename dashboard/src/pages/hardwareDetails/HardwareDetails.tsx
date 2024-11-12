@@ -20,8 +20,12 @@ import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 function HardwareDetails(): JSX.Element {
   const searchParams = useSearch({ from: '/hardware/$hardwareId' });
   const { hardwareId } = useParams({ from: '/hardware/$hardwareId' });
-  const { intervalInDays } = useSearch({ from: '/hardware' });
-  const { data, isLoading } = useHardwareDetails(hardwareId, intervalInDays);
+  const { intervalInDays, origin } = useSearch({ from: '/hardware' });
+  const { data, isLoading } = useHardwareDetails(
+    hardwareId,
+    intervalInDays,
+    origin,
+  );
 
   if (isLoading || !data)
     return (

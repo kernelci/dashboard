@@ -2,14 +2,19 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
+import type { TOrigins } from '@/types/general';
 
 import http from './api';
 
+type fetchHardwareDetailsParams = {
+  intervalInDays: number;
+  origin: TOrigins;
+};
+
 const fetchHardwareDetails = async (
   hardwareId: string,
-  intervalInDays: number,
+  params: fetchHardwareDetailsParams,
 ): Promise<THardwareDetails> => {
-  const params = { intervalInDays };
   const res = await http.get<THardwareDetails>(`/api/hardware/${hardwareId}`, {
     params,
   });
@@ -20,9 +25,11 @@ const fetchHardwareDetails = async (
 export const useHardwareDetails = (
   hardwareId: string,
   intervalInDays: number,
+  origin: TOrigins,
 ): UseQueryResult<THardwareDetails> => {
+  const params = { intervalInDays, origin };
   return useQuery({
-    queryKey: ['HardwareDetails', hardwareId, intervalInDays],
-    queryFn: () => fetchHardwareDetails(hardwareId, intervalInDays),
+    queryKey: ['HardwareDetails', hardwareId, params],
+    queryFn: () => fetchHardwareDetails(hardwareId, params),
   });
 };

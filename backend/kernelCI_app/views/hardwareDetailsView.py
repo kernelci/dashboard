@@ -12,7 +12,7 @@ from kernelCI_app.utils import (
 )
 from kernelCI_app.helpers.date import parseIntervalInDaysGetParameter
 from kernelCI_app.helpers.errorHandling import ExceptionWithJsonResponse
-
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
 
 DEFAULT_DAYS_INTERVAL = 3
 
@@ -103,6 +103,8 @@ def generate_test_dict():
 
 
 class HardwareDetails(View):
+    required_params_get = ["origin"]
+
     def sanitize_records(self, records):
         processed_builds = set()
         builds = {"items": [], "issues": {}}
@@ -162,20 +164,20 @@ class HardwareDetails(View):
         except ExceptionWithJsonResponse as e:
             return e.getJsonResponse()
 
+        origin = request.GET.get("origin", DEFAULT_ORIGIN)
         start_time = timezone.now() - timedelta(days=days_interval)
 
         target_tests = Tests.objects.filter(
-            environment_compatible__contains=[hardware_id], start_time__gte=start_time
+            environment_compatible__contains=[hardware_id],
+            start_time__gte=start_time,
+            origin=origin
         ).values(
             "id",
-            "origin",
-            "environment_comment",
             "environment_misc",
             "path",
             "comment",
             "log_url",
             "status",
-            "waived",
             "start_time",
             "duration",
             "misc",
