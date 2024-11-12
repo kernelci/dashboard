@@ -4,6 +4,7 @@ from django.views import View
 from django.db.models import F
 from django.utils import timezone
 from django.http import JsonResponse
+from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.viewCommon import create_details_build_summary, get_details_issue
 from kernelCI_app.models import Tests
 from kernelCI_app.utils import (
@@ -104,6 +105,7 @@ def generate_test_dict():
 
 class HardwareDetails(View):
     required_params_get = ["origin"]
+    cache_key_get = "hardwareDetailsGET"
 
     def sanitize_records(self, records):
         processed_builds = set()
@@ -156,17 +158,7 @@ class HardwareDetails(View):
 
         return (builds, tests, boots, trees)
 
-    def get(self, request, hardware_id):
-        try:
-            days_interval = parseIntervalInDaysGetParameter(
-                request.GET.get("intervalInDays", DEFAULT_DAYS_INTERVAL)
-            )
-        except ExceptionWithJsonResponse as e:
-            return e.getJsonResponse()
-
-        origin = request.GET.get("origin", DEFAULT_ORIGIN)
-        start_time = timezone.now() - timedelta(days=days_interval)
-
+    def get_records(self, *, hardware_id, origin, start_time):
         target_tests = Tests.objects.filter(
             environment_compatible__contains=[hardware_id],
             start_time__gte=start_time,
@@ -204,6 +196,29 @@ class HardwareDetails(View):
             issue_comment=F("build__incidents__issue__comment"),
             issue_report_url=F("build__incidents__issue__report_url"),
         )
+        return records
+
+    def get(self, request, hardware_id):
+        try:
+            days_interval = parseIntervalInDaysGetParameter(
+                request.GET.get("intervalInDays", DEFAULT_DAYS_INTERVAL)
+            )
+        except ExceptionWithJsonResponse as e:
+            return e.getJsonResponse()
+
+        origin = request.GET.get("origin", DEFAULT_ORIGIN)
+        start_time = timezone.now() - timedelta(days=days_interval)
+        params = {
+            "hardware_id": hardware_id,
+            "origin": origin,
+            "start_time": start_time,
+        }
+
+        records = getQueryCache(self.cache_key_get, params)
+        if not records:
+            records = self.get_records(**params)
+            setQueryCache(self.cache_key_get, params, records)
+
         builds, tests, boots, trees = self.sanitize_records(records)
 
         return JsonResponse(
