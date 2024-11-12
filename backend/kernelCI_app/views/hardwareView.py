@@ -7,14 +7,17 @@ from kernelCI_app.helpers.date import parseIntervalInDaysGetParameter
 from kernelCI_app.helpers.errorHandling import ExceptionWithJsonResponse
 from kernelCI_app.models import Tests
 from kernelCI_app.helpers.build import build_status_map
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
 
 DEFAULT_DAYS_INTERVAL = 3
 
 
 class HardwareView(View):
-    def __getSlowResult(self, start_date):
+    def __getSlowResult(self, start_date, origin):
         tests = Tests.objects.filter(
-            start_time__gte=start_date, environment_compatible__isnull=False
+            start_time__gte=start_date,
+            environment_compatible__isnull=False,
+            origin=origin
         ).values("environment_compatible", "status", "build__valid", "path")
 
         hardware = {}
@@ -43,10 +46,12 @@ class HardwareView(View):
 
         return result
 
-    def __getFastResult(self, start_date):
+    def __getFastResult(self, start_date, origin):
         hardwares = set()
         tests = Tests.objects.filter(
-            start_time__gte=start_date, environment_compatible__isnull=False
+            start_time__gte=start_date,
+            environment_compatible__isnull=False,
+            origin=origin
         ).values("environment_compatible")
 
         for test in tests:
@@ -61,6 +66,7 @@ class HardwareView(View):
 
     def get(self, request):
         mode = request.GET.get("mode", "fast")
+        origin = request.GET.get("origin", DEFAULT_ORIGIN)
         try:
             intervalInDays = parseIntervalInDaysGetParameter(
                 request.GET.get("intervalInDays", DEFAULT_DAYS_INTERVAL)
@@ -70,9 +76,9 @@ class HardwareView(View):
 
         start_date = timezone.now() - datetime.timedelta(days=intervalInDays)
         if mode == "fast":
-            result = self.__getFastResult(start_date)
+            result = self.__getFastResult(start_date, origin)
         elif mode == "slow":
-            result = self.__getSlowResult(start_date)
+            result = self.__getSlowResult(start_date, origin)
         else:
             return JsonResponse({"error": "Invalid mode"}, status=400)
 
