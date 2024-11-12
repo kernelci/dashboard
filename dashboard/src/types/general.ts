@@ -104,3 +104,19 @@ const zIntervalInDaysUncatched = z.number().min(1);
 export const makeZIntervalInDays = (
   defaultValue: number,
 ): z.ZodCatch<z.ZodNumber> => zIntervalInDaysUncatched.catch(defaultValue);
+
+const origins = [
+  '0dayci',
+  'broonie',
+  'maestro',
+  'microsoft',
+  'redhat',
+  'syzbot',
+  'tuxsuite',
+] as const;
+const DEFAULT_ORIGIN = 'maestro';
+
+export type TOrigins = (typeof origins)[number];
+
+export const zOriginEnum = z.enum(origins);
+export const zOrigin = zOriginEnum.catch(DEFAULT_ORIGIN);

@@ -8,12 +8,15 @@ import type {
   HardwareListingResponse,
 } from '@/types/hardware';
 
+import type { TOrigins } from '@/types/general';
+
 import http from './api';
 const fetchTreeCheckoutData = async (
+  origin: TOrigins,
   intervalInDays?: number,
 ): Promise<HardwareListingResponse> => {
   const res = await http.get('/api/hardware/', {
-    params: { intervalInDays, mode: 'slow' },
+    params: { intervalInDays, mode: 'slow', origin },
   });
   return res.data;
 };
@@ -23,33 +26,34 @@ export const useHardwareListingSlow = ({
 }: {
   enabled: boolean;
 }): UseQueryResult<HardwareListingResponse> => {
-  const { intervalInDays } = useSearch({ from: '/hardware' });
+  const { intervalInDays, origin } = useSearch({ from: '/hardware' });
 
-  const queryKey = ['hardwareListing', intervalInDays];
+  const queryKey = ['hardwareListing', intervalInDays, origin];
 
   return useQuery({
     queryKey,
-    queryFn: () => fetchTreeCheckoutData(intervalInDays),
+    queryFn: () => fetchTreeCheckoutData(origin, intervalInDays),
     enabled,
   });
 };
 
 const fetchHardwareListingFastData = async (
+  origin: TOrigins,
   intervalInDays?: number,
 ): Promise<HardwareFastResponse> => {
   const res = await http.get('/api/hardware/', {
-    params: { intervalInDays, mode: 'fast' },
+    params: { intervalInDays, mode: 'fast', origin },
   });
   return res.data;
 };
 
 export const useHardwareListingFast =
   (): UseQueryResult<HardwareFastResponse> => {
-    const { intervalInDays } = useSearch({ from: '/hardware' });
-    const queryKey = ['hardwareListingFast', intervalInDays];
+    const { intervalInDays, origin } = useSearch({ from: '/hardware' });
+    const queryKey = ['hardwareListingFast', intervalInDays, origin];
 
     return useQuery({
       queryKey,
-      queryFn: () => fetchHardwareListingFastData(intervalInDays),
+      queryFn: () => fetchHardwareListingFastData(origin, intervalInDays),
     });
   };

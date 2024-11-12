@@ -4,23 +4,37 @@ import { useSearch, useNavigate, useLocation } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import Select, { SelectItem } from '@/components/Select/Select';
-import type { TOrigins } from '@/types/tree/Tree';
-import { zOrigin, zOriginEnum } from '@/types/tree/Tree';
+import type { TOrigins } from '@/types/general';
+import { zOrigin, zOriginEnum } from '@/types/general';
 
-const OriginSelect = (): JSX.Element => {
+type PossiblePath = '/tree' | '/hardware';
+
+const getTargetPath = (basePath: string): PossiblePath => {
+  switch (basePath) {
+    case 'tree':
+      return '/tree';
+    case 'hardware':
+      return '/hardware';
+    default:
+      return '/tree';
+  }
+};
+
+const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
 
-  const navigate = useNavigate({ from: '/' });
+  const targetPath = getTargetPath(basePath);
+  const navigate = useNavigate({ from: targetPath });
 
   const onValueChange = useCallback(
     (value: TOrigins) => {
       navigate({
-        to: '/',
+        to: targetPath,
         search: previousSearch => ({ ...previousSearch, origin: value }),
       });
     },
-    [navigate],
+    [navigate, targetPath],
   );
 
   const selectItems = useMemo(
@@ -74,7 +88,7 @@ const TopBar = (): JSX.Element => {
         <span className="mr-14 text-2xl">
           <TitleName basePath={basePath} />
         </span>
-        {basePath === 'tree' && <OriginSelect />}
+        <OriginSelect basePath={basePath} />
       </div>
     </div>
   );

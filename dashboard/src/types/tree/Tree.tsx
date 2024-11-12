@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 import type { BuildStatus } from '@/types/general';
 
 export type TreeFastPathResponse = Array<{
@@ -74,19 +72,3 @@ export type Tree = {
     miss: number;
   };
 };
-
-const origins = [
-  '0dayci',
-  'broonie',
-  'maestro',
-  'microsoft',
-  'redhat',
-  'syzbot',
-  'tuxsuite',
-] as const;
-const DEFAULT_ORIGIN = 'maestro';
-
-export type TOrigins = (typeof origins)[number];
-
-export const zOriginEnum = z.enum(origins);
-export const zOrigin = zOriginEnum.catch(DEFAULT_ORIGIN);
