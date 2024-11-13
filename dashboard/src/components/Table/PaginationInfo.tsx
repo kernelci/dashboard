@@ -64,7 +64,9 @@ export function PaginationInfo({
           {startIndex} - {endIndex}
         </span>
         <FormattedMessage id="table.of" />
-        <span className="font-bold">{data.length}</span>
+        <span className="font-bold">
+          {table.getFilteredRowModel().rows.length}
+        </span>
         <FormattedMessage id={intlLabel} defaultMessage="Trees" />
       </div>
       <ItemsPerPageSelector

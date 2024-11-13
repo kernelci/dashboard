@@ -114,6 +114,7 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
     cell: ({ row }): JSX.Element => {
       return buildStatusMap[row.getValue('status') as keyof BuildStatus];
     },
+    filterFn: 'equals',
   },
 ];
 

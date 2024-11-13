@@ -170,6 +170,27 @@ export function TestsTable({
     }
   }, [filter, rawData]);
 
+  const table = useReactTable({
+    data,
+    columns,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getRowCanExpand: _ => true,
+    getExpandedRowModel: getExpandedRowModel(),
+    onExpandedChange: setExpanded,
+    state: {
+      sorting,
+      pagination,
+      expanded,
+    },
+  });
+
+  const { globalFilter } = table.getState();
+
   const filterCount: Record<(typeof possibleTestsTableFilter)[number], number> =
     useMemo(() => {
       const count = {
@@ -179,7 +200,11 @@ export function TestsTable({
         inconclusive: 0,
       };
 
-      rawData.forEach(tests => {
+      const filteredData = globalFilter
+        ? rawData.filter(row => row.path_group.includes(globalFilter))
+        : rawData;
+
+      filteredData.forEach(tests => {
         count.all += tests.total_tests;
         count.success += tests.pass_tests;
         count.failed += tests.fail_tests;
@@ -188,7 +213,7 @@ export function TestsTable({
       });
 
       return count;
-    }, [rawData]);
+    }, [rawData, globalFilter]);
 
   const filters = useMemo(
     () => [
@@ -227,25 +252,6 @@ export function TestsTable({
     ],
     [filterCount, intl, filter],
   );
-
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getRowCanExpand: _ => true,
-    getExpandedRowModel: getExpandedRowModel(),
-    onExpandedChange: setExpanded,
-    state: {
-      sorting,
-      pagination,
-      expanded,
-    },
-  });
 
   const onSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) =>
