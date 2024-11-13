@@ -259,8 +259,8 @@ export function BuildsTable({
   }, [setLog, sortedItems.length]);
 
   const { data: dataBuildCount, isLoading } = useBuildStatusCount(
-    { buildId: sortedItems[currentLog ?? 0].id ?? '' },
-    { enabled: !!sortedItems[currentLog ?? 0].id },
+    { buildId: sortedItems[currentLog ?? 0]?.id ?? '' },
+    { enabled: !!sortedItems[currentLog ?? 0]?.id },
   );
 
   const navigationLogsActions = useMemo(
@@ -297,7 +297,7 @@ export function BuildsTable({
         <Sheet open={currentLog !== null} onOpenChange={onOpenChange}>
           <LogSheet
             logExcerpt={dataBuildCount?.log_excerpt}
-            logUrl={sortedItems[currentLog ?? 0].buildLogs}
+            logUrl={sortedItems[currentLog ?? 0]?.buildLogs}
             navigationLogsActions={navigationLogsActions}
           />
         </Sheet>
