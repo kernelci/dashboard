@@ -13,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { LinkProps } from '@tanstack/react-router';
 
 import { MdChevronRight } from 'react-icons/md';
@@ -64,6 +64,8 @@ const columns: ColumnDef<TestByCommitHash>[] = [
   },
   {
     accessorKey: 'status',
+    filterFn: (row, columnId, filterValue) =>
+      getStatusGroup(row.getValue(columnId)) === filterValue,
     header: ({ column }): JSX.Element =>
       TableHeader({
         column: column,
@@ -181,15 +183,24 @@ export function BootsTable({
     [testHistory],
   );
 
-  const data = useMemo((): TestByCommitHash[] => {
-    const filterToApply = filter;
-    if (filterToApply === 'all') {
-      return rawData?.tests;
-    }
-    return rawData?.tests.filter(test => {
-      return getStatusGroup(test.status) === filterToApply;
-    });
-  }, [filter, rawData?.tests]);
+  const testsData = useMemo(() => rawData.tests, [rawData]);
+
+  const table = useReactTable({
+    data: testsData,
+    columns,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      pagination,
+    },
+  });
+
+  const { globalFilter } = table.getState();
 
   const filterCount: Record<(typeof possibleTestsTableFilter)[number], number> =
     useMemo(() => {
@@ -199,11 +210,18 @@ export function BootsTable({
         failed: 0,
         inconclusive: 0,
       };
-      count.all = rawData.tests.length;
-      rawData.tests.forEach(test => count[getStatusGroup(test.status)]++);
+
+      const rowsOriginal = table
+        .getPrePaginationRowModel()
+        .rows.map(row => row.original);
+
+      const dataFilter = globalFilter ? rowsOriginal : testsData;
+
+      count.all = dataFilter.length;
+      dataFilter.forEach(test => count[getStatusGroup(test.status)]++);
 
       return count;
-    }, [rawData.tests]);
+    }, [testsData, globalFilter, table]);
 
   const checkIfFilterIsSelected = useCallback(
     (possibleFilter: TestsTableFilter): boolean => {
@@ -250,20 +268,11 @@ export function BootsTable({
     [intl, filterCount, checkIfFilterIsSelected],
   );
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      pagination,
-    },
-  });
+  useEffect(() => {
+    table
+      .getColumn('status')
+      ?.setFilterValue(filter !== 'all' ? filter : undefined);
+  }, [filter, table]);
 
   const onSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -386,7 +395,11 @@ export function BootsTable({
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableRows}</TableBody>
       </BaseTable>
-      <PaginationInfo table={table} data={data} intlLabel="treeDetails.boots" />
+      <PaginationInfo
+        table={table}
+        data={table.getPrePaginationRowModel().rows.map(row => row.original)}
+        intlLabel="treeDetails.boots"
+      />
     </WrapperTable>
   );
 }

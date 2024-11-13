@@ -127,6 +127,7 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
         row.getValue('status') as keyof typeof buildStatusMap
       ];
     },
+    filterFn: 'equals',
   },
 ];
 

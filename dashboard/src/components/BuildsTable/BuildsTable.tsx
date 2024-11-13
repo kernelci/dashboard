@@ -16,7 +16,14 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { Fragment, memo, useCallback, useMemo, useState } from 'react';
+import {
+  Fragment,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
@@ -133,17 +140,38 @@ export function BuildsTable({
     }));
   }, [buildItems]);
 
-  const data = useMemo((): AccordionItemBuilds[] => {
-    return filter === 'all'
-      ? rawData
-      : rawData?.filter(row => row.status && row.status === filter);
-  }, [filter, rawData]);
+  const table = useReactTable({
+    data: rawData,
+    columns,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getRowCanExpand: _ => true,
+    getExpandedRowModel: getExpandedRowModel(),
+    onExpandedChange: setExpanded,
+    state: {
+      sorting,
+      pagination,
+      expanded,
+    },
+  });
+
+  const { globalFilter } = table.getState();
 
   const filterCount = useMemo(() => {
+    const rowsOriginal = table
+      .getPrePaginationRowModel()
+      .rows.map(row => row.original);
+
+    const dataFilter = globalFilter ? rowsOriginal : rawData;
+
     const count = possibleBuildsTableFilter.reduce(
       (acc, currentFilter) => {
-        if (rawData)
-          acc[currentFilter] = rawData?.reduce(
+        if (dataFilter)
+          acc[currentFilter] = dataFilter?.reduce(
             (total, row) => (row.status === currentFilter ? total + 1 : total),
             0,
           );
@@ -151,10 +179,10 @@ export function BuildsTable({
       },
       {} as Record<(typeof possibleBuildsTableFilter)[number], number>,
     );
-    count.all = rawData ? rawData.length : 0;
+    count.all = dataFilter ? dataFilter.length : 0;
 
     return count;
-  }, [rawData]);
+  }, [rawData, globalFilter, table]);
 
   const filters = useMemo(
     () => [
@@ -194,24 +222,11 @@ export function BuildsTable({
     [intl, filterCount, filter],
   );
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getRowCanExpand: _ => true,
-    getExpandedRowModel: getExpandedRowModel(),
-    onExpandedChange: setExpanded,
-    state: {
-      sorting,
-      pagination,
-      expanded,
-    },
-  });
+  useEffect(() => {
+    table
+      .getColumn('status')
+      ?.setFilterValue(filter !== 'all' ? filter : undefined);
+  }, [filter, table]);
 
   const onSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -373,7 +388,7 @@ export function BuildsTable({
       </BaseTable>
       <PaginationInfo
         table={table}
-        data={data}
+        data={table.getPrePaginationRowModel().rows.map(row => row.original)}
         intlLabel="treeDetails.builds"
       />
     </WrapperTable>
