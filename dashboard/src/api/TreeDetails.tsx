@@ -51,32 +51,19 @@ const fetchTreeDetailData = async (
   treeSearchParameters: TreeSearchParameters,
   filter: TTreeDetailsFilter | Record<string, never>,
 ): Promise<BuildsTab> => {
-  const searchParam = mapFiltersToUrlSearchParams(filter);
+  const filtersFormatted = mapFiltersKeysToBackendCompatible(filter);
+
+  const params = {
+    origin: treeSearchParameters.origin,
+    git_url: treeSearchParameters.gitUrl,
+    git_branch: treeSearchParameters.gitBranch,
+    ...filtersFormatted,
+  };
 
   assertTreeSearchParameters(treeSearchParameters, 'useBuildsTab');
 
-  searchParam.append('origin', treeSearchParameters.origin);
-  searchParam.append('git_url', treeSearchParameters.gitUrl);
-  searchParam.append('git_branch', treeSearchParameters.gitBranch);
-
-  const res = await http.get(`/api/tree/${treeId}`, { params: searchParam });
+  const res = await http.get(`/api/tree/${treeId}`, { params: params });
   return res.data;
-};
-
-/** @deprecated */
-const mapFiltersToUrlSearchParams = (
-  filter: TTreeDetailsFilter | Record<string, never>,
-): URLSearchParams => {
-  const filterParam = new URLSearchParams();
-
-  Object.keys(filter).forEach(key => {
-    const filterList = filter[key as keyof TTreeDetailsFilter];
-    filterList?.forEach(value =>
-      filterParam.append(`filter_${key}`, value.toString()),
-    );
-  });
-
-  return filterParam;
 };
 
 // TODO, remove this function, is just a step further towards the final implementation
@@ -139,9 +126,6 @@ const fetchTreeTestsData = async (
 
   const res = await http.get<TTreeTestsFullData>(`/api/tree/${treeId}/full`, {
     params: params,
-    paramsSerializer: {
-      indexes: null,
-    },
   });
 
   return res.data;
@@ -264,7 +248,6 @@ const fetchTreeCommitHistory = async (
   gitBranch: string,
   filters: TTreeDetailsFilter,
 ): Promise<TTreeCommitHistoryResponse> => {
-  // TODO: remove deprecated function
   const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
 
   const params = {
