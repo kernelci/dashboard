@@ -37,14 +37,15 @@ const IssuesList = ({ issues, title }: IIssuesList): JSX.Element => {
   ) : (
     <DumbListingContent>
       {issues.map(issue => {
+        const WrapperLink = issue.report_url ? Link : 'div';
         return (
-          <Link key={issue.id} to={issue.report_url} target="_blank">
+          <WrapperLink key={issue.id} to={issue.report_url} target="_blank">
             <ListingItem
               unknown={issue.incidents_info.incidentsCount}
               hasBottomBorder
               text={issue.comment ?? ''}
             />
-          </Link>
+          </WrapperLink>
         );
       })}
     </DumbListingContent>
