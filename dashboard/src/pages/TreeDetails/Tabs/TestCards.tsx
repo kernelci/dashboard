@@ -298,6 +298,7 @@ const IssuesList = ({ issues, title }: IIssuesList): JSX.Element => {
               unknown={issue.incidents_info.incidentsCount}
               hasBottomBorder
               text={issue.comment ?? ''}
+              tooltip={issue.comment}
             />
           </Link>
         );
