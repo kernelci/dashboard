@@ -1,8 +1,11 @@
 import classNames from 'classnames';
 
-import { useCallback } from 'react';
+import { useCallback, Fragment, memo } from 'react';
+
+import type { PropsWithChildren } from 'react';
 
 import ColoredCircle from '../ColoredCircle/ColoredCircle';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../Tooltip';
 
 export interface IListingItem {
   leftIcon?: React.ReactNode;
@@ -14,6 +17,7 @@ export interface IListingItem {
   hasBottomBorder?: boolean;
   showNumber?: boolean;
   onClick?: (item: string) => void;
+  tooltip?: string;
 }
 
 export enum ItemType {
@@ -35,6 +39,7 @@ const ListingItem = ({
   hasBottomBorder,
   showNumber = true,
   onClick,
+  tooltip,
 }: IListingItem): JSX.Element => {
   const hasBorder = hasBottomBorder
     ? '[&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2 [&:not(:last-child)]:mb-2'
@@ -89,21 +94,45 @@ const ListingItem = ({
     <></>
   );
 
+  const TooltipComponent = ({ children }: PropsWithChildren): JSX.Element => {
+    return (
+      <Tooltip>
+        <div className="flex">
+          <TooltipTrigger className="overflow-hidden">
+            {children}
+          </TooltipTrigger>
+
+          <TooltipContent>
+            <span className="text-sm text-black">{tooltip}</span>
+          </TooltipContent>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const TooltipMemoized = memo(TooltipComponent);
+
   const WrapperComponent = onClick ? 'button' : 'div';
+  const TooltipWrapper = tooltip ? TooltipMemoized : Fragment;
 
   return (
-    <WrapperComponent
-      className={classNames('flex flex-row items-center gap-2 pb-1', hasBorder)}
-      onClick={handleOnClick}
-    >
-      {itemError}
-      {itemWarning}
-      {itemSuccess}
-      {itemUnknown}
-      {itemNeutral}
-      {leftIcon}
-      <span className="truncate text-sm text-black">{text}</span>
-    </WrapperComponent>
+    <TooltipWrapper>
+      <WrapperComponent
+        className={classNames(
+          'flex flex-row items-center gap-2 pb-1',
+          hasBorder,
+        )}
+        onClick={handleOnClick}
+      >
+        {itemError}
+        {itemWarning}
+        {itemSuccess}
+        {itemUnknown}
+        {itemNeutral}
+        {leftIcon}
+        <span className="truncate text-sm text-black">{text}</span>
+      </WrapperComponent>
+    </TooltipWrapper>
   );
 };
 

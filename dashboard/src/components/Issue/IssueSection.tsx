@@ -40,6 +40,7 @@ const IssueSection = ({
           <ListingItem
             unknown={issue.incidents_info.incidentsCount}
             text={issue.comment ?? ''}
+            tooltip={issue.comment}
           />
         </Link>
       )),
