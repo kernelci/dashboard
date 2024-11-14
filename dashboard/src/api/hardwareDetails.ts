@@ -7,7 +7,8 @@ import type { TOrigins } from '@/types/general';
 import http from './api';
 
 type fetchHardwareDetailsParams = {
-  intervalInDays: number;
+  startTimestampInSeconds: number;
+  endTimestampInSeconds: number;
   origin: TOrigins;
 };
 
@@ -24,10 +25,11 @@ const fetchHardwareDetails = async (
 
 export const useHardwareDetails = (
   hardwareId: string,
-  intervalInDays: number,
+  startTimestampInSeconds: number,
+  endTimestampInSeconds: number,
   origin: TOrigins,
 ): UseQueryResult<THardwareDetails> => {
-  const params = { intervalInDays, origin };
+  const params = { origin, startTimestampInSeconds, endTimestampInSeconds };
   return useQuery({
     queryKey: ['HardwareDetails', hardwareId, params],
     queryFn: () => fetchHardwareDetails(hardwareId, params),

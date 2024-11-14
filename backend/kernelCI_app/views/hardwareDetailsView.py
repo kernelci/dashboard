@@ -1,18 +1,16 @@
 from collections import defaultdict
-from datetime import timedelta
 from django.views import View
 from django.db.models import F
-from django.utils import timezone
-from django.http import JsonResponse
+from datetime import datetime, timezone
+from django.http import HttpResponseBadRequest, JsonResponse
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.viewCommon import create_details_build_summary, get_details_issue
 from kernelCI_app.models import Tests
 from kernelCI_app.utils import (
     extract_error_message,
     extract_platform,
+    getErrorResponseBody,
 )
-from kernelCI_app.helpers.date import parseIntervalInDaysGetParameter
-from kernelCI_app.helpers.errorHandling import ExceptionWithJsonResponse
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 
 DEFAULT_DAYS_INTERVAL = 3
@@ -161,12 +159,8 @@ class HardwareDetails(View):
 
         return (builds, tests, boots, trees)
 
-    def get_records(self, *, hardware_id, origin, start_time):
-        target_tests = Tests.objects.filter(
-            environment_compatible__contains=[hardware_id],
-            start_time__gte=start_time,
-            origin=origin
-        ).values(
+    def get_records(self, *, hardware_id, origin, start_datetime, end_datetime):
+        records = Tests.objects.values(
             "id",
             "environment_misc",
             "path",
@@ -178,9 +172,7 @@ class HardwareDetails(View):
             "misc",
             "build_id",
             "environment_compatible",
-        )
-
-        records = target_tests.annotate(
+        ).annotate(
             build_architecture=F("build__architecture"),
             build_config_name=F("build__config_name"),
             build_misc=F("build__misc"),
@@ -198,23 +190,29 @@ class HardwareDetails(View):
             issue_id=F("build__incidents__issue__id"),
             issue_comment=F("build__incidents__issue__comment"),
             issue_report_url=F("build__incidents__issue__report_url"),
+        ).filter(
+            environment_compatible__contains=[hardware_id],
+            build__checkout__start_time__gte=start_datetime,
+            build__checkout__start_time__lte=end_datetime,
+            origin=origin
         )
         return records
 
     def get(self, request, hardware_id):
         try:
-            days_interval = parseIntervalInDaysGetParameter(
-                request.GET.get("intervalInDays", DEFAULT_DAYS_INTERVAL)
+            start_datetime = datetime.fromtimestamp(int(request.GET.get('startTimestampInSeconds')), timezone.utc)
+            end_datetime = datetime.fromtimestamp(int(request.GET.get('endTimestampInSeconds')), timezone.utc)
+        except ValueError:
+            return HttpResponseBadRequest(
+                getErrorResponseBody("startTimestampInSeconds and endTimestampInSeconds must be a Unix Timestamp")
             )
-        except ExceptionWithJsonResponse as e:
-            return e.getJsonResponse()
 
         origin = request.GET.get("origin", DEFAULT_ORIGIN)
-        start_time = timezone.now() - timedelta(days=days_interval)
         params = {
             "hardware_id": hardware_id,
             "origin": origin,
-            "start_time": start_time,
+            "start_datetime": start_datetime,
+            "end_datetime": end_datetime,
         }
 
         records = getQueryCache(self.cache_key_get, params)
