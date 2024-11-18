@@ -386,11 +386,7 @@ export function BuildsTable({
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
       </BaseTable>
-      <PaginationInfo
-        table={table}
-        data={table.getPrePaginationRowModel().rows.map(row => row.original)}
-        intlLabel="treeDetails.builds"
-      />
+      <PaginationInfo table={table} intlLabel="treeDetails.builds" />
     </WrapperTable>
   );
 }

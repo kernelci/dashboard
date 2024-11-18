@@ -182,7 +182,7 @@ export function HardwareHeader({ treeItems }: IHardwareHeader): JSX.Element {
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableRows}</TableBody>
       </BaseTable>
-      <PaginationInfo table={table} data={data} intlLabel="global.trees" />
+      <PaginationInfo table={table} intlLabel="global.trees" />
     </div>
   );
 }

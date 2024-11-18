@@ -328,7 +328,7 @@ export function TestsTable({
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableRows}</TableBody>
       </BaseTable>
-      <PaginationInfo table={table} data={data} intlLabel="treeDetails.tests" />
+      <PaginationInfo table={table} intlLabel="treeDetails.tests" />
     </div>
   );
 }

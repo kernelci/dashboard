@@ -4,6 +4,8 @@ import { FormattedMessage } from 'react-intl';
 
 import { MdArrowBackIos, MdArrowForwardIos } from 'react-icons/md';
 
+import { useMemo } from 'react';
+
 import type {
   AccordionItemBuilds,
   TestByCommitHash,
@@ -33,28 +35,26 @@ interface IPaginationInfo {
     | Table<TreeTableBody>
     | Table<HardwareTableItem>
     | Table<Trees>;
-  data:
-    | TestByCommitHash[]
-    | TPathTests[]
-    | AccordionItemBuilds[]
-    | TreeTableBody[]
-    | HardwareTableItem[]
-    | Trees[];
   intlLabel: MessagesKey;
 }
 
 export function PaginationInfo({
   table,
-  data,
   intlLabel,
 }: IPaginationInfo): JSX.Element {
   const buttonsClassName = 'text-blue font-bold';
 
+  const filteredRowModel = table.getFilteredRowModel();
+  const countData = useMemo(
+    () => filteredRowModel.rows.length,
+    [filteredRowModel],
+  );
+
   const pagination = table.getState().pagination;
   const pageIndex = pagination.pageIndex;
   const pageSize = pagination.pageSize;
-  const startIndex = pageIndex * pageSize + 1;
-  const endIndex = Math.min((pageIndex + 1) * pageSize, data.length);
+  const startIndex = countData > 0 ? pageIndex * pageSize + 1 : 0;
+  const endIndex = Math.min((pageIndex + 1) * pageSize, countData);
 
   return (
     <div className="flex flex-row justify-end gap-4 text-sm">
@@ -64,9 +64,7 @@ export function PaginationInfo({
           {startIndex} - {endIndex}
         </span>
         <FormattedMessage id="table.of" />
-        <span className="font-bold">
-          {table.getFilteredRowModel().rows.length}
-        </span>
+        <span className="font-bold">{countData}</span>
         <FormattedMessage id={intlLabel} defaultMessage="Trees" />
       </div>
       <ItemsPerPageSelector
