@@ -44,7 +44,11 @@ function HardwareDetails(): JSX.Element {
             <BreadcrumbLink
               to="/hardware"
               search={previousParams => {
-                return { ...previousParams, searchParams };
+                return {
+                  intervalInDays: previousParams.intervalInDays,
+                  origin: previousParams.origin,
+                  hardwareSearch: previousParams.hardwareSearch,
+                };
               }}
             >
               <FormattedMessage id="hardware.path" />

@@ -218,7 +218,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
         to: '/tree/$treeId',
         params: { treeId: row.original.id },
 
-        search: {
+        search: previousSearch => ({
           tableFilter: {
             bootsTable: possibleTestsTableFilter[0],
             buildsTable: possibleBuildsTableFilter[2],
@@ -234,7 +234,8 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
             commitName: row.original.commitName,
             headCommitHash: row.original.id,
           },
-        },
+          intervalInDays: previousSearch.intervalInDays,
+        }),
       };
     },
     [origin],
