@@ -139,9 +139,15 @@ const columns: ColumnDef<HardwareTableItem>[] = [
 
 interface ITreeTable {
   treeTableRows: HardwareTableItem[];
+  startTimestampInSeconds: number;
+  endTimestampInSeconds: number;
 }
 
-export function HardwareTable({ treeTableRows }: ITreeTable): JSX.Element {
+export function HardwareTable({
+  treeTableRows,
+  startTimestampInSeconds,
+  endTimestampInSeconds,
+}: ITreeTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -149,13 +155,21 @@ export function HardwareTable({ treeTableRows }: ITreeTable): JSX.Element {
     pageSize: 10,
   });
 
-  const getLinkProps = useCallback((row: Row<HardwareTableItem>): LinkProps => {
-    return {
-      to: '/hardware/$hardwareId',
-      params: { hardwareId: row.original.hardwareName },
-      search: previousSearch => previousSearch,
-    };
-  }, []);
+  const getLinkProps = useCallback(
+    (row: Row<HardwareTableItem>): LinkProps => {
+      return {
+        from: '/hardware',
+        to: '/hardware/$hardwareId',
+        params: { hardwareId: row.original.hardwareName },
+        search: previousSearch => ({
+          ...previousSearch,
+          startTimestampInSeconds,
+          endTimestampInSeconds,
+        }),
+      };
+    },
+    [endTimestampInSeconds, startTimestampInSeconds],
+  );
 
   const data = useMemo(() => {
     return treeTableRows;

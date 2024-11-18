@@ -11,6 +11,8 @@ const hardwareDetailsSearchSchema = z.object({
     buildsTable: 'all',
     testsTable: 'all',
   }),
+  startTimestampInSeconds: z.number(),
+  endTimestampInSeconds: z.number(),
 });
 
 export const Route = createFileRoute('/hardware/$hardwareId')({

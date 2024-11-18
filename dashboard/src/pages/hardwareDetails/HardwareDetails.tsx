@@ -17,39 +17,15 @@ import { useHardwareDetails } from '@/api/hardwareDetails';
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 
-const MILISECONDS_IN_ONE_SECOND = 1000;
-
-const get_Timestamps = (
-  intervalInDays: number,
-): {
-  startTimestampInSeconds: number;
-  endTimestampInSeconds: number;
-} => {
-  const currentDate = new Date();
-  currentDate.setDate(currentDate.getDate() - intervalInDays);
-  const startTimestampInSeconds = Math.floor(
-    currentDate.getTime() / MILISECONDS_IN_ONE_SECOND,
-  );
-  const endTimestampInSeconds = Math.floor(
-    Date.now() / MILISECONDS_IN_ONE_SECOND,
-  );
-
-  return { startTimestampInSeconds, endTimestampInSeconds };
-};
-
 function HardwareDetails(): JSX.Element {
   const searchParams = useSearch({ from: '/hardware/$hardwareId' });
   const { hardwareId } = useParams({ from: '/hardware/$hardwareId' });
-  const { intervalInDays, origin } = useSearch({ from: '/hardware' });
-
-  // TODO: actually we will get this from URL soon
-  const { startTimestampInSeconds, endTimestampInSeconds } =
-    get_Timestamps(intervalInDays);
+  const { origin } = useSearch({ from: '/hardware' });
 
   const { data, isLoading } = useHardwareDetails(
     hardwareId,
-    startTimestampInSeconds,
-    endTimestampInSeconds,
+    searchParams.startTimestampInSeconds,
+    searchParams.endTimestampInSeconds,
     origin,
   );
 

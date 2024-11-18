@@ -13,47 +13,85 @@ import type { TOrigins } from '@/types/general';
 import http from './api';
 const fetchTreeCheckoutData = async (
   origin: TOrigins,
-  intervalInDays?: number,
+  startTimestampInSeconds: number,
+  endTimeStampInSeconds: number,
 ): Promise<HardwareListingResponse> => {
   const res = await http.get('/api/hardware/', {
-    params: { intervalInDays, mode: 'slow', origin },
+    params: {
+      startTimestampInSeconds,
+      endTimeStampInSeconds,
+      mode: 'slow',
+      origin,
+    },
   });
   return res.data;
 };
 
-export const useHardwareListingSlow = ({
-  enabled,
-}: {
-  enabled: boolean;
-}): UseQueryResult<HardwareListingResponse> => {
-  const { intervalInDays, origin } = useSearch({ from: '/hardware' });
+export const useHardwareListingSlow = (
+  startTimestampInSeconds: number,
+  endTimestampInSeconds: number,
+  {
+    enabled,
+  }: {
+    enabled: boolean;
+  },
+): UseQueryResult<HardwareListingResponse> => {
+  const { origin } = useSearch({ from: '/hardware' });
 
-  const queryKey = ['hardwareListing', intervalInDays, origin];
+  const queryKey = [
+    'hardwareListing',
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+    origin,
+  ];
 
   return useQuery({
     queryKey,
-    queryFn: () => fetchTreeCheckoutData(origin, intervalInDays),
+    queryFn: () =>
+      fetchTreeCheckoutData(
+        origin,
+        startTimestampInSeconds,
+        endTimestampInSeconds,
+      ),
     enabled,
   });
 };
 
 const fetchHardwareListingFastData = async (
   origin: TOrigins,
-  intervalInDays?: number,
+  startTimestampInSeconds: number,
+  endTimeStampInSeconds: number,
 ): Promise<HardwareFastResponse> => {
   const res = await http.get('/api/hardware/', {
-    params: { intervalInDays, mode: 'fast', origin },
+    params: {
+      startTimestampInSeconds,
+      endTimeStampInSeconds,
+      mode: 'fast',
+      origin,
+    },
   });
   return res.data;
 };
 
-export const useHardwareListingFast =
-  (): UseQueryResult<HardwareFastResponse> => {
-    const { intervalInDays, origin } = useSearch({ from: '/hardware' });
-    const queryKey = ['hardwareListingFast', intervalInDays, origin];
+export const useHardwareListingFast = (
+  startTimestampInSeconds: number,
+  endTimestampInSeconds: number,
+): UseQueryResult<HardwareFastResponse> => {
+  const { origin } = useSearch({ from: '/hardware' });
+  const queryKey = [
+    'hardwareListingFast',
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+    origin,
+  ];
 
-    return useQuery({
-      queryKey,
-      queryFn: () => fetchHardwareListingFastData(origin, intervalInDays),
-    });
-  };
+  return useQuery({
+    queryKey,
+    queryFn: () =>
+      fetchHardwareListingFastData(
+        origin,
+        startTimestampInSeconds,
+        endTimestampInSeconds,
+      ),
+  });
+};

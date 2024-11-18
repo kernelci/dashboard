@@ -1,4 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+import { useSearch } from '@tanstack/react-router';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
@@ -11,6 +13,8 @@ import type {
 } from '@/types/hardware';
 
 import { useHardwareListingFast, useHardwareListingSlow } from '@/api/Hardware';
+
+import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
 
 import { HardwareTable } from './HardwareTable';
 
@@ -28,14 +32,45 @@ function isCompleteHardware(
   );
 }
 
+const calculateTimeStamp = (
+  intervalInDays: number,
+): {
+  startTimestampInSeconds: number;
+  endTimestampInSeconds: number;
+} => {
+  const endTimestampInSeconds = dateObjectToTimestampInSeconds(new Date());
+  const startTimestampInSeconds =
+    endTimestampInSeconds - daysToSeconds(intervalInDays);
+  return { startTimestampInSeconds, endTimestampInSeconds };
+};
+
 const HardwareListingPage = ({
   inputFilter,
 }: HardwareListingPageProps): JSX.Element => {
   //TODO: Combine these 2 hooks inside a single hook
-  const { data: fastData, status: fastStatus } = useHardwareListingFast();
-  const { data, error, isLoading } = useHardwareListingSlow({
-    enabled: fastStatus === 'success' && !!fastData,
+  const { intervalInDays } = useSearch({ from: '/hardware' });
+  const [timestamps, setTimeStamps] = useState(() => {
+    return calculateTimeStamp(intervalInDays);
   });
+
+  const { startTimestampInSeconds, endTimestampInSeconds } = timestamps;
+
+  useEffect(() => {
+    setTimeStamps(calculateTimeStamp(intervalInDays));
+  }, [intervalInDays]);
+
+  const { data: fastData, status: fastStatus } = useHardwareListingFast(
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+  );
+
+  const { data, error, isLoading } = useHardwareListingSlow(
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+    {
+      enabled: fastStatus === 'success' && !!fastData,
+    },
+  );
 
   const listItems: HardwareTableItem[] = useMemo(() => {
     if (!fastData || fastStatus === 'error') return [];
@@ -98,7 +133,11 @@ const HardwareListingPage = ({
     <QuerySwitcher status={fastStatus} data={fastData}>
       <Toaster />
       <div className="flex flex-col gap-6">
-        <HardwareTable treeTableRows={listItems} />
+        <HardwareTable
+          treeTableRows={listItems}
+          startTimestampInSeconds={startTimestampInSeconds}
+          endTimestampInSeconds={endTimestampInSeconds}
+        />
       </div>
     </QuerySwitcher>
   );
