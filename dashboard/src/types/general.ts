@@ -61,6 +61,7 @@ export type BuildsTabBuild = {
   git_repository_url: string;
   misc: ITreeDetailsMisc | null;
   tree_name?: string;
+  tree_index?: number;
 };
 
 export type BuildStatus = {

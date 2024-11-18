@@ -41,10 +41,10 @@ export type Trees = {
   treeName?: string;
   gitRepositoryBranch?: string;
   gitRepositoryUrl?: string;
-  gitCommitName?: string;
-  gitCommitHash?: string;
+  headGitCommitName?: string;
+  headGitCommitHash?: string;
+  index: string;
 };
-
 export type THardwareDetails = {
   builds: BuildsData;
   tests: Tests;

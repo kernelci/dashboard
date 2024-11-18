@@ -1,4 +1,6 @@
 from collections import defaultdict
+import json
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.db.models import F
 from datetime import datetime, timezone
@@ -12,8 +14,10 @@ from kernelCI_app.utils import (
     getErrorResponseBody,
 )
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from django.views.decorators.csrf import csrf_exempt
 
 DEFAULT_DAYS_INTERVAL = 3
+SELECTED_VALUE = 'selected'
 
 
 def properties2List(d, keys):
@@ -33,7 +37,7 @@ def get_arch_summary(record):
     }
 
 
-def get_build(record):
+def get_build(record, tree_idx):
     return {
         "id": record["build_id"],
         "architecture": record["build_architecture"],
@@ -48,6 +52,7 @@ def get_build(record):
         "git_repository_url": record["checkout_git_repository_url"],
         "git_repository_branch": record["checkout_git_repository_branch"],
         "tree_name": record["checkout_tree_name"],
+        "tree_index": tree_idx
     }
 
 
@@ -89,6 +94,18 @@ def is_boot(record):
     return record["path"] == "boot" or record["path"].startswith("boot.")
 
 
+def get_current_selected_tree(record, selected_trees):
+    for tree in selected_trees:
+        if (
+            tree["treeName"] == record["checkout_tree_name"]
+            and tree["gitRepositoryBranch"] == record["checkout_git_repository_branch"]
+            and tree["gitRepositoryUrl"] == record["checkout_git_repository_url"]
+        ):
+            return tree
+
+    return None
+
+
 def generate_test_dict():
     return {
         "history": [],
@@ -101,24 +118,31 @@ def generate_test_dict():
     }
 
 
+# disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
+# that protection is recommended for ‘unsafe’ methods (POST, PUT, and DELETE)
+# but we are using POST here just to follow the convention to use the request body
+# also the csrf protection require the usage of cookies which is not currently
+# supported in this project
+@method_decorator(csrf_exempt, name='dispatch')
 class HardwareDetails(View):
     required_params_get = ["origin"]
     cache_key_get = "hardwareDetailsGET"
 
-    def sanitize_records(self, records):
+    def sanitize_records(self, records, selected_trees):
         processed_builds = set()
-        processed_trees = set()
         builds = {"items": [], "issues": {}}
 
         tests = generate_test_dict()
         boots = generate_test_dict()
-        trees = []
 
         for r in records:
+            current_tree = get_current_selected_tree(r, selected_trees)
+            if not current_tree:
+                continue
+
             build_id = r["build_id"]
             issue_id = r["issue_id"]
             status = r["status"]
-
             tests_or_boots = boots if is_boot(r) else tests
 
             tests_or_boots["history"].append(get_history(r))
@@ -140,12 +164,7 @@ class HardwareDetails(View):
 
             if build_id not in processed_builds:
                 processed_builds.add(build_id)
-                builds["items"].append(get_build(r))
-
-            tree_key = get_tree_key(r)
-            if tree_key not in processed_trees:
-                processed_trees.add(tree_key)
-                trees.append(get_tree(r))
+                builds["items"].append(get_build(r, current_tree["index"]))
 
             if issue_id:
                 currentIssue = get_details_issue(r)
@@ -157,7 +176,49 @@ class HardwareDetails(View):
         properties2List(tests, ["issues", "platformsFailing", "archSummary"])
         properties2List(boots, ["issues", "platformsFailing", "archSummary"])
 
-        return (builds, tests, boots, trees)
+        return (builds, tests, boots)
+
+    def get_trees(self, hardware_id, origin, start_datetime, end_datetime):
+        tree_id_fields = [
+            "build__checkout__tree_name",
+            "build__checkout__git_repository_branch",
+            "build__checkout__git_repository_url",
+        ]
+
+        trees_query_set = Tests.objects.filter(
+            environment_compatible__contains=[hardware_id],
+            origin=origin,
+            build__checkout__start_time__gte=start_datetime,
+            build__checkout__start_time__lte=end_datetime,
+        ).values(
+            *tree_id_fields,
+            "build__checkout__git_commit_name",
+            "build__checkout__git_commit_hash",
+        ).distinct(
+            *tree_id_fields,
+        ).order_by(
+            *tree_id_fields,
+            "-start_time"
+        )
+
+        trees = []
+        for idx, tree in enumerate(trees_query_set):
+            trees.append({
+                "treeName": tree["build__checkout__tree_name"],
+                "gitRepositoryBranch": tree["build__checkout__git_repository_branch"],
+                "gitRepositoryUrl": tree["build__checkout__git_repository_url"],
+                "headGitCommitName": tree["build__checkout__git_commit_name"],
+                "headGitCommitHash": tree["build__checkout__git_commit_hash"],
+                "index": str(idx),
+            })
+
+        return trees
+
+    def get_selected_trees(self, trees, selected_trees):
+        def filter_fn(tree):
+            return selected_trees.get(tree.get('index')) == SELECTED_VALUE
+
+        return list(filter(filter_fn, trees)) if selected_trees else trees
 
     def get_records(self, *, hardware_id, origin, start_datetime, end_datetime):
         records = Tests.objects.values(
@@ -198,24 +259,36 @@ class HardwareDetails(View):
         )
         return records
 
-    def get(self, request, hardware_id):
+    # Using post to receive a body request
+    def post(self, request, hardware_id):
+
         try:
+            body = json.loads(request.body)
+            origin = body.get("origin", DEFAULT_ORIGIN)
             start_datetime = datetime.fromtimestamp(
-                int(request.GET.get('startTimestampInSeconds')),
+                int(body.get('startTimestampInSeconds')),
                 timezone.utc
             )
             end_datetime = datetime.fromtimestamp(
-                int(request.GET.get('endTimestampInSeconds')),
+                int(body.get('endTimestampInSeconds')),
                 timezone.utc
             )
-        except ValueError:
+        except json.JSONDecodeError:
+            return HttpResponseBadRequest(
+                getErrorResponseBody(
+                    "Invalid body, request body must be a valid json string"
+                )
+            )
+        except (ValueError, TypeError):
             return HttpResponseBadRequest(
                 getErrorResponseBody(
                     "startTimestampInSeconds and endTimestampInSeconds must be a Unix Timestamp"
                 )
             )
 
-        origin = request.GET.get("origin", DEFAULT_ORIGIN)
+        trees = self.get_trees(hardware_id, origin, start_datetime, end_datetime)
+        selected_trees = self.get_selected_trees(trees, body.get('selectedTrees', {}))
+
         params = {
             "hardware_id": hardware_id,
             "origin": origin,
@@ -228,7 +301,7 @@ class HardwareDetails(View):
             records = self.get_records(**params)
             setQueryCache(self.cache_key_get, params, records)
 
-        builds, tests, boots, trees = self.sanitize_records(records)
+        builds, tests, boots = self.sanitize_records(records, selected_trees)
 
         return JsonResponse(
             {"builds": builds, "tests": tests, "boots": boots, "trees": trees}, safe=False

@@ -6,7 +6,7 @@ import type { TOrigins } from '@/types/general';
 
 import http from './api';
 
-type fetchHardwareDetailsParams = {
+type fetchHardwareDetailsBody = {
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
   origin: TOrigins;
@@ -14,11 +14,12 @@ type fetchHardwareDetailsParams = {
 
 const fetchHardwareDetails = async (
   hardwareId: string,
-  params: fetchHardwareDetailsParams,
+  body: fetchHardwareDetailsBody,
 ): Promise<THardwareDetails> => {
-  const res = await http.get<THardwareDetails>(`/api/hardware/${hardwareId}`, {
-    params,
-  });
+  const res = await http.post<THardwareDetails>(
+    `/api/hardware/${hardwareId}`,
+    body,
+  );
 
   return res.data;
 };
@@ -29,9 +30,9 @@ export const useHardwareDetails = (
   endTimestampInSeconds: number,
   origin: TOrigins,
 ): UseQueryResult<THardwareDetails> => {
-  const params = { origin, startTimestampInSeconds, endTimestampInSeconds };
+  const body = { origin, startTimestampInSeconds, endTimestampInSeconds };
   return useQuery({
-    queryKey: ['HardwareDetails', hardwareId, params],
-    queryFn: () => fetchHardwareDetails(hardwareId, params),
+    queryKey: ['HardwareDetails', hardwareId, body],
+    queryFn: () => fetchHardwareDetails(hardwareId, body),
   });
 };

@@ -79,7 +79,7 @@ const columns: ColumnDef<Trees>[] = [
       }),
   },
   {
-    accessorKey: 'gitCommitName',
+    accessorKey: 'headGitCommitName',
     header: ({ column }): JSX.Element =>
       TableHeader({
         column: column,
@@ -90,21 +90,22 @@ const columns: ColumnDef<Trees>[] = [
     cell: ({ row }): JSX.Element => (
       <Tooltip>
         <TooltipTrigger>
-          {sanitizeTableValue(row.getValue('gitCommitName'), false)}
+          {sanitizeTableValue(row.getValue('headGitCommitName'), false)}
         </TooltipTrigger>
-        <TooltipContent>{row.original.gitCommitHash}</TooltipContent>
+        <TooltipContent>{row.original.headGitCommitHash}</TooltipContent>
       </Tooltip>
     ),
   },
 ];
 
-const sanitizeTreeItems = (treeItems: Record<string, string>[]): Trees[] => {
+const sanitizeTreeItems = (treeItems: Trees[]): Trees[] => {
   return treeItems.map(tree => ({
-    treeName: tree['tree_name'] ?? '-',
-    gitRepositoryBranch: tree['git_repository_branch'] ?? '-',
-    gitCommitName: tree['git_commit_name'] ?? '-',
-    gitCommitHash: tree['git_commit_hash'],
-    gitRepositoryUrl: tree['git_repository_url'] ?? '-',
+    treeName: tree['treeName'] ?? '-',
+    gitRepositoryBranch: tree['gitRepositoryBranch'] ?? '-',
+    headGitCommitName: tree['headGitCommitName'] ?? '-',
+    headGitCommitHash: tree['headGitCommitHash'],
+    gitRepositoryUrl: tree['gitRepositoryUrl'] ?? '-',
+    index: tree['index'],
   }));
 };
 
