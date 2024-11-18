@@ -316,13 +316,13 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
         </span>
         <div className="flex items-center justify-between gap-10">
           <MemoizedInputTime />
-          <PaginationInfo table={table} data={data} intlLabel="global.trees" />
+          <PaginationInfo table={table} intlLabel="global.trees" />
         </div>
       </div>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
       </BaseTable>
-      <PaginationInfo table={table} data={data} intlLabel="global.trees" />
+      <PaginationInfo table={table} intlLabel="global.trees" />
     </div>
   );
 }

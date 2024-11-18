@@ -395,11 +395,7 @@ export function BootsTable({
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableRows}</TableBody>
       </BaseTable>
-      <PaginationInfo
-        table={table}
-        data={table.getPrePaginationRowModel().rows.map(row => row.original)}
-        intlLabel="treeDetails.boots"
-      />
+      <PaginationInfo table={table} intlLabel="treeDetails.boots" />
     </WrapperTable>
   );
 }
