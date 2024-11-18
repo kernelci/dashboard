@@ -40,7 +40,7 @@ const CodeBlockDialog = ({ children }: PropsWithChildren): JSX.Element => {
         <DialogTrigger asChild className="p-2">
           <Button
             variant="outline"
-            className="absolute right-[10px] top-[10px] opacity-50 hover:opacity-100"
+            className="absolute right-[20px] top-[10px] opacity-50 hover:opacity-100"
           >
             <GoScreenFull size={25} />
           </Button>

@@ -19,23 +19,24 @@ import { TableBody, TableCellWithLink, TableRow } from '@/components/ui/table';
 
 import { useTestDetails } from '@/api/TestDetails';
 import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
+import { cn } from '@/lib/utils';
 
 type GetRowLink = (testId: TestHistory['id']) => LinkProps;
 
 const TableCellComponent = ({
   cell,
-  rowIdx,
+  rowIndex,
   linkProps,
   openLogSheet,
 }: {
   cell: Cell<TIndividualTest, unknown>;
-  rowIdx: number;
+  rowIndex: number;
   linkProps: LinkProps;
   openLogSheet: (index: number) => void;
 }): JSX.Element => {
   const handleClick = useCallback(() => {
-    openLogSheet(rowIdx);
-  }, [rowIdx, openLogSheet]);
+    openLogSheet(rowIndex);
+  }, [rowIndex, openLogSheet]);
 
   const parsedHandleClick =
     cell.column.id === 'status' ? handleClick : undefined;
@@ -58,27 +59,34 @@ const TableCellMemoized = memo(TableCellComponent);
 const TableRowComponent = ({
   row,
   getRowLink,
-  rowIdx,
+  index,
   openLogSheet,
+  currentLog,
 }: {
   row: Row<TIndividualTest>;
-  rowIdx: number;
+  index: number;
   getRowLink: GetRowLink;
+  currentLog?: number;
   openLogSheet: (index: number) => void;
 }): JSX.Element => {
+  const className = index === currentLog ? 'bg-lightBlue' : undefined;
+
   const linkProps: LinkProps = useMemo(() => {
     return getRowLink(row.original.id);
   }, [getRowLink, row.original.id]);
 
   return (
-    <TableRow key={row.id} className="border-b-0 hover:bg-lightBlue">
+    <TableRow
+      key={row.id}
+      className={cn('cursor-pointer border-b-0 hover:bg-lightBlue', className)}
+    >
       {row.getVisibleCells().map((cell, idx) => (
         <TableCellMemoized
           key={idx}
           cell={cell}
           linkProps={linkProps}
           openLogSheet={openLogSheet}
-          rowIdx={rowIdx}
+          rowIndex={index}
         />
       ))}
     </TableRow>
@@ -148,9 +156,9 @@ export function IndividualTestsTable({
     [rows],
   );
 
-  const [currentLog, setLog] = useState<number | null>(null);
+  const [currentLog, setLog] = useState<number | undefined>(undefined);
 
-  const onOpenChange = useCallback(() => setLog(null), [setLog]);
+  const onOpenChange = useCallback(() => setLog(undefined), [setLog]);
   const openLogSheet = useCallback((index: number) => setLog(index), [setLog]);
 
   const tableRows = useMemo((): JSX.Element[] => {
@@ -162,12 +170,13 @@ export function IndividualTestsTable({
           openLogSheet={openLogSheet}
           getRowLink={getRowLink}
           row={row}
-          rowIdx={idx}
+          index={idx}
           key={row.id}
+          currentLog={currentLog}
         />
       );
     });
-  }, [rows, virtualItems, openLogSheet, getRowLink]);
+  }, [virtualItems, rows, openLogSheet, getRowLink, currentLog]);
 
   // if more performance is needed, try using translate as in the example from tanstack virtual instead of padding
   // https://tanstack.com/virtual/latest/docs/framework/react/examples/table
@@ -229,7 +238,7 @@ export function IndividualTestsTable({
 
   return (
     <WrapperTable
-      currentLog={currentLog ?? undefined}
+      currentLog={currentLog}
       logExcerpt={dataTest?.log_excerpt}
       logUrl={dataTest?.log_url}
       navigationLogsActions={navigationLogsActions}

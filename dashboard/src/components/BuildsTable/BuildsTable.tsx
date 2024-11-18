@@ -2,6 +2,7 @@ import type {
   Cell,
   ColumnDef,
   ExpandedState,
+  Header,
   PaginationState,
   Row,
   SortingState,
@@ -35,6 +36,7 @@ import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
 
 import { useBuildStatusCount } from '@/api/TreeDetails';
 import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
+import { cn } from '@/lib/utils';
 
 export interface IBuildsTable {
   buildItems: AccordionItemBuilds[];
@@ -95,8 +97,62 @@ const AccordionBuildContentComponent = ({
   );
 };
 
+const TableRowComponent = ({
+  index,
+  row,
+  groupHeaders,
+  onClickShowBuild,
+  openLogSheet,
+  currentLog,
+  isExpanded,
+}: {
+  index: number;
+  row: Row<AccordionItemBuilds>;
+  currentLog?: number;
+  openLogSheet: (index: number) => void;
+  groupHeaders: Header<AccordionItemBuilds, unknown>[];
+  onClickShowBuild: IAccordionItems['onClickShowBuild'];
+  isExpanded: boolean;
+}): JSX.Element => {
+  const className = index === currentLog ? 'bg-lightBlue' : undefined;
+
+  return (
+    <Fragment key={row.id}>
+      <TableRow
+        className={cn('cursor-pointer hover:bg-lightBlue', className)}
+        data-state={isExpanded ? 'open' : 'closed'}
+      >
+        {row.getVisibleCells().map((cell, cellIdx) => (
+          <TableCellMemoized
+            key={cellIdx}
+            cell={cell}
+            rowIndex={index}
+            row={row}
+            openLogSheet={openLogSheet}
+          />
+        ))}
+      </TableRow>
+      {isExpanded && (
+        <TableRow>
+          <TableCell colSpan={groupHeaders.length} className="p-0">
+            <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
+              <AccordionBuildContentMemoized
+                row={row}
+                rowIndex={index}
+                onClickShowBuild={onClickShowBuild}
+                openLogSheet={openLogSheet}
+              />
+            </div>
+          </TableCell>
+        </TableRow>
+      )}
+    </Fragment>
+  );
+};
+
 const TableCellMemoized = memo(TableCellComponent);
 const AccordionBuildContentMemoized = memo(AccordionBuildContentComponent);
+const TableRowMemoized = memo(TableRowComponent);
 
 export function BuildsTable({
   buildItems,
@@ -241,60 +297,28 @@ export function BuildsTable({
     [modelRows],
   );
 
-  const [currentLog, setLog] = useState<number | null>(null);
+  const [currentLog, setLog] = useState<number | undefined>(undefined);
 
-  const onOpenChange = useCallback(() => setLog(null), [setLog]);
+  const onOpenChange = useCallback(() => setLog(undefined), [setLog]);
   const openLogSheet = useCallback((index: number) => setLog(index), [setLog]);
-
-  const TableRowComponent = ({
-    index,
-    row,
-  }: {
-    index: number;
-    row: Row<AccordionItemBuilds>;
-  }): JSX.Element => {
-    return (
-      <Fragment key={row.id}>
-        <TableRow
-          className="cursor-pointer hover:bg-lightBlue"
-          data-state={row.getIsExpanded() ? 'open' : 'closed'}
-        >
-          {row.getVisibleCells().map((cell, cellIdx) => (
-            <TableCellMemoized
-              key={cellIdx}
-              cell={cell}
-              rowIndex={index}
-              row={row}
-              openLogSheet={openLogSheet}
-            />
-          ))}
-        </TableRow>
-        {row.getIsExpanded() && (
-          <TableRow>
-            <TableCell colSpan={groupHeaders.length} className="p-0">
-              <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
-                <AccordionBuildContentMemoized
-                  row={row}
-                  rowIndex={index}
-                  onClickShowBuild={onClickShowBuild}
-                  openLogSheet={openLogSheet}
-                />
-              </div>
-            </TableCell>
-          </TableRow>
-        )}
-      </Fragment>
-    );
-  };
-
-  const TableRowMemoized = memo(TableRowComponent);
 
   const tableBody = useMemo((): JSX.Element[] | JSX.Element => {
     {
       return modelRows?.length ? (
-        modelRows.map((row, index) => (
-          <TableRowMemoized key={index} index={index} row={row} />
-        ))
+        modelRows.map((row, index) => {
+          return (
+            <TableRowMemoized
+              key={index}
+              index={index}
+              row={row}
+              isExpanded={row.getIsExpanded()}
+              groupHeaders={groupHeaders}
+              onClickShowBuild={onClickShowBuild}
+              openLogSheet={openLogSheet}
+              currentLog={currentLog}
+            />
+          );
+        })
       ) : (
         <TableRow>
           <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -303,7 +327,14 @@ export function BuildsTable({
         </TableRow>
       );
     }
-  }, [columns.length, modelRows, TableRowMemoized]);
+  }, [
+    modelRows,
+    columns.length,
+    groupHeaders,
+    onClickShowBuild,
+    openLogSheet,
+    currentLog,
+  ]);
 
   const handlePreviousItem = useCallback(() => {
     setLog(previousLog => {
@@ -351,7 +382,7 @@ export function BuildsTable({
 
   return (
     <WrapperTable
-      currentLog={currentLog ?? undefined}
+      currentLog={currentLog}
       logExcerpt={dataBuildCount?.log_excerpt}
       logUrl={
         sortedItems.length > 0 ? sortedItems[currentLog ?? 0].buildLogs : ''
