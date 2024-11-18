@@ -2,6 +2,7 @@ import type {
   Cell,
   ColumnDef,
   PaginationState,
+  Row,
   SortingState,
 } from '@tanstack/react-table';
 import {
@@ -50,6 +51,7 @@ import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { useTestDetails } from '@/api/TestDetails';
 import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
+import { cn } from '@/lib/utils';
 
 const columns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -121,19 +123,19 @@ interface IBootsTable {
 const TableCellComponent = ({
   cell,
   rowId,
-  rowIdx,
+  rowIndex,
   openLogSheet,
   getRowLink,
 }: {
   cell: Cell<TestByCommitHash, unknown>;
   rowId: TestHistory['id'];
-  rowIdx: number;
+  rowIndex: number;
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   openLogSheet: (index: number) => void;
 }): JSX.Element => {
   const handleClick = useCallback(
-    () => openLogSheet(rowIdx),
-    [rowIdx, openLogSheet],
+    () => openLogSheet(rowIndex),
+    [rowIndex, openLogSheet],
   );
 
   const parsedHandleClick =
@@ -152,7 +154,42 @@ const TableCellComponent = ({
   );
 };
 
+const TableRowComponent = ({
+  row,
+  index,
+  currentLog,
+  getRowLink,
+  openLogSheet,
+}: {
+  row: Row<TestByCommitHash>;
+  index: number;
+  currentLog?: number;
+  getRowLink: (testId: TestHistory['id']) => LinkProps;
+  openLogSheet: (index: number) => void;
+}): JSX.Element => {
+  const className = index === currentLog ? 'bg-lightBlue' : undefined;
+
+  return (
+    <TableRow
+      className={cn('cursor-pointer hover:bg-lightBlue', className)}
+      key={row.id}
+    >
+      {row.getVisibleCells().map((cell, cellIdx) => (
+        <TableCellMemoized
+          key={cellIdx}
+          cell={cell}
+          rowId={row.original.id}
+          rowIndex={index}
+          getRowLink={getRowLink}
+          openLogSheet={openLogSheet}
+        />
+      ))}
+    </TableRow>
+  );
+};
+
 const TableCellMemoized = memo(TableCellComponent);
+const TableRowMemoized = memo(TableRowComponent);
 
 export function BootsTable({
   testHistory,
@@ -302,26 +339,22 @@ export function BootsTable({
     [modelRows],
   );
 
-  const [currentLog, setLog] = useState<number | null>(null);
+  const [currentLog, setLog] = useState<number | undefined>(undefined);
 
-  const onOpenChange = useCallback(() => setLog(null), [setLog]);
+  const onOpenChange = useCallback(() => setLog(undefined), [setLog]);
   const openLogSheet = useCallback((index: number) => setLog(index), [setLog]);
 
   const tableRows = useMemo((): JSX.Element[] | JSX.Element => {
     return modelRows?.length ? (
       modelRows.map((row, idx) => (
-        <TableRow key={row.id}>
-          {row.getVisibleCells().map((cell, cellIdx) => (
-            <TableCellMemoized
-              key={cellIdx}
-              cell={cell}
-              rowId={row.original.id}
-              rowIdx={idx}
-              getRowLink={getRowLink}
-              openLogSheet={openLogSheet}
-            />
-          ))}
-        </TableRow>
+        <TableRowMemoized
+          getRowLink={getRowLink}
+          openLogSheet={openLogSheet}
+          currentLog={currentLog}
+          key={idx}
+          index={idx}
+          row={row}
+        />
       ))
     ) : (
       <TableRow key="no-results">
@@ -330,7 +363,7 @@ export function BootsTable({
         </TableCell>
       </TableRow>
     );
-  }, [modelRows, getRowLink, openLogSheet]);
+  }, [modelRows, getRowLink, openLogSheet, currentLog]);
 
   const handlePreviousItem = useCallback(() => {
     setLog(previousLog => {
@@ -377,7 +410,7 @@ export function BootsTable({
 
   return (
     <WrapperTable
-      currentLog={currentLog ?? undefined}
+      currentLog={currentLog}
       logExcerpt={dataTest?.log_excerpt}
       logUrl={dataTest?.log_url}
       navigationLogsActions={navigationLogsActions}
