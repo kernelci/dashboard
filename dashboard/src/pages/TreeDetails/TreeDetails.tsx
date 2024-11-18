@@ -226,7 +226,15 @@ function TreeDetails(): JSX.Element {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink to="/tree" search={searchParams}>
+            <BreadcrumbLink
+              to="/tree"
+              search={previousParams => {
+                return {
+                  intervalInDays: previousParams.intervalInDays,
+                  origin: previousParams.origin,
+                };
+              }}
+            >
               <FormattedMessage id="tree.path" />
             </BreadcrumbLink>
           </BreadcrumbItem>
