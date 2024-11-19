@@ -118,6 +118,10 @@ def generate_test_dict():
     }
 
 
+def is_record_in_tree_head(record, tree):
+    return record["checkout_git_commit_hash"] == tree["headGitCommitHash"]
+
+
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
 # that protection is recommended for ‘unsafe’ methods (POST, PUT, and DELETE)
 # but we are using POST here just to follow the convention to use the request body
@@ -137,7 +141,7 @@ class HardwareDetails(View):
 
         for r in records:
             current_tree = get_current_selected_tree(r, selected_trees)
-            if not current_tree:
+            if not current_tree or not is_record_in_tree_head(r, current_tree):
                 continue
 
             build_id = r["build_id"]
