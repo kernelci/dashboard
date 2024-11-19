@@ -2,13 +2,13 @@ from collections import defaultdict
 import json
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.db.models import F
 from datetime import datetime, timezone
 from django.http import HttpResponseBadRequest, JsonResponse
 from kernelCI_app.cache import getQueryCache, setQueryCache
-from kernelCI_app.viewCommon import create_details_build_summary, get_details_issue
+from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.models import Tests
 from kernelCI_app.utils import (
+    create_issue,
     extract_error_message,
     extract_platform,
     getErrorResponseBody,
@@ -31,8 +31,8 @@ def properties2List(d, keys):
 
 def get_arch_summary(record):
     return {
-        "arch": record["build_architecture"],
-        "compiler": record["build_compiler"],
+        "arch": record["build__architecture"],
+        "compiler": record["build__compiler"],
         "status": defaultdict(int)
     }
 
@@ -40,35 +40,35 @@ def get_arch_summary(record):
 def get_build(record, tree_idx):
     return {
         "id": record["build_id"],
-        "architecture": record["build_architecture"],
-        "config_name": record["build_config_name"],
-        "misc": record["build_misc"],
-        "config_url": record["build_config_url"],
-        "compiler": record["build_compiler"],
-        "valid": record["build_valid"],
-        "duration": record["build_duration"],
-        "log_url": record["build_log_url"],
-        "start_time": record["build_start_time"],
-        "git_repository_url": record["checkout_git_repository_url"],
-        "git_repository_branch": record["checkout_git_repository_branch"],
-        "tree_name": record["checkout_tree_name"],
+        "architecture": record["build__architecture"],
+        "config_name": record["build__config_name"],
+        "misc": record["build__misc"],
+        "config_url": record["build__config_url"],
+        "compiler": record["build__compiler"],
+        "valid": record["build__valid"],
+        "duration": record["build__duration"],
+        "log_url": record["build__log_url"],
+        "start_time": record["build__start_time"],
+        "git_repository_url": record["build__checkout__git_repository_url"],
+        "git_repository_branch": record["build__checkout__git_repository_branch"],
+        "tree_name": record["build__checkout__tree_name"],
         "tree_index": tree_idx
     }
 
 
 def get_tree_key(record):
-    return record["checkout_tree_name"] + \
-        record["checkout_git_repository_branch"] + \
-        record["checkout_git_repository_url"]
+    return record["build__checkout__tree_name"] + \
+        record["build__checkout__git_repository_branch"] + \
+        record["build__checkout__git_repository_url"]
 
 
 def get_tree(record):
     return {
-        "tree_name": record["checkout_tree_name"],
-        "git_repository_branch": record["checkout_git_repository_branch"],
-        "git_repository_url": record["checkout_git_repository_url"],
-        "git_commit_name": record["checkout_git_commit_name"],
-        "git_commit_hash": record["checkout_git_commit_hash"],
+        "tree_name": record["build__checkout__tree_name"],
+        "git_repository_branch": record["build__checkout__git_repository_branch"],
+        "git_repository_url": record["build__checkout__git_repository_url"],
+        "git_commit_name": record["build__checkout__git_commit_name"],
+        "git_commit_hash": record["build__checkout__git_commit_hash"],
     }
 
 
@@ -97,13 +97,21 @@ def is_boot(record):
 def get_current_selected_tree(record, selected_trees):
     for tree in selected_trees:
         if (
-            tree["treeName"] == record["checkout_tree_name"]
-            and tree["gitRepositoryBranch"] == record["checkout_git_repository_branch"]
-            and tree["gitRepositoryUrl"] == record["checkout_git_repository_url"]
+            tree["treeName"] == record["build__checkout__tree_name"]
+            and tree["gitRepositoryBranch"] == record["build__checkout__git_repository_branch"]
+            and tree["gitRepositoryUrl"] == record["build__checkout__git_repository_url"]
         ):
             return tree
 
     return None
+
+
+def get_details_issue(record):
+    return create_issue(
+        issue_id=record["build__incidents__issue__id"],
+        issue_comment=record["build__incidents__issue__comment"],
+        issue_report_url=record["build__incidents__issue__report_url"],
+    )
 
 
 def generate_test_dict():
@@ -119,7 +127,7 @@ def generate_test_dict():
 
 
 def is_record_in_tree_head(record, tree):
-    return record["checkout_git_commit_hash"] == tree["headGitCommitHash"]
+    return record["build__checkout__git_commit_hash"] == tree["headGitCommitHash"]
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -145,13 +153,13 @@ class HardwareDetails(View):
                 continue
 
             build_id = r["build_id"]
-            issue_id = r["issue_id"]
+            issue_id = r["build__incidents__issue__id"]
             status = r["status"]
             tests_or_boots = boots if is_boot(r) else tests
 
             tests_or_boots["history"].append(get_history(r))
             tests_or_boots["statusSummary"][r["status"]] += 1
-            tests_or_boots["configs"][r["build_config_name"]][r["status"]] += 1
+            tests_or_boots["configs"][r["build__config_name"]][r["status"]] += 1
 
             if status == "ERROR" or status == "FAIL" or status == "MISS":
                 tests_or_boots["platformsFailing"].add(
@@ -159,7 +167,7 @@ class HardwareDetails(View):
                 )
                 tests_or_boots["failReasons"][extract_error_message(r["misc"])] += 1
 
-            archKey = f'{r["build_architecture"]}{r["build_compiler"]}'
+            archKey = f'{r["build__architecture"]}{r["build__compiler"]}'
             archSummary = tests_or_boots["archSummary"].get(archKey)
             if not archSummary:
                 archSummary = get_arch_summary(r)
@@ -237,24 +245,23 @@ class HardwareDetails(View):
             "misc",
             "build_id",
             "environment_compatible",
-        ).annotate(
-            build_architecture=F("build__architecture"),
-            build_config_name=F("build__config_name"),
-            build_misc=F("build__misc"),
-            build_config_url=F("build__config_url"),
-            build_compiler=F("build__compiler"),
-            build_valid=F("build__valid"),
-            build_duration=F("build__duration"),
-            build_log_url=F("build__log_url"),
-            build_start_time=F("build__start_time"),
-            checkout_git_repository_url=F("build__checkout__git_repository_url"),
-            checkout_git_repository_branch=F("build__checkout__git_repository_branch"),
-            checkout_git_commit_name=F("build__checkout__git_commit_name"),
-            checkout_git_commit_hash=F("build__checkout__git_commit_hash"),
-            checkout_tree_name=F("build__checkout__tree_name"),
-            issue_id=F("build__incidents__issue__id"),
-            issue_comment=F("build__incidents__issue__comment"),
-            issue_report_url=F("build__incidents__issue__report_url"),
+            "build__architecture",
+            "build__config_name",
+            "build__misc",
+            "build__config_url",
+            "build__compiler",
+            "build__valid",
+            "build__duration",
+            "build__log_url",
+            "build__start_time",
+            "build__checkout__git_repository_url",
+            "build__checkout__git_repository_branch",
+            "build__checkout__git_commit_name",
+            "build__checkout__git_commit_hash",
+            "build__checkout__tree_name",
+            "build__incidents__issue__id",
+            "build__incidents__issue__comment",
+            "build__incidents__issue__report_url"
         ).filter(
             environment_compatible__contains=[hardware_id],
             build__checkout__start_time__gte=start_datetime,
