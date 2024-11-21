@@ -10,6 +10,7 @@ type fetchHardwareDetailsBody = {
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
   origin: TOrigins;
+  selectedTrees: Record<string, string>;
 };
 
 const fetchHardwareDetails = async (
@@ -24,13 +25,30 @@ const fetchHardwareDetails = async (
   return res.data;
 };
 
+const mapIndexesToSelectedTrees = (
+  selectedIndexes: number[],
+): Record<number, string> => {
+  return Object.fromEntries(
+    Array.from(selectedIndexes, index => [index.toString(), 'selected']),
+  );
+};
+
 export const useHardwareDetails = (
   hardwareId: string,
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
   origin: TOrigins,
+  selectedIndexes: number[],
 ): UseQueryResult<THardwareDetails> => {
-  const body = { origin, startTimestampInSeconds, endTimestampInSeconds };
+  const selectedTrees = mapIndexesToSelectedTrees(selectedIndexes);
+
+  const body: fetchHardwareDetailsBody = {
+    origin,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+    selectedTrees,
+  };
+
   return useQuery({
     queryKey: ['HardwareDetails', hardwareId, body],
     queryFn: () => fetchHardwareDetails(hardwareId, body),

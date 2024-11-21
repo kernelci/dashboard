@@ -1,6 +1,8 @@
-import { useParams, useSearch } from '@tanstack/react-router';
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage } from 'react-intl';
+
+import { useCallback, useMemo } from 'react';
 
 import {
   Breadcrumb,
@@ -14,19 +16,52 @@ import {
 import { Skeleton } from '@/components/Skeleton';
 import { useHardwareDetails } from '@/api/hardwareDetails';
 
+import type { Trees } from '@/types/hardware/hardwareDetails';
+
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 
+const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
+  treeItems.map(tree => ({
+    treeName: tree['treeName'] ?? '-',
+    gitRepositoryBranch: tree['gitRepositoryBranch'] ?? '-',
+    headGitCommitName: tree['headGitCommitName'] ?? '-',
+    headGitCommitHash: tree['headGitCommitHash'] ?? '-',
+    gitRepositoryUrl: tree['gitRepositoryUrl'] ?? '-',
+    index: tree['index'],
+  }));
+
 function HardwareDetails(): JSX.Element {
-  const searchParams = useSearch({ from: '/hardware/$hardwareId' });
+  const { treeIndexes, startTimestampInSeconds, endTimestampInSeconds } =
+    useSearch({ from: '/hardware/$hardwareId' });
   const { hardwareId } = useParams({ from: '/hardware/$hardwareId' });
   const { origin } = useSearch({ from: '/hardware' });
 
+  const navigate = useNavigate({ from: '/hardware/$hardwareId' });
+
+  const updateTreeFilters = useCallback(
+    (selectedIndexes: number[]) => {
+      navigate({
+        search: previousSearch => ({
+          ...previousSearch,
+          treeIndexes: selectedIndexes,
+        }),
+      });
+    },
+    [navigate],
+  );
+
   const { data, isLoading } = useHardwareDetails(
     hardwareId,
-    searchParams.startTimestampInSeconds,
-    searchParams.endTimestampInSeconds,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
     origin,
+    treeIndexes ?? [],
+  );
+
+  const treeData = useMemo(
+    () => sanitizeTreeItems(data?.trees || []),
+    [data?.trees],
   );
 
   if (isLoading || !data)
@@ -63,7 +98,11 @@ function HardwareDetails(): JSX.Element {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="mt-5">
-        <HardwareHeader treeItems={data.trees} />
+        <HardwareHeader
+          treeItems={treeData}
+          selectedIndexes={treeIndexes}
+          updateTreeFilters={updateTreeFilters}
+        />
         <HardwareDetailsTabs
           HardwareDetailsData={data}
           hardwareId={hardwareId}
