@@ -9,7 +9,7 @@ import type {
   BuildCountsResponse,
 } from '@/types/tree/TreeDetails';
 
-import { useBuildStatusCount } from '@/api/TreeDetails';
+import { useBuildStatusCount } from '@/api/treeDetails';
 
 import type { IStatusChart } from '@/components/StatusChart/StatusCharts';
 import StatusChartMemoized, {

@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 import type { HardwareTableItem } from '@/types/hardware';
 
-import { useHardwareListing } from '@/api/Hardware';
+import { useHardwareListing } from '@/api/hardware';
 
 import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
 

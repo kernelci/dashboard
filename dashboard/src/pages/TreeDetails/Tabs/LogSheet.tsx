@@ -16,7 +16,7 @@ import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { truncateBigText } from '@/lib/string';
-import { useLogFiles } from '@/api/TreeDetails';
+import { useLogFiles } from '@/api/treeDetails';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { LogFile } from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/ui/skeleton';

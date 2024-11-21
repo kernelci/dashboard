@@ -10,7 +10,7 @@ import type { LinkProps } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
 import type { ISection } from '@/components/Section/Section';
-import { useBuildDetails, useBuildIssues } from '@/api/BuildDetails';
+import { useBuildDetails, useBuildIssues } from '@/api/buildDetails';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
 import { formatDate } from '@/utils/utils';

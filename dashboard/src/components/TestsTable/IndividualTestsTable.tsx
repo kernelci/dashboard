@@ -17,7 +17,7 @@ import type { TestHistory, TIndividualTest } from '@/types/general';
 import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
 import { TableBody, TableCellWithLink, TableRow } from '@/components/ui/table';
 
-import { useTestDetails } from '@/api/TestDetails';
+import { useTestDetails } from '@/api/testDetails';
 import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
 import { cn } from '@/lib/utils';
 

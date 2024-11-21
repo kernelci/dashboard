@@ -41,7 +41,7 @@ import type {
 } from '@/types/tree/TreeDetails';
 import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
 
-import { useBuildStatusCount } from '@/api/TreeDetails';
+import { useBuildStatusCount } from '@/api/treeDetails';
 import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
 import { cn } from '@/lib/utils';
 

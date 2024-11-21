@@ -5,7 +5,7 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { useCallback } from 'react';
 
-import { useTestsTab } from '@/api/TreeDetails';
+import { useTestsTab } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 import { Skeleton } from '@/components/Skeleton';
 

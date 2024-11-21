@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { Colors } from '@/components/StatusChart/StatusCharts';
 import { LineChart } from '@/components/LineChart';
 import BaseCard from '@/components/Cards/BaseCard';
-import { useTreeCommitHistory } from '@/api/TreeDetails';
+import { useTreeCommitHistory } from '@/api/treeDetails';
 import type { TLineChartProps } from '@/components/LineChart/LineChart';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { MessagesKey } from '@/locales/messages';

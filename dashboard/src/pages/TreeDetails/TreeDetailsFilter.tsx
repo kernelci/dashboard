@@ -20,7 +20,7 @@ import type {
   TTreeDetailsFilter,
 } from '@/types/tree/TreeDetails';
 import { isTFilterObjectKeys } from '@/types/tree/TreeDetails';
-import { useBuildsTab, useTestsTab } from '@/api/TreeDetails';
+import { useBuildsTab, useTestsTab } from '@/api/treeDetails';
 import { Skeleton } from '@/components/Skeleton';
 import type { TRequestFiltersValues } from '@/utils/filters';
 
