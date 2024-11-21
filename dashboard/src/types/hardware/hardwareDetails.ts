@@ -100,3 +100,40 @@ export const zDiffFilter = z
     z.record(z.never()),
   ])
   .catch({});
+
+export type TFilter = z.infer<typeof zDiffFilter>;
+export type TFilterObjectsKeys = z.infer<typeof zFilterObjectsKeys>;
+export type TFilterNumberKeys = z.infer<typeof zFilterNumberKeys>;
+
+export const isTFilterObjectKeys = (key: string): key is TFilterObjectsKeys => {
+  return zFilterObjectsKeys.safeParse(key).success;
+};
+
+export const isTFilterNumberKeys = (key: string): key is TFilterNumberKeys => {
+  return zFilterNumberKeys.safeParse(key).success;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const requestFilters = {
+  test: [
+    'test.status',
+    'test.duration_[gte]',
+    'test.duration_[lte]',
+    'boot.status',
+    'boot.duration_[gte]',
+    'boot.duration_[lte]',
+  ],
+  hardwareDetails: [
+    'hardwareDetails.trees',
+    'hardwareDetails.config_name',
+    'hardwareDetails.architecture',
+    'hardwareDetails.compiler',
+    'hardwareDetails.valid',
+    'hardwareDetails.duration_[gte]',
+    'hardwareDetails.duration_[lte]',
+  ],
+} as const;
+
+type TRequestFiltersKey = keyof typeof requestFilters;
+export type TRequestFiltersValues =
+  (typeof requestFilters)[TRequestFiltersKey][number];
