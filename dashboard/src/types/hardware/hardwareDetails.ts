@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import type {
   ArchCompilerStatus,
   BuildsTabBuild,
@@ -51,3 +53,48 @@ export type THardwareDetails = {
   boots: Tests;
   trees: Trees[];
 };
+
+// TODO: move to general types
+const zFilterBoolValue = z.record(z.boolean()).optional();
+const zFilterNumberValue = z.number().optional();
+
+export const zFilterObjectsKeys = z.enum([
+  'configs',
+  'archs',
+  'compilers',
+  'buildStatus',
+  'bootStatus',
+  'testStatus',
+]);
+export const zFilterNumberKeys = z.enum([
+  'buildDurationMin',
+  'buildDurationMax',
+  'bootDurationMin',
+  'bootDurationMax',
+  'testDurationMin',
+  'testDurationMax',
+]);
+
+export type TFilterKeys =
+  | z.infer<typeof zFilterObjectsKeys>
+  | z.infer<typeof zFilterNumberKeys>;
+
+export const zDiffFilter = z
+  .union([
+    z.object({
+      configs: zFilterBoolValue,
+      archs: zFilterBoolValue,
+      buildStatus: zFilterBoolValue,
+      compilers: zFilterBoolValue,
+      bootStatus: zFilterBoolValue,
+      testStatus: zFilterBoolValue,
+      buildDurationMax: zFilterNumberValue,
+      buildDurationMin: zFilterNumberValue,
+      bootDurationMin: zFilterNumberValue,
+      bootDurationMax: zFilterNumberValue,
+      testDurationMin: zFilterNumberValue,
+      testDurationMax: zFilterNumberValue,
+    } satisfies Record<TFilterKeys, unknown>),
+    z.record(z.never()),
+  ])
+  .catch({});

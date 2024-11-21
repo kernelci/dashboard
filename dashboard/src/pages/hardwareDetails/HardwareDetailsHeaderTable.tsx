@@ -1,6 +1,7 @@
 import type {
   ColumnDef,
   PaginationState,
+  RowSelectionState,
   SortingState,
 } from '@tanstack/react-table';
 import {
@@ -12,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -23,35 +24,43 @@ import type { Trees } from '@/types/hardware/hardwareDetails';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { sanitizeTableValue } from '@/components/Table/tableUtils';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
-// import { IndeterminateCheckbox } from '@/components/Checkbox/IndeterminateCheckbox';
+import { IndeterminateCheckbox } from '@/components/Checkbox/IndeterminateCheckbox';
+import { useDebounce } from '@/hooks/useDebounce';
+
+const DEBOUNCE_INTERVAL = 1000;
 
 interface IHardwareHeader {
   treeItems: Trees[];
+  selectedIndexes?: number[];
+  updateTreeFilters: (selectedIndexes: number[]) => void;
 }
 
 const columns: ColumnDef<Trees>[] = [
-  // {
-  //   id: 'select',
-  //   header: ({ table }) => (
-  //     <IndeterminateCheckbox
-  //       {...{
-  //         checked: table.getIsAllRowsSelected(),
-  //         indeterminate: table.getIsSomeRowsSelected(),
-  //         onChange: table.getToggleAllRowsSelectedHandler(),
-  //         disabled: true,
-  //       }}
-  //     />
-  //   ),
-  //   cell: ({ row }) => (
-  //     <IndeterminateCheckbox
-  //       {...{
-  //         checked: row.getIsSelected(),
-  //         disabled: !row.getCanSelect(),
-  //         onChange: row.getToggleSelectedHandler(),
-  //       }}
-  //     />
-  //   ),
-  // },
+  {
+    id: 'select',
+    header: ({ table }) => (
+      <IndeterminateCheckbox
+        {...{
+          checked: table.getIsAllRowsSelected(),
+          indeterminate: table.getIsSomeRowsSelected(),
+          onChange: table.getToggleAllRowsSelectedHandler(),
+          disabled: table.getIsAllRowsSelected(),
+        }}
+      />
+    ),
+    cell: ({ row, table }) => (
+      <IndeterminateCheckbox
+        {...{
+          checked: row.getIsSelected(),
+          disabled:
+            !row.getCanSelect() ||
+            (Object.keys(table.getState().rowSelection).length === 1 &&
+              row.getIsSelected()),
+          onChange: row.getToggleSelectedHandler(),
+        }}
+      />
+    ),
+  },
   {
     accessorKey: 'treeName',
     header: ({ column }): JSX.Element =>
@@ -98,18 +107,39 @@ const columns: ColumnDef<Trees>[] = [
   },
 ];
 
-const sanitizeTreeItems = (treeItems: Trees[]): Trees[] => {
-  return treeItems.map(tree => ({
-    treeName: tree['treeName'] ?? '-',
-    gitRepositoryBranch: tree['gitRepositoryBranch'] ?? '-',
-    headGitCommitName: tree['headGitCommitName'] ?? '-',
-    headGitCommitHash: tree['headGitCommitHash'],
-    gitRepositoryUrl: tree['gitRepositoryUrl'] ?? '-',
-    index: tree['index'],
-  }));
+const getInitialRowSelection = (
+  selectedIndexes: number[],
+  treeItemsLength: number,
+): Record<string, boolean> => {
+  if (selectedIndexes.length === 0) {
+    return Object.fromEntries(
+      Array.from({ length: treeItemsLength }, (_, i) => [i.toString(), true]),
+    );
+  }
+  return Object.fromEntries(
+    Array.from(selectedIndexes, treeIndex => [treeIndex.toString(), true]),
+  );
 };
 
-export function HardwareHeader({ treeItems }: IHardwareHeader): JSX.Element {
+const indexesFromRowSelection = (
+  rowSelection: RowSelectionState,
+  maxTreeItems: number,
+): number[] => {
+  const rowSelectionValues = Object.values(rowSelection);
+  if (
+    rowSelectionValues.length === maxTreeItems ||
+    rowSelectionValues.length === 0
+  ) {
+    return [];
+  }
+  return Object.keys(rowSelection).map(rowId => parseInt(rowId));
+};
+
+export function HardwareHeader({
+  treeItems,
+  selectedIndexes = [],
+  updateTreeFilters,
+}: IHardwareHeader): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'treeName', desc: false },
   ]);
@@ -117,14 +147,23 @@ export function HardwareHeader({ treeItems }: IHardwareHeader): JSX.Element {
     pageIndex: 0,
     pageSize: 5,
   });
-  // const [rowSelection, setRowSelection] = useState({});
 
-  const data = useMemo(() => {
-    return sanitizeTreeItems(treeItems);
-  }, [treeItems]);
+  const [rowSelection, setRowSelection] = useState(() =>
+    getInitialRowSelection(selectedIndexes, treeItems.length),
+  );
+
+  const rowSelectionDebounced = useDebounce(rowSelection, DEBOUNCE_INTERVAL);
+
+  useEffect(() => {
+    const updatedSelection = indexesFromRowSelection(
+      rowSelectionDebounced,
+      treeItems.length,
+    );
+    updateTreeFilters(updatedSelection);
+  }, [rowSelectionDebounced, treeItems.length, updateTreeFilters]);
 
   const table = useReactTable({
-    data,
+    data: treeItems,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -132,12 +171,13 @@ export function HardwareHeader({ treeItems }: IHardwareHeader): JSX.Element {
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
     getFilteredRowModel: getFilteredRowModel(),
-    // enableRowSelection: false,
-    // onRowSelectionChange: setRowSelection,
+    getRowId: originalRow => originalRow.index,
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       pagination,
-      // rowSelection,
+      rowSelection,
     },
   });
 
@@ -154,7 +194,7 @@ export function HardwareHeader({ treeItems }: IHardwareHeader): JSX.Element {
     });
     // TODO: remove exhaustive-deps and change memo  (all tables)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupHeaders, sorting /*, rowSelection*/]);
+  }, [groupHeaders, sorting, rowSelection]);
 
   const modelRows = table.getRowModel().rows;
   const tableRows = useMemo((): JSX.Element[] | JSX.Element => {
@@ -176,7 +216,7 @@ export function HardwareHeader({ treeItems }: IHardwareHeader): JSX.Element {
       </TableRow>
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modelRows /*, rowSelection*/]);
+  }, [modelRows, rowSelection]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
