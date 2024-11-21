@@ -1,4 +1,5 @@
 import React from 'react';
+import type { MessageDescriptor } from 'react-intl';
 import { FormattedMessage } from 'react-intl';
 import { IoChevronDown, IoClose } from 'react-icons/io5';
 
@@ -16,8 +17,12 @@ import {
 import { Separator } from '../ui/separator';
 import ButtonWithIcon from '../Button/ButtonWithIcon';
 
-interface IDrawerLink {
-  treeURL: string;
+export interface IDrawerLink {
+  link: {
+    title: MessageDescriptor['id'];
+    value: string;
+    url?: string;
+  };
 }
 
 interface IFilterDrawer extends IDrawerLink {
@@ -46,19 +51,20 @@ const DrawerHeader = (): JSX.Element => {
   );
 };
 
-const DrawerLink = ({ treeURL }: IDrawerLink): JSX.Element => {
+const DrawerLink = ({ link }: IDrawerLink): JSX.Element => {
   return (
     <div className="mb-8 flex items-center justify-between">
       <div className="flex h-[52px] w-full flex-col border border-darkGray bg-white px-4 py-2">
         <span className="text-xs text-darkGray2">
-          <FormattedMessage id="filter.treeURL" />
+          <FormattedMessage id={link.title} />
         </span>
         <a
           className="text-base text-dimBlack underline"
-          href={treeURL}
-          target="_bank"
+          href={link.url ?? '#'}
+          target={link.url ? '_blank' : undefined}
+          rel="noreferrer"
         >
-          {treeURL}
+          {link.value}
         </a>
       </div>
     </div>
@@ -81,7 +87,7 @@ export const DrawerSection = ({
 };
 
 const Drawer = ({
-  treeURL,
+  link,
   children,
   onCancel,
   onFilter,
@@ -99,7 +105,7 @@ const Drawer = ({
       <DrawerContent className="flex max-h-screen items-center bg-lightGray px-4">
         <DrawerHeader />
         <section className="max-h-full overflow-y-auto">
-          <DrawerLink treeURL={treeURL} />
+          <DrawerLink link={link} />
           <div className="w-[1000px] rounded-lg bg-white">
             {React.Children.map(children, child => (
               <>{child}</>
