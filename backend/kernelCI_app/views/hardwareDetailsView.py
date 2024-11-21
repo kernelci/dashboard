@@ -210,7 +210,7 @@ class HardwareDetails(View):
             *tree_id_fields,
         ).order_by(
             *tree_id_fields,
-            "-start_time"
+            "-build__checkout__start_time"
         )
 
         trees = []
