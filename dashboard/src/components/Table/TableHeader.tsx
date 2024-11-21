@@ -2,7 +2,7 @@ import type { Column } from '@tanstack/react-table';
 
 import { FormattedMessage } from 'react-intl';
 
-import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { LiaQuestionCircle } from 'react-icons/lia';
 
 import { z } from 'zod';
@@ -12,28 +12,11 @@ import { useCallback } from 'react';
 import type { MessagesKey } from '@/locales/messages';
 import { formattedBreakLineValue } from '@/locales/messages';
 
-import type { TIndividualTest, TPathTests } from '@/types/general';
-import type {
-  AccordionItemBuilds,
-  TestByCommitHash,
-} from '@/types/tree/TreeDetails';
-import type { TreeTableBody } from '@/types/tree/Tree';
-import type { Trees } from '@/types/hardware/hardwareDetails';
-
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
-import type { HardwareTableItem } from '@/types/hardware';
+import { Button } from '@/components/ui/button';
 
-interface ITableHeader {
-  // TODO Use Generic
-  column:
-    | Column<TIndividualTest>
-    | Column<TestByCommitHash>
-    | Column<TPathTests>
-    | Column<AccordionItemBuilds>
-    | Column<TreeTableBody>
-    | Column<HardwareTableItem>
-    | Column<Trees>;
+export interface ITableHeader<T> {
+  column: Column<T>;
   sortable: boolean;
   intlKey: MessagesKey;
   intlDefaultMessage: string;
@@ -52,13 +35,13 @@ const sortedArrow = {
   false: <ArrowUpDown className={arrowClassName} color="gray" />,
 };
 
-export function TableHeader({
+export const TableHeader = <T,>({
   column,
   sortable,
   intlKey,
   intlDefaultMessage,
   tooltipId,
-}: ITableHeader): JSX.Element {
+}: ITableHeader<T>): JSX.Element => {
   const headerSort = useCallback(() => {
     if (sortable)
       if (column.getIsSorted() === 'asc') {
@@ -97,4 +80,4 @@ export function TableHeader({
       )}
     </span>
   );
-}
+};
