@@ -5,8 +5,6 @@ import { useCallback } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import MemoizedStatusChart from '@/components/Cards/StatusChart';
-import MemoizedConfigList from '@/components/Cards/ConfigsList';
-import MemoizedErrorsSummary from '@/components/Cards/ErrorsSummary';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
 import {
@@ -18,6 +16,8 @@ import {
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
+
+import { MemoizedConfigList, MemoizedErrorsSummary } from '../Boots/BootsTab';
 
 import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
