@@ -1,6 +1,7 @@
 import { useSearch } from '@tanstack/react-router';
 
 import type { TFilter, TFilterObjectsKeys } from '@/types/tree/TreeDetails';
+
 import {
   isTFilterObjectKeys,
   isTFilterNumberKeys,
@@ -37,7 +38,7 @@ export const useDiffFilterParams = (
   filterSection: TFilterObjectsKeys,
 ): TFilter => {
   const { diffFilter: currentDiffFilter } = useSearch({
-    strict: false,
+    from: '/tree/$treeId/',
   });
 
   if (!currentDiffFilter) return {};

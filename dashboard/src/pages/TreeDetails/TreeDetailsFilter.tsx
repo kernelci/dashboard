@@ -5,6 +5,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate, useParams } from '@tanstack/react-router';
 
 import { status as testStatuses } from '@/utils/constants/database';
+import type { IDrawerLink } from '@/components/Filter/Drawer';
 import FilterDrawer, { DrawerSection } from '@/components/Filter/Drawer';
 import type { ICheckboxSection } from '@/components/Filter/CheckboxSection';
 import FilterCheckboxSection from '@/components/Filter/CheckboxSection';
@@ -385,9 +386,18 @@ const TreeDetailsFilter = ({
     [paramFilter],
   );
 
+  const drawerLink: IDrawerLink['link'] = useMemo(
+    () => ({
+      title: 'filter.hardware',
+      value: treeUrl,
+      url: treeUrl,
+    }),
+    [treeUrl],
+  );
+
   return (
     <FilterDrawer
-      treeURL={treeUrl}
+      link={drawerLink}
       onFilter={onClickFilterHandle}
       onOpenChange={handleOpenChange}
       onCancel={onClickCancel}
