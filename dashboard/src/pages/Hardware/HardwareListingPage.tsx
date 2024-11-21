@@ -6,13 +6,9 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 import { Toaster } from '@/components/ui/toaster';
 
-import type {
-  HardwareFastItem,
-  HardwareListingItem,
-  HardwareTableItem,
-} from '@/types/hardware';
+import type { HardwareTableItem } from '@/types/hardware';
 
-import { useHardwareListingFast, useHardwareListingSlow } from '@/api/Hardware';
+import { useHardwareListing } from '@/api/Hardware';
 
 import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
 
@@ -20,16 +16,6 @@ import { HardwareTable } from './HardwareTable';
 
 interface HardwareListingPageProps {
   inputFilter: string;
-}
-
-function isCompleteHardware(
-  data: HardwareListingItem | HardwareFastItem,
-): data is HardwareListingItem {
-  return (
-    'buildCount' in data &&
-    'testStatusCount' in data &&
-    'bootStatusCount' in data
-  );
 }
 
 const calculateTimeStamp = (
@@ -59,61 +45,46 @@ const HardwareListingPage = ({
     setTimeStamps(calculateTimeStamp(intervalInDays));
   }, [intervalInDays]);
 
-  const { data: fastData, status: fastStatus } = useHardwareListingFast(
+  const { data, error, status } = useHardwareListing(
     startTimestampInSeconds,
     endTimestampInSeconds,
-  );
-
-  const { data, error, isLoading } = useHardwareListingSlow(
-    startTimestampInSeconds,
-    endTimestampInSeconds,
-    {
-      enabled: fastStatus === 'success' && !!fastData,
-    },
   );
 
   const listItems: HardwareTableItem[] = useMemo(() => {
-    if (!fastData || fastStatus === 'error') return [];
+    if (!data || error) return [];
 
-    const hasCompleteData = !isLoading && !!data;
-    const currentData = hasCompleteData ? data.hardware : fastData.hardware;
+    const currentData = data.hardware;
 
     return currentData
       .filter(hardware => {
         return hardware.hardwareName?.includes(inputFilter);
       })
       .map((hardware): HardwareTableItem => {
-        const buildCount = isCompleteHardware(hardware)
-          ? {
-              valid: hardware.buildCount?.valid,
-              invalid: hardware.buildCount?.invalid,
-              null: hardware.buildCount?.null,
-            }
-          : undefined;
+        const buildCount = {
+          valid: hardware.buildCount?.valid,
+          invalid: hardware.buildCount?.invalid,
+          null: hardware.buildCount?.null,
+        };
 
-        const testStatusCount = isCompleteHardware(hardware)
-          ? {
-              DONE: hardware.testStatusCount.DONE,
-              ERROR: hardware.testStatusCount.ERROR,
-              FAIL: hardware.testStatusCount.FAIL,
-              MISS: hardware.testStatusCount.MISS,
-              PASS: hardware.testStatusCount.PASS,
-              SKIP: hardware.testStatusCount.SKIP,
-              NULL: hardware.testStatusCount.NULL,
-            }
-          : undefined;
+        const testStatusCount = {
+          DONE: hardware.testStatusCount.DONE,
+          ERROR: hardware.testStatusCount.ERROR,
+          FAIL: hardware.testStatusCount.FAIL,
+          MISS: hardware.testStatusCount.MISS,
+          PASS: hardware.testStatusCount.PASS,
+          SKIP: hardware.testStatusCount.SKIP,
+          NULL: hardware.testStatusCount.NULL,
+        };
 
-        const bootStatusCount = isCompleteHardware(hardware)
-          ? {
-              DONE: hardware.bootStatusCount.DONE,
-              ERROR: hardware.bootStatusCount.ERROR,
-              FAIL: hardware.bootStatusCount.FAIL,
-              MISS: hardware.bootStatusCount.MISS,
-              PASS: hardware.bootStatusCount.PASS,
-              SKIP: hardware.bootStatusCount.SKIP,
-              NULL: hardware.bootStatusCount.NULL,
-            }
-          : undefined;
+        const bootStatusCount = {
+          DONE: hardware.bootStatusCount.DONE,
+          ERROR: hardware.bootStatusCount.ERROR,
+          FAIL: hardware.bootStatusCount.FAIL,
+          MISS: hardware.bootStatusCount.MISS,
+          PASS: hardware.bootStatusCount.PASS,
+          SKIP: hardware.bootStatusCount.SKIP,
+          NULL: hardware.bootStatusCount.NULL,
+        };
 
         return {
           hardwareName: hardware.hardwareName ?? '',
@@ -123,14 +94,14 @@ const HardwareListingPage = ({
         };
       })
       .sort((a, b) => a.hardwareName.localeCompare(b.hardwareName));
-  }, [data, fastData, inputFilter, isLoading, fastStatus]);
+  }, [data, error, inputFilter]);
 
   if (error) {
     return <div>Error: {error.message}</div>;
   }
 
   return (
-    <QuerySwitcher status={fastStatus} data={fastData}>
+    <QuerySwitcher status={status} data={data}>
       <Toaster />
       <div className="flex flex-col gap-6">
         <HardwareTable
