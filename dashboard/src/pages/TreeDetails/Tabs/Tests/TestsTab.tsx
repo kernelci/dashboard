@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 
 import { Skeleton } from '@/components/Skeleton';
 
-import { useTestsTab } from '@/api/TreeDetails';
+import { useTestsTab } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';

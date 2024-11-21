@@ -6,7 +6,7 @@ import type {
   TreeTableBody,
 } from '@/types/tree/Tree';
 
-import { useTreeTable, useTreeTableFast } from '@/api/Tree';
+import { useTreeTable, useTreeTableFast } from '@/api/tree';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 

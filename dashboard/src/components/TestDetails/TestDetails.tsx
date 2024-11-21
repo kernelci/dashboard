@@ -10,7 +10,7 @@ import { MdFolderOpen } from 'react-icons/md';
 import { truncateBigText } from '@/lib/string';
 import type { TTestDetails } from '@/types/tree/TestDetails';
 import { Sheet, SheetTrigger } from '@/components/Sheet';
-import { useTestDetails, useTestIssues } from '@/api/TestDetails';
+import { useTestDetails, useTestIssues } from '@/api/testDetails';
 
 import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
 

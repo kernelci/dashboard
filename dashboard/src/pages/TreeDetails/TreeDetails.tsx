@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useBuildsTab, useTestsTab } from '@/api/TreeDetails';
+import { useBuildsTab, useTestsTab } from '@/api/treeDetails';
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
 import type { ISummaryItem } from '@/components/Summary/Summary';
 import type { AccordionItemBuilds, BuildsTab } from '@/types/tree/TreeDetails';

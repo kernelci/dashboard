@@ -49,7 +49,7 @@ import { TableHeader } from '@/components/Table/TableHeader';
 
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
-import { useTestDetails } from '@/api/TestDetails';
+import { useTestDetails } from '@/api/testDetails';
 import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
 import { cn } from '@/lib/utils';
 
