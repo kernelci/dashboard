@@ -1,4 +1,5 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
+from kernelCI_app.utils import getErrorResponseBody
 from rest_framework.views import APIView
 from bs4 import BeautifulSoup, Tag
 import requests
@@ -58,6 +59,6 @@ class LogDownloaderView(APIView):
 
         error_message = parsed_data.get("error")
         if error_message:
-            return JsonResponse({"error": error_message}, status=500)
+            return HttpResponseBadRequest(getErrorResponseBody(error_message))
 
         return JsonResponse(parsed_data)
