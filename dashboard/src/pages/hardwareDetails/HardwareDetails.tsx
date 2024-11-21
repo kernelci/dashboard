@@ -18,8 +18,16 @@ import { useHardwareDetails } from '@/api/hardwareDetails';
 
 import type { Trees } from '@/types/hardware/hardwareDetails';
 
+import {
+  GroupedTestStatus,
+  BuildStatus as BuildStatusComponent,
+} from '@/components/Status/Status';
+
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
+import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
+import HardwareDetailsFilter from './HardwareDetailsFilter';
+import HardwareDetailsFilterList from './HardwareDetailsFilterList';
 
 const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
   treeItems.map(tree => ({
@@ -32,8 +40,12 @@ const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
   }));
 
 function HardwareDetails(): JSX.Element {
-  const { treeIndexes, startTimestampInSeconds, endTimestampInSeconds } =
-    useSearch({ from: '/hardware/$hardwareId' });
+  const {
+    treeIndexes,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+    diffFilter,
+  } = useSearch({ from: '/hardware/$hardwareId' });
   const { hardwareId } = useParams({ from: '/hardware/$hardwareId' });
   const { origin } = useSearch({ from: '/hardware' });
 
@@ -58,6 +70,48 @@ function HardwareDetails(): JSX.Element {
     origin,
     treeIndexes ?? [],
   );
+
+  const filterListElement = useMemo(
+    () => <HardwareDetailsFilterList filter={diffFilter} />,
+    [diffFilter],
+  );
+
+  const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
+    const { valid, invalid } = data?.builds.summary.builds ?? {};
+    const { statusSummary: testStatusSummary } = data?.tests ?? {};
+
+    const { statusSummary: bootStatusSummary } = data?.boots ?? {};
+
+    return {
+      'treeDetails.tests': testStatusSummary ? (
+        <GroupedTestStatus
+          fail={testStatusSummary.FAIL}
+          pass={testStatusSummary.PASS}
+          hideInconclusive
+        />
+      ) : (
+        <></>
+      ),
+      'treeDetails.boots': bootStatusSummary ? (
+        <GroupedTestStatus
+          fail={bootStatusSummary.FAIL}
+          pass={bootStatusSummary.PASS}
+          hideInconclusive
+        />
+      ) : (
+        <></>
+      ),
+      'treeDetails.builds': data?.builds ? (
+        <BuildStatusComponent
+          valid={valid}
+          invalid={invalid}
+          hideInconclusive
+        />
+      ) : (
+        <></>
+      ),
+    };
+  }, [data?.boots, data?.builds, data?.tests]);
 
   const treeData = useMemo(
     () => sanitizeTreeItems(data?.trees || []),
@@ -103,10 +157,21 @@ function HardwareDetails(): JSX.Element {
           selectedIndexes={treeIndexes}
           updateTreeFilters={updateTreeFilters}
         />
-        <HardwareDetailsTabs
-          HardwareDetailsData={data}
-          hardwareId={hardwareId}
-        />
+        <div className="relative pt-2">
+          <div className="absolute right-0 top-0">
+            <HardwareDetailsFilter
+              paramFilter={diffFilter}
+              hardwareName={hardwareId}
+              data={data}
+            />
+          </div>
+          <HardwareDetailsTabs
+            HardwareDetailsData={data}
+            hardwareId={hardwareId}
+            filterListElement={filterListElement}
+            countElements={tabsCounts}
+          />
+        </div>
       </div>
     </div>
   );

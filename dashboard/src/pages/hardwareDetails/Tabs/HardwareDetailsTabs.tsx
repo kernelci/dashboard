@@ -27,11 +27,15 @@ export type TreeDetailsTabRightElement = Record<
 export interface IHardwareDetailsTab {
   HardwareDetailsData: THardwareDetails;
   hardwareId: string;
+  filterListElement?: JSX.Element;
+  countElements: TreeDetailsTabRightElement;
 }
 
 const HardwareDetailsTabs = ({
   HardwareDetailsData,
   hardwareId,
+  filterListElement,
+  countElements,
 }: IHardwareDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
     from: '/hardware/$hardwareId/',
@@ -64,6 +68,7 @@ const HardwareDetailsTabs = ({
             hardwareId={hardwareId}
           />
         ),
+        rightElement: countElements['treeDetails.builds'],
         disabled: false,
       },
       {
@@ -71,6 +76,7 @@ const HardwareDetailsTabs = ({
         content: (
           <BootsTab boots={HardwareDetailsData.boots} hardwareId={hardwareId} />
         ),
+        rightElement: countElements['treeDetails.boots'],
         disabled: false,
       },
       {
@@ -78,14 +84,26 @@ const HardwareDetailsTabs = ({
         content: (
           <TestsTab tests={HardwareDetailsData.tests} hardwareId={hardwareId} />
         ),
+        rightElement: countElements['treeDetails.tests'],
         disabled: false,
       },
     ],
-    [HardwareDetailsData, hardwareId],
+    [
+      HardwareDetailsData.boots,
+      HardwareDetailsData.builds,
+      HardwareDetailsData.tests,
+      countElements,
+      hardwareId,
+    ],
   );
 
   return (
-    <Tabs tabs={tabs} value={currentPageTab} onValueChange={onTabChange} />
+    <Tabs
+      tabs={tabs}
+      value={currentPageTab}
+      onValueChange={onTabChange}
+      filterListElement={filterListElement}
+    />
   );
 };
 
