@@ -7,7 +7,7 @@ import { zOrigin } from '@/types/general';
 import {
   zDiffFilter,
   zPossibleValidator,
-  zTableFilterInfo,
+  zTableFilterInfoValidator,
   zTreeInformation,
 } from '@/types/tree/TreeDetails';
 
@@ -17,7 +17,7 @@ const treeDetailsSearchSchema = z.object({
   origin: zOrigin,
   treeInfo: zTreeInformation,
   currentPageTab: zPossibleValidator,
-  tableFilter: zTableFilterInfo,
+  tableFilter: zTableFilterInfoValidator,
 });
 
 export const Route = createFileRoute('/tree/$treeId')({
