@@ -50,13 +50,9 @@ import { InputTime } from './InputTime';
 const columns: ColumnDef<TreeTableBody>[] = [
   {
     accessorKey: 'tree_name',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.tree',
-        intlDefaultMessage: 'Tree',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="globalTable.tree" />
+    ),
     cell: ({ row }): JSX.Element => {
       return (
         <Tooltip>
@@ -76,23 +72,15 @@ const columns: ColumnDef<TreeTableBody>[] = [
   },
   {
     accessorKey: 'branch',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.branch',
-        intlDefaultMessage: 'Branch',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="globalTable.branch" />
+    ),
   },
   {
     accessorKey: 'commitName',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.commitTag',
-        intlDefaultMessage: 'Commit/Tag',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="globalTable.commitTag" />
+    ),
     cell: ({ row }) =>
       sanitizeTableValue(
         row.getValue('commitName')
@@ -102,27 +90,22 @@ const columns: ColumnDef<TreeTableBody>[] = [
   },
   {
     accessorKey: 'date',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.date',
-        intlDefaultMessage: 'Date',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.date" />
+    ),
     cell: ({ row }): JSX.Element => (
       <TooltipDateTime dateTime={row.getValue('date')} lineBreak={true} />
     ),
   },
   {
     accessorKey: 'buildStatus.valid',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.build',
-        intlDefaultMessage: 'Build Status',
-        tooltipId: 'build.statusTooltip',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="globalTable.build"
+        tooltipId="build.statusTooltip"
+      />
+    ),
     cell: ({ row }): JSX.Element => {
       return row.original.buildStatus ? (
         <BuildStatus
@@ -137,14 +120,13 @@ const columns: ColumnDef<TreeTableBody>[] = [
   },
   {
     accessorKey: 'bootStatus.pass',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.bootStatus',
-        intlDefaultMessage: 'Boot Status',
-        tooltipId: 'boots.statusTooltip',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="globalTable.bootStatus"
+        tooltipId="boots.statusTooltip"
+      />
+    ),
     cell: ({ row }): JSX.Element => {
       return row.original.bootStatus ? (
         <GroupedTestStatus
@@ -162,14 +144,13 @@ const columns: ColumnDef<TreeTableBody>[] = [
   },
   {
     accessorKey: 'testStatus.pass',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.test',
-        intlDefaultMessage: 'Test Status',
-        tooltipId: 'test.statusTooltip',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="globalTable.test"
+        tooltipId="test.statusTooltip"
+      />
+    ),
     cell: ({ row }): JSX.Element => {
       return row.original.testStatus ? (
         <GroupedTestStatus

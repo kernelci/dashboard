@@ -17,9 +17,8 @@ import { Button } from '@/components/ui/button';
 
 export interface ITableHeader<T> {
   column: Column<T>;
-  sortable: boolean;
+  sortable?: boolean;
   intlKey: MessagesKey;
-  intlDefaultMessage: string;
   tooltipId?: MessagesKey;
 }
 
@@ -37,9 +36,8 @@ const sortedArrow = {
 
 export const TableHeader = <T,>({
   column,
-  sortable,
+  sortable = true,
   intlKey,
-  intlDefaultMessage,
   tooltipId,
 }: ITableHeader<T>): JSX.Element => {
   const headerSort = useCallback(() => {
@@ -60,11 +58,7 @@ export const TableHeader = <T,>({
         className="justify-start px-2"
         onClick={headerSort}
       >
-        <FormattedMessage
-          key={intlKey}
-          id={intlKey}
-          defaultMessage={intlDefaultMessage}
-        ></FormattedMessage>
+        <FormattedMessage key={intlKey} id={intlKey} />
 
         {sortable && sortedArrow[zSortingMethod.parse(column.getIsSorted())]}
       </Button>

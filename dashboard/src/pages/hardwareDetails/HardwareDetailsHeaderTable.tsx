@@ -63,13 +63,9 @@ const columns: ColumnDef<Trees>[] = [
   },
   {
     accessorKey: 'treeName',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.tree',
-        intlDefaultMessage: 'Tree',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="globalTable.tree" />
+    ),
     cell: ({ row }): JSX.Element => (
       <Tooltip>
         <TooltipTrigger>{row.getValue('treeName')}</TooltipTrigger>
@@ -79,23 +75,15 @@ const columns: ColumnDef<Trees>[] = [
   },
   {
     accessorKey: 'gitRepositoryBranch',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.branch',
-        intlDefaultMessage: 'Branch',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="globalTable.branch" />
+    ),
   },
   {
     accessorKey: 'headGitCommitName',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.commitTag',
-        intlDefaultMessage: 'Commit/Tag',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="globalTable.commitTag" />
+    ),
     cell: ({ row }): JSX.Element => (
       <Tooltip>
         <TooltipTrigger>
