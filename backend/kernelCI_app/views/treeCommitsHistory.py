@@ -70,9 +70,6 @@ class TreeCommitsHistory(APIView):
             self.field_values[value_name] = filter['value']
             if op == "IN":
                 clause += f" = ANY(%({value_name})s)"
-            elif op == "LIKE":
-                self.field_values[value_name] = f"%{filter['value']}%"
-                clause += f" {op} %({value_name})s"
             else:
                 clause += f" {op} %({value_name})s"
 

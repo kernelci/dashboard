@@ -94,7 +94,6 @@ const HardwareDetailsTestTable = ({
   onClickFilter,
   testHistory,
   hardwareId,
-  updatePathFilter,
 }: IHardwareDetailsTestTable): JSX.Element => {
   const getRowLink = useCallback(
     (bootId: string): LinkProps => ({
@@ -115,7 +114,6 @@ const HardwareDetailsTestTable = ({
       testHistory={testHistory}
       innerColumns={innerColumns}
       getRowLink={getRowLink}
-      updatePathFilter={updatePathFilter}
     />
   );
 };

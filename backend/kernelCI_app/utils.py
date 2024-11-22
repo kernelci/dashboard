@@ -106,10 +106,7 @@ class FilterParams:
         "gte": ["gte", ">="],
         "lt": ["lt", "<"],
         "lte": ["lte", "<="],
-        "like": ["like", "LIKE"],
     }
-
-    string_like_filters = ["test.path"]
 
     def __init__(self, request):
         self.filters = []
@@ -130,10 +127,6 @@ class FilterParams:
 
                 for value in values:
                     self.add_filter(field, value, "in")
-                continue
-
-            if filter_term in self.string_like_filters:
-                self.add_filter(filter_term, request.GET.get(k), "like")
                 continue
 
             match = self.filter_reg.match(filter_term)

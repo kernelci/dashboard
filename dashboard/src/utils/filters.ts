@@ -7,7 +7,6 @@ const requestFilters = {
     'test.duration_[gte]',
     'test.duration_[lte]',
     'test.hardware',
-    'test.path',
     'boot.status',
     'boot.duration_[gte]',
     'boot.duration_[lte]',

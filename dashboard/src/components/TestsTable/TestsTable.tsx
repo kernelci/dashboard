@@ -47,17 +47,15 @@ export interface ITestsTable {
   columns?: ColumnDef<TPathTests>[];
   innerColumns?: ColumnDef<TIndividualTest>[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
-  updatePathFilter?: (pathFilter: string) => void;
 }
 
 export function TestsTable({
   testHistory,
   onClickFilter,
   filter,
+  getRowLink,
   columns = defaultColumns,
   innerColumns = defaultInnerColumns,
-  getRowLink,
-  updatePathFilter,
 }: ITestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
@@ -255,39 +253,20 @@ export function TestsTable({
     [filterCount, intl, filter],
   );
 
-  // TODO: there should be a filtering for the frontend before the backend AND that filtering should consider the individual tests inside each test "batch" (the data from individualTestsTables), not only the rows of the external table
   const onSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.value !== undefined && updatePathFilter) {
-        updatePathFilter(e.target.value);
-      }
-      // TODO: remove this frontend filter when the hardwareDetails backend filtering gets in place
-      table.setGlobalFilter(String(e.target.value));
-    },
-    [table, updatePathFilter],
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      table.setGlobalFilter(String(e.target.value)),
+    [table],
   );
 
   const groupHeaders = table.getHeaderGroups()[0]?.headers;
   const tableHeaders = useMemo((): JSX.Element[] => {
     return groupHeaders.map(header => {
-      const headerComponent = header.isPlaceholder
-        ? null
-        : flexRender(header.column.columnDef.header, header.getContext());
       return (
         <TableHead key={header.id} className="border-b px-2 font-bold">
-          {header.id === 'path_group' ? (
-            <div className="flex items-center">
-              {headerComponent}
-              <DebounceInput
-                debouncedSideEffect={onSearchChange}
-                className="w-50 font-normal"
-                type="text"
-                placeholder={intl.formatMessage({ id: 'global.search' })}
-              />
-            </div>
-          ) : (
-            headerComponent
-          )}
+          {header.isPlaceholder
+            ? null
+            : flexRender(header.column.columnDef.header, header.getContext())}
         </TableHead>
       );
     });
@@ -337,7 +316,15 @@ export function TestsTable({
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
+      <div className="flex justify-between">
+        <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
+        <DebounceInput
+          debouncedSideEffect={onSearchChange}
+          className="w-50"
+          type="text"
+          placeholder={intl.formatMessage({ id: 'global.search' })}
+        />
+      </div>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableRows}</TableBody>
       </BaseTable>
