@@ -27,9 +27,27 @@ interface TTestsTab {
 }
 
 const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
-  const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
+  const { tableFilter } = useSearch({
+    from: '/hardware/$hardwareId',
+  });
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
+
+  // TODO: move inside the same hook for the tables, passing navigate, in order to not repeat the same code in each tab of each monitor
+  const updatePathFilter = useCallback(
+    (pathFilter: string) => {
+      navigate({
+        search: previousSearch => ({
+          ...previousSearch,
+          diffFilter: {
+            ...previousSearch.diffFilter,
+            path: pathFilter === '' ? undefined : { [pathFilter]: true },
+          },
+        }),
+      });
+    },
+    [navigate],
+  );
 
   const onClickFilter = useCallback(
     (newFilter: TestsTableFilter): void => {
@@ -97,6 +115,7 @@ const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
         filter={tableFilter.testsTable}
         hardwareId={hardwareId}
         onClickFilter={onClickFilter}
+        updatePathFilter={updatePathFilter}
       />
     </div>
   );
