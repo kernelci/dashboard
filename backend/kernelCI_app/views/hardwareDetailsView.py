@@ -140,9 +140,44 @@ class HardwareDetails(View):
     required_params_get = ["origin"]
     cache_key_get = "hardwareDetailsGET"
 
-    def sanitize_records(self, records, selected_trees):
+    def get_filters(self, filters):
+        filters_map = {
+            "build": [],
+            "boot": [],
+            "test": []
+        }
+
+        for key, value in filters.items():
+            _, filter_item = key.split("_")
+
+            filter_split = filter_item.split(".")
+            if len(filter_split) == 2:
+                table, field = filter_item.split(".")
+            else:
+                table = "build"
+                field = filter_item
+
+            if table == "build":
+                value = [x == "Success" for x in value]
+            filters_map[table].append({"field": field, "value": value})
+
+        return filters_map
+
+    def pass_in_filters(self, data, filters):
+        for currentFilter in filters:
+            field = currentFilter.get("field")
+            value = currentFilter.get("value")
+
+            if data[field] not in value:
+                return False
+
+        return True
+
+    def sanitize_records(self, records, selected_trees, filters):
         processed_builds = set()
         builds = {"items": [], "issues": {}}
+
+        filters_map = self.get_filters(filters)
 
         tests = generate_test_dict()
         boots = generate_test_dict()
@@ -155,33 +190,45 @@ class HardwareDetails(View):
             build_id = r["build_id"]
             issue_id = r["build__incidents__issue__id"]
             status = r["status"]
-            tests_or_boots = boots if is_boot(r) else tests
+            table_test = "boot" if is_boot(r) else "test"
 
-            tests_or_boots["history"].append(get_history(r))
-            tests_or_boots["statusSummary"][r["status"]] += 1
-            tests_or_boots["configs"][r["build__config_name"]][r["status"]] += 1
+            test_filter_is_empty = len(filters_map[table_test]) == 0
+            test_pass_in_filters = self.pass_in_filters(r, filters_map[table_test])
 
-            if status == "ERROR" or status == "FAIL" or status == "MISS":
-                tests_or_boots["platformsFailing"].add(
-                    extract_platform(r["environment_misc"])
-                )
-                tests_or_boots["failReasons"][extract_error_message(r["misc"])] += 1
+            jump_test = not test_filter_is_empty and not test_pass_in_filters
 
-            archKey = f'{r["build__architecture"]}{r["build__compiler"]}'
-            archSummary = tests_or_boots["archSummary"].get(archKey)
-            if not archSummary:
-                archSummary = get_arch_summary(r)
-                tests_or_boots["archSummary"][archKey] = archSummary
-            archSummary["status"][status] += 1
+            if not jump_test:
+                tests_or_boots = boots if is_boot(r) else tests
+
+                tests_or_boots["history"].append(get_history(r))
+                tests_or_boots["statusSummary"][r["status"]] += 1
+                tests_or_boots["configs"][r["build__config_name"]][r["status"]] += 1
+
+                if status == "ERROR" or status == "FAIL" or status == "MISS":
+                    tests_or_boots["platformsFailing"].add(
+                        extract_platform(r["environment_misc"])
+                    )
+                    tests_or_boots["failReasons"][extract_error_message(r["misc"])] += 1
+
+                archKey = f'{r["build__architecture"]}{r["build__compiler"]}'
+                archSummary = tests_or_boots["archSummary"].get(archKey)
+                if not archSummary:
+                    archSummary = get_arch_summary(r)
+                    tests_or_boots["archSummary"][archKey] = archSummary
+                archSummary["status"][status] += 1
 
             if build_id not in processed_builds:
                 processed_builds.add(build_id)
-                builds["items"].append(get_build(r, current_tree["index"]))
+                build = get_build(r, current_tree["index"])
+
+                if len(filters_map['build']) == 0 or self.pass_in_filters(build, filters_map['build']):
+                    builds["items"].append(build)
 
             if issue_id:
                 currentIssue = get_details_issue(r)
                 update_issues(builds["issues"], currentIssue)
-                update_issues(tests_or_boots["issues"], currentIssue)
+                if not jump_test:
+                    update_issues(tests_or_boots["issues"], currentIssue)
 
         builds["summary"] = create_details_build_summary(builds["items"])
         properties2List(builds, ["issues"])
@@ -275,6 +322,7 @@ class HardwareDetails(View):
 
         try:
             body = json.loads(request.body)
+
             origin = body.get("origin", DEFAULT_ORIGIN)
             start_datetime = datetime.fromtimestamp(
                 int(body.get('startTimestampInSeconds')),
@@ -284,6 +332,7 @@ class HardwareDetails(View):
                 int(body.get('endTimestampInSeconds')),
                 timezone.utc
             )
+            filters = body.get("filter", {})
         except json.JSONDecodeError:
             return HttpResponseBadRequest(
                 getErrorResponseBody(
@@ -304,7 +353,7 @@ class HardwareDetails(View):
             "hardware_id": hardware_id,
             "origin": origin,
             "start_datetime": start_datetime,
-            "end_datetime": end_datetime,
+            "end_datetime": end_datetime
         }
 
         records = getQueryCache(self.cache_key_get, params)
@@ -312,7 +361,7 @@ class HardwareDetails(View):
             records = self.get_records(**params)
             setQueryCache(self.cache_key_get, params, records)
 
-        builds, tests, boots = self.sanitize_records(records, selected_trees)
+        builds, tests, boots = self.sanitize_records(records, selected_trees, filters)
 
         return JsonResponse(
             {"builds": builds, "tests": tests, "boots": boots, "trees": trees}, safe=False
