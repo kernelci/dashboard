@@ -311,3 +311,23 @@ export const useLogFiles = (
     queryFn: () => fetchLogFiles(logUrl),
   });
 };
+
+export type RequestFiltersType = {
+  test: [
+    'test.status',
+    'test.duration_[gte]',
+    'test.duration_[lte]',
+    'boot.status',
+    'boot.duration_[gte]',
+    'boot.duration_[lte]',
+  ];
+  hardwareDetails: [
+    'hardwareDetails.trees',
+    'hardwareDetails.config_name',
+    'hardwareDetails.architecture',
+    'hardwareDetails.compiler',
+    'hardwareDetails.valid',
+    'hardwareDetails.duration_[gte]',
+    'hardwareDetails.duration_[lte]',
+  ];
+};

@@ -5,7 +5,7 @@ from django.views import View
 from datetime import datetime, timezone
 from django.http import HttpResponseBadRequest, JsonResponse
 from kernelCI_app.cache import getQueryCache, setQueryCache
-from kernelCI_app.viewCommon import create_details_build_summary
+from kernelCI_app.viewCommon import create_default_build_status, create_details_build_summary
 from kernelCI_app.models import Tests
 from kernelCI_app.utils import (
     create_issue,
@@ -19,6 +19,7 @@ from django.views.decorators.csrf import csrf_exempt
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_VALUE = 'selected'
 
+build_status_map = {True: "valid", False: "invalid", None: "null"}
 
 def properties2List(d, keys):
     for k in keys:
@@ -125,9 +126,59 @@ def generate_test_dict():
         "issues": {},
     }
 
+def generate_commit_summary():
+    return {
+        "earliestStartTime": "1970-01-01T00:00:00", #epoch in iso8601
+        "buildStatus": create_default_build_status(),
+        "bootStatus": defaultdict(int),
+        "testStatus": defaultdict(int),
+    }
+
+def handle_commit_summary(commit_summary, record):
+    status_key = 'bootStatus' if is_boot(record) else 'testStatus'
+    commit_summary[status_key][record["status"]] += 1
+    build_status = build_status_map[record["build__valid"]]
+    commit_summary["buildStatus"][build_status] += 1
+
+    print('tttype:', type(record["build__checkout__start_time"]))
+    print('iso8601:', record["build__checkout__start_time"].isoformat())
+    # if record["build__checkout__start_time"] > commit_summary["earliestStartTime"]:
+    #    commit_summary["earliestStartTime"] = record["build__checkout__start_time"]
+
+
 
 def is_record_in_tree_head(record, tree):
     return record["build__checkout__git_commit_hash"] == tree["headGitCommitHash"]
+
+# def get_commit():
+#     {
+#         "git_commit_hash": row[0],
+#         "git_commit_name": row[1],
+#         "earliest_start_time": row[2],
+#         "builds": {
+#             "valid_builds": row[3] or 0,
+#             "invalid_builds": row[4] or 0,
+#             "null_builds": row[5] or 0,
+#         },
+#         "boots_tests": {
+#             "fail_count": row[6] or 0,
+#             "error_count": row[7] or 0,
+#             "miss_count": row[8] or 0,
+#             "pass_count": row[9] or 0,
+#             "done_count": row[10] or 0,
+#             "skip_count": row[11] or 0,
+#             "null_count": row[12] or 0,
+#         },
+#         "non_boots_tests": {
+#             "fail_count": row[13] or 0,
+#             "error_count": row[14] or 0,
+#             "miss_count": row[15] or 0,
+#             "pass_count": row[16] or 0,
+#             "done_count": row[17] or 0,
+#             "skip_count": row[18] or 0,
+#             "null_count": row[19] or 0,
+#         },
+#     }
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -142,14 +193,36 @@ class HardwareDetails(View):
 
     def sanitize_records(self, records, selected_trees):
         processed_builds = set()
+        processed_commits = set()
         builds = {"items": [], "issues": {}}
 
         tests = generate_test_dict()
         boots = generate_test_dict()
+        commit_history = defaultdict(list)
+        commit_summaries = {}
+
 
         for r in records:
+            commit_hash = r["build__checkout__git_commit_hash"]
             current_tree = get_current_selected_tree(r, selected_trees)
-            if not current_tree or not is_record_in_tree_head(r, current_tree):
+
+            if not current_tree:
+                continue
+
+            tree_index = current_tree["index"]
+
+            if commit_hash not in processed_commits:
+                processed_commits.add(commit_hash)
+                commit_history[tree_index].append({
+                    "git_commit_hash": r["build__checkout__git_commit_hash"],
+                    "git_commit_name": r["build__checkout__git_commit_name"],
+                })
+                commit_summaries[commit_hash] = generate_commit_summary()
+
+            handle_commit_summary(commit_summaries[commit_hash], r)
+
+
+            if not is_record_in_tree_head(r, current_tree):
                 continue
 
             build_id = r["build_id"]
@@ -183,12 +256,16 @@ class HardwareDetails(View):
                 update_issues(builds["issues"], currentIssue)
                 update_issues(tests_or_boots["issues"], currentIssue)
 
+        for k, v in commit_history.items():
+           print('commit:', k, v)
+
+        print(records[0]["build__checkout__start_time"])
         builds["summary"] = create_details_build_summary(builds["items"])
         properties2List(builds, ["issues"])
         properties2List(tests, ["issues", "platformsFailing", "archSummary"])
         properties2List(boots, ["issues", "platformsFailing", "archSummary"])
 
-        return (builds, tests, boots)
+        return (builds, tests, boots, commit_summaries)
 
     def get_trees(self, hardware_id, origin, start_datetime, end_datetime):
         tree_id_fields = [
@@ -206,11 +283,12 @@ class HardwareDetails(View):
             *tree_id_fields,
             "build__checkout__git_commit_name",
             "build__checkout__git_commit_hash",
+            "build__checkout__start_time"
         ).distinct(
             *tree_id_fields,
         ).order_by(
             *tree_id_fields,
-            "-start_time"
+            "-build__checkout__start_time"
         )
 
         trees = []
@@ -221,6 +299,7 @@ class HardwareDetails(View):
                 "gitRepositoryUrl": tree["build__checkout__git_repository_url"],
                 "headGitCommitName": tree["build__checkout__git_commit_name"],
                 "headGitCommitHash": tree["build__checkout__git_commit_hash"],
+                "earliestCheckoutStartTime": tree["build__checkout__start_time"],
                 "index": str(idx),
             })
 
@@ -258,6 +337,7 @@ class HardwareDetails(View):
             "build__checkout__git_repository_branch",
             "build__checkout__git_commit_name",
             "build__checkout__git_commit_hash",
+            "build__checkout__start_time",
             "build__checkout__tree_name",
             "build__incidents__issue__id",
             "build__incidents__issue__comment",
@@ -312,8 +392,8 @@ class HardwareDetails(View):
             records = self.get_records(**params)
             setQueryCache(self.cache_key_get, params, records)
 
-        builds, tests, boots = self.sanitize_records(records, selected_trees)
+        builds, tests, boots, commit_summaries = self.sanitize_records(records, selected_trees)
 
         return JsonResponse(
-            {"builds": builds, "tests": tests, "boots": boots, "trees": trees}, safe=False
+            {"builds": builds, "tests": tests, "boots": boots, "trees": trees, "commit_summaries": commit_summaries}, safe=False
         )
