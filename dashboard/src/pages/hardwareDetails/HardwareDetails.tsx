@@ -75,10 +75,7 @@ function HardwareDetails(): JSX.Element {
   );
 
   const filterListElement = useMemo(
-    () =>
-      Object.keys(diffFilter).length !== 0 ? (
-        <HardwareDetailsFilterList filter={diffFilter} />
-      ) : undefined,
+    () => <HardwareDetailsFilterList filter={diffFilter} />,
     [diffFilter],
   );
 
@@ -163,15 +160,13 @@ function HardwareDetails(): JSX.Element {
           selectedIndexes={treeIndexes}
           updateTreeFilters={updateTreeFilters}
         />
-        <div className="flex flex-col pb-2">
-          <div className="sticky top-[4.5rem] z-10">
-            <div className="absolute right-0 top-2 py-4">
-              <HardwareDetailsFilter
-                paramFilter={diffFilter}
-                hardwareName={hardwareId}
-                data={data}
-              />
-            </div>
+        <div className="relative pt-2">
+          <div className="absolute right-0 top-0">
+            <HardwareDetailsFilter
+              paramFilter={diffFilter}
+              hardwareName={hardwareId}
+              data={data}
+            />
           </div>
           <HardwareDetailsTabs
             HardwareDetailsData={data}

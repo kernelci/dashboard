@@ -149,10 +149,7 @@ function TreeDetails(): JSX.Element {
   }, [isBuildTab, testsIsLoading, buildIsLoading]);
 
   const filterListElement = useMemo(
-    () =>
-      Object.keys(diffFilter).length !== 0 ? (
-        <TreeDetailsFilterList filter={diffFilter} />
-      ) : undefined,
+    () => <TreeDetailsFilterList filter={diffFilter} />,
     [diffFilter],
   );
 
@@ -270,11 +267,9 @@ function TreeDetails(): JSX.Element {
           />
         </div>
       </QuerySwitcher>
-      <div className="flex flex-col pb-2">
-        <div className="sticky top-[4.5rem] z-10">
-          <div className="absolute right-0 top-2 py-4">
-            <TreeDetailsFilter paramFilter={diffFilter} treeUrl={treeUrl} />
-          </div>
+      <div className="relative mt-10 flex flex-col pb-2">
+        <div className="absolute right-0 top-[-16px]">
+          <TreeDetailsFilter paramFilter={diffFilter} treeUrl={treeUrl} />
         </div>
         <TreeDetailsTab
           treeDetailsData={treeDetailsData}
