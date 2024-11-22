@@ -47,26 +47,21 @@ import { InputTime } from './InputTime';
 const columns: ColumnDef<HardwareTableItem>[] = [
   {
     accessorKey: 'hardwareName',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.name',
-        intlDefaultMessage: 'Hardware',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.name" />
+    ),
   },
   {
     accessorKey: 'buildCount',
     accessorFn: ({ buildCount }): number =>
       buildCount ? sumStatus(buildCount) : 0,
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.build',
-        intlDefaultMessage: 'Build Status',
-        tooltipId: 'build.statusTooltip',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="globalTable.build"
+        tooltipId="build.statusTooltip"
+      />
+    ),
     cell: ({ row }): JSX.Element => {
       return row.original.buildCount ? (
         <BuildStatus
@@ -83,14 +78,13 @@ const columns: ColumnDef<HardwareTableItem>[] = [
     accessorKey: 'bootStatusCount',
     accessorFn: ({ bootStatusCount }): number =>
       bootStatusCount ? sumStatus(bootStatusCount) : 0,
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.bootStatus',
-        intlDefaultMessage: 'Boot Status',
-        tooltipId: 'boots.statusTooltip',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="globalTable.bootStatus"
+        tooltipId="boots.statusTooltip"
+      />
+    ),
     cell: ({ row }): JSX.Element => {
       return row.original.bootStatusCount ? (
         <GroupedTestStatus
@@ -111,14 +105,13 @@ const columns: ColumnDef<HardwareTableItem>[] = [
     accessorKey: 'testStatusCount',
     accessorFn: ({ testStatusCount }): number =>
       testStatusCount ? sumStatus(testStatusCount) : 0,
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'globalTable.test',
-        intlDefaultMessage: 'Test Status',
-        tooltipId: 'test.statusTooltip',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="globalTable.test"
+        tooltipId="test.statusTooltip"
+      />
+    ),
     cell: ({ row }): JSX.Element => {
       return row.original.testStatusCount ? (
         <GroupedTestStatus

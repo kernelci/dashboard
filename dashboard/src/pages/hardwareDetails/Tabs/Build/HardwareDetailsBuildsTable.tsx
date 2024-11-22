@@ -31,53 +31,33 @@ const buildStatusMap = {
 const columns: ColumnDef<AccordionItemBuilds>[] = [
   {
     accessorKey: 'treeBranch',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'hardwareDetails.treeBranch',
-        intlDefaultMessage: 'Tree / Branch',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="hardwareDetails.treeBranch" />
+    ),
   },
   {
     accessorKey: 'config',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.config',
-        intlDefaultMessage: 'Config',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.config" />
+    ),
   },
   {
     accessorKey: 'architecture',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.arch',
-        intlDefaultMessage: 'Arch',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.arch" />
+    ),
   },
   {
     accessorKey: 'compiler',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.compiler',
-        intlDefaultMessage: 'Compiler',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.compiler" />
+    ),
   },
   {
     accessorKey: 'date',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.date',
-        intlDefaultMessage: 'Date',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.date" />
+    ),
     cell: ({ row }): JSX.Element => (
       <TooltipDateTime
         dateTime={row.getValue('date')}
@@ -89,13 +69,9 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
   },
   {
     accessorKey: 'buildErrors',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.buildErrors',
-        intlDefaultMessage: 'Build Errors',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.buildErrors" />
+    ),
     cell: ({ row }): JSX.Element => (
       <ColoredCircle
         className="max-w-6"
@@ -110,27 +86,22 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
   },
   {
     accessorKey: 'buildTime',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.buildTime',
-        intlDefaultMessage: 'Build Time',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.buildTime" />
+    ),
     cell: ({ row }): JSX.Element => {
       return row.getValue('buildTime');
     },
   },
   {
     accessorKey: 'status',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.status',
-        intlDefaultMessage: 'Status',
-        tooltipId: 'build.statusTooltip',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="global.status"
+        tooltipId="build.statusTooltip"
+      />
+    ),
     cell: ({ row }): JSX.Element => {
       return buildStatusMap[
         row.getValue('status') as keyof typeof buildStatusMap

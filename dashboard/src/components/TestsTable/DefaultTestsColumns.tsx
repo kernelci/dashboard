@@ -16,24 +16,19 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 export const defaultColumns: ColumnDef<TPathTests>[] = [
   {
     accessorKey: 'path_group',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.path',
-        intlDefaultMessage: 'Path',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.path" />
+    ),
   },
   {
     accessorKey: 'pass_tests',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.status',
-        intlDefaultMessage: 'Status',
-        tooltipId: 'boots.statusTooltip',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="global.status"
+        tooltipId="boots.statusTooltip"
+      />
+    ),
     cell: ({ row }): JSX.Element => {
       return (
         <GroupedTestStatus
@@ -56,13 +51,9 @@ export const defaultColumns: ColumnDef<TPathTests>[] = [
 export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
   {
     accessorKey: 'path',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.path',
-        intlDefaultMessage: 'Path',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.path" />
+    ),
     cell: ({ row }): JSX.Element => {
       return (
         <Tooltip>
@@ -78,23 +69,15 @@ export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
   },
   {
     accessorKey: 'status',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.status',
-        intlDefaultMessage: 'Status',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.status" />
+    ),
   },
   {
     accessorKey: 'start_time',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.date',
-        intlDefaultMessage: 'Date',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.date" />
+    ),
     cell: ({ row }): JSX.Element => (
       <div className="text-nowrap">
         <TooltipDateTime
@@ -106,26 +89,18 @@ export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
   },
   {
     accessorKey: 'duration',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.duration',
-        intlDefaultMessage: 'Duration',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.duration" />
+    ),
     cell: ({ row }): string =>
       row.getValue('duration') ? row.getValue('duration') : '-',
   },
   {
     id: 'hardware',
     accessorKey: 'hardware',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.hardware',
-        intlDefaultMessage: 'Hardware',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.hardware" />
+    ),
     cell: ({ row }): JSX.Element => (
       <div className="text-nowrap">
         <TooltipHardware hardwares={row.getValue('hardware')} />

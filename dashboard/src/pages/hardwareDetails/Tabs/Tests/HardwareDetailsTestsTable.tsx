@@ -17,13 +17,9 @@ import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 const innerColumns: ColumnDef<TIndividualTest>[] = [
   {
     accessorKey: 'path',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.path',
-        intlDefaultMessage: 'Path',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.path" />
+    ),
     cell: ({ row }): JSX.Element => {
       return (
         <Tooltip>
@@ -39,23 +35,15 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
   },
   {
     accessorKey: 'status',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.status',
-        intlDefaultMessage: 'Status',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.status" />
+    ),
   },
   {
     accessorKey: 'start_time',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.date',
-        intlDefaultMessage: 'Date',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.date" />
+    ),
     cell: ({ row }): JSX.Element => (
       <div className="text-nowrap">
         <TooltipDateTime
@@ -67,13 +55,9 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
   },
   {
     accessorKey: 'duration',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.duration',
-        intlDefaultMessage: 'Duration',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.duration" />
+    ),
     cell: ({ row }): string =>
       row.getValue('duration') ? row.getValue('duration') : '-',
   },

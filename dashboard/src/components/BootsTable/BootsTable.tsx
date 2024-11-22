@@ -56,36 +56,27 @@ import { cn } from '@/lib/utils';
 const columns: ColumnDef<TestByCommitHash>[] = [
   {
     accessorKey: 'path',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.path',
-        intlDefaultMessage: 'Path',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.path" />
+    ),
   },
   {
     accessorKey: 'status',
     filterFn: (row, columnId, filterValue) =>
       getStatusGroup(row.getValue(columnId)) === filterValue,
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.status',
-        intlDefaultMessage: 'Status',
-        tooltipId: 'boots.statusTooltip',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="global.status"
+        tooltipId="boots.statusTooltip"
+      />
+    ),
   },
   {
     accessorKey: 'startTime',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'buildDetails.startTime',
-        intlDefaultMessage: 'Start time',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="buildDetails.startTime" />
+    ),
     cell: ({ row }): JSX.Element => (
       <TooltipDateTime
         dateTime={row.getValue('startTime')}
@@ -97,13 +88,9 @@ const columns: ColumnDef<TestByCommitHash>[] = [
   },
   {
     accessorKey: 'duration',
-    header: ({ column }): JSX.Element =>
-      TableHeader({
-        column: column,
-        sortable: true,
-        intlKey: 'global.duration',
-        intlDefaultMessage: 'Duration',
-      }),
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.duration" />
+    ),
     cell: ({ row }): string =>
       row.getValue('duration') ? row.getValue('duration') : '-',
   },
