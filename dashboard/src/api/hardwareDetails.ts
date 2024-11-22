@@ -1,7 +1,11 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 
-import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
+import type {
+  THardwareDetails,
+  THardwareDetailsFilter,
+} from '@/types/hardware/hardwareDetails';
+import { getTargetFilter } from '@/types/hardware/hardwareDetails';
 import type { TOrigins } from '@/types/general';
 
 import http from './api';
@@ -11,6 +15,24 @@ type fetchHardwareDetailsBody = {
   endTimestampInSeconds: number;
   origin: TOrigins;
   selectedTrees: Record<string, string>;
+  filter?: Record<string, string[]>;
+};
+
+const mapFiltersKeysToBackendCompatible = (
+  filter: THardwareDetailsFilter | Record<string, never>,
+): Record<string, string[]> => {
+  const filterParam: { [key: string]: string[] } = {};
+
+  Object.keys(filter).forEach(key => {
+    const filterList = filter[key as keyof THardwareDetailsFilter];
+    filterList?.forEach(value => {
+      if (!filterParam[`filter_${key}`])
+        filterParam[`filter_${key}`] = [value.toString()];
+      else filterParam[`filter_${key}`].push(value.toString());
+    });
+  });
+
+  return filterParam;
 };
 
 const fetchHardwareDetails = async (
@@ -38,8 +60,12 @@ export const useHardwareDetails = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
   origin: TOrigins,
+  filter: { [key: string]: string[] },
   selectedIndexes: number[],
 ): UseQueryResult<THardwareDetails> => {
+  const detailsFilter = getTargetFilter(filter, 'hardwareDetails');
+  const filtersFormatted = mapFiltersKeysToBackendCompatible(detailsFilter);
+
   const selectedTrees = mapIndexesToSelectedTrees(selectedIndexes);
 
   const body: fetchHardwareDetailsBody = {
@@ -47,6 +73,7 @@ export const useHardwareDetails = (
     startTimestampInSeconds,
     endTimestampInSeconds,
     selectedTrees,
+    filter: filtersFormatted,
   };
 
   return useQuery({

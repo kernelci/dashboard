@@ -116,14 +116,6 @@ export const isTFilterNumberKeys = (key: string): key is TFilterNumberKeys => {
 // TODO remove eslint disable rules
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const requestFilters = {
-  test: [
-    'test.status',
-    'test.duration_[gte]',
-    'test.duration_[lte]',
-    'boot.status',
-    'boot.duration_[gte]',
-    'boot.duration_[lte]',
-  ],
   hardwareDetails: [
     'hardwareDetails.trees',
     'hardwareDetails.config_name',
@@ -132,9 +124,47 @@ const requestFilters = {
     'hardwareDetails.valid',
     'hardwareDetails.duration_[gte]',
     'hardwareDetails.duration_[lte]',
+    'test.status',
+    'test.duration_[gte]',
+    'test.duration_[lte]',
+    'boot.status',
+    'boot.duration_[gte]',
+    'boot.duration_[lte]',
   ],
 } as const;
 
 type TRequestFiltersKey = keyof typeof requestFilters;
 export type TRequestFiltersValues =
   (typeof requestFilters)[TRequestFiltersKey][number];
+
+export interface THardwareDetailsFilter
+  extends Partial<{
+    [K in keyof Omit<
+      BuildsTabBuild,
+      'test_status' | 'misc' | 'valid' | 'tree_name' | 'tree_index'
+    >]: BuildsTabBuild[K][];
+  }> {
+  valid?: string[];
+}
+
+export const getTargetFilter = (
+  filter: THardwareDetailsFilter,
+  target: TRequestFiltersKey,
+): THardwareDetailsFilter => {
+  const targetFilter: readonly string[] = requestFilters[target];
+  const acc: Record<string, unknown> = {}; //fix this
+
+  Object.entries(filter).forEach(([k, v]) => {
+    if (!targetFilter.includes(k)) return;
+
+    const splitted = k.split('.');
+    const field = splitted[splitted.length - 1];
+    if (splitted[0] !== 'hardwareDetails') {
+      acc[k] = v;
+    } else {
+      acc[field] = v;
+    }
+  });
+
+  return acc;
+};

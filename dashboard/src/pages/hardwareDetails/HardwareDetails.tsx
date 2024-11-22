@@ -26,7 +26,7 @@ import {
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
-import HardwareDetailsFilter from './HardwareDetailsFilter';
+import HardwareDetailsFilter, { mapFilterToReq } from './HardwareDetailsFilter';
 import HardwareDetailsFilterList from './HardwareDetailsFilterList';
 
 const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
@@ -51,6 +51,8 @@ function HardwareDetails(): JSX.Element {
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
+  const reqFilter = mapFilterToReq(diffFilter);
+
   const updateTreeFilters = useCallback(
     (selectedIndexes: number[]) => {
       navigate({
@@ -68,6 +70,7 @@ function HardwareDetails(): JSX.Element {
     startTimestampInSeconds,
     endTimestampInSeconds,
     origin,
+    reqFilter,
     treeIndexes ?? [],
   );
 
