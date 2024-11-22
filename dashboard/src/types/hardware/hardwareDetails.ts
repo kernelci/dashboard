@@ -27,6 +27,7 @@ type BuildsData = {
   items: BuildsTabBuild[];
   issues: TIssue[];
   summary: BuildSummary;
+  failedWithUnknownIssues: number;
 };
 
 type Tests = {
@@ -37,6 +38,7 @@ type Tests = {
   failReasons: Record<string, unknown>;
   configs: Record<string, StatusCounts>;
   issues: TIssue[];
+  failedWithUnknownIssues: number;
 };
 
 export type Trees = {

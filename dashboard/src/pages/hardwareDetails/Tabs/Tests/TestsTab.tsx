@@ -87,6 +87,7 @@ const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
             issues={tests.issues}
+            failedWithUnknownIssues={tests.failedWithUnknownIssues}
           />
         </div>
       </DesktopGrid>
@@ -108,6 +109,7 @@ const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
               issues={tests.issues}
+              failedWithUnknownIssues={tests.failedWithUnknownIssues}
             />
           </div>
         </InnerMobileGrid>

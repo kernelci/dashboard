@@ -64,6 +64,8 @@ class TreeDetailsSlow(View):
             lambda: IncidentInfo(incidentsCount=0)
         )
         self.hardwareUsed = set()
+        self.failedTestsWithUnknownIssues = 0
+        self.failedBootsWithUnknownIssues = 0
 
     def __handle_boot_status(self, current_filter):
         self.filterBootStatus.add(current_filter["value"])
@@ -255,11 +257,13 @@ class TreeDetailsSlow(View):
             if currentIssue:
                 currentIssue["incidents_info"]["incidentsCount"] += 1
             else:
-                self.testIssuesTable[issue_id] = create_issue(
+                self.bootsIssuesTable[issue_id] = create_issue(
                     issue_id=issue_id,
                     issue_comment=issue_comment,
                     issue_report_url=issue_report_url,
                 )
+        elif testStatus == "FAIL":
+            self.failedBootsWithUnknownIssues += 1
 
         if testId in self.processedTests:
             return
@@ -340,6 +344,9 @@ class TreeDetailsSlow(View):
                     issue_comment=issue_comment,
                     issue_report_url=issue_report_url,
                 )
+        elif testStatus == "FAIL":
+            self.failedTestsWithUnknownIssues += 1
+
         if testId in self.processedTests:
             return
         self.processedTests.add(testId)
@@ -539,6 +546,8 @@ class TreeDetailsSlow(View):
                 "bootEnvironmentCompatible": self.bootEnvironmentCompatible,
                 "incidentsIssueRelationship": self.incidentsIssueRelationship,
                 "hardwareUsed": list(self.hardwareUsed),
+                "failedTestsWithUnknownIssues": self.failedTestsWithUnknownIssues,
+                "failedBootsWithUnknownIssues": self.failedBootsWithUnknownIssues,
             },
             safe=False,
         )

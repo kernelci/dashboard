@@ -143,6 +143,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
             issues={data.testIssues}
+            failedWithUnknownIssues={data.failedTestsWithUnknownIssues}
           />
         </div>
         <div>
@@ -172,6 +173,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
               issues={data.testIssues}
+              failedWithUnknownIssues={data.failedTestsWithUnknownIssues}
             />
           </div>
           <div>

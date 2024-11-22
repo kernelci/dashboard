@@ -139,6 +139,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
             issues={data.bootIssues}
+            failedWithUnknownIssues={data.failedBootsWithUnknownIssues}
           />
         </div>
         <div>
@@ -168,6 +169,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
               issues={data.bootIssues}
+              failedWithUnknownIssues={data.failedBootsWithUnknownIssues}
             />
           </div>
           <div>

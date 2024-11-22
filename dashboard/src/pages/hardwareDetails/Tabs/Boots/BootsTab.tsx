@@ -217,6 +217,7 @@ const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
             issues={boots.issues}
+            failedWithUnknownIssues={boots.failedWithUnknownIssues}
           />
         </div>
       </DesktopGrid>
@@ -238,6 +239,7 @@ const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
               issues={boots.issues}
+              failedWithUnknownIssues={boots.failedWithUnknownIssues}
             />
           </div>
         </InnerMobileGrid>

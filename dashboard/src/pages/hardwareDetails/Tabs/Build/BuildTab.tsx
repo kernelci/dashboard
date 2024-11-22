@@ -298,6 +298,7 @@ const BuildTab = ({ builds, hardwareId }: TBuildTab): JSX.Element => {
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
             issues={builds.issues}
+            failedWithUnknownIssues={builds.failedWithUnknownIssues}
           />
         </div>
         <MemoizedConfigsCard
@@ -323,6 +324,7 @@ const BuildTab = ({ builds, hardwareId }: TBuildTab): JSX.Element => {
         <MemoizedIssuesList
           title={<FormattedMessage id="global.issues" />}
           issues={builds.issues}
+          failedWithUnknownIssues={builds.failedWithUnknownIssues}
         />
       </MobileGrid>
 
