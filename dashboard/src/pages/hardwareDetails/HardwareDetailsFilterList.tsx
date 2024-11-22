@@ -42,9 +42,6 @@ const HardwareDetailsFilterList = ({
 
       if (typeof fieldSection === 'object') {
         delete fieldSection[value];
-        if (Object.keys(fieldSection).length === 0) {
-          delete newFilter[field];
-        }
       } else {
         delete newFilter[field];
       }

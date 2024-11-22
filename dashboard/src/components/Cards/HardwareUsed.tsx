@@ -24,7 +24,6 @@ const HardwareUsed = ({ hardwareUsed, title }: IHardwareUsed): JSX.Element => {
   return (
     <BaseCard
       title={title}
-      className="mb-0"
       content={
         <div className="flex flex-row flex-wrap gap-4 p-4">
           {hardwareSorted}
