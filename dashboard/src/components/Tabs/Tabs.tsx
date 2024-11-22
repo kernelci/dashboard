@@ -39,7 +39,7 @@ const TabsComponent = ({
           key={tab.name}
           value={tab.name}
         >
-          <FormattedMessage id={tab.name} />{' '}
+          <FormattedMessage id={tab.name} />
           <div className="pl-2">{tab.rightElement}</div>
         </TabsTrigger>
       )),
@@ -63,10 +63,12 @@ const TabsComponent = ({
       defaultValue={defaultTab}
       className="w-full"
     >
-      <TabsList className="w-full justify-start bg-transparent">
-        {tabsTrigger}
-      </TabsList>
-      <div className="border-t border-darkGray py-6">{filterListElement}</div>
+      <div className="sticky top-16 z-[5] rounded-md bg-lightGray pb-6 pt-12">
+        <TabsList className="w-full justify-start rounded-none border-b border-darkGray bg-transparent">
+          {tabsTrigger}
+        </TabsList>
+        {filterListElement && <div className="pt-6">{filterListElement}</div>}
+      </div>
 
       {tabsContent}
     </Tabs>
