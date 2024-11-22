@@ -118,7 +118,6 @@ interface IBootsTable {
   filter: TestsTableFilter;
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   onClickFilter: (newFilter: TestsTableFilter) => void;
-  updatePathFilter: (pathFilter: string) => void;
 }
 
 const TableCellComponent = ({
@@ -197,7 +196,6 @@ export function BootsTable({
   filter,
   getRowLink,
   onClickFilter,
-  updatePathFilter,
 }: IBootsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -313,40 +311,20 @@ export function BootsTable({
       ?.setFilterValue(filter !== 'all' ? filter : undefined);
   }, [filter, table]);
 
-  // TODO: there should be a filtering for the frontend before the backend AND that filtering should consider the individual tests inside each test "batch" (the data from individualTestsTables), not only the rows of the external table
   const onSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.value !== undefined) {
-        updatePathFilter(e.target.value);
-      }
-      // TODO: only use the frontend filtering when the backend filter function is undefined (like in BuildDetails page)
-      table.setGlobalFilter(String(e.target.value));
-    },
-    [table, updatePathFilter],
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      table.setGlobalFilter(String(e.target.value)),
+    [table],
   );
 
   const groupHeaders = table.getHeaderGroups()[0]?.headers;
   const tableHeaders = useMemo((): JSX.Element[] => {
     return groupHeaders.map(header => {
-      const headerComponent = header.isPlaceholder
-        ? null
-        : flexRender(header.column.columnDef.header, header.getContext());
       return (
-        <TableHead key={header.id} className="border-b px-2 font-bold">
-          {header.id === 'path' ? (
-            <div className="flex items-center">
-              {headerComponent}
-              {/* TODO: add startingValue with the currentPathFilter from the diffFilter param, same for TestsTable */}
-              <DebounceInput
-                debouncedSideEffect={onSearchChange}
-                className="w-50 font-normal"
-                type="text"
-                placeholder={intl.formatMessage({ id: 'global.search' })}
-              />
-            </div>
-          ) : (
-            headerComponent
-          )}
+        <TableHead key={header.id}>
+          {header.isPlaceholder
+            ? null
+            : flexRender(header.column.columnDef.header, header.getContext())}
         </TableHead>
       );
     });
@@ -438,7 +416,15 @@ export function BootsTable({
       navigationLogsActions={navigationLogsActions}
       onOpenChange={onOpenChange}
     >
-      <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
+      <div className="flex justify-between">
+        <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
+        <DebounceInput
+          debouncedSideEffect={onSearchChange}
+          className="w-50"
+          type="text"
+          placeholder={intl.formatMessage({ id: 'global.search' })}
+        />
+      </div>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableRows}</TableBody>
       </BaseTable>

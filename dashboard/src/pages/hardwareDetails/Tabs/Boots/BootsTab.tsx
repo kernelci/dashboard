@@ -145,9 +145,7 @@ const ErrorsSummary = ({
 export const MemoizedErrorsSummary = memo(ErrorsSummary);
 
 const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
-  const { tableFilter } = useSearch({
-    from: '/hardware/$hardwareId',
-  });
+  const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
 
   const getRowLink = useCallback(
     (bootId: string): LinkProps => ({
@@ -162,21 +160,6 @@ const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
   );
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
-
-  const updatePathFilter = useCallback(
-    (pathFilter: string) => {
-      navigate({
-        search: previousSearch => ({
-          ...previousSearch,
-          diffFilter: {
-            ...previousSearch.diffFilter,
-            path: pathFilter === '' ? undefined : { [pathFilter]: true },
-          },
-        }),
-      });
-    },
-    [navigate],
-  );
 
   const onClickFilter = useCallback(
     (newFilter: TestsTableFilter): void => {
@@ -244,7 +227,6 @@ const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
         filter={tableFilter.bootsTable}
         testHistory={boots.history}
         onClickFilter={onClickFilter}
-        updatePathFilter={updatePathFilter}
       />
     </div>
   );
