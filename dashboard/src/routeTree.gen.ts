@@ -20,7 +20,6 @@ import { Route as TreeTreeIdRouteImport } from './routes/tree/$treeId/route'
 import { Route as HardwareHardwareIdRouteImport } from './routes/hardware/$hardwareId/route'
 import { Route as TreeTreeIdIndexImport } from './routes/tree/$treeId/index'
 import { Route as HardwareHardwareIdIndexImport } from './routes/hardware/$hardwareId/index'
-import { Route as TreeTreeIdTestRouteImport } from './routes/tree/$treeId/test/route'
 import { Route as HardwareHardwareIdTestRouteImport } from './routes/hardware/$hardwareId/test/route'
 import { Route as HardwareHardwareIdBuildRouteImport } from './routes/hardware/$hardwareId/build/route'
 import { Route as HardwareHardwareIdBootRouteImport } from './routes/hardware/$hardwareId/boot/route'
@@ -81,11 +80,6 @@ const HardwareHardwareIdIndexRoute = HardwareHardwareIdIndexImport.update({
   getParentRoute: () => HardwareHardwareIdRouteRoute,
 } as any)
 
-const TreeTreeIdTestRouteRoute = TreeTreeIdTestRouteImport.update({
-  path: '/test',
-  getParentRoute: () => TreeTreeIdRouteRoute,
-} as any)
-
 const HardwareHardwareIdTestRouteRoute =
   HardwareHardwareIdTestRouteImport.update({
     path: '/test',
@@ -123,8 +117,8 @@ const HardwareHardwareIdBootIndexRoute =
   } as any)
 
 const TreeTreeIdTestTestIdRouteRoute = TreeTreeIdTestTestIdRouteImport.update({
-  path: '/$testId',
-  getParentRoute: () => TreeTreeIdTestRouteRoute,
+  path: '/test/$testId',
+  getParentRoute: () => TreeTreeIdRouteRoute,
 } as any)
 
 const TreeTreeIdTestTestIdIndexRoute = TreeTreeIdTestTestIdIndexImport.update({
@@ -230,13 +224,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HardwareHardwareIdTestRouteImport
       parentRoute: typeof HardwareHardwareIdRouteImport
     }
-    '/tree/$treeId/test': {
-      id: '/tree/$treeId/test'
-      path: '/test'
-      fullPath: '/tree/$treeId/test'
-      preLoaderRoute: typeof TreeTreeIdTestRouteImport
-      parentRoute: typeof TreeTreeIdRouteImport
-    }
     '/hardware/$hardwareId/': {
       id: '/hardware/$hardwareId/'
       path: '/'
@@ -253,10 +240,10 @@ declare module '@tanstack/react-router' {
     }
     '/tree/$treeId/test/$testId': {
       id: '/tree/$treeId/test/$testId'
-      path: '/$testId'
+      path: '/test/$testId'
       fullPath: '/tree/$treeId/test/$testId'
       preLoaderRoute: typeof TreeTreeIdTestTestIdRouteImport
-      parentRoute: typeof TreeTreeIdTestRouteImport
+      parentRoute: typeof TreeTreeIdRouteImport
     }
     '/hardware/$hardwareId/boot/': {
       id: '/hardware/$hardwareId/boot/'
@@ -344,13 +331,11 @@ export const routeTree = rootRoute.addChildren({
   }),
   TreeRouteRoute: TreeRouteRoute.addChildren({
     TreeTreeIdRouteRoute: TreeTreeIdRouteRoute.addChildren({
-      TreeTreeIdTestRouteRoute: TreeTreeIdTestRouteRoute.addChildren({
-        TreeTreeIdTestTestIdRouteRoute:
-          TreeTreeIdTestTestIdRouteRoute.addChildren({
-            TreeTreeIdTestTestIdIndexRoute,
-          }),
-      }),
       TreeTreeIdIndexRoute,
+      TreeTreeIdTestTestIdRouteRoute:
+        TreeTreeIdTestTestIdRouteRoute.addChildren({
+          TreeTreeIdTestTestIdIndexRoute,
+        }),
       TreeTreeIdBuildBuildIdIndexRoute,
     }),
     TreeIndexRoute,
@@ -401,8 +386,8 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "tree/$treeId/route.tsx",
       "parent": "/tree",
       "children": [
-        "/tree/$treeId/test",
         "/tree/$treeId/",
+        "/tree/$treeId/test/$testId",
         "/tree/$treeId/build/$buildId/"
       ]
     },
@@ -438,13 +423,6 @@ export const routeTree = rootRoute.addChildren({
         "/hardware/$hardwareId/test/$testId/"
       ]
     },
-    "/tree/$treeId/test": {
-      "filePath": "tree/$treeId/test/route.tsx",
-      "parent": "/tree/$treeId",
-      "children": [
-        "/tree/$treeId/test/$testId"
-      ]
-    },
     "/hardware/$hardwareId/": {
       "filePath": "hardware/$hardwareId/index.tsx",
       "parent": "/hardware/$hardwareId"
@@ -455,7 +433,7 @@ export const routeTree = rootRoute.addChildren({
     },
     "/tree/$treeId/test/$testId": {
       "filePath": "tree/$treeId/test/$testId/route.tsx",
-      "parent": "/tree/$treeId/test",
+      "parent": "/tree/$treeId",
       "children": [
         "/tree/$treeId/test/$testId/"
       ]
