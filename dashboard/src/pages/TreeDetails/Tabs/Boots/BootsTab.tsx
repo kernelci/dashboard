@@ -38,6 +38,21 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
 
   const navigate = useNavigate({ from: '/tree/$treeId/' });
 
+  const updatePathFilter = useCallback(
+    (pathFilter: string) => {
+      navigate({
+        search: previousSearch => ({
+          ...previousSearch,
+          diffFilter: {
+            ...previousSearch.diffFilter,
+            path: pathFilter === '' ? undefined : { [pathFilter]: true },
+          },
+        }),
+      });
+    },
+    [navigate],
+  );
+
   const onClickFilter = useCallback(
     (newFilter: TestsTableFilter): void => {
       navigate({
@@ -165,6 +180,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
         onClickFilter={onClickFilter}
         testHistory={data.bootHistory}
         getRowLink={getRowLink}
+        updatePathFilter={updatePathFilter}
       />
     </div>
   );
