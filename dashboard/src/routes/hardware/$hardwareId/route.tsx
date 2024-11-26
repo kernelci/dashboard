@@ -7,11 +7,12 @@ import {
   zTableFilterInfoValidator,
 } from '@/types/tree/TreeDetails';
 
-import { zDiffFilter } from '@/types/hardware/hardwareDetails';
+import { zDiffFilter, zTreeCommits } from '@/types/hardware/hardwareDetails';
 
 const hardwareDetailsSearchSchema = z.object({
   currentPageTab: zPossibleTabValidator,
   treeIndexes: z.array(z.number().int()).optional(),
+  treeCommits: zTreeCommits,
   tableFilter: zTableFilterInfoValidator,
   startTimestampInSeconds: z.number(),
   endTimestampInSeconds: z.number(),

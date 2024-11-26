@@ -17,16 +17,22 @@ import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 
-import { MemoizedConfigList, MemoizedErrorsSummary } from '../Boots/BootsTab';
+import {
+  MemoizedConfigList,
+  MemoizedErrorsSummary,
+} from '@/pages/hardwareDetails/Tabs/Boots/BootsTab';
+
+import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 
 import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
 interface TTestsTab {
   tests: THardwareDetails['tests'];
+  trees: THardwareDetails['trees'];
   hardwareId: string;
 }
 
-const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
+const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
   const { tableFilter, diffFilter } = useSearch({
     from: '/hardware/$hardwareId',
   });
@@ -89,12 +95,14 @@ const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
             issues={tests.issues}
           />
         </div>
+        <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
       </DesktopGrid>
       <MobileGrid>
         <MemoizedStatusChart
           title={<FormattedMessage id="bootsTab.bootStatus" />}
           statusCounts={tests.statusSummary}
         />
+        <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList

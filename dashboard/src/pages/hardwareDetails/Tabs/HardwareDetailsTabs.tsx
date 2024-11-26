@@ -20,14 +20,14 @@ export type TreeDetailsTabRightElement = Record<
 >;
 
 export interface IHardwareDetailsTab {
-  HardwareDetailsData: THardwareDetails;
+  hardwareDetailsData: THardwareDetails;
   hardwareId: string;
   filterListElement?: JSX.Element;
   countElements: TreeDetailsTabRightElement;
 }
 
 const HardwareDetailsTabs = ({
-  HardwareDetailsData,
+  hardwareDetailsData,
   hardwareId,
   filterListElement,
   countElements,
@@ -59,7 +59,8 @@ const HardwareDetailsTabs = ({
         name: 'global.builds',
         content: (
           <BuildTab
-            builds={HardwareDetailsData.builds}
+            builds={hardwareDetailsData.builds}
+            trees={hardwareDetailsData.trees}
             hardwareId={hardwareId}
           />
         ),
@@ -69,7 +70,11 @@ const HardwareDetailsTabs = ({
       {
         name: 'global.boots',
         content: (
-          <BootsTab boots={HardwareDetailsData.boots} hardwareId={hardwareId} />
+          <BootsTab
+            boots={hardwareDetailsData.boots}
+            hardwareId={hardwareId}
+            trees={hardwareDetailsData.trees}
+          />
         ),
         rightElement: countElements['global.boots'],
         disabled: false,
@@ -77,18 +82,23 @@ const HardwareDetailsTabs = ({
       {
         name: 'global.tests',
         content: (
-          <TestsTab tests={HardwareDetailsData.tests} hardwareId={hardwareId} />
+          <TestsTab
+            tests={hardwareDetailsData.tests}
+            hardwareId={hardwareId}
+            trees={hardwareDetailsData.trees}
+          />
         ),
         rightElement: countElements['global.tests'],
         disabled: false,
       },
     ],
     [
-      HardwareDetailsData.boots,
-      HardwareDetailsData.builds,
-      HardwareDetailsData.tests,
-      countElements,
+      hardwareDetailsData.builds,
+      hardwareDetailsData.trees,
+      hardwareDetailsData.boots,
+      hardwareDetailsData.tests,
       hardwareId,
+      countElements,
     ],
   );
 

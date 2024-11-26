@@ -42,12 +42,14 @@ const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
 function HardwareDetails(): JSX.Element {
   const {
     treeIndexes,
+    treeCommits,
     startTimestampInSeconds,
     endTimestampInSeconds,
     diffFilter,
+    origin,
   } = useSearch({ from: '/hardware/$hardwareId' });
+
   const { hardwareId } = useParams({ from: '/hardware/$hardwareId' });
-  const { origin } = useSearch({ from: '/hardware' });
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
@@ -72,6 +74,7 @@ function HardwareDetails(): JSX.Element {
     origin,
     reqFilter,
     treeIndexes ?? [],
+    treeCommits,
   );
 
   const filterListElement = useMemo(
@@ -174,7 +177,7 @@ function HardwareDetails(): JSX.Element {
             </div>
           </div>
           <HardwareDetailsTabs
-            HardwareDetailsData={data}
+            hardwareDetailsData={data}
             hardwareId={hardwareId}
             filterListElement={filterListElement}
             countElements={tabsCounts}

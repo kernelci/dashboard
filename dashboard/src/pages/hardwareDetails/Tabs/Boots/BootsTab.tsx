@@ -33,11 +33,14 @@ import { DumbSummary } from '@/components/Summary/Summary';
 
 import type { ArchCompilerStatus } from '@/types/general';
 
-import FilterLink from '../../HardwareDetailsFilterLink';
-import { MemoizedSummaryItem } from '../Build/BuildTab';
+import FilterLink from '@/pages/hardwareDetails/HardwareDetailsFilterLink';
+
+import { MemoizedSummaryItem } from '@/pages/hardwareDetails/Tabs/Build/BuildTab';
+import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 
 interface TBootsTab {
   boots: THardwareDetails['boots'];
+  trees: THardwareDetails['trees'];
   hardwareId: string;
 }
 
@@ -144,7 +147,7 @@ const ErrorsSummary = ({
 //TODO: put it in other file to be reused
 export const MemoizedErrorsSummary = memo(ErrorsSummary);
 
-const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
+const BootsTab = ({ boots, trees, hardwareId }: TBootsTab): JSX.Element => {
   const { tableFilter, diffFilter } = useSearch({
     from: '/hardware/$hardwareId',
   });
@@ -219,12 +222,14 @@ const BootsTab = ({ boots, hardwareId }: TBootsTab): JSX.Element => {
             issues={boots.issues}
           />
         </div>
+        <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
       </DesktopGrid>
       <MobileGrid>
         <MemoizedStatusChart
           title={<FormattedMessage id="bootsTab.bootStatus" />}
           statusCounts={boots.statusSummary}
         />
+        <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList

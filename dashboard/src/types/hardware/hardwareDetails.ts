@@ -65,6 +65,7 @@ export const zFilterObjectsKeys = z.enum([
   'buildStatus',
   'bootStatus',
   'testStatus',
+  'hardware',
   'trees',
   'path',
   'bootPath',
@@ -92,6 +93,7 @@ export const zDiffFilter = z
       compilers: zFilterBoolValue,
       bootStatus: zFilterBoolValue,
       testStatus: zFilterBoolValue,
+      hardware: zFilterBoolValue,
       buildDurationMax: zFilterNumberValue,
       buildDurationMin: zFilterNumberValue,
       bootDurationMin: zFilterNumberValue,
@@ -176,3 +178,6 @@ export const getTargetFilter = (
 
   return acc;
 };
+
+export const zTreeCommits = z.record(z.string()).optional();
+export type TTreeCommits = z.infer<typeof zTreeCommits>;

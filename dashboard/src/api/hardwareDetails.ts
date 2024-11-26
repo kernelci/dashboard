@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import type {
   THardwareDetails,
   THardwareDetailsFilter,
+  TTreeCommits,
 } from '@/types/hardware/hardwareDetails';
 import { getTargetFilter } from '@/types/hardware/hardwareDetails';
 import type { TOrigins } from '@/types/general';
@@ -47,12 +48,21 @@ const fetchHardwareDetails = async (
   return res.data;
 };
 
+const TREE_SELECT_HEAD_VALUE = 'head';
+
 const mapIndexesToSelectedTrees = (
   selectedIndexes: number[],
-): Record<number, string> => {
-  return Object.fromEntries(
-    Array.from(selectedIndexes, index => [index.toString(), 'selected']),
-  );
+  treeCommits: TTreeCommits = {},
+): Record<string, string> => {
+  const selectedTrees: Record<string, string> = {};
+
+  selectedIndexes.forEach(idx => {
+    const key = idx.toString();
+    const value = treeCommits[key] || TREE_SELECT_HEAD_VALUE;
+    selectedTrees[key] = value;
+  });
+
+  return selectedTrees;
 };
 
 export const useHardwareDetails = (
@@ -62,11 +72,11 @@ export const useHardwareDetails = (
   origin: TOrigins,
   filter: { [key: string]: string[] },
   selectedIndexes: number[],
+  treeCommits: TTreeCommits,
 ): UseQueryResult<THardwareDetails> => {
   const detailsFilter = getTargetFilter(filter, 'hardwareDetails');
   const filtersFormatted = mapFiltersKeysToBackendCompatible(detailsFilter);
-
-  const selectedTrees = mapIndexesToSelectedTrees(selectedIndexes);
+  const selectedTrees = mapIndexesToSelectedTrees(selectedIndexes, treeCommits);
 
   const body: fetchHardwareDetailsBody = {
     origin,

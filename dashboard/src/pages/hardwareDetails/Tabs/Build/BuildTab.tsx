@@ -30,12 +30,15 @@ import ListingItem from '@/components/ListingItem/ListingItem';
 
 import { TableCell, TableCellWithLink, TableRow } from '@/components/ui/table';
 
-import FilterLink from '../../HardwareDetailsFilterLink';
+import FilterLink from '@/pages/hardwareDetails/HardwareDetailsFilterLink';
+
+import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
 interface TBuildTab {
   builds: THardwareDetails['builds'];
+  trees: THardwareDetails['trees'];
   hardwareId: string;
 }
 
@@ -235,7 +238,7 @@ const ConfigsCard = ({
 //TODO: put it in other file to be reused
 export const MemoizedConfigsCard = memo(ConfigsCard);
 
-const BuildTab = ({ builds, hardwareId }: TBuildTab): JSX.Element => {
+const BuildTab = ({ builds, trees, hardwareId }: TBuildTab): JSX.Element => {
   /* const navigate = useNavigate({
     from: '/hardware/$hardwareId/',
   }); */
@@ -300,12 +303,19 @@ const BuildTab = ({ builds, hardwareId }: TBuildTab): JSX.Element => {
             issues={builds.issues}
           />
         </div>
-        <MemoizedConfigsCard
-          configs={configsItems}
-          toggleFilterBySection={toggleFilterBySection}
-        />
+        <div>
+          <HardwareCommitNavigationGraph
+            trees={trees}
+            hardwareId={hardwareId}
+          />
+          <MemoizedConfigsCard
+            configs={configsItems}
+            toggleFilterBySection={toggleFilterBySection}
+          />
+        </div>
       </DesktopGrid>
       <MobileGrid>
+        <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
         <MemoizedStatusCard
           toggleFilterBySection={toggleFilterBySection}
           buildsSummary={builds.summary.builds}
