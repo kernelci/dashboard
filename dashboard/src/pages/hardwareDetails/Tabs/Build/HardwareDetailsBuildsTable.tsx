@@ -51,6 +51,16 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
       }),
   },
   {
+    accessorKey: 'architecture',
+    header: ({ column }): JSX.Element =>
+      TableHeader({
+        column: column,
+        sortable: true,
+        intlKey: 'global.arch',
+        intlDefaultMessage: 'Arch',
+      }),
+  },
+  {
     accessorKey: 'compiler',
     header: ({ column }): JSX.Element =>
       TableHeader({

@@ -19,6 +19,7 @@ import type { Status } from '@/types/database';
 export type AccordionItemBuilds = {
   id: string;
   config?: string;
+  architecture?: string;
   compiler?: string;
   date?: string;
   buildErrors?: number;

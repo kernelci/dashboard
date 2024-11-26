@@ -90,6 +90,7 @@ export const messages = {
     'filter.treeSubtitle': 'Please select one or more Trees:',
     'filter.treeURL': 'Tree URL',
     'global.allCount': 'All: {count}',
+    'global.arch': 'Arch',
     'global.architecture': 'Architecture',
     'global.boots': 'Boots',
     'global.branch': 'Branch',

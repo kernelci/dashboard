@@ -71,6 +71,7 @@ export const sanitizeBuilds = (
   return builds.map(build => ({
     id: build.id,
     config: build.config_name,
+    architecture: build.architecture,
     date: build.start_time,
     buildTime: build.duration,
     compiler: build.compiler,
