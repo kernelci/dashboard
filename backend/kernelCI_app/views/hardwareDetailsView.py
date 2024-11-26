@@ -17,7 +17,7 @@ from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from django.views.decorators.csrf import csrf_exempt
 
 DEFAULT_DAYS_INTERVAL = 3
-SELECTED_VALUE = 'selected'
+SELECTED_HEAD_TREE_VALUE = 'head'
 
 
 def properties2List(d, keys):
@@ -97,9 +97,9 @@ def is_boot(record):
 def get_current_selected_tree(record, selected_trees):
     for tree in selected_trees:
         if (
-            tree["treeName"] == record["build__checkout__tree_name"]
-            and tree["gitRepositoryBranch"] == record["build__checkout__git_repository_branch"]
-            and tree["gitRepositoryUrl"] == record["build__checkout__git_repository_url"]
+            tree["tree_name"] == record["build__checkout__tree_name"]
+            and tree["git_repository_branch"] == record["build__checkout__git_repository_branch"]
+            and tree["git_repository_url"] == record["build__checkout__git_repository_url"]
         ):
             return tree
 
@@ -126,8 +126,8 @@ def generate_test_dict():
     }
 
 
-def is_record_in_tree_head(record, tree):
-    return record["build__checkout__git_commit_hash"] == tree["headGitCommitHash"]
+def is_record_selected(record, tree):
+    return record["build__checkout__git_commit_hash"] == tree["git_commit_hash"]
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -190,7 +190,7 @@ class HardwareDetails(View):
 
         for r in records:
             current_tree = get_current_selected_tree(r, selected_trees)
-            if not current_tree or not is_record_in_tree_head(r, current_tree):
+            if not current_tree or not is_record_selected(r, current_tree):
                 continue
 
             build_id = r["build_id"]
@@ -279,13 +279,31 @@ class HardwareDetails(View):
 
         return trees
 
-    def get_selected_trees(self, trees, selected_trees):
-        def filter_fn(tree):
-            return selected_trees.get(tree.get('index')) == SELECTED_VALUE
+    def get_selected_trees(self, trees, selected_tree_param):
+        selected_trees = []
 
-        return list(filter(filter_fn, trees)) if selected_trees else trees
+        for tree in trees:
+            tree_idx = tree["index"]
+            selected_commit = selected_tree_param.get(tree_idx)
 
-    def get_records(self, *, hardware_id, origin, start_datetime, end_datetime):
+            if not selected_tree_param or selected_commit == SELECTED_HEAD_TREE_VALUE:
+                selected_commit = tree['headGitCommitHash']
+            elif not selected_commit:
+                continue
+
+            selected_trees.append({
+                "tree_name": tree["treeName"],
+                "git_repository_branch": tree["gitRepositoryBranch"],
+                "git_repository_url": tree["gitRepositoryUrl"],
+                "index": tree["index"],
+                "git_commit_hash": selected_commit,
+            })
+
+        return selected_trees
+
+    def get_records(self, *, hardware_id, origin, trees):
+        commit_hashes = [tree["git_commit_hash"] for tree in trees]
+
         records = Tests.objects.values(
             "id",
             "environment_misc",
@@ -316,10 +334,9 @@ class HardwareDetails(View):
             "build__incidents__issue__comment",
             "build__incidents__issue__report_url"
         ).filter(
+            origin=origin,
             environment_compatible__contains=[hardware_id],
-            build__checkout__start_time__gte=start_datetime,
-            build__checkout__start_time__lte=end_datetime,
-            origin=origin
+            build__checkout__git_commit_hash__in=commit_hashes,
         )
         return records
 
@@ -358,8 +375,7 @@ class HardwareDetails(View):
         params = {
             "hardware_id": hardware_id,
             "origin": origin,
-            "start_datetime": start_datetime,
-            "end_datetime": end_datetime
+            "trees": selected_trees
         }
 
         records = getQueryCache(self.cache_key_get, params)
