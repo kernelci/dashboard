@@ -67,7 +67,9 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
     >
       <NavLink
         to={item.navigateTo}
-        search={prevSearch => prevSearch}
+        search={prevSearch => ({
+          origin: prevSearch.origin,
+        })}
         icon={item.icon}
         idIntl={item.idIntl}
       />
