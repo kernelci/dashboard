@@ -181,6 +181,7 @@ export function BuildsTable({
     return buildItems?.map(row => ({
       ...row,
       config: row.config ?? '-',
+      architecture: row.architecture ?? '-',
       compiler: row.compiler ?? '-',
       buildTime: row.buildTime ? (
         <span>
