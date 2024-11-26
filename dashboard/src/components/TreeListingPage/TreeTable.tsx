@@ -47,6 +47,8 @@ import { PaginationInfo } from '../Table/PaginationInfo';
 
 import { InputTime } from './InputTime';
 
+const MemoizedInputTime = memo(InputTime);
+
 const columns: ColumnDef<TreeTableBody>[] = [
   {
     accessorKey: 'tree_name',
@@ -280,8 +282,6 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
       </TableRow>
     );
   }, [getLinkProps, modelRows]);
-
-  const MemoizedInputTime = memo(InputTime);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
