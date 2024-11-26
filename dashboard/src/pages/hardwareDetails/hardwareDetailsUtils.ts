@@ -4,7 +4,9 @@ import { useSearch } from '@tanstack/react-router';
 
 import type {
   TFilter,
+  TFilterKeys,
   TFilterObjectsKeys,
+  TRequestFiltersValues,
 } from '@/types/hardware/hardwareDetails';
 
 import {
@@ -61,3 +63,19 @@ export const useDiffFilterParams = (
 
   return newFilter;
 };
+
+export const filterFieldMap = {
+  'hardwareDetails.config_name': 'configs',
+  'hardwareDetails.architecture': 'archs',
+  'hardwareDetails.compiler': 'compilers',
+  'hardwareDetails.valid': 'buildStatus',
+  'hardwareDetails.duration_[gte]': 'buildDurationMin',
+  'hardwareDetails.duration_[lte]': 'buildDurationMax',
+  'hardwareDetails.trees': 'trees',
+  'boot.status': 'bootStatus',
+  'boot.duration_[gte]': 'bootDurationMin',
+  'boot.duration_[lte]': 'bootDurationMax',
+  'test.status': 'testStatus',
+  'test.duration_[gte]': 'testDurationMin',
+  'test.duration_[lte]': 'testDurationMax',
+} as const satisfies Record<TRequestFiltersValues, TFilterKeys>;

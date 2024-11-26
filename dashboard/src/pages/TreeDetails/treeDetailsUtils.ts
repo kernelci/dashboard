@@ -1,11 +1,16 @@
 import { useSearch } from '@tanstack/react-router';
 
-import type { TFilter, TFilterObjectsKeys } from '@/types/tree/TreeDetails';
+import type {
+  TFilter,
+  TFilterKeys,
+  TFilterObjectsKeys,
+} from '@/types/tree/TreeDetails';
 
 import {
   isTFilterObjectKeys,
   isTFilterNumberKeys,
 } from '@/types/tree/TreeDetails';
+import type { TRequestFiltersValues } from '@/utils/filters';
 
 export const cleanFalseFilters = (diffFilter: TFilter): TFilter => {
   const cleanedFilter: TFilter = {};
@@ -32,6 +37,22 @@ export const cleanFalseFilters = (diffFilter: TFilter): TFilter => {
 
   return cleanedFilter;
 };
+
+export const filterFieldMap = {
+  'treeDetails.config_name': 'configs',
+  'treeDetails.architecture': 'archs',
+  'treeDetails.compiler': 'compilers',
+  'treeDetails.valid': 'buildStatus',
+  'treeDetails.duration_[gte]': 'buildDurationMin',
+  'treeDetails.duration_[lte]': 'buildDurationMax',
+  'boot.status': 'bootStatus',
+  'boot.duration_[gte]': 'bootDurationMin',
+  'boot.duration_[lte]': 'bootDurationMax',
+  'test.status': 'testStatus',
+  'test.duration_[gte]': 'testDurationMin',
+  'test.duration_[lte]': 'testDurationMax',
+  'test.hardware': 'hardware',
+} as const satisfies Record<TRequestFiltersValues, TFilterKeys>;
 
 export const useDiffFilterParams = (
   filterValue: string,

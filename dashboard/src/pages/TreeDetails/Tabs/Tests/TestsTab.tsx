@@ -12,20 +12,20 @@ import BaseCard from '@/components/Cards/BaseCard';
 
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 
-import {
-  DesktopGrid,
-  InnerMobileGrid,
-  MobileGrid,
-} from '@/pages/TreeDetails/Tabs/TabGrid';
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
 
-import MemoizedStatusChart from '@/components/Cards/StatusChart';
-import MemoizedConfigList from '@/components/Cards/ConfigsList';
-import MemoizedErrorsSummary from '@/components/Cards/ErrorsSummary';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
 
 import { TestsTable } from '@/components/TestsTable/TestsTable';
+import {
+  DesktopGrid,
+  InnerMobileGrid,
+  MobileGrid,
+} from '@/components/Tabs/TabGrid';
+import MemoizedStatusChart from '@/components/Tabs/Tests/StatusChart';
+import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
+import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
 interface TestsTabProps {
   reqFilter: Record<string, string[]>;
@@ -39,6 +39,11 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
   });
 
   const { tableFilter } = useSearch({
+    from: '/tree/$treeId/',
+  });
+  const {
+    diffFilter,
+  }: { diffFilter: Record<string, Record<string, boolean>> } = useSearch({
     from: '/tree/$treeId/',
   });
 
@@ -117,10 +122,12 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
           <MemoizedConfigList
             title={<FormattedMessage id="global.configs" />}
             configStatusCounts={data.testConfigs}
+            diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
             archCompilerErrors={data.testArchSummary}
+            diffFilter={diffFilter}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
@@ -146,10 +153,12 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             <MemoizedConfigList
               title={<FormattedMessage id="global.configs" />}
               configStatusCounts={data.testConfigs}
+              diffFilter={diffFilter}
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
               archCompilerErrors={data.testArchSummary}
+              diffFilter={diffFilter}
             />
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}

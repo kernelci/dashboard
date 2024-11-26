@@ -14,7 +14,9 @@ import type { TLineChartProps } from '@/components/LineChart/LineChart';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { MessagesKey } from '@/locales/messages';
 import { formatDate } from '@/utils/utils';
-import { mapFilterToReq } from '@/pages/TreeDetails/TreeDetailsFilter';
+import { mapFilterToReq } from '@/components/Tabs/Filters';
+
+import { filterFieldMap } from '../treeDetailsUtils';
 
 const graphDisplaySize = 7;
 
@@ -35,7 +37,10 @@ const CommitNavigationGraph = (): JSX.Element => {
     from: '/tree/$treeId',
   });
 
-  const reqFilter = mapFilterToReq(diffFilter);
+  const reqFilter = mapFilterToReq(
+    diffFilter as Record<string, string>,
+    filterFieldMap,
+  );
 
   const { data, status } = useTreeCommitHistory(
     {

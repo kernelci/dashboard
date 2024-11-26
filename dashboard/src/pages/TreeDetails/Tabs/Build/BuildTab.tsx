@@ -1,30 +1,27 @@
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 
-import { memo, useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
-import { useNavigate } from '@tanstack/react-router';
-
-import StatusChartMemoized, {
-  Colors,
-} from '@/components/StatusChart/StatusCharts';
-import { DumbListingContent } from '@/components/ListingContent/ListingContent';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import type { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
 import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
-import BaseCard from '@/components/Cards/BaseCard';
 
 import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
-import { MemoizedErrorsSummaryBuild } from '@/pages/TreeDetails/Tabs/BuildCards';
-
-import { BuildStatus } from '@/components/Status/Status';
-
-import ListingItem from '@/components/ListingItem/ListingItem';
-
-import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
-import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
+import { MemoizedStatusCard } from '@/components/Tabs/Builds/StatusCard';
+
+import { MemoizedConfigsCard } from '@/components/Tabs/Builds/ConfigsCard';
+
+import { MemoizedErrorsSummaryBuild } from '@/components/Tabs/Builds/BuildCards';
+
+import {
+  DesktopGrid,
+  InnerMobileGrid,
+  MobileGrid,
+} from '@/components/Tabs/TabGrid';
 
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
@@ -32,104 +29,15 @@ interface BuildTab {
   treeDetailsData: ITreeDetails;
 }
 
-const StatusCard = ({
-  buildsSummary,
-  toggleFilterBySection,
-}: {
-  toggleFilterBySection: (
-    value: string,
-    filterSection: TFilterObjectsKeys,
-  ) => void;
-  buildsSummary?: ITreeDetails['buildsSummary'];
-}): JSX.Element => {
-  const { formatMessage } = useIntl();
-  if (!buildsSummary) return <></>;
-  return (
-    <BaseCard
-      title={formatMessage({ id: 'treeDetails.buildStatus' })}
-      content={
-        <StatusChartMemoized
-          type="chart"
-          pieCentralLabel={formatMessage({ id: 'treeDetails.executed' })}
-          pieCentralDescription={
-            <>
-              {(buildsSummary.invalid ?? 0) +
-                (buildsSummary.valid ?? 0) +
-                (buildsSummary.null ?? 0)}
-            </>
-          }
-          onLegendClick={(value: string) => {
-            toggleFilterBySection(value, 'buildStatus');
-          }}
-          elements={[
-            {
-              value: buildsSummary.valid ?? 0,
-              label: 'treeDetails.success',
-              color: Colors.Green,
-            },
-            {
-              value: buildsSummary.invalid ?? 0,
-              label: 'treeDetails.failed',
-              color: Colors.Red,
-            },
-            {
-              value: buildsSummary.null ?? 0,
-              label: 'global.inconclusive',
-              color: Colors.Gray,
-            },
-          ]}
-        />
-      }
-    />
-  );
-};
-
-//TODO: put it in other file to be reused
-export const MemoizedStatusCard = memo(StatusCard);
-
-const ConfigsCard = ({
-  configs,
-}: {
-  configs: ITreeDetails['configs'];
-  toggleFilterBySection: (
-    value: string,
-    filterSection: TFilterObjectsKeys,
-  ) => void;
-}): JSX.Element => {
-  const content = useMemo(() => {
-    return (
-      <DumbListingContent>
-        {configs.map((item, i) => (
-          <FilterLink key={i} filterSection="configs" filterValue={item.text}>
-            <ListingItem
-              text={item.text}
-              leftIcon={
-                <BuildStatus
-                  valid={item.success}
-                  invalid={item.errors}
-                  unknown={item.unknown}
-                />
-              }
-            />
-          </FilterLink>
-        ))}
-      </DumbListingContent>
-    );
-  }, [configs]);
-
-  return (
-    <BaseCard
-      title={<FormattedMessage id="treeDetails.configs" />}
-      content={content}
-    />
-  );
-};
-//TODO: put it in other file to be reused
-export const MemoizedConfigsCard = memo(ConfigsCard);
-
 const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   const navigate = useNavigate({
     from: '/tree/$treeId',
+  });
+
+  const {
+    diffFilter,
+  }: { diffFilter: Record<string, Record<string, boolean>> } = useSearch({
+    from: '/tree/$treeId/',
   });
 
   const toggleFilterBySection = useCallback(
@@ -161,13 +69,14 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
         <div>
-          <MemoizedStatusCard
+          <MemoizedStatusCard<TFilterObjectsKeys>
             toggleFilterBySection={toggleFilterBySection}
             buildsSummary={treeDetailsData.buildsSummary}
           />
-          <MemoizedErrorsSummaryBuild
+          <MemoizedErrorsSummaryBuild<TFilterObjectsKeys>
             summaryBody={treeDetailsData.architectures}
             toggleFilterBySection={toggleFilterBySection}
+            diffFilter={diffFilter}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
@@ -176,9 +85,10 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         </div>
         <div>
           <CommitNavigationGraph />
-          <MemoizedConfigsCard
+          <MemoizedConfigsCard<TFilterObjectsKeys>
             configs={treeDetailsData.configs}
             toggleFilterBySection={toggleFilterBySection}
+            diffFilter={diffFilter}
           />
         </div>
       </DesktopGrid>
@@ -189,13 +99,15 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           buildsSummary={treeDetailsData.buildsSummary}
         />
         <InnerMobileGrid>
-          <MemoizedErrorsSummaryBuild
+          <MemoizedErrorsSummaryBuild<TFilterObjectsKeys>
             summaryBody={treeDetailsData.architectures}
             toggleFilterBySection={toggleFilterBySection}
+            diffFilter={diffFilter}
           />
-          <MemoizedConfigsCard
+          <MemoizedConfigsCard<TFilterObjectsKeys>
             configs={treeDetailsData.configs}
             toggleFilterBySection={toggleFilterBySection}
+            diffFilter={diffFilter}
           />
         </InnerMobileGrid>
         <MemoizedIssuesList

@@ -16,18 +16,22 @@ import {
 import { Skeleton } from '@/components/Skeleton';
 import { useHardwareDetails } from '@/api/hardwareDetails';
 
-import type { Trees } from '@/types/hardware/hardwareDetails';
+import type { TFilter, Trees } from '@/types/hardware/hardwareDetails';
 
 import {
   GroupedTestStatus,
   BuildStatus as BuildStatusComponent,
 } from '@/components/Status/Status';
 
+import { mapFilterToReq } from '@/components/Tabs/Filters';
+
+import DetailsFilterList from '@/components/Tabs/FilterList';
+
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
-import HardwareDetailsFilter, { mapFilterToReq } from './HardwareDetailsFilter';
-import HardwareDetailsFilterList from './HardwareDetailsFilterList';
+import HardwareDetailsFilter from './HardwareDetailsFilter';
+import { filterFieldMap } from './hardwareDetailsUtils';
 
 const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
   treeItems.map(tree => ({
@@ -51,7 +55,10 @@ function HardwareDetails(): JSX.Element {
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
-  const reqFilter = mapFilterToReq(diffFilter);
+  const reqFilter = mapFilterToReq(
+    diffFilter as Record<string, string>,
+    filterFieldMap,
+  );
 
   const updateTreeFilters = useCallback(
     (selectedIndexes: number[]) => {
@@ -65,6 +72,31 @@ function HardwareDetails(): JSX.Element {
     [navigate],
   );
 
+  const onFilterChange = useCallback(
+    (newFilter: TFilter) => {
+      navigate({
+        search: previousSearch => {
+          return {
+            ...previousSearch,
+            diffFilter: newFilter,
+          };
+        },
+      });
+    },
+    [navigate],
+  );
+
+  const cleanAll = useCallback(() => {
+    navigate({
+      search: previousSearch => {
+        return {
+          ...previousSearch,
+          diffFilter: {},
+        };
+      },
+    });
+  }, [navigate]);
+
   const { data, isLoading } = useHardwareDetails(
     hardwareId,
     startTimestampInSeconds,
@@ -75,8 +107,14 @@ function HardwareDetails(): JSX.Element {
   );
 
   const filterListElement = useMemo(
-    () => <HardwareDetailsFilterList filter={diffFilter} />,
-    [diffFilter],
+    () => (
+      <DetailsFilterList
+        filter={diffFilter as Record<string, Record<string, boolean | number>>}
+        cleanFilters={cleanAll}
+        navigate={onFilterChange}
+      />
+    ),
+    [cleanAll, diffFilter, onFilterChange],
   );
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {

@@ -113,8 +113,6 @@ export const isTFilterNumberKeys = (key: string): key is TFilterNumberKeys => {
   return zFilterNumberKeys.safeParse(key).success;
 };
 
-// TODO remove eslint disable rules
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const requestFilters = {
   hardwareDetails: [
     'hardwareDetails.trees',

@@ -5,12 +5,14 @@ import type { IBaseCard } from '@/components/Cards/BaseCard';
 import BaseCard from '@/components/Cards/BaseCard';
 import { GroupedTestStatus } from '@/components/Status/Status';
 
-import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
 import type { ArchCompilerStatus } from '@/types/general';
+
+import { DumbSummary, MemoizedSummaryItem } from '../Summary';
 
 interface IErrorsSummary {
   archCompilerErrors: ArchCompilerStatus[];
   title: IBaseCard['title'];
+  diffFilter: Record<string, Record<string, boolean>>;
 }
 
 const summaryHeaders = [
@@ -21,6 +23,7 @@ const summaryHeaders = [
 const ErrorsSummary = ({
   archCompilerErrors,
   title,
+  diffFilter,
 }: IErrorsSummary): JSX.Element => {
   return (
     <BaseCard
@@ -31,8 +34,9 @@ const ErrorsSummary = ({
             const statusCounts = e.status;
             const currentCompilers = [e.compiler];
             return (
-              <SummaryItem
+              <MemoizedSummaryItem
                 key={e.arch}
+                diffFilter={diffFilter}
                 arch={{
                   text: e.arch,
                 }}
@@ -58,4 +62,6 @@ const ErrorsSummary = ({
   );
 };
 
-export default memo(ErrorsSummary);
+const MemoizedErrorsSummary = memo(ErrorsSummary);
+
+export default MemoizedErrorsSummary;

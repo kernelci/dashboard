@@ -66,4 +66,6 @@ const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
   );
 };
 
-export default memo(StatusChart);
+const MemoizedStatusChart = memo(StatusChart);
+
+export default MemoizedStatusChart;

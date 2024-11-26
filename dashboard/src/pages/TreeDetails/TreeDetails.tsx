@@ -1,12 +1,15 @@
-import { useParams, useSearch } from '@tanstack/react-router';
-import { useMemo } from 'react';
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
 import { useBuildsTab, useTestsTab } from '@/api/TreeDetails';
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
-import type { ISummaryItem } from '@/components/Summary/Summary';
-import type { AccordionItemBuilds, BuildsTab } from '@/types/tree/TreeDetails';
+import type {
+  AccordionItemBuilds,
+  BuildsTab,
+  TFilter,
+} from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
 import {
   Breadcrumb,
@@ -47,11 +50,16 @@ import type { BuildStatus } from '@/types/general';
 
 import MemoizedHardwareUsed from '@/components/Cards/HardwareUsed';
 
-import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
+import { mapFilterToReq } from '@/components/Tabs/Filters';
+
+import DetailsFilterList from '@/components/Tabs/FilterList';
+
+import type { ISummaryItem } from '@/components/Tabs/Summary';
+
+import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
-
-import TreeDetailsFilterList from './TreeDetailsFilterList';
+import { filterFieldMap } from './treeDetailsUtils';
 
 export interface ITreeDetails {
   architectures: ISummaryItem[];
@@ -119,8 +127,12 @@ function TreeDetails(): JSX.Element {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
   const searchParams = useSearch({ from: '/tree/$treeId/' });
   const { diffFilter, treeInfo } = searchParams;
+  const navigate = useNavigate({ from: '/tree/$treeId/' });
 
-  const reqFilter = mapFilterToReq(diffFilter);
+  const reqFilter = mapFilterToReq(
+    diffFilter as Record<string, string>,
+    filterFieldMap,
+  );
 
   const isBuildTab = searchParams.currentPageTab === 'treeDetails.builds';
 
@@ -148,9 +160,40 @@ function TreeDetails(): JSX.Element {
     return isBuildTab ? buildIsLoading : testsIsLoading;
   }, [isBuildTab, testsIsLoading, buildIsLoading]);
 
+  const onFilterChange = useCallback(
+    (newFilter: TFilter) => {
+      navigate({
+        search: previousSearch => {
+          return {
+            ...previousSearch,
+            diffFilter: newFilter,
+          };
+        },
+      });
+    },
+    [navigate],
+  );
+
+  const cleanAll = useCallback(() => {
+    navigate({
+      search: previousSearch => {
+        return {
+          ...previousSearch,
+          diffFilter: {},
+        };
+      },
+    });
+  }, [navigate]);
+
   const filterListElement = useMemo(
-    () => <TreeDetailsFilterList filter={diffFilter} />,
-    [diffFilter],
+    () => (
+      <DetailsFilterList
+        filter={diffFilter as Record<string, Record<string, boolean | number>>}
+        cleanFilters={cleanAll}
+        navigate={onFilterChange}
+      />
+    ),
+    [cleanAll, diffFilter, onFilterChange],
   );
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {

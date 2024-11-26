@@ -5,21 +5,19 @@ import { memo, useMemo } from 'react';
 import BaseCard from '@/components/Cards/BaseCard';
 import { GroupedTestStatus } from '@/components/Status/Status';
 
-import type { ISummaryTable } from '@/components/Summary/Summary';
-import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
-import type { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
+import type { ISummaryTable } from '../Summary';
+import { DumbSummary, MemoizedSummaryItem } from '../Summary';
 
-interface IErrorsSummaryBuild extends Pick<ISummaryTable, 'summaryBody'> {
-  toggleFilterBySection: (
-    value: string,
-    filterSection: TFilterObjectsKeys,
-  ) => void;
+interface IErrorsSummaryBuild<T> extends Pick<ISummaryTable, 'summaryBody'> {
+  toggleFilterBySection: (value: string, filterSection: T) => void;
+  diffFilter: Record<string, Record<string, boolean>>;
 }
 
-const ErrorsSummaryBuild = ({
+const ErrorsSummaryBuild = <T,>({
   summaryBody,
   toggleFilterBySection,
-}: IErrorsSummaryBuild): JSX.Element => {
+  diffFilter,
+}: IErrorsSummaryBuild<T>): JSX.Element => {
   const summaryHeaders = useMemo(
     () => [
       <FormattedMessage key="treeDetails.arch" id="treeDetails.arch" />,
@@ -35,13 +33,14 @@ const ErrorsSummaryBuild = ({
         <DumbSummary summaryHeaders={summaryHeaders}>
           {summaryBody?.map(row => {
             return (
-              <SummaryItem
+              <MemoizedSummaryItem
                 key={row.arch.text}
                 arch={{ text: row.arch.text }}
+                diffFilter={diffFilter}
                 onClickCompiler={value =>
-                  toggleFilterBySection(value, 'compilers')
+                  toggleFilterBySection(value, 'compilers' as T)
                 }
-                onClickKey={value => toggleFilterBySection(value, 'archs')}
+                onClickKey={value => toggleFilterBySection(value, 'archs' as T)}
                 leftIcon={
                   <GroupedTestStatus
                     forceNumber={false}
@@ -60,4 +59,6 @@ const ErrorsSummaryBuild = ({
   );
 };
 
-export const MemoizedErrorsSummaryBuild = memo(ErrorsSummaryBuild);
+export const MemoizedErrorsSummaryBuild = memo(ErrorsSummaryBuild) as <T>(
+  props: IErrorsSummaryBuild<T>,
+) => JSX.Element;

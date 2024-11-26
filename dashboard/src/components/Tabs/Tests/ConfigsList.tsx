@@ -7,15 +7,17 @@ import ListingItem from '@/components/ListingItem/ListingItem';
 import { GroupedTestStatus } from '@/components/Status/Status';
 import type { TTreeTestsData } from '@/types/tree/TreeDetails';
 
-import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
+import FilterLink from '../FilterLink';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
+  diffFilter: Record<string, Record<string, boolean>>;
 }
 
 const ConfigsList = ({
   configStatusCounts,
   title,
+  diffFilter,
 }: IConfigList): JSX.Element => {
   return (
     <BaseCard
@@ -30,6 +32,7 @@ const ConfigsList = ({
                 key={configName}
                 filterSection="configs"
                 filterValue={configName}
+                diffFilter={diffFilter}
               >
                 <ListingItem
                   hasBottomBorder
@@ -56,4 +59,5 @@ const ConfigsList = ({
   );
 };
 
-export default memo(ConfigsList);
+const MemoizedConfigList = memo(ConfigsList);
+export default MemoizedConfigList;

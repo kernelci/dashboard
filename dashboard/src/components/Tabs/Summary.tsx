@@ -1,26 +1,15 @@
-import type { ReactElement } from 'react';
-import { useMemo } from 'react';
+import { memo, useMemo, type ReactElement } from 'react';
 
-import { useDiffFilterParams } from '@/pages/TreeDetails/treeDetailsUtils';
-
-import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
-
-import BaseTable from '../Table/BaseTable';
-import { TableBody, TableCell, TableCellWithLink, TableRow } from '../ui/table';
 import type { IListingItem } from '../ListingItem/ListingItem';
+
+import { TableBody, TableCell, TableCellWithLink, TableRow } from '../ui/table';
+
 import ListingItem from '../ListingItem/ListingItem';
 
-export interface ISummary extends ISummaryTable {
-  title: ReactElement;
-  type: 'summary';
-}
+import BaseTable from '../Table/BaseTable';
 
-export interface ISummaryTable {
-  summaryHeaders: ReactElement[];
-  summaryBody: ISummaryItem[];
-  onClickKey?: (key: string) => void;
-  onClickCompiler?: (compiler: string) => void;
-}
+import FilterLink from './FilterLink';
+import { useDiffFilterParams } from './tabsUtils';
 
 export interface ISummaryItem {
   arch: Omit<IListingItem, 'leftIcon'>;
@@ -28,6 +17,18 @@ export interface ISummaryItem {
   onClickKey?: (key: string) => void;
   onClickCompiler?: (compiler: string) => void;
   compilers: string[];
+}
+
+export interface ISummaryItemWithFilter extends ISummaryItem {
+  diffFilter: Record<string, Record<string, boolean>>;
+}
+
+export interface ISummaryTable {
+  summaryHeaders: ReactElement[];
+  summaryBody: ISummaryItemWithFilter[];
+  onClickKey?: (key: string) => void;
+  onClickCompiler?: (compiler: string) => void;
+  diffFilter: Record<string, Record<string, boolean>>;
 }
 
 interface IDumbSummary {
@@ -53,6 +54,7 @@ const Summary = ({
   summaryBody,
   onClickKey,
   onClickCompiler,
+  diffFilter,
 }: ISummaryTable): JSX.Element => {
   const summaryBodyRows = useMemo(
     () =>
@@ -61,11 +63,12 @@ const Summary = ({
           onClickKey={onClickKey}
           key={row.arch.text}
           arch={row.arch}
+          diffFilter={diffFilter}
           compilers={row.compilers}
           onClickCompiler={onClickCompiler}
         />
       )),
-    [onClickKey, summaryBody, onClickCompiler],
+    [summaryBody, onClickKey, diffFilter, onClickCompiler],
   );
 
   return (
@@ -73,13 +76,14 @@ const Summary = ({
   );
 };
 
-export const SummaryItem = ({
+const SummaryItem = ({
   arch,
   compilers,
   onClickKey,
   leftIcon,
-}: ISummaryItem): JSX.Element => {
-  const diffFilter = useDiffFilterParams(arch.text, 'archs');
+  diffFilter,
+}: ISummaryItemWithFilter): JSX.Element => {
+  const handleDiffFilter = useDiffFilterParams(arch.text, 'archs', diffFilter);
 
   const compilersElement = useMemo(() => {
     return compilers?.map(compiler => (
@@ -87,11 +91,12 @@ export const SummaryItem = ({
         key={compiler}
         filterSection="compilers"
         filterValue={compiler}
+        diffFilter={diffFilter}
       >
         {compiler}
       </FilterLink>
     ));
-  }, [compilers]);
+  }, [compilers, diffFilter]);
 
   return (
     <TableRow>
@@ -99,7 +104,7 @@ export const SummaryItem = ({
         linkProps={{
           search: previousParams => ({
             ...previousParams,
-            diffFilter,
+            diffFilter: handleDiffFilter,
           }),
         }}
       >
@@ -120,4 +125,8 @@ export const SummaryItem = ({
   );
 };
 
-export default Summary;
+export const MemoizedSummaryItem = memo(SummaryItem);
+
+const MemoizedSummary = memo(Summary);
+
+export default MemoizedSummary;

@@ -1,15 +1,20 @@
 import { useCallback, useMemo } from 'react';
 
-import { useNavigate } from '@tanstack/react-router';
-
 import FilterList from '@/components/FilterList/FilterList';
-import type { TFilter, TFilterKeys } from '@/types/tree/TreeDetails';
 
-interface ITreeDetailsFilterList {
-  filter: TFilter;
+interface IDetailsFilterList<
+  T extends Record<string, Record<string, boolean | number>>,
+> {
+  filter: T;
+  navigate: (filter: T) => void;
+  cleanFilters: () => void;
 }
 
-const createFlatFilter = (filter: TFilter): string[] => {
+const createFlatFilter = <
+  T extends Record<string, Record<string, boolean | number>>,
+>(
+  filter: T,
+): string[] => {
   const flatFilter: string[] = [];
 
   Object.entries(filter).forEach(([field, fieldValue]) => {
@@ -24,19 +29,23 @@ const createFlatFilter = (filter: TFilter): string[] => {
   return flatFilter;
 };
 
-const TreeDetailsFilterList = ({
+const DetailsFilterList = <
+  T extends Record<string, Record<string, boolean | number>>,
+  K extends string,
+>({
   filter,
-}: ITreeDetailsFilterList): JSX.Element => {
+  navigate,
+  cleanFilters,
+}: IDetailsFilterList<T>): JSX.Element => {
   const flatFilter = useMemo(() => createFlatFilter(filter), [filter]);
-  const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const onClickItem = useCallback(
     (flatValue: string, _: number) => {
       const [field, ...rest] = flatValue.split(':');
       const value = rest.join(':');
 
-      const newFilter = JSON.parse(JSON.stringify(filter ?? {}));
-      const fieldSection = newFilter[field as TFilterKeys];
+      const newFilter = JSON.parse(JSON.stringify(filter ?? {})) as T;
+      const fieldSection = newFilter[field as K];
 
       if (typeof fieldSection === 'object') {
         delete fieldSection[value];
@@ -44,37 +53,19 @@ const TreeDetailsFilterList = ({
         delete newFilter[field];
       }
 
-      navigate({
-        search: previousSearch => {
-          return {
-            ...previousSearch,
-            diffFilter: newFilter,
-          };
-        },
-      });
+      navigate(newFilter);
     },
     [filter, navigate],
   );
-
-  const onClickCleanALl = useCallback(() => {
-    navigate({
-      search: previousSearch => {
-        return {
-          ...previousSearch,
-          diffFilter: {},
-        };
-      },
-    });
-  }, [navigate]);
 
   return (
     <FilterList
       items={flatFilter}
       onClickItem={onClickItem}
-      onClickCleanAll={onClickCleanALl}
+      onClickCleanAll={cleanFilters}
       removeOnEmpty={true}
     />
   );
 };
 
-export default TreeDetailsFilterList;
+export default DetailsFilterList;

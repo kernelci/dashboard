@@ -4,20 +4,21 @@ import { useCallback } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import MemoizedStatusChart from '@/components/Cards/StatusChart';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
-
-import {
-  DesktopGrid,
-  InnerMobileGrid,
-  MobileGrid,
-} from '@/pages/TreeDetails/Tabs/TabGrid';
 
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 
-import { MemoizedConfigList, MemoizedErrorsSummary } from '../Boots/BootsTab';
+import {
+  DesktopGrid,
+  MobileGrid,
+  InnerMobileGrid,
+} from '@/components/Tabs/TabGrid';
+
+import MemoizedStatusChart from '@/components/Tabs/Tests/StatusChart';
+import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
+import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
 import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
@@ -28,6 +29,11 @@ interface TTestsTab {
 
 const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
   const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
+  const {
+    diffFilter,
+  }: { diffFilter: Record<string, Record<string, boolean>> } = useSearch({
+    from: '/tree/$treeId/',
+  });
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
@@ -59,10 +65,12 @@ const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
           <MemoizedConfigList
             title={<FormattedMessage id="bootsTab.configs" />}
             configStatusCounts={tests.configs}
+            diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
             archCompilerErrors={tests.archSummary}
+            diffFilter={diffFilter}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
@@ -80,10 +88,12 @@ const TestsTab = ({ tests, hardwareId }: TTestsTab): JSX.Element => {
             <MemoizedConfigList
               title={<FormattedMessage id="bootsTab.configs" />}
               configStatusCounts={tests.configs}
+              diffFilter={diffFilter}
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
               archCompilerErrors={tests.archSummary}
+              diffFilter={diffFilter}
             />
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
