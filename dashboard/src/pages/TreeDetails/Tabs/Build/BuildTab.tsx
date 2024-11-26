@@ -13,7 +13,6 @@ import type { TFilterObjectsKeys } from '@/types/tree/TreeDetails';
 import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 
-import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
 import { MemoizedErrorsSummaryBuild } from '@/pages/TreeDetails/Tabs/BuildCards';
 
 import { BuildStatus } from '@/components/Status/Status';
@@ -24,7 +23,13 @@ import FilterLink from '@/pages/TreeDetails/TreeDetailsFilterLink';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
-import { DesktopGrid, InnerMobileGrid, MobileGrid } from '../TabGrid';
+import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
+
+import {
+  DesktopGrid,
+  InnerMobileGrid,
+  MobileGrid,
+} from '@/pages/TreeDetails/Tabs/TabGrid';
 
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
@@ -175,7 +180,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           />
         </div>
         <div>
-          <CommitNavigationGraph />
+          <TreeCommitNavigationGraph />
           <MemoizedConfigsCard
             configs={treeDetailsData.configs}
             toggleFilterBySection={toggleFilterBySection}
@@ -183,7 +188,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         </div>
       </DesktopGrid>
       <MobileGrid>
-        <CommitNavigationGraph />
+        <TreeCommitNavigationGraph />
         <MemoizedStatusCard
           toggleFilterBySection={toggleFilterBySection}
           buildsSummary={treeDetailsData.buildsSummary}

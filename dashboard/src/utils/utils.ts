@@ -2,7 +2,10 @@ import { format } from 'date-fns';
 
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
 import type { ISummaryItem } from '@/components/Summary/Summary';
-import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+import type {
+  AccordionItemBuilds,
+  TTreeDetailsFilter,
+} from '@/types/tree/TreeDetails';
 import type {
   Architecture,
   BuildsTabBuild,
@@ -91,3 +94,21 @@ export const sanitizeBuildsSummary = (
   buildsSummary: BuildStatus | undefined,
 ): BuildStatus =>
   buildsSummary ? buildsSummary : { invalid: 0, null: 0, valid: 0 };
+
+// TODO, remove this function, is just a step further towards the final implementation
+export const mapFiltersKeysToBackendCompatible = (
+  filter: TTreeDetailsFilter | Record<string, never>,
+): Record<string, string[]> => {
+  const filterParam: { [key: string]: string[] } = {};
+
+  Object.keys(filter).forEach(key => {
+    const filterList = filter[key as keyof TTreeDetailsFilter];
+    filterList?.forEach(value => {
+      if (!filterParam[`filter_${key}`])
+        filterParam[`filter_${key}`] = [value.toString()];
+      else filterParam[`filter_${key}`].push(value.toString());
+    });
+  });
+
+  return filterParam;
+};

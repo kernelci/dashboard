@@ -2,42 +2,46 @@ import { useIntl } from 'react-intl';
 
 import { memo, useMemo } from 'react';
 
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
-
 import { z } from 'zod';
 
 import { Colors } from '@/components/StatusChart/StatusCharts';
 import { LineChart } from '@/components/LineChart';
 import BaseCard from '@/components/Cards/BaseCard';
-import { useTreeCommitHistory } from '@/api/TreeDetails';
 import type { TLineChartProps } from '@/components/LineChart/LineChart';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { MessagesKey } from '@/locales/messages';
 import { formatDate } from '@/utils/utils';
 import { mapFilterToReq } from '@/pages/TreeDetails/TreeDetailsFilter';
+import type { TFilter } from '@/types/tree/TreeDetails';
+import { useCommitHistory } from '@/api/commitHistory';
 
 const graphDisplaySize = 7;
 
-const CommitNavigationGraph = (): JSX.Element => {
+interface ICommitNavigationGraph {
+  origin: string;
+  currentPageTab: string;
+  diffFilter: TFilter;
+  gitUrl?: string;
+  gitBranch?: string;
+  headCommitHash?: string;
+  treeId?: string;
+  onMarkClick: (commitHash: string, commitName?: string) => void;
+}
+const CommitNavigationGraph = ({
+  origin,
+  currentPageTab,
+  diffFilter,
+  gitUrl,
+  gitBranch,
+  headCommitHash,
+  treeId,
+  onMarkClick,
+}: ICommitNavigationGraph): JSX.Element => {
   const { formatMessage } = useIntl();
-  const {
-    origin,
-    currentPageTab,
-    diffFilter,
-    treeInfo: { gitUrl, gitBranch, headCommitHash },
-  } = useSearch({ from: '/tree/$treeId/' });
-
-  const { treeId } = useParams({
-    from: '/tree/$treeId/',
-  });
-
-  const navigate = useNavigate({
-    from: '/tree/$treeId',
-  });
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const { data, status } = useTreeCommitHistory(
+  const { data, status } = useCommitHistory(
     {
       gitBranch: gitBranch ?? '',
       gitUrl: gitUrl ?? '',
@@ -252,20 +256,7 @@ const CommitNavigationGraph = (): JSX.Element => {
               const commitHash = commitData[commitIndex].commitHash;
               const commitName = commitData[commitIndex].commitName;
               if (commitHash) {
-                navigate({
-                  to: '/tree/$treeId',
-                  params: {
-                    treeId: commitHash,
-                  },
-                  search: previousParams => ({
-                    ...previousParams,
-                    treeInfo: {
-                      ...previousParams.treeInfo,
-                      commitName: commitName,
-                      commitHash: commitHash,
-                    },
-                  }),
-                });
+                onMarkClick(commitHash, commitName);
               }
             }}
           />

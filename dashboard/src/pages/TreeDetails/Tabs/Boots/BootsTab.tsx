@@ -15,7 +15,6 @@ import {
   MobileGrid,
 } from '@/pages/TreeDetails/Tabs/TabGrid';
 
-import CommitNavigationGraph from '@/pages/TreeDetails/Tabs/CommitNavigationGraph';
 import { BootsTable } from '@/components/BootsTable/BootsTable';
 import MemoizedStatusChart from '@/components/Cards/StatusChart';
 import MemoizedConfigList from '@/components/Cards/ConfigsList';
@@ -23,6 +22,8 @@ import MemoizedErrorsSummary from '@/components/Cards/ErrorsSummary';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
+
+import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
 
 interface BootsTabProps {
   reqFilter: Record<string, string[]>;
@@ -142,7 +143,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           />
         </div>
         <div>
-          <CommitNavigationGraph />
+          <TreeCommitNavigationGraph />
           <MemoizedHardwareTested
             title={<FormattedMessage id="bootsTab.hardwareTested" />}
             environmentCompatible={data.bootEnvironmentCompatible}
@@ -154,7 +155,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           title={<FormattedMessage id="bootsTab.bootStatus" />}
           statusCounts={data.bootStatusSummary}
         />
-        <CommitNavigationGraph />
+        <TreeCommitNavigationGraph />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList

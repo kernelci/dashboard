@@ -7,13 +7,14 @@ import type {
   BuildsTab,
   TTreeDetailsFilter,
   TTestByCommitHashResponse,
-  TTreeCommitHistoryResponse,
   BuildCountsResponse,
   TTreeTestsFullData,
   LogFilesResponse,
 } from '@/types/tree/TreeDetails';
 
 import { getTargetFilter } from '@/utils/filters';
+
+import { mapFiltersKeysToBackendCompatible } from '@/utils/utils';
 
 import http from './api';
 
@@ -62,24 +63,6 @@ const fetchTreeDetailData = async (
 
   const res = await http.get(`/api/tree/${treeId}`, { params: params });
   return res.data;
-};
-
-// TODO, remove this function, is just a step further towards the final implementation
-const mapFiltersKeysToBackendCompatible = (
-  filter: TTreeDetailsFilter | Record<string, never>,
-): Record<string, string[]> => {
-  const filterParam: { [key: string]: string[] } = {};
-
-  Object.keys(filter).forEach(key => {
-    const filterList = filter[key as keyof TTreeDetailsFilter];
-    filterList?.forEach(value => {
-      if (!filterParam[`filter_${key}`])
-        filterParam[`filter_${key}`] = [value.toString()];
-      else filterParam[`filter_${key}`].push(value.toString());
-    });
-  });
-
-  return filterParam;
 };
 
 export const useBuildsTab = ({
@@ -192,70 +175,6 @@ export const useTestsByTreeAndCommitHash = (
   return useQuery({
     queryKey: ['testsByTreeAndCommitHash', commitHash, params],
     queryFn: () => fetchTestsByTreeAndCommitHash(commitHash, params),
-  });
-};
-
-const fetchTreeCommitHistory = async (
-  commitHash: string,
-  origin: string,
-  gitUrl: string,
-  gitBranch: string,
-  filters: TTreeDetailsFilter,
-): Promise<TTreeCommitHistoryResponse> => {
-  const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
-
-  const params = {
-    origin,
-    git_url: gitUrl,
-    git_branch: gitBranch,
-    ...filtersFormatted,
-  };
-
-  const res = await http.get<TTreeCommitHistoryResponse>(
-    `/api/tree/${commitHash}/commits`,
-    {
-      params,
-    },
-  );
-  return res.data;
-};
-
-export const useTreeCommitHistory = (
-  {
-    commitHash,
-    origin,
-    gitUrl,
-    gitBranch,
-    filter,
-  }: {
-    commitHash: string;
-    origin: string;
-    gitUrl: string;
-    gitBranch: string;
-    filter: TTreeDetailsFilter;
-  },
-  { enabled = true },
-): UseQueryResult<TTreeCommitHistoryResponse> => {
-  const testFilter = getTargetFilter(filter, 'test');
-  const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
-
-  const filters = {
-    ...treeDetailsFilter,
-    ...testFilter,
-  };
-
-  return useQuery({
-    queryKey: [
-      'treeCommitHistory',
-      commitHash,
-      origin,
-      gitUrl,
-      gitBranch,
-      filters,
-    ],
-    enabled,
-    queryFn: () =>
-      fetchTreeCommitHistory(commitHash, origin, gitUrl, gitBranch, filters),
   });
 };
 
