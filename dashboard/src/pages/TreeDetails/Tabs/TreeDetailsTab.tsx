@@ -1,7 +1,7 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import type { ReactElement } from 'react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import type { ITabItem } from '@/components/Tabs/Tabs';
 import Tabs from '@/components/Tabs/Tabs';
@@ -36,26 +36,29 @@ const TreeDetailsTab = ({
     from: '/tree/$treeId/',
   });
   const navigate = useNavigate({ from: '/tree/$treeId' });
-  const buildsTab: ITabItem = {
-    name: 'global.builds',
-    content: <BuildTab treeDetailsData={treeDetailsData} />,
-    disabled: false,
-    rightElement: countElements['global.builds'],
-  };
-
-  const bootsTab: ITabItem = {
-    name: 'global.boots',
-    content: <BootsTab reqFilter={reqFilter} />,
-    disabled: false,
-    rightElement: countElements['global.boots'],
-  };
-
-  const testsTab: ITabItem = {
-    name: 'global.tests',
-    content: <TestsTab reqFilter={reqFilter} />,
-    disabled: false,
-    rightElement: countElements['global.tests'],
-  };
+  const treeDetailsTab: ITabItem[] = useMemo(
+    () => [
+      {
+        name: 'global.builds',
+        content: <BuildTab treeDetailsData={treeDetailsData} />,
+        disabled: false,
+        rightElement: countElements['global.builds'],
+      },
+      {
+        name: 'global.boots',
+        content: <BootsTab reqFilter={reqFilter} />,
+        disabled: false,
+        rightElement: countElements['global.boots'],
+      },
+      {
+        name: 'global.tests',
+        content: <TestsTab reqFilter={reqFilter} />,
+        disabled: false,
+        rightElement: countElements['global.tests'],
+      },
+    ],
+    [countElements, reqFilter, treeDetailsData],
+  );
 
   const onValueChange: (value: string) => void = useCallback(
     value => {
@@ -72,7 +75,6 @@ const TreeDetailsTab = ({
     [navigate],
   );
 
-  const treeDetailsTab = [buildsTab, bootsTab, testsTab];
   return (
     <Tabs
       tabs={treeDetailsTab}
