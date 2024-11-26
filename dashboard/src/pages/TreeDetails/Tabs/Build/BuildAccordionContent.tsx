@@ -23,8 +23,6 @@ import { Button } from '@/components/ui/button';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
-import type { TPathTests } from '@/types/general';
-
 export interface IBuildAccordionContent {
   testStatus: {
     failTests: number;
@@ -116,7 +114,7 @@ const AccordBuildStatusChart = ({
 };
 
 export interface IAccordionItems {
-  accordionData: AccordionItemBuilds | TPathTests;
+  accordionData: AccordionItemBuilds;
   onClickShowBuild: (buildId: AccordionItemBuilds['id']) => void;
   openLogSheet?: () => void;
 }
@@ -126,45 +124,42 @@ const AccordionBuildContent = ({
   onClickShowBuild,
   openLogSheet,
 }: IAccordionItems): JSX.Element => {
-  //TODO: Fix the typing for not using as
-  const contentData = accordionData as AccordionItemBuilds;
-
   const { data, status } = useBuildStatusCount(
-    { buildId: contentData.id ?? '' },
-    { enabled: !!contentData.id },
+    { buildId: accordionData.id ?? '' },
+    { enabled: !!accordionData.id },
   );
 
   const onClickShowBuildHandler = useCallback(
-    () => onClickShowBuild(contentData.id),
-    [contentData.id, onClickShowBuild],
+    () => onClickShowBuild(accordionData.id),
+    [accordionData.id, onClickShowBuild],
   );
 
   const links: ILinkGroup['links'] = useMemo(
     () => [
-      contentData.kernelImage
+      accordionData.kernelImage
         ? {
             title: 'buildAccordion.kernelImage',
             icon: <MdFolderOpen className={blueText} />,
-            linkText: <span>{`kernel/${contentData.kernelImage}`}</span>,
+            linkText: <span>{`kernel/${accordionData.kernelImage}`}</span>,
           }
         : undefined,
-      contentData.kernelConfig
+      accordionData.kernelConfig
         ? {
             title: 'buildAccordion.kernelConfig',
             icon: <MdFolderOpen className={blueText} />,
-            link: contentData.kernelConfig,
+            link: accordionData.kernelConfig,
             linkText: <FormattedMessage id="buildAccordion.kernelConfigPath" />,
           }
         : undefined,
-      contentData.dtb
+      accordionData.dtb
         ? {
             title: 'buildAccordion.dtb',
             icon: <MdFolderOpen className={blueText} />,
-            link: contentData.dtb,
+            link: accordionData.dtb,
             linkText: <FormattedMessage id="buildAccordion.dtbs" />,
           }
         : undefined,
-      contentData.buildLogs
+      accordionData.buildLogs
         ? {
             title: 'buildAccordion.buildLogs',
             icon: <MdFolderOpen className={blueText} />,
@@ -172,30 +167,30 @@ const AccordionBuildContent = ({
             onClick: openLogSheet,
           }
         : undefined,
-      contentData.systemMap
+      accordionData.systemMap
         ? {
             title: 'buildAccordion.systemMap',
             icon: <MdFolderOpen className={blueText} />,
-            link: contentData.systemMap,
+            link: accordionData.systemMap,
             linkText: <FormattedMessage id="buildAccordion.systemMapPath" />,
           }
         : undefined,
-      contentData.modules
+      accordionData.modules
         ? {
             title: 'buildAccordion.modules',
             icon: <MdFolderOpen className={blueText} />,
-            link: contentData.modules,
+            link: accordionData.modules,
             linkText: <FormattedMessage id="buildAccordion.modulesZip" />,
           }
         : undefined,
     ],
     [
-      contentData.buildLogs,
-      contentData.dtb,
-      contentData.kernelConfig,
-      contentData.kernelImage,
-      contentData.modules,
-      contentData.systemMap,
+      accordionData.buildLogs,
+      accordionData.dtb,
+      accordionData.kernelConfig,
+      accordionData.kernelImage,
+      accordionData.modules,
+      accordionData.systemMap,
       openLogSheet,
     ],
   );
