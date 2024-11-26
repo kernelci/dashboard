@@ -222,12 +222,8 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
     [origin],
   );
 
-  const data = useMemo(() => {
-    return treeTableRows;
-  }, [treeTableRows]);
-
   const table = useReactTable({
-    data,
+    data: treeTableRows,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
