@@ -1,48 +1,44 @@
-import { memo, useMemo, type ReactElement } from 'react';
+import { Link } from '@tanstack/react-router';
 
-import type { IListingItem } from '../ListingItem/ListingItem';
+import { useDiffFilterParams } from '@/components/Tabs/tabsUtils';
+import type { TFilter, TFilterObjectsKeys } from '@/types/general';
 
-import { TableBody, TableCell, TableCellWithLink, TableRow } from '../ui/table';
-
-import ListingItem from '../ListingItem/ListingItem';
-
-import BaseTable from '../Table/BaseTable';
-
-import FilterLink from './FilterLink';
-import { useDiffFilterParams } from './tabsUtils';
-
-export interface ISummaryItem {
-  arch: Omit<IListingItem, 'leftIcon'>;
-  leftIcon?: IListingItem['leftIcon'];
-  onClickKey?: (key: string) => void;
-  onClickCompiler?: (compiler: string) => void;
-  compilers: string[];
+interface FilterLinkProps {
+  children?: JSX.Element | string;
+  filterValue: string;
+  filterSection: TFilterObjectsKeys;
+  diffFilter: TFilter;
+  className?: string;
+  disabled?: boolean; // temporary solution
 }
 
-export interface ISummaryItemWithFilter extends ISummaryItem {
-  diffFilter: Record<string, Record<string, boolean>>;
-}
-
-export interface ISummaryTable {
-  summaryHeaders: ReactElement[];
-  summaryBody: ISummaryItemWithFilter[];
-  onClickKey?: (key: string) => void;
-  onClickCompiler?: (compiler: string) => void;
-  diffFilter: Record<string, Record<string, boolean>>;
-}
-
-interface IDumbSummary {
-  children: ReactElement | ReactElement[];
-  summaryHeaders: ReactElement[];
-}
-
-export const DumbSummary = ({
+const FilterLink = ({
   children,
-  summaryHeaders,
-}: IDumbSummary): JSX.Element => {
+  filterSection,
+  filterValue,
+  className,
+  diffFilter,
+  disabled,
+}: FilterLinkProps): JSX.Element => {
+  const handleDiffFilter = useDiffFilterParams(
+    filterValue,
+    filterSection,
+    diffFilter,
+  );
+
   return (
-    <BaseTable
-      className="!rounded-[0rem] bg-mediumGray"
-      headers={summaryHeaders}
-      body={<TableBody>{children}</TableBody>}
-    />
+    <Link
+      search={previousParams => ({
+        ...previousParams,
+        diffFilter: handleDiffFilter,
+      })}
+      disabled={disabled}
+      key={filterValue}
+      className={className}
+    >
+      {children}
+    </Link>
+  );
+};
+
+export default FilterLink;

@@ -13,17 +13,17 @@ import type { TTreeTestsData } from '@/types/tree/TreeDetails';
 interface IStatusChart extends Pick<TTreeTestsData, 'statusCounts'> {
   title: IBaseCard['title'];
 }
-const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
+const StatusCard = ({ statusCounts, title }: IStatusChart): JSX.Element => {
   const groupedStatusCounts = useMemo(
     () =>
       groupStatus({
-        doneCount: statusCounts.DONE ?? 0,
-        errorCount: statusCounts.ERROR ?? 0,
-        failCount: statusCounts.FAIL ?? 0,
-        missCount: statusCounts.MISS ?? 0,
-        passCount: statusCounts.PASS ?? 0,
-        skipCount: statusCounts.SKIP ?? 0,
-        nullCount: statusCounts.NULL ?? 0,
+        doneCount: statusCounts.DONE,
+        errorCount: statusCounts.ERROR,
+        failCount: statusCounts.FAIL,
+        missCount: statusCounts.MISS,
+        passCount: statusCounts.PASS,
+        skipCount: statusCounts.SKIP,
+        nullCount: statusCounts.NULL,
       }),
     [
       statusCounts.DONE,
@@ -94,6 +94,6 @@ const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
   );
 };
 
-const MemoizedStatusChart = memo(StatusChart);
+const MemoizedStatusChart = memo(StatusCard);
 
 export default MemoizedStatusChart;

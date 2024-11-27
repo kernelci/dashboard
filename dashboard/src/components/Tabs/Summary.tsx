@@ -1,15 +1,22 @@
 import { memo, useMemo, type ReactElement } from 'react';
 
-import type { IListingItem } from '../ListingItem/ListingItem';
+import type { IListingItem } from '@/components/ListingItem/ListingItem';
 
-import { TableBody, TableCell, TableCellWithLink, TableRow } from '../ui/table';
+import {
+  TableBody,
+  TableCell,
+  TableCellWithLink,
+  TableRow,
+} from '@/components/ui/table';
 
-import ListingItem from '../ListingItem/ListingItem';
+import ListingItem from '@/components/ListingItem/ListingItem';
 
-import BaseTable from '../Table/BaseTable';
+import BaseTable from '@/components/Table/BaseTable';
 
-import FilterLink from './FilterLink';
-import { useDiffFilterParams } from './tabsUtils';
+import FilterLink from '@/components/Tabs/FilterLink';
+
+import { useDiffFilterParams } from '@/components/Tabs/tabsUtils';
+import type { TFilter } from '@/types/general';
 
 export interface ISummaryItem {
   arch: Omit<IListingItem, 'leftIcon'>;
@@ -20,7 +27,8 @@ export interface ISummaryItem {
 }
 
 export interface ISummaryItemWithFilter extends ISummaryItem {
-  diffFilter: Record<string, Record<string, boolean>>;
+  diffFilter: TFilter;
+  disabled?: boolean;
 }
 
 export interface ISummaryTable {
@@ -82,6 +90,7 @@ const SummaryItem = ({
   onClickKey,
   leftIcon,
   diffFilter,
+  disabled,
 }: ISummaryItemWithFilter): JSX.Element => {
   const handleDiffFilter = useDiffFilterParams(arch.text, 'archs', diffFilter);
 
@@ -92,11 +101,12 @@ const SummaryItem = ({
         filterSection="compilers"
         filterValue={compiler}
         diffFilter={diffFilter}
+        disabled={disabled}
       >
         {compiler}
       </FilterLink>
     ));
-  }, [compilers, diffFilter]);
+  }, [compilers, diffFilter, disabled]);
 
   return (
     <TableRow>
@@ -106,6 +116,7 @@ const SummaryItem = ({
             ...previousParams,
             diffFilter: handleDiffFilter,
           }),
+          disabled: disabled,
         }}
       >
         <ListingItem
@@ -116,6 +127,7 @@ const SummaryItem = ({
           success={arch.success}
           unknown={arch.unknown}
           errors={arch.errors}
+          disabled={disabled}
         />
       </TableCellWithLink>
       <TableCell>

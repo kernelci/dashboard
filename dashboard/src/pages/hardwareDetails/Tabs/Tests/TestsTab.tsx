@@ -4,24 +4,21 @@ import { useCallback } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import MemoizedStatusChart from '@/components/Cards/StatusChart';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
-
-import {
-  DesktopGrid,
-  InnerMobileGrid,
-  MobileGrid,
-} from '@/pages/TreeDetails/Tabs/TabGrid';
 
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 
 import {
-  MemoizedConfigList,
-  MemoizedErrorsSummary,
-} from '@/pages/hardwareDetails/Tabs/Boots/BootsTab';
+  DesktopGrid,
+  MobileGrid,
+  InnerMobileGrid,
+} from '@/components/Tabs/TabGrid';
 
+import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
+import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
+import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 
 import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
@@ -78,17 +75,21 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
         <div>
-          <MemoizedStatusChart
+          <MemoizedStatusCard
             title={<FormattedMessage id="testsTab.testStatus" />}
             statusCounts={tests.statusSummary}
           />
           <MemoizedConfigList
+            disabled
             title={<FormattedMessage id="bootsTab.configs" />}
             configStatusCounts={tests.configs}
+            diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
+            disabled
             title={<FormattedMessage id="global.summary" />}
             archCompilerErrors={tests.archSummary}
+            diffFilter={diffFilter}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
@@ -99,7 +100,7 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
       </DesktopGrid>
       <MobileGrid>
-        <MemoizedStatusChart
+        <MemoizedStatusCard
           title={<FormattedMessage id="bootsTab.bootStatus" />}
           statusCounts={tests.statusSummary}
         />
@@ -109,10 +110,12 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
             <MemoizedConfigList
               title={<FormattedMessage id="bootsTab.configs" />}
               configStatusCounts={tests.configs}
+              diffFilter={diffFilter}
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
               archCompilerErrors={tests.archSummary}
+              diffFilter={diffFilter}
             />
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}

@@ -1,7 +1,6 @@
 import { format } from 'date-fns';
 
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
-import type { ISummaryItem } from '@/components/Summary/Summary';
 import type {
   AccordionItemBuilds,
   TTreeDetailsFilter,
@@ -12,6 +11,7 @@ import type {
   BuildStatus,
 } from '@/types/general';
 import { sanitizeTableValue } from '@/components/Table/tableUtils';
+import type { ISummaryItem } from '@/components/Tabs/Summary';
 
 export function formatDate(date: Date | string, short?: boolean): string {
   const options: Intl.DateTimeFormatOptions = {

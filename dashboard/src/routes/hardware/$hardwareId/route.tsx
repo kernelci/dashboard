@@ -7,7 +7,8 @@ import {
   zTableFilterInfoValidator,
 } from '@/types/tree/TreeDetails';
 
-import { zDiffFilter, zTreeCommits } from '@/types/hardware/hardwareDetails';
+import { zTreeCommits } from '@/types/hardware/hardwareDetails';
+import { zDiffFilter } from '@/types/general';
 
 const hardwareDetailsSearchSchema = z.object({
   currentPageTab: zPossibleTabValidator,

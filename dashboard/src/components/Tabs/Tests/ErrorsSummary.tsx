@@ -5,24 +5,26 @@ import type { IBaseCard } from '@/components/Cards/BaseCard';
 import BaseCard from '@/components/Cards/BaseCard';
 import { GroupedTestStatus } from '@/components/Status/Status';
 
-import type { ArchCompilerStatus } from '@/types/general';
+import type { ArchCompilerStatus, TFilter } from '@/types/general';
 
-import { DumbSummary, MemoizedSummaryItem } from '../Summary';
+import { DumbSummary, MemoizedSummaryItem } from '@/components/Tabs/Summary';
 
 interface IErrorsSummary {
   archCompilerErrors: ArchCompilerStatus[];
   title: IBaseCard['title'];
-  diffFilter: Record<string, Record<string, boolean>>;
+  diffFilter: TFilter;
+  disabled?: boolean;
 }
 
 const summaryHeaders = [
-  <FormattedMessage key="treeDetails.arch" id="treeDetails.arch" />,
-  <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
+  <FormattedMessage key="global.arch" id="global.arch" />,
+  <FormattedMessage key="global.compiler" id="global.compiler" />,
 ];
 
 const ErrorsSummary = ({
   archCompilerErrors,
   title,
+  disabled,
   diffFilter,
 }: IErrorsSummary): JSX.Element => {
   return (
@@ -40,6 +42,7 @@ const ErrorsSummary = ({
                 arch={{
                   text: e.arch,
                 }}
+                disabled={disabled}
                 leftIcon={
                   <GroupedTestStatus
                     forceNumber={false}

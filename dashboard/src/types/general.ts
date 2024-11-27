@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 import type { Status } from './database';
+import type { TTreeDetailsFilter } from './tree/TreeDetails';
+import type { THardwareDetailsFilter } from './hardware/hardwareDetails';
 type IncidentsInfo = { incidentsCount: number };
 export type TPathTests = {
   path_group: string;
@@ -121,3 +123,153 @@ export type TOrigins = (typeof origins)[number];
 
 export const zOriginEnum = z.enum(origins);
 export const zOrigin = zOriginEnum.catch(DEFAULT_ORIGIN);
+
+const zFilterBoolValue = z.record(z.boolean()).optional();
+const zFilterNumberValue = z.number().optional();
+
+export const zFilterObjectsKeys = z.enum([
+  'configs',
+  'archs',
+  'compilers',
+  'buildStatus',
+  'bootStatus',
+  'testStatus',
+  'hardware',
+  'trees',
+  'testPath',
+  'bootPath',
+]);
+
+export const zFilterNumberKeys = z.enum([
+  'buildDurationMin',
+  'buildDurationMax',
+  'bootDurationMin',
+  'bootDurationMax',
+  'testDurationMin',
+  'testDurationMax',
+]);
+
+export type TFilterKeys =
+  | z.infer<typeof zFilterObjectsKeys>
+  | z.infer<typeof zFilterNumberKeys>;
+
+export const zDiffFilter = z
+  .union([
+    z.object({
+      configs: zFilterBoolValue,
+      archs: zFilterBoolValue,
+      buildStatus: zFilterBoolValue,
+      compilers: zFilterBoolValue,
+      bootStatus: zFilterBoolValue,
+      testStatus: zFilterBoolValue,
+      testPath: zFilterBoolValue,
+      bootPath: zFilterBoolValue,
+      buildDurationMax: zFilterNumberValue,
+      buildDurationMin: zFilterNumberValue,
+      bootDurationMin: zFilterNumberValue,
+      bootDurationMax: zFilterNumberValue,
+      testDurationMin: zFilterNumberValue,
+      testDurationMax: zFilterNumberValue,
+      hardware: zFilterBoolValue,
+      trees: zFilterBoolValue,
+    } satisfies Record<TFilterKeys, unknown>),
+    z.record(z.never()),
+  ])
+  .catch({});
+
+export type TFilterObjectsKeys = z.infer<typeof zFilterObjectsKeys>;
+export type TFilter = z.infer<typeof zDiffFilter>;
+export type TFilterNumberKeys = z.infer<typeof zFilterNumberKeys>;
+
+export const isTFilterObjectKeys = (key: string): key is TFilterObjectsKeys => {
+  return zFilterObjectsKeys.safeParse(key).success;
+};
+
+export const isTFilterNumberKeys = (key: string): key is TFilterNumberKeys => {
+  return zFilterNumberKeys.safeParse(key).success;
+};
+
+const requestFilters = {
+  hardwareDetails: [
+    'hardwareDetails.trees',
+    'hardwareDetails.config_name',
+    'hardwareDetails.architecture',
+    'hardwareDetails.compiler',
+    'hardwareDetails.valid',
+    'hardwareDetails.duration_[gte]',
+    'hardwareDetails.duration_[lte]',
+  ],
+  treeDetails: [
+    'treeDetails.config_name',
+    'treeDetails.architecture',
+    'treeDetails.compiler',
+    'treeDetails.valid',
+    'treeDetails.duration_[gte]',
+    'treeDetails.duration_[lte]',
+  ],
+  test: [
+    'test.status',
+    'test.duration_[gte]',
+    'test.duration_[lte]',
+    'test.hardware',
+    'test.path',
+    'boot.path',
+    'boot.status',
+    'boot.duration_[gte]',
+    'boot.duration_[lte]',
+  ],
+} as const;
+
+type TRequestFiltersKey = keyof typeof requestFilters;
+export type TRequestFiltersValues =
+  (typeof requestFilters)[TRequestFiltersKey][number];
+
+export const filterFieldMap = {
+  'hardwareDetails.config_name': 'configs',
+  'hardwareDetails.architecture': 'archs',
+  'hardwareDetails.compiler': 'compilers',
+  'hardwareDetails.valid': 'buildStatus',
+  'hardwareDetails.duration_[gte]': 'buildDurationMin',
+  'hardwareDetails.duration_[lte]': 'buildDurationMax',
+  'hardwareDetails.trees': 'trees',
+  'treeDetails.config_name': 'configs',
+  'treeDetails.architecture': 'archs',
+  'treeDetails.compiler': 'compilers',
+  'treeDetails.valid': 'buildStatus',
+  'treeDetails.duration_[gte]': 'buildDurationMin',
+  'treeDetails.duration_[lte]': 'buildDurationMax',
+  'boot.status': 'bootStatus',
+  'boot.duration_[gte]': 'bootDurationMin',
+  'boot.duration_[lte]': 'bootDurationMax',
+  'test.status': 'testStatus',
+  'test.duration_[gte]': 'testDurationMin',
+  'test.duration_[lte]': 'testDurationMax',
+  'test.hardware': 'hardware',
+  'test.path': 'testPath',
+  'boot.path': 'bootPath',
+} as const satisfies Record<TRequestFiltersValues, TFilterKeys>;
+
+export const getTargetFilter = (
+  filter: THardwareDetailsFilter | TTreeDetailsFilter | TFilter,
+  target: TRequestFiltersKey,
+): THardwareDetailsFilter | TTreeDetailsFilter => {
+  const targetFilter: readonly string[] = requestFilters[target];
+  const accumulator: Record<
+    string,
+    THardwareDetailsFilter | TTreeDetailsFilter
+  > = {};
+
+  Object.entries(filter).forEach(([k, v]) => {
+    if (!targetFilter.includes(k)) return;
+
+    const splitted = k.split('.');
+    const field = splitted[splitted.length - 1];
+    if (target === 'test') {
+      accumulator[k] = v;
+    } else {
+      accumulator[field] = v;
+    }
+  });
+
+  return accumulator;
+};

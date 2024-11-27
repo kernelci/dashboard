@@ -84,6 +84,7 @@ export const messages = {
     'filter.statusSubtitle': 'Please select one or more Status:',
     'filter.testDuration': 'Test duration',
     'filter.testStatus': 'Test Status',
+    'filter.treeURL': 'Tree URL',
     'global.allCount': 'All: {count}',
     'global.arch': 'Arch',
     'global.architecture': 'Architecture',

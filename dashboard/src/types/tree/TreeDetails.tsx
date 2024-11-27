@@ -140,68 +140,6 @@ export const zTableFilterInfoValidator = zTableFilterInfo.catch({
 
 export type TableFilter = z.infer<typeof zTableFilterInfo>;
 
-const zFilterBoolValue = z.record(z.boolean()).optional();
-const zFilterNumberValue = z.number().optional();
-
-export const zFilterObjectsKeys = z.enum([
-  'configs',
-  'archs',
-  'compilers',
-  'buildStatus',
-  'bootStatus',
-  'testStatus',
-  'hardware',
-  'testPath',
-  'bootPath',
-]);
-export const zFilterNumberKeys = z.enum([
-  'buildDurationMin',
-  'buildDurationMax',
-  'bootDurationMin',
-  'bootDurationMax',
-  'testDurationMin',
-  'testDurationMax',
-]);
-
-export type TFilterKeys =
-  | z.infer<typeof zFilterObjectsKeys>
-  | z.infer<typeof zFilterNumberKeys>;
-
-export const zDiffFilter = z
-  .union([
-    z.object({
-      configs: zFilterBoolValue,
-      archs: zFilterBoolValue,
-      buildStatus: zFilterBoolValue,
-      compilers: zFilterBoolValue,
-      bootStatus: zFilterBoolValue,
-      testStatus: zFilterBoolValue,
-      hardware: zFilterBoolValue,
-      testPath: zFilterBoolValue,
-      bootPath: zFilterBoolValue,
-      buildDurationMax: zFilterNumberValue,
-      buildDurationMin: zFilterNumberValue,
-      bootDurationMin: zFilterNumberValue,
-      bootDurationMax: zFilterNumberValue,
-      testDurationMin: zFilterNumberValue,
-      testDurationMax: zFilterNumberValue,
-    } satisfies Record<TFilterKeys, unknown>),
-    z.record(z.never()),
-  ])
-  .catch({});
-
-export type TFilter = z.infer<typeof zDiffFilter>;
-export type TFilterObjectsKeys = z.infer<typeof zFilterObjectsKeys>;
-export type TFilterNumberKeys = z.infer<typeof zFilterNumberKeys>;
-
-export const isTFilterObjectKeys = (key: string): key is TFilterObjectsKeys => {
-  return zFilterObjectsKeys.safeParse(key).success;
-};
-
-export const isTFilterNumberKeys = (key: string): key is TFilterNumberKeys => {
-  return zFilterNumberKeys.safeParse(key).success;
-};
-
 export const zTreeInformation = z
   .object({
     gitBranch: z.string().optional().catch(''),

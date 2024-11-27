@@ -4,23 +4,29 @@ import { FormattedMessage } from 'react-intl';
 
 import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
-import { DumbListingContent } from '../../ListingContent/ListingContent';
-import ListingItem from '../../ListingItem/ListingItem';
-import { BuildStatus } from '../../Status/Status';
-import BaseCard from '../../Cards/BaseCard';
+import { DumbListingContent } from '@/components/ListingContent/ListingContent';
+import ListingItem from '@/components/ListingItem/ListingItem';
+import { BuildStatus } from '@/components/Status/Status';
+import BaseCard from '@/components/Cards/BaseCard';
 
-import FilterLink from '../FilterLink';
+import FilterLink from '@/components/Tabs/FilterLink';
+import type { TFilter, TFilterObjectsKeys } from '@/types/general';
 
-interface IConfigsCard<T> {
+interface IConfigsCard {
   configs: ITreeDetails['configs'];
-  toggleFilterBySection: (value: string, filterSection: T) => void;
-  diffFilter: Record<string, Record<string, boolean>>;
+  toggleFilterBySection: (
+    value: string,
+    filterSection: TFilterObjectsKeys,
+  ) => void;
+  diffFilter: TFilter;
+  disabled?: boolean;
 }
 
-const ConfigsCard = <T,>({
+const ConfigsCard = ({
   configs,
   diffFilter,
-}: IConfigsCard<T>): JSX.Element => {
+  disabled,
+}: IConfigsCard): JSX.Element => {
   const content = useMemo(() => {
     return (
       <DumbListingContent>
@@ -30,9 +36,11 @@ const ConfigsCard = <T,>({
             filterSection="configs"
             filterValue={item.text}
             diffFilter={diffFilter}
+            disabled={disabled}
           >
             <ListingItem
               text={item.text}
+              disabled={disabled}
               leftIcon={
                 <BuildStatus
                   valid={item.success}
@@ -45,7 +53,7 @@ const ConfigsCard = <T,>({
         ))}
       </DumbListingContent>
     );
-  }, [configs, diffFilter]);
+  }, [configs, diffFilter, disabled]);
 
   return (
     <BaseCard
@@ -55,6 +63,4 @@ const ConfigsCard = <T,>({
   );
 };
 
-export const MemoizedConfigsCard = memo(ConfigsCard) as <T>(
-  props: IConfigsCard<T>,
-) => JSX.Element;
+export const MemoizedConfigsCard = memo(ConfigsCard);

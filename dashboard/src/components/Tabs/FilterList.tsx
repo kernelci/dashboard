@@ -1,20 +1,16 @@
 import { useCallback, useMemo } from 'react';
 
 import FilterList from '@/components/FilterList/FilterList';
+import type { TFilter } from '@/types/general';
 
-interface IDetailsFilterList<
-  T extends Record<string, Record<string, boolean | number>>,
-> {
-  filter: T;
-  navigate: (filter: T) => void;
+interface IDetailsFilterList {
+  filter: TFilter;
+  navigate: (filter: TFilter) => void;
   cleanFilters: () => void;
+  isLoading: boolean;
 }
 
-const createFlatFilter = <
-  T extends Record<string, Record<string, boolean | number>>,
->(
-  filter: T,
-): string[] => {
+const createFlatFilter = (filter: TFilter): string[] => {
   const flatFilter: string[] = [];
 
   Object.entries(filter).forEach(([field, fieldValue]) => {
@@ -29,14 +25,12 @@ const createFlatFilter = <
   return flatFilter;
 };
 
-const DetailsFilterList = <
-  T extends Record<string, Record<string, boolean | number>>,
-  K extends string,
->({
+const DetailsFilterList = ({
   filter,
   navigate,
   cleanFilters,
-}: IDetailsFilterList<T>): JSX.Element => {
+  isLoading = false,
+}: IDetailsFilterList): JSX.Element => {
   const flatFilter = useMemo(() => createFlatFilter(filter), [filter]);
 
   const onClickItem = useCallback(
@@ -44,11 +38,14 @@ const DetailsFilterList = <
       const [field, ...rest] = flatValue.split(':');
       const value = rest.join(':');
 
-      const newFilter = JSON.parse(JSON.stringify(filter ?? {})) as T;
-      const fieldSection = newFilter[field as K];
+      const newFilter = JSON.parse(JSON.stringify(filter ?? {}));
+      const fieldSection = newFilter[field];
 
       if (typeof fieldSection === 'object') {
         delete fieldSection[value];
+        if (Object.keys(fieldSection).length === 0) {
+          delete newFilter[field];
+        }
       } else {
         delete newFilter[field];
       }
@@ -60,6 +57,7 @@ const DetailsFilterList = <
 
   return (
     <FilterList
+      isLoading={isLoading}
       items={flatFilter}
       onClickItem={onClickItem}
       onClickCleanAll={cleanFilters}

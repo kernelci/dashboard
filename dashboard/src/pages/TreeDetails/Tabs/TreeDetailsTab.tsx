@@ -10,6 +10,8 @@ import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
 import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
+import type { TFilter } from '@/types/general';
+
 import BuildTab from './Build';
 import BootsTab from './Boots';
 import TestsTab from './Tests';
@@ -22,7 +24,7 @@ export type TreeDetailsTabRightElement = Record<
 export interface ITreeDetailsTab {
   treeDetailsData: ITreeDetails;
   filterListElement?: JSX.Element;
-  reqFilter: Record<string, string[]>;
+  reqFilter: TFilter;
   countElements: TreeDetailsTabRightElement;
 }
 

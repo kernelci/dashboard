@@ -6,8 +6,9 @@ import type {
   TTreeDetailsFilter,
 } from '@/types/tree/TreeDetails';
 
-import { getTargetFilter } from '@/utils/filters';
 import { mapFiltersKeysToBackendCompatible } from '@/utils/utils';
+
+import { getTargetFilter, type TFilter } from '@/types/general';
 
 import http from './api';
 
@@ -48,7 +49,7 @@ export const useCommitHistory = (
     origin: string;
     gitUrl: string;
     gitBranch: string;
-    filter: TTreeDetailsFilter;
+    filter: TTreeDetailsFilter | TFilter;
   },
   { enabled = true },
 ): UseQueryResult<TTreeCommitHistoryResponse> => {

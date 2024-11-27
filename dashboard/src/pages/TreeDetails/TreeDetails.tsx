@@ -1,11 +1,10 @@
-import { useParams, useSearch } from '@tanstack/react-router';
-import { useMemo } from 'react';
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
 import { useBuildsTab, useTestsTab } from '@/api/treeDetails';
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
-import type { ISummaryItem } from '@/components/Summary/Summary';
 import type { AccordionItemBuilds, BuildsTab } from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
 import {
@@ -43,15 +42,19 @@ import {
   sanitizeConfigs,
 } from '@/utils/utils';
 
-import type { BuildStatus } from '@/types/general';
+import type { BuildStatus, TFilter } from '@/types/general';
 
 import MemoizedHardwareUsed from '@/components/Cards/HardwareUsed';
 
-import TreeDetailsFilter, { mapFilterToReq } from './TreeDetailsFilter';
+import { mapFilterToReq } from '@/components/Tabs/Filters';
+
+import DetailsFilterList from '@/components/Tabs/FilterList';
+
+import type { ISummaryItem } from '@/components/Tabs/Summary';
+
+import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
-
-import TreeDetailsFilterList from './TreeDetailsFilterList';
 
 export interface ITreeDetails {
   architectures: ISummaryItem[];
@@ -120,6 +123,7 @@ function TreeDetails(): JSX.Element {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
   const searchParams = useSearch({ from: '/tree/$treeId/' });
   const { diffFilter, treeInfo } = searchParams;
+  const navigate = useNavigate({ from: '/tree/$treeId/' });
 
   const reqFilter = mapFilterToReq(diffFilter);
 
@@ -155,15 +159,41 @@ function TreeDetails(): JSX.Element {
     return isBuildTab ? buildIsLoading : testsIsLoading;
   }, [isBuildTab, testsIsLoading, buildIsLoading]);
 
+  const onFilterChange = useCallback(
+    (newFilter: TFilter) => {
+      navigate({
+        search: previousSearch => {
+          return {
+            ...previousSearch,
+            diffFilter: newFilter,
+          };
+        },
+      });
+    },
+    [navigate],
+  );
+
+  const cleanAll = useCallback(() => {
+    navigate({
+      search: previousSearch => {
+        return {
+          ...previousSearch,
+          diffFilter: {},
+        };
+      },
+    });
+  }, [navigate]);
+
   const filterListElement = useMemo(
-    () =>
-      Object.keys(diffFilter).length !== 0 ? (
-        <TreeDetailsFilterList
-          filter={diffFilter}
-          isLoading={isPlaceholderData}
-        />
-      ) : undefined,
-    [diffFilter, isPlaceholderData],
+    () => (
+      <DetailsFilterList
+        filter={diffFilter}
+        cleanFilters={cleanAll}
+        navigate={onFilterChange}
+        isLoading={isPlaceholderData}
+      />
+    ),
+    [cleanAll, diffFilter, isPlaceholderData, onFilterChange],
   );
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {

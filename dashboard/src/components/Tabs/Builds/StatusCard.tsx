@@ -1,22 +1,37 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { useIntl } from 'react-intl';
 
 import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
-import BaseCard from '../../Cards/BaseCard';
-import StatusChartMemoized, { Colors } from '../../StatusChart/StatusCharts';
+import BaseCard from '@/components/Cards/BaseCard';
+import StatusChartMemoized, {
+  Colors,
+} from '@/components/StatusChart/StatusCharts';
+import type { TFilterObjectsKeys } from '@/types/general';
 
-interface IStatusCard<T> {
+interface IStatusCard {
   buildsSummary?: ITreeDetails['buildsSummary'];
-  toggleFilterBySection: (value: string, filterSection: T) => void;
+  toggleFilterBySection: (
+    value: string,
+    filterSection: TFilterObjectsKeys,
+  ) => void;
 }
 
-const StatusCard = <T,>({
+const StatusCard = ({
   buildsSummary,
   toggleFilterBySection,
-}: IStatusCard<T>): JSX.Element => {
+}: IStatusCard): JSX.Element => {
   const { formatMessage } = useIntl();
+
+  const totalStatus = useMemo(() => {
+    const invalid = buildsSummary?.invalid ?? 0;
+    const valid = buildsSummary?.valid ?? 0;
+    const nullables = buildsSummary?.null ?? 0;
+
+    return invalid + valid + nullables;
+  }, [buildsSummary]);
+
   if (!buildsSummary) return <></>;
 
   return (
@@ -26,15 +41,9 @@ const StatusCard = <T,>({
         <StatusChartMemoized
           type="chart"
           pieCentralLabel={formatMessage({ id: 'global.executed' })}
-          pieCentralDescription={
-            <>
-              {(buildsSummary.invalid ?? 0) +
-                (buildsSummary.valid ?? 0) +
-                (buildsSummary.null ?? 0)}
-            </>
-          }
+          pieCentralDescription={<>{totalStatus}</>}
           onLegendClick={(value: string) => {
-            toggleFilterBySection(value, 'buildStatus' as T);
+            toggleFilterBySection(value, 'buildStatus');
           }}
           elements={[
             {
@@ -59,6 +68,4 @@ const StatusCard = <T,>({
   );
 };
 
-export const MemoizedStatusCard = memo(StatusCard) as <T>(
-  props: IStatusCard<T>,
-) => JSX.Element;
+export const MemoizedStatusCard = memo(StatusCard);

@@ -7,17 +7,20 @@ import ListingItem from '@/components/ListingItem/ListingItem';
 import { GroupedTestStatus } from '@/components/Status/Status';
 import type { TTreeTestsData } from '@/types/tree/TreeDetails';
 
-import FilterLink from '../FilterLink';
+import FilterLink from '@/components/Tabs/FilterLink';
+import type { TFilter } from '@/types/general';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
-  diffFilter: Record<string, Record<string, boolean>>;
+  diffFilter: TFilter;
+  disabled?: boolean;
 }
 
 const ConfigsList = ({
   configStatusCounts,
   title,
   diffFilter,
+  disabled,
 }: IConfigList): JSX.Element => {
   return (
     <BaseCard
@@ -32,12 +35,14 @@ const ConfigsList = ({
                 key={configName}
                 filterSection="configs"
                 filterValue={configName}
+                disabled={disabled}
                 diffFilter={diffFilter}
               >
                 <ListingItem
                   hasBottomBorder
                   key={configName}
                   text={configName}
+                  disabled={disabled}
                   leftIcon={
                     <GroupedTestStatus
                       done={DONE}

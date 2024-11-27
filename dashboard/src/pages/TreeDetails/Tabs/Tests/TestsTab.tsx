@@ -12,24 +12,26 @@ import BaseCard from '@/components/Cards/BaseCard';
 
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 
-import {
-  DesktopGrid,
-  InnerMobileGrid,
-  MobileGrid,
-} from '@/pages/TreeDetails/Tabs/TabGrid';
-
-import MemoizedStatusChart from '@/components/Cards/StatusChart';
-import MemoizedConfigList from '@/components/Cards/ConfigsList';
-import MemoizedErrorsSummary from '@/components/Cards/ErrorsSummary';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
 
 import { TestsTable } from '@/components/TestsTable/TestsTable';
+import {
+  DesktopGrid,
+  InnerMobileGrid,
+  MobileGrid,
+} from '@/components/Tabs/TabGrid';
+
+import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
+import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
+
+import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
+import type { TFilter } from '@/types/general';
 
 import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
 
 interface TestsTabProps {
-  reqFilter: Record<string, string[]>;
+  reqFilter: TFilter;
 }
 
 const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
@@ -129,17 +131,19 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
         <div>
-          <MemoizedStatusChart
+          <MemoizedStatusCard
             title={<FormattedMessage id="testsTab.testStatus" />}
             statusCounts={data.testStatusSummary}
           />
           <MemoizedConfigList
             title={<FormattedMessage id="global.configs" />}
             configStatusCounts={data.testConfigs}
+            diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
             archCompilerErrors={data.testArchSummary}
+            diffFilter={diffFilter}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
@@ -156,7 +160,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
         </div>
       </DesktopGrid>
       <MobileGrid>
-        <MemoizedStatusChart
+        <MemoizedStatusCard
           title={<FormattedMessage id="testsTab.testStatus" />}
           statusCounts={data.testStatusSummary}
         />
@@ -166,10 +170,12 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             <MemoizedConfigList
               title={<FormattedMessage id="global.configs" />}
               configStatusCounts={data.testConfigs}
+              diffFilter={diffFilter}
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
               archCompilerErrors={data.testArchSummary}
+              diffFilter={diffFilter}
             />
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
