@@ -14,8 +14,7 @@ const hardwareDetailsSearchSchema = z.object({
   treeIndexes: z.array(z.number().int()).optional(),
   treeCommits: zTreeCommits,
   tableFilter: zTableFilterInfoValidator,
-  startTimestampInSeconds: z.number(),
-  endTimestampInSeconds: z.number(),
+  limitTimestampInSeconds: z.number(),
   diffFilter: zDiffFilter,
 });
 

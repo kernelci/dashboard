@@ -243,7 +243,7 @@ class HardwareDetails(View):
 
         return (builds, tests, boots)
 
-    def get_trees(self, hardware_id, origin, start_datetime, end_datetime):
+    def get_trees(self, hardware_id, origin, limit_datetime):
         tree_id_fields = [
             "build__checkout__tree_name",
             "build__checkout__git_repository_branch",
@@ -253,8 +253,7 @@ class HardwareDetails(View):
         trees_query_set = Tests.objects.filter(
             environment_compatible__contains=[hardware_id],
             origin=origin,
-            build__checkout__start_time__gte=start_datetime,
-            build__checkout__start_time__lte=end_datetime,
+            build__checkout__start_time__lte=limit_datetime,
         ).values(
             *tree_id_fields,
             "build__checkout__git_commit_name",
@@ -342,17 +341,12 @@ class HardwareDetails(View):
 
     # Using post to receive a body request
     def post(self, request, hardware_id):
-
         try:
             body = json.loads(request.body)
 
             origin = body.get("origin", DEFAULT_ORIGIN)
-            start_datetime = datetime.fromtimestamp(
-                int(body.get('startTimestampInSeconds')),
-                timezone.utc
-            )
-            end_datetime = datetime.fromtimestamp(
-                int(body.get('endTimestampInSeconds')),
+            limit_datetime = datetime.fromtimestamp(
+                int(body.get('limitTimestampInSeconds')),
                 timezone.utc
             )
             filters = body.get("filter", {})
@@ -364,12 +358,10 @@ class HardwareDetails(View):
             )
         except (ValueError, TypeError):
             return HttpResponseBadRequest(
-                getErrorResponseBody(
-                    "startTimestampInSeconds and endTimestampInSeconds must be a Unix Timestamp"
-                )
+                getErrorResponseBody("limitTimestampInSeconds must be a Unix Timestamp")
             )
 
-        trees = self.get_trees(hardware_id, origin, start_datetime, end_datetime)
+        trees = self.get_trees(hardware_id, origin, limit_datetime)
         selected_trees = self.get_selected_trees(trees, body.get('selectedTrees', {}))
 
         params = {

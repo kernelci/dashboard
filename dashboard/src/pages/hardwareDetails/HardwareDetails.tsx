@@ -43,8 +43,7 @@ function HardwareDetails(): JSX.Element {
   const {
     treeIndexes,
     treeCommits,
-    startTimestampInSeconds,
-    endTimestampInSeconds,
+    limitTimestampInSeconds,
     diffFilter,
     origin,
   } = useSearch({ from: '/hardware/$hardwareId' });
@@ -69,8 +68,7 @@ function HardwareDetails(): JSX.Element {
 
   const { data, isLoading } = useHardwareDetails(
     hardwareId,
-    startTimestampInSeconds,
-    endTimestampInSeconds,
+    limitTimestampInSeconds,
     origin,
     reqFilter,
     treeIndexes ?? [],

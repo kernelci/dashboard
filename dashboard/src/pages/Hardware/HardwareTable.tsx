@@ -139,14 +139,12 @@ const columns: ColumnDef<HardwareTableItem>[] = [
 
 interface ITreeTable {
   treeTableRows: HardwareTableItem[];
-  startTimestampInSeconds: number;
-  endTimestampInSeconds: number;
+  limitTimestampInSeconds: number;
 }
 
 export function HardwareTable({
   treeTableRows,
-  startTimestampInSeconds,
-  endTimestampInSeconds,
+  limitTimestampInSeconds,
 }: ITreeTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -163,12 +161,11 @@ export function HardwareTable({
         params: { hardwareId: row.original.hardwareName },
         search: previousSearch => ({
           ...previousSearch,
-          startTimestampInSeconds,
-          endTimestampInSeconds,
+          limitTimestampInSeconds,
         }),
       };
     },
-    [endTimestampInSeconds, startTimestampInSeconds],
+    [limitTimestampInSeconds],
   );
 
   const data = useMemo(() => {

@@ -12,8 +12,7 @@ import type { TOrigins } from '@/types/general';
 import http from './api';
 
 type fetchHardwareDetailsBody = {
-  startTimestampInSeconds: number;
-  endTimestampInSeconds: number;
+  limitTimestampInSeconds: number;
   origin: TOrigins;
   selectedTrees: Record<string, string>;
   filter?: Record<string, string[]>;
@@ -67,8 +66,7 @@ const mapIndexesToSelectedTrees = (
 
 export const useHardwareDetails = (
   hardwareId: string,
-  startTimestampInSeconds: number,
-  endTimestampInSeconds: number,
+  limitTimestampInSeconds: number,
   origin: TOrigins,
   filter: { [key: string]: string[] },
   selectedIndexes: number[],
@@ -80,8 +78,7 @@ export const useHardwareDetails = (
 
   const body: fetchHardwareDetailsBody = {
     origin,
-    startTimestampInSeconds,
-    endTimestampInSeconds,
+    limitTimestampInSeconds,
     selectedTrees,
     filter: filtersFormatted,
   };

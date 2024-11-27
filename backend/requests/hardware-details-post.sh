@@ -6,7 +6,6 @@ Content-Type:application/json \
         "1": "selected"
     },
     "origin": "maestro",
-    "startTimestampInSeconds": 1731275753,
-    "endTimestampInSeconds": 1731448553
+    "limitTimestampInSeconds": 1731448553
 }'
 
