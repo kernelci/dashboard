@@ -20,7 +20,7 @@ export const defaultColumns: ColumnDef<TPathTests>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.path',
+        intlKey: 'global.path',
         intlDefaultMessage: 'Path',
       }),
   },
@@ -30,9 +30,9 @@ export const defaultColumns: ColumnDef<TPathTests>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.status',
+        intlKey: 'global.status',
         intlDefaultMessage: 'Status',
-        tooltipId: 'bootsTab.statusTooltip',
+        tooltipId: 'boots.statusTooltip',
       }),
     cell: ({ row }): JSX.Element => {
       return (
@@ -60,7 +60,7 @@ export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.path',
+        intlKey: 'global.path',
         intlDefaultMessage: 'Path',
       }),
     cell: ({ row }): JSX.Element => {
@@ -82,7 +82,7 @@ export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.status',
+        intlKey: 'global.status',
         intlDefaultMessage: 'Status',
       }),
   },
@@ -110,7 +110,7 @@ export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.duration',
+        intlKey: 'global.duration',
         intlDefaultMessage: 'Duration',
       }),
     cell: ({ row }): string =>
@@ -123,7 +123,7 @@ export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeDetails.hardware',
+        intlKey: 'global.hardware',
         intlDefaultMessage: 'Hardware',
       }),
     cell: ({ row }): JSX.Element => (

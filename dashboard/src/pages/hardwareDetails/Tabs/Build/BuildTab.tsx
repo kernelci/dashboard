@@ -60,11 +60,11 @@ const StatusCard = ({
   if (!buildsSummary) return <></>;
   return (
     <BaseCard
-      title={formatMessage({ id: 'treeDetails.buildStatus' })}
+      title={formatMessage({ id: 'buildTab.buildStatus' })}
       content={
         <StatusChartMemoized
           type="chart"
-          pieCentralLabel={formatMessage({ id: 'treeDetails.executed' })}
+          pieCentralLabel={formatMessage({ id: 'global.executed' })}
           pieCentralDescription={
             <>
               {(buildsSummary.invalid ?? 0) +
@@ -78,12 +78,12 @@ const StatusCard = ({
           elements={[
             {
               value: buildsSummary.valid ?? 0,
-              label: 'treeDetails.success',
+              label: 'global.success',
               color: Colors.Green,
             },
             {
               value: buildsSummary.invalid ?? 0,
-              label: 'treeDetails.failed',
+              label: 'global.failed',
               color: Colors.Red,
             },
             {
@@ -154,8 +154,8 @@ const ErrorsSummaryBuild = ({
 }: IErrorsSummaryBuild): JSX.Element => {
   const summaryHeaders = useMemo(
     () => [
-      <FormattedMessage key="treeDetails.arch" id="treeDetails.arch" />,
-      <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
+      <FormattedMessage key="global.arch" id="global.arch" />,
+      <FormattedMessage key="global.compiler" id="global.compiler" />,
     ],
     [],
   );
@@ -227,7 +227,7 @@ const ConfigsCard = ({
 
   return (
     <BaseCard
-      title={<FormattedMessage id="treeDetails.configs" />}
+      title={<FormattedMessage id="global.configs" />}
       content={content}
     />
   );
@@ -328,7 +328,7 @@ const BuildTab = ({ builds, hardwareId }: TBuildTab): JSX.Element => {
 
       <div className="flex flex-col gap-4">
         <div className="text-lg">
-          <FormattedMessage id="global.build" />
+          <FormattedMessage id="global.builds" />
         </div>
         <HardwareDetailsBuildsTable
           buildItems={buildItems}

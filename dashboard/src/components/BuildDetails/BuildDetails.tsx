@@ -98,7 +98,7 @@ const BuildDetails = ({
                 linkText: formatDate(valueOrEmpty(data.start_time)),
               },
               {
-                title: 'global.defconfig',
+                title: 'buildDetails.defconfig',
                 linkText: valueOrEmpty(data.config_name),
               },
               {
@@ -140,7 +140,7 @@ const BuildDetails = ({
                 wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
               },
               {
-                title: 'global.dtb',
+                title: 'buildDetails.dtb',
                 linkText: valueOrEmpty(data.misc?.dtb),
                 icon: data.misc?.dtb ? <BlueFolderIcon /> : undefined,
               },

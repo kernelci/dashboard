@@ -6,7 +6,7 @@ import { zOrigin } from '@/types/general';
 
 import {
   zDiffFilter,
-  zPossibleValidator,
+  zPossibleTabValidator,
   zTableFilterInfoValidator,
   zTreeInformation,
 } from '@/types/tree/TreeDetails';
@@ -16,7 +16,7 @@ const treeDetailsSearchSchema = z.object({
   testPath: z.string().optional().catch(''),
   origin: zOrigin,
   treeInfo: zTreeInformation,
-  currentPageTab: zPossibleValidator,
+  currentPageTab: zPossibleTabValidator,
   tableFilter: zTableFilterInfoValidator,
 });
 

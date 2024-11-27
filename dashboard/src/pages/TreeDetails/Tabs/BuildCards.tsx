@@ -22,8 +22,8 @@ const ErrorsSummaryBuild = ({
 }: IErrorsSummaryBuild): JSX.Element => {
   const summaryHeaders = useMemo(
     () => [
-      <FormattedMessage key="treeDetails.arch" id="treeDetails.arch" />,
-      <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
+      <FormattedMessage key="global.arch" id="global.arch" />,
+      <FormattedMessage key="global.compiler" id="global.compiler" />,
     ],
     [],
   );

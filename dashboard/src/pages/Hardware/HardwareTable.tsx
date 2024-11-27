@@ -63,9 +63,9 @@ const columns: ColumnDef<HardwareTableItem>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.build',
+        intlKey: 'globalTable.build',
         intlDefaultMessage: 'Build Status',
-        tooltipId: 'buildTab.statusTooltip',
+        tooltipId: 'build.statusTooltip',
       }),
     cell: ({ row }): JSX.Element => {
       return row.original.buildCount ? (
@@ -87,9 +87,9 @@ const columns: ColumnDef<HardwareTableItem>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.bootStatus',
+        intlKey: 'globalTable.bootStatus',
         intlDefaultMessage: 'Boot Status',
-        tooltipId: 'bootsTab.statusTooltip',
+        tooltipId: 'boots.statusTooltip',
       }),
     cell: ({ row }): JSX.Element => {
       return row.original.bootStatusCount ? (
@@ -115,9 +115,9 @@ const columns: ColumnDef<HardwareTableItem>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.test',
+        intlKey: 'globalTable.test',
         intlDefaultMessage: 'Test Status',
-        tooltipId: 'testsTab.statusTooltip',
+        tooltipId: 'test.statusTooltip',
       }),
     cell: ({ row }): JSX.Element => {
       return row.original.testStatusCount ? (
@@ -247,13 +247,13 @@ export function HardwareTable({
         </span>
         <div className="flex items-center justify-between gap-10">
           <MemoizedInputTime />
-          <PaginationInfo table={table} intlLabel="global.hardware" />
+          <PaginationInfo table={table} intlLabel="global.hardwares" />
         </div>
       </div>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
       </BaseTable>
-      <PaginationInfo table={table} intlLabel="global.trees" />
+      <PaginationInfo table={table} intlLabel="global.hardwares" />
     </div>
   );
 }

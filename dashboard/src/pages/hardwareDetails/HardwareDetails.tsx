@@ -89,7 +89,7 @@ function HardwareDetails(): JSX.Element {
     const { statusSummary: bootStatusSummary } = data?.boots ?? {};
 
     return {
-      'treeDetails.tests': testStatusSummary ? (
+      'global.tests': testStatusSummary ? (
         <GroupedTestStatus
           fail={testStatusSummary.FAIL}
           pass={testStatusSummary.PASS}
@@ -98,7 +98,7 @@ function HardwareDetails(): JSX.Element {
       ) : (
         <></>
       ),
-      'treeDetails.boots': bootStatusSummary ? (
+      'global.boots': bootStatusSummary ? (
         <GroupedTestStatus
           fail={bootStatusSummary.FAIL}
           pass={bootStatusSummary.PASS}
@@ -107,7 +107,7 @@ function HardwareDetails(): JSX.Element {
       ) : (
         <></>
       ),
-      'treeDetails.builds': data?.builds ? (
+      'global.builds': data?.builds ? (
         <BuildStatusComponent
           valid={valid}
           invalid={invalid}

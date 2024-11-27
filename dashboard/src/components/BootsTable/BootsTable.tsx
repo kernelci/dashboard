@@ -60,7 +60,7 @@ const columns: ColumnDef<TestByCommitHash>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.path',
+        intlKey: 'global.path',
         intlDefaultMessage: 'Path',
       }),
   },
@@ -72,9 +72,9 @@ const columns: ColumnDef<TestByCommitHash>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.status',
+        intlKey: 'global.status',
         intlDefaultMessage: 'Status',
-        tooltipId: 'bootsTab.statusTooltip',
+        tooltipId: 'boots.statusTooltip',
       }),
   },
   {
@@ -101,7 +101,7 @@ const columns: ColumnDef<TestByCommitHash>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.duration',
+        intlKey: 'global.duration',
         intlDefaultMessage: 'Duration',
       }),
     cell: ({ row }): string =>
@@ -442,7 +442,7 @@ export function BootsTable({
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableRows}</TableBody>
       </BaseTable>
-      <PaginationInfo table={table} intlLabel="treeDetails.boots" />
+      <PaginationInfo table={table} intlLabel="global.boots" />
     </WrapperTable>
   );
 }

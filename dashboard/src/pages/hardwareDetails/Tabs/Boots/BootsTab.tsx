@@ -97,8 +97,8 @@ const ConfigsList = ({
 export const MemoizedConfigList = memo(ConfigsList);
 
 const summaryHeaders = [
-  <FormattedMessage key="treeDetails.arch" id="treeDetails.arch" />,
-  <FormattedMessage key="treeDetails.compiler" id="treeDetails.compiler" />,
+  <FormattedMessage key="global.arch" id="global.arch" />,
+  <FormattedMessage key="global.compiler" id="global.compiler" />,
 ];
 
 const ErrorsSummary = ({

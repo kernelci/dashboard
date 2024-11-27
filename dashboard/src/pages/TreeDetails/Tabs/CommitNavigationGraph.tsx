@@ -61,14 +61,14 @@ const CommitNavigationGraph = (): JSX.Element => {
 
   const messagesId: MessagesID = useMemo(() => {
     switch (currentPageTab) {
-      case 'treeDetails.boots':
+      case 'global.boots':
         return {
           graphName: 'treeDetails.bootsHistory',
           good: 'treeDetails.successBoots',
           bad: 'treeDetails.failedBoots',
           mid: 'treeDetails.inconclusiveBoots',
         } as MessagesID;
-      case 'treeDetails.tests':
+      case 'global.tests':
         return {
           graphName: 'treeDetails.testsHistory',
           good: 'treeDetails.testsSuccess',
@@ -120,12 +120,12 @@ const CommitNavigationGraph = (): JSX.Element => {
   const xAxisIndexes: number[] = [];
   // TODO Extract the magic code to outside the component
   data?.forEach((item, index) => {
-    if (currentPageTab === 'treeDetails.builds') {
+    if (currentPageTab === 'global.builds') {
       series[0].data?.unshift(item.builds.valid_builds);
       series[1].data?.unshift(item.builds.invalid_builds);
       series[2].data?.unshift(item.builds.null_builds);
     }
-    if (currentPageTab === 'treeDetails.boots') {
+    if (currentPageTab === 'global.boots') {
       const inconclusiveCount =
         item.boots_tests.miss_count +
         item.boots_tests.skip_count +
@@ -136,7 +136,7 @@ const CommitNavigationGraph = (): JSX.Element => {
       series[1].data?.unshift(item.boots_tests.fail_count);
       series[2].data?.unshift(inconclusiveCount);
     }
-    if (currentPageTab === 'treeDetails.tests') {
+    if (currentPageTab === 'global.tests') {
       const inconclusiveCount =
         item.non_boots_tests.miss_count +
         item.non_boots_tests.skip_count +

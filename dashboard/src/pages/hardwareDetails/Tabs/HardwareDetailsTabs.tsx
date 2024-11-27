@@ -6,9 +6,7 @@ import { useCallback, useMemo } from 'react';
 import type { ITabItem } from '@/components/Tabs/Tabs';
 import Tabs from '@/components/Tabs/Tabs';
 
-import { zPossibleValidator } from '@/types/tree/TreeDetails';
-
-import type { MessagesKey } from '@/locales/messages';
+import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
@@ -17,10 +15,7 @@ import BootsTab from './Boots';
 import TestsTab from './Tests';
 
 export type TreeDetailsTabRightElement = Record<
-  Extract<
-    MessagesKey,
-    'treeDetails.builds' | 'treeDetails.boots' | 'treeDetails.tests'
-  >,
+  'global.builds' | 'global.boots' | 'global.tests',
   ReactElement
 >;
 
@@ -45,7 +40,7 @@ const HardwareDetailsTabs = ({
 
   const onTabChange: (value: string) => void = useCallback(
     value => {
-      const validatedValue = zPossibleValidator.parse(value);
+      const validatedValue = zPossibleTabValidator.parse(value);
       navigate({
         search: previousParams => {
           return {
@@ -57,34 +52,34 @@ const HardwareDetailsTabs = ({
     },
     [navigate],
   );
-  // TODO: put i18n in global.
+
   const tabs: ITabItem[] = useMemo(
     () => [
       {
-        name: 'treeDetails.builds',
+        name: 'global.builds',
         content: (
           <BuildTab
             builds={HardwareDetailsData.builds}
             hardwareId={hardwareId}
           />
         ),
-        rightElement: countElements['treeDetails.builds'],
+        rightElement: countElements['global.builds'],
         disabled: false,
       },
       {
-        name: 'treeDetails.boots',
+        name: 'global.boots',
         content: (
           <BootsTab boots={HardwareDetailsData.boots} hardwareId={hardwareId} />
         ),
-        rightElement: countElements['treeDetails.boots'],
+        rightElement: countElements['global.boots'],
         disabled: false,
       },
       {
-        name: 'treeDetails.tests',
+        name: 'global.tests',
         content: (
           <TestsTab tests={HardwareDetailsData.tests} hardwareId={hardwareId} />
         ),
-        rightElement: countElements['treeDetails.tests'],
+        rightElement: countElements['global.tests'],
         disabled: false,
       },
     ],
