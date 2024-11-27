@@ -27,7 +27,7 @@ import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import { IndeterminateCheckbox } from '@/components/Checkbox/IndeterminateCheckbox';
 import { useDebounce } from '@/hooks/useDebounce';
 
-const DEBOUNCE_INTERVAL = 1000;
+const DEBOUNCE_INTERVAL = 2000;
 
 interface IHardwareHeader {
   treeItems: Trees[];
