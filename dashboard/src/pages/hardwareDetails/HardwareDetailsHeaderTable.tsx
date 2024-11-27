@@ -188,12 +188,17 @@ export function HardwareHeader({
         <TableHead key={header.id}>
           {header.isPlaceholder
             ? null
-            : flexRender(header.column.columnDef.header, header.getContext())}
+            : // the header must change the icon when sorting changes,
+              // but just the column dependency won't trigger the rerender
+              // so we pass an unused sorting prop here to force the useMemo dependency
+              flexRender(header.column.columnDef.header, {
+                ...header.getContext(),
+                sorting,
+                rowSelection, // needed for the selection icon too
+              })}
         </TableHead>
       );
     });
-    // TODO: remove exhaustive-deps and change memo  (all tables)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupHeaders, sorting, rowSelection]);
 
   const modelRows = table.getRowModel().rows;
