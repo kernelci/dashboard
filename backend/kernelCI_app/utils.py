@@ -109,7 +109,7 @@ class FilterParams:
         "like": ["like", "LIKE"],
     }
 
-    string_like_filters = ["test.path"]
+    string_like_filters = ["boot.path", "test.path"]
 
     def __init__(self, request):
         self.filters = []

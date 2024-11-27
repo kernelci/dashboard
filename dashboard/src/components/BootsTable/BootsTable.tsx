@@ -118,7 +118,8 @@ interface IBootsTable {
   filter: TestsTableFilter;
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   onClickFilter: (newFilter: TestsTableFilter) => void;
-  updatePathFilter: (pathFilter: string) => void;
+  updatePathFilter?: (pathFilter: string) => void;
+  currentPathFilter?: string;
 }
 
 const TableCellComponent = ({
@@ -192,12 +193,14 @@ const TableRowComponent = ({
 const TableCellMemoized = memo(TableCellComponent);
 const TableRowMemoized = memo(TableRowComponent);
 
+// TODO: would be useful if the navigation happened within the table, so the parent component would only be required to pass the navigation url instead of the whole function for the update and the currentPath diffFilter (boots/tests Table)
 export function BootsTable({
   testHistory,
   filter,
   getRowLink,
   onClickFilter,
   updatePathFilter,
+  currentPathFilter,
 }: IBootsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -313,14 +316,14 @@ export function BootsTable({
       ?.setFilterValue(filter !== 'all' ? filter : undefined);
   }, [filter, table]);
 
-  // TODO: there should be a filtering for the frontend before the backend AND that filtering should consider the individual tests inside each test "batch" (the data from individualTestsTables), not only the rows of the external table
   const onSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.value !== undefined) {
+      if (e.target.value !== undefined && updatePathFilter) {
         updatePathFilter(e.target.value);
       }
-      // TODO: only use the frontend filtering when the backend filter function is undefined (like in BuildDetails page)
-      table.setGlobalFilter(String(e.target.value));
+      if (updatePathFilter === undefined) {
+        table.setGlobalFilter(String(e.target.value));
+      }
     },
     [table, updatePathFilter],
   );
@@ -342,9 +345,10 @@ export function BootsTable({
           {header.id === 'path' ? (
             <div className="flex items-center">
               {headerComponent}
-              {/* TODO: add startingValue with the currentPathFilter from the diffFilter param, same for TestsTable */}
               <DebounceInput
+                key={currentPathFilter}
                 debouncedSideEffect={onSearchChange}
+                startingValue={currentPathFilter}
                 className="w-50 font-normal"
                 type="text"
                 placeholder={intl.formatMessage({ id: 'global.search' })}
@@ -356,7 +360,7 @@ export function BootsTable({
         </TableHead>
       );
     });
-  }, [groupHeaders, intl, onSearchChange, sorting]);
+  }, [currentPathFilter, groupHeaders, intl, onSearchChange, sorting]);
 
   const modelRows = table.getRowModel().rows;
 

@@ -67,6 +67,8 @@ export const zFilterObjectsKeys = z.enum([
   'testStatus',
   'trees',
   'path',
+  'bootPath',
+  'testPath',
 ]);
 export const zFilterNumberKeys = z.enum([
   'buildDurationMin',
@@ -98,6 +100,8 @@ export const zDiffFilter = z
       testDurationMax: zFilterNumberValue,
       trees: zFilterBoolValue,
       path: zFilterBoolValue,
+      bootPath: zFilterBoolValue,
+      testPath: zFilterBoolValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])
@@ -132,6 +136,8 @@ const requestFilters = {
     'boot.status',
     'boot.duration_[gte]',
     'boot.duration_[lte]',
+    'test.path',
+    'boot.path',
   ],
 } as const;
 

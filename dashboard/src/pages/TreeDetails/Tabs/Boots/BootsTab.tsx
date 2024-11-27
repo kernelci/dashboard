@@ -32,9 +32,12 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
   const { treeId } = useParams({
     from: '/tree/$treeId/',
   });
-  const { tableFilter } = useSearch({
+  const { tableFilter, diffFilter } = useSearch({
     from: '/tree/$treeId/',
   });
+  const currentPathFilter = diffFilter.bootPath
+    ? Object.keys(diffFilter.bootPath)[0]
+    : undefined;
 
   const navigate = useNavigate({ from: '/tree/$treeId/' });
 
@@ -45,7 +48,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           ...previousSearch,
           diffFilter: {
             ...previousSearch.diffFilter,
-            path: pathFilter === '' ? undefined : { [pathFilter]: true },
+            bootPath: pathFilter === '' ? undefined : { [pathFilter]: true },
           },
         }),
       });
@@ -181,6 +184,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
         testHistory={data.bootHistory}
         getRowLink={getRowLink}
         updatePathFilter={updatePathFilter}
+        currentPathFilter={currentPathFilter}
       />
     </div>
   );
