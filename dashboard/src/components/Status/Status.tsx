@@ -24,13 +24,13 @@ export const GroupedTestStatus = ({
   hideInconclusive = false,
 }: ITestStatus): JSX.Element => {
   const { successCount, inconclusiveCount, failedCount } = groupStatus({
-    doneCount: done ?? 0,
-    errorCount: error ?? 0,
-    failCount: fail ?? 0,
-    missCount: miss ?? 0,
-    passCount: pass ?? 0,
-    skipCount: skip ?? 0,
-    nullCount: nullStatus ?? 0,
+    doneCount: done,
+    errorCount: error,
+    failCount: fail,
+    missCount: miss,
+    passCount: pass,
+    skipCount: skip,
+    nullCount: nullStatus,
   });
   return (
     <div className="flex flex-row gap-1">

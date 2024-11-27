@@ -1,14 +1,39 @@
 import { useMemo } from 'react';
 
-export type RecordDiffBooleanType = Record<string, Record<string, boolean>>;
-export type RecordDiffNumberType = Record<string, number>;
+import {
+  isTFilterNumberKeys,
+  isTFilterObjectKeys,
+  type TFilter,
+  type TFilterObjectsKeys,
+} from '@/types/general';
 
-export type RecordDiffType = RecordDiffNumberType | RecordDiffBooleanType;
+export const cleanFalseFilters = (diffFilter: TFilter): TFilter => {
+  const cleanedFilter: TFilter = {};
+  Object.entries(diffFilter).forEach(
+    ([filterSectionKey, filterSectionValue]) => {
+      if (isTFilterObjectKeys(filterSectionKey)) {
+        cleanedFilter[filterSectionKey] = {};
+        const currentSection = cleanedFilter[filterSectionKey];
+        Object.entries(filterSectionValue).forEach(
+          ([filterKey, filterValue]) => {
+            if (currentSection) {
+              currentSection[filterKey] = filterValue;
+            }
+          },
+        );
+      } else if (
+        isTFilterNumberKeys(filterSectionKey) &&
+        typeof filterSectionValue === 'number'
+      ) {
+        cleanedFilter[filterSectionKey] = filterSectionValue;
+      }
+    },
+  );
 
-export const useDiffFilterParams = <
-  TFilterObjectsKeys extends string,
-  TFilter extends Record<TFilterObjectsKeys, Record<string, boolean>>,
->(
+  return cleanedFilter;
+};
+
+export const useDiffFilterParams = (
   filterValue: string,
   filterSection: TFilterObjectsKeys,
   currentDiffFilter: TFilter,

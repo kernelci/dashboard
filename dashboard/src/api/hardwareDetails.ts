@@ -6,8 +6,8 @@ import type {
   THardwareDetailsFilter,
   TTreeCommits,
 } from '@/types/hardware/hardwareDetails';
-import { getTargetFilter } from '@/types/hardware/hardwareDetails';
-import type { TOrigins } from '@/types/general';
+import type { TFilter, TOrigins } from '@/types/general';
+import { getTargetFilter } from '@/types/general';
 
 import http from './api';
 
@@ -68,12 +68,20 @@ export const useHardwareDetails = (
   hardwareId: string,
   limitTimestampInSeconds: number,
   origin: TOrigins,
-  filter: { [key: string]: string[] },
+  filter: TFilter,
   selectedIndexes: number[],
   treeCommits: TTreeCommits,
 ): UseQueryResult<THardwareDetails> => {
+  const testFilter = getTargetFilter(filter, 'test');
   const detailsFilter = getTargetFilter(filter, 'hardwareDetails');
-  const filtersFormatted = mapFiltersKeysToBackendCompatible(detailsFilter);
+
+  const filters = {
+    ...testFilter,
+    ...detailsFilter,
+  };
+
+  const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
+
   const selectedTrees = mapIndexesToSelectedTrees(selectedIndexes, treeCommits);
 
   const body: fetchHardwareDetailsBody = {

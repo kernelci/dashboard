@@ -4,24 +4,28 @@ import { useIntl } from 'react-intl';
 
 import type {
   ICheckboxSection,
-  Section,
+  ISectionItem,
 } from '@/components/Filter/CheckboxSection';
 import FilterCheckboxSection from '@/components/Filter/CheckboxSection';
 
 import FilterTimeRangeSection from '@/components/Filter/TimeRangeSection';
 
-import { DrawerSection } from '../Filter/Drawer';
+import { DrawerSection } from '@/components/Filter/Drawer';
 
-import type { RecordDiffType } from './tabsUtils';
+import type {
+  TFilterKeys,
+  TFilter,
+  TFilterObjectsKeys,
+  TFilterNumberKeys,
+} from '@/types/general';
+import { filterFieldMap, zFilterObjectsKeys } from '@/types/general';
 
-export const mapFilterToReq = <T extends Record<string, string>>(
-  filter: T,
-  fieldMap: Record<string, string>,
-): { [key: string]: string[] } => {
+// TODO: We can improve this idea and replace mapFilterToReq entirely
+export const mapFilterToReq = (filter: TFilter): TFilter => {
   const filterMapped: { [key: string]: string[] } = {};
 
-  Object.entries(fieldMap).forEach(([reqField, field]) => {
-    const values = filter[field];
+  Object.entries(filterFieldMap).forEach(([reqField, field]) => {
+    const values = filter[field as TFilterKeys];
     if (!values) return;
 
     if (typeof values === 'object') {
@@ -43,20 +47,23 @@ export const mapFilterToReq = <T extends Record<string, string>>(
   return filterMapped;
 };
 
-const parseCheckboxFilter = <T extends Record<string, Record<string, boolean>>>(
-  filter: T,
-  diffFilter: T,
+const parseCheckboxFilter = (
+  filter: TFilter,
+  diffFilter: TFilter,
   isTFilterObjectKeys: (key: string) => boolean,
-): T => {
-  const result = structuredClone(filter) as T;
-  Object.keys(result).forEach(key => {
-    const currentFilterSection = result[key];
+): TFilter => {
+  const result: TFilter = structuredClone(filter);
 
-    if (!currentFilterSection || !isTFilterObjectKeys(key)) {
+  Object.keys(result).forEach(key => {
+    // key is always returned as string in Object.keys function, but he is a TFilterObjectKeys type.
+    const validateKey = zFilterObjectsKeys.catch('buildStatus').parse(key);
+    const currentFilterSection = result[validateKey];
+
+    if (!currentFilterSection || !isTFilterObjectKeys(validateKey)) {
       return;
     }
 
-    const diffFilterSection = diffFilter[key];
+    const diffFilterSection = diffFilter[validateKey];
 
     if (diffFilterSection) {
       Object.keys(diffFilterSection).forEach(filterSectionKey => {
@@ -69,51 +76,45 @@ const parseCheckboxFilter = <T extends Record<string, Record<string, boolean>>>(
   return result;
 };
 
-const changeCheckboxFilterValue = <
-  T extends Record<string, Record<string, boolean>>,
-  K extends keyof T,
->(
-  filter: T,
-  filterField: K,
+const changeCheckboxFilterValue = (
+  filter: TFilter,
+  filterField: TFilterObjectsKeys,
   value: string,
-): T => {
-  const newFilter: T = JSON.parse(JSON.stringify(filter ?? {}));
+): TFilter => {
+  const newFilter = JSON.parse(JSON.stringify(filter ?? {}));
   if (!newFilter[filterField]) {
-    newFilter[filterField] = {} as T[K];
+    newFilter[filterField] = {};
   }
 
-  const filterSection = newFilter[filterField] as Record<string, boolean>;
+  const filterSection = newFilter[filterField];
   const filterValue = filterSection[value] ?? false;
   filterSection[value] = !filterValue;
 
   return newFilter;
 };
 
-type SectionsProps<T extends RecordDiffType> = {
-  diffFilter: T;
-  setDiffFilter: Dispatch<SetStateAction<T>>;
+type SectionsProps = {
+  diffFilter: TFilter;
+  setDiffFilter: Dispatch<SetStateAction<TFilter>>;
 };
 
-interface ICheckboxSectionProps<
-  T extends Record<string, Record<string, boolean>>,
-> extends SectionsProps<T> {
-  filter: T;
+interface ICheckboxSectionProps extends SectionsProps {
+  filter: TFilter;
   isTFilterObjectKeys: (key: string) => boolean;
-  sections: Section[];
-  //getSections: (parsedFilter: T) => ICheckboxSection[];
+  sections: ISectionItem[];
 }
 
 // TODO: Remove useState for this forms, use something like react hook forms or tanstack forms (when it gets released)
-const CheckboxSection = <T extends Record<string, Record<string, boolean>>>({
+const CheckboxSection = ({
   diffFilter,
   setDiffFilter,
   filter,
   isTFilterObjectKeys,
   sections,
-}: ICheckboxSectionProps<T>): JSX.Element => {
+}: ICheckboxSectionProps): JSX.Element => {
   const intl = useIntl();
 
-  const parsedFilter: T = useMemo(
+  const parsedFilter = useMemo(
     () => parseCheckboxFilter(filter, diffFilter, isTFilterObjectKeys),
     [diffFilter, filter, isTFilterObjectKeys],
   );
@@ -146,14 +147,14 @@ const CheckboxSection = <T extends Record<string, Record<string, boolean>>>({
 
 export const MemoizedCheckboxSection = memo(CheckboxSection);
 
-const TimeRangeSection = <T extends Record<string, number>, K extends string>({
+const TimeRangeSection = ({
   diffFilter,
   setDiffFilter,
-}: SectionsProps<T>): JSX.Element => {
+}: SectionsProps): JSX.Element => {
   const intl = useIntl();
 
   const timeChangeHandler = useCallback(
-    (e: React.FormEvent<HTMLInputElement>, field: K) => {
+    (e: React.FormEvent<HTMLInputElement>, field: TFilterNumberKeys) => {
       const value = e.currentTarget.value;
       setDiffFilter(old => ({ ...old, [field]: parseInt(value) }));
     },
@@ -169,24 +170,24 @@ const TimeRangeSection = <T extends Record<string, number>, K extends string>({
         subtitle: intl.formatMessage({ id: 'filter.durationSubtitle' }),
         min: diffFilter.buildDurationMin,
         max: diffFilter.buildDurationMax,
-        onMaxChange: e => timeChangeHandler(e, 'buildDurationMax' as K),
-        onMinChange: e => timeChangeHandler(e, 'buildDurationMin' as K),
+        onMaxChange: e => timeChangeHandler(e, 'buildDurationMax'),
+        onMinChange: e => timeChangeHandler(e, 'buildDurationMin'),
       },
       {
         title: intl.formatMessage({ id: 'filter.bootDuration' }),
         subtitle: intl.formatMessage({ id: 'filter.durationSubtitle' }),
         min: diffFilter.bootDurationMin,
         max: diffFilter.bootDurationMax,
-        onMaxChange: e => timeChangeHandler(e, 'bootDurationMax' as K),
-        onMinChange: e => timeChangeHandler(e, 'bootDurationMin' as K),
+        onMaxChange: e => timeChangeHandler(e, 'bootDurationMax'),
+        onMinChange: e => timeChangeHandler(e, 'bootDurationMin'),
       },
       {
         title: intl.formatMessage({ id: 'filter.testDuration' }),
         subtitle: intl.formatMessage({ id: 'filter.durationSubtitle' }),
         min: diffFilter.testDurationMin,
         max: diffFilter.testDurationMax,
-        onMaxChange: e => timeChangeHandler(e, 'testDurationMax' as K),
-        onMinChange: e => timeChangeHandler(e, 'testDurationMin' as K),
+        onMaxChange: e => timeChangeHandler(e, 'testDurationMax'),
+        onMinChange: e => timeChangeHandler(e, 'testDurationMin'),
       },
     ],
     [

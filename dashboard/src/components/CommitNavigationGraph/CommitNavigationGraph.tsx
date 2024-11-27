@@ -11,9 +11,9 @@ import type { TLineChartProps } from '@/components/LineChart/LineChart';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { MessagesKey } from '@/locales/messages';
 import { formatDate } from '@/utils/utils';
-import { mapFilterToReq } from '@/pages/TreeDetails/TreeDetailsFilter';
-import type { TFilter } from '@/types/tree/TreeDetails';
+import { mapFilterToReq } from '@/components/Tabs/Filters';
 import { useCommitHistory } from '@/api/commitHistory';
+import type { TFilter } from '@/types/general';
 
 const graphDisplaySize = 8;
 

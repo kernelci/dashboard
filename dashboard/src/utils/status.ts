@@ -4,12 +4,12 @@ import type { StatusCount, BuildStatus } from '@/types/general';
 type StatusGroups = 'success' | 'failed' | 'inconclusive';
 
 type GroupStatusCount = {
-  doneCount: number;
-  missCount: number;
-  skipCount: number;
-  errorCount: number;
-  failCount: number;
-  passCount: number;
+  doneCount?: number;
+  missCount?: number;
+  skipCount?: number;
+  errorCount?: number;
+  failCount?: number;
+  passCount?: number;
   nullCount?: number;
 };
 
@@ -21,13 +21,13 @@ type GroupedStatus = {
 
 export function groupStatus(counts: GroupStatusCount): GroupedStatus {
   return {
-    successCount: counts.passCount,
-    failedCount: counts.failCount,
+    successCount: counts.passCount ?? 0,
+    failedCount: counts.failCount ?? 0,
     inconclusiveCount:
-      counts.doneCount +
-      counts.errorCount +
-      counts.missCount +
-      counts.skipCount +
+      (counts.doneCount ?? 0) +
+      (counts.errorCount ?? 0) +
+      (counts.missCount ?? 0) +
+      (counts.skipCount ?? 0) +
       (counts.nullCount ?? 0),
   };
 }

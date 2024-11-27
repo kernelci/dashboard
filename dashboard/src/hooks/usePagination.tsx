@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 
 import type {
   BuildsTableFilter,
-  TFilter,
   TestsTableFilter,
 } from '@/types/tree/TreeDetails';
+import type { TFilter } from '@/types/general';
 
 export const usePagination = (
   totalItems: number,

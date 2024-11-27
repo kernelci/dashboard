@@ -23,11 +23,16 @@ import {
   BuildStatus as BuildStatusComponent,
 } from '@/components/Status/Status';
 
+import { mapFilterToReq } from '@/components/Tabs/Filters';
+
+import DetailsFilterList from '@/components/Tabs/FilterList';
+
+import type { TFilter } from '@/types/general';
+
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
-import HardwareDetailsFilter, { mapFilterToReq } from './HardwareDetailsFilter';
-import HardwareDetailsFilterList from './HardwareDetailsFilterList';
+import HardwareDetailsFilter from './HardwareDetailsFilter';
 
 const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
   treeItems.map(tree => ({
@@ -66,6 +71,31 @@ function HardwareDetails(): JSX.Element {
     [navigate],
   );
 
+  const onFilterChange = useCallback(
+    (newFilter: TFilter) => {
+      navigate({
+        search: previousSearch => {
+          return {
+            ...previousSearch,
+            diffFilter: newFilter,
+          };
+        },
+      });
+    },
+    [navigate],
+  );
+
+  const cleanAll = useCallback(() => {
+    navigate({
+      search: previousSearch => {
+        return {
+          ...previousSearch,
+          diffFilter: {},
+        };
+      },
+    });
+  }, [navigate]);
+
   const { data, isLoading, isPlaceholderData } = useHardwareDetails(
     hardwareId,
     limitTimestampInSeconds,
@@ -76,14 +106,15 @@ function HardwareDetails(): JSX.Element {
   );
 
   const filterListElement = useMemo(
-    () =>
-      Object.keys(diffFilter).length !== 0 ? (
-        <HardwareDetailsFilterList
-          isLoading={isPlaceholderData}
-          filter={diffFilter}
-        />
-      ) : undefined,
-    [diffFilter, isPlaceholderData],
+    () => (
+      <DetailsFilterList
+        filter={diffFilter}
+        cleanFilters={cleanAll}
+        navigate={onFilterChange}
+        isLoading={isPlaceholderData}
+      />
+    ),
+    [cleanAll, diffFilter, isPlaceholderData, onFilterChange],
   );
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {

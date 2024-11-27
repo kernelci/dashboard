@@ -2,10 +2,9 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { z } from 'zod';
 
-import { zOrigin } from '@/types/general';
+import { zDiffFilter, zOrigin } from '@/types/general';
 
 import {
-  zDiffFilter,
   zPossibleTabValidator,
   zTableFilterInfoValidator,
   zTreeInformation,

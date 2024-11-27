@@ -10,7 +10,6 @@ import ListingItem, { ItemType } from '@/components/ListingItem/ListingItem';
 import { GroupedTestStatus } from '@/components/Status/Status';
 import type { TTreeTestsData } from '@/types/tree/TreeDetails';
 
-import { DumbSummary, SummaryItem } from '@/components/Summary/Summary';
 import type { StatusChartValues } from '@/components/StatusChart/StatusCharts';
 import StatusChartMemoized, {
   Colors,
@@ -22,16 +21,18 @@ import { NoIssueFound } from '@/components/Issue/IssueSection';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { Badge } from '@/components/ui/badge';
-
-import FilterLink from '../TreeDetailsFilterLink';
+import FilterLink from '@/components/Tabs/FilterLink';
+import { DumbSummary, MemoizedSummaryItem } from '@/components/Tabs/Summary';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
+  diffFilter: Record<string, Record<string, boolean>>;
 }
 
 const ConfigsList = ({
   configStatusCounts,
   title,
+  diffFilter,
 }: IConfigList): JSX.Element => {
   return (
     <BaseCard
@@ -46,6 +47,7 @@ const ConfigsList = ({
                 key={configName}
                 filterSection="configs"
                 filterValue={configName}
+                diffFilter={diffFilter}
               >
                 <ListingItem
                   hasBottomBorder
@@ -76,11 +78,13 @@ export const MemoizedConfigList = memo(ConfigsList);
 interface IHardwareTested
   extends Pick<TTreeTestsData, 'environmentCompatible'> {
   title: IBaseCard['title'];
+  diffFilter: Record<string, Record<string, boolean>>;
 }
 
 const HardwareTested = ({
   environmentCompatible,
   title,
+  diffFilter,
 }: IHardwareTested): JSX.Element => {
   return (
     <BaseCard
@@ -97,6 +101,7 @@ const HardwareTested = ({
                   key={hardwareTestedName}
                   filterSection="hardware"
                   filterValue={hardwareTestedName}
+                  diffFilter={diffFilter}
                 >
                   <ListingItem
                     hasBottomBorder
@@ -158,11 +163,13 @@ export const MemoizedErrorCountList = memo(ErrorCountList);
 interface IErrorsSummary {
   archCompilerErrors: ArchCompilerStatus[];
   title: IBaseCard['title'];
+  diffFilter: Record<string, Record<string, boolean>>;
 }
 
 const ErrorsSummary = ({
   archCompilerErrors,
   title,
+  diffFilter,
 }: IErrorsSummary): JSX.Element => {
   const summaryHeaders = [
     <FormattedMessage key="global.arch" id="global.arch" />,
@@ -178,7 +185,8 @@ const ErrorsSummary = ({
             const statusCounts = e.status;
             const currentCompilers = [e.compiler];
             return (
-              <SummaryItem
+              <MemoizedSummaryItem
+                diffFilter={diffFilter}
                 key={e.arch}
                 arch={{
                   text: e.arch,
@@ -213,13 +221,13 @@ interface IStatusChart extends Pick<TTreeTestsData, 'statusCounts'> {
 
 const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
   const groupedStatusCounts = groupStatus({
-    doneCount: statusCounts.DONE ?? 0,
-    errorCount: statusCounts.ERROR ?? 0,
-    failCount: statusCounts.FAIL ?? 0,
-    missCount: statusCounts.MISS ?? 0,
-    passCount: statusCounts.PASS ?? 0,
-    skipCount: statusCounts.SKIP ?? 0,
-    nullCount: statusCounts.NULL ?? 0,
+    doneCount: statusCounts.DONE,
+    errorCount: statusCounts.ERROR,
+    failCount: statusCounts.FAIL,
+    missCount: statusCounts.MISS,
+    passCount: statusCounts.PASS,
+    skipCount: statusCounts.SKIP,
+    nullCount: statusCounts.NULL,
   });
 
   const chartElements = [

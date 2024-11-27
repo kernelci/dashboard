@@ -18,6 +18,7 @@ export interface IListingItem {
   showNumber?: boolean;
   onClick?: (item: string) => void;
   tooltip?: string;
+  disabled?: boolean; // temporary solution
 }
 
 export enum ItemType {
@@ -40,6 +41,7 @@ const ListingItem = ({
   showNumber = true,
   onClick,
   tooltip,
+  disabled,
 }: IListingItem): JSX.Element => {
   const hasBorder = hasBottomBorder
     ? '[&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2 [&:not(:last-child)]:mb-2'
@@ -57,10 +59,10 @@ const ListingItem = ({
     showNumber;
 
   const handleOnClick = useCallback(() => {
-    if (onClick) {
+    if (onClick && !disabled) {
       onClick(text);
     }
-  }, [onClick, text]);
+  }, [disabled, onClick, text]);
 
   const itemError = hasErrors ? (
     <ColoredCircle quantity={errors} backgroundClassName={ItemType.Error} />
@@ -122,6 +124,7 @@ const ListingItem = ({
           'flex flex-row items-center gap-2 pb-1',
           hasBorder,
         )}
+        disabled={disabled}
         onClick={handleOnClick}
       >
         {itemError}

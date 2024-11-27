@@ -2,6 +2,10 @@ import cls from 'classnames';
 
 import { useCallback, useMemo } from 'react';
 
+import type { MessageDescriptor } from 'react-intl';
+
+import type { TFilterObjectsKeys } from '@/types/general';
+
 import Checkbox from '../Checkbox/Checkbox';
 
 type TOnClickItem = (value: string) => void;
@@ -32,6 +36,12 @@ export interface ICheckboxSection {
   subsections?: ICheckboxSubsection[];
   onClickItem: TOnClickItem;
   className?: string;
+}
+
+export interface ISectionItem {
+  title: MessageDescriptor['id'];
+  subtitle: MessageDescriptor['id'];
+  sectionKey: TFilterObjectsKeys;
 }
 
 const CheckboxSectionItem = ({
