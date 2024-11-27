@@ -23,7 +23,7 @@ export interface TTreeDetailsBuildsTable {
 type BuildStatus = Record<AccordionItemBuilds['status'], ReactElement>;
 
 const buildStatusMap: BuildStatus = {
-  valid: <MdCheck className="text-green" />,
+  valid: <MdCheck className="text-red" />,
   invalid: <MdClose className="text-red" />,
   null: <span>-</span>,
 };
