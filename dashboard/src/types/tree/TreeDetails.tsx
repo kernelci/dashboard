@@ -158,7 +158,8 @@ export const zFilterObjectsKeys = z.enum([
   'bootStatus',
   'testStatus',
   'hardware',
-  'path',
+  'testPath',
+  'bootPath',
 ]);
 export const zFilterNumberKeys = z.enum([
   'buildDurationMin',
@@ -183,7 +184,8 @@ export const zDiffFilter = z
       bootStatus: zFilterBoolValue,
       testStatus: zFilterBoolValue,
       hardware: zFilterBoolValue,
-      path: zFilterBoolValue,
+      testPath: zFilterBoolValue,
+      bootPath: zFilterBoolValue,
       buildDurationMax: zFilterNumberValue,
       buildDurationMin: zFilterNumberValue,
       bootDurationMin: zFilterNumberValue,

@@ -48,8 +48,10 @@ export interface ITestsTable {
   innerColumns?: ColumnDef<TIndividualTest>[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   updatePathFilter?: (pathFilter: string) => void;
+  currentPathFilter?: string;
 }
 
+// TODO: would be useful if the navigation happened within the table, so the parent component would only be required to pass the navigation url instead of the whole function for the update and the currentPath diffFilter (boots/tests Table)
 export function TestsTable({
   testHistory,
   onClickFilter,
@@ -58,6 +60,7 @@ export function TestsTable({
   innerColumns = defaultInnerColumns,
   getRowLink,
   updatePathFilter,
+  currentPathFilter,
 }: ITestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
@@ -255,14 +258,14 @@ export function TestsTable({
     [filterCount, intl, filter],
   );
 
-  // TODO: there should be a filtering for the frontend before the backend AND that filtering should consider the individual tests inside each test "batch" (the data from individualTestsTables), not only the rows of the external table
   const onSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.value !== undefined && updatePathFilter) {
         updatePathFilter(e.target.value);
       }
-      // TODO: remove this frontend filter when the hardwareDetails backend filtering gets in place
-      table.setGlobalFilter(String(e.target.value));
+      if (updatePathFilter === undefined) {
+        table.setGlobalFilter(String(e.target.value));
+      }
     },
     [table, updatePathFilter],
   );
@@ -285,7 +288,9 @@ export function TestsTable({
             <div className="flex items-center">
               {headerComponent}
               <DebounceInput
+                key={currentPathFilter}
                 debouncedSideEffect={onSearchChange}
+                startingValue={currentPathFilter}
                 className="w-50 font-normal"
                 type="text"
                 placeholder={intl.formatMessage({ id: 'global.search' })}
@@ -297,7 +302,7 @@ export function TestsTable({
         </TableHead>
       );
     });
-  }, [groupHeaders, intl, onSearchChange, sorting]);
+  }, [currentPathFilter, groupHeaders, intl, onSearchChange, sorting]);
 
   const modelRows = table.getRowModel().rows;
   const tableRows = useMemo((): JSX.Element[] | JSX.Element => {

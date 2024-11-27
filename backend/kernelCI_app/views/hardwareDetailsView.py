@@ -168,7 +168,13 @@ class HardwareDetails(View):
             field = currentFilter.get("field")
             value = currentFilter.get("value")
 
-            if data[field] not in value:
+            if (
+                field == "path"
+                and value[0] not in data[field]
+            ):
+                return False
+
+            if (data[field] not in value):
                 return False
 
         return True

@@ -38,9 +38,12 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
     filter: reqFilter,
   });
 
-  const { tableFilter } = useSearch({
+  const { tableFilter, diffFilter } = useSearch({
     from: '/tree/$treeId/',
   });
+  const currentPathFilter = diffFilter.testPath
+    ? Object.keys(diffFilter.testPath)[0]
+    : undefined;
 
   const navigate = useNavigate({ from: '/tree/$treeId' });
 
@@ -51,7 +54,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
           ...previousSearch,
           diffFilter: {
             ...previousSearch.diffFilter,
-            path: pathFilter === '' ? undefined : { [pathFilter]: true },
+            testPath: pathFilter === '' ? undefined : { [pathFilter]: true },
           },
         }),
       });
@@ -186,6 +189,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
         filter={tableFilter.testsTable}
         getRowLink={getRowLink}
         updatePathFilter={updatePathFilter}
+        currentPathFilter={currentPathFilter}
       />
     </div>
   );

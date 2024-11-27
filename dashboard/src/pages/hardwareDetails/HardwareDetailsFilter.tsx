@@ -45,6 +45,8 @@ const filterFieldMap = {
   'test.status': 'testStatus',
   'test.duration_[gte]': 'testDurationMin',
   'test.duration_[lte]': 'testDurationMax',
+  'test.path': 'testPath',
+  'boot.path': 'bootPath',
 } as const satisfies Record<TRequestFiltersValues, TFilterKeys>;
 
 export const mapFilterToReq = (

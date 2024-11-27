@@ -27,7 +27,8 @@ class TreeDetailsSlow(View):
         self.filterTreeDetailsCompiler = set()
         self.filterArchitecture = set()
         self.filterHardware = set()
-        self.filterPath = ""
+        self.filterTestPath = ""
+        self.filterBootPath = ""
         self.filter_handlers = {
             "boot.status": self.__handle_boot_status,
             "boot.duration": self.__handle_boot_duration,
@@ -38,6 +39,7 @@ class TreeDetailsSlow(View):
             "architecture": self.__handle_architecture,
             "test.hardware": self.__handle_hardware,
             "test.path": self.__handle_path,
+            "boot.path": self.__handle_path,
         }
 
         self.testHistory = []
@@ -98,7 +100,10 @@ class TreeDetailsSlow(View):
         self.filterHardware.add(current_filter["value"])
 
     def __handle_path(self, current_filter):
-        self.filterPath = current_filter["value"]
+        if current_filter["field"] == "boot.path":
+            self.filterBootPath = current_filter["value"]
+        else:
+            self.filterTestPath = current_filter["value"]
 
     def __processFilters(self, request):
         try:
@@ -478,8 +483,14 @@ class TreeDetailsSlow(View):
 
             if (
                 (
-                    self.filterPath != ""
-                    and (self.filterPath not in path)
+                    path.startswith("boot")
+                    and self.filterBootPath != ""
+                    and (self.filterBootPath not in path)
+                )
+                or (
+                    not path.startswith("boot")
+                    and self.filterTestPath != ""
+                    and (self.filterTestPath not in path)
                 )
                 or (
                     len(self.filterHardware) > 0
