@@ -330,7 +330,13 @@ export function BootsTable({
     return groupHeaders.map(header => {
       const headerComponent = header.isPlaceholder
         ? null
-        : flexRender(header.column.columnDef.header, header.getContext());
+        : // the header must change the icon when sorting changes,
+          // but just the column dependency won't trigger the rerender
+          // so we pass an unused sorting prop here to force the useMemo dependency
+          flexRender(header.column.columnDef.header, {
+            ...header.getContext(),
+            sorting,
+          });
       return (
         <TableHead key={header.id} className="border-b px-2 font-bold">
           {header.id === 'path' ? (
@@ -350,9 +356,7 @@ export function BootsTable({
         </TableHead>
       );
     });
-    // TODO: remove exhaustive-deps and change memo  (all tables)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupHeaders, sorting]);
+  }, [groupHeaders, intl, onSearchChange, sorting]);
 
   const modelRows = table.getRowModel().rows;
 

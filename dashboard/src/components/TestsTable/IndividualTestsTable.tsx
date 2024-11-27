@@ -129,12 +129,16 @@ export function IndividualTestsTable({
         <TableHead key={header.id} className="px-2">
           {header.isPlaceholder
             ? null
-            : flexRender(header.column.columnDef.header, header.getContext())}
+            : // the header must change the icon when sorting changes,
+              // but just the column dependency won't trigger the rerender
+              // so we pass an unused sorting prop here to force the useMemo dependency
+              flexRender(header.column.columnDef.header, {
+                ...header.getContext(),
+                sorting,
+              })}
         </TableHead>
       );
     });
-    // TODO: remove exhaustive-deps and change memo  (all tables)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupHeaders, sorting]);
 
   const { rows } = useMemo(() => {
