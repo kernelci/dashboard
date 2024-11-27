@@ -67,7 +67,7 @@ const columns: ColumnDef<Trees>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.tree',
+        intlKey: 'globalTable.tree',
         intlDefaultMessage: 'Tree',
       }),
     cell: ({ row }): JSX.Element => (
@@ -83,7 +83,7 @@ const columns: ColumnDef<Trees>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.branch',
+        intlKey: 'globalTable.branch',
         intlDefaultMessage: 'Branch',
       }),
   },
@@ -93,7 +93,7 @@ const columns: ColumnDef<Trees>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.commitTag',
+        intlKey: 'globalTable.commitTag',
         intlDefaultMessage: 'Commit/Tag',
       }),
     cell: ({ row }): JSX.Element => (

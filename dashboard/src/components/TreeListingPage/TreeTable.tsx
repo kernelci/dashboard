@@ -31,7 +31,7 @@ import { formattedBreakLineValue } from '@/locales/messages';
 import {
   possibleBuildsTableFilter,
   possibleTestsTableFilter,
-  zPossibleValidator,
+  zPossibleTabValidator,
 } from '@/types/tree/TreeDetails';
 
 import BaseTable, { TableHead } from '../Table/BaseTable';
@@ -54,7 +54,7 @@ const columns: ColumnDef<TreeTableBody>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.tree',
+        intlKey: 'globalTable.tree',
         intlDefaultMessage: 'Tree',
       }),
     cell: ({ row }): JSX.Element => {
@@ -80,7 +80,7 @@ const columns: ColumnDef<TreeTableBody>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.branch',
+        intlKey: 'globalTable.branch',
         intlDefaultMessage: 'Branch',
       }),
   },
@@ -90,7 +90,7 @@ const columns: ColumnDef<TreeTableBody>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.commitTag',
+        intlKey: 'globalTable.commitTag',
         intlDefaultMessage: 'Commit/Tag',
       }),
     cell: ({ row }) =>
@@ -119,9 +119,9 @@ const columns: ColumnDef<TreeTableBody>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.build',
+        intlKey: 'globalTable.build',
         intlDefaultMessage: 'Build Status',
-        tooltipId: 'buildTab.statusTooltip',
+        tooltipId: 'build.statusTooltip',
       }),
     cell: ({ row }): JSX.Element => {
       return row.original.buildStatus ? (
@@ -141,9 +141,9 @@ const columns: ColumnDef<TreeTableBody>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.bootStatus',
+        intlKey: 'globalTable.bootStatus',
         intlDefaultMessage: 'Boot Status',
-        tooltipId: 'bootsTab.statusTooltip',
+        tooltipId: 'boots.statusTooltip',
       }),
     cell: ({ row }): JSX.Element => {
       return row.original.bootStatus ? (
@@ -166,9 +166,9 @@ const columns: ColumnDef<TreeTableBody>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeTable.test',
+        intlKey: 'globalTable.test',
         intlDefaultMessage: 'Test Status',
-        tooltipId: 'testsTab.statusTooltip',
+        tooltipId: 'test.statusTooltip',
       }),
     cell: ({ row }): JSX.Element => {
       return row.original.testStatus ? (
@@ -188,13 +188,13 @@ const columns: ColumnDef<TreeTableBody>[] = [
 ];
 
 const columnLinkTargets = [
-  'treeDetails.builds',
-  'treeDetails.builds',
-  'treeDetails.builds',
-  'treeDetails.builds',
-  'treeDetails.builds',
-  'treeDetails.boots',
-  'treeDetails.tests',
+  'global.builds',
+  'global.builds',
+  'global.builds',
+  'global.builds',
+  'global.builds',
+  'global.boots',
+  'global.tests',
 ] as const;
 
 interface ITreeTable {
@@ -225,7 +225,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
             testsTable: possibleTestsTableFilter[0],
           },
           origin: origin,
-          currentPageTab: zPossibleValidator.parse(target),
+          currentPageTab: zPossibleTabValidator.parse(target),
           diffFilter: {},
           treeInfo: {
             gitUrl: row.original.url,

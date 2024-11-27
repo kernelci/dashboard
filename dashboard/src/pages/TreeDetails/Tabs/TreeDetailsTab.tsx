@@ -6,21 +6,16 @@ import { useCallback } from 'react';
 import type { ITabItem } from '@/components/Tabs/Tabs';
 import Tabs from '@/components/Tabs/Tabs';
 
-import { zPossibleValidator } from '@/types/tree/TreeDetails';
+import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
 import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
-
-import type { MessagesKey } from '@/locales/messages';
 
 import BuildTab from './Build';
 import BootsTab from './Boots';
 import TestsTab from './Tests';
 
 export type TreeDetailsTabRightElement = Record<
-  Extract<
-    MessagesKey,
-    'treeDetails.builds' | 'treeDetails.boots' | 'treeDetails.tests'
-  >,
+  'global.builds' | 'global.boots' | 'global.tests',
   ReactElement
 >;
 
@@ -42,29 +37,29 @@ const TreeDetailsTab = ({
   });
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const buildsTab: ITabItem = {
-    name: 'treeDetails.builds',
+    name: 'global.builds',
     content: <BuildTab treeDetailsData={treeDetailsData} />,
     disabled: false,
-    rightElement: countElements['treeDetails.builds'],
+    rightElement: countElements['global.builds'],
   };
 
   const bootsTab: ITabItem = {
-    name: 'treeDetails.boots',
+    name: 'global.boots',
     content: <BootsTab reqFilter={reqFilter} />,
     disabled: false,
-    rightElement: countElements['treeDetails.boots'],
+    rightElement: countElements['global.boots'],
   };
 
   const testsTab: ITabItem = {
-    name: 'treeDetails.tests',
+    name: 'global.tests',
     content: <TestsTab reqFilter={reqFilter} />,
     disabled: false,
-    rightElement: countElements['treeDetails.tests'],
+    rightElement: countElements['global.tests'],
   };
 
   const onValueChange: (value: string) => void = useCallback(
     value => {
-      const validatedValue = zPossibleValidator.parse(value);
+      const validatedValue = zPossibleTabValidator.parse(value);
       navigate({
         search: previousParams => {
           return {

@@ -417,7 +417,7 @@ export function BuildsTable({
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
       </BaseTable>
-      <PaginationInfo table={table} intlLabel="treeDetails.builds" />
+      <PaginationInfo table={table} intlLabel="global.builds" />
     </WrapperTable>
   );
 }

@@ -28,7 +28,6 @@ const buildStatusMap = {
   null: <span>-</span>,
 };
 
-// TODO: put i18n in global.
 const columns: ColumnDef<AccordionItemBuilds>[] = [
   {
     accessorKey: 'treeBranch',
@@ -46,7 +45,7 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeDetails.config',
+        intlKey: 'global.config',
         intlDefaultMessage: 'Config',
       }),
   },
@@ -56,7 +55,7 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeDetails.compiler',
+        intlKey: 'global.compiler',
         intlDefaultMessage: 'Compiler',
       }),
   },
@@ -66,7 +65,7 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeDetails.date',
+        intlKey: 'global.date',
         intlDefaultMessage: 'Date',
       }),
     cell: ({ row }): JSX.Element => (
@@ -84,7 +83,7 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeDetails.buildErrors',
+        intlKey: 'global.buildErrors',
         intlDefaultMessage: 'Build Errors',
       }),
     cell: ({ row }): JSX.Element => (
@@ -105,7 +104,7 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeDetails.buildTime',
+        intlKey: 'global.buildTime',
         intlDefaultMessage: 'Build Time',
       }),
     cell: ({ row }): JSX.Element => {
@@ -118,9 +117,9 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'treeDetails.status',
+        intlKey: 'global.status',
         intlDefaultMessage: 'Status',
-        tooltipId: 'buildTab.statusTooltip',
+        tooltipId: 'build.statusTooltip',
       }),
     cell: ({ row }): JSX.Element => {
       return buildStatusMap[

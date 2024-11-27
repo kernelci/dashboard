@@ -16,13 +16,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const tabs: ITabItem[] = [
-  { name: 'treeDetails.boots', content: <span>Boots</span> },
-  { name: 'treeDetails.tests', content: <span>Tests</span>, disabled: true },
-  { name: 'treeDetails.builds', content: <span>Builds</span> },
+  { name: 'global.boots', content: <span>Boots</span> },
+  { name: 'global.tests', content: <span>Tests</span>, disabled: true },
+  { name: 'global.builds', content: <span>Builds</span> },
 ];
 export const Default: Story = {
   args: {
     tabs: tabs,
-    defaultTab: 'treeDetails.boots',
+    defaultTab: 'global.boots',
   },
 };

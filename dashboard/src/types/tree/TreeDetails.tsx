@@ -2,8 +2,6 @@ import { object, z } from 'zod';
 
 import type { ReactNode } from 'react';
 
-import type { MessagesKey } from '@/locales/messages';
-
 import type {
   BuildsTabBuild,
   BuildStatus,
@@ -94,20 +92,11 @@ export type TTreeTestsFullData = {
   hardwareUsed: string[];
 };
 
-export type PossibleTabs = Extract<
-  MessagesKey,
-  'treeDetails.builds' | 'treeDetails.boots' | 'treeDetails.tests'
->;
+const possibleTabs = ['global.builds', 'global.boots', 'global.tests'] as const;
 
-const possibleTabs = [
-  'treeDetails.builds',
-  'treeDetails.boots',
-  'treeDetails.tests',
-] as const satisfies PossibleTabs[];
-
-export const zPossibleValidator = z
+export const zPossibleTabValidator = z
   .enum(possibleTabs)
-  .catch('treeDetails.builds');
+  .catch('global.builds');
 
 export const possibleBuildsTableFilter = [
   'invalid',

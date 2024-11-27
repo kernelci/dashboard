@@ -83,7 +83,7 @@ const TreeHeader = ({
           <FormattedMessage id="global.tree" />
         </TableHead>
         <TableHead>
-          <FormattedMessage id="global.branch" />
+          <FormattedMessage id="treeDetails.branch" />
         </TableHead>
         <TableHead>
           <FormattedMessage id="treeDetails.commitOrTag" />
@@ -122,7 +122,7 @@ function TreeDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const isBuildTab = searchParams.currentPageTab === 'treeDetails.builds';
+  const isBuildTab = searchParams.currentPageTab === 'global.builds';
 
   const {
     isLoading: buildIsLoading,
@@ -163,7 +163,7 @@ function TreeDetails(): JSX.Element {
     const { bootStatusSummary } = testsData ?? {};
 
     return {
-      'treeDetails.tests': testStatusSummary ? (
+      'global.tests': testStatusSummary ? (
         <GroupedTestStatus
           fail={testStatusSummary.FAIL}
           pass={testStatusSummary.PASS}
@@ -172,7 +172,7 @@ function TreeDetails(): JSX.Element {
       ) : (
         <></>
       ),
-      'treeDetails.boots': bootStatusSummary ? (
+      'global.boots': bootStatusSummary ? (
         <GroupedTestStatus
           fail={bootStatusSummary.FAIL}
           pass={bootStatusSummary.PASS}
@@ -181,7 +181,7 @@ function TreeDetails(): JSX.Element {
       ) : (
         <></>
       ),
-      'treeDetails.builds': buildData ? (
+      'global.builds': buildData ? (
         <BuildStatusComponent
           valid={valid}
           invalid={invalid}

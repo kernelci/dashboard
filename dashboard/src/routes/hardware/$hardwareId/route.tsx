@@ -3,14 +3,14 @@ import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
 import {
-  zPossibleValidator,
+  zPossibleTabValidator,
   zTableFilterInfoValidator,
 } from '@/types/tree/TreeDetails';
 
 import { zDiffFilter } from '@/types/hardware/hardwareDetails';
 
 const hardwareDetailsSearchSchema = z.object({
-  currentPageTab: zPossibleValidator,
+  currentPageTab: zPossibleTabValidator,
   treeIndexes: z.array(z.number().int()).optional(),
   tableFilter: zTableFilterInfoValidator,
   startTimestampInSeconds: z.number(),

@@ -44,20 +44,20 @@ const TestDetailsSection = ({
   const infos: ISubsection['infos'] = useMemo(() => {
     const baseInfo: ISubsection['infos'] = [
       {
-        title: 'testDetails.status',
+        title: 'global.status',
         linkText: truncateBigText(test.status),
       },
       {
-        title: 'testDetails.path',
+        title: 'global.path',
         linkText: valueOrEmpty(test.path),
       },
       {
-        title: 'testDetails.arch',
+        title: 'global.arch',
         linkText: valueOrEmpty(test.architecture),
         icon: <PiComputerTowerThin className="text-blue" />,
       },
       {
-        title: 'testDetails.compiler',
+        title: 'global.compiler',
         linkText: valueOrEmpty(test.compiler),
       },
       {
@@ -87,7 +87,7 @@ const TestDetailsSection = ({
         link: buildDetailsLink,
       },
       {
-        title: 'testDetails.hardware',
+        title: 'global.hardware',
         linkText: hardware,
         icon: <GiFlatPlatform className="text-blue" />,
       },

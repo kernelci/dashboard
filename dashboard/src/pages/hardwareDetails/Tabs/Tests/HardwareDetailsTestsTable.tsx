@@ -14,7 +14,6 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 
-//TODO: move 18n to global.
 const innerColumns: ColumnDef<TIndividualTest>[] = [
   {
     accessorKey: 'path',
@@ -22,7 +21,7 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.path',
+        intlKey: 'global.path',
         intlDefaultMessage: 'Path',
       }),
     cell: ({ row }): JSX.Element => {
@@ -44,7 +43,7 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.status',
+        intlKey: 'global.status',
         intlDefaultMessage: 'Status',
       }),
   },
@@ -72,7 +71,7 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
       TableHeader({
         column: column,
         sortable: true,
-        intlKey: 'testDetails.duration',
+        intlKey: 'global.duration',
         intlDefaultMessage: 'Duration',
       }),
     cell: ({ row }): string =>

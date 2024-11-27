@@ -46,7 +46,7 @@ const Trees = (): JSX.Element => {
             className="w-2/3"
             type="text"
             startingValue={treeSearch}
-            placeholder={intl.formatMessage({ id: 'global.placeholderSearch' })}
+            placeholder={intl.formatMessage({ id: 'tree.searchPlaceholder' })}
           />
         </div>
       </div>
