@@ -1,7 +1,12 @@
 import { FormattedMessage } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import {
+  useNavigate,
+  useParams,
+  useRouterState,
+  useSearch,
+} from '@tanstack/react-router';
 
 import { useCallback } from 'react';
 
@@ -18,10 +23,9 @@ import BuildDetails from '@/components/BuildDetails/BuildDetails';
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 
 const TreeBuildDetails = (): JSX.Element => {
-  const searchParams = useSearch({ from: '/tree/$treeId/build/$buildId/' });
-  const { buildId, treeId } = useParams({
-    from: '/tree/$treeId/build/$buildId/',
-  });
+  const searchParams = useSearch({ from: '/build/$buildId' });
+  const { buildId } = useParams({ from: '/build/$buildId' });
+  const treeId = useRouterState({ select: s => s.location.state.id });
 
   const navigate = useNavigate({ from: '/tree/$treeId/build/$buildId' });
 

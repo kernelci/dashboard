@@ -17,9 +17,13 @@ import { Route as IndexImport } from './routes/index'
 import { Route as TreeIndexImport } from './routes/tree/index'
 import { Route as HardwareIndexImport } from './routes/hardware/index'
 import { Route as TreeTreeIdRouteImport } from './routes/tree/$treeId/route'
+import { Route as TestTestIdRouteImport } from './routes/test/$testId/route'
 import { Route as HardwareHardwareIdRouteImport } from './routes/hardware/$hardwareId/route'
+import { Route as BuildBuildIdRouteImport } from './routes/build/$buildId/route'
 import { Route as TreeTreeIdIndexImport } from './routes/tree/$treeId/index'
+import { Route as TestTestIdIndexImport } from './routes/test/$testId/index'
 import { Route as HardwareHardwareIdIndexImport } from './routes/hardware/$hardwareId/index'
+import { Route as BuildBuildIdIndexImport } from './routes/build/$buildId/index'
 import { Route as HardwareHardwareIdTestRouteImport } from './routes/hardware/$hardwareId/test/route'
 import { Route as HardwareHardwareIdBuildRouteImport } from './routes/hardware/$hardwareId/build/route'
 import { Route as HardwareHardwareIdBootRouteImport } from './routes/hardware/$hardwareId/boot/route'
@@ -65,9 +69,19 @@ const TreeTreeIdRouteRoute = TreeTreeIdRouteImport.update({
   getParentRoute: () => TreeRouteRoute,
 } as any)
 
+const TestTestIdRouteRoute = TestTestIdRouteImport.update({
+  path: '/test/$testId',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const HardwareHardwareIdRouteRoute = HardwareHardwareIdRouteImport.update({
   path: '/$hardwareId',
   getParentRoute: () => HardwareRouteRoute,
+} as any)
+
+const BuildBuildIdRouteRoute = BuildBuildIdRouteImport.update({
+  path: '/build/$buildId',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const TreeTreeIdIndexRoute = TreeTreeIdIndexImport.update({
@@ -75,9 +89,19 @@ const TreeTreeIdIndexRoute = TreeTreeIdIndexImport.update({
   getParentRoute: () => TreeTreeIdRouteRoute,
 } as any)
 
+const TestTestIdIndexRoute = TestTestIdIndexImport.update({
+  path: '/',
+  getParentRoute: () => TestTestIdRouteRoute,
+} as any)
+
 const HardwareHardwareIdIndexRoute = HardwareHardwareIdIndexImport.update({
   path: '/',
   getParentRoute: () => HardwareHardwareIdRouteRoute,
+} as any)
+
+const BuildBuildIdIndexRoute = BuildBuildIdIndexImport.update({
+  path: '/',
+  getParentRoute: () => BuildBuildIdRouteRoute,
 } as any)
 
 const HardwareHardwareIdTestRouteRoute =
@@ -175,12 +199,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TreeRouteImport
       parentRoute: typeof rootRoute
     }
+    '/build/$buildId': {
+      id: '/build/$buildId'
+      path: '/build/$buildId'
+      fullPath: '/build/$buildId'
+      preLoaderRoute: typeof BuildBuildIdRouteImport
+      parentRoute: typeof rootRoute
+    }
     '/hardware/$hardwareId': {
       id: '/hardware/$hardwareId'
       path: '/$hardwareId'
       fullPath: '/hardware/$hardwareId'
       preLoaderRoute: typeof HardwareHardwareIdRouteImport
       parentRoute: typeof HardwareRouteImport
+    }
+    '/test/$testId': {
+      id: '/test/$testId'
+      path: '/test/$testId'
+      fullPath: '/test/$testId'
+      preLoaderRoute: typeof TestTestIdRouteImport
+      parentRoute: typeof rootRoute
     }
     '/tree/$treeId': {
       id: '/tree/$treeId'
@@ -224,12 +262,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HardwareHardwareIdTestRouteImport
       parentRoute: typeof HardwareHardwareIdRouteImport
     }
+    '/build/$buildId/': {
+      id: '/build/$buildId/'
+      path: '/'
+      fullPath: '/build/$buildId/'
+      preLoaderRoute: typeof BuildBuildIdIndexImport
+      parentRoute: typeof BuildBuildIdRouteImport
+    }
     '/hardware/$hardwareId/': {
       id: '/hardware/$hardwareId/'
       path: '/'
       fullPath: '/hardware/$hardwareId/'
       preLoaderRoute: typeof HardwareHardwareIdIndexImport
       parentRoute: typeof HardwareHardwareIdRouteImport
+    }
+    '/test/$testId/': {
+      id: '/test/$testId/'
+      path: '/'
+      fullPath: '/test/$testId/'
+      preLoaderRoute: typeof TestTestIdIndexImport
+      parentRoute: typeof TestTestIdRouteImport
     }
     '/tree/$treeId/': {
       id: '/tree/$treeId/'
@@ -340,6 +392,12 @@ export const routeTree = rootRoute.addChildren({
     }),
     TreeIndexRoute,
   }),
+  BuildBuildIdRouteRoute: BuildBuildIdRouteRoute.addChildren({
+    BuildBuildIdIndexRoute,
+  }),
+  TestTestIdRouteRoute: TestTestIdRouteRoute.addChildren({
+    TestTestIdIndexRoute,
+  }),
 })
 
 /* prettier-ignore-end */
@@ -352,7 +410,9 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/",
         "/hardware",
-        "/tree"
+        "/tree",
+        "/build/$buildId",
+        "/test/$testId"
       ]
     },
     "/": {
@@ -372,6 +432,12 @@ export const routeTree = rootRoute.addChildren({
         "/tree/"
       ]
     },
+    "/build/$buildId": {
+      "filePath": "build/$buildId/route.tsx",
+      "children": [
+        "/build/$buildId/"
+      ]
+    },
     "/hardware/$hardwareId": {
       "filePath": "hardware/$hardwareId/route.tsx",
       "parent": "/hardware",
@@ -380,6 +446,12 @@ export const routeTree = rootRoute.addChildren({
         "/hardware/$hardwareId/build",
         "/hardware/$hardwareId/test",
         "/hardware/$hardwareId/"
+      ]
+    },
+    "/test/$testId": {
+      "filePath": "test/$testId/route.tsx",
+      "children": [
+        "/test/$testId/"
       ]
     },
     "/tree/$treeId": {
@@ -423,9 +495,17 @@ export const routeTree = rootRoute.addChildren({
         "/hardware/$hardwareId/test/$testId/"
       ]
     },
+    "/build/$buildId/": {
+      "filePath": "build/$buildId/index.tsx",
+      "parent": "/build/$buildId"
+    },
     "/hardware/$hardwareId/": {
       "filePath": "hardware/$hardwareId/index.tsx",
       "parent": "/hardware/$hardwareId"
+    },
+    "/test/$testId/": {
+      "filePath": "test/$testId/index.tsx",
+      "parent": "/test/$testId"
     },
     "/tree/$treeId/": {
       "filePath": "tree/$treeId/index.tsx",

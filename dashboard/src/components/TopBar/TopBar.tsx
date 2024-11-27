@@ -1,6 +1,12 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useSearch, useNavigate, useLocation } from '@tanstack/react-router';
+import {
+  useSearch,
+  useNavigate,
+  useLocation,
+  useRouterState,
+} from '@tanstack/react-router';
+
 import { useCallback, useEffect, useMemo } from 'react';
 
 import Select, { SelectItem } from '@/components/Select/Select';
@@ -72,6 +78,10 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
       return <FormattedMessage id="routes.treeMonitor" />;
     case 'hardware':
       return <FormattedMessage id="routes.hardwareMonitor" />;
+    case 'build':
+      return <FormattedMessage id="routes.buildDetails" />;
+    case 'test':
+      return <FormattedMessage id="routes.testDetails" />;
     default:
       return <FormattedMessage id="routes.unknown" />;
   }
@@ -79,8 +89,9 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
 
 const TopBar = (): JSX.Element => {
   const { pathname } = useLocation();
-
-  const basePath = pathname.split('/')[1] ?? '';
+  const redirectFrom = useRouterState({ select: s => s.location.state.from });
+  const splitPath = pathname.split('/')[1] ?? '';
+  const basePath = redirectFrom ?? splitPath;
 
   return (
     <div className="fixed top-0 z-10 mx-52 flex h-20 w-full bg-white px-16">
@@ -88,7 +99,9 @@ const TopBar = (): JSX.Element => {
         <span className="mr-14 text-2xl">
           <TitleName basePath={basePath} />
         </span>
-        <OriginSelect basePath={basePath} />
+        {(basePath === 'tree' || basePath === 'hardware') && (
+          <OriginSelect basePath={basePath} />
+        )}
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ export interface ILinkWithIcon {
   linkText?: string | ReactElement;
   link?: string;
   icon?: ReactElement;
+  linkComponent?: ReactElement;
   onClick?: () => void;
 }
 
@@ -17,6 +18,7 @@ const LinkWithIcon = ({
   linkText,
   icon,
   link,
+  linkComponent,
   onClick,
 }: ILinkWithIcon): JSX.Element => {
   const WrapperLink = link ? 'a' : 'div';
@@ -25,16 +27,18 @@ const LinkWithIcon = ({
       <span className="font-bold">
         <FormattedMessage id={title} />
       </span>
-      <WrapperLink
-        className="flex flex-row items-center gap-1"
-        href={link}
-        target="_blank"
-        rel="noreferrer"
-        onClick={onClick}
-      >
-        {linkText}
-        {icon}
-      </WrapperLink>
+      {linkComponent ?? (
+        <WrapperLink
+          className="flex flex-row items-center gap-1"
+          href={link}
+          target="_blank"
+          rel="noreferrer"
+          onClick={onClick}
+        >
+          {linkText}
+          {icon}
+        </WrapperLink>
+      )}
     </div>
   );
 };

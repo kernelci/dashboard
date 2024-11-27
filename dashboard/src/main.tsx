@@ -20,6 +20,8 @@ import { routeTree } from './routeTree.gen';
 import './index.css';
 import { isDev } from './lib/utils/vite';
 import { ToastProvider } from './components/ui/toast';
+import type { RedirectFrom } from './types/general';
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace FormatjsIntl {
@@ -32,6 +34,11 @@ declare global {
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
+  }
+
+  interface HistoryState {
+    id?: string;
+    from?: RedirectFrom;
   }
 }
 

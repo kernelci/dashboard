@@ -36,7 +36,7 @@ const BlueFolderIcon = (): JSX.Element => (
 );
 
 interface BuildDetailsProps {
-  breadcrumb: JSX.Element;
+  breadcrumb?: JSX.Element;
   buildId?: string;
   onClickFilter: (filter: TestsTableFilter) => void;
   tableFilter: TableFilter;

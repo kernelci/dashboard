@@ -1,7 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
-import TreeTestDetails from '@/pages/TreeTestDetails/TreeTestDetails';
+import { RedirectFrom } from '@/types/general';
 
 export const Route = createFileRoute('/tree/$treeId/test/$testId/')({
-  component: () => <TreeTestDetails />,
+  loaderDeps: ({ search }) => ({ search }),
+  loader: async ({ params, deps }) => {
+    throw redirect({
+      to: '/test/$testId',
+      search: deps.search,
+      state: { id: params.treeId, from: RedirectFrom.Tree },
+    });
+  },
 });

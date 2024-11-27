@@ -1,4 +1,4 @@
-import { useParams, useSearch } from '@tanstack/react-router';
+import { useParams, useRouterState, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -14,13 +14,13 @@ import {
 import TestDetails from '@/components/TestDetails/TestDetails';
 
 const TreeTestDetails = (): JSX.Element => {
-  const searchParams = useSearch({ from: '/tree/$treeId/test/$testId/' });
-  const { testId, treeId } = useParams({ from: '/tree/$treeId/test/$testId/' });
+  const searchParams = useSearch({ from: '/test/$testId/' });
+  const { testId } = useParams({ from: '/test/$testId/' });
+  const treeId = useRouterState({ select: s => s.location.state.id });
 
   return (
     <TestDetails
       testId={testId}
-      context="tree"
       breadcrumb={
         <Breadcrumb className="pb-6 pt-6">
           <BreadcrumbList>
