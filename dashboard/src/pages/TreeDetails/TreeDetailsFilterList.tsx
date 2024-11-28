@@ -7,6 +7,7 @@ import type { TFilter, TFilterKeys } from '@/types/tree/TreeDetails';
 
 interface ITreeDetailsFilterList {
   filter: TFilter;
+  isLoading: boolean;
 }
 
 const createFlatFilter = (filter: TFilter): string[] => {
@@ -26,6 +27,7 @@ const createFlatFilter = (filter: TFilter): string[] => {
 
 const TreeDetailsFilterList = ({
   filter,
+  isLoading = false,
 }: ITreeDetailsFilterList): JSX.Element => {
   const flatFilter = useMemo(() => createFlatFilter(filter), [filter]);
   const navigate = useNavigate({ from: '/tree/$treeId' });
@@ -72,6 +74,7 @@ const TreeDetailsFilterList = ({
 
   return (
     <FilterList
+      isLoading={isLoading}
       items={flatFilter}
       onClickItem={onClickItem}
       onClickCleanAll={onClickCleanALl}
