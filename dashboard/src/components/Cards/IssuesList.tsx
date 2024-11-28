@@ -2,6 +2,8 @@ import { memo } from 'react';
 
 import { Link } from '@tanstack/react-router';
 
+import { useIntl } from 'react-intl';
+
 import type { IBaseCard } from '@/components/Cards/BaseCard';
 import BaseCard from '@/components/Cards/BaseCard';
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
@@ -13,11 +15,20 @@ import type { TIssue } from '@/types/general';
 
 interface IIssuesList {
   issues: TIssue[];
+  failedWithUnknownIssues?: number;
   title: IBaseCard['title'];
 }
 
-const IssuesList = ({ issues, title }: IIssuesList): JSX.Element => {
-  const hasIssue = issues.length > 0;
+const IssuesList = ({
+  issues,
+  failedWithUnknownIssues,
+  title,
+}: IIssuesList): JSX.Element => {
+  const intl = useIntl();
+  failedWithUnknownIssues = failedWithUnknownIssues
+    ? failedWithUnknownIssues
+    : undefined;
+  const hasIssue = issues.length > 0 || failedWithUnknownIssues;
 
   const titleElement = (
     <span>
@@ -26,7 +37,7 @@ const IssuesList = ({ issues, title }: IIssuesList): JSX.Element => {
         <ColoredCircle
           className="ml-2 font-normal"
           backgroundClassName={ItemType.Error}
-          quantity={issues.length}
+          quantity={issues.length + (failedWithUnknownIssues ? 1 : 0)}
         />
       )}
     </span>
@@ -49,6 +60,12 @@ const IssuesList = ({ issues, title }: IIssuesList): JSX.Element => {
           </WrapperLink>
         );
       })}
+      {failedWithUnknownIssues && (
+        <ListingItem
+          unknown={failedWithUnknownIssues}
+          text={intl.formatMessage({ id: 'global.unknown' })}
+        />
+      )}
     </DumbListingContent>
   );
 

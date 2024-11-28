@@ -93,6 +93,7 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
             issues={tests.issues}
+            failedWithUnknownIssues={tests.failedWithUnknownIssues}
           />
         </div>
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
@@ -116,6 +117,7 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
               issues={tests.issues}
+              failedWithUnknownIssues={tests.failedWithUnknownIssues}
             />
           </div>
         </InnerMobileGrid>

@@ -123,11 +123,19 @@ def generate_test_dict():
         "failReasons": defaultdict(int),
         "configs": defaultdict(lambda: defaultdict(int)),
         "issues": {},
+        "failedWithUnknownIssues": 0,
     }
 
 
 def is_record_selected(record, tree):
     return record["build__checkout__git_commit_hash"] == tree["git_commit_hash"]
+
+
+def update_unknown_issues(tests_or_boots, status, builds, is_build_processed, build_is_valid):
+    if status == "FAIL":
+        tests_or_boots["failedWithUnknownIssues"] += 1
+    if not is_build_processed and build_is_valid is False:
+        builds["failedWithUnknownIssues"] += 1
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -181,7 +189,7 @@ class HardwareDetails(View):
 
     def sanitize_records(self, records, selected_trees, filters):
         processed_builds = set()
-        builds = {"items": [], "issues": {}}
+        builds = {"items": [], "issues": {}, "failedWithUnknownIssues": 0}
 
         filters_map = self.get_filters(filters)
 
@@ -223,7 +231,8 @@ class HardwareDetails(View):
                     tests_or_boots["archSummary"][archKey] = archSummary
                 archSummary["status"][status] += 1
 
-            if build_id not in processed_builds:
+            is_build_processed = build_id in processed_builds
+            if not is_build_processed:
                 processed_builds.add(build_id)
                 build = get_build(r, current_tree["index"])
 
@@ -235,6 +244,10 @@ class HardwareDetails(View):
                 update_issues(builds["issues"], currentIssue)
                 if not jump_test:
                     update_issues(tests_or_boots["issues"], currentIssue)
+            else:
+                update_unknown_issues(
+                    tests_or_boots, r["status"], builds, is_build_processed, r["build__valid"]
+                )
 
         builds["summary"] = create_details_build_summary(builds["items"])
         properties2List(builds, ["issues"])

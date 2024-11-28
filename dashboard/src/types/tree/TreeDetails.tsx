@@ -40,6 +40,7 @@ export type BuildsTab = {
     architectures: Architecture;
   };
   issues: TIssue[];
+  failedWithUnknownIssues: number;
 };
 
 export interface TTreeDetailsFilter
@@ -91,6 +92,8 @@ export type TTreeTestsFullData = {
   testEnvironmentCompatible: PropertyStatusCounts;
   bootEnvironmentCompatible: PropertyStatusCounts;
   hardwareUsed: string[];
+  failedTestsWithUnknownIssues: number;
+  failedBootsWithUnknownIssues: number;
 };
 
 const possibleTabs = ['global.builds', 'global.boots', 'global.tests'] as const;

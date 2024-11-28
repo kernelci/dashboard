@@ -220,6 +220,7 @@ const BootsTab = ({ boots, trees, hardwareId }: TBootsTab): JSX.Element => {
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
             issues={boots.issues}
+            failedWithUnknownIssues={boots.failedWithUnknownIssues}
           />
         </div>
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
@@ -243,6 +244,7 @@ const BootsTab = ({ boots, trees, hardwareId }: TBootsTab): JSX.Element => {
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
               issues={boots.issues}
+              failedWithUnknownIssues={boots.failedWithUnknownIssues}
             />
           </div>
         </InnerMobileGrid>

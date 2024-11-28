@@ -59,6 +59,7 @@ export interface ITreeDetails {
   buildsSummary: BuildStatus;
   builds: AccordionItemBuilds[];
   issues: BuildsTab['issues'];
+  failedWithUnknownIssues?: number;
 }
 
 interface ITreeHeader {
@@ -213,6 +214,7 @@ function TreeDetails(): JSX.Element {
       builds: sanitizeBuilds(buildData?.builds),
       buildsSummary: sanitizeBuildsSummary(buildData?.summary.builds),
       issues: buildData?.issues || [],
+      failedWithUnknownIssues: buildData?.failedWithUnknownIssues,
     }),
     [buildData],
   );

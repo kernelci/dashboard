@@ -37,16 +37,19 @@ class TreeDetails(View):
         builds = []
         processedBuilds = set()
         issues_dict = {}
+        failedWithUnknownIssues = 0
 
         for r in records:
+            build_id = r["id"]
             if r["issue_id"]:
                 currentIssue = issues_dict.get(r["issue_id"])
                 if currentIssue:
                     currentIssue["incidents_info"]["incidentsCount"] += 1
                 else:
                     issues_dict[r["issue_id"]] = get_details_issue(r)
+            elif build_id not in processedBuilds and r["valid"] is False:
+                failedWithUnknownIssues += 1
 
-            build_id = r["id"]
             if build_id in processedBuilds:
                 continue
             processedBuilds.add(build_id)
@@ -58,6 +61,7 @@ class TreeDetails(View):
             builds,
             summary,
             issues,
+            failedWithUnknownIssues,
         )
 
     def __get_filtered_tree_details_query(self, query: Query, filter_params, build_fields, checkout_fields):
@@ -159,8 +163,13 @@ class TreeDetails(View):
         query = self.__get_filtered_tree_details_query(query, filter_params, build_fields, checkout_fields)
 
         records = query.select()
-        builds, summary, issues = self.sanitize_records(records)
+        builds, summary, issues, failedWithUnknownIssues = self.sanitize_records(records)
 
         return JsonResponse(
-            {"builds": builds, "summary": summary, "issues": issues}, safe=False
+            {
+                "builds": builds,
+                "summary": summary,
+                "issues": issues,
+                "failedWithUnknownIssues": failedWithUnknownIssues,
+            }, safe=False
         )
