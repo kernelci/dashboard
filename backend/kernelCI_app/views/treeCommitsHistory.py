@@ -198,6 +198,11 @@ class TreeCommitsHistory(APIView):
                 git_repository_branch = %(git_branch_param)s
                 AND git_repository_url = %(git_url_param)s
                 AND origin = %(origin_param)s
+                AND start_time <= (
+                    SELECT MAX(start_time) as head_start_time
+                    FROM checkouts
+                    WHERE git_commit_hash = %(commit_hash)s
+                )
             ORDER BY
                 start_time DESC
         ),
