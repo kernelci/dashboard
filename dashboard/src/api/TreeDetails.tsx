@@ -83,6 +83,7 @@ export const useBuildsTab = ({
     queryFn: () =>
       fetchTreeDetailData(treeId, treeSearchParameters, detailsFilter),
     enabled,
+    placeholderData: previousData => previousData,
   });
 };
 
@@ -139,6 +140,7 @@ export const useTestsTab = ({
         ...treeDetailsFilter,
       }),
     enabled,
+    placeholderData: previousData => previousData,
   });
 };
 

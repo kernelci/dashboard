@@ -66,7 +66,7 @@ function HardwareDetails(): JSX.Element {
     [navigate],
   );
 
-  const { data, isLoading } = useHardwareDetails(
+  const { data, isLoading, isPlaceholderData } = useHardwareDetails(
     hardwareId,
     limitTimestampInSeconds,
     origin,
@@ -78,9 +78,12 @@ function HardwareDetails(): JSX.Element {
   const filterListElement = useMemo(
     () =>
       Object.keys(diffFilter).length !== 0 ? (
-        <HardwareDetailsFilterList filter={diffFilter} />
+        <HardwareDetailsFilterList
+          isLoading={isPlaceholderData}
+          filter={diffFilter}
+        />
       ) : undefined,
-    [diffFilter],
+    [diffFilter, isPlaceholderData],
   );
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {

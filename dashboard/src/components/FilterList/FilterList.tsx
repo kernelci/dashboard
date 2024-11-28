@@ -3,9 +3,12 @@ import { IoClose } from 'react-icons/io5';
 import classNames from 'classnames';
 import { useIntl } from 'react-intl';
 
+import { LoadingCircle } from '@/components/ui/loading-circle';
+
 import { Button } from '../ui/button';
 
 export interface IFilterList {
+  isLoading: boolean;
   items: string[];
   onClickItem: (item: string, itemIdx: number) => void;
   onClickCleanAll: () => void;
@@ -72,6 +75,7 @@ const FilterItem = ({
 };
 
 const FilterList = ({
+  isLoading,
   items,
   onClickItem,
   onClickCleanAll,
@@ -97,7 +101,7 @@ const FilterList = ({
   }
 
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="flex flex-wrap items-center gap-4">
       {buttonList}
       <FilterButton
         className="hover:bg-darkGray2"
@@ -105,6 +109,7 @@ const FilterList = ({
         variant="primary"
         onClick={onClickCleanAll}
       />
+      {isLoading && <LoadingCircle />}
     </div>
   );
 };

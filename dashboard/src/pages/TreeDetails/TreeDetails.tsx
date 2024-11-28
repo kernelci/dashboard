@@ -129,6 +129,7 @@ function TreeDetails(): JSX.Element {
     isLoading: buildIsLoading,
     data: buildData,
     status: buildStatus,
+    isPlaceholderData: buildIsPlaceholderData,
   } = useBuildsTab({
     treeId: treeId ?? '',
     filter: reqFilter,
@@ -139,11 +140,16 @@ function TreeDetails(): JSX.Element {
     isLoading: testsIsLoading,
     data: testsData,
     status: testStatus,
+    isPlaceholderData: testIsPlaceholderData,
   } = useTestsTab({
     treeId: treeId ?? '',
     filter: reqFilter,
     enabled: !isBuildTab || (buildStatus === 'success' && !!buildData),
   });
+
+  const isPlaceholderData = useMemo(() => {
+    return isBuildTab ? buildIsPlaceholderData : testIsPlaceholderData;
+  }, [buildIsPlaceholderData, isBuildTab, testIsPlaceholderData]);
 
   const isLoading = useMemo(() => {
     return isBuildTab ? buildIsLoading : testsIsLoading;
@@ -152,9 +158,12 @@ function TreeDetails(): JSX.Element {
   const filterListElement = useMemo(
     () =>
       Object.keys(diffFilter).length !== 0 ? (
-        <TreeDetailsFilterList filter={diffFilter} />
+        <TreeDetailsFilterList
+          filter={diffFilter}
+          isLoading={isPlaceholderData}
+        />
       ) : undefined,
-    [diffFilter],
+    [diffFilter, isPlaceholderData],
   );
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {

@@ -86,5 +86,6 @@ export const useHardwareDetails = (
   return useQuery({
     queryKey: ['HardwareDetails', hardwareId, body],
     queryFn: () => fetchHardwareDetails(hardwareId, body),
+    placeholderData: previousData => previousData,
   });
 };

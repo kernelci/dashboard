@@ -8,6 +8,7 @@ import FilterList from '@/components/FilterList/FilterList';
 import type { TFilter, TFilterKeys } from '@/types/hardware/hardwareDetails';
 
 interface ITreeDetailsFilterList {
+  isLoading: boolean;
   filter: TFilter;
 }
 
@@ -27,6 +28,7 @@ const createFlatFilter = (filter: TFilter): string[] => {
 };
 
 const HardwareDetailsFilterList = ({
+  isLoading,
   filter,
 }: ITreeDetailsFilterList): JSX.Element => {
   const flatFilter = useMemo(() => createFlatFilter(filter), [filter]);
@@ -74,6 +76,7 @@ const HardwareDetailsFilterList = ({
 
   return (
     <FilterList
+      isLoading={isLoading}
       items={flatFilter}
       onClickItem={onClickItem}
       onClickCleanAll={onClickCleanALl}
