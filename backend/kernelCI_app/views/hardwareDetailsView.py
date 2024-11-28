@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_HEAD_TREE_VALUE = 'head'
+STATUS_FAILED_VALUE = "FAIL"
 
 
 def properties2List(d, keys):
@@ -82,7 +83,7 @@ def get_history(record):
     }
 
 
-def update_issues(issues, issue):
+def update_known_issues(issues, issue):
     existing_issue = issues.get(issue["id"])
     if existing_issue:
         existing_issue["incidents_info"]["incidentsCount"] += 1
@@ -131,11 +132,13 @@ def is_record_selected(record, tree):
     return record["build__checkout__git_commit_hash"] == tree["git_commit_hash"]
 
 
-def update_unknown_issues(tests_or_boots, status, builds, is_build_processed, build_is_valid):
-    if status == "FAIL":
-        tests_or_boots["failedWithUnknownIssues"] += 1
-    if not is_build_processed and build_is_valid is False:
-        builds["failedWithUnknownIssues"] += 1
+def update_issues(record, task, is_failed_task):
+    has_issue = bool(record["build__incidents__issue__id"])
+    if has_issue:
+        currentIssue = get_details_issue(record)
+        update_known_issues(task["issues"], currentIssue)
+    elif is_failed_task:
+        task["failedWithUnknownIssues"] += 1
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -202,7 +205,6 @@ class HardwareDetails(View):
                 continue
 
             build_id = r["build_id"]
-            issue_id = r["build__incidents__issue__id"]
             status = r["status"]
             table_test = "boot" if is_boot(r) else "test"
 
@@ -231,23 +233,16 @@ class HardwareDetails(View):
                     tests_or_boots["archSummary"][archKey] = archSummary
                 archSummary["status"][status] += 1
 
-            is_build_processed = build_id in processed_builds
-            if not is_build_processed:
+                update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+
+            if build_id not in processed_builds:
                 processed_builds.add(build_id)
                 build = get_build(r, current_tree["index"])
 
                 if len(filters_map['build']) == 0 or self.pass_in_filters(build, filters_map['build']):
                     builds["items"].append(build)
 
-            if issue_id:
-                currentIssue = get_details_issue(r)
-                update_issues(builds["issues"], currentIssue)
-                if not jump_test:
-                    update_issues(tests_or_boots["issues"], currentIssue)
-            else:
-                update_unknown_issues(
-                    tests_or_boots, r["status"], builds, is_build_processed, r["build__valid"]
-                )
+                update_issues(r, builds, r["build__valid"] is False)
 
         builds["summary"] = create_details_build_summary(builds["items"])
         properties2List(builds, ["issues"])
