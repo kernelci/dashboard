@@ -69,7 +69,7 @@ const TableRowComponent = ({
   currentLog?: number;
   openLogSheet: (index: number) => void;
 }): JSX.Element => {
-  const className = index === currentLog ? 'bg-lightBlue' : undefined;
+  const className = index === currentLog ? 'bg-sky-200' : undefined;
 
   const linkProps: LinkProps = useMemo(() => {
     return getRowLink(row.original.id);

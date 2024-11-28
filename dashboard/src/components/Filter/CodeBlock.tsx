@@ -72,7 +72,7 @@ const Code = ({
     <>
       <pre
         className={cn(
-          'w-full max-w-[calc(100vw_-_398px)] overflow-x-auto rounded-md bg-[#DDDDDD] p-4 font-mono text-[#767676]',
+          'w-full max-w-[100vw] overflow-x-auto rounded-md bg-[#DDDDDD] p-4 font-mono text-sm leading-4 text-[#767676]',
           className,
         )}
       >

@@ -121,7 +121,7 @@ const TableRowComponent = ({
   onClickShowBuild: IAccordionItems['onClickShowBuild'];
   isExpanded: boolean;
 }): JSX.Element => {
-  const className = index === currentLog ? 'bg-lightBlue' : undefined;
+  const className = index === currentLog ? 'bg-sky-200' : undefined;
 
   return (
     <Fragment key={row.id}>

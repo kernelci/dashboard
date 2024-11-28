@@ -156,7 +156,7 @@ const TableRowComponent = ({
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   openLogSheet: (index: number) => void;
 }): JSX.Element => {
-  const className = index === currentLog ? 'bg-lightBlue' : undefined;
+  const className = index === currentLog ? 'bg-sky-200' : undefined;
 
   return (
     <TableRow
