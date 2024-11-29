@@ -1,12 +1,15 @@
 import { FormattedMessage } from 'react-intl';
 
-import { Input } from '../ui/input';
+import { Input } from '@/components/ui/input';
+
+import { FilterTypeIcon } from './Drawer';
 
 interface TimeRangeSection {
   title: string;
   subtitle: string;
   min: number | undefined;
   max: number | undefined;
+  isGlobal?: boolean;
   onMinChange: (e: React.FormEvent<HTMLInputElement>) => void;
   onMaxChange: (e: React.FormEvent<HTMLInputElement>) => void;
 }
@@ -19,12 +22,16 @@ const TimeRangeSection = ({
   subtitle,
   min,
   max,
+  isGlobal = false,
   onMinChange,
   onMaxChange,
 }: TimeRangeSection): JSX.Element => {
   return (
     <div className="flex flex-col gap-y-2 text-dimGray">
-      <h3 className="mb-2 text-xl font-semibold">{title}</h3>
+      <h3 className="mb-2 flex items-center gap-[0.4rem] text-xl font-semibold text-dimGray">
+        <FilterTypeIcon type={isGlobal ? 'global' : 'tab'} />
+        <span>{title}</span>
+      </h3>
       <h4 className="text-s mb-6">{subtitle}</h4>
       <div className={inputContainerClass}>
         <span className="w-8">

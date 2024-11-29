@@ -2,8 +2,10 @@ import React from 'react';
 import type { MessageDescriptor } from 'react-intl';
 import { FormattedMessage } from 'react-intl';
 import { IoChevronDown, IoClose } from 'react-icons/io5';
+import { AiOutlineGlobal } from 'react-icons/ai';
+import { CgTab } from 'react-icons/cg';
 
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 import {
   Drawer as UIDrawer,
@@ -13,9 +15,11 @@ import {
   DrawerTrigger,
   DrawerTitle,
   DrawerDescription,
-} from '../ui/drawer';
-import { Separator } from '../ui/separator';
-import ButtonWithIcon from '../Button/ButtonWithIcon';
+} from '@/components/ui/drawer';
+import { Separator } from '@/components/ui/separator';
+import ButtonWithIcon from '@/components/Button/ButtonWithIcon';
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '../Tooltip/Tooltip';
 
 export interface IDrawerLink {
   link: {
@@ -81,8 +85,58 @@ export const DrawerSection = ({
   return (
     <>
       {!hideSeparator && <Separator />}
-      <div className="px-6 py-10">{children}</div>
+      <div className="[&:last-child]:pt-10 [&:not(:last-child)]:py-10">
+        {children}
+      </div>
     </>
+  );
+};
+
+type FilterTypeIconProps = {
+  type: 'global' | 'tab';
+};
+
+const iconClassName = 'text-[1.2rem] text-blue';
+
+const Icons: Record<FilterTypeIconProps['type'], JSX.Element> = {
+  global: <AiOutlineGlobal className={iconClassName} />,
+  tab: <CgTab className={iconClassName} />,
+};
+
+const iconMessage: Record<
+  FilterTypeIconProps['type'],
+  MessageDescriptor['id']
+> = {
+  global: 'filter.globalFilterAllTabs',
+  tab: 'filter.onlySpecificTab',
+};
+
+export const FilterTypeIcon = ({ type }: FilterTypeIconProps): JSX.Element => {
+  return (
+    <Tooltip>
+      <TooltipTrigger>{Icons[type]}</TooltipTrigger>
+      <TooltipContent>
+        <FormattedMessage id={iconMessage[type]} />
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
+const Legend = (): JSX.Element => {
+  return (
+    <div className="flex items-center gap-1 pb-8 pt-6 font-semibold">
+      <span className="mr-1">
+        <FormattedMessage id="global.legend" />
+      </span>
+      <span className="flex items-center gap-1 font-medium">
+        <FilterTypeIcon type="global" />
+        <FormattedMessage id="filter.globalFilter" />
+      </span>
+      <span className="flex items-center gap-1 font-medium">
+        <FilterTypeIcon type="tab" />
+        <FormattedMessage id="filter.perTabFilter" />
+      </span>
+    </div>
   );
 };
 
@@ -106,10 +160,9 @@ const Drawer = ({
         <DrawerHeader />
         <section className="max-h-full overflow-y-auto">
           <DrawerLink link={link} />
-          <div className="w-[1000px] rounded-lg bg-white">
-            {React.Children.map(children, child => (
-              <>{child}</>
-            ))}
+          <div className="w-[1000px] rounded-lg bg-white px-6">
+            <div>{children}</div>
+            <Legend />
           </div>
         </section>
 

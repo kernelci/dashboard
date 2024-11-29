@@ -125,6 +125,7 @@ const CheckboxSection = ({
         title: intl.formatMessage({ id: section.title }),
         subtitle: intl.formatMessage({ id: section.subtitle }),
         items: parsedFilter[section.sectionKey],
+        isGlobal: section.isGlobal,
         onClickItem: (value: string): void => {
           setDiffFilter(old =>
             changeCheckboxFilterValue(old, section.sectionKey, value),
