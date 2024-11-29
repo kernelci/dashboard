@@ -15,7 +15,7 @@ import { mapFilterToReq } from '@/pages/TreeDetails/TreeDetailsFilter';
 import type { TFilter } from '@/types/tree/TreeDetails';
 import { useCommitHistory } from '@/api/commitHistory';
 
-const graphDisplaySize = 7;
+const graphDisplaySize = 8;
 
 interface ICommitNavigationGraph {
   origin: string;
@@ -210,12 +210,11 @@ const CommitNavigationGraph = ({
                     })
                     .parse(possibleIndexNumber);
 
-                  const name = commitData[parsedPossibleIndex].commitName;
                   isCurrentCommit =
                     treeId === commitData[parsedPossibleIndex].commitHash;
-                  displayText = (
-                    name ?? commitData[parsedPossibleIndex].commitHash
-                  ).slice(0, graphDisplaySize);
+                  displayText = commitData[
+                    parsedPossibleIndex
+                  ]?.commitHash.slice(0, graphDisplaySize);
                 }
 
                 return (
