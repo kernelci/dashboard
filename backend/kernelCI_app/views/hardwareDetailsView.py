@@ -1,3 +1,4 @@
+from typing import Dict, List, Set, Literal
 from collections import defaultdict
 import json
 from django.utils.decorators import method_decorator
@@ -132,7 +133,7 @@ def is_record_selected(record, tree):
     return record["build__checkout__git_commit_hash"] == tree["git_commit_hash"]
 
 
-def update_issues(record, task, is_failed_task):
+def update_issues(record: Dict, task: Dict, is_failed_task: bool):
     has_issue = bool(record["build__incidents__issue__id"])
     if has_issue:
         currentIssue = get_details_issue(record)
@@ -150,6 +151,18 @@ def update_issues(record, task, is_failed_task):
 class HardwareDetails(View):
     required_params_get = ["origin"]
     cache_key_get = "hardwareDetailsGET"
+
+    def is_build_filtered_in(
+        self,
+        build: Dict,
+        filters_map: Dict[str, List[Dict]],
+        processed_builds: Set[str],
+    ) -> bool:
+        is_build_not_processed = not build["id"] in processed_builds
+        is_build_filtered_out = len(filters_map["build"]) == 0 or self.pass_in_filters(
+            build, filters_map["build"]
+        )
+        return is_build_not_processed and is_build_filtered_out
 
     def get_filters(self, filters):
         filters_map = {
@@ -190,8 +203,18 @@ class HardwareDetails(View):
 
         return True
 
+    def should_jump_test(
+        self,
+        table_test: Literal["boot", "test"],
+        record: Dict,
+        filters_map: Dict[str, List[Dict]],
+    ) -> bool:
+        test_filter_is_empty = len(filters_map[table_test]) == 0
+        test_pass_in_filters = self.pass_in_filters(record, filters_map[table_test])
+        return not test_filter_is_empty and not test_pass_in_filters
+
     def sanitize_records(self, records, selected_trees, filters):
-        processed_builds = set()
+        processed_builds: Set[str] = set()
         builds = {"items": [], "issues": {}, "failedWithUnknownIssues": 0}
 
         filters_map = self.get_filters(filters)
@@ -208,10 +231,7 @@ class HardwareDetails(View):
             status = r["status"]
             table_test = "boot" if is_boot(r) else "test"
 
-            test_filter_is_empty = len(filters_map[table_test]) == 0
-            test_pass_in_filters = self.pass_in_filters(r, filters_map[table_test])
-
-            jump_test = not test_filter_is_empty and not test_pass_in_filters
+            jump_test = self.should_jump_test(table_test, r, filters_map)
 
             if not jump_test:
                 tests_or_boots = boots if is_boot(r) else tests
@@ -235,13 +255,11 @@ class HardwareDetails(View):
 
                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
 
-            if build_id not in processed_builds:
+            build = get_build(r, current_tree["index"])
+
+            if self.is_build_filtered_in(build, filters_map, processed_builds):
                 processed_builds.add(build_id)
-                build = get_build(r, current_tree["index"])
-
-                if len(filters_map['build']) == 0 or self.pass_in_filters(build, filters_map['build']):
-                    builds["items"].append(build)
-
+                builds["items"].append(build)
                 update_issues(r, builds, r["build__valid"] is False)
 
         builds["summary"] = create_details_build_summary(builds["items"])
