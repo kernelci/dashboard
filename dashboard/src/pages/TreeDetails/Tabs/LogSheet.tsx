@@ -122,7 +122,7 @@ export const LogSheet = ({
     { enabled: !!logUrl },
   );
   return (
-    <SheetContent className="flex w-[25rem] flex-col sm:w-full sm:max-w-[44rem]">
+    <SheetContent className="flex flex-col sm:w-full sm:max-w-[clamp(650px,75vw,1300px)]">
       <SheetHeader className="mb-3">
         <SheetTitle className="text-[1.75rem]">
           <FormattedMessage id="logSheet.title" />
