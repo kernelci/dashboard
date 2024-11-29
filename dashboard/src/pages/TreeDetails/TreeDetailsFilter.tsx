@@ -88,24 +88,27 @@ const sectionTrees: ISectionItem[] = [
     title: 'filter.hardware',
     subtitle: 'filter.hardwareSubtitle',
     sectionKey: 'hardware',
+    isGlobal: true,
   },
   {
     title: 'global.configs',
     subtitle: 'filter.configsSubtitle',
     sectionKey: 'configs',
+    isGlobal: true,
   },
   {
     title: 'global.architecture',
     subtitle: 'filter.architectureSubtitle',
     sectionKey: 'archs',
+    isGlobal: true,
   },
   {
     title: 'global.compilers',
     subtitle: 'filter.compilersSubtitle',
     sectionKey: 'compilers',
+    isGlobal: true,
   },
 ];
-
 const TreeDetailsFilter = ({
   paramFilter,
   treeUrl,

@@ -6,7 +6,9 @@ import type { MessageDescriptor } from 'react-intl';
 
 import type { TFilterObjectsKeys } from '@/types/general';
 
-import Checkbox from '../Checkbox/Checkbox';
+import Checkbox from '@/components/Checkbox/Checkbox';
+
+import { FilterTypeIcon } from './Drawer';
 
 type TOnClickItem = (value: string) => void;
 
@@ -32,6 +34,7 @@ interface ICheckboxSubsection {
 export interface ICheckboxSection {
   items?: TItems;
   title: string;
+  isGlobal?: boolean;
   subtitle?: string;
   subsections?: ICheckboxSubsection[];
   onClickItem: TOnClickItem;
@@ -42,6 +45,7 @@ export interface ISectionItem {
   title: MessageDescriptor['id'];
   subtitle: MessageDescriptor['id'];
   sectionKey: TFilterObjectsKeys;
+  isGlobal?: boolean;
 }
 
 const CheckboxSectionItem = ({
@@ -98,6 +102,7 @@ const CheckboxSection = ({
   subtitle,
   onClickItem,
   subsections,
+  isGlobal = false,
   className,
 }: ICheckboxSection): JSX.Element => {
   const subsectionComponents = useMemo(
@@ -115,7 +120,10 @@ const CheckboxSection = ({
 
   return (
     <div className={cls(className)}>
-      <h3 className="mb-2 text-xl font-semibold text-dimGray">{title}</h3>
+      <h3 className="mb-2 flex items-center gap-[0.4rem] text-xl font-semibold text-dimGray">
+        <FilterTypeIcon type={isGlobal ? 'global' : 'tab'} />
+        <span>{title}</span>
+      </h3>
       <h4 className="mb-6 text-sm text-dimGray">{subtitle}</h4>
       {items && <CheckboxList items={items} onClickItem={onClickItem} />}
       {subsectionComponents}
