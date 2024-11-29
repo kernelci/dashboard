@@ -1,8 +1,8 @@
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import { GrDocumentDownload } from 'react-icons/gr';
 
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
 import BaseCard from '@/components/Cards/BaseCard';
 import CodeBlock from '@/components/Filter/CodeBlock';
@@ -20,6 +20,11 @@ import { useLogFiles } from '@/api/treeDetails';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { LogFile } from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/Tooltip/Tooltip';
 
 //TODO Localize the fallback string
 const FallbackLog = `
@@ -112,6 +117,33 @@ const LogFilesTable = ({
 
 const MemoizedLogFilesTable = memo(LogFilesTable);
 
+const nextItem = (
+  navigationLogsActions?: LogSheetProps['navigationLogsActions'],
+): void => {
+  navigationLogsActions?.nextItem();
+};
+
+const previousItem = (
+  navigationLogsActions?: LogSheetProps['navigationLogsActions'],
+): void => {
+  navigationLogsActions?.previousItem();
+};
+
+const keyboardMap: {
+  [key: string]: (
+    navigationLogsActions?: LogSheetProps['navigationLogsActions'],
+  ) => void;
+} = {
+  ArrowRight: nextItem,
+  ArrowLeft: previousItem,
+  ArrowDown: nextItem,
+  ArrowUp: previousItem,
+  h: previousItem,
+  j: nextItem,
+  k: previousItem,
+  l: nextItem,
+};
+
 export const LogSheet = ({
   logExcerpt,
   logUrl,
@@ -121,8 +153,27 @@ export const LogSheet = ({
     { logUrl: logUrl ?? '' },
     { enabled: !!logUrl },
   );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent): void => {
+      if (!navigationLogsActions?.isLoading) {
+        keyboardMap[e.key]?.(navigationLogsActions);
+      }
+    },
+    [navigationLogsActions],
+  );
+
+  const { formatMessage } = useIntl();
+  const previousTooltipMsg = `${formatMessage({ id: 'global.arrowRight' })},\
+    ${formatMessage({ id: 'global.arrowUp' })}, k, h`;
+  const nextTooltipMsg = `${formatMessage({ id: 'global.arrowLeft' })},\
+    ${formatMessage({ id: 'global.arrowDown' })}, j, l`;
+
   return (
-    <SheetContent className="flex flex-col sm:w-full sm:max-w-[clamp(650px,75vw,1300px)]">
+    <SheetContent
+      className="flex flex-col overflow-auto sm:w-full sm:max-w-[clamp(650px,75vw,1300px)]"
+      onKeyDown={handleKeyDown}
+    >
       <SheetHeader className="mb-3">
         <SheetTitle className="text-[1.75rem]">
           <FormattedMessage id="logSheet.title" />
@@ -177,24 +228,38 @@ export const LogSheet = ({
       <div className="mt-auto flex justify-end">
         {navigationLogsActions && (
           <>
-            <Button
-              onClick={navigationLogsActions.previousItem}
-              disabled={!navigationLogsActions.hasPrevious}
-              className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
-            >
-              <FormattedMessage id="global.prev" defaultMessage="Previous" />
-            </Button>
-            <Button
-              onClick={navigationLogsActions.nextItem}
-              disabled={!navigationLogsActions.hasNext}
-              className="mx-5 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
-            >
-              <FormattedMessage id="global.next" defaultMessage="Next" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={navigationLogsActions.previousItem}
+                  disabled={!navigationLogsActions.hasPrevious}
+                  className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
+                >
+                  <FormattedMessage
+                    id="global.prev"
+                    defaultMessage="Previous"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{previousTooltipMsg}</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={navigationLogsActions.nextItem}
+                  disabled={!navigationLogsActions.hasNext}
+                  className="mx-5 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
+                >
+                  <FormattedMessage id="global.next" defaultMessage="Next" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{nextTooltipMsg}</TooltipContent>
+            </Tooltip>
           </>
         )}
 
-        <SheetTrigger>
+        <SheetTrigger asChild>
           <Button className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white">
             <FormattedMessage id="global.close" defaultMessage="Close" />
           </Button>
