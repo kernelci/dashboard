@@ -1,3 +1,4 @@
+import json
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views import View
 from kernelCI_app.utils import (
@@ -14,6 +15,8 @@ from kernelCI_app.utils import (
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from django.db import connection
 from collections import defaultdict
+
+from kernelCI_app.viewCommon import create_details_build_summary
 
 
 class TreeDetailsSlow(View):
@@ -40,6 +43,7 @@ class TreeDetailsSlow(View):
             "test.hardware": self.__handle_hardware,
             "test.path": self.__handle_path,
             "boot.path": self.__handle_path,
+            "valid": self._handle_build_valid,
         }
 
         self.testHistory = []
@@ -66,6 +70,14 @@ class TreeDetailsSlow(View):
         self.hardwareUsed = set()
         self.failedTestsWithUnknownIssues = 0
         self.failedBootsWithUnknownIssues = 0
+        self.builds = []
+        self.processed_builds = set()
+        self.build_summary = {}
+        self.issues = []
+        self.failed_builds_with_unknown_issues = 0
+        self.processed_issues_dict = {}
+        self.tree_url = ""
+        self.filterBuildValid = set()
 
     def __handle_boot_status(self, current_filter):
         self.filterBootStatus.add(current_filter["value"])
@@ -107,6 +119,9 @@ class TreeDetailsSlow(View):
         else:
             self.filterTestPath = current_filter["value"]
 
+    def _handle_build_valid(self, current_filter):
+        self.filterBuildValid.add(current_filter["value"])
+
     def __processFilters(self, request):
         try:
             filter_params = FilterParams(request)
@@ -119,136 +134,119 @@ class TreeDetailsSlow(View):
             return HttpResponseBadRequest(getErrorResponseBody(str(e)))
 
     def __getCurrentRowData(self, currentRow):
-        tempColumnDict = {
-            "tests_id": 1,
-            "tests_origin": 2,
-            "tests_environment_comment": 3,
-            "tests_environment_misc": 4,
-            "tests_path": 5,
-            "tests_comment": 6,
-            "tests_log_url": 7,
-            "tests_status": 8,
-            "tests_waived": 9,
-            "tests_start_time": 10,
-            "tests_duration": 11,
-            "tests_number_value": 12,
-            "tests_misc": 13,
-            "tests_environment_compatible": 14,
-            "builds_checkout_id": 15,
-            "builds_id": 16,
-            "builds_comment": 17,
-            "builds_start_time": 18,
-            "builds_duration": 19,
-            "builds_architecture": 20,
-            "builds_command": 21,
-            "builds_compiler": 22,
-            "builds_config_name": 23,
-            "builds_config_url": 24,
-            "builds_log_url": 25,
-            "builds_valid": 26,
-            "incident_id": 28,
-            "incident_present": 29,
-            "issue_id": 30,
-            "issue_comment": 31,
-            "issue_report_url": 32,
+        tmp_test_env_comp_key = 14
+        currentRowData = {
+            "test_id": currentRow[1],
+            "test_origin": currentRow[2],
+            "test_environment_comment": currentRow[3],
+            "test_environment_misc": currentRow[4],
+            "test_path": currentRow[5],
+            "test_comment": currentRow[6],
+            "test_log_url": currentRow[7],
+            "test_status": currentRow[8],
+            "test_waived": currentRow[9],
+            "test_start_time": currentRow[10],
+            "test_duration": currentRow[11],
+            "test_number_value": currentRow[12],
+            "test_misc": currentRow[13],
+            "test_environment_compatible": currentRow[tmp_test_env_comp_key],
+            "build_id": currentRow[16],
+            "build_comment": currentRow[17],
+            "build_start_time": currentRow[18],
+            "build_duration": currentRow[19],
+            "build_architecture": currentRow[20],
+            "build_command": currentRow[21],
+            "build_compiler": currentRow[22],
+            "build_config_name": currentRow[23],
+            "build_config_url": currentRow[24],
+            "build_log_url": currentRow[25],
+            "build_valid": currentRow[26],
+            "build_misc": currentRow[27],
+            "checkout_id": currentRow[28],
+            "checkout_git_repository_url": currentRow[29],
+            "checkout_git_repository_branch": currentRow[30],
+            "incident_id": currentRow[31],
+            "incident_present": currentRow[32],
+            "issue_id": currentRow[33],
+            "issue_comment": currentRow[34],
+            "issue_report_url": currentRow[35],
         }
 
         UNKNOWN_STRING = "Unknown"
 
-        incident_id = currentRow[tempColumnDict["incident_id"]]
-        incident_present = currentRow[tempColumnDict["incident_present"]]
-        issue_id = currentRow[tempColumnDict["issue_id"]]
-        issue_comment = currentRow[tempColumnDict["issue_comment"]]
-        issue_report_url = currentRow[tempColumnDict["issue_report_url"]]
-        path = currentRow[tempColumnDict["tests_path"]]
-        testId = currentRow[tempColumnDict["tests_id"]]
-        testStatus = currentRow[tempColumnDict["tests_status"]]
-        if (testStatus is None):
-            testStatus = "NULL"
-        testDuration = currentRow[tempColumnDict["tests_duration"]]
-        buildConfig = currentRow[tempColumnDict["builds_config_name"]]
-        if (buildConfig is None):
-            buildConfig = UNKNOWN_STRING
-        buildArch = currentRow[tempColumnDict["builds_architecture"]]
-        if (buildArch is None):
-            buildArch = UNKNOWN_STRING
-        buildCompiler = currentRow[tempColumnDict["builds_compiler"]]
-        if (buildCompiler is None):
-            buildCompiler = UNKNOWN_STRING
-        startTime = tempColumnDict["tests_start_time"]
-        testPlatform = extract_platform(
-            currentRow[tempColumnDict["tests_environment_misc"]]
-        )
-        testError = extract_error_message(currentRow[tempColumnDict["tests_misc"]])
-        testEnvironmentCompatible = currentRow[
-            tempColumnDict["tests_environment_compatible"]
-        ][0] if currentRow[
-            tempColumnDict["tests_environment_compatible"]
-        ] is not None else UNKNOWN_STRING
+        currentRowData["test_platform"] = extract_platform(currentRowData["test_environment_misc"])
+        if (currentRowData["test_status"] is None):
+            currentRowData["test_status"] = "NULL"
+        currentRowData["test_error"] = extract_error_message(currentRowData["test_misc"])
+        if (currentRowData["test_environment_compatible"] is None):
+            currentRowData["test_environment_compatible"] = UNKNOWN_STRING
+        else:
+            currentRowData["test_environment_compatible"] = currentRowData["test_environment_compatible"][0]
+        if (currentRowData["build_architecture"] is None):
+            currentRowData["build_architecture"] = UNKNOWN_STRING
+        if (currentRowData["build_compiler"] is None):
+            currentRowData["build_compiler"] = UNKNOWN_STRING
+        if (currentRowData["build_config_name"] is None):
+            currentRowData["build_config_name"] = UNKNOWN_STRING
+        if (currentRowData["build_misc"] is not None):
+            currentRowData["build_misc"] = json.loads(currentRowData["build_misc"])
 
-        historyItem = {
-            "id": testId,
-            "status": testStatus,
-            "path": path,
-            "duration": testDuration,
-            "startTime": currentRow[tempColumnDict["tests_start_time"]],
-            "hardware": currentRow[tempColumnDict["tests_environment_compatible"]]
+        currentRowData["history_item"] = {
+            "id": currentRowData["test_id"],
+            "status": currentRowData["test_status"],
+            "path": currentRowData["test_path"],
+            "duration": currentRowData["test_duration"],
+            "startTime": currentRowData["test_start_time"],
+            "hardware": currentRow[tmp_test_env_comp_key]
         }
 
-        return (
-            path,
-            testId,
-            testStatus,
-            testDuration,
-            buildConfig,
-            buildArch,
-            buildCompiler,
-            testPlatform,
-            testError,
-            startTime,
-            historyItem,
-            incident_id,
-            incident_present,
-            issue_id,
-            issue_comment,
-            issue_report_url,
-            testEnvironmentCompatible,
-        )
+        return currentRowData
 
     def __processBootsTest(self, currentRowData):
-        (
-            path,
-            testId,
-            testStatus,
-            testDuration,
-            buildConfig,
-            buildArch,
-            buildCompiler,
-            testPlatform,
-            testError,
-            startTime,
-            historyItem,
-            incident_id,
-            incident_present,
-            issue_id,
-            issue_comment,
-            issue_report_url,
-            testEnvironmentCompatible,
-        ) = currentRowData
+        testId = currentRowData["test_id"]
+        testStatus = currentRowData["test_status"]
+        testDuration = currentRowData["test_duration"]
+        buildConfig = currentRowData["build_config_name"]
+        buildArch = currentRowData["build_architecture"]
+        buildCompiler = currentRowData["build_compiler"]
+        testPlatform = currentRowData["test_platform"]
+        testError = currentRowData["test_error"]
+        historyItem = currentRowData["history_item"]
+        incident_id = currentRowData["incident_id"]
+        issue_id = currentRowData["issue_id"]
+        issue_comment = currentRowData["issue_comment"]
+        issue_report_url = currentRowData["issue_report_url"]
+        testEnvironmentCompatible = currentRowData["test_environment_compatible"]
+        testPath = currentRowData["test_path"]
 
-        if len(self.filterBootStatus) > 0 and (testStatus not in self.filterBootStatus):
-            return
         if (
-            self.filterBootDurationMax is not None or self.filterBootDurationMin is not None
-        ) and testDuration is None:
-            return
-        if self.filterBootDurationMax is not None and (
-            toIntOrDefault(testDuration, 0) > self.filterBootDurationMax
-        ):
-            return
-
-        if self.filterBootDurationMin is not None and (
-            toIntOrDefault(testDuration, 0) < self.filterBootDurationMin
+            (
+                self.filterBootPath != ""
+                and (self.filterBootPath not in testPath)
+            )
+            or (
+                len(self.filterBootStatus) > 0
+                and (testStatus not in self.filterBootStatus)
+            )
+            or (
+                (
+                    self.filterBootDurationMax is not None
+                    or self.filterBootDurationMin is not None
+                )
+                and testDuration is None
+            )
+            or (
+                self.filterBootDurationMax is not None
+                and (
+                    toIntOrDefault(testDuration, 0) > self.filterBootDurationMax
+                )
+            )
+            or (
+                self.filterBootDurationMin is not None
+                and (
+                    toIntOrDefault(testDuration, 0) < self.filterBootDurationMin
+                )
+            )
         ):
             return
 
@@ -293,7 +291,9 @@ class TreeDetailsSlow(View):
         self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
         self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
-    def __nonBootsGuard(self, testStatus, testDuration):
+    def __nonBootsGuard(self, testStatus, testDuration, testPath):
+        if self.filterTestPath != "" and self.filterTestPath not in testPath:
+            return False
         if len(self.filterTestStatus) > 0 and (testStatus not in self.filterTestStatus):
             return False
         if (
@@ -311,29 +311,21 @@ class TreeDetailsSlow(View):
         return True
 
     def __processNonBootsTest(self, currentRowData):
-        (
-            path,
-            testId,
-            testStatus,
-            testDuration,
-            buildConfig,
-            buildArch,
-            buildCompiler,
-            testPlatform,
-            testError,
-            startTime,
-            historyItem,
-            incident_id,
-            incident_present,
-            issue_id,
-            issue_comment,
-            issue_report_url,
-            testEnvironmentCompatible,
-        ) = currentRowData
+        testId = currentRowData["test_id"]
+        testStatus = currentRowData["test_status"]
+        buildConfig = currentRowData["build_config_name"]
+        buildArch = currentRowData["build_architecture"]
+        buildCompiler = currentRowData["build_compiler"]
+        testPlatform = currentRowData["test_platform"]
+        testError = currentRowData["test_error"]
+        historyItem = currentRowData["history_item"]
+        issue_id = currentRowData["issue_id"]
+        issue_comment = currentRowData["issue_comment"]
+        issue_report_url = currentRowData["issue_report_url"]
+        testEnvironmentCompatible = currentRowData["test_environment_compatible"]
 
-        if not self.__nonBootsGuard(testStatus, testDuration):
+        if not self.__nonBootsGuard(testStatus, currentRowData["test_duration"], currentRowData["test_path"]):
             return
-
         if issue_id:
             currentIssue = self.testIssuesTable.get(issue_id)
             if currentIssue:
@@ -374,6 +366,77 @@ class TreeDetailsSlow(View):
 
         self.testEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
 
+    def _process_builds(self, row_data):
+        build_id = row_data["build_id"]
+        issue_id = row_data["issue_id"]
+        build_valid = row_data["build_valid"]
+
+        if len(self.filterBuildValid) > 0 and (str(build_valid).lower() not in self.filterBuildValid):
+            return
+
+        if issue_id:
+            current_issue = self.processed_issues_dict.get(issue_id)
+            if (current_issue):
+                current_issue["incidents_info"]["incidentsCount"] += 1
+            else:
+                self.processed_issues_dict[issue_id] = _get_issue_details(row_data)
+        elif build_id not in self.processed_builds and build_valid is False:
+            self.failed_builds_with_unknown_issues += 1
+
+        if build_id in self.processed_builds:
+            return
+        self.processed_builds.add(build_id)
+        self.builds.append(_get_build(row_data))
+
+    def _sanitize_rows(self, rows):
+        for row in rows:
+            row_data = self.__getCurrentRowData(row)
+
+            test_path = row_data["test_path"]
+            test_environment_compatible = row_data["test_environment_compatible"]
+            git_repository_url = row_data["checkout_git_repository_url"]
+
+            if (test_environment_compatible):
+                self.hardwareUsed.add(test_environment_compatible)
+
+            if (self.tree_url == "" and git_repository_url is not None):
+                self.tree_url = git_repository_url
+
+            if (
+                (
+                    len(self.filterHardware) > 0
+                    and test_environment_compatible
+                    and (test_environment_compatible not in self.filterHardware)
+                )
+                or (
+                    len(self.filterArchitecture) > 0
+                    and test_environment_compatible
+                    and (row_data["build_architecture"] not in self.filterArchitecture)
+                )
+                or (
+                    len(self.filterTreeDetailsCompiler) > 0
+                    and (row_data["build_compiler"] not in self.filterTreeDetailsCompiler)
+                )
+                or (
+                    len(self.filterTreeDetailsConfigs) > 0
+                    and (row_data["build_config_name"] not in self.filterTreeDetailsConfigs)
+                )
+            ):
+                continue
+
+            self._process_builds(row_data)
+
+            if test_path:
+                if test_path.startswith("boot"):
+                    self.__processBootsTest(row_data)
+                else:
+                    self.__processNonBootsTest(row_data)
+
+        self.testIssues = convert_issues_dict_to_list(self.testIssuesTable)
+        self.bootIssues = convert_issues_dict_to_list(self.bootsIssuesTable)
+        self.build_summary = create_details_build_summary(self.builds)
+        self.issues = convert_issues_dict_to_list(self.processed_issues_dict)
+
     def get(self, request, commit_hash: str | None):
         cache_key = "treeDetailsSlow"
         origin_param = request.GET.get("origin")
@@ -391,8 +454,6 @@ class TreeDetailsSlow(View):
         rows = getQueryCache(cache_key, params)
 
         if rows is None:
-            # Right now this query is only using for showing test data so it is doing inner joins
-            # if it is needed for builds data they should become left join and the logic should be updated
             query = """
             SELECT
                     tests.build_id AS tests_build_id,
@@ -411,11 +472,11 @@ class TreeDetailsSlow(View):
                     tests.misc AS tests_misc,
                     tests.environment_compatible AS tests_environment_compatible,
                     builds_filter.*,
-                    incidents.id,
-                    incidents.present,
-                    issues.id,
-                    issues.comment,
-                    issues.report_url
+                    incidents.id AS incidents_id,
+                    incidents.present AS incidents_present,
+                    issues.id AS issues_id,
+                    issues.comment AS issues_comment,
+                    issues.report_url AS issues_report_url
             FROM
                 (
                     SELECT
@@ -431,11 +492,14 @@ class TreeDetailsSlow(View):
                         builds.config_url AS builds_config_url,
                         builds.log_url AS builds_log_url,
                         builds.valid AS builds_valid,
+                        builds.misc AS builds_misc,
                         tree_head.*
                     FROM
                         (
                             SELECT
-                                checkouts.id AS checkout_id
+                                checkouts.id AS checkout_id,
+                                checkouts.git_repository_url AS checkouts_git_repository_url,
+                                checkouts.git_repository_branch AS checkouts_git_repository_branch
                             FROM
                                 checkouts
                             WHERE
@@ -449,82 +513,23 @@ class TreeDetailsSlow(View):
                     WHERE
                         builds.origin = %(origin_param)s
                 ) AS builds_filter
-            INNER JOIN tests
+            LEFT JOIN tests
                 ON builds_filter.builds_id = tests.build_id
             LEFT JOIN incidents
-                ON tests.id = incidents.test_id
+                ON tests.id = incidents.test_id OR
+                   builds_filter.builds_id = incidents.build_id
             LEFT JOIN issues
                 ON incidents.issue_id = issues.id
             WHERE
-                tests.origin = %(origin_param)s
+                tests.origin = %(origin_param)s OR
+                tests.origin IS NULL
             """
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
                 rows = cursor.fetchall()
                 setQueryCache(cache_key, params, rows)
 
-        for currentRow in rows:
-            currentRowData = self.__getCurrentRowData(currentRow)
-
-            (
-                path,
-                testId,
-                testStatus,
-                testDuration,
-                buildConfig,
-                buildArch,
-                buildCompiler,
-                testPlatform,
-                testError,
-                startTime,
-                historyItem,
-                incident_id,
-                incident_present,
-                issue_id,
-                issue_comment,
-                issue_report_url,
-                testEnvironmentCompatible,
-            ) = currentRowData
-
-            self.hardwareUsed.add(testEnvironmentCompatible)
-
-            if (
-                (
-                    path.startswith("boot")
-                    and self.filterBootPath != ""
-                    and (self.filterBootPath not in path)
-                )
-                or (
-                    not path.startswith("boot")
-                    and self.filterTestPath != ""
-                    and (self.filterTestPath not in path)
-                )
-                or (
-                    len(self.filterHardware) > 0
-                    and (testEnvironmentCompatible not in self.filterHardware)
-                )
-                or (
-                    len(self.filterArchitecture) > 0
-                    and (buildArch not in self.filterArchitecture)
-                )
-                or (
-                    len(self.filterTreeDetailsCompiler) > 0
-                    and (buildCompiler not in self.filterTreeDetailsCompiler)
-                )
-                or (
-                    len(self.filterTreeDetailsConfigs) > 0
-                    and (buildConfig not in self.filterTreeDetailsConfigs)
-                )
-            ):
-                continue
-
-            if path.startswith("boot"):
-                self.__processBootsTest(currentRowData)
-            else:
-                self.__processNonBootsTest(currentRowData)
-
-        self.testIssues = convert_issues_dict_to_list(self.testIssuesTable)
-        self.bootIssues = convert_issues_dict_to_list(self.bootsIssuesTable)
+        self._sanitize_rows(rows)
 
         return JsonResponse(
             {
@@ -548,6 +553,36 @@ class TreeDetailsSlow(View):
                 "hardwareUsed": list(self.hardwareUsed),
                 "failedTestsWithUnknownIssues": self.failedTestsWithUnknownIssues,
                 "failedBootsWithUnknownIssues": self.failedBootsWithUnknownIssues,
+                "builds": self.builds,
+                "buildsSummary": self.build_summary,
+                "buildsIssues": self.issues,
+                "failedBuildsWithUnknownIssues": self.failed_builds_with_unknown_issues,
+                "treeUrl": self.tree_url,
             },
             safe=False,
         )
+
+
+def _get_build(row_data):
+    return {
+        "id": row_data["build_id"],
+        "architecture": row_data["build_architecture"],
+        "config_name": row_data["build_config_name"],
+        "misc": row_data["build_misc"],
+        "config_url": row_data["build_config_url"],
+        "compiler": row_data["build_compiler"],
+        "valid": row_data["build_valid"],
+        "duration": row_data["build_duration"],
+        "log_url": row_data["build_log_url"],
+        "start_time": row_data["build_start_time"],
+        "git_repository_url": row_data["checkout_git_repository_url"],
+        "git_repository_branch": row_data["checkout_git_repository_branch"],
+    }
+
+
+def _get_issue_details(row_data):
+    return create_issue(
+        issue_id=row_data["issue_id"],
+        issue_comment=row_data["issue_comment"],
+        issue_report_url=row_data["issue_report_url"],
+    )
