@@ -28,7 +28,6 @@ export interface ISummaryItem {
 
 export interface ISummaryItemWithFilter extends ISummaryItem {
   diffFilter: TFilter;
-  disabled?: boolean;
 }
 
 export interface ISummaryTable {
@@ -90,7 +89,6 @@ const SummaryItem = ({
   onClickKey,
   leftIcon,
   diffFilter,
-  disabled,
 }: ISummaryItemWithFilter): JSX.Element => {
   const handleDiffFilter = useDiffFilterParams(arch.text, 'archs', diffFilter);
 
@@ -101,12 +99,11 @@ const SummaryItem = ({
         filterSection="compilers"
         filterValue={compiler}
         diffFilter={diffFilter}
-        disabled={disabled}
       >
         {compiler}
       </FilterLink>
     ));
-  }, [compilers, diffFilter, disabled]);
+  }, [compilers, diffFilter]);
 
   return (
     <TableRow>
@@ -116,7 +113,6 @@ const SummaryItem = ({
             ...previousParams,
             diffFilter: handleDiffFilter,
           }),
-          disabled: disabled,
         }}
       >
         <ListingItem
@@ -127,7 +123,6 @@ const SummaryItem = ({
           success={arch.success}
           unknown={arch.unknown}
           errors={arch.errors}
-          disabled={disabled}
         />
       </TableCellWithLink>
       <TableCell>

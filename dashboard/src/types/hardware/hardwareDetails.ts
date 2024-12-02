@@ -54,6 +54,9 @@ export type THardwareDetails = {
   tests: Tests;
   boots: Tests;
   trees: Trees[];
+  configs: string[];
+  archs: string[];
+  compilers: string[];
 };
 
 export interface THardwareDetailsFilter

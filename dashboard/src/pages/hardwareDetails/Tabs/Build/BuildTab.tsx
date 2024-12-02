@@ -1,8 +1,8 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
-import { useSearch } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 import { sanitizeArchs, sanitizeBuilds, sanitizeConfigs } from '@/utils/utils';
@@ -21,6 +21,8 @@ import { MemoizedErrorsSummaryBuild } from '@/components/Tabs/Builds/BuildCards'
 import { MemoizedConfigsCard } from '@/components/Tabs/Builds/ConfigsCard';
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 
+import type { TFilterObjectsKeys } from '@/types/general';
+
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
 interface TBuildTab {
@@ -30,14 +32,15 @@ interface TBuildTab {
 }
 
 const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
+  const navigate = useNavigate({
+    from: '/hardware/$hardwareId/',
+  });
+
   const { diffFilter } = useSearch({
     from: '/hardware/$hardwareId/',
   });
 
-  //TODO: implement this function to filter details by data list
-
-  const toggleFilterBySection = console.error;
-  /* useCallback(
+  const toggleFilterBySection = useCallback(
     (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
       navigate({
         search: previousParams => {
@@ -60,7 +63,7 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
       });
     },
     [navigate],
-  ); */
+  );
 
   const archSummary = useMemo(
     () => sanitizeArchs(builds.summary.architectures),
@@ -87,7 +90,6 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
           />
           <MemoizedErrorsSummaryBuild
             summaryBody={archSummary}
-            disabled
             toggleFilterBySection={toggleFilterBySection}
             diffFilter={diffFilter}
           />
@@ -103,7 +105,6 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
             hardwareId={hardwareId}
           />
           <MemoizedConfigsCard
-            disabled
             configs={configsItems}
             toggleFilterBySection={toggleFilterBySection}
             diffFilter={diffFilter}

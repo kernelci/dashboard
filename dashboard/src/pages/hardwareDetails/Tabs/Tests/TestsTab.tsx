@@ -80,13 +80,11 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
             statusCounts={tests.statusSummary}
           />
           <MemoizedConfigList
-            disabled
             title={<FormattedMessage id="bootsTab.configs" />}
             configStatusCounts={tests.configs}
             diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
-            disabled
             title={<FormattedMessage id="global.summary" />}
             archCompilerErrors={tests.archSummary}
             diffFilter={diffFilter}

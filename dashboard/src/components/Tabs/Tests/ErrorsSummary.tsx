@@ -13,7 +13,6 @@ interface IErrorsSummary {
   archCompilerErrors: ArchCompilerStatus[];
   title: IBaseCard['title'];
   diffFilter: TFilter;
-  disabled?: boolean;
 }
 
 const summaryHeaders = [
@@ -24,7 +23,6 @@ const summaryHeaders = [
 const ErrorsSummary = ({
   archCompilerErrors,
   title,
-  disabled,
   diffFilter,
 }: IErrorsSummary): JSX.Element => {
   return (
@@ -42,7 +40,6 @@ const ErrorsSummary = ({
                 arch={{
                   text: e.arch,
                 }}
-                disabled={disabled}
                 leftIcon={
                   <GroupedTestStatus
                     forceNumber={false}

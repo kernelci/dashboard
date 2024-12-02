@@ -13,14 +13,12 @@ import type { TFilter } from '@/types/general';
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
   diffFilter: TFilter;
-  disabled?: boolean;
 }
 
 const ConfigsList = ({
   configStatusCounts,
   title,
   diffFilter,
-  disabled,
 }: IConfigList): JSX.Element => {
   return (
     <BaseCard
@@ -35,14 +33,12 @@ const ConfigsList = ({
                 key={configName}
                 filterSection="configs"
                 filterValue={configName}
-                disabled={disabled}
                 diffFilter={diffFilter}
               >
                 <ListingItem
                   hasBottomBorder
                   key={configName}
                   text={configName}
-                  disabled={disabled}
                   leftIcon={
                     <GroupedTestStatus
                       done={DONE}

@@ -95,13 +95,11 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
             statusCounts={boots.statusSummary}
           />
           <MemoizedConfigList
-            disabled
             title={<FormattedMessage id="bootsTab.configs" />}
             configStatusCounts={boots.configs}
             diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
-            disabled
             title={<FormattedMessage id="global.summary" />}
             archCompilerErrors={boots.archSummary}
             diffFilter={diffFilter}

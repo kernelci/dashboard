@@ -10,7 +10,6 @@ interface FilterLinkProps {
   filterSection: TFilterObjectsKeys;
   diffFilter: TFilter;
   className?: string;
-  disabled?: boolean; // temporary solution
   from?: LinkProps['from'];
   to?: LinkProps['to'];
 }
@@ -23,7 +22,6 @@ const FilterLink = ({
   from,
   to,
   diffFilter,
-  disabled,
 }: FilterLinkProps): JSX.Element => {
   const handleDiffFilter = useDiffFilterParams(
     filterValue,
@@ -39,7 +37,6 @@ const FilterLink = ({
       })}
       from={from}
       to={to}
-      disabled={disabled}
       key={filterValue}
       className={className}
     >

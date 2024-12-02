@@ -19,14 +19,9 @@ interface IConfigsCard {
     filterSection: TFilterObjectsKeys,
   ) => void;
   diffFilter: TFilter;
-  disabled?: boolean;
 }
 
-const ConfigsCard = ({
-  configs,
-  diffFilter,
-  disabled,
-}: IConfigsCard): JSX.Element => {
+const ConfigsCard = ({ configs, diffFilter }: IConfigsCard): JSX.Element => {
   const content = useMemo(() => {
     return (
       <DumbListingContent>
@@ -36,11 +31,9 @@ const ConfigsCard = ({
             filterSection="configs"
             filterValue={item.text}
             diffFilter={diffFilter}
-            disabled={disabled}
           >
             <ListingItem
               text={item.text}
-              disabled={disabled}
               leftIcon={
                 <BuildStatus
                   valid={item.success}
@@ -53,7 +46,7 @@ const ConfigsCard = ({
         ))}
       </DumbListingContent>
     );
-  }, [configs, diffFilter, disabled]);
+  }, [configs, diffFilter]);
 
   return (
     <BaseCard
