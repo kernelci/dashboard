@@ -50,10 +50,14 @@ export const createFilter = (data: THardwareDetails | undefined): TFilter => {
       trees[treeNameBranch] = false;
     });
 
-    data.builds.items.forEach(b => {
-      configs[b.config_name ?? 'Unknown'] = false;
-      archs[b.architecture ?? 'Unknown'] = false;
-      compilers[b.compiler ?? 'Unknown'] = false;
+    data.archs.forEach(arch => {
+      archs[arch ?? 'Unknown'] = false;
+    });
+    data.compilers.forEach(compiler => {
+      compilers[compiler ?? 'Unknown'] = false;
+    });
+    data.configs.forEach(config => {
+      configs[config ?? 'Unknown'] = false;
     });
   }
 
@@ -83,6 +87,24 @@ const sectionHardware: ISectionItem[] = [
     title: 'filter.testStatus',
     subtitle: 'filter.statusSubtitle',
     sectionKey: 'testStatus',
+  },
+  {
+    title: 'global.configs',
+    subtitle: 'filter.configsSubtitle',
+    sectionKey: 'configs',
+    isGlobal: true,
+  },
+  {
+    title: 'global.architecture',
+    subtitle: 'filter.architectureSubtitle',
+    sectionKey: 'archs',
+    isGlobal: true,
+  },
+  {
+    title: 'global.compilers',
+    subtitle: 'filter.compilersSubtitle',
+    sectionKey: 'compilers',
+    isGlobal: true,
   },
 ];
 

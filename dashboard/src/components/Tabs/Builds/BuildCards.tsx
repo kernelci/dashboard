@@ -15,14 +15,12 @@ interface IErrorsSummaryBuild extends Pick<ISummaryTable, 'summaryBody'> {
     filterSection: TFilterObjectsKeys,
   ) => void;
   diffFilter: TFilter;
-  disabled?: boolean; // temporary solution
 }
 
 const ErrorsSummaryBuild = ({
   summaryBody,
   toggleFilterBySection,
   diffFilter,
-  disabled,
 }: IErrorsSummaryBuild): JSX.Element => {
   const summaryHeaders = useMemo(
     () => [
@@ -41,7 +39,6 @@ const ErrorsSummaryBuild = ({
             return (
               <MemoizedSummaryItem
                 key={row.arch.text}
-                disabled={disabled}
                 arch={{ text: row.arch.text }}
                 diffFilter={diffFilter}
                 onClickCompiler={value =>
