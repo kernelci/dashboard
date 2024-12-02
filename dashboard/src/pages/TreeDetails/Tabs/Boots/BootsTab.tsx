@@ -5,7 +5,7 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { useCallback } from 'react';
 
-import { useTestsTab } from '@/api/treeDetails';
+import { useTreeDetails } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 import { Skeleton } from '@/components/Skeleton';
 
@@ -77,7 +77,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
     [navigate],
   );
 
-  const { isLoading, data, error } = useTestsTab({
+  const { isLoading, data, error } = useTreeDetails({
     treeId: treeId ?? '',
     filter: reqFilter,
   });

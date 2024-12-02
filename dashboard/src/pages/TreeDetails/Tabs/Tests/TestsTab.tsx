@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 
 import { Skeleton } from '@/components/Skeleton';
 
-import { useTestsTab } from '@/api/treeDetails';
+import { useTreeDetails } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 
 import type { TestsTableFilter } from '@/types/tree/TreeDetails';
@@ -36,7 +36,7 @@ interface TestsTabProps {
 
 const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
-  const { isLoading, data, error } = useTestsTab({
+  const { isLoading, data, error } = useTreeDetails({
     treeId: treeId ?? '',
     filter: reqFilter,
   });

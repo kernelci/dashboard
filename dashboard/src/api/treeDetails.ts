@@ -45,14 +45,14 @@ function assertTreeSearchParameters(
   }
 }
 
-const fetchTreeTestsData = async (
+const fetchTreeDetails = async (
   treeId: string,
   treeSearchParameters: TreeSearchParameters,
   filter: TTreeDetailsFilter = {},
 ): Promise<TTreeTestsFullData> => {
   assertTreeSearchParameters(
     treeSearchParameters,
-    'fetchTreeTestsData - useSearchTab',
+    'fetchTreeDetails - useSearchTab',
   );
 
   const backendCompatibleFilters = mapFiltersKeysToBackendCompatible(filter);
@@ -71,7 +71,7 @@ const fetchTreeTestsData = async (
   return res.data;
 };
 
-export const useTestsTab = ({
+export const useTreeDetails = ({
   treeId,
   filter = {},
   enabled = true,
@@ -93,7 +93,7 @@ export const useTestsTab = ({
       treeDetailsFilter,
     ],
     queryFn: () =>
-      fetchTreeTestsData(treeId, treeSearchParameters, {
+      fetchTreeDetails(treeId, treeSearchParameters, {
         ...testFilter,
         ...treeDetailsFilter,
       }),
