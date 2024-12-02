@@ -3,7 +3,6 @@ import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useBuildsTab, useTestsTab } from '@/api/treeDetails';
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
 import type { AccordionItemBuilds, BuildsTab } from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
@@ -52,6 +51,8 @@ import DetailsFilterList from '@/components/Tabs/FilterList';
 
 import type { ISummaryItem } from '@/components/Tabs/Summary';
 
+import { useTestsTab } from '@/api/treeDetails';
+
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
@@ -61,8 +62,8 @@ export interface ITreeDetails {
   configs: IListingItem[];
   buildsSummary: BuildStatus;
   builds: AccordionItemBuilds[];
-  issues: BuildsTab['issues'];
-  failedWithUnknownIssues?: number;
+  buildsIssues: TIssue[];
+  failedBuildsWithUnknownIssues?: number;
 }
 
 interface ITreeHeader {
@@ -127,37 +128,10 @@ function TreeDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const isBuildTab = searchParams.currentPageTab === 'global.builds';
-
-  const {
-    isLoading: buildIsLoading,
-    data: buildData,
-    status: buildStatus,
-    isPlaceholderData: buildIsPlaceholderData,
-  } = useBuildsTab({
+  const { isLoading, data, status, isPlaceholderData } = useTestsTab({
     treeId: treeId ?? '',
     filter: reqFilter,
-    enabled: isBuildTab,
   });
-
-  const {
-    isLoading: testsIsLoading,
-    data: testsData,
-    status: testStatus,
-    isPlaceholderData: testIsPlaceholderData,
-  } = useTestsTab({
-    treeId: treeId ?? '',
-    filter: reqFilter,
-    enabled: !isBuildTab || (buildStatus === 'success' && !!buildData),
-  });
-
-  const isPlaceholderData = useMemo(() => {
-    return isBuildTab ? buildIsPlaceholderData : testIsPlaceholderData;
-  }, [buildIsPlaceholderData, isBuildTab, testIsPlaceholderData]);
-
-  const isLoading = useMemo(() => {
-    return isBuildTab ? buildIsLoading : testsIsLoading;
-  }, [isBuildTab, testsIsLoading, buildIsLoading]);
 
   const onFilterChange = useCallback(
     (newFilter: TFilter) => {
@@ -197,10 +171,10 @@ function TreeDetails(): JSX.Element {
   );
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
-    const { valid, invalid } = buildData?.summary.builds ?? {};
-    const { testStatusSummary } = testsData ?? {};
+    const { valid, invalid } = data?.buildsSummary.builds ?? {};
+    const { testStatusSummary } = data ?? {};
 
-    const { bootStatusSummary } = testsData ?? {};
+    const { bootStatusSummary } = data ?? {};
 
     return {
       'global.tests': testStatusSummary ? (
@@ -221,7 +195,7 @@ function TreeDetails(): JSX.Element {
       ) : (
         <></>
       ),
-      'global.builds': buildData ? (
+      'global.builds': data ? (
         <BuildStatusComponent
           valid={valid}
           invalid={invalid}
@@ -231,31 +205,18 @@ function TreeDetails(): JSX.Element {
         <></>
       ),
     };
-  }, [buildData, testsData]);
-
-  //TODO: at some point `treeUrl` should be returned in `data`
-  const treeUrl = useMemo(() => {
-    let url = '';
-    if (!buildData) return '';
-    Object.entries(buildData.builds).some(([, build]) => {
-      if (build.git_repository_url) {
-        url = build.git_repository_url;
-        return true;
-      }
-    });
-    return url;
-  }, [buildData]);
+  }, [data]);
 
   const treeDetailsData: ITreeDetails = useMemo(
     () => ({
-      architectures: sanitizeArchs(buildData?.summary.architectures),
-      configs: sanitizeConfigs(buildData?.summary.configs),
-      builds: sanitizeBuilds(buildData?.builds),
-      buildsSummary: sanitizeBuildsSummary(buildData?.summary.builds),
-      issues: buildData?.issues || [],
-      failedWithUnknownIssues: buildData?.failedWithUnknownIssues,
+      architectures: sanitizeArchs(data?.buildsSummary.architectures),
+      configs: sanitizeConfigs(data?.buildsSummary.configs),
+      builds: sanitizeBuilds(data?.builds),
+      buildsSummary: sanitizeBuildsSummary(data?.buildsSummary.builds),
+      buildsIssues: data?.buildsIssues || [],
+      failedBuildsWithUnknownIssues: data?.failedBuildsWithUnknownIssues,
     }),
-    [buildData],
+    [data],
   );
 
   if (isLoading)
@@ -300,24 +261,29 @@ function TreeDetails(): JSX.Element {
         />
       </div>
       <QuerySwitcher
-        status={testStatus}
-        data={testsData}
+        status={status}
+        data={data}
         skeletonClassname="h-[200px] bg-lightGray"
       >
         <div className="mt-5">
           <MemoizedHardwareUsed
             title={<FormattedMessage id="treeDetails.hardwareUsed" />}
-            hardwareUsed={testsData?.hardwareUsed}
+            hardwareUsed={data?.hardwareUsed}
             diffFilter={diffFilter}
           />
         </div>
       </QuerySwitcher>
       <div className="flex flex-col pb-2">
-        <div className="sticky top-[4.5rem] z-10">
-          <div className="absolute right-0 top-2 py-4">
-            <TreeDetailsFilter paramFilter={diffFilter} treeUrl={treeUrl} />
+        {data?.treeUrl && (
+          <div className="sticky top-[4.5rem] z-10">
+            <div className="absolute right-0 top-2 py-4">
+              <TreeDetailsFilter
+                paramFilter={diffFilter}
+                treeUrl={data.treeUrl}
+              />
+            </div>
           </div>
-        </div>
+        )}
         <TreeDetailsTab
           treeDetailsData={treeDetailsData}
           filterListElement={filterListElement}

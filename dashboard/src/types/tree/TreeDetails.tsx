@@ -94,6 +94,15 @@ export type TTreeTestsFullData = {
   hardwareUsed: string[];
   failedTestsWithUnknownIssues: number;
   failedBootsWithUnknownIssues: number;
+  builds: BuildsTabBuild[];
+  buildsSummary: {
+    builds: BuildStatus;
+    configs: Record<string, BuildStatus>;
+    architectures: Architecture;
+  };
+  buildsIssues: TIssue[];
+  failedBuildsWithUnknownIssues: number;
+  treeUrl: string;
 };
 
 const possibleTabs = ['global.builds', 'global.boots', 'global.tests'] as const;

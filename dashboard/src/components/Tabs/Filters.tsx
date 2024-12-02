@@ -32,7 +32,13 @@ export const mapFilterToReq = (filter: TFilter): TFilter => {
       Object.entries(values).forEach(([value, isSelected]) => {
         if (isSelected) {
           if (reqField === 'treeDetails.valid') {
-            value = value === 'Success' ? 'true' : 'false';
+            if (value === 'Success') {
+              value = 'true';
+            } else if (value === 'Failed') {
+              value = 'false';
+            } else {
+              value = 'none';
+            }
           }
           if (!filterMapped[reqField]) {
             filterMapped[reqField] = [];

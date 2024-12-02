@@ -79,8 +79,10 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
-            issues={treeDetailsData.issues || []}
-            failedWithUnknownIssues={treeDetailsData.failedWithUnknownIssues}
+            issues={treeDetailsData.buildsIssues || []}
+            failedWithUnknownIssues={
+              treeDetailsData.failedBuildsWithUnknownIssues
+            }
           />
         </div>
         <div>
@@ -112,8 +114,10 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
         </InnerMobileGrid>
         <MemoizedIssuesList
           title={<FormattedMessage id="global.issues" />}
-          issues={treeDetailsData.issues}
-          failedWithUnknownIssues={treeDetailsData.failedWithUnknownIssues}
+          issues={treeDetailsData.buildsIssues}
+          failedWithUnknownIssues={
+            treeDetailsData.failedBuildsWithUnknownIssues
+          }
         />
       </MobileGrid>
 

@@ -13,6 +13,8 @@ import type {
 import { sanitizeTableValue } from '@/components/Table/tableUtils';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
 
+import { UNKNOWN_STRING } from './constants/backend';
+
 export function formatDate(date: Date | string, short?: boolean): string {
   const options: Intl.DateTimeFormatOptions = {
     year: short ? '2-digit' : 'numeric',
@@ -73,11 +75,13 @@ export const sanitizeBuilds = (
 
   return builds.map(build => ({
     id: build.id,
-    config: build.config_name,
-    architecture: build.architecture,
+    config:
+      build.config_name === UNKNOWN_STRING ? undefined : build.config_name,
+    architecture:
+      build.architecture === UNKNOWN_STRING ? undefined : build.architecture,
     date: build.start_time,
     buildTime: build.duration,
-    compiler: build.compiler,
+    compiler: build.compiler === UNKNOWN_STRING ? undefined : build.compiler,
     buildErrors: isBuildError(build),
     status: build.valid === null ? 'null' : build.valid ? 'valid' : 'invalid',
     buildLogs: build.log_url,
