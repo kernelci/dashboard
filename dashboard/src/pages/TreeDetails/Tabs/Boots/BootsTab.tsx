@@ -153,6 +153,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           <MemoizedHardwareTested
             title={<FormattedMessage id="bootsTab.hardwareTested" />}
             environmentCompatible={data.bootEnvironmentCompatible}
+            diffFilter={diffFilter}
           />
         </div>
       </DesktopGrid>
@@ -184,6 +185,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
             <MemoizedHardwareTested
               title={<FormattedMessage id="bootsTab.hardwareTested" />}
               environmentCompatible={data.bootEnvironmentCompatible}
+              diffFilter={diffFilter}
             />
           </div>
         </InnerMobileGrid>

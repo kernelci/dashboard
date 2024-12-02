@@ -308,6 +308,7 @@ function TreeDetails(): JSX.Element {
           <MemoizedHardwareUsed
             title={<FormattedMessage id="treeDetails.hardwareUsed" />}
             hardwareUsed={testsData?.hardwareUsed}
+            diffFilter={diffFilter}
           />
         </div>
       </QuerySwitcher>

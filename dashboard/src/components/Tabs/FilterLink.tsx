@@ -1,3 +1,4 @@
+import type { LinkProps } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
 
 import { useDiffFilterParams } from '@/components/Tabs/tabsUtils';
@@ -10,6 +11,8 @@ interface FilterLinkProps {
   diffFilter: TFilter;
   className?: string;
   disabled?: boolean; // temporary solution
+  from?: LinkProps['from'];
+  to?: LinkProps['to'];
 }
 
 const FilterLink = ({
@@ -17,6 +20,8 @@ const FilterLink = ({
   filterSection,
   filterValue,
   className,
+  from,
+  to,
   diffFilter,
   disabled,
 }: FilterLinkProps): JSX.Element => {
@@ -32,6 +37,8 @@ const FilterLink = ({
         ...previousParams,
         diffFilter: handleDiffFilter,
       })}
+      from={from}
+      to={to}
       disabled={disabled}
       key={filterValue}
       className={className}
