@@ -32,17 +32,6 @@ export type AccordionItemBuilds = {
   treeBranch?: string;
 };
 
-export type BuildsTab = {
-  builds: BuildsTabBuild[];
-  summary: {
-    builds: BuildStatus;
-    configs: Record<string, BuildStatus>;
-    architectures: Architecture;
-  };
-  issues: TIssue[];
-  failedWithUnknownIssues: number;
-};
-
 export interface TTreeDetailsFilter
   extends Partial<{
     [K in keyof Omit<

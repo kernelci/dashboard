@@ -4,7 +4,7 @@ import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
-import type { AccordionItemBuilds, BuildsTab } from '@/types/tree/TreeDetails';
+import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 import { Skeleton } from '@/components/Skeleton';
 import {
   Breadcrumb,
@@ -41,7 +41,7 @@ import {
   sanitizeConfigs,
 } from '@/utils/utils';
 
-import type { BuildStatus, TFilter } from '@/types/general';
+import type { BuildStatus, TFilter, TIssue } from '@/types/general';
 
 import MemoizedHardwareUsed from '@/components/Cards/HardwareUsed';
 
