@@ -156,6 +156,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
           <MemoizedHardwareTested
             title={<FormattedMessage id="testsTab.hardwareTested" />}
             environmentCompatible={data.testEnvironmentCompatible}
+            diffFilter={diffFilter}
           />
         </div>
       </DesktopGrid>
@@ -187,6 +188,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             <MemoizedHardwareTested
               title={<FormattedMessage id="testsTab.hardwareTested" />}
               environmentCompatible={data.testEnvironmentCompatible}
+              diffFilter={diffFilter}
             />
           </div>
         </InnerMobileGrid>

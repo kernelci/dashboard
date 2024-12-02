@@ -9,14 +9,20 @@ import type { TTreeTestsData } from '@/types/tree/TreeDetails';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+import type { TFilter } from '@/types/general';
+
+import FilterLink from '../Tabs/FilterLink';
+
 interface IHardwareTested
   extends Pick<TTreeTestsData, 'environmentCompatible'> {
   title: IBaseCard['title'];
+  diffFilter: TFilter;
 }
 
 const HardwareTested = ({
   environmentCompatible,
   title,
+  diffFilter,
 }: IHardwareTested): JSX.Element => {
   return (
     <BaseCard
@@ -29,22 +35,29 @@ const HardwareTested = ({
                 environmentCompatible[hardwareTestedName];
 
               return (
-                <ListingItem
-                  hasBottomBorder
+                <FilterLink
                   key={hardwareTestedName}
-                  text={hardwareTestedName}
-                  leftIcon={
-                    <GroupedTestStatus
-                      done={DONE}
-                      fail={FAIL}
-                      error={ERROR}
-                      miss={MISS}
-                      pass={PASS}
-                      skip={SKIP}
-                      nullStatus={NULL}
-                    />
-                  }
-                />
+                  filterValue={hardwareTestedName}
+                  filterSection="hardware"
+                  diffFilter={diffFilter}
+                >
+                  <ListingItem
+                    hasBottomBorder
+                    key={hardwareTestedName}
+                    text={hardwareTestedName}
+                    leftIcon={
+                      <GroupedTestStatus
+                        done={DONE}
+                        fail={FAIL}
+                        error={ERROR}
+                        miss={MISS}
+                        pass={PASS}
+                        skip={SKIP}
+                        nullStatus={NULL}
+                      />
+                    }
+                  />
+                </FilterLink>
               );
             })}
           </DumbListingContent>
