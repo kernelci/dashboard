@@ -6,11 +6,9 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { status as testStatuses } from '@/utils/constants/database';
 import type { IDrawerLink } from '@/components/Filter/Drawer';
 import FilterDrawer from '@/components/Filter/Drawer';
-import type {
-  BuildsTab as TreeDetailsType,
-  TTreeTestsFullData,
-} from '@/types/tree/TreeDetails';
-import { useBuildsTab, useTestsTab } from '@/api/treeDetails';
+import type { TTreeTestsFullData } from '@/types/tree/TreeDetails';
+import { useTestsTab } from '@/api/treeDetails';
+
 import { Skeleton } from '@/components/Skeleton';
 
 import {
@@ -29,11 +27,8 @@ interface ITreeDetailsFilter {
   treeUrl: string;
 }
 
-export const createFilter = (
-  data: TreeDetailsType | undefined,
-  testData: TTreeTestsFullData | undefined,
-): TFilter => {
-  const buildStatus = { Success: false, Failure: false };
+export const createFilter = (data: TTreeTestsFullData | undefined): TFilter => {
+  const buildStatus = { Success: false, Failed: false, Inconclusive: false };
 
   const bootStatus: TFilterValues = {};
   const testStatus: TFilterValues = {};
@@ -48,14 +43,15 @@ export const createFilter = (
 
   const hardware: TFilterValues = {};
 
-  if (data)
+  if (data) {
     data.builds.forEach(b => {
       configs[b.config_name ?? 'Unknown'] = false;
       archs[b.architecture ?? 'Unknown'] = false;
       compilers[b.compiler ?? 'Unknown'] = false;
     });
 
-  if (testData) testData.hardwareUsed.forEach(h => (hardware[h] = false));
+    data.hardwareUsed.forEach(h => (hardware[h] = false));
+  }
 
   return {
     buildStatus,
@@ -115,17 +111,17 @@ const TreeDetailsFilter = ({
 }: ITreeDetailsFilter): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
 
-  const { data, isLoading } = useBuildsTab({ treeId });
-
-  const { data: testData, isLoading: testIsLoading } = useTestsTab({ treeId });
+  const { data, isLoading } = useTestsTab({
+    treeId,
+  });
 
   const navigate = useNavigate({
     from: '/tree/$treeId',
   });
 
   const filter: TFilter = useMemo(() => {
-    return createFilter(data, testData);
-  }, [data, testData]);
+    return createFilter(data);
+  }, [data]);
 
   const [diffFilter, setDiffFilter] = useState<TFilter>(paramFilter);
 
@@ -168,7 +164,7 @@ const TreeDetailsFilter = ({
       onOpenChange={handleOpenChange}
       onCancel={onClickCancel}
     >
-      {isLoading || testIsLoading ? (
+      {isLoading ? (
         <Skeleton>
           <FormattedMessage id="global.loading" />
         </Skeleton>
