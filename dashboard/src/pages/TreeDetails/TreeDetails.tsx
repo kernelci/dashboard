@@ -51,7 +51,7 @@ import DetailsFilterList from '@/components/Tabs/FilterList';
 
 import type { ISummaryItem } from '@/components/Tabs/Summary';
 
-import { useTestsTab } from '@/api/treeDetails';
+import { useTreeDetails } from '@/api/treeDetails';
 
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
@@ -128,7 +128,7 @@ function TreeDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const { isLoading, data, status, isPlaceholderData } = useTestsTab({
+  const { isLoading, data, status, isPlaceholderData } = useTreeDetails({
     treeId: treeId ?? '',
     filter: reqFilter,
   });

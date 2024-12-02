@@ -19,7 +19,7 @@ from collections import defaultdict
 from kernelCI_app.viewCommon import create_details_build_summary
 
 
-class TreeDetailsSlow(View):
+class TreeDetails(View):
     def __init__(self):
         self.processedTests = set()
         self.filterTestDurationMin, self.filterTestDurationMax = None, None

@@ -7,7 +7,7 @@ import { status as testStatuses } from '@/utils/constants/database';
 import type { IDrawerLink } from '@/components/Filter/Drawer';
 import FilterDrawer from '@/components/Filter/Drawer';
 import type { TTreeTestsFullData } from '@/types/tree/TreeDetails';
-import { useTestsTab } from '@/api/treeDetails';
+import type { ISectionItem } from '@/components/Filter/CheckboxSection';
 
 import { Skeleton } from '@/components/Skeleton';
 
@@ -16,9 +16,10 @@ import {
   MemoizedTimeRangeSection,
 } from '@/components/Tabs/Filters';
 
-import type { ISectionItem } from '@/components/Filter/CheckboxSection';
 import { isTFilterObjectKeys, type TFilter } from '@/types/general';
 import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
+
+import { useTreeDetails } from '@/api/treeDetails';
 
 type TFilterValues = Record<string, boolean>;
 
@@ -111,7 +112,7 @@ const TreeDetailsFilter = ({
 }: ITreeDetailsFilter): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId/' });
 
-  const { data, isLoading } = useTestsTab({
+  const { data, isLoading } = useTreeDetails({
     treeId,
   });
 
