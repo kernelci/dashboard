@@ -20,6 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_HEAD_TREE_VALUE = 'head'
 STATUS_FAILED_VALUE = "FAIL"
+NULL_STRINGS = ["null", "Unknown"]
 
 
 def properties2List(d, keys):
@@ -159,7 +160,7 @@ class HardwareDetails(View):
         processed_builds: Set[str],
     ) -> bool:
         is_build_not_processed = not build["id"] in processed_builds
-        is_build_filtered_out = len(filters_map["build"]) == 0 or self.pass_in_filters(
+        is_build_filtered_out = len(filters_map["build"]) == 0 or self.pass_test_filters(
             build, filters_map["build"]
         )
         return is_build_not_processed and is_build_filtered_out
@@ -168,35 +169,48 @@ class HardwareDetails(View):
         filters_map = {
             "build": [],
             "boot": [],
-            "test": []
+            "test": [],
+            "global": [],
         }
 
         for key, value in filters.items():
-            _, filter_item = key.split("_")
+            key = key.replace("filter_", "")
 
-            filter_split = filter_item.split(".")
-            if len(filter_split) == 2:
-                table, field = filter_item.split(".")
+            table = "global"
+            if "." in key:
+                table, field = key.split(".")
             else:
-                table = "build"
-                field = filter_item
+                field = key
 
-            if table == "build":
+            if field == "valid":
+                table = "build"
                 value = [x == "Success" for x in value]
             filters_map[table].append({"field": field, "value": value})
 
         return filters_map
 
-    def pass_in_filters(self, data, filters):
+    def pass_build_filter(self, data, filters):
+        for currentFilter in filters:
+            field = currentFilter.get("field")
+            value = currentFilter.get("value")
+            include_null = any(null_string in value for null_string in NULL_STRINGS)
+            build_field = f"build__{field}"
+
+            if include_null and data[build_field] is None:
+                return True
+
+            if (data[build_field] not in value):
+                return False
+
+        return True
+
+    def pass_test_filters(self, data, filters):
         for currentFilter in filters:
             field = currentFilter.get("field")
             value = currentFilter.get("value")
 
-            if (
-                field == "path"
-                and value[0] not in data[field]
-            ):
-                return False
+            if field == "path":
+                return value[0] in data[field]
 
             if (data[field] not in value):
                 return False
@@ -209,9 +223,25 @@ class HardwareDetails(View):
         record: Dict,
         filters_map: Dict[str, List[Dict]],
     ) -> bool:
-        test_filter_is_empty = len(filters_map[table_test]) == 0
-        test_pass_in_filters = self.pass_in_filters(record, filters_map[table_test])
-        return not test_filter_is_empty and not test_pass_in_filters
+        test_filter_is_empty = len(filters_map['build']) == 0 and len(filters_map[table_test]) == 0
+        test_pass_in_filters = self.pass_test_filters(record, filters_map[table_test])
+        return not test_filter_is_empty and (not test_pass_in_filters)
+
+    def get_filter_options(self, records, selected_trees):
+        configs = set()
+        archs = set()
+        compilers = set()
+
+        for r in records:
+            current_tree = get_current_selected_tree(r, selected_trees)
+            if not current_tree or not is_record_selected(r, current_tree):
+                continue
+
+            configs.add(r['build__config_name'])
+            archs.add(r['build__architecture'])
+            compilers.add(r['build__compiler'])
+
+        return list(configs), list(archs), list(compilers)
 
     def sanitize_records(self, records, selected_trees, filters):
         processed_builds: Set[str] = set()
@@ -224,7 +254,11 @@ class HardwareDetails(View):
 
         for r in records:
             current_tree = get_current_selected_tree(r, selected_trees)
-            if not current_tree or not is_record_selected(r, current_tree):
+
+            is_tree_selected = current_tree and is_record_selected(r, current_tree)
+            pass_in_global_filters = self.pass_build_filter(r, filters_map['global'])
+
+            if not is_tree_selected or not pass_in_global_filters:
                 continue
 
             build_id = r["build_id"]
@@ -402,7 +436,16 @@ class HardwareDetails(View):
             setQueryCache(self.cache_key_get, params, records)
 
         builds, tests, boots = self.sanitize_records(records, selected_trees, filters)
+        configs, archs, compilers = self.get_filter_options(records, selected_trees)
 
         return JsonResponse(
-            {"builds": builds, "tests": tests, "boots": boots, "trees": trees}, safe=False
+            {
+                "builds": builds,
+                "tests": tests,
+                "boots": boots,
+                "trees": trees,
+                "configs": configs,
+                "archs": archs,
+                "compilers": compilers
+            }, safe=False
         )
