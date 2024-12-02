@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearch } from '@tanstack/react-router';
 
 import type {
-  BuildsTab,
   TTreeDetailsFilter,
   TTestByCommitHashResponse,
   BuildCountsResponse,
@@ -45,48 +44,6 @@ function assertTreeSearchParameters(
     throw new Error(`Git Branch is required in ${locationMessage}`);
   }
 }
-
-const fetchTreeDetailData = async (
-  treeId: string,
-  treeSearchParameters: TreeSearchParameters,
-  filter: TTreeDetailsFilter | Record<string, never>,
-): Promise<BuildsTab> => {
-  const filtersFormatted = mapFiltersKeysToBackendCompatible(filter);
-
-  const params = {
-    origin: treeSearchParameters.origin,
-    git_url: treeSearchParameters.gitUrl,
-    git_branch: treeSearchParameters.gitBranch,
-    ...filtersFormatted,
-  };
-
-  assertTreeSearchParameters(treeSearchParameters, 'useBuildsTab');
-
-  const res = await http.get(`/api/tree/${treeId}`, { params: params });
-  return res.data;
-};
-
-export const useBuildsTab = ({
-  treeId,
-  filter = {},
-  enabled = true,
-}: {
-  treeId: string;
-  filter?: TFilter;
-  enabled?: boolean;
-}): UseQueryResult<BuildsTab> => {
-  const detailsFilter = getTargetFilter(filter, 'treeDetails');
-
-  const treeSearchParameters = useTreeSearchParameters();
-
-  return useQuery({
-    queryKey: ['treeData', treeId, detailsFilter, treeSearchParameters],
-    queryFn: () =>
-      fetchTreeDetailData(treeId, treeSearchParameters, detailsFilter),
-    enabled,
-    placeholderData: previousData => previousData,
-  });
-};
 
 const fetchTreeTestsData = async (
   treeId: string,
