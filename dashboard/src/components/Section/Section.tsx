@@ -30,6 +30,7 @@ export const Subsection = ({ infos }: ISubsection): JSX.Element => {
               key={info.title?.toString()}
               title={info.title}
               link={info.link}
+              linkComponent={info.linkComponent}
               linkText={info.linkText}
               icon={
                 info.link && !info.icon ? (

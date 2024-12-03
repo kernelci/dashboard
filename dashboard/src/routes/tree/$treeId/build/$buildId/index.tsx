@@ -1,15 +1,22 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { z } from 'zod';
 
 import { zTableFilterInfoValidator } from '@/types/tree/TreeDetails';
-import TreeBuildDetails from '@/pages/TreeBuildDetails';
+import { RedirectFrom } from '@/types/general';
 
 const buildDetailsSearchSchema = z.object({
   tableFilter: zTableFilterInfoValidator,
 });
 
 export const Route = createFileRoute('/tree/$treeId/build/$buildId/')({
-  component: () => <TreeBuildDetails />,
   validateSearch: buildDetailsSearchSchema,
+  loaderDeps: ({ search }) => ({ search }),
+  loader: async ({ params, deps }) => {
+    throw redirect({
+      to: '/build/$buildId',
+      search: deps.search,
+      state: { id: params.treeId, from: RedirectFrom.Tree },
+    });
+  },
 });

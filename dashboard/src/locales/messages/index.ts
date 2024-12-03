@@ -172,10 +172,12 @@ export const messages = {
     'logSheet.fileSize': 'File Size',
     'logSheet.indexOf': 'Index of {link}',
     'logSheet.title': 'Logs Viewer',
+    'routes.buildDetails': 'Build',
     'routes.hardwareMonitor': 'Hardware',
     'routes.sendFeedback': 'Send us Feedback',
     'routes.sendFeedbackMsg':
       'Thank you for your feedback!\nWe greatly appreciate your input. You are welcome to send us the feedback via email or by creating an issue on our GitHub repository.',
+    'routes.testDetails': 'Test',
     'routes.treeMonitor': 'Trees',
     'routes.unknown': 'Unknown',
     'tab.name': 'Name',

@@ -273,3 +273,8 @@ export const getTargetFilter = (
 
   return accumulator;
 };
+
+export enum RedirectFrom {
+  Tree = 'tree',
+  Hardware = 'hardware',
+}

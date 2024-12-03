@@ -1,7 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
-import HardwareTestDetails from '@/pages/HardwareTestDetails';
+import { RedirectFrom } from '@/types/general';
 
 export const Route = createFileRoute('/hardware/$hardwareId/test/$testId/')({
-  component: () => <HardwareTestDetails />,
+  loaderDeps: ({ search }) => ({ search }),
+  loader: async ({ params, deps }) => {
+    throw redirect({
+      to: '/test/$testId',
+      search: deps.search,
+      state: { id: params.hardwareId, from: RedirectFrom.Hardware },
+    });
+  },
 });

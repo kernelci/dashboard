@@ -1,4 +1,4 @@
-import { useParams, useSearch } from '@tanstack/react-router';
+import { useParams, useRouterState, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -14,17 +14,13 @@ import {
 import TestDetails from '@/components/TestDetails/TestDetails';
 
 const HardwareTestDetails = (): JSX.Element => {
-  const searchParams = useSearch({
-    from: '/hardware/$hardwareId/test/$testId/',
-  });
-  const { testId, hardwareId } = useParams({
-    from: '/hardware/$hardwareId/test/$testId/',
-  });
+  const searchParams = useSearch({ from: '/test/$testId/' });
+  const { testId } = useParams({ from: '/test/$testId/' });
+  const hardwareId = useRouterState({ select: s => s.location.state.id });
 
   return (
     <TestDetails
       testId={testId}
-      context="hardware"
       breadcrumb={
         <Breadcrumb className="pb-6 pt-6">
           <BreadcrumbList>

@@ -7,12 +7,18 @@ import { useMemo } from 'react';
 import { PiComputerTowerThin } from 'react-icons/pi';
 import { MdFolderOpen } from 'react-icons/md';
 
+import { Link, useRouterState, useSearch } from '@tanstack/react-router';
+
+import { FiLink } from 'react-icons/fi';
+
 import { truncateBigText } from '@/lib/string';
 import type { TTestDetails } from '@/types/tree/TestDetails';
 import { Sheet, SheetTrigger } from '@/components/Sheet';
 import { useTestDetails, useTestIssues } from '@/api/testDetails';
 
 import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
+
+import { RedirectFrom } from '@/types/general';
 
 import { Subsection } from '../Section/Section';
 import type { ISubsection } from '../Section/Section';
@@ -22,22 +28,42 @@ import IssueSection from '../Issue/IssueSection';
 const emptyValue = '-';
 const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
 
-const TestDetailsSection = ({
-  test,
-  context,
-}: {
-  test: TTestDetails;
-  context: string;
-}): JSX.Element => {
+const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
   const intl = useIntl();
+  const historyState = useRouterState({ select: s => s.location.state });
+  const searchParams = useSearch({ from: '/test/$testId' });
   const hardware: string =
     test.environment_compatible?.join(' | ') ??
     intl.formatMessage({ id: 'global.unknown' });
 
-  const buildDetailsLink =
-    `${window.location.origin}` +
-    `/${context}/${test.git_commit_hash}/build/${test.build_id}` +
-    `${window.location.search}`;
+  const buildDetailsLink = useMemo(() => {
+    let linkTo = '';
+    let linkParams = {};
+    if (historyState.from === RedirectFrom.Hardware && historyState.id) {
+      linkTo = '/hardware/$hardwareId/build/$buildId';
+      linkParams = { hardwareId: historyState.id, buildId: test.build_id };
+    } else if (historyState.from === RedirectFrom.Tree && historyState.id) {
+      linkTo = '/tree/$treeId/build/$buildId';
+      linkParams = { treeId: historyState.id, buildId: test.build_id };
+    } else {
+      linkTo = '/build/$buildId';
+      linkParams = { buildId: test.build_id };
+    }
+
+    return (
+      <Link
+        to={linkTo}
+        params={linkParams}
+        search={searchParams}
+        className="flex flex-row items-center gap-1"
+        target="_blank"
+        rel="noreferrer"
+      >
+        {truncateBigText(test.build_id)}
+        <FiLink className="text-blue" />
+      </Link>
+    );
+  }, [historyState, test.build_id, searchParams]);
 
   const hasUsefulLogInfo = test.log_url || test.log_excerpt;
 
@@ -84,7 +110,7 @@ const TestDetailsSection = ({
       {
         title: 'testDetails.buildInfo',
         linkText: truncateBigText(test.build_id),
-        link: buildDetailsLink,
+        linkComponent: buildDetailsLink,
       },
       {
         title: 'global.hardware',
@@ -124,15 +150,13 @@ const TestDetailsSection = ({
 };
 
 interface TestsDetailsProps {
-  breadcrumb: JSX.Element;
+  breadcrumb?: JSX.Element;
   testId?: string;
-  context: string;
 }
 
 const TestDetails = ({
   breadcrumb,
   testId,
-  context,
 }: TestsDetailsProps): JSX.Element => {
   const { data, error, isLoading } = useTestDetails(testId ?? '');
   const issuesQueryResult = useTestIssues(testId ?? '');
@@ -161,7 +185,7 @@ const TestDetails = ({
         {breadcrumb}
 
         <h1 className="mb-4 text-2xl font-bold">{data.path}</h1>
-        <TestDetailsSection test={data} context={context} />
+        <TestDetailsSection test={data} />
         <IssueSection {...issuesQueryResult} />
       </div>
       <LogSheet logUrl={data.log_url} logExcerpt={data.log_excerpt} />
