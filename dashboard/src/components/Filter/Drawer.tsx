@@ -124,15 +124,15 @@ export const FilterTypeIcon = ({ type }: FilterTypeIconProps): JSX.Element => {
 
 const Legend = (): JSX.Element => {
   return (
-    <div className="flex items-center gap-1 pb-8 pt-6 font-semibold">
-      <span className="mr-1">
+    <div className="flex items-center gap-1 pt-6">
+      <span className="mr-1 font-semibold">
         <FormattedMessage id="global.legend" />
       </span>
-      <span className="flex items-center gap-1 font-medium">
+      <span className="flex items-center gap-1">
         <FilterTypeIcon type="global" />
         <FormattedMessage id="filter.globalFilter" />
       </span>
-      <span className="flex items-center gap-1 font-medium">
+      <span className="flex items-center gap-1">
         <FilterTypeIcon type="tab" />
         <FormattedMessage id="filter.perTabFilter" />
       </span>
@@ -160,9 +160,9 @@ const Drawer = ({
         <DrawerHeader />
         <section className="max-h-full overflow-y-auto">
           <DrawerLink link={link} />
-          <div className="w-[1000px] rounded-lg bg-white px-6">
-            <div>{children}</div>
+          <div className="w-[1000px] rounded-lg bg-white px-6 pb-5">
             <Legend />
+            <div>{children}</div>
           </div>
         </section>
 
