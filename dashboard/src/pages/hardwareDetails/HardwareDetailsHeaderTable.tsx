@@ -26,6 +26,7 @@ import { sanitizeTableValue } from '@/components/Table/tableUtils';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import { IndeterminateCheckbox } from '@/components/Checkbox/IndeterminateCheckbox';
 import { useDebounce } from '@/hooks/useDebounce';
+import { GroupedTestStatus } from '@/components/Status/Status';
 
 const DEBOUNCE_INTERVAL = 2000;
 
@@ -92,6 +93,60 @@ const columns: ColumnDef<Trees>[] = [
         <TooltipContent>{row.original.headGitCommitHash}</TooltipContent>
       </Tooltip>
     ),
+  },
+  {
+    accessorKey: 'selectedCommitStatusSummaryBuilds',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="globalTable.build" />
+    ),
+    cell: ({ row }): JSX.Element => {
+      const statusSummary = row.original.selectedCommitStatusSummary?.builds;
+      return (
+        <GroupedTestStatus
+          fail={statusSummary?.invalid}
+          pass={statusSummary?.valid}
+          nullStatus={statusSummary?.null}
+        />
+      );
+    },
+  },
+  {
+    accessorKey: 'selectedCommitStatusSummaryBoots',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="globalTable.bootStatus" />
+    ),
+    cell: ({ row }): JSX.Element => {
+      const statusSummary = row.original.selectedCommitStatusSummary?.boots;
+      return (
+        <GroupedTestStatus
+          fail={statusSummary?.FAIL}
+          pass={statusSummary?.PASS}
+          done={statusSummary?.DONE}
+          error={statusSummary?.ERROR}
+          miss={statusSummary?.MISS}
+          skip={statusSummary?.SKIP}
+        />
+      );
+    },
+  },
+  {
+    accessorKey: 'selectedCommitStatusSummaryTests',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="globalTable.test" />
+    ),
+    cell: ({ row }): JSX.Element => {
+      const statusSummary = row.original.selectedCommitStatusSummary?.tests;
+      return (
+        <GroupedTestStatus
+          fail={statusSummary?.FAIL}
+          pass={statusSummary?.PASS}
+          done={statusSummary?.DONE}
+          error={statusSummary?.ERROR}
+          miss={statusSummary?.MISS}
+          skip={statusSummary?.SKIP}
+        />
+      );
+    },
   },
 ];
 

@@ -4,6 +4,7 @@ import type {
   ArchCompilerStatus,
   BuildsTabBuild,
   BuildStatus,
+  StatusCount,
   StatusCounts,
   TestHistory,
   TIssue,
@@ -41,14 +42,22 @@ type Tests = {
   failedWithUnknownIssues: number;
 };
 
+type TTreesStatusSummary = {
+  builds: Partial<BuildStatus>;
+  boots: StatusCount;
+  tests: StatusCount;
+};
+
 export type Trees = {
   treeName?: string;
   gitRepositoryBranch?: string;
   gitRepositoryUrl?: string;
   headGitCommitName?: string;
   headGitCommitHash?: string;
+  selectedCommitStatusSummary?: TTreesStatusSummary;
   index: string;
 };
+
 export type THardwareDetails = {
   builds: BuildsData;
   tests: Tests;

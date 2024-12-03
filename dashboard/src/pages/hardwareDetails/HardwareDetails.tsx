@@ -42,6 +42,7 @@ const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
     headGitCommitHash: tree['headGitCommitHash'] ?? '-',
     gitRepositoryUrl: tree['gitRepositoryUrl'] ?? '-',
     index: tree['index'],
+    selectedCommitStatusSummary: tree['selectedCommitStatusSummary'],
   }));
 
 function HardwareDetails(): JSX.Element {

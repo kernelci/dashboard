@@ -14,7 +14,7 @@ import http from './api';
 type fetchHardwareDetailsBody = {
   limitTimestampInSeconds: number;
   origin: TOrigins;
-  selectedTrees: Record<string, string>;
+  selectedCommits: Record<string, string>;
   filter?: Record<string, string[]>;
 };
 
@@ -87,7 +87,7 @@ export const useHardwareDetails = (
   const body: fetchHardwareDetailsBody = {
     origin,
     limitTimestampInSeconds,
-    selectedTrees,
+    selectedCommits: selectedTrees,
     filter: filtersFormatted,
   };
 
