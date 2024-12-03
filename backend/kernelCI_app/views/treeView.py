@@ -27,35 +27,19 @@ class TreeView(View):
             "interval_param": getQueryTimeInterval(**interval_days_data).timestamp()
         }
 
+        # '1 as id' is necessary in this case because django raw queries must include the primary key.
+        # In this case we don't need the primary key and adding it would alter the GROUP BY clause,
+        # potentially causing the tree listing page show the same tree multiple times
         checkouts = Checkouts.objects.raw(
             """
-            WITH selection AS (
-                SELECT
-                    git_repository_url,
-                    git_repository_branch,
-                    MAX(start_time) AS start_time
-                FROM
-                    (
-                        SELECT
-                            git_repository_url,
-                            git_repository_branch,
-                            origin,
-                            start_time
-                        FROM
-                            checkouts
-                        WHERE
-                            origin = %(origin_param)s AND start_time  >= TO_TIMESTAMP(%(interval_param)s)
-                        ORDER BY
-                            start_time DESC
-                    ) AS selection_sorted
-                GROUP BY
-                    git_repository_url, git_repository_branch
-                ORDER BY
-                    start_time DESC
-            )
-
             SELECT
-                checkouts.*,
+                1 as id,
+                checkouts.tree_name,
+                checkouts.git_repository_branch,
+                checkouts.git_repository_url,
+                checkouts.git_commit_hash,
+                MAX(checkouts.git_commit_name) AS git_commit_name,
+                MAX(checkouts.start_time) AS start_time,
                 COUNT(DISTINCT CASE WHEN builds.valid = true THEN builds.id END) AS valid_builds,
                 COUNT(DISTINCT CASE WHEN builds.valid = false THEN builds.id END) AS invalid_builds,
                 COUNT(DISTINCT CASE WHEN builds.valid IS NULL AND builds.id IS NOT NULL THEN builds.id END)
@@ -89,25 +73,53 @@ class TreeView(View):
                     AND tests.status = 'DONE' THEN 1 END) AS done_boots,
                 COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
                     AND tests.status = 'SKIP' THEN 1 END) AS skip_boots,
-
                 COALESCE(
-                    ARRAY_AGG(DISTINCT tree_name) FILTER (WHERE tree_name IS NOT NULL),
-                    ARRAY[]::text[]
+                    ARRAY_AGG(DISTINCT tree_name) FILTER (
+                        WHERE tree_name IS NOT NULL
+                    ),
+                    ARRAY[]::TEXT[]
                 ) AS tree_names
             FROM
-                selection
-            JOIN checkouts ON
-                checkouts.git_repository_url = selection.git_repository_url AND
-                checkouts.git_repository_branch = selection.git_repository_branch AND
-                checkouts.start_time = selection.start_time
+                checkouts
             LEFT JOIN
                 builds ON builds.checkout_id = checkouts.id
             LEFT JOIN
                 tests ON tests.build_id = builds.id
+            WHERE
+                checkouts.git_commit_hash IN (
+                    SELECT
+                        git_commit_hash
+                    FROM
+                        (
+                            SELECT
+                                git_repository_branch,
+                                git_repository_url,
+                                git_commit_hash,
+                                ROW_NUMBER() OVER (
+                                    PARTITION BY git_repository_url, git_repository_branch
+                                    ORDER BY start_time DESC
+                                ) AS time_order
+                            FROM
+                                checkouts
+                            WHERE
+                                origin = %(origin_param)s
+                                AND start_time >= TO_TIMESTAMP(%(interval_param)s)
+                        ) AS ordered_checkouts_by_tree
+                    WHERE
+                        time_order = 1
+                    ORDER BY
+                        git_repository_branch,
+                        git_repository_url,
+                        time_order
+                )
+                AND checkouts.origin = %(origin_param)s
             GROUP BY
-                checkouts.id
+                checkouts.git_commit_hash,
+                checkouts.git_repository_branch,
+                checkouts.git_repository_url,
+                checkouts.tree_name
             ORDER BY
-                checkouts.start_time DESC;
+                checkouts.git_commit_hash;
             ;
             """, params
         )
