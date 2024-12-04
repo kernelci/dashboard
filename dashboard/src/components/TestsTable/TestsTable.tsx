@@ -1,7 +1,6 @@
 import type {
   ColumnDef,
   ExpandedState,
-  PaginationState,
   SortingState,
 } from '@tanstack/react-table';
 import {
@@ -37,10 +36,15 @@ import { PaginationInfo } from '@/components/Table/PaginationInfo';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
+import { usePaginationState } from '@/hooks/usePaginationState';
+
+import type { TableKeys } from '@/utils/constants/tables';
+
 import { IndividualTestsTable } from './IndividualTestsTable';
 import { defaultColumns, defaultInnerColumns } from './DefaultTestsColumns';
 
 export interface ITestsTable {
+  tableKey: TableKeys;
   testHistory: TestHistory[];
   onClickFilter: (filter: TestsTableFilter) => void;
   filter: TestsTableFilter;
@@ -53,6 +57,7 @@ export interface ITestsTable {
 
 // TODO: would be useful if the navigation happened within the table, so the parent component would only be required to pass the navigation url instead of the whole function for the update and the currentPath diffFilter (boots/tests Table)
 export function TestsTable({
+  tableKey,
   testHistory,
   onClickFilter,
   filter,
@@ -64,10 +69,7 @@ export function TestsTable({
 }: ITestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+  const { pagination, paginationUpdater } = usePaginationState(tableKey);
 
   const intl = useIntl();
 
@@ -181,7 +183,7 @@ export function TestsTable({
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
+    onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getRowCanExpand: _ => true,

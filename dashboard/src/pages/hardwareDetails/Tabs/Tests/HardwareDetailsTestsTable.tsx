@@ -73,6 +73,7 @@ interface IHardwareDetailsTestTable
 }
 
 const HardwareDetailsTestTable = ({
+  tableKey,
   filter,
   onClickFilter,
   testHistory,
@@ -94,6 +95,7 @@ const HardwareDetailsTestTable = ({
 
   return (
     <TestsTable
+      tableKey={tableKey}
       filter={filter}
       onClickFilter={onClickFilter}
       testHistory={testHistory}

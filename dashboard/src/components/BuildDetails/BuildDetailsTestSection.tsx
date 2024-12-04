@@ -47,6 +47,7 @@ const BuildDetailsTestSection = ({
       {hasTest ? (
         <div className="flex flex-col gap-6">
           <TestsTable
+            tableKey="buildDetailsTests"
             testHistory={data}
             onClickFilter={onClickFilter}
             filter={tableFilter.testsTable}

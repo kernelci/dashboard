@@ -150,6 +150,7 @@ export function HardwareDetailsBuildsTable({
 
   return (
     <BuildsTable
+      tableKey="hardwareDetailsBuilds"
       filter={tableFilter.buildsTable}
       buildItems={buildItems}
       columns={columns}

@@ -1,7 +1,6 @@
 import type {
   ColumnDef,
   ColumnFiltersState,
-  PaginationState,
   Row,
   SortingState,
 } from '@tanstack/react-table';
@@ -39,6 +38,8 @@ import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import type { HardwareTableItem } from '@/types/hardware';
 
 import { sumStatus } from '@/utils/status';
+
+import { usePaginationState } from '@/hooks/usePaginationState';
 
 import { InputTime } from './InputTime';
 
@@ -141,10 +142,8 @@ export function HardwareTable({
 }: ITreeTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+  const { pagination, paginationUpdater } =
+    usePaginationState('hardwareListing');
 
   const getLinkProps = useCallback(
     (row: Row<HardwareTableItem>): LinkProps => {
@@ -172,7 +171,7 @@ export function HardwareTable({
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
+    onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     state: {
