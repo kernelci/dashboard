@@ -111,9 +111,45 @@ class FilterParams:
 
     string_like_filters = ["boot.path", "test.path"]
 
-    def __init__(self, request):
+    def __init__(self, data, process_body=False):
         self.filters = []
-        self.create_filters_from_req(request)
+        if process_body:
+            self.create_filters_from_body(data)
+        else:
+            self.create_filters_from_req(data)
+
+    def create_filters_from_body(self, body):
+        filters = body.get("filter", {})
+        for k in filters.keys():
+            if not k.startswith(self.filter_param_prefix):
+                continue
+            # HACK: Flake8 will always bug with (): so we define a variable here
+            filter_param_prefix_length = len(self.filter_param_prefix)
+            filter_term = k[filter_param_prefix_length:]
+
+            # filter as list
+            filter_data = filters.get(k)
+
+            if type(filter_data) is list and len(filter_data) > 0:
+                field = filter_term
+                values = filter_data
+
+                for value in values:
+                    self.add_filter(field, value, "in")
+                continue
+
+            if filter_term in self.string_like_filters:
+                self.add_filter(filter_term, filter_data, "like")
+                continue
+
+            match = self.filter_reg.match(filter_term)
+            if match:
+                field = match.group(1)
+                comparison_op = match.group(2)
+                self.add_filter(field, filter_data, comparison_op)
+                continue
+
+            self.add_filter(filter_term, filter_data, "exact")
 
     def create_filters_from_req(self, request):
         for k in request.GET.keys():
