@@ -1,0 +1,336 @@
+diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+index ccfc829..3300c50 100644
+--- a/backend/kernelCI_app/views/hardwareDetailsView.py
++++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+@@ -18,6 +18,7 @@ from kernelCI_app.utils import (
+ )
+ from kernelCI_app.constants.general import DEFAULT_ORIGIN
+ from django.views.decorators.csrf import csrf_exempt
++from random import randint
+ 
+ DEFAULT_DAYS_INTERVAL = 3
+ SELECTED_HEAD_TREE_VALUE = 'head'
+@@ -328,6 +329,7 @@ class HardwareDetails(View):
+         boots = generate_test_dict()
+ 
+         for r in records:
++            r['duration'] = randint(0, 100000)
+             current_tree = get_current_selected_tree(r, selected_trees)
+ 
+             is_tree_selected = current_tree and is_record_selected(r, current_tree)
+@@ -366,6 +368,7 @@ class HardwareDetails(View):
+                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+ 
+             build = get_build(r, current_tree["index"])
++            build['duration'] = randint(0, 100000)
+ 
+             if self.is_build_filtered_in(build, processed_builds):
+                 processed_builds.add(build_id)
+diff --git a/backend/test.patch b/backend/test.patch
+index 7b8d772..e69de29 100644
+--- a/backend/test.patch
++++ b/backend/test.patch
+@@ -1,303 +0,0 @@
+-diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+-index 54f9908..badcea5 100644
+---- a/backend/kernelCI_app/views/hardwareDetailsView.py
+-+++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+-@@ -19,6 +19,7 @@ from kernelCI_app.utils import (
+- )
+- from kernelCI_app.constants.general import DEFAULT_ORIGIN
+- from django.views.decorators.csrf import csrf_exempt
+-+from random import randint
+- 
+- DEFAULT_DAYS_INTERVAL = 3
+- SELECTED_HEAD_TREE_VALUE = 'head'
+-@@ -396,6 +397,7 @@ class HardwareDetails(View):
+-         boots = generate_test_dict()
+- 
+-         for r in records:
+-+            r['duration'] = randint(0, 100000)
+-             current_tree = get_current_selected_tree(r, selected_trees)
+- 
+-             is_tree_selected = current_tree and is_record_selected(r, current_tree)
+-@@ -434,6 +436,7 @@ class HardwareDetails(View):
+-                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+- 
+-             build = get_build(r, current_tree["index"])
+-+            build['duration'] = randint(0, 100000)
+- 
+-             if self.is_build_filtered_in(build, processed_builds):
+-                 processed_builds.add(build_id)
+-diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+-index ccfc829..25694e5 100644
+---- a/backend/kernelCI_app/views/hardwareDetailsView.py
+-+++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+-@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
+- )
+- from kernelCI_app.constants.general import DEFAULT_ORIGIN
+- from django.views.decorators.csrf import csrf_exempt
+-+from random import randint
+-+
+- 
+- DEFAULT_DAYS_INTERVAL = 3
+- SELECTED_HEAD_TREE_VALUE = 'head'
+-@@ -310,6 +312,7 @@ class HardwareDetails(View):
+-         compilers = set()
+- 
+-         for r in records:
+-+            r['duration'] = randint(0, 100000)
+-             current_tree = get_current_selected_tree(r, selected_trees)
+-             if not current_tree or not is_record_selected(r, current_tree):
+-                 continue
+-@@ -366,6 +369,7 @@ class HardwareDetails(View):
+-                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+- 
+-             build = get_build(r, current_tree["index"])
+-+            build['duration'] = randint(0, 100000)
+- 
+-             if self.is_build_filtered_in(build, processed_builds):
+-                 processed_builds.add(build_id)
+-diff --git a/backend/kernelCI_app/utils.py b/backend/kernelCI_app/utils.py
+-index 325f706..c9a7548 100644
+---- a/backend/kernelCI_app/utils.py
+-+++ b/backend/kernelCI_app/utils.py
+-@@ -153,6 +153,7 @@ class FilterParams:
+-         self.filterBootStatus.add(current_filter["value"])
+- 
+-     def _handle_boot_duration(self, current_filter: Dict):
+-+        print("BOOTS DURATION > > ", current_filter)
+-         value = current_filter["value"]
+-         operation = current_filter["comparison_op"]
+-         if operation == "lte":
+-@@ -164,6 +165,7 @@ class FilterParams:
+-         self.filterTestStatus.add(current_filter["value"])
+- 
+-     def _handle_test_duration(self, current_filter: Dict):
+-+        print("TEST DURATION > > ", current_filter)
+-         value = current_filter["value"]
+-         operation = current_filter["comparison_op"]
+-         if operation == "lte":
+-@@ -194,7 +196,8 @@ class FilterParams:
+-         self.filterBuildValid.add(current_filter["value"] == "Success")
+- 
+-     def _handle_build_duration(self, current_filter: Dict):
+--        value = current_filter["value"][0]
+-+        print("BUILD DURATION > > ", current_filter)
+-+        value = current_filter["value"]
+-         operation = current_filter["comparison_op"]
+-         if operation == "lte":
+-             self.filterBuildDurationMax = toIntOrDefault(value, None)
+-@@ -223,6 +226,14 @@ class FilterParams:
+-             # filter as list
+-             filter_data = filters.get(k)
+- 
+-+            match = self.filter_reg.match(filter_term)
+-+
+-+            if match:
+-+                field = match.group(1)
+-+                comparison_op = match.group(2)
+-+                self.add_filter(field, filter_data[0], comparison_op)
+-+                continue
+-+
+-             if type(filter_data) is list and len(filter_data) > 0:
+-                 field = filter_term
+-                 values = filter_data
+-@@ -235,13 +246,6 @@ class FilterParams:
+-                 self.add_filter(filter_term, filter_data, "like")
+-                 continue
+- 
+--            match = self.filter_reg.match(filter_term)
+--            if match:
+--                field = match.group(1)
+--                comparison_op = match.group(2)
+--                self.add_filter(field, filter_data, comparison_op)
+--                continue
+--
+-             self.add_filter(filter_term, filter_data, "exact")
+- 
+-     def create_filters_from_req(self, request):
+-diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+-index ccfc829..4002898 100644
+---- a/backend/kernelCI_app/views/hardwareDetailsView.py
+-+++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+-@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
+- )
+- from kernelCI_app.constants.general import DEFAULT_ORIGIN
+- from django.views.decorators.csrf import csrf_exempt
+-+from random import randint
+-+
+- 
+- DEFAULT_DAYS_INTERVAL = 3
+- SELECTED_HEAD_TREE_VALUE = 'head'
+-@@ -184,6 +186,7 @@ class HardwareDetails(View):
+-         return is_build_not_processed and is_build_filtered_out
+- 
+-     def __build_filters_pass(self, status: bool, duration: int):
+-+        # print(self.filterBuildDurationMin, self.filterBuildDurationMax)
+-         if len(self.filterValid) > 0 and (status not in self.filterValid):
+-             return False
+-         if (
+-@@ -328,6 +331,7 @@ class HardwareDetails(View):
+-         boots = generate_test_dict()
+- 
+-         for r in records:
+-+            r['duration'] = randint(0, 100000)
+-             current_tree = get_current_selected_tree(r, selected_trees)
+- 
+-             is_tree_selected = current_tree and is_record_selected(r, current_tree)
+-@@ -366,6 +370,7 @@ class HardwareDetails(View):
+-                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+- 
+-             build = get_build(r, current_tree["index"])
+-+            build['duration'] = randint(0, 100000)
+- 
+-             if self.is_build_filtered_in(build, processed_builds):
+-                 processed_builds.add(build_id)
+-@@ -487,6 +492,9 @@ class HardwareDetails(View):
+-             )
+- 
+-             self.filterParams = FilterParams(body, process_body=True)
+-+
+-+            print(self.filterParams.filters)
+-+
+-             self.setup_filters()
+-         except json.JSONDecodeError:
+-             return HttpResponseBadRequest(
+-diff --git a/backend/test.patch b/backend/test.patch
+-index b98e62d..ee5004a 100644
+---- a/backend/test.patch
+-+++ b/backend/test.patch
+-@@ -26,3 +26,134 @@ index 54f9908..badcea5 100644
+-  
+-              if self.is_build_filtered_in(build, processed_builds):
+-                  processed_builds.add(build_id)
+-+diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+-+index ccfc829..25694e5 100644
+-+--- a/backend/kernelCI_app/views/hardwareDetailsView.py
+-++++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+-+@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
+-+ )
+-+ from kernelCI_app.constants.general import DEFAULT_ORIGIN
+-+ from django.views.decorators.csrf import csrf_exempt
+-++from random import randint
+-++
+-+ 
+-+ DEFAULT_DAYS_INTERVAL = 3
+-+ SELECTED_HEAD_TREE_VALUE = 'head'
+-+@@ -310,6 +312,7 @@ class HardwareDetails(View):
+-+         compilers = set()
+-+ 
+-+         for r in records:
+-++            r['duration'] = randint(0, 100000)
+-+             current_tree = get_current_selected_tree(r, selected_trees)
+-+             if not current_tree or not is_record_selected(r, current_tree):
+-+                 continue
+-+@@ -366,6 +369,7 @@ class HardwareDetails(View):
+-+                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+-+ 
+-+             build = get_build(r, current_tree["index"])
+-++            build['duration'] = randint(0, 100000)
+-+ 
+-+             if self.is_build_filtered_in(build, processed_builds):
+-+                 processed_builds.add(build_id)
+-+diff --git a/backend/kernelCI_app/utils.py b/backend/kernelCI_app/utils.py
+-+index 325f706..c9a7548 100644
+-+--- a/backend/kernelCI_app/utils.py
+-++++ b/backend/kernelCI_app/utils.py
+-+@@ -153,6 +153,7 @@ class FilterParams:
+-+         self.filterBootStatus.add(current_filter["value"])
+-+ 
+-+     def _handle_boot_duration(self, current_filter: Dict):
+-++        print("BOOTS DURATION > > ", current_filter)
+-+         value = current_filter["value"]
+-+         operation = current_filter["comparison_op"]
+-+         if operation == "lte":
+-+@@ -164,6 +165,7 @@ class FilterParams:
+-+         self.filterTestStatus.add(current_filter["value"])
+-+ 
+-+     def _handle_test_duration(self, current_filter: Dict):
+-++        print("TEST DURATION > > ", current_filter)
+-+         value = current_filter["value"]
+-+         operation = current_filter["comparison_op"]
+-+         if operation == "lte":
+-+@@ -194,7 +196,8 @@ class FilterParams:
+-+         self.filterBuildValid.add(current_filter["value"] == "Success")
+-+ 
+-+     def _handle_build_duration(self, current_filter: Dict):
+-+-        value = current_filter["value"][0]
+-++        print("BUILD DURATION > > ", current_filter)
+-++        value = current_filter["value"]
+-+         operation = current_filter["comparison_op"]
+-+         if operation == "lte":
+-+             self.filterBuildDurationMax = toIntOrDefault(value, None)
+-+@@ -223,6 +226,14 @@ class FilterParams:
+-+             # filter as list
+-+             filter_data = filters.get(k)
+-+ 
+-++            match = self.filter_reg.match(filter_term)
+-++
+-++            if match:
+-++                field = match.group(1)
+-++                comparison_op = match.group(2)
+-++                self.add_filter(field, filter_data[0], comparison_op)
+-++                continue
+-++
+-+             if type(filter_data) is list and len(filter_data) > 0:
+-+                 field = filter_term
+-+                 values = filter_data
+-+@@ -235,13 +246,6 @@ class FilterParams:
+-+                 self.add_filter(filter_term, filter_data, "like")
+-+                 continue
+-+ 
+-+-            match = self.filter_reg.match(filter_term)
+-+-            if match:
+-+-                field = match.group(1)
+-+-                comparison_op = match.group(2)
+-+-                self.add_filter(field, filter_data, comparison_op)
+-+-                continue
+-+-
+-+             self.add_filter(filter_term, filter_data, "exact")
+-+ 
+-+     def create_filters_from_req(self, request):
+-+diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+-+index ccfc829..4002898 100644
+-+--- a/backend/kernelCI_app/views/hardwareDetailsView.py
+-++++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+-+@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
+-+ )
+-+ from kernelCI_app.constants.general import DEFAULT_ORIGIN
+-+ from django.views.decorators.csrf import csrf_exempt
+-++from random import randint
+-++
+-+ 
+-+ DEFAULT_DAYS_INTERVAL = 3
+-+ SELECTED_HEAD_TREE_VALUE = 'head'
+-+@@ -184,6 +186,7 @@ class HardwareDetails(View):
+-+         return is_build_not_processed and is_build_filtered_out
+-+ 
+-+     def __build_filters_pass(self, status: bool, duration: int):
+-++        # print(self.filterBuildDurationMin, self.filterBuildDurationMax)
+-+         if len(self.filterValid) > 0 and (status not in self.filterValid):
+-+             return False
+-+         if (
+-+@@ -328,6 +331,7 @@ class HardwareDetails(View):
+-+         boots = generate_test_dict()
+-+ 
+-+         for r in records:
+-++            r['duration'] = randint(0, 100000)
+-+             current_tree = get_current_selected_tree(r, selected_trees)
+-+ 
+-+             is_tree_selected = current_tree and is_record_selected(r, current_tree)
+-+@@ -366,6 +370,7 @@ class HardwareDetails(View):
+-+                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+-+ 
+-+             build = get_build(r, current_tree["index"])
+-++            build['duration'] = randint(0, 100000)
+-+ 
+-+             if self.is_build_filtered_in(build, processed_builds):
+-+                 processed_builds.add(build_id)
+-+@@ -487,6 +492,9 @@ class HardwareDetails(View):
+-+             )
+-+ 
+-+             self.filterParams = FilterParams(body, process_body=True)
+-++
+-++           
+-\ No newline at end of file
