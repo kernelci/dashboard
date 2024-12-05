@@ -9,7 +9,10 @@ import FilterDrawer from '@/components/Filter/Drawer';
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 import { Skeleton } from '@/components/Skeleton';
 
-import { MemoizedCheckboxSection } from '@/components/Tabs/Filters';
+import {
+  MemoizedCheckboxSection,
+  MemoizedTimeRangeSection,
+} from '@/components/Tabs/Filters';
 import type { ISectionItem } from '@/components/Filter/CheckboxSection';
 import { isTFilterObjectKeys, type TFilter } from '@/types/general';
 import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
@@ -23,7 +26,7 @@ interface IHardwareDetailsFilter {
 }
 
 export const createFilter = (data: THardwareDetails | undefined): TFilter => {
-  const buildStatus = { Success: false, Failure: false };
+  const buildStatus = { Success: false, Failure: false, Inconclusive: false };
 
   const bootStatus: TFilterValues = {};
   const testStatus: TFilterValues = {};
@@ -175,6 +178,10 @@ const HardwareDetailsFilter = ({
             diffFilter={diffFilter}
             filter={filter}
             isTFilterObjectKeys={isTFilterObjectKeys}
+          />
+          <MemoizedTimeRangeSection
+            diffFilter={diffFilter}
+            setDiffFilter={setDiffFilter}
           />
         </>
       )}
