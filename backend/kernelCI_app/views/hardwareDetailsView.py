@@ -1,3 +1,5 @@
+from typing import Dict, Set, Literal
+from collections import defaultdict
 import json
 from typing import Dict, List, Optional, Set, Literal
 from kernelCI_app.helpers.logger import log_message
@@ -13,6 +15,9 @@ from kernelCI_app.utils import (
     extract_error_message,
     extract_platform,
     getErrorResponseBody,
+    toIntOrDefault,
+    FilterParams,
+    InvalidComparisonOP
 )
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from django.views.decorators.csrf import csrf_exempt
@@ -172,81 +177,221 @@ class HardwareDetails(View):
     cache_key_get_tree_data = "hardwareDetailsTreeData"
     cache_key_get_full_data = "hardwareDetailsFullData"
 
+    def __init__(self):
+        self.filterTestDurationMin, self.filterTestDurationMax = None, None
+        self.filterBootDurationMin, self.filterBootDurationMax = None, None
+        self.filterBuildDurationMin, self.filterBuildDurationMax = None, None
+        self.filterBootStatus = set()
+        self.filterTestStatus = set()
+        self.filterTreeDetailsConfigs = set()
+        self.filterTreeDetailsCompiler = set()
+        self.filterArchitecture = set()
+        self.filterTestPath = ""
+        self.filterBootPath = ""
+        self.filterValid = set()
+        self.filter_handlers = {
+            "boot.status": self.__handle_boot_status,
+            "boot.duration": self.__handle_boot_duration,
+            "test.status": self.__handle_test_status,
+            "test.duration": self.__handle_test_duration,
+            "duration": self.__handle_build_duration,
+            "config_name": self.__handle_config_name,
+            "compiler": self.__handle_compiler,
+            "valid": self.__handle_valid,
+            "architecture": self.__handle_architecture,
+            "test.path": self.__handle_path,
+            "boot.path": self.__handle_path,
+        }
+
+    def __handle_boot_status(self, current_filter):
+        self.filterBootStatus.add(current_filter["value"])
+
+    def __handle_boot_duration(self, current_filter):
+        value = current_filter["value"][0]
+        operation = current_filter["comparison_op"]
+        if operation == "lte":
+            self.filterBootDurationMax = toIntOrDefault(value, None)
+        else:
+            self.filterBootDurationMin = toIntOrDefault(value, None)
+
+    def __handle_test_status(self, current_filter):
+        self.filterTestStatus.add(current_filter["value"])
+
+    def __handle_test_duration(self, current_filter):
+        value = current_filter["value"][0]
+        operation = current_filter["comparison_op"]
+        if operation == "lte":
+            self.filterTestDurationMax = toIntOrDefault(value, None)
+        else:
+            self.filterTestDurationMin = toIntOrDefault(value, None)
+
+    def __handle_build_duration(self, current_filter):
+        value = current_filter["value"][0]
+        operation = current_filter["comparison_op"]
+        if operation == "lte":
+            self.filterBuildDurationMax = toIntOrDefault(value, None)
+        else:
+            self.filterBuildDurationMin = toIntOrDefault(value, None)
+
+    def __handle_config_name(self, current_filter):
+        self.filterTreeDetailsConfigs = self.filterTreeDetailsConfigs.union(current_filter["value"])
+
+    def __handle_compiler(self, current_filter):
+        self.filterTreeDetailsCompiler = self.filterTreeDetailsCompiler.union(current_filter["value"])
+
+    def __handle_architecture(self, current_filter):
+        self.filterArchitecture = self.filterArchitecture.union(current_filter["value"])
+
+    def __handle_path(self, current_filter):
+        if current_filter["field"] == "boot.path":
+            self.filterBootPath = current_filter["value"][0]
+        else:
+            self.filterTestPath = current_filter["value"][0]
+
+    def __handle_valid(self, current_filter):
+        self.filterValid.add(current_filter["value"] == "Success")
+
+    def __processFilters(self, body):
+        try:
+            filter_params = FilterParams(body, process_body=True)
+
+            for current_filter in filter_params.filters:
+                field = current_filter["field"]
+                # Delegate to the appropriate handler based on the field
+                if field in self.filter_handlers:
+                    self.filter_handlers[field](current_filter)
+        except InvalidComparisonOP as e:
+            return HttpResponseBadRequest(getErrorResponseBody(str(e)))
+
     def is_build_filtered_in(
         self,
         build: Dict,
-        filters_map: Dict[str, List[Dict]],
         processed_builds: Set[str],
     ) -> bool:
         is_build_not_processed = not build["id"] in processed_builds
-        is_build_filtered_out = len(filters_map["build"]) == 0 or self.pass_test_filters(
-            build, filters_map["build"]
-        )
+        is_build_filtered_out = self.__build_filters_pass(build['valid'], build['duration'])
         return is_build_not_processed and is_build_filtered_out
 
-    def get_filters(self, filters):
-        filters_map = {
-            "build": [],
-            "boot": [],
-            "test": [],
-            "global": [],
-        }
-
-        for key, value in filters.items():
-            key = key.replace("filter_", "")
-
-            table = "global"
-            if "." in key:
-                table, field = key.split(".")
-            else:
-                field = key
-
-            if field == "valid":
-                table = "build"
-                value = [x == "Success" for x in value]
-            filters_map[table].append({"field": field, "value": value})
-
-        return filters_map
-
-    def pass_build_filter(self, data, filters):
-        for currentFilter in filters:
-            field = currentFilter.get("field")
-            value = currentFilter.get("value")
-            include_null = any(null_string in value for null_string in NULL_STRINGS)
-            build_field = f"build__{field}"
-
-            if include_null and data[build_field] is None:
-                return True
-
-            if (data[build_field] not in value):
-                return False
+    def __build_filters_pass(self, status: bool, duration: int):
+        if len(self.filterValid) > 0 and (str(status).lower() not in self.filterValid):
+            return False
+        if (
+            self.filterBuildDurationMax is not None or self.filterBuildDurationMin is not None
+        ) and duration is None:
+            return False
+        if self.filterBuildDurationMax is not None and (
+            toIntOrDefault(duration, 0) > self.filterBuildDurationMax
+        ):
+            return False
+        if self.filterBuildDurationMin is not None and (
+            toIntOrDefault(duration, 0) < self.filterBuildDurationMin
+        ):
+            return False
 
         return True
 
-    def pass_test_filters(self, data, filters):
-        for currentFilter in filters:
-            field = currentFilter.get("field")
-            value = currentFilter.get("value")
-
-            if field == "path":
-                return value[0] in data[field]
-
-            if (data[field] not in value):
-                return False
+    def __boots_filters_pass(self, status, duration):
+        if len(self.filterBootStatus) > 0 and (status not in self.filterBootStatus):
+            return False
+        if (
+            self.filterBootDurationMax is not None or self.filterBootDurationMin is not None
+        ) and duration is None:
+            return False
+        if self.filterBootDurationMax is not None and (
+            toIntOrDefault(duration, 0) > self.filterBootDurationMax
+        ):
+            return False
+        if self.filterBootDurationMin is not None and (
+            toIntOrDefault(duration, 0) < self.filterBootDurationMin
+        ):
+            return False
 
         return True
 
-    def should_jump_test(
+    def __non_boots_filters_pass(self, status, duration):
+        if len(self.filterTestStatus) > 0 and (status not in self.filterTestStatus):
+            return False
+        if (
+            self.filterTestDurationMax is not None or self.filterTestDurationMin is not None
+        ) and duration is None:
+            return False
+        if self.filterTestDurationMax is not None and (
+            toIntOrDefault(duration, 0) > self.filterTestDurationMax
+        ):
+            return False
+        if self.filterTestDurationMin is not None and (
+            toIntOrDefault(duration, 0) < self.filterTestDurationMin
+        ):
+            return False
+
+        return True
+
+    def record_in_filter(
+        self,
+        record: Dict,
+    ) -> bool:
+        record_arch_null_accept = (
+            not record['build__architecture']
+            and any(null_string in self.filterArchitecture for null_string in NULL_STRINGS)
+        )
+        record_compiler_null_accept = (
+            not record['build__compiler']
+            and any(null_string in self.filterTreeDetailsCompiler for null_string in NULL_STRINGS)
+        )
+        record_config_null_accept = (
+            not record['build__config_name']
+            and any(null_string in self.filterTreeDetailsConfigs for null_string in NULL_STRINGS)
+        )
+
+        if (
+            (
+                record['path'].startswith("boot")
+                and self.filterBootPath != ""
+                and (self.filterBootPath not in record['path'])
+            )
+            or (
+                not record['path'].startswith("boot")
+                and self.filterTestPath != ""
+                and (self.filterTestPath not in record['path'])
+            )
+            or (
+                len(self.filterArchitecture) > 0
+                and (
+                    record['build__architecture'] not in self.filterArchitecture
+                    and not record_arch_null_accept
+                )
+            )
+            or (
+                len(self.filterTreeDetailsCompiler) > 0
+                and (
+                    record['build__compiler'] not in self.filterTreeDetailsCompiler
+                    and not record_compiler_null_accept
+                )
+            )
+            or (
+                len(self.filterTreeDetailsConfigs) > 0
+                and (
+                    record['build__config_name'] not in self.filterTreeDetailsConfigs
+                    and not record_config_null_accept
+                )
+            )
+        ):
+            return False
+
+        return True
+
+    def test_in_filter(
         self,
         table_test: Literal["boot", "test"],
-        record: Dict,
-        filters_map: Dict[str, List[Dict]],
+        record: Dict
     ) -> bool:
-        test_filter_is_empty = (
-            len(filters_map["build"]) == 0 and len(filters_map[table_test]) == 0
-        )
-        test_pass_in_filters = self.pass_test_filters(record, filters_map[table_test])
-        return not test_filter_is_empty and (not test_pass_in_filters)
+        test_filter_pass = True
+        if table_test == "boot":
+            test_filter_pass = self.__boots_filters_pass(record['status'], record['duration'])
+        else:
+            test_filter_pass = self.__non_boots_filters_pass(record['status'], record['duration'])
+
+        return test_filter_pass
 
     def handle_test(self, record, tests):
         status = record["status"]
