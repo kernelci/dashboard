@@ -223,6 +223,30 @@ class HardwareDetails(View):
 
         return True
 
+    def get_recent_checkouts(self, commit_hashes):
+        max_start_times = Checkouts.objects.filter(
+            git_commit_hash=OuterRef('git_commit_hash')
+        ).values(
+            'git_commit_hash'
+        ).annotate(
+            max_start_time=Max('start_time')
+        ).values('max_start_time')
+
+        # Main query to get the most recent 5 Checkouts for each commit hash
+        recent_checkouts = Checkouts.objects.filter(
+            git_commit_hash__in=commit_hashes,
+            start_time__lte=Subquery(max_start_times)
+        ).order_by(
+            'git_commit_hash', '-start_time'
+        )[:5]
+
+     def recent_checkouts = Checkouts.objects.filter(
+        git_commit_hash__in=commit_hashes,
+        start_time__lte=Subquery(max_start_times.values('max_start_time'))
+    ).order_by(
+        'git_commit_hash', '-start_time'
+    )[:5]
+
     def pass_test_filters(self, data, filters):
         for currentFilter in filters:
             field = currentFilter.get("field")
