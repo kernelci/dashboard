@@ -1,4 +1,4 @@
-from typing import Dict, Set, Literal
+from typing import Dict, Set, Literal, List
 from collections import defaultdict
 import json
 from typing import Dict, List, Optional, Set, Literal
@@ -17,7 +17,7 @@ from kernelCI_app.utils import (
     getErrorResponseBody,
     toIntOrDefault,
     FilterParams,
-    InvalidComparisonOP
+    NULL_STRINGS
 )
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from django.views.decorators.csrf import csrf_exempt
@@ -26,10 +26,9 @@ from collections import defaultdict
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_HEAD_TREE_VALUE = 'head'
 STATUS_FAILED_VALUE = "FAIL"
-NULL_STRINGS = ["null", "Unknown"]
 
 
-def properties2List(d, keys):
+def properties2List(d: Dict, keys: str):
     for k in keys:
         v = d[k]
         if type(v) is dict:
@@ -38,7 +37,7 @@ def properties2List(d, keys):
             d[k] = list(v)
 
 
-def get_arch_summary(record):
+def get_arch_summary(record: Dict):
     return {
         "arch": record["build__architecture"],
         "compiler": record["build__compiler"],
@@ -46,7 +45,7 @@ def get_arch_summary(record):
     }
 
 
-def get_build(record, tree_idx):
+def get_build(record: Dict, tree_idx: int):
     return {
         "id": record["build_id"],
         "architecture": record["build__architecture"],
@@ -65,13 +64,13 @@ def get_build(record, tree_idx):
     }
 
 
-def get_tree_key(record):
+def get_tree_key(record: Dict):
     return record["build__checkout__tree_name"] + \
         record["build__checkout__git_repository_branch"] + \
         record["build__checkout__git_repository_url"]
 
 
-def get_tree(record):
+def get_tree(record: Dict):
     return {
         "tree_name": record["build__checkout__tree_name"],
         "git_repository_branch": record["build__checkout__git_repository_branch"],
@@ -81,7 +80,7 @@ def get_tree(record):
     }
 
 
-def get_history(record):
+def get_history(record: Dict):
     return {
         "id": record["id"],
         "status": record["status"],
@@ -107,7 +106,7 @@ def get_record_tree(record: Dict, selected_trees: List) -> Optional[Dict]:
     return None
 
 
-def get_details_issue(record):
+def get_details_issue(record: Dict):
     return create_issue(
         issue_id=record["build__incidents__issue__id"],
         issue_comment=record["build__incidents__issue__comment"],
@@ -178,90 +177,23 @@ class HardwareDetails(View):
     cache_key_get_full_data = "hardwareDetailsFullData"
 
     def __init__(self):
-        self.filterTestDurationMin, self.filterTestDurationMax = None, None
-        self.filterBootDurationMin, self.filterBootDurationMax = None, None
-        self.filterBuildDurationMin, self.filterBuildDurationMax = None, None
-        self.filterBootStatus = set()
-        self.filterTestStatus = set()
-        self.filterTreeDetailsConfigs = set()
-        self.filterTreeDetailsCompiler = set()
-        self.filterArchitecture = set()
-        self.filterTestPath = ""
-        self.filterBootPath = ""
-        self.filterValid = set()
-        self.filter_handlers = {
-            "boot.status": self.__handle_boot_status,
-            "boot.duration": self.__handle_boot_duration,
-            "test.status": self.__handle_test_status,
-            "test.duration": self.__handle_test_duration,
-            "duration": self.__handle_build_duration,
-            "config_name": self.__handle_config_name,
-            "compiler": self.__handle_compiler,
-            "valid": self.__handle_valid,
-            "architecture": self.__handle_architecture,
-            "test.path": self.__handle_path,
-            "boot.path": self.__handle_path,
-        }
+        self.filterParams = None
 
-    def __handle_boot_status(self, current_filter):
-        self.filterBootStatus.add(current_filter["value"])
-
-    def __handle_boot_duration(self, current_filter):
-        value = current_filter["value"][0]
-        operation = current_filter["comparison_op"]
-        if operation == "lte":
-            self.filterBootDurationMax = toIntOrDefault(value, None)
-        else:
-            self.filterBootDurationMin = toIntOrDefault(value, None)
-
-    def __handle_test_status(self, current_filter):
-        self.filterTestStatus.add(current_filter["value"])
-
-    def __handle_test_duration(self, current_filter):
-        value = current_filter["value"][0]
-        operation = current_filter["comparison_op"]
-        if operation == "lte":
-            self.filterTestDurationMax = toIntOrDefault(value, None)
-        else:
-            self.filterTestDurationMin = toIntOrDefault(value, None)
-
-    def __handle_build_duration(self, current_filter):
-        value = current_filter["value"][0]
-        operation = current_filter["comparison_op"]
-        if operation == "lte":
-            self.filterBuildDurationMax = toIntOrDefault(value, None)
-        else:
-            self.filterBuildDurationMin = toIntOrDefault(value, None)
-
-    def __handle_config_name(self, current_filter):
-        self.filterTreeDetailsConfigs = self.filterTreeDetailsConfigs.union(current_filter["value"])
-
-    def __handle_compiler(self, current_filter):
-        self.filterTreeDetailsCompiler = self.filterTreeDetailsCompiler.union(current_filter["value"])
-
-    def __handle_architecture(self, current_filter):
-        self.filterArchitecture = self.filterArchitecture.union(current_filter["value"])
-
-    def __handle_path(self, current_filter):
-        if current_filter["field"] == "boot.path":
-            self.filterBootPath = current_filter["value"][0]
-        else:
-            self.filterTestPath = current_filter["value"][0]
-
-    def __handle_valid(self, current_filter):
-        self.filterValid.add(current_filter["value"] == "Success")
-
-    def __processFilters(self, body):
-        try:
-            filter_params = FilterParams(body, process_body=True)
-
-            for current_filter in filter_params.filters:
-                field = current_filter["field"]
-                # Delegate to the appropriate handler based on the field
-                if field in self.filter_handlers:
-                    self.filter_handlers[field](current_filter)
-        except InvalidComparisonOP as e:
-            return HttpResponseBadRequest(getErrorResponseBody(str(e)))
+    def setup_filters(self):
+        self.filterTestDurationMin = self.filterParams.filterTestDurationMin
+        self.filterTestDurationMax = self.filterParams.filterTestDurationMax
+        self.filterBootDurationMin = self.filterParams.filterBootDurationMin
+        self.filterBootDurationMax = self.filterParams.filterBootDurationMax
+        self.filterBuildDurationMin = self.filterParams.filterBuildDurationMin
+        self.filterBuildDurationMax = self.filterParams.filterBuildDurationMax
+        self.filterBootStatus = self.filterParams.filterBootStatus
+        self.filterTestStatus = self.filterParams.filterTestStatus
+        self.filterTreeDetailsConfigs = self.filterParams.filterConfigs
+        self.filterTreeDetailsCompiler = self.filterParams.filterCompiler
+        self.filterArchitecture = self.filterParams.filterArchitecture
+        self.filterTestPath = self.filterParams.filterTestPath
+        self.filterBootPath = self.filterParams.filterBootPath
+        self.filterValid = self.filterParams.filterBuildValid
 
     def is_build_filtered_in(
         self,
@@ -290,7 +222,7 @@ class HardwareDetails(View):
 
         return True
 
-    def __boots_filters_pass(self, status, duration):
+    def __boots_filters_pass(self, status: str, duration: int):
         if len(self.filterBootStatus) > 0 and (status not in self.filterBootStatus):
             return False
         if (
@@ -308,7 +240,7 @@ class HardwareDetails(View):
 
         return True
 
-    def __non_boots_filters_pass(self, status, duration):
+    def __non_boots_filters_pass(self, status: str, duration: int):
         if len(self.filterTestStatus) > 0 and (status not in self.filterTestStatus):
             return False
         if (
@@ -501,7 +433,7 @@ class HardwareDetails(View):
 
         return (builds, tests, boots, tree_status_summary)
 
-    def get_trees(self, hardware_id, origin, limit_datetime):
+    def get_trees(self, hardware_id: str, origin: str, limit_datetime: int):
         tree_id_fields = [
             "build__checkout__tree_name",
             "build__checkout__git_repository_branch",
@@ -614,8 +546,10 @@ class HardwareDetails(View):
                 int(body.get('limitTimestampInSeconds')),
                 timezone.utc
             )
-            filters_params = body.get("filter", {})
+
             selected_commits = body.get("selectedCommits", {})
+            self.filterParams = FilterParams(body, process_body=True)
+            self.setup_filters()
 
             is_all_selected = len(selected_commits) == 0
         except json.JSONDecodeError:
@@ -658,8 +592,6 @@ class HardwareDetails(View):
         if not records:
             records = self.get_full_tests(**params)
             setQueryCache(self.cache_key_get_full_data, params, records)
-
-        filters_map = self.get_filters(filters_params)
 
         builds, tests, boots, tree_status_summary = self.sanitize_records(
             records,
