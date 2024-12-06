@@ -195,6 +195,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
       </MobileGrid>
 
       <TestsTable
+        tableKey="treeDetailsTests"
         testHistory={data.testHistory}
         onClickFilter={onClickFilter}
         filter={tableFilter.testsTable}

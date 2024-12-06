@@ -141,6 +141,7 @@ export function TreeDetailsBuildsTable({
 
   return (
     <BuildsTable
+      tableKey="treeDetailsBuilds"
       onClickShowBuild={navigateToBuildDetails}
       filter={tableFilter.buildsTable}
       buildItems={buildItems}

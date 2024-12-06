@@ -191,6 +191,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
         </InnerMobileGrid>
       </MobileGrid>
       <BootsTable
+        tableKey="treeDetailsBoots"
         filter={tableFilter.bootsTable}
         onClickFilter={onClickFilter}
         testHistory={data.bootHistory}

@@ -124,6 +124,7 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
         </InnerMobileGrid>
       </MobileGrid>
       <HardwareDetailsTestTable
+        tableKey="hardwareDetailsTests"
         testHistory={tests.history}
         filter={tableFilter.testsTable}
         hardwareId={hardwareId}

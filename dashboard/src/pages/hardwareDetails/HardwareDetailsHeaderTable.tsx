@@ -1,6 +1,5 @@
 import type {
   ColumnDef,
-  PaginationState,
   RowSelectionState,
   SortingState,
 } from '@tanstack/react-table';
@@ -27,6 +26,8 @@ import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import { IndeterminateCheckbox } from '@/components/Checkbox/IndeterminateCheckbox';
 import { useDebounce } from '@/hooks/useDebounce';
 import { GroupedTestStatus } from '@/components/Status/Status';
+
+import { usePaginationState } from '@/hooks/usePaginationState';
 
 const DEBOUNCE_INTERVAL = 2000;
 
@@ -186,10 +187,9 @@ export function HardwareHeader({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'treeName', desc: false },
   ]);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 5,
-  });
+  const { pagination, paginationUpdater } = usePaginationState(
+    'hardwareDetailsTrees',
+  );
 
   const [rowSelection, setRowSelection] = useState(() =>
     getInitialRowSelection(selectedIndexes, treeItems.length),
@@ -212,7 +212,7 @@ export function HardwareHeader({
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
+    onPaginationChange: paginationUpdater,
     getFilteredRowModel: getFilteredRowModel(),
     getRowId: originalRow => originalRow.index,
     enableRowSelection: true,

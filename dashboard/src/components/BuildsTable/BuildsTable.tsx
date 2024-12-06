@@ -3,7 +3,6 @@ import type {
   ColumnDef,
   ExpandedState,
   Header,
-  PaginationState,
   Row,
   SortingState,
 } from '@tanstack/react-table';
@@ -45,7 +44,12 @@ import { useBuildStatusCount } from '@/api/treeDetails';
 import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
 import { cn } from '@/lib/utils';
 
+import { usePaginationState } from '@/hooks/usePaginationState';
+
+import type { TableKeys } from '@/utils/constants/tables';
+
 export interface IBuildsTable {
+  tableKey: TableKeys;
   buildItems: AccordionItemBuilds[];
   columns: ColumnDef<AccordionItemBuilds>[];
   onClickShowBuild: IAccordionItems['onClickShowBuild'];
@@ -162,6 +166,7 @@ const AccordionBuildContentMemoized = memo(AccordionBuildContentComponent);
 const TableRowMemoized = memo(TableRowComponent);
 
 export function BuildsTable({
+  tableKey,
   buildItems,
   columns,
   onClickShowBuild,
@@ -170,10 +175,7 @@ export function BuildsTable({
 }: IBuildsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+  const { pagination, paginationUpdater } = usePaginationState(tableKey);
 
   const intl = useIntl();
 
@@ -203,7 +205,7 @@ export function BuildsTable({
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
+    onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getRowCanExpand: _ => true,

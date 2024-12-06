@@ -1,7 +1,6 @@
 import type {
   ColumnDef,
   ColumnFiltersState,
-  PaginationState,
   Row,
   SortingState,
 } from '@tanstack/react-table';
@@ -34,16 +33,23 @@ import {
   zPossibleTabValidator,
 } from '@/types/tree/TreeDetails';
 
-import BaseTable, { TableHead } from '../Table/BaseTable';
-import { TableBody, TableCell, TableCellWithLink, TableRow } from '../ui/table';
+import { usePaginationState } from '@/hooks/usePaginationState';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '../Tooltip';
+import BaseTable, { TableHead } from '@/components/Table/BaseTable';
+import {
+  TableBody,
+  TableCell,
+  TableCellWithLink,
+  TableRow,
+} from '@/components/ui/table';
 
-import { sanitizeTableValue } from '../Table/tableUtils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
-import { BuildStatus, GroupedTestStatus } from '../Status/Status';
-import { TableHeader } from '../Table/TableHeader';
-import { PaginationInfo } from '../Table/PaginationInfo';
+import { sanitizeTableValue } from '@/components/Table/tableUtils';
+
+import { BuildStatus, GroupedTestStatus } from '@/components/Status/Status';
+import { TableHeader } from '@/components/Table/TableHeader';
+import { PaginationInfo } from '@/components/Table/PaginationInfo';
 
 import { InputTime } from './InputTime';
 
@@ -187,10 +193,7 @@ interface ITreeTable {
 export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+  const { pagination, paginationUpdater } = usePaginationState('treeListing');
 
   const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
@@ -231,7 +234,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
+    onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     state: {

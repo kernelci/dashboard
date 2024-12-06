@@ -139,6 +139,7 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
         </InnerMobileGrid>
       </MobileGrid>
       <BootsTable
+        tableKey="hardwareDetailsBoots"
         getRowLink={getRowLink}
         filter={tableFilter.bootsTable}
         testHistory={boots.history}
