@@ -171,6 +171,8 @@ export const messages = {
     'hardware.details': 'Hardware Details',
     'hardware.path': 'Hardware',
     'hardware.searchPlaceholder': 'Search by hardware name',
+    'hardwareDetails.timeFrame':
+      'Results from {startDate} and {startTime} to {endDate} {endTime}',
     'hardwareDetails.treeBranch': 'Tree / Branch',
     'issue.noIssueFound': 'No issue found.',
     'logSheet.fileName': 'File Name',

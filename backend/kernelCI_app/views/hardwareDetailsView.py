@@ -1,4 +1,5 @@
 from collections import defaultdict
+from django.db.models import Subquery
 import json
 from typing import Dict, List, Optional, Set, Literal
 from kernelCI_app.helpers.filters import (
@@ -26,19 +27,22 @@ from kernelCI_app.utils import (
 )
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from django.views.decorators.csrf import csrf_exempt
+from kernelCI_app.helpers.trees import get_tree_heads
 
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_HEAD_TREE_VALUE = 'head'
 STATUS_FAILED_VALUE = "FAIL"
 
+BuildStatusType = Literal["valid", "invalid", "null"]
 
-def properties2List(d: Dict, keys: str):
-    for k in keys:
-        v = d[k]
-        if type(v) is dict:
-            d[k] = list(v.values())
-        elif type(v) is set:
-            d[k] = list(v)
+
+def mutate_properties_to_list(dict: Dict, keys: List[str]) -> None:
+    for key in keys:
+        value = dict[key]
+        if isinstance(value, Dict):
+            dict[key] = list(value.values())
+        elif isinstance(value, Set):
+            dict[key] = list(value)
 
 
 def get_arch_summary(record: Dict):
@@ -171,7 +175,7 @@ def generate_tree_status_summary_dict():
     }
 
 
-def get_build_status(is_build_valid):
+def get_build_status(is_build_valid) -> BuildStatusType:
     if is_build_valid is True:
         return "valid"
     elif is_build_valid is False:
@@ -517,9 +521,9 @@ class HardwareDetails(View):
                 )
 
         builds["summary"] = create_details_build_summary(builds["items"])
-        properties2List(builds, ["issues"])
-        properties2List(tests, ["issues", "platformsFailing", "archSummary"])
-        properties2List(boots, ["issues", "platformsFailing", "archSummary"])
+        mutate_properties_to_list(builds, ["issues"])
+        mutate_properties_to_list(tests, ["issues", "platformsFailing", "archSummary"])
+        mutate_properties_to_list(boots, ["issues", "platformsFailing", "archSummary"])
 
         return (builds, tests, boots, tree_status_summary)
 
@@ -535,7 +539,13 @@ class HardwareDetails(View):
         if (record["incidents__issue__id"] is None and record["status"] == STATUS_FAILED_VALUE):
             record["incidents__issue__id"] = UNKNOWN_STRING
 
-    def get_trees(self, hardware_id: str, origin: str, limit_datetime: int):
+    def get_trees(self, hardware_id: str, origin: str, start_date: datetime, end_date: datetime):
+        # We need a subquery because if we filter by any hardware, it will get the
+        # last head that has that hardware, but not the real head of the trees
+        trees_subquery = get_tree_heads(
+            origin, start_date, end_date
+        )
+
         tree_id_fields = [
             "build__checkout__tree_name",
             "build__checkout__git_repository_branch",
@@ -545,28 +555,36 @@ class HardwareDetails(View):
         trees_query_set = Tests.objects.filter(
             environment_compatible__contains=[hardware_id],
             origin=origin,
-            build__checkout__start_time__lte=limit_datetime,
+            build__checkout__start_time__lte=end_date,
+            build__checkout__start_time__gte=start_date,
+            build__checkout__git_commit_hash__in=Subquery(trees_subquery),
         ).values(
             *tree_id_fields,
             "build__checkout__git_commit_name",
             "build__checkout__git_commit_hash",
         ).distinct(
             *tree_id_fields,
+            "build__checkout__git_commit_hash",
         ).order_by(
             *tree_id_fields,
+            "build__checkout__git_commit_hash",
             "-build__checkout__start_time"
         )
 
         trees = []
         for idx, tree in enumerate(trees_query_set):
-            trees.append({
-                "treeName": tree["build__checkout__tree_name"],
-                "gitRepositoryBranch": tree["build__checkout__git_repository_branch"],
-                "gitRepositoryUrl": tree["build__checkout__git_repository_url"],
-                "headGitCommitName": tree["build__checkout__git_commit_name"],
-                "headGitCommitHash": tree["build__checkout__git_commit_hash"],
-                "index": str(idx),
-            })
+            trees.append(
+                {
+                    "treeName": tree["build__checkout__tree_name"],
+                    "gitRepositoryBranch": tree[
+                        "build__checkout__git_repository_branch"
+                    ],
+                    "gitRepositoryUrl": tree["build__checkout__git_repository_url"],
+                    "headGitCommitName": tree["build__checkout__git_commit_name"],
+                    "headGitCommitHash": tree["build__checkout__git_commit_hash"],
+                    "index": str(idx),
+                }
+            )
 
         return trees
 
@@ -598,7 +616,7 @@ class HardwareDetails(View):
 
         return selected
 
-    def get_full_tests(self, *, hardware_id, origin, trees):
+    def get_full_tests(self, *, hardware_id, origin, trees, start_date=int, end_date=int):
         commit_hashes = [tree["git_commit_hash"] for tree in trees]
 
         records = Tests.objects.values(
@@ -634,7 +652,9 @@ class HardwareDetails(View):
             "incidents__test_id",
             "build__incidents__issue__id"
         ).filter(
-            origin=origin,
+            start_time__gte=start_date,
+            start_time__lte=end_date,
+            build__checkout__origin=origin,
             environment_compatible__contains=[hardware_id],
             # TODO Treat commit_hash collision (it can happen between repos)
             build__checkout__git_commit_hash__in=commit_hashes,
@@ -647,8 +667,13 @@ class HardwareDetails(View):
             body = json.loads(request.body)
 
             origin = body.get("origin", DEFAULT_ORIGIN)
-            limit_datetime = datetime.fromtimestamp(
-                int(body.get('limitTimestampInSeconds')),
+            end_datetime = datetime.fromtimestamp(
+                int(body.get('endTimestampInSeconds')),
+                timezone.utc
+            )
+
+            start_datetime = datetime.fromtimestamp(
+                int(body.get('startTimestampInSeconds')),
                 timezone.utc
             )
 
@@ -672,13 +697,14 @@ class HardwareDetails(View):
             "hardware_id": hardware_id,
             "origin": origin,
             "selected_commits": json.dumps(selected_commits),
-            "limit_datetime": limit_datetime
+            "start_datetime": start_datetime,
+            "end_datetime": end_datetime,
         }
 
         trees = getQueryCache(self.cache_key_get_tree_data, cache_params)
 
         if not trees:
-            trees = self.get_trees(hardware_id, origin, limit_datetime)
+            trees = self.get_trees(hardware_id, origin, start_datetime, end_datetime)
             setQueryCache(self.cache_key_get_tree_data, cache_params, trees)
 
         trees_with_selected_commits = self.get_trees_with_selected_commit(
@@ -689,7 +715,9 @@ class HardwareDetails(View):
         params = {
             "hardware_id": hardware_id,
             "origin": origin,
-            "trees": trees_with_selected_commits
+            "trees": trees_with_selected_commits,
+            "start_date": start_datetime,
+            "end_date": end_datetime
         }
 
         records = getQueryCache(self.cache_key_get_full_data, cache_params)
