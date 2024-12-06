@@ -106,7 +106,8 @@ const HardwareListingPage = ({
       <div className="flex flex-col gap-6">
         <HardwareTable
           treeTableRows={listItems}
-          limitTimestampInSeconds={endTimestampInSeconds}
+          endTimestampInSeconds={endTimestampInSeconds}
+          startTimestampInSeconds={startTimestampInSeconds}
         />
       </div>
     </QuerySwitcher>
