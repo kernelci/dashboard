@@ -208,7 +208,7 @@ class TreeCommitsHistory(APIView):
                 start_time DESC
         ),
         earliest_commits AS (
-            SELECT
+            SELECT DISTINCT ON (git_commit_hash)
                 git_commit_hash,
                 git_commit_name,
                 MAX(start_time) AS earliest_start_time
@@ -218,8 +218,7 @@ class TreeCommitsHistory(APIView):
                 git_commit_hash,
                 git_commit_name
             ORDER BY
-                earliest_start_time DESC
-            LIMIT 6
+                git_commit_hash
         ),
         build_counts AS (
             SELECT
