@@ -1,4 +1,3 @@
-from typing import Dict, Set, Literal, List
 from collections import defaultdict
 import json
 from typing import Dict, List, Optional, Set, Literal
@@ -21,7 +20,6 @@ from kernelCI_app.utils import (
 )
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from django.views.decorators.csrf import csrf_exempt
-from collections import defaultdict
 
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_HEAD_TREE_VALUE = 'head'
@@ -379,7 +377,7 @@ class HardwareDetails(View):
             build_status = get_build_status(record["build__valid"])
             tree_status_summary[tree_index]["builds"][build_status] += 1
 
-    def sanitize_records(self, records, trees: List, filters_map: Dict, is_all_selected: bool):
+    def sanitize_records(self, records, trees: List, is_all_selected: bool):
         processed_builds = set()
         tests = generate_test_dict()
         boots = generate_test_dict()
@@ -410,21 +408,22 @@ class HardwareDetails(View):
                 is_record_boot,
             )
 
-            should_process_test = not self.should_jump_test(test_filter_key, record, filters_map)
+            should_process_test = self.test_in_filter(test_filter_key, record)
 
-            pass_in_global_filters = self.pass_build_filter(record, filters_map['global'])
+            pass_in_global_filters = self.record_in_filter(record)
             if not record_tree_selected or not pass_in_global_filters:
+                processed_builds.add(build_id)
                 continue
 
             if should_process_test:
                 self.handle_test(record, boots if is_record_boot else tests)
 
-            should_process_build = self.is_build_filtered_in(build, filters_map, processed_builds)
+            should_process_build = self.is_build_filtered_in(build, processed_builds)
 
+            processed_builds.add(build_id)
             if should_process_build:
                 builds["items"].append(build)
                 update_issues(record, builds, record["build__valid"] is False)
-                processed_builds.add(build_id)
 
         builds["summary"] = create_details_build_summary(builds["items"])
         properties2List(builds, ["issues"])
@@ -596,7 +595,6 @@ class HardwareDetails(View):
         builds, tests, boots, tree_status_summary = self.sanitize_records(
             records,
             trees_with_selected_commits,
-            filters_map,
             is_all_selected
         )
 
