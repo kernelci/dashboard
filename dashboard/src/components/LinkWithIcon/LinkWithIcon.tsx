@@ -24,9 +24,11 @@ const LinkWithIcon = ({
   const WrapperLink = link ? 'a' : 'div';
   return (
     <div className="flex flex-col items-start gap-2 text-sm">
-      <span className="font-bold">
-        <FormattedMessage id={title} />
-      </span>
+      {title && (
+        <span className="font-bold">
+          <FormattedMessage id={title} />
+        </span>
+      )}
       {linkComponent ?? (
         <WrapperLink
           className="flex flex-row items-center gap-1"

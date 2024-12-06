@@ -126,6 +126,11 @@ class FilterParams:
         self.filterTestPath = ""
         self.filterBootPath = ""
         self.filterBuildValid = set()
+        self.filterIssues = {
+            "build": set(),
+            "boot": set(),
+            "test": set()
+        }
 
         self.filter_handlers = {
             "boot.status": self._handle_boot_status,
@@ -140,6 +145,9 @@ class FilterParams:
             "test.hardware": self._handle_hardware,
             "test.path": self._handle_path,
             "boot.path": self._handle_path,
+            "build.issue": self._handle_issues,
+            "boot.issue": self._handle_issues,
+            "test.issue": self._handle_issues,
         }
 
         self.filters = []
@@ -200,6 +208,10 @@ class FilterParams:
             self.filterBuildDurationMax = toIntOrDefault(value, None)
         else:
             self.filterBuildDurationMin = toIntOrDefault(value, None)
+
+    def _handle_issues(self, current_filter):
+        tab = current_filter["field"].split('.')[0]
+        self.filterIssues[tab].add(current_filter["value"])
 
     def _processFilters(self):
         try:

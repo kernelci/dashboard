@@ -16,6 +16,8 @@ from collections import defaultdict
 
 from kernelCI_app.viewCommon import create_details_build_summary
 
+UNKNOWN_STRING = "Unknown"
+
 
 class TreeDetails(View):
     def __init__(self):
@@ -49,9 +51,9 @@ class TreeDetails(View):
         self.builds = []
         self.processed_builds = set()
         self.build_summary = {}
-        self.issues = []
+        self.build_issues = []
         self.failed_builds_with_unknown_issues = 0
-        self.processed_issues_dict = {}
+        self.processed_build_issues = {}
         self.tree_url = ""
 
     def setup_filters(self):
@@ -68,6 +70,7 @@ class TreeDetails(View):
         self.filterTestPath = self.filterParams.filterTestPath
         self.filterBootPath = self.filterParams.filterBootPath
         self.filterBuildValid = self.filterParams.filterBuildValid
+        self.filterIssues = self.filterParams.filterIssues
 
     def __getCurrentRowData(self, currentRow):
         tmp_test_env_comp_key = 14
@@ -102,13 +105,12 @@ class TreeDetails(View):
             "checkout_git_repository_url": currentRow[29],
             "checkout_git_repository_branch": currentRow[30],
             "incident_id": currentRow[31],
-            "incident_present": currentRow[32],
-            "issue_id": currentRow[33],
-            "issue_comment": currentRow[34],
-            "issue_report_url": currentRow[35],
+            "incident_test_id": currentRow[32],
+            "incident_present": currentRow[33],
+            "issue_id": currentRow[34],
+            "issue_comment": currentRow[35],
+            "issue_report_url": currentRow[36],
         }
-
-        UNKNOWN_STRING = "Unknown"
 
         currentRowData["test_platform"] = extract_platform(currentRowData["test_environment_misc"])
         if (currentRowData["test_status"] is None):
@@ -124,6 +126,15 @@ class TreeDetails(View):
             currentRowData["build_compiler"] = UNKNOWN_STRING
         if (currentRowData["build_config_name"] is None):
             currentRowData["build_config_name"] = UNKNOWN_STRING
+        if (
+            currentRowData["issue_id"] is None
+            and (
+                currentRowData["build_valid"] is False
+                or currentRowData["build_valid"] is None
+                or currentRowData["test_status"] == "FAIL"
+            )
+        ):
+            currentRowData["issue_id"] = UNKNOWN_STRING
         if (currentRowData["build_misc"] is not None):
             currentRowData["build_misc"] = json.loads(currentRowData["build_misc"])
 
@@ -183,6 +194,10 @@ class TreeDetails(View):
                     toIntOrDefault(testDuration, 0) < self.filterBootDurationMin
                 )
             )
+            or (
+                len(self.filterIssues["boot"]) > 0
+                and issue_id not in self.filterIssues["boot"]
+            )
         ):
             return
 
@@ -227,24 +242,56 @@ class TreeDetails(View):
         self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
         self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
-    def __nonBootsGuard(self, testStatus, testDuration, testPath):
-        if self.filterTestPath != "" and self.filterTestPath not in testPath:
-            return False
-        if len(self.filterTestStatus) > 0 and (testStatus not in self.filterTestStatus):
-            return False
+    def __nonBootsGuard(self, currentRowData):
+        test_duration = currentRowData["test_duration"]
+
         if (
-            self.filterTestDurationMax is not None or self.filterTestDurationMin is not None
-        ) and testDuration is None:
-            return False
-        if self.filterTestDurationMax is not None and (
-            toIntOrDefault(testDuration, 0) > self.filterTestDurationMax
+            (
+                self.filterTestPath != ""
+                and self.filterTestPath not in currentRowData["test_path"]
+            )
+            or (
+                len(self.filterTestStatus) > 0
+                and (currentRowData["test_status"] not in self.filterTestStatus)
+            )
+            or (
+                (
+                    self.filterTestDurationMax is not None
+                    or self.filterTestDurationMin is not None
+                ) and test_duration is None
+            )
+            or (
+                self.filterTestDurationMax is not None and (
+                    toIntOrDefault(test_duration, 0) > self.filterTestDurationMax
+                )
+            )
+            or (
+                self.filterTestDurationMin is not None and (
+                    toIntOrDefault(test_duration, 0) < self.filterTestDurationMin
+                )
+            )
+            or self._test_issue_filter(currentRowData)
         ):
             return False
-        if self.filterTestDurationMin is not None and (
-            toIntOrDefault(testDuration, 0) < self.filterTestDurationMin
-        ):
-            return False
+
         return True
+
+    def _test_issue_filter(self, currentRowData) -> bool:
+        issue_id = currentRowData["issue_id"]
+        incident_test_id = currentRowData["incident_test_id"]
+
+        test_issue_filters = self.filterIssues["test"]
+
+        has_any_test_filter = len(test_issue_filters) > 0
+        is_known_issue = issue_id is not None and issue_id is not UNKNOWN_STRING
+        is_from_tests = incident_test_id is not None or not is_known_issue
+        issue_outside_allowed_issues = issue_id not in test_issue_filters
+
+        return (
+            has_any_test_filter
+            and is_from_tests
+            and issue_outside_allowed_issues
+        )
 
     def __processNonBootsTest(self, currentRowData):
         testId = currentRowData["test_id"]
@@ -260,9 +307,23 @@ class TreeDetails(View):
         issue_report_url = currentRowData["issue_report_url"]
         testEnvironmentCompatible = currentRowData["test_environment_compatible"]
 
-        if not self.__nonBootsGuard(testStatus, currentRowData["test_duration"], currentRowData["test_path"]):
+        if not self.__nonBootsGuard(currentRowData):
             return
-        if issue_id:
+
+        issue_id = currentRowData["issue_id"]
+        incident_test_id = currentRowData["incident_test_id"]
+
+        is_known_issue = issue_id is not None and issue_id is not UNKNOWN_STRING
+        is_exclusively_build_issue = is_known_issue and incident_test_id is None
+
+        if is_exclusively_build_issue:
+            issue_id = UNKNOWN_STRING
+
+        is_unknown_issue = issue_id is UNKNOWN_STRING
+        is_known_test_issue = incident_test_id is not None
+        is_from_tests = is_known_test_issue or is_unknown_issue
+
+        if is_from_tests:
             currentIssue = self.testIssuesTable.get(issue_id)
             if currentIssue:
                 currentIssue["incidents_info"]["incidentsCount"] += 1
@@ -307,15 +368,27 @@ class TreeDetails(View):
         issue_id = row_data["issue_id"]
         build_valid = row_data["build_valid"]
 
-        if len(self.filterBuildValid) > 0 and (str(build_valid).lower() not in self.filterBuildValid):
+        if (
+            (
+                len(self.filterBuildValid) > 0
+                and (str(build_valid).lower() not in self.filterBuildValid)
+            )
+            or (
+                len(self.filterIssues["build"]) > 0
+                and (
+                    issue_id not in self.filterIssues["build"]
+                    or build_valid is True
+                )
+            )
+        ):
             return
 
-        if issue_id:
-            current_issue = self.processed_issues_dict.get(issue_id)
+        if issue_id and (build_valid is False or build_valid is None):
+            current_issue = self.processed_build_issues.get(issue_id)
             if (current_issue):
                 current_issue["incidents_info"]["incidentsCount"] += 1
             else:
-                self.processed_issues_dict[issue_id] = _get_issue_details(row_data)
+                self.processed_build_issues[issue_id] = _get_issue_details(row_data)
         elif build_id not in self.processed_builds and build_valid is False:
             self.failed_builds_with_unknown_issues += 1
 
@@ -360,7 +433,8 @@ class TreeDetails(View):
             ):
                 continue
 
-            self._process_builds(row_data)
+            if row_data["build_id"] is not None:
+                self._process_builds(row_data)
 
             if test_path:
                 if test_path.startswith("boot"):
@@ -371,7 +445,7 @@ class TreeDetails(View):
         self.testIssues = convert_issues_dict_to_list(self.testIssuesTable)
         self.bootIssues = convert_issues_dict_to_list(self.bootsIssuesTable)
         self.build_summary = create_details_build_summary(self.builds)
-        self.issues = convert_issues_dict_to_list(self.processed_issues_dict)
+        self.build_issues = convert_issues_dict_to_list(self.processed_build_issues)
 
     def get(self, request, commit_hash: str | None):
         cache_key = "treeDetailsSlow"
@@ -410,6 +484,7 @@ class TreeDetails(View):
                     tests.environment_compatible AS tests_environment_compatible,
                     builds_filter.*,
                     incidents.id AS incidents_id,
+                    incidents.test_id AS incidents_test_id,
                     incidents.present AS incidents_present,
                     issues.id AS issues_id,
                     issues.comment AS issues_comment,
@@ -492,7 +567,7 @@ class TreeDetails(View):
                 "failedBootsWithUnknownIssues": self.failedBootsWithUnknownIssues,
                 "builds": self.builds,
                 "buildsSummary": self.build_summary,
-                "buildsIssues": self.issues,
+                "buildsIssues": self.build_issues,
                 "failedBuildsWithUnknownIssues": self.failed_builds_with_unknown_issues,
                 "treeUrl": self.tree_url,
             },

@@ -97,6 +97,8 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
             title={<FormattedMessage id="global.issues" />}
             issues={builds.issues}
             failedWithUnknownIssues={builds.failedWithUnknownIssues}
+            diffFilter={diffFilter}
+            issueFilterSection="buildIssue"
           />
         </div>
         <div>
@@ -133,6 +135,8 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
           title={<FormattedMessage id="global.issues" />}
           issues={builds.issues}
           failedWithUnknownIssues={builds.failedWithUnknownIssues}
+          diffFilter={diffFilter}
+          issueFilterSection="buildIssue"
         />
       </MobileGrid>
 

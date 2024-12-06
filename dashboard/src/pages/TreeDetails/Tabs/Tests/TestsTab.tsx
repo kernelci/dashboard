@@ -149,6 +149,8 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             title={<FormattedMessage id="global.issues" />}
             issues={data.testIssues}
             failedWithUnknownIssues={data.failedTestsWithUnknownIssues}
+            diffFilter={diffFilter}
+            issueFilterSection="testIssue"
           />
         </div>
         <div>
@@ -182,6 +184,8 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
               title={<FormattedMessage id="global.issues" />}
               issues={data.testIssues}
               failedWithUnknownIssues={data.failedTestsWithUnknownIssues}
+              diffFilter={diffFilter}
+              issueFilterSection="testIssue"
             />
           </div>
           <div>
