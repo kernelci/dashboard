@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db.models import Subquery
 from django.http import JsonResponse
 from django.views import View
@@ -6,43 +7,32 @@ from kernelCI_app.helpers.date import (
     parse_start_and_end_timestamps_in_seconds_to_datetime,
 )
 from kernelCI_app.helpers.errorHandling import ExceptionWithJsonResponse
-from kernelCI_app.models import Tests, Checkouts
+from kernelCI_app.models import Tests
 from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from kernelCI_app.helpers.trees import get_tree_heads
 
 
 class HardwareView(View):
-    def _getResults(self, start_date, end_date, origin):
-        tree_id_fields = [
-            "tree_name",
-            "git_repository_branch",
-            "git_repository_url",
-        ]
-
+    def _getResults(self, start_date: datetime, end_date: datetime, origin: str):
         processedBuilds = set()
 
-        checkouts_subquery = (
-            Checkouts.objects.filter(
-                origin=origin,
-                start_time__gte=start_date,
-                start_time__lte=end_date,
-            )
-            .order_by(
-                *tree_id_fields,
-                "-start_time",
-            )
-            .distinct(*tree_id_fields)
-            .values_list("git_commit_hash", flat=True)
+        checkouts_subquery = get_tree_heads(
+            origin, start_date, end_date
         )
 
         tests = Tests.objects.filter(
             environment_compatible__isnull=False,
+            start_time__gte=start_date,
+            start_time__lte=end_date,
+            build__checkout__origin=origin,
             build__checkout__git_commit_hash__in=Subquery(checkouts_subquery),
         ).values(
             "environment_compatible", "status", "build__valid", "path", "build__id"
         )
 
         hardware = {}
+
         for test in tests:
             for compatible in test["environment_compatible"]:
                 if hardware.get(compatible) is None:
@@ -66,6 +56,7 @@ class HardwareView(View):
                 processedBuilds.add(buildKey)
 
                 build_status = build_status_map.get(test["build__valid"])
+
                 if build_status is not None:
                     hardware[compatible]["buildCount"][build_status] += 1
 

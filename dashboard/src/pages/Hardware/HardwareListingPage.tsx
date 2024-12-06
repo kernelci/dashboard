@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { roundToNearestMinutes } from 'date-fns';
 
 import { useSearch } from '@tanstack/react-router';
 
@@ -24,26 +25,40 @@ const calculateTimeStamp = (
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
 } => {
-  const endTimestampInSeconds = dateObjectToTimestampInSeconds(new Date());
+  // Rounding so cache key doesn't get invalidated every request
+  const endTimestampInSeconds = dateObjectToTimestampInSeconds(
+    roundToNearestMinutes(new Date(), {
+      nearestTo: 30,
+    }),
+  );
   const startTimestampInSeconds =
     endTimestampInSeconds - daysToSeconds(intervalInDays);
+  return { startTimestampInSeconds, endTimestampInSeconds };
+};
+
+const useHardwareListingTime = (): {
+  startTimestampInSeconds: number;
+  endTimestampInSeconds: number;
+} => {
+  const { intervalInDays } = useSearch({ from: '/hardware' });
+  const [timestamps, setTimeStamps] = useState(() => {
+    return calculateTimeStamp(intervalInDays);
+  });
+
+  useEffect(() => {
+    setTimeStamps(calculateTimeStamp(intervalInDays));
+  }, [intervalInDays]);
+
+  const { startTimestampInSeconds, endTimestampInSeconds } = timestamps;
+
   return { startTimestampInSeconds, endTimestampInSeconds };
 };
 
 const HardwareListingPage = ({
   inputFilter,
 }: HardwareListingPageProps): JSX.Element => {
-  //TODO: Combine these 2 hooks inside a single hook
-  const { intervalInDays } = useSearch({ from: '/hardware' });
-  const [timestamps, setTimeStamps] = useState(() => {
-    return calculateTimeStamp(intervalInDays);
-  });
-
-  const { startTimestampInSeconds, endTimestampInSeconds } = timestamps;
-
-  useEffect(() => {
-    setTimeStamps(calculateTimeStamp(intervalInDays));
-  }, [intervalInDays]);
+  const { startTimestampInSeconds, endTimestampInSeconds } =
+    useHardwareListingTime();
 
   const { data, error, status } = useHardwareListing(
     startTimestampInSeconds,
@@ -106,7 +121,8 @@ const HardwareListingPage = ({
       <div className="flex flex-col gap-6">
         <HardwareTable
           treeTableRows={listItems}
-          limitTimestampInSeconds={endTimestampInSeconds}
+          endTimestampInSeconds={endTimestampInSeconds}
+          startTimestampInSeconds={startTimestampInSeconds}
         />
       </div>
     </QuerySwitcher>
