@@ -4,6 +4,7 @@ from rest_framework import status
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.db import connection
 from kernelCI_app.utils import (
+    NULL_STRINGS,
     FilterParams,
     InvalidComparisonOP,
     getErrorResponseBody,
@@ -54,8 +55,9 @@ class TreeCommitsHistory(APIView):
         clause = table_field
         is_null_clause = f"{table_field} IS NULL"
         has_null_value = False
-        if (isinstance(filter['value'], str)):
-            filter['value'] = '' if filter['value'] in ['NULL', 'Unknown'] else filter['value']
+
+        if (isinstance(filter['value'], str) and filter['value'] in NULL_STRINGS):
+            return is_null_clause
         else:
             if ('NULL' in filter['value']):
                 has_null_value = True
@@ -64,20 +66,17 @@ class TreeCommitsHistory(APIView):
                 has_null_value = True
                 filter['value'].remove('Unknown')
 
-        if (len(filter['value']) == 0):
-            clause = is_null_clause
+        self.field_values[value_name] = filter['value']
+        if op == "IN":
+            clause += f" = ANY(%({value_name})s)"
+        elif op == "LIKE":
+            self.field_values[value_name] = f"%{filter['value']}%"
+            clause += f" {op} %({value_name})s"
         else:
-            self.field_values[value_name] = filter['value']
-            if op == "IN":
-                clause += f" = ANY(%({value_name})s)"
-            elif op == "LIKE":
-                self.field_values[value_name] = f"%{filter['value']}%"
-                clause += f" {op} %({value_name})s"
-            else:
-                clause += f" {op} %({value_name})s"
+            clause += f" {op} %({value_name})s"
 
-            if has_null_value:
-                clause += f" OR {is_null_clause}"
+        if has_null_value:
+            clause += f" OR {is_null_clause}"
         return clause
 
     # TODO: unite the filters logic
@@ -264,8 +263,7 @@ class TreeCommitsHistory(APIView):
                 relevant_checkouts AS c
             INNER JOIN
                 builds AS b
-                ON
-                c.id = b.checkout_id
+                ON c.id = b.checkout_id
             LEFT JOIN
                 tests AS t
                 ON b.id = t.build_id
@@ -295,8 +293,7 @@ class TreeCommitsHistory(APIView):
                 relevant_checkouts AS c
             INNER JOIN
                 builds AS b
-                ON
-                c.id = b.checkout_id
+                ON c.id = b.checkout_id
             LEFT JOIN
                 tests AS t
                 ON b.id = t.build_id
