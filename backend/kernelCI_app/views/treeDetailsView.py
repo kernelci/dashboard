@@ -1,13 +1,11 @@
 import json
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.utils import (
     FilterParams,
     convert_issues_dict_to_list,
     extract_error_message,
     extract_platform,
-    InvalidComparisonOP,
-    getErrorResponseBody,
     toIntOrDefault,
     create_issue,
     IncidentInfo,
@@ -22,29 +20,7 @@ from kernelCI_app.viewCommon import create_details_build_summary
 class TreeDetails(View):
     def __init__(self):
         self.processedTests = set()
-        self.filterTestDurationMin, self.filterTestDurationMax = None, None
-        self.filterBootDurationMin, self.filterBootDurationMax = None, None
-        self.filterBootStatus = set()
-        self.filterTestStatus = set()
-        self.filterTreeDetailsConfigs = set()
-        self.filterTreeDetailsCompiler = set()
-        self.filterArchitecture = set()
-        self.filterHardware = set()
-        self.filterTestPath = ""
-        self.filterBootPath = ""
-        self.filter_handlers = {
-            "boot.status": self.__handle_boot_status,
-            "boot.duration": self.__handle_boot_duration,
-            "test.status": self.__handle_test_status,
-            "test.duration": self.__handle_test_duration,
-            "config_name": self.__handle_config_name,
-            "compiler": self.__handle_compiler,
-            "architecture": self.__handle_architecture,
-            "test.hardware": self.__handle_hardware,
-            "test.path": self.__handle_path,
-            "boot.path": self.__handle_path,
-            "valid": self._handle_build_valid,
-        }
+        self.filterParams = None
 
         self.testHistory = []
         self.testStatusSummary = {}
@@ -77,61 +53,21 @@ class TreeDetails(View):
         self.failed_builds_with_unknown_issues = 0
         self.processed_issues_dict = {}
         self.tree_url = ""
-        self.filterBuildValid = set()
 
-    def __handle_boot_status(self, current_filter):
-        self.filterBootStatus.add(current_filter["value"])
-
-    def __handle_boot_duration(self, current_filter):
-        value = current_filter["value"]
-        operation = current_filter["comparison_op"]
-        if operation == "lte":
-            self.filterBootDurationMax = toIntOrDefault(value, None)
-        else:
-            self.filterBootDurationMin = toIntOrDefault(value, None)
-
-    def __handle_test_status(self, current_filter):
-        self.filterTestStatus.add(current_filter["value"])
-
-    def __handle_test_duration(self, current_filter):
-        value = current_filter["value"]
-        operation = current_filter["comparison_op"]
-        if operation == "lte":
-            self.filterTestDurationMax = toIntOrDefault(value, None)
-        else:
-            self.filterTestDurationMin = toIntOrDefault(value, None)
-
-    def __handle_config_name(self, current_filter):
-        self.filterTreeDetailsConfigs.add(current_filter["value"])
-
-    def __handle_compiler(self, current_filter):
-        self.filterTreeDetailsCompiler.add(current_filter["value"])
-
-    def __handle_architecture(self, current_filter):
-        self.filterArchitecture.add(current_filter["value"])
-
-    def __handle_hardware(self, current_filter):
-        self.filterHardware.add(current_filter["value"])
-
-    def __handle_path(self, current_filter):
-        if current_filter["field"] == "boot.path":
-            self.filterBootPath = current_filter["value"]
-        else:
-            self.filterTestPath = current_filter["value"]
-
-    def _handle_build_valid(self, current_filter):
-        self.filterBuildValid.add(current_filter["value"])
-
-    def __processFilters(self, request):
-        try:
-            filter_params = FilterParams(request)
-            for current_filter in filter_params.filters:
-                field = current_filter["field"]
-                # Delegate to the appropriate handler based on the field
-                if field in self.filter_handlers:
-                    self.filter_handlers[field](current_filter)
-        except InvalidComparisonOP as e:
-            return HttpResponseBadRequest(getErrorResponseBody(str(e)))
+    def setup_filters(self):
+        self.filterTestDurationMin = self.filterParams.filterTestDurationMin
+        self.filterTestDurationMax = self.filterParams.filterTestDurationMax
+        self.filterBootDurationMin = self.filterParams.filterBootDurationMin
+        self.filterBootDurationMax = self.filterParams.filterBootDurationMax
+        self.filterBootStatus = self.filterParams.filterBootStatus
+        self.filterTestStatus = self.filterParams.filterTestStatus
+        self.filterTreeDetailsConfigs = self.filterParams.filterConfigs
+        self.filterTreeDetailsCompiler = self.filterParams.filterCompiler
+        self.filterArchitecture = self.filterParams.filterArchitecture
+        self.filterHardware = self.filterParams.filterHardware
+        self.filterTestPath = self.filterParams.filterTestPath
+        self.filterBootPath = self.filterParams.filterBootPath
+        self.filterBuildValid = self.filterParams.filterBuildValid
 
     def __getCurrentRowData(self, currentRow):
         tmp_test_env_comp_key = 14
@@ -442,7 +378,8 @@ class TreeDetails(View):
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
-        self.__processFilters(request)
+        self.filterParams = FilterParams(request)
+        self.setup_filters()
 
         params = {
             "commit_hash": commit_hash,

@@ -2,9 +2,11 @@ import json
 from typing import Union, TypedDict, List, Optional, Dict
 from django.utils import timezone
 from datetime import timedelta
+from django.http import HttpResponseBadRequest
 import re
 
 DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
+NULL_STRINGS = set(["null", "Unknown"])
 
 
 class IncidentInfo(TypedDict):
@@ -111,14 +113,105 @@ class FilterParams:
 
     string_like_filters = ["boot.path", "test.path"]
 
-    def __init__(self, data, process_body=False):
+    def __init__(self, data: Dict, process_body=False):
+        self.filterTestDurationMin, self.filterTestDurationMax = None, None
+        self.filterBootDurationMin, self.filterBootDurationMax = None, None
+        self.filterBuildDurationMin, self.filterBuildDurationMax = None, None
+        self.filterBootStatus = set()
+        self.filterTestStatus = set()
+        self.filterConfigs = set()
+        self.filterCompiler = set()
+        self.filterArchitecture = set()
+        self.filterHardware = set()
+        self.filterTestPath = ""
+        self.filterBootPath = ""
+        self.filterBuildValid = set()
+
+        self.filter_handlers = {
+            "boot.status": self._handle_boot_status,
+            "boot.duration": self._handle_boot_duration,
+            "test.status": self._handle_test_status,
+            "test.duration": self._handle_test_duration,
+            "duration": self._handle_build_duration,
+            "config_name": self._handle_config_name,
+            "compiler": self._handle_compiler,
+            "architecture": self._handle_architecture,
+            "valid": self._handle_build_valid,
+            "test.hardware": self._handle_hardware,
+            "test.path": self._handle_path,
+            "boot.path": self._handle_path,
+        }
+
         self.filters = []
         if process_body:
             self.create_filters_from_body(data)
         else:
             self.create_filters_from_req(data)
 
-    def create_filters_from_body(self, body):
+        self._processFilters()
+
+    def _handle_boot_status(self, current_filter: Dict):
+        self.filterBootStatus.add(current_filter["value"])
+
+    def _handle_boot_duration(self, current_filter: Dict):
+        value = current_filter["value"]
+        operation = current_filter["comparison_op"]
+        if operation == "lte":
+            self.filterBootDurationMax = toIntOrDefault(value, None)
+        else:
+            self.filterBootDurationMin = toIntOrDefault(value, None)
+
+    def _handle_test_status(self, current_filter: Dict):
+        self.filterTestStatus.add(current_filter["value"])
+
+    def _handle_test_duration(self, current_filter: Dict):
+        value = current_filter["value"]
+        operation = current_filter["comparison_op"]
+        if operation == "lte":
+            self.filterTestDurationMax = toIntOrDefault(value, None)
+        else:
+            self.filterTestDurationMin = toIntOrDefault(value, None)
+
+    def _handle_config_name(self, current_filter: Dict):
+        self.filterConfigs.add(current_filter["value"])
+
+    def _handle_compiler(self, current_filter: Dict):
+        self.filterCompiler.add(current_filter["value"])
+
+    def _handle_architecture(self, current_filter: Dict):
+        self.filterArchitecture.add(current_filter["value"])
+
+    def _handle_hardware(self, current_filter: Dict):
+        self.filterHardware.add(current_filter["value"])
+
+    def _handle_path(self, current_filter: Dict):
+        if current_filter["field"] == "boot.path":
+            self.filterBootPath = current_filter["value"]
+        else:
+            self.filterTestPath = current_filter["value"]
+
+    def _handle_build_valid(self, current_filter: Dict):
+        self.filterBuildValid.add(current_filter["value"])
+
+    def _handle_build_duration(self, current_filter: Dict):
+        value = current_filter["value"][0]
+        operation = current_filter["comparison_op"]
+        if operation == "lte":
+            self.filterBuildDurationMax = toIntOrDefault(value, None)
+        else:
+            self.filterBuildDurationMin = toIntOrDefault(value, None)
+
+    def _processFilters(self):
+        try:
+            for current_filter in self.filters:
+                field = current_filter["field"]
+                # Delegate to the appropriate handler based on the field
+                if field in self.filter_handlers:
+                    self.filter_handlers[field](current_filter)
+        except InvalidComparisonOP as e:
+            return HttpResponseBadRequest(getErrorResponseBody(str(e)))
+
+    def create_filters_from_body(self, body: Dict):
         filters = body.get("filter", {})
         for k in filters.keys():
             if not k.startswith(self.filter_param_prefix):
@@ -130,6 +223,14 @@ class FilterParams:
             # filter as list
             filter_data = filters.get(k)
 
+            match = self.filter_reg.match(filter_term)
+
+            if match:
+                field = match.group(1)
+                comparison_op = match.group(2)
+                self.add_filter(field, filter_data[0], comparison_op)
+                continue
+
             if type(filter_data) is list and len(filter_data) > 0:
                 field = filter_term
                 values = filter_data
@@ -140,13 +241,6 @@ class FilterParams:
 
             if filter_term in self.string_like_filters:
                 self.add_filter(filter_term, filter_data, "like")
-                continue
-
-            match = self.filter_reg.match(filter_term)
-            if match:
-                field = match.group(1)
-                comparison_op = match.group(2)
-                self.add_filter(field, filter_data, comparison_op)
                 continue
 
             self.add_filter(filter_term, filter_data, "exact")
