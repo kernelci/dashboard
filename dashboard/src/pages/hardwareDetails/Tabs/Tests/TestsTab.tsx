@@ -93,6 +93,8 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
             title={<FormattedMessage id="global.issues" />}
             issues={tests.issues}
             failedWithUnknownIssues={tests.failedWithUnknownIssues}
+            diffFilter={diffFilter}
+            issueFilterSection="testIssue"
           />
         </div>
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
@@ -119,6 +121,8 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
               title={<FormattedMessage id="global.issues" />}
               issues={tests.issues}
               failedWithUnknownIssues={tests.failedWithUnknownIssues}
+              diffFilter={diffFilter}
+              issueFilterSection="testIssue"
             />
           </div>
         </InnerMobileGrid>

@@ -108,6 +108,8 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
             title={<FormattedMessage id="global.issues" />}
             issues={boots.issues}
             failedWithUnknownIssues={boots.failedWithUnknownIssues}
+            diffFilter={diffFilter}
+            issueFilterSection="bootIssue"
           />
         </div>
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
@@ -134,6 +136,8 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
               title={<FormattedMessage id="global.issues" />}
               issues={boots.issues}
               failedWithUnknownIssues={boots.failedWithUnknownIssues}
+              diffFilter={diffFilter}
+              issueFilterSection="bootIssue"
             />
           </div>
         </InnerMobileGrid>

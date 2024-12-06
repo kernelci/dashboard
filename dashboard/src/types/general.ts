@@ -138,6 +138,9 @@ export const zFilterObjectsKeys = z.enum([
   'trees',
   'testPath',
   'bootPath',
+  'buildIssue',
+  'bootIssue',
+  'testIssue',
 ]);
 
 export const zFilterNumberKeys = z.enum([
@@ -172,6 +175,9 @@ export const zDiffFilter = z
       testDurationMax: zFilterNumberValue,
       hardware: zFilterBoolValue,
       trees: zFilterBoolValue,
+      buildIssue: zFilterBoolValue,
+      bootIssue: zFilterBoolValue,
+      testIssue: zFilterBoolValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])
@@ -217,6 +223,9 @@ const requestFilters = {
     'boot.status',
     'boot.duration_[gte]',
     'boot.duration_[lte]',
+    'build.issue',
+    'test.issue',
+    'boot.issue',
   ],
 } as const;
 
@@ -247,6 +256,9 @@ export const filterFieldMap = {
   'test.hardware': 'hardware',
   'test.path': 'testPath',
   'boot.path': 'bootPath',
+  'build.issue': 'buildIssue',
+  'boot.issue': 'bootIssue',
+  'test.issue': 'testIssue',
 } as const satisfies Record<TRequestFiltersValues, TFilterKeys>;
 
 export const getTargetFilter = (

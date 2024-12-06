@@ -83,6 +83,8 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
             failedWithUnknownIssues={
               treeDetailsData.failedBuildsWithUnknownIssues
             }
+            diffFilter={diffFilter}
+            issueFilterSection="buildIssue"
           />
         </div>
         <div>
@@ -118,6 +120,8 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           failedWithUnknownIssues={
             treeDetailsData.failedBuildsWithUnknownIssues
           }
+          diffFilter={diffFilter}
+          issueFilterSection="buildIssue"
         />
       </MobileGrid>
 

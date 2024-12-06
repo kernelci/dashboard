@@ -38,6 +38,10 @@ export const createFilter = (data: TTreeTestsFullData | undefined): TFilter => {
     testStatus[s] = false;
   });
 
+  const buildIssue: TFilterValues = {};
+  const bootIssue: TFilterValues = {};
+  const testIssue: TFilterValues = {};
+
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};
   const compilers: TFilterValues = {};
@@ -52,6 +56,10 @@ export const createFilter = (data: TTreeTestsFullData | undefined): TFilter => {
     });
 
     data.hardwareUsed.forEach(h => (hardware[h] = false));
+
+    data.buildsIssues.forEach(i => (buildIssue[i.id] = false));
+    data.bootIssues.forEach(i => (bootIssue[i.id] = false));
+    data.testIssues.forEach(i => (testIssue[i.id] = false));
   }
 
   return {
@@ -62,6 +70,9 @@ export const createFilter = (data: TTreeTestsFullData | undefined): TFilter => {
     bootStatus,
     testStatus,
     hardware,
+    buildIssue,
+    bootIssue,
+    testIssue,
   };
 };
 
@@ -80,6 +91,21 @@ const sectionTrees: ISectionItem[] = [
     title: 'filter.testStatus',
     subtitle: 'filter.statusSubtitle',
     sectionKey: 'testStatus',
+  },
+  {
+    title: 'filter.buildIssue',
+    subtitle: 'filter.issueSubtitle',
+    sectionKey: 'buildIssue',
+  },
+  {
+    title: 'filter.bootIssue',
+    subtitle: 'filter.issueSubtitle',
+    sectionKey: 'bootIssue',
+  },
+  {
+    title: 'filter.testIssue',
+    subtitle: 'filter.issueSubtitle',
+    sectionKey: 'testIssue',
   },
   {
     title: 'filter.hardware',

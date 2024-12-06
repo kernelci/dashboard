@@ -146,6 +146,8 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
             title={<FormattedMessage id="global.issues" />}
             issues={data.bootIssues}
             failedWithUnknownIssues={data.failedBootsWithUnknownIssues}
+            diffFilter={diffFilter}
+            issueFilterSection="bootIssue"
           />
         </div>
         <div>
@@ -179,6 +181,8 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
               title={<FormattedMessage id="global.issues" />}
               issues={data.bootIssues}
               failedWithUnknownIssues={data.failedBootsWithUnknownIssues}
+              diffFilter={diffFilter}
+              issueFilterSection="bootIssue"
             />
           </div>
           <div>

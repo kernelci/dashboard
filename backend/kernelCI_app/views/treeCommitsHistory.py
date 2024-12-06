@@ -86,6 +86,10 @@ class TreeCommitsHistory(APIView):
         for _, filter in grouped_filters.items():
             table, field, op = self.__format_field_operation(filter, filter_params)
 
+            # temporary solution since the query isn't joining on issues table
+            if field == "issue":
+                continue
+
             table_field = f"{self.filters_options[table]['table_alias']}.{field}"
             value_name = f"{table}{field.capitalize()}{filter_params.get_comparison_op(filter)}"
             clause = self.__treat_unknown_filter(table_field, op, value_name, filter)
