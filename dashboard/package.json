@@ -39,7 +39,7 @@
     "@tanstack/query-sync-storage-persister": "^5.56.2",
     "@tanstack/react-query": "^5.56.2",
     "@tanstack/react-query-persist-client": "^5.56.2",
-    "@tanstack/react-router": "^1.46.8",
+    "@tanstack/react-router": "^1.87.1",
     "@tanstack/react-table": "^8.20.5",
     "@tanstack/react-virtual": "^3.10.8",
     "@vitejs/plugin-react": "^4.3.1",

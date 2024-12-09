@@ -7,6 +7,7 @@ export const Route = createFileRoute('/hardware/$hardwareId/build/$buildId/')({
   loader: async ({ params, deps }) => {
     throw redirect({
       to: '/build/$buildId',
+      params: { buildId: params.buildId },
       search: deps.search,
       state: { id: params.hardwareId, from: RedirectFrom.Hardware },
     });
