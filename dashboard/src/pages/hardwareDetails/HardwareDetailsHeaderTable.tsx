@@ -191,6 +191,7 @@ export function HardwareHeader({
     'hardwareDetailsTrees',
   );
 
+  // The initial assignment is useful to catch the initial indexes from URL
   const [rowSelection, setRowSelection] = useState(() =>
     getInitialRowSelection(selectedIndexes, treeItems.length),
   );
@@ -204,6 +205,14 @@ export function HardwareHeader({
     );
     updateTreeFilters(updatedSelection);
   }, [rowSelectionDebounced, treeItems.length, updateTreeFilters]);
+
+  // This useEffect update the current row selection when the selectedIndexes change.
+  // Useful when the user select a tree by filter modal.
+  useEffect(() => {
+    setRowSelection(() =>
+      getInitialRowSelection(selectedIndexes, treeItems.length),
+    );
+  }, [selectedIndexes, treeItems.length]);
 
   const table = useReactTable({
     data: treeItems,

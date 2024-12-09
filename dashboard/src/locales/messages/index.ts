@@ -92,6 +92,7 @@ export const messages = {
     'filter.testDuration': 'Test duration',
     'filter.testIssue': 'Test issue',
     'filter.testStatus': 'Test Status',
+    'filter.treeSubtitle': 'Please select one or more Trees:',
     'filter.treeURL': 'Tree URL',
     'global.allCount': 'All: {count}',
     'global.arch': 'Arch',

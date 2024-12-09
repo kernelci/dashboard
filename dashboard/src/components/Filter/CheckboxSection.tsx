@@ -48,6 +48,15 @@ export interface ISectionItem {
   isGlobal?: boolean;
 }
 
+type SplitFilterString = `${string}__${string}`;
+
+const extractCheckboxValue = (value: SplitFilterString | undefined): string => {
+  if (!value) return '';
+
+  const valueSplit = value.split('__');
+  return valueSplit[0];
+};
+
 const CheckboxSectionItem = ({
   value,
   onClickItem,
@@ -58,7 +67,11 @@ const CheckboxSectionItem = ({
     [value, onClickItem],
   );
   return (
-    <Checkbox onToggle={handleOnToggle} text={value} isChecked={isSelected} />
+    <Checkbox
+      onToggle={handleOnToggle}
+      text={extractCheckboxValue(value as SplitFilterString)}
+      isChecked={isSelected}
+    />
   );
 };
 
