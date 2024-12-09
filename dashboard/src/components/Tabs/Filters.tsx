@@ -113,6 +113,12 @@ interface ICheckboxSectionProps extends SectionsProps {
   sections: ISectionItem[];
 }
 
+interface ITreeSectionProps {
+  items?: Record<string, boolean>;
+  selectedTrees?: number[];
+  handleSelectTree: (index: string) => void;
+}
+
 // TODO: Remove useState for this forms, use something like react hook forms or tanstack forms (when it gets released)
 const CheckboxSection = ({
   diffFilter,
@@ -224,3 +230,39 @@ const TimeRangeSection = ({
 };
 
 export const MemoizedTimeRangeSection = memo(TimeRangeSection);
+
+const TreeSelectSection = ({
+  items,
+  handleSelectTree,
+  selectedTrees,
+}: ITreeSectionProps): JSX.Element => {
+  const intl = useIntl();
+
+  const filterItems = useMemo(() => {
+    if (!items) return {};
+
+    const filteredItems: Record<string, boolean> = {};
+
+    Object.keys(items).map(key => {
+      const idx = Number(key.split('__')[1]);
+
+      filteredItems[key] = selectedTrees?.includes(idx) || false;
+    });
+
+    return filteredItems;
+  }, [items, selectedTrees]);
+
+  return (
+    <DrawerSection key="Tree">
+      <FilterCheckboxSection
+        title={intl.formatMessage({ id: 'global.trees' })}
+        items={filterItems}
+        isGlobal
+        subtitle={intl.formatMessage({ id: 'filter.treeSubtitle' })}
+        onClickItem={handleSelectTree}
+      />
+    </DrawerSection>
+  );
+};
+
+export const MemoizedTreeSelectSection = memo(TreeSelectSection);

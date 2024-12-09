@@ -191,9 +191,7 @@ export function HardwareHeader({
     'hardwareDetailsTrees',
   );
 
-  const [rowSelection, setRowSelection] = useState(() =>
-    getInitialRowSelection(selectedIndexes, treeItems.length),
-  );
+  const [rowSelection, setRowSelection] = useState({});
 
   const rowSelectionDebounced = useDebounce(rowSelection, DEBOUNCE_INTERVAL);
 
@@ -204,6 +202,10 @@ export function HardwareHeader({
     );
     updateTreeFilters(updatedSelection);
   }, [rowSelectionDebounced, treeItems.length, updateTreeFilters]);
+
+  useEffect(() => {
+    setRowSelection(getInitialRowSelection(selectedIndexes, treeItems.length));
+  }, [selectedIndexes, treeItems.length]);
 
   const table = useReactTable({
     data: treeItems,

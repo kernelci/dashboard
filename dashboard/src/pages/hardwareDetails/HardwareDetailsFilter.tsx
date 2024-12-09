@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import { useNavigate } from '@tanstack/react-router';
@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/Skeleton';
 import {
   MemoizedCheckboxSection,
   MemoizedTimeRangeSection,
+  MemoizedTreeSelectSection,
 } from '@/components/Tabs/Filters';
 import type { ISectionItem } from '@/components/Filter/CheckboxSection';
 import { isTFilterObjectKeys, type TFilter } from '@/types/general';
@@ -23,6 +24,7 @@ interface IHardwareDetailsFilter {
   paramFilter: TFilter;
   hardwareName: string;
   data: THardwareDetails;
+  selectedTrees?: number[];
 }
 
 export const createFilter = (data: THardwareDetails | undefined): TFilter => {
@@ -42,6 +44,7 @@ export const createFilter = (data: THardwareDetails | undefined): TFilter => {
 
   if (data) {
     data.trees.forEach(tree => {
+      const treeIdx = tree.index;
       const treeName = tree.treeName ?? 'Unknown';
       const treeBranch = tree.gitRepositoryBranch ?? 'Unknown';
 
@@ -50,7 +53,7 @@ export const createFilter = (data: THardwareDetails | undefined): TFilter => {
       if (treeName === 'Unknown' && treeBranch === 'Unknown')
         treeNameBranch = 'Unknown';
 
-      trees[treeNameBranch] = false;
+      trees[`${treeNameBranch}__${treeIdx}`] = false;
     });
 
     data.archs.forEach(arch => {
@@ -115,6 +118,7 @@ const HardwareDetailsFilter = ({
   paramFilter,
   hardwareName,
   data,
+  selectedTrees,
 }: IHardwareDetailsFilter): JSX.Element => {
   const isLoading = false;
 
@@ -127,6 +131,11 @@ const HardwareDetailsFilter = ({
   }, [data]);
 
   const [diffFilter, setDiffFilter] = useState<TFilter>(paramFilter);
+  const [treeIndexes, setTreeIndexes] = useState<number[]>([]);
+
+  useEffect(() => {
+    setTreeIndexes(selectedTrees || []);
+  }, [selectedTrees]);
 
   const onClickFilterHandle = useCallback(() => {
     const cleanedFilter = cleanFalseFilters(diffFilter);
@@ -134,11 +143,12 @@ const HardwareDetailsFilter = ({
       search: previousSearch => {
         return {
           ...previousSearch,
+          treeIndexes,
           diffFilter: cleanedFilter,
         };
       },
     });
-  }, [diffFilter, navigate]);
+  }, [diffFilter, navigate, treeIndexes]);
 
   const onClickCancel = useCallback(() => {
     setDiffFilter(paramFilter);
@@ -149,6 +159,17 @@ const HardwareDetailsFilter = ({
       setDiffFilter(paramFilter);
     },
     [paramFilter],
+  );
+
+  const handleSelectTree = useCallback(
+    (value: string) => {
+      const idx = Number(value.split('__')[1]);
+
+      if (treeIndexes.includes(idx))
+        setTreeIndexes(treeIndexes.filter(i => i !== idx));
+      else setTreeIndexes([...treeIndexes, idx]);
+    },
+    [treeIndexes],
   );
 
   const drawerLink: IDrawerLink['link'] = useMemo(
@@ -179,6 +200,13 @@ const HardwareDetailsFilter = ({
             filter={filter}
             isTFilterObjectKeys={isTFilterObjectKeys}
           />
+
+          <MemoizedTreeSelectSection
+            items={filter.trees}
+            handleSelectTree={handleSelectTree}
+            selectedTrees={treeIndexes}
+          />
+
           <MemoizedTimeRangeSection
             diffFilter={diffFilter}
             setDiffFilter={setDiffFilter}

@@ -206,6 +206,7 @@ function HardwareDetails(): JSX.Element {
                 paramFilter={diffFilter}
                 hardwareName={hardwareId}
                 data={data}
+                selectedTrees={treeIndexes}
               />
             </div>
           </div>
