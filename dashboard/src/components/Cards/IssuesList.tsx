@@ -94,7 +94,10 @@ const IssuesList = ({
         >
           <ListingItem
             unknown={failedWithUnknownIssues}
-            text={intl.formatMessage({ id: 'global.unknown' })}
+            text={
+              // intl.formatMessage({ id: 'global.unknown' })
+              'failedWithUnknownIssues'
+            }
           />
         </FilterLink>
       )}
