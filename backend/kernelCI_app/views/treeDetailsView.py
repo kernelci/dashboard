@@ -2,6 +2,7 @@ import json
 from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.utils import (
+    UNKNOWN_STRING,
     FilterParams,
     convert_issues_dict_to_list,
     extract_error_message,
@@ -15,8 +16,6 @@ from django.db import connection
 from collections import defaultdict
 
 from kernelCI_app.viewCommon import create_details_build_summary
-
-UNKNOWN_STRING = "Unknown"
 
 
 class TreeDetails(View):

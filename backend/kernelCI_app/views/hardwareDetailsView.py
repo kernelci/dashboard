@@ -10,6 +10,7 @@ from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.models import Tests
 from kernelCI_app.utils import (
+    UNKNOWN_STRING,
     create_issue,
     extract_error_message,
     extract_platform,
@@ -58,6 +59,7 @@ def get_build(record: Dict, tree_idx: int):
         "git_repository_url": record["build__checkout__git_repository_url"],
         "git_repository_branch": record["build__checkout__git_repository_branch"],
         "tree_name": record["build__checkout__tree_name"],
+        "issue_id": record["build__incidents__issue__id"],
         "tree_index": tree_idx
     }
 
@@ -106,9 +108,9 @@ def get_record_tree(record: Dict, selected_trees: List) -> Optional[Dict]:
 
 def get_details_issue(record: Dict):
     return create_issue(
-        issue_id=record["build__incidents__issue__id"],
-        issue_comment=record["build__incidents__issue__comment"],
-        issue_report_url=record["build__incidents__issue__report_url"],
+        issue_id=record["incidents__issue__id"],
+        issue_comment=record["incidents__issue__comment"],
+        issue_report_url=record["incidents__issue__report_url"],
     )
 
 
@@ -132,15 +134,31 @@ def is_record_tree_selected(record, tree, is_all_selected: bool):
         tree["git_commit_hash"] == record["build__checkout__git_commit_hash"]
 
 
-def update_issues(record, task, is_failed_task):
-    issue_id = record["build__incidents__issue__id"]
-    if issue_id:
+def update_issues(record, task, is_failed_task, tab):
+    issue_id = record["incidents__issue__id"]
+    incident_test_id = record["incidents__test_id"]
+
+    tab_condition = True
+    if (tab == "build"):
+        is_invalid = record["build__valid"] is False or record["build__valid"] is None
+        tab_condition = is_invalid
+    elif (tab == "test"):
+        is_known_issue = issue_id is not None and issue_id is not UNKNOWN_STRING
+        is_exclusively_build_issue = is_known_issue and incident_test_id is None
+        if is_exclusively_build_issue:
+            issue_id = UNKNOWN_STRING
+        is_unknown_issue = issue_id is UNKNOWN_STRING
+        is_known_test_issue = incident_test_id is not None
+        is_from_tests = is_known_test_issue or is_unknown_issue
+        tab_condition = is_from_tests
+
+    if issue_id and tab_condition:
         existing_issue = task["issues"].get(issue_id)
         if existing_issue:
             existing_issue["incidents_info"]["incidentsCount"] += 1
         else:
             new_issue = get_details_issue(record)
-            task[issue_id] = new_issue
+            task["issues"][issue_id] = new_issue
     elif is_failed_task:
         task["failedWithUnknownIssues"] += 1
 
@@ -192,6 +210,7 @@ class HardwareDetails(View):
         self.filterTestPath = self.filterParams.filterTestPath
         self.filterBootPath = self.filterParams.filterBootPath
         self.filterValid = self.filterParams.filterBuildValid
+        self.filterIssues = self.filterParams.filterIssues
 
     def is_build_filtered_in(
         self,
@@ -199,10 +218,12 @@ class HardwareDetails(View):
         processed_builds: Set[str],
     ) -> bool:
         is_build_not_processed = not build["id"] in processed_builds
-        is_build_filtered_out = self.__build_filters_pass(build['valid'], build['duration'])
+        is_build_filtered_out = self._build_filters_pass(
+            build["valid"], build["duration"], build
+        )
         return is_build_not_processed and is_build_filtered_out
 
-    def __build_filters_pass(self, status: bool, duration: int):
+    def _build_filters_pass(self, status: bool, duration: int, build):
         if len(self.filterValid) > 0 and (str(status).lower() not in self.filterValid):
             return False
         if (
@@ -217,10 +238,23 @@ class HardwareDetails(View):
             toIntOrDefault(duration, 0) < self.filterBuildDurationMin
         ):
             return False
+        if (
+            len(self.filterIssues["build"]) > 0
+            and (
+                build["issue_id"] not in self.filterIssues["build"]
+                or build["valid"] is True
+            )
+        ):
+            return False
 
         return True
 
-    def __boots_filters_pass(self, status: str, duration: int):
+    def _boots_filters_pass(self, status: str, duration: int, record):
+        if (
+            self.filterBootPath != ""
+            and (self.filterBootPath not in record['path'])
+        ):
+            return False
         if len(self.filterBootStatus) > 0 and (status not in self.filterBootStatus):
             return False
         if (
@@ -235,10 +269,44 @@ class HardwareDetails(View):
             toIntOrDefault(duration, 0) < self.filterBootDurationMin
         ):
             return False
+        if self.test_issue_filter_condition(
+            self.filterIssues["boot"],
+            record["incidents__issue__id"],
+            record["incidents__test_id"],
+        ):
+            return False
 
         return True
 
-    def __non_boots_filters_pass(self, status: str, duration: int):
+    def is_known_issue(self, issue_id):
+        return issue_id is not None and issue_id is not UNKNOWN_STRING
+
+    def is_issue_from_test(self, incident_test_id, is_known_issue):
+        return incident_test_id is not None or not is_known_issue
+
+    def is_issue_filtered_out(self, issue_id, issue_filters):
+        return issue_id not in issue_filters
+
+    def test_issue_filter_condition(self, issue_filters: set, issue_id: str, incident_test_id: str) -> bool:
+        has_issue_filter = len(issue_filters) > 0
+
+        is_known_issue_result = self.is_known_issue(issue_id)
+        is_issue_from_tests_result = self.is_issue_from_test(incident_test_id, is_known_issue_result)
+
+        is_issue_filtered_out_result = self.is_issue_filtered_out(issue_id, issue_filters)
+
+        return (
+            has_issue_filter
+            and is_issue_from_tests_result
+            and is_issue_filtered_out_result
+        )
+
+    def _non_boots_filters_pass(self, status: str, duration: int, record):
+        if (
+            self.filterTestPath != ""
+            and (self.filterTestPath not in record['path'])
+        ):
+            return False
         if len(self.filterTestStatus) > 0 and (status not in self.filterTestStatus):
             return False
         if (
@@ -251,6 +319,12 @@ class HardwareDetails(View):
             return False
         if self.filterTestDurationMin is not None and (
             toIntOrDefault(duration, 0) < self.filterTestDurationMin
+        ):
+            return False
+        if self.test_issue_filter_condition(
+            self.filterIssues["test"],
+            record["incidents__issue__id"],
+            record["incidents__test_id"],
         ):
             return False
 
@@ -275,16 +349,6 @@ class HardwareDetails(View):
 
         if (
             (
-                record['path'].startswith("boot")
-                and self.filterBootPath != ""
-                and (self.filterBootPath not in record['path'])
-            )
-            or (
-                not record['path'].startswith("boot")
-                and self.filterTestPath != ""
-                and (self.filterTestPath not in record['path'])
-            )
-            or (
                 len(self.filterArchitecture) > 0
                 and (
                     record['build__architecture'] not in self.filterArchitecture
@@ -317,9 +381,9 @@ class HardwareDetails(View):
     ) -> bool:
         test_filter_pass = True
         if table_test == "boot":
-            test_filter_pass = self.__boots_filters_pass(record['status'], record['duration'])
+            test_filter_pass = self._boots_filters_pass(record['status'], record['duration'], record)
         else:
-            test_filter_pass = self.__non_boots_filters_pass(record['status'], record['duration'])
+            test_filter_pass = self._non_boots_filters_pass(record['status'], record['duration'], record)
 
         return test_filter_pass
 
@@ -327,8 +391,8 @@ class HardwareDetails(View):
         status = record["status"]
 
         tests["history"].append(get_history(record))
-        tests["statusSummary"][record["status"]] += 1
-        tests["configs"][record["build__config_name"]][record["status"]] += 1
+        tests["statusSummary"][status] += 1
+        tests["configs"][record["build__config_name"]][status] += 1
 
         if status == "ERROR" or status == "FAIL" or status == "MISS":
             tests["platformsFailing"].add(
@@ -343,7 +407,7 @@ class HardwareDetails(View):
             tests["archSummary"][archKey] = archSummary
         archSummary["status"][status] += 1
 
-        update_issues(record, tests, status == STATUS_FAILED_VALUE)
+        update_issues(record, tests, status == STATUS_FAILED_VALUE, "test")
 
     def get_filter_options(self, records, selected_trees, is_all_selected: bool):
         configs = set()
@@ -390,6 +454,8 @@ class HardwareDetails(View):
                 log_message(f"Tree not found for record: {record}")
                 continue
 
+            self._assign_default_record_values(record)
+
             tree_index = current_tree["index"]
             is_record_boot = is_boot(record)
             # TODO -> Unify with tree_status_key, be careful with the pluralization
@@ -408,12 +474,12 @@ class HardwareDetails(View):
                 is_record_boot,
             )
 
-            should_process_test = self.test_in_filter(test_filter_key, record)
-
             pass_in_global_filters = self.record_in_filter(record)
             if not record_tree_selected or not pass_in_global_filters:
                 processed_builds.add(build_id)
                 continue
+
+            should_process_test = self.test_in_filter(test_filter_key, record)
 
             if should_process_test:
                 self.handle_test(record, boots if is_record_boot else tests)
@@ -423,7 +489,7 @@ class HardwareDetails(View):
             processed_builds.add(build_id)
             if should_process_build:
                 builds["items"].append(build)
-                update_issues(record, builds, record["build__valid"] is False)
+                update_issues(record, builds, record["build__valid"] is not True, "build")
 
         builds["summary"] = create_details_build_summary(builds["items"])
         properties2List(builds, ["issues"])
@@ -431,6 +497,18 @@ class HardwareDetails(View):
         properties2List(boots, ["issues", "platformsFailing", "archSummary"])
 
         return (builds, tests, boots, tree_status_summary)
+
+    def _assign_default_record_values(self, record):
+        if (record["build__architecture"] is None):
+            record["build__architecture"] = UNKNOWN_STRING
+        if (record["build__compiler"] is None):
+            record["build__compiler"] = UNKNOWN_STRING
+        if (record["build__config_name"] is None):
+            record["build__config_name"] = UNKNOWN_STRING
+        if (record["build__incidents__issue__id"] is None and record["build__valid"] is not True):
+            record["build__incidents__issue__id"] = UNKNOWN_STRING
+        if (record["incidents__issue__id"] is None and record["status"] == STATUS_FAILED_VALUE):
+            record["incidents__issue__id"] = UNKNOWN_STRING
 
     def get_trees(self, hardware_id: str, origin: str, limit_datetime: int):
         tree_id_fields = [
@@ -524,9 +602,12 @@ class HardwareDetails(View):
             "build__checkout__git_commit_name",
             "build__checkout__git_commit_hash",
             "build__checkout__tree_name",
-            "build__incidents__issue__id",
-            "build__incidents__issue__comment",
-            "build__incidents__issue__report_url"
+            "incidents__id",
+            "incidents__issue__id",
+            "incidents__issue__comment",
+            "incidents__issue__report_url",
+            "incidents__test_id",
+            "build__incidents__issue__id"
         ).filter(
             origin=origin,
             environment_compatible__contains=[hardware_id],
