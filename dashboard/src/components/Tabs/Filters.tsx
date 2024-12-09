@@ -20,6 +20,8 @@ import type {
 } from '@/types/general';
 import { filterFieldMap, zFilterObjectsKeys } from '@/types/general';
 
+export const NO_VALID_INDEX = -1;
+
 // TODO: We can improve this idea and replace mapFilterToReq entirely
 export const mapFilterToReq = (filter: TFilter): TFilter => {
   const filterMapped: { [key: string]: string[] } = {};
@@ -111,6 +113,12 @@ interface ICheckboxSectionProps extends SectionsProps {
   filter: TFilter;
   isTFilterObjectKeys: (key: string) => boolean;
   sections: ISectionItem[];
+}
+
+interface ITreeSectionProps {
+  items?: Record<string, boolean>;
+  selectedTrees?: number[];
+  handleSelectTree: (index: string) => void;
 }
 
 // TODO: Remove useState for this forms, use something like react hook forms or tanstack forms (when it gets released)
@@ -224,3 +232,39 @@ const TimeRangeSection = ({
 };
 
 export const MemoizedTimeRangeSection = memo(TimeRangeSection);
+
+const TreeSelectSection = ({
+  items,
+  handleSelectTree,
+  selectedTrees,
+}: ITreeSectionProps): JSX.Element => {
+  const intl = useIntl();
+
+  const filterItems = useMemo(() => {
+    if (!items) return {};
+
+    const filteredItems: Record<string, boolean> = {};
+
+    Object.keys(items).map(key => {
+      const idx = Number(key.split('__')[1] ?? NO_VALID_INDEX);
+
+      filteredItems[key] = selectedTrees?.includes(idx) || false;
+    });
+
+    return filteredItems;
+  }, [items, selectedTrees]);
+
+  return (
+    <DrawerSection key="Tree">
+      <FilterCheckboxSection
+        title={intl.formatMessage({ id: 'global.trees' })}
+        items={filterItems}
+        isGlobal
+        subtitle={intl.formatMessage({ id: 'filter.treeSubtitle' })}
+        onClickItem={handleSelectTree}
+      />
+    </DrawerSection>
+  );
+};
+
+export const MemoizedTreeSelectSection = memo(TreeSelectSection);
