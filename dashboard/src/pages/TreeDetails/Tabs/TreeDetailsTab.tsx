@@ -35,7 +35,7 @@ const TreeDetailsTab = ({
   countElements,
 }: ITreeDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
-    from: '/tree/$treeId/',
+    from: '/tree/$treeId',
   });
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const treeDetailsTab: ITabItem[] = useMemo(

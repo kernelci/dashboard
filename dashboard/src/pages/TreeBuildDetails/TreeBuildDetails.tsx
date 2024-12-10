@@ -20,7 +20,10 @@ import {
 } from '@/components/Breadcrumb/Breadcrumb';
 
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
+import {
+  zTableFilterInfoDefault,
+  type TestsTableFilter,
+} from '@/types/tree/TreeDetails';
 
 const TreeBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
@@ -48,8 +51,7 @@ const TreeBuildDetails = (): JSX.Element => {
           return {
             ...previousParams,
             tableFilter: {
-              bootsTable: previousParams.tableFilter.bootsTable,
-              buildsTable: previousParams.tableFilter.buildsTable,
+              ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
               testsTable: filter,
             },
           };
@@ -90,7 +92,7 @@ const TreeBuildDetails = (): JSX.Element => {
       buildId={buildId}
       breadcrumb={breadcrumbElement}
       onClickFilter={onClickFilter}
-      tableFilter={searchParams.tableFilter}
+      tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}
     />
   );

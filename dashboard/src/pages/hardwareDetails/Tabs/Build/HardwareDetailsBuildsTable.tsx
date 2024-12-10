@@ -12,9 +12,10 @@ import { ItemType } from '@/components/ListingItem/ListingItem';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
-import type {
-  AccordionItemBuilds,
-  BuildsTableFilter,
+import {
+  zTableFilterInfoDefault,
+  type AccordionItemBuilds,
+  type BuildsTableFilter,
 } from '@/types/tree/TreeDetails';
 
 export interface THardwareDetailsBuildsTable {
@@ -117,7 +118,7 @@ export function HardwareDetailsBuildsTable({
 }: THardwareDetailsBuildsTable): JSX.Element {
   const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
 
-  const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
+  const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
   const navigateToBuildDetails = useCallback(
     (buildId: string) => {
@@ -137,9 +138,8 @@ export function HardwareDetailsBuildsTable({
           return {
             ...previousParams,
             tableFilter: {
+              ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
               buildsTable: filter,
-              bootsTable: previousParams.tableFilter?.bootsTable ?? 'all',
-              testsTable: previousParams.tableFilter?.testsTable ?? 'all',
             },
           };
         },

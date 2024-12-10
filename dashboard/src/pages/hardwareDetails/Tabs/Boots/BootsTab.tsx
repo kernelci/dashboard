@@ -12,7 +12,10 @@ import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
+import {
+  zTableFilterInfoDefault,
+  type TestsTableFilter,
+} from '@/types/tree/TreeDetails';
 
 import {
   DesktopGrid,
@@ -76,7 +79,7 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
           return {
             ...previousParams,
             tableFilter: {
-              ...previousParams.tableFilter,
+              ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
               bootsTable: newFilter,
             },
           };
