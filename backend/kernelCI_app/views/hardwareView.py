@@ -36,6 +36,7 @@ class HardwareView(View):
         )
 
         tests = Tests.objects.filter(
+            origin=origin,
             environment_compatible__isnull=False,
             build__checkout__git_commit_hash__in=Subquery(checkouts_subquery),
         ).values(

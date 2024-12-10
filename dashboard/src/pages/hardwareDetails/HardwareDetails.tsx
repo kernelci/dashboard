@@ -29,6 +29,8 @@ import DetailsFilterList from '@/components/Tabs/FilterList';
 
 import type { TFilter } from '@/types/general';
 
+import { getFormattedDate, getFormattedTime } from '@/utils/date';
+
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
@@ -49,7 +51,8 @@ function HardwareDetails(): JSX.Element {
   const {
     treeIndexes,
     treeCommits,
-    limitTimestampInSeconds,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
     diffFilter,
     origin,
   } = useSearch({ from: '/hardware/$hardwareId' });
@@ -99,7 +102,8 @@ function HardwareDetails(): JSX.Element {
 
   const { data, isLoading, isPlaceholderData } = useHardwareDetails(
     hardwareId,
-    limitTimestampInSeconds,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
     origin,
     reqFilter,
     treeIndexes ?? [],
@@ -117,6 +121,11 @@ function HardwareDetails(): JSX.Element {
     ),
     [cleanAll, diffFilter, isPlaceholderData, onFilterChange],
   );
+
+  const startTime = getFormattedTime(startTimestampInSeconds);
+  const endTime = getFormattedTime(endTimestampInSeconds);
+  const startDate = getFormattedDate(startTimestampInSeconds);
+  const endDate = getFormattedDate(endTimestampInSeconds);
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
     const { valid, invalid } = data?.builds.summary.builds ?? {};
@@ -169,30 +178,45 @@ function HardwareDetails(): JSX.Element {
 
   return (
     <div className="flex flex-col pt-8">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink
-              to="/hardware"
-              search={previousParams => {
-                return {
-                  intervalInDays: previousParams.intervalInDays,
-                  origin: previousParams.origin,
-                  hardwareSearch: previousParams.hardwareSearch,
-                };
-              }}
-            >
-              <FormattedMessage id="hardware.path" />
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              <span>{hardwareId}</span>
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <div className="flex items-center justify-between">
+        <div>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  to="/hardware"
+                  search={previousParams => {
+                    return {
+                      intervalInDays: previousParams.intervalInDays,
+                      origin: previousParams.origin,
+                      hardwareSearch: previousParams.hardwareSearch,
+                    };
+                  }}
+                >
+                  <FormattedMessage id="hardware.path" />
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>
+                  <span>{hardwareId}</span>
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+        <p className="text-sm font-medium text-gray-900">
+          <FormattedMessage
+            id="hardwareDetails.timeFrame"
+            values={{
+              startDate: startDate,
+              startTime: startTime,
+              endDate: endDate,
+              endTime: endTime,
+            }}
+          />
+        </p>
+      </div>
       <div className="mt-5">
         <HardwareHeader
           treeItems={treeData}

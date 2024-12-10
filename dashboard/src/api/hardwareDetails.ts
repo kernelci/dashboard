@@ -12,7 +12,8 @@ import { getTargetFilter } from '@/types/general';
 import http from './api';
 
 type fetchHardwareDetailsBody = {
-  limitTimestampInSeconds: number;
+  startTimestampInSeconds: number;
+  endTimestampInSeconds: number;
   origin: TOrigins;
   selectedCommits: Record<string, string>;
   filter?: Record<string, string[]>;
@@ -66,7 +67,8 @@ const mapIndexesToSelectedTrees = (
 
 export const useHardwareDetails = (
   hardwareId: string,
-  limitTimestampInSeconds: number,
+  startTimestampInSeconds: number,
+  endTimestampInSeconds: number,
   origin: TOrigins,
   filter: TFilter,
   selectedIndexes: number[],
@@ -86,7 +88,8 @@ export const useHardwareDetails = (
 
   const body: fetchHardwareDetailsBody = {
     origin,
-    limitTimestampInSeconds,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
     selectedCommits: selectedTrees,
     filter: filtersFormatted,
   };

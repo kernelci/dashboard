@@ -26,13 +26,13 @@ SELECTED_HEAD_TREE_VALUE = 'head'
 STATUS_FAILED_VALUE = "FAIL"
 
 
-def properties2List(d: Dict, keys: str):
-    for k in keys:
-        v = d[k]
+def properties_to_list(dict: Dict, keys: List[str]):
+    for key in keys:
+        v = dict[key]
         if type(v) is dict:
-            d[k] = list(v.values())
+            dict[key] = list(v.values())
         elif type(v) is set:
-            d[k] = list(v)
+            dict[key] = list(v)
 
 
 def get_arch_summary(record: Dict):
@@ -426,13 +426,13 @@ class HardwareDetails(View):
                 update_issues(record, builds, record["build__valid"] is False)
 
         builds["summary"] = create_details_build_summary(builds["items"])
-        properties2List(builds, ["issues"])
-        properties2List(tests, ["issues", "platformsFailing", "archSummary"])
-        properties2List(boots, ["issues", "platformsFailing", "archSummary"])
+        properties_to_list(builds, ["issues"])
+        properties_to_list(tests, ["issues", "platformsFailing", "archSummary"])
+        properties_to_list(boots, ["issues", "platformsFailing", "archSummary"])
 
         return (builds, tests, boots, tree_status_summary)
 
-    def get_trees(self, hardware_id: str, origin: str, limit_datetime: int):
+    def get_trees(self, hardware_id: str, origin: str, start_datetime: int, end_datetime: int):
         tree_id_fields = [
             "build__checkout__tree_name",
             "build__checkout__git_repository_branch",
@@ -442,7 +442,8 @@ class HardwareDetails(View):
         trees_query_set = Tests.objects.filter(
             environment_compatible__contains=[hardware_id],
             origin=origin,
-            build__checkout__start_time__lte=limit_datetime,
+            build__checkout__start_time__lte=end_datetime,
+            build__checkout__start_time__gte=start_datetime,
         ).values(
             *tree_id_fields,
             "build__checkout__git_commit_name",
@@ -541,8 +542,13 @@ class HardwareDetails(View):
             body = json.loads(request.body)
 
             origin = body.get("origin", DEFAULT_ORIGIN)
-            limit_datetime = datetime.fromtimestamp(
-                int(body.get('limitTimestampInSeconds')),
+            end_datetime = datetime.fromtimestamp(
+                int(body.get('endTimestampInSeconds')),
+                timezone.utc
+            )
+
+            start_datetime = datetime.fromtimestamp(
+                int(body.get('startTimestampInSeconds')),
                 timezone.utc
             )
 
@@ -566,13 +572,14 @@ class HardwareDetails(View):
             "hardware_id": hardware_id,
             "origin": origin,
             "selected_commits": json.dumps(selected_commits),
-            "limit_datetime": limit_datetime
+            "start_datetime": start_datetime,
+            "end_datetime": end_datetime,
         }
 
         trees = getQueryCache(self.cache_key_get_tree_data, cache_params)
 
         if not trees:
-            trees = self.get_trees(hardware_id, origin, limit_datetime)
+            trees = self.get_trees(hardware_id, origin, start_datetime, end_datetime)
             setQueryCache(self.cache_key_get_tree_data, cache_params, trees)
 
         trees_with_selected_commits = self.get_trees_with_selected_commit(
