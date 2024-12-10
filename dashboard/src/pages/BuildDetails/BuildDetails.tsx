@@ -8,7 +8,10 @@ import {
   useRouterState,
 } from '@tanstack/react-router';
 
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
+import {
+  zTableFilterInfoDefault,
+  type TestsTableFilter,
+} from '@/types/tree/TreeDetails';
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 
 import { RedirectFrom } from '@/types/general';
@@ -40,8 +43,7 @@ const BuildDetailsPage = (): JSX.Element => {
           return {
             ...previousParams,
             tableFilter: {
-              bootsTable: previousParams.tableFilter.bootsTable,
-              buildsTable: previousParams.tableFilter.buildsTable,
+              ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
               testsTable: filter,
             },
           };
@@ -65,7 +67,7 @@ const BuildDetailsPage = (): JSX.Element => {
     <BuildDetails
       buildId={buildId}
       onClickFilter={onClickFilter}
-      tableFilter={searchParams.tableFilter}
+      tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}
     />
   );

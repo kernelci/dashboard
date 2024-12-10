@@ -78,5 +78,5 @@ export interface THardwareDetailsFilter
   valid?: string[];
 }
 
-export const zTreeCommits = z.record(z.string()).optional();
+export const zTreeCommits = z.record(z.string()).default({});
 export type TTreeCommits = z.infer<typeof zTreeCommits>;

@@ -10,7 +10,10 @@ import { Skeleton } from '@/components/Skeleton';
 import { useTreeDetails } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
+import {
+  zTableFilterInfoDefault,
+  type TestsTableFilter,
+} from '@/types/tree/TreeDetails';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
@@ -35,14 +38,14 @@ interface TestsTabProps {
 }
 
 const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
-  const { treeId } = useParams({ from: '/tree/$treeId/' });
+  const { treeId } = useParams({ from: '/tree/$treeId' });
   const { isLoading, data, error } = useTreeDetails({
     treeId: treeId ?? '',
     filter: reqFilter,
   });
 
   const { tableFilter, diffFilter } = useSearch({
-    from: '/tree/$treeId/',
+    from: '/tree/$treeId',
   });
   const currentPathFilter = diffFilter.testPath
     ? Object.keys(diffFilter.testPath)[0]
@@ -86,8 +89,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
           return {
             ...previousParams,
             tableFilter: {
-              bootsTable: previousParams.tableFilter.bootsTable,
-              buildsTable: previousParams.tableFilter.buildsTable,
+              ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
               testsTable: filter,
             },
           };

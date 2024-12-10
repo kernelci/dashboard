@@ -12,7 +12,10 @@ import { Skeleton } from '@/components/Skeleton';
 import { BootsTable } from '@/components/BootsTable/BootsTable';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
+import {
+  zTableFilterInfoDefault,
+  type TestsTableFilter,
+} from '@/types/tree/TreeDetails';
 import {
   DesktopGrid,
   MobileGrid,
@@ -34,16 +37,16 @@ interface BootsTabProps {
 
 const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
   const { treeId } = useParams({
-    from: '/tree/$treeId/',
+    from: '/tree/$treeId',
   });
   const { tableFilter, diffFilter } = useSearch({
-    from: '/tree/$treeId/',
+    from: '/tree/$treeId',
   });
   const currentPathFilter = diffFilter.bootPath
     ? Object.keys(diffFilter.bootPath)[0]
     : undefined;
 
-  const navigate = useNavigate({ from: '/tree/$treeId/' });
+  const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const updatePathFilter = useCallback(
     (pathFilter: string) => {
@@ -67,7 +70,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           return {
             ...previousParams,
             tableFilter: {
-              ...previousParams.tableFilter,
+              ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
               bootsTable: newFilter,
             },
           };

@@ -1,8 +1,26 @@
 import { z } from 'zod';
 
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
 
-import { zTableFilterInfoValidator } from '@/types/tree/TreeDetails';
+import {
+  defaultValidadorValues,
+  zTableFilterInfoDefault,
+  zTableFilterInfoValidator,
+} from '@/types/tree/TreeDetails';
+import { DEFAULT_DIFF_FILTER, DEFAULT_ORIGIN } from '@/types/general';
+import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
+
+const defaultValues = {
+  origin: DEFAULT_ORIGIN,
+  tableFilter: zTableFilterInfoDefault,
+  diffFilter: DEFAULT_DIFF_FILTER,
+  currentPageTab: defaultValidadorValues.tab,
+  intervalInDays: DEFAULT_TIME_SEARCH,
+  treeSearch: '',
+  hardwareSearch: '',
+  treeIndexes: [],
+  treeCommits: {},
+};
 
 const buildDetailsSearchSchema = z.object({
   tableFilter: zTableFilterInfoValidator,
@@ -10,4 +28,5 @@ const buildDetailsSearchSchema = z.object({
 
 export const Route = createFileRoute('/build/$buildId')({
   validateSearch: buildDetailsSearchSchema,
+  search: { middlewares: [stripSearchParams(defaultValues)] },
 });

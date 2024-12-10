@@ -11,9 +11,10 @@ import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { ItemType } from '@/components/ListingItem/ListingItem';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
-import type {
-  AccordionItemBuilds,
-  BuildsTableFilter,
+import {
+  zTableFilterInfoDefault,
+  type AccordionItemBuilds,
+  type BuildsTableFilter,
 } from '@/types/tree/TreeDetails';
 
 export interface TTreeDetailsBuildsTable {
@@ -106,9 +107,9 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
 export function TreeDetailsBuildsTable({
   buildItems,
 }: TTreeDetailsBuildsTable): JSX.Element {
-  const { treeId } = useParams({ from: '/tree/$treeId/' });
-  const { tableFilter } = useSearch({ from: '/tree/$treeId/' });
-  const navigate = useNavigate({ from: '/tree/$treeId/' });
+  const { treeId } = useParams({ from: '/tree/$treeId' });
+  const { tableFilter } = useSearch({ from: '/tree/$treeId' });
+  const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const navigateToBuildDetails = useCallback(
     (buildId: string) => {
@@ -128,9 +129,8 @@ export function TreeDetailsBuildsTable({
           return {
             ...previousParams,
             tableFilter: {
+              ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
               buildsTable: newFilter,
-              bootsTable: previousParams.tableFilter?.bootsTable ?? 'all',
-              testsTable: previousParams.tableFilter?.testsTable ?? 'all',
             },
           };
         },
