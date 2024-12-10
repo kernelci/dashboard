@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 
 import { Link } from '@tanstack/react-router';
+import type { LinkProps } from '@tanstack/react-router';
 
 import {
   Breadcrumb,
@@ -19,9 +20,8 @@ const BreadcrumbList = ({ ...props }: BreadcrumbListProps): JSX.Element => {
   return <BreadcrumbListComponent {...props} className="text-black" />;
 };
 
-type LinkComponent = ComponentProps<typeof Link>;
 type BreadcrumbLinkProps = Pick<
-  LinkComponent,
+  LinkProps,
   'to' | 'params' | 'from' | 'search' | 'children'
 >;
 

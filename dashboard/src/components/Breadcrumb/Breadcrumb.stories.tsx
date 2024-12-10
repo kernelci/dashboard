@@ -30,7 +30,7 @@ export const Default: Story = {
           <BreadcrumbEllipsis />
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink to="#">Page</BreadcrumbLink>
+            <BreadcrumbLink to=".">Page</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
