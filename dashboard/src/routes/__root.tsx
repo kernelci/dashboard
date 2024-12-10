@@ -1,4 +1,8 @@
-import { createRootRoute, Outlet } from '@tanstack/react-router';
+import {
+  createRootRoute,
+  Outlet,
+  stripSearchParams,
+} from '@tanstack/react-router';
 
 import { z } from 'zod';
 
@@ -9,7 +13,11 @@ import { z } from 'zod';
 import SideMenu from '@/components/SideMenu/SideMenu';
 import TopBar from '@/components/TopBar/TopBar';
 
-import { zOrigin } from '@/types/general';
+import { DEFAULT_ORIGIN, zOrigin } from '@/types/general';
+
+const defaultValues = {
+  origin: DEFAULT_ORIGIN,
+};
 
 const RouteSchema = z.object({
   origin: zOrigin,
@@ -17,6 +25,7 @@ const RouteSchema = z.object({
 
 export const Route = createRootRoute({
   validateSearch: RouteSchema,
+  search: { middlewares: [stripSearchParams(defaultValues)] },
   component: () => (
     <>
       <div className="h-full w-full">

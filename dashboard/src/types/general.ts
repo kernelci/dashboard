@@ -117,7 +117,7 @@ const origins = [
   'syzbot',
   'tuxsuite',
 ] as const;
-const DEFAULT_ORIGIN = 'maestro';
+export const DEFAULT_ORIGIN = 'maestro';
 
 export type TOrigins = (typeof origins)[number];
 
@@ -156,6 +156,7 @@ export type TFilterKeys =
   | z.infer<typeof zFilterObjectsKeys>
   | z.infer<typeof zFilterNumberKeys>;
 
+export const DEFAULT_DIFF_FILTER = {};
 export const zDiffFilter = z
   .union([
     z.object({
@@ -181,7 +182,7 @@ export const zDiffFilter = z
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])
-  .catch({});
+  .catch(DEFAULT_DIFF_FILTER);
 
 export type TFilterObjectsKeys = z.infer<typeof zFilterObjectsKeys>;
 export type TFilter = z.infer<typeof zDiffFilter>;
