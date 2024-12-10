@@ -5,7 +5,7 @@ import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
 import { makeZIntervalInDays } from '@/types/general';
 
 export const HomeSearchSchema = z.object({
-  treeSearch: z.string().optional().catch(undefined),
+  treeSearch: z.string().catch(''),
   intervalInDays: makeZIntervalInDays(DEFAULT_TIME_SEARCH),
 });
 

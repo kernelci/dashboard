@@ -117,7 +117,7 @@ export function HardwareDetailsBuildsTable({
 }: THardwareDetailsBuildsTable): JSX.Element {
   const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
 
-  const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
+  const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
   const navigateToBuildDetails = useCallback(
     (buildId: string) => {

@@ -136,7 +136,7 @@ const TreeDetailsFilter = ({
   paramFilter,
   treeUrl,
 }: ITreeDetailsFilter): JSX.Element => {
-  const { treeId } = useParams({ from: '/tree/$treeId/' });
+  const { treeId } = useParams({ from: '/tree/$treeId' });
 
   const { data, isLoading } = useTreeDetails({
     treeId,

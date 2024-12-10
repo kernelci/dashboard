@@ -96,10 +96,6 @@ export type TTreeTestsFullData = {
 
 const possibleTabs = ['global.builds', 'global.boots', 'global.tests'] as const;
 
-export const zPossibleTabValidator = z
-  .enum(possibleTabs)
-  .catch('global.builds');
-
 export const possibleBuildsTableFilter = [
   'invalid',
   'valid',
@@ -114,12 +110,28 @@ export const possibleTestsTableFilter = [
   'inconclusive',
 ] as const;
 
+export const defaultValidadorValues: {
+  tab: (typeof possibleTabs)[number];
+  buildsTableFilter: (typeof possibleBuildsTableFilter)[number];
+  testsTableFilter: (typeof possibleTestsTableFilter)[number];
+} = {
+  tab: 'global.builds',
+  buildsTableFilter: 'all',
+  testsTableFilter: 'all',
+};
+
+export const zPossibleTabValidator = z
+  .enum(possibleTabs)
+  .default(defaultValidadorValues.tab)
+  .catch(defaultValidadorValues.tab);
+
 export const zBuildsTableFilterValidator = z
   .enum(possibleBuildsTableFilter)
-  .catch('all');
+  .catch(defaultValidadorValues.buildsTableFilter);
+
 export const zTestsTableFilterValidator = z
   .enum(possibleTestsTableFilter)
-  .catch('all');
+  .catch(defaultValidadorValues.testsTableFilter);
 
 export type BuildsTableFilter = z.infer<typeof zBuildsTableFilterValidator>;
 export type TestsTableFilter = z.infer<typeof zTestsTableFilterValidator>;
@@ -130,14 +142,19 @@ export const zTableFilterInfo = object({
   testsTable: zTestsTableFilterValidator,
 });
 
-export const zTableFilterInfoValidator = zTableFilterInfo.catch({
+export const zTableFilterInfoDefault = {
   buildsTable: zBuildsTableFilterValidator.parse(''),
   bootsTable: zTestsTableFilterValidator.parse(''),
   testsTable: zTestsTableFilterValidator.parse(''),
-});
+};
+
+export const zTableFilterInfoValidator = zTableFilterInfo
+  .default(zTableFilterInfoDefault)
+  .catch(zTableFilterInfoDefault);
 
 export type TableFilter = z.infer<typeof zTableFilterInfo>;
 
+export const DEFAULT_TREE_INFO = {};
 export const zTreeInformation = z
   .object({
     gitBranch: z.string().optional().catch(''),
@@ -146,7 +163,8 @@ export const zTreeInformation = z
     commitName: z.string().optional().catch(''),
     headCommitHash: z.string().optional().catch(undefined),
   })
-  .catch({});
+  .default(DEFAULT_TREE_INFO)
+  .catch(DEFAULT_TREE_INFO);
 
 export type TestByCommitHash = {
   id: string;

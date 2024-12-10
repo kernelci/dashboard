@@ -34,16 +34,16 @@ interface BootsTabProps {
 
 const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
   const { treeId } = useParams({
-    from: '/tree/$treeId/',
+    from: '/tree/$treeId',
   });
   const { tableFilter, diffFilter } = useSearch({
-    from: '/tree/$treeId/',
+    from: '/tree/$treeId',
   });
   const currentPathFilter = diffFilter.bootPath
     ? Object.keys(diffFilter.bootPath)[0]
     : undefined;
 
-  const navigate = useNavigate({ from: '/tree/$treeId/' });
+  const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const updatePathFilter = useCallback(
     (pathFilter: string) => {

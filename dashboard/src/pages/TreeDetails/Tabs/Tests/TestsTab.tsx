@@ -35,14 +35,14 @@ interface TestsTabProps {
 }
 
 const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
-  const { treeId } = useParams({ from: '/tree/$treeId/' });
+  const { treeId } = useParams({ from: '/tree/$treeId' });
   const { isLoading, data, error } = useTreeDetails({
     treeId: treeId ?? '',
     filter: reqFilter,
   });
 
   const { tableFilter, diffFilter } = useSearch({
-    from: '/tree/$treeId/',
+    from: '/tree/$treeId',
   });
   const currentPathFilter = diffFilter.testPath
     ? Object.keys(diffFilter.testPath)[0]

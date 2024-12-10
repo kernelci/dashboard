@@ -106,9 +106,9 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
 export function TreeDetailsBuildsTable({
   buildItems,
 }: TTreeDetailsBuildsTable): JSX.Element {
-  const { treeId } = useParams({ from: '/tree/$treeId/' });
-  const { tableFilter } = useSearch({ from: '/tree/$treeId/' });
-  const navigate = useNavigate({ from: '/tree/$treeId/' });
+  const { treeId } = useParams({ from: '/tree/$treeId' });
+  const { tableFilter } = useSearch({ from: '/tree/$treeId' });
+  const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const navigateToBuildDetails = useCallback(
     (buildId: string) => {
