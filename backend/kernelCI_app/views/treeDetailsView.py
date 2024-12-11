@@ -1,7 +1,9 @@
 import json
 from django.http import JsonResponse
 from django.views import View
+from kernelCI_app.helpers.filters import should_increment_test_issue, should_filter_test_issue
 from kernelCI_app.utils import (
+    UNKNOWN_STRING,
     FilterParams,
     convert_issues_dict_to_list,
     extract_error_message,
@@ -15,8 +17,6 @@ from django.db import connection
 from collections import defaultdict
 
 from kernelCI_app.viewCommon import create_details_build_summary
-
-UNKNOWN_STRING = "Unknown"
 
 
 class TreeDetails(View):
@@ -165,6 +165,7 @@ class TreeDetails(View):
         issue_report_url = currentRowData["issue_report_url"]
         testEnvironmentCompatible = currentRowData["test_environment_compatible"]
         testPath = currentRowData["test_path"]
+        incident_test_id = currentRowData["incident_test_id"]
 
         if (
             (
@@ -194,14 +195,19 @@ class TreeDetails(View):
                     toIntOrDefault(testDuration, 0) < self.filterBootDurationMin
                 )
             )
-            or (
-                len(self.filterIssues["boot"]) > 0
-                and issue_id not in self.filterIssues["boot"]
+            or should_filter_test_issue(
+                self.filterIssues["boot"],
+                issue_id,
+                "incident_test_id"
             )
         ):
             return
 
-        if issue_id:
+        can_insert_issue = should_increment_test_issue(
+            issue_id=issue_id, incident_test_id=incident_test_id
+        )
+
+        if issue_id and can_insert_issue:
             currentIssue = self.bootsIssuesTable.get(issue_id)
             if currentIssue:
                 currentIssue["incidents_info"]["incidentsCount"] += 1
@@ -270,28 +276,15 @@ class TreeDetails(View):
                     toIntOrDefault(test_duration, 0) < self.filterTestDurationMin
                 )
             )
-            or self._test_issue_filter(currentRowData)
+            or should_filter_test_issue(
+                self.filterIssues["test"],
+                currentRowData["issue_id"],
+                currentRowData["incident_test_id"],
+            )
         ):
             return False
 
         return True
-
-    def _test_issue_filter(self, currentRowData) -> bool:
-        issue_id = currentRowData["issue_id"]
-        incident_test_id = currentRowData["incident_test_id"]
-
-        test_issue_filters = self.filterIssues["test"]
-
-        has_any_test_filter = len(test_issue_filters) > 0
-        is_known_issue = issue_id is not None and issue_id is not UNKNOWN_STRING
-        is_from_tests = incident_test_id is not None or not is_known_issue
-        issue_outside_allowed_issues = issue_id not in test_issue_filters
-
-        return (
-            has_any_test_filter
-            and is_from_tests
-            and issue_outside_allowed_issues
-        )
 
     def __processNonBootsTest(self, currentRowData):
         testId = currentRowData["test_id"]
@@ -306,24 +299,14 @@ class TreeDetails(View):
         issue_comment = currentRowData["issue_comment"]
         issue_report_url = currentRowData["issue_report_url"]
         testEnvironmentCompatible = currentRowData["test_environment_compatible"]
+        incident_test_id = currentRowData["incident_test_id"]
 
         if not self.__nonBootsGuard(currentRowData):
             return
 
-        issue_id = currentRowData["issue_id"]
-        incident_test_id = currentRowData["incident_test_id"]
+        can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
 
-        is_known_issue = issue_id is not None and issue_id is not UNKNOWN_STRING
-        is_exclusively_build_issue = is_known_issue and incident_test_id is None
-
-        if is_exclusively_build_issue:
-            issue_id = UNKNOWN_STRING
-
-        is_unknown_issue = issue_id is UNKNOWN_STRING
-        is_known_test_issue = incident_test_id is not None
-        is_from_tests = is_known_test_issue or is_unknown_issue
-
-        if is_from_tests:
+        if issue_id and can_insert_issue:
             currentIssue = self.testIssuesTable.get(issue_id)
             if currentIssue:
                 currentIssue["incidents_info"]["incidentsCount"] += 1
@@ -388,7 +371,11 @@ class TreeDetails(View):
             if (current_issue):
                 current_issue["incidents_info"]["incidentsCount"] += 1
             else:
-                self.processed_build_issues[issue_id] = _get_issue_details(row_data)
+                self.processed_build_issues[issue_id] = create_issue(
+                    issue_id=row_data["issue_id"],
+                    issue_comment=row_data["issue_comment"],
+                    issue_report_url=row_data["issue_report_url"],
+                )
         elif build_id not in self.processed_builds and build_valid is False:
             self.failed_builds_with_unknown_issues += 1
 
@@ -590,11 +577,3 @@ def _get_build(row_data):
         "git_repository_url": row_data["checkout_git_repository_url"],
         "git_repository_branch": row_data["checkout_git_repository_branch"],
     }
-
-
-def _get_issue_details(row_data):
-    return create_issue(
-        issue_id=row_data["issue_id"],
-        issue_comment=row_data["issue_comment"],
-        issue_report_url=row_data["issue_report_url"],
-    )
