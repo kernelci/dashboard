@@ -41,6 +41,10 @@ import { sumStatus } from '@/utils/status';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
 
+import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
+
+import type { ListingTableColumnMeta } from '@/types/table';
+
 import { InputTime } from './InputTime';
 
 // TODO Extract and reuse the table
@@ -51,6 +55,9 @@ const columns: ColumnDef<HardwareTableItem>[] = [
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.name" />
     ),
+    meta: {
+      tabTarget: 'global.builds',
+    },
   },
   {
     accessorKey: 'buildCount',
@@ -73,6 +80,9 @@ const columns: ColumnDef<HardwareTableItem>[] = [
       ) : (
         <FormattedMessage id="global.loading" defaultMessage="Loading..." />
       );
+    },
+    meta: {
+      tabTarget: 'global.builds',
     },
   },
   {
@@ -101,6 +111,9 @@ const columns: ColumnDef<HardwareTableItem>[] = [
         <FormattedMessage id="global.loading" defaultMessage="Loading..." />
       );
     },
+    meta: {
+      tabTarget: 'global.boots',
+    },
   },
   {
     accessorKey: 'testStatusCount',
@@ -128,6 +141,9 @@ const columns: ColumnDef<HardwareTableItem>[] = [
         <FormattedMessage id="global.loading" defaultMessage="Loading..." />
       );
     },
+    meta: {
+      tabTarget: 'global.tests',
+    },
   },
 ];
 
@@ -146,13 +162,15 @@ export function HardwareTable({
     usePaginationState('hardwareListing');
 
   const getLinkProps = useCallback(
-    (row: Row<HardwareTableItem>): LinkProps => {
+    (row: Row<HardwareTableItem>, tabTarget?: string): LinkProps => {
       return {
         from: '/hardware',
         to: '/hardware/$hardwareId',
         params: { hardwareId: row.original.hardwareName },
+
         search: previousSearch => ({
           ...previousSearch,
+          currentPageTab: zPossibleTabValidator.parse(tabTarget),
           limitTimestampInSeconds,
         }),
       };
@@ -206,11 +224,14 @@ export function HardwareTable({
       modelRows.map(row => (
         <TableRow key={row.id}>
           {row.getVisibleCells().map(cell => {
+            const tabTarget = (
+              cell.column.columnDef.meta as ListingTableColumnMeta
+            ).tabTarget;
             return (
               <TableCellWithLink
                 key={cell.id}
                 linkClassName="w-full inline-block h-full"
-                linkProps={getLinkProps(row)}
+                linkProps={getLinkProps(row, tabTarget)}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </TableCellWithLink>
