@@ -6,7 +6,8 @@ from django.http import HttpResponseBadRequest
 import re
 
 DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
-NULL_STRINGS = set(["null", "Unknown", "NULL"])
+UNKNOWN_STRING = "Unknown"
+NULL_STRINGS = set(["null", UNKNOWN_STRING, "NULL"])
 
 
 class IncidentInfo(TypedDict):

@@ -44,6 +44,10 @@ export const createFilter = (
     testStatus[s] = false;
   });
 
+  const buildIssue: TFilterValues = {};
+  const bootIssue: TFilterValues = {};
+  const testIssue: TFilterValues = {};
+
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};
   const compilers: TFilterValues = {};
@@ -74,6 +78,9 @@ export const createFilter = (
     data.configs.forEach(config => {
       configs[config ?? 'Unknown'] = false;
     });
+    data.builds.issues.forEach(i => (buildIssue[i.id] = false));
+    data.boots.issues.forEach(i => (bootIssue[i.id] = false));
+    data.tests.issues.forEach(i => (testIssue[i.id] = false));
   }
 
   return {
@@ -85,6 +92,9 @@ export const createFilter = (
     testStatus,
     trees,
     treeIndexes,
+    buildIssue,
+    bootIssue,
+    testIssue,
   };
 };
 
@@ -103,6 +113,21 @@ const sectionHardware: ISectionItem[] = [
     title: 'filter.testStatus',
     subtitle: 'filter.statusSubtitle',
     sectionKey: 'testStatus',
+  },
+  {
+    title: 'filter.buildIssue',
+    subtitle: 'filter.issueSubtitle',
+    sectionKey: 'buildIssue',
+  },
+  {
+    title: 'filter.bootIssue',
+    subtitle: 'filter.issueSubtitle',
+    sectionKey: 'bootIssue',
+  },
+  {
+    title: 'filter.testIssue',
+    subtitle: 'filter.issueSubtitle',
+    sectionKey: 'testIssue',
   },
   {
     title: 'global.configs',

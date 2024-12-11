@@ -154,11 +154,14 @@ const CheckboxSection = ({
 
   return (
     <>
-      {checkboxSectionsProps.map((props, i) => (
-        <DrawerSection key={props.title} hideSeparator={i === 0}>
-          <FilterCheckboxSection {...props} />
-        </DrawerSection>
-      ))}
+      {checkboxSectionsProps.map(
+        (props, i) =>
+          Object.entries(props.items ?? {}).length > 0 && (
+            <DrawerSection key={props.title} hideSeparator={i === 0}>
+              <FilterCheckboxSection {...props} />
+            </DrawerSection>
+          ),
+      )}
     </>
   );
 };
