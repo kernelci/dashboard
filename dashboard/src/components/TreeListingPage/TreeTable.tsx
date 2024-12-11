@@ -51,6 +51,8 @@ import { BuildStatus, GroupedTestStatus } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 
+import type { ListingTableColumnMeta } from '@/types/table';
+
 import { InputTime } from './InputTime';
 
 const MemoizedInputTime = memo(InputTime);
@@ -77,12 +79,18 @@ const columns: ColumnDef<TreeTableBody>[] = [
         </Tooltip>
       );
     },
+    meta: {
+      tabTarget: 'global.builds',
+    },
   },
   {
     accessorKey: 'branch',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="globalTable.branch" />
     ),
+    meta: {
+      tabTarget: 'global.builds',
+    },
   },
   {
     accessorKey: 'commitName',
@@ -95,6 +103,9 @@ const columns: ColumnDef<TreeTableBody>[] = [
           ? row.getValue('commitName')
           : row.original.commitHash,
       ),
+    meta: {
+      tabTarget: 'global.builds',
+    },
   },
   {
     accessorKey: 'date',
@@ -104,6 +115,9 @@ const columns: ColumnDef<TreeTableBody>[] = [
     cell: ({ row }): JSX.Element => (
       <TooltipDateTime dateTime={row.getValue('date')} lineBreak={true} />
     ),
+    meta: {
+      tabTarget: 'global.builds',
+    },
   },
   {
     accessorKey: 'buildStatus.valid',
@@ -124,6 +138,9 @@ const columns: ColumnDef<TreeTableBody>[] = [
       ) : (
         <FormattedMessage id="global.loading" defaultMessage="Loading..." />
       );
+    },
+    meta: {
+      tabTarget: 'global.builds',
     },
   },
   {
@@ -149,6 +166,9 @@ const columns: ColumnDef<TreeTableBody>[] = [
         <FormattedMessage id="global.loading" defaultMessage="Loading..." />
       );
     },
+    meta: {
+      tabTarget: 'global.boots',
+    },
   },
   {
     accessorKey: 'testStatus.pass',
@@ -173,18 +193,11 @@ const columns: ColumnDef<TreeTableBody>[] = [
         <FormattedMessage id="global.loading" defaultMessage="Loading..." />
       );
     },
+    meta: {
+      tabTarget: 'global.tests',
+    },
   },
 ];
-
-const columnLinkTargets = [
-  'global.builds',
-  'global.builds',
-  'global.builds',
-  'global.builds',
-  'global.builds',
-  'global.boots',
-  'global.tests',
-] as const;
 
 interface ITreeTable {
   treeTableRows: TreeTableBody[];
@@ -199,7 +212,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
   const origin = zOrigin.parse(unsafeOrigin);
 
   const getLinkProps = useCallback(
-    (row: Row<TreeTableBody>, target: string): LinkProps => {
+    (row: Row<TreeTableBody>, tabTarget?: string): LinkProps => {
       return {
         to: '/tree/$treeId',
         params: { treeId: row.original.id },
@@ -211,7 +224,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
             testsTable: possibleTestsTableFilter[0],
           },
           origin: origin,
-          currentPageTab: zPossibleTabValidator.parse(target),
+          currentPageTab: zPossibleTabValidator.parse(tabTarget),
           diffFilter: {},
           treeInfo: {
             gitUrl: row.original.url,
@@ -268,12 +281,15 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
     return modelRows?.length ? (
       modelRows.map(row => (
         <TableRow key={row.id}>
-          {row.getVisibleCells().map((cell, cellIndex) => {
+          {row.getVisibleCells().map(cell => {
+            const tabTarget = (
+              cell.column.columnDef.meta as ListingTableColumnMeta
+            ).tabTarget;
             return (
               <TableCellWithLink
                 key={cell.id}
                 linkClassName="w-full inline-block h-full"
-                linkProps={getLinkProps(row, columnLinkTargets[cellIndex])}
+                linkProps={getLinkProps(row, tabTarget)}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </TableCellWithLink>
