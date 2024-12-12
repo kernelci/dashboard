@@ -1,115 +1,32 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
-import { MdCheck, MdClose } from 'react-icons/md';
-
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { useCallback } from 'react';
 
 import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
-import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
-import { ItemType } from '@/components/ListingItem/ListingItem';
 import { TableHeader } from '@/components/Table/TableHeader';
-import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import {
   zTableFilterInfoDefault,
   type AccordionItemBuilds,
   type BuildsTableFilter,
 } from '@/types/tree/TreeDetails';
+import { defaultBuildColumns } from '@/components/BuildsTable/DefaultBuildsColumns';
 
 export interface THardwareDetailsBuildsTable {
   buildItems: AccordionItemBuilds[];
   hardwareId: string;
 }
 
-const buildStatusMap = {
-  valid: <MdCheck className="text-green" />,
-  invalid: <MdClose className="text-red" />,
-  null: <span>-</span>,
-};
-
-const columns: ColumnDef<AccordionItemBuilds>[] = [
+const hardwareDetailsBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
   {
     accessorKey: 'treeBranch',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="hardwareDetails.treeBranch" />
     ),
   },
-  {
-    accessorKey: 'config',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="global.config" />
-    ),
-  },
-  {
-    accessorKey: 'architecture',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="global.arch" />
-    ),
-  },
-  {
-    accessorKey: 'compiler',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="global.compiler" />
-    ),
-  },
-  {
-    accessorKey: 'date',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="global.date" />
-    ),
-    cell: ({ row }): JSX.Element => (
-      <TooltipDateTime
-        dateTime={row.getValue('date')}
-        lineBreak={true}
-        showLabelTime={true}
-        showLabelTZ={true}
-      />
-    ),
-  },
-  {
-    accessorKey: 'buildErrors',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="global.buildErrors" />
-    ),
-    cell: ({ row }): JSX.Element => (
-      <ColoredCircle
-        className="max-w-6"
-        quantity={row.getValue('buildErrors')}
-        backgroundClassName={
-          (row.getValue('buildErrors') as number) > 0
-            ? ItemType.Error
-            : ItemType.None
-        }
-      />
-    ),
-  },
-  {
-    accessorKey: 'buildTime',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="global.buildTime" />
-    ),
-    cell: ({ row }): JSX.Element => {
-      return row.getValue('buildTime');
-    },
-  },
-  {
-    accessorKey: 'status',
-    header: ({ column }): JSX.Element => (
-      <TableHeader
-        column={column}
-        intlKey="global.status"
-        tooltipId="build.statusTooltip"
-      />
-    ),
-    cell: ({ row }): JSX.Element => {
-      return buildStatusMap[
-        row.getValue('status') as keyof typeof buildStatusMap
-      ];
-    },
-    filterFn: 'equals',
-  },
+  ...defaultBuildColumns,
 ];
 
 export function HardwareDetailsBuildsTable({
@@ -153,7 +70,7 @@ export function HardwareDetailsBuildsTable({
       tableKey="hardwareDetailsBuilds"
       filter={tableFilter.buildsTable}
       buildItems={buildItems}
-      columns={columns}
+      columns={hardwareDetailsBuildColumns}
       onClickFilter={onClickFilter}
       onClickShowBuild={navigateToBuildDetails}
     />
