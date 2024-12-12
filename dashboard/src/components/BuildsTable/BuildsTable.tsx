@@ -48,10 +48,12 @@ import { usePaginationState } from '@/hooks/usePaginationState';
 
 import type { TableKeys } from '@/utils/constants/tables';
 
+import { defaultBuildColumns } from './DefaultBuildsColumns';
+
 export interface IBuildsTable {
   tableKey: TableKeys;
   buildItems: AccordionItemBuilds[];
-  columns: ColumnDef<AccordionItemBuilds>[];
+  columns?: ColumnDef<AccordionItemBuilds>[];
   onClickShowBuild: IAccordionItems['onClickShowBuild'];
   filter: BuildsTableFilter;
   onClickFilter: (filter: BuildsTableFilter) => void;
@@ -168,7 +170,7 @@ const TableRowMemoized = memo(TableRowComponent);
 export function BuildsTable({
   tableKey,
   buildItems,
-  columns,
+  columns = defaultBuildColumns,
   onClickShowBuild,
   filter,
   onClickFilter,

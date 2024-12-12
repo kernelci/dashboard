@@ -1,0 +1,85 @@
+import type { ColumnDef } from '@tanstack/react-table';
+
+import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+import { TableHeader } from '@/components/Table/TableHeader';
+
+import { TooltipDateTime } from '@/components/TooltipDateTime';
+import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
+import { ItemType } from '@/components/ListingItem/ListingItem';
+
+export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
+  {
+    accessorKey: 'config',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.config" />
+    ),
+  },
+  {
+    accessorKey: 'architecture',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.arch" />
+    ),
+  },
+  {
+    accessorKey: 'compiler',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.compiler" />
+    ),
+  },
+  {
+    accessorKey: 'date',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.date" />
+    ),
+    cell: ({ row }): JSX.Element => (
+      <TooltipDateTime
+        dateTime={row.getValue('date')}
+        lineBreak={true}
+        showLabelTime={true}
+        showLabelTZ={true}
+      />
+    ),
+  },
+  {
+    accessorKey: 'buildErrors',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.buildErrors" />
+    ),
+    cell: ({ row }): JSX.Element => (
+      <ColoredCircle
+        className="max-w-6"
+        quantity={row.getValue('buildErrors')}
+        backgroundClassName={
+          (row.getValue('buildErrors') as number) > 0
+            ? ItemType.Error
+            : ItemType.None
+        }
+      />
+    ),
+  },
+  {
+    accessorKey: 'buildTime',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.buildTime" />
+    ),
+    cell: ({ row }): JSX.Element => {
+      return row.getValue('buildTime');
+    },
+  },
+  {
+    accessorKey: 'status',
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="global.status"
+        tooltipId="build.statusTooltip"
+      />
+    ),
+    cell: ({ row }): string => {
+      return row.getValue('status')
+        ? row.getValue('status')!.toString().toUpperCase()
+        : 'NULL';
+    },
+    filterFn: 'equals',
+  },
+];
