@@ -5,31 +5,26 @@ import { z } from 'zod';
 import {
   DEFAULT_DIFF_FILTER,
   DEFAULT_ORIGIN,
+  DEFAULT_TAB,
   zDiffFilter,
   zOrigin,
-} from '@/types/general';
-
-import {
-  DEFAULT_TREE_INFO,
-  defaultValidadorValues,
   zPossibleTabValidator,
   zTableFilterInfoDefault,
   zTableFilterInfoValidator,
-  zTreeInformation,
-} from '@/types/tree/TreeDetails';
+} from '@/types/general';
+
+import { DEFAULT_TREE_INFO, zTreeInformation } from '@/types/tree/TreeDetails';
 
 const defaultValues = {
   diffFilter: DEFAULT_DIFF_FILTER,
-  testPath: '',
   origin: DEFAULT_ORIGIN,
   treeInfo: DEFAULT_TREE_INFO,
-  currentPageTab: defaultValidadorValues.tab,
+  currentPageTab: DEFAULT_TAB,
   tableFilter: zTableFilterInfoDefault,
 };
 
 const treeDetailsSearchSchema = z.object({
   diffFilter: zDiffFilter,
-  testPath: z.string().catch(''),
   origin: zOrigin,
   treeInfo: zTreeInformation,
   currentPageTab: zPossibleTabValidator,

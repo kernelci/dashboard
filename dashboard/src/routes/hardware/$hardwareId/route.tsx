@@ -3,25 +3,31 @@ import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
 import { z } from 'zod';
 
 import {
-  defaultValidadorValues,
+  DEFAULT_TREE_COMMITS,
+  DEFAULT_TREE_INDEXES,
+  zTreeCommits,
+  zTreeIndexes,
+} from '@/types/hardware/hardwareDetails';
+
+import {
+  DEFAULT_DIFF_FILTER,
+  DEFAULT_TAB,
+  zDiffFilter,
   zPossibleTabValidator,
   zTableFilterInfoDefault,
   zTableFilterInfoValidator,
-} from '@/types/tree/TreeDetails';
-
-import { zTreeCommits } from '@/types/hardware/hardwareDetails';
-import { DEFAULT_DIFF_FILTER, zDiffFilter } from '@/types/general';
+} from '@/types/general';
 
 const defaultValues = {
-  currentPageTab: defaultValidadorValues.tab,
-  treeIndexes: [],
-  treeCommits: {},
+  currentPageTab: DEFAULT_TAB,
+  treeIndexes: DEFAULT_TREE_INDEXES,
+  treeCommits: DEFAULT_TREE_COMMITS,
   tableFilter: zTableFilterInfoDefault,
   diffFilter: DEFAULT_DIFF_FILTER,
 };
 const hardwareDetailsSearchSchema = z.object({
   currentPageTab: zPossibleTabValidator,
-  treeIndexes: z.array(z.number().int()).default([]),
+  treeIndexes: zTreeIndexes,
   treeCommits: zTreeCommits,
   tableFilter: zTableFilterInfoValidator,
   startTimestampInSeconds: z.number(),

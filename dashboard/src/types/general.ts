@@ -158,7 +158,29 @@ export type TFilterKeys =
   | z.infer<typeof zFilterObjectsKeys>
   | z.infer<typeof zFilterNumberKeys>;
 
+const possibleTabs = ['global.builds', 'global.boots', 'global.tests'] as const;
+
+export const possibleBuildsTableFilter = [
+  'invalid',
+  'valid',
+  'all',
+  'null',
+] as const;
+
+export const possibleTestsTableFilter = [
+  'all',
+  'success',
+  'failed',
+  'inconclusive',
+] as const;
+
 export const DEFAULT_DIFF_FILTER = {};
+export const DEFAULT_TAB: (typeof possibleTabs)[number] = 'global.builds';
+const DEFAULT_BUILDS_TABLE_FILTER: (typeof possibleBuildsTableFilter)[number] =
+  'all';
+const DEFAULT_TESTS_TABLE_FILTER: (typeof possibleTestsTableFilter)[number] =
+  'all';
+
 export const zDiffFilter = z
   .union([
     z.object({
@@ -186,6 +208,40 @@ export const zDiffFilter = z
   ])
   .default(DEFAULT_DIFF_FILTER)
   .catch(DEFAULT_DIFF_FILTER);
+
+export const zPossibleTabValidator = z
+  .enum(possibleTabs)
+  .default(DEFAULT_TAB)
+  .catch(DEFAULT_TAB);
+
+export const zBuildsTableFilterValidator = z
+  .enum(possibleBuildsTableFilter)
+  .catch(DEFAULT_BUILDS_TABLE_FILTER);
+
+export const zTestsTableFilterValidator = z
+  .enum(possibleTestsTableFilter)
+  .catch(DEFAULT_TESTS_TABLE_FILTER);
+
+export type BuildsTableFilter = z.infer<typeof zBuildsTableFilterValidator>;
+export type TestsTableFilter = z.infer<typeof zTestsTableFilterValidator>;
+
+export const zTableFilterInfo = z.object({
+  buildsTable: zBuildsTableFilterValidator,
+  bootsTable: zTestsTableFilterValidator,
+  testsTable: zTestsTableFilterValidator,
+});
+
+export const zTableFilterInfoDefault = {
+  buildsTable: zBuildsTableFilterValidator.parse(''),
+  bootsTable: zTestsTableFilterValidator.parse(''),
+  testsTable: zTestsTableFilterValidator.parse(''),
+};
+
+export const zTableFilterInfoValidator = zTableFilterInfo
+  .default(zTableFilterInfoDefault)
+  .catch(zTableFilterInfoDefault);
+
+export type TableFilter = z.infer<typeof zTableFilterInfo>;
 
 export type TFilterObjectsKeys = z.infer<typeof zFilterObjectsKeys>;
 export type TFilter = z.infer<typeof zDiffFilter>;

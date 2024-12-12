@@ -12,7 +12,6 @@ import { Skeleton } from '@/components/Skeleton';
 import { BootsTable } from '@/components/BootsTable/BootsTable';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 import {
   DesktopGrid,
   MobileGrid,
@@ -24,7 +23,8 @@ import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
 import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
-import type { TFilter } from '@/types/general';
+
+import type { TestsTableFilter, TFilter } from '@/types/general';
 
 import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
 

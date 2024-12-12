@@ -34,11 +34,7 @@ import TableStatusFilter from '@/components/Table/TableStatusFilter';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import type { IAccordionItems } from '@/pages/TreeDetails/Tabs/Build/BuildAccordionContent';
 import AccordionBuildContent from '@/pages/TreeDetails/Tabs/Build/BuildAccordionContent';
-import type {
-  AccordionItemBuilds,
-  BuildsTableFilter,
-} from '@/types/tree/TreeDetails';
-import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
+import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
 import { useBuildStatusCount } from '@/api/treeDetails';
 import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
@@ -47,6 +43,8 @@ import { cn } from '@/lib/utils';
 import { usePaginationState } from '@/hooks/usePaginationState';
 
 import type { TableKeys } from '@/utils/constants/tables';
+import { possibleBuildsTableFilter } from '@/types/general';
+import type { BuildsTableFilter } from '@/types/general';
 
 export interface IBuildsTable {
   tableKey: TableKeys;

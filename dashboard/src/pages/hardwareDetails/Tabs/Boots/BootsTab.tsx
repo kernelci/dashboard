@@ -12,8 +12,6 @@ import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
-
 import {
   DesktopGrid,
   MobileGrid,
@@ -25,6 +23,7 @@ import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
+import type { TestsTableFilter } from '@/types/general';
 
 interface TBootsTab {
   boots: THardwareDetails['boots'];

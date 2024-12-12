@@ -19,10 +19,14 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
 
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
-import { possibleTestsTableFilter } from '@/types/tree/TreeDetails';
+import { possibleTestsTableFilter } from '@/types/general';
 
-import type { TestHistory, TIndividualTest, TPathTests } from '@/types/general';
+import type {
+  TestHistory,
+  TestsTableFilter,
+  TIndividualTest,
+  TPathTests,
+} from '@/types/general';
 
 import { StatusTable } from '@/utils/constants/database';
 

@@ -3,24 +3,33 @@ import { z } from 'zod';
 import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
 
 import {
-  defaultValidadorValues,
+  DEFAULT_DIFF_FILTER,
+  DEFAULT_ORIGIN,
+  DEFAULT_TAB,
   zTableFilterInfoDefault,
   zTableFilterInfoValidator,
-} from '@/types/tree/TreeDetails';
-import { DEFAULT_DIFF_FILTER, DEFAULT_ORIGIN } from '@/types/general';
-import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
+} from '@/types/general';
+
+import {
+  DEFAULT_TREE_INTERVAL_IN_DAYS,
+  DEFAULT_TREE_SEARCH,
+} from '@/pages/treeConstants';
+import {
+  DEFAULT_TREE_COMMITS,
+  DEFAULT_TREE_INDEXES,
+} from '@/types/hardware/hardwareDetails';
+import { DEFAULT_HARDWARE_SEARCH } from '@/utils/constants/hardware';
 
 const defaultValues = {
   origin: DEFAULT_ORIGIN,
   tableFilter: zTableFilterInfoDefault,
   diffFilter: DEFAULT_DIFF_FILTER,
-  currentPageTab: defaultValidadorValues.tab,
-  intervalInDays: DEFAULT_TIME_SEARCH,
-  testPath: '',
-  treeSearch: '',
-  hardwareSearch: '',
-  treeIndexes: [],
-  treeCommits: {},
+  currentPageTab: DEFAULT_TAB,
+  intervalInDays: DEFAULT_TREE_INTERVAL_IN_DAYS,
+  treeSearch: DEFAULT_TREE_SEARCH,
+  hardwareSearch: DEFAULT_HARDWARE_SEARCH,
+  treeIndexes: DEFAULT_TREE_INDEXES,
+  treeCommits: DEFAULT_TREE_COMMITS,
 };
 
 const buildDetailsSearchSchema = z.object({

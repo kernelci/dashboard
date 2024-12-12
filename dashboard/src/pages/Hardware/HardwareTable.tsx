@@ -41,7 +41,7 @@ import { sumStatus } from '@/utils/status';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
 
-import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
+import { zPossibleTabValidator } from '@/types/general';
 
 import type { ListingTableColumnMeta } from '@/types/table';
 

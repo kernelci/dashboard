@@ -2,10 +2,8 @@ import classNames from 'classnames';
 import { useCallback, useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
-import type {
-  BuildsTableFilter,
-  TestsTableFilter,
-} from '@/types/tree/TreeDetails';
+
+import type { BuildsTableFilter, TestsTableFilter } from '@/types/general';
 
 interface ITableStatusFilter {
   onClickBuild?: (value: BuildsTableFilter) => void;

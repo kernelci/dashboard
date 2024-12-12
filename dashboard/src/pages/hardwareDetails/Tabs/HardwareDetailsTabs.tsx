@@ -6,9 +6,8 @@ import { useCallback, useMemo } from 'react';
 import type { ITabItem } from '@/components/Tabs/Tabs';
 import Tabs from '@/components/Tabs/Tabs';
 
-import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
-
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
+import { zPossibleTabValidator } from '@/types/general';
 
 import BuildTab from './Build';
 import BootsTab from './Boots';
