@@ -15,7 +15,7 @@ import {
 import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { truncateBigText } from '@/lib/string';
+import { truncateUrl } from '@/lib/string';
 import { useLogFiles } from '@/api/treeDetails';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { LogFile } from '@/types/tree/TreeDetails';
@@ -179,42 +179,53 @@ export const LogSheet = ({
           <FormattedMessage id="logSheet.title" />
         </SheetTitle>
       </SheetHeader>
-      <BaseCard className="gap-0" title={<FormattedMessage id="global.logs" />}>
-        <div className="px-2 py-3 font-mono text-sm text-[#454545]">
-          <FormattedMessage
-            id="logSheet.indexOf"
-            values={{
-              link: (
-                <a
-                  href={logUrl}
-                  className="flex gap-2 transition-all hover:text-blue"
-                >
-                  <span>{truncateBigText(logUrl)}</span>
-                  <GrDocumentDownload className="text-blue" />
-                </a>
-              ),
-            }}
-          />
+      <BaseCard
+        className="gap-0"
+        title={<FormattedMessage id="global.fullLogs" />}
+      >
+        <div className="px-2 py-3 font-mono text-[#454545]">
+          {navigationLogsActions?.isLoading ? (
+            <FormattedMessage id="global.loading" />
+          ) : (
+            <FormattedMessage
+              id={logUrl ? 'logSheet.downloadLog' : 'logSheet.noLogFound'}
+              values={{
+                link: (
+                  <a
+                    href={logUrl}
+                    className="flex gap-2 text-blue transition-all hover:underline"
+                  >
+                    <span>{truncateUrl(logUrl)}</span>
+                    <GrDocumentDownload className="text-blue" />
+                  </a>
+                ),
+              }}
+            />
+          )}
         </div>
-        <QuerySwitcher
-          data={logFilesData}
-          status={status}
-          skeletonClassname="h-[3rem]"
-          customError={
-            <div className="p-4 text-center">
-              This log url is not supported in the log viewer yet
-            </div>
-          }
-        >
-          <Table containerClassName="rounded-none border-none">
-            {logFilesData?.log_files && !!logUrl && (
-              <MemoizedLogFilesTable
-                logFiles={logFilesData?.log_files}
-                logUrl={logUrl}
-              />
-            )}
-          </Table>
-        </QuerySwitcher>
+        {logUrl ? (
+          <QuerySwitcher
+            data={logFilesData}
+            status={status}
+            skeletonClassname="h-[3rem]"
+            customError={
+              <div className="p-4 text-center">
+                <FormattedMessage id="logSheet.logQueryCustomError" />
+              </div>
+            }
+          >
+            <Table containerClassName="rounded-none border-none">
+              {logFilesData?.log_files && !!logUrl && (
+                <MemoizedLogFilesTable
+                  logFiles={logFilesData?.log_files}
+                  logUrl={logUrl}
+                />
+              )}
+            </Table>
+          </QuerySwitcher>
+        ) : (
+          <div className="p-9"></div>
+        )}
       </BaseCard>
 
       {navigationLogsActions?.isLoading ? (
