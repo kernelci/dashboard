@@ -25,10 +25,9 @@ from kernelCI_app.utils import (
     FilterParams,
     NULL_STRINGS
 )
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import get_tree_heads
-from kernelCI_app.typeModels.hardwareDetails import PostBody
-from pydantic import ValidationError
 
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_HEAD_TREE_VALUE = 'head'
@@ -192,7 +191,7 @@ def get_build_status(is_build_valid) -> BuildStatusType:
 # also the csrf protection require the usage of cookies which is not currently
 # supported in this project
 @method_decorator(csrf_exempt, name='dispatch')
-class HardwareDetails(View):
+class HardwareDetailsCommitHistoryView(View):
     required_params_get = ["origin"]
     cache_key_get_tree_data = "hardwareDetailsTreeData"
     cache_key_get_full_data = "hardwareDetailsFullData"
@@ -667,28 +666,22 @@ class HardwareDetails(View):
         try:
             body = json.loads(request.body)
 
-            post_body = PostBody(**body)
-
-            origin = post_body.origin
+            origin = body.get("origin", DEFAULT_ORIGIN)
             end_datetime = datetime.fromtimestamp(
-                int(post_body.endTimestampInSeconds),
+                int(body.get('endTimestampInSeconds')),
                 timezone.utc
             )
 
             start_datetime = datetime.fromtimestamp(
-                int(post_body.startTimestampInSeconds),
+                int(body.get('startTimestampInSeconds')),
                 timezone.utc
             )
 
-            selected_commits = post_body.selectedCommits
+            selected_commits = body.get("selectedCommits", {})
             self.filterParams = FilterParams(body, process_body=True)
             self.setup_filters()
 
             is_all_selected = len(selected_commits) == 0
-        except ValidationError as e:
-            return HttpResponseBadRequest(
-                getErrorResponseBody(e.errors())
-            )
         except json.JSONDecodeError:
             return HttpResponseBadRequest(
                 getErrorResponseBody(
