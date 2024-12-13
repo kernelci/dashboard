@@ -44,7 +44,7 @@ import { TableHeader } from '@/components/Table/TableHeader';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { useTestDetails } from '@/api/testDetails';
-import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
+import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 import { cn } from '@/lib/utils';
 import { usePaginationState } from '@/hooks/usePaginationState';
 
@@ -422,7 +422,7 @@ export function BootsTable({
   );
 
   return (
-    <WrapperTable
+    <WrapperTableWithLogSheet
       currentLog={currentLog}
       logExcerpt={dataTest?.log_excerpt}
       logUrl={dataTest?.log_url}
@@ -434,6 +434,6 @@ export function BootsTable({
         <TableBody>{tableRows}</TableBody>
       </BaseTable>
       <PaginationInfo table={table} intlLabel="global.boots" />
-    </WrapperTable>
+    </WrapperTableWithLogSheet>
   );
 }

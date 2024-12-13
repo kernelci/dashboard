@@ -18,7 +18,7 @@ import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
 import { TableBody, TableCellWithLink, TableRow } from '@/components/ui/table';
 
 import { useTestDetails } from '@/api/testDetails';
-import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
+import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 import { cn } from '@/lib/utils';
 
 type GetRowLink = (testId: TestHistory['id']) => LinkProps;
@@ -241,7 +241,7 @@ export function IndividualTestsTable({
   );
 
   return (
-    <WrapperTable
+    <WrapperTableWithLogSheet
       currentLog={currentLog}
       logExcerpt={dataTest?.log_excerpt}
       logUrl={dataTest?.log_url}
@@ -261,6 +261,6 @@ export function IndividualTestsTable({
           <div style={lastRowStyle} />
         </div>
       </div>
-    </WrapperTable>
+    </WrapperTableWithLogSheet>
   );
 }

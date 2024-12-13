@@ -41,7 +41,7 @@ import type {
 import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
 
 import { useBuildStatusCount } from '@/api/treeDetails';
-import WrapperTable from '@/pages/TreeDetails/Tabs/WrapperTable';
+import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 import { cn } from '@/lib/utils';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
@@ -405,7 +405,7 @@ export function BuildsTable({
   );
 
   return (
-    <WrapperTable
+    <WrapperTableWithLogSheet
       currentLog={currentLog}
       logExcerpt={dataBuildCount?.log_excerpt}
       logUrl={
@@ -427,6 +427,6 @@ export function BuildsTable({
         <TableBody>{tableBody}</TableBody>
       </BaseTable>
       <PaginationInfo table={table} intlLabel="global.builds" />
-    </WrapperTable>
+    </WrapperTableWithLogSheet>
   );
 }

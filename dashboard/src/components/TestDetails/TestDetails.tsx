@@ -16,14 +16,13 @@ import type { TTestDetails } from '@/types/tree/TestDetails';
 import { Sheet, SheetTrigger } from '@/components/Sheet';
 import { useTestDetails, useTestIssues } from '@/api/testDetails';
 
-import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
-
 import { RedirectFrom } from '@/types/general';
 
-import { Subsection } from '../Section/Section';
-import type { ISubsection } from '../Section/Section';
-import { TooltipDateTime } from '../TooltipDateTime';
-import IssueSection from '../Issue/IssueSection';
+import { Subsection } from '@/components/Section/Section';
+import type { ISubsection } from '@/components/Section/Section';
+import { TooltipDateTime } from '@/components/TooltipDateTime';
+import IssueSection from '@/components/Issue/IssueSection';
+import { LogSheetContent } from '@/components/Log/LogSheetContent';
 
 const emptyValue = '-';
 const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
@@ -188,7 +187,7 @@ const TestDetails = ({
         <TestDetailsSection test={data} />
         <IssueSection {...issuesQueryResult} />
       </div>
-      <LogSheet logUrl={data.log_url} logExcerpt={data.log_excerpt} />
+      <LogSheetContent logUrl={data.log_url} logExcerpt={data.log_excerpt} />
     </Sheet>
   );
 };

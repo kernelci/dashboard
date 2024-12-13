@@ -21,9 +21,9 @@ import { truncateBigText } from '@/lib/string';
 
 import { Sheet, SheetTrigger } from '@/components/Sheet';
 
-import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
-
 import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
+
+import { LogSheetContent } from '@/components/Log/LogSheetContent';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -203,7 +203,7 @@ const BuildDetails = ({
           getRowLink={getTestTableRowLink}
         />
         <IssueSection {...issuesQueryResult} />
-        <LogSheet logUrl={data.log_url} logExcerpt={data.log_excerpt} />
+        <LogSheetContent logUrl={data.log_url} logExcerpt={data.log_excerpt} />
       </Sheet>
     </ErrorBoundary>
   );
