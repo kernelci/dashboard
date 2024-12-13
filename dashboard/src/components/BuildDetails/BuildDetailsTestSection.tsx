@@ -8,9 +8,9 @@ import { Separator } from '@/components/ui/separator';
 
 import { useBuildTests } from '@/api/buildTests';
 
-import { TestsTable } from '@/components/TestsTable/TestsTable';
+import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
 
-import type { TableFilter, TestsTableFilter } from '@/types/general';
+import { TestsTable } from '@/components/TestsTable/TestsTable';
 
 interface IBuildDetailsTestSection {
   buildId: string;

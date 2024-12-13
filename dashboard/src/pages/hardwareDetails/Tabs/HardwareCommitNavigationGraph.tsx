@@ -18,7 +18,7 @@ const HardwareCommitNavigationGraph = ({
       from: '/hardware/$hardwareId',
     });
 
-  const navigate = useNavigate({ from: '/hardware/$hardwareId' });
+  const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
 
   const diffFilterWithHardware = useMemo(
     () => ({ ...diffFilter, hardware: { [hardwareId]: true } }),

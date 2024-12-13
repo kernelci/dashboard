@@ -33,11 +33,11 @@ interface TBuildTab {
 
 const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
   const navigate = useNavigate({
-    from: '/hardware/$hardwareId',
+    from: '/hardware/$hardwareId/',
   });
 
   const { diffFilter } = useSearch({
-    from: '/hardware/$hardwareId',
+    from: '/hardware/$hardwareId/',
   });
 
   const toggleFilterBySection = useCallback(

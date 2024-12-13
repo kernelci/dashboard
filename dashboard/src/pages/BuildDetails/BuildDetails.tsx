@@ -8,10 +8,10 @@ import {
   useRouterState,
 } from '@tanstack/react-router';
 
+import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 
 import { RedirectFrom } from '@/types/general';
-import type { TestsTableFilter } from '@/types/general';
 
 import TreeBuildDetails from '@/pages/TreeBuildDetails';
 import HardwareBuildDetails from '@/pages/HardwareBuildDetails';

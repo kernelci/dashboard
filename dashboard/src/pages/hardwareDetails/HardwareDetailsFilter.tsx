@@ -158,7 +158,7 @@ const HardwareDetailsFilter = ({
   const isLoading = false;
 
   const navigate = useNavigate({
-    from: '/hardware/$hardwareId',
+    from: '/hardware/$hardwareId/',
   });
 
   const filter: TFilterCreate = useMemo(() => {
