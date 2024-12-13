@@ -23,7 +23,7 @@ import { Sheet, SheetTrigger } from '@/components/Sheet';
 
 import { LogSheet } from '@/pages/TreeDetails/Tabs/LogSheet';
 
-import type { TableFilter, TestsTableFilter } from '@/types/general';
+import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 

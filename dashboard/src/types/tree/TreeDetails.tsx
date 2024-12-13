@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { object, z } from 'zod';
 
 import type { ReactNode } from 'react';
 
@@ -94,7 +94,49 @@ export type TTreeTestsFullData = {
   treeUrl: string;
 };
 
-export const DEFAULT_TREE_INFO = {};
+const possibleTabs = ['global.builds', 'global.boots', 'global.tests'] as const;
+
+export const zPossibleTabValidator = z
+  .enum(possibleTabs)
+  .catch('global.builds');
+
+export const possibleBuildsTableFilter = [
+  'invalid',
+  'valid',
+  'all',
+  'null',
+] as const;
+
+export const possibleTestsTableFilter = [
+  'all',
+  'success',
+  'failed',
+  'inconclusive',
+] as const;
+
+export const zBuildsTableFilterValidator = z
+  .enum(possibleBuildsTableFilter)
+  .catch('all');
+export const zTestsTableFilterValidator = z
+  .enum(possibleTestsTableFilter)
+  .catch('all');
+
+export type BuildsTableFilter = z.infer<typeof zBuildsTableFilterValidator>;
+export type TestsTableFilter = z.infer<typeof zTestsTableFilterValidator>;
+
+export const zTableFilterInfo = object({
+  buildsTable: zBuildsTableFilterValidator,
+  bootsTable: zTestsTableFilterValidator,
+  testsTable: zTestsTableFilterValidator,
+});
+
+export const zTableFilterInfoValidator = zTableFilterInfo.catch({
+  buildsTable: zBuildsTableFilterValidator.parse(''),
+  bootsTable: zTestsTableFilterValidator.parse(''),
+  testsTable: zTestsTableFilterValidator.parse(''),
+});
+
+export type TableFilter = z.infer<typeof zTableFilterInfo>;
 
 export const zTreeInformation = z
   .object({
@@ -104,8 +146,7 @@ export const zTreeInformation = z
     commitName: z.string().optional().catch(''),
     headCommitHash: z.string().optional().catch(undefined),
   })
-  .default(DEFAULT_TREE_INFO)
-  .catch(DEFAULT_TREE_INFO);
+  .catch({});
 
 export type TestByCommitHash = {
   id: string;

@@ -10,6 +10,8 @@ import { Skeleton } from '@/components/Skeleton';
 import { useTreeDetails } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 
+import type { TestsTableFilter } from '@/types/tree/TreeDetails';
+
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
 
@@ -24,8 +26,7 @@ import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
 import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
-
-import type { TestsTableFilter, TFilter } from '@/types/general';
+import type { TFilter } from '@/types/general';
 
 import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
 
@@ -34,14 +35,14 @@ interface TestsTabProps {
 }
 
 const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
-  const { treeId } = useParams({ from: '/tree/$treeId' });
+  const { treeId } = useParams({ from: '/tree/$treeId/' });
   const { isLoading, data, error } = useTreeDetails({
     treeId: treeId ?? '',
     filter: reqFilter,
   });
 
   const { tableFilter, diffFilter } = useSearch({
-    from: '/tree/$treeId',
+    from: '/tree/$treeId/',
   });
   const currentPathFilter = diffFilter.testPath
     ? Object.keys(diffFilter.testPath)[0]

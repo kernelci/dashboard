@@ -17,9 +17,10 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import type {
   TestByCommitHash,
+  TestsTableFilter,
   TTestByCommitHashResponse,
 } from '@/types/tree/TreeDetails';
-import { possibleTestsTableFilter } from '@/types/general';
+import { possibleTestsTableFilter } from '@/types/tree/TreeDetails';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
@@ -32,7 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import type { TestHistory, TestsTableFilter } from '@/types/general';
+import type { TestHistory } from '@/types/general';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 

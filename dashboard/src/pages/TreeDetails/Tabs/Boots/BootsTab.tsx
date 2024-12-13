@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/Skeleton';
 import { BootsTable } from '@/components/BootsTable/BootsTable';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
+import type { TestsTableFilter } from '@/types/tree/TreeDetails';
 import {
   DesktopGrid,
   MobileGrid,
@@ -23,8 +24,7 @@ import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
 import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
-
-import type { TestsTableFilter, TFilter } from '@/types/general';
+import type { TFilter } from '@/types/general';
 
 import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
 
@@ -34,16 +34,16 @@ interface BootsTabProps {
 
 const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
   const { treeId } = useParams({
-    from: '/tree/$treeId',
+    from: '/tree/$treeId/',
   });
   const { tableFilter, diffFilter } = useSearch({
-    from: '/tree/$treeId',
+    from: '/tree/$treeId/',
   });
   const currentPathFilter = diffFilter.bootPath
     ? Object.keys(diffFilter.bootPath)[0]
     : undefined;
 
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const navigate = useNavigate({ from: '/tree/$treeId/' });
 
   const updatePathFilter = useCallback(
     (pathFilter: string) => {

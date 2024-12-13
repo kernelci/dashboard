@@ -6,8 +6,9 @@ import { useCallback, useMemo } from 'react';
 import type { ITabItem } from '@/components/Tabs/Tabs';
 import Tabs from '@/components/Tabs/Tabs';
 
+import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
+
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
-import { zPossibleTabValidator } from '@/types/general';
 
 import BuildTab from './Build';
 import BootsTab from './Boots';
@@ -32,7 +33,7 @@ const HardwareDetailsTabs = ({
   countElements,
 }: IHardwareDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
-    from: '/hardware/$hardwareId',
+    from: '/hardware/$hardwareId/',
   });
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });

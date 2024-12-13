@@ -11,8 +11,10 @@ import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { ItemType } from '@/components/ListingItem/ListingItem';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
-import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
-import type { BuildsTableFilter } from '@/types/general';
+import type {
+  AccordionItemBuilds,
+  BuildsTableFilter,
+} from '@/types/tree/TreeDetails';
 
 export interface TTreeDetailsBuildsTable {
   buildItems: AccordionItemBuilds[];
@@ -104,9 +106,9 @@ const columns: ColumnDef<AccordionItemBuilds>[] = [
 export function TreeDetailsBuildsTable({
   buildItems,
 }: TTreeDetailsBuildsTable): JSX.Element {
-  const { treeId } = useParams({ from: '/tree/$treeId' });
-  const { tableFilter } = useSearch({ from: '/tree/$treeId' });
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const { treeId } = useParams({ from: '/tree/$treeId/' });
+  const { tableFilter } = useSearch({ from: '/tree/$treeId/' });
+  const navigate = useNavigate({ from: '/tree/$treeId/' });
 
   const navigateToBuildDetails = useCallback(
     (buildId: string) => {

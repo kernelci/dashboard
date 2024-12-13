@@ -121,10 +121,10 @@ const TreeHeader = ({
 };
 
 function TreeDetails(): JSX.Element {
-  const { treeId } = useParams({ from: '/tree/$treeId' });
-  const searchParams = useSearch({ from: '/tree/$treeId' });
+  const { treeId } = useParams({ from: '/tree/$treeId/' });
+  const searchParams = useSearch({ from: '/tree/$treeId/' });
   const { diffFilter, treeInfo } = searchParams;
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const navigate = useNavigate({ from: '/tree/$treeId/' });
 
   const reqFilter = mapFilterToReq(diffFilter);
 

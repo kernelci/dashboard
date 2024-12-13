@@ -23,14 +23,15 @@ import { useSearch } from '@tanstack/react-router';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import type { TreeTableBody } from '@/types/tree/Tree';
+import { zOrigin } from '@/types/general';
+
+import { formattedBreakLineValue } from '@/locales/messages';
+
 import {
   possibleBuildsTableFilter,
   possibleTestsTableFilter,
-  zOrigin,
   zPossibleTabValidator,
-} from '@/types/general';
-
-import { formattedBreakLineValue } from '@/locales/messages';
+} from '@/types/tree/TreeDetails';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
 
