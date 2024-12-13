@@ -2,23 +2,18 @@ import type { PropsWithChildren } from 'react';
 
 import { Sheet } from '@/components/Sheet';
 
-import { LogSheet } from './LogSheet';
+import { LogSheetContent } from '@/components/Log/LogSheetContent';
+import type { TNavigationLogActions } from '@/components/Sheet/WrapperSheetContent';
 
 interface TableWithLogSheetProps {
   currentLog?: number;
   onOpenChange?: () => void;
   logExcerpt?: string;
   logUrl?: string;
-  navigationLogsActions?: {
-    previousItem: () => void;
-    nextItem: () => void;
-    hasPrevious: boolean;
-    hasNext: boolean;
-    isLoading: boolean;
-  };
+  navigationLogsActions?: TNavigationLogActions;
 }
 
-const WrapperTable = ({
+const WrapperTableWithLogSheet = ({
   children,
   currentLog,
   logExcerpt,
@@ -31,7 +26,7 @@ const WrapperTable = ({
       {children}
 
       <Sheet open={typeof currentLog === 'number'} onOpenChange={onOpenChange}>
-        <LogSheet
+        <LogSheetContent
           logExcerpt={logExcerpt}
           logUrl={logUrl}
           navigationLogsActions={navigationLogsActions}
@@ -41,4 +36,4 @@ const WrapperTable = ({
   );
 };
 
-export default WrapperTable;
+export default WrapperTableWithLogSheet;
