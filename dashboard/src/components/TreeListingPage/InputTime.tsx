@@ -12,7 +12,7 @@ import { Controller, useForm } from 'react-hook-form';
 import type { ChangeEvent } from 'react';
 import { useCallback } from 'react';
 
-import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
+import { DEFAULT_TREE_INTERVAL_IN_DAYS } from '@/pages/treeConstants';
 import { toast } from '@/hooks/useToast';
 
 import DebounceInput from '../DebounceInput/DebounceInput';
@@ -37,7 +37,7 @@ export function InputTime(): JSX.Element {
   const { handleSubmit, control } = useForm<z.infer<typeof InputTimeSchema>>({
     resolver: zodResolver(InputTimeSchema),
     defaultValues: {
-      intervalInDays: `${DEFAULT_TIME_SEARCH}`,
+      intervalInDays: `${DEFAULT_TREE_INTERVAL_IN_DAYS}`,
     },
   });
 
@@ -94,7 +94,7 @@ export function InputTime(): JSX.Element {
         min={1}
         className={`${fieldError ? 'border-red' : 'border-gray'} mx-[10px] flex w-[100px] flex-1 rounded-md border`}
         startingValue={
-          interval ? interval.toString() : `${DEFAULT_TIME_SEARCH}`
+          interval ? interval.toString() : `${DEFAULT_TREE_INTERVAL_IN_DAYS}`
         }
         placeholder="7"
         {...rest}

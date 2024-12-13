@@ -12,10 +12,8 @@ import { ItemType } from '@/components/ListingItem/ListingItem';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
-import type {
-  AccordionItemBuilds,
-  BuildsTableFilter,
-} from '@/types/tree/TreeDetails';
+import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+import type { BuildsTableFilter } from '@/types/general';
 
 export interface THardwareDetailsBuildsTable {
   buildItems: AccordionItemBuilds[];
@@ -117,7 +115,7 @@ export function HardwareDetailsBuildsTable({
 }: THardwareDetailsBuildsTable): JSX.Element {
   const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
 
-  const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
+  const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
   const navigateToBuildDetails = useCallback(
     (buildId: string) => {

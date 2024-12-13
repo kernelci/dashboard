@@ -2,8 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { z } from 'zod';
 
-import { zTableFilterInfoValidator } from '@/types/tree/TreeDetails';
-import { RedirectFrom } from '@/types/general';
+import { RedirectFrom, zTableFilterInfoValidator } from '@/types/general';
 
 const buildDetailsSearchSchema = z.object({
   tableFilter: zTableFilterInfoValidator,

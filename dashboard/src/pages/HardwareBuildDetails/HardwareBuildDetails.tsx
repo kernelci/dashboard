@@ -20,7 +20,7 @@ import {
 } from '@/components/Breadcrumb/Breadcrumb';
 
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
+import type { TestsTableFilter } from '@/types/general';
 
 const HardwareBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });

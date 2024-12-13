@@ -36,7 +36,7 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   });
 
   const { diffFilter } = useSearch({
-    from: '/tree/$treeId/',
+    from: '/tree/$treeId',
   });
 
   const toggleFilterBySection = useCallback(
