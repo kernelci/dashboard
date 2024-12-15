@@ -21,6 +21,7 @@ import './index.css';
 import { isDev } from './lib/utils/vite';
 import { ToastProvider } from './components/ui/toast';
 import type { RedirectFrom } from './types/general';
+import { parseSearch, stringifySearch } from './utils/search';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -57,7 +58,11 @@ const persister = createSyncStoragePersister({
 
 const currentMessages = messages[LOCALES.EN_US];
 
-const router = createRouter({ routeTree });
+const router = createRouter({
+  routeTree: routeTree,
+  parseSearch: parseSearch,
+  stringifySearch: stringifySearch,
+});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
