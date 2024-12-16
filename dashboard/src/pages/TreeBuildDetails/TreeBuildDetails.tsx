@@ -24,11 +24,13 @@ import {
   zTableFilterInfoDefault,
   type TestsTableFilter,
 } from '@/types/tree/TreeDetails';
+import { RedirectFrom } from '@/types/general';
 
 const TreeBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
   const { buildId } = useParams({ from: '/build/$buildId' });
-  const treeId = useRouterState({ select: s => s.location.state.id });
+  const historyState = useRouterState({ select: s => s.location.state });
+  const treeId = historyState.id;
 
   const navigate = useNavigate({ from: '/tree/$treeId/build/$buildId' });
 
@@ -56,9 +58,10 @@ const TreeBuildDetails = (): JSX.Element => {
             },
           };
         },
+        state: { id: treeId, from: RedirectFrom.Tree },
       });
     },
-    [navigate],
+    [navigate, treeId],
   );
 
   const breadcrumbElement = (
@@ -94,6 +97,7 @@ const TreeBuildDetails = (): JSX.Element => {
       onClickFilter={onClickFilter}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}
+      historyState={historyState}
     />
   );
 };

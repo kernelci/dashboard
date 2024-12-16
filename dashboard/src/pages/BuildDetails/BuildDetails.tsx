@@ -48,9 +48,10 @@ const BuildDetailsPage = (): JSX.Element => {
             },
           };
         },
+        state: historyState,
       });
     },
-    [navigate],
+    [navigate, historyState],
   );
 
   if (historyState.id !== undefined) {
@@ -69,6 +70,7 @@ const BuildDetailsPage = (): JSX.Element => {
       onClickFilter={onClickFilter}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}
+      historyState={historyState}
     />
   );
 };
