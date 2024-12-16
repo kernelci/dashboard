@@ -24,6 +24,7 @@ import {
   zTableFilterInfoDefault,
   type TestsTableFilter,
 } from '@/types/tree/TreeDetails';
+import { RedirectFrom } from '@/types/general';
 
 const TreeBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
@@ -56,9 +57,10 @@ const TreeBuildDetails = (): JSX.Element => {
             },
           };
         },
+        state: { id: treeId, from: RedirectFrom.Tree },
       });
     },
-    [navigate],
+    [navigate, treeId],
   );
 
   const breadcrumbElement = (

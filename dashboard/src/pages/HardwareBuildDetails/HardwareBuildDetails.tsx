@@ -24,6 +24,7 @@ import {
   zTableFilterInfoDefault,
   type TestsTableFilter,
 } from '@/types/tree/TreeDetails';
+import { RedirectFrom } from '@/types/general';
 
 const HardwareBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
@@ -58,9 +59,10 @@ const HardwareBuildDetails = (): JSX.Element => {
             },
           };
         },
+        state: { id: hardwareId, from: RedirectFrom.Hardware },
       });
     },
-    [navigate],
+    [navigate, hardwareId],
   );
 
   const breadcrumbElement = (

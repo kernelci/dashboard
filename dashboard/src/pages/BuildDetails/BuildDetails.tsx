@@ -48,9 +48,10 @@ const BuildDetailsPage = (): JSX.Element => {
             },
           };
         },
+        state: historyState,
       });
     },
-    [navigate],
+    [navigate, historyState],
   );
 
   if (historyState.id !== undefined) {
