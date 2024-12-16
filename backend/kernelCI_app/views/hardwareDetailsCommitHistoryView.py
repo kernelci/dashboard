@@ -2,32 +2,26 @@ from collections import defaultdict
 from django.db.models import Subquery
 import json
 from typing import Dict, List, Optional, Set, Literal
+from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.filters import (
     should_increment_test_issue,
     is_build_invalid,
-    should_filter_test_issue,
 )
 from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
 from django.views import View
 from datetime import datetime, timezone
-from django.http import HttpResponseBadRequest, JsonResponse
-from kernelCI_app.cache import getQueryCache, setQueryCache
+from django.http import JsonResponse
 from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.models import Tests
 from kernelCI_app.utils import (
-    UNKNOWN_STRING,
-    create_issue,
     extract_error_message,
     extract_platform,
-    getErrorResponseBody,
-    toIntOrDefault,
-    FilterParams,
-    NULL_STRINGS
 )
-from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import get_tree_heads
+from kernelCI_app.typeModels.hardwareDetails import CommitHistoryPostBody
+from pydantic import ValidationError
 
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_HEAD_TREE_VALUE = 'head'
@@ -36,153 +30,6 @@ STATUS_FAILED_VALUE = "FAIL"
 BuildStatusType = Literal["valid", "invalid", "null"]
 
 
-def mutate_properties_to_list(dict: Dict, keys: List[str]) -> None:
-    for key in keys:
-        value = dict[key]
-        if isinstance(value, Dict):
-            dict[key] = list(value.values())
-        elif isinstance(value, Set):
-            dict[key] = list(value)
-
-
-def get_arch_summary(record: Dict):
-    return {
-        "arch": record["build__architecture"],
-        "compiler": record["build__compiler"],
-        "status": defaultdict(int)
-    }
-
-
-def get_build(record: Dict, tree_idx: int):
-    return {
-        "id": record["build_id"],
-        "architecture": record["build__architecture"],
-        "config_name": record["build__config_name"],
-        "misc": record["build__misc"],
-        "config_url": record["build__config_url"],
-        "compiler": record["build__compiler"],
-        "valid": record["build__valid"],
-        "duration": record["build__duration"],
-        "log_url": record["build__log_url"],
-        "start_time": record["build__start_time"],
-        "git_repository_url": record["build__checkout__git_repository_url"],
-        "git_repository_branch": record["build__checkout__git_repository_branch"],
-        "tree_name": record["build__checkout__tree_name"],
-        "issue_id": record["build__incidents__issue__id"],
-        "tree_index": tree_idx
-    }
-
-
-def get_tree_key(record: Dict):
-    return record["build__checkout__tree_name"] + \
-        record["build__checkout__git_repository_branch"] + \
-        record["build__checkout__git_repository_url"]
-
-
-def get_tree(record: Dict):
-    return {
-        "tree_name": record["build__checkout__tree_name"],
-        "git_repository_branch": record["build__checkout__git_repository_branch"],
-        "git_repository_url": record["build__checkout__git_repository_url"],
-        "git_commit_name": record["build__checkout__git_commit_name"],
-        "git_commit_hash": record["build__checkout__git_commit_hash"],
-    }
-
-
-def get_history(record: Dict):
-    return {
-        "id": record["id"],
-        "status": record["status"],
-        "path": record["path"],
-        "duration": record["duration"],
-        "startTime": record["start_time"],
-    }
-
-
-def is_boot(record: Dict) -> bool:
-    return record["path"] == "boot" or record["path"].startswith("boot.")
-
-
-def get_record_tree(record: Dict, selected_trees: List) -> Optional[Dict]:
-    for tree in selected_trees:
-        if (
-            tree["tree_name"] == record["build__checkout__tree_name"]
-            and tree["git_repository_branch"] == record["build__checkout__git_repository_branch"]
-            and tree["git_repository_url"] == record["build__checkout__git_repository_url"]
-        ):
-            return tree
-
-    return None
-
-
-def generate_test_dict():
-    return {
-        "history": [],
-        "archSummary": {},
-        "platformsFailing": set(),
-        "statusSummary": defaultdict(int),
-        "failReasons": defaultdict(int),
-        "configs": defaultdict(lambda: defaultdict(int)),
-        "issues": {},
-        "failedWithUnknownIssues": 0,
-    }
-
-
-def is_record_tree_selected(record, tree, is_all_selected: bool):
-    if is_all_selected:
-        return True
-    return tree.get("is_tree_selected") and \
-        tree["git_commit_hash"] == record["build__checkout__git_commit_hash"]
-
-
-# TODO unify with treeDetails
-def update_issues(
-    issue_id: Optional[str],
-    incident_test_id: Optional[str],
-    build_valid: Optional[bool],
-    issue_comment: Optional[str],
-    issue_report_url: Optional[str],
-    task,
-    is_failed_task: bool,
-    issue_from: str,
-) -> None:
-    can_insert_issue = True
-    if (issue_from == "build"):
-        can_insert_issue = is_build_invalid(build_valid)
-    elif (issue_from == "test"):
-        can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
-
-    if issue_id and can_insert_issue:
-        existing_issue = task["issues"].get(issue_id)
-        if existing_issue:
-            existing_issue["incidents_info"]["incidentsCount"] += 1
-        else:
-            new_issue = create_issue(
-                issue_id=issue_id,
-                issue_comment=issue_comment,
-                issue_report_url=issue_report_url,
-            )
-            task["issues"][issue_id] = new_issue
-    elif is_failed_task:
-        task["failedWithUnknownIssues"] += 1
-
-
-def generate_tree_status_summary_dict():
-    return {
-        "builds": defaultdict(int),
-        "boots": defaultdict(int),
-        "tests": defaultdict(int)
-    }
-
-
-def get_build_status(is_build_valid) -> BuildStatusType:
-    if is_build_valid is True:
-        return "valid"
-    elif is_build_valid is False:
-        return "invalid"
-
-    # can be None
-    return "null"
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -199,204 +46,6 @@ class HardwareDetailsCommitHistoryView(View):
     def __init__(self):
         self.filterParams = None
 
-    def setup_filters(self):
-        self.filterTestDurationMin = self.filterParams.filterTestDurationMin
-        self.filterTestDurationMax = self.filterParams.filterTestDurationMax
-        self.filterBootDurationMin = self.filterParams.filterBootDurationMin
-        self.filterBootDurationMax = self.filterParams.filterBootDurationMax
-        self.filterBuildDurationMin = self.filterParams.filterBuildDurationMin
-        self.filterBuildDurationMax = self.filterParams.filterBuildDurationMax
-        self.filterBootStatus = self.filterParams.filterBootStatus
-        self.filterTestStatus = self.filterParams.filterTestStatus
-        self.filterTreeDetailsConfigs = self.filterParams.filterConfigs
-        self.filterTreeDetailsCompiler = self.filterParams.filterCompiler
-        self.filterArchitecture = self.filterParams.filterArchitecture
-        self.filterTestPath = self.filterParams.filterTestPath
-        self.filterBootPath = self.filterParams.filterBootPath
-        self.filterValid = self.filterParams.filterBuildValid
-        self.filterIssues = self.filterParams.filterIssues
-
-    def is_build_filtered_in(
-        self,
-        build: Dict,
-        processed_builds: Set[str],
-    ) -> bool:
-        is_build_not_processed = not build["id"] in processed_builds
-        is_build_filtered_out = self._build_filters_pass(
-            valid=build["valid"],
-            duration=build["duration"],
-            issue_id=build["issue_id"]
-        )
-        return is_build_not_processed and is_build_filtered_out
-
-    def _build_filters_pass(
-        self, valid: Optional[bool], duration: Optional[int], issue_id: Optional[str]
-    ) -> bool:
-        if len(self.filterValid) > 0 and (str(valid).lower() not in self.filterValid):
-            return False
-        if (
-            self.filterBuildDurationMax is not None or self.filterBuildDurationMin is not None
-        ) and duration is None:
-            return False
-        if self.filterBuildDurationMax is not None and (
-            toIntOrDefault(duration, 0) > self.filterBuildDurationMax
-        ):
-            return False
-        if self.filterBuildDurationMin is not None and (
-            toIntOrDefault(duration, 0) < self.filterBuildDurationMin
-        ):
-            return False
-        if (
-            len(self.filterIssues["build"]) > 0
-            and (
-                issue_id not in self.filterIssues["build"]
-                or valid is True
-            )
-        ):
-            return False
-
-        return True
-
-    def _boots_filters_pass(
-        self,
-        status: Optional[str],
-        duration: Optional[int],
-        path: Optional[str],
-        issue_id: Optional[str],
-        incidents_test_id: Optional[str],
-    ) -> bool:
-        if (
-            self.filterBootPath != ""
-            and (self.filterBootPath not in path)
-        ):
-            return False
-        if len(self.filterBootStatus) > 0 and (status not in self.filterBootStatus):
-            return False
-        if (
-            self.filterBootDurationMax is not None or self.filterBootDurationMin is not None
-        ) and duration is None:
-            return False
-        if self.filterBootDurationMax is not None and (
-            toIntOrDefault(duration, 0) > self.filterBootDurationMax
-        ):
-            return False
-        if self.filterBootDurationMin is not None and (
-            toIntOrDefault(duration, 0) < self.filterBootDurationMin
-        ):
-            return False
-        if should_filter_test_issue(
-            self.filterIssues["boot"],
-            issue_id,
-            incidents_test_id,
-        ):
-            return False
-
-        return True
-
-    def _non_boots_filters_pass(
-        self,
-        status: Optional[str],
-        duration: Optional[int],
-        path: Optional[str],
-        issue_id: Optional[str],
-        incidents_test_id: Optional[str],
-    ) -> bool:
-        if (
-            self.filterTestPath != ""
-            and (self.filterTestPath not in path)
-        ):
-            return False
-        if len(self.filterTestStatus) > 0 and (status not in self.filterTestStatus):
-            return False
-        if (
-            self.filterTestDurationMax is not None or self.filterTestDurationMin is not None
-        ) and duration is None:
-            return False
-        if self.filterTestDurationMax is not None and (
-            toIntOrDefault(duration, 0) > self.filterTestDurationMax
-        ):
-            return False
-        if self.filterTestDurationMin is not None and (
-            toIntOrDefault(duration, 0) < self.filterTestDurationMin
-        ):
-            return False
-        if should_filter_test_issue(
-            self.filterIssues["test"],
-            issue_id,
-            incidents_test_id,
-        ):
-            return False
-
-        return True
-
-    def record_in_filter(
-        self,
-        record: Dict,
-    ) -> bool:
-        record_arch_null_accept = (
-            not record['build__architecture']
-            and any(null_string in self.filterArchitecture for null_string in NULL_STRINGS)
-        )
-        record_compiler_null_accept = (
-            not record['build__compiler']
-            and any(null_string in self.filterTreeDetailsCompiler for null_string in NULL_STRINGS)
-        )
-        record_config_null_accept = (
-            not record['build__config_name']
-            and any(null_string in self.filterTreeDetailsConfigs for null_string in NULL_STRINGS)
-        )
-
-        if (
-            (
-                len(self.filterArchitecture) > 0
-                and (
-                    record['build__architecture'] not in self.filterArchitecture
-                    and not record_arch_null_accept
-                )
-            )
-            or (
-                len(self.filterTreeDetailsCompiler) > 0
-                and (
-                    record['build__compiler'] not in self.filterTreeDetailsCompiler
-                    and not record_compiler_null_accept
-                )
-            )
-            or (
-                len(self.filterTreeDetailsConfigs) > 0
-                and (
-                    record['build__config_name'] not in self.filterTreeDetailsConfigs
-                    and not record_config_null_accept
-                )
-            )
-        ):
-            return False
-
-        return True
-
-    def test_in_filter(
-        self,
-        table_test: Literal["boot", "test"],
-        record: Dict
-    ) -> bool:
-        test_filter_pass = True
-        if table_test == "boot":
-            test_filter_pass = self._boots_filters_pass(
-                status=record["status"],
-                duration=record["duration"],
-                path=record["path"],
-                issue_id=record["incidents__issue__id"],
-                incidents_test_id=record["incidents__test_id"]
-            )
-        else:
-            test_filter_pass = self._non_boots_filters_pass(
-                status=record["status"],
-                duration=record["duration"],
-                path=record["path"],
-                issue_id=record["incidents__issue__id"],
-                incidents_test_id=record["incidents__test_id"]
-            )
-
-        return test_filter_pass
 
     def handle_test(self, record, tests):
         status = record["status"]
@@ -461,85 +110,7 @@ class HardwareDetailsCommitHistoryView(View):
             build_status = get_build_status(record["build__valid"])
             tree_status_summary[tree_index]["builds"][build_status] += 1
 
-    def sanitize_records(self, records, trees: List, is_all_selected: bool):
-        processed_builds = set()
-        tests = generate_test_dict()
-        boots = generate_test_dict()
-        tree_status_summary = defaultdict(generate_tree_status_summary_dict)
-        builds = {"items": [], "issues": {}, "failedWithUnknownIssues": 0}
-
-        for record in records:
-            current_tree = get_record_tree(record, trees)
-            if not current_tree:
-                log_message(f"Tree not found for record: {record}")
-                continue
-
-            self._assign_default_record_values(record)
-
-            tree_index = current_tree["index"]
-            is_record_boot = is_boot(record)
-            # TODO -> Unify with tree_status_key, be careful with the pluralization
-            test_filter_key = "boot" if is_record_boot else "test"
-
-            build_id = record["build_id"]
-            build = get_build(record, tree_index)
-
-            record_tree_selected = is_record_tree_selected(record, current_tree, is_all_selected)
-
-            self.handle_tree_status_summary(
-                record,
-                tree_status_summary,
-                tree_index,
-                processed_builds,
-                is_record_boot,
-            )
-
-            pass_in_global_filters = self.record_in_filter(record)
-            if not record_tree_selected or not pass_in_global_filters:
-                processed_builds.add(build_id)
-                continue
-
-            should_process_test = self.test_in_filter(test_filter_key, record)
-
-            if should_process_test:
-                self.handle_test(record, boots if is_record_boot else tests)
-
-            should_process_build = self.is_build_filtered_in(build, processed_builds)
-
-            processed_builds.add(build_id)
-            if should_process_build:
-                builds["items"].append(build)
-                update_issues(
-                    issue_id=record["incidents__issue__id"],
-                    incident_test_id=record["incidents__test_id"],
-                    build_valid=record["build__valid"],
-                    issue_comment=record["incidents__issue__comment"],
-                    issue_report_url=record["incidents__issue__report_url"],
-                    task=builds,
-                    is_failed_task=record["build__valid"] is not True,
-                    issue_from="build"
-                )
-
-        builds["summary"] = create_details_build_summary(builds["items"])
-        mutate_properties_to_list(builds, ["issues"])
-        mutate_properties_to_list(tests, ["issues", "platformsFailing", "archSummary"])
-        mutate_properties_to_list(boots, ["issues", "platformsFailing", "archSummary"])
-
-        return (builds, tests, boots, tree_status_summary)
-
-    def _assign_default_record_values(self, record: Dict) -> None:
-        if (record["build__architecture"] is None):
-            record["build__architecture"] = UNKNOWN_STRING
-        if (record["build__compiler"] is None):
-            record["build__compiler"] = UNKNOWN_STRING
-        if (record["build__config_name"] is None):
-            record["build__config_name"] = UNKNOWN_STRING
-        if (record["build__incidents__issue__id"] is None and record["build__valid"] is not True):
-            record["build__incidents__issue__id"] = UNKNOWN_STRING
-        if (record["incidents__issue__id"] is None and record["status"] == STATUS_FAILED_VALUE):
-            record["incidents__issue__id"] = UNKNOWN_STRING
-
-    def get_trees(self, hardware_id: str, origin: str, start_date: datetime, end_date: datetime):
+    def get_commit_history(self, hardware_id: str, origin: str, start_date: datetime, end_date: datetime, commit_heads: Dict):
         # We need a subquery because if we filter by any hardware, it will get the
         # last head that has that hardware, but not the real head of the trees
         trees_subquery = get_tree_heads(
@@ -588,167 +159,41 @@ class HardwareDetailsCommitHistoryView(View):
 
         return trees
 
-    def get_displayed_commit(self, tree: Dict, selected_commit: Optional[str]):
-        if (not selected_commit) or (selected_commit == SELECTED_HEAD_TREE_VALUE):
-            return tree["headGitCommitHash"]
-        return selected_commit
-
-    def get_trees_with_selected_commit(self, trees: List, selected_commits: Dict):
-        selected = []
-
-        for tree in trees:
-            tree_idx = tree["index"]
-
-            raw_selected_commit = selected_commits.get(tree_idx)
-
-            is_tree_selected = raw_selected_commit is not None
-
-            displayed_commit = self.get_displayed_commit(tree, raw_selected_commit)
-
-            selected.append({
-                "tree_name": tree["treeName"],
-                "git_repository_branch": tree["gitRepositoryBranch"],
-                "git_repository_url": tree["gitRepositoryUrl"],
-                "index": tree["index"],
-                "git_commit_hash": displayed_commit,
-                "is_tree_selected": is_tree_selected
-            })
-
-        return selected
-
-    def get_full_tests(self, *, hardware_id, origin, trees, start_date=int, end_date=int):
-        commit_hashes = [tree["git_commit_hash"] for tree in trees]
-
-        records = Tests.objects.values(
-            "id",
-            "environment_misc",
-            "path",
-            "comment",
-            "log_url",
-            "status",
-            "start_time",
-            "duration",
-            "misc",
-            "build_id",
-            "environment_compatible",
-            "build__architecture",
-            "build__config_name",
-            "build__misc",
-            "build__config_url",
-            "build__compiler",
-            "build__valid",
-            "build__duration",
-            "build__log_url",
-            "build__start_time",
-            "build__checkout__git_repository_url",
-            "build__checkout__git_repository_branch",
-            "build__checkout__git_commit_name",
-            "build__checkout__git_commit_hash",
-            "build__checkout__tree_name",
-            "incidents__id",
-            "incidents__issue__id",
-            "incidents__issue__comment",
-            "incidents__issue__report_url",
-            "incidents__test_id",
-            "build__incidents__issue__id"
-        ).filter(
-            start_time__gte=start_date,
-            start_time__lte=end_date,
-            build__checkout__origin=origin,
-            environment_compatible__contains=[hardware_id],
-            # TODO Treat commit_hash collision (it can happen between repos)
-            build__checkout__git_commit_hash__in=commit_hashes,
-        )
-        return records
 
     # Using post to receive a body request
     def post(self, request, hardware_id):
         try:
             body = json.loads(request.body)
 
-            origin = body.get("origin", DEFAULT_ORIGIN)
+            post_body = CommitHistoryPostBody(**body)
+
+            origin = post_body.origin
             end_datetime = datetime.fromtimestamp(
-                int(body.get('endTimestampInSeconds')),
+                int(post_body.endTimestampInSeconds),
                 timezone.utc
             )
 
             start_datetime = datetime.fromtimestamp(
-                int(body.get('startTimestampInSeconds')),
+                int(post_body.startTimestampInSeconds),
                 timezone.utc
             )
 
-            selected_commits = body.get("selectedCommits", {})
-            self.filterParams = FilterParams(body, process_body=True)
-            self.setup_filters()
+            commit_heads = post_body.commitHeads
 
-            is_all_selected = len(selected_commits) == 0
+            is_all_selected = len(commit_heads) == 0
+        except ValidationError as e:
+            return create_error_response(e.json())
         except json.JSONDecodeError:
-            return HttpResponseBadRequest(
-                getErrorResponseBody(
-                    "Invalid body, request body must be a valid json string"
-                )
-            )
+            return create_error_response("Invalid body, request body must be a valid json string")
         except (ValueError, TypeError):
-            return HttpResponseBadRequest(
-                getErrorResponseBody("limitTimestampInSeconds must be a Unix Timestamp")
-            )
+            return create_error_response("startTimestampInSeconds and endTimestampInSeconds must be a Unix Timestamp")
 
-        cache_params = {
-            "hardware_id": hardware_id,
-            "origin": origin,
-            "selected_commits": json.dumps(selected_commits),
-            "start_datetime": start_datetime,
-            "end_datetime": end_datetime,
-        }
+        commit_history = self.get_commit_history(hardware_id, origin, start_datetime, end_datetime, commit_heads)
 
-        trees = getQueryCache(self.cache_key_get_tree_data, cache_params)
-
-        if not trees:
-            trees = self.get_trees(hardware_id, origin, start_datetime, end_datetime)
-            setQueryCache(self.cache_key_get_tree_data, cache_params, trees)
-
-        trees_with_selected_commits = self.get_trees_with_selected_commit(
-            trees,
-            selected_commits
-        )
-
-        params = {
-            "hardware_id": hardware_id,
-            "origin": origin,
-            "trees": trees_with_selected_commits,
-            "start_date": start_datetime,
-            "end_date": end_datetime
-        }
-
-        records = getQueryCache(self.cache_key_get_full_data, cache_params)
-
-        if not records:
-            records = self.get_full_tests(**params)
-            setQueryCache(self.cache_key_get_full_data, params, records)
-
-        builds, tests, boots, tree_status_summary = self.sanitize_records(
-            records,
-            trees_with_selected_commits,
-            is_all_selected
-        )
-
-        configs, archs, compilers = self.get_filter_options(
-            records, trees_with_selected_commits, is_all_selected
-        )
-
-        trees_with_status_count = []
-        for tree in trees:
-            summary = tree_status_summary.get(tree["index"])
-            trees_with_status_count.append({**tree, "selectedCommitStatusSummary": summary})
+        commit_history_table = {}
 
         return JsonResponse(
             {
-                "builds": builds,
-                "tests": tests,
-                "boots": boots,
-                "configs": configs,
-                "archs": archs,
-                "compilers": compilers,
-                "trees": trees_with_status_count,
+                "commit_history_table " : commit_history_table
             }, safe=False
         )
