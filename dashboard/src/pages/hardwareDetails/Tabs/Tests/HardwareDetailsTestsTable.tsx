@@ -12,7 +12,11 @@ import { TableHeader } from '@/components/Table/TableHeader';
 import type { TIndividualTest } from '@/types/general';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
-import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
+import {
+  DETAILS_COLUMN_ID,
+  MoreDetailsIcon,
+  MoreDetailsTableHeader,
+} from '@/components/Table/DetailsColumn';
 
 const innerColumns: ColumnDef<TIndividualTest>[] = [
   {
@@ -62,8 +66,9 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
       row.getValue('duration') ? row.getValue('duration') : '-',
   },
   {
-    id: 'chevron',
-    cell: (): JSX.Element => <ChevronRightAnimate />,
+    id: DETAILS_COLUMN_ID,
+    header: (): JSX.Element => <MoreDetailsTableHeader />,
+    cell: (): JSX.Element => <MoreDetailsIcon />,
   },
 ];
 

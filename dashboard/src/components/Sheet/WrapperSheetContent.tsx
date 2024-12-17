@@ -17,6 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/Tooltip/Tooltip';
+import { cn } from '@/lib/utils';
 
 export type TNavigationLogActions = {
   previousItem: () => void;
@@ -30,6 +31,7 @@ type WrapperSheetProps = {
   navigationLogsActions?: TNavigationLogActions;
   children: ReactNode;
   sheetTitle: MessageDescriptor['id'];
+  detailsButton?: JSX.Element;
 };
 
 const nextItem = (
@@ -63,6 +65,7 @@ export const WrapperSheetContent = ({
   navigationLogsActions,
   children,
   sheetTitle,
+  detailsButton,
 }: WrapperSheetProps): JSX.Element => {
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent): void => {
@@ -92,45 +95,56 @@ export const WrapperSheetContent = ({
 
       {children}
 
-      <div className="mt-auto flex justify-end">
-        {navigationLogsActions && (
-          <>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={navigationLogsActions.previousItem}
-                  disabled={!navigationLogsActions.hasPrevious}
-                  className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
-                >
-                  <FormattedMessage
-                    id="global.prev"
-                    defaultMessage="Previous"
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{previousTooltipMsg}</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={navigationLogsActions.nextItem}
-                  disabled={!navigationLogsActions.hasNext}
-                  className="mx-5 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
-                >
-                  <FormattedMessage id="global.next" defaultMessage="Next" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{nextTooltipMsg}</TooltipContent>
-            </Tooltip>
-          </>
+      <div
+        className={cn(
+          'mt-auto flex',
+          detailsButton ? 'justify-between' : 'justify-end',
         )}
-
-        <SheetTrigger asChild>
-          <Button className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white">
-            <FormattedMessage id="global.close" defaultMessage="Close" />
-          </Button>
-        </SheetTrigger>
+      >
+        {detailsButton}
+        <div className="flex">
+          <div className="mt-auto flex justify-end">
+            {navigationLogsActions && (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={navigationLogsActions.previousItem}
+                      disabled={!navigationLogsActions.hasPrevious}
+                      className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
+                    >
+                      <FormattedMessage
+                        id="global.prev"
+                        defaultMessage="Previous"
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{previousTooltipMsg}</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={navigationLogsActions.nextItem}
+                      disabled={!navigationLogsActions.hasNext}
+                      className="mx-5 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
+                    >
+                      <FormattedMessage
+                        id="global.next"
+                        defaultMessage="Next"
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{nextTooltipMsg}</TooltipContent>
+                </Tooltip>
+              </>
+            )}
+          </div>
+          <SheetTrigger asChild>
+            <Button className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white">
+              <FormattedMessage id="global.close" defaultMessage="Close" />
+            </Button>
+          </SheetTrigger>
+        </div>
       </div>
     </SheetContent>
   );

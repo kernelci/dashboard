@@ -7,6 +7,12 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { ItemType } from '@/components/ListingItem/ListingItem';
 
+import {
+  DETAILS_COLUMN_ID,
+  MoreDetailsIcon,
+  MoreDetailsTableHeader,
+} from '@/components/Table/DetailsColumn';
+
 export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
   {
     accessorKey: 'config',
@@ -81,5 +87,10 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
         : 'NULL';
     },
     filterFn: 'equals',
+  },
+  {
+    id: DETAILS_COLUMN_ID,
+    header: (): JSX.Element => <MoreDetailsTableHeader />,
+    cell: (): JSX.Element => <MoreDetailsIcon />,
   },
 ];

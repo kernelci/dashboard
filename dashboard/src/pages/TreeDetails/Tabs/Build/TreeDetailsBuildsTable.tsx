@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 
+import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
@@ -20,15 +21,16 @@ export function TreeDetailsBuildsTable({
   const { tableFilter } = useSearch({ from: '/tree/$treeId' });
   const navigate = useNavigate({ from: '/tree/$treeId' });
 
-  const navigateToBuildDetails = useCallback(
-    (buildId: string) => {
-      navigate({
-        to: `/tree/${treeId}/build/${buildId}`,
-        params: { treeId },
-        search: prev => prev,
-      });
-    },
-    [navigate, treeId],
+  const getRowLink = useCallback(
+    (buildId: string): LinkProps => ({
+      to: '/tree/$treeId/build/$buildId',
+      params: {
+        buildId: buildId,
+        treeId: treeId,
+      },
+      search: s => s,
+    }),
+    [treeId],
   );
 
   const onClickFilter = useCallback(
@@ -51,10 +53,10 @@ export function TreeDetailsBuildsTable({
   return (
     <BuildsTable
       tableKey="treeDetailsBuilds"
-      onClickShowBuild={navigateToBuildDetails}
       filter={tableFilter.buildsTable}
       buildItems={buildItems}
       onClickFilter={onClickFilter}
+      getRowLink={getRowLink}
     />
   );
 }

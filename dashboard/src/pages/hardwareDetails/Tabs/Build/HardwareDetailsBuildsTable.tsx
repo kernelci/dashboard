@@ -1,5 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
+import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { useCallback } from 'react';
@@ -37,15 +38,16 @@ export function HardwareDetailsBuildsTable({
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
-  const navigateToBuildDetails = useCallback(
-    (buildId: string) => {
-      navigate({
-        to: `/hardware/${hardwareId}/build/${buildId}`,
-        params: { hardwareId },
-        search: prev => prev,
-      });
-    },
-    [navigate, hardwareId],
+  const getRowLink = useCallback(
+    (buildId: string): LinkProps => ({
+      to: '/hardware/$hardwareId/build/$buildId',
+      params: {
+        buildId: buildId,
+        hardwareId: hardwareId,
+      },
+      search: s => s,
+    }),
+    [hardwareId],
   );
 
   const onClickFilter = useCallback(
@@ -72,7 +74,7 @@ export function HardwareDetailsBuildsTable({
       buildItems={buildItems}
       columns={hardwareDetailsBuildColumns}
       onClickFilter={onClickFilter}
-      onClickShowBuild={navigateToBuildDetails}
+      getRowLink={getRowLink}
     />
   );
 }

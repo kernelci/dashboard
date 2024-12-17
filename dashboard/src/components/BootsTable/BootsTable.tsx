@@ -1,4 +1,4 @@
-import type { Cell, ColumnDef, Row, SortingState } from '@tanstack/react-table';
+import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import {
   flexRender,
   getCoreRowModel,
@@ -8,10 +8,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { LinkProps } from '@tanstack/react-router';
-
-import { MdChevronRight } from 'react-icons/md';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
@@ -26,12 +24,7 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import { getStatusGroup } from '@/utils/status';
 
-import {
-  TableBody,
-  TableCell,
-  TableCellWithLink,
-  TableRow,
-} from '@/components/ui/table';
+import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 import type { TestHistory } from '@/types/general';
 
@@ -45,10 +38,17 @@ import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { useTestDetails } from '@/api/testDetails';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
-import { cn } from '@/lib/utils';
 import { usePaginationState } from '@/hooks/usePaginationState';
 
 import type { TableKeys } from '@/utils/constants/tables';
+
+import {
+  DETAILS_COLUMN_ID,
+  MoreDetailsIcon,
+  MoreDetailsTableHeader,
+} from '@/components/Table/DetailsColumn';
+
+import { TableRowMemoized } from '@/components/Table/TableComponents';
 
 const columns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -92,8 +92,9 @@ const columns: ColumnDef<TestByCommitHash>[] = [
       row.getValue('duration') ? row.getValue('duration') : '-',
   },
   {
-    id: 'chevron',
-    cell: (): JSX.Element => <MdChevronRight />,
+    id: DETAILS_COLUMN_ID,
+    header: (): JSX.Element => <MoreDetailsTableHeader />,
+    cell: (): JSX.Element => <MoreDetailsIcon />,
   },
 ];
 
@@ -106,77 +107,6 @@ interface IBootsTable {
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
 }
-
-const TableCellComponent = ({
-  cell,
-  rowId,
-  rowIndex,
-  openLogSheet,
-  getRowLink,
-}: {
-  cell: Cell<TestByCommitHash, unknown>;
-  rowId: TestHistory['id'];
-  rowIndex: number;
-  getRowLink: (testId: TestHistory['id']) => LinkProps;
-  openLogSheet: (index: number) => void;
-}): JSX.Element => {
-  const handleClick = useCallback(
-    () => openLogSheet(rowIndex),
-    [rowIndex, openLogSheet],
-  );
-
-  const parsedHandleClick =
-    cell.column.id === 'status' ? handleClick : undefined;
-  const parsedLinkProps: LinkProps =
-    cell.column.id === 'status' ? { search: s => s } : getRowLink(rowId);
-
-  return (
-    <TableCellWithLink
-      onClick={parsedHandleClick}
-      key={cell.id}
-      linkProps={parsedLinkProps}
-    >
-      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-    </TableCellWithLink>
-  );
-};
-
-const TableRowComponent = ({
-  row,
-  index,
-  currentLog,
-  getRowLink,
-  openLogSheet,
-}: {
-  row: Row<TestByCommitHash>;
-  index: number;
-  currentLog?: number;
-  getRowLink: (testId: TestHistory['id']) => LinkProps;
-  openLogSheet: (index: number) => void;
-}): JSX.Element => {
-  const className = index === currentLog ? 'bg-sky-200' : undefined;
-
-  return (
-    <TableRow
-      className={cn('cursor-pointer hover:bg-lightBlue', className)}
-      key={row.id}
-    >
-      {row.getVisibleCells().map((cell, cellIdx) => (
-        <TableCellMemoized
-          key={cellIdx}
-          cell={cell}
-          rowId={row.original.id}
-          rowIndex={index}
-          getRowLink={getRowLink}
-          openLogSheet={openLogSheet}
-        />
-      ))}
-    </TableRow>
-  );
-};
-
-const TableCellMemoized = memo(TableCellComponent);
-const TableRowMemoized = memo(TableRowComponent);
 
 // TODO: would be useful if the navigation happened within the table, so the parent component would only be required to pass the navigation url instead of the whole function for the update and the currentPath diffFilter (boots/tests Table)
 export function BootsTable({
@@ -360,13 +290,13 @@ export function BootsTable({
   const tableRows = useMemo((): JSX.Element[] | JSX.Element => {
     return modelRows?.length ? (
       modelRows.map((row, idx) => (
-        <TableRowMemoized
-          getRowLink={getRowLink}
-          openLogSheet={openLogSheet}
-          currentLog={currentLog}
+        <TableRowMemoized<TestByCommitHash>
           key={idx}
           index={idx}
           row={row}
+          openLogSheet={openLogSheet}
+          currentLog={currentLog}
+          getRowLink={getRowLink}
         />
       ))
     ) : (
@@ -421,6 +351,10 @@ export function BootsTable({
     ],
   );
 
+  const currentLinkProps = useMemo(() => {
+    return getRowLink(dataTest?.id ?? '');
+  }, [dataTest?.id, getRowLink]);
+
   return (
     <WrapperTableWithLogSheet
       currentLog={currentLog}
@@ -428,6 +362,7 @@ export function BootsTable({
       logUrl={dataTest?.log_url}
       navigationLogsActions={navigationLogsActions}
       onOpenChange={onOpenChange}
+      currentLinkProps={currentLinkProps}
     >
       <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
       <BaseTable headerComponents={tableHeaders}>

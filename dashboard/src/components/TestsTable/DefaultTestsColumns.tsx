@@ -13,6 +13,12 @@ import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 import TooltipHardware from '@/components/TestsTable/TooltipHardware';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
+import {
+  MoreDetailsTableHeader,
+  MoreDetailsIcon,
+  DETAILS_COLUMN_ID,
+} from '@/components/Table/DetailsColumn';
+
 export const defaultColumns: ColumnDef<TPathTests>[] = [
   {
     accessorKey: 'path_group',
@@ -108,7 +114,8 @@ export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
     ),
   },
   {
-    id: 'chevron',
-    cell: (): JSX.Element => <ChevronRightAnimate />,
+    id: DETAILS_COLUMN_ID,
+    header: (): JSX.Element => <MoreDetailsTableHeader />,
+    cell: (): JSX.Element => <MoreDetailsIcon />,
   },
 ];
