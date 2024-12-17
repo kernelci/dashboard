@@ -16,7 +16,7 @@ import {
 import { Skeleton } from '@/components/Skeleton';
 import { useHardwareDetails } from '@/api/hardwareDetails';
 
-import type { Trees } from '@/types/hardware/hardwareDetails';
+import type { CommitHead, Trees } from '@/types/hardware/hardwareDetails';
 
 import {
   GroupedTestStatus,
@@ -35,6 +35,7 @@ import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsFilter from './HardwareDetailsFilter';
+import { makeTreeIdentifierKey } from '@/utils/trees';
 
 const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
   treeItems.map(tree => ({
@@ -109,6 +110,29 @@ function HardwareDetails(): JSX.Element {
     treeIndexes ?? [],
     treeCommits,
   );
+
+  const hardwareTableForCommitHistory = useMemo(() => {
+    const result: Record<string, CommitHead> = {};
+    if (!isLoading && data) {
+      data?.trees.forEach(tree => {
+        const treeIdentifierKey = makeTreeIdentifierKey({
+          treeName: tree.treeName ?? '',
+          gitRepositoryUrl: tree.gitRepositoryUrl ?? '',
+          gitRepositoryBranch: tree.gitRepositoryBranch ?? '',
+        });
+
+        const commitHead: CommitHead = {
+          treeName: tree.treeName ?? '',
+          repositoryUrl: tree.gitRepositoryUrl ?? '',
+          branch: tree.gitRepositoryBranch ?? '',
+          commitHash: tree.headGitCommitHash ?? '',
+        };
+
+        result[treeIdentifierKey] = commitHead;
+      });
+    }
+    return result;
+  }, [data]);
 
   const filterListElement = useMemo(
     () => (
