@@ -1,5 +1,7 @@
 import type { PropsWithChildren } from 'react';
 
+import type { LinkProps } from '@tanstack/react-router';
+
 import { Sheet } from '@/components/Sheet';
 
 import { LogSheetContent } from '@/components/Log/LogSheetContent';
@@ -11,6 +13,7 @@ interface TableWithLogSheetProps {
   logExcerpt?: string;
   logUrl?: string;
   navigationLogsActions?: TNavigationLogActions;
+  currentLinkProps: LinkProps;
 }
 
 const WrapperTableWithLogSheet = ({
@@ -20,6 +23,7 @@ const WrapperTableWithLogSheet = ({
   logUrl,
   navigationLogsActions,
   onOpenChange,
+  currentLinkProps,
 }: PropsWithChildren<TableWithLogSheetProps>): JSX.Element => {
   return (
     <div className="flex flex-col gap-6 pb-4">
@@ -30,6 +34,7 @@ const WrapperTableWithLogSheet = ({
           logExcerpt={logExcerpt}
           logUrl={logUrl}
           navigationLogsActions={navigationLogsActions}
+          currentLinkProps={currentLinkProps}
         />
       </Sheet>
     </div>

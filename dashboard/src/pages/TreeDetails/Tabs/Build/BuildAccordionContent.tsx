@@ -1,13 +1,8 @@
-import { MdFolderOpen } from 'react-icons/md';
-
-import { useCallback, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import type {
-  AccordionItemBuilds,
-  BuildCountsResponse,
-} from '@/types/tree/TreeDetails';
+import type { BuildCountsResponse } from '@/types/tree/TreeDetails';
 
 import { useBuildStatusCount } from '@/api/treeDetails';
 
@@ -16,38 +11,7 @@ import StatusChartMemoized, {
   Colors,
 } from '@/components/StatusChart/StatusCharts';
 
-import type { ILinkGroup } from '@/components/LinkGroup/LinkGroup';
-import LinksGroup from '@/components/LinkGroup/LinkGroup';
-
-import { Button } from '@/components/ui/button';
-
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
-
-export interface IBuildAccordionContent {
-  testStatus: {
-    failTests: number;
-    errorTests: number;
-    passTests: number;
-    skipTests: number;
-  };
-  kernelImage?: string;
-  buildLogs?: string;
-  kernelConfig?: string;
-  dtb?: string;
-  systemMap?: string;
-  modules?: string;
-}
-
-export interface ILinksGroup {
-  kernelImage?: string;
-  buildLogs?: string;
-  kernelConfig?: string;
-  dtb?: string;
-  systemMap?: string;
-  modules?: string;
-}
-
-const blueText = 'text-blue';
 
 const AccordBuildStatusChart = ({
   buildCountsData,
@@ -113,107 +77,21 @@ const AccordBuildStatusChart = ({
   );
 };
 
-export interface IAccordionItems {
-  accordionData: AccordionItemBuilds;
-  onClickShowBuild: (buildId: AccordionItemBuilds['id']) => void;
-  openLogSheet?: () => void;
-}
-
-const AccordionBuildContent = ({
-  accordionData,
-  onClickShowBuild,
-  openLogSheet,
-}: IAccordionItems): JSX.Element => {
+const BuildTestStatusChart = ({
+  buildId,
+}: {
+  buildId: string;
+}): JSX.Element => {
   const { data, status } = useBuildStatusCount(
-    { buildId: accordionData.id ?? '' },
-    { enabled: !!accordionData.id },
-  );
-
-  const onClickShowBuildHandler = useCallback(
-    () => onClickShowBuild(accordionData.id),
-    [accordionData.id, onClickShowBuild],
-  );
-
-  const links: ILinkGroup['links'] = useMemo(
-    () => [
-      accordionData.kernelImage
-        ? {
-            title: 'buildAccordion.kernelImage',
-            icon: <MdFolderOpen className={blueText} />,
-            linkText: <span>{`kernel/${accordionData.kernelImage}`}</span>,
-          }
-        : undefined,
-      accordionData.kernelConfig
-        ? {
-            title: 'buildAccordion.kernelConfig',
-            icon: <MdFolderOpen className={blueText} />,
-            link: accordionData.kernelConfig,
-            linkText: <FormattedMessage id="buildAccordion.kernelConfigPath" />,
-          }
-        : undefined,
-      accordionData.dtb
-        ? {
-            title: 'buildAccordion.dtb',
-            icon: <MdFolderOpen className={blueText} />,
-            link: accordionData.dtb,
-            linkText: <FormattedMessage id="buildAccordion.dtbs" />,
-          }
-        : undefined,
-      accordionData.buildLogs
-        ? {
-            title: 'buildAccordion.buildLogs',
-            icon: <MdFolderOpen className={blueText} />,
-            linkText: <FormattedMessage id="buildAccordion.logs" />,
-            onClick: openLogSheet,
-          }
-        : undefined,
-      accordionData.systemMap
-        ? {
-            title: 'buildAccordion.systemMap',
-            icon: <MdFolderOpen className={blueText} />,
-            link: accordionData.systemMap,
-            linkText: <FormattedMessage id="buildAccordion.systemMapPath" />,
-          }
-        : undefined,
-      accordionData.modules
-        ? {
-            title: 'buildAccordion.modules',
-            icon: <MdFolderOpen className={blueText} />,
-            link: accordionData.modules,
-            linkText: <FormattedMessage id="buildAccordion.modulesZip" />,
-          }
-        : undefined,
-    ],
-    [
-      accordionData.buildLogs,
-      accordionData.dtb,
-      accordionData.kernelConfig,
-      accordionData.kernelImage,
-      accordionData.modules,
-      accordionData.systemMap,
-      openLogSheet,
-    ],
+    { buildId: buildId ?? '' },
+    { enabled: !!buildId },
   );
 
   return (
-    <div className="flex flex-row justify-between">
-      <QuerySwitcher data={data} status={status} skeletonClassname="h-[60px]">
-        {data && <AccordBuildStatusChart buildCountsData={data} />}
-      </QuerySwitcher>
-      <div className="flex flex-col gap-8">
-        <LinksGroup links={links} />
-        <div className="flex flex-row gap-4">
-          <Button
-            variant="outline"
-            className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
-            onClick={onClickShowBuildHandler}
-          >
-            <FormattedMessage id="buildAccordion.showMore" />
-          </Button>
-        </div>
-      </div>
-    </div>
+    <QuerySwitcher data={data} status={status} skeletonClassname="h-[60px]">
+      {data && <AccordBuildStatusChart buildCountsData={data} />}
+    </QuerySwitcher>
   );
 };
 
-export default AccordionBuildContent;
+export const MemoizedBuildTestsChart = memo(BuildTestStatusChart);

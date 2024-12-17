@@ -1,39 +1,24 @@
-import type {
-  Cell,
-  ColumnDef,
-  ExpandedState,
-  Header,
-  Row,
-  SortingState,
-} from '@tanstack/react-table';
+import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import {
   flexRender,
   getCoreRowModel,
-  getExpandedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 
-import {
-  Fragment,
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
+
+import type { LinkProps } from '@tanstack/react-router';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import TableStatusFilter from '@/components/Table/TableStatusFilter';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
-import type { IAccordionItems } from '@/pages/TreeDetails/Tabs/Build/BuildAccordionContent';
-import AccordionBuildContent from '@/pages/TreeDetails/Tabs/Build/BuildAccordionContent';
 import type {
   AccordionItemBuilds,
   BuildsTableFilter,
@@ -42,11 +27,12 @@ import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
 
 import { useBuildStatusCount } from '@/api/treeDetails';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
-import { cn } from '@/lib/utils';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
 
 import type { TableKeys } from '@/utils/constants/tables';
+
+import { TableRowMemoized } from '@/components/Table/TableComponents';
 
 import { defaultBuildColumns } from './DefaultBuildsColumns';
 
@@ -54,129 +40,20 @@ export interface IBuildsTable {
   tableKey: TableKeys;
   buildItems: AccordionItemBuilds[];
   columns?: ColumnDef<AccordionItemBuilds>[];
-  onClickShowBuild: IAccordionItems['onClickShowBuild'];
   filter: BuildsTableFilter;
   onClickFilter: (filter: BuildsTableFilter) => void;
+  getRowLink: (buildId: string) => LinkProps;
 }
-
-const TableCellComponent = ({
-  row,
-  cell,
-  rowIndex,
-  openLogSheet,
-}: {
-  row: Row<AccordionItemBuilds>;
-  cell: Cell<AccordionItemBuilds, unknown>;
-  rowIndex: number;
-  openLogSheet: (index: number) => void;
-}): JSX.Element => {
-  const handleClickCell = useCallback(() => {
-    if (cell.column.id === 'status') {
-      openLogSheet(rowIndex);
-    } else if (row.getCanExpand()) {
-      row.toggleExpanded();
-    }
-  }, [cell, row, rowIndex, openLogSheet]);
-
-  return (
-    <TableCell key={cell.id} onClick={handleClickCell}>
-      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-    </TableCell>
-  );
-};
-
-const AccordionBuildContentComponent = ({
-  row,
-  rowIndex,
-  openLogSheet,
-  onClickShowBuild,
-}: {
-  row: Row<AccordionItemBuilds>;
-  rowIndex: number;
-  openLogSheet: (index: number) => void;
-  onClickShowBuild: IAccordionItems['onClickShowBuild'];
-}): JSX.Element => {
-  const handleOpenLogSheet = useCallback(
-    () => openLogSheet(rowIndex),
-    [rowIndex, openLogSheet],
-  );
-
-  return (
-    <AccordionBuildContent
-      accordionData={row.original}
-      onClickShowBuild={onClickShowBuild}
-      openLogSheet={handleOpenLogSheet}
-    />
-  );
-};
-
-const TableRowComponent = ({
-  index,
-  row,
-  groupHeaders,
-  onClickShowBuild,
-  openLogSheet,
-  currentLog,
-  isExpanded,
-}: {
-  index: number;
-  row: Row<AccordionItemBuilds>;
-  currentLog?: number;
-  openLogSheet: (index: number) => void;
-  groupHeaders: Header<AccordionItemBuilds, unknown>[];
-  onClickShowBuild: IAccordionItems['onClickShowBuild'];
-  isExpanded: boolean;
-}): JSX.Element => {
-  const className = index === currentLog ? 'bg-sky-200' : undefined;
-
-  return (
-    <Fragment key={row.id}>
-      <TableRow
-        className={cn('cursor-pointer hover:bg-lightBlue', className)}
-        data-state={isExpanded ? 'open' : 'closed'}
-      >
-        {row.getVisibleCells().map((cell, cellIdx) => (
-          <TableCellMemoized
-            key={cellIdx}
-            cell={cell}
-            rowIndex={index}
-            row={row}
-            openLogSheet={openLogSheet}
-          />
-        ))}
-      </TableRow>
-      {isExpanded && (
-        <TableRow>
-          <TableCell colSpan={groupHeaders.length} className="p-0">
-            <div className="max-h-[400px] w-full overflow-scroll border-b border-darkGray bg-lightGray p-8">
-              <AccordionBuildContentMemoized
-                row={row}
-                rowIndex={index}
-                onClickShowBuild={onClickShowBuild}
-                openLogSheet={openLogSheet}
-              />
-            </div>
-          </TableCell>
-        </TableRow>
-      )}
-    </Fragment>
-  );
-};
-
-const TableCellMemoized = memo(TableCellComponent);
-const AccordionBuildContentMemoized = memo(AccordionBuildContentComponent);
-const TableRowMemoized = memo(TableRowComponent);
 
 export function BuildsTable({
   tableKey,
   buildItems,
   columns = defaultBuildColumns,
-  onClickShowBuild,
   filter,
   onClickFilter,
+  getRowLink,
 }: IBuildsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [expanded, setExpanded] = useState<ExpandedState>({});
   const { pagination, paginationUpdater } = usePaginationState(tableKey);
 
   const intl = useIntl();
@@ -210,13 +87,9 @@ export function BuildsTable({
     onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getRowCanExpand: _ => true,
-    getExpandedRowModel: getExpandedRowModel(),
-    onExpandedChange: setExpanded,
     state: {
       sorting,
       pagination,
-      expanded,
     },
   });
 
@@ -331,15 +204,13 @@ export function BuildsTable({
       return modelRows?.length ? (
         modelRows.map((row, index) => {
           return (
-            <TableRowMemoized
+            <TableRowMemoized<AccordionItemBuilds>
               key={index}
               index={index}
               row={row}
-              isExpanded={row.getIsExpanded()}
-              groupHeaders={groupHeaders}
-              onClickShowBuild={onClickShowBuild}
               openLogSheet={openLogSheet}
               currentLog={currentLog}
+              getRowLink={getRowLink}
             />
           );
         })
@@ -351,14 +222,7 @@ export function BuildsTable({
         </TableRow>
       );
     }
-  }, [
-    modelRows,
-    columns.length,
-    groupHeaders,
-    onClickShowBuild,
-    openLogSheet,
-    currentLog,
-  ]);
+  }, [modelRows, columns.length, openLogSheet, currentLog, getRowLink]);
 
   const handlePreviousItem = useCallback(() => {
     setLog(previousLog => {
@@ -404,15 +268,20 @@ export function BuildsTable({
     ],
   );
 
+  const currentLinkProps = useMemo(() => {
+    return getRowLink(sortedItems[currentLog ?? 0]?.id ?? '');
+  }, [currentLog, getRowLink, sortedItems]);
+
   return (
     <WrapperTableWithLogSheet
       currentLog={currentLog}
       logExcerpt={dataBuildCount?.log_excerpt}
       logUrl={
-        sortedItems.length > 0 ? sortedItems[currentLog ?? 0].buildLogs : ''
+        sortedItems.length > 0 ? sortedItems[currentLog ?? 0]?.buildLogs : ''
       }
       navigationLogsActions={navigationLogsActions}
       onOpenChange={onOpenChange}
+      currentLinkProps={currentLinkProps}
     >
       <div className="flex justify-between">
         <TableStatusFilter filters={filters} onClickBuild={onClickFilter} />

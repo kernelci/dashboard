@@ -1,4 +1,4 @@
-import type { Cell, ColumnDef, Row, SortingState } from '@tanstack/react-table';
+import type { ColumnDef, Row, SortingState } from '@tanstack/react-table';
 import {
   flexRender,
   getCoreRowModel,
@@ -8,98 +8,26 @@ import {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { CSSProperties } from 'react';
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 
 import type { TestHistory, TIndividualTest } from '@/types/general';
 
 import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
-import { TableBody, TableCellWithLink, TableRow } from '@/components/ui/table';
+import { TableBody } from '@/components/ui/table';
 
 import { useTestDetails } from '@/api/testDetails';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
-import { cn } from '@/lib/utils';
 
-type GetRowLink = (testId: TestHistory['id']) => LinkProps;
-
-const TableCellComponent = ({
-  cell,
-  rowIndex,
-  linkProps,
-  openLogSheet,
-}: {
-  cell: Cell<TIndividualTest, unknown>;
-  rowIndex: number;
-  linkProps: LinkProps;
-  openLogSheet: (index: number) => void;
-}): JSX.Element => {
-  const handleClick = useCallback(() => {
-    openLogSheet(rowIndex);
-  }, [rowIndex, openLogSheet]);
-
-  const parsedHandleClick =
-    cell.column.id === 'status' ? handleClick : undefined;
-  const parsedLinkProps: LinkProps =
-    cell.column.id === 'status' ? { search: s => s } : linkProps;
-
-  return (
-    <TableCellWithLink
-      onClick={parsedHandleClick}
-      key={cell.id}
-      linkProps={parsedLinkProps}
-    >
-      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-    </TableCellWithLink>
-  );
-};
-
-const TableCellMemoized = memo(TableCellComponent);
-
-const TableRowComponent = ({
-  row,
-  getRowLink,
-  index,
-  openLogSheet,
-  currentLog,
-}: {
-  row: Row<TIndividualTest>;
-  index: number;
-  getRowLink: GetRowLink;
-  currentLog?: number;
-  openLogSheet: (index: number) => void;
-}): JSX.Element => {
-  const className = index === currentLog ? 'bg-sky-200' : undefined;
-
-  const linkProps: LinkProps = useMemo(() => {
-    return getRowLink(row.original.id);
-  }, [getRowLink, row.original.id]);
-
-  return (
-    <TableRow
-      key={row.id}
-      className={cn('cursor-pointer border-b-0 hover:bg-lightBlue', className)}
-    >
-      {row.getVisibleCells().map((cell, idx) => (
-        <TableCellMemoized
-          key={idx}
-          cell={cell}
-          linkProps={linkProps}
-          openLogSheet={openLogSheet}
-          rowIndex={index}
-        />
-      ))}
-    </TableRow>
-  );
-};
-const TableRowMemoized = memo(TableRowComponent);
+import { TableRowMemoized } from '@/components/Table/TableComponents';
 
 const ESTIMATED_ROW_HEIGHT = 60;
 
 interface IIndividualTestsTable {
   columns: ColumnDef<TIndividualTest>[];
   data: TIndividualTest[];
-  getRowLink: GetRowLink;
+  getRowLink: (testId: TestHistory['id']) => LinkProps;
 }
 
 export function IndividualTestsTable({
@@ -170,13 +98,13 @@ export function IndividualTestsTable({
       const row = rows[virtualRow.index] as Row<TIndividualTest>;
 
       return (
-        <TableRowMemoized
-          openLogSheet={openLogSheet}
-          getRowLink={getRowLink}
-          row={row}
-          index={idx}
+        <TableRowMemoized<TIndividualTest>
           key={row.id}
+          index={idx}
+          row={row}
+          openLogSheet={openLogSheet}
           currentLog={currentLog}
+          getRowLink={getRowLink}
         />
       );
     });
@@ -240,6 +168,10 @@ export function IndividualTestsTable({
     ],
   );
 
+  const currentLinkProps = useMemo(() => {
+    return getRowLink(dataTest?.id ?? '');
+  }, [dataTest?.id, getRowLink]);
+
   return (
     <WrapperTableWithLogSheet
       currentLog={currentLog}
@@ -247,6 +179,7 @@ export function IndividualTestsTable({
       logUrl={dataTest?.log_url}
       navigationLogsActions={navigationLogsActions}
       onOpenChange={onOpenChange}
+      currentLinkProps={currentLinkProps}
     >
       <div
         ref={parentRef}
