@@ -110,6 +110,46 @@ class TreeCommitsHistory(APIView):
 
         self.commit_hashes[commit_hash]['builds_count'][label] += 1
 
+    def _process_boots_count(
+        self,
+        test_status: str,
+        commit_hash: str,
+        test_duration: int,
+        test_path: str
+    ) -> None:
+        is_boot_filter_out = self.filterParams.is_boot_filtered_out(
+            duration=test_duration,
+            issue_id=None,
+            path=test_path,
+            status=test_status
+        )
+
+        if is_boot_filter_out:
+            return
+
+        label = test_status.lower()
+        self.commit_hashes[commit_hash]['boots_count'][label] += 1
+
+    def _process_nonboots_count(
+        self,
+        test_status: str,
+        commit_hash: str,
+        test_duration: int,
+        test_path: str
+    ) -> None:
+        is_nonboot_filter_out = self.filterParams.is_test_filtered_out(
+            duration=test_duration,
+            issue_id=None,
+            path=test_path,
+            status=test_status
+        )
+
+        if is_nonboot_filter_out:
+            return
+
+        label = test_status.lower()
+        self.commit_hashes[commit_hash]['tests_count'][label] += 1
+
     def _pass_in_global_filters(self, row: Dict) -> bool:
         hardware_compatibles = [UNKNOWN_STRING]
         architecture = UNKNOWN_STRING
@@ -153,10 +193,20 @@ class TreeCommitsHistory(APIView):
             self.processed_tests.add(row['test_id'])
             is_boot = row['test_path'] is not None and row['test_path'].startswith('boot')
 
-            count_label = "boots_count" if is_boot else "tests_count"
-            test_status = row['test_status'] or "NULL"
-            label = test_status.lower()
-            self.commit_hashes[commit_hash][count_label][label] += 1
+            if is_boot:
+                self._process_boots_count(
+                    row['test_status'] or "NULL",
+                    commit_hash,
+                    row['test_duration'],
+                    row['test_path']
+                )
+            else:
+                self._process_nonboots_count(
+                    row['test_status'] or "NULL",
+                    commit_hash,
+                    row['test_duration'],
+                    row['test_path']
+                )
 
     def _process_builds(self, row: Dict) -> None:
         if row["build_id"] is not None and row['build_id'] not in self.processed_builds:
