@@ -31,11 +31,12 @@ import type { TFilter } from '@/types/general';
 
 import { getFormattedDate, getFormattedTime } from '@/utils/date';
 
+import { makeTreeIdentifierKey } from '@/utils/trees';
+
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsFilter from './HardwareDetailsFilter';
-import { makeTreeIdentifierKey } from '@/utils/trees';
 
 const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
   treeItems.map(tree => ({
@@ -132,7 +133,7 @@ function HardwareDetails(): JSX.Element {
       });
     }
     return result;
-  }, [data]);
+  }, [data, isLoading]);
 
   const filterListElement = useMemo(
     () => (
