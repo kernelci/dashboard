@@ -53,6 +53,8 @@ import type { ISummaryItem } from '@/components/Tabs/Summary';
 
 import { useTreeDetails } from '@/api/treeDetails';
 
+import { truncateUrl } from '@/lib/string';
+
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
@@ -73,6 +75,8 @@ interface ITreeHeader {
   gitUrl?: string;
   gitBranch?: string;
 }
+
+const defaultUrlLength = 12;
 
 const TreeHeader = ({
   commit,
@@ -110,7 +114,9 @@ const TreeHeader = ({
           </TableCell>
           <TableCell>
             <Tooltip>
-              <TooltipTrigger>{sanitizeTableValue(gitUrl)} </TooltipTrigger>
+              <TooltipTrigger>
+                {truncateUrl(gitUrl, defaultUrlLength)}
+              </TooltipTrigger>
               <TooltipContent>{gitUrl}</TooltipContent>
             </Tooltip>
           </TableCell>
