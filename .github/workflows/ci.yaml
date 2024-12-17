@@ -96,6 +96,10 @@ jobs:
         with:
           node-version-file: './dashboard/.nvmrc'
 
+      - name: Run tests
+        run: pnpm test
+        working-directory: ./dashboard
+
       - name: Run build
         run: pnpm build
         working-directory: ./dashboard
