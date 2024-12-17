@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "lint-staged": "eslint --max-warnings=0 --ext .ts,.tsx,.js,.jsx src",
@@ -97,6 +99,7 @@
     "prettier-plugin-tailwindcss": "^0.6.6",
     "storybook": "^8.3.0",
     "tailwindcss": "^3.4.11",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.8"
   }
 }

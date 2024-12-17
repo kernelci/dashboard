@@ -72,7 +72,7 @@ const isStringRecord = (obj: unknown): obj is Record<string, unknown> => {
   );
 };
 
-const flattenObject = (
+export const flattenObject = (
   obj: Record<string, unknown>,
   keySplitChar: string,
   parent = '',
@@ -97,7 +97,7 @@ const flattenObject = (
   return result;
 };
 
-const unflattenObject = (
+export const unflattenObject = (
   obj: qs.ParsedQuery<string | number | boolean>,
   keySplitChar: string,
 ): Record<string, unknown> => {
