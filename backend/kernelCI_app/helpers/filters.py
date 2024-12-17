@@ -334,8 +334,7 @@ class FilterParams:
             hardwares: Optional[List[str]] = None,
             architecture: Optional[str],
             compiler: Optional[str],
-            config_name: Optional[str],
-            hasHardware=True
+            config_name: Optional[str]
     ) -> bool:
         hardware_compatibles = [UNKNOWN_STRING]
         record_architecture = UNKNOWN_STRING
@@ -353,8 +352,7 @@ class FilterParams:
 
         if (
             (
-                hasHardware
-                and len(self.filterHardware) > 0
+                len(self.filterHardware) > 0
                 and (not self.filterHardware.intersection(hardware_compatibles))
             )
             or (

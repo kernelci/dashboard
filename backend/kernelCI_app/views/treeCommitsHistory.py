@@ -18,141 +18,174 @@ from kernelCI_app.helpers.filters import (
 # have to be another request, it can be called from the tree details endpoint
 class TreeCommitsHistory(APIView):
     def __init__(self):
-        self.filters_options = {
-            'build': {
-                'table_alias': 'b',
-                'filters': []
+        self.commit_hashes = {}
+        self.filterParams = None
+        self.field_values = dict()
+        self.processed_builds = set()
+        self.processed_tests = set()
+
+    def setup_filters(self):
+        self.filterTestDurationMin = self.filterParams.filterTestDurationMin
+        self.filterTestDurationMax = self.filterParams.filterTestDurationMax
+        self.filterBootDurationMin = self.filterParams.filterBootDurationMin
+        self.filterBootDurationMax = self.filterParams.filterBootDurationMax
+        self.filterBuildDurationMin = self.filterParams.filterBuildDurationMin
+        self.filterBuildDurationMax = self.filterParams.filterBuildDurationMax
+        self.filterBootStatus = self.filterParams.filterBootStatus
+        self.filterTestStatus = self.filterParams.filterTestStatus
+        self.filterTreeDetailsConfigs = self.filterParams.filterConfigs
+        self.filterTreeDetailsCompiler = self.filterParams.filterCompiler
+        self.filterArchitecture = self.filterParams.filterArchitecture
+        self.filterHardware = self.filterParams.filterHardware
+        self.filterTestPath = self.filterParams.filterTestPath
+        self.filterBootPath = self.filterParams.filterBootPath
+        self.filterBuildValid = self.filterParams.filterBuildValid
+
+    def sanitize_rows(self, rows: Dict) -> List:
+        return [
+            {
+                "git_commit_hash": row[0],
+                "git_commit_name": row[1],
+                "earliest_start_time": row[2],
+                "build_duration": row[3],
+                "architecture": row[4],
+                "compiler": row[5],
+                "config_name": row[6],
+                "build_valid": row[7],
+                "test_path": row[8],
+                "test_status": row[9],
+                "test_duration": row[10],
+                "hardware_compatibles": row[11],
+                "build_id": row[12],
+                "test_id": row[13]
+            }
+            for row in rows
+        ]
+
+    def _create_commit_entry(self) -> Dict:
+        return {
+            'commit_name': '',
+            'builds_count': {
+                'true': 0,
+                'false': 0,
+                'null': 0
             },
-            'boot': {
-                'table_alias': 't',
-                'filters': []
+            'boots_count': {
+                "fail": 0,
+                "error": 0,
+                "miss": 0,
+                "pass": 0,
+                "done": 0,
+                "skip": 0,
+                "null": 0,
             },
-            'test': {
-                'table_alias': 't',
-                'filters': []
+            'tests_count': {
+                "fail": 0,
+                "error": 0,
+                "miss": 0,
+                "pass": 0,
+                "done": 0,
+                "skip": 0,
+                "null": 0,
             }
         }
-        self.field_values = dict()
 
-    def __format_field_operation(self, f, filter_params):
-        split_filter = f['field'].split('.')
+    def _process_builds_count(
+            self,
+            build_valid: bool,
+            duration: int,
+            commit_hash: str
+    ) -> None:
+        is_filtered_out = self.filterParams.is_build_filtered_out(
+            duration=duration,
+            valid=build_valid,
+            issue_id=None
+        )
+        if is_filtered_out:
+            return
 
-        if len(split_filter) == 1:
-            split_filter.insert(0, 'build')
+        label = 'null'
+        if build_valid is not None:
+            label = str(build_valid).lower()
 
-        table, field = split_filter
+        self.commit_hashes[commit_hash]['builds_count'][label] += 1
 
-        field = field.replace("[]", "")
+    def _pass_in_global_filters(self, row: Dict) -> bool:
+        hardware_compatibles = [UNKNOWN_STRING]
+        architecture = UNKNOWN_STRING
+        compiler = UNKNOWN_STRING
+        config_name = UNKNOWN_STRING
 
-        if (field == "hardware"):
-            field = "environment_compatible"
-            op = "&&"
-            if isinstance(f['value'], str):
-                f['value'] = [f['value']]
-        else:
-            op = filter_params.get_comparison_op(f, "raw")
+        if row['hardware_compatibles'] is not None:
+            hardware_compatibles = row['hardware_compatibles']
+        if row['architecture'] is not None:
+            architecture = row['architecture']
+        if row['compiler'] is not None:
+            compiler = row['compiler']
+        if row['config_name'] is not None:
+            config_name = row['config_name']
 
-        return table, field, op
+        if (
+            (
+                len(self.filterHardware) > 0
+                and (not self.filterHardware.intersection(hardware_compatibles))
+            )
+            or (
+                len(self.filterArchitecture) > 0
+                and (architecture not in self.filterArchitecture)
+            )
+            or (
+                len(self.filterTreeDetailsCompiler) > 0
+                and (compiler not in self.filterTreeDetailsCompiler)
+            )
+            or (
+                len(self.filterTreeDetailsConfigs) > 0
+                and (config_name not in self.filterTreeDetailsConfigs)
+            )
+        ):
+            return False
 
-    def __treat_unknown_filter(self, table_field, op, value_name, filter):
-        clause = table_field
-        is_null_clause = f"{table_field} IS NULL"
-        has_null_value = False
+        return True
 
-        if (isinstance(filter['value'], str) and filter['value'] in NULL_STRINGS):
-            return is_null_clause
-        else:
-            if ('NULL' in filter['value']):
-                has_null_value = True
-                filter['value'].remove('NULL')
-            elif ('Unknown' in filter['value']):
-                has_null_value = True
-                filter['value'].remove('Unknown')
+    def _process_tests(self, row: Dict) -> None:
+        if row['test_id'] is not None and row['test_id'] not in self.processed_tests:
+            commit_hash = row['git_commit_hash']
+            self.processed_tests.add(row['test_id'])
+            is_boot = row['test_path'] is not None and row['test_path'].startswith('boot')
 
-        self.field_values[value_name] = filter['value']
-        if op == "IN":
-            clause += f" = ANY(%({value_name})s)"
-        elif op == "LIKE":
-            self.field_values[value_name] = f"%{filter['value']}%"
-            clause += f" {op} %({value_name})s"
-        else:
-            clause += f" {op} %({value_name})s"
+            count_label = "boots_count" if is_boot else "tests_count"
+            test_status = row['test_status'] or "NULL"
+            label = test_status.lower()
+            self.commit_hashes[commit_hash][count_label][label] += 1
 
-        if has_null_value:
-            clause += f" OR {is_null_clause}"
-        return clause
+    def _process_builds(self, row: Dict) -> None:
+        if row["build_id"] is not None and row['build_id'] not in self.processed_builds:
+            commit_hash = row['git_commit_hash']
+            self.processed_builds.add(row['build_id'])
+            self._process_builds_count(row["build_valid"], row['build_duration'], commit_hash)
 
-    # TODO: unite the filters logic
-    def __get_filters(self, filter_params):
-        grouped_filters = filter_params.get_grouped_filters()
+    def _process_rows(self, rows: Dict) -> None:
+        sanitized_rows = self.sanitize_rows(rows)
 
-        for _, filter in grouped_filters.items():
-            table, field, op = self.__format_field_operation(filter, filter_params)
+        for row in sanitized_rows:
+            record_filter_out = self.filterParams.is_record_filtered_out(
+                hardwares=row['hardware_compatibles'],
+                architecture=row['architecture'],
+                compiler=row['compiler'],
+                config_name=row['config_name']
+            )
 
-            # temporary solution since the query isn't joining on issues table
-            if field == "issue":
+            if record_filter_out:
                 continue
 
-            table_field = f"{self.filters_options[table]['table_alias']}.{field}"
-            value_name = f"{table}{field.capitalize()}{filter_params.get_comparison_op(filter)}"
-            clause = self.__treat_unknown_filter(table_field, op, value_name, filter)
+            commit_hash = row['git_commit_hash']
+            if commit_hash not in self.commit_hashes:
+                self.commit_hashes[commit_hash] = self._create_commit_entry()
+                self.commit_hashes[commit_hash]['commit_name'] = row["git_commit_name"]
+                self.commit_hashes[commit_hash]['earliest_start_time'] = row["earliest_start_time"]
 
-            if field != "environment_compatible":
-                self.filters_options[table]['filters'].append(clause)
-
-            if field in ["config_name", "architecture", "compiler", "environment_compatible"]:
-                self.filters_options['test']['filters'].append(clause)
-                self.filters_options['boot']['filters'].append(clause)
-
-        build_counts_where = """
-            c.git_repository_branch = %(git_branch_param)s
-            AND c.git_repository_url = %(git_url_param)s
-            AND c.origin = %(origin_param)s"""
-
-        boot_counts_where = """
-            b.start_time >= (
-                SELECT
-                    MIN(earliest_start_time)
-                FROM earliest_commits
-            )
-            AND t.start_time >= (
-                SELECT
-                    MIN(earliest_start_time)
-                FROM earliest_commits
-            )"""
-
-        test_counts_where = """
-            b.start_time >= (
-                SELECT
-                    MIN(earliest_start_time)
-                FROM earliest_commits
-            )
-            AND t.start_time >= (
-                SELECT
-                    MIN(earliest_start_time)
-                FROM earliest_commits
-            )"""
-
-        if len(self.filters_options['build']['filters']) > 0:
-            filter_clauses = f"""
-                AND {" AND ".join(self.filters_options['build']['filters'])}"""
-            build_counts_where += filter_clauses
-
-        if len(self.filters_options['boot']['filters']) > 0:
-            filter_clauses = f"""
-                AND {" AND ".join(self.filters_options['boot']['filters'])}"""
-            boot_counts_where += filter_clauses
-
-        if len(self.filters_options['test']['filters']) > 0:
-            filter_clauses = f"""
-                AND {" AND ".join(self.filters_options['test']['filters'])}"""
-            test_counts_where += filter_clauses
-
-        return (
-            build_counts_where,
-            boot_counts_where,
-            test_counts_where
-        )
+            self._process_tests(row)
+            self._process_builds(row)
 
     def get(self, request, commit_hash):
         origin_param = request.GET.get("origin")
@@ -174,7 +207,8 @@ class TreeCommitsHistory(APIView):
             )
 
         try:
-            filter_params = FilterParams(request)
+            self.filterParams = FilterParams(request)
+            self.setup_filters()
         except InvalidComparisonOP as e:
             return HttpResponseBadRequest(getErrorResponseBody(str(e)))
 
