@@ -78,8 +78,8 @@ def getQueryTimeInterval(**kwargs):
     return timezone.now() - timedelta(**kwargs)
 
 
-def getErrorResponseBody(reason: str):
-    return json.dumps({"error": True, "reason": reason})
+def getErrorResponseBody(reason: str) -> bytes:
+    return json.dumps({"error": True, "reason": reason}).encode("utf-8")
 
 
 class InvalidComparisonOP(

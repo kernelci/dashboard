@@ -25,9 +25,10 @@ from kernelCI_app.utils import (
     FilterParams,
     NULL_STRINGS
 )
-from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import get_tree_heads
+from kernelCI_app.typeModels.hardwareDetails import PostBody
+from pydantic import ValidationError
 
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_HEAD_TREE_VALUE = 'head'
@@ -666,22 +667,28 @@ class HardwareDetails(View):
         try:
             body = json.loads(request.body)
 
-            origin = body.get("origin", DEFAULT_ORIGIN)
+            post_body = PostBody(**body)
+
+            origin = post_body.origin
             end_datetime = datetime.fromtimestamp(
-                int(body.get('endTimestampInSeconds')),
+                int(post_body.endTimestampInSeconds),
                 timezone.utc
             )
 
             start_datetime = datetime.fromtimestamp(
-                int(body.get('startTimestampInSeconds')),
+                int(post_body.startTimestampInSeconds),
                 timezone.utc
             )
 
-            selected_commits = body.get("selectedCommits", {})
+            selected_commits = post_body.selectedCommits
             self.filterParams = FilterParams(body, process_body=True)
             self.setup_filters()
 
             is_all_selected = len(selected_commits) == 0
+        except ValidationError as e:
+            return HttpResponseBadRequest(
+                getErrorResponseBody(e.errors())
+            )
         except json.JSONDecodeError:
             return HttpResponseBadRequest(
                 getErrorResponseBody(
