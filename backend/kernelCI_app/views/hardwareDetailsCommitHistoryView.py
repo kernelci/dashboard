@@ -1,21 +1,20 @@
-from django.db.models import Subquery
+from collections import defaultdict
+from django.forms.models import model_to_dict
+from django.db import connection
 import json
-from typing import Dict, Set, Literal
+from typing import Dict, Set, Literal, List, Tuple, TypedDict
 from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
 from django.views import View
 from datetime import datetime, timezone
 from django.http import JsonResponse
+from django.db import connection
 from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.models import Tests, Checkouts
-from kernelCI_app.utils import (
-    extract_error_message,
-    extract_platform,
-)
 from django.views.decorators.csrf import csrf_exempt
-from kernelCI_app.helpers.trees import get_tree_heads
-from kernelCI_app.typeModels.hardwareDetails import CommitHistoryPostBody, CommitHistoryQuerysetItem
+from kernelCI_app.helpers.trees import make_tree_identifier_key
+from kernelCI_app.typeModels.hardwareDetails import CommitHead, CommitHistoryPostBody, CommitHistoryValidCheckout
 from pydantic import ValidationError
 
 DEFAULT_DAYS_INTERVAL = 3
@@ -25,7 +24,32 @@ STATUS_FAILED_VALUE = "FAIL"
 BuildStatusType = Literal["valid", "invalid", "null"]
 
 
+class GenerateQueryParamsResponse(TypedDict):
+    query_params: Dict[str, Dict[str, str]]
+    tuple_str: str
 
+def generate_query_params(commit_heads: List[CommitHead]) -> GenerateQueryParamsResponse:
+    tuple_list = []
+    params = {}
+
+    for index, commit_head in enumerate(commit_heads):
+        tree_name_key= f"tree_name{index}"
+        git_repository_url_key = f"git_repository_url{index}"
+        git_repository_branch_key = f"git_repository_branch{index}"
+        git_commit_hash_key = f"git_commit_hash{index}"
+
+        tuple_string = (f"(%({tree_name_key})s,"
+                           f"%({git_repository_url_key})s, %({git_repository_branch_key})s,"
+                           f"%({git_commit_hash_key})s)")
+
+        tuple_list.append(tuple_string)
+        params[tree_name_key] = commit_head.treeName
+        params[git_repository_url_key] = commit_head.repositoryUrl
+        params[git_repository_branch_key] = commit_head.branch
+        params[git_commit_hash_key] = commit_head.commitHash
+
+    tuple_str = ", ".join(tuple_list)
+    return { "tuple_str": f"({tuple_str})", "query_params": params }
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
 # that protection is recommended for ‘unsafe’ methods (POST, PUT, and DELETE)
@@ -42,11 +66,19 @@ class HardwareDetailsCommitHistoryView(View):
         self.filterParams = None
 
 
-    def get_commit_history(self, hardware_id: str, origin: str, start_date: datetime, end_date: datetime, commit_heads: Dict):
+    def get_commit_history(self, hardware_id: str, origin: str, start_date: datetime, end_date: datetime, commit_heads: List[CommitHead]):
         # We need a subquery because if we filter by any hardware, it will get the
         # last head that has that hardware, but not the real head of the trees
+        relevant_commit = commit_heads[0] if commit_heads else None
 
-        raw_query = """
+        if relevant_commit is None:
+            return
+
+        relevant_param_data = generate_query_params(commit_heads)
+
+        print(relevant_param_data)
+
+        raw_query = f"""
         WITH filtered_checkouts AS (
             SELECT
                 tree_name,
@@ -59,10 +91,7 @@ class HardwareDetailsCommitHistoryView(View):
                 (c.tree_name,
                 c.git_repository_url,
                 c.git_repository_branch,
-                c.git_commit_hash) IN (
-                        ('stable-rc', 'https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git', 'linux-5.10.y', '53504d530e5ecd4c32edd34ab074f6e745bb4e4d'),
-                        ('stable-rc', 'https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git', 'linux-5.15.y', '765608b24f2192193901d4b27e0d5a0a248e043c')
-                    )
+                c.git_commit_hash) IN {relevant_param_data['tuple_str']}
                 AND c.origin = 'maestro'
             )
             SELECT
@@ -90,14 +119,32 @@ class HardwareDetailsCommitHistoryView(View):
             ) AS lateralus;
         """
 
-        checkouts_query_set = Checkouts.objects.raw(raw_query)
-        formatted_checkouts = []
-        for idx, checkout in enumerate(checkouts_query_set):
+        with connection.cursor() as cursor:
+            cursor.execute(raw_query, relevant_param_data['query_params'])
+            checkouts_query_set = cursor.fetchall()
+
+        formatted_checkouts = defaultdict(list)
+
+        for checkout in checkouts_query_set:
             print(checkout)
+            dict_checkout = {
+                            "tree_name": checkout[0],
+                            "git_repository_url": checkout[1],
+                            "git_repository_branch": checkout[2],
+                            "git_commit_hash": checkout[3],
+                            "start_time": checkout[4]
+                    }
             try:
-                validate_checkout = CommitHistoryQuerysetItem(**checkout)
-                formatted_checkouts.append(validate_checkout)
+                validate_checkout = CommitHistoryValidCheckout(**dict_checkout)
+                table_response_key = make_tree_identifier_key(
+                    tree_name=validate_checkout.tree_name,
+                    git_repository_url=validate_checkout.git_repository_url,
+                    git_repository_branch=validate_checkout.git_repository_branch
+                )
+
+                formatted_checkouts[table_response_key].append(validate_checkout.model_dump())
             except ValidationError as e:
+                log_message(f"Error validating checkout {dict_checkout}: {e.json()}")
                 continue
 
         return formatted_checkouts
@@ -137,6 +184,6 @@ class HardwareDetailsCommitHistoryView(View):
 
         return JsonResponse(
             {
-                "commit_history_table " : commit_history_table
+                    "commit_history_table " : commit_history
             }, safe=False
         )

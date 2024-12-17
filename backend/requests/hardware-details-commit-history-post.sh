@@ -4,38 +4,19 @@ Content-Type:application/json \
   "origin": "maestro",
   "startTimestampInSeconds": 1733846400,
   "endTimestampInSeconds": 1734105600,
-  "selectedCommits": {
-    "0": "head",
-    "2": "head",
-    "3": "head",
-    "4": "head",
-    "5": "head",
-    "6": "head",
-    "7": "head",
-    "8": "head",
-    "9": "head",
-    "10": "head",
-    "11": "head",
-    "12": "head",
-    "13": "head",
-    "14": "head",
-    "15": "head",
-    "16": "head",
-    "17": "head",
-    "18": "head",
-    "19": "head",
-    "20": "head",
-    "21": "head",
-    "22": "head",
-    "23": "head",
-    "24": "head",
-    "25": "head",
-    "26": "head",
-    "27": "head",
-    "28": "head",
-    "29": "head",
-    "30": "head"
-  },
-  "filter": {}
+    "commitHeads": [
+        {
+            "treeName": "stable-rc",
+            "repositoryUrl": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git",
+            "branch": "linux-5.10.y",
+            "commitHash": "53504d530e5ecd4c32edd34ab074f6e745bb4e4d"
+        },
+        {
+            "treeName": "stable-rc",
+            "repositoryUrl": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git",
+            "branch": "linux-5.15.y",
+            "commitHash": "765608b24f2192193901d4b27e0d5a0a248e043c"
+        }
+    ]
 }'
 
