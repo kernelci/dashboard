@@ -15,3 +15,9 @@ class CommitHistoryPostBody(BaseModel):
     endTimestampInSeconds: Union[str, int]
     # Keys will be tree name + commit branch.
     commitHeads: Dict[str, str]
+
+class CommitHistoryQuerysetItem(BaseModel):
+    git_commit_hash: str
+    tree_name: str
+    git_repository_branch: str
+    git_repository_url: str

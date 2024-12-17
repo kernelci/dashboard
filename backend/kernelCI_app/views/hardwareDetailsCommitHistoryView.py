@@ -1,26 +1,21 @@
-from collections import defaultdict
 from django.db.models import Subquery
 import json
-from typing import Dict, List, Optional, Set, Literal
+from typing import Dict, Set, Literal
 from kernelCI_app.helpers.errorHandling import create_error_response
-from kernelCI_app.helpers.filters import (
-    should_increment_test_issue,
-    is_build_invalid,
-)
 from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
 from django.views import View
 from datetime import datetime, timezone
 from django.http import JsonResponse
 from kernelCI_app.viewCommon import create_details_build_summary
-from kernelCI_app.models import Tests
+from kernelCI_app.models import Tests, Checkouts
 from kernelCI_app.utils import (
     extract_error_message,
     extract_platform,
 )
 from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import get_tree_heads
-from kernelCI_app.typeModels.hardwareDetails import CommitHistoryPostBody
+from kernelCI_app.typeModels.hardwareDetails import CommitHistoryPostBody, CommitHistoryQuerysetItem
 from pydantic import ValidationError
 
 DEFAULT_DAYS_INTERVAL = 3
@@ -47,117 +42,65 @@ class HardwareDetailsCommitHistoryView(View):
         self.filterParams = None
 
 
-    def handle_test(self, record, tests):
-        status = record["status"]
-
-        tests["history"].append(get_history(record))
-        tests["statusSummary"][status] += 1
-        tests["configs"][record["build__config_name"]][status] += 1
-
-        if status == "ERROR" or status == "FAIL" or status == "MISS":
-            tests["platformsFailing"].add(
-                extract_platform(record["environment_misc"])
-            )
-            tests["failReasons"][extract_error_message(record["misc"])] += 1
-
-        archKey = f'{record["build__architecture"]}{record["build__compiler"]}'
-        archSummary = tests["archSummary"].get(archKey)
-        if not archSummary:
-            archSummary = get_arch_summary(record)
-            tests["archSummary"][archKey] = archSummary
-        archSummary["status"][status] += 1
-
-        update_issues(
-            issue_id=record["incidents__issue__id"],
-            incident_test_id=record["incidents__test_id"],
-            build_valid=record["build__valid"],
-            issue_comment=record["incidents__issue__comment"],
-            issue_report_url=record["incidents__issue__report_url"],
-            task=tests,
-            is_failed_task=status == STATUS_FAILED_VALUE,
-            issue_from="test"
-        )
-
-    def get_filter_options(self, records, selected_trees, is_all_selected: bool):
-        configs = set()
-        archs = set()
-        compilers = set()
-
-        for r in records:
-            current_tree = get_record_tree(r, selected_trees)
-            if not current_tree or not is_record_tree_selected(r, current_tree, is_all_selected):
-                continue
-
-            configs.add(r['build__config_name'])
-            archs.add(r['build__architecture'])
-            compilers.add(r['build__compiler'])
-
-        return list(configs), list(archs), list(compilers)
-
-    # Status Summary should be unaffected by filters because it is placed above filters in the UI
-    def handle_tree_status_summary(
-        self,
-        record: Dict,
-        tree_status_summary: Dict,
-        tree_index: str,
-        processed_builds: Set[str],
-        is_record_boot: bool,
-    ) -> None:
-        tree_status_key = "boots" if is_record_boot else "tests"
-        tree_status_summary[tree_index][tree_status_key][record["status"]] += 1
-
-        if record["build_id"] not in processed_builds:
-            build_status = get_build_status(record["build__valid"])
-            tree_status_summary[tree_index]["builds"][build_status] += 1
-
     def get_commit_history(self, hardware_id: str, origin: str, start_date: datetime, end_date: datetime, commit_heads: Dict):
         # We need a subquery because if we filter by any hardware, it will get the
         # last head that has that hardware, but not the real head of the trees
-        trees_subquery = get_tree_heads(
-            origin, start_date, end_date
-        )
 
-        tree_id_fields = [
-            "build__checkout__tree_name",
-            "build__checkout__git_repository_branch",
-            "build__checkout__git_repository_url",
-        ]
-
-        trees_query_set = Tests.objects.filter(
-            environment_compatible__contains=[hardware_id],
-            origin=origin,
-            build__checkout__start_time__lte=end_date,
-            build__checkout__start_time__gte=start_date,
-            build__checkout__git_commit_hash__in=Subquery(trees_subquery),
-        ).values(
-            *tree_id_fields,
-            "build__checkout__git_commit_name",
-            "build__checkout__git_commit_hash",
-        ).distinct(
-            *tree_id_fields,
-            "build__checkout__git_commit_hash",
-        ).order_by(
-            *tree_id_fields,
-            "build__checkout__git_commit_hash",
-            "-build__checkout__start_time"
-        )
-
-        trees = []
-        for idx, tree in enumerate(trees_query_set):
-            trees.append(
-                {
-                    "treeName": tree["build__checkout__tree_name"],
-                    "gitRepositoryBranch": tree[
-                        "build__checkout__git_repository_branch"
-                    ],
-                    "gitRepositoryUrl": tree["build__checkout__git_repository_url"],
-                    "headGitCommitName": tree["build__checkout__git_commit_name"],
-                    "headGitCommitHash": tree["build__checkout__git_commit_hash"],
-                    "index": str(idx),
-                }
+        raw_query = """
+        WITH filtered_checkouts AS (
+            SELECT
+                tree_name,
+                git_repository_branch,
+                git_repository_url,
+                start_time
+            FROM
+                checkouts c
+            WHERE
+                (c.tree_name,
+                c.git_repository_url,
+                c.git_repository_branch,
+                c.git_commit_hash) IN (
+                        ('stable-rc', 'https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git', 'linux-5.10.y', '53504d530e5ecd4c32edd34ab074f6e745bb4e4d'),
+                        ('stable-rc', 'https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git', 'linux-5.15.y', '765608b24f2192193901d4b27e0d5a0a248e043c')
+                    )
+                AND c.origin = 'maestro'
             )
+            SELECT
+                fc.tree_name AS tree_name,
+                fc.git_repository_branch AS git_repository_branch,
+                fc.git_repository_url AS git_repository_url,
+                lateralus.git_commit_hash AS git_commit_hash,
+                lateralus.start_time AS start_time
+            FROM
+                filtered_checkouts fc,
+                LATERAL (
+                SELECT
+                    DISTINCT ON (c.git_commit_hash)
+                    c.git_commit_hash,
+                    c.start_time
+                FROM
+                    checkouts c
+                WHERE
+                    c.tree_name = fc.tree_name
+                    AND c.git_repository_branch = fc.git_repository_branch
+                    AND c.git_repository_url = fc.git_repository_url
+                    AND c.start_time <= fc.start_time
+                ORDER BY c.git_commit_hash, c.start_time
+                LIMIT 5
+            ) AS lateralus;
+        """
 
-        return trees
+        checkouts_query_set = Checkouts.objects.raw(raw_query)
+        formatted_checkouts = []
+        for idx, checkout in enumerate(checkouts_query_set):
+            print(checkout)
+            try:
+                validate_checkout = CommitHistoryQuerysetItem(**checkout)
+                formatted_checkouts.append(validate_checkout)
+            except ValidationError as e:
+                continue
+
+        return formatted_checkouts
 
 
     # Using post to receive a body request
