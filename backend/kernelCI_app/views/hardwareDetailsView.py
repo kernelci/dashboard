@@ -4,8 +4,7 @@ import json
 from typing import Dict, List, Optional, Set, Literal
 from kernelCI_app.helpers.filters import (
     should_increment_test_issue,
-    is_build_invalid,
-    should_filter_test_issue,
+    is_build_invalid
 )
 from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
@@ -16,18 +15,18 @@ from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.models import Tests
 from kernelCI_app.utils import (
-    UNKNOWN_STRING,
     create_issue,
     extract_error_message,
     extract_platform,
-    getErrorResponseBody,
-    toIntOrDefault,
-    FilterParams,
-    NULL_STRINGS
+    getErrorResponseBody
 )
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import get_tree_heads
+from kernelCI_app.helpers.filters import (
+    UNKNOWN_STRING,
+    FilterParams
+)
 
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_HEAD_TREE_VALUE = 'head'
@@ -222,156 +221,24 @@ class HardwareDetails(View):
         processed_builds: Set[str],
     ) -> bool:
         is_build_not_processed = not build["id"] in processed_builds
-        is_build_filtered_out = self._build_filters_pass(
+        is_build_filtered_out = self.filterParams.is_build_filtered_out(
             valid=build["valid"],
             duration=build["duration"],
             issue_id=build["issue_id"]
         )
-        return is_build_not_processed and is_build_filtered_out
-
-    def _build_filters_pass(
-        self, valid: Optional[bool], duration: Optional[int], issue_id: Optional[str]
-    ) -> bool:
-        if len(self.filterValid) > 0 and (str(valid).lower() not in self.filterValid):
-            return False
-        if (
-            self.filterBuildDurationMax is not None or self.filterBuildDurationMin is not None
-        ) and duration is None:
-            return False
-        if self.filterBuildDurationMax is not None and (
-            toIntOrDefault(duration, 0) > self.filterBuildDurationMax
-        ):
-            return False
-        if self.filterBuildDurationMin is not None and (
-            toIntOrDefault(duration, 0) < self.filterBuildDurationMin
-        ):
-            return False
-        if (
-            len(self.filterIssues["build"]) > 0
-            and (
-                issue_id not in self.filterIssues["build"]
-                or valid is True
-            )
-        ):
-            return False
-
-        return True
-
-    def _boots_filters_pass(
-        self,
-        status: Optional[str],
-        duration: Optional[int],
-        path: Optional[str],
-        issue_id: Optional[str],
-        incidents_test_id: Optional[str],
-    ) -> bool:
-        if (
-            self.filterBootPath != ""
-            and (self.filterBootPath not in path)
-        ):
-            return False
-        if len(self.filterBootStatus) > 0 and (status not in self.filterBootStatus):
-            return False
-        if (
-            self.filterBootDurationMax is not None or self.filterBootDurationMin is not None
-        ) and duration is None:
-            return False
-        if self.filterBootDurationMax is not None and (
-            toIntOrDefault(duration, 0) > self.filterBootDurationMax
-        ):
-            return False
-        if self.filterBootDurationMin is not None and (
-            toIntOrDefault(duration, 0) < self.filterBootDurationMin
-        ):
-            return False
-        if should_filter_test_issue(
-            self.filterIssues["boot"],
-            issue_id,
-            incidents_test_id,
-        ):
-            return False
-
-        return True
-
-    def _non_boots_filters_pass(
-        self,
-        status: Optional[str],
-        duration: Optional[int],
-        path: Optional[str],
-        issue_id: Optional[str],
-        incidents_test_id: Optional[str],
-    ) -> bool:
-        if (
-            self.filterTestPath != ""
-            and (self.filterTestPath not in path)
-        ):
-            return False
-        if len(self.filterTestStatus) > 0 and (status not in self.filterTestStatus):
-            return False
-        if (
-            self.filterTestDurationMax is not None or self.filterTestDurationMin is not None
-        ) and duration is None:
-            return False
-        if self.filterTestDurationMax is not None and (
-            toIntOrDefault(duration, 0) > self.filterTestDurationMax
-        ):
-            return False
-        if self.filterTestDurationMin is not None and (
-            toIntOrDefault(duration, 0) < self.filterTestDurationMin
-        ):
-            return False
-        if should_filter_test_issue(
-            self.filterIssues["test"],
-            issue_id,
-            incidents_test_id,
-        ):
-            return False
-
-        return True
+        return is_build_not_processed and not is_build_filtered_out
 
     def record_in_filter(
         self,
         record: Dict,
     ) -> bool:
-        record_arch_null_accept = (
-            not record['build__architecture']
-            and any(null_string in self.filterArchitecture for null_string in NULL_STRINGS)
-        )
-        record_compiler_null_accept = (
-            not record['build__compiler']
-            and any(null_string in self.filterTreeDetailsCompiler for null_string in NULL_STRINGS)
-        )
-        record_config_null_accept = (
-            not record['build__config_name']
-            and any(null_string in self.filterTreeDetailsConfigs for null_string in NULL_STRINGS)
+        record_filter_out = self.filterParams.is_record_filtered_out(
+            architecture=record['build__architecture'],
+            compiler=record['build__compiler'],
+            config_name=record['build__config_name']
         )
 
-        if (
-            (
-                len(self.filterArchitecture) > 0
-                and (
-                    record['build__architecture'] not in self.filterArchitecture
-                    and not record_arch_null_accept
-                )
-            )
-            or (
-                len(self.filterTreeDetailsCompiler) > 0
-                and (
-                    record['build__compiler'] not in self.filterTreeDetailsCompiler
-                    and not record_compiler_null_accept
-                )
-            )
-            or (
-                len(self.filterTreeDetailsConfigs) > 0
-                and (
-                    record['build__config_name'] not in self.filterTreeDetailsConfigs
-                    and not record_config_null_accept
-                )
-            )
-        ):
-            return False
-
-        return True
+        return not record_filter_out
 
     def test_in_filter(
         self,
@@ -379,21 +246,28 @@ class HardwareDetails(View):
         record: Dict
     ) -> bool:
         test_filter_pass = True
+
+        status = record["status"]
+        duration = record["duration"]
+        path = record["path"]
+        issue_id = record["incidents__issue__id"]
+        incidents_test_id = record["incidents__test_id"]
+
         if table_test == "boot":
-            test_filter_pass = self._boots_filters_pass(
-                status=record["status"],
-                duration=record["duration"],
-                path=record["path"],
-                issue_id=record["incidents__issue__id"],
-                incidents_test_id=record["incidents__test_id"]
+            test_filter_pass = not self.filterParams.is_boot_filtered_out(
+                status=status,
+                duration=duration,
+                path=path,
+                issue_id=issue_id,
+                incident_test_id=incidents_test_id
             )
         else:
-            test_filter_pass = self._non_boots_filters_pass(
-                status=record["status"],
-                duration=record["duration"],
-                path=record["path"],
-                issue_id=record["incidents__issue__id"],
-                incidents_test_id=record["incidents__test_id"]
+            test_filter_pass = not self.filterParams.is_test_filtered_out(
+                status=status,
+                duration=duration,
+                path=path,
+                issue_id=issue_id,
+                incident_test_id=incidents_test_id
             )
 
         return test_filter_pass

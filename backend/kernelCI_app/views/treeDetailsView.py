@@ -1,14 +1,15 @@
 import json
 from django.http import JsonResponse
 from django.views import View
-from kernelCI_app.helpers.filters import should_increment_test_issue, should_filter_test_issue
-from kernelCI_app.utils import (
+from kernelCI_app.helpers.filters import (
+    should_increment_test_issue,
     UNKNOWN_STRING,
-    FilterParams,
+    FilterParams
+)
+from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     extract_error_message,
     extract_platform,
-    toIntOrDefault,
     create_issue,
     IncidentInfo,
 )
@@ -167,40 +168,15 @@ class TreeDetails(View):
         testPath = currentRowData["test_path"]
         incident_test_id = currentRowData["incident_test_id"]
 
-        if (
-            (
-                self.filterBootPath != ""
-                and (self.filterBootPath not in testPath)
-            )
-            or (
-                len(self.filterBootStatus) > 0
-                and (testStatus not in self.filterBootStatus)
-            )
-            or (
-                (
-                    self.filterBootDurationMax is not None
-                    or self.filterBootDurationMin is not None
-                )
-                and testDuration is None
-            )
-            or (
-                self.filterBootDurationMax is not None
-                and (
-                    toIntOrDefault(testDuration, 0) > self.filterBootDurationMax
-                )
-            )
-            or (
-                self.filterBootDurationMin is not None
-                and (
-                    toIntOrDefault(testDuration, 0) < self.filterBootDurationMin
-                )
-            )
-            or should_filter_test_issue(
-                self.filterIssues["boot"],
-                issue_id,
-                "incident_test_id"
-            )
-        ):
+        is_boot_filter_out = self.filterParams.is_boot_filtered_out(
+            duration=testDuration,
+            issue_id=issue_id,
+            path=testPath,
+            status=testStatus,
+            incident_test_id=incident_test_id
+        )
+
+        if is_boot_filter_out:
             return
 
         can_insert_issue = should_increment_test_issue(
@@ -248,47 +224,10 @@ class TreeDetails(View):
         self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
         self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
-    def __nonBootsGuard(self, currentRowData):
-        test_duration = currentRowData["test_duration"]
-
-        if (
-            (
-                self.filterTestPath != ""
-                and self.filterTestPath not in currentRowData["test_path"]
-            )
-            or (
-                len(self.filterTestStatus) > 0
-                and (currentRowData["test_status"] not in self.filterTestStatus)
-            )
-            or (
-                (
-                    self.filterTestDurationMax is not None
-                    or self.filterTestDurationMin is not None
-                ) and test_duration is None
-            )
-            or (
-                self.filterTestDurationMax is not None and (
-                    toIntOrDefault(test_duration, 0) > self.filterTestDurationMax
-                )
-            )
-            or (
-                self.filterTestDurationMin is not None and (
-                    toIntOrDefault(test_duration, 0) < self.filterTestDurationMin
-                )
-            )
-            or should_filter_test_issue(
-                self.filterIssues["test"],
-                currentRowData["issue_id"],
-                currentRowData["incident_test_id"],
-            )
-        ):
-            return False
-
-        return True
-
     def __processNonBootsTest(self, currentRowData):
         testId = currentRowData["test_id"]
         testStatus = currentRowData["test_status"]
+        testDuration = currentRowData["test_duration"]
         buildConfig = currentRowData["build_config_name"]
         buildArch = currentRowData["build_architecture"]
         buildCompiler = currentRowData["build_compiler"]
@@ -299,9 +238,18 @@ class TreeDetails(View):
         issue_comment = currentRowData["issue_comment"]
         issue_report_url = currentRowData["issue_report_url"]
         testEnvironmentCompatible = currentRowData["test_environment_compatible"]
+        testPath = currentRowData["test_path"]
         incident_test_id = currentRowData["incident_test_id"]
 
-        if not self.__nonBootsGuard(currentRowData):
+        is_test_filter_out = self.filterParams.is_test_filtered_out(
+            duration=testDuration,
+            issue_id=issue_id,
+            path=testPath,
+            status=testStatus,
+            incident_test_id=incident_test_id
+        )
+
+        if is_test_filter_out:
             return
 
         can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
@@ -350,20 +298,15 @@ class TreeDetails(View):
         build_id = row_data["build_id"]
         issue_id = row_data["issue_id"]
         build_valid = row_data["build_valid"]
+        build_duration = row_data["build_duration"]
 
-        if (
-            (
-                len(self.filterBuildValid) > 0
-                and (str(build_valid).lower() not in self.filterBuildValid)
-            )
-            or (
-                len(self.filterIssues["build"]) > 0
-                and (
-                    issue_id not in self.filterIssues["build"]
-                    or build_valid is True
-                )
-            )
-        ):
+        is_build_filtered_out = self.filterParams.is_build_filtered_out(
+            valid=build_valid,
+            duration=build_duration,
+            issue_id=issue_id
+        )
+
+        if is_build_filtered_out:
             return
 
         if issue_id and (build_valid is False or build_valid is None):
@@ -398,26 +341,14 @@ class TreeDetails(View):
             if (self.tree_url == "" and git_repository_url is not None):
                 self.tree_url = git_repository_url
 
-            if (
-                (
-                    len(self.filterHardware) > 0
-                    and test_environment_compatible
-                    and (test_environment_compatible not in self.filterHardware)
-                )
-                or (
-                    len(self.filterArchitecture) > 0
-                    and test_environment_compatible
-                    and (row_data["build_architecture"] not in self.filterArchitecture)
-                )
-                or (
-                    len(self.filterTreeDetailsCompiler) > 0
-                    and (row_data["build_compiler"] not in self.filterTreeDetailsCompiler)
-                )
-                or (
-                    len(self.filterTreeDetailsConfigs) > 0
-                    and (row_data["build_config_name"] not in self.filterTreeDetailsConfigs)
-                )
-            ):
+            record_filter_out = self.filterParams.is_record_filtered_out(
+                hardwares=[test_environment_compatible],
+                architecture=row_data['build_architecture'],
+                compiler=row_data['build_compiler'],
+                config_name=row_data['build_config_name']
+            )
+
+            if record_filter_out:
                 continue
 
             if row_data["build_id"] is not None:
