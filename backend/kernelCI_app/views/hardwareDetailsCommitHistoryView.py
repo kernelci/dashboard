@@ -92,7 +92,7 @@ class HardwareDetailsCommitHistoryView(View):
                 c.git_repository_url,
                 c.git_repository_branch,
                 c.git_commit_hash) IN {relevant_param_data['tuple_str']}
-                AND c.origin = 'maestro'
+                AND c.origin = %(origin)s
             )
             SELECT
                 fc.tree_name AS tree_name,
@@ -120,7 +120,7 @@ class HardwareDetailsCommitHistoryView(View):
         """
 
         with connection.cursor() as cursor:
-            cursor.execute(raw_query, relevant_param_data['query_params'])
+            cursor.execute(raw_query, {**relevant_param_data['query_params'], 'origin': origin })
             checkouts_query_set = cursor.fetchall()
 
         formatted_checkouts = defaultdict(list)
@@ -170,7 +170,6 @@ class HardwareDetailsCommitHistoryView(View):
 
             commit_heads = post_body.commitHeads
 
-            is_all_selected = len(commit_heads) == 0
         except ValidationError as e:
             return create_error_response(e.json())
         except json.JSONDecodeError:
@@ -179,8 +178,6 @@ class HardwareDetailsCommitHistoryView(View):
             return create_error_response("startTimestampInSeconds and endTimestampInSeconds must be a Unix Timestamp")
 
         commit_history = self.get_commit_history(hardware_id, origin, start_datetime, end_datetime, commit_heads)
-
-        commit_history_table = {}
 
         return JsonResponse(
             {
