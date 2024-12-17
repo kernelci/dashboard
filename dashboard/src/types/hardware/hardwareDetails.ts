@@ -80,3 +80,21 @@ export interface THardwareDetailsFilter
 
 export const zTreeCommits = z.record(z.string()).optional();
 export type TTreeCommits = z.infer<typeof zTreeCommits>;
+
+
+export type CommitHead = {
+  treeName: string;
+  repositoryUrl: string;
+  branch: string;
+  commitHash: string;
+};
+
+type CommitHistory = {
+  git_commit_hash: string;
+  git_repository_branch: string;
+  git_repository_url: string;
+  start_time: string;
+  tree_name: string;
+};
+
+export type CommitHistoryTable = Record<string, CommitHistory[]>;
