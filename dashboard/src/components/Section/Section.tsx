@@ -12,7 +12,7 @@ export interface ISection {
   eyebrow?: string | ReactElement;
 }
 
-interface SubsectionLink extends ILinkWithIcon {
+export interface SubsectionLink extends ILinkWithIcon {
   wrapperComponent?: ElementType<{ children: ReactNode }>;
 }
 export interface ISubsection {
@@ -32,6 +32,7 @@ export const Subsection = ({ infos }: ISubsection): JSX.Element => {
               link={info.link}
               linkComponent={info.linkComponent}
               linkText={info.linkText}
+              unformattedTitle={info.unformattedTitle}
               icon={
                 info.link && !info.icon ? (
                   <FiLink className="text-blue" />
@@ -55,8 +56,8 @@ export const Subsection = ({ infos }: ISubsection): JSX.Element => {
 const Section = ({ title, subsections, eyebrow }: ISection): JSX.Element => {
   const sections = useMemo(
     () =>
-      subsections?.map(subsection => (
-        <Subsection key={subsection.infos[0].link} infos={subsection.infos} />
+      subsections?.map((subsection, index) => (
+        <Subsection key={index} infos={subsection.infos} />
       )),
     [subsections],
   );

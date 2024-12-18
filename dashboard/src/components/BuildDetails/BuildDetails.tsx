@@ -17,19 +17,20 @@ import { formatDate } from '@/utils/utils';
 
 import IssueSection from '@/components/Issue/IssueSection';
 
-import { truncateBigText } from '@/lib/string';
+import { valueOrEmpty } from '@/lib/string';
 
 import { Sheet, SheetTrigger } from '@/components/Sheet';
 
 import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
 
 import { LogSheetContent } from '@/components/Log/LogSheetContent';
+import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
+
+import { getMiscSection } from '@/components/Section/MiscSection';
+
+import { getFilesSection } from '@/components/Section/FilesSection';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
-
-const emptyValue = '-';
-
-const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
 
 const BlueFolderIcon = (): JSX.Element => (
   <MdFolderOpen className="text-blue" />
@@ -53,12 +54,33 @@ const BuildDetails = ({
   const { data, error, isLoading } = useBuildDetails(buildId ?? '');
   const issuesQueryResult = useBuildIssues(buildId ?? '');
 
-  const intl = useIntl();
+  const { formatMessage } = useIntl();
 
   const hasUsefulLogInfo = data?.log_url || data?.log_excerpt;
 
-  const sectionsData: ISection[] = useMemo(() => {
-    if (!data) return [];
+  const miscSection: ISection | undefined = useMemo(():
+    | ISection
+    | undefined => {
+    return getMiscSection({
+      misc: data?.misc,
+      title: formatMessage({ id: 'globalDetails.miscData' }),
+    });
+  }, [data?.misc, formatMessage]);
+
+  const filesSection: ISection | undefined = useMemo(():
+    | ISection
+    | undefined => {
+    return getFilesSection({
+      inputFiles: data?.input_files,
+      outputFiles: data?.output_files,
+      title: formatMessage({ id: 'globalDetails.artifacts' }),
+    });
+  }, [data?.input_files, data?.output_files, formatMessage]);
+
+  const generalSections: ISection[] = useMemo(() => {
+    if (!data) {
+      return [];
+    }
     return [
       {
         title: valueOrEmpty(
@@ -66,7 +88,7 @@ const BuildDetails = ({
             ? `${data.git_commit_name} • ${data.config_name}`
             : data.config_name,
         ),
-        eyebrow: intl.formatMessage({ id: 'buildDetails.buildDetails' }),
+        eyebrow: formatMessage({ id: 'buildDetails.buildDetails' }),
         subsections: [
           {
             infos: [
@@ -77,7 +99,12 @@ const BuildDetails = ({
               },
               {
                 title: 'buildDetails.gitUrl',
-                linkText: truncateBigText(data.git_repository_url),
+                linkText: (
+                  <TruncatedValueTooltip
+                    value={data.git_repository_url}
+                    isUrl={true}
+                  />
+                ),
                 link: data.git_repository_url,
               },
               {
@@ -115,19 +142,15 @@ const BuildDetails = ({
               },
               {
                 title: 'buildDetails.buildTime',
-                linkText: data.duration ? `${data.duration} sec` : emptyValue,
+                linkText: data.duration ? `${data.duration} sec` : '-',
               },
-            ],
-          },
-          {
-            infos: [
               {
                 title: 'buildDetails.compiler',
                 linkText: valueOrEmpty(data.compiler),
               },
               {
                 title: 'global.command',
-                linkText: valueOrEmpty(valueOrEmpty(data.command)),
+                linkText: valueOrEmpty(data.command),
               },
             ],
           },
@@ -135,42 +158,31 @@ const BuildDetails = ({
             infos: [
               {
                 title: 'buildDetails.buildLogs',
-                linkText: truncateBigText(data.log_url),
+                linkText: (
+                  <TruncatedValueTooltip value={data.log_url} isUrl={true} />
+                ),
                 icon: hasUsefulLogInfo ? <BlueFolderIcon /> : undefined,
                 wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
               },
               {
-                title: 'buildDetails.dtb',
-                linkText: valueOrEmpty(data.misc?.dtb),
-                icon: data.misc?.dtb ? <BlueFolderIcon /> : undefined,
-              },
-              {
                 title: 'buildDetails.kernelConfig',
-                linkText: truncateBigText(data.config_url),
+                linkText: (
+                  <TruncatedValueTooltip value={data.config_url} isUrl={true} />
+                ),
                 link: data.config_url,
-                icon: data.config_url ? <BlueFolderIcon /> : undefined,
-              },
-              {
-                title: 'global.modules',
-                linkText: valueOrEmpty(data.misc?.modules),
-                icon: data.misc?.modules ? <BlueFolderIcon /> : undefined,
-              },
-              {
-                title: 'buildDetails.kernelImage',
-                linkText: valueOrEmpty(data.misc?.kernel_type),
-                icon: data.misc?.kernel_type ? <BlueFolderIcon /> : undefined,
-              },
-              {
-                title: 'buildDetails.systemMap',
-                linkText: valueOrEmpty(data.misc?.system_map),
-                icon: data.misc?.system_map ? <BlueFolderIcon /> : undefined,
               },
             ],
           },
         ],
       },
     ];
-  }, [data, hasUsefulLogInfo, intl]);
+  }, [data, formatMessage, hasUsefulLogInfo]);
+
+  const sectionsData: ISection[] = useMemo(() => {
+    return [...generalSections, miscSection, filesSection].filter(
+      section => section !== undefined,
+    );
+  }, [generalSections, miscSection, filesSection]);
 
   if (error) {
     return (

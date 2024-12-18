@@ -24,6 +24,8 @@ class BuildDetails(View):
             "log_url",
             "valid",
             "misc",
+            "input_files",
+            "output_files"
         ]
 
         query = Query().from_table(Builds, build_fields)
