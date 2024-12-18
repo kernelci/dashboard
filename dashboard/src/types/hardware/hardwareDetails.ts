@@ -66,6 +66,7 @@ export type THardwareDetails = {
   configs: string[];
   archs: string[];
   compilers: string[];
+  compatibles: string[];
 };
 
 export interface THardwareDetailsFilter
