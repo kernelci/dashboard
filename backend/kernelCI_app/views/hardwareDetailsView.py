@@ -339,6 +339,7 @@ class HardwareDetails(View):
         processed_builds = set()
         tests = generate_test_dict()
         boots = generate_test_dict()
+        compatibles: Set[str] = set()
         tree_status_summary = defaultdict(generate_tree_status_summary_dict)
         builds = {"items": [], "issues": {}, "failedWithUnknownIssues": 0}
 
@@ -349,6 +350,9 @@ class HardwareDetails(View):
                 continue
 
             self._assign_default_record_values(record)
+
+            if record["environment_compatible"] is not None:
+                compatibles.update(record["environment_compatible"])
 
             tree_index = current_tree["index"]
             is_record_boot = is_boot(record)
@@ -399,7 +403,7 @@ class HardwareDetails(View):
         mutate_properties_to_list(tests, ["issues", "platformsFailing", "archSummary"])
         mutate_properties_to_list(boots, ["issues", "platformsFailing", "archSummary"])
 
-        return (builds, tests, boots, tree_status_summary)
+        return (builds, tests, boots, tree_status_summary, list(compatibles))
 
     def _assign_default_record_values(self, record: Dict) -> None:
         if (record["build__architecture"] is None):
@@ -600,7 +604,7 @@ class HardwareDetails(View):
             records = self.get_full_tests(**params)
             setQueryCache(self.cache_key_get_full_data, params, records)
 
-        builds, tests, boots, tree_status_summary = self.sanitize_records(
+        builds, tests, boots, tree_status_summary, compatibles = self.sanitize_records(
             records,
             trees_with_selected_commits,
             is_all_selected
@@ -624,5 +628,6 @@ class HardwareDetails(View):
                 "archs": archs,
                 "compilers": compilers,
                 "trees": trees_with_status_count,
+                "compatibles": compatibles,
             }, safe=False
         )
