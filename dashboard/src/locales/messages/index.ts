@@ -173,6 +173,7 @@ export const messages = {
     'hardware.details': 'Hardware Details',
     'hardware.path': 'Hardware',
     'hardware.searchPlaceholder': 'Search by hardware name',
+    'hardwareDetails.compatibles': 'Compatibles',
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
     'hardwareDetails.treeBranch': 'Tree / Branch',
