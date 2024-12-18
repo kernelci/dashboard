@@ -2,10 +2,7 @@ from collections import defaultdict
 from django.db.models import Subquery
 import json
 from typing import Dict, List, Optional, Set, Literal
-from kernelCI_app.helpers.filters import (
-    should_increment_test_issue,
-    is_build_invalid
-)
+from kernelCI_app.helpers.filters import should_increment_test_issue, is_build_invalid
 from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -14,22 +11,18 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.models import Tests
-from kernelCI_app.utils import (
-    create_issue,
-    extract_error_message,
-    extract_platform,
-    getErrorResponseBody
-)
+from kernelCI_app.utils import create_issue, extract_error_message, getErrorResponseBody
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import get_tree_heads
-from kernelCI_app.helpers.filters import (
-    UNKNOWN_STRING,
-    FilterParams
+from kernelCI_app.helpers.filters import UNKNOWN_STRING, FilterParams
+from kernelCI_app.helpers.misc import (
+    handle_environment_misc,
+    env_misc_value_or_default
 )
 
 DEFAULT_DAYS_INTERVAL = 3
-SELECTED_HEAD_TREE_VALUE = 'head'
+SELECTED_HEAD_TREE_VALUE = "head"
 STATUS_FAILED_VALUE = "FAIL"
 
 BuildStatusType = Literal["valid", "invalid", "null"]
@@ -48,7 +41,7 @@ def get_arch_summary(record: Dict):
     return {
         "arch": record["build__architecture"],
         "compiler": record["build__compiler"],
-        "status": defaultdict(int)
+        "status": defaultdict(int),
     }
 
 
@@ -68,14 +61,16 @@ def get_build(record: Dict, tree_idx: int):
         "git_repository_branch": record["build__checkout__git_repository_branch"],
         "tree_name": record["build__checkout__tree_name"],
         "issue_id": record["build__incidents__issue__id"],
-        "tree_index": tree_idx
+        "tree_index": tree_idx,
     }
 
 
 def get_tree_key(record: Dict):
-    return record["build__checkout__tree_name"] + \
-        record["build__checkout__git_repository_branch"] + \
-        record["build__checkout__git_repository_url"]
+    return (
+        record["build__checkout__tree_name"]
+        + record["build__checkout__git_repository_branch"]
+        + record["build__checkout__git_repository_url"]
+    )
 
 
 def get_tree(record: Dict):
@@ -106,8 +101,10 @@ def get_record_tree(record: Dict, selected_trees: List) -> Optional[Dict]:
     for tree in selected_trees:
         if (
             tree["tree_name"] == record["build__checkout__tree_name"]
-            and tree["git_repository_branch"] == record["build__checkout__git_repository_branch"]
-            and tree["git_repository_url"] == record["build__checkout__git_repository_url"]
+            and tree["git_repository_branch"]
+            == record["build__checkout__git_repository_branch"]
+            and tree["git_repository_url"]
+            == record["build__checkout__git_repository_url"]
         ):
             return tree
 
@@ -130,8 +127,10 @@ def generate_test_dict():
 def is_record_tree_selected(record, tree, is_all_selected: bool):
     if is_all_selected:
         return True
-    return tree.get("is_tree_selected") and \
-        tree["git_commit_hash"] == record["build__checkout__git_commit_hash"]
+    return (
+        tree.get("is_tree_selected")
+        and tree["git_commit_hash"] == record["build__checkout__git_commit_hash"]
+    )
 
 
 # TODO unify with treeDetails
@@ -146,9 +145,9 @@ def update_issues(
     issue_from: str,
 ) -> None:
     can_insert_issue = True
-    if (issue_from == "build"):
+    if issue_from == "build":
         can_insert_issue = is_build_invalid(build_valid)
-    elif (issue_from == "test"):
+    elif issue_from == "test":
         can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
 
     if issue_id and can_insert_issue:
@@ -170,7 +169,7 @@ def generate_tree_status_summary_dict():
     return {
         "builds": defaultdict(int),
         "boots": defaultdict(int),
-        "tests": defaultdict(int)
+        "tests": defaultdict(int),
     }
 
 
@@ -189,7 +188,7 @@ def get_build_status(is_build_valid) -> BuildStatusType:
 # but we are using POST here just to follow the convention to use the request body
 # also the csrf protection require the usage of cookies which is not currently
 # supported in this project
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class HardwareDetails(View):
     required_params_get = ["origin"]
     cache_key_get_tree_data = "hardwareDetailsTreeData"
@@ -222,9 +221,7 @@ class HardwareDetails(View):
     ) -> bool:
         is_build_not_processed = not build["id"] in processed_builds
         is_build_filtered_out = self.filterParams.is_build_filtered_out(
-            valid=build["valid"],
-            duration=build["duration"],
-            issue_id=build["issue_id"]
+            valid=build["valid"], duration=build["duration"], issue_id=build["issue_id"]
         )
         return is_build_not_processed and not is_build_filtered_out
 
@@ -233,18 +230,14 @@ class HardwareDetails(View):
         record: Dict,
     ) -> bool:
         record_filter_out = self.filterParams.is_record_filtered_out(
-            architecture=record['build__architecture'],
-            compiler=record['build__compiler'],
-            config_name=record['build__config_name']
+            architecture=record["build__architecture"],
+            compiler=record["build__compiler"],
+            config_name=record["build__config_name"],
         )
 
         return not record_filter_out
 
-    def test_in_filter(
-        self,
-        table_test: Literal["boot", "test"],
-        record: Dict
-    ) -> bool:
+    def test_in_filter(self, table_test: Literal["boot", "test"], record: Dict) -> bool:
         test_filter_pass = True
 
         status = record["status"]
@@ -259,7 +252,7 @@ class HardwareDetails(View):
                 duration=duration,
                 path=path,
                 issue_id=issue_id,
-                incident_test_id=incidents_test_id
+                incident_test_id=incidents_test_id,
             )
         else:
             test_filter_pass = not self.filterParams.is_test_filtered_out(
@@ -267,7 +260,7 @@ class HardwareDetails(View):
                 duration=duration,
                 path=path,
                 issue_id=issue_id,
-                incident_test_id=incidents_test_id
+                incident_test_id=incidents_test_id,
             )
 
         return test_filter_pass
@@ -280,8 +273,9 @@ class HardwareDetails(View):
         tests["configs"][record["build__config_name"]][status] += 1
 
         if status == "ERROR" or status == "FAIL" or status == "MISS":
+            environment_misc = handle_environment_misc(record["environment_misc"])
             tests["platformsFailing"].add(
-                extract_platform(record["environment_misc"])
+                env_misc_value_or_default(environment_misc).get("platform")
             )
             tests["failReasons"][extract_error_message(record["misc"])] += 1
 
@@ -300,7 +294,7 @@ class HardwareDetails(View):
             issue_report_url=record["incidents__issue__report_url"],
             task=tests,
             is_failed_task=status == STATUS_FAILED_VALUE,
-            issue_from="test"
+            issue_from="test",
         )
 
     def get_filter_options(self, records, selected_trees, is_all_selected: bool):
@@ -310,12 +304,14 @@ class HardwareDetails(View):
 
         for r in records:
             current_tree = get_record_tree(r, selected_trees)
-            if not current_tree or not is_record_tree_selected(r, current_tree, is_all_selected):
+            if not current_tree or not is_record_tree_selected(
+                r, current_tree, is_all_selected
+            ):
                 continue
 
-            configs.add(r['build__config_name'])
-            archs.add(r['build__architecture'])
-            compilers.add(r['build__compiler'])
+            configs.add(r["build__config_name"])
+            archs.add(r["build__architecture"])
+            compilers.add(r["build__compiler"])
 
         return list(configs), list(archs), list(compilers)
 
@@ -358,7 +354,9 @@ class HardwareDetails(View):
             build_id = record["build_id"]
             build = get_build(record, tree_index)
 
-            record_tree_selected = is_record_tree_selected(record, current_tree, is_all_selected)
+            record_tree_selected = is_record_tree_selected(
+                record, current_tree, is_all_selected
+            )
 
             self.handle_tree_status_summary(
                 record,
@@ -391,7 +389,7 @@ class HardwareDetails(View):
                     issue_report_url=record["incidents__issue__report_url"],
                     task=builds,
                     is_failed_task=record["build__valid"] is not True,
-                    issue_from="build"
+                    issue_from="build",
                 )
 
         builds["summary"] = create_details_build_summary(builds["items"])
@@ -402,23 +400,29 @@ class HardwareDetails(View):
         return (builds, tests, boots, tree_status_summary)
 
     def _assign_default_record_values(self, record: Dict) -> None:
-        if (record["build__architecture"] is None):
+        if record["build__architecture"] is None:
             record["build__architecture"] = UNKNOWN_STRING
-        if (record["build__compiler"] is None):
+        if record["build__compiler"] is None:
             record["build__compiler"] = UNKNOWN_STRING
-        if (record["build__config_name"] is None):
+        if record["build__config_name"] is None:
             record["build__config_name"] = UNKNOWN_STRING
-        if (record["build__incidents__issue__id"] is None and record["build__valid"] is not True):
+        if (
+            record["build__incidents__issue__id"] is None
+            and record["build__valid"] is not True
+        ):
             record["build__incidents__issue__id"] = UNKNOWN_STRING
-        if (record["incidents__issue__id"] is None and record["status"] == STATUS_FAILED_VALUE):
+        if (
+            record["incidents__issue__id"] is None
+            and record["status"] == STATUS_FAILED_VALUE
+        ):
             record["incidents__issue__id"] = UNKNOWN_STRING
 
-    def get_trees(self, hardware_id: str, origin: str, start_date: datetime, end_date: datetime):
+    def get_trees(
+        self, hardware_id: str, origin: str, start_date: datetime, end_date: datetime
+    ):
         # We need a subquery because if we filter by any hardware, it will get the
         # last head that has that hardware, but not the real head of the trees
-        trees_subquery = get_tree_heads(
-            origin, start_date, end_date
-        )
+        trees_subquery = get_tree_heads(origin, start_date, end_date)
 
         tree_id_fields = [
             "build__checkout__tree_name",
@@ -426,23 +430,28 @@ class HardwareDetails(View):
             "build__checkout__git_repository_url",
         ]
 
-        trees_query_set = Tests.objects.filter(
-            environment_compatible__contains=[hardware_id],
-            origin=origin,
-            build__checkout__start_time__lte=end_date,
-            build__checkout__start_time__gte=start_date,
-            build__checkout__git_commit_hash__in=Subquery(trees_subquery),
-        ).values(
-            *tree_id_fields,
-            "build__checkout__git_commit_name",
-            "build__checkout__git_commit_hash",
-        ).distinct(
-            *tree_id_fields,
-            "build__checkout__git_commit_hash",
-        ).order_by(
-            *tree_id_fields,
-            "build__checkout__git_commit_hash",
-            "-build__checkout__start_time"
+        trees_query_set = (
+            Tests.objects.filter(
+                environment_compatible__contains=[hardware_id],
+                origin=origin,
+                build__checkout__start_time__lte=end_date,
+                build__checkout__start_time__gte=start_date,
+                build__checkout__git_commit_hash__in=Subquery(trees_subquery),
+            )
+            .values(
+                *tree_id_fields,
+                "build__checkout__git_commit_name",
+                "build__checkout__git_commit_hash",
+            )
+            .distinct(
+                *tree_id_fields,
+                "build__checkout__git_commit_hash",
+            )
+            .order_by(
+                *tree_id_fields,
+                "build__checkout__git_commit_hash",
+                "-build__checkout__start_time",
+            )
         )
 
         trees = []
@@ -479,18 +488,22 @@ class HardwareDetails(View):
 
             displayed_commit = self.get_displayed_commit(tree, raw_selected_commit)
 
-            selected.append({
-                "tree_name": tree["treeName"],
-                "git_repository_branch": tree["gitRepositoryBranch"],
-                "git_repository_url": tree["gitRepositoryUrl"],
-                "index": tree["index"],
-                "git_commit_hash": displayed_commit,
-                "is_tree_selected": is_tree_selected
-            })
+            selected.append(
+                {
+                    "tree_name": tree["treeName"],
+                    "git_repository_branch": tree["gitRepositoryBranch"],
+                    "git_repository_url": tree["gitRepositoryUrl"],
+                    "index": tree["index"],
+                    "git_commit_hash": displayed_commit,
+                    "is_tree_selected": is_tree_selected,
+                }
+            )
 
         return selected
 
-    def get_full_tests(self, *, hardware_id, origin, trees, start_date=int, end_date=int):
+    def get_full_tests(
+        self, *, hardware_id, origin, trees, start_date=int, end_date=int
+    ):
         commit_hashes = [tree["git_commit_hash"] for tree in trees]
 
         records = Tests.objects.values(
@@ -524,7 +537,7 @@ class HardwareDetails(View):
             "incidents__issue__comment",
             "incidents__issue__report_url",
             "incidents__test_id",
-            "build__incidents__issue__id"
+            "build__incidents__issue__id",
         ).filter(
             start_time__gte=start_date,
             start_time__lte=end_date,
@@ -542,13 +555,11 @@ class HardwareDetails(View):
 
             origin = body.get("origin", DEFAULT_ORIGIN)
             end_datetime = datetime.fromtimestamp(
-                int(body.get('endTimestampInSeconds')),
-                timezone.utc
+                int(body.get("endTimestampInSeconds")), timezone.utc
             )
 
             start_datetime = datetime.fromtimestamp(
-                int(body.get('startTimestampInSeconds')),
-                timezone.utc
+                int(body.get("startTimestampInSeconds")), timezone.utc
             )
 
             selected_commits = body.get("selectedCommits", {})
@@ -582,8 +593,7 @@ class HardwareDetails(View):
             setQueryCache(self.cache_key_get_tree_data, cache_params, trees)
 
         trees_with_selected_commits = self.get_trees_with_selected_commit(
-            trees,
-            selected_commits
+            trees, selected_commits
         )
 
         params = {
@@ -591,7 +601,7 @@ class HardwareDetails(View):
             "origin": origin,
             "trees": trees_with_selected_commits,
             "start_date": start_datetime,
-            "end_date": end_datetime
+            "end_date": end_datetime,
         }
 
         records = getQueryCache(self.cache_key_get_full_data, cache_params)
@@ -601,9 +611,7 @@ class HardwareDetails(View):
             setQueryCache(self.cache_key_get_full_data, params, records)
 
         builds, tests, boots, tree_status_summary = self.sanitize_records(
-            records,
-            trees_with_selected_commits,
-            is_all_selected
+            records, trees_with_selected_commits, is_all_selected
         )
 
         configs, archs, compilers = self.get_filter_options(
@@ -613,7 +621,9 @@ class HardwareDetails(View):
         trees_with_status_count = []
         for tree in trees:
             summary = tree_status_summary.get(tree["index"])
-            trees_with_status_count.append({**tree, "selectedCommitStatusSummary": summary})
+            trees_with_status_count.append(
+                {**tree, "selectedCommitStatusSummary": summary}
+            )
 
         return JsonResponse(
             {
@@ -624,5 +634,6 @@ class HardwareDetails(View):
                 "archs": archs,
                 "compilers": compilers,
                 "trees": trees_with_status_count,
-            }, safe=False
+            },
+            safe=False,
         )
