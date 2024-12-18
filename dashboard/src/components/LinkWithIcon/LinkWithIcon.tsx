@@ -11,6 +11,7 @@ export interface ILinkWithIcon {
   icon?: ReactElement;
   linkComponent?: ReactElement;
   onClick?: () => void;
+  unformattedTitle?: string;
 }
 
 const LinkWithIcon = ({
@@ -20,15 +21,17 @@ const LinkWithIcon = ({
   link,
   linkComponent,
   onClick,
+  unformattedTitle,
 }: ILinkWithIcon): JSX.Element => {
   const WrapperLink = link ? 'a' : 'div';
   return (
     <div className="flex flex-col items-start gap-2 text-sm">
-      {title && (
+      {(title && (
         <span className="font-bold">
           <FormattedMessage id={title} />
         </span>
-      )}
+      )) ||
+        (unformattedTitle && <p className="font-bold">{unformattedTitle}</p>)}
       {linkComponent ?? (
         <WrapperLink
           className="flex flex-row items-center gap-1"

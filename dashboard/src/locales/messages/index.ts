@@ -164,6 +164,8 @@ export const messages = {
     'global.underDevelopment': 'Under Development',
     'global.unknown': 'Unknown',
     'global.url': 'URL',
+    'globalDetails.artifacts': 'Artifacts',
+    'globalDetails.miscData': 'Misc Data',
     'globalTable.bootStatus': 'Boot Status',
     'globalTable.branch': 'Branch',
     'globalTable.build': 'Build Status',

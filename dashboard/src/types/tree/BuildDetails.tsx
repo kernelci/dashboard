@@ -19,12 +19,7 @@ export type TBuildDetails = {
   git_repository_url?: string;
   origin?: string;
   log_excerpt?: string;
-  misc: IBuildDetailsMisc | null;
+  misc?: Record<string, unknown>;
+  input_files?: Record<string, unknown>;
+  output_files?: Record<string, unknown>;
 };
-
-interface IBuildDetailsMisc {
-  kernel_type?: string;
-  dtb?: string;
-  modules?: string;
-  system_map?: string;
-}
