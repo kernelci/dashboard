@@ -34,20 +34,6 @@ def convert_issues_dict_to_list(issues_dict: Dict[str, Issue]) -> List[Issue]:
     return list(issues_dict.values())
 
 
-def extract_platform(misc_environment: Union[str, dict, None]):
-    parsedEnvMisc = None
-    if isinstance(misc_environment, dict):
-        parsedEnvMisc = misc_environment
-    elif misc_environment is None:
-        return "unknown"
-    else:
-        parsedEnvMisc = json.loads(misc_environment)
-    platform = parsedEnvMisc.get("platform")
-    if platform:
-        return platform
-    return "unknown"
-
-
 # TODO misc is not stable and should be used as a POC only
 def extract_error_message(misc: Union[str, dict, None]):
     parsedEnv = None
@@ -79,3 +65,4 @@ def string_to_json(string: str) -> Optional[dict]:
             return json.loads(string)
         except json.JSONDecodeError as e:
             log_message(e.msg)
+            return None

@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl';
 import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useTreeDetails } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
@@ -97,6 +97,13 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
     [treeId],
   );
 
+  const hardwareData = useMemo(() => {
+    return {
+      ...data?.bootEnvironmentCompatible,
+      ...data?.bootEnvironmentMisc,
+    };
+  }, [data?.bootEnvironmentCompatible, data?.bootEnvironmentMisc]);
+
   if (error || !treeId) {
     return (
       <div>
@@ -157,7 +164,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           <TreeCommitNavigationGraph />
           <MemoizedHardwareTested
             title={<FormattedMessage id="bootsTab.hardwareTested" />}
-            environmentCompatible={data.bootEnvironmentCompatible}
+            environmentCompatible={hardwareData}
             diffFilter={diffFilter}
           />
         </div>
@@ -191,7 +198,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
           <div>
             <MemoizedHardwareTested
               title={<FormattedMessage id="bootsTab.hardwareTested" />}
-              environmentCompatible={data.bootEnvironmentCompatible}
+              environmentCompatible={hardwareData}
               diffFilter={diffFilter}
             />
           </div>
