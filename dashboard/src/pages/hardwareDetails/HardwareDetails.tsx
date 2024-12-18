@@ -18,6 +18,8 @@ import { useHardwareDetails } from '@/api/hardwareDetails';
 
 import type { Trees } from '@/types/hardware/hardwareDetails';
 
+import MemoizedCompatibleHardware from '@/components/Cards/CompatibleHardware';
+
 import {
   GroupedTestStatus,
   BuildStatus as BuildStatusComponent,
@@ -223,6 +225,12 @@ function HardwareDetails(): JSX.Element {
           selectedIndexes={treeIndexes}
           updateTreeFilters={updateTreeFilters}
         />
+        <div className="mt-5">
+          <MemoizedCompatibleHardware
+            title={<FormattedMessage id="hardwareDetails.compatibles" />}
+            compatibles={data.compatibles}
+          />
+        </div>
         <div className="flex flex-col pb-2">
           <div className="sticky top-[4.5rem] z-10">
             <div className="absolute right-0 top-2 py-4">
