@@ -273,7 +273,7 @@ class HardwareDetails(View):
         return test_filter_pass
 
     def handle_test(self, record, tests):
-        status = record["status"]
+        status = record["status"] or "NULL"
 
         tests["history"].append(get_history(record))
         tests["statusSummary"][status] += 1
