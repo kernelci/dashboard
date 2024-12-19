@@ -1,17 +1,21 @@
-import json
 from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.helpers.filters import (
     should_increment_test_issue,
     UNKNOWN_STRING,
-    FilterParams
+    FilterParams,
 )
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     extract_error_message,
-    extract_platform,
     create_issue,
     IncidentInfo,
+)
+from kernelCI_app.helpers.misc import (
+    handle_build_misc,
+    handle_environment_misc,
+    build_misc_value_or_default,
+    env_misc_value_or_default
 )
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from django.db import connection
@@ -34,6 +38,7 @@ class TreeDetails(View):
         self.testIssues = []
         self.testIssuesTable = {}
         self.testEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
+        self.testEnvironmentMisc = defaultdict(lambda: defaultdict(int))
         self.bootHistory = []
         self.bootStatusSummary = {}
         self.bootConfigs = {}
@@ -43,6 +48,7 @@ class TreeDetails(View):
         self.bootIssues = []
         self.bootsIssuesTable = {}
         self.bootEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
+        self.bootEnvironmentMisc = defaultdict(lambda: defaultdict(int))
         self.incidentsIssueRelationship = defaultdict(
             lambda: IncidentInfo(incidentsCount=0)
         )
@@ -113,31 +119,36 @@ class TreeDetails(View):
             "issue_report_url": currentRow[36],
         }
 
-        currentRowData["test_platform"] = extract_platform(currentRowData["test_environment_misc"])
-        if (currentRowData["test_status"] is None):
+        environment_misc = handle_environment_misc(
+            currentRowData["test_environment_misc"]
+        )
+        currentRowData["test_platform"] = env_misc_value_or_default(
+            environment_misc
+        ).get("platform")
+        if currentRowData["test_status"] is None:
             currentRowData["test_status"] = "NULL"
-        currentRowData["test_error"] = extract_error_message(currentRowData["test_misc"])
-        if (currentRowData["test_environment_compatible"] is None):
+        currentRowData["test_error"] = extract_error_message(
+            currentRowData["test_misc"]
+        )
+        if currentRowData["test_environment_compatible"] is None:
             currentRowData["test_environment_compatible"] = UNKNOWN_STRING
         else:
-            currentRowData["test_environment_compatible"] = currentRowData["test_environment_compatible"][0]
-        if (currentRowData["build_architecture"] is None):
+            currentRowData["test_environment_compatible"] = currentRowData[
+                "test_environment_compatible"
+            ][0]
+        if currentRowData["build_architecture"] is None:
             currentRowData["build_architecture"] = UNKNOWN_STRING
-        if (currentRowData["build_compiler"] is None):
+        if currentRowData["build_compiler"] is None:
             currentRowData["build_compiler"] = UNKNOWN_STRING
-        if (currentRowData["build_config_name"] is None):
+        if currentRowData["build_config_name"] is None:
             currentRowData["build_config_name"] = UNKNOWN_STRING
-        if (
-            currentRowData["issue_id"] is None
-            and (
-                currentRowData["build_valid"] is False
-                or currentRowData["build_valid"] is None
-                or currentRowData["test_status"] == "FAIL"
-            )
+        if currentRowData["issue_id"] is None and (
+            currentRowData["build_valid"] is False
+            or currentRowData["build_valid"] is None
+            or currentRowData["test_status"] == "FAIL"
         ):
             currentRowData["issue_id"] = UNKNOWN_STRING
-        if (currentRowData["build_misc"] is not None):
-            currentRowData["build_misc"] = json.loads(currentRowData["build_misc"])
+        currentRowData["build_misc"] = handle_build_misc(currentRowData["build_misc"])
 
         currentRowData["history_item"] = {
             "id": currentRowData["test_id"],
@@ -145,7 +156,7 @@ class TreeDetails(View):
             "path": currentRowData["test_path"],
             "duration": currentRowData["test_duration"],
             "startTime": currentRowData["test_start_time"],
-            "hardware": currentRow[tmp_test_env_comp_key]
+            "hardware": currentRow[tmp_test_env_comp_key],
         }
 
         return currentRowData
@@ -173,7 +184,7 @@ class TreeDetails(View):
             issue_id=issue_id,
             path=testPath,
             status=testStatus,
-            incident_test_id=incident_test_id
+            incident_test_id=incident_test_id,
         )
 
         if is_boot_filter_out:
@@ -221,7 +232,11 @@ class TreeDetails(View):
             self.bootPlatformsFailing.add(testPlatform)
             self.bootFailReasons[testError] = self.bootFailReasons.get(testError, 0) + 1
 
-        self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
+        if testEnvironmentCompatible != UNKNOWN_STRING:
+            self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
+        else:
+            self.bootEnvironmentMisc[testPlatform][testStatus] += 1
+
         self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
     def __processNonBootsTest(self, currentRowData):
@@ -246,7 +261,7 @@ class TreeDetails(View):
             issue_id=issue_id,
             path=testPath,
             status=testStatus,
-            incident_test_id=incident_test_id
+            incident_test_id=incident_test_id,
         )
 
         if is_test_filter_out:
@@ -292,7 +307,10 @@ class TreeDetails(View):
             self.testPlatformsWithErrors.add(testPlatform)
             self.testFailReasons[testError] = self.testFailReasons.get(testError, 0) + 1
 
-        self.testEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
+        if testEnvironmentCompatible != UNKNOWN_STRING:
+            self.testEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
+        else:
+            self.testEnvironmentMisc[testPlatform][testStatus] += 1
 
     def _process_builds(self, row_data):
         build_id = row_data["build_id"]
@@ -301,9 +319,7 @@ class TreeDetails(View):
         build_duration = row_data["build_duration"]
 
         is_build_filtered_out = self.filterParams.is_build_filtered_out(
-            valid=build_valid,
-            duration=build_duration,
-            issue_id=issue_id
+            valid=build_valid, duration=build_duration, issue_id=issue_id
         )
 
         if is_build_filtered_out:
@@ -311,7 +327,7 @@ class TreeDetails(View):
 
         if issue_id and (build_valid is False or build_valid is None):
             current_issue = self.processed_build_issues.get(issue_id)
-            if (current_issue):
+            if current_issue:
                 current_issue["incidents_info"]["incidentsCount"] += 1
             else:
                 self.processed_build_issues[issue_id] = create_issue(
@@ -333,19 +349,30 @@ class TreeDetails(View):
 
             test_path = row_data["test_path"]
             test_environment_compatible = row_data["test_environment_compatible"]
+            test_environment_misc_platform = row_data["test_platform"]
+            build_misc_platform = build_misc_value_or_default(
+                row_data["build_misc"]
+            ).get("platform", UNKNOWN_STRING)
+            hardware_filter = test_environment_compatible
             git_repository_url = row_data["checkout_git_repository_url"]
 
-            if (test_environment_compatible):
+            if test_environment_compatible != UNKNOWN_STRING:
                 self.hardwareUsed.add(test_environment_compatible)
+            elif test_environment_misc_platform != UNKNOWN_STRING:
+                hardware_filter = test_environment_misc_platform
+                self.hardwareUsed.add(test_environment_misc_platform)
+            else:
+                hardware_filter = build_misc_platform
+                self.hardwareUsed.add(build_misc_platform)
 
-            if (self.tree_url == "" and git_repository_url is not None):
+            if self.tree_url == "" and git_repository_url is not None:
                 self.tree_url = git_repository_url
 
             record_filter_out = self.filterParams.is_record_filtered_out(
-                hardwares=[test_environment_compatible],
-                architecture=row_data['build_architecture'],
-                compiler=row_data['build_compiler'],
-                config_name=row_data['build_config_name']
+                hardwares=[hardware_filter],
+                architecture=row_data["build_architecture"],
+                compiler=row_data["build_compiler"],
+                config_name=row_data["build_config_name"],
             )
 
             if record_filter_out:
@@ -479,6 +506,8 @@ class TreeDetails(View):
                 "testIssues": self.testIssues,
                 "testEnvironmentCompatible": self.testEnvironmentCompatible,
                 "bootEnvironmentCompatible": self.bootEnvironmentCompatible,
+                "testEnvironmentMisc": self.testEnvironmentMisc,
+                "bootEnvironmentMisc": self.bootEnvironmentMisc,
                 "incidentsIssueRelationship": self.incidentsIssueRelationship,
                 "hardwareUsed": list(self.hardwareUsed),
                 "failedTestsWithUnknownIssues": self.failedTestsWithUnknownIssues,

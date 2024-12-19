@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl';
 import type { LinkProps } from '@tanstack/react-router';
 import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { Skeleton } from '@/components/Skeleton';
 
@@ -99,6 +99,13 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
     [navigate],
   );
 
+  const hardwareData = useMemo(() => {
+    return {
+      ...data?.testEnvironmentCompatible,
+      ...data?.testEnvironmentMisc,
+    };
+  }, [data?.testEnvironmentCompatible, data?.testEnvironmentMisc]);
+
   if (error || !treeId) {
     return (
       <div>
@@ -159,7 +166,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
           <TreeCommitNavigationGraph />
           <MemoizedHardwareTested
             title={<FormattedMessage id="testsTab.hardwareTested" />}
-            environmentCompatible={data.testEnvironmentCompatible}
+            environmentCompatible={hardwareData}
             diffFilter={diffFilter}
           />
         </div>
@@ -193,7 +200,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
           <div>
             <MemoizedHardwareTested
               title={<FormattedMessage id="testsTab.hardwareTested" />}
-              environmentCompatible={data.testEnvironmentCompatible}
+              environmentCompatible={hardwareData}
               diffFilter={diffFilter}
             />
           </div>

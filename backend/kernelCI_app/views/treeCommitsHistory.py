@@ -1,6 +1,4 @@
-from kernelCI_app.utils import (
-    getErrorResponseBody
-)
+from kernelCI_app.utils import getErrorResponseBody
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,7 +8,13 @@ from typing import Dict, List
 from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
-    InvalidComparisonOP
+    InvalidComparisonOP,
+)
+from kernelCI_app.helpers.misc import (
+    handle_build_misc,
+    handle_environment_misc,
+    build_misc_value_or_default,
+    env_misc_value_or_default,
 )
 
 
@@ -56,21 +60,19 @@ class TreeCommitsHistory(APIView):
                 "test_status": row[9],
                 "test_duration": row[10],
                 "hardware_compatibles": row[11],
-                "build_id": row[12],
-                "test_id": row[13]
+                "test_environment_misc": row[12],
+                "build_id": row[13],
+                "build_misc": row[14],
+                "test_id": row[15],
             }
             for row in rows
         ]
 
     def _create_commit_entry(self) -> Dict:
         return {
-            'commit_name': '',
-            'builds_count': {
-                'true': 0,
-                'false': 0,
-                'null': 0
-            },
-            'boots_count': {
+            "commit_name": "",
+            "builds_count": {"true": 0, "false": 0, "null": 0},
+            "boots_count": {
                 "fail": 0,
                 "error": 0,
                 "miss": 0,
@@ -79,7 +81,7 @@ class TreeCommitsHistory(APIView):
                 "skip": 0,
                 "null": 0,
             },
-            'tests_count': {
+            "tests_count": {
                 "fail": 0,
                 "error": 0,
                 "miss": 0,
@@ -87,68 +89,49 @@ class TreeCommitsHistory(APIView):
                 "done": 0,
                 "skip": 0,
                 "null": 0,
-            }
+            },
         }
 
     def _process_builds_count(
-            self,
-            build_valid: bool,
-            duration: int,
-            commit_hash: str
+        self, build_valid: bool, duration: int, commit_hash: str
     ) -> None:
         is_filtered_out = self.filterParams.is_build_filtered_out(
-            duration=duration,
-            valid=build_valid,
-            issue_id=None
+            duration=duration, valid=build_valid, issue_id=None
         )
         if is_filtered_out:
             return
 
-        label = 'null'
+        label = "null"
         if build_valid is not None:
             label = str(build_valid).lower()
 
-        self.commit_hashes[commit_hash]['builds_count'][label] += 1
+        self.commit_hashes[commit_hash]["builds_count"][label] += 1
 
     def _process_boots_count(
-        self,
-        test_status: str,
-        commit_hash: str,
-        test_duration: int,
-        test_path: str
+        self, test_status: str, commit_hash: str, test_duration: int, test_path: str
     ) -> None:
         is_boot_filter_out = self.filterParams.is_boot_filtered_out(
-            duration=test_duration,
-            issue_id=None,
-            path=test_path,
-            status=test_status
+            duration=test_duration, issue_id=None, path=test_path, status=test_status
         )
 
         if is_boot_filter_out:
             return
 
         label = test_status.lower()
-        self.commit_hashes[commit_hash]['boots_count'][label] += 1
+        self.commit_hashes[commit_hash]["boots_count"][label] += 1
 
     def _process_nonboots_count(
-        self,
-        test_status: str,
-        commit_hash: str,
-        test_duration: int,
-        test_path: str
+        self, test_status: str, commit_hash: str, test_duration: int, test_path: str
     ) -> None:
         is_nonboot_filter_out = self.filterParams.is_test_filtered_out(
-            duration=test_duration,
-            issue_id=None,
-            path=test_path,
-            status=test_status
+            duration=test_duration, issue_id=None, path=test_path, status=test_status
         )
 
         if is_nonboot_filter_out:
             return
 
         label = test_status.lower()
-        self.commit_hashes[commit_hash]['tests_count'][label] += 1
+        self.commit_hashes[commit_hash]["tests_count"][label] += 1
 
     def _pass_in_global_filters(self, row: Dict) -> bool:
         hardware_compatibles = [UNKNOWN_STRING]
@@ -156,14 +139,14 @@ class TreeCommitsHistory(APIView):
         compiler = UNKNOWN_STRING
         config_name = UNKNOWN_STRING
 
-        if row['hardware_compatibles'] is not None:
-            hardware_compatibles = row['hardware_compatibles']
-        if row['architecture'] is not None:
-            architecture = row['architecture']
-        if row['compiler'] is not None:
-            compiler = row['compiler']
-        if row['config_name'] is not None:
-            config_name = row['config_name']
+        if row["hardware_compatibles"] is not None:
+            hardware_compatibles = row["hardware_compatibles"]
+        if row["architecture"] is not None:
+            architecture = row["architecture"]
+        if row["compiler"] is not None:
+            compiler = row["compiler"]
+        if row["config_name"] is not None:
+            config_name = row["config_name"]
 
         if (
             (
@@ -188,51 +171,74 @@ class TreeCommitsHistory(APIView):
         return True
 
     def _process_tests(self, row: Dict) -> None:
-        if row['test_id'] is not None and row['test_id'] not in self.processed_tests:
-            commit_hash = row['git_commit_hash']
-            self.processed_tests.add(row['test_id'])
-            is_boot = row['test_path'] is not None and row['test_path'].startswith('boot')
+        if row["test_id"] is not None and row["test_id"] not in self.processed_tests:
+            commit_hash = row["git_commit_hash"]
+            self.processed_tests.add(row["test_id"])
+            is_boot = row["test_path"] is not None and row["test_path"].startswith(
+                "boot"
+            )
 
             if is_boot:
                 self._process_boots_count(
-                    row['test_status'] or "NULL",
+                    row["test_status"] or "NULL",
                     commit_hash,
-                    row['test_duration'],
-                    row['test_path']
+                    row["test_duration"],
+                    row["test_path"],
                 )
             else:
                 self._process_nonboots_count(
-                    row['test_status'] or "NULL",
+                    row["test_status"] or "NULL",
                     commit_hash,
-                    row['test_duration'],
-                    row['test_path']
+                    row["test_duration"],
+                    row["test_path"],
                 )
 
     def _process_builds(self, row: Dict) -> None:
-        if row["build_id"] is not None and row['build_id'] not in self.processed_builds:
-            commit_hash = row['git_commit_hash']
-            self.processed_builds.add(row['build_id'])
-            self._process_builds_count(row["build_valid"], row['build_duration'], commit_hash)
+        if row["build_id"] is not None and row["build_id"] not in self.processed_builds:
+            commit_hash = row["git_commit_hash"]
+            self.processed_builds.add(row["build_id"])
+            self._process_builds_count(
+                row["build_valid"], row["build_duration"], commit_hash
+            )
 
     def _process_rows(self, rows: Dict) -> None:
         sanitized_rows = self.sanitize_rows(rows)
 
         for row in sanitized_rows:
+            test_environment_misc = handle_environment_misc(
+                row["test_environment_misc"]
+            )
+            build_misc = handle_build_misc(row["build_misc"])
+
+            hardware_filter = None
+            if row["hardware_compatibles"] is not None:
+                hardware_filter = row["hardware_compatibles"]
+            elif test_environment_misc is not None:
+                hardware_filter = [
+                    env_misc_value_or_default(test_environment_misc).get("platform")
+                ]
+            else:
+                hardware_filter = [
+                    build_misc_value_or_default(build_misc).get("platform")
+                ]
+
             record_filter_out = self.filterParams.is_record_filtered_out(
-                hardwares=row['hardware_compatibles'],
-                architecture=row['architecture'],
-                compiler=row['compiler'],
-                config_name=row['config_name']
+                hardwares=hardware_filter,
+                architecture=row["architecture"],
+                compiler=row["compiler"],
+                config_name=row["config_name"],
             )
 
             if record_filter_out:
                 continue
 
-            commit_hash = row['git_commit_hash']
+            commit_hash = row["git_commit_hash"]
             if commit_hash not in self.commit_hashes:
                 self.commit_hashes[commit_hash] = self._create_commit_entry()
-                self.commit_hashes[commit_hash]['commit_name'] = row["git_commit_name"]
-                self.commit_hashes[commit_hash]['earliest_start_time'] = row["earliest_start_time"]
+                self.commit_hashes[commit_hash]["commit_name"] = row["git_commit_name"]
+                self.commit_hashes[commit_hash]["earliest_start_time"] = row[
+                    "earliest_start_time"
+                ]
 
             self._process_tests(row)
             self._process_builds(row)
@@ -321,7 +327,9 @@ class TreeCommitsHistory(APIView):
             t.status,
             t.duration,
             t.environment_compatible,
+            t.environment_misc,
             b.id AS build_id,
+            b.misc AS build_misc,
             t.id AS test_id
         FROM earliest_commits AS c
         INNER JOIN builds AS b
@@ -345,33 +353,35 @@ class TreeCommitsHistory(APIView):
         results = []
 
         for key, value in self.commit_hashes.items():
-            results.append({
-                "git_commit_hash": key,
-                "git_commit_name": value['commit_name'],
-                "earliest_start_time": value['earliest_start_time'],
-                "builds": {
-                    "valid_builds": value['builds_count']['true'],
-                    "invalid_builds": value['builds_count']['false'],
-                    "null_builds": value['builds_count']['null'],
-                },
-                "boots_tests": {
-                    "fail_count": value['boots_count']['fail'],
-                    "error_count": value['boots_count']['error'],
-                    "miss_count": value['boots_count']['miss'],
-                    "pass_count": value['boots_count']['pass'],
-                    "done_count": value['boots_count']['done'],
-                    "skip_count": value['boots_count']['skip'],
-                    "null_count": value['boots_count']['null'],
-                },
-                "non_boots_tests": {
-                    "fail_count": value['tests_count']['fail'],
-                    "error_count": value['tests_count']['error'],
-                    "miss_count": value['tests_count']['miss'],
-                    "pass_count": value['tests_count']['pass'],
-                    "done_count": value['tests_count']['done'],
-                    "skip_count": value['tests_count']['skip'],
-                    "null_count": value['tests_count']['null'],
-                },
-            })
+            results.append(
+                {
+                    "git_commit_hash": key,
+                    "git_commit_name": value["commit_name"],
+                    "earliest_start_time": value["earliest_start_time"],
+                    "builds": {
+                        "valid_builds": value["builds_count"]["true"],
+                        "invalid_builds": value["builds_count"]["false"],
+                        "null_builds": value["builds_count"]["null"],
+                    },
+                    "boots_tests": {
+                        "fail_count": value["boots_count"]["fail"],
+                        "error_count": value["boots_count"]["error"],
+                        "miss_count": value["boots_count"]["miss"],
+                        "pass_count": value["boots_count"]["pass"],
+                        "done_count": value["boots_count"]["done"],
+                        "skip_count": value["boots_count"]["skip"],
+                        "null_count": value["boots_count"]["null"],
+                    },
+                    "non_boots_tests": {
+                        "fail_count": value["tests_count"]["fail"],
+                        "error_count": value["tests_count"]["error"],
+                        "miss_count": value["tests_count"]["miss"],
+                        "pass_count": value["tests_count"]["pass"],
+                        "done_count": value["tests_count"]["done"],
+                        "skip_count": value["tests_count"]["skip"],
+                        "null_count": value["tests_count"]["null"],
+                    },
+                }
+            )
 
         return JsonResponse(results, safe=False)

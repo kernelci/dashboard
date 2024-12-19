@@ -80,6 +80,8 @@ export type TTreeTestsFullData = {
   testIssues: TIssue[];
   testEnvironmentCompatible: PropertyStatusCounts;
   bootEnvironmentCompatible: PropertyStatusCounts;
+  testEnvironmentMisc: PropertyStatusCounts;
+  bootEnvironmentMisc: PropertyStatusCounts;
   hardwareUsed: string[];
   failedTestsWithUnknownIssues: number;
   failedBootsWithUnknownIssues: number;
