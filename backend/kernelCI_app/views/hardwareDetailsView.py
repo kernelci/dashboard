@@ -266,7 +266,7 @@ class HardwareDetails(View):
         return test_filter_pass
 
     def handle_test(self, record, tests):
-        status = record["status"]
+        status = record["status"] or "NULL"
 
         tests["history"].append(get_history(record))
         tests["statusSummary"][status] += 1
@@ -372,8 +372,10 @@ class HardwareDetails(View):
                 processed_builds.add(build_id)
                 continue
 
-            should_process_test = not record["id"] in processed_tests \
-                and self.test_in_filter(test_filter_key, record)
+            should_process_test = (
+                self.test_in_filter(test_filter_key, record)
+                and record["id"] not in processed_tests
+            )
 
             if should_process_test:
                 processed_tests.add(record['id'])
