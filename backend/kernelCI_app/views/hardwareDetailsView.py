@@ -333,6 +333,7 @@ class HardwareDetails(View):
 
     def sanitize_records(self, records, trees: List, is_all_selected: bool):
         processed_builds = set()
+        processed_tests = set()
         tests = generate_test_dict()
         boots = generate_test_dict()
         tree_status_summary = defaultdict(generate_tree_status_summary_dict)
@@ -371,9 +372,11 @@ class HardwareDetails(View):
                 processed_builds.add(build_id)
                 continue
 
-            should_process_test = self.test_in_filter(test_filter_key, record)
+            should_process_test = not record["id"] in processed_tests \
+                and self.test_in_filter(test_filter_key, record)
 
             if should_process_test:
+                processed_tests.add(record['id'])
                 self.handle_test(record, boots if is_record_boot else tests)
 
             should_process_build = self.is_build_filtered_in(build, processed_builds)

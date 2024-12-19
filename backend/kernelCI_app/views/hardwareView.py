@@ -16,6 +16,7 @@ from kernelCI_app.helpers.trees import get_tree_heads
 class HardwareView(View):
     def _getResults(self, start_date: datetime, end_date: datetime, origin: str):
         processedBuilds = set()
+        processedTests = set()
 
         checkouts_subquery = get_tree_heads(
             origin, start_date, end_date
@@ -28,13 +29,24 @@ class HardwareView(View):
             build__checkout__origin=origin,
             build__checkout__git_commit_hash__in=Subquery(checkouts_subquery),
         ).values(
-            "environment_compatible", "status", "build__valid", "path", "build__id"
+            "environment_compatible",
+            "status",
+            "build__valid",
+            "path",
+            "build__id",
+            "id"
         )
 
         hardware = {}
 
         for test in tests:
             for compatible in test["environment_compatible"]:
+                testKey = test["id"] + compatible
+                if testKey in processedTests:
+                    continue
+
+                processedTests.add(testKey)
+
                 if hardware.get(compatible) is None:
                     hardware[compatible] = {
                         "hardwareName": compatible,
