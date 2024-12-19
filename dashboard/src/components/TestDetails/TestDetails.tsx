@@ -11,29 +11,30 @@ import { Link, useRouterState, useSearch } from '@tanstack/react-router';
 
 import { FiLink } from 'react-icons/fi';
 
-import { truncateBigText } from '@/lib/string';
+import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
 import type { TTestDetails } from '@/types/tree/TestDetails';
 import { Sheet, SheetTrigger } from '@/components/Sheet';
 import { useTestDetails, useTestIssues } from '@/api/testDetails';
 
 import { RedirectFrom } from '@/types/general';
 
-import { Subsection } from '@/components/Section/Section';
-import type { ISubsection } from '@/components/Section/Section';
+import { LogSheetContent } from '@/components/Log/LogSheetContent';
+import type { ISection } from '@/components/Section/Section';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import IssueSection from '@/components/Issue/IssueSection';
-import { LogSheetContent } from '@/components/Log/LogSheetContent';
+import SectionGroup from '@/components/Section/SectionGroup';
+import { getMiscSection } from '@/components/Section/MiscSection';
+import { getFilesSection } from '@/components/Section/FilesSection';
 
-const emptyValue = '-';
-const valueOrEmpty = (value: string | undefined): string => value || emptyValue;
+import { TruncatedValueTooltip } from '../Tooltip/TruncatedValueTooltip';
 
-const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
-  const intl = useIntl();
+const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
+  const { formatMessage } = useIntl();
   const historyState = useRouterState({ select: s => s.location.state });
   const searchParams = useSearch({ from: '/test/$testId' });
   const hardware: string =
     test.environment_compatible?.join(' | ') ??
-    intl.formatMessage({ id: 'global.unknown' });
+    formatMessage({ id: 'global.unknown' });
 
   const buildDetailsLink = useMemo(() => {
     let linkTo = '';
@@ -66,73 +67,90 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
 
   const hasUsefulLogInfo = test.log_url || test.log_excerpt;
 
-  const infos: ISubsection['infos'] = useMemo(() => {
-    const baseInfo: ISubsection['infos'] = [
-      {
-        title: 'global.status',
-        linkText: truncateBigText(test.status),
-      },
-      {
-        title: 'global.path',
-        linkText: valueOrEmpty(test.path),
-      },
-      {
-        title: 'global.arch',
-        linkText: valueOrEmpty(test.architecture),
-        icon: <PiComputerTowerThin className="text-blue" />,
-      },
-      {
-        title: 'global.compiler',
-        linkText: valueOrEmpty(test.compiler),
-      },
-      {
-        title: 'global.logs',
-        icon: hasUsefulLogInfo ? (
-          <MdFolderOpen className="text-blue" />
-        ) : undefined,
-        linkText: truncateBigText(valueOrEmpty(test.log_url)),
-        wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
-      },
-      {
-        title: 'testDetails.gitCommitHash',
-        linkText: valueOrEmpty(test.git_commit_hash),
-      },
-      {
-        title: 'testDetails.gitRepositoryUrl',
-        linkText: truncateBigText(valueOrEmpty(test.git_repository_url)),
-        link: test.git_repository_url,
-      },
-      {
-        title: 'testDetails.gitRepositoryBranch',
-        linkText: valueOrEmpty(test.git_repository_branch),
-      },
-      {
-        title: 'testDetails.buildInfo',
-        linkText: truncateBigText(test.build_id),
-        linkComponent: buildDetailsLink,
-      },
-      {
-        title: 'global.hardware',
-        linkText: hardware,
-        icon: <GiFlatPlatform className="text-blue" />,
-      },
-      {
-        title: 'global.startTime',
-        linkText: (
-          <TooltipDateTime
-            dateTime={test.start_time}
-            lineBreak={true}
-            showLabelTime={true}
-            showLabelTZ={true}
-          />
-        ),
-      },
-    ];
-
-    return baseInfo;
+  const generalSection: ISection = useMemo(() => {
+    return {
+      title: test.path,
+      eyebrow: formatMessage({ id: 'test.details' }),
+      subsections: [
+        {
+          infos: [
+            {
+              title: 'global.status',
+              linkText: truncateBigText(test.status),
+            },
+            {
+              title: 'global.path',
+              linkText: valueOrEmpty(test.path),
+            },
+            {
+              title: 'global.arch',
+              linkText: valueOrEmpty(test.architecture),
+              icon: <PiComputerTowerThin className="text-blue" />,
+            },
+            {
+              title: 'global.compiler',
+              linkText: valueOrEmpty(test.compiler),
+            },
+            {
+              title: 'global.logs',
+              icon: hasUsefulLogInfo ? (
+                <MdFolderOpen className="text-blue" />
+              ) : undefined,
+              linkText: shouldTruncate(valueOrEmpty(test.log_url)) ? (
+                <TruncatedValueTooltip value={test.log_url} isUrl={true} />
+              ) : (
+                valueOrEmpty(test.log_url)
+              ),
+              wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
+            },
+            {
+              title: 'testDetails.gitCommitHash',
+              linkText: valueOrEmpty(test.git_commit_hash),
+            },
+            {
+              title: 'testDetails.gitRepositoryUrl',
+              linkText: shouldTruncate(test.git_repository_url) ? (
+                <TruncatedValueTooltip
+                  value={test.git_repository_url}
+                  isUrl={true}
+                />
+              ) : (
+                test.git_repository_url
+              ),
+              link: test.git_repository_url,
+            },
+            {
+              title: 'testDetails.gitRepositoryBranch',
+              linkText: valueOrEmpty(test.git_repository_branch),
+            },
+            {
+              title: 'testDetails.buildInfo',
+              linkText: truncateBigText(test.build_id),
+              linkComponent: buildDetailsLink,
+            },
+            {
+              title: 'global.hardware',
+              linkText: hardware,
+              icon: <GiFlatPlatform className="text-blue" />,
+            },
+            {
+              title: 'global.startTime',
+              linkText: (
+                <TooltipDateTime
+                  dateTime={test.start_time}
+                  lineBreak={true}
+                  showLabelTime={true}
+                  showLabelTZ={true}
+                />
+              ),
+            },
+          ],
+        },
+      ],
+    };
   }, [
-    test.status,
     test.path,
+    test.status,
     test.architecture,
     test.compiler,
     test.log_url,
@@ -141,11 +159,49 @@ const TestDetailsSection = ({ test }: { test: TTestDetails }): JSX.Element => {
     test.git_repository_branch,
     test.build_id,
     test.start_time,
+    formatMessage,
     hasUsefulLogInfo,
     buildDetailsLink,
     hardware,
   ]);
-  return <Subsection infos={infos} />;
+
+  const miscSection: ISection | undefined = useMemo(():
+    | ISection
+    | undefined => {
+    return getMiscSection({
+      misc: test.misc,
+      title: formatMessage({ id: 'globalDetails.miscData' }),
+    });
+  }, [formatMessage, test.misc]);
+
+  const environmentMiscSection: ISection | undefined = useMemo(():
+    | ISection
+    | undefined => {
+    return getMiscSection({
+      misc: test.environment_misc,
+      title: formatMessage({ id: 'globalDetails.environmentMiscData' }),
+    });
+  }, [formatMessage, test.environment_misc]);
+
+  const filesSection: ISection | undefined = useMemo(():
+    | ISection
+    | undefined => {
+    return getFilesSection({
+      outputFiles: test.output_files,
+      title: formatMessage({ id: 'globalDetails.artifacts' }),
+    });
+  }, [formatMessage, test.output_files]);
+
+  const sectionsData: ISection[] = useMemo(() => {
+    return [
+      generalSection,
+      miscSection,
+      environmentMiscSection,
+      filesSection,
+    ].filter(section => section !== undefined);
+  }, [generalSection, miscSection, environmentMiscSection, filesSection]);
+
+  return <SectionGroup sections={sectionsData} />;
 };
 
 interface TestsDetailsProps {
@@ -183,8 +239,7 @@ const TestDetails = ({
       <div className="w-100 px-5 pb-8">
         {breadcrumb}
 
-        <h1 className="mb-4 text-2xl font-bold">{data.path}</h1>
-        <TestDetailsSection test={data} />
+        <TestDetailsSections test={data} />
         <IssueSection {...issuesQueryResult} />
       </div>
       <LogSheetContent logUrl={data.log_url} logExcerpt={data.log_excerpt} />

@@ -3,6 +3,8 @@ from typing import Union, TypedDict, List, Optional, Dict
 from django.utils import timezone
 from datetime import timedelta
 
+from kernelCI_app.helpers.logger import log_message
+
 DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
 
 
@@ -69,3 +71,11 @@ def getQueryTimeInterval(**kwargs):
 
 def getErrorResponseBody(reason: str):
     return json.dumps({"error": True, "reason": reason})
+
+
+def string_to_json(string: str) -> Optional[dict]:
+    if (string):
+        try:
+            return json.loads(string)
+        except json.JSONDecodeError as e:
+            log_message(e.msg)

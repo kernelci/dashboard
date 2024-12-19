@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.db import connection
 from django.views import View
+from kernelCI_app.utils import string_to_json
 
 
 class TestDetails(View):
@@ -16,6 +17,7 @@ class TestDetails(View):
             "environment_misc": "combined_tests.environment_misc",
             "start_time": "combined_tests.start_time",
             "environment_compatible": "combined_tests.environment_compatible",
+            "output_files": "combined_tests.output_files",
             "compiler": "builds.compiler",
             "architecture": "builds.architecture",
             "config_name": "builds.config_name",
@@ -36,6 +38,7 @@ class TestDetails(View):
                 tests.environment_misc,
                 tests.start_time,
                 tests.environment_compatible,
+                tests.output_files,
                 builds.compiler,
                 builds.architecture,
                 builds.config_name,
@@ -53,9 +56,12 @@ class TestDetails(View):
         response = {}
         with connection.cursor() as cursor:
             cursor.execute(query, [test_id])
-            rows = cursor.fetchall()
-            if rows:
+            row = cursor.fetchone()
+            if row:
                 for idx, key in enumerate(names_map.keys()):
-                    response[key] = rows[0][idx]
+                    response[key] = row[idx]
+                response["misc"] = string_to_json(response["misc"])
+                response["environment_misc"] = string_to_json(response["environment_misc"])
+                response["output_files"] = string_to_json(response["output_files"])
 
         return JsonResponse(response, safe=False)

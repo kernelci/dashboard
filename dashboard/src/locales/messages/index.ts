@@ -165,6 +165,7 @@ export const messages = {
     'global.unknown': 'Unknown',
     'global.url': 'URL',
     'globalDetails.artifacts': 'Artifacts',
+    'globalDetails.environmentMiscData': 'Environment Misc Data',
     'globalDetails.miscData': 'Misc Data',
     'globalTable.bootStatus': 'Boot Status',
     'globalTable.branch': 'Branch',
