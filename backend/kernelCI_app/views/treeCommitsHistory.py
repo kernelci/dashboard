@@ -2,6 +2,7 @@ from kernelCI_app.utils import getErrorResponseBody
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from datetime import datetime, timezone
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.db import connection
 from typing import Dict, List
@@ -16,6 +17,7 @@ from kernelCI_app.helpers.misc import (
     build_misc_value_or_default,
     env_misc_value_or_default,
 )
+from kernelCI_app.helpers.logger import log_message
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -24,6 +26,8 @@ class TreeCommitsHistory(APIView):
     def __init__(self):
         self.commit_hashes = {}
         self.filterParams = None
+        self.start_datetime = None
+        self.end_datetime = None
         self.field_values = dict()
         self.processed_builds = set()
         self.processed_tests = set()
@@ -201,6 +205,11 @@ class TreeCommitsHistory(APIView):
                 row["build_valid"], row["build_duration"], commit_hash
             )
 
+    def _is_record_in_time_period(self, start_time: datetime) -> bool:
+        if self.start_datetime is not None and self.end_datetime is not None:
+            return start_time >= self.start_datetime and start_time <= self.end_datetime
+        return True
+
     def _process_rows(self, rows: Dict) -> None:
         sanitized_rows = self.sanitize_rows(rows)
 
@@ -222,7 +231,9 @@ class TreeCommitsHistory(APIView):
                     build_misc_value_or_default(build_misc).get("platform")
                 ]
 
-            record_filter_out = self.filterParams.is_record_filtered_out(
+            record_in_period = self._is_record_in_time_period(start_time=row['earliest_start_time'])
+
+            record_filter_out = not record_in_period or self.filterParams.is_record_filtered_out(
                 hardwares=hardware_filter,
                 architecture=row["architecture"],
                 compiler=row["compiler"],
@@ -243,10 +254,23 @@ class TreeCommitsHistory(APIView):
             self._process_tests(row)
             self._process_builds(row)
 
+    def _process_time_range(self, request) -> None:
+        try:
+            self.end_datetime = datetime.fromtimestamp(
+                int(request.GET.get("endTimestampInSeconds")), timezone.utc
+            )
+            self.start_datetime = datetime.fromtimestamp(
+                int(request.GET.get("startTimestampInSeconds")), timezone.utc
+            )
+        except Exception as ex:
+            log_message(ex)
+
     def get(self, request, commit_hash):
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
+        start_timestamp = request.GET.get("startTimestampInSeconds")
+        end_timestamp = request.GET.get("endTimestampInSeconds")
 
         missing_params = []
         if not origin_param:
@@ -261,6 +285,9 @@ class TreeCommitsHistory(APIView):
                 {"error": f"Missing parameters: {', '.join(missing_params)}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        if None not in (start_timestamp, end_timestamp):
+            self._process_time_range(request)
 
         try:
             self.filterParams = FilterParams(request)
