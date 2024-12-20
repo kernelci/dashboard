@@ -2,6 +2,12 @@ from datetime import datetime
 from kernelCI_app.models import Checkouts
 
 
+def make_tree_identifier_key(
+    *, tree_name: str, git_repository_url: str, git_repository_branch: str
+) -> str:
+    return f"{tree_name}-{git_repository_url}-{git_repository_branch}"
+
+
 def get_tree_heads(origin: str, start_date: datetime, end_date: datetime):
     tree_id_fields = [
         "tree_name",

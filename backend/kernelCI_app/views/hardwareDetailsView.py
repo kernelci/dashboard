@@ -3,16 +3,16 @@ from django.db.models import Subquery
 import json
 from typing import Dict, List, Optional, Set, Literal
 from kernelCI_app.helpers.filters import should_increment_test_issue, is_build_invalid
+from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
 from django.views import View
 from datetime import datetime, timezone
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.http import JsonResponse
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.models import Tests
-from kernelCI_app.utils import create_issue, extract_error_message, getErrorResponseBody
-from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from kernelCI_app.utils import create_issue, extract_error_message
 from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import get_tree_heads
 from kernelCI_app.helpers.filters import UNKNOWN_STRING, FilterParams
@@ -20,6 +20,8 @@ from kernelCI_app.helpers.misc import (
     handle_environment_misc,
     env_misc_value_or_default
 )
+from kernelCI_app.typeModels.hardwareDetails import PostBody
+from pydantic import ValidationError
 
 DEFAULT_DAYS_INTERVAL = 3
 SELECTED_HEAD_TREE_VALUE = "head"
@@ -562,29 +564,33 @@ class HardwareDetails(View):
         try:
             body = json.loads(request.body)
 
-            origin = body.get("origin", DEFAULT_ORIGIN)
+            post_body = PostBody(**body)
+
+            origin = post_body.origin
             end_datetime = datetime.fromtimestamp(
-                int(body.get("endTimestampInSeconds")), timezone.utc
+                int(post_body.endTimestampInSeconds),
+                timezone.utc
             )
 
             start_datetime = datetime.fromtimestamp(
-                int(body.get("startTimestampInSeconds")), timezone.utc
+                int(post_body.startTimestampInSeconds),
+                timezone.utc
             )
 
-            selected_commits = body.get("selectedCommits", {})
+            selected_commits = post_body.selectedCommits
             self.filterParams = FilterParams(body, process_body=True)
             self.setup_filters()
 
             is_all_selected = len(selected_commits) == 0
+        except ValidationError as e:
+            return create_error_response(e.json())
         except json.JSONDecodeError:
-            return HttpResponseBadRequest(
-                getErrorResponseBody(
-                    "Invalid body, request body must be a valid json string"
-                )
+            return create_error_response(
+                "Invalid body, request body must be a valid json string"
             )
         except (ValueError, TypeError):
-            return HttpResponseBadRequest(
-                getErrorResponseBody("limitTimestampInSeconds must be a Unix Timestamp")
+            return create_error_response(
+                "limitTimestampInSeconds must be a Unix Timestamp"
             )
 
         cache_params = {
