@@ -13,10 +13,17 @@ const HardwareCommitNavigationGraph = ({
   trees,
   hardwareId,
 }: ICommitNavigationGraph): React.ReactNode => {
-  const { diffFilter, treeIndexes, origin, currentPageTab, treeCommits } =
-    useSearch({
-      from: '/hardware/$hardwareId',
-    });
+  const {
+    diffFilter,
+    treeIndexes,
+    origin,
+    currentPageTab,
+    treeCommits,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+  } = useSearch({
+    from: '/hardware/$hardwareId',
+  });
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
@@ -57,6 +64,8 @@ const HardwareCommitNavigationGraph = ({
       onMarkClick={markClickHandle}
       diffFilter={diffFilterWithHardware}
       currentPageTab={currentPageTab}
+      endTimestampInSeconds={endTimestampInSeconds}
+      startTimestampInSeconds={startTimestampInSeconds}
     />
   );
 };

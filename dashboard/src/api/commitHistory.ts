@@ -18,6 +18,8 @@ const fetchCommitHistory = async (
   gitUrl: string,
   gitBranch: string,
   filters: TTreeDetailsFilter,
+  startTimestampInSeconds: number | undefined,
+  endTimestampInSeconds: number | undefined,
 ): Promise<TTreeCommitHistoryResponse> => {
   const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
 
@@ -25,6 +27,8 @@ const fetchCommitHistory = async (
     origin,
     git_url: gitUrl,
     git_branch: gitBranch,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
     ...filtersFormatted,
   };
 
@@ -44,12 +48,16 @@ export const useCommitHistory = (
     gitUrl,
     gitBranch,
     filter,
+    endTimestampInSeconds,
+    startTimestampInSeconds,
   }: {
     commitHash: string;
     origin: string;
     gitUrl: string;
     gitBranch: string;
     filter: TTreeDetailsFilter | TFilter;
+    startTimestampInSeconds?: number;
+    endTimestampInSeconds?: number;
   },
   { enabled = true },
 ): UseQueryResult<TTreeCommitHistoryResponse> => {
@@ -69,9 +77,19 @@ export const useCommitHistory = (
       gitUrl,
       gitBranch,
       filters,
+      startTimestampInSeconds,
+      endTimestampInSeconds,
     ],
     enabled,
     queryFn: () =>
-      fetchCommitHistory(commitHash, origin, gitUrl, gitBranch, filters),
+      fetchCommitHistory(
+        commitHash,
+        origin,
+        gitUrl,
+        gitBranch,
+        filters,
+        startTimestampInSeconds,
+        endTimestampInSeconds,
+      ),
   });
 };
