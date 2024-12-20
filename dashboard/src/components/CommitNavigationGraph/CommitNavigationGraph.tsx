@@ -25,6 +25,8 @@ interface ICommitNavigationGraph {
   gitBranch?: string;
   headCommitHash?: string;
   treeId?: string;
+  startTimestampInSeconds?: number;
+  endTimestampInSeconds?: number;
   onMarkClick: (commitHash: string, commitName?: string) => void;
 }
 const CommitNavigationGraph = ({
@@ -36,6 +38,8 @@ const CommitNavigationGraph = ({
   headCommitHash,
   treeId,
   onMarkClick,
+  endTimestampInSeconds,
+  startTimestampInSeconds,
 }: ICommitNavigationGraph): JSX.Element => {
   const { formatMessage } = useIntl();
 
@@ -48,6 +52,8 @@ const CommitNavigationGraph = ({
       commitHash: headCommitHash ?? '',
       origin: origin,
       filter: reqFilter,
+      endTimestampInSeconds,
+      startTimestampInSeconds,
     },
     {
       enabled: !!gitBranch && !!gitUrl,
