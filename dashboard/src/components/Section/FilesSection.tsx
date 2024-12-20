@@ -11,13 +11,16 @@ export const getFilesSection = ({
   outputFiles?: object;
   title: string;
 }): ISection | undefined => {
-  if (!inputFiles && !outputFiles) {
+  if (
+    (!inputFiles || Object.keys(inputFiles).length === 0) &&
+    (!outputFiles || Object.keys(outputFiles).length === 0)
+  ) {
     return;
   }
 
   const filesSubsections: ISubsection[] = [];
 
-  if (inputFiles) {
+  if (inputFiles && Object.keys(inputFiles).length > 0) {
     const inputFilesInfo: SubsectionLink[] = [];
     if (Array.isArray(inputFiles)) {
       inputFiles.forEach(file => {
@@ -33,7 +36,7 @@ export const getFilesSection = ({
     }
   }
 
-  if (outputFiles) {
+  if (outputFiles && Object.keys(outputFiles).length > 0) {
     const outputFilesInfo: SubsectionLink[] = [];
     if (Array.isArray(outputFiles)) {
       outputFiles.forEach(file => {

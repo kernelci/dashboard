@@ -11,7 +11,7 @@ export const getMiscSection = ({
   misc?: object;
   title: string;
 }): ISection | undefined => {
-  if (!misc) {
+  if (!misc || Object.keys(misc).length === 0) {
     return;
   }
 
