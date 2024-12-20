@@ -22,7 +22,7 @@ import type { TreeTableBody } from '@/types/tree/Tree';
 import type { HardwareTableItem } from '@/types/hardware';
 
 import { Button } from '@/components/ui/button';
-import type { Trees } from '@/types/hardware/hardwareDetails';
+import type { PreparedTrees, Trees } from '@/types/hardware/hardwareDetails';
 
 import { ItemsPerPageSelector } from './TableInfo';
 
@@ -34,6 +34,7 @@ interface IPaginationInfo {
     | Table<AccordionItemBuilds>
     | Table<TreeTableBody>
     | Table<HardwareTableItem>
+    | Table<PreparedTrees>
     | Table<Trees>;
   intlLabel: MessagesKey;
 }

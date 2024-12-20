@@ -12,14 +12,19 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
+
+import { useNavigate } from '@tanstack/react-router';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
-import type { Trees } from '@/types/hardware/hardwareDetails';
+import type {
+  CommitHistory,
+  PreparedTrees,
+} from '@/types/hardware/hardwareDetails';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { sanitizeTableValue } from '@/components/Table/tableUtils';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
@@ -28,16 +33,110 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { GroupedTestStatus } from '@/components/Status/Status';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { LoadingCircle } from '@/components/ui/loading-circle';
 
 const DEBOUNCE_INTERVAL = 2000;
 
 interface IHardwareHeader {
-  treeItems: Trees[];
+  treeItems: PreparedTrees[];
   selectedIndexes?: number[];
   updateTreeFilters: (selectedIndexes: number[]) => void;
 }
 
-const columns: ColumnDef<Trees>[] = [
+const CommitSelector = ({
+  headCommitHash,
+  headCommitName,
+  selectableCommits,
+  isCommitsLoading,
+  treeIndex,
+  rowLength,
+  isMainPageLoading,
+}: {
+  headCommitName?: string;
+  headCommitHash?: string;
+  selectableCommits: CommitHistory[];
+  isCommitsLoading: boolean;
+  isMainPageLoading: boolean;
+  treeIndex: string;
+  rowLength: number;
+}): JSX.Element => {
+  const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
+
+  const navigateToThePast = useCallback(
+    (commitHash: string) => {
+      if (treeIndex === null) return;
+      navigate({
+        search: current => {
+          const parsedTreeIndex =
+            current.treeIndexes?.length ?? 0 > 0
+              ? current.treeIndexes
+              : Array.from(Array(rowLength).keys());
+          return {
+            ...current,
+            treeCommits: { ...current.treeCommits, [treeIndex]: commitHash },
+            treeIndexes: parsedTreeIndex,
+          };
+        },
+      });
+    },
+    [navigate, rowLength, treeIndex],
+  );
+
+  const sortedSelectableCommits = useMemo(() => {
+    return selectableCommits.sort(
+      (a, b) =>
+        new Date(b.start_time).getTime() - new Date(a.start_time).getTime(),
+    );
+  }, [selectableCommits]);
+
+  if (selectableCommits.length < 1 || isCommitsLoading) {
+    return (
+      <Tooltip>
+        <TooltipTrigger>
+          <div className="flex items-center gap-4">
+            {sanitizeTableValue(headCommitName, false)}
+            {isCommitsLoading && <LoadingCircle />}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <>{headCommitHash}</>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+  return (
+    <div className="flex items-center gap-4">
+      <Select onValueChange={navigateToThePast} disabled={isMainPageLoading}>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder={headCommitHash} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {sortedSelectableCommits.map(commit => (
+              <SelectItem
+                key={commit.git_commit_hash}
+                value={commit.git_commit_hash}
+              >
+                {commit.git_commit_hash} - {commit.start_time}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+      {isMainPageLoading && <LoadingCircle />}
+    </div>
+  );
+};
+
+const columns: ColumnDef<PreparedTrees>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -86,13 +185,16 @@ const columns: ColumnDef<Trees>[] = [
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="globalTable.commitTag" />
     ),
-    cell: ({ row }): JSX.Element => (
-      <Tooltip>
-        <TooltipTrigger>
-          {sanitizeTableValue(row.getValue('headGitCommitName'), false)}
-        </TooltipTrigger>
-        <TooltipContent>{row.original.headGitCommitHash}</TooltipContent>
-      </Tooltip>
+    cell: ({ row, table }): JSX.Element => (
+      <CommitSelector
+        headCommitName={row.original.headGitCommitName}
+        headCommitHash={row.original.headGitCommitHash}
+        selectableCommits={row.original.selectableCommits}
+        isCommitsLoading={row.original.isCommitHistoryDataLoading}
+        treeIndex={row.original.index}
+        rowLength={table.getCoreRowModel().rows.length}
+        isMainPageLoading={row.original.isMainPageLoading}
+      />
     ),
   },
   {

@@ -14,9 +14,17 @@ import {
 } from '@/components/Breadcrumb/Breadcrumb';
 
 import { Skeleton } from '@/components/Skeleton';
-import { useHardwareDetails } from '@/api/hardwareDetails';
+import {
+  useHardwareDetails,
+  useHardwareDetailsCommitHistory,
+} from '@/api/hardwareDetails';
 
-import type { Trees } from '@/types/hardware/hardwareDetails';
+import type {
+  CommitHead,
+  CommitHistoryTable,
+  PreparedTrees,
+  Trees,
+} from '@/types/hardware/hardwareDetails';
 
 import MemoizedCompatibleHardware from '@/components/Cards/CompatibleHardware';
 
@@ -33,21 +41,46 @@ import type { TFilter } from '@/types/general';
 
 import { getFormattedDate, getFormattedTime } from '@/utils/date';
 
+import { makeTreeIdentifierKey } from '@/utils/trees';
+
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsFilter from './HardwareDetailsFilter';
 
-const sanitizeTreeItems = (treeItems: Trees[]): Trees[] =>
-  treeItems.map(tree => ({
-    treeName: tree['treeName'] ?? '-',
-    gitRepositoryBranch: tree['gitRepositoryBranch'] ?? '-',
-    headGitCommitName: tree['headGitCommitName'] ?? '-',
-    headGitCommitHash: tree['headGitCommitHash'] ?? '-',
-    gitRepositoryUrl: tree['gitRepositoryUrl'] ?? '-',
-    index: tree['index'],
-    selectedCommitStatusSummary: tree['selectedCommitStatusSummary'],
-  }));
+const prepareTreeItems = ({
+  isCommitHistoryDataLoading,
+  treeItems,
+  commitHistoryData,
+  isMainPageLoading,
+}: {
+  isCommitHistoryDataLoading: boolean;
+  treeItems?: Trees[];
+  commitHistoryData?: CommitHistoryTable;
+  isMainPageLoading: boolean;
+}): PreparedTrees[] | void =>
+  treeItems?.map(tree => {
+    const treeIdentifier = makeTreeIdentifierKey({
+      treeName: tree.treeName ?? '',
+      gitRepositoryBranch: tree.gitRepositoryBranch ?? '',
+      gitRepositoryUrl: tree.gitRepositoryUrl ?? '',
+    });
+
+    const result = {
+      treeName: tree['treeName'] ?? '-',
+      gitRepositoryBranch: tree['gitRepositoryBranch'] ?? '-',
+      headGitCommitName: tree['headGitCommitName'] ?? '-',
+      headGitCommitHash: tree['headGitCommitHash'] ?? '-',
+      gitRepositoryUrl: tree['gitRepositoryUrl'] ?? '-',
+      index: tree['index'],
+      selectedCommitStatusSummary: tree['selectedCommitStatusSummary'],
+      selectableCommits: commitHistoryData?.[treeIdentifier] ?? [],
+      isCommitHistoryDataLoading,
+      isMainPageLoading: isMainPageLoading,
+    };
+
+    return result;
+  });
 
 function HardwareDetails(): JSX.Element {
   const {
@@ -112,6 +145,35 @@ function HardwareDetails(): JSX.Element {
     treeCommits,
   );
 
+  const hardwareTableForCommitHistory = useMemo(() => {
+    const result: CommitHead[] = [];
+    if (!isLoading && data) {
+      data?.trees.forEach(tree => {
+        const commitHead: CommitHead = {
+          treeName: tree.treeName ?? '',
+          repositoryUrl: tree.gitRepositoryUrl ?? '',
+          branch: tree.gitRepositoryBranch ?? '',
+          commitHash: tree.headGitCommitHash ?? '',
+        };
+
+        result.push(commitHead);
+      });
+    }
+    return result;
+  }, [data, isLoading]);
+
+  const { isLoading: commitHistoryIsLoading, data: commitHistoryData } =
+    useHardwareDetailsCommitHistory(
+      {
+        origin,
+        hardwareId,
+        endTimestampInSeconds,
+        startTimestampInSeconds,
+        commitHeads: hardwareTableForCommitHistory,
+      },
+      { enabled: !isLoading && !!data },
+    );
+
   const filterListElement = useMemo(
     () => (
       <DetailsFilterList
@@ -167,8 +229,20 @@ function HardwareDetails(): JSX.Element {
   }, [data?.boots, data?.builds, data?.tests]);
 
   const treeData = useMemo(
-    () => sanitizeTreeItems(data?.trees || []),
-    [data?.trees],
+    () =>
+      prepareTreeItems({
+        isCommitHistoryDataLoading: commitHistoryIsLoading,
+        treeItems: data?.trees,
+        commitHistoryData: commitHistoryData?.commitHistoryTable,
+        isMainPageLoading: isPlaceholderData || isLoading,
+      }),
+    [
+      commitHistoryIsLoading,
+      data?.trees,
+      commitHistoryData?.commitHistoryTable,
+      isPlaceholderData,
+      isLoading,
+    ],
   );
 
   if (isLoading || !data)
@@ -220,17 +294,21 @@ function HardwareDetails(): JSX.Element {
         </p>
       </div>
       <div className="mt-5">
-        <HardwareHeader
-          treeItems={treeData}
-          selectedIndexes={treeIndexes}
-          updateTreeFilters={updateTreeFilters}
-        />
-        <div className="mt-5">
-          <MemoizedCompatibleHardware
-            title={<FormattedMessage id="hardwareDetails.compatibles" />}
-            compatibles={data.compatibles}
-          />
-        </div>
+        {!!treeData && (
+          <>
+            <HardwareHeader
+              treeItems={treeData}
+              selectedIndexes={treeIndexes}
+              updateTreeFilters={updateTreeFilters}
+            />
+            <div className="mt-5">
+              <MemoizedCompatibleHardware
+                title={<FormattedMessage id="hardwareDetails.compatibles" />}
+                compatibles={data.compatibles}
+              />
+            </div>
+          </>
+        )}
         <div className="flex flex-col pb-2">
           <div className="sticky top-[4.5rem] z-10">
             <div className="absolute right-0 top-2 py-4">
