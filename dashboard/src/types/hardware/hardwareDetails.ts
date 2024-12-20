@@ -58,6 +58,12 @@ export type Trees = {
   index: string;
 };
 
+export type PreparedTrees = Trees & {
+  selectableCommits: CommitHistory[];
+  isCommitHistoryDataLoading: boolean;
+  isMainPageLoading: boolean;
+};
+
 export type THardwareDetails = {
   builds: BuildsData;
   tests: Tests;
@@ -81,3 +87,24 @@ export interface THardwareDetailsFilter
 
 export const zTreeCommits = z.record(z.string()).default({});
 export type TTreeCommits = z.infer<typeof zTreeCommits>;
+
+export type CommitHead = {
+  treeName: string;
+  repositoryUrl: string;
+  branch: string;
+  commitHash: string;
+};
+
+export type CommitHistory = {
+  git_commit_hash: string;
+  git_repository_branch: string;
+  git_repository_url: string;
+  start_time: string;
+  tree_name: string;
+};
+
+export type CommitHistoryTable = Record<string, CommitHistory[]>;
+
+export type CommitHistoryResponse = {
+  commitHistoryTable: CommitHistoryTable;
+};

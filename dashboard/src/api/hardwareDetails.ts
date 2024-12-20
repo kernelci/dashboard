@@ -2,6 +2,9 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 
 import type {
+  CommitHead,
+  CommitHistoryResponse,
+  CommitHistoryTable,
   THardwareDetails,
   THardwareDetailsFilter,
   TTreeCommits,
@@ -98,5 +101,53 @@ export const useHardwareDetails = (
     queryKey: ['HardwareDetails', hardwareId, body],
     queryFn: () => fetchHardwareDetails(hardwareId, body),
     placeholderData: previousData => previousData,
+  });
+};
+
+type FetchHardwareDetailsCommitHistoryBody = {
+  origin: string;
+  startTimestampInSeconds: number;
+  endTimestampInSeconds: number;
+  commitHeads: CommitHead[];
+};
+
+const fetchCommitHistory = async (
+  hardwareId: string,
+  body: FetchHardwareDetailsCommitHistoryBody,
+): Promise<CommitHistoryTable> => {
+  const res = await http.post<CommitHistoryTable>(
+    `/api/hardware/${hardwareId}/commit-history`,
+    body,
+  );
+  return res.data;
+};
+
+export const useHardwareDetailsCommitHistory = (
+  {
+    hardwareId,
+    origin,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+    commitHeads,
+  }: {
+    hardwareId: string;
+    origin: string;
+    startTimestampInSeconds: number;
+    endTimestampInSeconds: number;
+    commitHeads: CommitHead[];
+  },
+  { enabled } = { enabled: true },
+): UseQueryResult<CommitHistoryResponse> => {
+  const body: FetchHardwareDetailsCommitHistoryBody = {
+    origin,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+    commitHeads,
+  };
+
+  return useQuery({
+    queryKey: ['CommitHistory', hardwareId, body],
+    queryFn: () => fetchCommitHistory(hardwareId, body),
+    enabled,
   });
 };
