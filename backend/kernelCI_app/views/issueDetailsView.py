@@ -23,12 +23,13 @@ class IssueDetails(View):
             "misc",
         ]
 
-        query = Issues.objects.values(*issue_fields).filter(
-            id=issue_id, version=version
+        query = (
+            Issues.objects.values(*issue_fields)
+            .filter(id=issue_id, version=version)
+            .first()
         )
-        if len(query) == 0:
-            return None
-        return query[0]
+
+        return query
 
     def get(self, _request, issue_id: Optional[str], version: Optional[str]):
         missing_params = []
