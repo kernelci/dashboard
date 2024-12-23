@@ -1,6 +1,18 @@
-from pydantic import BaseModel, Field
-from typing import Dict, Optional, Union, List
 from datetime import datetime
+from typing import Annotated, Any, Dict, List, Optional, Union
+
+from kernelCI_app.typeModels.databases import StatusValues
+from pydantic import BaseModel, BeforeValidator, Field
+
+
+def process_status(value: Any) -> Any:
+    if value is None:
+        return "NULL"
+    return value
+
+
+class DefaultRecordValues(BaseModel):
+    status: Annotated[StatusValues, BeforeValidator(process_status)]
 
 
 class PostBody(BaseModel):

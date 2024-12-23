@@ -20,7 +20,7 @@ from kernelCI_app.helpers.misc import (
     handle_environment_misc,
     env_misc_value_or_default
 )
-from kernelCI_app.typeModels.hardwareDetails import PostBody
+from kernelCI_app.typeModels.hardwareDetails import PostBody, DefaultRecordValues
 from pydantic import ValidationError
 
 DEFAULT_DAYS_INTERVAL = 3
@@ -268,7 +268,7 @@ class HardwareDetails(View):
         return test_filter_pass
 
     def handle_test(self, record, tests):
-        status = record["status"] or "NULL"
+        status = record["status"]
 
         tests["history"].append(get_history(record))
         tests["statusSummary"][status] += 1
@@ -343,6 +343,11 @@ class HardwareDetails(View):
         builds = {"items": [], "issues": {}, "failedWithUnknownIssues": 0}
 
         for record in records:
+            try:
+                validatedRecord = DefaultRecordValues(**record)
+                record["status"] = validatedRecord.status
+            except ValidationError:
+                continue
             current_tree = get_record_tree(record, trees)
             if not current_tree:
                 log_message(f"Tree not found for record: {record}")
