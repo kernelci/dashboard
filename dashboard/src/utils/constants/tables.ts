@@ -8,4 +8,5 @@ export type TableKeys =
   | 'hardwareDetailsBoots'
   | 'hardwareDetailsTests'
   | 'hardwareDetailsTrees'
-  | 'buildDetailsTests';
+  | 'buildDetailsTests'
+  | 'issueDetailsTests';
