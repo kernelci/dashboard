@@ -2,6 +2,8 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo } from 'react';
 
+import type { LinkProps } from '@tanstack/react-router';
+
 import SectionGroup from '@/components/Section/SectionGroup';
 import type { ISection } from '@/components/Section/Section';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
@@ -14,16 +16,28 @@ import { getMiscSection } from '@/components/Section/MiscSection';
 
 import { useIssueDetails } from '@/api/issueDetails';
 
+import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
+
+import { IssueDetailsTestSection } from './IssueDetailsTestSection';
+
 interface IIssueDetails {
   issueId: string;
   versionNumber: string;
+  tableFilter: TableFilter;
+  onClickTestFilter: (filter: TestsTableFilter) => void;
+  getTestTableRowLink: (testId: string) => LinkProps;
 }
 
 export const IssueDetails = ({
   issueId,
   versionNumber,
+  tableFilter,
+  onClickTestFilter,
+  getTestTableRowLink,
 }: IIssueDetails): JSX.Element => {
   const { data, error, isLoading } = useIssueDetails(issueId, versionNumber);
+
+  const hasTest = data && data.test_status !== null;
 
   const { formatMessage } = useIntl();
 
@@ -136,6 +150,15 @@ export const IssueDetails = ({
   return (
     <ErrorBoundary FallbackComponent={UnexpectedError}>
       <SectionGroup sections={sectionsData} />
+      {hasTest && (
+        <IssueDetailsTestSection
+          issueId={issueId}
+          versionNumber={versionNumber}
+          testTableFilter={tableFilter.testsTable}
+          getTableRowLink={getTestTableRowLink}
+          onClickFilter={onClickTestFilter}
+        />
+      )}
     </ErrorBoundary>
   );
 };
