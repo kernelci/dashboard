@@ -12,15 +12,30 @@ type INavLink = LinkProps & {
   icon: JSX.Element;
   href?: string;
   asTag?: string;
+  selected?: boolean;
 };
 
-const NavLink = ({ icon, idIntl, asTag, ...props }: INavLink): JSX.Element => {
+const NavLink = ({
+  selected = false,
+  icon,
+  idIntl,
+  asTag,
+  ...props
+}: INavLink): JSX.Element => {
   const LinkElement = asTag ?? Link;
+
+  const baseClassName =
+    'items-center hover:text-sky-500 w-full flex pl-5 py-4 cursor-pointer';
+
+  const selectedItemClassName =
+    'text-sky-500 bg-black border-l-4 border-sky-500';
+
+  const notSelectedItemClassName = 'text-white';
 
   return (
     <NavigationMenuLink asChild>
       <LinkElement
-        className="flex items-center no-underline hover:text-sky-500"
+        className={`${baseClassName} ${selected ? selectedItemClassName : notSelectedItemClassName}`}
         {...props}
       >
         <span className="mr-3">{icon}</span>

@@ -51,21 +51,12 @@ type SideMenuItemProps = {
 const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
   const { pathname } = useLocation();
 
-  const selectedItemClassName =
-    'w-full flex pl-5 py-4 cursor-pointer text-sky-500 bg-black border-l-4 border-sky-500';
-  const notSelectedItemClassName =
-    'w-full flex pl-5 py-4 cursor-pointer text-white';
-
   const isCurrentPath = pathname.startsWith(item.navigateTo);
 
   return (
-    <NavigationMenuItem
-      className={
-        isCurrentPath ? selectedItemClassName : notSelectedItemClassName
-      }
-      key={item.idIntl}
-    >
+    <NavigationMenuItem key={item.idIntl} className="w-full">
       <NavLink
+        selected={isCurrentPath}
         to={item.navigateTo}
         search={prevSearch => ({
           origin: prevSearch.origin,
@@ -78,9 +69,6 @@ const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
 };
 
 const SideMenu = (): JSX.Element => {
-  const notSelectedItemClassName =
-    'w-full flex pl-5 py-4 cursor-pointer text-white';
-
   const routeItems: RouteMenuItems[] = [
     {
       navigateTo: '/tree',
@@ -99,10 +87,7 @@ const SideMenu = (): JSX.Element => {
   const linksItemElements = useMemo(
     () =>
       linkItems.map(item => (
-        <NavigationMenuItem
-          className={notSelectedItemClassName}
-          key={item.idIntl}
-        >
+        <NavigationMenuItem key={item.idIntl} className="w-full">
           <NavLink
             asTag="a"
             icon={item.icon}
@@ -132,7 +117,7 @@ const SideMenu = (): JSX.Element => {
         ))}
         <Separator className="my-4 bg-onSecondary-10" />
         {linksItemElements}
-        <SendFeedback className={notSelectedItemClassName} />
+        <SendFeedback className="w-full" />
       </NavigationMenuList>
     </NavigationMenu>
   );
