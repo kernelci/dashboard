@@ -1,9 +1,7 @@
 from typing import Optional, Dict, List, TypedDict, Literal, Any
 from django.http import HttpResponseBadRequest
 import re
-from kernelCI_app.utils import (
-    getErrorResponseBody
-)
+from kernelCI_app.utils import getErrorResponseBody
 
 UNKNOWN_STRING = "Unknown"
 NULL_STRINGS = set(["null", UNKNOWN_STRING, "NULL"])
@@ -114,11 +112,7 @@ class FilterParams:
         self.filterTestPath = ""
         self.filterBootPath = ""
         self.filterBuildValid = set()
-        self.filterIssues = {
-            "build": set(),
-            "boot": set(),
-            "test": set()
-        }
+        self.filterIssues = {"build": set(), "boot": set(), "test": set()}
         self.filterPlatforms = {
             "build": set(),
             "boot": set(),
@@ -206,11 +200,11 @@ class FilterParams:
             self.filterBuildDurationMin = toIntOrDefault(value, None)
 
     def _handle_issues(self, current_filter: ParsedFilter) -> None:
-        tab = current_filter["field"].split('.')[0]
+        tab = current_filter["field"].split(".")[0]
         self.filterIssues[tab].add(current_filter["value"])
 
     def _handle_platforms(self, current_filter: ParsedFilter) -> None:
-        tab = current_filter["field"].split('.')[0]
+        tab = current_filter["field"].split(".")[0]
         self.filterPlatforms[tab].add(current_filter["value"])
 
     def _processFilters(self):
@@ -308,56 +302,64 @@ class FilterParams:
 
         for f in self.filters:
             field = f["field"]
-            value = f['value']
+            value = f["value"]
             if field not in grouped_filters:
                 grouped_filters[field] = f
-            elif type(grouped_filters[field]['value']) is str:
-                grouped_filters[field]['value'] = [grouped_filters[field]['value'], value]
+            elif type(grouped_filters[field]["value"]) is str:
+                grouped_filters[field]["value"] = [
+                    grouped_filters[field]["value"],
+                    value,
+                ]
             else:
-                grouped_filters[field]['value'].append(value)
+                grouped_filters[field]["value"].append(value)
 
         return grouped_filters
 
     def is_build_filtered_out(
-            self, *,
-            duration: Optional[int],
-            valid: Optional[bool],
-            issue_id: Optional[str],
-            platform: Optional[str] = None,
+        self,
+        *,
+        duration: Optional[int],
+        valid: Optional[bool],
+        issue_id: Optional[str],
+        platform: Optional[str] = None,
     ) -> bool:
         return (
-            len(self.filterBuildValid) > 0
-            and (str(valid).lower() not in self.filterBuildValid)
-        ) or (
-            (self.filterBuildDurationMax is not None or self.filterBuildDurationMin is not None)
-            and duration is None
-        ) or (
-            self.filterBuildDurationMax is not None and (
-                toIntOrDefault(duration, 0) > self.filterBuildDurationMax
+            (
+                len(self.filterBuildValid) > 0
+                and (str(valid).lower() not in self.filterBuildValid)
             )
-        ) or (
-            self.filterBuildDurationMin is not None and (
-                toIntOrDefault(duration, 0) < self.filterBuildDurationMin
+            or (
+                (
+                    self.filterBuildDurationMax is not None
+                    or self.filterBuildDurationMin is not None
+                )
+                and duration is None
             )
-        ) or (
-            len(self.filterIssues["build"]) > 0
-            and (
-                issue_id not in self.filterIssues["build"]
-                or valid is True
+            or (
+                self.filterBuildDurationMax is not None
+                and (toIntOrDefault(duration, 0) > self.filterBuildDurationMax)
             )
-        ) or (
-            len(self.filterPlatforms["build"]) > 0
-            and (
-                platform not in self.filterPlatforms["build"]
+            or (
+                self.filterBuildDurationMin is not None
+                and (toIntOrDefault(duration, 0) < self.filterBuildDurationMin)
+            )
+            or (
+                len(self.filterIssues["build"]) > 0
+                and (issue_id not in self.filterIssues["build"] or valid is True)
+            )
+            or (
+                len(self.filterPlatforms["build"]) > 0
+                and (platform not in self.filterPlatforms["build"])
             )
         )
 
     def is_record_filtered_out(
-            self, *,
-            hardwares: Optional[List[str]] = None,
-            architecture: Optional[str],
-            compiler: Optional[str],
-            config_name: Optional[str]
+        self,
+        *,
+        hardwares: Optional[List[str]] = None,
+        architecture: Optional[str],
+        compiler: Optional[str],
+        config_name: Optional[str],
     ) -> bool:
         hardware_compatibles = [UNKNOWN_STRING]
         record_architecture = UNKNOWN_STRING
@@ -396,22 +398,19 @@ class FilterParams:
         return False
 
     def is_boot_filtered_out(
-            self, *,
-            path: Optional[str],
-            status: Optional[str],
-            duration: Optional[int],
-            issue_id: Optional[str] = None,
-            incident_test_id: Optional[str] = "incident_test_id",
-            platform: Optional[str] = None,
+        self,
+        *,
+        path: Optional[str],
+        status: Optional[str],
+        duration: Optional[int],
+        issue_id: Optional[str] = None,
+        incident_test_id: Optional[str] = "incident_test_id",
+        platform: Optional[str] = None,
     ) -> bool:
         if (
-            (
-                self.filterBootPath != ""
-                and (self.filterBootPath not in path)
-            )
+            (self.filterBootPath != "" and (self.filterBootPath not in path))
             or (
-                len(self.filterBootStatus) > 0
-                and (status not in self.filterBootStatus)
+                len(self.filterBootStatus) > 0 and (status not in self.filterBootStatus)
             )
             or (
                 (
@@ -422,25 +421,18 @@ class FilterParams:
             )
             or (
                 self.filterBootDurationMax is not None
-                and (
-                    toIntOrDefault(duration, 0) > self.filterBootDurationMax
-                )
+                and (toIntOrDefault(duration, 0) > self.filterBootDurationMax)
             )
             or (
                 self.filterBootDurationMin is not None
-                and (
-                    toIntOrDefault(duration, 0) < self.filterBootDurationMin
-                )
+                and (toIntOrDefault(duration, 0) < self.filterBootDurationMin)
             )
             or should_filter_test_issue(
-                self.filterIssues["boot"],
-                issue_id,
-                incident_test_id
-            ) or (
+                self.filterIssues["boot"], issue_id, incident_test_id
+            )
+            or (
                 len(self.filterPlatforms["boot"]) > 0
-                and (
-                    platform not in self.filterPlatforms["boot"]
-                )
+                and (platform not in self.filterPlatforms["boot"])
             )
         ):
             return True
@@ -448,22 +440,19 @@ class FilterParams:
         return False
 
     def is_test_filtered_out(
-            self, *,
-            path: Optional[str],
-            status: Optional[str],
-            duration: Optional[int],
-            issue_id: Optional[str] = None,
-            incident_test_id: Optional[str] = "incident_test_id",
-            platform: Optional[str] = None,
+        self,
+        *,
+        path: Optional[str],
+        status: Optional[str],
+        duration: Optional[int],
+        issue_id: Optional[str] = None,
+        incident_test_id: Optional[str] = "incident_test_id",
+        platform: Optional[str] = None,
     ) -> bool:
         if (
-            (
-                self.filterTestPath != ""
-                and (self.filterTestPath not in path)
-            )
+            (self.filterTestPath != "" and (self.filterTestPath not in path))
             or (
-                len(self.filterTestStatus) > 0
-                and (status not in self.filterTestStatus)
+                len(self.filterTestStatus) > 0 and (status not in self.filterTestStatus)
             )
             or (
                 (
@@ -474,25 +463,18 @@ class FilterParams:
             )
             or (
                 self.filterTestDurationMax is not None
-                and (
-                    toIntOrDefault(duration, 0) > self.filterTestDurationMax
-                )
+                and (toIntOrDefault(duration, 0) > self.filterTestDurationMax)
             )
             or (
                 self.filterTestDurationMin is not None
-                and (
-                    toIntOrDefault(duration, 0) < self.filterTestDurationMin
-                )
+                and (toIntOrDefault(duration, 0) < self.filterTestDurationMin)
             )
             or should_filter_test_issue(
-                self.filterIssues["test"],
-                issue_id,
-                incident_test_id
-            ) or (
+                self.filterIssues["test"], issue_id, incident_test_id
+            )
+            or (
                 len(self.filterPlatforms["test"]) > 0
-                and (
-                    platform not in self.filterPlatforms["test"]
-                )
+                and (platform not in self.filterPlatforms["test"])
             )
         ):
             return True
