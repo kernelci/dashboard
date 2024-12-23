@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { TIssueDetails } from '@/types/issueDetails';
 
-import type { TestHistory } from '@/types/general';
+import type { BuildsTableBuild, TestHistory } from '@/types/general';
 
 import http from './api';
 
@@ -46,5 +46,26 @@ export const useIssueDetailsTests = (
   return useQuery({
     queryKey: ['issueTestsData', issueId, versionNumber],
     queryFn: () => fetchIssueDetailsTests(issueId, versionNumber),
+  });
+};
+
+const fetchIssueDetailsBuilds = async (
+  issueId: string,
+  versionNumber: string,
+): Promise<BuildsTableBuild[]> => {
+  const res = await http.get(
+    `/api/issue/${issueId}/version/${versionNumber}/builds`,
+  );
+
+  return res.data;
+};
+
+export const useIssueDetailsBuilds = (
+  issueId: string,
+  versionNumber: string,
+): UseQueryResult<BuildsTableBuild[]> => {
+  return useQuery({
+    queryKey: ['issueBuildsData', issueId, versionNumber],
+    queryFn: () => fetchIssueDetailsBuilds(issueId, versionNumber),
   });
 };
