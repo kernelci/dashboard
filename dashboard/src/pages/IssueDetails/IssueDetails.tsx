@@ -4,10 +4,11 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { useCallback } from 'react';
 
 import { IssueDetails } from '@/components/IssueDetails/IssueDetails';
-import {
-  zTableFilterInfoDefault,
-  type TestsTableFilter,
+import type {
+  BuildsTableFilter,
+  TestsTableFilter,
 } from '@/types/tree/TreeDetails';
+import { zTableFilterInfoDefault } from '@/types/tree/TreeDetails';
 
 const CURRENT_ROUTE = '/issue/$issueId/version/$versionNumber';
 
@@ -44,6 +45,34 @@ const IssueDetailsPage = (): JSX.Element => {
     [navigate],
   );
 
+  const getBuildTableRowLink = useCallback(
+    (buildId: string): LinkProps => ({
+      to: '/build/$buildId',
+      params: {
+        buildId: buildId,
+      },
+      search: s => s,
+    }),
+    [],
+  );
+
+  const onClickBuildFilter = useCallback(
+    (filter: BuildsTableFilter): void => {
+      navigate({
+        search: previousParams => {
+          return {
+            ...previousParams,
+            tableFilter: {
+              ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
+              buildsTable: filter,
+            },
+          };
+        },
+      });
+    },
+    [navigate],
+  );
+
   return (
     <IssueDetails
       issueId={issueId}
@@ -51,6 +80,8 @@ const IssueDetailsPage = (): JSX.Element => {
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       onClickTestFilter={onClickTestFilter}
       getTestTableRowLink={getTestTableRowLink}
+      onClickBuildFilter={onClickBuildFilter}
+      getBuildTableRowLink={getBuildTableRowLink}
     />
   );
 };

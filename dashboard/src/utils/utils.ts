@@ -8,6 +8,7 @@ import type {
 import type {
   Architecture,
   BuildsTabBuild,
+  BuildsTableBuild,
   BuildStatus,
   StatusCount,
 } from '@/types/general';
@@ -113,8 +114,14 @@ export const sanitizePlatforms = (
   }
 };
 
-const isBuildError = (build: BuildsTabBuild): number => {
-  return build.valid || build.valid === null ? 0 : 1;
+const isBuildError = (build_valid: boolean | null): number => {
+  return build_valid || build_valid === null ? 0 : 1;
+};
+
+const getBuildStatus = (
+  build_valid: boolean | null,
+): AccordionItemBuilds['status'] => {
+  return build_valid === null ? 'null' : build_valid ? 'valid' : 'invalid';
 };
 
 export const sanitizeBuilds = (
@@ -131,8 +138,8 @@ export const sanitizeBuilds = (
     date: build.start_time,
     buildTime: build.duration,
     compiler: build.compiler === UNKNOWN_STRING ? undefined : build.compiler,
-    buildErrors: isBuildError(build),
-    status: build.valid === null ? 'null' : build.valid ? 'valid' : 'invalid',
+    buildErrors: isBuildError(build.valid),
+    status: getBuildStatus(build.valid),
     buildLogs: build.log_url,
     kernelConfig: build.config_url,
     kernelImage: build.misc ? build.misc['kernel_type'] : undefined,
@@ -140,6 +147,22 @@ export const sanitizeBuilds = (
     systemMap: build.misc ? build.misc['system_map'] : undefined,
     modules: build.misc ? build.misc['modules'] : undefined,
     treeBranch: `${sanitizeTableValue(build.tree_name)} / ${sanitizeTableValue(build.git_repository_branch)}`,
+  }));
+};
+
+export const sanitizeBuildTable = (
+  builds: BuildsTableBuild[],
+): AccordionItemBuilds[] => {
+  return builds.map(build => ({
+    id: build.id,
+    config: build.config_name,
+    architecture: build.architecture,
+    date: build.start_time,
+    buildTime: build.duration,
+    compiler: build.compiler,
+    buildErrors: isBuildError(build.valid),
+    status: getBuildStatus(build.valid),
+    buildLogs: build.log_url,
   }));
 };
 
