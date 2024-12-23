@@ -16,9 +16,14 @@ import { getMiscSection } from '@/components/Section/MiscSection';
 
 import { useIssueDetails } from '@/api/issueDetails';
 
-import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
+import type {
+  BuildsTableFilter,
+  TableFilter,
+  TestsTableFilter,
+} from '@/types/tree/TreeDetails';
 
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
+import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
 
 interface IIssueDetails {
   issueId: string;
@@ -26,6 +31,8 @@ interface IIssueDetails {
   tableFilter: TableFilter;
   onClickTestFilter: (filter: TestsTableFilter) => void;
   getTestTableRowLink: (testId: string) => LinkProps;
+  onClickBuildFilter: (filter: BuildsTableFilter) => void;
+  getBuildTableRowLink: (testId: string) => LinkProps;
 }
 
 export const IssueDetails = ({
@@ -34,10 +41,13 @@ export const IssueDetails = ({
   tableFilter,
   onClickTestFilter,
   getTestTableRowLink,
+  onClickBuildFilter,
+  getBuildTableRowLink,
 }: IIssueDetails): JSX.Element => {
   const { data, error, isLoading } = useIssueDetails(issueId, versionNumber);
 
   const hasTest = data && data.test_status !== null;
+  const hasBuild = data && data.build_valid !== null;
 
   const { formatMessage } = useIntl();
 
@@ -157,6 +167,15 @@ export const IssueDetails = ({
           testTableFilter={tableFilter.testsTable}
           getTableRowLink={getTestTableRowLink}
           onClickFilter={onClickTestFilter}
+        />
+      )}
+      {hasBuild && (
+        <IssueDetailsBuildSection
+          issueId={issueId}
+          versionNumber={versionNumber}
+          buildTableFilter={tableFilter.buildsTable}
+          getTableRowLink={getBuildTableRowLink}
+          onClickFilter={onClickBuildFilter}
         />
       )}
     </ErrorBoundary>
