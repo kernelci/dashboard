@@ -9,11 +9,13 @@ import type {
   Architecture,
   BuildsTabBuild,
   BuildStatus,
+  StatusCount,
 } from '@/types/general';
 import { sanitizeTableValue } from '@/components/Table/tableUtils';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
 
 import { UNKNOWN_STRING } from './constants/backend';
+import { groupStatus } from './status';
 
 export function formatDate(date: Date | string, short?: boolean): string {
   const options: Intl.DateTimeFormatOptions = {
@@ -62,6 +64,53 @@ export const sanitizeConfigs = (
     success: value.valid,
     unknown: value.null,
   }));
+};
+
+const isBuildPlatform = (
+  platforms: Record<string, BuildStatus> | Record<string, StatusCount>,
+): platforms is Record<string, BuildStatus> => {
+  const platform = platforms[Object.keys(platforms)[0]];
+  return (
+    platform &&
+    ('valid' in platform || 'invalid' in platform || 'null' in platform)
+  );
+};
+
+export const sanitizePlatforms = (
+  platforms:
+    | Record<string, BuildStatus>
+    | Record<string, StatusCount>
+    | undefined,
+): IListingItem[] => {
+  if (!platforms) return [];
+
+  if (isBuildPlatform(platforms)) {
+    return Object.entries(platforms).map(([key, value]) => ({
+      text: key,
+      errors: value.invalid,
+      success: value.valid,
+      unknown: value.null,
+    }));
+  } else {
+    return Object.entries(platforms).map(([key, value]) => {
+      const { successCount, failedCount, inconclusiveCount } = groupStatus({
+        doneCount: value.DONE,
+        errorCount: value.ERROR,
+        failCount: value.FAIL,
+        missCount: value.MISS,
+        passCount: value.PASS,
+        skipCount: value.SKIP,
+        nullCount: value.NULL,
+      });
+
+      return {
+        text: key,
+        errors: failedCount,
+        success: successCount,
+        unknown: inconclusiveCount,
+      };
+    });
+  }
 };
 
 const isBuildError = (build: BuildsTabBuild): number => {
