@@ -68,6 +68,9 @@ class TreeCommitsHistory(APIView):
                 "build_id": row[13],
                 "build_misc": row[14],
                 "test_id": row[15],
+                "incidents_id": row[16],
+                "incidents_test_id": row[17],
+                "issue_id": row[18]
             }
             for row in rows
         ]
@@ -97,10 +100,14 @@ class TreeCommitsHistory(APIView):
         }
 
     def _process_builds_count(
-        self, build_valid: bool, duration: int, commit_hash: str
+        self, *,
+        build_valid: bool,
+        duration: int,
+        commit_hash: str,
+        issue_id: str
     ) -> None:
         is_filtered_out = self.filterParams.is_build_filtered_out(
-            duration=duration, valid=build_valid, issue_id=None
+            duration=duration, valid=build_valid, issue_id=issue_id
         )
         if is_filtered_out:
             return
@@ -112,10 +119,20 @@ class TreeCommitsHistory(APIView):
         self.commit_hashes[commit_hash]["builds_count"][label] += 1
 
     def _process_boots_count(
-        self, test_status: str, commit_hash: str, test_duration: int, test_path: str
+        self, *,
+        test_status: str,
+        commit_hash: str,
+        test_duration: int,
+        test_path: str,
+        issue_id: str,
+        incident_test_id: str
     ) -> None:
         is_boot_filter_out = self.filterParams.is_boot_filtered_out(
-            duration=test_duration, issue_id=None, path=test_path, status=test_status
+            duration=test_duration,
+            issue_id=issue_id,
+            path=test_path,
+            status=test_status,
+            incident_test_id=incident_test_id
         )
 
         if is_boot_filter_out:
@@ -125,10 +142,20 @@ class TreeCommitsHistory(APIView):
         self.commit_hashes[commit_hash]["boots_count"][label] += 1
 
     def _process_nonboots_count(
-        self, test_status: str, commit_hash: str, test_duration: int, test_path: str
+        self, *,
+        test_status: str,
+        commit_hash: str,
+        test_duration: int,
+        test_path: str,
+        issue_id: str,
+        incident_test_id: str
     ) -> None:
         is_nonboot_filter_out = self.filterParams.is_test_filtered_out(
-            duration=test_duration, issue_id=None, path=test_path, status=test_status
+            duration=test_duration,
+            issue_id=issue_id,
+            path=test_path,
+            status=test_status,
+            incident_test_id=incident_test_id
         )
 
         if is_nonboot_filter_out:
@@ -182,19 +209,35 @@ class TreeCommitsHistory(APIView):
                 "boot"
             )
 
+            test_status = row["test_status"] or "NULL"
+            test_duration = row["test_duration"]
+            test_path = row["test_path"]
+            issue_id = row["issue_id"]
+            incident_test_id = row["incidents_test_id"]
+
+            if issue_id is None and (
+                row["build_valid"] in [False, None]
+                or test_status == "FAIL"
+            ):
+                issue_id = UNKNOWN_STRING
+
             if is_boot:
                 self._process_boots_count(
-                    row["test_status"] or "NULL",
-                    commit_hash,
-                    row["test_duration"],
-                    row["test_path"],
+                    test_status=test_status,
+                    commit_hash=commit_hash,
+                    test_duration=test_duration,
+                    test_path=test_path,
+                    issue_id=issue_id,
+                    incident_test_id=incident_test_id
                 )
             else:
                 self._process_nonboots_count(
-                    row["test_status"] or "NULL",
-                    commit_hash,
-                    row["test_duration"],
-                    row["test_path"],
+                    test_status=row["test_status"] or "NULL",
+                    commit_hash=commit_hash,
+                    test_duration=row["test_duration"],
+                    test_path=row["test_path"],
+                    issue_id=row["issue_id"],
+                    incident_test_id=row["incidents_test_id"]
                 )
 
     def _process_builds(self, row: Dict) -> None:
@@ -202,7 +245,10 @@ class TreeCommitsHistory(APIView):
             commit_hash = row["git_commit_hash"]
             self.processed_builds.add(row["build_id"])
             self._process_builds_count(
-                row["build_valid"], row["build_duration"], commit_hash
+                build_valid=row["build_valid"],
+                duration=row["build_duration"],
+                commit_hash=commit_hash,
+                issue_id=row['issue_id']
             )
 
     def _is_record_in_time_period(self, start_time: datetime) -> bool:
@@ -357,7 +403,10 @@ class TreeCommitsHistory(APIView):
             t.environment_misc,
             b.id AS build_id,
             b.misc AS build_misc,
-            t.id AS test_id
+            t.id AS test_id,
+            ic.id AS incidents_id,
+            ic.test_id AS incidents_test_id,
+            i.id AS issues_id
         FROM earliest_commits AS c
         INNER JOIN builds AS b
         ON
@@ -365,6 +414,11 @@ class TreeCommitsHistory(APIView):
         LEFT JOIN tests AS t
         ON
             t.build_id = b.id
+        LEFT JOIN incidents AS ic
+            ON t.id = ic.test_id OR
+                b.id = ic.build_id
+        LEFT JOIN issues AS i
+            ON ic.issue_id = i.id
         """
 
         # Execute the query
