@@ -15,18 +15,15 @@ import { getMiscSection } from '@/components/Section/MiscSection';
 import { useIssueDetails } from '@/api/issueDetails';
 
 interface IIssueDetails {
-  issueId?: string;
-  versionNumber?: string;
+  issueId: string;
+  versionNumber: string;
 }
 
 export const IssueDetails = ({
   issueId,
   versionNumber,
 }: IIssueDetails): JSX.Element => {
-  const { data, error, isLoading } = useIssueDetails(
-    issueId ?? '',
-    versionNumber ?? '',
-  );
+  const { data, error, isLoading } = useIssueDetails(issueId, versionNumber);
 
   const { formatMessage } = useIntl();
 
