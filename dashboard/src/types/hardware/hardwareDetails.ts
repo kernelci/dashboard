@@ -28,12 +28,14 @@ type BuildsData = {
   items: BuildsTabBuild[];
   issues: TIssue[];
   summary: BuildSummary;
+  platforms: Record<string, BuildStatus>;
   failedWithUnknownIssues: number;
 };
 
 type Tests = {
   archSummary: ArchCompilerStatus[];
   history: TestHistory[];
+  platforms: Record<string, StatusCount>;
   platformsFailing: string[];
   statusSummary: StatusCounts;
   failReasons: Record<string, unknown>;

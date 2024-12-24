@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
@@ -23,6 +23,9 @@ import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
 import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
+import { MemoizedPlatformsCard } from '@/components/Cards/PlatformsCard';
+
+import { sanitizePlatforms } from '@/utils/utils';
 
 import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
@@ -74,6 +77,11 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
     [navigate],
   );
 
+  const platformItems = useMemo(
+    () => sanitizePlatforms(tests.platforms),
+    [tests.platforms],
+  );
+
   return (
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
@@ -81,11 +89,6 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
           <MemoizedStatusCard
             title={<FormattedMessage id="testsTab.testStatus" />}
             statusCounts={tests.statusSummary}
-          />
-          <MemoizedConfigList
-            title={<FormattedMessage id="bootsTab.configs" />}
-            configStatusCounts={tests.configs}
-            diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
@@ -100,7 +103,22 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
             issueFilterSection="testIssue"
           />
         </div>
-        <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
+        <div>
+          <HardwareCommitNavigationGraph
+            trees={trees}
+            hardwareId={hardwareId}
+          />
+          <MemoizedConfigList
+            title={<FormattedMessage id="bootsTab.configs" />}
+            configStatusCounts={tests.configs}
+            diffFilter={diffFilter}
+          />
+          <MemoizedPlatformsCard
+            platforms={platformItems}
+            issueFilterSection="testPlatform"
+            diffFilter={diffFilter}
+          />
+        </div>
       </DesktopGrid>
       <MobileGrid>
         <MemoizedStatusCard
@@ -113,6 +131,11 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
             <MemoizedConfigList
               title={<FormattedMessage id="bootsTab.configs" />}
               configStatusCounts={tests.configs}
+              diffFilter={diffFilter}
+            />
+            <MemoizedPlatformsCard
+              platforms={platformItems}
+              issueFilterSection="testPlatform"
               diffFilter={diffFilter}
             />
             <MemoizedErrorsSummary

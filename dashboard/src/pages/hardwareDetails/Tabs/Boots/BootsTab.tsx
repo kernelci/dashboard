@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 
@@ -26,6 +26,9 @@ import {
 import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
 import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
+import { MemoizedPlatformsCard } from '@/components/Cards/PlatformsCard';
+
+import { sanitizePlatforms } from '@/utils/utils';
 
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 
@@ -89,6 +92,11 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
     [navigate],
   );
 
+  const platformItems = useMemo(
+    () => sanitizePlatforms(boots.platforms),
+    [boots.platforms],
+  );
+
   return (
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
@@ -96,11 +104,6 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
           <MemoizedStatusCard
             title={<FormattedMessage id="bootsTab.bootStatus" />}
             statusCounts={boots.statusSummary}
-          />
-          <MemoizedConfigList
-            title={<FormattedMessage id="bootsTab.configs" />}
-            configStatusCounts={boots.configs}
-            diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
@@ -115,7 +118,22 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
             issueFilterSection="bootIssue"
           />
         </div>
-        <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
+        <div>
+          <HardwareCommitNavigationGraph
+            trees={trees}
+            hardwareId={hardwareId}
+          />
+          <MemoizedConfigList
+            title={<FormattedMessage id="bootsTab.configs" />}
+            configStatusCounts={boots.configs}
+            diffFilter={diffFilter}
+          />
+          <MemoizedPlatformsCard
+            platforms={platformItems}
+            issueFilterSection="bootPlatform"
+            diffFilter={diffFilter}
+          />
+        </div>
       </DesktopGrid>
       <MobileGrid>
         <MemoizedStatusCard
@@ -128,6 +146,11 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
             <MemoizedConfigList
               title={<FormattedMessage id="bootsTab.configs" />}
               configStatusCounts={boots.configs}
+              diffFilter={diffFilter}
+            />
+            <MemoizedPlatformsCard
+              platforms={platformItems}
+              issueFilterSection="bootPlatform"
               diffFilter={diffFilter}
             />
             <MemoizedErrorsSummary
