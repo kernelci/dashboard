@@ -1,6 +1,4 @@
-import { FormattedMessage, useIntl } from 'react-intl';
-
-import { RiProhibited2Line } from 'react-icons/ri';
+import { useIntl } from 'react-intl';
 
 import type { HistoryState, LinkProps } from '@tanstack/react-router';
 
@@ -12,6 +10,8 @@ import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
 
 import { TestsTable } from '@/components/TestsTable/TestsTable';
 
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
 interface IBuildDetailsTestSection {
   buildId: string;
   onClickFilter: (filter: TestsTableFilter) => void;
@@ -19,15 +19,6 @@ interface IBuildDetailsTestSection {
   getRowLink: (testId: string) => LinkProps;
   historyState?: HistoryState;
 }
-
-const NoTestFound = (): JSX.Element => (
-  <div className="flex flex-col items-center py-6 text-weakGray">
-    <RiProhibited2Line className="h-14 w-14" />
-    <h1 className="text-2xl font-semibold">
-      <FormattedMessage id={'buildDetails.noTestResults'} />
-    </h1>
-  </div>
-);
 
 const BuildDetailsTestSection = ({
   buildId,
@@ -37,9 +28,9 @@ const BuildDetailsTestSection = ({
   historyState,
 }: IBuildDetailsTestSection): JSX.Element => {
   const intl = useIntl();
-  const { data, error } = useBuildTests(buildId);
+  const { data, error, isLoading } = useBuildTests(buildId);
 
-  const hasTest = data && data.length > 0 && !error;
+  const hasTest = data && data.length > 0;
   return (
     <>
       <span className="text-2xl font-bold">
@@ -58,7 +49,12 @@ const BuildDetailsTestSection = ({
           />
         </div>
       ) : (
-        <NoTestFound />
+        <MemoizedSectionError
+          isLoading={isLoading}
+          errorMessage={error?.message}
+          isEmpty={data?.length === 0}
+          emptyLabel={'buildDetails.noTestResults'}
+        />
       )}
     </>
   );

@@ -74,4 +74,10 @@ urlpatterns = [
     path("issue/<str:issue_id>/version/<str:version>",
          viewCache(views.IssueDetails),
          name="issueDetails"),
+    path("issue/<str:issue_id>/version/<str:version>/tests",
+         viewCache(views.IssueDetailsTests),
+         name="issueDetailsTests"),
+    path("issue/<str:issue_id>/version/<str:version>/builds",
+         viewCache(views.IssueDetailsBuilds),
+         name="issueDetailsBuilds"),
 ]

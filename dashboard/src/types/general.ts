@@ -66,6 +66,17 @@ export type BuildsTabBuild = {
   tree_index?: number;
 };
 
+export type BuildsTableBuild = Pick<
+  BuildsTabBuild,
+  | 'id'
+  | 'architecture'
+  | 'config_name'
+  | 'valid'
+  | 'start_time'
+  | 'duration'
+  | 'compiler'
+>;
+
 export type BuildStatus = {
   valid: number;
   invalid: number;
