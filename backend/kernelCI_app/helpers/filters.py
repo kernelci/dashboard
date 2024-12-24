@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, TypedDict, Literal, Any
 from django.http import HttpResponseBadRequest
 import re
 from kernelCI_app.utils import (
@@ -96,7 +96,12 @@ class FilterParams:
 
     string_like_filters = ["boot.path", "test.path"]
 
-    def __init__(self, data: Dict, process_body=False):
+    class ParsedFilter(TypedDict):
+        field: str
+        value: Any  # TODO: correctly type this field
+        comparison_op: Literal["exact", "in", "gt", "gte", "lt", "lte", "like"]
+
+    def __init__(self, data: Dict, process_body=False) -> None:
         self.filterTestDurationMin, self.filterTestDurationMax = None, None
         self.filterBootDurationMin, self.filterBootDurationMax = None, None
         self.filterBuildDurationMin, self.filterBuildDurationMax = None, None
@@ -113,6 +118,11 @@ class FilterParams:
             "build": set(),
             "boot": set(),
             "test": set()
+        }
+        self.filterPlatforms = {
+            "build": set(),
+            "boot": set(),
+            "test": set(),
         }
 
         self.filter_handlers = {
@@ -131,9 +141,12 @@ class FilterParams:
             "build.issue": self._handle_issues,
             "boot.issue": self._handle_issues,
             "test.issue": self._handle_issues,
+            "build.platform": self._handle_platforms,
+            "boot.platform": self._handle_platforms,
+            "test.platform": self._handle_platforms,
         }
 
-        self.filters = []
+        self.filters: List[FilterParams.ParsedFilter] = []
         if process_body:
             self.create_filters_from_body(data)
         else:
@@ -141,10 +154,10 @@ class FilterParams:
 
         self._processFilters()
 
-    def _handle_boot_status(self, current_filter: Dict):
+    def _handle_boot_status(self, current_filter: ParsedFilter) -> None:
         self.filterBootStatus.add(current_filter["value"])
 
-    def _handle_boot_duration(self, current_filter: Dict):
+    def _handle_boot_duration(self, current_filter: ParsedFilter) -> None:
         value = current_filter["value"]
         operation = current_filter["comparison_op"]
         if operation == "lte":
@@ -152,10 +165,10 @@ class FilterParams:
         else:
             self.filterBootDurationMin = toIntOrDefault(value, None)
 
-    def _handle_test_status(self, current_filter: Dict):
+    def _handle_test_status(self, current_filter: ParsedFilter) -> None:
         self.filterTestStatus.add(current_filter["value"])
 
-    def _handle_test_duration(self, current_filter: Dict):
+    def _handle_test_duration(self, current_filter: ParsedFilter) -> None:
         value = current_filter["value"]
         operation = current_filter["comparison_op"]
         if operation == "lte":
@@ -163,28 +176,28 @@ class FilterParams:
         else:
             self.filterTestDurationMin = toIntOrDefault(value, None)
 
-    def _handle_config_name(self, current_filter: Dict):
+    def _handle_config_name(self, current_filter: ParsedFilter) -> None:
         self.filterConfigs.add(current_filter["value"])
 
-    def _handle_compiler(self, current_filter: Dict):
+    def _handle_compiler(self, current_filter: ParsedFilter) -> None:
         self.filterCompiler.add(current_filter["value"])
 
-    def _handle_architecture(self, current_filter: Dict):
+    def _handle_architecture(self, current_filter: ParsedFilter) -> None:
         self.filterArchitecture.add(current_filter["value"])
 
-    def _handle_hardware(self, current_filter: Dict):
+    def _handle_hardware(self, current_filter: ParsedFilter) -> None:
         self.filterHardware.add(current_filter["value"])
 
-    def _handle_path(self, current_filter: Dict):
+    def _handle_path(self, current_filter: ParsedFilter) -> None:
         if current_filter["field"] == "boot.path":
             self.filterBootPath = current_filter["value"]
         else:
             self.filterTestPath = current_filter["value"]
 
-    def _handle_build_valid(self, current_filter: Dict):
+    def _handle_build_valid(self, current_filter: ParsedFilter) -> None:
         self.filterBuildValid.add(current_filter["value"])
 
-    def _handle_build_duration(self, current_filter: Dict):
+    def _handle_build_duration(self, current_filter: ParsedFilter) -> None:
         value = current_filter["value"][0]
         operation = current_filter["comparison_op"]
         if operation == "lte":
@@ -192,9 +205,13 @@ class FilterParams:
         else:
             self.filterBuildDurationMin = toIntOrDefault(value, None)
 
-    def _handle_issues(self, current_filter):
+    def _handle_issues(self, current_filter: ParsedFilter) -> None:
         tab = current_filter["field"].split('.')[0]
         self.filterIssues[tab].add(current_filter["value"])
+
+    def _handle_platforms(self, current_filter: ParsedFilter) -> None:
+        tab = current_filter["field"].split('.')[0]
+        self.filterPlatforms[tab].add(current_filter["value"])
 
     def _processFilters(self):
         try:
@@ -270,7 +287,7 @@ class FilterParams:
 
             self.add_filter(filter_term, request.GET.get(k), "exact")
 
-    def add_filter(self, field, value, comparison_op):
+    def add_filter(self, field: str, value: Any, comparison_op: str) -> None:
         self.validate_comparison_op(comparison_op)
         self.filters.append(
             {"field": field, "value": value, "comparison_op": comparison_op}
@@ -305,7 +322,8 @@ class FilterParams:
             self, *,
             duration: Optional[int],
             valid: Optional[bool],
-            issue_id: Optional[str]
+            issue_id: Optional[str],
+            platform: Optional[str] = None,
     ) -> bool:
         return (
             len(self.filterBuildValid) > 0
@@ -326,6 +344,11 @@ class FilterParams:
             and (
                 issue_id not in self.filterIssues["build"]
                 or valid is True
+            )
+        ) or (
+            len(self.filterPlatforms["build"]) > 0
+            and (
+                platform not in self.filterPlatforms["build"]
             )
         )
 
@@ -379,6 +402,7 @@ class FilterParams:
             duration: Optional[int],
             issue_id: Optional[str] = None,
             incident_test_id: Optional[str] = "incident_test_id",
+            platform: Optional[str] = None,
     ) -> bool:
         if (
             (
@@ -412,6 +436,11 @@ class FilterParams:
                 self.filterIssues["boot"],
                 issue_id,
                 incident_test_id
+            ) or (
+                len(self.filterPlatforms["boot"]) > 0
+                and (
+                    platform not in self.filterPlatforms["boot"]
+                )
             )
         ):
             return True
@@ -425,6 +454,7 @@ class FilterParams:
             duration: Optional[int],
             issue_id: Optional[str] = None,
             incident_test_id: Optional[str] = "incident_test_id",
+            platform: Optional[str] = None,
     ) -> bool:
         if (
             (
@@ -458,6 +488,11 @@ class FilterParams:
                 self.filterIssues["test"],
                 issue_id,
                 incident_test_id
+            ) or (
+                len(self.filterPlatforms["test"]) > 0
+                and (
+                    platform not in self.filterPlatforms["test"]
+                )
             )
         ):
             return True

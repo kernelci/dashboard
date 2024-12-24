@@ -1,5 +1,6 @@
 from typing import TypedDict
 from kernelCI_app.utils import create_issue
+from kernelCI_app.helpers.build import build_status_map
 
 
 class BuildDict(TypedDict):
@@ -14,14 +15,12 @@ def create_default_build_status():
 
 
 def create_details_build_summary(builds: list[BuildDict]):
-    status_map = {True: "valid", False: "invalid", None: "null"}
-
     build_summ = create_default_build_status()
     config_summ = {}
     arch_summ = {}
 
     for build in builds:
-        status_key = status_map[build["valid"]]
+        status_key = build_status_map[build["valid"]]
         build_summ[status_key] += 1
 
         if config := build["config_name"]:

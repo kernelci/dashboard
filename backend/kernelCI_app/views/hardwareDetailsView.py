@@ -17,10 +17,13 @@ from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import get_tree_heads
 from kernelCI_app.helpers.filters import UNKNOWN_STRING, FilterParams
 from kernelCI_app.helpers.misc import (
+    handle_build_misc,
     handle_environment_misc,
-    env_misc_value_or_default
+    build_misc_value_or_default,
+    env_misc_value_or_default,
 )
 from kernelCI_app.typeModels.hardwareDetails import PostBody, DefaultRecordValues
+from kernelCI_app.helpers.build import build_status_map
 from pydantic import ValidationError
 
 DEFAULT_DAYS_INTERVAL = 3
@@ -117,6 +120,7 @@ def generate_test_dict():
     return {
         "history": [],
         "archSummary": {},
+        "platforms": defaultdict(lambda: defaultdict(int)),
         "platformsFailing": set(),
         "statusSummary": defaultdict(int),
         "failReasons": defaultdict(int),
@@ -221,9 +225,15 @@ class HardwareDetails(View):
         build: Dict,
         processed_builds: Set[str],
     ) -> bool:
-        is_build_not_processed = not build["id"] in processed_builds
+        platform = build_misc_value_or_default(handle_build_misc(build["misc"])).get(
+            "platform"
+        )
+        is_build_not_processed = build["id"] not in processed_builds
         is_build_filtered_out = self.filterParams.is_build_filtered_out(
-            valid=build["valid"], duration=build["duration"], issue_id=build["issue_id"]
+            valid=build["valid"],
+            duration=build["duration"],
+            issue_id=build["issue_id"],
+            platform=platform,
         )
         return is_build_not_processed and not is_build_filtered_out
 
@@ -247,6 +257,9 @@ class HardwareDetails(View):
         path = record["path"]
         issue_id = record["incidents__issue__id"]
         incidents_test_id = record["incidents__test_id"]
+        platform = env_misc_value_or_default(
+            handle_environment_misc(record["environment_misc"])
+        ).get("platform")
 
         if table_test == "boot":
             test_filter_pass = not self.filterParams.is_boot_filtered_out(
@@ -255,6 +268,7 @@ class HardwareDetails(View):
                 path=path,
                 issue_id=issue_id,
                 incident_test_id=incidents_test_id,
+                platform=platform,
             )
         else:
             test_filter_pass = not self.filterParams.is_test_filtered_out(
@@ -263,6 +277,7 @@ class HardwareDetails(View):
                 path=path,
                 issue_id=issue_id,
                 incident_test_id=incidents_test_id,
+                platform=platform,
             )
 
         return test_filter_pass
@@ -274,11 +289,12 @@ class HardwareDetails(View):
         tests["statusSummary"][status] += 1
         tests["configs"][record["build__config_name"]][status] += 1
 
+        environment_misc = handle_environment_misc(record["environment_misc"])
+        test_platform = env_misc_value_or_default(environment_misc).get("platform")
+        tests["platforms"][test_platform][status] += 1
+
         if status == "ERROR" or status == "FAIL" or status == "MISS":
-            environment_misc = handle_environment_misc(record["environment_misc"])
-            tests["platformsFailing"].add(
-                env_misc_value_or_default(environment_misc).get("platform")
-            )
+            tests["platformsFailing"].add(test_platform)
             tests["failReasons"][extract_error_message(record["misc"])] += 1
 
         archKey = f'{record["build__architecture"]}{record["build__compiler"]}'
@@ -340,7 +356,12 @@ class HardwareDetails(View):
         boots = generate_test_dict()
         compatibles: Set[str] = set()
         tree_status_summary = defaultdict(generate_tree_status_summary_dict)
-        builds = {"items": [], "issues": {}, "failedWithUnknownIssues": 0}
+        builds = {
+            "items": [],
+            "issues": {},
+            "platforms": defaultdict(lambda: defaultdict(int)),
+            "failedWithUnknownIssues": 0,
+        }
 
         for record in records:
             try:
@@ -389,7 +410,7 @@ class HardwareDetails(View):
             )
 
             if should_process_test:
-                processed_tests.add(record['id'])
+                processed_tests.add(record["id"])
                 self.handle_test(record, boots if is_record_boot else tests)
 
             should_process_build = self.is_build_filtered_in(build, processed_builds)
@@ -407,13 +428,24 @@ class HardwareDetails(View):
                     is_failed_task=record["build__valid"] is not True,
                     issue_from="build",
                 )
+                build_platform = build_misc_value_or_default(
+                    handle_build_misc(record["build__misc"])
+                ).get("platform")
+                build_status = build_status_map[record["build__valid"]]
+                builds["platforms"][build_platform][build_status] += 1
 
         builds["summary"] = create_details_build_summary(builds["items"])
         mutate_properties_to_list(builds, ["issues"])
         mutate_properties_to_list(tests, ["issues", "platformsFailing", "archSummary"])
         mutate_properties_to_list(boots, ["issues", "platformsFailing", "archSummary"])
 
-        return (builds, tests, boots, tree_status_summary, list(compatibles))
+        return (
+            builds,
+            tests,
+            boots,
+            tree_status_summary,
+            list(compatibles),
+        )
 
     def _assign_default_record_values(self, record: Dict) -> None:
         if record["build__architecture"] is None:
@@ -573,13 +605,11 @@ class HardwareDetails(View):
 
             origin = post_body.origin
             end_datetime = datetime.fromtimestamp(
-                int(post_body.endTimestampInSeconds),
-                timezone.utc
+                int(post_body.endTimestampInSeconds), timezone.utc
             )
 
             start_datetime = datetime.fromtimestamp(
-                int(post_body.startTimestampInSeconds),
-                timezone.utc
+                int(post_body.startTimestampInSeconds), timezone.utc
             )
 
             selected_commits = post_body.selectedCommits
@@ -631,9 +661,7 @@ class HardwareDetails(View):
             setQueryCache(self.cache_key_get_full_data, params, records)
 
         builds, tests, boots, tree_status_summary, compatibles = self.sanitize_records(
-            records,
-            trees_with_selected_commits,
-            is_all_selected
+            records, trees_with_selected_commits, is_all_selected
         )
 
         configs, archs, compilers = self.get_filter_options(
@@ -657,5 +685,6 @@ class HardwareDetails(View):
                 "compilers": compilers,
                 "trees": trees_with_status_count,
                 "compatibles": compatibles,
-            }, safe=False
+            },
+            safe=False,
         )
