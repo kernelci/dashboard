@@ -36,6 +36,10 @@ urlpatterns = [
          viewCache(views.TreeCommitsHistory),
          name="treeCommits"
          ),
+    path("tree/<str:tree_name>/<str:branch>",
+         viewCache(views.TreeLatest),
+         name="treeLatest"
+         ),
     path("build/<str:build_id>",
          viewCache(views.BuildDetails),
          name="buildDetails"
