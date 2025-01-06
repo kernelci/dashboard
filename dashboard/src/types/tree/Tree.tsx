@@ -72,3 +72,10 @@ export type Tree = {
     miss: number;
   };
 };
+
+export type TreeLatestResponse = {
+  api_url: string;
+  git_commit_hash: string;
+  git_repository_url: string | null;
+  git_commit_name: string | null;
+};
