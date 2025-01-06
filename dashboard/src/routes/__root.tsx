@@ -32,7 +32,7 @@ export const Route = createRootRoute({
         <div className="flex w-full flex-row justify-between">
           <SideMenu />
           <TopBar />
-          <div className="w-full overflow-x-auto bg-lightGray px-16 pt-24">
+          <div className="w-full bg-lightGray px-16 pt-24">
             <Outlet />
           </div>
         </div>
