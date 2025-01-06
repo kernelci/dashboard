@@ -3,7 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useSearch } from '@tanstack/react-router';
 
-import type { Tree, TreeFastPathResponse } from '@/types/tree/Tree';
+import type {
+  Tree,
+  TreeFastPathResponse,
+  TreeLatestResponse,
+} from '@/types/tree/Tree';
+import { DEFAULT_ORIGIN, type TOrigins } from '@/types/general';
 
 import http from './api';
 
@@ -51,5 +56,27 @@ export const useTreeTableFast = (): UseQueryResult<TreeFastPathResponse> => {
   return useQuery({
     queryKey,
     queryFn: () => fetchTreeFastCheckoutData(origin, intervalInDays),
+  });
+};
+
+const fetchTreeLatest = async (
+  treeName: string,
+  branch: string,
+  origin?: TOrigins,
+): Promise<TreeLatestResponse> => {
+  const res = await http.get(`/api/tree/${treeName}/${branch}`, {
+    params: { origin: origin || DEFAULT_ORIGIN },
+  });
+  return res.data;
+};
+
+export const useTreeLatest = (
+  treeName: string,
+  branch: string,
+  origin?: TOrigins,
+): UseQueryResult<TreeLatestResponse> => {
+  return useQuery({
+    queryKey: ['treeLatest', treeName, branch, origin],
+    queryFn: () => fetchTreeLatest(treeName, branch, origin),
   });
 };
