@@ -1,25 +1,26 @@
-from django.http import HttpResponseBadRequest, JsonResponse
+from typing import Dict, List, Optional
+from django.http import JsonResponse
 from django.db import connection
 from django.views import View
 
-from kernelCI_app.utils import convert_issues_dict_to_list, create_issue, getErrorResponseBody
+from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.utils import (
+    Issue,
+    convert_issues_dict_to_list,
+    create_issue,
+)
 
 
 class IssueView(View):
-    fields = [
-        "incident_id",
-        "id",
-        "comment",
-        "report_url"
-    ]
+    fields = ["incident_id", "id", "comment", "report_url"]
 
-    def get_dict_record(self, row):
+    def get_dict_record(self, row) -> Dict[str, str]:
         record = {}
         for idx, field in enumerate(self.fields):
             record[field] = row[idx]
         return record
 
-    def sanitize_rows(self, rows):
+    def sanitize_rows(self, rows) -> List[Issue]:
         result = {}
         for row in rows:
             record = self.get_dict_record(row)
@@ -28,13 +29,13 @@ class IssueView(View):
                 currentIssue["incidents_info"]["incidentsCount"] += 1
             else:
                 result[record["id"]] = create_issue(
-                    issue_id=record['id'],
-                    issue_comment=record['comment'],
-                    issue_report_url=record['report_url'],
+                    issue_id=record["id"],
+                    issue_comment=record["comment"],
+                    issue_report_url=record["report_url"],
                 )
         return convert_issues_dict_to_list(result)
 
-    def get_test_issues(self, test_id):
+    def get_test_issues(self, test_id: str) -> List[Issue]:
         query = """
             SELECT
                 incidents.id,
@@ -51,7 +52,7 @@ class IssueView(View):
             rows = cursor.fetchall()
         return self.sanitize_rows(rows)
 
-    def get_build_issues(self, build_id):
+    def get_build_issues(self, build_id: str) -> List[Issue]:
         query = """
             SELECT
                 incidents.id,
@@ -69,11 +70,13 @@ class IssueView(View):
             rows = cursor.fetchall()
         return self.sanitize_rows(rows)
 
-    def get(self, _request, test_id=None, build_id=None):
+    def get(
+        self, _request, test_id: Optional[str] = None, build_id: Optional[str] = None
+    ) -> JsonResponse:
         if test_id:
             return JsonResponse(self.get_test_issues(test_id), safe=False)
         if build_id:
             return JsonResponse(self.get_build_issues(build_id), safe=False)
-        return HttpResponseBadRequest(
-            getErrorResponseBody("A test or build ID must be provided")
+        return create_error_response(
+            error_message="A test or build ID must be provided",
         )
