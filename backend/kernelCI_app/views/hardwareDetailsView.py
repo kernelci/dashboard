@@ -66,6 +66,7 @@ def get_build(record: Dict, tree_idx: int):
         "git_repository_branch": record["build__checkout__git_repository_branch"],
         "tree_name": record["build__checkout__tree_name"],
         "issue_id": record["build__incidents__issue__id"],
+        "issue_version": record["build__incidents__issue__version"],
         "tree_index": tree_idx,
     }
 
@@ -142,6 +143,7 @@ def is_record_tree_selected(record, tree, is_all_selected: bool):
 # TODO unify with treeDetails
 def update_issues(
     issue_id: Optional[str],
+    issue_version: Optional[str],
     incident_test_id: Optional[str],
     build_valid: Optional[bool],
     issue_comment: Optional[str],
@@ -156,13 +158,14 @@ def update_issues(
     elif issue_from == "test":
         can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
 
-    if issue_id and can_insert_issue:
+    if issue_id and issue_version is not None and can_insert_issue:
         existing_issue = task["issues"].get(issue_id)
         if existing_issue:
             existing_issue["incidents_info"]["incidentsCount"] += 1
         else:
             new_issue = create_issue(
                 issue_id=issue_id,
+                issue_version=issue_version,
                 issue_comment=issue_comment,
                 issue_report_url=issue_report_url,
             )
@@ -306,6 +309,7 @@ class HardwareDetails(View):
 
         update_issues(
             issue_id=record["incidents__issue__id"],
+            issue_version=record["incidents__issue__version"],
             incident_test_id=record["incidents__test_id"],
             build_valid=record["build__valid"],
             issue_comment=record["incidents__issue__comment"],
@@ -420,6 +424,7 @@ class HardwareDetails(View):
                 builds["items"].append(build)
                 update_issues(
                     issue_id=record["incidents__issue__id"],
+                    issue_version=record["incidents__issue__version"],
                     incident_test_id=record["incidents__test_id"],
                     build_valid=record["build__valid"],
                     issue_comment=record["incidents__issue__comment"],
@@ -582,10 +587,12 @@ class HardwareDetails(View):
             "build__checkout__tree_name",
             "incidents__id",
             "incidents__issue__id",
+            "incidents__issue__version",
             "incidents__issue__comment",
             "incidents__issue__report_url",
             "incidents__test_id",
             "build__incidents__issue__id",
+            "build__incidents__issue__version",
         ).filter(
             start_time__gte=start_date,
             start_time__lte=end_date,

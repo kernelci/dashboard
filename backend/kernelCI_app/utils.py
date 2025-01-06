@@ -14,16 +14,22 @@ class IncidentInfo(TypedDict):
 
 class Issue(TypedDict):
     id: str
+    version: str
     comment: Optional[str]
     report_url: Optional[str]
     incidents_info: IncidentInfo
 
 
 def create_issue(
-    *, issue_id: str, issue_comment: Optional[str], issue_report_url: Optional[str]
+    *,
+    issue_id: str,
+    issue_version: str,
+    issue_comment: Optional[str],
+    issue_report_url: Optional[str]
 ) -> Issue:
     return {
         "id": issue_id,
+        "version": issue_version,
         "comment": issue_comment,
         "report_url": issue_report_url,
         "incidents_info": {"incidentsCount": 1},

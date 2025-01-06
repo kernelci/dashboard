@@ -19,6 +19,7 @@ def is_issue_from_test(incident_test_id: Optional[str], is_known_issue: bool) ->
     return incident_test_id is not None or not is_known_issue
 
 
+# TODO: consider issue_version in the filter
 def is_issue_filtered_out(issue_id: Optional[str], issue_filters: set) -> bool:
     return issue_id not in issue_filters
 

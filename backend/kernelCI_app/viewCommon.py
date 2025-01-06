@@ -1,5 +1,4 @@
 from typing import TypedDict
-from kernelCI_app.utils import create_issue
 from kernelCI_app.helpers.build import build_status_map
 
 
@@ -42,11 +41,3 @@ def create_details_build_summary(builds: list[BuildDict]):
         "configs": config_summ,
         "architectures": arch_summ,
     }
-
-
-def get_details_issue(record):
-    return create_issue(
-        issue_id=record["issue_id"],
-        issue_comment=record["issue_comment"],
-        issue_report_url=record["issue_report_url"],
-    )
