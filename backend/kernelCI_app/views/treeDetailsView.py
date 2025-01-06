@@ -1,3 +1,4 @@
+from typing import Dict, List, Tuple
 from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.helpers.filters import (
@@ -6,6 +7,7 @@ from kernelCI_app.helpers.filters import (
     FilterParams,
 )
 from kernelCI_app.utils import (
+    Issue,
     convert_issues_dict_to_list,
     extract_error_message,
     create_issue,
@@ -23,6 +25,8 @@ from collections import defaultdict
 
 from kernelCI_app.viewCommon import create_details_build_summary
 
+type IssueDict = Dict[Tuple[str, str], Issue]
+
 
 class TreeDetails(View):
     def __init__(self):
@@ -35,8 +39,8 @@ class TreeDetails(View):
         self.testPlatformsWithErrors = set()
         self.testFailReasons = {}
         self.testArchSummary = {}
-        self.testIssues = []
-        self.testIssuesTable = {}
+        self.testIssues: List[Issue] = []
+        self.testIssuesTable: IssueDict = {}
         self.testEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
         self.testEnvironmentMisc = defaultdict(lambda: defaultdict(int))
         self.bootHistory = []
@@ -45,8 +49,8 @@ class TreeDetails(View):
         self.bootPlatformsFailing = set()
         self.bootFailReasons = {}
         self.bootArchSummary = {}
-        self.bootIssues = []
-        self.bootsIssuesTable = {}
+        self.bootIssues: List[Issue] = []
+        self.bootsIssuesTable: IssueDict = {}
         self.bootEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
         self.bootEnvironmentMisc = defaultdict(lambda: defaultdict(int))
         self.incidentsIssueRelationship = defaultdict(
@@ -58,9 +62,9 @@ class TreeDetails(View):
         self.builds = []
         self.processed_builds = set()
         self.build_summary = {}
-        self.build_issues = []
+        self.build_issues: List[Issue] = []
         self.failed_builds_with_unknown_issues = 0
-        self.processed_build_issues = {}
+        self.processed_build_issues: IssueDict = {}
         self.tree_url = ""
 
     def setup_filters(self):
@@ -79,7 +83,7 @@ class TreeDetails(View):
         self.filterBuildValid = self.filterParams.filterBuildValid
         self.filterIssues = self.filterParams.filterIssues
 
-    def __getCurrentRowData(self, currentRow):
+    def _getCurrentRowData(self, currentRow):
         tmp_test_env_comp_key = 14
         currentRowData = {
             "test_id": currentRow[1],
@@ -115,8 +119,9 @@ class TreeDetails(View):
             "incident_test_id": currentRow[32],
             "incident_present": currentRow[33],
             "issue_id": currentRow[34],
-            "issue_comment": currentRow[35],
-            "issue_report_url": currentRow[36],
+            "issue_version": currentRow[35],
+            "issue_comment": currentRow[36],
+            "issue_report_url": currentRow[37],
         }
 
         environment_misc = handle_environment_misc(
@@ -161,7 +166,7 @@ class TreeDetails(View):
 
         return currentRowData
 
-    def __processBootsTest(self, currentRowData):
+    def _processBootsTest(self, currentRowData):
         testId = currentRowData["test_id"]
         testStatus = currentRowData["test_status"]
         testDuration = currentRowData["test_duration"]
@@ -173,6 +178,7 @@ class TreeDetails(View):
         historyItem = currentRowData["history_item"]
         incident_id = currentRowData["incident_id"]
         issue_id = currentRowData["issue_id"]
+        issue_version = currentRowData["issue_version"]
         issue_comment = currentRowData["issue_comment"]
         issue_report_url = currentRowData["issue_report_url"]
         testEnvironmentCompatible = currentRowData["test_environment_compatible"]
@@ -195,12 +201,13 @@ class TreeDetails(View):
         )
 
         if issue_id and can_insert_issue:
-            currentIssue = self.bootsIssuesTable.get(issue_id)
+            currentIssue = self.bootsIssuesTable.get((issue_id, issue_version))
             if currentIssue:
                 currentIssue["incidents_info"]["incidentsCount"] += 1
             else:
-                self.bootsIssuesTable[issue_id] = create_issue(
+                self.bootsIssuesTable[(issue_id, issue_version)] = create_issue(
                     issue_id=issue_id,
+                    issue_version=issue_version,
                     issue_comment=issue_comment,
                     issue_report_url=issue_report_url,
                 )
@@ -250,6 +257,7 @@ class TreeDetails(View):
         testError = currentRowData["test_error"]
         historyItem = currentRowData["history_item"]
         issue_id = currentRowData["issue_id"]
+        issue_version = currentRowData["issue_version"]
         issue_comment = currentRowData["issue_comment"]
         issue_report_url = currentRowData["issue_report_url"]
         testEnvironmentCompatible = currentRowData["test_environment_compatible"]
@@ -270,12 +278,13 @@ class TreeDetails(View):
         can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
 
         if issue_id and can_insert_issue:
-            currentIssue = self.testIssuesTable.get(issue_id)
+            currentIssue = self.testIssuesTable.get((issue_id, issue_version))
             if currentIssue:
                 currentIssue["incidents_info"]["incidentsCount"] += 1
             else:
-                self.testIssuesTable[issue_id] = create_issue(
+                self.testIssuesTable[(issue_id, issue_version)] = create_issue(
                     issue_id=issue_id,
+                    issue_version=issue_version,
                     issue_comment=issue_comment,
                     issue_report_url=issue_report_url,
                 )
@@ -315,6 +324,7 @@ class TreeDetails(View):
     def _process_builds(self, row_data):
         build_id = row_data["build_id"]
         issue_id = row_data["issue_id"]
+        issue_version = row_data["issue_version"]
         build_valid = row_data["build_valid"]
         build_duration = row_data["build_duration"]
 
@@ -326,12 +336,13 @@ class TreeDetails(View):
             return
 
         if issue_id and (build_valid is False or build_valid is None):
-            current_issue = self.processed_build_issues.get(issue_id)
+            current_issue = self.processed_build_issues.get((issue_id, issue_version))
             if current_issue:
                 current_issue["incidents_info"]["incidentsCount"] += 1
             else:
-                self.processed_build_issues[issue_id] = create_issue(
-                    issue_id=row_data["issue_id"],
+                self.processed_build_issues[(issue_id, issue_version)] = create_issue(
+                    issue_id=issue_id,
+                    issue_version=issue_version,
                     issue_comment=row_data["issue_comment"],
                     issue_report_url=row_data["issue_report_url"],
                 )
@@ -345,7 +356,7 @@ class TreeDetails(View):
 
     def _sanitize_rows(self, rows):
         for row in rows:
-            row_data = self.__getCurrentRowData(row)
+            row_data = self._getCurrentRowData(row)
 
             test_path = row_data["test_path"]
             test_environment_compatible = row_data["test_environment_compatible"]
@@ -383,7 +394,7 @@ class TreeDetails(View):
 
             if test_path:
                 if test_path.startswith("boot"):
-                    self.__processBootsTest(row_data)
+                    self._processBootsTest(row_data)
                 else:
                     self.__processNonBootsTest(row_data)
 
@@ -432,6 +443,7 @@ class TreeDetails(View):
                     incidents.test_id AS incidents_test_id,
                     incidents.present AS incidents_present,
                     issues.id AS issues_id,
+                    issues.version AS issues_version,
                     issues.comment AS issues_comment,
                     issues.report_url AS issues_report_url
             FROM

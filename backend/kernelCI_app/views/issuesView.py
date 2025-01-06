@@ -12,7 +12,7 @@ from kernelCI_app.utils import (
 
 
 class IssueView(View):
-    fields = ["incident_id", "id", "comment", "report_url"]
+    fields = ["incident_id", "id", "version", "comment", "report_url"]
 
     def get_dict_record(self, row) -> Dict[str, str]:
         record = {}
@@ -30,6 +30,7 @@ class IssueView(View):
             else:
                 result[record["id"]] = create_issue(
                     issue_id=record["id"],
+                    issue_version=record["version"],
                     issue_comment=record["comment"],
                     issue_report_url=record["report_url"],
                 )
@@ -40,6 +41,7 @@ class IssueView(View):
             SELECT
                 incidents.id,
                 issues.id,
+                issues.version,
                 issues.comment,
                 issues.report_url
             FROM incidents
@@ -56,8 +58,8 @@ class IssueView(View):
         query = """
             SELECT
                 incidents.id,
-                incidents.present,
                 issues.id,
+                issues.version,
                 issues.comment,
                 issues.report_url
             FROM incidents
