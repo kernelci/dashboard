@@ -1,5 +1,3 @@
-import { FormattedMessage } from 'react-intl';
-
 import type { LinkProps } from '@tanstack/react-router';
 import {
   useNavigate,
@@ -10,21 +8,13 @@ import {
 
 import { useCallback } from 'react';
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/Breadcrumb/Breadcrumb';
-
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 import {
   zTableFilterInfoDefault,
   type TestsTableFilter,
 } from '@/types/tree/TreeDetails';
 import { RedirectFrom } from '@/types/general';
+import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 
 const TreeBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
@@ -64,36 +54,15 @@ const TreeBuildDetails = (): JSX.Element => {
     [navigate, treeId],
   );
 
-  const breadcrumbElement = (
-    <Breadcrumb className="pb-6 pt-6">
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink to="/tree" search={searchParams}>
-            <FormattedMessage id="tree.path" />
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbLink
-          to={`/tree/$treeId`}
-          params={{ treeId: treeId }}
-          search={searchParams}
-        >
-          <FormattedMessage id="tree.details" />
-        </BreadcrumbLink>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbPage>
-            <FormattedMessage id="buildDetails.buildDetails" />
-          </BreadcrumbPage>
-        </BreadcrumbItem>
-      </BreadcrumbList>
-    </Breadcrumb>
-  );
-
   return (
     <BuildDetails
       buildId={buildId}
-      breadcrumb={breadcrumbElement}
+      breadcrumb={
+        <MemoizedTreeBreadcrumb
+          searchParams={searchParams}
+          locationMessage="buildDetails.buildDetails"
+        />
+      }
       onClickFilter={onClickFilter}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}

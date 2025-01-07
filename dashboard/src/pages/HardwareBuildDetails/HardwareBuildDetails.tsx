@@ -1,5 +1,3 @@
-import { FormattedMessage } from 'react-intl';
-
 import type { LinkProps } from '@tanstack/react-router';
 import {
   useNavigate,
@@ -10,21 +8,13 @@ import {
 
 import { useCallback } from 'react';
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/Breadcrumb/Breadcrumb';
-
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 import {
   zTableFilterInfoDefault,
   type TestsTableFilter,
 } from '@/types/tree/TreeDetails';
 import { RedirectFrom } from '@/types/general';
+import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBreadcrumb';
 
 const HardwareBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
@@ -66,36 +56,15 @@ const HardwareBuildDetails = (): JSX.Element => {
     [navigate, hardwareId],
   );
 
-  const breadcrumbElement = (
-    <Breadcrumb className="pb-6 pt-6">
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink to="/hardware" search={searchParams}>
-            <FormattedMessage id="hardware.path" />
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbLink
-          to="/hardware/$hardwareId"
-          params={{ hardwareId }}
-          search={searchParams}
-        >
-          <FormattedMessage id="hardware.details" />
-        </BreadcrumbLink>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbPage>
-            <FormattedMessage id="buildDetails.buildDetails" />
-          </BreadcrumbPage>
-        </BreadcrumbItem>
-      </BreadcrumbList>
-    </Breadcrumb>
-  );
-
   return (
     <BuildDetails
       buildId={buildId}
-      breadcrumb={breadcrumbElement}
+      breadcrumb={
+        <MemoizedHardwareBreadcrumb
+          searchParams={searchParams}
+          locationMessage="buildDetails.buildDetails"
+        />
+      }
       onClickFilter={onClickFilter}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}
