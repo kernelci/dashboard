@@ -22,7 +22,7 @@ const BreadcrumbList = ({ ...props }: BreadcrumbListProps): JSX.Element => {
 
 type BreadcrumbLinkProps = Pick<
   LinkProps,
-  'to' | 'params' | 'from' | 'search' | 'children'
+  'to' | 'params' | 'from' | 'search' | 'children' | 'state'
 >;
 
 const BreadcrumbLink = ({
