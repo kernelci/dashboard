@@ -31,6 +31,7 @@ class BuildDetails(View):
         query = Query().from_table(Builds, build_fields)
         query.join(
             "checkouts",
+            join_type="LEFT JOIN",
             fields=[
                 "tree_name",
                 "git_repository_branch",

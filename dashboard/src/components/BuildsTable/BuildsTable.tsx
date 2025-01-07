@@ -25,7 +25,6 @@ import type {
 } from '@/types/tree/TreeDetails';
 import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
 
-import { useBuildStatusCount } from '@/api/treeDetails';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
@@ -33,6 +32,8 @@ import { usePaginationState } from '@/hooks/usePaginationState';
 import type { TableKeys } from '@/utils/constants/tables';
 
 import { TableRowMemoized } from '@/components/Table/TableComponents';
+
+import { useBuildDetails } from '@/api/buildDetails';
 
 import { defaultBuildColumns } from './DefaultBuildsColumns';
 
@@ -245,9 +246,8 @@ export function BuildsTable({
     });
   }, [setLog, sortedItems.length]);
 
-  const { data: dataBuildCount, isLoading } = useBuildStatusCount(
-    { buildId: sortedItems.length > 0 ? sortedItems[currentLog ?? 0]?.id : '' },
-    { enabled: sortedItems.length > 0 && !!sortedItems[currentLog ?? 0]?.id },
+  const { data: dataBuildCount, isLoading } = useBuildDetails(
+    sortedItems.length > 0 ? sortedItems[currentLog ?? 0]?.id : '',
   );
 
   const navigationLogsActions = useMemo(
