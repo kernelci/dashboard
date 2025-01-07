@@ -157,14 +157,14 @@ export const zTableFilterInfoValidator = zTableFilterInfo
 export type TableFilter = z.infer<typeof zTableFilterInfo>;
 
 export const DEFAULT_TREE_INFO = {};
-export const zTreeInformation = z
-  .object({
-    gitBranch: z.string().optional().catch(''),
-    gitUrl: z.string().optional().catch(''),
-    treeName: z.string().optional().catch(''),
-    commitName: z.string().optional().catch(''),
-    headCommitHash: z.string().optional().catch(undefined),
-  })
+export const zTreeInformationObject = z.object({
+  gitBranch: z.string().optional().catch(''),
+  gitUrl: z.string().optional().catch(''),
+  treeName: z.string().optional().catch(''),
+  commitName: z.string().optional().catch(''),
+  headCommitHash: z.string().optional().catch(undefined),
+});
+export const zTreeInformation = zTreeInformationObject
   .default(DEFAULT_TREE_INFO)
   .catch(DEFAULT_TREE_INFO);
 

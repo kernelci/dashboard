@@ -8,6 +8,8 @@ import {
   parseSearch,
   stringifySearch,
   isEncodedJSONArrayParam,
+  minifyParams,
+  unminifyParams,
 } from './search';
 
 const KEY_FLAT_CHAR = '|';
@@ -19,8 +21,14 @@ const simpleObject = {
   treeIndexes: [1, 2, 3],
 };
 
-const simpleObjectStringify =
-  '?origin=maestro&intervalInDays=7&treeIndexes[]=1,2,3';
+const simpleObjectMinify = {
+  o: 'maestro',
+  i: 7,
+  // eslint-disable-next-line no-magic-numbers
+  x: [1, 2, 3],
+};
+
+const simpleObjectStringify = '?o=maestro&i=7&x[]=1,2,3';
 
 const nestedObject = {
   origin: 'maestro',
@@ -32,7 +40,7 @@ const nestedObject = {
   },
   treeInfo: {
     treeName: 'android',
-    gitCommitHash: 'hash',
+    headCommitHash: 'hash',
   },
   diffFilter: {
     configs: { defconfig: true },
@@ -42,6 +50,33 @@ const nestedObject = {
   treeIndexes: [0, 1, 2],
 };
 
+const nestedObjectMinify = {
+  o: 'maestro',
+  i: 7,
+  tf: {
+    bt: 'a',
+    b: 'f',
+    t: 'a',
+  },
+  ti: {
+    t: 'android',
+    ch: 'hash',
+  },
+  df: {
+    c: { defconfig: true },
+    a: { arm: true },
+    tp: 'amlogic',
+  },
+  x: [0, 1, 2],
+};
+
+const nestedObjectStringify =
+  '?o=maestro&i=7' +
+  '&tf|bt=a&tf|b=f&tf|t=a' +
+  '&ti|t=android&ti|ch=hash' +
+  '&df|c|defconfig=true&df|a|arm=true&df|tp=amlogic' +
+  '&x[]=0,1,2';
+
 const flatObject = {
   origin: 'maestro',
   intervalInDays: 7,
@@ -49,19 +84,26 @@ const flatObject = {
   'tableFilter|buildsTable': 'failed',
   'tableFilter|testsTable': 'all',
   'treeInfo|treeName': 'android',
-  'treeInfo|gitCommitHash': 'hash',
+  'treeInfo|headCommitHash': 'hash',
   'diffFilter|configs|defconfig': true,
   'diffFilter|archs|arm': true,
   'diffFilter|testPath': 'amlogic',
   treeIndexes: [0, 1, 2],
 };
 
-const nestedObjectStringify =
-  '?origin=maestro&intervalInDays=7' +
-  '&tableFilter|bootsTable=all&tableFilter|buildsTable=failed&tableFilter|testsTable=all' +
-  '&treeInfo|treeName=android&treeInfo|gitCommitHash=hash' +
-  '&diffFilter|configs|defconfig=true&diffFilter|archs|arm=true&diffFilter|testPath=amlogic' +
-  '&treeIndexes[]=0,1,2';
+const flatObjectMinify = {
+  o: 'maestro',
+  i: 7,
+  'tf|bt': 'a',
+  'tf|b': 'f',
+  'tf|t': 'a',
+  'ti|t': 'android',
+  'ti|ch': 'hash',
+  'df|c|defconfig': true,
+  'df|a|arm': true,
+  'df|tp': 'amlogic',
+  x: [0, 1, 2],
+};
 
 describe('isEncodedArrayParam', () => {
   const emptyJSONArrayStr = 'treeIndexes=[]';
@@ -149,6 +191,42 @@ describe('unflattenObject', () => {
   });
 });
 
+describe('minifyParams', () => {
+  it('Simple object with filled array', () => {
+    expect(minifyParams(simpleObject)).toStrictEqual(simpleObjectMinify);
+  });
+
+  it('Simple object with empty array', () => {
+    const simpleObjectEmptyArray = { ...simpleObject, treeIndexes: [] };
+    const simpleObjectEmptyArrayMinify = { ...simpleObjectMinify, x: [] };
+    expect(minifyParams(simpleObjectEmptyArray)).toStrictEqual(
+      simpleObjectEmptyArrayMinify,
+    );
+  });
+
+  it('Nested object', () => {
+    expect(minifyParams(nestedObject)).toStrictEqual(nestedObjectMinify);
+  });
+});
+
+describe('unminifyParams', () => {
+  it('Simple object with filled array', () => {
+    expect(unminifyParams(simpleObjectMinify)).toStrictEqual(simpleObject);
+  });
+
+  it('Simple object with empty array', () => {
+    const simpleObjectEmptyArray = { ...simpleObject, treeIndexes: [] };
+    const simpleObjectEmptyArrayMinify = { ...simpleObjectMinify, x: [] };
+    expect(unminifyParams(simpleObjectEmptyArrayMinify)).toStrictEqual(
+      simpleObjectEmptyArray,
+    );
+  });
+
+  it('Nested object', () => {
+    expect(unminifyParams(nestedObjectMinify)).toStrictEqual(nestedObject);
+  });
+});
+
 describe('parseSearch', () => {
   it('Simple object with filled array', () => {
     expect(parseSearch(simpleObjectStringify)).toStrictEqual(simpleObject);
@@ -156,8 +234,7 @@ describe('parseSearch', () => {
 
   it('Simple object with empty array', () => {
     const simpleObjectEmptyArray = { ...simpleObject, treeIndexes: [] };
-    const simpleObjectEmptyArrayStringify =
-      '?origin=maestro&intervalInDays=7&treeIndexes[]';
+    const simpleObjectEmptyArrayStringify = '?o=maestro&i=7&x[]';
     expect(parseSearch(simpleObjectEmptyArrayStringify)).toStrictEqual(
       simpleObjectEmptyArray,
     );
@@ -235,17 +312,18 @@ describe('stringifySearch', () => {
 
   it('Simple object with filled array', () => {
     const result = stringifySearch(simpleObject);
-    assertSearchParams(result, simpleObject);
+    assertSearchParams(result, simpleObjectMinify);
   });
 
   it('Simple object with empty array', () => {
     const simpleObjectEmptyArray = { ...simpleObject, treeIndexes: [] };
+    const simpleObjectEmptyArrayMinify = { ...simpleObjectMinify, x: [] };
     const result = stringifySearch(simpleObjectEmptyArray);
-    assertSearchParams(result, simpleObjectEmptyArray);
+    assertSearchParams(result, simpleObjectEmptyArrayMinify);
   });
 
   it('Nested object', () => {
     const result = stringifySearch(nestedObject);
-    assertSearchParams(result, flatObject);
+    assertSearchParams(result, flatObjectMinify);
   });
 });

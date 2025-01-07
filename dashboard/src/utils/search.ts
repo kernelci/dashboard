@@ -2,6 +2,12 @@ import qs from 'query-string';
 
 import { type AnySchema, parseSearchWith } from '@tanstack/react-router';
 
+import { zFilterNumberKeys, zFilterObjectsKeys } from '@/types/general';
+import {
+  zTableFilterInfo,
+  zTreeInformationObject,
+} from '@/types/tree/TreeDetails';
+
 // Must be a character not used in any other query parameters (e.g. '.' or '_' wouldn't work)
 const KEY_FLAT_CHAR = '|';
 const ARRAY_SEPARATOR = ',';
@@ -34,28 +40,36 @@ export const parseSearch = (searchStr: string): AnySchema => {
     arrayFormatSeparator: ARRAY_SEPARATOR,
     parseBooleans: true,
     types: {
-      intervalInDays: 'number',
-      diffFilter_buildDurationMax: 'number',
-      diffFilter_buildDurationMin: 'number',
-      diffFilter_bootDurationMin: 'number',
-      diffFilter_bootDurationMax: 'number',
-      diffFilter_testDurationMin: 'number',
-      diffFilter_testDurationMax: 'number',
-      treeIndexes: 'number[]',
-      startTimestampInSeconds: 'number',
-      endTimestampInSeconds: 'number',
+      i: 'number',
+      df_bdx: 'number',
+      df_bdm: 'number',
+      df_btdx: 'number',
+      df_btdm: 'number',
+      df_tdx: 'number',
+      df_tdm: 'number',
+      x: 'number[]',
+      st: 'number',
+      et: 'number',
     },
   });
 
   Object.setPrototypeOf(flattenedParsedSearch, Object.prototype);
-  const parsedSearch = unflattenObject(flattenedParsedSearch, KEY_FLAT_CHAR);
+  const minifiedParsedSearch = unflattenObject(
+    flattenedParsedSearch,
+    KEY_FLAT_CHAR,
+  );
+  const parsedSearch = unminifyParams(minifiedParsedSearch);
   return parsedSearch;
 };
 
 export const stringifySearch = (
   searchParams: Record<string, unknown>,
 ): string => {
-  const flattenedSearchParams = flattenObject(searchParams, KEY_FLAT_CHAR);
+  const minifiedSearchParams = minifyParams(searchParams);
+  const flattenedSearchParams = flattenObject(
+    minifiedSearchParams,
+    KEY_FLAT_CHAR,
+  );
   const stringifiedSearch = qs.stringify(flattenedSearchParams, {
     arrayFormat: 'bracket-separator',
     arrayFormatSeparator: ARRAY_SEPARATOR,
@@ -118,6 +132,165 @@ export const unflattenObject = (
         }
         return acc;
       }, result);
+    }
+  }
+  return result;
+};
+
+const minifiedParams = {
+  origin: 'o',
+  intervalInDays: 'i',
+  currentPageTab: 'p',
+  tableFilter: 'tf',
+  diffFilter: 'df',
+  treeSearch: 'ts',
+  hardwareSearch: 'hs',
+  treeInfo: 'ti',
+  treeIndexes: 'x',
+  treeCommits: 'c',
+  startTimestampInSeconds: 'st',
+  endTimestampInSeconds: 'et',
+
+  //TreeInfo
+  gitBranch: 'gb',
+  gitUrl: 'gu',
+  treeName: 't',
+  commitName: 'c',
+  headCommitHash: 'ch',
+
+  // TableFilter
+  buildsTable: 'b',
+  bootsTable: 'bt',
+  testsTable: 't',
+
+  // DiffFilter
+  configs: 'c',
+  archs: 'a',
+  buildStatus: 'bs',
+  compilers: 'cp',
+  bootStatus: 'bts',
+  testStatus: 'ts',
+  testPath: 'tp',
+  bootPath: 'bp',
+  buildDurationMax: 'bdc',
+  buildDurationMin: 'bdf',
+  bootDurationMax: 'btdc',
+  bootDurationMin: 'btdf',
+  testDurationMax: 'tdc',
+  testDurationMin: 'tdf',
+  hardware: 'h',
+  trees: 't',
+  buildPlatform: 'bpf',
+  bootPlatform: 'btpf',
+  testPlatform: 'tpf',
+  buildIssue: 'bi',
+  bootIssue: 'bti',
+  testIssue: 'ti',
+} as const;
+type MinifiedParamsKeys = keyof typeof minifiedParams;
+
+const minifiedValues = {
+  // TableFilter values
+  all: 'a',
+  success: 's',
+  failed: 'f',
+  inconclusive: 'i',
+  valid: 'v',
+  invalid: 'iv',
+  null: 'n',
+
+  // CurrentPageTab values
+  'global.builds': 'b',
+  'global.boots': 'bt',
+  'global.tests': 't',
+} as const;
+type MinifiedValuesKeys = keyof typeof minifiedValues;
+
+export const minifyParams = (
+  searchParams: Record<string, unknown>,
+): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  for (const key in searchParams) {
+    if (Object.prototype.hasOwnProperty.call(searchParams, key)) {
+      const newKey =
+        key in minifiedParams ? minifiedParams[key as MinifiedParamsKeys] : key;
+      if (isStringRecord(searchParams[key])) {
+        result[newKey] = minifyParams(searchParams[key]);
+      } else {
+        const value =
+          typeof searchParams[key] === 'string' &&
+          searchParams[key] in minifiedValues
+            ? minifiedValues[searchParams[key] as MinifiedValuesKeys]
+            : searchParams[key];
+        result[newKey] = value;
+      }
+    }
+  }
+  return result;
+};
+
+const minifiedParamsArray = Object.entries(minifiedParams).map(
+  ([key, value]) => [value, key],
+);
+const minifiedValuesArray = Object.entries(minifiedValues).map(
+  ([key, value]) => [value, key],
+);
+
+// Calculate the values of the last element of each type (diffFilter, tableFilter,
+// TreeInfo or general) to divide the minifiedParamsArray into groups
+const DF_LAST_ENTRY = minifiedParamsArray.length;
+const TF_LAST_ENTRY =
+  DF_LAST_ENTRY -
+  (Object.keys(zFilterObjectsKeys.enum).length +
+    Object.keys(zFilterNumberKeys.enum).length);
+const TI_LAST_ENTRY =
+  TF_LAST_ENTRY - Object.keys(zTableFilterInfo.shape).length;
+const GENERAL_LAST_ENTRY =
+  TI_LAST_ENTRY - Object.keys(zTreeInformationObject.shape).length;
+
+const groupedMinifiedParams = {
+  general: Object.fromEntries(minifiedParamsArray.slice(0, GENERAL_LAST_ENTRY)),
+  ti: Object.fromEntries(
+    minifiedParamsArray.slice(GENERAL_LAST_ENTRY, TI_LAST_ENTRY),
+  ),
+  tf: Object.fromEntries(
+    minifiedParamsArray.slice(TI_LAST_ENTRY, TF_LAST_ENTRY),
+  ),
+  df: Object.fromEntries(
+    minifiedParamsArray.slice(TF_LAST_ENTRY, DF_LAST_ENTRY),
+  ),
+  value: Object.fromEntries(minifiedValuesArray),
+} as const;
+type GroupedMinifiedKeys = keyof typeof groupedMinifiedParams;
+
+export const unminifyParams = (
+  searchParams: Record<string, unknown>,
+  group: GroupedMinifiedKeys = 'general',
+): Record<string, unknown> => {
+  const result: Record<string, unknown> = {};
+  for (const key in searchParams) {
+    if (Object.prototype.hasOwnProperty.call(searchParams, key)) {
+      const newKey =
+        key in groupedMinifiedParams[group]
+          ? groupedMinifiedParams[group][key as GroupedMinifiedKeys]
+          : key;
+      if (isStringRecord(searchParams[key])) {
+        result[newKey] = unminifyParams(
+          searchParams[key],
+          key in groupedMinifiedParams
+            ? (key as GroupedMinifiedKeys)
+            : 'general',
+        );
+      } else {
+        const value =
+          typeof searchParams[key] === 'string' &&
+          searchParams[key] in groupedMinifiedParams['value']
+            ? groupedMinifiedParams['value'][
+                searchParams[key] as GroupedMinifiedKeys
+              ]
+            : searchParams[key];
+        result[newKey] = value;
+      }
     }
   }
   return result;
