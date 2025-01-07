@@ -12,10 +12,6 @@ def viewCache(view):
 
 
 urlpatterns = [
-    path("tests/<str:commit_hash>",
-         viewCache(views.TestsByTreeAndCommitHash),
-         name="testsByTreeAndCommitHash"
-         ),
     path("tests/test/<str:test_id>",
          viewCache(views.TestDetails),
          name="testDetails"
@@ -47,10 +43,6 @@ urlpatterns = [
     path("build/<str:build_id>/tests",
          viewCache(views.BuildTests),
          name="buildTests"
-         ),
-    path("build/<str:build_id>/status-count",
-         viewCache(views.BuildStatusCountView),
-         name="buildStatusCount"
          ),
     path("build/<str:build_id>/issues",
          viewCache(views.IssueView),

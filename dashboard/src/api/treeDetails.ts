@@ -5,11 +5,9 @@ import { useSearch } from '@tanstack/react-router';
 
 import type {
   TTreeDetailsFilter,
-  TTestByCommitHashResponse,
   BuildCountsResponse,
   TTreeTestsFullData,
   LogFilesResponse,
-  TTreeCommitHistoryResponse,
 } from '@/types/tree/TreeDetails';
 
 import { getTargetFilter, type TFilter } from '@/types/general';
@@ -99,130 +97,6 @@ export const useTreeDetails = ({
       }),
     enabled,
     placeholderData: previousData => previousData,
-  });
-};
-
-const fetchTestsByTreeAndCommitHash = async (
-  commitHash: string,
-  params?: {
-    path?: string;
-    origin?: string;
-    git_url?: string;
-    git_branch?: string;
-  },
-): Promise<TTestByCommitHashResponse> => {
-  const res = await http.get<TTestByCommitHashResponse>(
-    `/api/tests/${commitHash}`,
-    { params },
-  );
-
-  return res.data;
-};
-
-export const useTestsByTreeAndCommitHash = (
-  commitHash: string,
-  isBoot: boolean,
-  origin?: string,
-  git_url?: string,
-  git_branch?: string,
-): UseQueryResult<TTestByCommitHashResponse> => {
-  const params = {
-    origin: origin,
-    git_url: git_url,
-    git_branch: git_branch,
-    path: isBoot ? 'boot' : '',
-  };
-  return useQuery({
-    queryKey: ['testsByTreeAndCommitHash', commitHash, params],
-    queryFn: () => fetchTestsByTreeAndCommitHash(commitHash, params),
-  });
-};
-
-const fetchTreeCommitHistory = async (
-  commitHash: string,
-  origin: string,
-  gitUrl: string,
-  gitBranch: string,
-  filters: TTreeDetailsFilter,
-): Promise<TTreeCommitHistoryResponse> => {
-  const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
-
-  const params = {
-    origin,
-    git_url: gitUrl,
-    git_branch: gitBranch,
-    ...filtersFormatted,
-  };
-
-  const res = await http.get<TTreeCommitHistoryResponse>(
-    `/api/tree/${commitHash}/commits`,
-    {
-      params,
-    },
-  );
-  return res.data;
-};
-
-export const useTreeCommitHistory = (
-  {
-    commitHash,
-    origin,
-    gitUrl,
-    gitBranch,
-    filter,
-  }: {
-    commitHash: string;
-    origin: string;
-    gitUrl: string;
-    gitBranch: string;
-    filter: TFilter;
-  },
-  { enabled = true },
-): UseQueryResult<TTreeCommitHistoryResponse> => {
-  const testFilter = getTargetFilter(filter, 'test');
-  const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
-
-  const filters = {
-    ...treeDetailsFilter,
-    ...testFilter,
-  };
-
-  return useQuery({
-    queryKey: [
-      'treeCommitHistory',
-      commitHash,
-      origin,
-      gitUrl,
-      gitBranch,
-      filters,
-    ],
-    enabled,
-    queryFn: () =>
-      fetchTreeCommitHistory(commitHash, origin, gitUrl, gitBranch, filters),
-  });
-};
-
-const fetchBuildStatusCount = async (
-  buildId: string,
-): Promise<BuildCountsResponse> => {
-  const res = await http.get<BuildCountsResponse>(
-    `/api/build/${buildId}/status-count`,
-  );
-  return res.data;
-};
-
-export const useBuildStatusCount = (
-  {
-    buildId,
-  }: {
-    buildId: string;
-  },
-  { enabled = true },
-): UseQueryResult<BuildCountsResponse> => {
-  return useQuery({
-    queryKey: [buildId],
-    enabled,
-    queryFn: () => fetchBuildStatusCount(buildId),
   });
 };
 
