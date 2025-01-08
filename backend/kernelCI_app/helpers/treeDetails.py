@@ -205,3 +205,16 @@ def get_tree_url(row_data, current_tree_url: str) -> str:
         git_repository_url = row_data["checkout_git_repository_url"]
         if current_tree_url == "" and git_repository_url is not None:
             return git_repository_url
+
+def call_based_on_compatible_and_misc_platform(row_data, callback):
+    test_environment_compatible = row_data["test_environment_compatible"]
+    test_environment_misc_platform = row_data["test_platform"]
+    build_misc_platform = build_misc_value_or_default(
+        row_data["build_misc"]
+    ).get("platform", UNKNOWN_STRING)
+
+    if test_environment_compatible != UNKNOWN_STRING:
+        return callback(test_environment_compatible)
+    if test_environment_misc_platform != UNKNOWN_STRING:
+        return callback(test_environment_misc_platform)
+    return callback(build_misc_platform)

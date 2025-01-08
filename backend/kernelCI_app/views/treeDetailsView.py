@@ -5,7 +5,7 @@ from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
 )
-from kernelCI_app.helpers.treeDetails import get_current_row_data, get_tree_details_data, get_tree_url
+from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, get_current_row_data, get_tree_details_data, get_tree_url
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     extract_error_message,
@@ -252,21 +252,11 @@ class TreeDetails(View):
 
             test_path = row_data["test_path"]
             test_environment_compatible = row_data["test_environment_compatible"]
-            test_environment_misc_platform = row_data["test_platform"]
-            build_misc_platform = build_misc_value_or_default(
-                row_data["build_misc"]
-            ).get("platform", UNKNOWN_STRING)
-            hardware_filter = test_environment_compatible
-            git_repository_url = row_data["checkout_git_repository_url"]
 
-            if test_environment_compatible != UNKNOWN_STRING:
-                self.hardwareUsed.add(test_environment_compatible)
-            elif test_environment_misc_platform != UNKNOWN_STRING:
-                hardware_filter = test_environment_misc_platform
-                self.hardwareUsed.add(test_environment_misc_platform)
-            else:
-                hardware_filter = build_misc_platform
-                self.hardwareUsed.add(build_misc_platform)
+            hardware_filter = test_environment_compatible
+            
+            call_based_on_compatible_and_misc_platform(row_data, self.hardwareUsed.add)
+            hardware_filter = call_based_on_compatible_and_misc_platform(row_data, lambda x: x)
 
             self.tree_url = get_tree_url(row_data, self.tree_url)
 
