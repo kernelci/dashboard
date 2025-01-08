@@ -5,7 +5,7 @@ from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
 )
-from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, get_current_row_data, get_tree_details_data, get_tree_url
+from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, get_current_row_data, get_tree_details_data, get_tree_url, is_test_boots_test
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     extract_error_message,
@@ -273,11 +273,10 @@ class TreeDetails(View):
             if row_data["build_id"] is not None:
                 self._process_builds(row_data)
 
-            if test_path:
-                if test_path.startswith("boot"):
-                    self.__processBootsTest(row_data)
-                else:
-                    self.__processNonBootsTest(row_data)
+            if is_test_boots_test(row_data):
+                self.__processBootsTest(row_data)
+            else:
+                self.__processNonBootsTest(row_data)
 
         self.testIssues = convert_issues_dict_to_list(self.testIssuesTable)
         self.bootIssues = convert_issues_dict_to_list(self.bootsIssuesTable)

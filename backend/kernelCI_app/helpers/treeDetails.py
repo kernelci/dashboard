@@ -189,6 +189,8 @@ def get_current_row_data(current_row):
     ):
         current_row_data["issue_id"] = UNKNOWN_STRING
     current_row_data["build_misc"] = handle_build_misc(current_row_data["build_misc"])
+    if current_row_data["test_platform"] is None:
+        current_row_data["test_platform"] = UNKNOWN_STRING
 
     current_row_data["history_item"] = {
         "id": current_row_data["test_id"],
@@ -218,3 +220,9 @@ def call_based_on_compatible_and_misc_platform(row_data, callback):
     if test_environment_misc_platform != UNKNOWN_STRING:
         return callback(test_environment_misc_platform)
     return callback(build_misc_platform)
+
+def is_test_boots_test(row_data):
+    test_path = row_data["test_path"]
+    if test_path.startswith("boot"):
+        return True
+    return False
