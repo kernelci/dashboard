@@ -18,8 +18,7 @@ from kernelCI_app.helpers.misc import (
     build_misc_value_or_default,
     env_misc_value_or_default
 )
-from kernelCI_app.cache import getQueryCache, setQueryCache
-from django.db import connection
+
 from collections import defaultdict
 
 from kernelCI_app.viewCommon import create_details_build_summary
@@ -28,10 +27,10 @@ from kernelCI_app.viewCommon import create_details_build_summary
 class TreeDetails(View):
     def __init__(self):
         self.processedTests = set()
-        self.filterParams = None
+        self.filters = None
 
-        self.testHistory = []
         self.testStatusSummary = {}
+        self.testHistory = []
         self.testConfigs = {}
         self.testPlatformsWithErrors = set()
         self.testFailReasons = {}
@@ -63,22 +62,6 @@ class TreeDetails(View):
         self.failed_builds_with_unknown_issues = 0
         self.processed_build_issues = {}
         self.tree_url = ""
-
-    def setup_filters(self):
-        self.filterTestDurationMin = self.filterParams.filterTestDurationMin
-        self.filterTestDurationMax = self.filterParams.filterTestDurationMax
-        self.filterBootDurationMin = self.filterParams.filterBootDurationMin
-        self.filterBootDurationMax = self.filterParams.filterBootDurationMax
-        self.filterBootStatus = self.filterParams.filterBootStatus
-        self.filterTestStatus = self.filterParams.filterTestStatus
-        self.filterTreeDetailsConfigs = self.filterParams.filterConfigs
-        self.filterTreeDetailsCompiler = self.filterParams.filterCompiler
-        self.filterArchitecture = self.filterParams.filterArchitecture
-        self.filterHardware = self.filterParams.filterHardware
-        self.filterTestPath = self.filterParams.filterTestPath
-        self.filterBootPath = self.filterParams.filterBootPath
-        self.filterBuildValid = self.filterParams.filterBuildValid
-        self.filterIssues = self.filterParams.filterIssues
 
     def __getCurrentRowData(self, currentRow):
         tmp_test_env_comp_key = 14
@@ -180,7 +163,7 @@ class TreeDetails(View):
         testPath = currentRowData["test_path"]
         incident_test_id = currentRowData["incident_test_id"]
 
-        is_boot_filter_out = self.filterParams.is_boot_filtered_out(
+        is_boot_filter_out = self.filters.is_boot_filtered_out(
             duration=testDuration,
             issue_id=issue_id,
             path=testPath,
@@ -257,7 +240,7 @@ class TreeDetails(View):
         testPath = currentRowData["test_path"]
         incident_test_id = currentRowData["incident_test_id"]
 
-        is_test_filter_out = self.filterParams.is_test_filtered_out(
+        is_test_filter_out = self.filters.is_test_filtered_out(
             duration=testDuration,
             issue_id=issue_id,
             path=testPath,
@@ -319,7 +302,7 @@ class TreeDetails(View):
         build_valid = row_data["build_valid"]
         build_duration = row_data["build_duration"]
 
-        is_build_filtered_out = self.filterParams.is_build_filtered_out(
+        is_build_filtered_out = self.filters.is_build_filtered_out(
             valid=build_valid, duration=build_duration, issue_id=issue_id
         )
 
@@ -369,7 +352,7 @@ class TreeDetails(View):
             if self.tree_url == "" and git_repository_url is not None:
                 self.tree_url = git_repository_url
 
-            record_filter_out = self.filterParams.is_record_filtered_out(
+            record_filter_out = self.filters.is_record_filtered_out(
                 hardwares=[hardware_filter],
                 architecture=row_data["build_architecture"],
                 compiler=row_data["build_compiler"],
@@ -394,12 +377,9 @@ class TreeDetails(View):
         self.build_issues = convert_issues_dict_to_list(self.processed_build_issues)
 
     def get(self, request, commit_hash: str | None):
-        cache_key = "treeDetailsSlow"
-
         rows = get_tree_details_data(request, commit_hash)
 
-        self.filterParams = FilterParams(request)
-        self.setup_filters()
+        self.filters = FilterParams(request)
 
         self._sanitize_rows(rows)
 
@@ -407,6 +387,7 @@ class TreeDetails(View):
             {
                 "bootArchSummary": list(self.bootArchSummary.values()),
                 "testArchSummary": list(self.testArchSummary.values()),
+                "buildsSummary": self.build_summary,
                 "bootFailReasons": self.bootFailReasons,
                 "testFailReasons": self.testFailReasons,
                 "testPlatformsWithErrors": list(self.testPlatformsWithErrors),
@@ -428,7 +409,6 @@ class TreeDetails(View):
                 "failedTestsWithUnknownIssues": self.failedTestsWithUnknownIssues,
                 "failedBootsWithUnknownIssues": self.failedBootsWithUnknownIssues,
                 "builds": self.builds,
-                "buildsSummary": self.build_summary,
                 "buildsIssues": self.build_issues,
                 "failedBuildsWithUnknownIssues": self.failed_builds_with_unknown_issues,
                 "treeUrl": self.tree_url,
