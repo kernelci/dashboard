@@ -1,4 +1,4 @@
-import type { HistoryState, LinkProps } from '@tanstack/react-router';
+import type { LinkProps } from '@tanstack/react-router';
 import type { Cell, Row } from '@tanstack/react-table';
 import { flexRender } from '@tanstack/react-table';
 import { memo, useCallback, useMemo } from 'react';
@@ -17,7 +17,6 @@ interface ITableCellComponent<T> {
   cell: Cell<T, unknown>;
   rowIndex: number;
   openLogSheet: (index: number) => void;
-  historyState?: HistoryState;
   detailsLinkProps: LinkProps;
 }
 
@@ -25,7 +24,6 @@ const TableCellComponent = <T,>({
   cell,
   rowIndex,
   openLogSheet,
-  historyState,
   detailsLinkProps,
 }: ITableCellComponent<T>): JSX.Element => {
   const handleClick = useCallback(() => {
@@ -38,7 +36,7 @@ const TableCellComponent = <T,>({
   const parsedLinkProps: LinkProps =
     cell.column.id === DETAILS_COLUMN_ID
       ? detailsLinkProps
-      : { search: s => s, state: historyState };
+      : { search: s => s, state: s => s };
 
   return (
     <TableCellWithLink
@@ -58,7 +56,6 @@ interface ITableRowComponent<T extends BaseComponentType> {
   row: Row<T>;
   index: number;
   currentLog?: number;
-  historyState?: HistoryState;
   openLogSheet: (index: number) => void;
   getRowLink: (detailsId: string) => LinkProps;
 }
@@ -67,7 +64,6 @@ const TableRowComponent = <T extends BaseComponentType>({
   row,
   index,
   currentLog,
-  historyState,
   openLogSheet,
   getRowLink,
 }: ITableRowComponent<T>): JSX.Element => {
@@ -87,7 +83,6 @@ const TableRowComponent = <T extends BaseComponentType>({
           key={cellIdx}
           cell={cell}
           rowIndex={index}
-          historyState={historyState}
           openLogSheet={openLogSheet}
           detailsLinkProps={linkProps}
         />

@@ -13,7 +13,12 @@ import ListingItem, { ItemType } from '@/components/ListingItem/ListingItem';
 
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { NoIssueFound } from '@/components/Issue/IssueSection';
-import type { TFilter, TFilterObjectsKeys, TIssue } from '@/types/general';
+import type {
+  RedirectFrom,
+  TFilter,
+  TFilterObjectsKeys,
+  TIssue,
+} from '@/types/general';
 
 import FilterLink from '@/components/Tabs/FilterLink';
 
@@ -29,6 +34,8 @@ interface IIssuesList {
   title: IBaseCard['title'];
   diffFilter: TFilter;
   issueFilterSection: TFilterObjectsKeys;
+  detailsId?: string;
+  pageFrom?: RedirectFrom;
 }
 
 const IssuesList = ({
@@ -37,6 +44,8 @@ const IssuesList = ({
   title,
   diffFilter,
   issueFilterSection,
+  detailsId,
+  pageFrom,
 }: IIssuesList): JSX.Element => {
   const getIssueLink = useCallback(
     (issueId: string, version: string): LinkProps => ({
@@ -46,8 +55,9 @@ const IssuesList = ({
         versionNumber: version,
       },
       search: s => s,
+      state: { id: detailsId, from: pageFrom },
     }),
-    [],
+    [detailsId, pageFrom],
   );
 
   const intl = useIntl();

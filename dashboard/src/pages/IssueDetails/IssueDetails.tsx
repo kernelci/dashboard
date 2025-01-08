@@ -1,7 +1,12 @@
 import type { LinkProps } from '@tanstack/react-router';
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import {
+  useNavigate,
+  useParams,
+  useRouterState,
+  useSearch,
+} from '@tanstack/react-router';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { IssueDetails } from '@/components/IssueDetails/IssueDetails';
 import type {
@@ -9,6 +14,9 @@ import type {
   TestsTableFilter,
 } from '@/types/tree/TreeDetails';
 import { zTableFilterInfoDefault } from '@/types/tree/TreeDetails';
+import { RedirectFrom } from '@/types/general';
+import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
+import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBreadcrumb';
 
 const ISSUE_ROUTE = '/issue/$issueId/version/$versionNumber';
 
@@ -18,20 +26,45 @@ const getBuildTableRowLink = (buildId: string): LinkProps => ({
     buildId: buildId,
   },
   search: s => s,
+  state: s => s,
 });
 
 const getTestTableRowLink = (testId: string): LinkProps => ({
-      to: '/test/$testId',
-      params: {
-        testId: testId,
-      },
-      search: s => s,
+  to: '/test/$testId',
+  params: {
+    testId: testId,
+  },
+  search: s => s,
+  state: s => s,
 });
 
 const IssueDetailsPage = (): JSX.Element => {
   const searchParams = useSearch({ from: ISSUE_ROUTE });
   const { issueId, versionNumber } = useParams({ from: ISSUE_ROUTE });
   const navigate = useNavigate({ from: ISSUE_ROUTE });
+  const historyState = useRouterState({ select: s => s.location.state });
+
+  const breadcrumbComponent = useMemo(() => {
+    if (historyState.id !== undefined) {
+      if (historyState.from === RedirectFrom.Tree) {
+        return (
+          <MemoizedTreeBreadcrumb
+            searchParams={searchParams}
+            locationMessage="issueDetails.issueDetails"
+          />
+        );
+      }
+
+      if (historyState.from === RedirectFrom.Hardware) {
+        return (
+          <MemoizedHardwareBreadcrumb
+            searchParams={searchParams}
+            locationMessage="issueDetails.issueDetails"
+          />
+        );
+      }
+    }
+  }, [historyState.from, historyState.id, searchParams]);
 
   const onClickTestFilter = useCallback(
     (filter: TestsTableFilter): void => {
@@ -45,6 +78,7 @@ const IssueDetailsPage = (): JSX.Element => {
             },
           };
         },
+        state: s => s,
       });
     },
     [navigate],
@@ -62,6 +96,7 @@ const IssueDetailsPage = (): JSX.Element => {
             },
           };
         },
+        state: s => s,
       });
     },
     [navigate],
@@ -76,6 +111,7 @@ const IssueDetailsPage = (): JSX.Element => {
       getTestTableRowLink={getTestTableRowLink}
       onClickBuildFilter={onClickBuildFilter}
       getBuildTableRowLink={getBuildTableRowLink}
+      breadcrumb={breadcrumbComponent}
     />
   );
 };

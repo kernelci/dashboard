@@ -27,6 +27,8 @@ import { MemoizedPlatformsCard } from '@/components/Cards/PlatformsCard';
 
 import { sanitizePlatforms } from '@/utils/utils';
 
+import { RedirectFrom } from '@/types/general';
+
 import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
 interface TTestsTab {
@@ -101,6 +103,8 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
             failedWithUnknownIssues={tests.failedWithUnknownIssues}
             diffFilter={diffFilter}
             issueFilterSection="testIssue"
+            detailsId={hardwareId}
+            pageFrom={RedirectFrom.Hardware}
           />
         </div>
         <div>
@@ -149,6 +153,8 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
               failedWithUnknownIssues={tests.failedWithUnknownIssues}
               diffFilter={diffFilter}
               issueFilterSection="testIssue"
+              detailsId={hardwareId}
+              pageFrom={RedirectFrom.Hardware}
             />
           </div>
         </InnerMobileGrid>

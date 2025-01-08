@@ -27,7 +27,7 @@ import { MemoizedConfigsCard } from '@/components/Tabs/Builds/ConfigsCard';
 import { MemoizedPlatformsCard } from '@/components/Cards/PlatformsCard';
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 
-import type { TFilterObjectsKeys } from '@/types/general';
+import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
@@ -110,6 +110,8 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
             failedWithUnknownIssues={builds.failedWithUnknownIssues}
             diffFilter={diffFilter}
             issueFilterSection="buildIssue"
+            detailsId={hardwareId}
+            pageFrom={RedirectFrom.Hardware}
           />
         </div>
         <div>
@@ -158,6 +160,8 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
           failedWithUnknownIssues={builds.failedWithUnknownIssues}
           diffFilter={diffFilter}
           issueFilterSection="buildIssue"
+          detailsId={hardwareId}
+          pageFrom={RedirectFrom.Hardware}
         />
       </MobileGrid>
 

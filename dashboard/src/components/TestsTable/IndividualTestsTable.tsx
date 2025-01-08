@@ -10,7 +10,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import type { CSSProperties } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
-import type { HistoryState, LinkProps } from '@tanstack/react-router';
+import type { LinkProps } from '@tanstack/react-router';
 
 import type { TestHistory, TIndividualTest } from '@/types/general';
 
@@ -27,14 +27,12 @@ const ESTIMATED_ROW_HEIGHT = 60;
 interface IIndividualTestsTable {
   columns: ColumnDef<TIndividualTest>[];
   data: TIndividualTest[];
-  historyState?: HistoryState;
   getRowLink: (testId: TestHistory['id']) => LinkProps;
 }
 
 export function IndividualTestsTable({
   data,
   columns,
-  historyState,
   getRowLink,
 }: IIndividualTestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -107,11 +105,10 @@ export function IndividualTestsTable({
           openLogSheet={openLogSheet}
           currentLog={currentLog}
           getRowLink={getRowLink}
-          historyState={historyState}
         />
       );
     });
-  }, [virtualItems, rows, openLogSheet, getRowLink, currentLog, historyState]);
+  }, [virtualItems, rows, openLogSheet, getRowLink, currentLog]);
 
   // if more performance is needed, try using translate as in the example from tanstack virtual instead of padding
   // https://tanstack.com/virtual/latest/docs/framework/react/examples/table

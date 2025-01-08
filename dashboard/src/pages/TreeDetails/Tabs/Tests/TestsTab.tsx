@@ -29,7 +29,7 @@ import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
 import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
-import type { TFilter } from '@/types/general';
+import { RedirectFrom, type TFilter } from '@/types/general';
 
 import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
 
@@ -160,6 +160,8 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
             failedWithUnknownIssues={data.failedTestsWithUnknownIssues}
             diffFilter={diffFilter}
             issueFilterSection="testIssue"
+            detailsId={treeId}
+            pageFrom={RedirectFrom.Tree}
           />
         </div>
         <div>
@@ -195,6 +197,8 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
               failedWithUnknownIssues={data.failedTestsWithUnknownIssues}
               diffFilter={diffFilter}
               issueFilterSection="testIssue"
+              detailsId={treeId}
+              pageFrom={RedirectFrom.Tree}
             />
           </div>
           <div>
