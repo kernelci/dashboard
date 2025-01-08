@@ -5,18 +5,11 @@ from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
 )
-from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, get_current_row_data, get_hardware_filter, get_tree_details_data, get_tree_url, is_test_boots_test
+from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, get_build, get_current_row_data, get_hardware_filter, get_tree_details_data, get_tree_url, is_test_boots_test
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
-    extract_error_message,
     create_issue,
     IncidentInfo,
-)
-from kernelCI_app.helpers.misc import (
-    handle_build_misc,
-    handle_environment_misc,
-    build_misc_value_or_default,
-    env_misc_value_or_default
 )
 
 from collections import defaultdict
@@ -244,12 +237,11 @@ class TreeDetails(View):
         if build_id in self.processed_builds:
             return
         self.processed_builds.add(build_id)
-        self.builds.append(_get_build(row_data))
+        self.builds.append(get_build(row_data))
 
     def _sanitize_rows(self, rows):
         for row in rows:
             row_data = get_current_row_data(row)
-
             
             call_based_on_compatible_and_misc_platform(row_data, self.hardwareUsed.add)
             hardware_filter = get_hardware_filter(row_data)
@@ -318,20 +310,3 @@ class TreeDetails(View):
             },
             safe=False,
         )
-
-
-def _get_build(row_data):
-    return {
-        "id": row_data["build_id"],
-        "architecture": row_data["build_architecture"],
-        "config_name": row_data["build_config_name"],
-        "misc": row_data["build_misc"],
-        "config_url": row_data["build_config_url"],
-        "compiler": row_data["build_compiler"],
-        "valid": row_data["build_valid"],
-        "duration": row_data["build_duration"],
-        "log_url": row_data["build_log_url"],
-        "start_time": row_data["build_start_time"],
-        "git_repository_url": row_data["checkout_git_repository_url"],
-        "git_repository_branch": row_data["checkout_git_repository_branch"],
-    }

@@ -232,3 +232,19 @@ def is_test_boots_test(row_data):
     if test_path.startswith("boot"):
         return True
     return False
+
+def get_build(row_data):
+    return {
+        "id": row_data["build_id"],
+        "architecture": row_data["build_architecture"],
+        "config_name": row_data["build_config_name"],
+        "misc": row_data["build_misc"],
+        "config_url": row_data["build_config_url"],
+        "compiler": row_data["build_compiler"],
+        "valid": row_data["build_valid"],
+        "duration": row_data["build_duration"],
+        "log_url": row_data["build_log_url"],
+        "start_time": row_data["build_start_time"],
+        "git_repository_url": row_data["checkout_git_repository_url"],
+        "git_repository_branch": row_data["checkout_git_repository_branch"],
+    }
