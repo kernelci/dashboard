@@ -193,10 +193,15 @@ def get_current_row_data(current_row):
     current_row_data["history_item"] = {
         "id": current_row_data["test_id"],
         "status": current_row_data["test_status"],
-        "path": current_row_data["test_path"],
         "duration": current_row_data["test_duration"],
         "startTime": current_row_data["test_start_time"],
         "hardware": current_row[tmp_test_env_comp_key],
     }
 
     return current_row_data
+
+
+def get_tree_url(row_data, current_tree_url: str) -> str:
+        git_repository_url = row_data["checkout_git_repository_url"]
+        if current_tree_url == "" and git_repository_url is not None:
+            return git_repository_url
