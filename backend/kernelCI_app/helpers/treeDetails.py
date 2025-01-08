@@ -116,3 +116,87 @@ def get_tree_details_data(request, commit_hash):
             setQueryCache(cache_key, params, rows)
 
         return rows
+
+
+
+def get_current_row_data(current_row):
+    tmp_test_env_comp_key = 14
+    current_row_data = {
+        "test_id": current_row[1],
+        "test_origin": current_row[2],
+        "test_environment_comment": current_row[3],
+        "test_environment_misc": current_row[4],
+        "test_path": current_row[5],
+        "test_comment": current_row[6],
+        "test_log_url": current_row[7],
+        "test_status": current_row[8],
+        "test_waived": current_row[9],
+        "test_start_time": current_row[10],
+        "test_duration": current_row[11],
+        "test_number_value": current_row[12],
+        "test_misc": current_row[13],
+        "test_environment_compatible": current_row[tmp_test_env_comp_key],
+        "build_id": current_row[16],
+        "build_comment": current_row[17],
+        "build_start_time": current_row[18],
+        "build_duration": current_row[19],
+        "build_architecture": current_row[20],
+        "build_command": current_row[21],
+        "build_compiler": current_row[22],
+        "build_config_name": current_row[23],
+        "build_config_url": current_row[24],
+        "build_log_url": current_row[25],
+        "build_valid": current_row[26],
+        "build_misc": current_row[27],
+        "checkout_id": current_row[28],
+        "checkout_git_repository_url": current_row[29],
+        "checkout_git_repository_branch": current_row[30],
+        "incident_id": current_row[31],
+        "incident_test_id": current_row[32],
+        "incident_present": current_row[33],
+        "issue_id": current_row[34],
+        "issue_comment": current_row[35],
+        "issue_report_url": current_row[36],
+    }
+
+    environment_misc = handle_environment_misc(
+        current_row_data["test_environment_misc"]
+    )
+    current_row_data["test_platform"] = env_misc_value_or_default(
+        environment_misc
+    ).get("platform")
+    if current_row_data["test_status"] is None:
+        current_row_data["test_status"] = "NULL"
+    current_row_data["test_error"] = extract_error_message(
+        current_row_data["test_misc"]
+    )
+    if current_row_data["test_environment_compatible"] is None:
+        current_row_data["test_environment_compatible"] = UNKNOWN_STRING
+    else:
+        current_row_data["test_environment_compatible"] = current_row_data[
+            "test_environment_compatible"
+        ][0]
+    if current_row_data["build_architecture"] is None:
+        current_row_data["build_architecture"] = UNKNOWN_STRING
+    if current_row_data["build_compiler"] is None:
+        current_row_data["build_compiler"] = UNKNOWN_STRING
+    if current_row_data["build_config_name"] is None:
+        current_row_data["build_config_name"] = UNKNOWN_STRING
+    if current_row_data["issue_id"] is None and (
+        current_row_data["build_valid"] is False
+        or current_row_data["build_valid"] is None
+        or current_row_data["test_status"] == "FAIL"
+    ):
+        current_row_data["issue_id"] = UNKNOWN_STRING
+    current_row_data["build_misc"] = handle_build_misc(current_row_data["build_misc"])
+
+    current_row_data["history_item"] = {
+        "id": current_row_data["test_id"],
+        "status": current_row_data["test_status"],
+        "path": current_row_data["test_path"],
+        "duration": current_row_data["test_duration"],
+        "startTime": current_row_data["test_start_time"],
+        "hardware": current_row[tmp_test_env_comp_key],
+    }
+
+    return current_row_data

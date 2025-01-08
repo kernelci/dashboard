@@ -5,7 +5,7 @@ from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
 )
-from kernelCI_app.helpers.treeDetails import get_tree_details_data
+from kernelCI_app.helpers.treeDetails import get_current_row_data, get_tree_details_data
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     extract_error_message,
@@ -63,87 +63,6 @@ class TreeDetails(View):
         self.processed_build_issues = {}
         self.tree_url = ""
 
-    def __getCurrentRowData(self, currentRow):
-        tmp_test_env_comp_key = 14
-        currentRowData = {
-            "test_id": currentRow[1],
-            "test_origin": currentRow[2],
-            "test_environment_comment": currentRow[3],
-            "test_environment_misc": currentRow[4],
-            "test_path": currentRow[5],
-            "test_comment": currentRow[6],
-            "test_log_url": currentRow[7],
-            "test_status": currentRow[8],
-            "test_waived": currentRow[9],
-            "test_start_time": currentRow[10],
-            "test_duration": currentRow[11],
-            "test_number_value": currentRow[12],
-            "test_misc": currentRow[13],
-            "test_environment_compatible": currentRow[tmp_test_env_comp_key],
-            "build_id": currentRow[16],
-            "build_comment": currentRow[17],
-            "build_start_time": currentRow[18],
-            "build_duration": currentRow[19],
-            "build_architecture": currentRow[20],
-            "build_command": currentRow[21],
-            "build_compiler": currentRow[22],
-            "build_config_name": currentRow[23],
-            "build_config_url": currentRow[24],
-            "build_log_url": currentRow[25],
-            "build_valid": currentRow[26],
-            "build_misc": currentRow[27],
-            "checkout_id": currentRow[28],
-            "checkout_git_repository_url": currentRow[29],
-            "checkout_git_repository_branch": currentRow[30],
-            "incident_id": currentRow[31],
-            "incident_test_id": currentRow[32],
-            "incident_present": currentRow[33],
-            "issue_id": currentRow[34],
-            "issue_comment": currentRow[35],
-            "issue_report_url": currentRow[36],
-        }
-
-        environment_misc = handle_environment_misc(
-            currentRowData["test_environment_misc"]
-        )
-        currentRowData["test_platform"] = env_misc_value_or_default(
-            environment_misc
-        ).get("platform")
-        if currentRowData["test_status"] is None:
-            currentRowData["test_status"] = "NULL"
-        currentRowData["test_error"] = extract_error_message(
-            currentRowData["test_misc"]
-        )
-        if currentRowData["test_environment_compatible"] is None:
-            currentRowData["test_environment_compatible"] = UNKNOWN_STRING
-        else:
-            currentRowData["test_environment_compatible"] = currentRowData[
-                "test_environment_compatible"
-            ][0]
-        if currentRowData["build_architecture"] is None:
-            currentRowData["build_architecture"] = UNKNOWN_STRING
-        if currentRowData["build_compiler"] is None:
-            currentRowData["build_compiler"] = UNKNOWN_STRING
-        if currentRowData["build_config_name"] is None:
-            currentRowData["build_config_name"] = UNKNOWN_STRING
-        if currentRowData["issue_id"] is None and (
-            currentRowData["build_valid"] is False
-            or currentRowData["build_valid"] is None
-            or currentRowData["test_status"] == "FAIL"
-        ):
-            currentRowData["issue_id"] = UNKNOWN_STRING
-        currentRowData["build_misc"] = handle_build_misc(currentRowData["build_misc"])
-
-        currentRowData["history_item"] = {
-            "id": currentRowData["test_id"],
-            "status": currentRowData["test_status"],
-            "path": currentRowData["test_path"],
-            "duration": currentRowData["test_duration"],
-            "startTime": currentRowData["test_start_time"],
-            "hardware": currentRow[tmp_test_env_comp_key],
-        }
-
-        return currentRowData
 
     def __processBootsTest(self, currentRowData):
         testId = currentRowData["test_id"]
@@ -329,7 +248,7 @@ class TreeDetails(View):
 
     def _sanitize_rows(self, rows):
         for row in rows:
-            row_data = self.__getCurrentRowData(row)
+            row_data = get_current_row_data(row)
 
             test_path = row_data["test_path"]
             test_environment_compatible = row_data["test_environment_compatible"]
