@@ -2,10 +2,13 @@ import qs from 'query-string';
 
 import { type AnySchema, parseSearchWith } from '@tanstack/react-router';
 
-import { zFilterNumberKeys, zFilterObjectsKeys } from '@/types/general';
-import {
-  zTableFilterInfo,
-  zTreeInformationObject,
+import { type SearchParamsKeys, type TFilterKeys } from '@/types/general';
+import type {
+  possibleBuildsTableFilter,
+  possibleTabs,
+  possibleTestsTableFilter,
+  TableFilter,
+  TTreeInformation,
 } from '@/types/tree/TreeDetails';
 
 // Must be a character not used in any other query parameters (e.g. '.' or '_' wouldn't work)
@@ -137,7 +140,7 @@ export const unflattenObject = (
   return result;
 };
 
-const minifiedParams = {
+const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   origin: 'o',
   intervalInDays: 'i',
   currentPageTab: 'p',
@@ -150,20 +153,23 @@ const minifiedParams = {
   treeCommits: 'c',
   startTimestampInSeconds: 'st',
   endTimestampInSeconds: 'et',
+} as const;
 
-  //TreeInfo
+const treeInfoMinifiedParams: Record<keyof TTreeInformation, string> = {
   gitBranch: 'gb',
   gitUrl: 'gu',
   treeName: 't',
   commitName: 'c',
   headCommitHash: 'ch',
+} as const;
 
-  // TableFilter
+const tableFilterMinifiedParams: Record<keyof TableFilter, string> = {
   buildsTable: 'b',
   bootsTable: 'bt',
   testsTable: 't',
+} as const;
 
-  // DiffFilter
+const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   configs: 'c',
   archs: 'a',
   buildStatus: 'bs',
@@ -186,10 +192,28 @@ const minifiedParams = {
   buildIssue: 'bi',
   bootIssue: 'bti',
   testIssue: 'ti',
-} as const;
-type MinifiedParamsKeys = keyof typeof minifiedParams;
+};
 
-const minifiedValues = {
+type MinifiedParams = Record<
+  SearchParamsKeys | TFilterKeys | keyof TableFilter | keyof TTreeInformation,
+  string
+>;
+type MinifiedParamsKeys = keyof MinifiedParams;
+const minifiedParams: MinifiedParams = {
+  ...generalMinifiedParams,
+  ...treeInfoMinifiedParams,
+  ...tableFilterMinifiedParams,
+  ...diffFilterMinifiedParams,
+} as const;
+
+type MinifiedValues = Record<
+  | (typeof possibleTabs)[number]
+  | (typeof possibleBuildsTableFilter)[number]
+  | (typeof possibleTestsTableFilter)[number],
+  string
+>;
+type MinifiedValuesKeys = keyof MinifiedValues;
+const minifiedValues: MinifiedValues = {
   // TableFilter values
   all: 'a',
   success: 's',
@@ -204,7 +228,6 @@ const minifiedValues = {
   'global.boots': 'bt',
   'global.tests': 't',
 } as const;
-type MinifiedValuesKeys = keyof typeof minifiedValues;
 
 export const minifyParams = (
   searchParams: Record<string, unknown>,
@@ -229,36 +252,27 @@ export const minifyParams = (
   return result;
 };
 
-const minifiedParamsArray = Object.entries(minifiedParams).map(
+const generalMinifiedParamsArray = Object.entries(generalMinifiedParams).map(
   ([key, value]) => [value, key],
 );
+const treeInfoMinifiedParamsArray = Object.entries(treeInfoMinifiedParams).map(
+  ([key, value]) => [value, key],
+);
+const tableFilterMinifiedParamsArray = Object.entries(
+  tableFilterMinifiedParams,
+).map(([key, value]) => [value, key]);
+const diffFilterMinifiedParamsArray = Object.entries(
+  diffFilterMinifiedParams,
+).map(([key, value]) => [value, key]);
 const minifiedValuesArray = Object.entries(minifiedValues).map(
   ([key, value]) => [value, key],
 );
 
-// Calculate the values of the last element of each type (diffFilter, tableFilter,
-// TreeInfo or general) to divide the minifiedParamsArray into groups
-const DF_LAST_ENTRY = minifiedParamsArray.length;
-const TF_LAST_ENTRY =
-  DF_LAST_ENTRY -
-  (Object.keys(zFilterObjectsKeys.enum).length +
-    Object.keys(zFilterNumberKeys.enum).length);
-const TI_LAST_ENTRY =
-  TF_LAST_ENTRY - Object.keys(zTableFilterInfo.shape).length;
-const GENERAL_LAST_ENTRY =
-  TI_LAST_ENTRY - Object.keys(zTreeInformationObject.shape).length;
-
 const groupedMinifiedParams = {
-  general: Object.fromEntries(minifiedParamsArray.slice(0, GENERAL_LAST_ENTRY)),
-  ti: Object.fromEntries(
-    minifiedParamsArray.slice(GENERAL_LAST_ENTRY, TI_LAST_ENTRY),
-  ),
-  tf: Object.fromEntries(
-    minifiedParamsArray.slice(TI_LAST_ENTRY, TF_LAST_ENTRY),
-  ),
-  df: Object.fromEntries(
-    minifiedParamsArray.slice(TF_LAST_ENTRY, DF_LAST_ENTRY),
-  ),
+  general: Object.fromEntries(generalMinifiedParamsArray),
+  ti: Object.fromEntries(treeInfoMinifiedParamsArray),
+  tf: Object.fromEntries(tableFilterMinifiedParamsArray),
+  df: Object.fromEntries(diffFilterMinifiedParamsArray),
   value: Object.fromEntries(minifiedValuesArray),
 } as const;
 type GroupedMinifiedKeys = keyof typeof groupedMinifiedParams;

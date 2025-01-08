@@ -96,7 +96,11 @@ export type TTreeTestsFullData = {
   treeUrl: string;
 };
 
-const possibleTabs = ['global.builds', 'global.boots', 'global.tests'] as const;
+export const possibleTabs = [
+  'global.builds',
+  'global.boots',
+  'global.tests',
+] as const;
 
 export const possibleBuildsTableFilter = [
   'invalid',
@@ -167,6 +171,8 @@ export const zTreeInformationObject = z.object({
 export const zTreeInformation = zTreeInformationObject
   .default(DEFAULT_TREE_INFO)
   .catch(DEFAULT_TREE_INFO);
+
+export type TTreeInformation = z.infer<typeof zTreeInformation>;
 
 export type TestByCommitHash = {
   id: string;
