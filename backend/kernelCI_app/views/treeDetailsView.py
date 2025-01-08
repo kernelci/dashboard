@@ -64,23 +64,23 @@ class TreeDetails(View):
         self.tree_url = ""
 
 
-    def __processBootsTest(self, currentRowData):
-        testId = currentRowData["test_id"]
-        testStatus = currentRowData["test_status"]
-        testDuration = currentRowData["test_duration"]
-        buildConfig = currentRowData["build_config_name"]
-        buildArch = currentRowData["build_architecture"]
-        buildCompiler = currentRowData["build_compiler"]
-        testPlatform = currentRowData["test_platform"]
-        testError = currentRowData["test_error"]
-        historyItem = currentRowData["history_item"]
-        incident_id = currentRowData["incident_id"]
-        issue_id = currentRowData["issue_id"]
-        issue_comment = currentRowData["issue_comment"]
-        issue_report_url = currentRowData["issue_report_url"]
-        testEnvironmentCompatible = currentRowData["test_environment_compatible"]
-        testPath = currentRowData["test_path"]
-        incident_test_id = currentRowData["incident_test_id"]
+    def _process_boots_test(self, current_row_data):
+        testId = current_row_data["test_id"]
+        testStatus = current_row_data["test_status"]
+        testDuration = current_row_data["test_duration"]
+        buildConfig = current_row_data["build_config_name"]
+        buildArch = current_row_data["build_architecture"]
+        buildCompiler = current_row_data["build_compiler"]
+        testPlatform = current_row_data["test_platform"]
+        testError = current_row_data["test_error"]
+        historyItem = current_row_data["history_item"]
+        incident_id = current_row_data["incident_id"]
+        issue_id = current_row_data["issue_id"]
+        issue_comment = current_row_data["issue_comment"]
+        issue_report_url = current_row_data["issue_report_url"]
+        testEnvironmentCompatible = current_row_data["test_environment_compatible"]
+        testPath = current_row_data["test_path"]
+        incident_test_id = current_row_data["incident_test_id"]
 
         is_boot_filter_out = self.filters.is_boot_filtered_out(
             duration=testDuration,
@@ -142,7 +142,7 @@ class TreeDetails(View):
 
         self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
-    def __processNonBootsTest(self, currentRowData):
+    def _process_non_boots_test(self, currentRowData):
         testId = currentRowData["test_id"]
         testStatus = currentRowData["test_status"]
         testDuration = currentRowData["test_duration"]
@@ -274,9 +274,9 @@ class TreeDetails(View):
                 self._process_builds(row_data)
 
             if is_test_boots_test(row_data):
-                self.__processBootsTest(row_data)
+                self._process_boots_test(row_data)
             else:
-                self.__processNonBootsTest(row_data)
+                self._process_non_boots_test(row_data)
 
         self.testIssues = convert_issues_dict_to_list(self.testIssuesTable)
         self.bootIssues = convert_issues_dict_to_list(self.bootsIssuesTable)
