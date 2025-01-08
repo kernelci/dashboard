@@ -217,6 +217,20 @@ export const isTFilterNumberKeys = (key: string): key is TFilterNumberKeys => {
   return zFilterNumberKeys.safeParse(key).success;
 };
 
+export type SearchParamsKeys =
+  | 'origin'
+  | 'intervalInDays'
+  | 'currentPageTab'
+  | 'tableFilter'
+  | 'diffFilter'
+  | 'treeSearch'
+  | 'hardwareSearch'
+  | 'treeInfo'
+  | 'treeIndexes'
+  | 'treeCommits'
+  | 'startTimestampInSeconds'
+  | 'endTimestampInSeconds';
+
 const requestFilters = {
   hardwareDetails: [
     'hardwareDetails.trees',
