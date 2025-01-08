@@ -1,8 +1,10 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { useIntl } from 'react-intl';
 
 import { MdLink } from 'react-icons/md';
+
+import type { LinkProps } from '@tanstack/react-router';
 
 import type { IBaseCard } from '@/components/Cards/BaseCard';
 import BaseCard from '@/components/Cards/BaseCard';
@@ -16,6 +18,10 @@ import type { TFilter, TFilterObjectsKeys, TIssue } from '@/types/general';
 import FilterLink from '@/components/Tabs/FilterLink';
 
 import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
+
+import { UNKNOWN_STRING } from '@/utils/constants/backend';
+
+import { MemoizedMoreDetailsIconLink } from '@/components/Button/MoreDetailsButton';
 
 interface IIssuesList {
   issues: TIssue[];
@@ -32,7 +38,20 @@ const IssuesList = ({
   diffFilter,
   issueFilterSection,
 }: IIssuesList): JSX.Element => {
+  const getIssueLink = useCallback(
+    (issueId: string, version: string): LinkProps => ({
+      to: '/issue/$issueId/version/$versionNumber',
+      params: {
+        issueId: issueId,
+        versionNumber: version,
+      },
+      search: s => s,
+    }),
+    [],
+  );
+
   const intl = useIntl();
+
   failedWithUnknownIssues = failedWithUnknownIssues
     ? failedWithUnknownIssues
     : undefined;
@@ -57,15 +76,7 @@ const IssuesList = ({
     <DumbListingContent>
       {issues.map(issue => {
         return (
-          <div key={issue.id} className="flex w-full items-center">
-            {issue.report_url && (
-              <div className="pb-1 pr-2">
-                <LinkWithIcon
-                  link={issue.report_url}
-                  icon={<MdLink className="h-4 w-4" />}
-                />
-              </div>
-            )}
+          <div key={issue.id} className="flex w-full justify-between gap-4">
             <div className="overflow-hidden">
               <FilterLink
                 filterSection={issueFilterSection}
@@ -82,6 +93,19 @@ const IssuesList = ({
                   tooltip={issue.comment}
                 />
               </FilterLink>
+            </div>
+            <div className="flex items-center gap-4">
+              {issue.report_url && (
+                <LinkWithIcon
+                  link={issue.report_url}
+                  icon={<MdLink className="h-4 w-4" />}
+                />
+              )}
+              {issue.id !== UNKNOWN_STRING && (
+                <MemoizedMoreDetailsIconLink
+                  linkProps={getIssueLink(issue.id, issue.version)}
+                />
+              )}
             </div>
           </div>
         );
