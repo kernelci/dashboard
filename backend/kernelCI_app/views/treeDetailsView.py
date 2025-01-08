@@ -5,7 +5,7 @@ from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
 )
-from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, get_current_row_data, get_tree_details_data, get_tree_url, is_test_boots_test
+from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, get_current_row_data, get_hardware_filter, get_tree_details_data, get_tree_url, is_test_boots_test
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     extract_error_message,
@@ -31,10 +31,10 @@ class TreeDetails(View):
 
         self.testStatusSummary = {}
         self.testHistory = []
-        self.testConfigs = {}
+        self.test_configs = {}
         self.testPlatformsWithErrors = set()
         self.testFailReasons = {}
-        self.testArchSummary = {}
+        self.test_arch_summary = {}
         self.testIssues = []
         self.testIssuesTable = {}
         self.testEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
@@ -142,22 +142,22 @@ class TreeDetails(View):
 
         self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
-    def _process_non_boots_test(self, currentRowData):
-        testId = currentRowData["test_id"]
-        testStatus = currentRowData["test_status"]
-        testDuration = currentRowData["test_duration"]
-        buildConfig = currentRowData["build_config_name"]
-        buildArch = currentRowData["build_architecture"]
-        buildCompiler = currentRowData["build_compiler"]
-        testPlatform = currentRowData["test_platform"]
-        testError = currentRowData["test_error"]
-        historyItem = currentRowData["history_item"]
-        issue_id = currentRowData["issue_id"]
-        issue_comment = currentRowData["issue_comment"]
-        issue_report_url = currentRowData["issue_report_url"]
-        testEnvironmentCompatible = currentRowData["test_environment_compatible"]
-        testPath = currentRowData["test_path"]
-        incident_test_id = currentRowData["incident_test_id"]
+    def _process_non_boots_test(self, current_row_data):
+        testId = current_row_data["test_id"]
+        testStatus = current_row_data["test_status"]
+        testDuration = current_row_data["test_duration"]
+        buildConfig = current_row_data["build_config_name"]
+        buildArch = current_row_data["build_architecture"]
+        buildCompiler = current_row_data["build_compiler"]
+        testPlatform = current_row_data["test_platform"]
+        testError = current_row_data["test_error"]
+        historyItem = current_row_data["history_item"]
+        issue_id = current_row_data["issue_id"]
+        issue_comment = current_row_data["issue_comment"]
+        issue_report_url = current_row_data["issue_report_url"]
+        testEnvironmentCompatible = current_row_data["test_environment_compatible"]
+        testPath = current_row_data["test_path"]
+        incident_test_id = current_row_data["incident_test_id"]
 
         is_test_filter_out = self.filters.is_test_filtered_out(
             duration=testDuration,
@@ -195,16 +195,16 @@ class TreeDetails(View):
         )
 
         archKey = "%s-%s" % (buildArch, buildCompiler)
-        archSummary = self.testArchSummary.get(
+        arch_summary = self.test_arch_summary.get(
             archKey,
             {"arch": buildArch, "compiler": buildCompiler, "status": {}},
         )
-        archSummary["status"][testStatus] = archSummary["status"].get(testStatus, 0) + 1
-        self.testArchSummary[archKey] = archSummary
+        arch_summary["status"][testStatus] = arch_summary["status"].get(testStatus, 0) + 1
+        self.test_arch_summary[archKey] = arch_summary
 
-        configSummary = self.testConfigs.get(buildConfig, {})
-        configSummary[testStatus] = configSummary.get(testStatus, 0) + 1
-        self.testConfigs[buildConfig] = configSummary
+        config_summary = self.test_configs.get(buildConfig, {})
+        config_summary[testStatus] = config_summary.get(testStatus, 0) + 1
+        self.test_configs[buildConfig] = config_summary
 
         if testStatus == "ERROR" or testStatus == "FAIL" or testStatus == "MISS":
             self.testPlatformsWithErrors.add(testPlatform)
@@ -250,24 +250,20 @@ class TreeDetails(View):
         for row in rows:
             row_data = get_current_row_data(row)
 
-            test_path = row_data["test_path"]
-            test_environment_compatible = row_data["test_environment_compatible"]
-
-            hardware_filter = test_environment_compatible
             
             call_based_on_compatible_and_misc_platform(row_data, self.hardwareUsed.add)
-            hardware_filter = call_based_on_compatible_and_misc_platform(row_data, lambda x: x)
+            hardware_filter = get_hardware_filter(row_data)
 
             self.tree_url = get_tree_url(row_data, self.tree_url)
 
-            record_filter_out = self.filters.is_record_filtered_out(
+            is_record_filter_out = self.filters.is_record_filtered_out(
                 hardwares=[hardware_filter],
                 architecture=row_data["build_architecture"],
                 compiler=row_data["build_compiler"],
                 config_name=row_data["build_config_name"],
             )
 
-            if record_filter_out:
+            if is_record_filter_out:
                 continue
 
             if row_data["build_id"] is not None:
@@ -293,13 +289,13 @@ class TreeDetails(View):
         return JsonResponse(
             {
                 "bootArchSummary": list(self.bootArchSummary.values()),
-                "testArchSummary": list(self.testArchSummary.values()),
+                "testArchSummary": list(self.test_arch_summary.values()),
                 "buildsSummary": self.build_summary,
                 "bootFailReasons": self.bootFailReasons,
                 "testFailReasons": self.testFailReasons,
                 "testPlatformsWithErrors": list(self.testPlatformsWithErrors),
                 "bootPlatformsFailing": list(self.bootPlatformsFailing),
-                "testConfigs": self.testConfigs,
+                "testConfigs": self.test_configs,
                 "bootConfigs": self.bootConfigs,
                 "testStatusSummary": self.testStatusSummary,
                 "bootStatusSummary": self.bootStatusSummary,
