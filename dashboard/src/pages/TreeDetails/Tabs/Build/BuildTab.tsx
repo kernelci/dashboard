@@ -2,7 +2,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { useCallback } from 'react';
 
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
@@ -22,7 +22,7 @@ import {
   MobileGrid,
 } from '@/components/Tabs/TabGrid';
 
-import type { TFilterObjectsKeys } from '@/types/general';
+import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
@@ -38,6 +38,8 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   const { diffFilter } = useSearch({
     from: '/tree/$treeId',
   });
+
+  const { treeId } = useParams({ from: '/tree/$treeId' });
 
   const toggleFilterBySection = useCallback(
     (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
@@ -85,6 +87,8 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
             }
             diffFilter={diffFilter}
             issueFilterSection="buildIssue"
+            detailsId={treeId}
+            pageFrom={RedirectFrom.Tree}
           />
         </div>
         <div>
@@ -122,6 +126,8 @@ const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
           }
           diffFilter={diffFilter}
           issueFilterSection="buildIssue"
+          detailsId={treeId}
+          pageFrom={RedirectFrom.Tree}
         />
       </MobileGrid>
 

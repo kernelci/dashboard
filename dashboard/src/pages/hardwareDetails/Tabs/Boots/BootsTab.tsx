@@ -31,6 +31,7 @@ import { MemoizedPlatformsCard } from '@/components/Cards/PlatformsCard';
 import { sanitizePlatforms } from '@/utils/utils';
 
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
+import { RedirectFrom } from '@/types/general';
 
 interface TBootsTab {
   boots: THardwareDetails['boots'];
@@ -116,6 +117,8 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
             failedWithUnknownIssues={boots.failedWithUnknownIssues}
             diffFilter={diffFilter}
             issueFilterSection="bootIssue"
+            detailsId={hardwareId}
+            pageFrom={RedirectFrom.Hardware}
           />
         </div>
         <div>
@@ -164,6 +167,8 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
               failedWithUnknownIssues={boots.failedWithUnknownIssues}
               diffFilter={diffFilter}
               issueFilterSection="bootIssue"
+              detailsId={hardwareId}
+              pageFrom={RedirectFrom.Hardware}
             />
           </div>
         </InnerMobileGrid>

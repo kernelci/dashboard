@@ -6,7 +6,11 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo } from 'react';
 
-import type { HistoryState, LinkProps } from '@tanstack/react-router';
+import {
+  useSearch,
+  type HistoryState,
+  type LinkProps,
+} from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
 import type { ISection } from '@/components/Section/Section';
@@ -53,6 +57,7 @@ const BuildDetails = ({
   getTestTableRowLink,
   historyState,
 }: BuildDetailsProps): JSX.Element => {
+  const searchParams = useSearch({ from: '/build/$buildId' });
   const { data, error, isLoading } = useBuildDetails(buildId ?? '');
   const { data: issueData, status: issueStatus } = useBuildIssues(
     buildId ?? '',
@@ -217,11 +222,12 @@ const BuildDetails = ({
           onClickFilter={onClickFilter}
           tableFilter={tableFilter}
           getRowLink={getTestTableRowLink}
-          historyState={historyState}
         />
         <IssueSection
           data={issueData}
           status={issueStatus}
+          historyState={historyState}
+          previousSearch={searchParams}
         />
         <LogSheetContent logUrl={data.log_url} logExcerpt={data.log_excerpt} />
       </Sheet>

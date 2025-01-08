@@ -27,7 +27,7 @@ import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
 import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
-import type { TFilter } from '@/types/general';
+import { RedirectFrom, type TFilter } from '@/types/general';
 
 import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
 
@@ -158,6 +158,8 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
             failedWithUnknownIssues={data.failedBootsWithUnknownIssues}
             diffFilter={diffFilter}
             issueFilterSection="bootIssue"
+            detailsId={treeId}
+            pageFrom={RedirectFrom.Tree}
           />
         </div>
         <div>
@@ -193,6 +195,8 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
               failedWithUnknownIssues={data.failedBootsWithUnknownIssues}
               diffFilter={diffFilter}
               issueFilterSection="bootIssue"
+              detailsId={treeId}
+              pageFrom={RedirectFrom.Tree}
             />
           </div>
           <div>

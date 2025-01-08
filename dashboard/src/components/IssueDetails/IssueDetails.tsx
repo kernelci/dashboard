@@ -33,6 +33,7 @@ interface IIssueDetails {
   getTestTableRowLink: (testId: string) => LinkProps;
   onClickBuildFilter: (filter: BuildsTableFilter) => void;
   getBuildTableRowLink: (testId: string) => LinkProps;
+  breadcrumb?: JSX.Element;
 }
 
 export const IssueDetails = ({
@@ -43,6 +44,7 @@ export const IssueDetails = ({
   getTestTableRowLink,
   onClickBuildFilter,
   getBuildTableRowLink,
+  breadcrumb,
 }: IIssueDetails): JSX.Element => {
   const { data, error, isLoading } = useIssueDetails(issueId, versionNumber);
 
@@ -159,6 +161,7 @@ export const IssueDetails = ({
 
   return (
     <ErrorBoundary FallbackComponent={UnexpectedError}>
+      {breadcrumb}
       <SectionGroup sections={sectionsData} />
       {hasTest && (
         <IssueDetailsTestSection

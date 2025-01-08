@@ -4,6 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
+import type { HistoryState, LinkProps } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
 
 import { RiProhibited2Line } from 'react-icons/ri';
@@ -27,9 +28,13 @@ export const NoIssueFound = (): JSX.Element => {
 const IssueSection = ({
   data,
   status,
+  historyState,
+  previousSearch,
 }: {
   data?: TIssue[];
   status: UseQueryResult['status'];
+  historyState?: HistoryState;
+  previousSearch: LinkProps['search'];
 }): JSX.Element => {
   const issueList = useMemo(
     () =>
@@ -37,8 +42,10 @@ const IssueSection = ({
         <Link
           key={issue.id + issue.version}
           className="mb-16 flex [&:not(:last-child)]:mb-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2"
-          to={`/issue/${issue.id}/version/${issue.version}`}
-          search={s => s}
+          to="/issue/$issueId/version/$versionNumber"
+          params={{ issueId: issue.id, versionNumber: issue.version }}
+          state={historyState}
+          search={previousSearch}
         >
           <ListingItem
             unknown={issue.incidents_info.incidentsCount}
@@ -47,7 +54,7 @@ const IssueSection = ({
           />
         </Link>
       )),
-    [data],
+    [data, historyState, previousSearch],
   );
 
   return (
