@@ -28,3 +28,16 @@ const MoreDetailsLinkButton = ({
   );
 };
 export const MemoizedMoreDetailsButton = memo(MoreDetailsLinkButton);
+
+const MoreDetailsIconLink = ({
+  linkProps,
+}: {
+  linkProps: LinkProps;
+}): JSX.Element => {
+  return (
+    <Link {...linkProps}>
+      <MoreDetailsIcon />
+    </Link>
+  );
+};
+export const MemoizedMoreDetailsIconLink = memo(MoreDetailsIconLink);

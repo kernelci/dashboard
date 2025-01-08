@@ -54,7 +54,9 @@ const BuildDetails = ({
   historyState,
 }: BuildDetailsProps): JSX.Element => {
   const { data, error, isLoading } = useBuildDetails(buildId ?? '');
-  const issuesQueryResult = useBuildIssues(buildId ?? '');
+  const { data: issueData, status: issueStatus } = useBuildIssues(
+    buildId ?? '',
+  );
 
   const { formatMessage } = useIntl();
 
@@ -217,7 +219,10 @@ const BuildDetails = ({
           getRowLink={getTestTableRowLink}
           historyState={historyState}
         />
-        <IssueSection {...issuesQueryResult} />
+        <IssueSection
+          data={issueData}
+          status={issueStatus}
+        />
         <LogSheetContent logUrl={data.log_url} logExcerpt={data.log_excerpt} />
       </Sheet>
     </ErrorBoundary>

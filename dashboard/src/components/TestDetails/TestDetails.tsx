@@ -214,7 +214,7 @@ const TestDetails = ({
   testId,
 }: TestsDetailsProps): JSX.Element => {
   const { data, error, isLoading } = useTestDetails(testId ?? '');
-  const issuesQueryResult = useTestIssues(testId ?? '');
+  const { data: issueData, status: issueStatus } = useTestIssues(testId ?? '');
 
   if (error) {
     return (
@@ -240,7 +240,10 @@ const TestDetails = ({
         {breadcrumb}
 
         <TestDetailsSections test={data} />
-        <IssueSection {...issuesQueryResult} />
+        <IssueSection
+          data={issueData}
+          status={issueStatus}
+        />
       </div>
       <LogSheetContent logUrl={data.log_url} logExcerpt={data.log_excerpt} />
     </Sheet>

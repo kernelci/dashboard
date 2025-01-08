@@ -10,23 +10,28 @@ import type {
 } from '@/types/tree/TreeDetails';
 import { zTableFilterInfoDefault } from '@/types/tree/TreeDetails';
 
-const CURRENT_ROUTE = '/issue/$issueId/version/$versionNumber';
+const ISSUE_ROUTE = '/issue/$issueId/version/$versionNumber';
 
-const IssueDetailsPage = (): JSX.Element => {
-  const searchParams = useSearch({ from: CURRENT_ROUTE });
-  const { issueId, versionNumber } = useParams({ from: CURRENT_ROUTE });
-  const navigate = useNavigate({ from: CURRENT_ROUTE });
+const getBuildTableRowLink = (buildId: string): LinkProps => ({
+  to: '/build/$buildId',
+  params: {
+    buildId: buildId,
+  },
+  search: s => s,
+});
 
-  const getTestTableRowLink = useCallback(
-    (testId: string): LinkProps => ({
+const getTestTableRowLink = (testId: string): LinkProps => ({
       to: '/test/$testId',
       params: {
         testId: testId,
       },
       search: s => s,
-    }),
-    [],
-  );
+});
+
+const IssueDetailsPage = (): JSX.Element => {
+  const searchParams = useSearch({ from: ISSUE_ROUTE });
+  const { issueId, versionNumber } = useParams({ from: ISSUE_ROUTE });
+  const navigate = useNavigate({ from: ISSUE_ROUTE });
 
   const onClickTestFilter = useCallback(
     (filter: TestsTableFilter): void => {
@@ -43,17 +48,6 @@ const IssueDetailsPage = (): JSX.Element => {
       });
     },
     [navigate],
-  );
-
-  const getBuildTableRowLink = useCallback(
-    (buildId: string): LinkProps => ({
-      to: '/build/$buildId',
-      params: {
-        buildId: buildId,
-      },
-      search: s => s,
-    }),
-    [],
   );
 
   const onClickBuildFilter = useCallback(

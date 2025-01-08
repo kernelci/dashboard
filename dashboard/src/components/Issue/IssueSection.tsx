@@ -27,20 +27,23 @@ export const NoIssueFound = (): JSX.Element => {
 const IssueSection = ({
   data,
   status,
-}: UseQueryResult<TIssue[]>): JSX.Element => {
+}: {
+  data?: TIssue[];
+  status: UseQueryResult['status'];
+}): JSX.Element => {
   const issueList = useMemo(
     () =>
       data?.map(issue => (
         <Link
-          key={issue.id}
-          to={issue.report_url}
-          target="_blank"
-          className="flex [&:not(:last-child)]:mb-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2"
+          key={issue.id + issue.version}
+          className="mb-16 flex [&:not(:last-child)]:mb-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2"
+          to={`/issue/${issue.id}/version/${issue.version}`}
+          search={s => s}
         >
           <ListingItem
             unknown={issue.incidents_info.incidentsCount}
-            text={issue.comment ?? ''}
-            tooltip={issue.comment}
+            text={issue.comment ?? issue.id}
+            tooltip={issue.id}
           />
         </Link>
       )),

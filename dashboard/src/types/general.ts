@@ -28,6 +28,7 @@ export type TIndividualTest = {
 
 export type TIssue = {
   id: string;
+  version: string;
   comment?: string;
   report_url?: string;
   incidents_info: IncidentsInfo;
