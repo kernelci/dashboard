@@ -21,7 +21,7 @@ import { formatDate } from '@/utils/utils';
 
 import IssueSection from '@/components/Issue/IssueSection';
 
-import { valueOrEmpty } from '@/lib/string';
+import { shouldTruncate, valueOrEmpty } from '@/lib/string';
 
 import { Sheet, SheetTrigger } from '@/components/Sheet';
 
@@ -104,22 +104,30 @@ const BuildDetails = ({
               {
                 title: 'global.tree',
                 linkText: valueOrEmpty(data.tree_name),
-                icon: <ImTree className="text-blue" />,
+                icon: data.tree_name ? (
+                  <ImTree className="text-blue" />
+                ) : undefined,
               },
               {
                 title: 'buildDetails.gitUrl',
-                linkText: (
+                linkText: shouldTruncate(
+                  valueOrEmpty(data.git_repository_url),
+                ) ? (
                   <TruncatedValueTooltip
                     value={data.git_repository_url}
                     isUrl={true}
                   />
+                ) : (
+                  <span>{valueOrEmpty(data.git_repository_url)}</span>
                 ),
                 link: data.git_repository_url,
               },
               {
                 title: 'buildDetails.gitBranch',
                 linkText: valueOrEmpty(data.git_repository_branch),
-                icon: <ImTree className="text-blue" />,
+                icon: data.git_repository_branch ? (
+                  <ImTree className="text-blue" />
+                ) : undefined,
               },
               {
                 title: 'buildDetails.gitCommit',
