@@ -17,6 +17,7 @@ export type TBuildDetails = {
   git_commit_name?: string;
   git_repository_branch?: string;
   git_repository_url?: string;
+  git_commit_tags?: string[];
   origin?: string;
   log_excerpt?: string;
   misc?: Record<string, unknown>;

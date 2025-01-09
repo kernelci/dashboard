@@ -38,6 +38,7 @@ class BuildDetails(View):
                 "git_commit_name",
                 "git_repository_url",
                 "git_commit_hash",
+                "git_commit_tags",
             ],
             condition="checkouts.id = builds.checkout_id",
         )

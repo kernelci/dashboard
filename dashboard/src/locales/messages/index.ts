@@ -170,6 +170,7 @@ export const messages = {
     'global.url': 'URL',
     'globalDetails.artifacts': 'Artifacts',
     'globalDetails.environmentMiscData': 'Environment Misc Data',
+    'globalDetails.gitCommitTag': 'Git Commit Tag',
     'globalDetails.miscData': 'Misc Data',
     'globalTable.bootStatus': 'Boot Status',
     'globalTable.branch': 'Branch',
