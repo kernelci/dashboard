@@ -1,7 +1,7 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 
-import type { TIssueDetails } from '@/types/issueDetails';
+import type { TErrorWithStatus, TIssueDetails } from '@/types/issueDetails';
 
 import type { BuildsTableBuild, TestHistory } from '@/types/general';
 
@@ -42,7 +42,7 @@ const fetchIssueDetailsTests = async (
 export const useIssueDetailsTests = (
   issueId: string,
   versionNumber: string,
-): UseQueryResult<TestHistory[]> => {
+): UseQueryResult<TestHistory[], TErrorWithStatus> => {
   return useQuery({
     queryKey: ['issueTestsData', issueId, versionNumber],
     queryFn: () => fetchIssueDetailsTests(issueId, versionNumber),
@@ -63,7 +63,7 @@ const fetchIssueDetailsBuilds = async (
 export const useIssueDetailsBuilds = (
   issueId: string,
   versionNumber: string,
-): UseQueryResult<BuildsTableBuild[]> => {
+): UseQueryResult<BuildsTableBuild[], TErrorWithStatus> => {
   return useQuery({
     queryKey: ['issueBuildsData', issueId, versionNumber],
     queryFn: () => fetchIssueDetailsBuilds(issueId, versionNumber),

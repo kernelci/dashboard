@@ -8,6 +8,7 @@ import { TestsTable } from '@/components/TestsTable/TestsTable';
 import { Separator } from '@/components/ui/separator';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
+import { NOT_FOUND_STATUS } from '@/types/issueDetails';
 
 interface IIssueDetailsTestSection {
   issueId: string;
@@ -30,7 +31,7 @@ export const IssueDetailsTestSection = ({
   );
   const { formatMessage } = useIntl();
 
-  if (!isLoading && data?.length === 0) {
+  if (!isLoading && error?.status === NOT_FOUND_STATUS) {
     return <></>;
   }
 

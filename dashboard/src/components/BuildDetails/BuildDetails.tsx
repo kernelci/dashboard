@@ -2,7 +2,7 @@ import { ImTree } from 'react-icons/im';
 
 import { MdClose, MdCheck, MdFolderOpen } from 'react-icons/md';
 
-import { FormattedMessage, useIntl } from 'react-intl';
+import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo } from 'react';
 
@@ -34,6 +34,9 @@ import { getMiscSection } from '@/components/Section/MiscSection';
 
 import { getFilesSection } from '@/components/Section/FilesSection';
 
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
 const BlueFolderIcon = (): JSX.Element => (
@@ -58,7 +61,7 @@ const BuildDetails = ({
   historyState,
 }: BuildDetailsProps): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
-  const { data, error, isLoading } = useBuildDetails(buildId ?? '');
+  const { data, isLoading, status } = useBuildDetails(buildId ?? '');
   const { data: issueData, status: issueStatus } = useBuildIssues(
     buildId ?? '',
   );
@@ -210,45 +213,42 @@ const BuildDetails = ({
     );
   }, [generalSections, miscSection, filesSection]);
 
-  if (error) {
-    return (
-      <div>
-        <FormattedMessage id="buildDetails.failedToFetch" />
-      </div>
-    );
-  }
-
-  if (isLoading) return <FormattedMessage id="global.loading" />;
-
-  if (!data) {
-    return (
-      <div>
-        <FormattedMessage id="buildDetails.notFound" />
-      </div>
-    );
-  }
-
   return (
-    <ErrorBoundary FallbackComponent={UnexpectedError}>
-      <Sheet>
-        {breadcrumb}
+    <QuerySwitcher
+      status={status}
+      data={data}
+      customError={
+        <MemoizedSectionError
+          isLoading={isLoading}
+          errorMessage={formatMessage({ id: 'buildDetails.failedToFetch' })}
+          emptyLabel={'global.error'}
+        />
+      }
+    >
+      <ErrorBoundary FallbackComponent={UnexpectedError}>
+        <Sheet>
+          {breadcrumb}
 
-        <SectionGroup sections={sectionsData} />
-        <BuildDetailsTestSection
-          buildId={buildId ?? ''}
-          onClickFilter={onClickFilter}
-          tableFilter={tableFilter}
-          getRowLink={getTestTableRowLink}
-        />
-        <IssueSection
-          data={issueData}
-          status={issueStatus}
-          historyState={historyState}
-          previousSearch={searchParams}
-        />
-        <LogSheetContent logUrl={data.log_url} logExcerpt={data.log_excerpt} />
-      </Sheet>
-    </ErrorBoundary>
+          <SectionGroup sections={sectionsData} />
+          <BuildDetailsTestSection
+            buildId={buildId ?? ''}
+            onClickFilter={onClickFilter}
+            tableFilter={tableFilter}
+            getRowLink={getTestTableRowLink}
+          />
+          <IssueSection
+            data={issueData}
+            status={issueStatus}
+            historyState={historyState}
+            previousSearch={searchParams}
+          />
+          <LogSheetContent
+            logUrl={data?.log_url}
+            logExcerpt={data?.log_excerpt}
+          />
+        </Sheet>
+      </ErrorBoundary>
+    </QuerySwitcher>
   );
 };
 
