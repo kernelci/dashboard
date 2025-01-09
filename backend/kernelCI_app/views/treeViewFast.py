@@ -2,6 +2,8 @@ from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.models import Checkouts
 from kernelCI_app.utils import getQueryTimeInterval
+from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_error_response
 
 DEFAULT_ORIGIN = "maestro"
 
@@ -53,6 +55,11 @@ class TreeViewFast(View):
             """,
             [origin, getQueryTimeInterval(**interval_days_data).timestamp()],
         )
+
+        if not checkouts:
+            return create_error_response(
+                error_message="Trees not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         # TODO Use django serializer
         response_data = [

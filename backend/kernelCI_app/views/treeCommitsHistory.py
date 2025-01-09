@@ -1,23 +1,25 @@
-from kernelCI_app.utils import getErrorResponseBody
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from datetime import datetime, timezone
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.db import connection
-from typing import Dict, List
+from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
     InvalidComparisonOP,
 )
+from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import (
     handle_build_misc,
     handle_environment_misc,
     build_misc_value_or_default,
     env_misc_value_or_default,
 )
-from kernelCI_app.helpers.logger import log_message
+from kernelCI_app.utils import getErrorResponseBody
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from typing import Dict, List
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -440,6 +442,11 @@ class TreeCommitsHistory(APIView):
                 self.field_values,
             )
             rows = cursor.fetchall()
+
+        if not rows:
+            return create_error_response(
+                error_message="History of tree commits not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         self._process_rows(rows)
         # Format the results as JSON

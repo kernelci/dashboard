@@ -1,7 +1,9 @@
-from django.http import JsonResponse, HttpResponseNotFound
+from django.http import JsonResponse
 from django.views import View
 from querybuilder.query import Query
 from kernelCI_app.models import Builds
+from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_error_response
 
 
 class BuildDetails(View):
@@ -46,5 +48,8 @@ class BuildDetails(View):
 
         records = query.select()
         if not records:
-            return HttpResponseNotFound("{}")
+            return create_error_response(
+                error_message="Build not found", status_code=HTTPStatus.NOT_FOUND
+            )
+
         return JsonResponse(records[0])

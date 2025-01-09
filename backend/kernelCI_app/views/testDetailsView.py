@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from django.db import connection
 from django.views import View
+from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.utils import string_to_json
 
 
@@ -65,5 +67,10 @@ class TestDetails(View):
                 response["misc"] = string_to_json(response["misc"])
                 response["environment_misc"] = string_to_json(response["environment_misc"])
                 response["output_files"] = string_to_json(response["output_files"])
+
+        if len(response) == 0:
+            return create_error_response(
+                error_message="Test not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         return JsonResponse(response, safe=False)

@@ -1,6 +1,8 @@
 from typing import Dict, List, Tuple
 from django.http import JsonResponse
+from http import HTTPStatus
 from django.views import View
+from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.filters import (
     FilterParams,
 )
@@ -150,6 +152,11 @@ class TreeDetails(View):
         rows = get_tree_details_data(request, commit_hash)
 
         self.filters = FilterParams(request)
+
+        if len(rows) == 0:
+            return create_error_response(
+                error_message="Tree not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         self._sanitize_rows(rows)
 

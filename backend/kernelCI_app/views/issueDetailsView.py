@@ -46,7 +46,7 @@ class IssueDetails(View):
             issue_id=parsed_params.issue_id, version=parsed_params.version
         )
 
-        if issue_data is None:
+        if not issue_data:
             return create_error_response(
                 error_message="Issue not found", status_code=HTTPStatus.NOT_FOUND
             )
