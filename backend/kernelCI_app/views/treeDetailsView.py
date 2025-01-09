@@ -244,6 +244,7 @@ class TreeDetails(View):
             row_data = get_current_row_data(row)
             
             call_based_on_compatible_and_misc_platform(row_data, self.hardwareUsed.add)
+
             hardware_filter = get_hardware_filter(row_data)
 
             self.tree_url = get_tree_url(row_data, self.tree_url)
