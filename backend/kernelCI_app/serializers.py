@@ -20,6 +20,7 @@ class TreeSerializer(serializers.Serializer):
     boot_status = serializers.SerializerMethodField(method_name="get_boot_status")
     git_commit_hash = serializers.CharField()
     git_commit_name = serializers.CharField()
+    git_commit_tags = serializers.ListField()
     patchset_hash = serializers.CharField()
     tree_names = serializers.ListField()
     git_repository_branch = serializers.CharField()

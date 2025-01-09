@@ -42,4 +42,6 @@ class CommitHistoryValidCheckout(BaseModel):
     tree_name: str
     git_repository_branch: str
     git_repository_url: str
+    git_commit_tags: Optional[List[str]] = []
+    git_commit_name: Optional[str]
     start_time: datetime

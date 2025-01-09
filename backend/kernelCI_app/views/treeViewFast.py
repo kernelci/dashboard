@@ -22,6 +22,7 @@ class TreeViewFast(View):
                     git_repository_url,
                     git_commit_hash,
                     git_commit_name,
+                    git_commit_tags,
                     patchset_hash,
                     start_time,
                     ROW_NUMBER() OVER
@@ -40,6 +41,7 @@ class TreeViewFast(View):
                 git_repository_url,
                 git_commit_hash,
                 git_commit_name,
+                git_commit_tags,
                 patchset_hash,
                 start_time
             FROM
@@ -61,6 +63,7 @@ class TreeViewFast(View):
                 "git_repository_url": checkout.git_repository_url,
                 "git_commit_hash": checkout.git_commit_hash,
                 "git_commit_name": checkout.git_commit_name,
+                "git_commit_tags": checkout.git_commit_tags,
                 "patchset_hash": checkout.patchset_hash,
                 "start_time": checkout.start_time,
             }

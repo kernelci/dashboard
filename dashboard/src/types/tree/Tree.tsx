@@ -2,18 +2,20 @@ import type { BuildStatus } from '@/types/general';
 
 export type TreeFastPathResponse = Array<{
   id: string;
-  tree_name: string | null;
+  tree_name?: string;
   git_repository_branch: string;
   git_repository_url: string;
   git_commit_hash: string;
-  git_commit_name: string | null;
-  patchset_hash: string | null;
+  git_commit_name?: string;
+  git_commit_tags?: string[];
+  patchset_hash?: string;
   start_time: string;
 }>;
 
 export type TreeTableBody = {
   commitHash: string;
   commitName: string;
+  commitTag?: string[];
   patchsetHash: string;
   buildStatus?: BuildStatus;
   tree_name?: string | null;
@@ -40,13 +42,14 @@ export type TreeTableBody = {
 };
 
 export type Tree = {
-  git_commit_hash: string | null;
-  patchset_hash: string | null;
+  git_commit_hash?: string;
+  patchset_hash?: string;
   tree_names: string[];
-  git_repository_branch: string | null;
-  start_time: string | null;
-  git_repository_url: string | null;
-  git_commit_name: string | null;
+  git_repository_branch?: string;
+  start_time?: string;
+  git_repository_url?: string;
+  git_commit_name?: string;
+  git_commit_tags: string[];
   build_status: {
     valid: number;
     invalid: number;

@@ -32,6 +32,7 @@ class Checkouts(models.Model):
     git_commit_hash = models.TextField(blank=True, null=True)
     git_commit_name = models.TextField(blank=True, null=True)
     git_repository_branch = models.TextField(blank=True, null=True)
+    git_commit_tags = ArrayField(models.TextField(), blank=True, null=True)
     patchset_files = models.JSONField(blank=True, null=True)
     patchset_hash = models.TextField(blank=True, null=True)
     message_id = models.TextField(blank=True, null=True)

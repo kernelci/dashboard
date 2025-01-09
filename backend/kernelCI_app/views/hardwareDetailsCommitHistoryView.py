@@ -112,6 +112,8 @@ class HardwareDetailsCommitHistoryView(View):
                 fc.tree_name AS tree_name,
                 fc.git_repository_url AS git_repository_url,
                 fc.git_repository_branch AS git_repository_branch,
+                lateralus.git_commit_tags AS git_commit_tags,
+                lateralus.git_commit_name AS git_commit_name,
                 lateralus.git_commit_hash AS git_commit_hash,
                 lateralus.start_time AS start_time
             FROM
@@ -119,6 +121,8 @@ class HardwareDetailsCommitHistoryView(View):
                 LATERAL (
                 SELECT
                     DISTINCT ON (c.git_commit_hash)
+                    c.git_commit_tags,
+                    c.git_commit_name,
                     c.git_commit_hash,
                     c.start_time
                 FROM
@@ -153,8 +157,10 @@ class HardwareDetailsCommitHistoryView(View):
                 "tree_name": checkout[0],
                 "git_repository_url": checkout[1],
                 "git_repository_branch": checkout[2],
-                "git_commit_hash": checkout[3],
-                "start_time": checkout[4],
+                "git_commit_tags": checkout[3],
+                "git_commit_name": checkout[4],
+                "git_commit_hash": checkout[5],
+                "start_time": checkout[6],
             }
             try:
                 validate_checkout = CommitHistoryValidCheckout(**dict_checkout)
