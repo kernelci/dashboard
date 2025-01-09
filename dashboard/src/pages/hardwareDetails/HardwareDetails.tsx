@@ -13,7 +13,6 @@ import {
   BreadcrumbSeparator,
 } from '@/components/Breadcrumb/Breadcrumb';
 
-import { Skeleton } from '@/components/Skeleton';
 import {
   useHardwareDetails,
   useHardwareDetailsCommitHistory,
@@ -42,6 +41,10 @@ import type { TFilter } from '@/types/general';
 import { getFormattedDate, getFormattedTime } from '@/utils/date';
 
 import { makeTreeIdentifierKey } from '@/utils/trees';
+
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
@@ -135,15 +138,16 @@ function HardwareDetails(): JSX.Element {
     });
   }, [navigate]);
 
-  const { data, isLoading, isPlaceholderData } = useHardwareDetails(
-    hardwareId,
-    startTimestampInSeconds,
-    endTimestampInSeconds,
-    origin,
-    reqFilter,
-    treeIndexes ?? [],
-    treeCommits,
-  );
+  const { data, status, isLoading, isPlaceholderData, error } =
+    useHardwareDetails(
+      hardwareId,
+      startTimestampInSeconds,
+      endTimestampInSeconds,
+      origin,
+      reqFilter,
+      treeIndexes ?? [],
+      treeCommits,
+    );
 
   const hardwareTableForCommitHistory = useMemo(() => {
     const result: CommitHead[] = [];
@@ -245,90 +249,101 @@ function HardwareDetails(): JSX.Element {
     ],
   );
 
-  if (isLoading || !data)
-    return (
-      <Skeleton>
-        <FormattedMessage id="global.loading" />
-      </Skeleton>
-    );
-
   return (
-    <div className="flex flex-col pt-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink
-                  to="/hardware"
-                  search={previousParams => {
-                    return {
-                      intervalInDays: previousParams.intervalInDays,
-                      origin: previousParams.origin,
-                      hardwareSearch: previousParams.hardwareSearch,
-                    };
-                  }}
-                >
-                  <FormattedMessage id="hardware.path" />
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>
-                  <span>{hardwareId}</span>
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-        <p className="text-sm font-medium text-gray-900">
-          <FormattedMessage
-            id="hardwareDetails.timeFrame"
-            values={{
-              startDate: startDate,
-              startTime: startTime,
-              endDate: endDate,
-              endTime: endTime,
-            }}
-          />
-        </p>
-      </div>
-      <div className="mt-5">
-        {!!treeData && (
-          <>
-            <HardwareHeader
-              treeItems={treeData}
-              selectedIndexes={treeIndexes}
-              updateTreeFilters={updateTreeFilters}
-            />
-            <div className="mt-5">
-              <MemoizedCompatibleHardware
-                title={<FormattedMessage id="hardwareDetails.compatibles" />}
-                compatibles={data.compatibles}
-              />
-            </div>
-          </>
-        )}
-        <div className="flex flex-col pb-2">
-          <div className="sticky top-[4.5rem] z-10">
-            <div className="absolute right-0 top-2 py-4">
-              <HardwareDetailsFilter
-                paramFilter={diffFilter}
-                hardwareName={hardwareId}
-                data={data}
-                selectedTrees={treeIndexes}
-              />
-            </div>
+    <QuerySwitcher
+      status={status}
+      data={data}
+      customError={
+        <MemoizedSectionError
+          isLoading={isLoading}
+          errorMessage={error?.message}
+          emptyLabel={'global.error'}
+        />
+      }
+    >
+      <div className="flex flex-col pt-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink
+                    to="/hardware"
+                    search={previousParams => {
+                      return {
+                        intervalInDays: previousParams.intervalInDays,
+                        origin: previousParams.origin,
+                        hardwareSearch: previousParams.hardwareSearch,
+                      };
+                    }}
+                  >
+                    <FormattedMessage id="hardware.path" />
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>
+                    <span>{hardwareId}</span>
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-          <HardwareDetailsTabs
-            hardwareDetailsData={data}
-            hardwareId={hardwareId}
-            filterListElement={filterListElement}
-            countElements={tabsCounts}
-          />
+          <p className="text-sm font-medium text-gray-900">
+            <FormattedMessage
+              id="hardwareDetails.timeFrame"
+              values={{
+                startDate: startDate,
+                startTime: startTime,
+                endDate: endDate,
+                endTime: endTime,
+              }}
+            />
+          </p>
+        </div>
+        <div className="mt-5">
+          {!!treeData && (
+            <>
+              <HardwareHeader
+                treeItems={treeData}
+                selectedIndexes={treeIndexes}
+                updateTreeFilters={updateTreeFilters}
+              />
+              {data && (
+                <div className="mt-5">
+                  <MemoizedCompatibleHardware
+                    title={
+                      <FormattedMessage id="hardwareDetails.compatibles" />
+                    }
+                    compatibles={data.compatibles}
+                  />
+                </div>
+              )}
+            </>
+          )}
+          {data && (
+            <div className="flex flex-col pb-2">
+              <div className="sticky top-[4.5rem] z-10">
+                <div className="absolute right-0 top-2 py-4">
+                  <HardwareDetailsFilter
+                    paramFilter={diffFilter}
+                    hardwareName={hardwareId}
+                    data={data}
+                    selectedTrees={treeIndexes}
+                  />
+                </div>
+              </div>
+              <HardwareDetailsTabs
+                hardwareDetailsData={data}
+                hardwareId={hardwareId}
+                filterListElement={filterListElement}
+                countElements={tabsCounts}
+              />
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </QuerySwitcher>
   );
 }
 

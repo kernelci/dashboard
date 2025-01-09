@@ -5,7 +5,6 @@ import { FormattedMessage } from 'react-intl';
 
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
 import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
-import { Skeleton } from '@/components/Skeleton';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -54,6 +53,8 @@ import type { ISummaryItem } from '@/components/Tabs/Summary';
 import { useTreeDetails } from '@/api/treeDetails';
 
 import { truncateUrl } from '@/lib/string';
+
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
@@ -134,7 +135,7 @@ function TreeDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const { isLoading, data, status, isPlaceholderData } = useTreeDetails({
+  const { isLoading, data, status, isPlaceholderData, error } = useTreeDetails({
     treeId: treeId ?? '',
     filter: reqFilter,
   });
@@ -225,79 +226,84 @@ function TreeDetails(): JSX.Element {
     [data],
   );
 
-  if (isLoading)
-    return (
-      <Skeleton>
-        <FormattedMessage id="global.loading" />
-      </Skeleton>
-    );
-
   return (
-    <div className="flex flex-col pt-8">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink
-              to="/tree"
-              search={previousParams => {
-                return {
-                  intervalInDays: previousParams.intervalInDays,
-                  origin: previousParams.origin,
-                };
-              }}
-            >
-              <FormattedMessage id="tree.path" />
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              <FormattedMessage id="tree.details" />
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <div className="mt-5">
-        <TreeHeader
-          gitBranch={treeInfo?.gitBranch}
-          commit={treeId}
-          treeNames={treeInfo?.treeName}
-          tag={treeInfo?.commitName ? treeInfo?.commitName : treeId}
-          gitUrl={treeInfo?.gitUrl}
+    <QuerySwitcher
+      status={status}
+      data={data}
+      customError={
+        <MemoizedSectionError
+          isLoading={isLoading}
+          errorMessage={error?.message}
+          emptyLabel={'global.error'}
         />
-      </div>
-      <QuerySwitcher
-        status={status}
-        data={data}
-        skeletonClassname="h-[200px] bg-lightGray"
-      >
+      }
+    >
+      <div className="flex flex-col pt-8">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                to="/tree"
+                search={previousParams => {
+                  return {
+                    intervalInDays: previousParams.intervalInDays,
+                    origin: previousParams.origin,
+                  };
+                }}
+              >
+                <FormattedMessage id="tree.path" />
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                <FormattedMessage id="tree.details" />
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         <div className="mt-5">
-          <MemoizedHardwareUsed
-            title={<FormattedMessage id="treeDetails.hardwareUsed" />}
-            hardwareUsed={data?.hardwareUsed}
-            diffFilter={diffFilter}
+          <TreeHeader
+            gitBranch={treeInfo?.gitBranch}
+            commit={treeId}
+            treeNames={treeInfo?.treeName}
+            tag={treeInfo?.commitName ? treeInfo?.commitName : treeId}
+            gitUrl={treeInfo?.gitUrl}
           />
         </div>
-      </QuerySwitcher>
-      <div className="flex flex-col pb-2">
-        {data?.treeUrl && (
-          <div className="sticky top-[4.5rem] z-10">
-            <div className="absolute right-0 top-2 py-4">
-              <TreeDetailsFilter
-                paramFilter={diffFilter}
-                treeUrl={data.treeUrl}
-              />
-            </div>
+        <QuerySwitcher
+          status={status}
+          data={data}
+          skeletonClassname="h-[200px] bg-lightGray"
+        >
+          <div className="mt-5">
+            <MemoizedHardwareUsed
+              title={<FormattedMessage id="treeDetails.hardwareUsed" />}
+              hardwareUsed={data?.hardwareUsed}
+              diffFilter={diffFilter}
+            />
           </div>
-        )}
-        <TreeDetailsTab
-          treeDetailsData={treeDetailsData}
-          filterListElement={filterListElement}
-          reqFilter={reqFilter}
-          countElements={tabsCounts}
-        />
+        </QuerySwitcher>
+        <div className="flex flex-col pb-2">
+          {data?.treeUrl && (
+            <div className="sticky top-[4.5rem] z-10">
+              <div className="absolute right-0 top-2 py-4">
+                <TreeDetailsFilter
+                  paramFilter={diffFilter}
+                  treeUrl={data.treeUrl}
+                />
+              </div>
+            </div>
+          )}
+          <TreeDetailsTab
+            treeDetailsData={treeDetailsData}
+            filterListElement={filterListElement}
+            reqFilter={reqFilter}
+            countElements={tabsCounts}
+          />
+        </div>
       </div>
-    </div>
+    </QuerySwitcher>
   );
 }
 
