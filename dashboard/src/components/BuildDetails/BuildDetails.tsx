@@ -174,6 +174,10 @@ const BuildDetails = ({
                 wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
               },
               {
+                title: 'buildDetails.buildId',
+                linkText: buildId,
+              },
+              {
                 title: 'buildDetails.kernelConfig',
                 linkText: (
                   <TruncatedValueTooltip value={data.config_url} isUrl={true} />
@@ -185,7 +189,7 @@ const BuildDetails = ({
         ],
       },
     ];
-  }, [data, formatMessage, hasUsefulLogInfo]);
+  }, [data, formatMessage, hasUsefulLogInfo, buildId]);
 
   const sectionsData: ISection[] = useMemo(() => {
     return [...generalSections, miscSection, filesSection].filter(

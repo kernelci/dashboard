@@ -46,6 +46,7 @@ export const messages = {
     'buildAccordion.testStatus': 'Test status',
     'buildAccordion.testSuccess': 'Test success',
     'buildDetails.buildDetails': 'Build Details',
+    'buildDetails.buildId': 'Build Id',
     'buildDetails.buildLogs': 'Build Logs',
     'buildDetails.buildTime': 'Build time',
     'buildDetails.compiler': 'Compiler',
