@@ -24,6 +24,7 @@ class TestDetails(View):
             "git_commit_hash": "checkouts.git_commit_hash",
             "git_repository_branch": "checkouts.git_repository_branch",
             "git_repository_url": "checkouts.git_repository_url",
+            "git_commit_tags": "checkouts.git_commit_tags",
         }
 
         query = """
@@ -44,7 +45,8 @@ class TestDetails(View):
                 builds.config_name,
                 checkouts.git_commit_hash,
                 checkouts.git_repository_branch,
-                checkouts.git_repository_url
+                checkouts.git_repository_url,
+                checkouts.git_commit_tags
             FROM tests
             LEFT JOIN builds
                 ON tests.build_id = builds.id
