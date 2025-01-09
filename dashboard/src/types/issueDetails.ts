@@ -1,3 +1,10 @@
+// TODO move this const
+export const NOT_FOUND_STATUS = 404;
+
+export type TErrorWithStatus = Error & {
+  status: number;
+};
+
 export type TIssueDetails = {
   timestamp: string;
   id: string;

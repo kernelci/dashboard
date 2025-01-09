@@ -12,6 +12,8 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 import { Toaster } from '@/components/ui/toaster';
 
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
 import { TreeTable } from './TreeTable';
 
 interface ITreeListingPage {
@@ -26,7 +28,12 @@ function isCompleteTree(
 
 const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   //TODO: Combine these 2 hooks inside a single hook
-  const { data: fastData, status: fastStatus } = useTreeTableFast();
+  const {
+    data: fastData,
+    status: fastStatus,
+    error: fastError,
+    isLoading: isFastLoading,
+  } = useTreeTableFast();
   const { data, error, isLoading } = useTreeTable({
     enabled: fastStatus === 'success' && !!fastData,
   });
@@ -116,7 +123,17 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   }
 
   return (
-    <QuerySwitcher status={fastStatus} data={fastData}>
+    <QuerySwitcher
+      status={fastStatus}
+      data={fastData}
+      customError={
+        <MemoizedSectionError
+          isLoading={isFastLoading}
+          errorMessage={fastError?.message}
+          emptyLabel={'global.error'}
+        />
+      }
+    >
       <Toaster />
       <div className="flex flex-col gap-6">
         <TreeTable treeTableRows={listItems} />

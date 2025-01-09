@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
@@ -12,7 +12,8 @@ import { RiProhibited2Line } from 'react-icons/ri';
 import ListingItem from '@/components/ListingItem/ListingItem';
 import type { TIssue } from '@/types/general';
 
-import QuerySwitcher from '../QuerySwitcher/QuerySwitcher';
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 export const NoIssueFound = (): JSX.Element => {
   return (
@@ -36,6 +37,8 @@ const IssueSection = ({
   historyState?: HistoryState;
   previousSearch: LinkProps['search'];
 }): JSX.Element => {
+  const intl = useIntl();
+
   const issueList = useMemo(
     () =>
       data?.map(issue => (
@@ -69,6 +72,13 @@ const IssueSection = ({
           skeletonClassname="h-[100px]"
           status={status}
           data={data}
+          customError={
+            <MemoizedSectionError
+              isLoading={status === 'pending'}
+              errorMessage={intl.formatMessage({ id: 'issue.noIssueFound' })}
+              emptyLabel={'global.error'}
+            />
+          }
         >
           {issueList}
         </QuerySwitcher>

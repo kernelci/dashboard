@@ -15,6 +15,8 @@ import { mapFilterToReq } from '@/components/Tabs/Filters';
 import { useCommitHistory } from '@/api/commitHistory';
 import type { TFilter } from '@/types/general';
 
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
 const graphDisplaySize = 8;
 
 interface ICommitNavigationGraph {
@@ -45,7 +47,7 @@ const CommitNavigationGraph = ({
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const { data, status } = useCommitHistory(
+  const { data, status, error, isLoading } = useCommitHistory(
     {
       gitBranch: gitBranch ?? '',
       gitUrl: gitUrl ?? '',
@@ -190,7 +192,17 @@ const CommitNavigationGraph = ({
     },
   ];
   return (
-    <QuerySwitcher status={status} data={displayableData}>
+    <QuerySwitcher
+      status={status}
+      data={displayableData}
+      customError={
+        <MemoizedSectionError
+          isLoading={isLoading}
+          errorMessage={error?.message}
+          emptyLabel={'global.error'}
+        />
+      }
+    >
       <BaseCard
         title={formatMessage({ id: messagesId.graphName })}
         content={
@@ -210,8 +222,8 @@ const CommitNavigationGraph = ({
                   const possibleIndexNumber = parseInt(possibleIndex);
                   const parsedPossibleIndex = z
                     .number()
-                    .catch(error => {
-                      console.error('Error parsing index', error);
+                    .catch(e => {
+                      console.error('Error parsing index', e);
                       return 0;
                     })
                     .parse(possibleIndexNumber);

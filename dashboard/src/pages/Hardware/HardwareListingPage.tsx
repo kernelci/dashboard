@@ -13,6 +13,8 @@ import { useHardwareListing } from '@/api/hardware';
 
 import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
 
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
 import { HardwareTable } from './HardwareTable';
 
 interface HardwareListingPageProps {
@@ -60,7 +62,7 @@ const HardwareListingPage = ({
   const { startTimestampInSeconds, endTimestampInSeconds } =
     useHardwareListingTime();
 
-  const { data, error, status } = useHardwareListing(
+  const { data, error, status, isLoading } = useHardwareListing(
     startTimestampInSeconds,
     endTimestampInSeconds,
   );
@@ -111,12 +113,18 @@ const HardwareListingPage = ({
       .sort((a, b) => a.hardwareName.localeCompare(b.hardwareName));
   }, [data, error, inputFilter]);
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
-
   return (
-    <QuerySwitcher status={status} data={data}>
+    <QuerySwitcher
+      status={status}
+      data={data}
+      customError={
+        <MemoizedSectionError
+          isLoading={isLoading}
+          errorMessage={error?.message}
+          emptyLabel={'global.error'}
+        />
+      }
+    >
       <Toaster />
       <div className="flex flex-col gap-6">
         <HardwareTable

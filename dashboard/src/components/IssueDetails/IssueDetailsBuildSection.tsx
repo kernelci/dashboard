@@ -16,6 +16,7 @@ import { useIssueDetailsBuilds } from '@/api/issueDetails';
 
 import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
 import { sanitizeBuildTable } from '@/utils/utils';
+import { NOT_FOUND_STATUS } from '@/types/issueDetails';
 
 interface IIssueDetailsBuildSection {
   issueId: string;
@@ -46,7 +47,7 @@ export const IssueDetailsBuildSection = ({
     return sanitizeBuildTable(data);
   }, [data]);
 
-  if (!isLoading && data?.length === 0) {
+  if (!isLoading && error?.status === NOT_FOUND_STATUS) {
     return <></>;
   }
 

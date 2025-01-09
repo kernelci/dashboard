@@ -1,4 +1,4 @@
-import { FormattedMessage, useIntl } from 'react-intl';
+import { useIntl } from 'react-intl';
 
 import { GiFlatPlatform } from 'react-icons/gi';
 
@@ -26,7 +26,9 @@ import SectionGroup from '@/components/Section/SectionGroup';
 import { getMiscSection } from '@/components/Section/MiscSection';
 import { getFilesSection } from '@/components/Section/FilesSection';
 
-import { TruncatedValueTooltip } from '../Tooltip/TruncatedValueTooltip';
+import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
   const { formatMessage } = useIntl();
@@ -230,42 +232,41 @@ const TestDetails = ({
 }: TestsDetailsProps): JSX.Element => {
   const historyState = useRouterState({ select: s => s.location.state });
   const searchParams = useSearch({ from: '/test/$testId' });
-  const { data, error, isLoading } = useTestDetails(testId ?? '');
+  const { data, isLoading, status } = useTestDetails(testId ?? '');
   const { data: issueData, status: issueStatus } = useTestIssues(testId ?? '');
 
-  if (error) {
-    return (
-      <div>
-        <FormattedMessage id="testDetails.failedToFetch" />
-      </div>
-    );
-  }
-
-  if (isLoading) return <FormattedMessage id="global.loading" />;
-
-  if (!data) {
-    return (
-      <div>
-        <FormattedMessage id="testDetails.notFound" />
-      </div>
-    );
-  }
+  const { formatMessage } = useIntl();
 
   return (
-    <Sheet>
-      <div className="w-100 px-5 pb-8">
-        {breadcrumb}
-
-        <TestDetailsSections test={data} />
-        <IssueSection
-          data={issueData}
-          status={issueStatus}
-          historyState={historyState}
-          previousSearch={searchParams}
+    <QuerySwitcher
+      status={status}
+      data={data}
+      customError={
+        <MemoizedSectionError
+          isLoading={isLoading}
+          errorMessage={formatMessage({ id: 'testDetails.failedToFetch' })}
+          emptyLabel={'global.error'}
         />
-      </div>
-      <LogSheetContent logUrl={data.log_url} logExcerpt={data.log_excerpt} />
-    </Sheet>
+      }
+    >
+      <Sheet>
+        <div className="w-100 px-5 pb-8">
+          {breadcrumb}
+
+          {data && <TestDetailsSections test={data} />}
+          <IssueSection
+            data={issueData}
+            status={issueStatus}
+            historyState={historyState}
+            previousSearch={searchParams}
+          />
+        </div>
+        <LogSheetContent
+          logUrl={data?.log_url}
+          logExcerpt={data?.log_excerpt}
+        />
+      </Sheet>
+    </QuerySwitcher>
   );
 };
 
