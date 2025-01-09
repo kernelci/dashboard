@@ -1,5 +1,7 @@
 from django.http import JsonResponse
+from http import HTTPStatus
 from django.views import View
+from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.filters import (
     should_increment_test_issue,
     UNKNOWN_STRING,
@@ -485,6 +487,11 @@ class TreeDetails(View):
                 cursor.execute(query, params)
                 rows = cursor.fetchall()
                 setQueryCache(cache_key, params, rows)
+
+        if len(rows) == 0:
+            return create_error_response(
+                error_message="Tree not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         self._sanitize_rows(rows)
 
