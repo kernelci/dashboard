@@ -248,3 +248,55 @@ def get_build(row_data):
         "git_repository_url": row_data["checkout_git_repository_url"],
         "git_repository_branch": row_data["checkout_git_repository_branch"],
     }
+
+
+def process_builds_issue(instance, row_data):
+    build_id = row_data["build_id"]
+    issue_id = row_data["issue_id"]
+    build_valid = row_data["build_valid"]
+
+    if issue_id and (build_valid is False or build_valid is None):
+        current_issue = instance.processed_build_issues.get(issue_id)
+        if current_issue:
+            current_issue["incidents_info"]["incidentsCount"] += 1
+        else:
+            instance.processed_build_issues[issue_id] = create_issue(
+                issue_id=row_data["issue_id"],
+                issue_comment=row_data["issue_comment"],
+                issue_report_url=row_data["issue_report_url"],
+            )
+    elif build_id not in instance.processed_builds and build_valid is False:
+        instance.failed_builds_with_unknown_issues += 1
+
+    if build_id in instance.processed_builds:
+        return
+    instance.processed_builds.add(build_id)
+    instance.builds.append(get_build(row_data))
+
+
+def decide_if_is_build_filtered_out(instance, row_data):
+    issue_id = row_data["issue_id"]
+    build_valid = row_data["build_valid"]
+    build_duration = row_data["build_duration"]
+
+    is_build_filtered_out = instance.filters.is_build_filtered_out(
+        valid=build_valid, duration=build_duration, issue_id=issue_id
+    )
+    return is_build_filtered_out
+
+def decide_if_is_boot_filtered_out(instance, row_data):
+    testStatus = row_data["test_status"]
+    testDuration = row_data["test_duration"]
+    issue_id = row_data["issue_id"]
+    testPath = row_data["test_path"]
+    incident_test_id = row_data["incident_test_id"]
+
+    is_boot_filter_out = instance.filters.is_boot_filtered_out(
+        duration=testDuration,
+        issue_id=issue_id,
+        path=testPath,
+        status=testStatus,
+        incident_test_id=incident_test_id,
+    )
+
+    return is_boot_filter_out

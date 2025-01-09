@@ -5,7 +5,7 @@ from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
 )
-from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, get_build, get_current_row_data, get_hardware_filter, get_tree_details_data, get_tree_url, is_test_boots_test
+from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, decide_if_is_boot_filtered_out, decide_if_is_build_filtered_out, get_build, get_current_row_data, get_hardware_filter, get_tree_details_data, get_tree_url, is_test_boots_test, process_builds_issue
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     create_issue,
@@ -57,33 +57,23 @@ class TreeDetails(View):
         self.tree_url = ""
 
 
-    def _process_boots_test(self, current_row_data):
-        testId = current_row_data["test_id"]
-        testStatus = current_row_data["test_status"]
-        testDuration = current_row_data["test_duration"]
-        buildConfig = current_row_data["build_config_name"]
-        buildArch = current_row_data["build_architecture"]
-        buildCompiler = current_row_data["build_compiler"]
-        testPlatform = current_row_data["test_platform"]
-        testError = current_row_data["test_error"]
-        historyItem = current_row_data["history_item"]
-        incident_id = current_row_data["incident_id"]
-        issue_id = current_row_data["issue_id"]
-        issue_comment = current_row_data["issue_comment"]
-        issue_report_url = current_row_data["issue_report_url"]
-        testEnvironmentCompatible = current_row_data["test_environment_compatible"]
-        testPath = current_row_data["test_path"]
-        incident_test_id = current_row_data["incident_test_id"]
+    def _process_boots_test(self, row_data):
+        testId = row_data["test_id"]
+        testStatus = row_data["test_status"]
+        buildConfig = row_data["build_config_name"]
+        buildArch = row_data["build_architecture"]
+        buildCompiler = row_data["build_compiler"]
+        testPlatform = row_data["test_platform"]
+        testError = row_data["test_error"]
+        historyItem = row_data["history_item"]
+        incident_id = row_data["incident_id"]
+        issue_id = row_data["issue_id"]
+        issue_comment = row_data["issue_comment"]
+        issue_report_url = row_data["issue_report_url"]
+        testEnvironmentCompatible = row_data["test_environment_compatible"]
+        incident_test_id = row_data["incident_test_id"]
 
-        is_boot_filter_out = self.filters.is_boot_filtered_out(
-            duration=testDuration,
-            issue_id=issue_id,
-            path=testPath,
-            status=testStatus,
-            incident_test_id=incident_test_id,
-        )
-
-        if is_boot_filter_out:
+        if decide_if_is_boot_filtered_out(self, row_data):
             return
 
         can_insert_issue = should_increment_test_issue(
@@ -106,7 +96,6 @@ class TreeDetails(View):
         if testId in self.processedTests:
             return
         self.processedTests.add(testId)
-
         self.bootHistory.append(historyItem)
         self.bootStatusSummary[testStatus] = (
             self.bootStatusSummary.get(testStatus, 0) + 1
@@ -210,33 +199,17 @@ class TreeDetails(View):
 
     def _process_builds(self, row_data):
         build_id = row_data["build_id"]
-        issue_id = row_data["issue_id"]
-        build_valid = row_data["build_valid"]
-        build_duration = row_data["build_duration"]
 
-        is_build_filtered_out = self.filters.is_build_filtered_out(
-            valid=build_valid, duration=build_duration, issue_id=issue_id
-        )
-
-        if is_build_filtered_out:
+        if decide_if_is_build_filtered_out(self, row_data):
             return
 
-        if issue_id and (build_valid is False or build_valid is None):
-            current_issue = self.processed_build_issues.get(issue_id)
-            if current_issue:
-                current_issue["incidents_info"]["incidentsCount"] += 1
-            else:
-                self.processed_build_issues[issue_id] = create_issue(
-                    issue_id=row_data["issue_id"],
-                    issue_comment=row_data["issue_comment"],
-                    issue_report_url=row_data["issue_report_url"],
-                )
-        elif build_id not in self.processed_builds and build_valid is False:
-            self.failed_builds_with_unknown_issues += 1
+        process_builds_issue(self, row_data)
 
         if build_id in self.processed_builds:
             return
+
         self.processed_builds.add(build_id)
+
         self.builds.append(get_build(row_data))
 
     def _sanitize_rows(self, rows):
