@@ -1,4 +1,4 @@
-import { FormattedMessage, useIntl } from 'react-intl';
+import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo } from 'react';
 
@@ -22,6 +22,10 @@ import type {
   TestsTableFilter,
 } from '@/types/tree/TreeDetails';
 
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
 
@@ -44,7 +48,7 @@ export const IssueDetails = ({
   onClickBuildFilter,
   getBuildTableRowLink,
 }: IIssueDetails): JSX.Element => {
-  const { data, error, isLoading } = useIssueDetails(issueId, versionNumber);
+  const { data, isLoading, status } = useIssueDetails(issueId, versionNumber);
 
   const hasTest = data && data.test_status !== null;
   const hasBuild = data && data.build_valid !== null;
@@ -138,46 +142,39 @@ export const IssueDetails = ({
     );
   }, [generalSections, miscSection]);
 
-  if (error) {
-    return (
-      <div>
-        <FormattedMessage id="issueDetails.failedToFetch" />
-        <div>Error: {error.message}</div>
-      </div>
-    );
-  }
-
-  if (isLoading) return <FormattedMessage id="global.loading" />;
-
-  if (!data) {
-    return (
-      <div>
-        <FormattedMessage id="issueDetails.notFound" />
-      </div>
-    );
-  }
-
   return (
-    <ErrorBoundary FallbackComponent={UnexpectedError}>
-      <SectionGroup sections={sectionsData} />
-      {hasTest && (
-        <IssueDetailsTestSection
-          issueId={issueId}
-          versionNumber={versionNumber}
-          testTableFilter={tableFilter.testsTable}
-          getTableRowLink={getTestTableRowLink}
-          onClickFilter={onClickTestFilter}
+    <QuerySwitcher
+      status={status}
+      data={data}
+      customError={
+        <MemoizedSectionError
+          isLoading={isLoading}
+          errorMessage={formatMessage({ id: 'issueDetails.failedToFetch' })}
+          emptyLabel={'global.error'}
         />
-      )}
-      {hasBuild && (
-        <IssueDetailsBuildSection
-          issueId={issueId}
-          versionNumber={versionNumber}
-          buildTableFilter={tableFilter.buildsTable}
-          getTableRowLink={getBuildTableRowLink}
-          onClickFilter={onClickBuildFilter}
-        />
-      )}
-    </ErrorBoundary>
+      }
+    >
+      <ErrorBoundary FallbackComponent={UnexpectedError}>
+        <SectionGroup sections={sectionsData} />
+        {hasTest && (
+          <IssueDetailsTestSection
+            issueId={issueId}
+            versionNumber={versionNumber}
+            testTableFilter={tableFilter.testsTable}
+            getTableRowLink={getTestTableRowLink}
+            onClickFilter={onClickTestFilter}
+          />
+        )}
+        {hasBuild && (
+          <IssueDetailsBuildSection
+            issueId={issueId}
+            versionNumber={versionNumber}
+            buildTableFilter={tableFilter.buildsTable}
+            getTableRowLink={getBuildTableRowLink}
+            onClickFilter={onClickBuildFilter}
+          />
+        )}
+      </ErrorBoundary>
+    </QuerySwitcher>
   );
 };
