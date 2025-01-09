@@ -229,6 +229,7 @@ export const messages = {
     'testDetails.gitCommitHash': 'Git Commit Hash',
     'testDetails.gitRepositoryBranch': 'Git Repository Branch',
     'testDetails.gitRepositoryUrl': 'Git Repository Url',
+    'testDetails.jobId': 'Job Id',
     'testDetails.notFound': 'Test not found',
     'testStatus.done': 'Done',
     'testStatus.error': 'Error',

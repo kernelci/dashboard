@@ -144,6 +144,10 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
                 />
               ),
             },
+            {
+              title: 'testDetails.jobId',
+              linkText: test.id,
+            },
           ],
         },
       ],
@@ -159,6 +163,7 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
     test.git_repository_branch,
     test.build_id,
     test.start_time,
+    test.id,
     formatMessage,
     hasUsefulLogInfo,
     buildDetailsLink,
