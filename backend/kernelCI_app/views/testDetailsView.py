@@ -46,9 +46,9 @@ class TestDetails(View):
                 checkouts.git_repository_branch,
                 checkouts.git_repository_url
             FROM tests
-            INNER JOIN builds
+            LEFT JOIN builds
                 ON tests.build_id = builds.id
-            INNER JOIN checkouts
+            LEFT JOIN checkouts
                 ON builds.checkout_id = checkouts.id
             WHERE tests.id = %s
             """

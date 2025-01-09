@@ -85,7 +85,9 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
             {
               title: 'global.arch',
               linkText: valueOrEmpty(test.architecture),
-              icon: <PiComputerTowerThin className="text-blue" />,
+              icon: test.architecture ? (
+                <PiComputerTowerThin className="text-blue" />
+              ) : undefined,
             },
             {
               title: 'global.compiler',
@@ -109,13 +111,15 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
             },
             {
               title: 'testDetails.gitRepositoryUrl',
-              linkText: shouldTruncate(test.git_repository_url) ? (
+              linkText: shouldTruncate(
+                valueOrEmpty(test.git_repository_url),
+              ) ? (
                 <TruncatedValueTooltip
                   value={test.git_repository_url}
                   isUrl={true}
                 />
               ) : (
-                test.git_repository_url
+                valueOrEmpty(test.git_repository_url)
               ),
               link: test.git_repository_url,
             },
