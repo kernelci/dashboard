@@ -1,5 +1,6 @@
 from collections import defaultdict
 from django.db.models import Subquery
+from http import HTTPStatus
 import json
 from typing import Dict, List, Optional, Set, Literal
 from kernelCI_app.helpers.filters import should_increment_test_issue, is_build_invalid
@@ -655,6 +656,11 @@ class HardwareDetails(View):
         if not records:
             records = self.get_full_tests(**params)
             setQueryCache(self.cache_key_get_full_data, params, records)
+
+        if len(records) == 0:
+            return create_error_response(
+                error_message="Hardware not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         builds, tests, boots, tree_status_summary, compatibles = self.sanitize_records(
             records, trees_with_selected_commits, is_all_selected

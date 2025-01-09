@@ -9,6 +9,7 @@ from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     create_issue,
 )
+from http import HTTPStatus
 
 
 class IssueView(View):
@@ -52,6 +53,7 @@ class IssueView(View):
         with connection.cursor() as cursor:
             cursor.execute(query, [test_id])
             rows = cursor.fetchall()
+
         return self.sanitize_rows(rows)
 
     def get_build_issues(self, build_id: str) -> List[Issue]:
@@ -76,9 +78,23 @@ class IssueView(View):
         self, _request, test_id: Optional[str] = None, build_id: Optional[str] = None
     ) -> JsonResponse:
         if test_id:
-            return JsonResponse(self.get_test_issues(test_id), safe=False)
+            test_issues = self.get_test_issues(test_id)
+
+            if len(test_issues) == 0:
+                return create_error_response(
+                    error_message="No issues were found for this test", status_code=HTTPStatus.NOT_FOUND
+                )
+
+            return JsonResponse(test_issues, safe=False)
         if build_id:
+            build_issues = self.get_build_issues(build_id)
+
+            if len(build_issues) == 0:
+                return create_error_response(
+                    error_message="No issues were found for this build", status_code=HTTPStatus.NOT_FOUND
+                )
+
             return JsonResponse(self.get_build_issues(build_id), safe=False)
         return create_error_response(
-            error_message="A test or build ID must be provided",
+            error_message="A test or build ID must be provided"
         )

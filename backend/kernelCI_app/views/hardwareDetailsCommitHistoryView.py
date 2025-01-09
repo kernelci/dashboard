@@ -16,6 +16,7 @@ from kernelCI_app.typeModels.hardwareDetails import (
     CommitHistoryValidCheckout,
 )
 from pydantic import ValidationError
+from http import HTTPStatus
 
 
 BuildStatusType = Literal["valid", "invalid", "null"]
@@ -214,5 +215,10 @@ class HardwareDetailsCommitHistoryView(View):
             end_date=end_datetime,
             commit_heads=commit_heads,
         )
+
+        if not commit_history:
+            return create_error_response(
+                error_message="Commit history not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         return JsonResponse({"commitHistoryTable": commit_history}, safe=False)
