@@ -5,7 +5,8 @@ from kernelCI_app.serializers import TreeSerializer
 from kernelCI_app.utils import getQueryTimeInterval
 from kernelCI_app.helpers.errorHandling import ExceptionWithJsonResponse
 from kernelCI_app.helpers.date import parseIntervalInDaysGetParameter
-
+from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_error_response
 
 DEFAULT_ORIGIN = 'maestro'
 
@@ -123,6 +124,12 @@ class TreeView(View):
             ;
             """, params
         )
+
+        if not checkouts:
+            return create_error_response(
+                error_message="Trees not found", status_code=HTTPStatus.NOT_FOUND
+            )
+
         serializer = TreeSerializer(checkouts, many=True)
         resp = JsonResponse(serializer.data, safe=False)
         return resp

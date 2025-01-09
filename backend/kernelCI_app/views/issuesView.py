@@ -1,8 +1,10 @@
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.http import JsonResponse
 from django.db import connection
 from django.views import View
 
-from kernelCI_app.utils import convert_issues_dict_to_list, create_issue, getErrorResponseBody
+from kernelCI_app.utils import convert_issues_dict_to_list, create_issue
+from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_error_response
 
 
 class IssueView(View):
@@ -74,6 +76,6 @@ class IssueView(View):
             return JsonResponse(self.get_test_issues(test_id), safe=False)
         if build_id:
             return JsonResponse(self.get_build_issues(build_id), safe=False)
-        return HttpResponseBadRequest(
-            getErrorResponseBody("A test or build ID must be provided")
+        return create_error_response(
+            error_message="A test ID or build ID must be provided", status_code=HTTPStatus.NOT_FOUND
         )

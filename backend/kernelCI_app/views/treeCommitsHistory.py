@@ -18,6 +18,8 @@ from kernelCI_app.helpers.misc import (
     env_misc_value_or_default,
 )
 from kernelCI_app.helpers.logger import log_message
+from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_error_response
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -440,6 +442,11 @@ class TreeCommitsHistory(APIView):
                 self.field_values,
             )
             rows = cursor.fetchall()
+
+        if not rows:
+            return create_error_response(
+                error_message="History of tree commits not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         self._process_rows(rows)
         # Format the results as JSON

@@ -11,6 +11,8 @@ from kernelCI_app.models import Tests
 from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.helpers.trees import get_tree_heads
+from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_error_response
 
 
 class HardwareView(View):
@@ -91,5 +93,10 @@ class HardwareView(View):
             return e.getJsonResponse()
 
         result = self._getResults(start_date, end_date, origin)
+
+        if not result['hardware']:
+            return create_error_response(
+                error_message="Hardwares not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         return JsonResponse(result, safe=False)

@@ -3,6 +3,8 @@ from kernelCI_app.utils import getErrorResponseBody
 from rest_framework.views import APIView
 from bs4 import BeautifulSoup, Tag
 import requests
+from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_error_response
 
 
 def scrape_log_data(url):
@@ -60,5 +62,10 @@ class LogDownloaderView(APIView):
         error_message = parsed_data.get("error")
         if error_message:
             return HttpResponseBadRequest(getErrorResponseBody(error_message))
+
+        if not parsed_data['log_files']:
+            return create_error_response(
+                error_message="No log files found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         return JsonResponse(parsed_data)

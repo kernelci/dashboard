@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from django.views import View
 from django.db import connection
+from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_error_response
 
 
 class TestsByTreeAndCommitHash(View):
@@ -59,6 +61,11 @@ class TestsByTreeAndCommitHash(View):
                 parameters
             )
             rows = cursor.fetchall()
+
+        if not rows:
+            return create_error_response(
+                error_message="Tests not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         # Format the results as JSON
         results = [
