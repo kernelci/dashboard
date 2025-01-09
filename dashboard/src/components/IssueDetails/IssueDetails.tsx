@@ -50,6 +50,7 @@ export const IssueDetails = ({
 
   const hasTest = data && data.test_status !== null;
   const hasBuild = data && data.build_valid !== null;
+  const hasNothingIdentified = !hasTest && !hasBuild;
 
   const { formatMessage } = useIntl();
 
@@ -163,7 +164,7 @@ export const IssueDetails = ({
     <ErrorBoundary FallbackComponent={UnexpectedError}>
       {breadcrumb}
       <SectionGroup sections={sectionsData} />
-      {hasTest && (
+      {(hasTest || hasNothingIdentified) && (
         <IssueDetailsTestSection
           issueId={issueId}
           versionNumber={versionNumber}
@@ -172,7 +173,7 @@ export const IssueDetails = ({
           onClickFilter={onClickTestFilter}
         />
       )}
-      {hasBuild && (
+      {(hasBuild || hasNothingIdentified) && (
         <IssueDetailsBuildSection
           issueId={issueId}
           versionNumber={versionNumber}
