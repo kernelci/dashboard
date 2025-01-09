@@ -38,6 +38,17 @@ class TreeView(View):
                 checkouts.git_repository_branch,
                 checkouts.git_repository_url,
                 checkouts.git_commit_hash,
+                CASE
+                    WHEN COUNT(DISTINCT checkouts.git_commit_tags) > 0 THEN
+                    COALESCE(
+                        ARRAY_AGG(DISTINCT checkouts.git_commit_tags) FILTER (
+                            WHERE checkouts.git_commit_tags IS NOT NULL
+                            AND checkouts.git_commit_tags::TEXT <> '{}'
+                        ),
+                        ARRAY[]::TEXT[]
+                    )
+                    ELSE ARRAY[]::TEXT[]
+                END AS git_commit_tags,
                 MAX(checkouts.git_commit_name) AS git_commit_name,
                 MAX(checkouts.start_time) AS start_time,
                 COUNT(DISTINCT CASE WHEN builds.valid = true THEN builds.id END) AS valid_builds,

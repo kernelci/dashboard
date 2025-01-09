@@ -93,16 +93,11 @@ const columns: ColumnDef<TreeTableBody>[] = [
     },
   },
   {
-    accessorKey: 'commitName',
+    accessorKey: 'commitTag',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="globalTable.commitTag" />
     ),
-    cell: ({ row }) =>
-      sanitizeTableValue(
-        row.getValue('commitName')
-          ? row.getValue('commitName')
-          : row.original.commitHash,
-      ),
+    cell: ({ row }): JSX.Element => row.getValue('commitTag'),
     meta: {
       tabTarget: 'global.builds',
     },

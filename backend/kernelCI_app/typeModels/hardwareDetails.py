@@ -37,9 +37,17 @@ class CommitHistoryPostBody(BaseModel):
     commitHeads: List[CommitHead]
 
 
+def process_tags(value: Any) -> Any:
+    if value is None:
+        return []
+    return value
+
+
 class CommitHistoryValidCheckout(BaseModel):
     git_commit_hash: str
     tree_name: str
     git_repository_branch: str
     git_repository_url: str
+    git_commit_tags: Annotated[List[str], BeforeValidator(process_tags)]
+    git_commit_name: str
     start_time: datetime

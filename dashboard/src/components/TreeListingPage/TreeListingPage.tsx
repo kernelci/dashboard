@@ -12,6 +12,8 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 import { Toaster } from '@/components/ui/toaster';
 
+import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
+
 import { TreeTable } from './TreeTable';
 
 interface ITreeListingPage {
@@ -84,6 +86,13 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
         return {
           commitHash: tree.git_commit_hash ?? '',
           commitName: tree.git_commit_name ?? '',
+          commitTag: (
+            <CommitTagTooltip
+              commitHash={tree.git_commit_hash ?? undefined}
+              commitName={tree.git_commit_name ?? undefined}
+              commitTags={tree.git_commit_tags ?? undefined}
+            />
+          ),
           patchsetHash: tree.patchset_hash ?? '',
           buildStatus,
           testStatus,

@@ -16,7 +16,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
+
+import { LiaQuestionCircleSolid } from 'react-icons/lia';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { TableHeader } from '@/components/Table/TableHeader';
@@ -26,7 +28,6 @@ import type {
   PreparedTrees,
 } from '@/types/hardware/hardwareDetails';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
-import { sanitizeTableValue } from '@/components/Table/tableUtils';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import { IndeterminateCheckbox } from '@/components/Checkbox/IndeterminateCheckbox';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -42,6 +43,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { LoadingCircle } from '@/components/ui/loading-circle';
+import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
 
 const DEBOUNCE_INTERVAL = 2000;
 
@@ -54,6 +56,7 @@ interface IHardwareHeader {
 const CommitSelector = ({
   headCommitHash,
   headCommitName,
+  headCommitTags,
   selectableCommits,
   isCommitsLoading,
   treeIndex,
@@ -62,6 +65,7 @@ const CommitSelector = ({
 }: {
   headCommitName?: string;
   headCommitHash?: string;
+  headCommitTags?: string[];
   selectableCommits: CommitHistory[];
   isCommitsLoading: boolean;
   isMainPageLoading: boolean;
@@ -69,6 +73,7 @@ const CommitSelector = ({
   rowLength: number;
 }): JSX.Element => {
   const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
+  const { treeCommits } = useSearch({ from: '/hardware/$hardwareId/' });
 
   const navigateToThePast = useCallback(
     (commitHash: string) => {
@@ -90,6 +95,22 @@ const CommitSelector = ({
     [navigate, rowLength, treeIndex],
   );
 
+  const gitValues = useMemo(() => {
+    let values: Record<string, Record<string, string | undefined>> = {};
+    selectableCommits.forEach(
+      value =>
+        (values = {
+          ...values,
+          [`${treeIndex}_${value.git_commit_hash}`]: {
+            gitCommitTags: value.git_commit_tags?.[0],
+            gitCommitHash: value.git_commit_hash,
+            gitCommitName: value.git_commit_name,
+          },
+        }),
+    );
+    return values;
+  }, [selectableCommits, treeIndex]);
+
   const sortedSelectableCommits = useMemo(() => {
     return selectableCommits.sort(
       (a, b) =>
@@ -99,19 +120,16 @@ const CommitSelector = ({
 
   if (selectableCommits.length < 1 || isCommitsLoading) {
     return (
-      <Tooltip>
-        <TooltipTrigger>
-          <div className="flex items-center gap-4">
-            {sanitizeTableValue(headCommitName, false)}
-            {isCommitsLoading && <LoadingCircle />}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <>{headCommitHash}</>
-        </TooltipContent>
-      </Tooltip>
+      <CommitTagTooltip
+        commitHash={headCommitHash}
+        commitName={headCommitName}
+        commitTags={headCommitTags}
+      />
     );
   }
+
+  const commitHash = treeCommits[treeIndex] ?? headCommitHash;
+
   return (
     <div className="flex items-center gap-4">
       <Select onValueChange={navigateToThePast} disabled={isMainPageLoading}>
@@ -132,6 +150,28 @@ const CommitSelector = ({
         </SelectContent>
       </Select>
       {isMainPageLoading && <LoadingCircle />}
+      <Tooltip>
+        <TooltipTrigger>
+          <LiaQuestionCircleSolid className="h-5 w-5" />
+        </TooltipTrigger>
+        <TooltipContent>
+          {gitValues[`${treeIndex}_${commitHash}`]?.gitCommitTags && (
+            <>
+              {gitValues[`${treeIndex}_${commitHash}`]?.gitCommitTags} <br />
+            </>
+          )}
+          {gitValues[`${treeIndex}_${commitHash}`]?.gitCommitHash && (
+            <>
+              {gitValues[`${treeIndex}_${commitHash}`]?.gitCommitHash} <br />
+            </>
+          )}
+          {gitValues[`${treeIndex}_${commitHash}`]?.gitCommitName && (
+            <>
+              {gitValues[`${treeIndex}_${commitHash}`]?.gitCommitName} <br />
+            </>
+          )}
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 };
@@ -189,6 +229,7 @@ const columns: ColumnDef<PreparedTrees>[] = [
       <CommitSelector
         headCommitName={row.original.headGitCommitName}
         headCommitHash={row.original.headGitCommitHash}
+        headCommitTags={row.original.headGitCommitTags}
         selectableCommits={row.original.selectableCommits}
         isCommitsLoading={row.original.isCommitHistoryDataLoading}
         treeIndex={row.original.index}
