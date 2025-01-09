@@ -23,8 +23,6 @@ import {
 
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
-import { sanitizeTableValue } from '@/components/Table/tableUtils';
-
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
@@ -57,6 +55,8 @@ import { truncateUrl } from '@/lib/string';
 
 import CopyButton from '@/components/Button/CopyButton';
 
+import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
+
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
@@ -71,22 +71,35 @@ export interface ITreeDetails {
 }
 
 interface ITreeHeader {
-  commit?: string;
   treeNames?: string;
-  tag?: string;
   gitUrl?: string;
   gitBranch?: string;
+  commitName?: string;
+  commitHash?: string;
+  commitTags?: string[];
 }
 
 const defaultUrlLength = 12;
 
 const TreeHeader = ({
-  commit,
   treeNames,
-  tag,
   gitUrl,
   gitBranch,
+  commitName,
+  commitHash,
+  commitTags,
 }: ITreeHeader): JSX.Element => {
+  const commitTagTooltip = useMemo(
+    () => (
+      <CommitTagTooltip
+        commitName={commitName}
+        commitHash={commitHash}
+        commitTags={commitTags}
+        copyButton={true}
+      />
+    ),
+    [commitName, commitHash, commitTags],
+  );
   return (
     <DumbBaseTable>
       <DumbTableHeader>
@@ -108,13 +121,7 @@ const TreeHeader = ({
           {/** TODO: Replace with real data */}
           <TableCell>{treeNames ?? '-'}</TableCell>
           <TableCell>{gitBranch ?? '-'}</TableCell>
-          <TableCell>
-            <Tooltip>
-              <TooltipTrigger>{sanitizeTableValue(tag, false)}</TooltipTrigger>
-              <TooltipContent>{commit}</TooltipContent>
-            </Tooltip>
-            {commit && <CopyButton value={commit} />}
-          </TableCell>
+          <TableCell>{commitTagTooltip}</TableCell>
           <TableCell>
             <Tooltip>
               <TooltipTrigger>
@@ -264,10 +271,11 @@ function TreeDetails(): JSX.Element {
       <div className="mt-5">
         <TreeHeader
           gitBranch={treeInfo?.gitBranch}
-          commit={treeId}
           treeNames={treeInfo?.treeName}
-          tag={treeInfo?.commitName ? treeInfo?.commitName : treeId}
           gitUrl={treeInfo?.gitUrl}
+          commitHash={treeId}
+          commitName={treeInfo?.commitName}
+          commitTags={data?.git_commit_tags}
         />
       </div>
       <QuerySwitcher

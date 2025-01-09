@@ -56,6 +56,7 @@ export type Trees = {
   gitRepositoryUrl?: string;
   headGitCommitName?: string;
   headGitCommitHash?: string;
+  headGitCommitTags?: string[];
   selectedCommitStatusSummary?: TTreesStatusSummary;
   index: string;
 };
@@ -101,6 +102,8 @@ export type CommitHistory = {
   git_commit_hash: string;
   git_repository_branch: string;
   git_repository_url: string;
+  git_commit_tags: string[];
+  git_commit_name: string;
   start_time: string;
   tree_name: string;
 };

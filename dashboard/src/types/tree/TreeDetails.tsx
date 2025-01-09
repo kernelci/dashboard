@@ -94,6 +94,7 @@ export type TTreeTestsFullData = {
   buildsIssues: TIssue[];
   failedBuildsWithUnknownIssues: number;
   treeUrl: string;
+  git_commit_tags: string[];
 };
 
 export const possibleTabs = [

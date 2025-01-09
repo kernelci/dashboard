@@ -84,6 +84,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
         return {
           commitHash: tree.git_commit_hash ?? '',
           commitName: tree.git_commit_name ?? '',
+          commitTag: tree.git_commit_tags,
           patchsetHash: tree.patchset_hash ?? '',
           buildStatus,
           testStatus,

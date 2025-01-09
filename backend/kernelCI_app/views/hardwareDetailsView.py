@@ -482,6 +482,7 @@ class HardwareDetails(View):
                 *tree_id_fields,
                 "build__checkout__git_commit_name",
                 "build__checkout__git_commit_hash",
+                "build__checkout__git_commit_tags",
             )
             .distinct(
                 *tree_id_fields,
@@ -505,6 +506,7 @@ class HardwareDetails(View):
                     "gitRepositoryUrl": tree["build__checkout__git_repository_url"],
                     "headGitCommitName": tree["build__checkout__git_commit_name"],
                     "headGitCommitHash": tree["build__checkout__git_commit_hash"],
+                    "headGitCommitTag": tree["build__checkout__git_commit_tags"],
                     "index": str(idx),
                 }
             )
