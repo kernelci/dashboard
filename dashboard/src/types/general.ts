@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z, type ZodTypeAny } from 'zod';
 
 import type { Status } from './database';
 import type { TTreeDetailsFilter } from './tree/TreeDetails';
@@ -231,6 +231,7 @@ export type SearchParamsKeys =
   | 'treeCommits'
   | 'startTimestampInSeconds'
   | 'endTimestampInSeconds';
+export type SearchSchema = Partial<Record<SearchParamsKeys, ZodTypeAny>>;
 
 const requestFilters = {
   hardwareDetails: [

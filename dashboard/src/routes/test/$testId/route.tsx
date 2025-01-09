@@ -6,7 +6,11 @@ import {
   defaultValidadorValues,
   zTableFilterInfoDefault,
 } from '@/types/tree/TreeDetails';
-import { DEFAULT_DIFF_FILTER, DEFAULT_ORIGIN } from '@/types/general';
+import {
+  DEFAULT_DIFF_FILTER,
+  DEFAULT_ORIGIN,
+  type SearchSchema,
+} from '@/types/general';
 import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
 
 const defaultValues = {
@@ -21,7 +25,7 @@ const defaultValues = {
   treeCommits: {},
 };
 
-const testDetailsSearchSchema = z.object({});
+const testDetailsSearchSchema = z.object({} satisfies SearchSchema);
 
 export const Route = createFileRoute('/test/$testId')({
   validateSearch: testDetailsSearchSchema,
