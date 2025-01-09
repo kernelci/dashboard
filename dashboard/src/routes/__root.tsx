@@ -1,10 +1,10 @@
+import { z } from 'zod';
+
 import {
   createRootRoute,
   Outlet,
   stripSearchParams,
 } from '@tanstack/react-router';
-
-import { z } from 'zod';
 
 // Uncomment for TanStack Router  devtools
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -13,7 +13,7 @@ import { z } from 'zod';
 import SideMenu from '@/components/SideMenu/SideMenu';
 import TopBar from '@/components/TopBar/TopBar';
 
-import { DEFAULT_ORIGIN, zOrigin } from '@/types/general';
+import { DEFAULT_ORIGIN, type SearchSchema, zOrigin } from '@/types/general';
 
 const defaultValues = {
   origin: DEFAULT_ORIGIN,
@@ -21,7 +21,7 @@ const defaultValues = {
 
 const RouteSchema = z.object({
   origin: zOrigin,
-});
+} satisfies SearchSchema);
 
 export const Route = createRootRoute({
   validateSearch: RouteSchema,

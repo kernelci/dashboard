@@ -10,7 +10,11 @@ import {
 } from '@/types/tree/TreeDetails';
 
 import { zTreeCommits } from '@/types/hardware/hardwareDetails';
-import { DEFAULT_DIFF_FILTER, zDiffFilter } from '@/types/general';
+import {
+  DEFAULT_DIFF_FILTER,
+  type SearchSchema,
+  zDiffFilter,
+} from '@/types/general';
 
 const defaultValues = {
   currentPageTab: defaultValidadorValues.tab,
@@ -27,7 +31,7 @@ const hardwareDetailsSearchSchema = z.object({
   startTimestampInSeconds: z.number(),
   endTimestampInSeconds: z.number(),
   diffFilter: zDiffFilter,
-});
+} satisfies SearchSchema);
 
 export const Route = createFileRoute('/hardware/$hardwareId')({
   validateSearch: hardwareDetailsSearchSchema,

@@ -7,7 +7,11 @@ import {
   zTableFilterInfoDefault,
   zTableFilterInfoValidator,
 } from '@/types/tree/TreeDetails';
-import { DEFAULT_DIFF_FILTER, DEFAULT_ORIGIN } from '@/types/general';
+import {
+  DEFAULT_DIFF_FILTER,
+  DEFAULT_ORIGIN,
+  type SearchSchema,
+} from '@/types/general';
 import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
 
 const defaultValues = {
@@ -24,7 +28,7 @@ const defaultValues = {
 
 const issueDetailsSearchSchema = z.object({
   tableFilter: zTableFilterInfoValidator,
-});
+} satisfies SearchSchema);
 
 export const Route = createFileRoute('/issue/$issueId/version/$versionNumber')({
   validateSearch: issueDetailsSearchSchema,

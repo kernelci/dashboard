@@ -1,10 +1,11 @@
-import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
-
 import { z } from 'zod';
+
+import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
 
 import {
   DEFAULT_DIFF_FILTER,
   DEFAULT_ORIGIN,
+  type SearchSchema,
   zDiffFilter,
   zOrigin,
 } from '@/types/general';
@@ -32,7 +33,7 @@ const treeDetailsSearchSchema = z.object({
   treeInfo: zTreeInformation,
   currentPageTab: zPossibleTabValidator,
   tableFilter: zTableFilterInfoValidator,
-});
+} satisfies SearchSchema);
 
 export const Route = createFileRoute('/tree/$treeId')({
   validateSearch: treeDetailsSearchSchema,
