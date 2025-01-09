@@ -130,6 +130,10 @@ const BuildDetails = ({
                 linkText: valueOrEmpty(data.git_commit_name),
               },
               {
+                title: 'buildDetails.gitCommitTag',
+                linkText: valueOrEmpty(data.git_commit_tags?.[0]),
+              },
+              {
                 title: 'global.date',
                 linkText: formatDate(valueOrEmpty(data.start_time)),
               },

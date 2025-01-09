@@ -124,6 +124,10 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
               linkText: valueOrEmpty(test.git_repository_branch),
             },
             {
+              title: 'testDetails.gitCommitTag',
+              linkText: valueOrEmpty(test.git_commit_tags?.[0]),
+            },
+            {
               title: 'testDetails.buildInfo',
               linkText: truncateBigText(test.build_id),
               linkComponent: buildDetailsLink,
@@ -161,6 +165,7 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
     test.git_commit_hash,
     test.git_repository_url,
     test.git_repository_branch,
+    test.git_commit_tags,
     test.build_id,
     test.start_time,
     test.id,
