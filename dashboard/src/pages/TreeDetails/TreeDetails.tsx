@@ -55,6 +55,8 @@ import { useTreeDetails } from '@/api/treeDetails';
 
 import { truncateUrl } from '@/lib/string';
 
+import CopyButton from '@/components/Button/CopyButton';
+
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
@@ -111,6 +113,7 @@ const TreeHeader = ({
               <TooltipTrigger>{sanitizeTableValue(tag, false)}</TooltipTrigger>
               <TooltipContent>{commit}</TooltipContent>
             </Tooltip>
+            {commit && <CopyButton value={commit} />}
           </TableCell>
           <TableCell>
             <Tooltip>
@@ -119,6 +122,7 @@ const TreeHeader = ({
               </TooltipTrigger>
               <TooltipContent>{gitUrl}</TooltipContent>
             </Tooltip>
+            {gitUrl && <CopyButton value={gitUrl} />}
           </TableCell>
         </TableRow>
       </TableBody>

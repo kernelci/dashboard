@@ -132,6 +132,7 @@ const BuildDetails = ({
               {
                 title: 'buildDetails.gitCommit',
                 linkText: valueOrEmpty(data.git_commit_hash),
+                copyValue: valueOrEmpty(data.git_commit_hash),
               },
               {
                 title: 'buildDetails.gitDescribe',
