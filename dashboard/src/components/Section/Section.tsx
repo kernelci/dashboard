@@ -6,6 +6,8 @@ import { useMemo, Fragment } from 'react';
 import type { ILinkWithIcon } from '@/components/LinkWithIcon/LinkWithIcon';
 import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
 
+import CopyButton from '@/components/Button/CopyButton';
+
 export interface ISection {
   title: string;
   subsections?: ISubsection[];
@@ -14,6 +16,7 @@ export interface ISection {
 
 export interface SubsectionLink extends ILinkWithIcon {
   wrapperComponent?: ElementType<{ children: ReactNode }>;
+  copyValue?: string;
 }
 export interface ISubsection {
   infos: SubsectionLink[];
@@ -26,21 +29,24 @@ export const Subsection = ({ infos }: ISubsection): JSX.Element => {
         const WrapperComponent = info.wrapperComponent ?? Fragment;
         return (
           <WrapperComponent key={info.title}>
-            <LinkWithIcon
-              key={info.title?.toString()}
-              title={info.title}
-              link={info.link}
-              linkComponent={info.linkComponent}
-              linkText={info.linkText}
-              unformattedTitle={info.unformattedTitle}
-              icon={
-                info.link && !info.icon ? (
-                  <FiLink className="text-blue" />
-                ) : (
-                  info.icon
-                )
-              }
-            />
+            <div className="flex flex-row items-end">
+              <LinkWithIcon
+                key={info.title?.toString()}
+                title={info.title}
+                link={info.link}
+                linkComponent={info.linkComponent}
+                linkText={info.linkText}
+                unformattedTitle={info.unformattedTitle}
+                icon={
+                  info.link && !info.icon ? (
+                    <FiLink className="text-blue" />
+                  ) : (
+                    info.icon
+                  )
+                }
+              />
+              {info.copyValue && <CopyButton value={info.copyValue} />}
+            </div>
           </WrapperComponent>
         );
       }),

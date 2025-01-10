@@ -106,6 +106,7 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
             {
               title: 'testDetails.gitCommitHash',
               linkText: valueOrEmpty(test.git_commit_hash),
+              copyValue: valueOrEmpty(test.git_commit_hash),
             },
             {
               title: 'testDetails.gitRepositoryUrl',

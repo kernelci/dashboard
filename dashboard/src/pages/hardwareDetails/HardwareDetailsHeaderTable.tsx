@@ -12,7 +12,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -42,6 +42,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { LoadingCircle } from '@/components/ui/loading-circle';
+import CopyButton from '@/components/Button/CopyButton';
 
 const DEBOUNCE_INTERVAL = 2000;
 
@@ -70,9 +71,13 @@ const CommitSelector = ({
 }): JSX.Element => {
   const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
 
+  const selectedCommitHash = useRef(headCommitHash);
+
   const navigateToThePast = useCallback(
     (commitHash: string) => {
       if (treeIndex === null) return;
+      selectedCommitHash.current = commitHash;
+
       navigate({
         search: current => {
           const parsedTreeIndex =
@@ -131,7 +136,11 @@ const CommitSelector = ({
           </SelectGroup>
         </SelectContent>
       </Select>
-      {isMainPageLoading && <LoadingCircle />}
+      {isMainPageLoading ? (
+        <LoadingCircle />
+      ) : (
+        <CopyButton value={selectedCommitHash.current} />
+      )}
     </div>
   );
 };
