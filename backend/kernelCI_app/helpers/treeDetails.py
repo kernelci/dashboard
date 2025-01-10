@@ -300,3 +300,14 @@ def decide_if_is_boot_filtered_out(instance, row_data):
     )
 
     return is_boot_filter_out
+
+def decide_if_is_full_row_filtered_out(instance, row_data):
+    hardware_filter = get_hardware_filter(row_data)
+
+    instance.filters.is_record_filtered_out(
+                    hardwares=[hardware_filter],
+                    architecture=row_data["build_architecture"],
+                    compiler=row_data["build_compiler"],
+                    config_name=row_data["build_config_name"],
+                )
+

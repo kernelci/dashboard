@@ -5,7 +5,7 @@ from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
 )
-from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, decide_if_is_boot_filtered_out, decide_if_is_build_filtered_out, get_build, get_current_row_data, get_hardware_filter, get_tree_details_data, get_tree_url, is_test_boots_test, process_builds_issue
+from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, decide_if_is_boot_filtered_out, decide_if_is_build_filtered_out, decide_if_is_full_row_filtered_out, get_build, get_current_row_data, get_hardware_filter, get_tree_details_data, get_tree_url, is_test_boots_test, process_builds_issue
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     create_issue,
@@ -218,16 +218,10 @@ class TreeDetails(View):
             
             call_based_on_compatible_and_misc_platform(row_data, self.hardwareUsed.add)
 
-            hardware_filter = get_hardware_filter(row_data)
 
             self.tree_url = get_tree_url(row_data, self.tree_url)
 
-            is_record_filter_out = self.filters.is_record_filtered_out(
-                hardwares=[hardware_filter],
-                architecture=row_data["build_architecture"],
-                compiler=row_data["build_compiler"],
-                config_name=row_data["build_config_name"],
-            )
+            is_record_filter_out = decide_if_is_full_row_filtered_out(self, row_data)
 
             if is_record_filter_out:
                 continue
