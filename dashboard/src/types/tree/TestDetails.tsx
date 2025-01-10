@@ -6,6 +6,7 @@ export type TTestDetails = {
   git_commit_hash: string;
   git_repository_branch: string;
   git_repository_url: string;
+  git_commit_tags?: string[];
   id: string;
   log_excerpt: string | undefined;
   log_url: string | undefined;

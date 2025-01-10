@@ -66,6 +66,7 @@ class TreeDetails(View):
         self.failed_builds_with_unknown_issues = 0
         self.processed_build_issues: IssueDict = {}
         self.tree_url = ""
+        self.git_commit_tags = []
 
     def setup_filters(self):
         self.filterTestDurationMin = self.filterParams.filterTestDurationMin
@@ -115,13 +116,14 @@ class TreeDetails(View):
             "checkout_id": currentRow[28],
             "checkout_git_repository_url": currentRow[29],
             "checkout_git_repository_branch": currentRow[30],
-            "incident_id": currentRow[31],
-            "incident_test_id": currentRow[32],
-            "incident_present": currentRow[33],
-            "issue_id": currentRow[34],
-            "issue_version": currentRow[35],
-            "issue_comment": currentRow[36],
-            "issue_report_url": currentRow[37],
+            "checkout_git_commit_tags": currentRow[31],
+            "incident_id": currentRow[32],
+            "incident_test_id": currentRow[33],
+            "incident_present": currentRow[34],
+            "issue_id": currentRow[35],
+            "issue_version": currentRow[36],
+            "issue_comment": currentRow[37],
+            "issue_report_url": currentRow[38],
         }
 
         environment_misc = handle_environment_misc(
@@ -398,6 +400,7 @@ class TreeDetails(View):
                 else:
                     self.__processNonBootsTest(row_data)
 
+        self.git_commit_tags = row_data["checkout_git_commit_tags"]
         self.testIssues = convert_issues_dict_to_list(self.testIssuesTable)
         self.bootIssues = convert_issues_dict_to_list(self.bootsIssuesTable)
         self.build_summary = create_details_build_summary(self.builds)
@@ -468,7 +471,8 @@ class TreeDetails(View):
                             SELECT
                                 checkouts.id AS checkout_id,
                                 checkouts.git_repository_url AS checkouts_git_repository_url,
-                                checkouts.git_repository_branch AS checkouts_git_repository_branch
+                                checkouts.git_repository_branch AS checkouts_git_repository_branch,
+                                checkouts.git_commit_tags
                             FROM
                                 checkouts
                             WHERE
@@ -529,6 +533,7 @@ class TreeDetails(View):
                 "buildsIssues": self.build_issues,
                 "failedBuildsWithUnknownIssues": self.failed_builds_with_unknown_issues,
                 "treeUrl": self.tree_url,
+                "git_commit_tags": self.git_commit_tags,
             },
             safe=False,
         )

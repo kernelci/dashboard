@@ -7,6 +7,7 @@ export type TreeFastPathResponse = Array<{
   git_repository_url: string;
   git_commit_hash: string;
   git_commit_name: string | null;
+  git_commit_tags: string[] | null;
   patchset_hash: string | null;
   start_time: string;
 }>;
@@ -14,6 +15,7 @@ export type TreeFastPathResponse = Array<{
 export type TreeTableBody = {
   commitHash: string;
   commitName: string;
+  commitTag: JSX.Element;
   patchsetHash: string;
   buildStatus?: BuildStatus;
   tree_name?: string | null;
@@ -47,6 +49,7 @@ export type Tree = {
   start_time: string | null;
   git_repository_url: string | null;
   git_commit_name: string | null;
+  git_commit_tags: string[];
   build_status: {
     valid: number;
     invalid: number;
