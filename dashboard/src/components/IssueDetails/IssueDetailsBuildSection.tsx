@@ -46,6 +46,10 @@ export const IssueDetailsBuildSection = ({
     return sanitizeBuildTable(data);
   }, [data]);
 
+  if (!isLoading && data?.length === 0) {
+    return <></>;
+  }
+
   return (
     <>
       <h2 className="text-2xl font-bold">

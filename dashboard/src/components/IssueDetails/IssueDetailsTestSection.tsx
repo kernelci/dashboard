@@ -30,6 +30,10 @@ export const IssueDetailsTestSection = ({
   );
   const { formatMessage } = useIntl();
 
+  if (!isLoading && data?.length === 0) {
+    return <></>;
+  }
+
   return (
     <>
       <h2 className="text-2xl font-bold">
