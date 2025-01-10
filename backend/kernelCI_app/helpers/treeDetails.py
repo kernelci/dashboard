@@ -265,6 +265,7 @@ def process_builds_issue(instance, row_data):
                 issue_comment=row_data["issue_comment"],
                 issue_report_url=row_data["issue_report_url"],
             )
+
     elif build_id not in instance.processed_builds and build_valid is False:
         instance.failed_builds_with_unknown_issues += 1
 
@@ -279,6 +280,7 @@ def process_tests_issue(instance, row_data):
     issue_comment = row_data["issue_comment"]
     issue_report_url = row_data["issue_report_url"]
     incident_test_id = row_data["incident_test_id"]
+
     can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
 
     if issue_id and can_insert_issue:
@@ -293,6 +295,31 @@ def process_tests_issue(instance, row_data):
             )
     elif testStatus == "FAIL":
         instance.failedTestsWithUnknownIssues += 1
+
+def process_boot_issue(instance, row_data):
+    test_status = row_data["test_status"]
+    issue_id = row_data["issue_id"]
+    issue_comment = row_data["issue_comment"]
+    issue_report_url = row_data["issue_report_url"]
+    incident_test_id = row_data["incident_test_id"]
+    history_item = row_data["history_item"]
+
+    can_insert_issue = should_increment_test_issue(
+        issue_id=issue_id, incident_test_id=incident_test_id
+    )
+
+    if issue_id and can_insert_issue:
+        currentIssue = instance.bootsIssuesTable.get(issue_id)
+        if currentIssue:
+            currentIssue["incidents_info"]["incidentsCount"] += 1
+        else:
+            instance.bootsIssuesTable[issue_id] = create_issue(
+                issue_id=issue_id,
+                issue_comment=issue_comment,
+                issue_report_url=issue_report_url,
+            )
+    elif test_status == "FAIL":
+        instance.failedBootsWithUnknownIssues += 1
 
 def decide_if_is_build_filtered_out(instance, row_data):
     issue_id = row_data["issue_id"]
@@ -377,3 +404,37 @@ def process_test_summary(instance, row_data):
         instance.testEnvironmentCompatible[test_environment_compatible][test_status] += 1
     else:
         instance.testEnvironmentMisc[test_platform][test_status] += 1
+
+def process_boots_summary(instance, row_data):
+    test_status = row_data["test_status"]
+    build_config = row_data["build_config_name"]
+    build_arch = row_data["build_architecture"]
+    build_compiler = row_data["build_compiler"]
+    test_platform = row_data["test_platform"]
+    test_error = row_data["test_error"]
+    test_environment_compatible = row_data["test_environment_compatible"]
+
+    instance.bootStatusSummary[test_status] = (
+        instance.bootStatusSummary.get(test_status, 0) + 1
+    )
+
+    archKey = "%s-%s" % (build_arch, build_compiler)
+    archSummary = instance.bootArchSummary.get(
+        archKey,
+        {"arch": build_arch, "compiler": build_compiler, "status": {}},
+    )
+    archSummary["status"][test_status] = archSummary["status"].get(test_status, 0) + 1
+    instance.bootArchSummary[archKey] = archSummary
+
+    configSummary = instance.bootConfigs.get(build_config, {})
+    configSummary[test_status] = configSummary.get(test_status, 0) + 1
+    instance.bootConfigs[build_config] = configSummary
+
+    if test_status == "ERROR" or test_status == "FAIL" or test_status == "MISS":
+        instance.bootPlatformsFailing.add(test_platform)
+        instance.bootFailReasons[test_error] = instance.bootFailReasons.get(test_error, 0) + 1
+
+    if test_environment_compatible != UNKNOWN_STRING:
+        instance.bootEnvironmentCompatible[test_environment_compatible][test_status] += 1
+    else:
+        instance.bootEnvironmentMisc[test_platform][test_status] += 1

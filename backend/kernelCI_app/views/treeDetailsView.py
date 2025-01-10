@@ -1,15 +1,11 @@
 from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.helpers.filters import (
-    should_increment_test_issue,
-    UNKNOWN_STRING,
     FilterParams,
 )
-from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, decide_if_is_boot_filtered_out, decide_if_is_build_filtered_out, decide_if_is_full_row_filtered_out, decide_if_is_test_filtered_out, get_build, get_current_row_data, get_hardware_filter, get_tree_details_data, get_tree_url, is_test_boots_test, process_builds_issue, process_test_summary, process_tests_issue
+from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, decide_if_is_boot_filtered_out, decide_if_is_build_filtered_out, decide_if_is_full_row_filtered_out, decide_if_is_test_filtered_out, get_build, get_current_row_data, get_tree_details_data, get_tree_url, is_test_boots_test, process_builds_issue, process_test_summary, process_tests_issue
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
-    create_issue,
-    IncidentInfo,
 )
 
 from collections import defaultdict
@@ -42,9 +38,6 @@ class TreeDetails(View):
         self.bootsIssuesTable = {}
         self.bootEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
         self.bootEnvironmentMisc = defaultdict(lambda: defaultdict(int))
-        self.incidentsIssueRelationship = defaultdict(
-            lambda: IncidentInfo(incidentsCount=0)
-        )
         self.hardwareUsed = set()
         self.failedTestsWithUnknownIssues = 0
         self.failedBootsWithUnknownIssues = 0
@@ -58,71 +51,18 @@ class TreeDetails(View):
 
 
     def _process_boots_test(self, row_data):
-        testId = row_data["test_id"]
-        testStatus = row_data["test_status"]
-        buildConfig = row_data["build_config_name"]
-        buildArch = row_data["build_architecture"]
-        buildCompiler = row_data["build_compiler"]
-        testPlatform = row_data["test_platform"]
-        testError = row_data["test_error"]
-        historyItem = row_data["history_item"]
-        incident_id = row_data["incident_id"]
-        issue_id = row_data["issue_id"]
-        issue_comment = row_data["issue_comment"]
-        issue_report_url = row_data["issue_report_url"]
-        testEnvironmentCompatible = row_data["test_environment_compatible"]
-        incident_test_id = row_data["incident_test_id"]
+        test_id = row_data["test_id"]
+        history_item = row_data["history_item"]
 
         if decide_if_is_boot_filtered_out(self, row_data):
             return
 
-        can_insert_issue = should_increment_test_issue(
-            issue_id=issue_id, incident_test_id=incident_test_id
-        )
+        process_builds_issue(self, row_data)
 
-        if issue_id and can_insert_issue:
-            currentIssue = self.bootsIssuesTable.get(issue_id)
-            if currentIssue:
-                currentIssue["incidents_info"]["incidentsCount"] += 1
-            else:
-                self.bootsIssuesTable[issue_id] = create_issue(
-                    issue_id=issue_id,
-                    issue_comment=issue_comment,
-                    issue_report_url=issue_report_url,
-                )
-        elif testStatus == "FAIL":
-            self.failedBootsWithUnknownIssues += 1
-
-        if testId in self.processedTests:
+        if test_id in self.processedTests:
             return
-        self.processedTests.add(testId)
-        self.bootHistory.append(historyItem)
-        self.bootStatusSummary[testStatus] = (
-            self.bootStatusSummary.get(testStatus, 0) + 1
-        )
-
-        archKey = "%s-%s" % (buildArch, buildCompiler)
-        archSummary = self.bootArchSummary.get(
-            archKey,
-            {"arch": buildArch, "compiler": buildCompiler, "status": {}},
-        )
-        archSummary["status"][testStatus] = archSummary["status"].get(testStatus, 0) + 1
-        self.bootArchSummary[archKey] = archSummary
-
-        configSummary = self.bootConfigs.get(buildConfig, {})
-        configSummary[testStatus] = configSummary.get(testStatus, 0) + 1
-        self.bootConfigs[buildConfig] = configSummary
-
-        if testStatus == "ERROR" or testStatus == "FAIL" or testStatus == "MISS":
-            self.bootPlatformsFailing.add(testPlatform)
-            self.bootFailReasons[testError] = self.bootFailReasons.get(testError, 0) + 1
-
-        if testEnvironmentCompatible != UNKNOWN_STRING:
-            self.bootEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
-        else:
-            self.bootEnvironmentMisc[testPlatform][testStatus] += 1
-
-        self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
+        self.processedTests.add(test_id)
+        self.bootHistory.append(history_item)
 
     def _process_non_boots_test(self, row_data):
         test_id = row_data["test_id"]
@@ -210,7 +150,6 @@ class TreeDetails(View):
                 "bootEnvironmentCompatible": self.bootEnvironmentCompatible,
                 "testEnvironmentMisc": self.testEnvironmentMisc,
                 "bootEnvironmentMisc": self.bootEnvironmentMisc,
-                "incidentsIssueRelationship": self.incidentsIssueRelationship,
                 "hardwareUsed": list(self.hardwareUsed),
                 "failedTestsWithUnknownIssues": self.failedTestsWithUnknownIssues,
                 "failedBootsWithUnknownIssues": self.failedBootsWithUnknownIssues,
