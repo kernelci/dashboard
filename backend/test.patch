@@ -1,41 +1,180 @@
-diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
-index ccfc829..3300c50 100644
---- a/backend/kernelCI_app/views/hardwareDetailsView.py
-+++ b/backend/kernelCI_app/views/hardwareDetailsView.py
-@@ -18,6 +18,7 @@ from kernelCI_app.utils import (
- )
- from kernelCI_app.constants.general import DEFAULT_ORIGIN
- from django.views.decorators.csrf import csrf_exempt
-+from random import randint
+diff --git a/backend/requests/build-details-get.sh b/backend/requests/build-details-get.sh
+old mode 100644
+new mode 100755
+index d51c921..255e9d5
+--- a/backend/requests/build-details-get.sh
++++ b/backend/requests/build-details-get.sh
+@@ -1,4 +1,4 @@
+-http 'http://localhost:8000/api/build/0dayci:build:6681e0032e96c85bf5ad3a80'
++http 'http://localhost:8000/api/build/invalid'
  
- DEFAULT_DAYS_INTERVAL = 3
- SELECTED_HEAD_TREE_VALUE = 'head'
-@@ -328,6 +329,7 @@ class HardwareDetails(View):
-         boots = generate_test_dict()
+ # HTTP/1.1 200 OK
+ # Content-Length: 625
+diff --git a/backend/requests/build-status-count-get.sh b/backend/requests/build-status-count-get.sh
+old mode 100644
+new mode 100755
+diff --git a/backend/requests/build-tests-get.sh b/backend/requests/build-tests-get.sh
+old mode 100644
+new mode 100755
+index 91a13f9..aaa8fd2
+--- a/backend/requests/build-tests-get.sh
++++ b/backend/requests/build-tests-get.sh
+@@ -1,4 +1,4 @@
+-http 'http://localhost:8000/api/build/kernelci:kernelci.org:66a1d00e546da93e297e7073/tests'
++http 'http://localhost:8000/api/build/invalid/tests'
  
-         for r in records:
-+            r['duration'] = randint(0, 100000)
-             current_tree = get_current_selected_tree(r, selected_trees)
+ # HTTP/1.1 200 OK
+ # Content-Length: 9122
+diff --git a/backend/requests/hardware-details-commit-history-post.sh b/backend/requests/hardware-details-commit-history-post.sh
+index 056c3bf..57c9502 100755
+--- a/backend/requests/hardware-details-commit-history-post.sh
++++ b/backend/requests/hardware-details-commit-history-post.sh
+@@ -1,4 +1,4 @@
+-http POST http://localhost:8000/api/hardware/fsl,imx6q-sabrelite/commit-history \
++http POST http://localhost:8000/api/hardware/invalid/commit-history \
+ Content-Type:application/json \
+ <<< '{
+   "origin": "maestro",
+diff --git a/backend/requests/hardware-details-post.sh b/backend/requests/hardware-details-post.sh
+index 5d27a68..ed44863 100755
+--- a/backend/requests/hardware-details-post.sh
++++ b/backend/requests/hardware-details-post.sh
+@@ -1,4 +1,4 @@
+-http POST http://localhost:8000/api/hardware/fsl,imx6q-sabrelite \
++http POST http://localhost:8000/api/hardware/invalid \
+ Content-Type:application/json \
+ <<< '{
+     "origin": "maestro",
+diff --git a/backend/requests/hardware-listing-fast.sh b/backend/requests/hardware-listing-fast.sh
+old mode 100644
+new mode 100755
+index 7c8fb8b..67abaab
+--- a/backend/requests/hardware-listing-fast.sh
++++ b/backend/requests/hardware-listing-fast.sh
+@@ -1,2 +1,2 @@
+-http 'http://localhost:8000/api/hardware/' mode==fast origin==maestro
++http 'http://localhost:8000/api/hardware/' mode==fast origin==invalid
  
-             is_tree_selected = current_tree and is_record_selected(r, current_tree)
-@@ -366,6 +368,7 @@ class HardwareDetails(View):
-                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+diff --git a/backend/requests/hardware-listing-slow.sh b/backend/requests/hardware-listing-slow.sh
+old mode 100644
+new mode 100755
+index 626481d..c2d5d0e
+--- a/backend/requests/hardware-listing-slow.sh
++++ b/backend/requests/hardware-listing-slow.sh
+@@ -1,2 +1,2 @@
+-http 'http://localhost:8000/api/hardware/' mode==slow origin==maestro
++http 'http://localhost:8000/api/hardware/' mode==slow origin==invalid
  
-             build = get_build(r, current_tree["index"])
-+            build['duration'] = randint(0, 100000)
+diff --git a/backend/requests/issue-details-builds-get.sh b/backend/requests/issue-details-builds-get.sh
+old mode 100644
+new mode 100755
+index 2187d44..f3cf1ba
+--- a/backend/requests/issue-details-builds-get.sh
++++ b/backend/requests/issue-details-builds-get.sh
+@@ -1,4 +1,4 @@
+-http http://localhost:8000/api/issue/maestro:f61865c29254c199ba015e5f48acfc070aff0eb0/version/0/builds
++http http://localhost:8000/api/issue/invalid/version/0/builds
  
-             if self.is_build_filtered_in(build, processed_builds):
-                 processed_builds.add(build_id)
+ # HTTP/1.1 200 OK
+ # Cache-Control: max-age=0
+diff --git a/backend/requests/issue-details-get.sh b/backend/requests/issue-details-get.sh
+old mode 100644
+new mode 100755
+index 38a2e6c..43af27b
+--- a/backend/requests/issue-details-get.sh
++++ b/backend/requests/issue-details-get.sh
+@@ -1,4 +1,4 @@
+-http 'http://localhost:8000/api/issue/maestro:26cab82e27e6b4a7e883e14b72220126b0206e4e/version/0'
++http 'http://localhost:8000/api/issue/invalid/version/0'
+ 
+ # HTTP/1.1 200 OK
+ # Cache-Control: max-age=0
+diff --git a/backend/requests/issue-details-tests-get.sh b/backend/requests/issue-details-tests-get.sh
+old mode 100644
+new mode 100755
+index a524f87..b47d71f
+--- a/backend/requests/issue-details-tests-get.sh
++++ b/backend/requests/issue-details-tests-get.sh
+@@ -1,4 +1,4 @@
+-http 'http://localhost:8000/api/issue/maestro:0820fe153b255bf52750bbf1fecb198d8772f5a9/version/0/tests'
++http 'http://localhost:8000/api/issue/invalid/version/0/tests'
+ 
+ # HTTP/1.1 200 OK
+ # Cache-Control: max-age=0
+diff --git a/backend/requests/log-downloader-error.sh b/backend/requests/log-downloader-error.sh
+old mode 100644
+new mode 100755
+diff --git a/backend/requests/log-downloader.sh b/backend/requests/log-downloader.sh
+old mode 100644
+new mode 100755
+diff --git a/backend/requests/test-details-get.sh b/backend/requests/test-details-get.sh
+old mode 100644
+new mode 100755
+index 7bb306a..63817f0
+--- a/backend/requests/test-details-get.sh
++++ b/backend/requests/test-details-get.sh
+@@ -1,5 +1,5 @@
+ # Database tested - `playground_kcidb`
+-http 'http://localhost:8000/api/tests/test/maestro:66b4883fd22b231086764dc2'
++http 'http://localhost:8000/api/tests/test/invalid'
+ 
+ # {
+ #   "id": "maestro:66b4883fd22b231086764dc2",
+diff --git a/backend/requests/tests-by-commit-hash.sh b/backend/requests/tests-by-commit-hash.sh
+old mode 100644
+new mode 100755
+diff --git a/backend/requests/tree-commit-history.sh b/backend/requests/tree-commit-history.sh
+old mode 100644
+new mode 100755
+index ed4fd83..a2dcc2c
+--- a/backend/requests/tree-commit-history.sh
++++ b/backend/requests/tree-commit-history.sh
+@@ -1,2 +1,2 @@
+-http 'http://localhost:8000/api/tree/b658b3a7cffc6f9e89b061930c37941cda34631e/commits' origin==maestro git_url==https://android.googlesource.com/kernel/common git_branch==android-mainline
++http 'http://localhost:8000/api/tree/invalid/commits' origin==maestro git_url==https://android.googlesource.com/kernel/common git_branch==android-mainline
+ 
+diff --git a/backend/requests/tree-details-get.sh b/backend/requests/tree-details-get.sh
+index b21c681..5a021c2 100755
+--- a/backend/requests/tree-details-get.sh
++++ b/backend/requests/tree-details-get.sh
+@@ -1 +1 @@
+-http 'http://localhost:8000/api/tree/b7bfaa761d760e72a969d116517eaa12e404c262/full' git_branch==for-kernelci git_url==https://git.kernel.org/pub/scm/linux/kernel/git/broonie/misc.git origin==maestro
++http 'http://localhost:8000/api/tree/invalid/full' git_branch==for-kernelci git_url==https://git.kernel.org/pub/scm/linux/kernel/git/broonie/misc.git origin==maestro
+diff --git a/backend/requests/tree-listing-fast.sh b/backend/requests/tree-listing-fast.sh
+index 4965b01..e56a925 100755
+--- a/backend/requests/tree-listing-fast.sh
++++ b/backend/requests/tree-listing-fast.sh
+@@ -1,6 +1,6 @@
+ # If you want to see headers, add -p H to the http call:
+ # http -p H 'http://localhost:8000/api/tree/' origin==maestro
+-http 'http://localhost:8000/api/tree-fast/' origin==maestro
++http 'http://localhost:8000/api/tree-fast/' origin==invalid
+ 
+ # If you want to provide another limit to query:
+ # http 'http://localhost:8000/api/tree-fast/' origin==maestro intervalInDays==8
+\ No newline at end of file
+diff --git a/backend/requests/tree-listing.sh b/backend/requests/tree-listing.sh
+index 4696ec7..ea3f7ef 100755
+--- a/backend/requests/tree-listing.sh
++++ b/backend/requests/tree-listing.sh
+@@ -1,6 +1,6 @@
+ # If you want to see headers, add -p H to the http call:
+ # http -p H 'http://localhost:8000/api/tree/' origin==0dayci
+-http 'http://localhost:8000/api/tree/' origin==0dayci
++http 'http://localhost:8000/api/tree/' origin==invalid
+ 
+ # If you want to provide another limit to query:
+ # http 'http://localhost:8000/api/tree/' origin==0dayci intervalInDays==4
 diff --git a/backend/test.patch b/backend/test.patch
-index 7b8d772..e69de29 100644
+index bd3f6eb..810a07f 100644
 --- a/backend/test.patch
 +++ b/backend/test.patch
-@@ -1,303 +0,0 @@
+@@ -1,336 +0,0 @@
 -diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
--index 54f9908..badcea5 100644
+-index ccfc829..3300c50 100644
 ---- a/backend/kernelCI_app/views/hardwareDetailsView.py
 -+++ b/backend/kernelCI_app/views/hardwareDetailsView.py
--@@ -19,6 +19,7 @@ from kernelCI_app.utils import (
+-@@ -18,6 +18,7 @@ from kernelCI_app.utils import (
 - )
 - from kernelCI_app.constants.general import DEFAULT_ORIGIN
 - from django.views.decorators.csrf import csrf_exempt
@@ -43,7 +182,7 @@ index 7b8d772..e69de29 100644
 - 
 - DEFAULT_DAYS_INTERVAL = 3
 - SELECTED_HEAD_TREE_VALUE = 'head'
--@@ -396,6 +397,7 @@ class HardwareDetails(View):
+-@@ -328,6 +329,7 @@ class HardwareDetails(View):
 -         boots = generate_test_dict()
 - 
 -         for r in records:
@@ -51,7 +190,7 @@ index 7b8d772..e69de29 100644
 -             current_tree = get_current_selected_tree(r, selected_trees)
 - 
 -             is_tree_selected = current_tree and is_record_selected(r, current_tree)
--@@ -434,6 +436,7 @@ class HardwareDetails(View):
+-@@ -366,6 +368,7 @@ class HardwareDetails(View):
 -                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
 - 
 -             build = get_build(r, current_tree["index"])
@@ -59,278 +198,311 @@ index 7b8d772..e69de29 100644
 - 
 -             if self.is_build_filtered_in(build, processed_builds):
 -                 processed_builds.add(build_id)
--diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
--index ccfc829..25694e5 100644
----- a/backend/kernelCI_app/views/hardwareDetailsView.py
--+++ b/backend/kernelCI_app/views/hardwareDetailsView.py
--@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
-- )
-- from kernelCI_app.constants.general import DEFAULT_ORIGIN
-- from django.views.decorators.csrf import csrf_exempt
--+from random import randint
--+
-- 
-- DEFAULT_DAYS_INTERVAL = 3
-- SELECTED_HEAD_TREE_VALUE = 'head'
--@@ -310,6 +312,7 @@ class HardwareDetails(View):
--         compilers = set()
-- 
--         for r in records:
--+            r['duration'] = randint(0, 100000)
--             current_tree = get_current_selected_tree(r, selected_trees)
--             if not current_tree or not is_record_selected(r, current_tree):
--                 continue
--@@ -366,6 +369,7 @@ class HardwareDetails(View):
--                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
-- 
--             build = get_build(r, current_tree["index"])
--+            build['duration'] = randint(0, 100000)
-- 
--             if self.is_build_filtered_in(build, processed_builds):
--                 processed_builds.add(build_id)
--diff --git a/backend/kernelCI_app/utils.py b/backend/kernelCI_app/utils.py
--index 325f706..c9a7548 100644
----- a/backend/kernelCI_app/utils.py
--+++ b/backend/kernelCI_app/utils.py
--@@ -153,6 +153,7 @@ class FilterParams:
--         self.filterBootStatus.add(current_filter["value"])
-- 
--     def _handle_boot_duration(self, current_filter: Dict):
--+        print("BOOTS DURATION > > ", current_filter)
--         value = current_filter["value"]
--         operation = current_filter["comparison_op"]
--         if operation == "lte":
--@@ -164,6 +165,7 @@ class FilterParams:
--         self.filterTestStatus.add(current_filter["value"])
-- 
--     def _handle_test_duration(self, current_filter: Dict):
--+        print("TEST DURATION > > ", current_filter)
--         value = current_filter["value"]
--         operation = current_filter["comparison_op"]
--         if operation == "lte":
--@@ -194,7 +196,8 @@ class FilterParams:
--         self.filterBuildValid.add(current_filter["value"] == "Success")
-- 
--     def _handle_build_duration(self, current_filter: Dict):
---        value = current_filter["value"][0]
--+        print("BUILD DURATION > > ", current_filter)
--+        value = current_filter["value"]
--         operation = current_filter["comparison_op"]
--         if operation == "lte":
--             self.filterBuildDurationMax = toIntOrDefault(value, None)
--@@ -223,6 +226,14 @@ class FilterParams:
--             # filter as list
--             filter_data = filters.get(k)
-- 
--+            match = self.filter_reg.match(filter_term)
--+
--+            if match:
--+                field = match.group(1)
--+                comparison_op = match.group(2)
--+                self.add_filter(field, filter_data[0], comparison_op)
--+                continue
--+
--             if type(filter_data) is list and len(filter_data) > 0:
--                 field = filter_term
--                 values = filter_data
--@@ -235,13 +246,6 @@ class FilterParams:
--                 self.add_filter(filter_term, filter_data, "like")
--                 continue
-- 
---            match = self.filter_reg.match(filter_term)
---            if match:
---                field = match.group(1)
---                comparison_op = match.group(2)
---                self.add_filter(field, filter_data, comparison_op)
---                continue
---
--             self.add_filter(filter_term, filter_data, "exact")
-- 
--     def create_filters_from_req(self, request):
--diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
--index ccfc829..4002898 100644
----- a/backend/kernelCI_app/views/hardwareDetailsView.py
--+++ b/backend/kernelCI_app/views/hardwareDetailsView.py
--@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
-- )
-- from kernelCI_app.constants.general import DEFAULT_ORIGIN
-- from django.views.decorators.csrf import csrf_exempt
--+from random import randint
--+
-- 
-- DEFAULT_DAYS_INTERVAL = 3
-- SELECTED_HEAD_TREE_VALUE = 'head'
--@@ -184,6 +186,7 @@ class HardwareDetails(View):
--         return is_build_not_processed and is_build_filtered_out
-- 
--     def __build_filters_pass(self, status: bool, duration: int):
--+        # print(self.filterBuildDurationMin, self.filterBuildDurationMax)
--         if len(self.filterValid) > 0 and (status not in self.filterValid):
--             return False
--         if (
--@@ -328,6 +331,7 @@ class HardwareDetails(View):
--         boots = generate_test_dict()
-- 
--         for r in records:
--+            r['duration'] = randint(0, 100000)
--             current_tree = get_current_selected_tree(r, selected_trees)
-- 
--             is_tree_selected = current_tree and is_record_selected(r, current_tree)
--@@ -366,6 +370,7 @@ class HardwareDetails(View):
--                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
-- 
--             build = get_build(r, current_tree["index"])
--+            build['duration'] = randint(0, 100000)
-- 
--             if self.is_build_filtered_in(build, processed_builds):
--                 processed_builds.add(build_id)
--@@ -487,6 +492,9 @@ class HardwareDetails(View):
--             )
-- 
--             self.filterParams = FilterParams(body, process_body=True)
--+
--+            print(self.filterParams.filters)
--+
--             self.setup_filters()
--         except json.JSONDecodeError:
--             return HttpResponseBadRequest(
 -diff --git a/backend/test.patch b/backend/test.patch
--index b98e62d..ee5004a 100644
+-index 7b8d772..e69de29 100644
 ---- a/backend/test.patch
 -+++ b/backend/test.patch
--@@ -26,3 +26,134 @@ index 54f9908..badcea5 100644
--  
--              if self.is_build_filtered_in(build, processed_builds):
--                  processed_builds.add(build_id)
--+diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
--+index ccfc829..25694e5 100644
--+--- a/backend/kernelCI_app/views/hardwareDetailsView.py
--++++ b/backend/kernelCI_app/views/hardwareDetailsView.py
--+@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
--+ )
--+ from kernelCI_app.constants.general import DEFAULT_ORIGIN
--+ from django.views.decorators.csrf import csrf_exempt
--++from random import randint
--++
--+ 
--+ DEFAULT_DAYS_INTERVAL = 3
--+ SELECTED_HEAD_TREE_VALUE = 'head'
--+@@ -310,6 +312,7 @@ class HardwareDetails(View):
--+         compilers = set()
--+ 
--+         for r in records:
--++            r['duration'] = randint(0, 100000)
--+             current_tree = get_current_selected_tree(r, selected_trees)
--+             if not current_tree or not is_record_selected(r, current_tree):
--+                 continue
--+@@ -366,6 +369,7 @@ class HardwareDetails(View):
--+                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
--+ 
--+             build = get_build(r, current_tree["index"])
--++            build['duration'] = randint(0, 100000)
--+ 
--+             if self.is_build_filtered_in(build, processed_builds):
--+                 processed_builds.add(build_id)
--+diff --git a/backend/kernelCI_app/utils.py b/backend/kernelCI_app/utils.py
--+index 325f706..c9a7548 100644
--+--- a/backend/kernelCI_app/utils.py
--++++ b/backend/kernelCI_app/utils.py
--+@@ -153,6 +153,7 @@ class FilterParams:
--+         self.filterBootStatus.add(current_filter["value"])
--+ 
--+     def _handle_boot_duration(self, current_filter: Dict):
--++        print("BOOTS DURATION > > ", current_filter)
--+         value = current_filter["value"]
--+         operation = current_filter["comparison_op"]
--+         if operation == "lte":
--+@@ -164,6 +165,7 @@ class FilterParams:
--+         self.filterTestStatus.add(current_filter["value"])
--+ 
--+     def _handle_test_duration(self, current_filter: Dict):
--++        print("TEST DURATION > > ", current_filter)
--+         value = current_filter["value"]
--+         operation = current_filter["comparison_op"]
--+         if operation == "lte":
--+@@ -194,7 +196,8 @@ class FilterParams:
--+         self.filterBuildValid.add(current_filter["value"] == "Success")
--+ 
--+     def _handle_build_duration(self, current_filter: Dict):
--+-        value = current_filter["value"][0]
--++        print("BUILD DURATION > > ", current_filter)
--++        value = current_filter["value"]
--+         operation = current_filter["comparison_op"]
--+         if operation == "lte":
--+             self.filterBuildDurationMax = toIntOrDefault(value, None)
--+@@ -223,6 +226,14 @@ class FilterParams:
--+             # filter as list
--+             filter_data = filters.get(k)
--+ 
--++            match = self.filter_reg.match(filter_term)
--++
--++            if match:
--++                field = match.group(1)
--++                comparison_op = match.group(2)
--++                self.add_filter(field, filter_data[0], comparison_op)
--++                continue
--++
--+             if type(filter_data) is list and len(filter_data) > 0:
--+                 field = filter_term
--+                 values = filter_data
--+@@ -235,13 +246,6 @@ class FilterParams:
--+                 self.add_filter(filter_term, filter_data, "like")
--+                 continue
--+ 
--+-            match = self.filter_reg.match(filter_term)
--+-            if match:
--+-                field = match.group(1)
--+-                comparison_op = match.group(2)
--+-                self.add_filter(field, filter_data, comparison_op)
--+-                continue
--+-
--+             self.add_filter(filter_term, filter_data, "exact")
--+ 
--+     def create_filters_from_req(self, request):
--+diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
--+index ccfc829..4002898 100644
--+--- a/backend/kernelCI_app/views/hardwareDetailsView.py
--++++ b/backend/kernelCI_app/views/hardwareDetailsView.py
--+@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
--+ )
--+ from kernelCI_app.constants.general import DEFAULT_ORIGIN
--+ from django.views.decorators.csrf import csrf_exempt
--++from random import randint
--++
--+ 
--+ DEFAULT_DAYS_INTERVAL = 3
--+ SELECTED_HEAD_TREE_VALUE = 'head'
--+@@ -184,6 +186,7 @@ class HardwareDetails(View):
--+         return is_build_not_processed and is_build_filtered_out
--+ 
--+     def __build_filters_pass(self, status: bool, duration: int):
--++        # print(self.filterBuildDurationMin, self.filterBuildDurationMax)
--+         if len(self.filterValid) > 0 and (status not in self.filterValid):
--+             return False
--+         if (
--+@@ -328,6 +331,7 @@ class HardwareDetails(View):
--+         boots = generate_test_dict()
--+ 
--+         for r in records:
--++            r['duration'] = randint(0, 100000)
--+             current_tree = get_current_selected_tree(r, selected_trees)
--+ 
--+             is_tree_selected = current_tree and is_record_selected(r, current_tree)
--+@@ -366,6 +370,7 @@ class HardwareDetails(View):
--+                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
--+ 
--+             build = get_build(r, current_tree["index"])
--++            build['duration'] = randint(0, 100000)
--+ 
--+             if self.is_build_filtered_in(build, processed_builds):
--+                 processed_builds.add(build_id)
--+@@ -487,6 +492,9 @@ class HardwareDetails(View):
--+             )
--+ 
--+             self.filterParams = FilterParams(body, process_body=True)
--++
--++           
--\ No newline at end of file
+-@@ -1,303 +0,0 @@
+--diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+--index 54f9908..badcea5 100644
+----- a/backend/kernelCI_app/views/hardwareDetailsView.py
+--+++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+--@@ -19,6 +19,7 @@ from kernelCI_app.utils import (
+-- )
+-- from kernelCI_app.constants.general import DEFAULT_ORIGIN
+-- from django.views.decorators.csrf import csrf_exempt
+--+from random import randint
+-- 
+-- DEFAULT_DAYS_INTERVAL = 3
+-- SELECTED_HEAD_TREE_VALUE = 'head'
+--@@ -396,6 +397,7 @@ class HardwareDetails(View):
+--         boots = generate_test_dict()
+-- 
+--         for r in records:
+--+            r['duration'] = randint(0, 100000)
+--             current_tree = get_current_selected_tree(r, selected_trees)
+-- 
+--             is_tree_selected = current_tree and is_record_selected(r, current_tree)
+--@@ -434,6 +436,7 @@ class HardwareDetails(View):
+--                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+-- 
+--             build = get_build(r, current_tree["index"])
+--+            build['duration'] = randint(0, 100000)
+-- 
+--             if self.is_build_filtered_in(build, processed_builds):
+--                 processed_builds.add(build_id)
+--diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+--index ccfc829..25694e5 100644
+----- a/backend/kernelCI_app/views/hardwareDetailsView.py
+--+++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+--@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
+-- )
+-- from kernelCI_app.constants.general import DEFAULT_ORIGIN
+-- from django.views.decorators.csrf import csrf_exempt
+--+from random import randint
+--+
+-- 
+-- DEFAULT_DAYS_INTERVAL = 3
+-- SELECTED_HEAD_TREE_VALUE = 'head'
+--@@ -310,6 +312,7 @@ class HardwareDetails(View):
+--         compilers = set()
+-- 
+--         for r in records:
+--+            r['duration'] = randint(0, 100000)
+--             current_tree = get_current_selected_tree(r, selected_trees)
+--             if not current_tree or not is_record_selected(r, current_tree):
+--                 continue
+--@@ -366,6 +369,7 @@ class HardwareDetails(View):
+--                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+-- 
+--             build = get_build(r, current_tree["index"])
+--+            build['duration'] = randint(0, 100000)
+-- 
+--             if self.is_build_filtered_in(build, processed_builds):
+--                 processed_builds.add(build_id)
+--diff --git a/backend/kernelCI_app/utils.py b/backend/kernelCI_app/utils.py
+--index 325f706..c9a7548 100644
+----- a/backend/kernelCI_app/utils.py
+--+++ b/backend/kernelCI_app/utils.py
+--@@ -153,6 +153,7 @@ class FilterParams:
+--         self.filterBootStatus.add(current_filter["value"])
+-- 
+--     def _handle_boot_duration(self, current_filter: Dict):
+--+        print("BOOTS DURATION > > ", current_filter)
+--         value = current_filter["value"]
+--         operation = current_filter["comparison_op"]
+--         if operation == "lte":
+--@@ -164,6 +165,7 @@ class FilterParams:
+--         self.filterTestStatus.add(current_filter["value"])
+-- 
+--     def _handle_test_duration(self, current_filter: Dict):
+--+        print("TEST DURATION > > ", current_filter)
+--         value = current_filter["value"]
+--         operation = current_filter["comparison_op"]
+--         if operation == "lte":
+--@@ -194,7 +196,8 @@ class FilterParams:
+--         self.filterBuildValid.add(current_filter["value"] == "Success")
+-- 
+--     def _handle_build_duration(self, current_filter: Dict):
+---        value = current_filter["value"][0]
+--+        print("BUILD DURATION > > ", current_filter)
+--+        value = current_filter["value"]
+--         operation = current_filter["comparison_op"]
+--         if operation == "lte":
+--             self.filterBuildDurationMax = toIntOrDefault(value, None)
+--@@ -223,6 +226,14 @@ class FilterParams:
+--             # filter as list
+--             filter_data = filters.get(k)
+-- 
+--+            match = self.filter_reg.match(filter_term)
+--+
+--+            if match:
+--+                field = match.group(1)
+--+                comparison_op = match.group(2)
+--+                self.add_filter(field, filter_data[0], comparison_op)
+--+                continue
+--+
+--             if type(filter_data) is list and len(filter_data) > 0:
+--                 field = filter_term
+--                 values = filter_data
+--@@ -235,13 +246,6 @@ class FilterParams:
+--                 self.add_filter(filter_term, filter_data, "like")
+--                 continue
+-- 
+---            match = self.filter_reg.match(filter_term)
+---            if match:
+---                field = match.group(1)
+---                comparison_op = match.group(2)
+---                self.add_filter(field, filter_data, comparison_op)
+---                continue
+---
+--             self.add_filter(filter_term, filter_data, "exact")
+-- 
+--     def create_filters_from_req(self, request):
+--diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+--index ccfc829..4002898 100644
+----- a/backend/kernelCI_app/views/hardwareDetailsView.py
+--+++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+--@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
+-- )
+-- from kernelCI_app.constants.general import DEFAULT_ORIGIN
+-- from django.views.decorators.csrf import csrf_exempt
+--+from random import randint
+--+
+-- 
+-- DEFAULT_DAYS_INTERVAL = 3
+-- SELECTED_HEAD_TREE_VALUE = 'head'
+--@@ -184,6 +186,7 @@ class HardwareDetails(View):
+--         return is_build_not_processed and is_build_filtered_out
+-- 
+--     def __build_filters_pass(self, status: bool, duration: int):
+--+        # print(self.filterBuildDurationMin, self.filterBuildDurationMax)
+--         if len(self.filterValid) > 0 and (status not in self.filterValid):
+--             return False
+--         if (
+--@@ -328,6 +331,7 @@ class HardwareDetails(View):
+--         boots = generate_test_dict()
+-- 
+--         for r in records:
+--+            r['duration'] = randint(0, 100000)
+--             current_tree = get_current_selected_tree(r, selected_trees)
+-- 
+--             is_tree_selected = current_tree and is_record_selected(r, current_tree)
+--@@ -366,6 +370,7 @@ class HardwareDetails(View):
+--                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+-- 
+--             build = get_build(r, current_tree["index"])
+--+            build['duration'] = randint(0, 100000)
+-- 
+--             if self.is_build_filtered_in(build, processed_builds):
+--                 processed_builds.add(build_id)
+--@@ -487,6 +492,9 @@ class HardwareDetails(View):
+--             )
+-- 
+--             self.filterParams = FilterParams(body, process_body=True)
+--+
+--+            print(self.filterParams.filters)
+--+
+--             self.setup_filters()
+--         except json.JSONDecodeError:
+--             return HttpResponseBadRequest(
+--diff --git a/backend/test.patch b/backend/test.patch
+--index b98e62d..ee5004a 100644
+----- a/backend/test.patch
+--+++ b/backend/test.patch
+--@@ -26,3 +26,134 @@ index 54f9908..badcea5 100644
+--  
+--              if self.is_build_filtered_in(build, processed_builds):
+--                  processed_builds.add(build_id)
+--+diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+--+index ccfc829..25694e5 100644
+--+--- a/backend/kernelCI_app/views/hardwareDetailsView.py
+--++++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+--+@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
+--+ )
+--+ from kernelCI_app.constants.general import DEFAULT_ORIGIN
+--+ from django.views.decorators.csrf import csrf_exempt
+--++from random import randint
+--++
+--+ 
+--+ DEFAULT_DAYS_INTERVAL = 3
+--+ SELECTED_HEAD_TREE_VALUE = 'head'
+--+@@ -310,6 +312,7 @@ class HardwareDetails(View):
+--+         compilers = set()
+--+ 
+--+         for r in records:
+--++            r['duration'] = randint(0, 100000)
+--+             current_tree = get_current_selected_tree(r, selected_trees)
+--+             if not current_tree or not is_record_selected(r, current_tree):
+--+                 continue
+--+@@ -366,6 +369,7 @@ class HardwareDetails(View):
+--+                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+--+ 
+--+             build = get_build(r, current_tree["index"])
+--++            build['duration'] = randint(0, 100000)
+--+ 
+--+             if self.is_build_filtered_in(build, processed_builds):
+--+                 processed_builds.add(build_id)
+--+diff --git a/backend/kernelCI_app/utils.py b/backend/kernelCI_app/utils.py
+--+index 325f706..c9a7548 100644
+--+--- a/backend/kernelCI_app/utils.py
+--++++ b/backend/kernelCI_app/utils.py
+--+@@ -153,6 +153,7 @@ class FilterParams:
+--+         self.filterBootStatus.add(current_filter["value"])
+--+ 
+--+     def _handle_boot_duration(self, current_filter: Dict):
+--++        print("BOOTS DURATION > > ", current_filter)
+--+         value = current_filter["value"]
+--+         operation = current_filter["comparison_op"]
+--+         if operation == "lte":
+--+@@ -164,6 +165,7 @@ class FilterParams:
+--+         self.filterTestStatus.add(current_filter["value"])
+--+ 
+--+     def _handle_test_duration(self, current_filter: Dict):
+--++        print("TEST DURATION > > ", current_filter)
+--+         value = current_filter["value"]
+--+         operation = current_filter["comparison_op"]
+--+         if operation == "lte":
+--+@@ -194,7 +196,8 @@ class FilterParams:
+--+         self.filterBuildValid.add(current_filter["value"] == "Success")
+--+ 
+--+     def _handle_build_duration(self, current_filter: Dict):
+--+-        value = current_filter["value"][0]
+--++        print("BUILD DURATION > > ", current_filter)
+--++        value = current_filter["value"]
+--+         operation = current_filter["comparison_op"]
+--+         if operation == "lte":
+--+             self.filterBuildDurationMax = toIntOrDefault(value, None)
+--+@@ -223,6 +226,14 @@ class FilterParams:
+--+             # filter as list
+--+             filter_data = filters.get(k)
+--+ 
+--++            match = self.filter_reg.match(filter_term)
+--++
+--++            if match:
+--++                field = match.group(1)
+--++                comparison_op = match.group(2)
+--++                self.add_filter(field, filter_data[0], comparison_op)
+--++                continue
+--++
+--+             if type(filter_data) is list and len(filter_data) > 0:
+--+                 field = filter_term
+--+                 values = filter_data
+--+@@ -235,13 +246,6 @@ class FilterParams:
+--+                 self.add_filter(filter_term, filter_data, "like")
+--+                 continue
+--+ 
+--+-            match = self.filter_reg.match(filter_term)
+--+-            if match:
+--+-                field = match.group(1)
+--+-                comparison_op = match.group(2)
+--+-                self.add_filter(field, filter_data, comparison_op)
+--+-                continue
+--+-
+--+             self.add_filter(filter_term, filter_data, "exact")
+--+ 
+--+     def create_filters_from_req(self, request):
+--+diff --git a/backend/kernelCI_app/views/hardwareDetailsView.py b/backend/kernelCI_app/views/hardwareDetailsView.py
+--+index ccfc829..4002898 100644
+--+--- a/backend/kernelCI_app/views/hardwareDetailsView.py
+--++++ b/backend/kernelCI_app/views/hardwareDetailsView.py
+--+@@ -18,6 +18,8 @@ from kernelCI_app.utils import (
+--+ )
+--+ from kernelCI_app.constants.general import DEFAULT_ORIGIN
+--+ from django.views.decorators.csrf import csrf_exempt
+--++from random import randint
+--++
+--+ 
+--+ DEFAULT_DAYS_INTERVAL = 3
+--+ SELECTED_HEAD_TREE_VALUE = 'head'
+--+@@ -184,6 +186,7 @@ class HardwareDetails(View):
+--+         return is_build_not_processed and is_build_filtered_out
+--+ 
+--+     def __build_filters_pass(self, status: bool, duration: int):
+--++        # print(self.filterBuildDurationMin, self.filterBuildDurationMax)
+--+         if len(self.filterValid) > 0 and (status not in self.filterValid):
+--+             return False
+--+         if (
+--+@@ -328,6 +331,7 @@ class HardwareDetails(View):
+--+         boots = generate_test_dict()
+--+ 
+--+         for r in records:
+--++            r['duration'] = randint(0, 100000)
+--+             current_tree = get_current_selected_tree(r, selected_trees)
+--+ 
+--+             is_tree_selected = current_tree and is_record_selected(r, current_tree)
+--+@@ -366,6 +370,7 @@ class HardwareDetails(View):
+--+                 update_issues(r, tests_or_boots, status == STATUS_FAILED_VALUE)
+--+ 
+--+             build = get_build(r, current_tree["index"])
+--++            build['duration'] = randint(0, 100000)
+--+ 
+--+             if self.is_build_filtered_in(build, processed_builds):
+--+                 processed_builds.add(build_id)
+--+@@ -487,6 +492,9 @@ class HardwareDetails(View):
+--+             )
+--+ 
+--+             self.filterParams = FilterParams(body, process_body=True)
+--++
+--++           
+--\ No newline at end of file
