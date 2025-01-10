@@ -1,13 +1,15 @@
-from typing import Dict, List, Tuple
+from typing import List
 from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.helpers.filters import (
+    should_increment_build_issue,
     should_increment_test_issue,
     UNKNOWN_STRING,
     FilterParams,
 )
 from kernelCI_app.utils import (
     Issue,
+    IssueDict,
     convert_issues_dict_to_list,
     extract_error_message,
     create_issue,
@@ -24,8 +26,6 @@ from django.db import connection
 from collections import defaultdict
 
 from kernelCI_app.viewCommon import create_details_build_summary
-
-type IssueDict = Dict[Tuple[str, str], Issue]
 
 
 class TreeDetails(View):
@@ -277,7 +277,7 @@ class TreeDetails(View):
 
         can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
 
-        if issue_id and can_insert_issue:
+        if issue_id and issue_version is not None and can_insert_issue:
             currentIssue = self.testIssuesTable.get((issue_id, issue_version))
             if currentIssue:
                 currentIssue["incidents_info"]["incidentsCount"] += 1
@@ -327,6 +327,7 @@ class TreeDetails(View):
         issue_version = row_data["issue_version"]
         build_valid = row_data["build_valid"]
         build_duration = row_data["build_duration"]
+        incident_test_id = row_data["incident_test_id"]
 
         is_build_filtered_out = self.filterParams.is_build_filtered_out(
             valid=build_valid, duration=build_duration, issue_id=issue_id
@@ -335,7 +336,13 @@ class TreeDetails(View):
         if is_build_filtered_out:
             return
 
-        if issue_id and (build_valid is False or build_valid is None):
+        can_insert_issue = should_increment_build_issue(
+            issue_id=issue_id,
+            incident_test_id=incident_test_id,
+            build_valid=build_valid,
+        )
+
+        if issue_id and issue_version is not None and can_insert_issue:
             current_issue = self.processed_build_issues.get((issue_id, issue_version))
             if current_issue:
                 current_issue["incidents_info"]["incidentsCount"] += 1
@@ -489,6 +496,7 @@ class TreeDetails(View):
                    builds_filter.builds_id = incidents.build_id
             LEFT JOIN issues
                 ON incidents.issue_id = issues.id
+                AND incidents.issue_version = issues.version
             WHERE
                 tests.origin = %(origin_param)s OR
                 tests.origin IS NULL

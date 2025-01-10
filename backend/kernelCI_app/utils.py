@@ -1,5 +1,5 @@
 import json
-from typing import Union, TypedDict, List, Optional, Dict
+from typing import Tuple, Union, TypedDict, List, Optional, Dict
 from django.utils import timezone
 from datetime import timedelta
 
@@ -18,6 +18,9 @@ class Issue(TypedDict):
     comment: Optional[str]
     report_url: Optional[str]
     incidents_info: IncidentInfo
+
+
+IssueDict = Dict[Tuple[str, str], Issue]
 
 
 def create_issue(

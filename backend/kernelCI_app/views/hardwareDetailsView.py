@@ -2,7 +2,10 @@ from collections import defaultdict
 from django.db.models import Subquery
 import json
 from typing import Dict, List, Optional, Set, Literal
-from kernelCI_app.helpers.filters import should_increment_test_issue, is_build_invalid
+from kernelCI_app.helpers.filters import (
+    should_increment_build_issue,
+    should_increment_test_issue,
+)
 from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
@@ -154,12 +157,16 @@ def update_issues(
 ) -> None:
     can_insert_issue = True
     if issue_from == "build":
-        can_insert_issue = is_build_invalid(build_valid)
+        can_insert_issue = should_increment_build_issue(
+            issue_id=issue_id,
+            incident_test_id=incident_test_id,
+            build_valid=build_valid,
+        )
     elif issue_from == "test":
         can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
 
     if issue_id and issue_version is not None and can_insert_issue:
-        existing_issue = task["issues"].get(issue_id)
+        existing_issue = task["issues"].get((issue_id, issue_version))
         if existing_issue:
             existing_issue["incidents_info"]["incidentsCount"] += 1
         else:
@@ -169,7 +176,7 @@ def update_issues(
                 issue_comment=issue_comment,
                 issue_report_url=issue_report_url,
             )
-            task["issues"][issue_id] = new_issue
+            task["issues"][(issue_id, issue_version)] = new_issue
     elif is_failed_task:
         task["failedWithUnknownIssues"] += 1
 
