@@ -5,7 +5,7 @@ from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
 )
-from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, decide_if_is_boot_filtered_out, decide_if_is_build_filtered_out, decide_if_is_full_row_filtered_out, get_build, get_current_row_data, get_hardware_filter, get_tree_details_data, get_tree_url, is_test_boots_test, process_builds_issue
+from kernelCI_app.helpers.treeDetails import call_based_on_compatible_and_misc_platform, decide_if_is_boot_filtered_out, decide_if_is_build_filtered_out, decide_if_is_full_row_filtered_out, decide_if_is_test_filtered_out, get_build, get_current_row_data, get_hardware_filter, get_tree_details_data, get_tree_url, is_test_boots_test, process_builds_issue, process_test_summary, process_tests_issue
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     create_issue,
@@ -124,78 +124,21 @@ class TreeDetails(View):
 
         self.incidentsIssueRelationship[incident_id]["incidentsCount"] += 1
 
-    def _process_non_boots_test(self, current_row_data):
-        testId = current_row_data["test_id"]
-        testStatus = current_row_data["test_status"]
-        testDuration = current_row_data["test_duration"]
-        buildConfig = current_row_data["build_config_name"]
-        buildArch = current_row_data["build_architecture"]
-        buildCompiler = current_row_data["build_compiler"]
-        testPlatform = current_row_data["test_platform"]
-        testError = current_row_data["test_error"]
-        historyItem = current_row_data["history_item"]
-        issue_id = current_row_data["issue_id"]
-        issue_comment = current_row_data["issue_comment"]
-        issue_report_url = current_row_data["issue_report_url"]
-        testEnvironmentCompatible = current_row_data["test_environment_compatible"]
-        testPath = current_row_data["test_path"]
-        incident_test_id = current_row_data["incident_test_id"]
+    def _process_non_boots_test(self, row_data):
+        test_id = row_data["test_id"]
+        history_item = row_data["history_item"]
 
-        is_test_filter_out = self.filters.is_test_filtered_out(
-            duration=testDuration,
-            issue_id=issue_id,
-            path=testPath,
-            status=testStatus,
-            incident_test_id=incident_test_id,
-        )
-
-        if is_test_filter_out:
+        if decide_if_is_test_filtered_out(self, row_data):
             return
 
-        can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
+        process_tests_issue(self,row_data)
 
-        if issue_id and can_insert_issue:
-            currentIssue = self.testIssuesTable.get(issue_id)
-            if currentIssue:
-                currentIssue["incidents_info"]["incidentsCount"] += 1
-            else:
-                self.testIssuesTable[issue_id] = create_issue(
-                    issue_id=issue_id,
-                    issue_comment=issue_comment,
-                    issue_report_url=issue_report_url,
-                )
-        elif testStatus == "FAIL":
-            self.failedTestsWithUnknownIssues += 1
-
-        if testId in self.processedTests:
+        if test_id in self.processedTests:
             return
-        self.processedTests.add(testId)
 
-        self.testHistory.append(historyItem)
-        self.testStatusSummary[testStatus] = (
-            self.testStatusSummary.get(testStatus, 0) + 1
-        )
-
-        archKey = "%s-%s" % (buildArch, buildCompiler)
-        arch_summary = self.test_arch_summary.get(
-            archKey,
-            {"arch": buildArch, "compiler": buildCompiler, "status": {}},
-        )
-        arch_summary["status"][testStatus] = arch_summary["status"].get(testStatus, 0) + 1
-        self.test_arch_summary[archKey] = arch_summary
-
-        config_summary = self.test_configs.get(buildConfig, {})
-        config_summary[testStatus] = config_summary.get(testStatus, 0) + 1
-        self.test_configs[buildConfig] = config_summary
-
-        if testStatus == "ERROR" or testStatus == "FAIL" or testStatus == "MISS":
-            self.testPlatformsWithErrors.add(testPlatform)
-            self.testFailReasons[testError] = self.testFailReasons.get(testError, 0) + 1
-
-        if testEnvironmentCompatible != UNKNOWN_STRING:
-            self.testEnvironmentCompatible[testEnvironmentCompatible][testStatus] += 1
-        else:
-            self.testEnvironmentMisc[testPlatform][testStatus] += 1
+        self.processedTests.add(test_id)
+        self.testHistory.append(history_item)
+        process_test_summary(self, row_data)
 
     def _process_builds(self, row_data):
         build_id = row_data["build_id"]

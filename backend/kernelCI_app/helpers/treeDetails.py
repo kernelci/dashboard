@@ -273,6 +273,26 @@ def process_builds_issue(instance, row_data):
     instance.processed_builds.add(build_id)
     instance.builds.append(get_build(row_data))
 
+def process_tests_issue(instance, row_data):
+    testStatus = row_data["test_status"]
+    issue_id = row_data["issue_id"]
+    issue_comment = row_data["issue_comment"]
+    issue_report_url = row_data["issue_report_url"]
+    incident_test_id = row_data["incident_test_id"]
+    can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
+
+    if issue_id and can_insert_issue:
+        currentIssue = instance.testIssuesTable.get(issue_id)
+        if currentIssue:
+            currentIssue["incidents_info"]["incidentsCount"] += 1
+        else:
+            instance.testIssuesTable[issue_id] = create_issue(
+                issue_id=issue_id,
+                issue_comment=issue_comment,
+                issue_report_url=issue_report_url,
+            )
+    elif testStatus == "FAIL":
+        instance.failedTestsWithUnknownIssues += 1
 
 def decide_if_is_build_filtered_out(instance, row_data):
     issue_id = row_data["issue_id"]
@@ -285,29 +305,75 @@ def decide_if_is_build_filtered_out(instance, row_data):
     return is_build_filtered_out
 
 def decide_if_is_boot_filtered_out(instance, row_data):
-    testStatus = row_data["test_status"]
-    testDuration = row_data["test_duration"]
+    test_status = row_data["test_status"]
+    test_duration = row_data["test_duration"]
     issue_id = row_data["issue_id"]
-    testPath = row_data["test_path"]
+    test_path = row_data["test_path"]
     incident_test_id = row_data["incident_test_id"]
 
-    is_boot_filter_out = instance.filters.is_boot_filtered_out(
-        duration=testDuration,
+    return instance.filters.is_boot_filtered_out(
+        duration=test_duration,
         issue_id=issue_id,
-        path=testPath,
-        status=testStatus,
+        path=test_path,
+        status=test_status,
         incident_test_id=incident_test_id,
     )
-
-    return is_boot_filter_out
 
 def decide_if_is_full_row_filtered_out(instance, row_data):
     hardware_filter = get_hardware_filter(row_data)
 
-    instance.filters.is_record_filtered_out(
+    return instance.filters.is_record_filtered_out(
                     hardwares=[hardware_filter],
                     architecture=row_data["build_architecture"],
                     compiler=row_data["build_compiler"],
                     config_name=row_data["build_config_name"],
                 )
 
+def decide_if_is_test_filtered_out(instance, row_data):
+    test_status = row_data["test_status"]
+    test_duration = row_data["test_duration"]
+    issue_id = row_data["issue_id"]
+    testPath = row_data["test_path"]
+    incident_test_id = row_data["incident_test_id"]
+
+    return instance.filters.is_test_filtered_out(
+        duration=test_duration,
+        issue_id=issue_id,
+        path=testPath,
+        status=test_status,
+        incident_test_id=incident_test_id,
+    )
+
+def process_test_summary(instance, row_data):
+    test_status = row_data["test_status"]
+    build_config = row_data["build_config_name"]
+    build_arch = row_data["build_architecture"]
+    build_compiler = row_data["build_compiler"]
+    test_platform = row_data["test_platform"]
+    test_error = row_data["test_error"]
+    test_environment_compatible = row_data["test_environment_compatible"]
+
+    instance.testStatusSummary[test_status] = (
+        instance.testStatusSummary.get(test_status, 0) + 1
+    )
+
+    arch_key = "%s-%s" % (build_arch, build_compiler)
+    arch_summary = instance.test_arch_summary.get(
+        arch_key,
+        {"arch": build_arch, "compiler": build_compiler, "status": {}},
+    )
+    arch_summary["status"][test_status] = arch_summary["status"].get(test_status, 0) + 1
+    instance.test_arch_summary[arch_key] = arch_summary
+
+    config_summary = instance.test_configs.get(build_config, {})
+    config_summary[test_status] = config_summary.get(test_status, 0) + 1
+    instance.test_configs[build_config] = config_summary
+
+    if test_status == "ERROR" or test_status == "FAIL" or test_status == "MISS":
+        instance.testPlatformsWithErrors.add(test_platform)
+        instance.testFailReasons[test_error] = instance.testFailReasons.get(test_error, 0) + 1
+
+    if test_environment_compatible != UNKNOWN_STRING:
+        instance.testEnvironmentCompatible[test_environment_compatible][test_status] += 1
+    else:
+        instance.testEnvironmentMisc[test_platform][test_status] += 1
