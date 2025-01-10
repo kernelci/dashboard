@@ -1,5 +1,6 @@
 from django.http import JsonResponse
-from django.views import View
+from drf_spectacular.utils import extend_schema
+from rest_framework.views import APIView
 from kernelCI_app.models import Checkouts
 from kernelCI_app.serializers import TreeSerializer
 from kernelCI_app.utils import getQueryTimeInterval
@@ -10,7 +11,11 @@ from kernelCI_app.helpers.date import parseIntervalInDaysGetParameter
 DEFAULT_ORIGIN = 'maestro'
 
 
-class TreeView(View):
+class TreeView(APIView):
+    #TODO Remove serializer, let's go full pydantic
+    @extend_schema(
+        responses=TreeSerializer(many=True),
+    )
     def get(self, request):
         origin_param = request.GET.get('origin', DEFAULT_ORIGIN)
         try:

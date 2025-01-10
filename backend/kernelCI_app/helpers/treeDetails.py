@@ -1,15 +1,10 @@
-from django.http import JsonResponse
-from django.views import View
 from kernelCI_app.helpers.filters import (
     should_increment_test_issue,
     UNKNOWN_STRING,
-    FilterParams,
 )
 from kernelCI_app.utils import (
-    convert_issues_dict_to_list,
     extract_error_message,
     create_issue,
-    IncidentInfo,
 )
 from kernelCI_app.helpers.misc import (
     handle_build_misc,
@@ -19,9 +14,7 @@ from kernelCI_app.helpers.misc import (
 )
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from django.db import connection
-from collections import defaultdict
 
-from kernelCI_app.viewCommon import create_details_build_summary
 
 def get_tree_details_data(request, commit_hash):
     cache_key = "treeDetailsSlow"

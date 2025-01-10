@@ -50,3 +50,4 @@ def get_details_issue(record):
         issue_comment=record["issue_comment"],
         issue_report_url=record["issue_report_url"],
     )
+

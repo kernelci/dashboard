@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "kernelCI_app",
     "rest_framework",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -110,6 +111,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "kernelCI.wsgi.application"
+
+REST_FRAMEWORK = {
+    # YOUR SETTINGS
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'KernelCI Dashboard API',
+    'DESCRIPTION': 'API for the KernelCI dashboard',
+    'VERSION': '1.0.0',
+}
 
 
 # Database
