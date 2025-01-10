@@ -11,3 +11,8 @@ export const makeTreeIdentifierKey = ({
 }: TreeIdentifierParams): string => {
   return `${treeName}-${gitRepositoryUrl}-${gitRepositoryBranch}`;
 };
+
+export const getCommitTagOrHash = (
+  commitHash: string,
+  commitTags?: string[],
+): string => commitTags?.[0] ?? commitHash;
