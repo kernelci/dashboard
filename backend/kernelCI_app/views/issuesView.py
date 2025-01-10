@@ -6,6 +6,7 @@ from django.views import View
 from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.utils import (
     Issue,
+    IssueDict,
     convert_issues_dict_to_list,
     create_issue,
 )
@@ -21,16 +22,19 @@ class IssueView(View):
         return record
 
     def sanitize_rows(self, rows) -> List[Issue]:
-        result = {}
+
+        result: IssueDict = {}
         for row in rows:
             record = self.get_dict_record(row)
-            currentIssue = result.get(record["id"])
+            issue_id = record["id"]
+            issue_version = record["version"]
+            currentIssue = result.get((issue_id, issue_version))
             if currentIssue:
                 currentIssue["incidents_info"]["incidentsCount"] += 1
             else:
-                result[record["id"]] = create_issue(
-                    issue_id=record["id"],
-                    issue_version=record["version"],
+                result[(issue_id, issue_version)] = create_issue(
+                    issue_id=issue_id,
+                    issue_version=issue_version,
                     issue_comment=record["comment"],
                     issue_report_url=record["report_url"],
                 )
@@ -47,6 +51,7 @@ class IssueView(View):
             FROM incidents
             JOIN issues
                 ON incidents.issue_id = issues.id
+                AND incidents.issue_version = issues.version
             WHERE incidents.test_id = %s
             """
         with connection.cursor() as cursor:
@@ -65,6 +70,7 @@ class IssueView(View):
             FROM incidents
             JOIN issues
                 ON incidents.issue_id = issues.id
+                AND incidents.issue_version = issues.version
             WHERE incidents.build_id = %s
             """
         with connection.cursor() as cursor:

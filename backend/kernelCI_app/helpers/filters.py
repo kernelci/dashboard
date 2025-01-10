@@ -47,13 +47,31 @@ def should_increment_test_issue(
     is_known_issue_result = is_known_issue(issue_id=issue_id)
     is_exclusively_build_issue = is_known_issue_result and incident_test_id is None
     if is_exclusively_build_issue:
-        issue_id = UNKNOWN_STRING
+        return False
 
     is_unknown_issue = issue_id is UNKNOWN_STRING
     is_known_test_issue = incident_test_id is not None
     is_issue_from_test = is_known_test_issue or is_unknown_issue
 
     return is_issue_from_test
+
+
+def should_increment_build_issue(
+    *,
+    issue_id: Optional[str],
+    incident_test_id: Optional[str],
+    build_valid: Optional[bool],
+) -> bool:
+    is_known_issue_result = is_known_issue(issue_id=issue_id)
+    is_exclusively_test_issue = is_known_issue_result and incident_test_id is not None
+    if is_exclusively_test_issue:
+        return False
+
+    is_unknown_issue = issue_id is UNKNOWN_STRING
+    is_known_build_issue = incident_test_id is None
+    is_issue_from_build = is_known_build_issue or is_unknown_issue
+
+    return is_issue_from_build and is_build_invalid(build_valid)
 
 
 def toIntOrDefault(value, default):
