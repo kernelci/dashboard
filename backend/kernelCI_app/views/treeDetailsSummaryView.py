@@ -1,9 +1,6 @@
-from typing import Dict, List, Tuple
-from django.http import JsonResponse
-from django.views import View
-from kernelCI_app.helpers.filters import (
-    FilterParams,
-)
+from pydantic import ValidationError
+from rest_framework.response import Response
+from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.treeDetails import (
     call_based_on_compatible_and_misc_platform,
     decide_if_is_boot_filtered_out,
@@ -21,41 +18,39 @@ from kernelCI_app.helpers.treeDetails import (
     process_test_summary,
     process_tests_issue,
 )
+from kernelCI_app.typeModels.treeDetails import SummaryResponse
 from kernelCI_app.utils import (
-    Issue,
     convert_issues_dict_to_list,
 )
 
 from collections import defaultdict
 
+from drf_spectacular.utils import extend_schema
+from rest_framework.views import APIView
 from kernelCI_app.viewCommon import create_details_build_summary
 
-type IssueDict = Dict[Tuple[str, str], Issue]
 
-
-class TreeDetails(View):
+class TreeDetailsSummary(APIView):
     def __init__(self):
         self.processedTests = set()
         self.filters = None
 
         self.testStatusSummary = {}
-        self.testHistory = []
         self.test_configs = {}
         self.testPlatformsWithErrors = set()
         self.testFailReasons = {}
         self.test_arch_summary = {}
-        self.testIssues: List[Issue] = []
-        self.testIssuesTable: IssueDict = {}
+        self.testIssues = []
+        self.testIssuesTable = {}
         self.testEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
         self.testEnvironmentMisc = defaultdict(lambda: defaultdict(int))
-        self.bootHistory = []
         self.bootStatusSummary = {}
         self.bootConfigs = {}
         self.bootPlatformsFailing = set()
         self.bootFailReasons = {}
         self.bootArchSummary = {}
-        self.bootIssues: List[Issue] = []
-        self.bootsIssuesTable: IssueDict = {}
+        self.bootIssues = []
+        self.bootsIssuesTable = {}
         self.bootEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
         self.bootEnvironmentMisc = defaultdict(lambda: defaultdict(int))
         self.hardwareUsed = set()
@@ -64,15 +59,14 @@ class TreeDetails(View):
         self.builds = []
         self.processed_builds = set()
         self.build_summary = {}
-        self.build_issues: List[Issue] = []
+        self.build_issues = []
         self.failed_builds_with_unknown_issues = 0
-        self.processed_build_issues: IssueDict = {}
+        self.processed_build_issues = {}
         self.tree_url = ""
         self.git_commit_tags = []
 
     def _process_boots_test(self, row_data):
         test_id = row_data["test_id"]
-        history_item = row_data["history_item"]
 
         if decide_if_is_boot_filtered_out(self, row_data):
             return
@@ -82,12 +76,10 @@ class TreeDetails(View):
         if test_id in self.processedTests:
             return
         self.processedTests.add(test_id)
-        self.bootHistory.append(history_item)
         process_boots_summary(self, row_data)
 
     def _process_non_boots_test(self, row_data):
         test_id = row_data["test_id"]
-        history_item = row_data["history_item"]
 
         if decide_if_is_test_filtered_out(self, row_data):
             return
@@ -98,7 +90,6 @@ class TreeDetails(View):
             return
 
         self.processedTests.add(test_id)
-        self.testHistory.append(history_item)
         process_test_summary(self, row_data)
 
     def _process_builds(self, row_data):
@@ -146,6 +137,9 @@ class TreeDetails(View):
         self.build_summary = create_details_build_summary(self.builds)
         self.build_issues = convert_issues_dict_to_list(self.processed_build_issues)
 
+    @extend_schema(
+        responses=SummaryResponse,
+    )
     def get(self, request, commit_hash: str | None):
         rows = get_tree_details_data(request, commit_hash)
 
@@ -153,35 +147,36 @@ class TreeDetails(View):
 
         self._sanitize_rows(rows)
 
-        return JsonResponse(
-            {
-                "bootArchSummary": list(self.bootArchSummary.values()),
-                "testArchSummary": list(self.test_arch_summary.values()),
-                "buildsSummary": self.build_summary,
-                "bootFailReasons": self.bootFailReasons,
-                "testFailReasons": self.testFailReasons,
-                "testPlatformsWithErrors": list(self.testPlatformsWithErrors),
-                "bootPlatformsFailing": list(self.bootPlatformsFailing),
-                "testConfigs": self.test_configs,
-                "bootConfigs": self.bootConfigs,
-                "testStatusSummary": self.testStatusSummary,
-                "bootStatusSummary": self.bootStatusSummary,
-                "bootHistory": self.bootHistory,
-                "testHistory": self.testHistory,
-                "bootIssues": self.bootIssues,
-                "testIssues": self.testIssues,
-                "testEnvironmentCompatible": self.testEnvironmentCompatible,
-                "bootEnvironmentCompatible": self.bootEnvironmentCompatible,
-                "testEnvironmentMisc": self.testEnvironmentMisc,
-                "bootEnvironmentMisc": self.bootEnvironmentMisc,
-                "hardwareUsed": list(self.hardwareUsed),
-                "failedTestsWithUnknownIssues": self.failedTestsWithUnknownIssues,
-                "failedBootsWithUnknownIssues": self.failedBootsWithUnknownIssues,
-                "builds": self.builds,
-                "buildsIssues": self.build_issues,
-                "failedBuildsWithUnknownIssues": self.failed_builds_with_unknown_issues,
-                "treeUrl": self.tree_url,
-                "git_commit_tags": self.git_commit_tags,
-            },
-            safe=False,
-        )
+        response = {
+            "bootArchSummary": list(self.bootArchSummary.values()),
+            "testArchSummary": list(self.test_arch_summary.values()),
+            "buildsSummary": self.build_summary,
+            "bootFailReasons": self.bootFailReasons,
+            "testFailReasons": self.testFailReasons,
+            "testPlatformsWithErrors": list(self.testPlatformsWithErrors),
+            "bootPlatformsFailing": list(self.bootPlatformsFailing),
+            "testConfigs": self.test_configs,
+            "bootConfigs": self.bootConfigs,
+            "testStatusSummary": self.testStatusSummary,
+            "bootStatusSummary": self.bootStatusSummary,
+            "bootIssues": self.bootIssues,
+            "testIssues": self.testIssues,
+            "testEnvironmentCompatible": self.testEnvironmentCompatible,
+            "bootEnvironmentCompatible": self.bootEnvironmentCompatible,
+            "testEnvironmentMisc": self.testEnvironmentMisc,
+            "bootEnvironmentMisc": self.bootEnvironmentMisc,
+            "hardwareUsed": list(self.hardwareUsed),
+            "failedTestsWithUnknownIssues": self.failedTestsWithUnknownIssues,
+            "failedBootsWithUnknownIssues": self.failedBootsWithUnknownIssues,
+            "buildsIssues": self.build_issues,
+            "failedBuildsWithUnknownIssues": self.failed_builds_with_unknown_issues,
+            "treeUrl": self.tree_url,
+            "git_commit_tags": self.git_commit_tags,
+        }
+
+        try:
+            SummaryResponse(**response)
+        except ValidationError as e:
+            return Response(data=e.errors())
+
+        return Response(response)

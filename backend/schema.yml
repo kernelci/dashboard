@@ -1,0 +1,644 @@
+openapi: 3.0.3
+info:
+  title: KernelCI Dashboard API
+  version: 1.0.0
+  description: API for the KernelCI dashboard
+paths:
+  /api/build/{build_id}/status-count:
+    get:
+      operationId: build_status_count_retrieve
+      parameters:
+      - in: path
+        name: build_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - build
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/log-downloader/:
+    get:
+      operationId: log_downloader_retrieve
+      tags:
+      - log-downloader
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/tree/:
+    get:
+      operationId: tree_list
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tree'
+          description: ''
+  /api/tree/{commit_hash}/commits:
+    get:
+      operationId: tree_commits_retrieve
+      parameters:
+      - in: path
+        name: commit_hash
+        schema:
+          type: string
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/tree/{commit_hash}/summary:
+    get:
+      operationId: tree_summary_retrieve
+      parameters:
+      - in: path
+        name: commit_hash
+        schema:
+          type: string
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummaryResponse'
+          description: ''
+components:
+  schemas:
+    Architectures:
+      properties:
+        valid:
+          title: Valid
+          type: integer
+        invalid:
+          title: Invalid
+          type: integer
+        'null':
+          title: 'Null'
+          type: integer
+        compilers:
+          items:
+            type: string
+          title: Compilers
+          type: array
+      required:
+      - valid
+      - invalid
+      - 'null'
+      - compilers
+      title: Architectures
+      type: object
+    BuildsIssuesItem:
+      properties:
+        id:
+          title: Id
+          type: string
+        comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comment
+        report_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Report Url
+        incidents_info:
+          $ref: '#/components/schemas/IncidentsInfo'
+      required:
+      - id
+      - comment
+      - report_url
+      - incidents_info
+      title: BuildsIssuesItem
+      type: object
+    BuildsSummary:
+      properties:
+        valid:
+          title: Valid
+          type: integer
+        invalid:
+          title: Invalid
+          type: integer
+        'null':
+          title: 'Null'
+          type: integer
+      required:
+      - valid
+      - invalid
+      - 'null'
+      title: BuildsSummary
+      type: object
+    BuildsSummaryDetails:
+      properties:
+        builds:
+          $ref: '#/components/schemas/BuildsSummary'
+        configs:
+          additionalProperties:
+            $ref: '#/components/schemas/Configs'
+          title: Configs
+          type: object
+        architectures:
+          additionalProperties:
+            $ref: '#/components/schemas/Architectures'
+          title: Architectures
+          type: object
+      required:
+      - builds
+      - configs
+      - architectures
+      title: BuildsSummaryDetails
+      type: object
+    Configs:
+      properties:
+        valid:
+          title: Valid
+          type: integer
+        invalid:
+          title: Invalid
+          type: integer
+        'null':
+          title: 'Null'
+          type: integer
+      required:
+      - valid
+      - invalid
+      - 'null'
+      title: Configs
+      type: object
+    IncidentsInfo:
+      properties:
+        incidentsCount:
+          title: Incidentscount
+          type: integer
+      required:
+      - incidentsCount
+      title: IncidentsInfo
+      type: object
+    Status:
+      properties:
+        PASS:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Pass
+        ERROR:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Error
+        FAIL:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Fail
+        SKIP:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Skip
+        'NULL':
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: 'Null'
+      required:
+      - PASS
+      - ERROR
+      - FAIL
+      - SKIP
+      - 'NULL'
+      title: Status
+      type: object
+    SummaryResponse:
+      properties:
+        bootArchSummary:
+          items: {}
+          title: Bootarchsummary
+          type: array
+        testArchSummary:
+          items:
+            $ref: '#/components/schemas/TestArchSummaryItem'
+          title: Testarchsummary
+          type: array
+        buildsSummary:
+          $ref: '#/components/schemas/BuildsSummaryDetails'
+        bootFailReasons:
+          title: Bootfailreasons
+          type: object
+        testFailReasons:
+          additionalProperties:
+            type: integer
+          title: Testfailreasons
+          type: object
+        testPlatformsWithErrors:
+          items:
+            type: string
+          title: Testplatformswitherrors
+          type: array
+        bootPlatformsFailing:
+          items: {}
+          title: Bootplatformsfailing
+          type: array
+        testConfigs:
+          additionalProperties:
+            $ref: '#/components/schemas/Status'
+          title: Testconfigs
+          type: object
+        bootConfigs:
+          title: Bootconfigs
+          type: object
+        testStatusSummary:
+          $ref: '#/components/schemas/Status'
+        bootStatusSummary:
+          title: Bootstatussummary
+          type: object
+        bootIssues:
+          items: {}
+          title: Bootissues
+          type: array
+        testIssues:
+          items:
+            $ref: '#/components/schemas/TestIssuesItem'
+          title: Testissues
+          type: array
+        testEnvironmentCompatible:
+          additionalProperties:
+            $ref: '#/components/schemas/TestEnvironmentCompatible'
+          title: Testenvironmentcompatible
+          type: object
+        bootEnvironmentCompatible:
+          title: Bootenvironmentcompatible
+          type: object
+        testEnvironmentMisc:
+          additionalProperties:
+            $ref: '#/components/schemas/TestEnvironmentMisc'
+          title: Testenvironmentmisc
+          type: object
+        bootEnvironmentMisc:
+          title: Bootenvironmentmisc
+          type: object
+        hardwareUsed:
+          items:
+            type: string
+          title: Hardwareused
+          type: array
+        failedTestsWithUnknownIssues:
+          title: Failedtestswithunknownissues
+          type: integer
+        failedBootsWithUnknownIssues:
+          title: Failedbootswithunknownissues
+          type: integer
+        buildsIssues:
+          items:
+            $ref: '#/components/schemas/BuildsIssuesItem'
+          title: Buildsissues
+          type: array
+        failedBuildsWithUnknownIssues:
+          title: Failedbuildswithunknownissues
+          type: integer
+        treeUrl:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Treeurl
+      required:
+      - bootArchSummary
+      - testArchSummary
+      - buildsSummary
+      - bootFailReasons
+      - testFailReasons
+      - testPlatformsWithErrors
+      - bootPlatformsFailing
+      - testConfigs
+      - bootConfigs
+      - testStatusSummary
+      - bootStatusSummary
+      - bootIssues
+      - testIssues
+      - testEnvironmentCompatible
+      - bootEnvironmentCompatible
+      - testEnvironmentMisc
+      - bootEnvironmentMisc
+      - hardwareUsed
+      - failedTestsWithUnknownIssues
+      - failedBootsWithUnknownIssues
+      - buildsIssues
+      - failedBuildsWithUnknownIssues
+      - treeUrl
+      title: SummaryResponse
+      type: object
+    TestArchSummaryItem:
+      properties:
+        arch:
+          title: Arch
+          type: string
+        compiler:
+          title: Compiler
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+      required:
+      - arch
+      - compiler
+      - status
+      title: TestArchSummaryItem
+      type: object
+    TestEnvironmentCompatible:
+      properties:
+        FAIL:
+          title: Fail
+          type: integer
+        PASS:
+          title: Pass
+          type: integer
+        SKIP:
+          title: Skip
+          type: integer
+      required:
+      - FAIL
+      - PASS
+      - SKIP
+      title: TestEnvironmentCompatible
+      type: object
+    TestEnvironmentMisc:
+      properties:
+        PASS:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Pass
+        FAIL:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Fail
+        ERROR:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Error
+        'NULL':
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: 'Null'
+        SKIP:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Skip
+      required:
+      - PASS
+      - FAIL
+      - ERROR
+      - 'NULL'
+      - SKIP
+      title: TestEnvironmentMisc
+      type: object
+    TestIssuesItem:
+      properties:
+        id:
+          title: Id
+          type: string
+        comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comment
+        report_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Report Url
+        incidents_info:
+          $ref: '#/components/schemas/IncidentsInfo'
+      required:
+      - id
+      - comment
+      - report_url
+      - incidents_info
+      title: TestIssuesItem
+      type: object
+    Tree:
+      type: object
+      properties:
+        build_status:
+          type: string
+          readOnly: true
+        test_status:
+          type: string
+          readOnly: true
+        boot_status:
+          type: string
+          readOnly: true
+        git_commit_hash:
+          type: string
+        git_commit_name:
+          type: string
+        patchset_hash:
+          type: string
+        tree_names:
+          type: array
+          items: {}
+        git_repository_branch:
+          type: string
+        git_repository_url:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+      required:
+      - boot_status
+      - build_status
+      - git_commit_hash
+      - git_commit_name
+      - git_repository_branch
+      - git_repository_url
+      - patchset_hash
+      - start_time
+      - test_status
+      - tree_names
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
