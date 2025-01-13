@@ -63,6 +63,8 @@ For debugging we have two env variables
 
 `DEBUG` and `DEBUG_SQL_QUERY` that can be set to `True` to enable debugging. The reason `DEBUG_SQL_QUERY` is separated is that it can be very verbose.
 
+## Open API generate
+You can update the OpenAPI schema by running the `generate-schema.sh` script
 
 ## IDE Specific:
 You are free to use whichever tool you would like, but here are tips for specific IDEs
