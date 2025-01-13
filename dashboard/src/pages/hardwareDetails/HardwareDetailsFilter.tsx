@@ -47,7 +47,6 @@ export const createFilter = (
   const buildIssue: TFilterValues = {};
   const bootIssue: TFilterValues = {};
   const testIssue: TFilterValues = {};
-  const buildPlatform: TFilterValues = {};
   const bootPlatform: TFilterValues = {};
   const testPlatform: TFilterValues = {};
 
@@ -84,7 +83,6 @@ export const createFilter = (
     data.builds.issues.forEach(i => (buildIssue[i.id] = false));
     data.boots.issues.forEach(i => (bootIssue[i.id] = false));
     data.tests.issues.forEach(i => (testIssue[i.id] = false));
-    Object.keys(data.builds.platforms).forEach(i => (buildPlatform[i] = false));
     Object.keys(data.boots.platforms).forEach(i => (bootPlatform[i] = false));
     Object.keys(data.tests.platforms).forEach(i => (testPlatform[i] = false));
   }
@@ -101,7 +99,6 @@ export const createFilter = (
     buildIssue,
     bootIssue,
     testIssue,
-    buildPlatform,
     bootPlatform,
     testPlatform,
   };
@@ -137,11 +134,6 @@ const sectionHardware: ISectionItem[] = [
     title: 'filter.testIssue',
     subtitle: 'filter.issueSubtitle',
     sectionKey: 'testIssue',
-  },
-  {
-    title: 'filter.buildPlatform',
-    subtitle: 'filter.platformSubtitle',
-    sectionKey: 'buildPlatform',
   },
   {
     title: 'filter.bootPlatform',
