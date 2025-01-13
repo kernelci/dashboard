@@ -5,12 +5,7 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
-import {
-  sanitizeArchs,
-  sanitizeBuilds,
-  sanitizeConfigs,
-  sanitizePlatforms,
-} from '@/utils/utils';
+import { sanitizeArchs, sanitizeBuilds, sanitizeConfigs } from '@/utils/utils';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
@@ -24,7 +19,6 @@ import {
 
 import { MemoizedErrorsSummaryBuild } from '@/components/Tabs/Builds/BuildCards';
 import { MemoizedConfigsCard } from '@/components/Tabs/Builds/ConfigsCard';
-import { MemoizedPlatformsCard } from '@/components/Cards/PlatformsCard';
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 
 import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
@@ -86,11 +80,6 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
     [builds.items],
   );
 
-  const platformItems = useMemo(
-    () => sanitizePlatforms(builds.platforms),
-    [builds.platforms],
-  );
-
   return (
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
@@ -124,11 +113,6 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
             toggleFilterBySection={toggleFilterBySection}
             diffFilter={diffFilter}
           />
-          <MemoizedPlatformsCard
-            platforms={platformItems}
-            issueFilterSection="buildPlatform"
-            diffFilter={diffFilter}
-          />
         </div>
       </DesktopGrid>
       <MobileGrid>
@@ -146,11 +130,6 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
           <MemoizedConfigsCard
             configs={configsItems}
             toggleFilterBySection={toggleFilterBySection}
-            diffFilter={diffFilter}
-          />
-          <MemoizedPlatformsCard
-            platforms={platformItems}
-            issueFilterSection="buildPlatform"
             diffFilter={diffFilter}
           />
         </InnerMobileGrid>
