@@ -8,7 +8,7 @@ import type { TIssue } from '@/types/general';
 import http from './api';
 
 const fetchTestDetails = async (testId: string): Promise<TTestDetails> => {
-  const res = await http.get<TTestDetails>(`/api/tests/test/${testId}`);
+  const res = await http.get<TTestDetails>(`/api/test/${testId}`);
   return res.data;
 };
 

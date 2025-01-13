@@ -12,7 +12,7 @@ def viewCache(view):
 
 
 urlpatterns = [
-    path("tests/test/<str:test_id>",
+    path("test/<str:test_id>",
          viewCache(views.TestDetails),
          name="testDetails"
          ),
