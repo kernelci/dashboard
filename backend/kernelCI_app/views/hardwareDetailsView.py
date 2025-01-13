@@ -17,13 +17,10 @@ from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import get_tree_heads
 from kernelCI_app.helpers.filters import UNKNOWN_STRING, FilterParams
 from kernelCI_app.helpers.misc import (
-    handle_build_misc,
     handle_environment_misc,
-    build_misc_value_or_default,
     env_misc_value_or_default,
 )
 from kernelCI_app.typeModels.hardwareDetails import PostBody, DefaultRecordValues
-from kernelCI_app.helpers.build import build_status_map
 from pydantic import ValidationError
 
 DEFAULT_DAYS_INTERVAL = 3
@@ -228,15 +225,11 @@ class HardwareDetails(View):
         build: Dict,
         processed_builds: Set[str],
     ) -> bool:
-        platform = build_misc_value_or_default(handle_build_misc(build["misc"])).get(
-            "platform"
-        )
         is_build_not_processed = build["id"] not in processed_builds
         is_build_filtered_out = self.filterParams.is_build_filtered_out(
             valid=build["valid"],
             duration=build["duration"],
             issue_id=build["issue_id"],
-            platform=platform,
         )
         return is_build_not_processed and not is_build_filtered_out
 
@@ -363,7 +356,6 @@ class HardwareDetails(View):
         builds = {
             "items": [],
             "issues": {},
-            "platforms": defaultdict(lambda: defaultdict(int)),
             "failedWithUnknownIssues": 0,
         }
 
@@ -433,11 +425,6 @@ class HardwareDetails(View):
                     is_failed_task=record["build__valid"] is not True,
                     issue_from="build",
                 )
-                build_platform = build_misc_value_or_default(
-                    handle_build_misc(record["build__misc"])
-                ).get("platform")
-                build_status = build_status_map[record["build__valid"]]
-                builds["platforms"][build_platform][build_status] += 1
 
         builds["summary"] = create_details_build_summary(builds["items"])
         mutate_properties_to_list(builds, ["issues"])

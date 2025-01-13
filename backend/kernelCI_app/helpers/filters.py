@@ -115,7 +115,6 @@ class FilterParams:
         self.filterBuildValid = set()
         self.filterIssues = {"build": set(), "boot": set(), "test": set()}
         self.filterPlatforms = {
-            "build": set(),
             "boot": set(),
             "test": set(),
         }
@@ -136,7 +135,6 @@ class FilterParams:
             "build.issue": self._handle_issues,
             "boot.issue": self._handle_issues,
             "test.issue": self._handle_issues,
-            "build.platform": self._handle_platforms,
             "boot.platform": self._handle_platforms,
             "test.platform": self._handle_platforms,
         }
@@ -322,7 +320,6 @@ class FilterParams:
         duration: Optional[int],
         valid: Optional[bool],
         issue_id: Optional[str],
-        platform: Optional[str] = None,
     ) -> bool:
         return (
             (
@@ -347,10 +344,6 @@ class FilterParams:
             or (
                 len(self.filterIssues["build"]) > 0
                 and (issue_id not in self.filterIssues["build"] or valid is True)
-            )
-            or (
-                len(self.filterPlatforms["build"]) > 0
-                and (platform not in self.filterPlatforms["build"])
             )
         )
 
