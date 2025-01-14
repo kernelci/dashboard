@@ -130,7 +130,7 @@ export function BootsTable({
           duration: e.duration?.toString() ?? '',
           id: e.id,
           path: e.path,
-          startTime: e.startTime,
+          startTime: e.start_time,
           status: e.status,
         }),
       ),

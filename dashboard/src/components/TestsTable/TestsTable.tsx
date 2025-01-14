@@ -100,7 +100,7 @@ export function TestsTable({
         id: e.id,
         duration: e.duration?.toString() ?? '',
         path: e.path,
-        start_time: e.startTime,
+        start_time: e.start_time,
         status: e.status,
         hardware: e.hardware,
       });
