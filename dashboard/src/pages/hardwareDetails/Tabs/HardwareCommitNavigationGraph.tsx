@@ -43,11 +43,11 @@ const HardwareCommitNavigationGraph = ({
       navigate({
         search: current => ({
           ...current,
-          treeCommits: { ...current.treeCommits, [treeIdx]: commitHash },
+          treeCommits: { ...treeCommits, [treeIdx]: commitHash },
         }),
       });
     },
-    [navigate, treeIdx],
+    [navigate, treeIdx, treeCommits],
   );
 
   if (!tree) return <></>;

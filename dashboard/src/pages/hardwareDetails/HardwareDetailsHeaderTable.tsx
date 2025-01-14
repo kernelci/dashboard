@@ -76,7 +76,7 @@ const CommitSelector = ({
   rowLength: number;
 }): JSX.Element => {
   const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
-  const { treeCommits } = useSearch({ from: '/hardware/$hardwareId/' });
+  const { treeCommits } = useSearch({ from: '/hardware/$hardwareId' });
 
   const navigateToThePast = useCallback(
     (commitHash: string) => {
@@ -90,13 +90,13 @@ const CommitSelector = ({
               : Array.from(Array(rowLength).keys());
           return {
             ...current,
-            treeCommits: { ...current.treeCommits, [treeIndex]: commitHash },
+            treeCommits: { ...treeCommits, [treeIndex]: commitHash },
             treeIndexes: parsedTreeIndex,
           };
         },
       });
     },
-    [navigate, rowLength, treeIndex],
+    [navigate, rowLength, treeIndex, treeCommits],
   );
 
   const gitValues = useMemo(() => {
