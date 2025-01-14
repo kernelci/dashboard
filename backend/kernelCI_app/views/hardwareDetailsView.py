@@ -3,7 +3,10 @@ from django.db.models import Subquery
 from http import HTTPStatus
 import json
 from typing import Dict, List, Optional, Set, Literal
-from kernelCI_app.helpers.filters import should_increment_test_issue, is_build_invalid
+from kernelCI_app.helpers.filters import (
+    should_increment_build_issue,
+    should_increment_test_issue,
+)
 from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
@@ -152,12 +155,16 @@ def update_issues(
 ) -> None:
     can_insert_issue = True
     if issue_from == "build":
-        can_insert_issue = is_build_invalid(build_valid)
+        (issue_id, can_insert_issue) = should_increment_build_issue(
+            issue_id=issue_id,
+            incident_test_id=incident_test_id,
+            build_valid=build_valid,
+        )
     elif issue_from == "test":
-        can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
+        (issue_id, can_insert_issue) = should_increment_test_issue(issue_id, incident_test_id)
 
     if issue_id and issue_version is not None and can_insert_issue:
-        existing_issue = task["issues"].get(issue_id)
+        existing_issue = task["issues"].get((issue_id, issue_version))
         if existing_issue:
             existing_issue["incidents_info"]["incidentsCount"] += 1
         else:
@@ -167,7 +174,7 @@ def update_issues(
                 issue_comment=issue_comment,
                 issue_report_url=issue_report_url,
             )
-            task["issues"][issue_id] = new_issue
+            task["issues"][(issue_id, issue_version)] = new_issue
     elif is_failed_task:
         task["failedWithUnknownIssues"] += 1
 
@@ -221,16 +228,18 @@ class HardwareDetails(View):
         self.filterValid = self.filterParams.filterBuildValid
         self.filterIssues = self.filterParams.filterIssues
 
-    def is_build_filtered_in(
+    def build_in_filter(
         self,
         build: Dict,
         processed_builds: Set[str],
+        incident_test_id: Optional[str],
     ) -> bool:
         is_build_not_processed = build["id"] not in processed_builds
         is_build_filtered_out = self.filterParams.is_build_filtered_out(
             valid=build["valid"],
             duration=build["duration"],
             issue_id=build["issue_id"],
+            incident_test_id=incident_test_id,
         )
         return is_build_not_processed and not is_build_filtered_out
 
@@ -410,7 +419,11 @@ class HardwareDetails(View):
                 processed_tests.add(record["id"])
                 self.handle_test(record, boots if is_record_boot else tests)
 
-            should_process_build = self.is_build_filtered_in(build, processed_builds)
+            should_process_build = self.build_in_filter(
+                build=build,
+                processed_builds=processed_builds,
+                incident_test_id=record["incidents__test_id"],
+            )
 
             processed_builds.add(build_id)
             if should_process_build:

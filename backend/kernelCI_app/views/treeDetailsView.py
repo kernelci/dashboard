@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import List
 from django.http import JsonResponse
 from http import HTTPStatus
 from django.views import View
@@ -32,7 +32,7 @@ from collections import defaultdict
 
 from kernelCI_app.viewCommon import create_details_build_summary
 
-type IssueDict = Dict[Tuple[str, str], Issue]
+from kernelCI_app.typeModels.issueDetails import IssueDict
 
 
 class TreeDetails(View):

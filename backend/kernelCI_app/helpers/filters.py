@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List, TypedDict, Literal, Any
+from typing import Optional, Dict, List, Tuple, TypedDict, Literal, Any
 from django.http import HttpResponseBadRequest
 import re
 from kernelCI_app.utils import getErrorResponseBody
@@ -15,8 +15,32 @@ def is_known_issue(issue_id: Optional[str]) -> bool:
     return issue_id is not None and issue_id is not UNKNOWN_STRING
 
 
-def is_issue_from_test(incident_test_id: Optional[str], is_known_issue: bool) -> bool:
-    return incident_test_id is not None or not is_known_issue
+def is_exclusively_build_issue(issue_id: Optional[str], incident_test_id: Optional[str]) -> bool:
+    is_known_issue_result = is_known_issue(issue_id)
+    is_exclusively_build_issue_result = is_known_issue_result and incident_test_id is None
+    return is_exclusively_build_issue_result
+
+
+def is_exclusively_test_issue(
+    *, issue_id: Optional[str], incident_test_id: Optional[str]
+) -> bool:
+    is_known_issue_result = is_known_issue(issue_id)
+    is_exclusively_test_issue_result = is_known_issue_result and incident_test_id is not None
+    return is_exclusively_test_issue_result
+
+
+def is_issue_from_test(*, incident_test_id: Optional[str], issue_id: Optional[str]) -> bool:
+    is_known_issue_result = is_known_issue(issue_id=issue_id)
+    is_possible_test_issue = incident_test_id is not None or not is_known_issue_result
+
+    return is_possible_test_issue
+
+
+def is_issue_from_build(*, issue_id: Optional[str], incident_test_id: Optional[str]) -> bool:
+    is_known_issue_result = is_known_issue(issue_id=issue_id)
+    is_possible_build_issue = incident_test_id is None or not is_known_issue_result
+
+    return is_possible_build_issue
 
 
 # TODO: consider issue_version in the filter
@@ -25,35 +49,96 @@ def is_issue_filtered_out(issue_id: Optional[str], issue_filters: set) -> bool:
 
 
 def should_filter_test_issue(
-    issue_filters: set, issue_id: Optional[str], incident_test_id: Optional[str]
+    issue_filters: set, issue_id: Optional[str], incident_test_id: Optional[str], test_status: Optional[str]
 ) -> bool:
     has_issue_filter = len(issue_filters) > 0
+    if (not has_issue_filter):
+        return False
 
-    is_known_issue_result = is_known_issue(issue_id)
-    is_issue_from_tests_result = is_issue_from_test(
-        incident_test_id, is_known_issue_result
+    if (test_status != "FAIL"):
+        return True
+
+    has_unknown_filter = UNKNOWN_STRING in issue_filters
+
+    is_exclusively_build_issue_result = is_exclusively_build_issue(
+        issue_id=issue_id, incident_test_id=incident_test_id
     )
+
+    if is_exclusively_build_issue_result and has_unknown_filter:
+        return False
+    if is_exclusively_build_issue_result:
+        issue_id = UNKNOWN_STRING
 
     is_issue_filtered_out_result = is_issue_filtered_out(issue_id, issue_filters)
 
-    return (
-        has_issue_filter and is_issue_from_tests_result and is_issue_filtered_out_result
+    return is_issue_filtered_out_result
+
+
+def should_filter_build_issue(
+    *,
+    issue_filters: set,
+    issue_id: Optional[str],
+    incident_test_id: Optional[str],
+    build_valid: Optional[bool],
+) -> bool:
+    has_issue_filter = len(issue_filters) > 0
+    if (not has_issue_filter):
+        return False
+
+    if (not is_build_invalid(build_valid)):
+        return True
+
+    has_unknown_filter = UNKNOWN_STRING in issue_filters
+
+    is_exclusively_test_issue_result = is_exclusively_test_issue(
+        issue_id=issue_id, incident_test_id=incident_test_id
     )
+
+    if is_exclusively_test_issue_result and has_unknown_filter:
+        return False
+    if is_exclusively_test_issue_result:
+        issue_id = UNKNOWN_STRING
+
+    is_issue_filtered_out_result = is_issue_filtered_out(issue_id, issue_filters)
+
+    return is_issue_filtered_out_result
 
 
 def should_increment_test_issue(
     issue_id: Optional[str], incident_test_id: Optional[str]
-) -> bool:
-    is_known_issue_result = is_known_issue(issue_id=issue_id)
-    is_exclusively_build_issue = is_known_issue_result and incident_test_id is None
-    if is_exclusively_build_issue:
-        issue_id = UNKNOWN_STRING
+) -> Tuple[str, bool]:
+    is_exclusively_build_issue_result = is_exclusively_build_issue(
+        issue_id=issue_id, incident_test_id=incident_test_id
+    )
+    if is_exclusively_build_issue_result:
+        return (UNKNOWN_STRING, False)
 
-    is_unknown_issue = issue_id is UNKNOWN_STRING
-    is_known_test_issue = incident_test_id is not None
-    is_issue_from_test = is_known_test_issue or is_unknown_issue
+    is_issue_from_test_result = is_issue_from_test(
+        incident_test_id=incident_test_id, issue_id=issue_id
+    )
 
-    return is_issue_from_test
+    return (issue_id, is_issue_from_test_result)
+
+
+def should_increment_build_issue(
+    *,
+    issue_id: Optional[str],
+    incident_test_id: Optional[str],
+    build_valid: Optional[bool],
+) -> Tuple[str, bool]:
+    is_exclusively_test_issue_result = is_exclusively_test_issue(
+        issue_id=issue_id, incident_test_id=incident_test_id
+    )
+    if is_exclusively_test_issue_result:
+        return (UNKNOWN_STRING, False)
+
+    is_issue_from_build_result = is_issue_from_build(
+        issue_id=issue_id, incident_test_id=incident_test_id
+    )
+
+    result = is_issue_from_build_result and is_build_invalid(build_valid)
+
+    return (issue_id, result)
 
 
 def toIntOrDefault(value, default):
@@ -320,6 +405,7 @@ class FilterParams:
         duration: Optional[int],
         valid: Optional[bool],
         issue_id: Optional[str],
+        incident_test_id: Optional[str],
     ) -> bool:
         return (
             (
@@ -342,8 +428,12 @@ class FilterParams:
                 and (toIntOrDefault(duration, 0) < self.filterBuildDurationMin)
             )
             or (
-                len(self.filterIssues["build"]) > 0
-                and (issue_id not in self.filterIssues["build"] or valid is True)
+                should_filter_build_issue(
+                    issue_filters=self.filterIssues["build"],
+                    issue_id=issue_id,
+                    incident_test_id=incident_test_id,
+                    build_valid=valid,
+                )
             )
         )
 
@@ -422,7 +512,7 @@ class FilterParams:
                 and (toIntOrDefault(duration, 0) < self.filterBootDurationMin)
             )
             or should_filter_test_issue(
-                self.filterIssues["boot"], issue_id, incident_test_id
+                self.filterIssues["boot"], issue_id, incident_test_id, status
             )
             or (
                 len(self.filterPlatforms["boot"]) > 0
@@ -464,7 +554,7 @@ class FilterParams:
                 and (toIntOrDefault(duration, 0) < self.filterTestDurationMin)
             )
             or should_filter_test_issue(
-                self.filterIssues["test"], issue_id, incident_test_id
+                self.filterIssues["test"], issue_id, incident_test_id, status
             )
             or (
                 len(self.filterPlatforms["test"]) > 0

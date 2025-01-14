@@ -19,7 +19,7 @@ from kernelCI_app.utils import getErrorResponseBody
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -106,10 +106,14 @@ class TreeCommitsHistory(APIView):
         build_valid: bool,
         duration: int,
         commit_hash: str,
-        issue_id: str
+        issue_id: str,
+        incident_test_id: Optional[str],
     ) -> None:
         is_filtered_out = self.filterParams.is_build_filtered_out(
-            duration=duration, valid=build_valid, issue_id=issue_id
+            duration=duration,
+            valid=build_valid,
+            issue_id=issue_id,
+            incident_test_id=incident_test_id,
         )
         if is_filtered_out:
             return
@@ -262,7 +266,8 @@ class TreeCommitsHistory(APIView):
                 build_valid=row["build_valid"],
                 duration=row["build_duration"],
                 commit_hash=commit_hash,
-                issue_id=row['issue_id']
+                issue_id=row['issue_id'],
+                incident_test_id=row['incidents_test_id']
             )
 
     def _is_record_in_time_period(self, start_time: datetime) -> bool:
