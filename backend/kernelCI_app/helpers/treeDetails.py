@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from typing import Any
 from kernelCI_app.helpers.filters import (
+    should_increment_build_issue,
     should_increment_test_issue,
     UNKNOWN_STRING,
 )
@@ -103,6 +104,7 @@ def get_tree_details_data(request, commit_hash):
                builds_filter.builds_id = incidents.build_id
         LEFT JOIN issues
             ON incidents.issue_id = issues.id
+            AND incidents.issue_version = issues.version
         WHERE
             tests.origin = %(origin_param)s OR
             tests.origin IS NULL
@@ -258,8 +260,15 @@ def process_builds_issue(instance, row_data):
     issue_report_url = row_data["issue_report_url"]
     issue_version = row_data["issue_version"]
     build_valid = row_data["build_valid"]
+    incident_test_id = row_data["incident_test_id"]
 
-    if issue_id and (build_valid is False or build_valid is None):
+    (issue_id, can_insert_issue) = should_increment_build_issue(
+        issue_id=issue_id,
+        incident_test_id=incident_test_id,
+        build_valid=build_valid,
+    )
+
+    if issue_id and issue_version is not None and can_insert_issue:
         current_issue = instance.processed_build_issues.get((issue_id, issue_version))
         if current_issue:
             current_issue["incidents_info"]["incidentsCount"] += 1
@@ -276,16 +285,18 @@ def process_builds_issue(instance, row_data):
 
 
 def process_tests_issue(instance, row_data):
-    testStatus = row_data["test_status"]
+    test_status = row_data["test_status"]
     issue_id = row_data["issue_id"]
     issue_comment = row_data["issue_comment"]
     issue_version = row_data["issue_version"]
     issue_report_url = row_data["issue_report_url"]
     incident_test_id = row_data["incident_test_id"]
 
-    can_insert_issue = should_increment_test_issue(issue_id, incident_test_id)
+    (issue_id, can_insert_issue) = should_increment_test_issue(
+        issue_id, incident_test_id
+    )
 
-    if issue_id and can_insert_issue:
+    if issue_id and issue_version is not None and can_insert_issue:
         currentIssue = instance.testIssuesTable.get((issue_id, issue_version))
         if currentIssue:
             currentIssue["incidents_info"]["incidentsCount"] += 1
@@ -296,7 +307,7 @@ def process_tests_issue(instance, row_data):
                 issue_comment=issue_comment,
                 issue_report_url=issue_report_url,
             )
-    elif testStatus == "FAIL":
+    elif test_status == "FAIL":
         instance.failedTestsWithUnknownIssues += 1
 
 
@@ -308,11 +319,11 @@ def process_boots_issue(instance, row_data):
     issue_report_url = row_data["issue_report_url"]
     incident_test_id = row_data["incident_test_id"]
 
-    can_insert_issue = should_increment_test_issue(
+    (issue_id, can_insert_issue) = should_increment_test_issue(
         issue_id=issue_id, incident_test_id=incident_test_id
     )
 
-    if issue_id and can_insert_issue:
+    if issue_id and issue_version is not None and can_insert_issue:
         currentIssue = instance.bootsIssuesTable.get((issue_id, issue_version))
         if currentIssue:
             currentIssue["incidents_info"]["incidentsCount"] += 1
@@ -331,9 +342,13 @@ def decide_if_is_build_filtered_out(instance, row_data):
     issue_id = row_data["issue_id"]
     build_valid = row_data["build_valid"]
     build_duration = row_data["build_duration"]
+    incident_test_id = row_data["incident_test_id"]
 
     is_build_filtered_out = instance.filters.is_build_filtered_out(
-        valid=build_valid, duration=build_duration, issue_id=issue_id
+        valid=build_valid,
+        duration=build_duration,
+        issue_id=issue_id,
+        incident_test_id=incident_test_id,
     )
     return is_build_filtered_out
 
