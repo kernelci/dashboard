@@ -35,7 +35,7 @@ export type TIssue = {
 };
 
 export type TestHistory = {
-  startTime: string;
+  start_time: string;
   status: Status;
   path: string;
   id: string;
