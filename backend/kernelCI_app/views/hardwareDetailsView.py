@@ -16,7 +16,11 @@ from django.http import JsonResponse
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.models import Tests
-from kernelCI_app.utils import create_issue, extract_error_message
+from kernelCI_app.utils import (
+    create_issue,
+    extract_error_message,
+    is_boot
+)
 from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import get_tree_heads
 from kernelCI_app.helpers.filters import UNKNOWN_STRING, FilterParams
@@ -98,10 +102,6 @@ def get_history(record: Dict):
         "duration": record["duration"],
         "startTime": record["start_time"],
     }
-
-
-def is_boot(record: Dict) -> bool:
-    return record["path"] == "boot" or record["path"].startswith("boot.")
 
 
 def get_record_tree(record: Dict, selected_trees: List) -> Optional[Dict]:
@@ -386,7 +386,7 @@ class HardwareDetails(View):
                 compatibles.update(record["environment_compatible"])
 
             tree_index = current_tree["index"]
-            is_record_boot = is_boot(record)
+            is_record_boot = is_boot(record['path'])
             # TODO -> Unify with tree_status_key, be careful with the pluralization
             test_filter_key = "boot" if is_record_boot else "test"
 
@@ -411,7 +411,8 @@ class HardwareDetails(View):
                 continue
 
             should_process_test = (
-                self.test_in_filter(test_filter_key, record)
+                record['id'] is not None
+                and self.test_in_filter(test_filter_key, record)
                 and record["id"] not in processed_tests
             )
 

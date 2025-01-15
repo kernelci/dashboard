@@ -16,6 +16,7 @@ from kernelCI_app.helpers.misc import (
     env_misc_value_or_default,
 )
 from kernelCI_app.cache import getQueryCache, setQueryCache
+from kernelCI_app.utils import is_boot
 from django.db import connection
 
 
@@ -231,9 +232,7 @@ def get_hardware_filter(row_data: dict) -> Any:
 
 def is_test_boots_test(row_data: dict) -> bool:
     test_path = row_data["test_path"]
-    if test_path.startswith("boot"):
-        return True
-    return False
+    return is_boot(test_path)
 
 
 def get_build(row_data: dict) -> dict:
