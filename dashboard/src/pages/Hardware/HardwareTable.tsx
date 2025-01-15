@@ -51,7 +51,7 @@ import { InputTime } from './InputTime';
 
 const columns: ColumnDef<HardwareTableItem>[] = [
   {
-    accessorKey: 'hardwareName',
+    accessorKey: 'hardware_name',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.name" />
     ),
@@ -60,8 +60,8 @@ const columns: ColumnDef<HardwareTableItem>[] = [
     },
   },
   {
-    accessorKey: 'buildCount',
-    accessorFn: ({ buildCount }): number =>
+    accessorKey: 'build_status_summary',
+    accessorFn: ({ build_status_summary: buildCount }): number =>
       buildCount ? sumStatus(buildCount) : 0,
     header: ({ column }): JSX.Element => (
       <TableHeader
@@ -71,11 +71,11 @@ const columns: ColumnDef<HardwareTableItem>[] = [
       />
     ),
     cell: ({ row }): JSX.Element => {
-      return row.original.buildCount ? (
+      return row.original.build_status_summary ? (
         <BuildStatus
-          valid={row.original.buildCount.valid}
-          invalid={row.original.buildCount.invalid}
-          unknown={row.original.buildCount.null}
+          valid={row.original.build_status_summary.valid}
+          invalid={row.original.build_status_summary.invalid}
+          unknown={row.original.build_status_summary.null}
         />
       ) : (
         <FormattedMessage id="global.loading" defaultMessage="Loading..." />
@@ -86,8 +86,8 @@ const columns: ColumnDef<HardwareTableItem>[] = [
     },
   },
   {
-    accessorKey: 'bootStatusCount',
-    accessorFn: ({ bootStatusCount }): number =>
+    accessorKey: 'boot_status_summary',
+    accessorFn: ({ boot_status_summary: bootStatusCount }): number =>
       bootStatusCount ? sumStatus(bootStatusCount) : 0,
     header: ({ column }): JSX.Element => (
       <TableHeader
@@ -97,15 +97,15 @@ const columns: ColumnDef<HardwareTableItem>[] = [
       />
     ),
     cell: ({ row }): JSX.Element => {
-      return row.original.bootStatusCount ? (
+      return row.original.boot_status_summary ? (
         <GroupedTestStatus
-          pass={row.original.bootStatusCount.PASS}
-          skip={row.original.bootStatusCount.SKIP}
-          fail={row.original.bootStatusCount.FAIL}
-          miss={row.original.bootStatusCount.MISS}
-          done={row.original.bootStatusCount.DONE}
-          error={row.original.bootStatusCount.ERROR}
-          nullStatus={row.original.bootStatusCount.NULL}
+          pass={row.original.boot_status_summary.PASS}
+          skip={row.original.boot_status_summary.SKIP}
+          fail={row.original.boot_status_summary.FAIL}
+          miss={row.original.boot_status_summary.MISS}
+          done={row.original.boot_status_summary.DONE}
+          error={row.original.boot_status_summary.ERROR}
+          nullStatus={row.original.boot_status_summary.NULL}
         />
       ) : (
         <FormattedMessage id="global.loading" defaultMessage="Loading..." />
@@ -116,8 +116,8 @@ const columns: ColumnDef<HardwareTableItem>[] = [
     },
   },
   {
-    accessorKey: 'testStatusCount',
-    accessorFn: ({ testStatusCount }): number =>
+    accessorKey: 'test_status_summary',
+    accessorFn: ({ test_status_summary: testStatusCount }): number =>
       testStatusCount ? sumStatus(testStatusCount) : 0,
     header: ({ column }): JSX.Element => (
       <TableHeader
@@ -127,15 +127,15 @@ const columns: ColumnDef<HardwareTableItem>[] = [
       />
     ),
     cell: ({ row }): JSX.Element => {
-      return row.original.testStatusCount ? (
+      return row.original.test_status_summary ? (
         <GroupedTestStatus
-          pass={row.original.testStatusCount.PASS}
-          skip={row.original.testStatusCount.SKIP}
-          fail={row.original.testStatusCount.FAIL}
-          miss={row.original.testStatusCount.MISS}
-          done={row.original.testStatusCount.DONE}
-          error={row.original.testStatusCount.ERROR}
-          nullStatus={row.original.testStatusCount.NULL}
+          pass={row.original.test_status_summary.PASS}
+          skip={row.original.test_status_summary.SKIP}
+          fail={row.original.test_status_summary.FAIL}
+          miss={row.original.test_status_summary.MISS}
+          done={row.original.test_status_summary.DONE}
+          error={row.original.test_status_summary.ERROR}
+          nullStatus={row.original.test_status_summary.NULL}
         />
       ) : (
         <FormattedMessage id="global.loading" defaultMessage="Loading..." />
@@ -168,7 +168,7 @@ export function HardwareTable({
       return {
         from: '/hardware',
         to: '/hardware/$hardwareId',
-        params: { hardwareId: row.original.hardwareName },
+        params: { hardwareId: row.original.hardware_name },
 
         search: previousSearch => ({
           ...previousSearch,

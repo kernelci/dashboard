@@ -7,10 +7,10 @@ interface BuildCount {
 }
 
 export interface HardwareItem {
-  hardwareName: string;
-  buildCount: BuildCount;
-  testStatusCount: StatusCount;
-  bootStatusCount: StatusCount;
+  hardware_name: string;
+  build_status_summary: BuildCount;
+  test_status_summary: StatusCount;
+  boot_status_summary: StatusCount;
 }
 
 export type HardwareListingItem = HardwareItem;

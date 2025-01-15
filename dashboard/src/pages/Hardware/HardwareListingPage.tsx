@@ -74,43 +74,43 @@ const HardwareListingPage = ({
 
     return currentData
       .filter(hardware => {
-        return hardware.hardwareName?.includes(inputFilter);
+        return hardware.hardware_name?.includes(inputFilter);
       })
       .map((hardware): HardwareTableItem => {
         const buildCount = {
-          valid: hardware.buildCount?.valid,
-          invalid: hardware.buildCount?.invalid,
-          null: hardware.buildCount?.null,
+          valid: hardware.build_status_summary?.valid,
+          invalid: hardware.build_status_summary?.invalid,
+          null: hardware.build_status_summary?.null,
         };
 
         const testStatusCount = {
-          DONE: hardware.testStatusCount.DONE,
-          ERROR: hardware.testStatusCount.ERROR,
-          FAIL: hardware.testStatusCount.FAIL,
-          MISS: hardware.testStatusCount.MISS,
-          PASS: hardware.testStatusCount.PASS,
-          SKIP: hardware.testStatusCount.SKIP,
-          NULL: hardware.testStatusCount.NULL,
+          DONE: hardware.test_status_summary.DONE,
+          ERROR: hardware.test_status_summary.ERROR,
+          FAIL: hardware.test_status_summary.FAIL,
+          MISS: hardware.test_status_summary.MISS,
+          PASS: hardware.test_status_summary.PASS,
+          SKIP: hardware.test_status_summary.SKIP,
+          NULL: hardware.test_status_summary.NULL,
         };
 
         const bootStatusCount = {
-          DONE: hardware.bootStatusCount.DONE,
-          ERROR: hardware.bootStatusCount.ERROR,
-          FAIL: hardware.bootStatusCount.FAIL,
-          MISS: hardware.bootStatusCount.MISS,
-          PASS: hardware.bootStatusCount.PASS,
-          SKIP: hardware.bootStatusCount.SKIP,
-          NULL: hardware.bootStatusCount.NULL,
+          DONE: hardware.boot_status_summary.DONE,
+          ERROR: hardware.boot_status_summary.ERROR,
+          FAIL: hardware.boot_status_summary.FAIL,
+          MISS: hardware.boot_status_summary.MISS,
+          PASS: hardware.boot_status_summary.PASS,
+          SKIP: hardware.boot_status_summary.SKIP,
+          NULL: hardware.boot_status_summary.NULL,
         };
 
         return {
-          hardwareName: hardware.hardwareName ?? '',
-          buildCount,
-          testStatusCount,
-          bootStatusCount,
+          hardware_name: hardware.hardware_name ?? '',
+          build_status_summary: buildCount,
+          test_status_summary: testStatusCount,
+          boot_status_summary: bootStatusCount,
         };
       })
-      .sort((a, b) => a.hardwareName.localeCompare(b.hardwareName));
+      .sort((a, b) => a.hardware_name.localeCompare(b.hardware_name));
   }, [data, error, inputFilter]);
 
   return (
