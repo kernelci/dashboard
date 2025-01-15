@@ -454,7 +454,7 @@ class FilterParams:
             hardware_compatibles = hardwares
         if architecture is not None:
             record_architecture = architecture
-        if compile is not None:
+        if compiler is not None:
             record_compiler = compiler
         if config_name is not None:
             record_config_name = config_name
