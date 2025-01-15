@@ -106,7 +106,7 @@ class TestHistory(BaseModel):
     status: Optional[str]
     duration: Optional[Union[int, float]]
     path: Optional[str]
-    startTime: Optional[Union[datetime, str]]
+    start_time: Optional[Union[datetime, str]]
     hardware: Optional[Union[str, List[str]]]
     config: Optional[str]
     log_url: Optional[str]

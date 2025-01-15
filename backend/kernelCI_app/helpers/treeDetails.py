@@ -198,7 +198,7 @@ def get_current_row_data(current_row: dict) -> dict:
         "status": current_row_data["test_status"],
         "duration": current_row_data["test_duration"],
         "path": current_row_data["test_path"],
-        "startTime": current_row_data["test_start_time"],
+        "start_time": current_row_data["test_start_time"],
         "hardware": current_row[tmp_test_env_comp_key],
         "config": current_row_data["build_config_name"],
         "log_url": current_row_data["test_log_url"],
