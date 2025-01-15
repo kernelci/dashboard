@@ -55,11 +55,11 @@ export const createFilter = (data: TTreeTestsFullData | undefined): TFilter => {
       compilers[b.compiler ?? 'Unknown'] = false;
     });
 
-    data.hardwareUsed.forEach(h => (hardware[h] = false));
+    data.summary.hardware.forEach(h => (hardware[h] = false));
 
-    data.buildsIssues.forEach(i => (buildIssue[i.id] = false));
-    data.bootIssues.forEach(i => (bootIssue[i.id] = false));
-    data.testIssues.forEach(i => (testIssue[i.id] = false));
+    data.summary.builds.issues.forEach(i => (buildIssue[i.id] = false));
+    data.summary.boots.issues.forEach(i => (bootIssue[i.id] = false));
+    data.summary.tests.issues.forEach(i => (testIssue[i.id] = false));
   }
 
   return {

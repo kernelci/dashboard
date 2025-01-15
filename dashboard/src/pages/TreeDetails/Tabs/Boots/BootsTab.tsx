@@ -99,10 +99,13 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
 
   const hardwareData = useMemo(() => {
     return {
-      ...data?.bootEnvironmentCompatible,
-      ...data?.bootEnvironmentMisc,
+      ...data?.summary.boots.enviroment_compatible,
+      ...data?.summary.boots.enviroment_misc,
     };
-  }, [data?.bootEnvironmentCompatible, data?.bootEnvironmentMisc]);
+  }, [
+    data?.summary.boots.enviroment_compatible,
+    data?.summary.boots.enviroment_misc,
+  ]);
 
   if (error || !treeId) {
     return (
@@ -121,7 +124,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
 
   if (!data) return <div />;
 
-  if (data.bootHistory.length < 1) {
+  if (data.boots.length < 1) {
     return (
       <BaseCard
         title={<FormattedMessage id="bootsTab.info" />}
@@ -140,22 +143,22 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
         <div>
           <MemoizedStatusCard
             title={<FormattedMessage id="bootsTab.bootStatus" />}
-            statusCounts={data.bootStatusSummary}
+            statusCounts={data.summary.boots.status}
           />
           <MemoizedConfigList
             title={<FormattedMessage id="bootsTab.configs" />}
-            configStatusCounts={data.bootConfigs}
+            configStatusCounts={data.summary.boots.configs}
             diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
-            archCompilerErrors={data.bootArchSummary}
+            archCompilerErrors={data.summary.boots.architectures}
             diffFilter={diffFilter}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
-            issues={data.bootIssues}
-            failedWithUnknownIssues={data.failedBootsWithUnknownIssues}
+            issues={data.summary.boots.issues}
+            failedWithUnknownIssues={data.summary.boots.unknown_issues}
             diffFilter={diffFilter}
             issueFilterSection="bootIssue"
             detailsId={treeId}
@@ -174,25 +177,25 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
       <MobileGrid>
         <MemoizedStatusCard
           title={<FormattedMessage id="bootsTab.bootStatus" />}
-          statusCounts={data.bootStatusSummary}
+          statusCounts={data.summary.boots.status}
         />
         <TreeCommitNavigationGraph />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList
               title={<FormattedMessage id="bootsTab.configs" />}
-              configStatusCounts={data.bootConfigs}
+              configStatusCounts={data.summary.boots.configs}
               diffFilter={diffFilter}
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
-              archCompilerErrors={data.bootArchSummary}
+              archCompilerErrors={data.summary.boots.architectures}
               diffFilter={diffFilter}
             />
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
-              issues={data.bootIssues}
-              failedWithUnknownIssues={data.failedBootsWithUnknownIssues}
+              issues={data.summary.boots.issues}
+              failedWithUnknownIssues={data.summary.boots.unknown_issues}
               diffFilter={diffFilter}
               issueFilterSection="bootIssue"
               detailsId={treeId}
@@ -212,7 +215,7 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
         tableKey="treeDetailsBoots"
         filter={tableFilter.bootsTable}
         onClickFilter={onClickFilter}
-        testHistory={data.bootHistory}
+        testHistory={data.boots}
         getRowLink={getRowLink}
         updatePathFilter={updatePathFilter}
         currentPathFilter={currentPathFilter}

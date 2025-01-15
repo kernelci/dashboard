@@ -101,10 +101,13 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
 
   const hardwareData = useMemo(() => {
     return {
-      ...data?.testEnvironmentCompatible,
-      ...data?.testEnvironmentMisc,
+      ...data?.summary.tests.enviroment_compatible,
+      ...data?.summary.tests.enviroment_misc,
     };
-  }, [data?.testEnvironmentCompatible, data?.testEnvironmentMisc]);
+  }, [
+    data?.summary.tests.enviroment_compatible,
+    data?.summary.tests.enviroment_misc,
+  ]);
 
   if (error || !treeId) {
     return (
@@ -123,7 +126,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
 
   if (!data) return <div />;
 
-  if (data.testHistory.length < 1) {
+  if (data.tests.length < 1) {
     return (
       <BaseCard
         title={<FormattedMessage id="global.info" />}
@@ -142,22 +145,22 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
         <div>
           <MemoizedStatusCard
             title={<FormattedMessage id="testsTab.testStatus" />}
-            statusCounts={data.testStatusSummary}
+            statusCounts={data.summary.tests.status}
           />
           <MemoizedConfigList
             title={<FormattedMessage id="global.configs" />}
-            configStatusCounts={data.testConfigs}
+            configStatusCounts={data.summary.tests.configs}
             diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
-            archCompilerErrors={data.testArchSummary}
+            archCompilerErrors={data.summary.tests.architectures}
             diffFilter={diffFilter}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
-            issues={data.testIssues}
-            failedWithUnknownIssues={data.failedTestsWithUnknownIssues}
+            issues={data.summary.tests.issues}
+            failedWithUnknownIssues={data.summary.tests.unknown_issues}
             diffFilter={diffFilter}
             issueFilterSection="testIssue"
             detailsId={treeId}
@@ -176,25 +179,25 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
       <MobileGrid>
         <MemoizedStatusCard
           title={<FormattedMessage id="testsTab.testStatus" />}
-          statusCounts={data.testStatusSummary}
+          statusCounts={data.summary.tests.status}
         />
         <TreeCommitNavigationGraph />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList
               title={<FormattedMessage id="global.configs" />}
-              configStatusCounts={data.testConfigs}
+              configStatusCounts={data.summary.tests.configs}
               diffFilter={diffFilter}
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
-              archCompilerErrors={data.testArchSummary}
+              archCompilerErrors={data.summary.tests.architectures}
               diffFilter={diffFilter}
             />
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
-              issues={data.testIssues}
-              failedWithUnknownIssues={data.failedTestsWithUnknownIssues}
+              issues={data.summary.tests.issues}
+              failedWithUnknownIssues={data.summary.tests.unknown_issues}
               diffFilter={diffFilter}
               issueFilterSection="testIssue"
               detailsId={treeId}
@@ -213,7 +216,7 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
 
       <TestsTable
         tableKey="treeDetailsTests"
-        testHistory={data.testHistory}
+        testHistory={data.tests}
         onClickFilter={onClickFilter}
         filter={tableFilter.testsTable}
         getRowLink={getRowLink}
