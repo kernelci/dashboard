@@ -15,7 +15,7 @@ from kernelCI_app.helpers.misc import (
     build_misc_value_or_default,
     env_misc_value_or_default,
 )
-from kernelCI_app.utils import getErrorResponseBody
+from kernelCI_app.utils import getErrorResponseBody, is_boot
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -225,10 +225,6 @@ class TreeCommitsHistory(APIView):
         incident_test_id = row["incidents_test_id"]
         build_valid = row["build_valid"]
 
-        is_boot = test_path is not None and test_path.startswith(
-            "boot"
-        )
-
         commit_hash = row["git_commit_hash"]
 
         if issue_id is None and (
@@ -237,7 +233,10 @@ class TreeCommitsHistory(APIView):
         ):
             issue_id = UNKNOWN_STRING
 
-        if is_boot:
+        if test_id is None:
+            return
+
+        if is_boot(test_path):
             self._process_boots_count(
                 test_id=test_id,
                 test_status=test_status,
