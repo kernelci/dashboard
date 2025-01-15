@@ -623,13 +623,21 @@ components:
       title: HardwareDetailsFullResponse
       type: object
     IncidentsInfo:
+    TestArchSummaryItem:
       properties:
-        incidentsCount:
-          title: Incidentscount
-          type: integer
+        arch:
+          title: Arch
+          type: string
+        compiler:
+          title: Compiler
+          type: string
+        status:
+          $ref: '#/components/schemas/TestStatusCount'
       required:
-      - incidentsCount
-      title: IncidentsInfo
+      - arch
+      - compiler
+      - status
+      title: TestArchSummaryItem
       type: object
     Summary:
       properties:
