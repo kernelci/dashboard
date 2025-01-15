@@ -138,6 +138,9 @@ class TreeDetails(View):
             if row_data["build_id"] is not None:
                 self._process_builds(row_data)
 
+            if row_data["test_id"] is None:
+                continue
+
             if is_test_boots_test(row_data):
                 self._process_boots_test(row_data)
             else:
