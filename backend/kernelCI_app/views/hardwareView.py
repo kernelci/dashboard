@@ -11,7 +11,7 @@ from kernelCI_app.helpers.date import (
 )
 from kernelCI_app.helpers.errorHandling import (
     ExceptionWithJsonResponse,
-    create_error_response
+    create_error_response,
 )
 from kernelCI_app.helpers.trees import get_tree_heads
 from kernelCI_app.models import Tests
@@ -22,9 +22,7 @@ class HardwareView(View):
         processedBuilds = set()
         processedTests = set()
 
-        checkouts_subquery = get_tree_heads(
-            origin, start_date, end_date
-        )
+        checkouts_subquery = get_tree_heads(origin, start_date, end_date)
 
         tests = Tests.objects.filter(
             environment_compatible__isnull=False,
@@ -38,7 +36,7 @@ class HardwareView(View):
             "build__valid",
             "path",
             "build__id",
-            "id"
+            "id",
         )
 
         hardware = {}
@@ -53,14 +51,14 @@ class HardwareView(View):
 
                 if hardware.get(compatible) is None:
                     hardware[compatible] = {
-                        "hardwareName": compatible,
-                        "testStatusCount": defaultdict(int),
-                        "bootStatusCount": defaultdict(int),
-                        "buildCount": {"valid": 0, "invalid": 0, "null": 0},
+                        "hardware_name": compatible,
+                        "test_status_summary": defaultdict(int),
+                        "boot_status_summary": defaultdict(int),
+                        "build_status_summary": {"valid": 0, "invalid": 0, "null": 0},
                     }
-                statusCount = "testStatusCount"
+                statusCount = "test_status_summary"
                 if test["path"].startswith("boot.") or test["path"] == "boot":
-                    statusCount = "bootStatusCount"
+                    statusCount = "boot_status_summary"
                 if test["status"] is None:
                     hardware[compatible][statusCount]["NULL"] += 1
                 else:
@@ -74,7 +72,7 @@ class HardwareView(View):
                 build_status = build_status_map.get(test["build__valid"])
 
                 if build_status is not None:
-                    hardware[compatible]["buildCount"][build_status] += 1
+                    hardware[compatible]["build_status_summary"][build_status] += 1
 
         result = {"hardware": list(hardware.values())}
 
@@ -96,7 +94,7 @@ class HardwareView(View):
 
         result = self._getResults(start_date, end_date, origin)
 
-        if not result['hardware']:
+        if not result["hardware"]:
             return create_error_response(
                 error_message="Hardwares not found", status_code=HTTPStatus.NOT_FOUND
             )

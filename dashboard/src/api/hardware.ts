@@ -17,7 +17,6 @@ const fetchHardwareListing = async (
     params: {
       startTimestampInSeconds,
       endTimeStampInSeconds,
-      mode: 'slow',
       origin,
     },
   });
