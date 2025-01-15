@@ -124,7 +124,7 @@ export function TestsTable({
           groups[group].skip_tests++;
           break;
         default:
-          if (!e.status) groups[group].null_tests++;
+          groups[group].null_tests++;
       }
     });
     return Object.values(groups);

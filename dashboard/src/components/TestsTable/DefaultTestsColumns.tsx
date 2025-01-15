@@ -44,6 +44,7 @@ export const defaultColumns: ColumnDef<TPathTests>[] = [
           fail={row.original.fail_tests}
           skip={row.original.skip_tests}
           error={row.original.error_tests}
+          nullStatus={row.original.null_tests}
         />
       );
     },
