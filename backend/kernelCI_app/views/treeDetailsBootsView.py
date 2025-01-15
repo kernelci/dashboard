@@ -84,6 +84,6 @@ class TreeDetailsBoots(APIView):
 
         return Response(
             {
-                "bootHistory": self.bootHistory,
+                "boots": self.bootHistory,
             }
         )

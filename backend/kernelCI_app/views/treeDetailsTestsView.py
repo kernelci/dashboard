@@ -89,6 +89,6 @@ class TreeDetailsTests(APIView):
 
         return Response(
             {
-                "testHistory": self.testHistory,
+                "tests": self.testHistory,
             }
         )
