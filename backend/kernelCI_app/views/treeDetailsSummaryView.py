@@ -151,30 +151,40 @@ class TreeDetailsSummary(APIView):
         self._sanitize_rows(rows)
 
         response = {
-            "bootArchSummary": list(self.bootArchSummary.values()),
-            "testArchSummary": list(self.test_arch_summary.values()),
-            "buildsSummary": self.build_summary,
-            "bootFailReasons": self.bootFailReasons,
-            "testFailReasons": self.testFailReasons,
-            "testPlatformsWithErrors": list(self.testPlatformsWithErrors),
-            "bootPlatformsFailing": list(self.bootPlatformsFailing),
-            "testConfigs": self.test_configs,
-            "bootConfigs": self.bootConfigs,
-            "testStatusSummary": self.testStatusSummary,
-            "bootStatusSummary": self.bootStatusSummary,
-            "bootIssues": self.bootIssues,
-            "testIssues": self.testIssues,
-            "testEnvironmentCompatible": self.testEnvironmentCompatible,
-            "bootEnvironmentCompatible": self.bootEnvironmentCompatible,
-            "testEnvironmentMisc": self.testEnvironmentMisc,
-            "bootEnvironmentMisc": self.bootEnvironmentMisc,
-            "hardwareUsed": list(self.hardwareUsed),
-            "failedTestsWithUnknownIssues": self.failedTestsWithUnknownIssues,
-            "failedBootsWithUnknownIssues": self.failedBootsWithUnknownIssues,
-            "buildsIssues": self.build_issues,
-            "failedBuildsWithUnknownIssues": self.failed_builds_with_unknown_issues,
-            "treeUrl": self.tree_url,
-            "git_commit_tags": self.git_commit_tags,
+            "summary": {
+                "builds": {
+                    "status": self.build_summary["builds"],
+                    "architectures": self.build_summary["architectures"],
+                    "configs": self.build_summary["configs"],
+                    "issues": self.build_issues,
+                    "unknown_issues": self.failed_builds_with_unknown_issues
+                },
+                "boots": {
+                    "status": self.bootStatusSummary,
+                    "architectures": list(self.bootArchSummary.values()),
+                    "configs": self.bootConfigs,
+                    "issues": self.bootIssues,
+                    "unknown_issues": self.failedBootsWithUnknownIssues,
+                    "enviroment_compatible": self.bootEnvironmentCompatible,
+                    "enviroment_misc": self.bootEnvironmentMisc,
+                    "fail_reasons": self.bootFailReasons,
+                    "failed_platforms": list(self.bootPlatformsFailing),
+                },
+                "tests": {
+                    "status": self.testStatusSummary,
+                    "architectures": list(self.test_arch_summary.values()),
+                    "configs": self.test_configs,
+                    "issues": self.testIssues,
+                    "unknown_issues": self.failedTestsWithUnknownIssues,
+                    "enviroment_compatible": self.testEnvironmentCompatible,
+                    "enviroment_misc": self.testEnvironmentMisc,
+                    "fail_reasons": self.testFailReasons,
+                    "failed_platforms": list(self.testPlatformsWithErrors),
+                },
+                "hardware": list(self.hardwareUsed),
+                "tree_url": self.tree_url,
+                "git_commit_tags": self.git_commit_tags,
+            }
         }
 
         try:

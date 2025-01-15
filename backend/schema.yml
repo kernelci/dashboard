@@ -364,7 +364,18 @@ paths:
           description: ''
 components:
   schemas:
-    Architectures:
+    BootResponse:
+      properties:
+        bootHistory:
+          items:
+            $ref: '#/components/schemas/TestHistory'
+          title: Boothistory
+          type: array
+      required:
+      - bootHistory
+      title: BootResponse
+      type: object
+    BuildArchitectures:
       properties:
         valid:
           title: Valid
@@ -385,18 +396,24 @@ components:
       - invalid
       - 'null'
       - compilers
-      title: Architectures
+      title: BuildArchitectures
       type: object
-    BootResponse:
+    BuildConfigs:
       properties:
-        bootHistory:
-          items:
-            $ref: '#/components/schemas/TestHistory'
-          title: Boothistory
-          type: array
+        valid:
+          title: Valid
+          type: integer
+        invalid:
+          title: Invalid
+          type: integer
+        'null':
+          title: 'Null'
+          type: integer
       required:
-      - bootHistory
-      title: BootResponse
+      - valid
+      - invalid
+      - 'null'
+      title: BuildConfigs
       type: object
     BuildItem:
       properties:
@@ -476,6 +493,53 @@ components:
       - git_repository_branch
       title: BuildItem
       type: object
+    BuildStatusCount:
+      properties:
+        valid:
+          title: Valid
+          type: integer
+        invalid:
+          title: Invalid
+          type: integer
+        'null':
+          title: 'Null'
+          type: integer
+      required:
+      - valid
+      - invalid
+      - 'null'
+      title: BuildStatusCount
+      type: object
+    BuildSummary:
+      properties:
+        status:
+          $ref: '#/components/schemas/BuildStatusCount'
+        architectures:
+          additionalProperties:
+            $ref: '#/components/schemas/BuildArchitectures'
+          title: Architectures
+          type: object
+        configs:
+          additionalProperties:
+            $ref: '#/components/schemas/BuildConfigs'
+          title: Configs
+          type: object
+        issues:
+          items:
+            $ref: '#/components/schemas/BuildsIssuesItem'
+          title: Issues
+          type: array
+        unknown_issues:
+          title: Unknown Issues
+          type: integer
+      required:
+      - status
+      - architectures
+      - configs
+      - issues
+      - unknown_issues
+      title: BuildSummary
+      type: object
     BuildsIssuesItem:
       properties:
         id:
@@ -511,59 +575,55 @@ components:
       - builds
       title: BuildsResponse
       type: object
-    BuildsSummary:
+    IncidentsInfo:
       properties:
-        valid:
-          title: Valid
-          type: integer
-        invalid:
-          title: Invalid
-          type: integer
-        'null':
-          title: 'Null'
+        incidentsCount:
+          title: Incidentscount
           type: integer
       required:
-      - valid
-      - invalid
-      - 'null'
-      title: BuildsSummary
+      - incidentsCount
+      title: IncidentsInfo
       type: object
-    BuildsSummaryDetails:
+    Summary:
       properties:
         builds:
-          $ref: '#/components/schemas/BuildsSummary'
-        configs:
-          additionalProperties:
-            $ref: '#/components/schemas/Configs'
-          title: Configs
-          type: object
-        architectures:
-          additionalProperties:
-            $ref: '#/components/schemas/Architectures'
-          title: Architectures
-          type: object
+          $ref: '#/components/schemas/BuildSummary'
+        boots:
+          $ref: '#/components/schemas/TestSummary'
+        tests:
+          $ref: '#/components/schemas/TestSummary'
+        hardware:
+          items:
+            type: string
+          title: Hardware
+          type: array
+          uniqueItems: true
+        tree_url:
+          title: Tree Url
+          type: string
+        git_commit_tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Git Commit Tags
       required:
       - builds
-      - configs
-      - architectures
-      title: BuildsSummaryDetails
+      - boots
+      - tests
+      - hardware
+      - tree_url
+      - git_commit_tags
+      title: Summary
       type: object
-    Configs:
+    SummaryResponse:
       properties:
-        valid:
-          title: Valid
-          type: integer
-        invalid:
-          title: Invalid
-          type: integer
-        'null':
-          title: 'Null'
-          type: integer
+        summary:
+          $ref: '#/components/schemas/Summary'
       required:
-      - valid
-      - invalid
-      - 'null'
-      title: Configs
+      - summary
+      title: SummaryResponse
       type: object
     HardwareDetailsFullResponse:
       properties:
@@ -613,15 +673,23 @@ components:
       title: HardwareDetailsFullResponse
       type: object
     IncidentsInfo:
+    TestArchSummaryItem:
       properties:
-        incidentsCount:
-          title: Incidentscount
-          type: integer
+        arch:
+          title: Arch
+          type: string
+        compiler:
+          title: Compiler
+          type: string
+        status:
+          $ref: '#/components/schemas/TestStatusCount'
       required:
-      - incidentsCount
-      title: IncidentsInfo
+      - arch
+      - compiler
+      - status
+      title: TestArchSummaryItem
       type: object
-    StatusCount:
+    TestEnvironmentCompatibleCount:
       properties:
         PASS:
           anyOf:
@@ -653,164 +721,6 @@ components:
           - type: 'null'
           default: null
           title: 'Null'
-      title: StatusCount
-      type: object
-    SummaryResponse:
-      properties:
-        bootArchSummary:
-          items: {}
-          title: Bootarchsummary
-          type: array
-        testArchSummary:
-          items:
-            $ref: '#/components/schemas/TestArchSummaryItem'
-          title: Testarchsummary
-          type: array
-        buildsSummary:
-          $ref: '#/components/schemas/BuildsSummaryDetails'
-        bootFailReasons:
-          title: Bootfailreasons
-          type: object
-        testFailReasons:
-          additionalProperties:
-            type: integer
-          title: Testfailreasons
-          type: object
-        testPlatformsWithErrors:
-          items:
-            type: string
-          title: Testplatformswitherrors
-          type: array
-        bootPlatformsFailing:
-          items: {}
-          title: Bootplatformsfailing
-          type: array
-        testConfigs:
-          additionalProperties:
-            $ref: '#/components/schemas/StatusCount'
-          title: Testconfigs
-          type: object
-        bootConfigs:
-          title: Bootconfigs
-          type: object
-        testStatusSummary:
-          $ref: '#/components/schemas/StatusCount'
-        bootStatusSummary:
-          title: Bootstatussummary
-          type: object
-        bootIssues:
-          items: {}
-          title: Bootissues
-          type: array
-        testIssues:
-          items:
-            $ref: '#/components/schemas/TestIssuesItem'
-          title: Testissues
-          type: array
-        testEnvironmentCompatible:
-          additionalProperties:
-            $ref: '#/components/schemas/TestEnvironmentCompatibleCount'
-          title: Testenvironmentcompatible
-          type: object
-        bootEnvironmentCompatible:
-          title: Bootenvironmentcompatible
-          type: object
-        testEnvironmentMisc:
-          additionalProperties:
-            $ref: '#/components/schemas/TestEnvironmentMiscCount'
-          title: Testenvironmentmisc
-          type: object
-        bootEnvironmentMisc:
-          title: Bootenvironmentmisc
-          type: object
-        hardwareUsed:
-          items:
-            type: string
-          title: Hardwareused
-          type: array
-        failedTestsWithUnknownIssues:
-          title: Failedtestswithunknownissues
-          type: integer
-        failedBootsWithUnknownIssues:
-          title: Failedbootswithunknownissues
-          type: integer
-        buildsIssues:
-          items:
-            $ref: '#/components/schemas/BuildsIssuesItem'
-          title: Buildsissues
-          type: array
-        failedBuildsWithUnknownIssues:
-          title: Failedbuildswithunknownissues
-          type: integer
-        treeUrl:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Treeurl
-        git_commit_tags:
-          anyOf:
-          - items: {}
-            type: array
-          - type: 'null'
-          title: Git Commit Tags
-      required:
-      - bootArchSummary
-      - testArchSummary
-      - buildsSummary
-      - bootFailReasons
-      - testFailReasons
-      - testPlatformsWithErrors
-      - bootPlatformsFailing
-      - testConfigs
-      - bootConfigs
-      - testStatusSummary
-      - bootStatusSummary
-      - bootIssues
-      - testIssues
-      - testEnvironmentCompatible
-      - bootEnvironmentCompatible
-      - testEnvironmentMisc
-      - bootEnvironmentMisc
-      - hardwareUsed
-      - failedTestsWithUnknownIssues
-      - failedBootsWithUnknownIssues
-      - buildsIssues
-      - failedBuildsWithUnknownIssues
-      - treeUrl
-      - git_commit_tags
-      title: SummaryResponse
-      type: object
-    TestArchSummaryItem:
-      properties:
-        arch:
-          title: Arch
-          type: string
-        compiler:
-          title: Compiler
-          type: string
-        status:
-          $ref: '#/components/schemas/StatusCount'
-      required:
-      - arch
-      - compiler
-      - status
-      title: TestArchSummaryItem
-      type: object
-    TestEnvironmentCompatibleCount:
-      properties:
-        FAIL:
-          title: Fail
-          type: integer
-        PASS:
-          title: Pass
-          type: integer
-        SKIP:
-          title: Skip
-          type: integer
-      required:
-      - FAIL
-      - PASS
-      - SKIP
       title: TestEnvironmentCompatibleCount
       type: object
     TestEnvironmentMiscCount:
@@ -821,30 +731,30 @@ components:
           - type: 'null'
           default: null
           title: Pass
-        FAIL:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: null
-          title: Fail
         ERROR:
           anyOf:
           - type: integer
           - type: 'null'
           default: null
           title: Error
-        'NULL':
+        FAIL:
           anyOf:
           - type: integer
           - type: 'null'
           default: null
-          title: 'Null'
+          title: Fail
         SKIP:
           anyOf:
           - type: integer
           - type: 'null'
           default: null
           title: Skip
+        'NULL':
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: 'Null'
       title: TestEnvironmentMiscCount
       type: object
     TestHistory:
@@ -926,6 +836,94 @@ components:
       required:
       - testHistory
       title: TestResponse
+      type: object
+    TestStatusCount:
+      properties:
+        PASS:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Pass
+        ERROR:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Error
+        FAIL:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Fail
+        SKIP:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Skip
+        'NULL':
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: 'Null'
+      title: TestStatusCount
+      type: object
+    TestSummary:
+      properties:
+        status:
+          $ref: '#/components/schemas/TestStatusCount'
+        architectures:
+          items:
+            $ref: '#/components/schemas/TestArchSummaryItem'
+          title: Architectures
+          type: array
+        configs:
+          additionalProperties:
+            $ref: '#/components/schemas/TestStatusCount'
+          title: Configs
+          type: object
+        issues:
+          items:
+            $ref: '#/components/schemas/TestIssuesItem'
+          title: Issues
+          type: array
+        unknown_issues:
+          title: Unknown Issues
+          type: integer
+        enviroment_compatible:
+          additionalProperties:
+            $ref: '#/components/schemas/TestEnvironmentCompatibleCount'
+          title: Enviroment Compatible
+          type: object
+        enviroment_misc:
+          additionalProperties:
+            $ref: '#/components/schemas/TestEnvironmentMiscCount'
+          title: Enviroment Misc
+          type: object
+        fail_reasons:
+          additionalProperties:
+            type: integer
+          title: Fail Reasons
+          type: object
+        failed_platforms:
+          items:
+            type: string
+          title: Failed Platforms
+          type: array
+      required:
+      - status
+      - architectures
+      - configs
+      - issues
+      - unknown_issues
+      - enviroment_compatible
+      - enviroment_misc
+      - fail_reasons
+      - failed_platforms
+      title: TestSummary
       type: object
     Tree:
       type: object
