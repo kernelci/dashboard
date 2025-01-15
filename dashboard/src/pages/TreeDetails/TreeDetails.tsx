@@ -188,10 +188,10 @@ function TreeDetails(): JSX.Element {
   );
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
-    const { valid, invalid } = data?.buildsSummary.builds ?? {};
-    const { testStatusSummary } = data ?? {};
+    const { valid, invalid } = data?.summary.builds.status ?? {};
+    const { status: testStatusSummary } = data?.summary.tests ?? {};
 
-    const { bootStatusSummary } = data ?? {};
+    const { status: bootStatusSummary } = data?.summary.boots ?? {};
 
     return {
       'global.tests': testStatusSummary ? (
@@ -226,12 +226,12 @@ function TreeDetails(): JSX.Element {
 
   const treeDetailsData: ITreeDetails = useMemo(
     () => ({
-      architectures: sanitizeArchs(data?.buildsSummary.architectures),
-      configs: sanitizeConfigs(data?.buildsSummary.configs),
+      architectures: sanitizeArchs(data?.summary.builds.architectures),
+      configs: sanitizeConfigs(data?.summary.builds.configs),
       builds: sanitizeBuilds(data?.builds),
-      buildsSummary: sanitizeBuildsSummary(data?.buildsSummary.builds),
-      buildsIssues: data?.buildsIssues || [],
-      failedBuildsWithUnknownIssues: data?.failedBuildsWithUnknownIssues,
+      buildsSummary: sanitizeBuildsSummary(data?.summary.builds.status),
+      buildsIssues: data?.summary.builds.issues || [],
+      failedBuildsWithUnknownIssues: data?.summary.builds.unknown_issues,
     }),
     [data],
   );
@@ -279,7 +279,7 @@ function TreeDetails(): JSX.Element {
             gitUrl={treeInfo?.gitUrl}
             commitHash={treeId}
             commitName={treeInfo?.commitName}
-            commitTags={data?.git_commit_tags}
+            commitTags={data?.summary.git_commit_tags}
           />
         </div>
         <QuerySwitcher
@@ -290,18 +290,18 @@ function TreeDetails(): JSX.Element {
           <div className="mt-5">
             <MemoizedHardwareUsed
               title={<FormattedMessage id="treeDetails.hardwareUsed" />}
-              hardwareUsed={data?.hardwareUsed}
+              hardwareUsed={data?.summary.hardware}
               diffFilter={diffFilter}
             />
           </div>
         </QuerySwitcher>
         <div className="flex flex-col pb-2">
-          {data?.treeUrl && (
+          {data?.summary.tree_url && (
             <div className="sticky top-[4.5rem] z-10">
               <div className="absolute right-0 top-2 py-4">
                 <TreeDetailsFilter
                   paramFilter={diffFilter}
-                  treeUrl={data.treeUrl}
+                  treeUrl={data.summary.tree_url}
                 />
               </div>
             </div>

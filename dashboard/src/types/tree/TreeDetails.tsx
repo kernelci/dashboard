@@ -63,38 +63,40 @@ export type TTreeTestsData = {
   environmentCompatible: PropertyStatusCounts;
 };
 
-export type TTreeTestsFullData = {
-  bootArchSummary: ArchCompilerStatus[];
-  testArchSummary: ArchCompilerStatus[];
-  bootFailReasons: ErrorMessageCounts;
-  testFailReasons: ErrorMessageCounts;
-  testPlatformsWithErrors: string[];
-  bootPlatformsFailing: string[];
-  testConfigs: PropertyStatusCounts;
-  bootConfigs: PropertyStatusCounts;
-  testStatusSummary: StatusCounts;
-  bootStatusSummary: StatusCounts;
-  bootHistory: TestHistory[];
-  testHistory: TestHistory[];
-  bootIssues: TIssue[];
-  testIssues: TIssue[];
-  testEnvironmentCompatible: PropertyStatusCounts;
-  bootEnvironmentCompatible: PropertyStatusCounts;
-  testEnvironmentMisc: PropertyStatusCounts;
-  bootEnvironmentMisc: PropertyStatusCounts;
-  hardwareUsed: string[];
-  failedTestsWithUnknownIssues: number;
-  failedBootsWithUnknownIssues: number;
-  builds: BuildsTabBuild[];
-  buildsSummary: {
-    builds: BuildStatus;
-    configs: Record<string, BuildStatus>;
-    architectures: Architecture;
-  };
-  buildsIssues: TIssue[];
-  failedBuildsWithUnknownIssues: number;
-  treeUrl: string;
+type TestSummary = {
+  status: StatusCounts;
+  architectures: ArchCompilerStatus[];
+  configs: PropertyStatusCounts;
+  issues: TIssue[];
+  unknown_issues: number;
+  enviroment_compatible: PropertyStatusCounts;
+  enviroment_misc: PropertyStatusCounts;
+  fail_reasons: Record<string, number>;
+  failed_platforms: string[];
+};
+
+type BuildSummary = {
+  status: BuildStatus;
+  architectures: Architecture;
+  configs: Record<string, BuildStatus>;
+  issues: TIssue[];
+  unknown_issues: number;
+};
+
+type Summary = {
+  boots: TestSummary;
+  builds: BuildSummary;
+  tests: TestSummary;
+  hardware: string[];
+  tree_url: string;
   git_commit_tags: string[];
+};
+
+export type TTreeTestsFullData = {
+  builds: BuildsTabBuild[];
+  boots: TestHistory[];
+  tests: TestHistory[];
+  summary: Summary;
 };
 
 export const possibleTabs = [
