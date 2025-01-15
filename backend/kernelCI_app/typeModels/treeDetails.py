@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Set, Union
 
 
 class TreeLatestPathParameters(BaseModel):
@@ -8,7 +8,7 @@ class TreeLatestPathParameters(BaseModel):
     branch: str
 
 
-class StatusCount(BaseModel):
+class TestStatusCount(BaseModel):
     PASS: Optional[int] = None
     ERROR: Optional[int] = None
     FAIL: Optional[int] = None
@@ -19,32 +19,23 @@ class StatusCount(BaseModel):
 class TestArchSummaryItem(BaseModel):
     arch: str
     compiler: str
-    status: StatusCount
+    status: TestStatusCount
 
 
-class BuildsSummary(BaseModel):
+class BuildStatusCount(BaseModel):
     valid: int
     invalid: int
     null: int
 
 
-class Configs(BaseModel):
+class BuildConfigs(BuildStatusCount):
     valid: int
     invalid: int
     null: int
 
 
-class Architectures(BaseModel):
-    valid: int
-    invalid: int
-    null: int
+class BuildArchitectures(BuildStatusCount):
     compilers: List[str]
-
-
-class BuildsSummaryDetails(BaseModel):
-    builds: BuildsSummary
-    configs: Dict[str, Configs]
-    architectures: Dict[str, Architectures]
 
 
 class IncidentsInfo(BaseModel):
@@ -58,18 +49,12 @@ class TestIssuesItem(BaseModel):
     incidents_info: IncidentsInfo
 
 
-class TestEnvironmentCompatibleCount(BaseModel):
-    FAIL: int
-    PASS: int
-    SKIP: int
+class TestEnvironmentCompatibleCount(TestStatusCount):
+    pass
 
 
-class TestEnvironmentMiscCount(BaseModel):
-    PASS: Optional[int] = None
-    FAIL: Optional[int] = None
-    ERROR: Optional[int] = None
-    NULL: Optional[int] = None
-    SKIP: Optional[int] = None
+class TestEnvironmentMiscCount(TestStatusCount):
+    pass
 
 
 class BuildsIssuesItem(BaseModel):
@@ -79,31 +64,37 @@ class BuildsIssuesItem(BaseModel):
     incidents_info: IncidentsInfo
 
 
+class TestSummary(BaseModel):
+    status: TestStatusCount
+    architectures: List[TestArchSummaryItem]
+    configs: Dict[str, TestStatusCount]
+    issues: List[TestIssuesItem]
+    unknown_issues: int
+    enviroment_compatible: Dict[str, TestEnvironmentCompatibleCount]
+    enviroment_misc: Dict[str, TestEnvironmentMiscCount]
+    fail_reasons: Dict[str, int]
+    failed_platforms: List[str]
+
+
+class BuildSummary(BaseModel):
+    status: BuildStatusCount
+    architectures: Dict[str, BuildArchitectures]
+    configs: Dict[str, BuildConfigs]
+    issues: List[BuildsIssuesItem]
+    unknown_issues: int
+
+
+class Summary(BaseModel):
+    builds: BuildSummary
+    boots: TestSummary
+    tests: TestSummary
+    hardware: Set[str]
+    tree_url: str
+    git_commit_tags: Optional[List[str]]
+
+
 class SummaryResponse(BaseModel):
-    bootArchSummary: List
-    testArchSummary: List[TestArchSummaryItem]
-    buildsSummary: BuildsSummaryDetails
-    bootFailReasons: Dict
-    testFailReasons: Dict[str, int]
-    testPlatformsWithErrors: List[str]
-    bootPlatformsFailing: List
-    testConfigs: Dict[str, StatusCount]
-    bootConfigs: Dict
-    testStatusSummary: StatusCount
-    bootStatusSummary: Dict
-    bootIssues: List
-    testIssues: List[TestIssuesItem]
-    testEnvironmentCompatible: Dict[str, TestEnvironmentCompatibleCount]
-    bootEnvironmentCompatible: Dict
-    testEnvironmentMisc: Dict[str, TestEnvironmentMiscCount]
-    bootEnvironmentMisc: Dict
-    hardwareUsed: List[str]
-    failedTestsWithUnknownIssues: int
-    failedBootsWithUnknownIssues: int
-    buildsIssues: List[BuildsIssuesItem]
-    failedBuildsWithUnknownIssues: int
-    treeUrl: Optional[str]
-    git_commit_tags: Optional[List]
+    summary: Summary
 
 
 class Misc(BaseModel):
