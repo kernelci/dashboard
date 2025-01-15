@@ -72,3 +72,7 @@ def string_to_json(string: str) -> Optional[dict]:
         except json.JSONDecodeError as e:
             log_message(e.msg)
             return None
+
+
+def is_boot(path: str | None) -> bool:
+    return path is not None and (path == "boot" or path.startswith("boot."))
