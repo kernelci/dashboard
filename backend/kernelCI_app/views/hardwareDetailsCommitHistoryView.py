@@ -218,4 +218,4 @@ class HardwareDetailsCommitHistoryView(View):
                 error_message="Commit history not found", status_code=HTTPStatus.NOT_FOUND
             )
 
-        return JsonResponse({"commitHistoryTable": commit_history}, safe=False)
+        return JsonResponse({"commit_history_table": commit_history}, safe=False)

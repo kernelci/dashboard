@@ -237,13 +237,13 @@ function HardwareDetails(): JSX.Element {
       prepareTreeItems({
         isCommitHistoryDataLoading: commitHistoryIsLoading,
         treeItems: data?.trees,
-        commitHistoryData: commitHistoryData?.commitHistoryTable,
+        commitHistoryData: commitHistoryData?.commit_history_table,
         isMainPageLoading: isPlaceholderData || isLoading,
       }),
     [
       commitHistoryIsLoading,
       data?.trees,
-      commitHistoryData?.commitHistoryTable,
+      commitHistoryData?.commit_history_table,
       isPlaceholderData,
       isLoading,
     ],
