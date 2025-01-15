@@ -1,5 +1,6 @@
+from datetime import datetime
 from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 
 class TreeLatestPathParameters(BaseModel):
@@ -103,3 +104,45 @@ class SummaryResponse(BaseModel):
     failedBuildsWithUnknownIssues: int
     treeUrl: Optional[str]
     git_commit_tags: Optional[List]
+
+
+class TestHistory(BaseModel):
+    id: str
+    status: Optional[str]
+    duration: Optional[Union[int, float]]
+    path: Optional[str]
+    startTime: Optional[Union[datetime, str]]
+    hardware: Optional[Union[str, List[str]]]
+
+
+class BootResponse(BaseModel):
+    bootHistory: List[TestHistory]
+
+
+class TestResponse(BaseModel):
+    testHistory: List[TestHistory]
+
+
+class BuildItem(BaseModel):
+    id: str
+    architecture: Optional[str]
+    config_name: Optional[str]
+    misc: Optional[dict]
+    config_url: Optional[str]
+    compiler: Optional[str]
+    valid: Optional[bool]
+    duration: Optional[Union[int, float]]
+    log_url: Optional[str]
+    start_time: Optional[Union[datetime, str]]
+    git_repository_url: Optional[str]
+    git_repository_branch: Optional[str]
+
+
+class BuildsResponse(BaseModel):
+    builds: List[BuildItem]
+
+
+class TreeQueryParameters(BaseModel):
+    origin: str = "maestro"
+    git_url: str
+    git_branch: str
