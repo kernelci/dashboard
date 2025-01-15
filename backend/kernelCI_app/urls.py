@@ -33,6 +33,18 @@ urlpatterns = [
          views.TreeDetailsSummary.as_view(),
          name="treeDetailsSummaryView"
          ),
+    path("tree/<str:commit_hash>/builds",
+         views.TreeDetailsBuilds.as_view(),
+         name="treeDetailsBuildsView"
+         ),
+    path("tree/<str:commit_hash>/boots",
+         views.TreeDetailsBoots.as_view(),
+         name="treeDetailsBootsView"
+         ),
+    path("tree/<str:commit_hash>/tests",
+         views.TreeDetailsTests.as_view(),
+         name="treeDetailsTestsView"
+         ),
     path("tree/<str:commit_hash>/commits",
          viewCache(views.TreeCommitsHistory),
          name="treeCommits"

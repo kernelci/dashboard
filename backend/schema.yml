@@ -4,24 +4,6 @@ info:
   version: 1.0.0
   description: API for the KernelCI dashboard
 paths:
-  /api/build/{build_id}/status-count:
-    get:
-      operationId: build_status_count_retrieve
-      parameters:
-      - in: path
-        name: build_id
-        schema:
-          type: string
-        required: true
-      tags:
-      - build
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
   /api/log-downloader/:
     get:
       operationId: log_downloader_retrieve
@@ -198,6 +180,86 @@ paths:
                 items:
                   $ref: '#/components/schemas/Tree'
           description: ''
+  /api/tree/{commit_hash}/boots:
+    get:
+      operationId: tree_boots_retrieve
+      parameters:
+      - in: path
+        name: commit_hash
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: git_branch
+        schema:
+          title: Git Branch
+          type: string
+        required: true
+      - in: query
+        name: git_url
+        schema:
+          title: Git Url
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BootResponse'
+          description: ''
+  /api/tree/{commit_hash}/builds:
+    get:
+      operationId: tree_builds_retrieve
+      parameters:
+      - in: path
+        name: commit_hash
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: git_branch
+        schema:
+          title: Git Branch
+          type: string
+        required: true
+      - in: query
+        name: git_url
+        schema:
+          title: Git Url
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildsResponse'
+          description: ''
   /api/tree/{commit_hash}/commits:
     get:
       operationId: tree_commits_retrieve
@@ -238,6 +300,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/SummaryResponse'
           description: ''
+  /api/tree/{commit_hash}/tests:
+    get:
+      operationId: tree_tests_retrieve
+      parameters:
+      - in: path
+        name: commit_hash
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: git_branch
+        schema:
+          title: Git Branch
+          type: string
+        required: true
+      - in: query
+        name: git_url
+        schema:
+          title: Git Url
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestResponse'
+          description: ''
 components:
   schemas:
     Architectures:
@@ -263,6 +365,95 @@ components:
       - compilers
       title: Architectures
       type: object
+    BootResponse:
+      properties:
+        bootHistory:
+          items:
+            $ref: '#/components/schemas/TestHistory'
+          title: Boothistory
+          type: array
+      required:
+      - bootHistory
+      title: BootResponse
+      type: object
+    BuildItem:
+      properties:
+        id:
+          title: Id
+          type: string
+        architecture:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Architecture
+        config_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Config Name
+        misc:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Misc
+        config_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Config Url
+        compiler:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Compiler
+        valid:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Valid
+        duration:
+          anyOf:
+          - type: integer
+          - type: number
+          - type: 'null'
+          title: Duration
+        log_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Log Url
+        start_time:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: string
+          - type: 'null'
+          title: Start Time
+        git_repository_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Git Repository Url
+        git_repository_branch:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Git Repository Branch
+      required:
+      - id
+      - architecture
+      - config_name
+      - misc
+      - config_url
+      - compiler
+      - valid
+      - duration
+      - log_url
+      - start_time
+      - git_repository_url
+      - git_repository_branch
+      title: BuildItem
+      type: object
     BuildsIssuesItem:
       properties:
         id:
@@ -286,6 +477,17 @@ components:
       - report_url
       - incidents_info
       title: BuildsIssuesItem
+      type: object
+    BuildsResponse:
+      properties:
+        builds:
+          items:
+            $ref: '#/components/schemas/BuildItem'
+          title: Builds
+          type: array
+      required:
+      - builds
+      title: BuildsResponse
       type: object
     BuildsSummary:
       properties:
@@ -350,40 +552,39 @@ components:
       - incidentsCount
       title: IncidentsInfo
       type: object
-    Status:
+    StatusCount:
       properties:
         PASS:
           anyOf:
           - type: integer
           - type: 'null'
+          default: null
           title: Pass
         ERROR:
           anyOf:
           - type: integer
           - type: 'null'
+          default: null
           title: Error
         FAIL:
           anyOf:
           - type: integer
           - type: 'null'
+          default: null
           title: Fail
         SKIP:
           anyOf:
           - type: integer
           - type: 'null'
+          default: null
           title: Skip
         'NULL':
           anyOf:
           - type: integer
           - type: 'null'
+          default: null
           title: 'Null'
-      required:
-      - PASS
-      - ERROR
-      - FAIL
-      - SKIP
-      - 'NULL'
-      title: Status
+      title: StatusCount
       type: object
     SummaryResponse:
       properties:
@@ -417,14 +618,14 @@ components:
           type: array
         testConfigs:
           additionalProperties:
-            $ref: '#/components/schemas/Status'
+            $ref: '#/components/schemas/StatusCount'
           title: Testconfigs
           type: object
         bootConfigs:
           title: Bootconfigs
           type: object
         testStatusSummary:
-          $ref: '#/components/schemas/Status'
+          $ref: '#/components/schemas/StatusCount'
         bootStatusSummary:
           title: Bootstatussummary
           type: object
@@ -439,7 +640,7 @@ components:
           type: array
         testEnvironmentCompatible:
           additionalProperties:
-            $ref: '#/components/schemas/TestEnvironmentCompatible'
+            $ref: '#/components/schemas/TestEnvironmentCompatibleCount'
           title: Testenvironmentcompatible
           type: object
         bootEnvironmentCompatible:
@@ -447,7 +648,7 @@ components:
           type: object
         testEnvironmentMisc:
           additionalProperties:
-            $ref: '#/components/schemas/TestEnvironmentMisc'
+            $ref: '#/components/schemas/TestEnvironmentMiscCount'
           title: Testenvironmentmisc
           type: object
         bootEnvironmentMisc:
@@ -477,6 +678,12 @@ components:
           - type: string
           - type: 'null'
           title: Treeurl
+        git_commit_tags:
+          anyOf:
+          - items: {}
+            type: array
+          - type: 'null'
+          title: Git Commit Tags
       required:
       - bootArchSummary
       - testArchSummary
@@ -501,6 +708,7 @@ components:
       - buildsIssues
       - failedBuildsWithUnknownIssues
       - treeUrl
+      - git_commit_tags
       title: SummaryResponse
       type: object
     TestArchSummaryItem:
@@ -512,14 +720,14 @@ components:
           title: Compiler
           type: string
         status:
-          $ref: '#/components/schemas/Status'
+          $ref: '#/components/schemas/StatusCount'
       required:
       - arch
       - compiler
       - status
       title: TestArchSummaryItem
       type: object
-    TestEnvironmentCompatible:
+    TestEnvironmentCompatibleCount:
       properties:
         FAIL:
           title: Fail
@@ -534,42 +742,86 @@ components:
       - FAIL
       - PASS
       - SKIP
-      title: TestEnvironmentCompatible
+      title: TestEnvironmentCompatibleCount
       type: object
-    TestEnvironmentMisc:
+    TestEnvironmentMiscCount:
       properties:
         PASS:
           anyOf:
           - type: integer
           - type: 'null'
+          default: null
           title: Pass
         FAIL:
           anyOf:
           - type: integer
           - type: 'null'
+          default: null
           title: Fail
         ERROR:
           anyOf:
           - type: integer
           - type: 'null'
+          default: null
           title: Error
         'NULL':
           anyOf:
           - type: integer
           - type: 'null'
+          default: null
           title: 'Null'
         SKIP:
           anyOf:
           - type: integer
           - type: 'null'
+          default: null
           title: Skip
+      title: TestEnvironmentMiscCount
+      type: object
+    TestHistory:
+      properties:
+        id:
+          title: Id
+          type: string
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+        duration:
+          anyOf:
+          - type: integer
+          - type: number
+          - type: 'null'
+          title: Duration
+        path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Path
+        startTime:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: string
+          - type: 'null'
+          title: Starttime
+        hardware:
+          anyOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Hardware
       required:
-      - PASS
-      - FAIL
-      - ERROR
-      - 'NULL'
-      - SKIP
-      title: TestEnvironmentMisc
+      - id
+      - status
+      - duration
+      - path
+      - startTime
+      - hardware
+      title: TestHistory
       type: object
     TestIssuesItem:
       properties:
@@ -595,6 +847,17 @@ components:
       - incidents_info
       title: TestIssuesItem
       type: object
+    TestResponse:
+      properties:
+        testHistory:
+          items:
+            $ref: '#/components/schemas/TestHistory'
+          title: Testhistory
+          type: array
+      required:
+      - testHistory
+      title: TestResponse
+      type: object
     Tree:
       type: object
       properties:
@@ -611,6 +874,9 @@ components:
           type: string
         git_commit_name:
           type: string
+        git_commit_tags:
+          type: array
+          items: {}
         patchset_hash:
           type: string
         tree_names:
@@ -628,6 +894,7 @@ components:
       - build_status
       - git_commit_hash
       - git_commit_name
+      - git_commit_tags
       - git_repository_branch
       - git_repository_url
       - patchset_hash
