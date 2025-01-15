@@ -23,7 +23,6 @@ class IssueView(View):
         return record
 
     def sanitize_rows(self, rows) -> List[Issue]:
-
         result: IssueDict = {}
         for row in rows:
             record = self.get_dict_record(row)
@@ -88,7 +87,8 @@ class IssueView(View):
 
             if len(test_issues) == 0:
                 return create_error_response(
-                    error_message="No issues were found for this test", status_code=HTTPStatus.NOT_FOUND
+                    error_message="No issues were found for this test",
+                    status_code=HTTPStatus.NOT_FOUND,
                 )
 
             return JsonResponse(test_issues, safe=False)
@@ -97,10 +97,11 @@ class IssueView(View):
 
             if len(build_issues) == 0:
                 return create_error_response(
-                    error_message="No issues were found for this build", status_code=HTTPStatus.NOT_FOUND
+                    error_message="No issues were found for this build",
+                    status_code=HTTPStatus.NOT_FOUND,
                 )
 
-            return JsonResponse(self.get_build_issues(build_id), safe=False)
+            return JsonResponse(build_issues, safe=False)
         return create_error_response(
             error_message="A test or build ID must be provided"
         )
