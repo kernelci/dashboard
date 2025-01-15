@@ -111,5 +111,5 @@ export type CommitHistory = {
 export type CommitHistoryTable = Record<string, CommitHistory[]>;
 
 export type CommitHistoryResponse = {
-  commitHistoryTable: CommitHistoryTable;
+  commit_history_table: CommitHistoryTable;
 };
