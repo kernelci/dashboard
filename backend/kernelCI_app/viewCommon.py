@@ -19,7 +19,7 @@ def create_details_build_summary(builds: list[BuildDict]):
     arch_summ = {}
 
     for build in builds:
-        status_key = build_status_map[build["valid"]]
+        status_key = build_status_map.get(build["valid"])
         build_summ[status_key] += 1
 
         if config := build["config_name"]:

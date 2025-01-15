@@ -1,7 +1,7 @@
 from collections import defaultdict
 from django.db import connection
 import json
-from typing import Dict, Literal, List, TypedDict
+from typing import Dict, List, TypedDict
 from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
@@ -17,9 +17,6 @@ from kernelCI_app.typeModels.hardwareDetails import (
 )
 from pydantic import ValidationError
 from http import HTTPStatus
-
-
-BuildStatusType = Literal["valid", "invalid", "null"]
 
 
 class GenerateQueryParamsResponse(TypedDict):

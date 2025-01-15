@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Any, Dict, List, Optional, Union
+from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
 from kernelCI_app.typeModels.databases import StatusValues
 from pydantic import BaseModel, BeforeValidator, Field
@@ -45,3 +45,8 @@ class CommitHistoryValidCheckout(BaseModel):
     git_commit_tags: Optional[List[str]] = []
     git_commit_name: Optional[str]
     start_time: datetime
+
+
+type HardwareTreeList = List[Dict[str, str]]
+
+PossibleTestType = Literal["test", "boot"]
