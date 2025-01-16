@@ -210,40 +210,42 @@ const columns: ColumnDef<PreparedTrees>[] = [
     ),
   },
   {
-    accessorKey: 'treeName',
+    accessorKey: 'tree_name',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="globalTable.tree" />
     ),
     cell: ({ row }): JSX.Element => (
       <Tooltip>
-        <TooltipTrigger>{row.getValue('treeName')}</TooltipTrigger>
-        <TooltipContent>{row.original.gitRepositoryUrl}</TooltipContent>
+        <TooltipTrigger>{row.getValue('tree_name')}</TooltipTrigger>
+        <TooltipContent>{row.original.git_repository_url}</TooltipContent>
       </Tooltip>
     ),
   },
   {
-    accessorKey: 'gitRepositoryBranch',
+    accessorKey: 'git_repository_branch',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="globalTable.branch" />
     ),
   },
   {
-    accessorKey: 'headGitCommitName',
+    accessorKey: 'head_git_commit_name',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="globalTable.commitTag" />
     ),
-    cell: ({ row, table }): JSX.Element => (
-      <CommitSelector
-        headCommitName={row.original.headGitCommitName}
-        headCommitHash={row.original.headGitCommitHash}
-        headCommitTags={row.original.headGitCommitTags}
-        selectableCommits={row.original.selectableCommits}
-        isCommitsLoading={row.original.isCommitHistoryDataLoading}
-        treeIndex={row.original.index}
-        rowLength={table.getCoreRowModel().rows.length}
-        isMainPageLoading={row.original.isMainPageLoading}
-      />
-    ),
+    cell: ({ row, table }): JSX.Element => {
+      return (
+        <CommitSelector
+          headCommitName={row.original.head_git_commit_name}
+          headCommitHash={row.original.head_git_commit_hash}
+          headCommitTags={row.original.head_git_commit_tags}
+          selectableCommits={row.original.selectableCommits}
+          isCommitsLoading={row.original.isCommitHistoryDataLoading}
+          treeIndex={row.original.index}
+          rowLength={table.getCoreRowModel().rows.length}
+          isMainPageLoading={row.original.isMainPageLoading}
+        />
+      );
+    },
   },
   {
     accessorKey: 'selectedCommitStatusSummaryBuilds',
@@ -251,7 +253,7 @@ const columns: ColumnDef<PreparedTrees>[] = [
       <TableHeader column={column} intlKey="globalTable.build" />
     ),
     cell: ({ row }): JSX.Element => {
-      const statusSummary = row.original.selectedCommitStatusSummary?.builds;
+      const statusSummary = row.original.selected_commit_status?.builds;
       return (
         <GroupedTestStatus
           fail={statusSummary?.invalid}
@@ -267,7 +269,7 @@ const columns: ColumnDef<PreparedTrees>[] = [
       <TableHeader column={column} intlKey="globalTable.bootStatus" />
     ),
     cell: ({ row }): JSX.Element => {
-      const statusSummary = row.original.selectedCommitStatusSummary?.boots;
+      const statusSummary = row.original.selected_commit_status?.boots;
       return (
         <GroupedTestStatus
           fail={statusSummary?.FAIL}
@@ -286,7 +288,7 @@ const columns: ColumnDef<PreparedTrees>[] = [
       <TableHeader column={column} intlKey="globalTable.test" />
     ),
     cell: ({ row }): JSX.Element => {
-      const statusSummary = row.original.selectedCommitStatusSummary?.tests;
+      const statusSummary = row.original.selected_commit_status?.tests;
       return (
         <GroupedTestStatus
           fail={statusSummary?.FAIL}

@@ -213,17 +213,48 @@ class HardwareDetails(APIView):
             trees=trees, tree_status_summary=self.tree_status_summary
         )
 
+        response = {
+            "builds": self.builds["items"],
+            "boots": self.boots["history"],
+            "tests": self.tests["history"],
+            "summary": {
+                "builds": {
+                    "status": self.builds["summary"]["builds"],
+                    "architectures": self.builds["summary"]["architectures"],
+                    "configs": self.builds["summary"]["configs"],
+                    "issues": self.builds["issues"],
+                    "unknown_issues": self.builds["failedWithUnknownIssues"],
+                },
+                "boots": {
+                    "status": self.boots["statusSummary"],
+                    "architectures": self.boots["archSummary"],
+                    "configs": self.boots["configs"],
+                    "issues": self.boots["issues"],
+                    "unknown_issues": self.boots["failedWithUnknownIssues"],
+                    "platforms": self.boots["platforms"],
+                    "fail_reasons": self.boots["failReasons"],
+                    "failed_platforms": list(self.boots["platformsFailing"]),
+                },
+                "tests": {
+                    "status": self.tests["statusSummary"],
+                    "architectures": self.tests["archSummary"],
+                    "configs": self.tests["configs"],
+                    "issues": self.tests["issues"],
+                    "unknown_issues": self.tests["failedWithUnknownIssues"],
+                    "platforms": self.tests["platforms"],
+                    "fail_reasons": self.tests["failReasons"],
+                    "failed_platforms": list(self.tests["platformsFailing"]),
+
+                },
+                "trees": trees_with_status_summary,
+                "configs": configs,
+                "architectures": archs,
+                "compilers": compilers,
+                "compatibles": self.compatibles,
+            }
+        }
         try:
-            valid_response = HardwareDetailsFullResponse(
-                builds=self.builds,
-                tests=self.tests,
-                boots=self.boots,
-                configs=configs,
-                archs=archs,
-                compilers=compilers,
-                trees=trees_with_status_summary,
-                compatibles=self.compatibles,
-            )
+            valid_response = HardwareDetailsFullResponse(**response)
         except ValidationError as e:
             return Response(data=e.errors(), status=HTTPStatus.BAD_REQUEST)
 

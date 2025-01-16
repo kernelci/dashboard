@@ -59,8 +59,9 @@ const HardwareDetailsTabs = ({
         name: 'global.builds',
         content: (
           <BuildTab
+            buildsSummary={hardwareDetailsData.summary.builds}
             builds={hardwareDetailsData.builds}
-            trees={hardwareDetailsData.trees}
+            trees={hardwareDetailsData.summary.trees}
             hardwareId={hardwareId}
           />
         ),
@@ -71,9 +72,10 @@ const HardwareDetailsTabs = ({
         name: 'global.boots',
         content: (
           <BootsTab
+            bootsSummary={hardwareDetailsData.summary.boots}
             boots={hardwareDetailsData.boots}
             hardwareId={hardwareId}
-            trees={hardwareDetailsData.trees}
+            trees={hardwareDetailsData.summary.trees}
           />
         ),
         rightElement: countElements['global.boots'],
@@ -83,9 +85,10 @@ const HardwareDetailsTabs = ({
         name: 'global.tests',
         content: (
           <TestsTab
+            testsSummary={hardwareDetailsData.summary.tests}
             tests={hardwareDetailsData.tests}
             hardwareId={hardwareId}
-            trees={hardwareDetailsData.trees}
+            trees={hardwareDetailsData.summary.trees}
           />
         ),
         rightElement: countElements['global.tests'],
@@ -93,8 +96,11 @@ const HardwareDetailsTabs = ({
       },
     ],
     [
+      hardwareDetailsData.summary.builds,
+      hardwareDetailsData.summary.trees,
+      hardwareDetailsData.summary.boots,
+      hardwareDetailsData.summary.tests,
       hardwareDetailsData.builds,
-      hardwareDetailsData.trees,
       hardwareDetailsData.boots,
       hardwareDetailsData.tests,
       hardwareId,

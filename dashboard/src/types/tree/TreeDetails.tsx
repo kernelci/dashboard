@@ -63,19 +63,20 @@ export type TTreeTestsData = {
   environmentCompatible: PropertyStatusCounts;
 };
 
-type TestSummary = {
+export type TestSummary = {
   status: StatusCounts;
   architectures: ArchCompilerStatus[];
   configs: PropertyStatusCounts;
   issues: TIssue[];
   unknown_issues: number;
-  enviroment_compatible: PropertyStatusCounts;
-  enviroment_misc: PropertyStatusCounts;
   fail_reasons: Record<string, number>;
   failed_platforms: string[];
+  enviroment_compatible?: PropertyStatusCounts;
+  enviroment_misc?: PropertyStatusCounts;
+  platforms?: PropertyStatusCounts;
 };
 
-type BuildSummary = {
+export type BuildSummary = {
   status: BuildStatus;
   architectures: Architecture;
   configs: Record<string, BuildStatus>;
@@ -83,7 +84,7 @@ type BuildSummary = {
   unknown_issues: number;
 };
 
-type Summary = {
+type TreeSummary = {
   boots: TestSummary;
   builds: BuildSummary;
   tests: TestSummary;
@@ -96,7 +97,7 @@ export type TTreeTestsFullData = {
   builds: BuildsTabBuild[];
   boots: TestHistory[];
   tests: TestHistory[];
-  summary: Summary;
+  summary: TreeSummary;
 };
 
 export const possibleTabs = [

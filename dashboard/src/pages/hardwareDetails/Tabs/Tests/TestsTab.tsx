@@ -31,13 +31,19 @@ import { RedirectFrom } from '@/types/general';
 
 import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
-interface TTestsTab {
+interface ITestsTab {
   tests: THardwareDetails['tests'];
-  trees: THardwareDetails['trees'];
+  testsSummary: THardwareDetails['summary']['tests'];
+  trees: THardwareDetails['summary']['trees'];
   hardwareId: string;
 }
 
-const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
+const TestsTab = ({
+  testsSummary,
+  tests,
+  trees,
+  hardwareId,
+}: ITestsTab): JSX.Element => {
   const { tableFilter, diffFilter } = useSearch({
     from: '/hardware/$hardwareId',
   });
@@ -80,8 +86,8 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
   );
 
   const platformItems = useMemo(
-    () => sanitizePlatforms(tests.platforms),
-    [tests.platforms],
+    () => sanitizePlatforms(testsSummary.platforms),
+    [testsSummary.platforms],
   );
 
   return (
@@ -90,17 +96,17 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
         <div>
           <MemoizedStatusCard
             title={<FormattedMessage id="testsTab.testStatus" />}
-            statusCounts={tests.statusSummary}
+            statusCounts={testsSummary.status}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
-            archCompilerErrors={tests.archSummary}
+            archCompilerErrors={testsSummary.architectures}
             diffFilter={diffFilter}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
-            issues={tests.issues}
-            failedWithUnknownIssues={tests.failedWithUnknownIssues}
+            issues={testsSummary.issues}
+            failedWithUnknownIssues={testsSummary.unknown_issues}
             diffFilter={diffFilter}
             issueFilterSection="testIssue"
             detailsId={hardwareId}
@@ -114,7 +120,7 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
           />
           <MemoizedConfigList
             title={<FormattedMessage id="bootsTab.configs" />}
-            configStatusCounts={tests.configs}
+            configStatusCounts={testsSummary.configs}
             diffFilter={diffFilter}
           />
           <MemoizedPlatformsCard
@@ -127,14 +133,14 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
       <MobileGrid>
         <MemoizedStatusCard
           title={<FormattedMessage id="bootsTab.bootStatus" />}
-          statusCounts={tests.statusSummary}
+          statusCounts={testsSummary.status}
         />
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList
               title={<FormattedMessage id="bootsTab.configs" />}
-              configStatusCounts={tests.configs}
+              configStatusCounts={testsSummary.configs}
               diffFilter={diffFilter}
             />
             <MemoizedPlatformsCard
@@ -144,13 +150,13 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
-              archCompilerErrors={tests.archSummary}
+              archCompilerErrors={testsSummary.architectures}
               diffFilter={diffFilter}
             />
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
-              issues={tests.issues}
-              failedWithUnknownIssues={tests.failedWithUnknownIssues}
+              issues={testsSummary.issues}
+              failedWithUnknownIssues={testsSummary.unknown_issues}
               diffFilter={diffFilter}
               issueFilterSection="testIssue"
               detailsId={hardwareId}
@@ -161,7 +167,7 @@ const TestsTab = ({ tests, trees, hardwareId }: TTestsTab): JSX.Element => {
       </MobileGrid>
       <HardwareDetailsTestTable
         tableKey="hardwareDetailsTests"
-        testHistory={tests.history}
+        testHistory={tests}
         filter={tableFilter.testsTable}
         hardwareId={hardwareId}
         onClickFilter={onClickFilter}

@@ -16,9 +16,11 @@ from kernelCI_app.helpers.treeDetails import (
     is_test_boots_test,
 )
 from kernelCI_app.typeModels.treeDetails import (
-    TestHistory,
     TestResponse,
     TreeQueryParameters,
+)
+from kernelCI_app.typeModels.commonDetails import (
+    TestHistoryItem
 )
 from kernelCI_app.utils import (
     Issue,
@@ -47,7 +49,7 @@ class TreeDetailsTests(APIView):
 
         self.processedTests.add(test_id)
 
-        TestHistory(**history_item)
+        TestHistoryItem(**history_item)
 
         self.testHistory.append(history_item)
 

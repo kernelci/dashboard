@@ -15,7 +15,7 @@ from kernelCI_app.helpers.treeDetails import (
     get_tree_details_data,
 )
 from kernelCI_app.typeModels.treeDetails import (
-    BuildItem,
+    BuildHistoryItem,
     BuildsResponse,
     TreeQueryParameters,
 )
@@ -43,7 +43,7 @@ class TreeDetailsBuilds(APIView):
 
         build_item = get_build(row_data)
 
-        BuildItem(**build_item)
+        BuildHistoryItem(**build_item)
 
         self.builds.append(build_item)
 

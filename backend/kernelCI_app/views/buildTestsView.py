@@ -17,16 +17,4 @@ class BuildTests(View):
                 status_code=HTTPStatus.NOT_FOUND,
             )
 
-        json_result = [
-            {
-                "id": test["id"],
-                "duration": test["duration"],
-                "status": test["status"],
-                "path": test["path"],
-                "start_time": test["start_time"],
-                "hardware": test["environment_compatible"],
-            }
-            for test in result
-        ]
-
-        return JsonResponse(json_result, safe=False)
+        return JsonResponse(list(result), safe=False)
