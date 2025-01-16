@@ -200,6 +200,13 @@ def get_current_row_data(current_row: dict) -> dict:
         "path": current_row_data["test_path"],
         "startTime": current_row_data["test_start_time"],
         "hardware": current_row[tmp_test_env_comp_key],
+        "config": current_row_data["build_config_name"],
+        "log_url": current_row_data["test_log_url"],
+        "architecture": current_row_data["build_architecture"],
+        "compiler": current_row_data["build_compiler"],
+        "misc": {
+            "platform": current_row_data["test_platform"]
+        }
     }
 
     return current_row_data
