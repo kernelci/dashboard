@@ -13,6 +13,7 @@ class ExceptionWithJsonResponse(Exception):
         return self.json_response
 
 
+# deprecated, should use APIView and return a Response from rest_framework.response instead
 def create_error_response(
     error_message: str, status_code: HTTPStatus = HTTPStatus.BAD_REQUEST
 ) -> JsonResponse:
