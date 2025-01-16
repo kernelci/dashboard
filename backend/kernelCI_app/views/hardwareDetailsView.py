@@ -1,12 +1,10 @@
 from collections import defaultdict
 from datetime import datetime
 import json
-from django.http import JsonResponse
 from django.utils.decorators import method_decorator
-from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+from drf_spectacular.utils import extend_schema
 from http import HTTPStatus
-from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.hardwareDetails import (
     assign_default_record_values,
@@ -29,6 +27,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     unstable_parse_post_body,
 )
 from kernelCI_app.typeModels.hardwareDetails import (
+    HardwareDetailsFullResponse,
     HardwareTreeList,
     PossibleTestType,
 )
@@ -37,6 +36,8 @@ from kernelCI_app.utils import (
 )
 from kernelCI_app.viewCommon import create_details_build_summary
 from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from typing import Dict, List, Set
 
 
@@ -46,7 +47,7 @@ from typing import Dict, List, Set
 # also the csrf protection require the usage of cookies which is not currently
 # supported in this project
 @method_decorator(csrf_exempt, name="dispatch")
-class HardwareDetails(View):
+class HardwareDetails(APIView):
     required_params_get = ["origin"]
 
     def __init__(self):
@@ -152,17 +153,26 @@ class HardwareDetails(View):
         )
 
     # Using post to receive a body request
-    def post(self, request, hardware_id) -> JsonResponse:
+    @extend_schema(
+        responses=HardwareDetailsFullResponse,
+    )
+    def post(self, request, hardware_id):
         try:
             unstable_parse_post_body(instance=self, request=request)
         except ValidationError as e:
-            return create_error_response(e.json())
+            return Response(data={"error": e.json()}, status=HTTPStatus.BAD_REQUEST)
         except json.JSONDecodeError:
-            return create_error_response(
-                "Invalid body, request body must be a valid json string"
+            return Response(
+                data={"error": "Invalid body, request body must be a valid json string"},
+                status=HTTPStatus.BAD_REQUEST,
             )
         except (ValueError, TypeError):
-            return create_error_response("limitTimestampInSeconds must be a Unix Timestamp")
+            return Response(
+                data={
+                    "error": "startTimeStamp and endTimeStamp must be a Unix Timestamp"
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
         trees = get_hardware_trees_data(
             hardware_id=hardware_id,
@@ -185,8 +195,8 @@ class HardwareDetails(View):
         )
 
         if len(records) == 0:
-            return create_error_response(
-                error_message="Hardware not found", status_code=HTTPStatus.NOT_FOUND
+            return Response(
+                data={"error": "Hardware not found"}, status=HTTPStatus.NOT_FOUND
             )
 
         is_all_selected = len(self.selected_commits) == 0
@@ -203,16 +213,18 @@ class HardwareDetails(View):
             trees=trees, tree_status_summary=self.tree_status_summary
         )
 
-        return JsonResponse(
-            {
-                "builds": self.builds,
-                "tests": self.tests,
-                "boots": self.boots,
-                "configs": configs,
-                "archs": archs,
-                "compilers": compilers,
-                "trees": trees_with_status_summary,
-                "compatibles": self.compatibles,
-            },
-            safe=False,
-        )
+        try:
+            valid_response = HardwareDetailsFullResponse(
+                builds=self.builds,
+                tests=self.tests,
+                boots=self.boots,
+                configs=configs,
+                archs=archs,
+                compilers=compilers,
+                trees=trees_with_status_summary,
+                compatibles=self.compatibles,
+            )
+        except ValidationError as e:
+            return Response(data=e.errors(), status=HTTPStatus.BAD_REQUEST)
+
+        return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)

@@ -4,6 +4,28 @@ info:
   version: 1.0.0
   description: API for the KernelCI dashboard
 paths:
+  /api/hardware/{hardware_id}:
+    post:
+      operationId: hardware_create
+      parameters:
+      - in: path
+        name: hardware_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - hardware
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareDetailsFullResponse'
+          description: ''
   /api/log-downloader/:
     get:
       operationId: log_downloader_retrieve
@@ -543,6 +565,53 @@ components:
       - 'null'
       title: Configs
       type: object
+    HardwareDetailsFullResponse:
+      properties:
+        builds:
+          title: Builds
+          type: object
+        tests:
+          title: Tests
+          type: object
+        boots:
+          title: Boots
+          type: object
+        configs:
+          items:
+            type: string
+          title: Configs
+          type: array
+        archs:
+          items:
+            type: string
+          title: Archs
+          type: array
+        compilers:
+          items:
+            type: string
+          title: Compilers
+          type: array
+        trees:
+          items:
+            type: object
+          title: Trees
+          type: array
+        compatibles:
+          items:
+            type: string
+          title: Compatibles
+          type: array
+      required:
+      - builds
+      - tests
+      - boots
+      - configs
+      - archs
+      - compilers
+      - trees
+      - compatibles
+      title: HardwareDetailsFullResponse
+      type: object
     IncidentsInfo:
       properties:
         incidentsCount:
@@ -862,13 +931,16 @@ components:
       type: object
       properties:
         build_status:
-          type: string
+          type: object
+          additionalProperties: {}
           readOnly: true
         test_status:
-          type: string
+          type: object
+          additionalProperties: {}
           readOnly: true
         boot_status:
-          type: string
+          type: object
+          additionalProperties: {}
           readOnly: true
         git_commit_hash:
           type: string

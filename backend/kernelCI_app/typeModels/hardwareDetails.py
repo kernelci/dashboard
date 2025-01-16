@@ -47,6 +47,17 @@ class CommitHistoryValidCheckout(BaseModel):
     start_time: datetime
 
 
+class HardwareDetailsFullResponse(BaseModel):
+    builds: Dict
+    tests: Dict
+    boots: Dict
+    configs: List[str]
+    archs: List[str]
+    compilers: List[str]
+    trees: List[Dict]
+    compatibles: List[str]
+
+
 type HardwareTreeList = List[Dict[str, str]]
 
 PossibleTestType = Literal["test", "boot"]

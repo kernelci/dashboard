@@ -1,3 +1,4 @@
+from typing import Dict
 from rest_framework import serializers
 from kernelCI_app.models import Checkouts
 
@@ -30,10 +31,10 @@ class TreeSerializer(serializers.Serializer):
     class Meta():
         fields = ['build_status', 'test_status', 'git_commit_hash', 'patchset_hash']
 
-    def get_repository_url(self, obj):
+    def get_repository_url(self, obj) -> str:
         return obj.id
 
-    def get_build_status(self, obj):
+    def get_build_status(self, obj) -> Dict:
         return {
             "valid": obj.valid_builds,
             "invalid": obj.invalid_builds,
@@ -41,7 +42,7 @@ class TreeSerializer(serializers.Serializer):
             "total": obj.total_builds
         }
 
-    def get_test_status(self, obj):
+    def get_test_status(self, obj) -> Dict:
         return {
             "fail": obj.fail_tests,
             "error": obj.error_tests,
@@ -53,7 +54,7 @@ class TreeSerializer(serializers.Serializer):
             "total": obj.total_tests
         }
 
-    def get_boot_status(self, obj):
+    def get_boot_status(self, obj) -> Dict:
         return {
             "fail": obj.fail_boots,
             "error": obj.error_boots,
