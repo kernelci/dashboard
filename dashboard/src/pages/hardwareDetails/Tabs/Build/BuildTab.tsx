@@ -25,13 +25,19 @@ import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
-interface TBuildTab {
+interface IBuildTab {
   builds: THardwareDetails['builds'];
-  trees: THardwareDetails['trees'];
+  buildsSummary: THardwareDetails['summary']['builds'];
+  trees: THardwareDetails['summary']['trees'];
   hardwareId: string;
 }
 
-const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
+const BuildTab = ({
+  buildsSummary,
+  builds,
+  hardwareId,
+  trees,
+}: IBuildTab): JSX.Element => {
   const navigate = useNavigate({
     from: '/hardware/$hardwareId',
   });
@@ -66,19 +72,16 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
   );
 
   const archSummary = useMemo(
-    () => sanitizeArchs(builds.summary.architectures),
-    [builds.summary.architectures],
+    () => sanitizeArchs(buildsSummary.architectures),
+    [buildsSummary.architectures],
   );
 
   const configsItems = useMemo(
-    () => sanitizeConfigs(builds.summary.configs),
-    [builds.summary.configs],
+    () => sanitizeConfigs(buildsSummary.configs),
+    [buildsSummary.configs],
   );
 
-  const buildItems = useMemo(
-    () => sanitizeBuilds(builds.items),
-    [builds.items],
-  );
+  const buildItems = useMemo(() => sanitizeBuilds(builds), [builds]);
 
   return (
     <div className="flex flex-col gap-8 pt-4">
@@ -86,7 +89,7 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
         <div>
           <MemoizedStatusCard
             toggleFilterBySection={toggleFilterBySection}
-            buildsSummary={builds.summary.builds}
+            buildsSummary={buildsSummary.status}
           />
           <MemoizedErrorsSummaryBuild
             summaryBody={archSummary}
@@ -95,8 +98,8 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
-            issues={builds.issues}
-            failedWithUnknownIssues={builds.failedWithUnknownIssues}
+            issues={buildsSummary.issues}
+            failedWithUnknownIssues={buildsSummary.unknown_issues}
             diffFilter={diffFilter}
             issueFilterSection="buildIssue"
             detailsId={hardwareId}
@@ -119,7 +122,7 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
         <MemoizedStatusCard
           toggleFilterBySection={toggleFilterBySection}
-          buildsSummary={builds.summary.builds}
+          buildsSummary={buildsSummary.status}
         />
         <InnerMobileGrid>
           <MemoizedErrorsSummaryBuild
@@ -135,8 +138,8 @@ const BuildTab = ({ builds, hardwareId, trees }: TBuildTab): JSX.Element => {
         </InnerMobileGrid>
         <MemoizedIssuesList
           title={<FormattedMessage id="global.issues" />}
-          issues={builds.issues}
-          failedWithUnknownIssues={builds.failedWithUnknownIssues}
+          issues={buildsSummary.issues}
+          failedWithUnknownIssues={buildsSummary.unknown_issues}
           diffFilter={diffFilter}
           issueFilterSection="buildIssue"
           detailsId={hardwareId}

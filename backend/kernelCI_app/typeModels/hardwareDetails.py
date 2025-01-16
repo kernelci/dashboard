@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
+from kernelCI_app.typeModels.commonDetails import BuildHistoryItem, Summary, TestHistoryItem
 from kernelCI_app.typeModels.databases import StatusValues
 from pydantic import BaseModel, BeforeValidator, Field
 
@@ -47,15 +48,30 @@ class CommitHistoryValidCheckout(BaseModel):
     start_time: datetime
 
 
-class HardwareDetailsFullResponse(BaseModel):
-    builds: Dict
-    tests: Dict
-    boots: Dict
+class Tree(BaseModel):
+    index: str
+    tree_name: Optional[str]
+    git_repository_branch: Optional[str]
+    git_repository_url: Optional[str]
+    head_git_commit_name: Optional[str]
+    head_git_commit_hash: Optional[str]
+    head_git_commit_tag: Optional[List[str]]
+    selected_commit_status: Optional[Dict]
+
+
+class HardwareSummary(Summary):
+    trees: List[Tree]
     configs: List[str]
-    archs: List[str]
+    architectures: List[str]
     compilers: List[str]
-    trees: List[Dict]
     compatibles: List[str]
+
+
+class HardwareDetailsFullResponse(BaseModel):
+    builds: List[BuildHistoryItem]
+    boots: List[TestHistoryItem]
+    tests: List[TestHistoryItem]
+    summary: HardwareSummary
 
 
 type HardwareTreeList = List[Dict[str, str]]

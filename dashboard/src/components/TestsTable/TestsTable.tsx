@@ -102,7 +102,7 @@ export function TestsTable({
         path: e.path,
         start_time: e.start_time,
         status: e.status,
-        hardware: e.hardware,
+        hardware: e.environment_compatible,
       });
       switch (e.status) {
         case 'DONE':

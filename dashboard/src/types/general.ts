@@ -40,7 +40,7 @@ export type TestHistory = {
   path: string;
   id: string;
   duration?: number;
-  hardware?: string[];
+  environment_compatible?: string[];
 };
 
 interface ITreeDetailsMisc {

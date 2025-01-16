@@ -57,10 +57,10 @@ export const createFilter = (
   const treeIndexes: number[] = [];
 
   if (data) {
-    data.trees.forEach(tree => {
+    data.summary.trees.forEach(tree => {
       const treeIdx = Number(tree.index);
-      const treeName = tree.treeName ?? 'Unknown';
-      const treeBranch = tree.gitRepositoryBranch ?? 'Unknown';
+      const treeName = tree.tree_name ?? 'Unknown';
+      const treeBranch = tree.git_repository_branch ?? 'Unknown';
 
       let treeNameBranch = `${treeName}/${treeBranch}`;
 
@@ -71,20 +71,24 @@ export const createFilter = (
       treeIndexes.push(treeIdx);
     });
 
-    data.archs.forEach(arch => {
+    data.summary.architectures.forEach(arch => {
       archs[arch ?? 'Unknown'] = false;
     });
-    data.compilers.forEach(compiler => {
+    data.summary.compilers.forEach(compiler => {
       compilers[compiler ?? 'Unknown'] = false;
     });
-    data.configs.forEach(config => {
+    data.summary.configs.forEach(config => {
       configs[config ?? 'Unknown'] = false;
     });
-    data.builds.issues.forEach(i => (buildIssue[i.id] = false));
-    data.boots.issues.forEach(i => (bootIssue[i.id] = false));
-    data.tests.issues.forEach(i => (testIssue[i.id] = false));
-    Object.keys(data.boots.platforms).forEach(i => (bootPlatform[i] = false));
-    Object.keys(data.tests.platforms).forEach(i => (testPlatform[i] = false));
+    data.summary.builds.issues.forEach(i => (buildIssue[i.id] = false));
+    data.summary.boots.issues.forEach(i => (bootIssue[i.id] = false));
+    data.summary.tests.issues.forEach(i => (testIssue[i.id] = false));
+    Object.keys(data.summary.boots.platforms ?? {}).forEach(
+      i => (bootPlatform[i] = false),
+    );
+    Object.keys(data.summary.tests.platforms ?? {}).forEach(
+      i => (testPlatform[i] = false),
+    );
   }
 
   return {

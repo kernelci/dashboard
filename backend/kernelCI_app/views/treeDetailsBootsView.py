@@ -18,8 +18,10 @@ from kernelCI_app.helpers.treeDetails import (
 )
 from kernelCI_app.typeModels.treeDetails import (
     BootResponse,
-    TestHistory,
     TreeQueryParameters,
+)
+from kernelCI_app.typeModels.commonDetails import (
+    TestHistoryItem
 )
 from kernelCI_app.utils import (
     Issue,
@@ -45,7 +47,7 @@ class TreeDetailsBoots(APIView):
         if test_id in self.processedTests:
             return
         self.processedTests.add(test_id)
-        TestHistory(**history_item)
+        TestHistoryItem(**history_item)
         self.bootHistory.append(history_item)
 
     def _sanitize_rows(self, rows):

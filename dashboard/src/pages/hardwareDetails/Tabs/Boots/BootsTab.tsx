@@ -33,13 +33,19 @@ import { sanitizePlatforms } from '@/utils/utils';
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 import { RedirectFrom } from '@/types/general';
 
-interface TBootsTab {
+interface IBootsTab {
   boots: THardwareDetails['boots'];
-  trees: THardwareDetails['trees'];
+  bootsSummary: THardwareDetails['summary']['boots'];
+  trees: THardwareDetails['summary']['trees'];
   hardwareId: string;
 }
 
-const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
+const BootsTab = ({
+  bootsSummary,
+  boots,
+  hardwareId,
+  trees,
+}: IBootsTab): JSX.Element => {
   const { tableFilter, diffFilter } = useSearch({
     from: '/hardware/$hardwareId',
   });
@@ -94,8 +100,8 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
   );
 
   const platformItems = useMemo(
-    () => sanitizePlatforms(boots.platforms),
-    [boots.platforms],
+    () => sanitizePlatforms(bootsSummary.platforms),
+    [bootsSummary.platforms],
   );
 
   return (
@@ -104,17 +110,17 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
         <div>
           <MemoizedStatusCard
             title={<FormattedMessage id="bootsTab.bootStatus" />}
-            statusCounts={boots.statusSummary}
+            statusCounts={bootsSummary.status}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
-            archCompilerErrors={boots.archSummary}
+            archCompilerErrors={bootsSummary.architectures}
             diffFilter={diffFilter}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
-            issues={boots.issues}
-            failedWithUnknownIssues={boots.failedWithUnknownIssues}
+            issues={bootsSummary.issues}
+            failedWithUnknownIssues={bootsSummary.unknown_issues}
             diffFilter={diffFilter}
             issueFilterSection="bootIssue"
             detailsId={hardwareId}
@@ -128,7 +134,7 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
           />
           <MemoizedConfigList
             title={<FormattedMessage id="bootsTab.configs" />}
-            configStatusCounts={boots.configs}
+            configStatusCounts={bootsSummary.configs}
             diffFilter={diffFilter}
           />
           <MemoizedPlatformsCard
@@ -141,14 +147,14 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
       <MobileGrid>
         <MemoizedStatusCard
           title={<FormattedMessage id="bootsTab.bootStatus" />}
-          statusCounts={boots.statusSummary}
+          statusCounts={bootsSummary.status}
         />
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList
               title={<FormattedMessage id="bootsTab.configs" />}
-              configStatusCounts={boots.configs}
+              configStatusCounts={bootsSummary.configs}
               diffFilter={diffFilter}
             />
             <MemoizedPlatformsCard
@@ -158,13 +164,13 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
-              archCompilerErrors={boots.archSummary}
+              archCompilerErrors={bootsSummary.architectures}
               diffFilter={diffFilter}
             />
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
-              issues={boots.issues}
-              failedWithUnknownIssues={boots.failedWithUnknownIssues}
+              issues={bootsSummary.issues}
+              failedWithUnknownIssues={bootsSummary.unknown_issues}
               diffFilter={diffFilter}
               issueFilterSection="bootIssue"
               detailsId={hardwareId}
@@ -177,7 +183,7 @@ const BootsTab = ({ boots, hardwareId, trees }: TBootsTab): JSX.Element => {
         tableKey="hardwareDetailsBoots"
         getRowLink={getRowLink}
         filter={tableFilter.bootsTable}
-        testHistory={boots.history}
+        testHistory={boots}
         onClickFilter={onClickFilter}
         updatePathFilter={updatePathFilter}
         currentPathFilter={currentPathFilter}

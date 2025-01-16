@@ -30,7 +30,7 @@ class IssueDetailsTests(View):
                 "status": test["test__status"],
                 "path": test["test__path"],
                 "start_time": test["test__start_time"],
-                "hardware": test["test__environment_compatible"],
+                "environment_compatible": test["test__environment_compatible"],
             }
             for test in tests
         ]

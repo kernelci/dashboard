@@ -64,19 +64,19 @@ const prepareTreeItems = ({
 }): PreparedTrees[] | void =>
   treeItems?.map(tree => {
     const treeIdentifier = makeTreeIdentifierKey({
-      treeName: tree.treeName ?? '',
-      gitRepositoryBranch: tree.gitRepositoryBranch ?? '',
-      gitRepositoryUrl: tree.gitRepositoryUrl ?? '',
+      treeName: tree.tree_name ?? '',
+      gitRepositoryBranch: tree.git_repository_branch ?? '',
+      gitRepositoryUrl: tree.git_repository_url ?? '',
     });
 
-    const result = {
-      treeName: tree['treeName'] ?? '-',
-      gitRepositoryBranch: tree['gitRepositoryBranch'] ?? '-',
-      headGitCommitName: tree['headGitCommitName'] ?? '-',
-      headGitCommitHash: tree['headGitCommitHash'] ?? '-',
-      gitRepositoryUrl: tree['gitRepositoryUrl'] ?? '-',
+    const result: PreparedTrees = {
+      tree_name: tree['tree_name'] ?? '-',
+      git_repository_branch: tree['git_repository_branch'] ?? '-',
+      head_git_commit_name: tree['head_git_commit_name'] ?? '-',
+      head_git_commit_hash: tree['head_git_commit_hash'] ?? '-',
+      git_repository_url: tree['git_repository_url'] ?? '-',
       index: tree['index'],
-      selectedCommitStatusSummary: tree['selectedCommitStatusSummary'],
+      selected_commit_status: tree['selected_commit_status'],
       selectableCommits: commitHistoryData?.[treeIdentifier] ?? [],
       isCommitHistoryDataLoading,
       isMainPageLoading: isMainPageLoading,
@@ -152,12 +152,12 @@ function HardwareDetails(): JSX.Element {
   const hardwareTableForCommitHistory = useMemo(() => {
     const result: CommitHead[] = [];
     if (!isLoading && data) {
-      data?.trees.forEach(tree => {
+      data?.summary.trees.forEach(tree => {
         const commitHead: CommitHead = {
-          treeName: tree.treeName ?? '',
-          repositoryUrl: tree.gitRepositoryUrl ?? '',
-          branch: tree.gitRepositoryBranch ?? '',
-          commitHash: tree.headGitCommitHash ?? '',
+          treeName: tree.tree_name ?? '',
+          repositoryUrl: tree.git_repository_url ?? '',
+          branch: tree.git_repository_branch ?? '',
+          commitHash: tree.head_git_commit_hash ?? '',
         };
 
         result.push(commitHead);
@@ -196,10 +196,9 @@ function HardwareDetails(): JSX.Element {
   const endDate = getFormattedDate(endTimestampInSeconds);
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
-    const { valid, invalid } = data?.builds.summary.builds ?? {};
-    const { statusSummary: testStatusSummary } = data?.tests ?? {};
-
-    const { statusSummary: bootStatusSummary } = data?.boots ?? {};
+    const { status: buildStatusSummary } = data?.summary.builds ?? {};
+    const { status: testStatusSummary } = data?.summary.tests ?? {};
+    const { status: bootStatusSummary } = data?.summary.boots ?? {};
 
     return {
       'global.tests': testStatusSummary ? (
@@ -220,29 +219,29 @@ function HardwareDetails(): JSX.Element {
       ) : (
         <></>
       ),
-      'global.builds': data?.builds ? (
+      'global.builds': buildStatusSummary ? (
         <BuildStatusComponent
-          valid={valid}
-          invalid={invalid}
+          valid={buildStatusSummary.valid}
+          invalid={buildStatusSummary.invalid}
           hideInconclusive
         />
       ) : (
         <></>
       ),
     };
-  }, [data?.boots, data?.builds, data?.tests]);
+  }, [data?.summary.boots, data?.summary.builds, data?.summary.tests]);
 
   const treeData = useMemo(
     () =>
       prepareTreeItems({
         isCommitHistoryDataLoading: commitHistoryIsLoading,
-        treeItems: data?.trees,
+        treeItems: data?.summary.trees,
         commitHistoryData: commitHistoryData?.commit_history_table,
         isMainPageLoading: isPlaceholderData || isLoading,
       }),
     [
       commitHistoryIsLoading,
-      data?.trees,
+      data?.summary.trees,
       commitHistoryData?.commit_history_table,
       isPlaceholderData,
       isLoading,
@@ -315,7 +314,7 @@ function HardwareDetails(): JSX.Element {
                     title={
                       <FormattedMessage id="hardwareDetails.compatibles" />
                     }
-                    compatibles={data.compatibles}
+                    compatibles={data.summary.compatibles}
                   />
                 </div>
               )}

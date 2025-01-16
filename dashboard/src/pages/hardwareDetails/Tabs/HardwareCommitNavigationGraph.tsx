@@ -6,7 +6,7 @@ import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
 import CommitNavigationGraph from '@/components/CommitNavigationGraph/CommitNavigationGraph';
 
 interface ICommitNavigationGraph {
-  trees: THardwareDetails['trees'];
+  trees: THardwareDetails['summary']['trees'];
   hardwareId: string;
 }
 const HardwareCommitNavigationGraph = ({
@@ -52,15 +52,15 @@ const HardwareCommitNavigationGraph = ({
 
   if (!tree) return <></>;
 
-  const treeId = treeCommits?.[treeIdx] ?? tree['headGitCommitHash'];
+  const treeId = treeCommits?.[treeIdx] ?? tree['head_git_commit_hash'];
 
   return (
     <CommitNavigationGraph
       origin={origin}
-      gitBranch={tree.gitRepositoryBranch}
-      gitUrl={tree.gitRepositoryUrl}
+      gitBranch={tree.git_repository_branch}
+      gitUrl={tree.git_repository_url}
       treeId={treeId}
-      headCommitHash={tree.headGitCommitHash}
+      headCommitHash={tree.head_git_commit_hash}
       onMarkClick={markClickHandle}
       diffFilter={diffFilterWithHardware}
       currentPageTab={currentPageTab}

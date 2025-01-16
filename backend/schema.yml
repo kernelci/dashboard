@@ -575,6 +575,53 @@ components:
       - builds
       title: BuildsResponse
       type: object
+    HardwareDetailsFullResponse:
+      properties:
+        builds:
+          title: Builds
+          type: object
+        tests:
+          title: Tests
+          type: object
+        boots:
+          title: Boots
+          type: object
+        configs:
+          items:
+            type: string
+          title: Configs
+          type: array
+        archs:
+          items:
+            type: string
+          title: Archs
+          type: array
+        compilers:
+          items:
+            type: string
+          title: Compilers
+          type: array
+        trees:
+          items:
+            type: object
+          title: Trees
+          type: array
+        compatibles:
+          items:
+            type: string
+          title: Compatibles
+          type: array
+      required:
+      - builds
+      - tests
+      - boots
+      - configs
+      - archs
+      - compilers
+      - trees
+      - compatibles
+      title: HardwareDetailsFullResponse
+      type: object
     IncidentsInfo:
       properties:
         incidentsCount:
@@ -625,54 +672,6 @@ components:
       - summary
       title: SummaryResponse
       type: object
-    HardwareDetailsFullResponse:
-      properties:
-        builds:
-          title: Builds
-          type: object
-        tests:
-          title: Tests
-          type: object
-        boots:
-          title: Boots
-          type: object
-        configs:
-          items:
-            type: string
-          title: Configs
-          type: array
-        archs:
-          items:
-            type: string
-          title: Archs
-          type: array
-        compilers:
-          items:
-            type: string
-          title: Compilers
-          type: array
-        trees:
-          items:
-            type: object
-          title: Trees
-          type: array
-        compatibles:
-          items:
-            type: string
-          title: Compatibles
-          type: array
-      required:
-      - builds
-      - tests
-      - boots
-      - configs
-      - archs
-      - compilers
-      - trees
-      - compatibles
-      title: HardwareDetailsFullResponse
-      type: object
-    IncidentsInfo:
     TestArchSummaryItem:
       properties:
         arch:
@@ -778,13 +777,13 @@ components:
           - type: string
           - type: 'null'
           title: Path
-        startTime:
+        start_time:
           anyOf:
           - format: date-time
             type: string
           - type: string
           - type: 'null'
-          title: Starttime
+          title: Start Time
         hardware:
           anyOf:
           - type: string
@@ -798,7 +797,7 @@ components:
       - status
       - duration
       - path
-      - startTime
+      - start_time
       - hardware
       title: TestHistory
       type: object

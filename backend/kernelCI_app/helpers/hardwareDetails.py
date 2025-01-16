@@ -109,14 +109,14 @@ def get_hardware_trees_data(
         for idx, tree in enumerate(trees_query_set):
             trees.append(
                 {
-                    "treeName": tree["build__checkout__tree_name"],
-                    "gitRepositoryBranch": tree[
+                    "tree_name": tree["build__checkout__tree_name"],
+                    "git_repository_branch": tree[
                         "build__checkout__git_repository_branch"
                     ],
-                    "gitRepositoryUrl": tree["build__checkout__git_repository_url"],
-                    "headGitCommitName": tree["build__checkout__git_commit_name"],
-                    "headGitCommitHash": tree["build__checkout__git_commit_hash"],
-                    "headGitCommitTag": tree["build__checkout__git_commit_tags"],
+                    "git_repository_url": tree["build__checkout__git_repository_url"],
+                    "head_git_commit_name": tree["build__checkout__git_commit_name"],
+                    "head_git_commit_hash": tree["build__checkout__git_commit_hash"],
+                    "head_git_commit_tag": tree["build__checkout__git_commit_tags"],
                     "index": str(idx),
                 }
             )
@@ -132,14 +132,14 @@ def get_trees_with_status_summary(
     trees_with_status_count: List[Dict] = []
     for tree in trees:
         summary = tree_status_summary.get(tree["index"])
-        trees_with_status_count.append({**tree, "selectedCommitStatusSummary": summary})
+        trees_with_status_count.append({**tree, "selected_commit_status": summary})
 
     return trees_with_status_count
 
 
 def get_displayed_commit(*, tree: Dict, selected_commit: Optional[str]):
     if (not selected_commit) or (selected_commit == SELECTED_HEAD_TREE_VALUE):
-        return tree["headGitCommitHash"]
+        return tree["head_git_commit_hash"]
     return selected_commit
 
 
@@ -161,9 +161,9 @@ def get_trees_with_selected_commit(
 
         selected.append(
             {
-                "tree_name": tree["treeName"],
-                "git_repository_branch": tree["gitRepositoryBranch"],
-                "git_repository_url": tree["gitRepositoryUrl"],
+                "tree_name": tree["tree_name"],
+                "git_repository_branch": tree["git_repository_branch"],
+                "git_repository_url": tree["git_repository_url"],
                 "index": tree["index"],
                 "git_commit_hash": displayed_commit,
                 "is_tree_selected": is_tree_selected,
@@ -306,7 +306,7 @@ def get_history(record: Dict):
         "status": record["status"],
         "path": record["path"],
         "duration": record["duration"],
-        "startTime": record["start_time"],
+        "start_time": record["start_time"],
     }
 
 
