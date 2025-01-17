@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.models import Issues
-from kernelCI_app.typeModels.issueDetails import IssueDetailsPathParameters
+from kernelCI_app.typeModels.issues import IssueDetailsPathParameters
 from pydantic import ValidationError
 
 
@@ -34,7 +34,9 @@ class IssueDetails(View):
 
         return query
 
-    def get(self, _request, issue_id: Optional[str], version: Optional[str]) -> JsonResponse:
+    def get(
+        self, _request, issue_id: Optional[str], version: Optional[str]
+    ) -> JsonResponse:
         try:
             parsed_params = IssueDetailsPathParameters(
                 issue_id=issue_id, version=version

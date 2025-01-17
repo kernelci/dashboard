@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.views import View
 from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.models import Incidents
-from kernelCI_app.typeModels.issueDetails import IssueDetailsPathParameters
+from kernelCI_app.typeModels.issues import IssueDetailsPathParameters
 from pydantic import ValidationError
 
 

@@ -2,6 +2,7 @@ from typing import Dict, Tuple
 from http import HTTPStatus
 
 from drf_spectacular.utils import extend_schema
+from kernelCI_app.typeModels.issues import Issue
 from pydantic import ValidationError
 from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.helpers.filters import (
@@ -22,9 +23,6 @@ from kernelCI_app.typeModels.treeDetails import (
 )
 from kernelCI_app.typeModels.commonDetails import (
     TestHistoryItem
-)
-from kernelCI_app.utils import (
-    Issue,
 )
 
 

@@ -5,12 +5,11 @@ from django.views import View
 
 from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.utils import (
-    Issue,
     convert_issues_dict_to_list,
     create_issue,
 )
 from http import HTTPStatus
-from kernelCI_app.typeModels.issueDetails import IssueDict
+from kernelCI_app.typeModels.issues import Issue, IssueDict
 
 
 class IssueView(View):

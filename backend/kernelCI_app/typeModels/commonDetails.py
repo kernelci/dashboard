@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
+from kernelCI_app.typeModels.issues import Issue
 from pydantic import BaseModel
 
 
@@ -28,24 +29,6 @@ class BuildConfigs(BuildStatusCount):
     valid: int
     invalid: int
     null: int
-
-
-class IncidentsInfo(BaseModel):
-    incidentsCount: int
-
-
-class TestIssuesItem(BaseModel):
-    id: str
-    comment: Optional[str]
-    report_url: Optional[str]
-    incidents_info: IncidentsInfo
-
-
-class BuildsIssuesItem(BaseModel):
-    id: str
-    comment: Optional[str]
-    report_url: Optional[str]
-    incidents_info: IncidentsInfo
 
 
 class BuildArchitectures(BuildStatusCount):
@@ -89,7 +72,7 @@ class TestSummary(BaseModel):
     status: TestStatusCount
     architectures: List[TestArchSummaryItem]
     configs: Dict[str, TestStatusCount]
-    issues: List[TestIssuesItem]
+    issues: List[Issue]
     unknown_issues: int
     fail_reasons: Dict[str, int]
     failed_platforms: List[str]
@@ -102,7 +85,7 @@ class BuildSummary(BaseModel):
     status: BuildStatusCount
     architectures: Dict[str, BuildArchitectures]
     configs: Dict[str, BuildConfigs]
-    issues: List[BuildsIssuesItem]
+    issues: List[Issue]
     unknown_issues: int
 
 
