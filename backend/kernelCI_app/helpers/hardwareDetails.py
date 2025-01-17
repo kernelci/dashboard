@@ -307,6 +307,14 @@ def get_history(record: Dict):
         "path": record["path"],
         "duration": record["duration"],
         "start_time": record["start_time"],
+        "environment_compatible": record["environment_compatible"],
+        "config": record["build__config_name"],
+        "log_url": record["log_url"],
+        "architecture": record["build__architecture"],
+        "compiler": record["build__compiler"],
+        "misc": {
+            "platform": record["test_platform"]
+        }
     }
 
 
@@ -392,12 +400,15 @@ def handle_tree_status_summary(
 def handle_test_or_boot(record: Dict, task: Dict) -> None:
     status = record["status"]
 
+    environment_misc = handle_environment_misc(record["environment_misc"])
+    test_platform = env_misc_value_or_default(environment_misc).get("platform")
+
+    record["test_platform"] = test_platform
+
     task["history"].append(get_history(record))
     task["statusSummary"][status] += 1
     task["configs"][record["build__config_name"]][status] += 1
 
-    environment_misc = handle_environment_misc(record["environment_misc"])
-    test_platform = env_misc_value_or_default(environment_misc).get("platform")
     task["platforms"][test_platform][status] += 1
 
     if status == "ERROR" or status == "FAIL" or status == "MISS":

@@ -62,13 +62,12 @@ class TestHistoryItem(BaseModel):
     duration: Optional[Union[int, float]]
     path: Optional[str]
     start_time: Optional[Union[datetime, str]]
-    environment_compatible: Optional[Union[str, List[str]]] = None
-    # TODO: When these fields are added to hardwareDetails, there shouldn't be any need for `= None` anymore
-    config: Optional[str] = None
-    log_url: Optional[str] = None
-    architecture: Optional[str] = None
-    compiler: Optional[str] = None
-    misc: Optional[Misc] = None
+    environment_compatible: Optional[Union[str, List[str]]]
+    config: Optional[str]
+    log_url: Optional[str]
+    architecture: Optional[str]
+    compiler: Optional[str]
+    misc: Optional[Misc]
 
 
 class BuildHistoryItem(BaseModel):
