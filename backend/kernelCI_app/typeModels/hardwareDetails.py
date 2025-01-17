@@ -67,6 +67,10 @@ class HardwareSummary(Summary):
     compatibles: List[str]
 
 
+class BuildResponse(BaseModel):
+    builds: List[BuildHistoryItem]
+
+
 class HardwareDetailsFullResponse(BaseModel):
     builds: List[BuildHistoryItem]
     boots: List[TestHistoryItem]
