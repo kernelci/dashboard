@@ -71,8 +71,8 @@ export type TestSummary = {
   unknown_issues: number;
   fail_reasons: Record<string, number>;
   failed_platforms: string[];
-  enviroment_compatible?: PropertyStatusCounts;
-  enviroment_misc?: PropertyStatusCounts;
+  environment_compatible?: PropertyStatusCounts;
+  environment_misc?: PropertyStatusCounts;
   platforms?: PropertyStatusCounts;
 };
 
@@ -98,6 +98,22 @@ export type TTreeTestsFullData = {
   boots: TestHistory[];
   tests: TestHistory[];
   summary: TreeSummary;
+};
+
+export type TreeDetailsSummary = {
+  summary: TreeSummary;
+};
+
+export type TreeDetailsBuilds = {
+  builds: BuildsTabBuild[];
+};
+
+export type TreeDetailsTests = {
+  tests: TestHistory[];
+};
+
+export type TreeDetailsBoots = {
+  boots: TestHistory[];
 };
 
 export const possibleTabs = [
@@ -134,6 +150,8 @@ export const zPossibleTabValidator = z
   .enum(possibleTabs)
   .default(defaultValidadorValues.tab)
   .catch(defaultValidadorValues.tab);
+
+export type PossibleTabs = z.infer<typeof zPossibleTabValidator>;
 
 export const zBuildsTableFilterValidator = z
   .enum(possibleBuildsTableFilter)
