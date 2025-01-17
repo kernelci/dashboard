@@ -106,6 +106,10 @@ class SummaryResponse(BaseModel):
     git_commit_tags: Optional[List]
 
 
+class Misc(BaseModel):
+    platform: str
+
+
 class TestHistory(BaseModel):
     id: str
     status: Optional[str]
@@ -113,6 +117,11 @@ class TestHistory(BaseModel):
     path: Optional[str]
     startTime: Optional[Union[datetime, str]]
     hardware: Optional[Union[str, List[str]]]
+    config: Optional[str]
+    log_url: Optional[str]
+    architecture: Optional[str]
+    compiler: Optional[str]
+    misc: Optional[Misc]
 
 
 class BootResponse(BaseModel):
