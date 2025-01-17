@@ -1,11 +1,8 @@
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from kernelCI_app.typeModels.commonDetails import (
     Summary,
     BuildHistoryItem,
-    TestArchSummaryItem,
-    TestIssuesItem,
-    TestStatusCount,
     TestHistoryItem,
 )
 from pydantic import BaseModel
@@ -14,18 +11,6 @@ from pydantic import BaseModel
 class TreeLatestPathParameters(BaseModel):
     tree_name: str
     branch: str
-
-
-class TestSummary(BaseModel):
-    status: TestStatusCount
-    architectures: List[TestArchSummaryItem]
-    configs: Dict[str, TestStatusCount]
-    issues: List[TestIssuesItem]
-    unknown_issues: int
-    environment_compatible: Dict[str, TestStatusCount]
-    environment_misc: Dict[str, TestStatusCount]
-    fail_reasons: Dict[str, int]
-    failed_platforms: List[str]
 
 
 class TreeCommon(BaseModel):

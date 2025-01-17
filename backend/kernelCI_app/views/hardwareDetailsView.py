@@ -18,22 +18,20 @@ from kernelCI_app.helpers.hardwareDetails import (
     get_hardware_details_data,
     get_hardware_trees_data,
     get_trees_with_selected_commit,
-    get_trees_with_status_summary,
     get_validated_current_tree,
     handle_build,
     handle_test_or_boot,
     handle_tree_status_summary,
     mutate_properties_to_list,
+    set_trees_status_summary,
     unstable_parse_post_body,
 )
 from kernelCI_app.typeModels.hardwareDetails import (
     HardwareDetailsFullResponse,
-    HardwareTreeList,
     PossibleTestType,
+    Tree,
 )
-from kernelCI_app.utils import (
-    is_boot
-)
+from kernelCI_app.utils import is_boot
 from kernelCI_app.viewCommon import create_details_build_summary
 from pydantic import ValidationError
 from rest_framework.response import Response
@@ -103,7 +101,7 @@ class HardwareDetails(APIView):
             handle_build(instance=self, record=record, build=build)
 
     def _sanitize_records(
-        self, records, trees: HardwareTreeList, is_all_selected: bool
+        self, records, trees: List[Tree], is_all_selected: bool
     ) -> None:
         compatibles: Set[str] = set()
 
@@ -119,7 +117,7 @@ class HardwareDetails(APIView):
             if record["environment_compatible"] is not None:
                 compatibles.update(record["environment_compatible"])
 
-            tree_index = current_tree["index"]
+            tree_index = current_tree.index
 
             handle_tree_status_summary(
                 record=record,
@@ -163,7 +161,9 @@ class HardwareDetails(APIView):
             return Response(data={"error": e.json()}, status=HTTPStatus.BAD_REQUEST)
         except json.JSONDecodeError:
             return Response(
-                data={"error": "Invalid body, request body must be a valid json string"},
+                data={
+                    "error": "Invalid body, request body must be a valid json string"
+                },
                 status=HTTPStatus.BAD_REQUEST,
             )
         except (ValueError, TypeError):
@@ -209,7 +209,7 @@ class HardwareDetails(APIView):
             is_all_selected=is_all_selected,
         )
 
-        trees_with_status_summary = get_trees_with_status_summary(
+        set_trees_status_summary(
             trees=trees, tree_status_summary=self.tree_status_summary
         )
 
@@ -244,14 +244,13 @@ class HardwareDetails(APIView):
                     "platforms": self.tests["platforms"],
                     "fail_reasons": self.tests["failReasons"],
                     "failed_platforms": list(self.tests["platformsFailing"]),
-
                 },
-                "trees": trees_with_status_summary,
+                "trees": trees,
                 "configs": configs,
                 "architectures": archs,
                 "compilers": compilers,
                 "compatibles": self.compatibles,
-            }
+            },
         }
         try:
             valid_response = HardwareDetailsFullResponse(**response)

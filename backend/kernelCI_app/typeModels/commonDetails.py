@@ -6,17 +6,18 @@ from pydantic import BaseModel
 
 
 class TestStatusCount(BaseModel):
-    PASS: Optional[int] = None
-    ERROR: Optional[int] = None
-    FAIL: Optional[int] = None
-    SKIP: Optional[int] = None
-    NULL: Optional[int] = None
+    PASS: Optional[int] = 0
+    ERROR: Optional[int] = 0
+    FAIL: Optional[int] = 0
+    SKIP: Optional[int] = 0
+    MISS: Optional[int] = 0
+    NULL: Optional[int] = 0
 
 
 class BuildStatusCount(BaseModel):
-    valid: int
-    invalid: int
-    null: int
+    valid: Optional[int] = 0
+    invalid: Optional[int] = 0
+    null: Optional[int] = 0
 
 
 class TestArchSummaryItem(BaseModel):
@@ -25,14 +26,8 @@ class TestArchSummaryItem(BaseModel):
     status: TestStatusCount
 
 
-class BuildConfigs(BuildStatusCount):
-    valid: int
-    invalid: int
-    null: int
-
-
 class BuildArchitectures(BuildStatusCount):
-    compilers: List[str]
+    compilers: Optional[List[str]] = []
 
 
 class Misc(BaseModel):
@@ -84,7 +79,7 @@ class TestSummary(BaseModel):
 class BuildSummary(BaseModel):
     status: BuildStatusCount
     architectures: Dict[str, BuildArchitectures]
-    configs: Dict[str, BuildConfigs]
+    configs: Dict[str, BuildStatusCount]
     issues: List[Issue]
     unknown_issues: int
 

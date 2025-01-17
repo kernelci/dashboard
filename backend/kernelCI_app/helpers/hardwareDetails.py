@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import datetime, timezone
 import json
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Literal, Optional, Set
 
 from django.http import JsonResponse
 from kernelCI_app.cache import getQueryCache, setQueryCache
@@ -21,12 +21,11 @@ from kernelCI_app.helpers.misc import env_misc_value_or_default, handle_environm
 from kernelCI_app.helpers.trees import get_tree_heads
 from kernelCI_app.models import Tests
 from kernelCI_app.typeModels.databases import FAIL_STATUS
-from kernelCI_app.typeModels.hardwareDetails import DefaultRecordValues, PostBody
+from kernelCI_app.typeModels.hardwareDetails import DefaultRecordValues, PostBody, Tree
 from kernelCI_app.utils import create_issue, extract_error_message, is_boot
 from pydantic import ValidationError
 from django.db.models import Subquery
 from kernelCI_app.typeModels.hardwareDetails import (
-    HardwareTreeList,
     PossibleTestType,
 )
 
@@ -57,7 +56,7 @@ def get_hardware_trees_data(
     selected_commits: Dict[str, str],
     start_datetime: datetime,
     end_datetime: datetime,
-) -> HardwareTreeList:
+) -> List[Tree]:
     cache_key = "hardwareDetailsTreeData"
 
     trees_cache_params = {
@@ -68,7 +67,7 @@ def get_hardware_trees_data(
         "end_datetime": end_datetime,
     }
 
-    trees: HardwareTreeList = getQueryCache(cache_key, trees_cache_params)
+    trees: List[Tree] = getQueryCache(cache_key, trees_cache_params)
 
     if not trees:
         # We need a subquery because if we filter by any hardware, it will get the
@@ -109,17 +108,19 @@ def get_hardware_trees_data(
         trees = []
         for idx, tree in enumerate(trees_query_set):
             trees.append(
-                {
-                    "tree_name": tree["build__checkout__tree_name"],
-                    "git_repository_branch": tree[
+                Tree(
+                    index=str(idx),
+                    tree_name=tree["build__checkout__tree_name"],
+                    git_repository_branch=tree[
                         "build__checkout__git_repository_branch"
                     ],
-                    "git_repository_url": tree["build__checkout__git_repository_url"],
-                    "head_git_commit_name": tree["build__checkout__git_commit_name"],
-                    "head_git_commit_hash": tree["build__checkout__git_commit_hash"],
-                    "head_git_commit_tag": tree["build__checkout__git_commit_tags"],
-                    "index": str(idx),
-                }
+                    git_repository_url=tree["build__checkout__git_repository_url"],
+                    head_git_commit_name=tree["build__checkout__git_commit_name"],
+                    head_git_commit_hash=tree["build__checkout__git_commit_hash"],
+                    head_git_commit_tag=tree["build__checkout__git_commit_tags"],
+                    selected_commit_status=None,
+                    is_selected=None,
+                )
             )
 
         setQueryCache(cache_key, trees_cache_params, trees)
@@ -127,30 +128,27 @@ def get_hardware_trees_data(
     return trees
 
 
-def get_trees_with_status_summary(
-    *, trees: HardwareTreeList, tree_status_summary: defaultdict
-) -> List[Dict]:
-    trees_with_status_count: List[Dict] = []
+def set_trees_status_summary(
+    *, trees: List[Tree], tree_status_summary: defaultdict
+) -> None:
     for tree in trees:
-        summary = tree_status_summary.get(tree["index"])
-        trees_with_status_count.append({**tree, "selected_commit_status": summary})
-
-    return trees_with_status_count
+        summary = tree_status_summary.get(tree.index)
+        tree.selected_commit_status = summary
 
 
-def get_displayed_commit(*, tree: Dict, selected_commit: Optional[str]):
+def get_displayed_commit(*, tree: Tree, selected_commit: Optional[str]):
     if (not selected_commit) or (selected_commit == SELECTED_HEAD_TREE_VALUE):
-        return tree["head_git_commit_hash"]
+        return tree.head_git_commit_hash
     return selected_commit
 
 
 def get_trees_with_selected_commit(
-    *, trees: HardwareTreeList, selected_commits: Dict
-) -> HardwareTreeList:
-    selected: HardwareTreeList = []
+    *, trees: List[Tree], selected_commits: Dict[str, str]
+) -> List[Tree]:
+    selected: List[Tree] = []
 
     for tree in trees:
-        tree_idx = tree["index"]
+        tree_idx = tree.index
 
         raw_selected_commit = selected_commits.get(tree_idx)
 
@@ -161,14 +159,17 @@ def get_trees_with_selected_commit(
         )
 
         selected.append(
-            {
-                "tree_name": tree["tree_name"],
-                "git_repository_branch": tree["git_repository_branch"],
-                "git_repository_url": tree["git_repository_url"],
-                "index": tree["index"],
-                "git_commit_hash": displayed_commit,
-                "is_tree_selected": is_tree_selected,
-            }
+            Tree(
+                index=tree.index,
+                tree_name=tree.tree_name,
+                git_repository_branch=tree.git_repository_branch,
+                git_repository_url=tree.git_repository_url,
+                head_git_commit_name=tree.head_git_commit_name,
+                head_git_commit_hash=displayed_commit,
+                head_git_commit_tag=tree.head_git_commit_tag,
+                selected_commit_status=tree.selected_commit_status,
+                is_selected=is_tree_selected,
+            )
         )
 
     return selected
@@ -178,7 +179,7 @@ def get_hardware_details_data(
     *,
     hardware_id: str,
     origin: str,
-    trees_with_selected_commits: List[Dict],
+    trees_with_selected_commits: List[Tree],
     start_datetime: datetime,
     end_datetime: datetime,
 ):
@@ -207,8 +208,10 @@ def get_hardware_details_data(
     return records
 
 
-def query_records(*, hardware_id, origin, trees, start_date=int, end_date=int):
-    commit_hashes = [tree["git_commit_hash"] for tree in trees]
+def query_records(
+    *, hardware_id, origin, trees: List[Tree], start_date=int, end_date=int
+):
+    commit_hashes = [tree.head_git_commit_hash for tree in trees]
 
     return Tests.objects.values(
         "id",
@@ -318,8 +321,8 @@ def get_history(record: Dict):
 
 
 def get_validated_current_tree(
-    *, record: Dict, selected_trees: HardwareTreeList
-) -> Optional[Dict]:
+    *, record: Dict, selected_trees: List[Tree]
+) -> Optional[Tree]:
     # TODO: combine DefaultRecordValues and assign_default_record_values into either one or the other
     try:
         validated_record = DefaultRecordValues(**record)
@@ -340,24 +343,24 @@ def get_validated_current_tree(
 
 
 def get_current_record_tree_in_selection(
-    *, record: Dict, selected_trees: List
-) -> Optional[Dict]:
+    *, record: Dict, selected_trees: List[Tree]
+) -> Optional[Tree]:
     current_tree_name = record["build__checkout__tree_name"]
     current_tree_branch = record["build__checkout__git_repository_branch"]
     current_tree_url = record["build__checkout__git_repository_url"]
 
     for tree in selected_trees:
         if (
-            current_tree_name == tree["tree_name"]
-            and current_tree_branch == tree["git_repository_branch"]
-            and current_tree_url == tree["git_repository_url"]
+            current_tree_name == tree.tree_name
+            and current_tree_branch == tree.git_repository_branch
+            and current_tree_url == tree.git_repository_url
         ):
             return tree
 
     return None
 
 
-def generate_test_dict():
+def generate_test_dict() -> Dict[str, any]:
     return {
         "history": [],
         "archSummary": {},
@@ -371,7 +374,7 @@ def generate_test_dict():
     }
 
 
-def generate_tree_status_summary_dict() -> Dict:
+def generate_tree_status_summary_dict() -> Dict[str]:
     return {
         "builds": defaultdict(int),
         "boots": defaultdict(int),
@@ -383,12 +386,12 @@ def generate_tree_status_summary_dict() -> Dict:
 def handle_tree_status_summary(
     *,
     record: Dict,
-    tree_status_summary: Dict,
+    tree_status_summary: Dict[str, str],
     tree_index: str,
     processed_builds: Set[str],
 ) -> None:
     is_record_boot = is_boot(path=record["path"])
-    test_type_key: PossibleTestType = "boots" if is_record_boot else "tests"
+    test_type_key = "boots" if is_record_boot else "tests"
     tree_status_summary[tree_index][test_type_key][record["status"]] += 1
 
     if record["build_id"] not in processed_builds:
@@ -494,7 +497,7 @@ def decide_if_is_full_record_filtered_out(
     *,
     instance,
     record: Dict,
-    current_tree: Dict,
+    current_tree: Tree,
     is_all_selected: bool,
 ) -> bool:
     is_current_tree_selected = is_record_tree_selected(
@@ -566,7 +569,7 @@ def decide_if_is_test_in_filter(
 
 
 def get_filter_options(
-    *, records: List[Dict], selected_trees: HardwareTreeList, is_all_selected: bool
+    *, records: List[Dict], selected_trees: List[Tree], is_all_selected: bool
 ) -> tuple[list[str], list[str], list[str]]:
     configs = set()
     archs = set()
@@ -588,12 +591,13 @@ def get_filter_options(
     return list(configs), list(archs), list(compilers)
 
 
-def is_record_tree_selected(*, record, tree: Optional[Dict], is_all_selected: bool):
+def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:
     if is_all_selected:
         return True
     return (
-        tree.get("is_tree_selected")
-        and tree["git_commit_hash"] == record["build__checkout__git_commit_hash"]
+        tree.is_selected is not None
+        and tree.is_selected
+        and tree.head_git_commit_hash == record["build__checkout__git_commit_hash"]
     )
 
 
