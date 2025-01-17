@@ -1,7 +1,11 @@
 from datetime import datetime
 from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
-from kernelCI_app.typeModels.commonDetails import BuildHistoryItem, Summary, TestHistoryItem
+from kernelCI_app.typeModels.commonDetails import (
+    BuildHistoryItem,
+    Summary,
+    TestHistoryItem,
+)
 from kernelCI_app.typeModels.databases import StatusValues
 from pydantic import BaseModel, BeforeValidator, Field
 
@@ -57,6 +61,7 @@ class Tree(BaseModel):
     head_git_commit_hash: Optional[str]
     head_git_commit_tag: Optional[List[str]]
     selected_commit_status: Optional[Dict]
+    is_selected: Optional[bool]
 
 
 class HardwareSummary(Summary):
