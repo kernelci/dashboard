@@ -46,6 +46,8 @@ import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
 
 import { useTreeDetailsLazyLoadQuery } from '@/hooks/useTreeDetailsLazyLoadQuery';
 
+import { LoadingCircle } from '@/components/ui/loading-circle';
+
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
@@ -130,6 +132,7 @@ function TreeDetails(): JSX.Element {
     filter: reqFilter,
   });
 
+  const { isAllReady, isAnyLoading } = treeDetailsLazyLoaded.common;
   const {
     data,
     isLoading,
@@ -270,16 +273,19 @@ function TreeDetails(): JSX.Element {
           />
         </div>
         <div className="flex flex-col pb-2">
-          {data?.summary.tree_url && (
-            <div className="sticky top-[4.5rem] z-10">
-              <div className="absolute right-0 top-2 py-4">
+          <div className="sticky top-[4.5rem] z-10">
+            <div className="absolute right-0 top-2 py-4">
+              {data && isAllReady && !isAnyLoading && (
                 <TreeDetailsFilter
                   paramFilter={diffFilter}
                   treeUrl={data.summary.tree_url}
                 />
-              </div>
+              )}
+              {!isAllReady && isAnyLoading && (
+                <LoadingCircle className="mr-8 mt-6" />
+              )}
             </div>
-          )}
+          </div>
           <TreeDetailsTab
             treeDetailsLazyLoaded={treeDetailsLazyLoaded}
             filterListElement={filterListElement}
