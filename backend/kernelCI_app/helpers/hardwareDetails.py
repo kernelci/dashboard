@@ -460,7 +460,7 @@ def update_issues(
     issue_report_url: Optional[str],
     task: Dict,
     is_failed_task: bool,
-    issue_from: str,
+    issue_from: Literal["build", "test"],
 ) -> None:
     can_insert_issue = True
     if issue_from == "build":

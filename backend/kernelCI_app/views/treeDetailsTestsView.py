@@ -1,5 +1,6 @@
 from typing import Dict, Tuple
 from drf_spectacular.utils import extend_schema
+from kernelCI_app.typeModels.issues import Issue
 from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,9 +22,6 @@ from kernelCI_app.typeModels.treeDetails import (
 )
 from kernelCI_app.typeModels.commonDetails import (
     TestHistoryItem
-)
-from kernelCI_app.utils import (
-    Issue,
 )
 
 

@@ -25,7 +25,6 @@ from kernelCI_app.helpers.treeDetails import (
     process_filters,
 )
 from kernelCI_app.utils import (
-    Issue,
     convert_issues_dict_to_list,
 )
 
@@ -33,7 +32,7 @@ from collections import defaultdict
 
 from kernelCI_app.viewCommon import create_details_build_summary
 
-from kernelCI_app.typeModels.issueDetails import IssueDict
+from kernelCI_app.typeModels.issues import Issue, IssueDict
 
 
 class TreeDetails(View):

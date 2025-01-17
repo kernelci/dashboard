@@ -1,29 +1,18 @@
 import json
-from typing import Union, TypedDict, List, Optional, Dict
+from typing import Union, List, Optional, Dict
 from django.utils import timezone
 from datetime import timedelta
 
 from kernelCI_app.helpers.logger import log_message
+from kernelCI_app.typeModels.issues import Issue
 
 DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
-
-
-class IncidentInfo(TypedDict):
-    incidentsCount: int
-
-
-class Issue(TypedDict):
-    id: str
-    version: str
-    comment: Optional[str]
-    report_url: Optional[str]
-    incidents_info: IncidentInfo
 
 
 def create_issue(
     *,
     issue_id: str,
-    issue_version: str,
+    issue_version: int,
     issue_comment: Optional[str],
     issue_report_url: Optional[str]
 ) -> Issue:
