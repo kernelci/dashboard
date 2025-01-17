@@ -140,6 +140,8 @@ const TreeDetailsFilter = ({
 
   const { data, isLoading } = useTreeDetails({
     treeId,
+    // TODO : use  tree details summary
+    variant: 'full',
   });
 
   const navigate = useNavigate({

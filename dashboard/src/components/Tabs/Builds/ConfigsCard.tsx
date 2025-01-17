@@ -2,8 +2,6 @@ import { memo, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
-
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import ListingItem from '@/components/ListingItem/ListingItem';
 import { BuildStatus } from '@/components/Status/Status';
@@ -11,9 +9,10 @@ import BaseCard from '@/components/Cards/BaseCard';
 
 import FilterLink from '@/components/Tabs/FilterLink';
 import type { TFilter, TFilterObjectsKeys } from '@/types/general';
+import type { IBuildsTab } from '@/pages/TreeDetails/Tabs/Build/BuildTab';
 
 interface IConfigsCard {
-  configs: ITreeDetails['configs'];
+  configs: IBuildsTab['configs'];
   toggleFilterBySection: (
     value: string,
     filterSection: TFilterObjectsKeys,
