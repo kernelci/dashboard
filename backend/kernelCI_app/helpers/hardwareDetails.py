@@ -720,6 +720,7 @@ def decide_if_is_full_record_filtered_out(
         return True
 
     is_record_filtered_out_result = instance.filters.is_record_filtered_out(
+        hardwares=record["environment_compatible"],
         architecture=record["build__architecture"],
         compiler=record["build__compiler"],
         config_name=record["build__config_name"],

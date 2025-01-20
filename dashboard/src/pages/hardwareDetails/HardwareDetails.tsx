@@ -319,6 +319,7 @@ function HardwareDetails(): JSX.Element {
                       <FormattedMessage id="hardwareDetails.compatibles" />
                     }
                     compatibles={summaryResponse.data.compatibles}
+                    diffFilter={diffFilter}
                   />
                 </div>
               )}

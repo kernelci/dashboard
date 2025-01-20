@@ -250,7 +250,7 @@ class HardwareDetails(APIView):
                 "configs": configs,
                 "architectures": archs,
                 "compilers": compilers,
-                "compatibles": list(self.processed_compatibles),
+                "compatibles": list(self.processed_compatibles - {hardware_id}),
             },
         }
         try:
