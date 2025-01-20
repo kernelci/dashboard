@@ -28,6 +28,8 @@ from collections import defaultdict
 from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from kernelCI_app.viewCommon import create_details_build_summary
+from kernelCI_app.helpers.errorHandling import create_error_response
+from http import HTTPStatus
 
 
 class TreeDetailsSummary(APIView):
@@ -145,6 +147,11 @@ class TreeDetailsSummary(APIView):
     )
     def get(self, request, commit_hash: str | None):
         rows = get_tree_details_data(request, commit_hash)
+
+        if len(rows) == 0:
+            return create_error_response(
+                error_message="Tree not found", status_code=HTTPStatus.NOT_FOUND
+            )
 
         self.filters = FilterParams(request)
 
