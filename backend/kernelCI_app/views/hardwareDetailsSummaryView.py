@@ -170,8 +170,8 @@ class HardwareDetailsSummary(APIView):
 
             self._process_build(record, tree_index)
 
-    def _format_processing_for_response(self) -> None:
-        self.compatibles = list(self.processed_compatibles)
+    def _format_processing_for_response(self, hardware_id: str) -> None:
+        self.compatibles = list(self.processed_compatibles - {hardware_id})
 
         self.boots_summary.architectures = list(
             self.processed_architectures["boot"].values()
@@ -234,15 +234,13 @@ class HardwareDetailsSummary(APIView):
         )
 
         if len(records) == 0:
-            return Response(
-                data={"error": "Hardware not found"}, status=HTTPStatus.OK
-            )
+            return Response(data={"error": "Hardware not found"}, status=HTTPStatus.OK)
 
         is_all_selected = len(self.selected_commits) == 0
 
         self._sanitize_records(records, trees_with_selected_commits, is_all_selected)
 
-        self._format_processing_for_response()
+        self._format_processing_for_response(hardware_id=hardware_id)
 
         configs, archs, compilers = get_filter_options(
             records=records,
