@@ -31,28 +31,11 @@ const useTreeSearchParameters = (): TreeSearchParameters => {
   return { origin, gitUrl, gitBranch };
 };
 
-function assertTreeSearchParameters(
-  treeSearchParameters: TreeSearchParameters,
-  locationMessage: string,
-): asserts treeSearchParameters is Required<TreeSearchParameters> {
-  if (!treeSearchParameters.gitUrl) {
-    throw new Error(`Git URL is required in ${locationMessage}`);
-  }
-  if (!treeSearchParameters.gitBranch) {
-    throw new Error(`Git Branch is required in ${locationMessage}`);
-  }
-}
-
 const fetchTreeDetails = async (
   treeId: string,
   treeSearchParameters: TreeSearchParameters,
   filter: TTreeDetailsFilter = {},
 ): Promise<TTreeTestsFullData> => {
-  assertTreeSearchParameters(
-    treeSearchParameters,
-    'fetchTreeDetails - useSearchTab',
-  );
-
   const backendCompatibleFilters = mapFiltersKeysToBackendCompatible(filter);
 
   const params = {
