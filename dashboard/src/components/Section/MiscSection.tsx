@@ -18,8 +18,10 @@ export const getMiscSection = ({
   const miscInfos: SubsectionLink[] = Object.entries(misc).map(
     ([fieldKey, fieldValue]) => {
       let stringField = fieldValue.toString();
+      let isObjectField = false;
       if (typeof fieldValue === 'object') {
         stringField = JSON.stringify(fieldValue);
+        isObjectField = true;
       }
       const isUrlResult = isUrl(stringField);
 
@@ -29,6 +31,7 @@ export const getMiscSection = ({
           unformattedTitle: fieldKey,
           linkText: stringField,
           link: isUrlResult ? stringField : undefined,
+          copyValue: isObjectField ? stringField : undefined,
         };
       }
 
@@ -39,6 +42,7 @@ export const getMiscSection = ({
           <TruncatedValueTooltip value={stringField} isUrl={isUrlResult} />
         ),
         link: isUrlResult ? stringField : undefined,
+        copyValue: isObjectField ? stringField : undefined,
       };
     },
   );
