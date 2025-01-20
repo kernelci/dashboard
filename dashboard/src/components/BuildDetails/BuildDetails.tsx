@@ -4,7 +4,7 @@ import { MdClose, MdCheck, MdFolderOpen } from 'react-icons/md';
 
 import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
   useSearch,
@@ -27,7 +27,11 @@ import { Sheet, SheetTrigger } from '@/components/Sheet';
 
 import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
 
-import { LogSheetContent } from '@/components/Log/LogSheetContent';
+import type {
+  IJsonContent,
+  SheetType,
+} from '@/components/Sheet/LogOrJsonSheetContent';
+import { LogOrJsonSheetContent } from '@/components/Sheet/LogOrJsonSheetContent';
 import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
 
 import { getMiscSection } from '@/components/Section/MiscSection';
@@ -70,12 +74,17 @@ const BuildDetails = ({
 
   const hasUsefulLogInfo = data?.log_url || data?.log_excerpt;
 
+  const [sheetType, setSheetType] = useState<SheetType>('log');
+  const [jsonContent, setJsonContent] = useState<IJsonContent>();
+
   const miscSection: ISection | undefined = useMemo(():
     | ISection
     | undefined => {
     return getMiscSection({
       misc: data?.misc,
       title: formatMessage({ id: 'globalDetails.miscData' }),
+      setSheetType: setSheetType,
+      setJsonContent: setJsonContent,
     });
   }, [data?.misc, formatMessage]);
 
@@ -88,6 +97,11 @@ const BuildDetails = ({
       title: formatMessage({ id: 'globalDetails.artifacts' }),
     });
   }, [data?.input_files, data?.output_files, formatMessage]);
+
+  const setSheetToLog = useCallback(
+    (): void => setSheetType('log'),
+    [setSheetType],
+  );
 
   const generalSections: ISection[] = useMemo(() => {
     if (!data) {
@@ -188,6 +202,7 @@ const BuildDetails = ({
                 ),
                 icon: hasUsefulLogInfo ? <BlueFolderIcon /> : undefined,
                 wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
+                onClick: hasUsefulLogInfo ? setSheetToLog : undefined,
               },
               {
                 title: 'buildDetails.buildId',
@@ -205,7 +220,7 @@ const BuildDetails = ({
         ],
       },
     ];
-  }, [data, formatMessage, hasUsefulLogInfo, buildId]);
+  }, [data, formatMessage, hasUsefulLogInfo, buildId, setSheetToLog]);
 
   const sectionsData: ISection[] = useMemo(() => {
     return [...generalSections, miscSection, filesSection].filter(
@@ -242,7 +257,9 @@ const BuildDetails = ({
             historyState={historyState}
             previousSearch={searchParams}
           />
-          <LogSheetContent
+          <LogOrJsonSheetContent
+            type={sheetType}
+            jsonContent={jsonContent}
             logUrl={data?.log_url}
             logExcerpt={data?.log_excerpt}
           />
