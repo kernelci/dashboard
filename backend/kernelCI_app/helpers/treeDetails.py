@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Optional, TypedDict
 from kernelCI_app.helpers.filters import (
     should_increment_build_issue,
     should_increment_test_issue,
@@ -20,6 +20,30 @@ from kernelCI_app.utils import is_boot
 from django.db import connection
 
 
+class CheckoutWhereClauses(TypedDict):
+    git_url_clause: str
+    git_branch_clause: str
+
+
+def create_checkouts_where_clauses(
+    git_url: Optional[str],
+    git_branch: Optional[str]
+) -> CheckoutWhereClauses:
+    git_url_clause = """git_repository_url = %(git_url_param)s"""
+    git_branch_clause = """git_repository_branch = %(git_branch_param)s"""
+
+    if not git_url:
+        git_url_clause = "git_repository_url IS NULL"
+
+    if not git_branch:
+        git_branch_clause = "git_repository_branch IS NULL"
+
+    return {
+        "git_url_clause": git_url_clause,
+        "git_branch_clause": git_branch_clause
+    }
+
+
 def get_tree_details_data(request, commit_hash):
     cache_key = "treeDetails"
 
@@ -36,7 +60,15 @@ def get_tree_details_data(request, commit_hash):
 
     rows = getQueryCache(cache_key, params)
     if rows is None:
-        query = """
+        checkout_clauses = create_checkouts_where_clauses(
+            git_url=git_url_param,
+            git_branch=git_branch_param
+        )
+
+        git_url_clause = checkout_clauses.get('git_url_clause')
+        git_branch_clause = checkout_clauses.get('git_branch_clause')
+
+        query = f"""
         SELECT
                 tests.build_id AS tests_build_id,
                 tests.id AS tests_id,
@@ -89,8 +121,8 @@ def get_tree_details_data(request, commit_hash):
                             checkouts
                         WHERE
                             checkouts.git_commit_hash = %(commit_hash)s AND
-                            checkouts.git_repository_url = %(git_url_param)s AND
-                            checkouts.git_repository_branch = %(git_branch_param)s AND
+                            {git_url_clause} AND
+                            {git_branch_clause} AND
                             checkouts.origin = %(origin_param)s
                     ) AS tree_head
                 INNER JOIN builds
