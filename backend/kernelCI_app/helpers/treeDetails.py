@@ -115,7 +115,7 @@ def get_tree_details_data(request, commit_hash):
             rows = cursor.fetchall()
             setQueryCache(cache_key, params, rows)
 
-        return rows
+    return rows
 
 
 def get_current_row_data(current_row: dict) -> dict:
