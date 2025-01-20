@@ -198,6 +198,7 @@ export const messages = {
     'issueDetails.reportSubject': 'Report Subject',
     'issueDetails.reportUrl': 'Report URL',
     'issueDetails.version': 'Version',
+    'jsonSheet.title': 'JSON Viewer',
     'logSheet.downloadLog': 'You can download the full log here: {link}',
     'logSheet.fileName': 'File Name',
     'logSheet.fileSize': 'File Size',

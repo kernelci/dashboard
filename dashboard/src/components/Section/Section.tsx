@@ -1,7 +1,9 @@
 import { FiLink } from 'react-icons/fi';
 
 import type { ReactElement, ReactNode, ElementType } from 'react';
-import { useMemo, Fragment } from 'react';
+import { useMemo } from 'react';
+
+import type { DialogTriggerProps } from '@radix-ui/react-dialog';
 
 import type { ILinkWithIcon } from '@/components/LinkWithIcon/LinkWithIcon';
 import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
@@ -15,7 +17,7 @@ export interface ISection {
 }
 
 export interface SubsectionLink extends ILinkWithIcon {
-  wrapperComponent?: ElementType<{ children: ReactNode }>;
+  wrapperComponent?: ElementType<{ children: ReactNode } & DialogTriggerProps>;
   copyValue?: string;
 }
 export interface ISubsection {
@@ -26,28 +28,34 @@ export const Subsection = ({ infos }: ISubsection): JSX.Element => {
   const items = useMemo(
     () =>
       infos.map(info => {
-        const WrapperComponent = info.wrapperComponent ?? Fragment;
+        const WrapperComponent = info.wrapperComponent;
+        const LinkComponent = (
+          <LinkWithIcon
+            key={info.title?.toString()}
+            title={info.title}
+            link={info.link}
+            linkComponent={info.linkComponent}
+            linkText={info.linkText}
+            unformattedTitle={info.unformattedTitle}
+            icon={
+              info.link && !info.icon ? (
+                <FiLink className="text-blue" />
+              ) : (
+                info.icon
+              )
+            }
+            onClick={info.onClick ?? undefined}
+          />
+        );
         return (
-          <WrapperComponent key={info.title}>
-            <div className="flex flex-row items-end">
-              <LinkWithIcon
-                key={info.title?.toString()}
-                title={info.title}
-                link={info.link}
-                linkComponent={info.linkComponent}
-                linkText={info.linkText}
-                unformattedTitle={info.unformattedTitle}
-                icon={
-                  info.link && !info.icon ? (
-                    <FiLink className="text-blue" />
-                  ) : (
-                    info.icon
-                  )
-                }
-              />
-              {info.copyValue && <CopyButton value={info.copyValue} />}
-            </div>
-          </WrapperComponent>
+          <div key={info.title} className="flex flex-row items-end">
+            {WrapperComponent ? (
+              <WrapperComponent asChild>{LinkComponent}</WrapperComponent>
+            ) : (
+              <>{LinkComponent}</>
+            )}
+            {info.copyValue && <CopyButton value={info.copyValue} />}
+          </div>
         );
       }),
     [infos],

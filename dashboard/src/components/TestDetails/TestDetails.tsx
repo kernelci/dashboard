@@ -2,7 +2,8 @@ import { useIntl } from 'react-intl';
 
 import { GiFlatPlatform } from 'react-icons/gi';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 import { PiComputerTowerThin } from 'react-icons/pi';
 import { MdFolderOpen } from 'react-icons/md';
@@ -18,7 +19,11 @@ import { useTestDetails, useTestIssues } from '@/api/testDetails';
 
 import { RedirectFrom } from '@/types/general';
 
-import { LogSheetContent } from '@/components/Log/LogSheetContent';
+import type {
+  IJsonContent,
+  SheetType,
+} from '@/components/Sheet/LogOrJsonSheetContent';
+import { LogOrJsonSheetContent } from '@/components/Sheet/LogOrJsonSheetContent';
 import type { ISection } from '@/components/Section/Section';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import IssueSection from '@/components/Issue/IssueSection';
@@ -30,7 +35,15 @@ import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueToolti
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
-const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
+const TestDetailsSections = ({
+  test,
+  setSheetType,
+  setJsonContent,
+}: {
+  test: TTestDetails;
+  setSheetType: Dispatch<SetStateAction<SheetType>>;
+  setJsonContent: Dispatch<SetStateAction<IJsonContent | undefined>>;
+}): JSX.Element => {
   const { formatMessage } = useIntl();
   const historyState = useRouterState({ select: s => s.location.state });
   const searchParams = useSearch({ from: '/test/$testId' });
@@ -69,6 +82,11 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
 
   const hasUsefulLogInfo = test.log_url || test.log_excerpt;
 
+  const setSheetToLog = useCallback(
+    (): void => setSheetType('log'),
+    [setSheetType],
+  );
+
   const generalSection: ISection = useMemo(() => {
     return {
       title: test.path,
@@ -106,6 +124,7 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
                 valueOrEmpty(test.log_url)
               ),
               wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
+              onClick: hasUsefulLogInfo ? setSheetToLog : undefined,
             },
             {
               title: 'testDetails.gitCommitHash',
@@ -180,6 +199,7 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
     hasUsefulLogInfo,
     buildDetailsLink,
     hardware,
+    setSheetToLog,
   ]);
 
   const miscSection: ISection | undefined = useMemo(():
@@ -188,8 +208,10 @@ const TestDetailsSections = ({ test }: { test: TTestDetails }): JSX.Element => {
     return getMiscSection({
       misc: test.misc,
       title: formatMessage({ id: 'globalDetails.miscData' }),
+      setSheetType: setSheetType,
+      setJsonContent: setJsonContent,
     });
-  }, [formatMessage, test.misc]);
+  }, [formatMessage, test.misc, setSheetType, setJsonContent]);
 
   const environmentMiscSection: ISection | undefined = useMemo(():
     | ISection
@@ -237,6 +259,9 @@ const TestDetails = ({
 
   const { formatMessage } = useIntl();
 
+  const [sheetType, setSheetType] = useState<SheetType>('log');
+  const [jsonContent, setJsonContent] = useState<IJsonContent>();
+
   return (
     <QuerySwitcher
       status={status}
@@ -253,7 +278,13 @@ const TestDetails = ({
         <div className="w-100 px-5 pb-8">
           {breadcrumb}
 
-          {data && <TestDetailsSections test={data} />}
+          {data && (
+            <TestDetailsSections
+              test={data}
+              setSheetType={setSheetType}
+              setJsonContent={setJsonContent}
+            />
+          )}
           <IssueSection
             data={issueData}
             status={issueStatus}
@@ -261,7 +292,9 @@ const TestDetails = ({
             previousSearch={searchParams}
           />
         </div>
-        <LogSheetContent
+        <LogOrJsonSheetContent
+          type={sheetType}
+          jsonContent={jsonContent}
           logUrl={data?.log_url}
           logExcerpt={data?.log_excerpt}
         />

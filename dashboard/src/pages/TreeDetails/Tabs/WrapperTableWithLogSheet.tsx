@@ -4,7 +4,7 @@ import type { LinkProps } from '@tanstack/react-router';
 
 import { Sheet } from '@/components/Sheet';
 
-import { LogSheetContent } from '@/components/Log/LogSheetContent';
+import { LogOrJsonSheetContent } from '@/components/Sheet/LogOrJsonSheetContent';
 import type { TNavigationLogActions } from '@/components/Sheet/WrapperSheetContent';
 
 interface TableWithLogSheetProps {
@@ -30,7 +30,7 @@ const WrapperTableWithLogSheet = ({
       {children}
 
       <Sheet open={typeof currentLog === 'number'} onOpenChange={onOpenChange}>
-        <LogSheetContent
+        <LogOrJsonSheetContent
           logExcerpt={logExcerpt}
           logUrl={logUrl}
           navigationLogsActions={navigationLogsActions}

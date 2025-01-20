@@ -1,6 +1,6 @@
 import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 
@@ -25,6 +25,12 @@ import type {
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
+import { Sheet } from '@/components/Sheet';
+import {
+  type IJsonContent,
+  LogOrJsonSheetContent,
+} from '@/components/Sheet/LogOrJsonSheetContent';
 
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
@@ -58,12 +64,15 @@ export const IssueDetails = ({
 
   const { formatMessage } = useIntl();
 
+  const [jsonContent, setJsonContent] = useState<IJsonContent>();
+
   const miscSection: ISection | undefined = useMemo(():
     | ISection
     | undefined => {
     return getMiscSection({
       misc: data?.misc,
       title: formatMessage({ id: 'globalDetails.miscData' }),
+      setJsonContent: setJsonContent,
     });
   }, [data?.misc, formatMessage]);
 
@@ -158,26 +167,29 @@ export const IssueDetails = ({
       }
     >
       <ErrorBoundary FallbackComponent={UnexpectedError}>
-        {breadcrumb}
-        <SectionGroup sections={sectionsData} />
-        {(hasTest || hasNothingIdentified) && (
-          <IssueDetailsTestSection
-            issueId={issueId}
-            versionNumber={versionNumber}
-            testTableFilter={tableFilter.testsTable}
-            getTableRowLink={getTestTableRowLink}
-            onClickFilter={onClickTestFilter}
-          />
-        )}
-        {(hasBuild || hasNothingIdentified) && (
-          <IssueDetailsBuildSection
-            issueId={issueId}
-            versionNumber={versionNumber}
-            buildTableFilter={tableFilter.buildsTable}
-            getTableRowLink={getBuildTableRowLink}
-            onClickFilter={onClickBuildFilter}
-          />
-        )}
+        <Sheet>
+          {breadcrumb}
+          <SectionGroup sections={sectionsData} />
+          {(hasTest || hasNothingIdentified) && (
+            <IssueDetailsTestSection
+              issueId={issueId}
+              versionNumber={versionNumber}
+              testTableFilter={tableFilter.testsTable}
+              getTableRowLink={getTestTableRowLink}
+              onClickFilter={onClickTestFilter}
+            />
+          )}
+          {(hasBuild || hasNothingIdentified) && (
+            <IssueDetailsBuildSection
+              issueId={issueId}
+              versionNumber={versionNumber}
+              buildTableFilter={tableFilter.buildsTable}
+              getTableRowLink={getBuildTableRowLink}
+              onClickFilter={onClickBuildFilter}
+            />
+          )}
+          <LogOrJsonSheetContent type="json" jsonContent={jsonContent} />
+        </Sheet>
       </ErrorBoundary>
     </QuerySwitcher>
   );
