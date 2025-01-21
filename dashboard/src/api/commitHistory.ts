@@ -41,26 +41,23 @@ const fetchCommitHistory = async (
   return res.data;
 };
 
-export const useCommitHistory = (
-  {
-    commitHash,
-    origin,
-    gitUrl,
-    gitBranch,
-    filter,
-    endTimestampInSeconds,
-    startTimestampInSeconds,
-  }: {
-    commitHash: string;
-    origin: string;
-    gitUrl: string;
-    gitBranch: string;
-    filter: TTreeDetailsFilter | TFilter;
-    startTimestampInSeconds?: number;
-    endTimestampInSeconds?: number;
-  },
-  { enabled = true },
-): UseQueryResult<TTreeCommitHistoryResponse> => {
+export const useCommitHistory = ({
+  commitHash,
+  origin,
+  gitUrl,
+  gitBranch,
+  filter,
+  endTimestampInSeconds,
+  startTimestampInSeconds,
+}: {
+  commitHash: string;
+  origin: string;
+  gitUrl: string;
+  gitBranch: string;
+  filter: TTreeDetailsFilter | TFilter;
+  startTimestampInSeconds?: number;
+  endTimestampInSeconds?: number;
+}): UseQueryResult<TTreeCommitHistoryResponse> => {
   const testFilter = getTargetFilter(filter, 'test');
   const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
 
@@ -80,7 +77,6 @@ export const useCommitHistory = (
       startTimestampInSeconds,
       endTimestampInSeconds,
     ],
-    enabled,
     queryFn: () =>
       fetchCommitHistory(
         commitHash,
