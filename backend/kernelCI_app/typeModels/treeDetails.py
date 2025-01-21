@@ -22,15 +22,15 @@ class TestSummary(BaseModel):
     configs: Dict[str, TestStatusCount]
     issues: List[TestIssuesItem]
     unknown_issues: int
-    enviroment_compatible: Dict[str, TestStatusCount]
-    enviroment_misc: Dict[str, TestStatusCount]
+    environment_compatible: Dict[str, TestStatusCount]
+    environment_misc: Dict[str, TestStatusCount]
     fail_reasons: Dict[str, int]
     failed_platforms: List[str]
 
 
 class TreeSummary(Summary):
-    hardware: Set[str]
-    tree_url: str
+    hardware: Optional[Set[str]]
+    tree_url: Optional[str]
     git_commit_tags: Optional[List[str]]
 
 
