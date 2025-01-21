@@ -47,20 +47,15 @@ const CommitNavigationGraph = ({
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const { data, status, error, isLoading } = useCommitHistory(
-    {
-      gitBranch: gitBranch ?? '',
-      gitUrl: gitUrl ?? '',
-      commitHash: headCommitHash ?? '',
-      origin: origin,
-      filter: reqFilter,
-      endTimestampInSeconds,
-      startTimestampInSeconds,
-    },
-    {
-      enabled: !!gitBranch && !!gitUrl,
-    },
-  );
+  const { data, status, error, isLoading } = useCommitHistory({
+    gitBranch: gitBranch ?? '',
+    gitUrl: gitUrl ?? '',
+    commitHash: headCommitHash ?? '',
+    origin: origin,
+    filter: reqFilter,
+    endTimestampInSeconds,
+    startTimestampInSeconds,
+  });
 
   const displayableData = data ? data : null;
 
