@@ -368,7 +368,7 @@ components:
       properties:
         bootHistory:
           items:
-            $ref: '#/components/schemas/TestHistoryItem'
+            $ref: '#/components/schemas/TestHistory'
           title: Boothistory
           type: array
       required:
@@ -415,7 +415,7 @@ components:
       - 'null'
       title: BuildConfigs
       type: object
-    BuildHistoryItem:
+    BuildItem:
       properties:
         id:
           title: Id
@@ -491,7 +491,7 @@ components:
       - start_time
       - git_repository_url
       - git_repository_branch
-      title: BuildHistoryItem
+      title: BuildItem
       type: object
     BuildStatusCount:
       properties:
@@ -568,7 +568,7 @@ components:
       properties:
         builds:
           items:
-            $ref: '#/components/schemas/BuildHistoryItem'
+            $ref: '#/components/schemas/BuildItem'
           title: Builds
           type: array
       required:
@@ -578,56 +578,33 @@ components:
     HardwareDetailsFullResponse:
       properties:
         builds:
-          items:
-            $ref: '#/components/schemas/BuildHistoryItem'
           title: Builds
-          type: array
-        boots:
-          items:
-            $ref: '#/components/schemas/TestHistoryItem'
-          title: Boots
-          type: array
+          type: object
         tests:
-          items:
-            $ref: '#/components/schemas/TestHistoryItem'
           title: Tests
-          type: array
-        summary:
-          $ref: '#/components/schemas/HardwareSummary'
-      required:
-      - builds
-      - boots
-      - tests
-      - summary
-      title: HardwareDetailsFullResponse
-      type: object
-    HardwareSummary:
-      properties:
-        builds:
-          $ref: '#/components/schemas/BuildSummary'
+          type: object
         boots:
-          $ref: '#/components/schemas/TestSummary'
-        tests:
-          $ref: '#/components/schemas/TestSummary'
-        trees:
-          items:
-            $ref: '#/components/schemas/Tree'
-          title: Trees
-          type: array
+          title: Boots
+          type: object
         configs:
           items:
             type: string
           title: Configs
           type: array
-        architectures:
+        archs:
           items:
             type: string
-          title: Architectures
+          title: Archs
           type: array
         compilers:
           items:
             type: string
           title: Compilers
+          type: array
+        trees:
+          items:
+            type: object
+          title: Trees
           type: array
         compatibles:
           items:
@@ -636,14 +613,14 @@ components:
           type: array
       required:
       - builds
-      - boots
       - tests
-      - trees
+      - boots
       - configs
-      - architectures
+      - archs
       - compilers
+      - trees
       - compatibles
-      title: HardwareSummary
+      title: HardwareDetailsFullResponse
       type: object
     IncidentsInfo:
       properties:
@@ -654,19 +631,43 @@ components:
       - incidentsCount
       title: IncidentsInfo
       type: object
-    Misc:
+    Summary:
       properties:
-        platform:
-          title: Platform
+        builds:
+          $ref: '#/components/schemas/BuildSummary'
+        boots:
+          $ref: '#/components/schemas/TestSummary'
+        tests:
+          $ref: '#/components/schemas/TestSummary'
+        hardware:
+          items:
+            type: string
+          title: Hardware
+          type: array
+          uniqueItems: true
+        tree_url:
+          title: Tree Url
           type: string
+        git_commit_tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Git Commit Tags
       required:
-      - platform
-      title: Misc
+      - builds
+      - boots
+      - tests
+      - hardware
+      - tree_url
+      - git_commit_tags
+      title: Summary
       type: object
     SummaryResponse:
       properties:
         summary:
-          $ref: '#/components/schemas/TreeSummary'
+          $ref: '#/components/schemas/Summary'
       required:
       - summary
       title: SummaryResponse
@@ -687,7 +688,75 @@ components:
       - status
       title: TestArchSummaryItem
       type: object
-    TestHistoryItem:
+    TestEnvironmentCompatibleCount:
+      properties:
+        PASS:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Pass
+        ERROR:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Error
+        FAIL:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Fail
+        SKIP:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Skip
+        'NULL':
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: 'Null'
+      title: TestEnvironmentCompatibleCount
+      type: object
+    TestEnvironmentMiscCount:
+      properties:
+        PASS:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Pass
+        ERROR:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Error
+        FAIL:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Fail
+        SKIP:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Skip
+        'NULL':
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: 'Null'
+      title: TestEnvironmentMiscCount
+      type: object
+    TestHistory:
       properties:
         id:
           title: Id
@@ -715,51 +784,22 @@ components:
           - type: string
           - type: 'null'
           title: Start Time
-        environment_compatible:
+        hardware:
           anyOf:
           - type: string
           - items:
               type: string
             type: array
           - type: 'null'
-          default: null
-          title: Environment Compatible
-        config:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Config
-        log_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Log Url
-        architecture:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Architecture
-        compiler:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Compiler
-        misc:
-          anyOf:
-          - $ref: '#/components/schemas/Misc'
-          - type: 'null'
-          default: null
+          title: Hardware
       required:
       - id
       - status
       - duration
       - path
       - start_time
-      title: TestHistoryItem
+      - hardware
+      title: TestHistory
       type: object
     TestIssuesItem:
       properties:
@@ -789,7 +829,7 @@ components:
       properties:
         testHistory:
           items:
-            $ref: '#/components/schemas/TestHistoryItem'
+            $ref: '#/components/schemas/TestHistory'
           title: Testhistory
           type: array
       required:
@@ -852,6 +892,16 @@ components:
         unknown_issues:
           title: Unknown Issues
           type: integer
+        enviroment_compatible:
+          additionalProperties:
+            $ref: '#/components/schemas/TestEnvironmentCompatibleCount'
+          title: Enviroment Compatible
+          type: object
+        enviroment_misc:
+          additionalProperties:
+            $ref: '#/components/schemas/TestEnvironmentMiscCount'
+          title: Enviroment Misc
+          type: object
         fail_reasons:
           additionalProperties:
             type: integer
@@ -862,125 +912,64 @@ components:
             type: string
           title: Failed Platforms
           type: array
-        environment_compatible:
-          anyOf:
-          - type: object
-          - type: 'null'
-          default: null
-          title: Environment Compatible
-        environment_misc:
-          anyOf:
-          - type: object
-          - type: 'null'
-          default: null
-          title: Environment Misc
-        platforms:
-          anyOf:
-          - additionalProperties:
-              $ref: '#/components/schemas/TestStatusCount'
-            type: object
-          - type: 'null'
-          default: null
-          title: Platforms
       required:
       - status
       - architectures
       - configs
       - issues
       - unknown_issues
+      - enviroment_compatible
+      - enviroment_misc
       - fail_reasons
       - failed_platforms
       title: TestSummary
       type: object
     Tree:
+      type: object
       properties:
-        index:
-          title: Index
+        build_status:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        test_status:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        boot_status:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        git_commit_hash:
           type: string
-        tree_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Tree Name
+        git_commit_name:
+          type: string
+        git_commit_tags:
+          type: array
+          items: {}
+        patchset_hash:
+          type: string
+        tree_names:
+          type: array
+          items: {}
         git_repository_branch:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Git Repository Branch
+          type: string
         git_repository_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Git Repository Url
-        head_git_commit_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Head Git Commit Name
-        head_git_commit_hash:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Head Git Commit Hash
-        head_git_commit_tag:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Head Git Commit Tag
-        selected_commit_status:
-          anyOf:
-          - type: object
-          - type: 'null'
-          title: Selected Commit Status
+          type: string
+        start_time:
+          type: string
+          format: date-time
       required:
-      - index
-      - tree_name
+      - boot_status
+      - build_status
+      - git_commit_hash
+      - git_commit_name
+      - git_commit_tags
       - git_repository_branch
       - git_repository_url
-      - head_git_commit_name
-      - head_git_commit_hash
-      - head_git_commit_tag
-      - selected_commit_status
-      title: Tree
-      type: object
-    TreeSummary:
-      properties:
-        builds:
-          $ref: '#/components/schemas/BuildSummary'
-        boots:
-          $ref: '#/components/schemas/TestSummary'
-        tests:
-          $ref: '#/components/schemas/TestSummary'
-        hardware:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Hardware
-        tree_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Tree Url
-        git_commit_tags:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Git Commit Tags
-      required:
-      - builds
-      - boots
-      - tests
-      - hardware
-      - tree_url
-      - git_commit_tags
-      title: TreeSummary
-      type: object
+      - patchset_hash
+      - start_time
+      - test_status
+      - tree_names
   securitySchemes:
     basicAuth:
       type: http

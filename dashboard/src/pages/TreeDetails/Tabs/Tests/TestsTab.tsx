@@ -7,6 +7,7 @@ import { useCallback, useMemo } from 'react';
 
 import { Skeleton } from '@/components/Skeleton';
 
+import { useTreeDetails } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 
 import {
@@ -28,23 +29,20 @@ import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
 import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
-import { RedirectFrom } from '@/types/general';
+import { RedirectFrom, type TFilter } from '@/types/general';
 
 import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
-import type { TreeDetailsLazyLoaded } from '@/hooks/useTreeDetailsLazyLoadQuery';
-import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 interface TestsTabProps {
-  treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
+  reqFilter: TFilter;
 }
 
-const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
+const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId' });
-
-  const { tests: testsQuery, summary: summaryQuery } = treeDetailsLazyLoaded;
-  const { data, status, isLoading: testsIsLoading } = testsQuery;
-  const { isLoading: isSummaryLoading, error: summaryError } = summaryQuery;
-  const summaryData = treeDetailsLazyLoaded.summary.data?.summary.tests;
+  const { isLoading, data, error } = useTreeDetails({
+    treeId: treeId ?? '',
+    filter: reqFilter,
+  });
 
   const { tableFilter, diffFilter } = useSearch({
     from: '/tree/$treeId',
@@ -103,12 +101,15 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
 
   const hardwareData = useMemo(() => {
     return {
-      ...summaryData?.environment_compatible,
-      ...summaryData?.environment_misc,
+      ...data?.summary.tests.enviroment_compatible,
+      ...data?.summary.tests.enviroment_misc,
     };
-  }, [summaryData?.environment_compatible, summaryData?.environment_misc]);
+  }, [
+    data?.summary.tests.enviroment_compatible,
+    data?.summary.tests.enviroment_misc,
+  ]);
 
-  if (summaryError || !treeId) {
+  if (error || !treeId) {
     return (
       <div>
         <FormattedMessage id="bootsTab.success" />
@@ -116,16 +117,16 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
     );
   }
 
-  if (isSummaryLoading)
+  if (isLoading)
     return (
       <Skeleton>
         <FormattedMessage id="global.loading" />
       </Skeleton>
     );
 
-  if (!summaryData) return <div />;
+  if (!data) return <div />;
 
-  if (!testsIsLoading && data?.tests.length === 0) {
+  if (data.tests.length < 1) {
     return (
       <BaseCard
         title={<FormattedMessage id="global.info" />}
@@ -144,22 +145,22 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
         <div>
           <MemoizedStatusCard
             title={<FormattedMessage id="testsTab.testStatus" />}
-            statusCounts={summaryData.status}
+            statusCounts={data.summary.tests.status}
           />
           <MemoizedConfigList
             title={<FormattedMessage id="global.configs" />}
-            configStatusCounts={summaryData.configs}
+            configStatusCounts={data.summary.tests.configs}
             diffFilter={diffFilter}
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
-            archCompilerErrors={summaryData.architectures}
+            archCompilerErrors={data.summary.tests.architectures}
             diffFilter={diffFilter}
           />
           <MemoizedIssuesList
             title={<FormattedMessage id="global.issues" />}
-            issues={summaryData.issues}
-            failedWithUnknownIssues={summaryData.unknown_issues}
+            issues={data.summary.tests.issues}
+            failedWithUnknownIssues={data.summary.tests.unknown_issues}
             diffFilter={diffFilter}
             issueFilterSection="testIssue"
             detailsId={treeId}
@@ -178,25 +179,25 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
       <MobileGrid>
         <MemoizedStatusCard
           title={<FormattedMessage id="testsTab.testStatus" />}
-          statusCounts={summaryData.status}
+          statusCounts={data.summary.tests.status}
         />
         <TreeCommitNavigationGraph />
         <InnerMobileGrid>
           <div>
             <MemoizedConfigList
               title={<FormattedMessage id="global.configs" />}
-              configStatusCounts={summaryData.configs}
+              configStatusCounts={data.summary.tests.configs}
               diffFilter={diffFilter}
             />
             <MemoizedErrorsSummary
               title={<FormattedMessage id="global.summary" />}
-              archCompilerErrors={summaryData.architectures}
+              archCompilerErrors={data.summary.tests.architectures}
               diffFilter={diffFilter}
             />
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
-              issues={summaryData.issues}
-              failedWithUnknownIssues={summaryData.unknown_issues}
+              issues={data.summary.tests.issues}
+              failedWithUnknownIssues={data.summary.tests.unknown_issues}
               diffFilter={diffFilter}
               issueFilterSection="testIssue"
               detailsId={treeId}
@@ -213,17 +214,15 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
         </InnerMobileGrid>
       </MobileGrid>
 
-      <QuerySwitcher status={status} data={data}>
-        <TestsTable
-          tableKey="treeDetailsTests"
-          testHistory={data?.tests ?? []}
-          onClickFilter={onClickFilter}
-          filter={tableFilter.testsTable}
-          getRowLink={getRowLink}
-          updatePathFilter={updatePathFilter}
-          currentPathFilter={currentPathFilter}
-        />
-      </QuerySwitcher>
+      <TestsTable
+        tableKey="treeDetailsTests"
+        testHistory={data.tests}
+        onClickFilter={onClickFilter}
+        filter={tableFilter.testsTable}
+        getRowLink={getRowLink}
+        updatePathFilter={updatePathFilter}
+        currentPathFilter={currentPathFilter}
+      />
     </div>
   );
 };

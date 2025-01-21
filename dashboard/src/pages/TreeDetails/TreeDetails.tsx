@@ -3,6 +3,8 @@ import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
+import type { IListingItem } from '@/components/ListingItem/ListingItem';
+import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -29,13 +31,24 @@ import {
   GroupedTestStatus,
 } from '@/components/Status/Status';
 
-import type { TFilter } from '@/types/general';
+import {
+  sanitizeArchs,
+  sanitizeBuilds,
+  sanitizeBuildsSummary,
+  sanitizeConfigs,
+} from '@/utils/utils';
+
+import type { BuildStatus, TFilter, TIssue } from '@/types/general';
 
 import MemoizedHardwareUsed from '@/components/Cards/HardwareUsed';
 
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 
 import DetailsFilterList from '@/components/Tabs/FilterList';
+
+import type { ISummaryItem } from '@/components/Tabs/Summary';
+
+import { useTreeDetails } from '@/api/treeDetails';
 
 import { truncateUrl } from '@/lib/string';
 
@@ -44,11 +57,18 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
 
-import { useTreeDetailsLazyLoadQuery } from '@/hooks/useTreeDetailsLazyLoadQuery';
-
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
+
+export interface ITreeDetails {
+  architectures: ISummaryItem[];
+  configs: IListingItem[];
+  buildsSummary: BuildStatus;
+  builds: AccordionItemBuilds[];
+  buildsIssues: TIssue[];
+  failedBuildsWithUnknownIssues?: number;
+}
 
 interface ITreeHeader {
   treeNames?: string;
@@ -125,17 +145,10 @@ function TreeDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const treeDetailsLazyLoaded = useTreeDetailsLazyLoadQuery({
+  const { isLoading, data, status, isPlaceholderData, error } = useTreeDetails({
     treeId: treeId ?? '',
     filter: reqFilter,
   });
-
-  const {
-    data,
-    isLoading,
-    error,
-    status: summaryQueryStatus,
-  } = treeDetailsLazyLoaded.summary;
 
   const onFilterChange = useCallback(
     (newFilter: TFilter) => {
@@ -168,15 +181,10 @@ function TreeDetails(): JSX.Element {
         filter={diffFilter}
         cleanFilters={cleanAll}
         navigate={onFilterChange}
-        isLoading={treeDetailsLazyLoaded.summary.isPlaceholderData}
+        isLoading={isPlaceholderData}
       />
     ),
-    [
-      cleanAll,
-      diffFilter,
-      onFilterChange,
-      treeDetailsLazyLoaded.summary.isPlaceholderData,
-    ],
+    [cleanAll, diffFilter, isPlaceholderData, onFilterChange],
   );
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
@@ -216,9 +224,21 @@ function TreeDetails(): JSX.Element {
     };
   }, [data]);
 
+  const treeDetailsData: ITreeDetails = useMemo(
+    () => ({
+      architectures: sanitizeArchs(data?.summary.builds.architectures),
+      configs: sanitizeConfigs(data?.summary.builds.configs),
+      builds: sanitizeBuilds(data?.builds),
+      buildsSummary: sanitizeBuildsSummary(data?.summary.builds.status),
+      buildsIssues: data?.summary.builds.issues || [],
+      failedBuildsWithUnknownIssues: data?.summary.builds.unknown_issues,
+    }),
+    [data],
+  );
+
   return (
     <QuerySwitcher
-      status={summaryQueryStatus}
+      status={status}
       data={data}
       customError={
         <MemoizedSectionError
@@ -262,13 +282,19 @@ function TreeDetails(): JSX.Element {
             commitTags={data?.summary.git_commit_tags}
           />
         </div>
-        <div className="mt-5">
-          <MemoizedHardwareUsed
-            title={<FormattedMessage id="treeDetails.hardwareUsed" />}
-            hardwareUsed={data?.summary.hardware}
-            diffFilter={diffFilter}
-          />
-        </div>
+        <QuerySwitcher
+          status={status}
+          data={data}
+          skeletonClassname="h-[200px] bg-lightGray"
+        >
+          <div className="mt-5">
+            <MemoizedHardwareUsed
+              title={<FormattedMessage id="treeDetails.hardwareUsed" />}
+              hardwareUsed={data?.summary.hardware}
+              diffFilter={diffFilter}
+            />
+          </div>
+        </QuerySwitcher>
         <div className="flex flex-col pb-2">
           {data?.summary.tree_url && (
             <div className="sticky top-[4.5rem] z-10">
@@ -281,8 +307,9 @@ function TreeDetails(): JSX.Element {
             </div>
           )}
           <TreeDetailsTab
-            treeDetailsLazyLoaded={treeDetailsLazyLoaded}
+            treeDetailsData={treeDetailsData}
             filterListElement={filterListElement}
+            reqFilter={reqFilter}
             countElements={tabsCounts}
           />
         </div>

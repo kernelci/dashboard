@@ -2,15 +2,16 @@ import { memo, useMemo } from 'react';
 
 import { useIntl } from 'react-intl';
 
+import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
+
 import BaseCard from '@/components/Cards/BaseCard';
 import StatusChartMemoized, {
   Colors,
 } from '@/components/StatusChart/StatusCharts';
 import type { TFilterObjectsKeys } from '@/types/general';
-import type { IBuildsTab } from '@/pages/TreeDetails/Tabs/Build/BuildTab';
 
 interface IStatusCard {
-  buildsSummary?: IBuildsTab['buildsSummary'];
+  buildsSummary?: ITreeDetails['buildsSummary'];
   toggleFilterBySection: (
     value: string,
     filterSection: TFilterObjectsKeys,

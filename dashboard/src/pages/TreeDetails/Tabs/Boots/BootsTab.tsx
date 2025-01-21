@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { useCallback, useMemo } from 'react';
 
+import { useTreeDetails } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 import { Skeleton } from '@/components/Skeleton';
 
@@ -26,17 +27,15 @@ import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
 import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
-import { RedirectFrom } from '@/types/general';
+import { RedirectFrom, type TFilter } from '@/types/general';
 
 import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
-import type { TreeDetailsLazyLoaded } from '@/hooks/useTreeDetailsLazyLoadQuery';
-import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 interface BootsTabProps {
-  treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
+  reqFilter: TFilter;
 }
 
-const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
+const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
   const { treeId } = useParams({
     from: '/tree/$treeId',
   });
@@ -81,8 +80,10 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
     [navigate],
   );
 
-  const { isLoading, data, error } = treeDetailsLazyLoaded.summary;
-  const { data: bootsData, status: bootsStatus } = treeDetailsLazyLoaded.boots;
+  const { isLoading, data, error } = useTreeDetails({
+    treeId: treeId ?? '',
+    filter: reqFilter,
+  });
 
   const getRowLink = useCallback(
     (bootId: string): LinkProps => ({
@@ -98,12 +99,12 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
 
   const hardwareData = useMemo(() => {
     return {
-      ...data?.summary.boots.environment_compatible,
-      ...data?.summary.boots.environment_misc,
+      ...data?.summary.boots.enviroment_compatible,
+      ...data?.summary.boots.enviroment_misc,
     };
   }, [
-    data?.summary.boots.environment_compatible,
-    data?.summary.boots.environment_misc,
+    data?.summary.boots.enviroment_compatible,
+    data?.summary.boots.enviroment_misc,
   ]);
 
   if (error || !treeId) {
@@ -123,7 +124,7 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
 
   if (!data) return <div />;
 
-  if (bootsData?.boots?.length === 0) {
+  if (data.boots.length < 1) {
     return (
       <BaseCard
         title={<FormattedMessage id="bootsTab.info" />}
@@ -210,17 +211,15 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
           </div>
         </InnerMobileGrid>
       </MobileGrid>
-      <QuerySwitcher data={bootsData} status={bootsStatus}>
-        <BootsTable
-          tableKey="treeDetailsBoots"
-          filter={tableFilter.bootsTable}
-          onClickFilter={onClickFilter}
-          testHistory={bootsData?.boots ?? []}
-          getRowLink={getRowLink}
-          updatePathFilter={updatePathFilter}
-          currentPathFilter={currentPathFilter}
-        />
-      </QuerySwitcher>
+      <BootsTable
+        tableKey="treeDetailsBoots"
+        filter={tableFilter.bootsTable}
+        onClickFilter={onClickFilter}
+        testHistory={data.boots}
+        getRowLink={getRowLink}
+        updatePathFilter={updatePathFilter}
+        currentPathFilter={currentPathFilter}
+      />
     </div>
   );
 };
