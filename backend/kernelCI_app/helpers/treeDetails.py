@@ -478,3 +478,34 @@ def process_boots_summary(instance, row_data):
         ] += 1
     else:
         instance.bootEnvironmentMisc[test_platform][test_status] += 1
+
+
+def process_filters(instance, row_data) -> None:
+    if row_data["build_id"] is not None:
+        instance.globalConfigs.add(row_data["build_config_name"])
+        instance.globalArchitectures.add(row_data["build_architecture"])
+        instance.globalCompilers.add(row_data["build_config_name"])
+
+    issue_id = row_data["issue_id"]
+    incident_test_id = row_data["incident_test_id"]
+    build_valid = row_data["build_valid"]
+
+    issue_id, is_build_issue = should_increment_build_issue(
+        issue_id=issue_id,
+        incident_test_id=incident_test_id,
+        build_valid=build_valid,
+    )
+
+    if issue_id is not None and is_build_issue:
+        instance.unfilteredBuildIssues.add(issue_id)
+
+    issue_id, is_test_issue = should_increment_test_issue(
+        issue_id=issue_id,
+        incident_test_id=incident_test_id,
+    )
+
+    if issue_id is not None and is_test_issue:
+        if is_boot(row_data["test_path"]):
+            instance.unfilteredBootIssues.add(issue_id)
+        else:
+            instance.unfilteredTestIssues.add(issue_id)

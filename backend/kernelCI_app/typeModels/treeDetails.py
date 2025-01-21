@@ -28,14 +28,33 @@ class TestSummary(BaseModel):
     failed_platforms: List[str]
 
 
-class TreeSummary(Summary):
+class TreeCommon(BaseModel):
     hardware: Optional[List[str]]
     tree_url: Optional[str]
     git_commit_tags: Optional[List[str]]
 
 
+class TreeGlobalFilters(BaseModel):
+    configs: List[str]
+    architectures: List[str]
+    compilers: List[str]
+
+
+class TreeLocalFilters(BaseModel):
+    issues: List[str]
+
+
+class TreeFilters(BaseModel):
+    all: TreeGlobalFilters
+    builds: TreeLocalFilters
+    boots: TreeLocalFilters
+    tests: TreeLocalFilters
+
+
 class SummaryResponse(BaseModel):
-    summary: TreeSummary
+    common: TreeCommon
+    summary: Summary
+    filters: TreeFilters
 
 
 class BootResponse(BaseModel):

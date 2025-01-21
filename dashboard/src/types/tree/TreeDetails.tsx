@@ -88,9 +88,29 @@ type TreeSummary = {
   boots: TestSummary;
   builds: BuildSummary;
   tests: TestSummary;
+};
+
+type TreeCommon = {
   hardware: string[];
   tree_url: string;
   git_commit_tags: string[];
+};
+
+type TreeGlobalFilters = {
+  configs: string[];
+  architectures: string[];
+  compilers: string[];
+};
+
+type TreeLocalFilters = {
+  issues: string[];
+};
+
+type TreeFilters = {
+  all: TreeGlobalFilters;
+  builds: TreeLocalFilters;
+  boots: TreeLocalFilters;
+  tests: TreeLocalFilters;
 };
 
 export type TTreeTestsFullData = {
@@ -98,10 +118,14 @@ export type TTreeTestsFullData = {
   boots: TestHistory[];
   tests: TestHistory[];
   summary: TreeSummary;
+  common: TreeCommon;
+  filters: TreeFilters;
 };
 
 export type TreeDetailsSummary = {
   summary: TreeSummary;
+  common: TreeCommon;
+  filters: TreeFilters;
 };
 
 export type TreeDetailsBuilds = {
