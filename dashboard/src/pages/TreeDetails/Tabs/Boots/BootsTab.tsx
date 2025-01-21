@@ -99,12 +99,12 @@ const BootsTab = ({ reqFilter }: BootsTabProps): JSX.Element => {
 
   const hardwareData = useMemo(() => {
     return {
-      ...data?.summary.boots.enviroment_compatible,
-      ...data?.summary.boots.enviroment_misc,
+      ...data?.summary.boots.environment_compatible,
+      ...data?.summary.boots.environment_misc,
     };
   }, [
-    data?.summary.boots.enviroment_compatible,
-    data?.summary.boots.enviroment_misc,
+    data?.summary.boots.environment_compatible,
+    data?.summary.boots.environment_misc,
   ]);
 
   if (error || !treeId) {

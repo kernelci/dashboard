@@ -101,12 +101,12 @@ const TestsTab = ({ reqFilter }: TestsTabProps): JSX.Element => {
 
   const hardwareData = useMemo(() => {
     return {
-      ...data?.summary.tests.enviroment_compatible,
-      ...data?.summary.tests.enviroment_misc,
+      ...data?.summary.tests.environment_compatible,
+      ...data?.summary.tests.environment_misc,
     };
   }, [
-    data?.summary.tests.enviroment_compatible,
-    data?.summary.tests.enviroment_misc,
+    data?.summary.tests.environment_compatible,
+    data?.summary.tests.environment_misc,
   ]);
 
   if (error || !treeId) {

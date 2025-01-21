@@ -95,7 +95,7 @@ class TestSummary(BaseModel):
     failed_platforms: List[str]
     environment_compatible: Optional[Dict] = None
     environment_misc: Optional[Dict] = None
-    platforms: Optional[Dict[str, TestStatusCount]]
+    platforms: Optional[Dict[str, TestStatusCount]] = None
 
 
 class BuildSummary(BaseModel):

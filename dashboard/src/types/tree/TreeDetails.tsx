@@ -71,8 +71,8 @@ export type TestSummary = {
   unknown_issues: number;
   fail_reasons: Record<string, number>;
   failed_platforms: string[];
-  enviroment_compatible?: PropertyStatusCounts;
-  enviroment_misc?: PropertyStatusCounts;
+  environment_compatible?: PropertyStatusCounts;
+  environment_misc?: PropertyStatusCounts;
   platforms?: PropertyStatusCounts;
 };
 
