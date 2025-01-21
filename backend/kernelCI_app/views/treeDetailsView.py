@@ -22,6 +22,7 @@ from kernelCI_app.helpers.treeDetails import (
     process_builds_issue,
     process_test_summary,
     process_tests_issue,
+    process_filters,
 )
 from kernelCI_app.utils import (
     Issue,
@@ -71,6 +72,13 @@ class TreeDetails(View):
         self.processed_build_issues: IssueDict = {}
         self.tree_url = ""
         self.git_commit_tags = []
+
+        self.global_configs = set()
+        self.global_architectures = set()
+        self.global_compilers = set()
+        self.unfiltered_test_issues = set()
+        self.unfiltered_boot_issues = set()
+        self.unfiltered_build_issues = set()
 
     def _process_boots_test(self, row_data):
         test_id = row_data["test_id"]
@@ -129,6 +137,7 @@ class TreeDetails(View):
             call_based_on_compatible_and_misc_platform(row_data, self.hardwareUsed.add)
 
             process_tree_url(self, row_data)
+            process_filters(self, row_data)
 
             is_record_filter_out = decide_if_is_full_row_filtered_out(self, row_data)
 
@@ -198,9 +207,27 @@ class TreeDetails(View):
                         "fail_reasons": self.testFailReasons,
                         "failed_platforms": list(self.testPlatformsWithErrors),
                     },
+                },
+                "common": {
                     "hardware": list(self.hardwareUsed),
                     "tree_url": self.tree_url,
                     "git_commit_tags": self.git_commit_tags,
+                },
+                "filters": {
+                    "all": {
+                        "configs": list(self.global_configs),
+                        "architectures": list(self.global_architectures),
+                        "compilers": list(self.global_compilers),
+                    },
+                    "builds": {
+                        "issues": list(self.unfiltered_build_issues),
+                    },
+                    "boots": {
+                        "issues": list(self.unfiltered_boot_issues),
+                    },
+                    "tests": {
+                        "issues": list(self.unfiltered_test_issues),
+                    },
                 },
             },
             safe=False,

@@ -663,12 +663,32 @@ components:
       - platform
       title: Misc
       type: object
+    Summary:
+      properties:
+        builds:
+          $ref: '#/components/schemas/BuildSummary'
+        boots:
+          $ref: '#/components/schemas/TestSummary'
+        tests:
+          $ref: '#/components/schemas/TestSummary'
+      required:
+      - builds
+      - boots
+      - tests
+      title: Summary
+      type: object
     SummaryResponse:
       properties:
+        common:
+          $ref: '#/components/schemas/TreeCommon'
         summary:
-          $ref: '#/components/schemas/TreeSummary'
+          $ref: '#/components/schemas/Summary'
+        filters:
+          $ref: '#/components/schemas/TreeFilters'
       required:
+      - common
       - summary
+      - filters
       title: SummaryResponse
       type: object
     TestArchSummaryItem:
@@ -945,14 +965,8 @@ components:
       - selected_commit_status
       title: Tree
       type: object
-    TreeSummary:
+    TreeCommon:
       properties:
-        builds:
-          $ref: '#/components/schemas/BuildSummary'
-        boots:
-          $ref: '#/components/schemas/TestSummary'
-        tests:
-          $ref: '#/components/schemas/TestSummary'
         hardware:
           anyOf:
           - items:
@@ -973,13 +987,61 @@ components:
           - type: 'null'
           title: Git Commit Tags
       required:
-      - builds
-      - boots
-      - tests
       - hardware
       - tree_url
       - git_commit_tags
-      title: TreeSummary
+      title: TreeCommon
+      type: object
+    TreeFilters:
+      properties:
+        all:
+          $ref: '#/components/schemas/TreeGlobalFilters'
+        builds:
+          $ref: '#/components/schemas/TreeLocalFilters'
+        boots:
+          $ref: '#/components/schemas/TreeLocalFilters'
+        tests:
+          $ref: '#/components/schemas/TreeLocalFilters'
+      required:
+      - all
+      - builds
+      - boots
+      - tests
+      title: TreeFilters
+      type: object
+    TreeGlobalFilters:
+      properties:
+        configs:
+          items:
+            type: string
+          title: Configs
+          type: array
+        architectures:
+          items:
+            type: string
+          title: Architectures
+          type: array
+        compilers:
+          items:
+            type: string
+          title: Compilers
+          type: array
+      required:
+      - configs
+      - architectures
+      - compilers
+      title: TreeGlobalFilters
+      type: object
+    TreeLocalFilters:
+      properties:
+        issues:
+          items:
+            type: string
+          title: Issues
+          type: array
+      required:
+      - issues
+      title: TreeLocalFilters
       type: object
   securitySchemes:
     basicAuth:

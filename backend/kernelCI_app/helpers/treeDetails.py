@@ -17,6 +17,7 @@ from kernelCI_app.helpers.misc import (
 )
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.utils import is_boot
+from kernelCI_app.constants.hardwareDetails import STATUS_FAILED_VALUE
 from django.db import connection
 
 
@@ -510,3 +511,43 @@ def process_boots_summary(instance, row_data):
         ] += 1
     else:
         instance.bootEnvironmentMisc[test_platform][test_status] += 1
+
+
+def process_filters(instance, row_data: dict) -> None:
+    if row_data["build_id"] is not None:
+        instance.global_configs.add(row_data["build_config_name"])
+        instance.global_architectures.add(row_data["build_architecture"])
+        instance.global_compilers.add(row_data["build_config_name"])
+
+    issue_id = row_data["issue_id"]
+    issue_version = row_data["issue_version"]
+    incident_test_id = row_data["incident_test_id"]
+    build_valid = row_data["build_valid"]
+
+    if row_data["build_id"] is not None:
+        build_issue_id, is_build_issue = should_increment_build_issue(
+            issue_id=issue_id,
+            incident_test_id=incident_test_id,
+            build_valid=build_valid,
+        )
+
+        if build_issue_id is not None and issue_version is not None and is_build_issue:
+            instance.unfiltered_build_issues.add(build_issue_id)
+        elif build_valid is False:
+            instance.unfiltered_build_issues.add(UNKNOWN_STRING)
+
+    if row_data["test_id"] is not None:
+        test_issue_id, is_test_issue = should_increment_test_issue(
+            issue_id=issue_id,
+            incident_test_id=incident_test_id,
+        )
+
+        if is_boot(row_data["test_path"]):
+            issue_set = instance.unfiltered_boot_issues
+        else:
+            issue_set = instance.unfiltered_test_issues
+
+        if test_issue_id is not None and issue_version is not None and is_test_issue:
+            issue_set.add(test_issue_id)
+        elif row_data["test_status"] == STATUS_FAILED_VALUE:
+            issue_set.add(UNKNOWN_STRING)

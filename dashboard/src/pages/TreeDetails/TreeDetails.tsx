@@ -262,13 +262,13 @@ function TreeDetails(): JSX.Element {
             gitUrl={treeInfo?.gitUrl}
             commitHash={treeId}
             commitName={treeInfo?.commitName}
-            commitTags={data?.summary.git_commit_tags}
+            commitTags={data?.common.git_commit_tags}
           />
         </div>
         <div className="mt-5">
           <MemoizedHardwareUsed
             title={<FormattedMessage id="treeDetails.hardwareUsed" />}
-            hardwareUsed={data?.summary.hardware}
+            hardwareUsed={data?.common.hardware}
             diffFilter={diffFilter}
           />
         </div>
@@ -278,7 +278,7 @@ function TreeDetails(): JSX.Element {
               {data && isAllReady && !isAnyLoading && (
                 <TreeDetailsFilter
                   paramFilter={diffFilter}
-                  treeUrl={data.summary.tree_url}
+                  treeUrl={data.common.tree_url}
                 />
               )}
               {!isAllReady && isAnyLoading && (
