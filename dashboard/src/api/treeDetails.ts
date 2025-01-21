@@ -8,10 +8,6 @@ import type {
   BuildCountsResponse,
   TTreeTestsFullData,
   LogFilesResponse,
-  TreeDetailsSummary,
-  TreeDetailsBoots,
-  TreeDetailsBuilds,
-  TreeDetailsTests,
 } from '@/types/tree/TreeDetails';
 
 import { getTargetFilter, type TFilter } from '@/types/general';
@@ -47,27 +43,11 @@ function assertTreeSearchParameters(
   }
 }
 
-type TreeDetailsVariants = 'full' | 'builds' | 'boots' | 'tests' | 'summary';
-
-type TreeDetailsResponseTable = {
-  full: TTreeTestsFullData;
-  summary: TreeDetailsSummary;
-  builds: TreeDetailsBuilds;
-  boots: TreeDetailsBoots;
-  tests: TreeDetailsTests;
-};
-
-const fetchTreeDetails = async ({
-  treeId,
-  treeSearchParameters,
-  filter = {},
-  variant,
-}: {
-  treeId: string;
-  treeSearchParameters: TreeSearchParameters;
-  filter: TTreeDetailsFilter;
-  variant: TreeDetailsVariants;
-}): Promise<TTreeTestsFullData> => {
+const fetchTreeDetails = async (
+  treeId: string,
+  treeSearchParameters: TreeSearchParameters,
+  filter: TTreeDetailsFilter = {},
+): Promise<TTreeTestsFullData> => {
   assertTreeSearchParameters(
     treeSearchParameters,
     'fetchTreeDetails - useSearchTab',
@@ -82,39 +62,22 @@ const fetchTreeDetails = async ({
     ...backendCompatibleFilters,
   };
 
-  const urlTable: Record<TreeDetailsVariants, string> = {
-    full: `/api/tree/${treeId}/full`,
-    builds: `/api/tree/${treeId}/builds`,
-    boots: `/api/tree/${treeId}/boots`,
-    tests: `/api/tree/${treeId}/tests`,
-    summary: `/api/tree/${treeId}/summary`,
-  };
-  const res = await http.get<TTreeTestsFullData>(urlTable[variant], {
+  const res = await http.get<TTreeTestsFullData>(`/api/tree/${treeId}/full`, {
     params: params,
   });
 
   return res.data;
 };
 
-type TreeDetailsResponse<T extends keyof TreeDetailsResponseTable> =
-  TreeDetailsResponseTable[T];
-
-export type UseTreeDetailsWithoutVariant = {
-  treeId: string;
-  filter?: TFilter;
-  enabled?: boolean;
-};
-
-type UseTreeDetailsParameters<T extends TreeDetailsVariants> = {
-  variant: T;
-} & UseTreeDetailsWithoutVariant;
-
-export const useTreeDetails = <T extends TreeDetailsVariants>({
+export const useTreeDetails = ({
   treeId,
   filter = {},
   enabled = true,
-  variant,
-}: UseTreeDetailsParameters<T>): UseQueryResult<TreeDetailsResponse<T>> => {
+}: {
+  treeId: string;
+  filter?: TFilter;
+  enabled?: boolean;
+}): UseQueryResult<TTreeTestsFullData> => {
   const testFilter = getTargetFilter(filter, 'test');
   const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
   const treeSearchParameters = useTreeSearchParameters();
@@ -126,17 +89,11 @@ export const useTreeDetails = <T extends TreeDetailsVariants>({
       treeSearchParameters,
       testFilter,
       treeDetailsFilter,
-      variant,
     ],
     queryFn: () =>
-      fetchTreeDetails({
-        treeId,
-        treeSearchParameters,
-        variant,
-        filter: {
-          ...testFilter,
-          ...treeDetailsFilter,
-        },
+      fetchTreeDetails(treeId, treeSearchParameters, {
+        ...testFilter,
+        ...treeDetailsFilter,
       }),
     enabled,
     placeholderData: previousData => previousData,

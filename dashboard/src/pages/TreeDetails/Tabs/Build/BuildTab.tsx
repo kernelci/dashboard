@@ -1,8 +1,10 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+
+import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
 
 import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
 
@@ -20,45 +22,15 @@ import {
   MobileGrid,
 } from '@/components/Tabs/TabGrid';
 
-import type { TreeDetailsLazyLoaded } from '@/hooks/useTreeDetailsLazyLoadQuery';
-
-import {
-  sanitizeArchs,
-  sanitizeConfigs,
-  sanitizeBuildsSummary,
-  sanitizeBuilds,
-} from '@/utils/utils';
-
-import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
-
-import type { ISummaryItem } from '@/components/Tabs/Summary';
-import type { IListingItem } from '@/components/ListingItem/ListingItem';
-
-import {
-  RedirectFrom,
-  type BuildStatus,
-  type TFilterObjectsKeys,
-  type TIssue,
-} from '@/types/general';
-
-import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
 interface BuildTab {
-  treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
+  treeDetailsData: ITreeDetails;
 }
 
-export interface IBuildsTab {
-  architectures: ISummaryItem[];
-  configs: IListingItem[];
-  buildsSummary: BuildStatus;
-  buildsIssues: TIssue[];
-  failedBuildsWithUnknownIssues?: number;
-  builds: AccordionItemBuilds[];
-}
-
-const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
+const BuildTab = ({ treeDetailsData }: BuildTab): JSX.Element => {
   const navigate = useNavigate({
     from: '/tree/$treeId',
   });
@@ -68,11 +40,6 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
   });
 
   const { treeId } = useParams({ from: '/tree/$treeId' });
-
-  const { builds: buildsQuery, summary: summaryQuery } = treeDetailsLazyLoaded;
-
-  const summaryData = summaryQuery.data?.summary.builds;
-  const { data: buildsData, status: buildsStatus } = buildsQuery;
 
   const toggleFilterBySection = useCallback(
     (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
@@ -99,24 +66,6 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
     [navigate],
   );
 
-  const treeDetailsData: IBuildsTab = useMemo(
-    () => ({
-      architectures: sanitizeArchs(summaryData?.architectures),
-      configs: sanitizeConfigs(summaryData?.configs),
-      buildsSummary: sanitizeBuildsSummary(summaryData?.status),
-      buildsIssues: summaryData?.issues || [],
-      failedBuildsWithUnknownIssues: summaryData?.unknown_issues,
-      builds: sanitizeBuilds(buildsData?.builds),
-    }),
-    [
-      buildsData?.builds,
-      summaryData?.architectures,
-      summaryData?.configs,
-      summaryData?.issues,
-      summaryData?.status,
-      summaryData?.unknown_issues,
-    ],
-  );
   return (
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
@@ -182,14 +131,15 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
         />
       </MobileGrid>
 
-      <QuerySwitcher data={buildsData} status={buildsStatus}>
+      {treeDetailsData && (
         <div className="flex flex-col gap-4">
           <div className="text-lg">
             <FormattedMessage id="global.builds" />
           </div>
+
           <TreeDetailsBuildsTable buildItems={treeDetailsData.builds} />
         </div>
-      </QuerySwitcher>
+      )}
     </div>
   );
 };
