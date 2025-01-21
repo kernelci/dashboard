@@ -55,7 +55,7 @@ export const createFilter = (data: TTreeTestsFullData | undefined): TFilter => {
       compilers[b.compiler ?? 'Unknown'] = false;
     });
 
-    data.summary.hardware.forEach(h => (hardware[h] = false));
+    data.common.hardware.forEach(h => (hardware[h] = false));
 
     data.summary.builds.issues.forEach(i => (buildIssue[i.id] = false));
     data.summary.boots.issues.forEach(i => (bootIssue[i.id] = false));
