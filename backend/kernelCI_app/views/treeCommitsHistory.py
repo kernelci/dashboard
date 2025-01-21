@@ -20,6 +20,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from typing import Dict, List, Optional
+from kernelCI_app.helpers.treeDetails import (
+    create_checkouts_where_clauses
+)
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -339,10 +342,6 @@ class TreeCommitsHistory(APIView):
         missing_params = []
         if not origin_param:
             missing_params.append("origin")
-        if not git_url_param:
-            missing_params.append("git_url")
-        if not git_branch_param:
-            missing_params.append("git_branch")
 
         if missing_params:
             return Response(
@@ -366,7 +365,15 @@ class TreeCommitsHistory(APIView):
             "git_branch_param": git_branch_param,
         }
 
-        query = """
+        checkout_clauses = create_checkouts_where_clauses(
+            git_url=git_url_param,
+            git_branch=git_branch_param
+        )
+
+        git_url_clause = checkout_clauses.get('git_url_clause')
+        git_branch_clause = checkout_clauses.get('git_branch_clause')
+
+        query = f"""
         WITH earliest_commits AS (
             SELECT
                  id,
@@ -391,15 +398,15 @@ class TreeCommitsHistory(APIView):
                         ORDER BY start_time DESC
                     ) AS time_order
                 FROM   checkouts
-                WHERE  git_repository_branch = %(git_branch_param)s
-                    AND git_repository_url = %(git_url_param)s
+                WHERE  {git_branch_clause}
+                    AND {git_url_clause}
                     AND origin = %(origin_param)s
                     AND git_commit_hash IS NOT NULL
                     AND start_time <= (SELECT Max(start_time) AS head_start_time
                                         FROM   checkouts
                                         WHERE  git_commit_hash = %(commit_hash)s
                                                 AND origin = %(origin_param)s
-                                                AND git_repository_url = %(git_url_param)s)
+                                                AND {git_url_clause})
                 ORDER  BY start_time DESC) AS checkouts_time_order
             WHERE
                 time_order = 1
