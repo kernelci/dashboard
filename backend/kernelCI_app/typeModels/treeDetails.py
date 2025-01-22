@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 from kernelCI_app.typeModels.commonDetails import (
     Summary,
@@ -29,7 +29,7 @@ class TestSummary(BaseModel):
 
 
 class TreeSummary(Summary):
-    hardware: Optional[Set[str]]
+    hardware: Optional[List[str]]
     tree_url: Optional[str]
     git_commit_tags: Optional[List[str]]
 
