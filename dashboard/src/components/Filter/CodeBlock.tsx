@@ -46,7 +46,7 @@ const CodeBlockDialog = ({ children }: PropsWithChildren): JSX.Element => {
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="sm:max-w-[70%]">
+        <DialogContent className="sm:h-[90%] sm:max-w-[70%]">
           <DialogHeader>
             <DialogTitle>
               <FormattedMessage id="global.logs" />
@@ -220,7 +220,7 @@ const CodeBlock = ({
 
       <CodeBlockDialog>
         <MemoizedCode
-          className="max-h-[520px]"
+          className="max-h-[100%]"
           highlightedCode={highlightedCode.highlightedCode}
           footer={footerElement}
         />
