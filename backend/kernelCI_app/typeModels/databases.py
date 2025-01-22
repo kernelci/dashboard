@@ -2,6 +2,13 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Literal
 from datetime import datetime
 
+FAIL_STATUS = "FAIL"
+ERROR_STATUS = "ERROR"
+MISS_STATUS = "MISS"
+PASS_STATUS = "PASS"
+
+failure_status_list = [ERROR_STATUS, FAIL_STATUS, MISS_STATUS]
+
 # "NULL" must be added manually because the database return None
 type StatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "NULL"]
 

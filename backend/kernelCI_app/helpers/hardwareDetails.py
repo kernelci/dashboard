@@ -7,12 +7,12 @@ from django.http import JsonResponse
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.constants.hardwareDetails import (
     SELECTED_HEAD_TREE_VALUE,
-    STATUS_FAILED_VALUE,
 )
 from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
+    is_test_failure,
     should_increment_build_issue,
     should_increment_test_issue,
 )
@@ -20,6 +20,7 @@ from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import env_misc_value_or_default, handle_environment_misc
 from kernelCI_app.helpers.trees import get_tree_heads
 from kernelCI_app.models import Tests
+from kernelCI_app.typeModels.databases import FAIL_STATUS
 from kernelCI_app.typeModels.hardwareDetails import DefaultRecordValues, PostBody
 from kernelCI_app.utils import create_issue, extract_error_message, is_boot
 from pydantic import ValidationError
@@ -312,9 +313,7 @@ def get_history(record: Dict):
         "log_url": record["log_url"],
         "architecture": record["build__architecture"],
         "compiler": record["build__compiler"],
-        "misc": {
-            "platform": record["test_platform"]
-        }
+        "misc": {"platform": record["test_platform"]},
     }
 
 
@@ -411,7 +410,7 @@ def handle_test_or_boot(record: Dict, task: Dict) -> None:
 
     task["platforms"][test_platform][status] += 1
 
-    if status == "ERROR" or status == "FAIL" or status == "MISS":
+    if is_test_failure(status):
         task["platformsFailing"].add(test_platform)
         task["failReasons"][extract_error_message(record["misc"])] += 1
 
@@ -430,7 +429,7 @@ def handle_test_or_boot(record: Dict, task: Dict) -> None:
         issue_comment=record["incidents__issue__comment"],
         issue_report_url=record["incidents__issue__report_url"],
         task=task,
-        is_failed_task=status == STATUS_FAILED_VALUE,
+        is_failed_task=status == FAIL_STATUS,
         issue_from="test",
     )
 
@@ -619,8 +618,5 @@ def assign_default_record_values(record: Dict) -> None:
         and record["build__valid"] is not True
     ):
         record["build__incidents__issue__id"] = UNKNOWN_STRING
-    if (
-        record["incidents__issue__id"] is None
-        and record["status"] == STATUS_FAILED_VALUE
-    ):
+    if record["incidents__issue__id"] is None and record["status"] == FAIL_STATUS:
         record["incidents__issue__id"] = UNKNOWN_STRING

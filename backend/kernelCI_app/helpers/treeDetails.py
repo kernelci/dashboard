@@ -1,10 +1,12 @@
 from collections.abc import Callable
 from typing import Any, Optional, TypedDict
 from kernelCI_app.helpers.filters import (
+    is_test_failure,
     should_increment_build_issue,
     should_increment_test_issue,
     UNKNOWN_STRING,
 )
+from kernelCI_app.typeModels.databases import FAIL_STATUS
 from kernelCI_app.utils import (
     extract_error_message,
     create_issue,
@@ -26,8 +28,7 @@ class CheckoutWhereClauses(TypedDict):
 
 
 def create_checkouts_where_clauses(
-    git_url: Optional[str],
-    git_branch: Optional[str]
+    git_url: Optional[str], git_branch: Optional[str]
 ) -> CheckoutWhereClauses:
     git_url_clause = """git_repository_url = %(git_url_param)s"""
     git_branch_clause = """git_repository_branch = %(git_branch_param)s"""
@@ -38,10 +39,7 @@ def create_checkouts_where_clauses(
     if not git_branch:
         git_branch_clause = "git_repository_branch IS NULL"
 
-    return {
-        "git_url_clause": git_url_clause,
-        "git_branch_clause": git_branch_clause
-    }
+    return {"git_url_clause": git_url_clause, "git_branch_clause": git_branch_clause}
 
 
 def get_tree_details_data(request, commit_hash):
@@ -61,12 +59,11 @@ def get_tree_details_data(request, commit_hash):
     rows = getQueryCache(cache_key, params)
     if rows is None:
         checkout_clauses = create_checkouts_where_clauses(
-            git_url=git_url_param,
-            git_branch=git_branch_param
+            git_url=git_url_param, git_branch=git_branch_param
         )
 
-        git_url_clause = checkout_clauses.get('git_url_clause')
-        git_branch_clause = checkout_clauses.get('git_branch_clause')
+        git_url_clause = checkout_clauses.get("git_url_clause")
+        git_branch_clause = checkout_clauses.get("git_branch_clause")
 
         query = f"""
         SELECT
@@ -218,7 +215,7 @@ def get_current_row_data(current_row: dict) -> dict:
     if current_row_data["issue_id"] is None and (
         current_row_data["build_valid"] is False
         or current_row_data["build_valid"] is None
-        or current_row_data["test_status"] == "FAIL"
+        or current_row_data["test_status"] == FAIL_STATUS
     ):
         current_row_data["issue_id"] = UNKNOWN_STRING
     current_row_data["build_misc"] = handle_build_misc(current_row_data["build_misc"])
@@ -236,9 +233,7 @@ def get_current_row_data(current_row: dict) -> dict:
         "log_url": current_row_data["test_log_url"],
         "architecture": current_row_data["build_architecture"],
         "compiler": current_row_data["build_compiler"],
-        "misc": {
-            "platform": current_row_data["test_platform"]
-        }
+        "misc": {"platform": current_row_data["test_platform"]},
     }
 
     return current_row_data
@@ -250,10 +245,14 @@ def process_tree_url(instance, row_data: dict) -> None:
         instance.tree_url = git_repository_url
 
 
-def call_based_on_compatible_and_misc_platform(row_data: dict, callback: Callable[[str], Any]) -> Any:
+def call_based_on_compatible_and_misc_platform(
+    row_data: dict, callback: Callable[[str], Any]
+) -> Any:
     test_environment_compatible = row_data["test_environment_compatible"]
     test_environment_misc_platform = row_data["test_platform"]
-    build_misc_platform = build_misc_value_or_default(row_data["build_misc"]).get("platform")
+    build_misc_platform = build_misc_value_or_default(row_data["build_misc"]).get(
+        "platform"
+    )
 
     if test_environment_compatible != UNKNOWN_STRING:
         return callback(test_environment_compatible)
@@ -345,7 +344,7 @@ def process_tests_issue(instance, row_data):
                 issue_comment=issue_comment,
                 issue_report_url=issue_report_url,
             )
-    elif test_status == "FAIL":
+    elif test_status == FAIL_STATUS:
         instance.failedTestsWithUnknownIssues += 1
 
 
@@ -372,7 +371,7 @@ def process_boots_issue(instance, row_data):
                 issue_comment=issue_comment,
                 issue_report_url=issue_report_url,
             )
-    elif test_status == "FAIL":
+    elif test_status == FAIL_STATUS:
         instance.failedBootsWithUnknownIssues += 1
 
 
@@ -459,7 +458,7 @@ def process_test_summary(instance, row_data):
     config_summary[test_status] = config_summary.get(test_status, 0) + 1
     instance.test_configs[build_config] = config_summary
 
-    if test_status == "ERROR" or test_status == "FAIL" or test_status == "MISS":
+    if is_test_failure(test_status):
         instance.testPlatformsWithErrors.add(test_platform)
         instance.testFailReasons[test_error] = (
             instance.testFailReasons.get(test_error, 0) + 1
@@ -498,7 +497,7 @@ def process_boots_summary(instance, row_data):
     configSummary[test_status] = configSummary.get(test_status, 0) + 1
     instance.bootConfigs[build_config] = configSummary
 
-    if test_status == "ERROR" or test_status == "FAIL" or test_status == "MISS":
+    if is_test_failure(test_status):
         instance.bootPlatformsFailing.add(test_platform)
         instance.bootFailReasons[test_error] = (
             instance.bootFailReasons.get(test_error, 0) + 1
