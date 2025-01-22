@@ -113,7 +113,7 @@ type TreeFilters = {
   tests: TreeLocalFilters;
 };
 
-export type TTreeTestsFullData = {
+export type TreeDetailsFullData = {
   builds: BuildsTabBuild[];
   boots: TestHistory[];
   tests: TestHistory[];
