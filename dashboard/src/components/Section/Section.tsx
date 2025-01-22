@@ -22,9 +22,10 @@ export interface SubsectionLink extends ILinkWithIcon {
 }
 export interface ISubsection {
   infos: SubsectionLink[];
+  title?: string;
 }
 
-export const Subsection = ({ infos }: ISubsection): JSX.Element => {
+export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
   const items = useMemo(
     () =>
       infos.map(info => {
@@ -61,8 +62,11 @@ export const Subsection = ({ infos }: ISubsection): JSX.Element => {
     [infos],
   );
   return (
-    <div className="grid grid-cols-2 gap-8 border-t border-darkGray py-8">
-      {items}
+    <div>
+      <span className="text-xl">{title}</span>
+      <div className="grid grid-cols-2 gap-8 border-t border-darkGray py-8">
+        {items}
+      </div>
     </div>
   );
 };
@@ -71,7 +75,11 @@ const Section = ({ title, subsections, eyebrow }: ISection): JSX.Element => {
   const sections = useMemo(
     () =>
       subsections?.map((subsection, index) => (
-        <Subsection key={index} infos={subsection.infos} />
+        <Subsection
+          key={index}
+          infos={subsection.infos}
+          title={subsection.title}
+        />
       )),
     [subsections],
   );
