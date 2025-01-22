@@ -50,6 +50,10 @@ export type TreeDetailsLazyLoaded = {
     isLoading: boolean;
     status: QuerySelectorStatus;
   };
+  common: {
+    isAllReady: boolean;
+    isAnyLoading: boolean;
+  };
 };
 
 export const useTreeDetailsLazyLoadQuery = (
@@ -86,6 +90,18 @@ export const useTreeDetailsLazyLoadQuery = (
     enabled:
       (!!summaryResult.data && currentPageTab === 'global.tests') || fetchAll,
   });
+
+  const isAllReady =
+    !!summaryResult.data &&
+    !!buildsResult.data &&
+    !!bootsResult.data &&
+    !!testsResult.data;
+
+  const isAnyLoading =
+    summaryResult.isLoading ||
+    buildsResult.isLoading ||
+    bootsResult.isLoading ||
+    testsResult.isLoading;
 
   useEffect(() => {
     if (
@@ -133,6 +149,10 @@ export const useTreeDetailsLazyLoadQuery = (
       data: testsResult.data,
       isLoading: testsResult.isLoading,
       status: testsResult.status,
+    },
+    common: {
+      isAllReady,
+      isAnyLoading,
     },
   };
 };
