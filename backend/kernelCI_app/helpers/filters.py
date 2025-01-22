@@ -1,6 +1,7 @@
 from typing import Optional, Dict, List, Tuple, TypedDict, Literal, Any
 from django.http import HttpResponseBadRequest
 import re
+from kernelCI_app.typeModels.databases import PASS_STATUS, failure_status_list
 from kernelCI_app.utils import getErrorResponseBody
 
 UNKNOWN_STRING = "Unknown"
@@ -9,6 +10,10 @@ NULL_STRINGS = set(["null", UNKNOWN_STRING, "NULL"])
 
 def is_build_invalid(build_valid: Optional[bool]) -> bool:
     return build_valid is None or build_valid is False
+
+
+def is_test_failure(test_status: str) -> bool:
+    return test_status in failure_status_list
 
 
 def is_known_issue(issue_id: Optional[str]) -> bool:
@@ -52,10 +57,10 @@ def should_filter_test_issue(
     issue_filters: set, issue_id: Optional[str], incident_test_id: Optional[str], test_status: Optional[str]
 ) -> bool:
     has_issue_filter = len(issue_filters) > 0
-    if (not has_issue_filter):
+    if not has_issue_filter:
         return False
 
-    if (test_status != "FAIL"):
+    if test_status == PASS_STATUS:
         return True
 
     has_unknown_filter = UNKNOWN_STRING in issue_filters
@@ -82,10 +87,10 @@ def should_filter_build_issue(
     build_valid: Optional[bool],
 ) -> bool:
     has_issue_filter = len(issue_filters) > 0
-    if (not has_issue_filter):
+    if not has_issue_filter:
         return False
 
-    if (not is_build_invalid(build_valid)):
+    if not is_build_invalid(build_valid):
         return True
 
     has_unknown_filter = UNKNOWN_STRING in issue_filters

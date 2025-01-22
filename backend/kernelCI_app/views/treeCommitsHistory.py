@@ -15,6 +15,7 @@ from kernelCI_app.helpers.misc import (
     build_misc_value_or_default,
     env_misc_value_or_default,
 )
+from kernelCI_app.typeModels.databases import FAIL_STATUS
 from kernelCI_app.utils import getErrorResponseBody, is_boot
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -232,7 +233,7 @@ class TreeCommitsHistory(APIView):
 
         if issue_id is None and (
             build_valid in [False, None]
-            or test_status == "FAIL"
+            or test_status == FAIL_STATUS
         ):
             issue_id = UNKNOWN_STRING
 
