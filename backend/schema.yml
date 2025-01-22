@@ -958,7 +958,6 @@ components:
           - items:
               type: string
             type: array
-            uniqueItems: true
           - type: 'null'
           title: Hardware
         tree_url:

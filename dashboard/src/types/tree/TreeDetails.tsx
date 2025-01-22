@@ -100,6 +100,22 @@ export type TTreeTestsFullData = {
   summary: TreeSummary;
 };
 
+export type TreeDetailsSummary = {
+  summary: TreeSummary;
+};
+
+export type TreeDetailsBuilds = {
+  builds: BuildsTabBuild[];
+};
+
+export type TreeDetailsTests = {
+  tests: TestHistory[];
+};
+
+export type TreeDetailsBoots = {
+  boots: TestHistory[];
+};
+
 export const possibleTabs = [
   'global.builds',
   'global.boots',
@@ -134,6 +150,8 @@ export const zPossibleTabValidator = z
   .enum(possibleTabs)
   .default(defaultValidadorValues.tab)
   .catch(defaultValidadorValues.tab);
+
+export type PossibleTabs = z.infer<typeof zPossibleTabValidator>;
 
 export const zBuildsTableFilterValidator = z
   .enum(possibleBuildsTableFilter)

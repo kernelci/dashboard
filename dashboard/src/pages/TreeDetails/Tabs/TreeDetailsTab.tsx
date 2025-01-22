@@ -8,9 +8,7 @@ import Tabs from '@/components/Tabs/Tabs';
 
 import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
-import type { ITreeDetails } from '@/pages/TreeDetails/TreeDetails';
-
-import type { TFilter } from '@/types/general';
+import type { TreeDetailsLazyLoaded } from '@/hooks/useTreeDetailsLazyLoadQuery';
 
 import BuildTab from './Build';
 import BootsTab from './Boots';
@@ -22,17 +20,15 @@ export type TreeDetailsTabRightElement = Record<
 >;
 
 export interface ITreeDetailsTab {
-  treeDetailsData: ITreeDetails;
+  treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
   filterListElement?: JSX.Element;
-  reqFilter: TFilter;
   countElements: TreeDetailsTabRightElement;
 }
 
 const TreeDetailsTab = ({
-  treeDetailsData,
   filterListElement,
-  reqFilter,
   countElements,
+  treeDetailsLazyLoaded,
 }: ITreeDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
     from: '/tree/$treeId',
@@ -42,24 +38,24 @@ const TreeDetailsTab = ({
     () => [
       {
         name: 'global.builds',
-        content: <BuildTab treeDetailsData={treeDetailsData} />,
+        content: <BuildTab treeDetailsLazyLoaded={treeDetailsLazyLoaded} />,
         disabled: false,
         rightElement: countElements['global.builds'],
       },
       {
         name: 'global.boots',
-        content: <BootsTab reqFilter={reqFilter} />,
+        content: <BootsTab treeDetailsLazyLoaded={treeDetailsLazyLoaded} />,
         disabled: false,
         rightElement: countElements['global.boots'],
       },
       {
         name: 'global.tests',
-        content: <TestsTab reqFilter={reqFilter} />,
+        content: <TestsTab treeDetailsLazyLoaded={treeDetailsLazyLoaded} />,
         disabled: false,
         rightElement: countElements['global.tests'],
       },
     ],
-    [countElements, reqFilter, treeDetailsData],
+    [countElements, treeDetailsLazyLoaded],
   );
 
   const onValueChange: (value: string) => void = useCallback(
