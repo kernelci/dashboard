@@ -69,10 +69,9 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
 
   const { treeId } = useParams({ from: '/tree/$treeId' });
 
-  const { builds: buildsQuery, summary: summaryQuery } = treeDetailsLazyLoaded;
-
-  const summaryData = summaryQuery.data?.summary.builds;
-  const { data: buildsData, status: buildsStatus } = buildsQuery;
+  const summaryData = treeDetailsLazyLoaded.summary?.data?.summary.builds;
+  const { data: fullData, status: fullStatus } = treeDetailsLazyLoaded.full;
+  const buildsData = fullData?.builds;
 
   const toggleFilterBySection = useCallback(
     (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
@@ -106,10 +105,10 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
       buildsSummary: sanitizeBuildsSummary(summaryData?.status),
       buildsIssues: summaryData?.issues || [],
       failedBuildsWithUnknownIssues: summaryData?.unknown_issues,
-      builds: sanitizeBuilds(buildsData?.builds),
+      builds: sanitizeBuilds(buildsData),
     }),
     [
-      buildsData?.builds,
+      buildsData,
       summaryData?.architectures,
       summaryData?.configs,
       summaryData?.issues,
@@ -182,7 +181,7 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
         />
       </MobileGrid>
 
-      <QuerySwitcher data={buildsData} status={buildsStatus}>
+      <QuerySwitcher data={buildsData} status={fullStatus}>
         <div className="flex flex-col gap-4">
           <div className="text-lg">
             <FormattedMessage id="global.builds" />

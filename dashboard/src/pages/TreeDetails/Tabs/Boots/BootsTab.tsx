@@ -82,7 +82,9 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
   );
 
   const { isLoading, data, error } = treeDetailsLazyLoaded.summary;
-  const { data: bootsData, status: bootsStatus } = treeDetailsLazyLoaded.boots;
+  const { data: fullData, status: fullStatus } = treeDetailsLazyLoaded.full;
+
+  const bootsData = fullData?.boots;
 
   const getRowLink = useCallback(
     (bootId: string): LinkProps => ({
@@ -123,7 +125,7 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
 
   if (!data) return <div />;
 
-  if (bootsData?.boots?.length === 0) {
+  if (bootsData?.length === 0) {
     return (
       <BaseCard
         title={<FormattedMessage id="bootsTab.info" />}
@@ -210,12 +212,12 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
           </div>
         </InnerMobileGrid>
       </MobileGrid>
-      <QuerySwitcher data={bootsData} status={bootsStatus}>
+      <QuerySwitcher data={bootsData} status={fullStatus}>
         <BootsTable
           tableKey="treeDetailsBoots"
           filter={tableFilter.bootsTable}
           onClickFilter={onClickFilter}
-          testHistory={bootsData?.boots ?? []}
+          testHistory={bootsData ?? []}
           getRowLink={getRowLink}
           updatePathFilter={updatePathFilter}
           currentPathFilter={currentPathFilter}
