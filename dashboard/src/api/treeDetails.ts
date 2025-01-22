@@ -6,7 +6,7 @@ import { useSearch } from '@tanstack/react-router';
 import type {
   TTreeDetailsFilter,
   BuildCountsResponse,
-  TTreeTestsFullData,
+  TreeDetailsFullData,
   LogFilesResponse,
   TreeDetailsSummary,
   TreeDetailsBoots,
@@ -38,7 +38,7 @@ const useTreeSearchParameters = (): TreeSearchParameters => {
 type TreeDetailsVariants = 'full' | 'builds' | 'boots' | 'tests' | 'summary';
 
 type TreeDetailsResponseTable = {
-  full: TTreeTestsFullData;
+  full: TreeDetailsFullData;
   summary: TreeDetailsSummary;
   builds: TreeDetailsBuilds;
   boots: TreeDetailsBoots;
@@ -55,7 +55,7 @@ const fetchTreeDetails = async ({
   treeSearchParameters: TreeSearchParameters;
   filter: TTreeDetailsFilter;
   variant: TreeDetailsVariants;
-}): Promise<TTreeTestsFullData> => {
+}): Promise<TreeDetailsFullData> => {
   const backendCompatibleFilters = mapFiltersKeysToBackendCompatible(filter);
 
   const params = {
@@ -72,7 +72,7 @@ const fetchTreeDetails = async ({
     tests: `/api/tree/${treeId}/tests`,
     summary: `/api/tree/${treeId}/summary`,
   };
-  const res = await http.get<TTreeTestsFullData>(urlTable[variant], {
+  const res = await http.get<TreeDetailsFullData>(urlTable[variant], {
     params: params,
   });
 

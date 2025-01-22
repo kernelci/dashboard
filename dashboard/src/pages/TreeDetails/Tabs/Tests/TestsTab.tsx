@@ -41,8 +41,8 @@ interface TestsTabProps {
 const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
   const { treeId } = useParams({ from: '/tree/$treeId' });
 
-  const { tests: testsQuery, summary: summaryQuery } = treeDetailsLazyLoaded;
-  const { data, status, isLoading: testsIsLoading } = testsQuery;
+  const { full: fullQuery, summary: summaryQuery } = treeDetailsLazyLoaded;
+  const { data, status, isLoading: fullIsLoading } = fullQuery;
   const { isLoading: isSummaryLoading, error: summaryError } = summaryQuery;
   const summaryData = treeDetailsLazyLoaded.summary.data?.summary.tests;
 
@@ -125,7 +125,7 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
 
   if (!summaryData) return <div />;
 
-  if (!testsIsLoading && data?.tests.length === 0) {
+  if (!fullIsLoading && data?.tests.length === 0) {
     return (
       <BaseCard
         title={<FormattedMessage id="global.info" />}
