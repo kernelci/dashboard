@@ -1,6 +1,6 @@
 import { ImTree } from 'react-icons/im';
 
-import { MdClose, MdCheck, MdFolderOpen } from 'react-icons/md';
+import { MdClose, MdCheck } from 'react-icons/md';
 
 import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -41,11 +41,9 @@ import { getFilesSection } from '@/components/Section/FilesSection';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
-import BuildDetailsTestSection from './BuildDetailsTestSection';
+import { BlueFolderIcon } from '@/components/Icons/BlueFolder';
 
-const BlueFolderIcon = (): JSX.Element => (
-  <MdFolderOpen className="text-blue" />
-);
+import BuildDetailsTestSection from './BuildDetailsTestSection';
 
 interface BuildDetailsProps {
   breadcrumb?: JSX.Element;
