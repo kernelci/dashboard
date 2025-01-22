@@ -6,7 +6,6 @@ import { useCallback, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 
 import { PiComputerTowerThin } from 'react-icons/pi';
-import { MdFolderOpen } from 'react-icons/md';
 
 import { Link, useRouterState, useSearch } from '@tanstack/react-router';
 
@@ -34,6 +33,7 @@ import { getFilesSection } from '@/components/Section/FilesSection';
 import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+import { BlueFolderIcon } from '@/components/Icons/BlueFolder';
 
 const TestDetailsSections = ({
   test,
@@ -115,9 +115,7 @@ const TestDetailsSections = ({
             },
             {
               title: 'global.logs',
-              icon: hasUsefulLogInfo ? (
-                <MdFolderOpen className="text-blue" />
-              ) : undefined,
+              icon: hasUsefulLogInfo ? <BlueFolderIcon /> : undefined,
               linkText: shouldTruncate(valueOrEmpty(test.log_url)) ? (
                 <TruncatedValueTooltip value={test.log_url} isUrl={true} />
               ) : (

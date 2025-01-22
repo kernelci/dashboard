@@ -1,7 +1,5 @@
 import { type Dispatch, type SetStateAction } from 'react';
 
-import { MdFolderOpen } from 'react-icons/md';
-
 import type {
   IJsonContent,
   SheetType,
@@ -13,11 +11,9 @@ import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueToolti
 
 import { SheetTrigger } from '@/components/Sheet';
 
-import type { ISection, SubsectionLink } from './Section';
+import { BlueFolderIcon } from '@/components/Icons/BlueFolder';
 
-const BlueFolderIcon = (): JSX.Element => (
-  <MdFolderOpen className="text-blue" />
-);
+import type { ISection, SubsectionLink } from './Section';
 
 export const getMiscSection = ({
   misc,
