@@ -4,7 +4,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.typeModels.issues import Issue
+from kernelCI_app.typeModels.issues import IncidentInfo, Issue
 
 DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
 
@@ -25,8 +25,26 @@ def create_issue(
     }
 
 
+# deprecated, use convert_issues_dict_to_list_typed instead and use type validation
 def convert_issues_dict_to_list(issues_dict: Dict[str, Issue]) -> List[Issue]:
     return list(issues_dict.values())
+
+
+def convert_issues_dict_to_list_typed(*, issues_dict: Dict) -> List[Issue]:
+    issues: List[Issue] = []
+    for issue in issues_dict.values():
+        issues.append(
+            Issue(
+                id=issue["id"],
+                version=issue["version"],
+                comment=issue["comment"],
+                report_url=issue["report_url"],
+                incidents_info=IncidentInfo(
+                    incidentsCount=issue["incidents_info"]["incidentsCount"],
+                )
+            )
+        )
+    return issues
 
 
 # TODO misc is not stable and should be used as a POC only
