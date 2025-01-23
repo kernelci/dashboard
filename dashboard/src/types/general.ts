@@ -102,6 +102,10 @@ export type Architecture = Record<
   }
 >;
 
+export type ResponseData<T> = T & {
+  error?: string;
+};
+
 /**
  * @deprecated use StatusCount
  */
