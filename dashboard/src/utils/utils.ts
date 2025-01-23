@@ -188,3 +188,14 @@ export const mapFiltersKeysToBackendCompatible = (
 
   return filterParam;
 };
+
+export const isStringRecord = (
+  obj: unknown,
+): obj is Record<string, unknown> => {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    !(obj instanceof Set) &&
+    !Array.isArray(obj)
+  );
+};

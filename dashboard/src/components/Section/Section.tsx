@@ -12,6 +12,7 @@ import CopyButton from '@/components/Button/CopyButton';
 
 export interface ISection {
   title: string;
+  icon?: JSX.Element;
   subsections?: ISubsection[];
   eyebrow?: string | ReactElement;
 }
@@ -19,6 +20,7 @@ export interface ISection {
 export interface SubsectionLink extends ILinkWithIcon {
   wrapperComponent?: ElementType<{ children: ReactNode } & DialogTriggerProps>;
   copyValue?: string;
+  children?: JSX.Element;
 }
 export interface ISubsection {
   infos: SubsectionLink[];
@@ -26,6 +28,7 @@ export interface ISubsection {
 }
 
 export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
+  const children: JSX.Element[] = useMemo(() => [], []);
   const items = useMemo(
     () =>
       infos.map(info => {
@@ -48,18 +51,23 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
             onClick={info.onClick ?? undefined}
           />
         );
-        return (
-          <div key={info.title} className="flex flex-row items-end">
-            {WrapperComponent ? (
-              <WrapperComponent asChild>{LinkComponent}</WrapperComponent>
-            ) : (
-              <>{LinkComponent}</>
-            )}
-            {info.copyValue && <CopyButton value={info.copyValue} />}
-          </div>
-        );
+
+        if (info.children !== undefined) {
+          children.push(info.children);
+        } else {
+          return (
+            <div key={info.title} className="flex flex-row items-end">
+              {WrapperComponent ? (
+                <WrapperComponent asChild>{LinkComponent}</WrapperComponent>
+              ) : (
+                <>{LinkComponent}</>
+              )}
+              {info.copyValue && <CopyButton value={info.copyValue} />}
+            </div>
+          );
+        }
       }),
-    [infos],
+    [infos, children],
   );
   return (
     <div>
@@ -67,11 +75,17 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
       <div className="grid grid-cols-2 gap-8 border-t border-darkGray py-8">
         {items}
       </div>
+      <div className="w-[80vw]">{children}</div>
     </div>
   );
 };
 
-const Section = ({ title, subsections, eyebrow }: ISection): JSX.Element => {
+const Section = ({
+  title,
+  subsections,
+  eyebrow,
+  icon,
+}: ISection): JSX.Element => {
   const sections = useMemo(
     () =>
       subsections?.map((subsection, index) => (
@@ -87,7 +101,10 @@ const Section = ({ title, subsections, eyebrow }: ISection): JSX.Element => {
     <div className="flex flex-col gap-4 text-dimGray">
       <div className="flex flex-col gap-2">
         <span className="text-sm">{eyebrow}</span>
-        <span className="text-2xl font-bold">{title}</span>
+        <div className="flex flex-row gap-2">
+          <span className="text-2xl font-bold">{title}</span>
+          {icon}
+        </div>
       </div>
       {sections}
     </div>

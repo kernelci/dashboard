@@ -16,6 +16,7 @@ const SectionGroup = ({ sections }: ISectionGroup): JSX.Element => {
           title={section.title}
           subsections={section.subsections}
           eyebrow={section.eyebrow}
+          icon={section.icon}
         />
       )),
     [sections],
