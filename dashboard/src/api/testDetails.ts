@@ -5,11 +5,11 @@ import type { TTestDetails } from '@/types/tree/TestDetails';
 
 import type { TIssue } from '@/types/general';
 
-import http from './api';
+import { RequestData } from './commonRequest';
 
 const fetchTestDetails = async (testId: string): Promise<TTestDetails> => {
-  const res = await http.get<TTestDetails>(`/api/test/${testId}`);
-  return res.data;
+  const data = await RequestData.get<TTestDetails>(`/api/test/${testId}`);
+  return data;
 };
 
 export const useTestDetails = (
@@ -22,8 +22,9 @@ export const useTestDetails = (
 };
 
 const fetchTestIssues = async (testId: string): Promise<TIssue[]> => {
-  const res = await http.get<TIssue[]>(`/api/test/${testId}/issues`);
-  return res.data;
+  const data = await RequestData.get<TIssue[]>(`/api/test/${testId}/issues`);
+
+  return data;
 };
 
 export const useTestIssues = (testId: string): UseQueryResult<TIssue[]> => {

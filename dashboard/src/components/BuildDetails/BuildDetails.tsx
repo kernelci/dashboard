@@ -63,10 +63,12 @@ const BuildDetails = ({
   historyState,
 }: BuildDetailsProps): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
-  const { data, isLoading, status } = useBuildDetails(buildId ?? '');
-  const { data: issueData, status: issueStatus } = useBuildIssues(
-    buildId ?? '',
-  );
+  const { data, isLoading, status, error } = useBuildDetails(buildId ?? '');
+  const {
+    data: issueData,
+    status: issueStatus,
+    error: issueError,
+  } = useBuildIssues(buildId ?? '');
 
   const { formatMessage } = useIntl();
 
@@ -233,7 +235,7 @@ const BuildDetails = ({
       customError={
         <MemoizedSectionError
           isLoading={isLoading}
-          errorMessage={formatMessage({ id: 'buildDetails.failedToFetch' })}
+          errorMessage={error?.message}
           emptyLabel={'global.error'}
         />
       }
@@ -252,6 +254,7 @@ const BuildDetails = ({
           <IssueSection
             data={issueData}
             status={issueStatus}
+            error={issueError?.message}
             historyState={historyState}
             previousSearch={searchParams}
           />

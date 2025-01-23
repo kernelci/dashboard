@@ -55,7 +55,7 @@ class IssueDetailsBuilds(View):
 
         if not builds_data:
             return create_error_response(
-                error_message="Builds not found", status_code=HTTPStatus.NOT_FOUND
+                error_message="No builds found for this issue", status_code=HTTPStatus.OK
             )
 
         return JsonResponse(builds_data, safe=False)

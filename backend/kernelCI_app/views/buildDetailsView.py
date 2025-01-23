@@ -49,7 +49,7 @@ class BuildDetails(View):
         records = query.select()
         if not records:
             return create_error_response(
-                error_message="Build not found", status_code=HTTPStatus.NOT_FOUND
+                error_message="Build not found", status_code=HTTPStatus.OK
             )
 
         return JsonResponse(records[0])

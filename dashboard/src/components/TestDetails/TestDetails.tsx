@@ -252,10 +252,12 @@ const TestDetails = ({
 }: TestsDetailsProps): JSX.Element => {
   const historyState = useRouterState({ select: s => s.location.state });
   const searchParams = useSearch({ from: '/test/$testId' });
-  const { data, isLoading, status } = useTestDetails(testId ?? '');
-  const { data: issueData, status: issueStatus } = useTestIssues(testId ?? '');
-
-  const { formatMessage } = useIntl();
+  const { data, isLoading, status, error } = useTestDetails(testId ?? '');
+  const {
+    data: issueData,
+    status: issueStatus,
+    error: issueError,
+  } = useTestIssues(testId ?? '');
 
   const [sheetType, setSheetType] = useState<SheetType>('log');
   const [jsonContent, setJsonContent] = useState<IJsonContent>();
@@ -267,7 +269,7 @@ const TestDetails = ({
       customError={
         <MemoizedSectionError
           isLoading={isLoading}
-          errorMessage={formatMessage({ id: 'testDetails.failedToFetch' })}
+          errorMessage={error?.message}
           emptyLabel={'global.error'}
         />
       }
@@ -286,6 +288,7 @@ const TestDetails = ({
           <IssueSection
             data={issueData}
             status={issueStatus}
+            error={issueError?.message}
             historyState={historyState}
             previousSearch={searchParams}
           />

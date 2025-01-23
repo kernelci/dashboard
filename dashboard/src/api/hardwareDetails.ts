@@ -12,7 +12,7 @@ import type {
 import type { TFilter, TOrigins } from '@/types/general';
 import { getTargetFilter } from '@/types/general';
 
-import http from './api';
+import { RequestData } from './commonRequest';
 
 type fetchHardwareDetailsBody = {
   startTimestampInSeconds: number;
@@ -43,12 +43,12 @@ const fetchHardwareDetails = async (
   hardwareId: string,
   body: fetchHardwareDetailsBody,
 ): Promise<THardwareDetails> => {
-  const res = await http.post<THardwareDetails>(
+  const data = await RequestData.post<THardwareDetails>(
     `/api/hardware/${hardwareId}`,
     body,
   );
 
-  return res.data;
+  return data;
 };
 
 const TREE_SELECT_HEAD_VALUE = 'head';
@@ -115,11 +115,12 @@ const fetchCommitHistory = async (
   hardwareId: string,
   body: FetchHardwareDetailsCommitHistoryBody,
 ): Promise<CommitHistoryTable> => {
-  const res = await http.post<CommitHistoryTable>(
+  const data = await RequestData.post<CommitHistoryTable>(
     `/api/hardware/${hardwareId}/commit-history`,
     body,
   );
-  return res.data;
+
+  return data;
 };
 
 export const useHardwareDetailsCommitHistory = (

@@ -18,7 +18,7 @@ import { getTargetFilter, type TFilter } from '@/types/general';
 
 import { mapFiltersKeysToBackendCompatible } from '@/utils/utils';
 
-import http from './api';
+import { RequestData } from './commonRequest';
 
 type TreeSearchParameters = {
   origin: string;
@@ -72,11 +72,12 @@ const fetchTreeDetails = async ({
     tests: `/api/tree/${treeId}/tests`,
     summary: `/api/tree/${treeId}/summary`,
   };
-  const res = await http.get<TreeDetailsFullData>(urlTable[variant], {
-    params: params,
+
+  const data = await RequestData.get<TreeDetailsFullData>(urlTable[variant], {
+    params,
   });
 
-  return res.data;
+  return data;
 };
 
 type TreeDetailsResponse<T extends keyof TreeDetailsResponseTable> =
@@ -127,12 +128,16 @@ export const useTreeDetails = <T extends TreeDetailsVariants>({
 };
 
 const fetchLogFiles = async (logUrl: string): Promise<BuildCountsResponse> => {
-  const res = await http.get<BuildCountsResponse>(`/api/log-downloader/`, {
-    params: {
-      log_download_url: logUrl,
+  const data = await RequestData.get<BuildCountsResponse>(
+    `/api/log-downloader/`,
+    {
+      params: {
+        log_download_url: logUrl,
+      },
     },
-  });
-  return res.data;
+  );
+
+  return data;
 };
 
 type Config = {

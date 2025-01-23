@@ -232,7 +232,7 @@ class HardwareDetailsSummary(APIView):
 
         if len(records) == 0:
             return Response(
-                data={"error": "Hardware not found"}, status=HTTPStatus.NOT_FOUND
+                data={"error": "Hardware not found"}, status=HTTPStatus.OK
             )
 
         is_all_selected = len(self.selected_commits) == 0

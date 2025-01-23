@@ -87,7 +87,7 @@ class IssueView(View):
             if len(test_issues) == 0:
                 return create_error_response(
                     error_message="No issues were found for this test",
-                    status_code=HTTPStatus.NOT_FOUND,
+                    status_code=HTTPStatus.OK,
                 )
 
             return JsonResponse(test_issues, safe=False)
@@ -97,7 +97,7 @@ class IssueView(View):
             if len(build_issues) == 0:
                 return create_error_response(
                     error_message="No issues were found for this build",
-                    status_code=HTTPStatus.NOT_FOUND,
+                    status_code=HTTPStatus.OK,
                 )
 
             return JsonResponse(build_issues, safe=False)

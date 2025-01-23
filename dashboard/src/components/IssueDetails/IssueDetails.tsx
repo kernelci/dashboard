@@ -56,7 +56,10 @@ export const IssueDetails = ({
   getBuildTableRowLink,
   breadcrumb,
 }: IIssueDetails): JSX.Element => {
-  const { data, isLoading, status } = useIssueDetails(issueId, versionNumber);
+  const { data, isLoading, status, error } = useIssueDetails(
+    issueId,
+    versionNumber,
+  );
 
   const hasTest = data && data.test_status !== null;
   const hasBuild = data && data.build_valid !== null;
@@ -161,7 +164,7 @@ export const IssueDetails = ({
       customError={
         <MemoizedSectionError
           isLoading={isLoading}
-          errorMessage={formatMessage({ id: 'issueDetails.failedToFetch' })}
+          errorMessage={error?.message}
           emptyLabel={'global.error'}
         />
       }

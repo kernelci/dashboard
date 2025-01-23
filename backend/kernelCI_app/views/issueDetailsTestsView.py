@@ -51,7 +51,7 @@ class IssueDetailsTests(View):
 
         if not tests_data:
             return create_error_response(
-                error_message="Tests not found", status_code=HTTPStatus.NOT_FOUND
+                error_message="No tests found for this issue", status_code=HTTPStatus.OK
             )
 
         return JsonResponse(tests_data, safe=False)

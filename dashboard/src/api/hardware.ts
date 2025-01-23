@@ -7,20 +7,25 @@ import type { HardwareListingResponse } from '@/types/hardware';
 
 import type { TOrigins } from '@/types/general';
 
-import http from './api';
+import { RequestData } from './commonRequest';
+
 const fetchHardwareListing = async (
   origin: TOrigins,
   startTimestampInSeconds: number,
   endTimeStampInSeconds: number,
 ): Promise<HardwareListingResponse> => {
-  const res = await http.get('/api/hardware/', {
-    params: {
-      startTimestampInSeconds,
-      endTimeStampInSeconds,
-      origin,
+  const data = await RequestData.get<HardwareListingResponse>(
+    '/api/hardware/',
+    {
+      params: {
+        startTimestampInSeconds,
+        endTimeStampInSeconds,
+        origin,
+      },
     },
-  });
-  return res.data;
+  );
+
+  return data;
 };
 
 export const useHardwareListing = (

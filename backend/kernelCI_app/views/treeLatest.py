@@ -60,7 +60,7 @@ class TreeLatest(View):
         if tree_data is None:
             return create_error_response(
                 error_message=tree_not_found_error_message,
-                status_code=HTTPStatus.NOT_FOUND,
+                status_code=HTTPStatus.OK,
             )
 
         base_url = reverse(

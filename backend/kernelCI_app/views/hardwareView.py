@@ -96,7 +96,7 @@ class HardwareView(View):
 
         if not result["hardware"]:
             return create_error_response(
-                error_message="Hardwares not found", status_code=HTTPStatus.NOT_FOUND
+                error_message="No hardwares found", status_code=HTTPStatus.OK
             )
 
         return JsonResponse(result, safe=False)

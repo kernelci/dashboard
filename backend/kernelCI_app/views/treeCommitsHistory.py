@@ -457,7 +457,7 @@ class TreeCommitsHistory(APIView):
 
         if not rows:
             return create_error_response(
-                error_message="History of tree commits not found", status_code=HTTPStatus.NOT_FOUND
+                error_message="History of tree commits not found", status_code=HTTPStatus.OK
             )
 
         self._process_rows(rows)
