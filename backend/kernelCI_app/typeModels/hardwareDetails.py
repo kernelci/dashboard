@@ -79,6 +79,14 @@ class HardwareDetailsFullResponse(BaseModel):
     summary: HardwareSummary
 
 
-type HardwareTreeList = List[Dict[str, str]]
+class HardwareDetailsSummaryResponse(BaseModel):
+    summary: HardwareSummary
+
 
 PossibleTestType = Literal["test", "boot"]
+
+
+class HardwareBuildHistoryItem(BuildHistoryItem):
+    tree_name: Optional[str]
+    issue_id: Optional[str]
+    issue_version: Optional[str]

@@ -26,6 +26,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/HardwareDetailsFullResponse'
           description: ''
+  /api/hardware/{hardware_id}/summary:
+    post:
+      operationId: hardware_summary_create
+      parameters:
+      - in: path
+        name: hardware_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - hardware
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareDetailsSummaryResponse'
+          description: ''
   /api/log-downloader/:
     get:
       operationId: log_downloader_retrieve
@@ -378,42 +400,32 @@ components:
     BuildArchitectures:
       properties:
         valid:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
           title: Valid
-          type: integer
         invalid:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
           title: Invalid
-          type: integer
         'null':
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
           title: 'Null'
-          type: integer
         compilers:
-          items:
-            type: string
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          default: []
           title: Compilers
-          type: array
-      required:
-      - valid
-      - invalid
-      - 'null'
-      - compilers
       title: BuildArchitectures
-      type: object
-    BuildConfigs:
-      properties:
-        valid:
-          title: Valid
-          type: integer
-        invalid:
-          title: Invalid
-          type: integer
-        'null':
-          title: 'Null'
-          type: integer
-      required:
-      - valid
-      - invalid
-      - 'null'
-      title: BuildConfigs
       type: object
     BuildHistoryItem:
       properties:
@@ -496,18 +508,23 @@ components:
     BuildStatusCount:
       properties:
         valid:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
           title: Valid
-          type: integer
         invalid:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
           title: Invalid
-          type: integer
         'null':
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
           title: 'Null'
-          type: integer
-      required:
-      - valid
-      - invalid
-      - 'null'
       title: BuildStatusCount
       type: object
     BuildSummary:
@@ -521,12 +538,12 @@ components:
           type: object
         configs:
           additionalProperties:
-            $ref: '#/components/schemas/BuildConfigs'
+            $ref: '#/components/schemas/BuildStatusCount'
           title: Configs
           type: object
         issues:
           items:
-            $ref: '#/components/schemas/BuildsIssuesItem'
+            $ref: '#/components/schemas/Issue'
           title: Issues
           type: array
         unknown_issues:
@@ -539,30 +556,6 @@ components:
       - issues
       - unknown_issues
       title: BuildSummary
-      type: object
-    BuildsIssuesItem:
-      properties:
-        id:
-          title: Id
-          type: string
-        comment:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Comment
-        report_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Report Url
-        incidents_info:
-          $ref: '#/components/schemas/IncidentsInfo'
-      required:
-      - id
-      - comment
-      - report_url
-      - incidents_info
-      title: BuildsIssuesItem
       type: object
     BuildsResponse:
       properties:
@@ -600,6 +593,14 @@ components:
       - tests
       - summary
       title: HardwareDetailsFullResponse
+      type: object
+    HardwareDetailsSummaryResponse:
+      properties:
+        summary:
+          $ref: '#/components/schemas/HardwareSummary'
+      required:
+      - summary
+      title: HardwareDetailsSummaryResponse
       type: object
     HardwareSummary:
       properties:
@@ -645,14 +646,42 @@ components:
       - compatibles
       title: HardwareSummary
       type: object
-    IncidentsInfo:
+    IncidentInfo:
       properties:
         incidentsCount:
           title: Incidentscount
           type: integer
       required:
       - incidentsCount
-      title: IncidentsInfo
+      title: IncidentInfo
+      type: object
+    Issue:
+      properties:
+        id:
+          title: Id
+          type: string
+        version:
+          title: Version
+          type: string
+        comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comment
+        report_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Report Url
+        incidents_info:
+          $ref: '#/components/schemas/IncidentInfo'
+      required:
+      - id
+      - version
+      - comment
+      - report_url
+      - incidents_info
+      title: Issue
       type: object
     Misc:
       properties:
@@ -781,30 +810,6 @@ components:
       - misc
       title: TestHistoryItem
       type: object
-    TestIssuesItem:
-      properties:
-        id:
-          title: Id
-          type: string
-        comment:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Comment
-        report_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Report Url
-        incidents_info:
-          $ref: '#/components/schemas/IncidentsInfo'
-      required:
-      - id
-      - comment
-      - report_url
-      - incidents_info
-      title: TestIssuesItem
-      type: object
     TestResponse:
       properties:
         testHistory:
@@ -822,31 +827,37 @@ components:
           anyOf:
           - type: integer
           - type: 'null'
-          default: null
+          default: 0
           title: Pass
         ERROR:
           anyOf:
           - type: integer
           - type: 'null'
-          default: null
+          default: 0
           title: Error
         FAIL:
           anyOf:
           - type: integer
           - type: 'null'
-          default: null
+          default: 0
           title: Fail
         SKIP:
           anyOf:
           - type: integer
           - type: 'null'
-          default: null
+          default: 0
           title: Skip
+        MISS:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Miss
         'NULL':
           anyOf:
           - type: integer
           - type: 'null'
-          default: null
+          default: 0
           title: 'Null'
       title: TestStatusCount
       type: object
@@ -866,7 +877,7 @@ components:
           type: object
         issues:
           items:
-            $ref: '#/components/schemas/TestIssuesItem'
+            $ref: '#/components/schemas/Issue'
           title: Issues
           type: array
         unknown_issues:
@@ -954,6 +965,11 @@ components:
           - type: object
           - type: 'null'
           title: Selected Commit Status
+        is_selected:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Selected
       required:
       - index
       - tree_name
@@ -963,6 +979,7 @@ components:
       - head_git_commit_hash
       - head_git_commit_tag
       - selected_commit_status
+      - is_selected
       title: Tree
       type: object
     TreeCommon:

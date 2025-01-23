@@ -81,6 +81,10 @@ urlpatterns = [
          viewCache(views.HardwareDetailsCommitHistoryView),
          name="hardwareDetailsCommitHistory"
          ),
+    path("hardware/<str:hardware_id>/summary",
+         views.HardwareDetailsSummary.as_view(),
+         name="hardwareDetailsSummary"
+         ),
     path("hardware/",
          viewCache(views.HardwareView),
          name="hardware"),
