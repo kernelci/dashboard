@@ -19,7 +19,6 @@ from kernelCI_app.helpers.misc import (
 )
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.utils import is_boot
-from kernelCI_app.constants.hardwareDetails import STATUS_FAILED_VALUE
 from django.db import connection
 
 
@@ -548,5 +547,5 @@ def process_filters(instance, row_data: dict) -> None:
 
         if test_issue_id is not None and issue_version is not None and is_test_issue:
             issue_set.add(test_issue_id)
-        elif row_data["test_status"] == STATUS_FAILED_VALUE:
+        elif row_data["test_status"] == FAIL_STATUS:
             issue_set.add(UNKNOWN_STRING)
