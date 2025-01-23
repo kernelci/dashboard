@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import type { MessagesKey } from '@/locales/messages';
+import { cn } from '@/lib/utils';
 
 export interface ILinkWithIcon {
   title?: MessagesKey;
@@ -34,7 +35,9 @@ const LinkWithIcon = ({
         (unformattedTitle && <p className="font-bold">{unformattedTitle}</p>)}
       {linkComponent ?? (
         <WrapperLink
-          className="flex flex-row items-center gap-1"
+          className={cn('flex flex-row items-center gap-1', {
+            'hover:text-gray-900': onClick,
+          })}
           href={link}
           target="_blank"
           rel="noreferrer"

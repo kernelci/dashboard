@@ -32,7 +32,10 @@ import {
   LogOrJsonSheetContent,
 } from '@/components/Sheet/LogOrJsonSheetContent';
 
+import { getLogspecSection } from '@/components/Section/LogspecSection';
+
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
+
 import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
 
 interface IIssueDetails {
@@ -72,6 +75,14 @@ export const IssueDetails = ({
     return getMiscSection({
       misc: data?.misc,
       title: formatMessage({ id: 'globalDetails.miscData' }),
+      setJsonContent: setJsonContent,
+    });
+  }, [data?.misc, formatMessage]);
+
+  const logspecSection: ISection | undefined = useMemo(() => {
+    return getLogspecSection({
+      misc: data?.misc,
+      title: formatMessage({ id: 'issueDetails.logspecData' }),
       setJsonContent: setJsonContent,
     });
   }, [data?.misc, formatMessage]);
@@ -149,10 +160,10 @@ export const IssueDetails = ({
   }, [data, formatMessage]);
 
   const sectionsData: ISection[] = useMemo(() => {
-    return [...generalSections, miscSection].filter(
+    return [...generalSections, logspecSection, miscSection].filter(
       section => section !== undefined,
     );
-  }, [generalSections, miscSection]);
+  }, [generalSections, logspecSection, miscSection]);
 
   return (
     <QuerySwitcher

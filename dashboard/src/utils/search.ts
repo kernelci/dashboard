@@ -11,6 +11,8 @@ import type {
   TTreeInformation,
 } from '@/types/tree/TreeDetails';
 
+import { isStringRecord } from './utils';
+
 // Must be a character not used in any other query parameters (e.g. '.' or '_' wouldn't work)
 const KEY_FLAT_CHAR = '|';
 const ARRAY_SEPARATOR = ',';
@@ -78,15 +80,6 @@ export const stringifySearch = (
     arrayFormatSeparator: ARRAY_SEPARATOR,
   });
   return stringifiedSearch && `?${stringifiedSearch}`;
-};
-
-const isStringRecord = (obj: unknown): obj is Record<string, unknown> => {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    !Array.isArray(obj) &&
-    Object.keys(obj).every(key => typeof key === 'string')
-  );
 };
 
 export const flattenObject = (

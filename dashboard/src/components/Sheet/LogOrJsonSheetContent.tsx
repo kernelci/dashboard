@@ -22,7 +22,7 @@ interface ILogSheet {
 }
 
 export interface IJsonContent {
-  src?: JSON;
+  src?: object;
   name?: string;
 }
 
