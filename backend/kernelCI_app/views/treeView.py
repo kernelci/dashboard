@@ -144,7 +144,7 @@ class TreeView(APIView):
 
         if not checkouts:
             return create_error_response(
-                error_message="Trees not found", status_code=HTTPStatus.NOT_FOUND
+                error_message="Trees not found", status_code=HTTPStatus.OK
             )
 
         serializer = TreeSerializer(checkouts, many=True)

@@ -75,7 +75,7 @@ class TreeDetailsBoots(APIView):
 
         if len(rows) == 0:
             return create_error_response(
-                error_message="Tree not found", status_code=HTTPStatus.NOT_FOUND
+                error_message="No boots found for this tree", status_code=HTTPStatus.OK
             )
 
         try:

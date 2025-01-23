@@ -5,15 +5,17 @@ import type { TErrorWithStatus, TIssueDetails } from '@/types/issueDetails';
 
 import type { BuildsTableBuild, TestHistory } from '@/types/general';
 
-import http from './api';
+import { RequestData } from './commonRequest';
 
 const fetchIssueDetailsData = async (
   issueId: string,
   versionNumber: string,
 ): Promise<TIssueDetails> => {
-  const res = await http.get(`/api/issue/${issueId}/version/${versionNumber}`);
+  const res = await RequestData.get<TIssueDetails & { _timestamp: string }>(
+    `/api/issue/${issueId}/version/${versionNumber}`,
+  );
 
-  const { _timestamp, ...data } = res.data;
+  const { _timestamp, ...data } = res;
   data.timestamp = _timestamp;
   return data;
 };
@@ -32,11 +34,11 @@ const fetchIssueDetailsTests = async (
   issueId: string,
   versionNumber: string,
 ): Promise<TestHistory[]> => {
-  const res = await http.get(
+  const data = await RequestData.get<TestHistory[]>(
     `/api/issue/${issueId}/version/${versionNumber}/tests`,
   );
 
-  return res.data;
+  return data;
 };
 
 export const useIssueDetailsTests = (
@@ -53,11 +55,11 @@ const fetchIssueDetailsBuilds = async (
   issueId: string,
   versionNumber: string,
 ): Promise<BuildsTableBuild[]> => {
-  const res = await http.get(
+  const data = await RequestData.get<BuildsTableBuild[]>(
     `/api/issue/${issueId}/version/${versionNumber}/builds`,
   );
 
-  return res.data;
+  return data;
 };
 
 export const useIssueDetailsBuilds = (

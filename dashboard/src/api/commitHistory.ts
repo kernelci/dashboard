@@ -8,9 +8,10 @@ import type {
 
 import { mapFiltersKeysToBackendCompatible } from '@/utils/utils';
 
-import { getTargetFilter, type TFilter } from '@/types/general';
+import { getTargetFilter } from '@/types/general';
+import type { TFilter } from '@/types/general';
 
-import http from './api';
+import { RequestData } from './commonRequest';
 
 const fetchCommitHistory = async (
   commitHash: string,
@@ -32,13 +33,14 @@ const fetchCommitHistory = async (
     ...filtersFormatted,
   };
 
-  const res = await http.get<TTreeCommitHistoryResponse>(
+  const data = await RequestData.get<TTreeCommitHistoryResponse>(
     `/api/tree/${commitHash}/commits`,
     {
       params,
     },
   );
-  return res.data;
+
+  return data;
 };
 
 export const useCommitHistory = ({

@@ -166,7 +166,7 @@ class TreeDetails(View):
 
         if len(rows) == 0:
             return create_error_response(
-                error_message="Tree not found", status_code=HTTPStatus.NOT_FOUND
+                error_message="Tree not found", status_code=HTTPStatus.OK
             )
 
         self._sanitize_rows(rows)

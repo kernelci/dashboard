@@ -70,7 +70,7 @@ class TestDetails(View):
 
         if len(response) == 0:
             return create_error_response(
-                error_message="Test not found", status_code=HTTPStatus.NOT_FOUND
+                error_message="Test not found", status_code=HTTPStatus.OK
             )
 
         return JsonResponse(response, safe=False)

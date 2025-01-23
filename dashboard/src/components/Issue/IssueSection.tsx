@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
@@ -29,16 +29,16 @@ export const NoIssueFound = (): JSX.Element => {
 const IssueSection = ({
   data,
   status,
+  error,
   historyState,
   previousSearch,
 }: {
   data?: TIssue[];
   status: UseQueryResult['status'];
+  error?: string;
   historyState?: HistoryState;
   previousSearch: LinkProps['search'];
 }): JSX.Element => {
-  const intl = useIntl();
-
   const issueList = useMemo(
     () =>
       data?.map(issue => (
@@ -65,24 +65,20 @@ const IssueSection = ({
       <h2 className="mb-3 border-b border-gray-300 pb-3 text-2xl font-semibold">
         <FormattedMessage id="global.issues" />
       </h2>
-      {data?.length === 0 ? (
-        <NoIssueFound />
-      ) : (
-        <QuerySwitcher
-          skeletonClassname="h-[100px]"
-          status={status}
-          data={data}
-          customError={
-            <MemoizedSectionError
-              isLoading={status === 'pending'}
-              errorMessage={intl.formatMessage({ id: 'issue.noIssueFound' })}
-              emptyLabel={'global.error'}
-            />
-          }
-        >
-          {issueList}
-        </QuerySwitcher>
-      )}
+      <QuerySwitcher
+        skeletonClassname="h-[100px]"
+        status={status}
+        data={data}
+        customError={
+          <MemoizedSectionError
+            isLoading={status === 'pending'}
+            errorMessage={error}
+            emptyLabel={'global.error'}
+          />
+        }
+      >
+        {issueList}
+      </QuerySwitcher>
     </div>
   );
 };

@@ -10,16 +10,16 @@ import type {
 } from '@/types/tree/Tree';
 import { DEFAULT_ORIGIN, type TOrigins } from '@/types/general';
 
-import http from './api';
+import { RequestData } from './commonRequest';
 
 const fetchTreeCheckoutData = async (
   origin: string,
   intervalInDays?: number,
 ): Promise<Tree[]> => {
-  const res = await http.get('/api/tree/', {
+  const data = await RequestData.get<Tree[]>('/api/tree/', {
     params: { origin, intervalInDays },
   });
-  return res.data;
+  return data;
 };
 
 export const useTreeTable = ({
@@ -42,10 +42,10 @@ const fetchTreeFastCheckoutData = async (
   origin: string,
   intervalInDays?: number,
 ): Promise<TreeFastPathResponse> => {
-  const res = await http.get('/api/tree-fast/', {
+  const data = await RequestData.get<TreeFastPathResponse>('/api/tree-fast/', {
     params: { origin, intervalInDays },
   });
-  return res.data;
+  return data;
 };
 
 export const useTreeTableFast = (): UseQueryResult<TreeFastPathResponse> => {
@@ -64,10 +64,13 @@ const fetchTreeLatest = async (
   branch: string,
   origin?: TOrigins,
 ): Promise<TreeLatestResponse> => {
-  const res = await http.get(`/api/tree/${treeName}/${branch}`, {
-    params: { origin: origin || DEFAULT_ORIGIN },
-  });
-  return res.data;
+  const data = await RequestData.get<TreeLatestResponse>(
+    `/api/tree/${treeName}/${branch}`,
+    {
+      params: { origin: origin || DEFAULT_ORIGIN },
+    },
+  );
+  return data;
 };
 
 export const useTreeLatest = (

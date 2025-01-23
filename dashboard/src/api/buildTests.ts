@@ -3,12 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { TestHistory } from '@/types/general';
 
-import http from './api';
+import { RequestData } from './commonRequest';
 
 const fetchBuildTestsData = async (buildId: string): Promise<TestHistory[]> => {
-  const res = await http.get(`/api/build/${buildId}/tests`);
+  const data = await RequestData.get<TestHistory[]>(
+    `/api/build/${buildId}/tests`,
+  );
 
-  return res.data;
+  return data;
 };
 
 export const useBuildTests = (

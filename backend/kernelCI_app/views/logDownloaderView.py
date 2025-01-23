@@ -65,7 +65,7 @@ class LogDownloaderView(APIView):
 
         if not parsed_data['log_files']:
             return create_error_response(
-                error_message="No log files found", status_code=HTTPStatus.NOT_FOUND
+                error_message="No log files found", status_code=HTTPStatus.OK
             )
 
         return JsonResponse(parsed_data)

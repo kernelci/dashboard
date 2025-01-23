@@ -5,12 +5,16 @@ import type { TBuildDetails } from '@/types/tree/BuildDetails';
 
 import type { TIssue } from '@/types/general';
 
-import http from './api';
+import { RequestData } from './commonRequest';
 
-const fetchTreeDetailData = async (buildId: string): Promise<TBuildDetails> => {
-  const res = await http.get(`/api/build/${buildId}`);
+const fetchBuildDetailsData = async (
+  buildId: string,
+): Promise<TBuildDetails> => {
+  const res = await RequestData.get<TBuildDetails & { _timestamp: string }>(
+    `/api/build/${buildId}`,
+  );
 
-  const { _timestamp, ...data } = res.data;
+  const { _timestamp, ...data } = res;
   data.timestamp = _timestamp;
   return data;
 };
@@ -20,13 +24,14 @@ export const useBuildDetails = (
 ): UseQueryResult<TBuildDetails> => {
   return useQuery({
     queryKey: ['treeData', buildId],
-    queryFn: () => fetchTreeDetailData(buildId),
+    queryFn: () => fetchBuildDetailsData(buildId),
   });
 };
 
 const fetchBuildIssues = async (buildId: string): Promise<TIssue[]> => {
-  const res = await http.get<TIssue[]>(`/api/build/${buildId}/issues`);
-  return res.data;
+  const data = await RequestData.get<TIssue[]>(`/api/build/${buildId}/issues`);
+
+  return data;
 };
 
 export const useBuildIssues = (buildId: string): UseQueryResult<TIssue[]> => {
