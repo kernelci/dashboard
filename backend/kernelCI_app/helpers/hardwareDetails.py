@@ -574,6 +574,11 @@ def handle_test_summary(
     process_issue(record=record, task_issues_dict=processed_issues, issue_from="test")
 
 
+def handle_build_history(*, record: Dict, tree_idx: int, builds: List[HardwareBuildHistoryItem]) -> None:
+    build = get_build_typed(record=record, tree_idx=tree_idx)
+    builds.append(build)
+
+
 def handle_build_summary(
     *,
     record: Dict,

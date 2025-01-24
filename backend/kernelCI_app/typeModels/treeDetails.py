@@ -1,8 +1,8 @@
 from typing import List, Optional
 
 from kernelCI_app.typeModels.commonDetails import (
-    Summary,
     BuildHistoryItem,
+    Summary,
 )
 from pydantic import BaseModel
 
@@ -41,7 +41,7 @@ class SummaryResponse(BaseModel):
     filters: TreeFilters
 
 
-class BuildsResponse(BaseModel):
+class TreeDetailsBuildsResponse(BaseModel):
     builds: List[BuildHistoryItem]
 
 

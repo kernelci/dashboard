@@ -60,6 +60,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/CommonDetailsBootsResponse'
           description: ''
+  /api/hardware/{hardware_id}/builds:
+    post:
+      operationId: hardware_builds_create
+      parameters:
+      - in: path
+        name: hardware_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - hardware
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareDetailsBuildsResponse'
+          description: ''
   /api/hardware/{hardware_id}/summary:
     post:
       operationId: hardware_summary_create
@@ -382,7 +416,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BuildsResponse'
+                $ref: '#/components/schemas/TreeDetailsBuildsResponse'
           description: ''
   /api/tree/{commit_hash}/commits:
     get:
@@ -626,17 +660,6 @@ components:
       - unknown_issues
       title: BuildSummary
       type: object
-    BuildsResponse:
-      properties:
-        builds:
-          items:
-            $ref: '#/components/schemas/BuildHistoryItem'
-          title: Builds
-          type: array
-      required:
-      - builds
-      title: BuildsResponse
-      type: object
     CommonDetailsBootsResponse:
       properties:
         boots:
@@ -659,11 +682,118 @@ components:
       - tests
       title: CommonDetailsTestsResponse
       type: object
+    HardwareBuildHistoryItem:
+      properties:
+        id:
+          title: Id
+          type: string
+        architecture:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Architecture
+        config_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Config Name
+        misc:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Misc
+        config_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Config Url
+        compiler:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Compiler
+        valid:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Valid
+        duration:
+          anyOf:
+          - type: integer
+          - type: number
+          - type: 'null'
+          title: Duration
+        log_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Log Url
+        start_time:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: string
+          - type: 'null'
+          title: Start Time
+        git_repository_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Git Repository Url
+        git_repository_branch:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Git Repository Branch
+        tree_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tree Name
+        issue_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Issue Id
+        issue_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Issue Version
+      required:
+      - id
+      - architecture
+      - config_name
+      - misc
+      - config_url
+      - compiler
+      - valid
+      - duration
+      - log_url
+      - start_time
+      - git_repository_url
+      - git_repository_branch
+      - tree_name
+      - issue_id
+      - issue_version
+      title: HardwareBuildHistoryItem
+      type: object
+    HardwareDetailsBuildsResponse:
+      properties:
+        builds:
+          items:
+            $ref: '#/components/schemas/HardwareBuildHistoryItem'
+          title: Builds
+          type: array
+      required:
+      - builds
+      title: HardwareDetailsBuildsResponse
+      type: object
     HardwareDetailsFullResponse:
       properties:
         builds:
           items:
-            $ref: '#/components/schemas/BuildHistoryItem'
+            $ref: '#/components/schemas/HardwareBuildHistoryItem'
           title: Builds
           type: array
         boots:
@@ -1121,6 +1251,17 @@ components:
       - tree_url
       - git_commit_tags
       title: TreeCommon
+      type: object
+    TreeDetailsBuildsResponse:
+      properties:
+        builds:
+          items:
+            $ref: '#/components/schemas/BuildHistoryItem'
+          title: Builds
+          type: array
+      required:
+      - builds
+      title: TreeDetailsBuildsResponse
       type: object
     TreeFilters:
       properties:

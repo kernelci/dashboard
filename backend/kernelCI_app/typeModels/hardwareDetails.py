@@ -72,8 +72,14 @@ class HardwareSummary(Summary):
     compatibles: List[str]
 
 
+class HardwareBuildHistoryItem(BuildHistoryItem):
+    tree_name: Optional[str]
+    issue_id: Optional[str]
+    issue_version: Optional[str]
+
+
 class HardwareDetailsFullResponse(BaseModel):
-    builds: List[BuildHistoryItem]
+    builds: List[HardwareBuildHistoryItem]
     boots: List[TestHistoryItem]
     tests: List[TestHistoryItem]
     summary: HardwareSummary
@@ -83,10 +89,8 @@ class HardwareDetailsSummaryResponse(BaseModel):
     summary: HardwareSummary
 
 
+class HardwareDetailsBuildsResponse(BaseModel):
+    builds: List[HardwareBuildHistoryItem]
+
+
 PossibleTestType = Literal["test", "boot"]
-
-
-class HardwareBuildHistoryItem(BuildHistoryItem):
-    tree_name: Optional[str]
-    issue_id: Optional[str]
-    issue_version: Optional[str]

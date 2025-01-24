@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Dict, List
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 from rest_framework.response import Response
@@ -15,18 +16,16 @@ from kernelCI_app.helpers.treeDetails import (
     get_tree_details_data,
 )
 from kernelCI_app.typeModels.treeDetails import (
-    BuildHistoryItem,
-    BuildsResponse,
+    TreeDetailsBuildsResponse,
     TreeQueryParameters,
 )
 
 
 class TreeDetailsBuilds(APIView):
     def __init__(self):
-        self.processedTests = set()
         self.filters = None
 
-        self.builds = []
+        self.builds: List[Dict] = []
         self.processed_builds = set()
         self.tree_url = ""
 
@@ -42,8 +41,6 @@ class TreeDetailsBuilds(APIView):
         self.processed_builds.add(build_id)
 
         build_item = get_build(row_data)
-
-        BuildHistoryItem(**build_item)
 
         self.builds.append(build_item)
 
@@ -61,7 +58,8 @@ class TreeDetailsBuilds(APIView):
 
     @extend_schema(
         parameters=[TreeQueryParameters],
-        responses=BuildsResponse,
+        responses=TreeDetailsBuildsResponse,
+        methods=["GET"],
     )
     def get(self, request, commit_hash: str | None):
         rows = get_tree_details_data(request, commit_hash)
@@ -70,16 +68,16 @@ class TreeDetailsBuilds(APIView):
 
         if len(rows) == 0:
             return create_error_response(
-                error_message="Tree not found", status_code=HTTPStatus.NOT_FOUND
+                error_message="No builds found for this tree", status_code=HTTPStatus.OK
             )
 
-        try:
-            self._sanitize_rows(rows)
-        except ValidationError as e:
-            return Response(data=e.errors(), status=HTTPStatus.BAD_REQUEST)
+        self._sanitize_rows(rows)
 
-        return Response(
-            {
-                "builds": self.builds,
-            }
-        )
+        try:
+            valid_response = TreeDetailsBuildsResponse(
+                builds=self.builds,
+            )
+        except ValidationError as e:
+            return Response(data=e.errors(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)
