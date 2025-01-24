@@ -30,6 +30,7 @@ from kernelCI_app.typeModels.commonDetails import (
     TestArchSummaryItem,
 )
 from kernelCI_app.typeModels.hardwareDetails import (
+    HardwareDetailsPostBody,
     HardwareDetailsSummaryResponse,
     HardwareSummary,
     PossibleTestType,
@@ -189,6 +190,8 @@ class HardwareDetailsSummary(APIView):
     # Using post to receive a body request
     @extend_schema(
         responses=HardwareDetailsSummaryResponse,
+        request=HardwareDetailsPostBody,
+        methods=["POST"],
     )
     def post(self, request, hardware_id) -> Response:
         try:

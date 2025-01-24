@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import json
 from typing import Dict, List, Literal, Optional, Set
 
-from django.http import JsonResponse
 from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.constants.hardwareDetails import (
     SELECTED_HEAD_TREE_VALUE,
@@ -34,7 +33,7 @@ from kernelCI_app.typeModels.commonDetails import (
 from kernelCI_app.typeModels.hardwareDetails import (
     DefaultRecordValues,
     HardwareBuildHistoryItem,
-    PostBody,
+    HardwareDetailsPostBody,
     Tree,
 )
 from kernelCI_app.utils import (
@@ -50,10 +49,10 @@ from kernelCI_app.typeModels.hardwareDetails import (
 )
 
 
-def unstable_parse_post_body(*, instance, request) -> Optional[JsonResponse]:
+def unstable_parse_post_body(*, instance, request) -> None:
     body = json.loads(request.body)
 
-    post_body = PostBody(**body)
+    post_body = HardwareDetailsPostBody(**body)
 
     instance.origin = post_body.origin
     instance.end_datetime = datetime.fromtimestamp(

@@ -20,7 +20,7 @@ class DefaultRecordValues(BaseModel):
     status: Annotated[StatusValues, BeforeValidator(process_status)]
 
 
-class PostBody(BaseModel):
+class HardwareDetailsPostBody(BaseModel):
     origin: str = Field(default="maestro")
     startTimestampInSeconds: Union[str, int]
     endTimestampInSeconds: Union[str, int]
