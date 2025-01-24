@@ -92,3 +92,7 @@ class Summary(BaseModel):
 
 class CommonDetailsTestsResponse(BaseModel):
     tests: List[TestHistoryItem]
+
+
+class CommonDetailsBootsResponse(BaseModel):
+    boots: List[TestHistoryItem]

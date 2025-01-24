@@ -18,10 +18,10 @@ from kernelCI_app.helpers.treeDetails import (
     is_test_boots_test,
 )
 from kernelCI_app.typeModels.treeDetails import (
-    BootResponse,
     TreeQueryParameters,
 )
 from kernelCI_app.typeModels.commonDetails import (
+    CommonDetailsBootsResponse,
     TestHistoryItem
 )
 
@@ -65,7 +65,8 @@ class TreeDetailsBoots(APIView):
 
     @extend_schema(
         parameters=[TreeQueryParameters],
-        responses=BootResponse,
+        methods=["GET"],
+        responses=CommonDetailsBootsResponse,
     )
     def get(self, request, commit_hash: str | None):
         rows = get_tree_details_data(request, commit_hash)
@@ -79,11 +80,11 @@ class TreeDetailsBoots(APIView):
 
         try:
             self._sanitize_rows(rows)
-        except ValidationError as e:
-            return Response(data=e.errors(), status=HTTPStatus.BAD_REQUEST)
 
-        return Response(
-            {
-                "boots": self.bootHistory,
-            }
-        )
+            valid_response = CommonDetailsBootsResponse(
+                boots=self.bootHistory,
+            )
+        except ValidationError as e:
+            return Response(data=e.errors(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)
