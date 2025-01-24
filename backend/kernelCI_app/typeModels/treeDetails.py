@@ -3,7 +3,6 @@ from typing import List, Optional
 from kernelCI_app.typeModels.commonDetails import (
     Summary,
     BuildHistoryItem,
-    TestHistoryItem,
 )
 from pydantic import BaseModel
 
@@ -40,10 +39,6 @@ class SummaryResponse(BaseModel):
     common: TreeCommon
     summary: Summary
     filters: TreeFilters
-
-
-class BootResponse(BaseModel):
-    bootHistory: List[TestHistoryItem]
 
 
 class BuildsResponse(BaseModel):
