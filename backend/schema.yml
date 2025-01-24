@@ -37,6 +37,18 @@ paths:
         required: true
       tags:
       - hardware
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -47,6 +59,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HardwareDetailsSummaryResponse'
+          description: ''
+  /api/hardware/{hardware_id}/tests:
+    post:
+      operationId: hardware_tests_create
+      parameters:
+      - in: path
+        name: hardware_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - hardware
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonDetailsTestsResponse'
           description: ''
   /api/log-downloader/:
     get:
@@ -382,7 +428,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TestResponse'
+                $ref: '#/components/schemas/CommonDetailsTestsResponse'
           description: ''
 components:
   schemas:
@@ -568,6 +614,17 @@ components:
       - builds
       title: BuildsResponse
       type: object
+    CommonDetailsTestsResponse:
+      properties:
+        tests:
+          items:
+            $ref: '#/components/schemas/TestHistoryItem'
+          title: Tests
+          type: array
+      required:
+      - tests
+      title: CommonDetailsTestsResponse
+      type: object
     HardwareDetailsFullResponse:
       properties:
         builds:
@@ -593,6 +650,39 @@ components:
       - tests
       - summary
       title: HardwareDetailsFullResponse
+      type: object
+    HardwareDetailsPostBody:
+      properties:
+        origin:
+          default: maestro
+          title: Origin
+          type: string
+        startTimestampInSeconds:
+          anyOf:
+          - type: string
+          - type: integer
+          title: Starttimestampinseconds
+        endTimestampInSeconds:
+          anyOf:
+          - type: string
+          - type: integer
+          title: Endtimestampinseconds
+        selectedCommits:
+          additionalProperties:
+            type: string
+          title: Selectedcommits
+          type: object
+        filter:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Filter
+      required:
+      - startTimestampInSeconds
+      - endTimestampInSeconds
+      - selectedCommits
+      - filter
+      title: HardwareDetailsPostBody
       type: object
     HardwareDetailsSummaryResponse:
       properties:
@@ -662,7 +752,7 @@ components:
           type: string
         version:
           title: Version
-          type: string
+          type: integer
         comment:
           anyOf:
           - type: string
@@ -809,17 +899,6 @@ components:
       - compiler
       - misc
       title: TestHistoryItem
-      type: object
-    TestResponse:
-      properties:
-        testHistory:
-          items:
-            $ref: '#/components/schemas/TestHistoryItem'
-          title: Testhistory
-          type: array
-      required:
-      - testHistory
-      title: TestResponse
       type: object
     TestStatusCount:
       properties:

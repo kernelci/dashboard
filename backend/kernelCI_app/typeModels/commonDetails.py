@@ -88,3 +88,7 @@ class Summary(BaseModel):
     builds: BuildSummary
     boots: TestSummary
     tests: TestSummary
+
+
+class CommonDetailsTestsResponse(BaseModel):
+    tests: List[TestHistoryItem]

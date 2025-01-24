@@ -85,6 +85,10 @@ urlpatterns = [
          views.HardwareDetailsSummary.as_view(),
          name="hardwareDetailsSummary"
          ),
+    path("hardware/<str:hardware_id>/tests",
+         views.HardwareDetailsTests.as_view(),
+         name="hardwareDetailsTests"
+         ),
     path("hardware/",
          viewCache(views.HardwareView),
          name="hardware"),

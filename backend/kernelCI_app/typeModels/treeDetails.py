@@ -46,10 +46,6 @@ class BootResponse(BaseModel):
     bootHistory: List[TestHistoryItem]
 
 
-class TestResponse(BaseModel):
-    testHistory: List[TestHistoryItem]
-
-
 class BuildsResponse(BaseModel):
     builds: List[BuildHistoryItem]
 
