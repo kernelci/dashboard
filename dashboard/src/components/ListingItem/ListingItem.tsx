@@ -97,8 +97,8 @@ const ListingItem = ({
   const TooltipComponent = ({ children }: PropsWithChildren): JSX.Element => {
     return (
       <Tooltip>
-        <div className="flex">
-          <TooltipTrigger className="overflow-hidden">
+        <div className="flex w-full">
+          <TooltipTrigger className="max-w-[200px] overflow-hidden sm:max-w-[300px] md:max-w-[500px] lg:max-w-[700px] xl:max-w-[1000px]">
             {children}
           </TooltipTrigger>
 
