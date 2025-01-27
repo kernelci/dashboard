@@ -17,4 +17,5 @@ export type TTestDetails = {
   environment_misc?: Record<string, unknown>;
   misc?: Record<string, unknown>;
   output_files?: Record<string, unknown>;
+  tree_name?: string;
 };

@@ -99,6 +99,10 @@ const TestDetailsSections = ({
               linkText: truncateBigText(test.status),
             },
             {
+              title: 'global.tree',
+              linkText: truncateBigText(test.tree_name),
+            },
+            {
               title: 'global.path',
               linkText: valueOrEmpty(test.path),
             },
@@ -183,6 +187,7 @@ const TestDetailsSections = ({
   }, [
     test.path,
     test.status,
+    test.tree_name,
     test.architecture,
     test.compiler,
     test.log_url,
