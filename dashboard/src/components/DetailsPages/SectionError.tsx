@@ -3,13 +3,31 @@ import { RiProhibited2Line } from 'react-icons/ri';
 import type { MessageDescriptor } from 'react-intl';
 import { FormattedMessage } from 'react-intl';
 
+export type TErrorVariant = 'warning' | 'error';
 interface ISectionError {
   errorMessage?: string;
   isLoading?: boolean;
   isEmpty?: boolean;
   emptyLabel?: MessageDescriptor['id'];
   customEmptyDataComponent?: JSX.Element;
+  variant?: TErrorVariant;
 }
+
+type IErrorMessage = {
+  label: string;
+  id: MessageDescriptor['id'];
+};
+
+const globalErrorMessage: Record<TErrorVariant, IErrorMessage> = {
+  warning: {
+    label: 'Warning',
+    id: 'global.warning',
+  },
+  error: {
+    label: 'Error',
+    id: 'global.error',
+  },
+};
 
 const SectionError = ({
   errorMessage,
@@ -17,6 +35,7 @@ const SectionError = ({
   isEmpty,
   emptyLabel = 'global.noResults',
   customEmptyDataComponent,
+  variant = 'error',
 }: ISectionError): JSX.Element => {
   const message = useMemo((): MessageDescriptor['id'] => {
     if (isLoading) {
@@ -24,10 +43,10 @@ const SectionError = ({
     } else if (isEmpty) {
       return emptyLabel;
     } else if (errorMessage) {
-      return 'global.error';
+      return globalErrorMessage[variant].id;
     }
-    return 'global.error';
-  }, [emptyLabel, errorMessage, isEmpty, isLoading]);
+    return globalErrorMessage[variant].id;
+  }, [emptyLabel, errorMessage, isEmpty, isLoading, variant]);
 
   if (isLoading === undefined) {
     return customEmptyDataComponent ?? <Fragment />;
@@ -35,11 +54,17 @@ const SectionError = ({
 
   return (
     <div className="flex flex-col items-center py-6 text-weakGray">
-      {!isLoading && <RiProhibited2Line className="h-14 w-14" />}
+      {variant === 'error' && !isLoading && (
+        <RiProhibited2Line className="h-14 w-14" />
+      )}
       <p className="text-2xl font-semibold">
         <FormattedMessage id={message} />
       </p>
-      {errorMessage && <p>Error: {errorMessage}</p>}
+      {errorMessage && (
+        <p>
+          {globalErrorMessage[variant].label}: {errorMessage}
+        </p>
+      )}
     </div>
   );
 };

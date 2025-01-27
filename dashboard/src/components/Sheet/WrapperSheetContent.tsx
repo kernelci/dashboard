@@ -84,7 +84,7 @@ export const WrapperSheetContent = ({
 
   return (
     <SheetContent
-      className="flex flex-col overflow-auto sm:w-full sm:max-w-[clamp(650px,75vw,1300px)]"
+      className="flex flex-col overflow-scroll sm:w-full sm:max-w-[clamp(650px,75vw,1300px)]"
       onKeyDown={handleKeyDown}
     >
       <SheetHeader className="mb-3">

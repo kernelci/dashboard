@@ -2,6 +2,8 @@ import type { LinkProps } from '@tanstack/react-router';
 
 import ReactJsonView from '@microlink/react-json-view';
 
+import type { UseQueryResult } from '@tanstack/react-query';
+
 import type { TNavigationLogActions } from '@/components/Sheet/WrapperSheetContent';
 import { WrapperSheetContent } from '@/components/Sheet/WrapperSheetContent';
 
@@ -9,6 +11,8 @@ import { MemoizedMoreDetailsButton } from '@/components/Button/MoreDetailsButton
 
 import { LogViewerCard } from '@/components/Log/LogViewerCard';
 import { LogExcerpt } from '@/components/Log/LogExcerpt';
+import IssueSection from '@/components/Issue/IssueSection';
+import type { TIssue } from '@/types/general';
 
 export type SheetType = 'log' | 'json';
 
@@ -19,6 +23,10 @@ interface ILogSheet {
   logUrl?: string;
   navigationLogsActions?: TNavigationLogActions;
   currentLinkProps?: LinkProps;
+  issues?: TIssue[];
+  status?: UseQueryResult['status'];
+  error?: UseQueryResult['error'];
+  previousSearch?: LinkProps['search'];
 }
 
 export interface IJsonContent {
@@ -33,6 +41,9 @@ export const LogOrJsonSheetContent = ({
   logUrl,
   navigationLogsActions,
   currentLinkProps,
+  issues,
+  status,
+  error,
 }: ILogSheet): JSX.Element => {
   return (
     <WrapperSheetContent
@@ -53,6 +64,14 @@ export const LogOrJsonSheetContent = ({
           <LogExcerpt
             logExcerpt={logExcerpt}
             isLoading={navigationLogsActions?.isLoading}
+          />
+          <IssueSection
+            data={issues}
+            status={status ?? 'success'}
+            error={error?.message}
+            historyState={historyState}
+            previousSearch={previousSearch}
+            variant="warning"
           />
         </>
       ) : (
