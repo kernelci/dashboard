@@ -283,7 +283,7 @@ export function BuildsTable({
       onOpenChange={onOpenChange}
       currentLinkProps={currentLinkProps}
     >
-      <div className="flex justify-between">
+      <div className="flex items-center justify-between">
         <TableStatusFilter filters={filters} onClickBuild={onClickFilter} />
         <DebounceInput
           debouncedSideEffect={onSearchChange}

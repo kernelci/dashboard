@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import { useCallback, useMemo } from 'react';
+import { FormattedMessage } from 'react-intl';
 
 import { Button } from '@/components/ui/button';
 import type {
@@ -51,7 +52,14 @@ const TableStatusFilter = ({
       )),
     [filters, onClickFilter],
   );
-  return <div>{filterButtons}</div>;
+  return (
+    <div className="flex flex-col">
+      <span className="ml-4">
+        <FormattedMessage id="filter.tableFilter" />
+      </span>
+      <span>{filterButtons}</span>
+    </div>
+  );
 };
 
 export default TableStatusFilter;

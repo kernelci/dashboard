@@ -91,6 +91,7 @@ export const messages = {
     'filter.perTabFilter': 'Per tab filters',
     'filter.platformSubtitle': 'Please select one or more platforms:',
     'filter.statusSubtitle': 'Please select one or more Status:',
+    'filter.tableFilter': 'Status filters:',
     'filter.testDuration': 'Test duration',
     'filter.testIssue': 'Test issue',
     'filter.testPlatform': 'Test Platforms',
