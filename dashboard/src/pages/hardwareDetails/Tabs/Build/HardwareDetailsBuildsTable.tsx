@@ -3,7 +3,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
 import { TableHeader } from '@/components/Table/TableHeader';
@@ -14,9 +14,11 @@ import {
   type BuildsTableFilter,
 } from '@/types/tree/TreeDetails';
 import { defaultBuildColumns } from '@/components/BuildsTable/DefaultBuildsColumns';
+import { sanitizeBuilds } from '@/utils/utils';
+import type { BuildsTabBuild } from '@/types/general';
 
 export interface THardwareDetailsBuildsTable {
-  buildItems: AccordionItemBuilds[];
+  buildsData?: BuildsTabBuild[];
   hardwareId: string;
 }
 
@@ -31,12 +33,14 @@ const hardwareDetailsBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
 ];
 
 export function HardwareDetailsBuildsTable({
-  buildItems,
+  buildsData,
   hardwareId,
 }: THardwareDetailsBuildsTable): JSX.Element {
   const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
+
+  const buildItems = useMemo(() => sanitizeBuilds(buildsData), [buildsData]);
 
   const getRowLink = useCallback(
     (buildId: string): LinkProps => ({
