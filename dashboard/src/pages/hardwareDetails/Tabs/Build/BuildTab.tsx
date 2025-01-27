@@ -5,7 +5,7 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
-import { sanitizeArchs, sanitizeBuilds, sanitizeConfigs } from '@/utils/utils';
+import { sanitizeArchs, sanitizeConfigs } from '@/utils/utils';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
@@ -81,8 +81,6 @@ const BuildTab = ({
     [buildsSummary.configs],
   );
 
-  const buildItems = useMemo(() => sanitizeBuilds(builds), [builds]);
-
   return (
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
@@ -152,7 +150,7 @@ const BuildTab = ({
           <FormattedMessage id="global.builds" />
         </div>
         <HardwareDetailsBuildsTable
-          buildItems={buildItems}
+          buildsData={builds}
           hardwareId={hardwareId}
         />
       </div>

@@ -100,7 +100,7 @@ const columns: ColumnDef<TestByCommitHash>[] = [
 
 interface IBootsTable {
   tableKey: TableKeys;
-  testHistory: TestHistory[];
+  testHistory?: TestHistory[];
   filter: TestsTableFilter;
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   onClickFilter: (newFilter: TestsTableFilter) => void;
@@ -125,15 +125,17 @@ export function BootsTable({
 
   const rawData = useMemo(
     (): TTestByCommitHashResponse => ({
-      tests: testHistory.map(
-        (e): TestByCommitHash => ({
-          duration: e.duration?.toString() ?? '',
-          id: e.id,
-          path: e.path,
-          startTime: e.start_time,
-          status: e.status,
-        }),
-      ),
+      tests: testHistory
+        ? testHistory.map(
+            (e): TestByCommitHash => ({
+              duration: e.duration?.toString() ?? '',
+              id: e.id,
+              path: e.path,
+              startTime: e.start_time,
+              status: e.status,
+            }),
+          )
+        : [],
     }),
     [testHistory],
   );

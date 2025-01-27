@@ -45,7 +45,7 @@ import { defaultColumns, defaultInnerColumns } from './DefaultTestsColumns';
 
 export interface ITestsTable {
   tableKey: TableKeys;
-  testHistory: TestHistory[];
+  testHistory?: TestHistory[];
   onClickFilter: (filter: TestsTableFilter) => void;
   filter: TestsTableFilter;
   columns?: ColumnDef<TPathTests>[];
@@ -78,55 +78,57 @@ export function TestsTable({
       [K: string]: TPathTests;
     };
     const groups: Groups = {};
-    testHistory.forEach(e => {
-      const parts = e.path.split('.', 1);
-      const group = parts.length > 0 ? parts[0] : '-';
-      if (!(group in groups)) {
-        groups[group] = {
-          done_tests: 0,
-          fail_tests: 0,
-          miss_tests: 0,
-          pass_tests: 0,
-          null_tests: 0,
-          skip_tests: 0,
-          error_tests: 0,
-          total_tests: 0,
-          path_group: group,
-          individual_tests: [],
-        };
-      }
-      groups[group].total_tests++;
-      groups[group].individual_tests.push({
-        id: e.id,
-        duration: e.duration?.toString() ?? '',
-        path: e.path,
-        start_time: e.start_time,
-        status: e.status,
-        hardware: e.environment_compatible,
+    if (testHistory !== undefined) {
+      testHistory.forEach(e => {
+        const parts = e.path.split('.', 1);
+        const group = parts.length > 0 ? parts[0] : '-';
+        if (!(group in groups)) {
+          groups[group] = {
+            done_tests: 0,
+            fail_tests: 0,
+            miss_tests: 0,
+            pass_tests: 0,
+            null_tests: 0,
+            skip_tests: 0,
+            error_tests: 0,
+            total_tests: 0,
+            path_group: group,
+            individual_tests: [],
+          };
+        }
+        groups[group].total_tests++;
+        groups[group].individual_tests.push({
+          id: e.id,
+          duration: e.duration?.toString() ?? '',
+          path: e.path,
+          start_time: e.start_time,
+          status: e.status,
+          hardware: e.environment_compatible,
+        });
+        switch (e.status) {
+          case 'DONE':
+            groups[group].done_tests++;
+            break;
+          case 'ERROR':
+            groups[group].error_tests++;
+            break;
+          case 'FAIL':
+            groups[group].fail_tests++;
+            break;
+          case 'MISS':
+            groups[group].miss_tests++;
+            break;
+          case 'PASS':
+            groups[group].pass_tests++;
+            break;
+          case 'SKIP':
+            groups[group].skip_tests++;
+            break;
+          default:
+            groups[group].null_tests++;
+        }
       });
-      switch (e.status) {
-        case 'DONE':
-          groups[group].done_tests++;
-          break;
-        case 'ERROR':
-          groups[group].error_tests++;
-          break;
-        case 'FAIL':
-          groups[group].fail_tests++;
-          break;
-        case 'MISS':
-          groups[group].miss_tests++;
-          break;
-        case 'PASS':
-          groups[group].pass_tests++;
-          break;
-        case 'SKIP':
-          groups[group].skip_tests++;
-          break;
-        default:
-          groups[group].null_tests++;
-      }
-    });
+    }
     return Object.values(groups);
   }, [testHistory]);
 
