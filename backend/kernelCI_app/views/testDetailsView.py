@@ -27,6 +27,7 @@ class TestDetails(View):
             "git_repository_branch": "checkouts.git_repository_branch",
             "git_repository_url": "checkouts.git_repository_url",
             "git_commit_tags": "checkouts.git_commit_tags",
+            "tree_name": "checkouts.tree_name",
         }
 
         query = """
@@ -48,7 +49,8 @@ class TestDetails(View):
                 checkouts.git_commit_hash,
                 checkouts.git_repository_branch,
                 checkouts.git_repository_url,
-                checkouts.git_commit_tags
+                checkouts.git_commit_tags,
+                checkouts.tree_name
             FROM tests
             LEFT JOIN builds
                 ON tests.build_id = builds.id
