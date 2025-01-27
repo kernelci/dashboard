@@ -3,12 +3,17 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 import { useCallback, useMemo } from 'react';
 
+import type { UseQueryResult } from '@tanstack/react-query';
+
 import type { ITabItem } from '@/components/Tabs/Tabs';
 import Tabs from '@/components/Tabs/Tabs';
 
 import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
-import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
+import type {
+  HardwareSummary,
+  THardwareDetails,
+} from '@/types/hardware/hardwareDetails';
 
 import BuildTab from './Build';
 import BootsTab from './Boots';
@@ -20,17 +25,19 @@ export type TreeDetailsTabRightElement = Record<
 >;
 
 export interface IHardwareDetailsTab {
-  hardwareDetailsData: THardwareDetails;
   hardwareId: string;
   filterListElement?: JSX.Element;
   countElements: TreeDetailsTabRightElement;
+  fullDataResult?: UseQueryResult<THardwareDetails>;
+  summaryData: HardwareSummary;
 }
 
 const HardwareDetailsTabs = ({
-  hardwareDetailsData,
   hardwareId,
   filterListElement,
   countElements,
+  fullDataResult,
+  summaryData,
 }: IHardwareDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
     from: '/hardware/$hardwareId',
@@ -59,10 +66,10 @@ const HardwareDetailsTabs = ({
         name: 'global.builds',
         content: (
           <BuildTab
-            buildsSummary={hardwareDetailsData.summary.builds}
-            builds={hardwareDetailsData.builds}
-            trees={hardwareDetailsData.summary.trees}
             hardwareId={hardwareId}
+            trees={summaryData.trees}
+            buildsSummary={summaryData.builds}
+            fullDataResult={fullDataResult}
           />
         ),
         rightElement: countElements['global.builds'],
@@ -72,10 +79,10 @@ const HardwareDetailsTabs = ({
         name: 'global.boots',
         content: (
           <BootsTab
-            bootsSummary={hardwareDetailsData.summary.boots}
-            boots={hardwareDetailsData.boots}
             hardwareId={hardwareId}
-            trees={hardwareDetailsData.summary.trees}
+            trees={summaryData.trees}
+            bootsSummary={summaryData.boots}
+            fullDataResult={fullDataResult}
           />
         ),
         rightElement: countElements['global.boots'],
@@ -85,10 +92,10 @@ const HardwareDetailsTabs = ({
         name: 'global.tests',
         content: (
           <TestsTab
-            testsSummary={hardwareDetailsData.summary.tests}
-            tests={hardwareDetailsData.tests}
             hardwareId={hardwareId}
-            trees={hardwareDetailsData.summary.trees}
+            trees={summaryData.trees}
+            testsSummary={summaryData.tests}
+            fullDataResult={fullDataResult}
           />
         ),
         rightElement: countElements['global.tests'],
@@ -96,14 +103,12 @@ const HardwareDetailsTabs = ({
       },
     ],
     [
-      hardwareDetailsData.summary.builds,
-      hardwareDetailsData.summary.trees,
-      hardwareDetailsData.summary.boots,
-      hardwareDetailsData.summary.tests,
-      hardwareDetailsData.builds,
-      hardwareDetailsData.boots,
-      hardwareDetailsData.tests,
       hardwareId,
+      summaryData.trees,
+      summaryData.builds,
+      summaryData.boots,
+      summaryData.tests,
+      fullDataResult,
       countElements,
     ],
   );

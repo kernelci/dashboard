@@ -6,11 +6,16 @@ import type { LinkProps } from '@tanstack/react-router';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
+import type { UseQueryResult } from '@tanstack/react-query';
+
 import { BootsTable } from '@/components/BootsTable/BootsTable';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
-import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
+import type {
+  HardwareSummary,
+  THardwareDetails,
+} from '@/types/hardware/hardwareDetails';
 
 import {
   zTableFilterInfoDefault,
@@ -32,19 +37,20 @@ import { sanitizePlatforms } from '@/utils/utils';
 
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 import { RedirectFrom } from '@/types/general';
+import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
 
 interface IBootsTab {
-  boots: THardwareDetails['boots'];
-  bootsSummary: THardwareDetails['summary']['boots'];
-  trees: THardwareDetails['summary']['trees'];
   hardwareId: string;
+  trees: HardwareSummary['trees'];
+  bootsSummary: HardwareSummary['boots'];
+  fullDataResult?: UseQueryResult<THardwareDetails>;
 }
 
 const BootsTab = ({
-  bootsSummary,
-  boots,
   hardwareId,
   trees,
+  bootsSummary,
+  fullDataResult,
 }: IBootsTab): JSX.Element => {
   const { tableFilter, diffFilter } = useSearch({
     from: '/hardware/$hardwareId',
@@ -179,15 +185,20 @@ const BootsTab = ({
           </div>
         </InnerMobileGrid>
       </MobileGrid>
-      <BootsTable
-        tableKey="hardwareDetailsBoots"
-        getRowLink={getRowLink}
-        filter={tableFilter.bootsTable}
-        testHistory={boots}
-        onClickFilter={onClickFilter}
-        updatePathFilter={updatePathFilter}
-        currentPathFilter={currentPathFilter}
-      />
+      <HardwareDetailsTabsQuerySwitcher
+        fullDataResult={fullDataResult}
+        tabData={fullDataResult?.data?.boots}
+      >
+        <BootsTable
+          tableKey="hardwareDetailsBoots"
+          getRowLink={getRowLink}
+          filter={tableFilter.bootsTable}
+          testHistory={fullDataResult?.data?.boots}
+          onClickFilter={onClickFilter}
+          updatePathFilter={updatePathFilter}
+          currentPathFilter={currentPathFilter}
+        />
+      </HardwareDetailsTabsQuerySwitcher>
     </div>
   );
 };

@@ -6,7 +6,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { status as testStatuses } from '@/utils/constants/database';
 import type { IDrawerLink } from '@/components/Filter/Drawer';
 import FilterDrawer from '@/components/Filter/Drawer';
-import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
+import type { HardwareSummary } from '@/types/hardware/hardwareDetails';
 import { Skeleton } from '@/components/Skeleton';
 
 import {
@@ -24,7 +24,7 @@ type TFilterValues = Record<string, boolean>;
 interface IHardwareDetailsFilter {
   paramFilter: TFilter;
   hardwareName: string;
-  data: THardwareDetails;
+  data: HardwareSummary | undefined;
   selectedTrees?: number[];
 }
 
@@ -33,7 +33,7 @@ type TFilterCreate = TFilter & {
 };
 
 export const createFilter = (
-  data: THardwareDetails | undefined,
+  data: HardwareSummary | undefined,
 ): TFilterCreate => {
   const buildStatus = { Success: false, Failure: false, Inconclusive: false };
 
@@ -57,7 +57,7 @@ export const createFilter = (
   const treeIndexes: number[] = [];
 
   if (data) {
-    data.summary.trees.forEach(tree => {
+    data.trees.forEach(tree => {
       const treeIdx = Number(tree.index);
       const treeName = tree.tree_name ?? 'Unknown';
       const treeBranch = tree.git_repository_branch ?? 'Unknown';
@@ -71,22 +71,22 @@ export const createFilter = (
       treeIndexes.push(treeIdx);
     });
 
-    data.summary.architectures.forEach(arch => {
+    data.architectures.forEach(arch => {
       archs[arch ?? 'Unknown'] = false;
     });
-    data.summary.compilers.forEach(compiler => {
+    data.compilers.forEach(compiler => {
       compilers[compiler ?? 'Unknown'] = false;
     });
-    data.summary.configs.forEach(config => {
+    data.configs.forEach(config => {
       configs[config ?? 'Unknown'] = false;
     });
-    data.summary.builds.issues.forEach(i => (buildIssue[i.id] = false));
-    data.summary.boots.issues.forEach(i => (bootIssue[i.id] = false));
-    data.summary.tests.issues.forEach(i => (testIssue[i.id] = false));
-    Object.keys(data.summary.boots.platforms ?? {}).forEach(
+    data.builds.issues.forEach(i => (buildIssue[i.id] = false));
+    data.boots.issues.forEach(i => (bootIssue[i.id] = false));
+    data.tests.issues.forEach(i => (testIssue[i.id] = false));
+    Object.keys(data.boots.platforms ?? {}).forEach(
       i => (bootPlatform[i] = false),
     );
-    Object.keys(data.summary.tests.platforms ?? {}).forEach(
+    Object.keys(data.tests.platforms ?? {}).forEach(
       i => (testPlatform[i] = false),
     );
   }

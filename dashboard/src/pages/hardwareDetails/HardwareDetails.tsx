@@ -13,10 +13,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/Breadcrumb/Breadcrumb';
 
-import {
-  useHardwareDetails,
-  useHardwareDetailsCommitHistory,
-} from '@/api/hardwareDetails';
+import { useHardwareDetailsCommitHistory } from '@/api/hardwareDetails';
 
 import type {
   CommitHead,
@@ -45,6 +42,8 @@ import { makeTreeIdentifierKey } from '@/utils/trees';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
+import { useHardwareDetailsLazyLoadQuery } from '@/hooks/useHardwareDetailsLazyLoadQuery';
 
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
@@ -138,21 +137,21 @@ function HardwareDetails(): JSX.Element {
     });
   }, [navigate]);
 
-  const { data, status, isLoading, isPlaceholderData, error } =
-    useHardwareDetails(
-      hardwareId,
-      startTimestampInSeconds,
-      endTimestampInSeconds,
-      origin,
-      reqFilter,
-      treeIndexes ?? [],
-      treeCommits,
-    );
+  const { summary: summaryResponse, full: fullResponse } =
+    useHardwareDetailsLazyLoadQuery({
+      hardwareId: hardwareId,
+      startTimestampInSeconds: startTimestampInSeconds,
+      endTimestampInSeconds: endTimestampInSeconds,
+      origin: origin,
+      filter: reqFilter,
+      selectedIndexes: treeIndexes ?? [],
+      treeCommits: treeCommits,
+    });
 
   const hardwareTableForCommitHistory = useMemo(() => {
     const result: CommitHead[] = [];
-    if (!isLoading && data) {
-      data?.summary.trees.forEach(tree => {
+    if (!summaryResponse.isLoading && summaryResponse.data) {
+      summaryResponse.data.trees.forEach(tree => {
         const commitHead: CommitHead = {
           treeName: tree.tree_name ?? '',
           repositoryUrl: tree.git_repository_url ?? '',
@@ -164,7 +163,7 @@ function HardwareDetails(): JSX.Element {
       });
     }
     return result;
-  }, [data, isLoading]);
+  }, [summaryResponse.data, summaryResponse.isLoading]);
 
   const { isLoading: commitHistoryIsLoading, data: commitHistoryData } =
     useHardwareDetailsCommitHistory(
@@ -175,7 +174,7 @@ function HardwareDetails(): JSX.Element {
         startTimestampInSeconds,
         commitHeads: hardwareTableForCommitHistory,
       },
-      { enabled: !isLoading && !!data },
+      { enabled: !fullResponse.isLoading && !!fullResponse.data },
     );
 
   const filterListElement = useMemo(
@@ -184,10 +183,10 @@ function HardwareDetails(): JSX.Element {
         filter={diffFilter}
         cleanFilters={cleanAll}
         navigate={onFilterChange}
-        isLoading={isPlaceholderData}
+        isLoading={summaryResponse.isPlaceholderData}
       />
     ),
-    [cleanAll, diffFilter, isPlaceholderData, onFilterChange],
+    [cleanAll, diffFilter, onFilterChange, summaryResponse.isPlaceholderData],
   );
 
   const startTime = getFormattedTime(startTimestampInSeconds);
@@ -196,9 +195,9 @@ function HardwareDetails(): JSX.Element {
   const endDate = getFormattedDate(endTimestampInSeconds);
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
-    const { status: buildStatusSummary } = data?.summary.builds ?? {};
-    const { status: testStatusSummary } = data?.summary.tests ?? {};
-    const { status: bootStatusSummary } = data?.summary.boots ?? {};
+    const { status: buildStatusSummary } = summaryResponse.data?.builds ?? {};
+    const { status: testStatusSummary } = summaryResponse.data?.tests ?? {};
+    const { status: bootStatusSummary } = summaryResponse.data?.boots ?? {};
 
     return {
       'global.tests': testStatusSummary ? (
@@ -229,33 +228,38 @@ function HardwareDetails(): JSX.Element {
         <></>
       ),
     };
-  }, [data?.summary.boots, data?.summary.builds, data?.summary.tests]);
+  }, [
+    summaryResponse.data?.boots,
+    summaryResponse.data?.builds,
+    summaryResponse.data?.tests,
+  ]);
 
   const treeData = useMemo(
     () =>
       prepareTreeItems({
         isCommitHistoryDataLoading: commitHistoryIsLoading,
-        treeItems: data?.summary.trees,
+        treeItems: summaryResponse.data?.trees,
         commitHistoryData: commitHistoryData?.commit_history_table,
-        isMainPageLoading: isPlaceholderData || isLoading,
+        isMainPageLoading:
+          fullResponse.isLoading || fullResponse.isPlaceholderData,
       }),
     [
       commitHistoryIsLoading,
-      data?.summary.trees,
+      summaryResponse.data?.trees,
       commitHistoryData?.commit_history_table,
-      isPlaceholderData,
-      isLoading,
+      fullResponse.isLoading,
+      fullResponse.isPlaceholderData,
     ],
   );
 
   return (
     <QuerySwitcher
-      status={status}
-      data={data}
+      status={summaryResponse.status}
+      data={summaryResponse.data}
       customError={
         <MemoizedSectionError
-          isLoading={isLoading}
-          errorMessage={error?.message}
+          isLoading={summaryResponse.isLoading}
+          errorMessage={summaryResponse.error?.message}
           emptyLabel={'global.error'}
         />
       }
@@ -308,38 +312,39 @@ function HardwareDetails(): JSX.Element {
                 selectedIndexes={treeIndexes}
                 updateTreeFilters={updateTreeFilters}
               />
-              {data && (
+              {summaryResponse.data && (
                 <div className="mt-5">
                   <MemoizedCompatibleHardware
                     title={
                       <FormattedMessage id="hardwareDetails.compatibles" />
                     }
-                    compatibles={data.summary.compatibles}
+                    compatibles={summaryResponse.data.compatibles}
                   />
                 </div>
               )}
             </>
           )}
-          {data && (
-            <div className="flex flex-col pb-2">
-              <div className="sticky top-[4.5rem] z-10">
-                <div className="absolute right-0 top-2 py-4">
-                  <HardwareDetailsFilter
-                    paramFilter={diffFilter}
-                    hardwareName={hardwareId}
-                    data={data}
-                    selectedTrees={treeIndexes}
-                  />
-                </div>
+          <div className="flex flex-col pb-2">
+            <div className="sticky top-[4.5rem] z-10">
+              <div className="absolute right-0 top-2 py-4">
+                <HardwareDetailsFilter
+                  paramFilter={diffFilter}
+                  hardwareName={hardwareId}
+                  data={summaryResponse.data}
+                  selectedTrees={treeIndexes}
+                />
               </div>
+            </div>
+            {summaryResponse.data && (
               <HardwareDetailsTabs
-                hardwareDetailsData={data}
                 hardwareId={hardwareId}
                 filterListElement={filterListElement}
                 countElements={tabsCounts}
+                summaryData={summaryResponse.data}
+                fullDataResult={fullResponse}
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </QuerySwitcher>
