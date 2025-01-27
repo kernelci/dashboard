@@ -38,5 +38,6 @@ export const useBuildIssues = (buildId: string): UseQueryResult<TIssue[]> => {
   return useQuery({
     queryKey: ['buildIssues', buildId],
     queryFn: () => fetchBuildIssues(buildId),
+    enabled: buildId !== '',
   });
 };

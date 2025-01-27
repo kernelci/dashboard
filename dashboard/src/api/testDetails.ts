@@ -30,6 +30,7 @@ const fetchTestIssues = async (testId: string): Promise<TIssue[]> => {
 export const useTestIssues = (testId: string): UseQueryResult<TIssue[]> => {
   return useQuery({
     queryKey: ['testIssues', testId],
+    enabled: testId !== '',
     queryFn: () => fetchTestIssues(testId),
   });
 };
