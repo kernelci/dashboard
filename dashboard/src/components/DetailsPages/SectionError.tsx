@@ -1,13 +1,14 @@
-import { memo, useMemo } from 'react';
+import { Fragment, memo, useMemo } from 'react';
 import { RiProhibited2Line } from 'react-icons/ri';
 import type { MessageDescriptor } from 'react-intl';
 import { FormattedMessage } from 'react-intl';
 
 interface ISectionError {
   errorMessage?: string;
-  isLoading: boolean;
+  isLoading?: boolean;
   isEmpty?: boolean;
   emptyLabel?: MessageDescriptor['id'];
+  customEmptyDataComponent?: JSX.Element;
 }
 
 const SectionError = ({
@@ -15,6 +16,7 @@ const SectionError = ({
   isLoading,
   isEmpty,
   emptyLabel = 'global.noResults',
+  customEmptyDataComponent,
 }: ISectionError): JSX.Element => {
   const message = useMemo((): MessageDescriptor['id'] => {
     if (isLoading) {
@@ -26,6 +28,10 @@ const SectionError = ({
     }
     return 'global.error';
   }, [emptyLabel, errorMessage, isEmpty, isLoading]);
+
+  if (isLoading === undefined) {
+    return customEmptyDataComponent ?? <Fragment />;
+  }
 
   return (
     <div className="flex flex-col items-center py-6 text-weakGray">

@@ -4,9 +4,14 @@ import { useCallback, useMemo } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
+import type { UseQueryResult } from '@tanstack/react-query';
+
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
-import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
+import type {
+  HardwareSummary,
+  THardwareDetails,
+} from '@/types/hardware/hardwareDetails';
 
 import {
   zTableFilterInfoDefault,
@@ -29,20 +34,22 @@ import { sanitizePlatforms } from '@/utils/utils';
 
 import { RedirectFrom } from '@/types/general';
 
+import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
+
 import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
 interface ITestsTab {
-  tests: THardwareDetails['tests'];
-  testsSummary: THardwareDetails['summary']['tests'];
-  trees: THardwareDetails['summary']['trees'];
   hardwareId: string;
+  trees: HardwareSummary['trees'];
+  testsSummary: HardwareSummary['tests'];
+  fullDataResult?: UseQueryResult<THardwareDetails>;
 }
 
 const TestsTab = ({
-  testsSummary,
-  tests,
-  trees,
   hardwareId,
+  trees,
+  testsSummary,
+  fullDataResult,
 }: ITestsTab): JSX.Element => {
   const { tableFilter, diffFilter } = useSearch({
     from: '/hardware/$hardwareId',
@@ -165,15 +172,20 @@ const TestsTab = ({
           </div>
         </InnerMobileGrid>
       </MobileGrid>
-      <HardwareDetailsTestTable
-        tableKey="hardwareDetailsTests"
-        testHistory={tests}
-        filter={tableFilter.testsTable}
-        hardwareId={hardwareId}
-        onClickFilter={onClickFilter}
-        updatePathFilter={updatePathFilter}
-        currentPathFilter={currentPathFilter}
-      />
+      <HardwareDetailsTabsQuerySwitcher
+        fullDataResult={fullDataResult}
+        tabData={fullDataResult?.data?.tests}
+      >
+        <HardwareDetailsTestTable
+          tableKey="hardwareDetailsTests"
+          testHistory={fullDataResult?.data?.tests}
+          filter={tableFilter.testsTable}
+          hardwareId={hardwareId}
+          onClickFilter={onClickFilter}
+          updatePathFilter={updatePathFilter}
+          currentPathFilter={currentPathFilter}
+        />
+      </HardwareDetailsTabsQuerySwitcher>
     </div>
   );
 };

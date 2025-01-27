@@ -4,7 +4,12 @@ import { useCallback, useMemo } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
+import type { UseQueryResult } from '@tanstack/react-query';
+
+import type {
+  HardwareSummary,
+  THardwareDetails,
+} from '@/types/hardware/hardwareDetails';
 import { sanitizeArchs, sanitizeConfigs } from '@/utils/utils';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
@@ -23,20 +28,22 @@ import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/Hardware
 
 import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 
+import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
+
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
 interface IBuildTab {
-  builds: THardwareDetails['builds'];
-  buildsSummary: THardwareDetails['summary']['builds'];
-  trees: THardwareDetails['summary']['trees'];
+  trees: HardwareSummary['trees'];
   hardwareId: string;
+  buildsSummary: HardwareSummary['builds'];
+  fullDataResult?: UseQueryResult<THardwareDetails>;
 }
 
 const BuildTab = ({
-  buildsSummary,
-  builds,
   hardwareId,
   trees,
+  buildsSummary,
+  fullDataResult,
 }: IBuildTab): JSX.Element => {
   const navigate = useNavigate({
     from: '/hardware/$hardwareId',
@@ -149,10 +156,15 @@ const BuildTab = ({
         <div className="text-lg">
           <FormattedMessage id="global.builds" />
         </div>
-        <HardwareDetailsBuildsTable
-          buildsData={builds}
-          hardwareId={hardwareId}
-        />
+        <HardwareDetailsTabsQuerySwitcher
+          fullDataResult={fullDataResult}
+          tabData={fullDataResult?.data?.builds}
+        >
+          <HardwareDetailsBuildsTable
+            buildsData={fullDataResult?.data?.builds}
+            hardwareId={hardwareId}
+          />
+        </HardwareDetailsTabsQuerySwitcher>
       </div>
     </div>
   );

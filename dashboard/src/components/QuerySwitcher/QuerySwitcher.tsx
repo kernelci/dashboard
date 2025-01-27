@@ -1,5 +1,5 @@
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -10,11 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 export type QuerySelectorStatus = UseQueryResult['status'];
 
 type QuerySwitcherProps = {
-  status: QuerySelectorStatus;
+  status?: QuerySelectorStatus;
   children: ReactNode;
   skeletonClassname?: string;
   data?: unknown;
   customError?: ReactNode;
+  customEmptyDataComponent?: JSX.Element;
 };
 
 const QuerySwitcher = ({
@@ -23,7 +24,12 @@ const QuerySwitcher = ({
   skeletonClassname,
   data,
   customError,
+  customEmptyDataComponent,
 }: QuerySwitcherProps): JSX.Element => {
+  if (!status) {
+    return customEmptyDataComponent ?? <Fragment />;
+  }
+
   switch (status) {
     case 'pending':
       return (
