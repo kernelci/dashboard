@@ -13,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -24,6 +24,7 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import type { TreeTableBody } from '@/types/tree/Tree';
 import { zOrigin } from '@/types/general';
+import type { TFilter, TOrigins } from '@/types/general';
 
 import { formattedBreakLineValue } from '@/locales/messages';
 
@@ -47,7 +48,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import { sanitizeTableValue } from '@/components/Table/tableUtils';
 
-import { BuildStatus, GroupedTestStatus } from '@/components/Status/Status';
+import {
+  BuildStatusWithLink,
+  GroupedTestStatusWithLink,
+} from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import {
@@ -62,149 +66,227 @@ import { InputTime } from './InputTime';
 
 const MemoizedInputTime = memo(InputTime);
 
-const columns: ColumnDef<TreeTableBody>[] = [
-  {
-    accessorKey: 'tree_name',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.tree" />
-    ),
-    cell: ({ row }): JSX.Element => {
-      return (
-        <Tooltip>
-          <TooltipTrigger>
-            <div>
-              {sanitizeTableValue(row.getValue('tree_name') ?? '', false)}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <a href={row.original.url} target="_blank" rel="noreferrer">
-              {sanitizeTableValue(row.original.url, false)}
-            </a>
-          </TooltipContent>
-        </Tooltip>
-      );
+const getLinkProps = (
+  row: Row<TreeTableBody>,
+  origin: TOrigins,
+  tabTarget?: string,
+  diffFilter?: TFilter,
+): LinkProps => {
+  return {
+    to: '/tree/$treeId',
+    params: { treeId: row.original.id },
+
+    search: previousSearch => ({
+      tableFilter: {
+        bootsTable: possibleTestsTableFilter[0],
+        buildsTable: possibleBuildsTableFilter[2],
+        testsTable: possibleTestsTableFilter[0],
+      },
+      origin: origin,
+      currentPageTab: zPossibleTabValidator.parse(tabTarget),
+      diffFilter: diffFilter ?? {},
+      treeInfo: {
+        gitUrl: row.original.url,
+        gitBranch: row.original.branch,
+        treeName: row.original.tree_name ?? undefined,
+        commitName: row.original.commitName,
+        headCommitHash: row.original.id,
+      },
+      intervalInDays: previousSearch.intervalInDays,
+    }),
+  };
+};
+
+const getColumns = (origin: TOrigins): ColumnDef<TreeTableBody>[] => {
+  return [
+    {
+      accessorKey: 'tree_name',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="globalTable.tree" />
+      ),
+      cell: ({ row }): JSX.Element => {
+        return (
+          <Tooltip>
+            <TooltipTrigger>
+              <div>
+                {sanitizeTableValue(row.getValue('tree_name') ?? '', false)}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <a href={row.original.url} target="_blank" rel="noreferrer">
+                {sanitizeTableValue(row.original.url, false)}
+              </a>
+            </TooltipContent>
+          </Tooltip>
+        );
+      },
+      meta: {
+        tabTarget: 'global.builds',
+      },
     },
-    meta: {
-      tabTarget: 'global.builds',
+    {
+      accessorKey: 'branch',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="globalTable.branch" />
+      ),
+      meta: {
+        tabTarget: 'global.builds',
+      },
     },
-  },
-  {
-    accessorKey: 'branch',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.branch" />
-    ),
-    meta: {
-      tabTarget: 'global.builds',
-    },
-  },
-  {
-    id: 'commitTag',
-    accessorKey: 'commitTag',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.commitTag" />
-    ),
-    cell: ({ row }): JSX.Element => (
-      <CommitTagTooltip
-        commitHash={row.original.commitHash}
-        commitName={row.original.commitName}
-        commitTags={row.original.commitTag}
-      />
-    ),
-    meta: {
-      tabTarget: 'global.builds',
-    },
-  },
-  {
-    accessorKey: 'date',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="global.date" />
-    ),
-    cell: ({ row }): JSX.Element => (
-      <TooltipDateTime dateTime={row.getValue('date')} lineBreak={true} />
-    ),
-    meta: {
-      tabTarget: 'global.builds',
-    },
-  },
-  {
-    accessorKey: 'buildStatus.valid',
-    header: ({ column }): JSX.Element => (
-      <TableHeader
-        column={column}
-        intlKey="globalTable.build"
-        tooltipId="build.statusTooltip"
-      />
-    ),
-    cell: ({ row }): JSX.Element => {
-      return row.original.buildStatus ? (
-        <BuildStatus
-          valid={row.original.buildStatus.valid}
-          invalid={row.original.buildStatus.invalid}
-          unknown={row.original.buildStatus.null}
+    {
+      id: 'commitTag',
+      accessorKey: 'commitTag',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="globalTable.commitTag" />
+      ),
+      cell: ({ row }): JSX.Element => (
+        <CommitTagTooltip
+          commitHash={row.original.commitHash}
+          commitName={row.original.commitName}
+          commitTags={row.original.commitTag}
         />
-      ) : (
-        <FormattedMessage id="global.loading" defaultMessage="Loading..." />
-      );
+      ),
+      meta: {
+        tabTarget: 'global.builds',
+      },
     },
-    meta: {
-      tabTarget: 'global.builds',
+    {
+      accessorKey: 'date',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="global.date" />
+      ),
+      cell: ({ row }): JSX.Element => (
+        <TooltipDateTime dateTime={row.getValue('date')} lineBreak={true} />
+      ),
+      meta: {
+        tabTarget: 'global.builds',
+      },
     },
-  },
-  {
-    accessorKey: 'bootStatus.pass',
-    header: ({ column }): JSX.Element => (
-      <TableHeader
-        column={column}
-        intlKey="globalTable.bootStatus"
-        tooltipId="boots.statusTooltip"
-      />
-    ),
-    cell: ({ row }): JSX.Element => {
-      return row.original.bootStatus ? (
-        <GroupedTestStatus
-          pass={row.original.bootStatus.pass}
-          skip={row.original.bootStatus.skip}
-          fail={row.original.bootStatus.fail}
-          miss={row.original.bootStatus.miss}
-          done={row.original.bootStatus.done}
-          error={row.original.bootStatus.error}
+    {
+      accessorKey: 'buildStatus.valid',
+      header: ({ column }): JSX.Element => (
+        <TableHeader
+          column={column}
+          intlKey="globalTable.build"
+          tooltipId="build.statusTooltip"
         />
-      ) : (
-        <FormattedMessage id="global.loading" defaultMessage="Loading..." />
-      );
+      ),
+      cell: ({ column, row }): JSX.Element => {
+        const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
+          .tabTarget;
+        return row.original.buildStatus ? (
+          <BuildStatusWithLink
+            valid={row.original.buildStatus.valid}
+            invalid={row.original.buildStatus.invalid}
+            unknown={row.original.buildStatus.null}
+            validLinkProps={getLinkProps(row, origin, tabTarget, {
+              buildStatus: { Success: true },
+            })}
+            invalidLinkProps={getLinkProps(row, origin, tabTarget, {
+              buildStatus: { Failed: true },
+            })}
+            unknownLinkProps={getLinkProps(row, origin, tabTarget, {
+              buildStatus: { Inconclusive: true },
+            })}
+          />
+        ) : (
+          <FormattedMessage id="global.loading" defaultMessage="Loading..." />
+        );
+      },
+      meta: {
+        tabTarget: 'global.builds',
+      },
     },
-    meta: {
-      tabTarget: 'global.boots',
-    },
-  },
-  {
-    accessorKey: 'testStatus.pass',
-    header: ({ column }): JSX.Element => (
-      <TableHeader
-        column={column}
-        intlKey="globalTable.test"
-        tooltipId="test.statusTooltip"
-      />
-    ),
-    cell: ({ row }): JSX.Element => {
-      return row.original.testStatus ? (
-        <GroupedTestStatus
-          pass={row.original.testStatus.pass}
-          skip={row.original.testStatus.skip}
-          fail={row.original.testStatus.fail}
-          miss={row.original.testStatus.miss}
-          done={row.original.testStatus.done}
-          error={row.original.testStatus.error}
+    {
+      accessorKey: 'bootStatus.pass',
+      header: ({ column }): JSX.Element => (
+        <TableHeader
+          column={column}
+          intlKey="globalTable.bootStatus"
+          tooltipId="boots.statusTooltip"
         />
-      ) : (
-        <FormattedMessage id="global.loading" defaultMessage="Loading..." />
-      );
+      ),
+      cell: ({ column, row }): JSX.Element => {
+        const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
+          .tabTarget;
+        return row.original.bootStatus ? (
+          <GroupedTestStatusWithLink
+            pass={row.original.bootStatus.pass}
+            skip={row.original.bootStatus.skip}
+            fail={row.original.bootStatus.fail}
+            miss={row.original.bootStatus.miss}
+            done={row.original.bootStatus.done}
+            error={row.original.bootStatus.error}
+            passLinkProps={getLinkProps(row, origin, tabTarget, {
+              bootStatus: { PASS: true },
+            })}
+            failLinkProps={getLinkProps(row, origin, tabTarget, {
+              bootStatus: { FAIL: true },
+            })}
+            inconclusiveLinkProps={getLinkProps(row, origin, tabTarget, {
+              bootStatus: {
+                MISS: true,
+                ERROR: true,
+                SKIP: true,
+                DONE: true,
+                NULL: true,
+              },
+            })}
+          />
+        ) : (
+          <FormattedMessage id="global.loading" defaultMessage="Loading..." />
+        );
+      },
+      meta: {
+        tabTarget: 'global.boots',
+      },
     },
-    meta: {
-      tabTarget: 'global.tests',
+    {
+      accessorKey: 'testStatus.pass',
+      header: ({ column }): JSX.Element => (
+        <TableHeader
+          column={column}
+          intlKey="globalTable.test"
+          tooltipId="test.statusTooltip"
+        />
+      ),
+      cell: ({ column, row }): JSX.Element => {
+        const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
+          .tabTarget;
+        return row.original.testStatus ? (
+          <GroupedTestStatusWithLink
+            pass={row.original.testStatus.pass}
+            skip={row.original.testStatus.skip}
+            fail={row.original.testStatus.fail}
+            miss={row.original.testStatus.miss}
+            done={row.original.testStatus.done}
+            error={row.original.testStatus.error}
+            passLinkProps={getLinkProps(row, origin, tabTarget, {
+              testStatus: { PASS: true },
+            })}
+            failLinkProps={getLinkProps(row, origin, tabTarget, {
+              testStatus: { FAIL: true },
+            })}
+            inconclusiveLinkProps={getLinkProps(row, origin, tabTarget, {
+              testStatus: {
+                MISS: true,
+                ERROR: true,
+                SKIP: true,
+                DONE: true,
+                NULL: true,
+              },
+            })}
+          />
+        ) : (
+          <FormattedMessage id="global.loading" defaultMessage="Loading..." />
+        );
+      },
+      meta: {
+        tabTarget: 'global.tests',
+      },
     },
-  },
-];
+  ];
+};
 
 interface ITreeTable {
   treeTableRows: TreeTableBody[];
@@ -218,34 +300,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
   const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
 
-  const getLinkProps = useCallback(
-    (row: Row<TreeTableBody>, tabTarget?: string): LinkProps => {
-      return {
-        to: '/tree/$treeId',
-        params: { treeId: row.original.id },
-
-        search: previousSearch => ({
-          tableFilter: {
-            bootsTable: possibleTestsTableFilter[0],
-            buildsTable: possibleBuildsTableFilter[2],
-            testsTable: possibleTestsTableFilter[0],
-          },
-          origin: origin,
-          currentPageTab: zPossibleTabValidator.parse(tabTarget),
-          diffFilter: {},
-          treeInfo: {
-            gitUrl: row.original.url,
-            gitBranch: row.original.branch,
-            treeName: row.original.tree_name ?? undefined,
-            commitName: row.original.commitName,
-            headCommitHash: row.original.id,
-          },
-          intervalInDays: previousSearch.intervalInDays,
-        }),
-      };
-    },
-    [origin],
-  );
+  const columns = useMemo(() => getColumns(origin), [origin]);
 
   const table = useReactTable({
     data: treeTableRows,
@@ -303,7 +358,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
               <TableCell key={cell.id}>
                 <Link
                   className="inline-block"
-                  {...getLinkProps(row, tabTarget)}
+                  {...getLinkProps(row, origin, tabTarget)}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </Link>
@@ -321,7 +376,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
               <TableCellWithLink
                 key={cell.id}
                 linkClassName="w-full inline-block h-full"
-                linkProps={getLinkProps(row, tabTarget)}
+                linkProps={getLinkProps(row, origin, tabTarget)}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </TableCellWithLink>
@@ -336,7 +391,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
         </TableCell>
       </TableRow>
     );
-  }, [getLinkProps, modelRows]);
+  }, [modelRows, columns.length, origin]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">

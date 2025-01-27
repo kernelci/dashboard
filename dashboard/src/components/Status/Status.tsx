@@ -1,3 +1,5 @@
+import { Link, type LinkProps } from '@tanstack/react-router';
+
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { groupStatus } from '@/utils/status';
 
@@ -59,6 +61,67 @@ export const GroupedTestStatus = ({
   );
 };
 
+interface ITestStatusWithLink extends ITestStatus {
+  passLinkProps?: LinkProps;
+  failLinkProps?: LinkProps;
+  inconclusiveLinkProps?: LinkProps;
+}
+
+export const GroupedTestStatusWithLink = ({
+  pass,
+  error,
+  miss,
+  fail,
+  done,
+  skip,
+  nullStatus,
+  hideInconclusive = false,
+  passLinkProps,
+  failLinkProps,
+  inconclusiveLinkProps,
+}: ITestStatusWithLink): JSX.Element => {
+  const { successCount, inconclusiveCount, failedCount } = groupStatus({
+    doneCount: done,
+    errorCount: error,
+    failCount: fail,
+    missCount: miss,
+    passCount: pass,
+    skipCount: skip,
+    nullCount: nullStatus,
+  });
+  return (
+    <div className="flex flex-row gap-1">
+      {
+        <Link {...passLinkProps}>
+          <ColoredCircle
+            quantity={successCount ?? 0}
+            tooltipText="global.success"
+            backgroundClassName="bg-lightGreen"
+          />
+        </Link>
+      }
+      {
+        <Link {...failLinkProps}>
+          <ColoredCircle
+            quantity={failedCount}
+            tooltipText="global.failed"
+            backgroundClassName="bg-lightRed"
+          />
+        </Link>
+      }
+      {!hideInconclusive && (
+        <Link {...inconclusiveLinkProps}>
+          <ColoredCircle
+            quantity={inconclusiveCount ?? 0}
+            tooltipText="global.inconclusive"
+            backgroundClassName="bg-mediumGray"
+          />
+        </Link>
+      )}
+    </div>
+  );
+};
+
 interface IBuildStatus {
   valid?: number;
   invalid?: number;
@@ -90,6 +153,50 @@ export const BuildStatus = ({
           tooltipText="global.inconclusive"
           backgroundClassName="bg-lightGray"
         />
+      )}
+    </div>
+  );
+};
+
+interface IBuildStatusWithLink extends IBuildStatus {
+  validLinkProps?: LinkProps;
+  invalidLinkProps?: LinkProps;
+  unknownLinkProps?: LinkProps;
+}
+
+export const BuildStatusWithLink = ({
+  valid,
+  invalid,
+  unknown,
+  hideInconclusive = false,
+  validLinkProps,
+  invalidLinkProps,
+  unknownLinkProps,
+}: IBuildStatusWithLink): JSX.Element => {
+  return (
+    <div className="flex flex-row gap-1">
+      <Link {...validLinkProps}>
+        <ColoredCircle
+          quantity={valid ?? 0}
+          backgroundClassName="bg-lightGreen"
+          tooltipText="global.success"
+        />
+      </Link>
+      <Link {...invalidLinkProps}>
+        <ColoredCircle
+          quantity={invalid ?? 0}
+          backgroundClassName="bg-lightRed"
+          tooltipText="global.failed"
+        />
+      </Link>
+      {!hideInconclusive && (
+        <Link {...unknownLinkProps}>
+          <ColoredCircle
+            quantity={unknown ?? 0}
+            tooltipText="global.inconclusive"
+            backgroundClassName="bg-lightGray"
+          />
+        </Link>
       )}
     </div>
   );
