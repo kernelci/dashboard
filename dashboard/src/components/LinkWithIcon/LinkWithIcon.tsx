@@ -36,7 +36,7 @@ const LinkWithIcon = ({
       {linkComponent ?? (
         <WrapperLink
           className={cn('flex flex-row items-center gap-1', {
-            'hover:text-gray-900': onClick,
+            'underline hover:text-gray-900': onClick || link,
           })}
           href={link}
           target="_blank"

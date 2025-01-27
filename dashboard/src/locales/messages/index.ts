@@ -169,6 +169,7 @@ export const messages = {
     'global.unknown': 'Unknown',
     'global.url': 'URL',
     'global.viewJson': 'View Json',
+    'global.viewLog': 'View Log',
     'globalDetails.artifacts': 'Artifacts',
     'globalDetails.environmentMiscData': 'Environment Misc Data',
     'globalDetails.gitCommitTag': 'Git Commit Tag',

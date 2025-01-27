@@ -2,8 +2,6 @@ import { memo, useCallback } from 'react';
 
 import { useIntl } from 'react-intl';
 
-import { MdLink } from 'react-icons/md';
-
 import type { LinkProps } from '@tanstack/react-router';
 
 import type { IBaseCard } from '@/components/Cards/BaseCard';
@@ -27,6 +25,8 @@ import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
 import { UNKNOWN_STRING } from '@/utils/constants/backend';
 
 import { MemoizedMoreDetailsIconLink } from '@/components/Button/MoreDetailsButton';
+
+import { LinkIcon } from '@/components/Icons/Link';
 
 interface IIssuesList {
   issues: TIssue[];
@@ -108,7 +108,7 @@ const IssuesList = ({
               {issue.report_url && (
                 <LinkWithIcon
                   link={issue.report_url}
-                  icon={<MdLink className="h-4 w-4" />}
+                  icon={<LinkIcon className="h-4 w-4" />}
                 />
               )}
               {issue.id !== UNKNOWN_STRING && (
