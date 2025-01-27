@@ -1,15 +1,9 @@
 import { useIntl } from 'react-intl';
 
-import { GiFlatPlatform } from 'react-icons/gi';
-
 import { useCallback, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 
-import { PiComputerTowerThin } from 'react-icons/pi';
-
 import { Link, useRouterState, useSearch } from '@tanstack/react-router';
-
-import { FiLink } from 'react-icons/fi';
 
 import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
 import type { TTestDetails } from '@/types/tree/TestDetails';
@@ -33,7 +27,8 @@ import { getFilesSection } from '@/components/Section/FilesSection';
 import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
-import { BlueFolderIcon } from '@/components/Icons/BlueFolder';
+import { LogViewIcon } from '@/components/Icons/LogView';
+import { LinkIcon } from '@/components/Icons/Link';
 
 const TestDetailsSections = ({
   test,
@@ -70,12 +65,12 @@ const TestDetailsSections = ({
         to={linkTo}
         params={linkParams}
         search={searchParams}
-        className="flex flex-row items-center gap-1"
+        className="flex flex-row items-center gap-1 underline hover:text-slate-900"
         target="_blank"
         rel="noreferrer"
       >
         {truncateBigText(test.build_id)}
-        <FiLink className="text-blue" />
+        <LinkIcon className="text-xl text-blue" />
       </Link>
     );
   }, [historyState, test.build_id, searchParams]);
@@ -109,9 +104,6 @@ const TestDetailsSections = ({
             {
               title: 'global.arch',
               linkText: valueOrEmpty(test.architecture),
-              icon: test.architecture ? (
-                <PiComputerTowerThin className="text-blue" />
-              ) : undefined,
             },
             {
               title: 'global.compiler',
@@ -119,7 +111,7 @@ const TestDetailsSections = ({
             },
             {
               title: 'global.logs',
-              icon: hasUsefulLogInfo ? <BlueFolderIcon /> : undefined,
+              icon: hasUsefulLogInfo ? <LogViewIcon /> : undefined,
               linkText: shouldTruncate(valueOrEmpty(test.log_url)) ? (
                 <TruncatedValueTooltip value={test.log_url} isUrl={true} />
               ) : (
@@ -163,7 +155,6 @@ const TestDetailsSections = ({
             {
               title: 'global.hardware',
               linkText: hardware,
-              icon: <GiFlatPlatform className="text-blue" />,
             },
             {
               title: 'global.startTime',

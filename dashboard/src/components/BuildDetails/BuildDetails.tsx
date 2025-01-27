@@ -1,5 +1,3 @@
-import { ImTree } from 'react-icons/im';
-
 import { MdClose, MdCheck } from 'react-icons/md';
 
 import { useIntl } from 'react-intl';
@@ -40,8 +38,7 @@ import { getFilesSection } from '@/components/Section/FilesSection';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
-
-import { BlueFolderIcon } from '@/components/Icons/BlueFolder';
+import { LogViewIcon } from '@/components/Icons/LogView';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -121,9 +118,6 @@ const BuildDetails = ({
               {
                 title: 'global.tree',
                 linkText: valueOrEmpty(data.tree_name),
-                icon: data.tree_name ? (
-                  <ImTree className="text-blue" />
-                ) : undefined,
               },
               {
                 title: 'buildDetails.gitUrl',
@@ -142,9 +136,6 @@ const BuildDetails = ({
               {
                 title: 'buildDetails.gitBranch',
                 linkText: valueOrEmpty(data.git_repository_branch),
-                icon: data.git_repository_branch ? (
-                  <ImTree className="text-blue" />
-                ) : undefined,
               },
               {
                 title: 'buildDetails.gitCommit',
@@ -169,10 +160,15 @@ const BuildDetails = ({
               },
               {
                 title: 'global.status',
+                linkText: data.valid
+                  ? 'VALID'
+                  : data.valid !== null
+                    ? 'INVALID'
+                    : 'NULL',
                 icon: data.valid ? (
-                  <MdCheck className="text-green" />
+                  <MdCheck className="text-xl text-green" />
                 ) : (
-                  <MdClose className="text-red" />
+                  <MdClose className="text-xl text-red" />
                 ),
               },
               {
@@ -200,7 +196,7 @@ const BuildDetails = ({
                 linkText: (
                   <TruncatedValueTooltip value={data.log_url} isUrl={true} />
                 ),
-                icon: hasUsefulLogInfo ? <BlueFolderIcon /> : undefined,
+                icon: hasUsefulLogInfo ? <LogViewIcon /> : undefined,
                 wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
                 onClick: hasUsefulLogInfo ? setSheetToLog : undefined,
               },

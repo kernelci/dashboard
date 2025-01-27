@@ -1,5 +1,3 @@
-import { FiLink } from 'react-icons/fi';
-
 import type { ReactElement, ReactNode, ElementType } from 'react';
 import { useMemo } from 'react';
 
@@ -9,6 +7,8 @@ import type { ILinkWithIcon } from '@/components/LinkWithIcon/LinkWithIcon';
 import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
 
 import CopyButton from '@/components/Button/CopyButton';
+
+import { LinkIcon } from '@/components/Icons/Link';
 
 export interface ISection {
   title: string;
@@ -43,7 +43,7 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
             unformattedTitle={info.unformattedTitle}
             icon={
               info.link && !info.icon ? (
-                <FiLink className="text-blue" />
+                <LinkIcon className="text-xl text-blue" />
               ) : (
                 info.icon
               )
