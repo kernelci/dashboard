@@ -31,7 +31,7 @@ export type PreparedTrees = Trees & {
   isMainPageLoading: boolean;
 };
 
-type HardwareSummary = {
+export type HardwareSummary = {
   builds: BuildSummary;
   boots: TestSummary;
   tests: TestSummary;
@@ -40,6 +40,10 @@ type HardwareSummary = {
   architectures: string[];
   compilers: string[];
   compatibles: string[];
+};
+
+export type HardwareDetailsSummaryResponse = {
+  summary: HardwareSummary;
 };
 
 export type THardwareDetails = {
