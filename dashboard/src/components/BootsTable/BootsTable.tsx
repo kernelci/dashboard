@@ -36,7 +36,7 @@ import { TableHeader } from '@/components/Table/TableHeader';
 
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
-import { useTestDetails } from '@/api/testDetails';
+import { useTestDetails, useTestIssues } from '@/api/testDetails';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 import { usePaginationState } from '@/hooks/usePaginationState';
 
@@ -357,6 +357,14 @@ export function BootsTable({
     return getRowLink(dataTest?.id ?? '');
   }, [dataTest?.id, getRowLink]);
 
+  const {
+    data: issues,
+    status,
+    error,
+  } = useTestIssues(
+    currentLog !== undefined ? sortedItems[currentLog]?.id : '',
+  );
+
   return (
     <WrapperTableWithLogSheet
       currentLog={currentLog}
@@ -365,6 +373,9 @@ export function BootsTable({
       navigationLogsActions={navigationLogsActions}
       onOpenChange={onOpenChange}
       currentLinkProps={currentLinkProps}
+      issues={issues}
+      status={status}
+      error={error}
     >
       <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
       <BaseTable headerComponents={tableHeaders}>

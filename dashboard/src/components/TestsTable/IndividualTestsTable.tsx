@@ -17,7 +17,7 @@ import type { TestHistory, TIndividualTest } from '@/types/general';
 import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
 import { TableBody } from '@/components/ui/table';
 
-import { useTestDetails } from '@/api/testDetails';
+import { useTestDetails, useTestIssues } from '@/api/testDetails';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 
 import { TableRowMemoized } from '@/components/Table/TableComponents';
@@ -172,6 +172,14 @@ export function IndividualTestsTable({
     return getRowLink(dataTest?.id ?? '');
   }, [dataTest?.id, getRowLink]);
 
+  const {
+    data: issues,
+    status,
+    error,
+  } = useTestIssues(
+    currentLog !== undefined ? sortedItems[currentLog]?.id : '',
+  );
+
   return (
     <WrapperTableWithLogSheet
       currentLog={currentLog}
@@ -180,6 +188,9 @@ export function IndividualTestsTable({
       navigationLogsActions={navigationLogsActions}
       onOpenChange={onOpenChange}
       currentLinkProps={currentLinkProps}
+      issues={issues}
+      status={status}
+      error={error}
     >
       <div
         ref={parentRef}

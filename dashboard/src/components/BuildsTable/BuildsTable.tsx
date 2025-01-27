@@ -33,7 +33,7 @@ import type { TableKeys } from '@/utils/constants/tables';
 
 import { TableRowMemoized } from '@/components/Table/TableComponents';
 
-import { useBuildDetails } from '@/api/buildDetails';
+import { useBuildDetails, useBuildIssues } from '@/api/buildDetails';
 
 import { defaultBuildColumns } from './DefaultBuildsColumns';
 
@@ -272,6 +272,14 @@ export function BuildsTable({
     return getRowLink(sortedItems[currentLog ?? 0]?.id ?? '');
   }, [currentLog, getRowLink, sortedItems]);
 
+  const {
+    data: issues,
+    status,
+    error,
+  } = useBuildIssues(
+    currentLog !== undefined ? sortedItems[currentLog]?.id : '',
+  );
+
   return (
     <WrapperTableWithLogSheet
       currentLog={currentLog}
@@ -282,6 +290,9 @@ export function BuildsTable({
       navigationLogsActions={navigationLogsActions}
       onOpenChange={onOpenChange}
       currentLinkProps={currentLinkProps}
+      issues={issues}
+      status={status}
+      error={error}
     >
       <div className="flex items-center justify-between">
         <TableStatusFilter filters={filters} onClickBuild={onClickFilter} />

@@ -13,6 +13,7 @@ import ListingItem from '@/components/ListingItem/ListingItem';
 import type { TIssue } from '@/types/general';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import type { TErrorVariant } from '@/components/DetailsPages/SectionError';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { IssueTooltip } from './IssueTooltip';
@@ -34,12 +35,14 @@ const IssueSection = ({
   error,
   historyState,
   previousSearch,
+  variant = 'error',
 }: {
   data?: TIssue[];
   status: UseQueryResult['status'];
   error?: string;
   historyState?: HistoryState;
   previousSearch: LinkProps['search'];
+  variant?: TErrorVariant;
 }): JSX.Element => {
   const issueList = useMemo(
     () =>
@@ -79,6 +82,7 @@ const IssueSection = ({
             isLoading={status === 'pending'}
             errorMessage={error}
             emptyLabel={'global.error'}
+            variant={variant}
           />
         }
       >

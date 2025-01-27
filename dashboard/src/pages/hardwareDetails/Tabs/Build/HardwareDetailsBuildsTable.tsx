@@ -36,7 +36,9 @@ export function HardwareDetailsBuildsTable({
   buildsData,
   hardwareId,
 }: THardwareDetailsBuildsTable): JSX.Element {
-  const { tableFilter } = useSearch({ from: '/hardware/$hardwareId' });
+  const searchParams = useSearch({ from: '/hardware/$hardwareId' });
+
+  const { tableFilter } = searchParams;
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
@@ -79,6 +81,7 @@ export function HardwareDetailsBuildsTable({
       columns={hardwareDetailsBuildColumns}
       onClickFilter={onClickFilter}
       getRowLink={getRowLink}
+      previousSearch={searchParams}
     />
   );
 }
