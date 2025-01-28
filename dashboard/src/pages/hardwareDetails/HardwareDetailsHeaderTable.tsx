@@ -142,7 +142,11 @@ const CommitSelector = ({
 
   return (
     <div className="flex items-center gap-4">
-      <Select onValueChange={navigateToThePast} disabled={isMainPageLoading}>
+      <Select
+        onValueChange={navigateToThePast}
+        value={treeCommits[treeIndex] ?? headCommitHash}
+        disabled={isMainPageLoading}
+      >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder={headCommitHash} />
         </SelectTrigger>
@@ -337,7 +341,7 @@ export function HardwareHeader({
   updateTreeFilters,
 }: IHardwareHeader): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'treeName', desc: false },
+    { id: 'tree_name', desc: false },
   ]);
   const { pagination, paginationUpdater } = usePaginationState(
     'hardwareDetailsTrees',
