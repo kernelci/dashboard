@@ -18,18 +18,29 @@ import type {
 } from '@/types/general';
 import { getTargetFilter } from '@/types/general';
 
+import { isEmptyObject } from '@/utils/utils';
+
 import { RequestData } from './commonRequest';
 
 const TREE_SELECT_HEAD_VALUE = 'head';
 
 const mapIndexesToSelectedTrees = (
   selectedIndexes: number[],
+  treeIndexesLength?: number,
   treeCommits: TTreeCommits = {},
 ): Record<string, string> => {
   const selectedTrees: Record<string, string> = {};
 
-  selectedIndexes.forEach(idx => {
-    const key = idx.toString();
+  if (selectedIndexes.length === 0 && isEmptyObject(treeCommits))
+    return selectedTrees;
+
+  const selectedArray =
+    treeIndexesLength && selectedIndexes.length === 0
+      ? Array.from({ length: treeIndexesLength }, (_, i) => i)
+      : selectedIndexes;
+
+  selectedArray.forEach(i => {
+    const key = i.toString();
     const value = treeCommits[key] || TREE_SELECT_HEAD_VALUE;
     selectedTrees[key] = value;
   });
@@ -114,6 +125,7 @@ export type UseHardwareDetailsWithoutVariant = {
   filter: TFilter;
   selectedIndexes: number[];
   treeCommits: TTreeCommits;
+  treeIndexesLength?: number;
   enabled?: boolean;
 };
 
@@ -129,6 +141,7 @@ export const useHardwareDetails = <T extends HardwareDetailsVariants>({
   filter,
   selectedIndexes,
   treeCommits,
+  treeIndexesLength,
   enabled = true,
   variant,
 }: UseHardwareDetailsParameters<T>): UseQueryResult<
@@ -144,7 +157,11 @@ export const useHardwareDetails = <T extends HardwareDetailsVariants>({
 
   const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
 
-  const selectedTrees = mapIndexesToSelectedTrees(selectedIndexes, treeCommits);
+  const selectedTrees = mapIndexesToSelectedTrees(
+    selectedIndexes,
+    treeIndexesLength,
+    treeCommits,
+  );
 
   const body: fetchHardwareDetailsBody = {
     origin,
