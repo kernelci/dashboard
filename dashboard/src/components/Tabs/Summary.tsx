@@ -113,6 +113,7 @@ const SummaryItem = ({
             ...previousParams,
             diffFilter: handleDiffFilter,
           }),
+          state: s => s,
         }}
       >
         <ListingItem

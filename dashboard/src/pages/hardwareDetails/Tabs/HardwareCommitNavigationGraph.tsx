@@ -45,6 +45,7 @@ const HardwareCommitNavigationGraph = ({
           ...current,
           treeCommits: { ...treeCommits, [treeIdx]: commitHash },
         }),
+        state: s => s,
       });
     },
     [navigate, treeIdx, treeCommits],

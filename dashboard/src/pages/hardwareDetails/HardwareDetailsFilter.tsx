@@ -207,6 +207,7 @@ const HardwareDetailsFilter = ({
           diffFilter: cleanedFilter,
         };
       },
+      state: s => s,
     });
   }, [diffFilter, navigate, treeIndexes]);
 

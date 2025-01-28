@@ -53,6 +53,7 @@ export interface ITestsTable {
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
+  searchParams?: LinkProps['search'];
 }
 
 // TODO: would be useful if the navigation happened within the table, so the parent component would only be required to pass the navigation url instead of the whole function for the update and the currentPath diffFilter (boots/tests Table)
@@ -66,6 +67,7 @@ export function TestsTable({
   getRowLink,
   updatePathFilter,
   currentPathFilter,
+  searchParams,
 }: ITestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
@@ -333,6 +335,7 @@ export function TestsTable({
                   getRowLink={getRowLink}
                   data={data[row.index].individual_tests}
                   columns={innerColumns}
+                  searchParams={searchParams}
                 />
               </TableCell>
             </TableRow>
@@ -346,7 +349,7 @@ export function TestsTable({
         </TableCell>
       </TableRow>
     );
-  }, [columns.length, data, getRowLink, innerColumns, modelRows]);
+  }, [columns.length, data, getRowLink, innerColumns, modelRows, searchParams]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">

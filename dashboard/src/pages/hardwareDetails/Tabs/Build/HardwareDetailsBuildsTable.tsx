@@ -68,6 +68,7 @@ export function HardwareDetailsBuildsTable({
             },
           };
         },
+        state: s => s,
       });
     },
     [navigate],
@@ -81,7 +82,7 @@ export function HardwareDetailsBuildsTable({
       columns={hardwareDetailsBuildColumns}
       onClickFilter={onClickFilter}
       getRowLink={getRowLink}
-      previousSearch={searchParams}
+      searchParams={searchParams}
     />
   );
 }

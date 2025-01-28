@@ -23,7 +23,7 @@ import { Link, useSearch } from '@tanstack/react-router';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import type { TreeTableBody } from '@/types/tree/Tree';
-import { zOrigin } from '@/types/general';
+import { RedirectFrom, zOrigin } from '@/types/general';
 import type { TFilter, TOrigins } from '@/types/general';
 
 import { formattedBreakLineValue } from '@/locales/messages';
@@ -75,7 +75,10 @@ const getLinkProps = (
   return {
     to: '/tree/$treeId',
     params: { treeId: row.original.id },
-
+    state: {
+      id: row.original.id,
+      from: RedirectFrom.Tree,
+    },
     search: previousSearch => ({
       tableFilter: {
         bootsTable: possibleTestsTableFilter[0],

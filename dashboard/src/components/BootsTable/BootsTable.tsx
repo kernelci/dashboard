@@ -106,6 +106,7 @@ interface IBootsTable {
   onClickFilter: (newFilter: TestsTableFilter) => void;
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
+  searchParams?: LinkProps['search'];
 }
 
 // TODO: would be useful if the navigation happened within the table, so the parent component would only be required to pass the navigation url instead of the whole function for the update and the currentPath diffFilter (boots/tests Table)
@@ -117,6 +118,7 @@ export function BootsTable({
   onClickFilter,
   updatePathFilter,
   currentPathFilter,
+  searchParams,
 }: IBootsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const { pagination, paginationUpdater } = usePaginationState(tableKey);
@@ -376,6 +378,7 @@ export function BootsTable({
       issues={issues}
       status={status}
       error={error}
+      previousSearch={searchParams}
     >
       <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
       <BaseTable headerComponents={tableHeaders}>

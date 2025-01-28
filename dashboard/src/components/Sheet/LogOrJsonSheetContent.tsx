@@ -44,6 +44,7 @@ export const LogOrJsonSheetContent = ({
   issues,
   status,
   error,
+  previousSearch,
 }: ILogSheet): JSX.Element => {
   return (
     <WrapperSheetContent
@@ -69,7 +70,6 @@ export const LogOrJsonSheetContent = ({
             data={issues}
             status={status ?? 'success'}
             error={error?.message}
-            historyState={historyState}
             previousSearch={previousSearch}
             variant="warning"
           />

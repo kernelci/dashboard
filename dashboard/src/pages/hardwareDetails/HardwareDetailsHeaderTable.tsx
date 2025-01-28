@@ -94,6 +94,7 @@ const CommitSelector = ({
             treeIndexes: parsedTreeIndex,
           };
         },
+        state: s => s,
       });
     },
     [navigate, rowLength, treeIndex, treeCommits],

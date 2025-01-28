@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react';
 
-import type { HistoryState, LinkProps } from '@tanstack/react-router';
+import type { LinkProps } from '@tanstack/react-router';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
@@ -21,7 +21,6 @@ interface TableWithLogSheetProps {
   status?: UseQueryResult['status'];
   error?: UseQueryResult['error'];
   previousSearch?: LinkProps['search'];
-  historyState?: HistoryState;
 }
 
 const WrapperTableWithLogSheet = ({
@@ -33,10 +32,9 @@ const WrapperTableWithLogSheet = ({
   onOpenChange,
   currentLinkProps,
   issues,
-  previousSearch,
   status,
   error,
-  historyState,
+  previousSearch,
 }: PropsWithChildren<TableWithLogSheetProps>): JSX.Element => {
   return (
     <div className="flex flex-col gap-6 pb-4">
@@ -51,7 +49,6 @@ const WrapperTableWithLogSheet = ({
           issues={issues}
           status={status}
           previousSearch={previousSearch}
-          historyState={historyState}
           error={error}
         />
       </Sheet>

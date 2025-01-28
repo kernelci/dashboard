@@ -152,6 +152,7 @@ const TreeDetailsFilter = ({
           diffFilter: cleanedFilter,
         };
       },
+      state: s => s,
     });
   }, [diffFilter, navigate]);
 

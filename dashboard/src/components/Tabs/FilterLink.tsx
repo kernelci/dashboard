@@ -35,6 +35,7 @@ const FilterLink = ({
         ...previousParams,
         diffFilter: handleDiffFilter,
       })}
+      state={s => s}
       from={from}
       to={to}
       key={filterValue}

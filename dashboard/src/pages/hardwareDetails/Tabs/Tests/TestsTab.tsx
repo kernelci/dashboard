@@ -51,9 +51,11 @@ const TestsTab = ({
   testsSummary,
   fullDataResult,
 }: ITestsTab): JSX.Element => {
-  const { tableFilter, diffFilter } = useSearch({
+  const searchParams = useSearch({
     from: '/hardware/$hardwareId',
   });
+
+  const { tableFilter, diffFilter } = searchParams;
   const currentPathFilter = diffFilter.testPath
     ? Object.keys(diffFilter.testPath)[0]
     : undefined;
@@ -70,6 +72,7 @@ const TestsTab = ({
             testPath: pathFilter === '' ? undefined : { [pathFilter]: true },
           },
         }),
+        state: s => s,
       });
     },
     [navigate],
@@ -87,6 +90,7 @@ const TestsTab = ({
             },
           };
         },
+        state: s => s,
       });
     },
     [navigate],
@@ -184,6 +188,7 @@ const TestsTab = ({
           onClickFilter={onClickFilter}
           updatePathFilter={updatePathFilter}
           currentPathFilter={currentPathFilter}
+          searchParams={searchParams}
         />
       </HardwareDetailsTabsQuerySwitcher>
     </div>

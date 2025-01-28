@@ -246,7 +246,6 @@ const TestDetails = ({
   breadcrumb,
   testId,
 }: TestsDetailsProps): JSX.Element => {
-  const historyState = useRouterState({ select: s => s.location.state });
   const searchParams = useSearch({ from: '/test/$testId' });
   const { data, isLoading, status, error } = useTestDetails(testId ?? '');
   const {
@@ -285,7 +284,6 @@ const TestDetails = ({
             data={issueData}
             status={issueStatus}
             error={issueError?.message}
-            historyState={historyState}
             previousSearch={searchParams}
           />
         </div>

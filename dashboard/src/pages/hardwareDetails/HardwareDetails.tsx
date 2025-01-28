@@ -107,6 +107,7 @@ function HardwareDetails(): JSX.Element {
           ...previousSearch,
           treeIndexes: selectedIndexes,
         }),
+        state: s => s,
       });
     },
     [navigate],
@@ -121,6 +122,7 @@ function HardwareDetails(): JSX.Element {
             diffFilter: newFilter,
           };
         },
+        state: s => s,
       });
     },
     [navigate],
@@ -134,6 +136,7 @@ function HardwareDetails(): JSX.Element {
           diffFilter: {},
         };
       },
+      state: s => s,
     });
   }, [navigate]);
 
@@ -279,6 +282,7 @@ function HardwareDetails(): JSX.Element {
                         hardwareSearch: previousParams.hardwareSearch,
                       };
                     }}
+                    state={s => s}
                   >
                     <FormattedMessage id="hardware.path" />
                   </BreadcrumbLink>

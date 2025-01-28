@@ -55,6 +55,7 @@ const HardwareDetailsTabs = ({
             currentPageTab: validatedValue,
           };
         },
+        state: s => s,
       });
     },
     [navigate],

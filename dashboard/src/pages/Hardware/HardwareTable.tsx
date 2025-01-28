@@ -48,7 +48,7 @@ import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
 import type { ListingTableColumnMeta } from '@/types/table';
 
-import type { TFilter } from '@/types/general';
+import { RedirectFrom, type TFilter } from '@/types/general';
 
 import { InputTime } from './InputTime';
 
@@ -71,7 +71,10 @@ const getLinkProps = (
     from: '/hardware',
     to: '/hardware/$hardwareId',
     params: { hardwareId: row.original.hardware_name },
-
+    state: {
+      id: row.original.hardware_name,
+      from: RedirectFrom.Hardware,
+    },
     search: previousSearch => ({
       ...previousSearch,
       currentPageTab: zPossibleTabValidator.parse(tabTarget),

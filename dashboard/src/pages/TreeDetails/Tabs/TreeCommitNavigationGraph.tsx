@@ -27,6 +27,10 @@ const TreeCommitNavigationGraph = (): React.ReactNode => {
         params: {
           treeId: commitHash,
         },
+        state: s => ({
+          ...s,
+          id: commitHash,
+        }),
         search: previousParams => ({
           ...previousParams,
           treeInfo: {

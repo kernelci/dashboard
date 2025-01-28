@@ -73,6 +73,7 @@ const BuildTab = ({
             diffFilter: newFilter,
           };
         },
+        state: s => s,
       });
     },
     [navigate],
