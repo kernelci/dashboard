@@ -190,6 +190,8 @@ export const messages = {
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
     'hardwareDetails.treeBranch': 'Tree / Branch',
     'issue.noIssueFound': 'No issue found.',
+    'issue.tooltip':
+      'Issues are objects that group several builds or tests based on their result, being related through an incident.{br}They can also be linked to an issue tracker website by a report URL.',
     'issueDetails.buildValid': 'Build Valid',
     'issueDetails.comment': 'Comment',
     'issueDetails.culpritCode': 'Culprit Code',
