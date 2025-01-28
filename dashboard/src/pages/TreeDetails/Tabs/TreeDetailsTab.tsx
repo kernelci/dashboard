@@ -68,6 +68,7 @@ const TreeDetailsTab = ({
             currentPageTab: validatedValue,
           };
         },
+        state: s => s,
       });
     },
     [navigate],

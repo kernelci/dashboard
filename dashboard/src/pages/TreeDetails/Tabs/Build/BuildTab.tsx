@@ -93,6 +93,7 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
             diffFilter: newFilter,
           };
         },
+        state: s => s,
       });
     },
     [navigate],

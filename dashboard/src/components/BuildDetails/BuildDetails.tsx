@@ -4,11 +4,7 @@ import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useCallback, useMemo, useState } from 'react';
 
-import {
-  useSearch,
-  type HistoryState,
-  type LinkProps,
-} from '@tanstack/react-router';
+import { useSearch, type LinkProps } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
 import type { ISection } from '@/components/Section/Section';
@@ -48,7 +44,6 @@ interface BuildDetailsProps {
   onClickFilter: (filter: TestsTableFilter) => void;
   tableFilter: TableFilter;
   getTestTableRowLink: (testId: string) => LinkProps;
-  historyState?: HistoryState;
 }
 
 const BuildDetails = ({
@@ -57,7 +52,6 @@ const BuildDetails = ({
   onClickFilter,
   tableFilter,
   getTestTableRowLink,
-  historyState,
 }: BuildDetailsProps): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
   const { data, isLoading, status, error } = useBuildDetails(buildId ?? '');
@@ -251,7 +245,6 @@ const BuildDetails = ({
             data={issueData}
             status={issueStatus}
             error={issueError?.message}
-            historyState={historyState}
             previousSearch={searchParams}
           />
           <LogOrJsonSheetContent

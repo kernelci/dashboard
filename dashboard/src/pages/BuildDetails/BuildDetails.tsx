@@ -70,7 +70,6 @@ const BuildDetailsPage = (): JSX.Element => {
       onClickFilter={onClickFilter}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}
-      historyState={historyState}
     />
   );
 };

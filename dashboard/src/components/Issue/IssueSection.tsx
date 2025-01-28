@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
-import type { HistoryState, LinkProps } from '@tanstack/react-router';
+import type { LinkProps } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
 
 import { RiProhibited2Line } from 'react-icons/ri';
@@ -33,14 +33,12 @@ const IssueSection = ({
   data,
   status,
   error,
-  historyState,
   previousSearch,
   variant = 'error',
 }: {
   data?: TIssue[];
   status: UseQueryResult['status'];
   error?: string;
-  historyState?: HistoryState;
   previousSearch: LinkProps['search'];
   variant?: TErrorVariant;
 }): JSX.Element => {
@@ -52,7 +50,7 @@ const IssueSection = ({
           className="mb-16 flex [&:not(:last-child)]:mb-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2"
           to="/issue/$issueId/version/$versionNumber"
           params={{ issueId: issue.id, versionNumber: issue.version }}
-          state={historyState}
+          state={s => s}
           search={previousSearch}
         >
           <ListingItem
@@ -62,7 +60,7 @@ const IssueSection = ({
           />
         </Link>
       )),
-    [data, historyState, previousSearch],
+    [data, previousSearch],
   );
 
   return (

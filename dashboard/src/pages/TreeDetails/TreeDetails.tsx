@@ -148,6 +148,7 @@ function TreeDetails(): JSX.Element {
             diffFilter: newFilter,
           };
         },
+        state: s => s,
       });
     },
     [navigate],
@@ -161,6 +162,7 @@ function TreeDetails(): JSX.Element {
           diffFilter: {},
         };
       },
+      state: s => s,
     });
   }, [navigate]);
 
@@ -242,6 +244,7 @@ function TreeDetails(): JSX.Element {
                     origin: previousParams.origin,
                   };
                 }}
+                state={s => s}
               >
                 <FormattedMessage id="tree.path" />
               </BreadcrumbLink>

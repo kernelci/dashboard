@@ -28,12 +28,14 @@ interface IIndividualTestsTable {
   columns: ColumnDef<TIndividualTest>[];
   data: TIndividualTest[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
+  searchParams?: LinkProps['search'];
 }
 
 export function IndividualTestsTable({
   data,
   columns,
   getRowLink,
+  searchParams,
 }: IIndividualTestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -191,6 +193,7 @@ export function IndividualTestsTable({
       issues={issues}
       status={status}
       error={error}
+      previousSearch={searchParams}
     >
       <div
         ref={parentRef}
