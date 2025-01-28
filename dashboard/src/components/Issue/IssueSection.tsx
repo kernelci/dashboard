@@ -15,6 +15,8 @@ import type { TIssue } from '@/types/general';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
+import { IssueTooltip } from './IssueTooltip';
+
 export const NoIssueFound = (): JSX.Element => {
   return (
     <div className="flex flex-col items-center py-6 text-weakGray">
@@ -62,9 +64,12 @@ const IssueSection = ({
 
   return (
     <div>
-      <h2 className="mb-3 border-b border-gray-300 pb-3 text-2xl font-semibold">
-        <FormattedMessage id="global.issues" />
-      </h2>
+      <div className="mb-3 flex items-center gap-4 border-b border-gray-300 pb-3">
+        <h2 className="text-2xl font-semibold">
+          <FormattedMessage id="global.issues" />
+        </h2>
+        <IssueTooltip />
+      </div>
       <QuerySwitcher
         skeletonClassname="h-[100px]"
         status={status}

@@ -27,6 +27,7 @@ import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
 import { UNKNOWN_STRING } from '@/utils/constants/backend';
 
 import { MemoizedMoreDetailsIconLink } from '@/components/Button/MoreDetailsButton';
+import { IssueTooltip } from '@/components/Issue/IssueTooltip';
 
 interface IIssuesList {
   issues: TIssue[];
@@ -68,16 +69,19 @@ const IssuesList = ({
   const hasIssue = issues.length > 0 || failedWithUnknownIssues;
 
   const titleElement = (
-    <span>
-      {title}
-      {hasIssue && (
-        <ColoredCircle
-          className="ml-2 font-normal"
-          backgroundClassName={ItemType.Error}
-          quantity={issues.length + (failedWithUnknownIssues ? 1 : 0)}
-        />
-      )}
-    </span>
+    <div className="flex items-center gap-4 pr-4">
+      <span>
+        {title}
+        {hasIssue && (
+          <ColoredCircle
+            className="ml-2 font-normal"
+            backgroundClassName={ItemType.Error}
+            quantity={issues.length + (failedWithUnknownIssues ? 1 : 0)}
+          />
+        )}
+      </span>
+      <IssueTooltip />
+    </div>
   );
 
   const contentElement = !hasIssue ? (
