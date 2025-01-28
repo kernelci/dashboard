@@ -199,3 +199,10 @@ export const isStringRecord = (
     !Array.isArray(obj)
   );
 };
+
+export const isEmptyObject = (obj: Record<string, unknown>): boolean => {
+  for (const prop in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, prop)) return false;
+  }
+  return true;
+};

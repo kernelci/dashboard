@@ -2,7 +2,7 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
   Breadcrumb,
@@ -140,6 +140,7 @@ function HardwareDetails(): JSX.Element {
     });
   }, [navigate]);
 
+  const [treeIndexesLength, setTreeIndexesLength] = useState(0);
   const { summary: summaryResponse, full: fullResponse } =
     useHardwareDetailsLazyLoadQuery({
       hardwareId: hardwareId,
@@ -149,6 +150,7 @@ function HardwareDetails(): JSX.Element {
       filter: reqFilter,
       selectedIndexes: treeIndexes ?? [],
       treeCommits: treeCommits,
+      treeIndexesLength: treeIndexesLength,
     });
 
   const hardwareTableForCommitHistory = useMemo(() => {
@@ -315,6 +317,7 @@ function HardwareDetails(): JSX.Element {
                 treeItems={treeData}
                 selectedIndexes={treeIndexes}
                 updateTreeFilters={updateTreeFilters}
+                setTreeIndexesLength={setTreeIndexesLength}
               />
               {summaryResponse.data && (
                 <div className="mt-5">

@@ -13,6 +13,7 @@ import {
 } from '@tanstack/react-table';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { SetStateAction, Dispatch } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -54,6 +55,7 @@ interface IHardwareHeader {
   treeItems: PreparedTrees[];
   selectedIndexes?: number[];
   updateTreeFilters: (selectedIndexes: number[]) => void;
+  setTreeIndexesLength: Dispatch<SetStateAction<number>>;
 }
 
 const CommitSelector = ({
@@ -65,6 +67,7 @@ const CommitSelector = ({
   treeIndex,
   rowLength,
   isMainPageLoading,
+  setTreeIndexesLength,
 }: {
   headCommitName?: string;
   headCommitHash?: string;
@@ -74,6 +77,7 @@ const CommitSelector = ({
   isMainPageLoading: boolean;
   treeIndex: string;
   rowLength: number;
+  setTreeIndexesLength: IHardwareHeader['setTreeIndexesLength'];
 }): JSX.Element => {
   const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
   const { treeCommits } = useSearch({ from: '/hardware/$hardwareId' });
@@ -81,23 +85,29 @@ const CommitSelector = ({
   const navigateToThePast = useCallback(
     (commitHash: string) => {
       if (treeIndex === null) return;
+      setTreeIndexesLength(rowLength);
+
+      const newTreeCommits = { ...treeCommits, [treeIndex]: commitHash };
+      if (commitHash === headCommitHash) delete newTreeCommits[treeIndex];
 
       navigate({
         search: current => {
-          const parsedTreeIndex =
-            current.treeIndexes?.length ?? 0 > 0
-              ? current.treeIndexes
-              : Array.from(Array(rowLength).keys());
           return {
             ...current,
-            treeCommits: { ...treeCommits, [treeIndex]: commitHash },
-            treeIndexes: parsedTreeIndex,
+            treeCommits: newTreeCommits,
           };
         },
         state: s => s,
       });
     },
-    [navigate, rowLength, treeIndex, treeCommits],
+    [
+      navigate,
+      setTreeIndexesLength,
+      headCommitHash,
+      rowLength,
+      treeIndex,
+      treeCommits,
+    ],
   );
 
   const gitValues = useMemo(() => {
@@ -145,7 +155,7 @@ const CommitSelector = ({
     <div className="flex items-center gap-4">
       <Select
         onValueChange={navigateToThePast}
-        value={treeCommits[treeIndex] ?? headCommitHash}
+        value={commitHash}
         disabled={isMainPageLoading}
       >
         <SelectTrigger className="w-[180px]">
@@ -188,125 +198,130 @@ const CommitSelector = ({
   );
 };
 
-const columns: ColumnDef<PreparedTrees>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <IndeterminateCheckbox
-        {...{
-          checked: table.getIsAllRowsSelected(),
-          indeterminate: table.getIsSomeRowsSelected(),
-          onChange: table.getToggleAllRowsSelectedHandler(),
-          disabled: table.getIsAllRowsSelected(),
-        }}
-      />
-    ),
-    cell: ({ row, table }) => (
-      <IndeterminateCheckbox
-        {...{
-          checked: row.getIsSelected(),
-          disabled:
-            !row.getCanSelect() ||
-            (Object.keys(table.getState().rowSelection).length === 1 &&
-              row.getIsSelected()),
-          onChange: row.getToggleSelectedHandler(),
-        }}
-      />
-    ),
-  },
-  {
-    accessorKey: 'tree_name',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.tree" />
-    ),
-    cell: ({ row }): JSX.Element => (
-      <Tooltip>
-        <TooltipTrigger>{row.getValue('tree_name')}</TooltipTrigger>
-        <TooltipContent>{row.original.git_repository_url}</TooltipContent>
-      </Tooltip>
-    ),
-  },
-  {
-    accessorKey: 'git_repository_branch',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.branch" />
-    ),
-  },
-  {
-    accessorKey: 'head_git_commit_name',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.commitTag" />
-    ),
-    cell: ({ row, table }): JSX.Element => {
-      return (
-        <CommitSelector
-          headCommitName={row.original.head_git_commit_name}
-          headCommitHash={row.original.head_git_commit_hash}
-          headCommitTags={row.original.head_git_commit_tags}
-          selectableCommits={row.original.selectableCommits}
-          isCommitsLoading={row.original.isCommitHistoryDataLoading}
-          treeIndex={row.original.index}
-          rowLength={table.getCoreRowModel().rows.length}
-          isMainPageLoading={row.original.isMainPageLoading}
+const getColumns = (
+  setTreeIndexesLength: IHardwareHeader['setTreeIndexesLength'],
+): ColumnDef<PreparedTrees>[] => {
+  return [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <IndeterminateCheckbox
+          {...{
+            checked: table.getIsAllRowsSelected(),
+            indeterminate: table.getIsSomeRowsSelected(),
+            onChange: table.getToggleAllRowsSelectedHandler(),
+            disabled: table.getIsAllRowsSelected(),
+          }}
         />
-      );
-    },
-  },
-  {
-    accessorKey: 'selectedCommitStatusSummaryBuilds',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.build" />
-    ),
-    cell: ({ row }): JSX.Element => {
-      const statusSummary = row.original.selected_commit_status?.builds;
-      return (
-        <GroupedTestStatus
-          fail={statusSummary?.invalid}
-          pass={statusSummary?.valid}
-          nullStatus={statusSummary?.null}
+      ),
+      cell: ({ row, table }) => (
+        <IndeterminateCheckbox
+          {...{
+            checked: row.getIsSelected(),
+            disabled:
+              !row.getCanSelect() ||
+              (Object.keys(table.getState().rowSelection).length === 1 &&
+                row.getIsSelected()),
+            onChange: row.getToggleSelectedHandler(),
+          }}
         />
-      );
+      ),
     },
-  },
-  {
-    accessorKey: 'selectedCommitStatusSummaryBoots',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.bootStatus" />
-    ),
-    cell: ({ row }): JSX.Element => {
-      const statusSummary = row.original.selected_commit_status?.boots;
-      return (
-        <GroupedTestStatus
-          fail={statusSummary?.FAIL}
-          pass={statusSummary?.PASS}
-          done={statusSummary?.DONE}
-          error={statusSummary?.ERROR}
-          miss={statusSummary?.MISS}
-          skip={statusSummary?.SKIP}
-        />
-      );
+    {
+      accessorKey: 'tree_name',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="globalTable.tree" />
+      ),
+      cell: ({ row }): JSX.Element => (
+        <Tooltip>
+          <TooltipTrigger>{row.getValue('tree_name')}</TooltipTrigger>
+          <TooltipContent>{row.original.git_repository_url}</TooltipContent>
+        </Tooltip>
+      ),
     },
-  },
-  {
-    accessorKey: 'selectedCommitStatusSummaryTests',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.test" />
-    ),
-    cell: ({ row }): JSX.Element => {
-      const statusSummary = row.original.selected_commit_status?.tests;
-      return (
-        <GroupedTestStatus
-          fail={statusSummary?.FAIL}
-          pass={statusSummary?.PASS}
-          done={statusSummary?.DONE}
-          error={statusSummary?.ERROR}
-          miss={statusSummary?.MISS}
-          skip={statusSummary?.SKIP}
-        />
-      );
+    {
+      accessorKey: 'git_repository_branch',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="globalTable.branch" />
+      ),
     },
-  },
-];
+    {
+      accessorKey: 'head_git_commit_name',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="globalTable.commitTag" />
+      ),
+      cell: ({ row, table }): JSX.Element => {
+        return (
+          <CommitSelector
+            headCommitName={row.original.head_git_commit_name}
+            headCommitHash={row.original.head_git_commit_hash}
+            headCommitTags={row.original.head_git_commit_tags}
+            selectableCommits={row.original.selectableCommits}
+            isCommitsLoading={row.original.isCommitHistoryDataLoading}
+            treeIndex={row.original.index}
+            rowLength={table.getCoreRowModel().rows.length}
+            isMainPageLoading={row.original.isMainPageLoading}
+            setTreeIndexesLength={setTreeIndexesLength}
+          />
+        );
+      },
+    },
+    {
+      accessorKey: 'selectedCommitStatusSummaryBuilds',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="globalTable.build" />
+      ),
+      cell: ({ row }): JSX.Element => {
+        const statusSummary = row.original.selected_commit_status?.builds;
+        return (
+          <GroupedTestStatus
+            fail={statusSummary?.invalid}
+            pass={statusSummary?.valid}
+            nullStatus={statusSummary?.null}
+          />
+        );
+      },
+    },
+    {
+      accessorKey: 'selectedCommitStatusSummaryBoots',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="globalTable.bootStatus" />
+      ),
+      cell: ({ row }): JSX.Element => {
+        const statusSummary = row.original.selected_commit_status?.boots;
+        return (
+          <GroupedTestStatus
+            fail={statusSummary?.FAIL}
+            pass={statusSummary?.PASS}
+            done={statusSummary?.DONE}
+            error={statusSummary?.ERROR}
+            miss={statusSummary?.MISS}
+            skip={statusSummary?.SKIP}
+          />
+        );
+      },
+    },
+    {
+      accessorKey: 'selectedCommitStatusSummaryTests',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="globalTable.test" />
+      ),
+      cell: ({ row }): JSX.Element => {
+        const statusSummary = row.original.selected_commit_status?.tests;
+        return (
+          <GroupedTestStatus
+            fail={statusSummary?.FAIL}
+            pass={statusSummary?.PASS}
+            done={statusSummary?.DONE}
+            error={statusSummary?.ERROR}
+            miss={statusSummary?.MISS}
+            skip={statusSummary?.SKIP}
+          />
+        );
+      },
+    },
+  ];
+};
 
 const getInitialRowSelection = (
   selectedIndexes: number[],
@@ -340,6 +355,7 @@ export function HardwareHeader({
   treeItems,
   selectedIndexes = [],
   updateTreeFilters,
+  setTreeIndexesLength,
 }: IHardwareHeader): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'tree_name', desc: false },
@@ -370,6 +386,11 @@ export function HardwareHeader({
       getInitialRowSelection(selectedIndexes, treeItems.length),
     );
   }, [selectedIndexes, treeItems.length]);
+
+  const columns = useMemo(
+    () => getColumns(setTreeIndexesLength),
+    [setTreeIndexesLength],
+  );
 
   const table = useReactTable({
     data: treeItems,
