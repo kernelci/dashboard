@@ -4,6 +4,28 @@ info:
   version: 1.0.0
   description: API for the KernelCI dashboard
 paths:
+  /api/build/{build_id}:
+    get:
+      operationId: build_retrieve
+      parameters:
+      - in: path
+        name: build_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - build
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildDetailsResponse'
+          description: ''
   /api/hardware/{hardware_id}:
     post:
       operationId: hardware_create
@@ -542,6 +564,117 @@ components:
           title: Compilers
       title: BuildArchitectures
       type: object
+    BuildDetailsResponse:
+      properties:
+        id:
+          title: Id
+          type: string
+        architecture:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Architecture
+        config_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Config Name
+        misc:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Misc
+        config_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Config Url
+        compiler:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Compiler
+        valid:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Valid
+        duration:
+          anyOf:
+          - type: integer
+          - type: number
+          - type: 'null'
+          title: Duration
+        log_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Log Url
+        start_time:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: string
+          - type: 'null'
+          title: Start Time
+        git_repository_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Git Repository Url
+        git_repository_branch:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Git Repository Branch
+        checkout_id:
+          $ref: '#/components/schemas/Checkout__Id'
+        command:
+          $ref: '#/components/schemas/Build__Command'
+        comment:
+          $ref: '#/components/schemas/Build__Comment'
+        tree_name:
+          $ref: '#/components/schemas/Checkout__TreeName'
+        git_commit_hash:
+          $ref: '#/components/schemas/Checkout__GitCommitHash'
+        git_commit_name:
+          $ref: '#/components/schemas/Checkout__GitCommitName'
+        git_commit_tags:
+          $ref: '#/components/schemas/Checkout__GitCommitTags'
+        origin:
+          $ref: '#/components/schemas/Origin'
+        log_excerpt:
+          $ref: '#/components/schemas/Build__LogExcerpt'
+        input_files:
+          $ref: '#/components/schemas/Build__InputFiles'
+        output_files:
+          $ref: '#/components/schemas/Build__OutputFiles'
+      required:
+      - id
+      - architecture
+      - config_name
+      - misc
+      - config_url
+      - compiler
+      - valid
+      - duration
+      - log_url
+      - start_time
+      - git_repository_url
+      - git_repository_branch
+      - checkout_id
+      - command
+      - comment
+      - tree_name
+      - git_commit_hash
+      - git_commit_name
+      - git_commit_tags
+      - origin
+      - log_excerpt
+      - input_files
+      - output_files
+      title: BuildDetailsResponse
+      type: object
     BuildHistoryItem:
       properties:
         id:
@@ -672,6 +805,52 @@ components:
       - unknown_issues
       title: BuildSummary
       type: object
+    Build__Command:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Build__Comment:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Build__InputFiles:
+      anyOf:
+      - items:
+          type: object
+        type: array
+      - type: object
+      - type: 'null'
+    Build__LogExcerpt:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Build__OutputFiles:
+      anyOf:
+      - items:
+          type: object
+        type: array
+      - type: object
+      - type: 'null'
+    Checkout__GitCommitHash:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Checkout__GitCommitName:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Checkout__GitCommitTags:
+      anyOf:
+      - items:
+          type: string
+        type: array
+      - type: 'null'
+    Checkout__Id:
+      type: string
+    Checkout__TreeName:
+      anyOf:
+      - type: string
+      - type: 'null'
     CommonDetailsBootsResponse:
       properties:
         boots:
@@ -1028,6 +1207,8 @@ components:
       - platform
       title: Misc
       type: object
+    Origin:
+      type: string
     Summary:
       properties:
         builds:

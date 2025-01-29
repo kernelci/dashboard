@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Literal
+from typing import List, Optional, Dict, Literal, Any, Union
 from datetime import datetime
 
 FAIL_STATUS = "FAIL"
@@ -14,6 +14,22 @@ failure_status_list = [ERROR_STATUS, FAIL_STATUS, MISS_STATUS]
 type StatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "NULL"]
 
 type DatabaseStatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS"]
+
+
+type Origin = str
+type Timestamp = str
+
+type Checkout__Id = str
+type Checkout__TreeName = Optional[str]
+type Checkout__GitCommitHash = Optional[str]
+type Checkout__GitCommitName = Optional[str]
+type Checkout__GitCommitTags = Optional[List[str]]
+
+type Build__Command = Optional[str]
+type Build__Comment = Optional[str]
+type Build__LogExcerpt = Optional[str]
+type Build__InputFiles = Optional[Union[List[Dict[str, Any]], Dict[str, Any]]]
+type Build__OutputFiles = Optional[Union[List[Dict[str, Any]], Dict[str, Any]]]
 
 
 class Issues(BaseModel):
