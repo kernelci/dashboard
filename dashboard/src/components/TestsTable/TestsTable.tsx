@@ -39,6 +39,7 @@ import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { usePaginationState } from '@/hooks/usePaginationState';
 
 import type { TableKeys } from '@/utils/constants/tables';
+import { buildHardwareArray } from '@/utils/table';
 
 import { IndividualTestsTable } from './IndividualTestsTable';
 import { defaultColumns, defaultInnerColumns } from './DefaultTestsColumns';
@@ -105,7 +106,7 @@ export function TestsTable({
           path: e.path,
           start_time: e.start_time,
           status: e.status,
-          hardware: e.environment_compatible,
+          hardware: buildHardwareArray(e.environment_compatible, e.misc),
         });
         switch (e.status) {
           case 'DONE':
