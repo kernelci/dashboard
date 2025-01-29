@@ -39,7 +39,6 @@ class TreeSerializer(serializers.Serializer):
             "valid": obj.valid_builds,
             "invalid": obj.invalid_builds,
             "null": obj.null_builds,
-            "total": obj.total_builds
         }
 
     def get_test_status(self, obj) -> Dict:
@@ -51,7 +50,6 @@ class TreeSerializer(serializers.Serializer):
             "done": obj.done_tests,
             "skip": obj.skip_tests,
             "null": obj.null_tests,
-            "total": obj.total_tests
         }
 
     def get_boot_status(self, obj) -> Dict:
@@ -62,6 +60,7 @@ class TreeSerializer(serializers.Serializer):
             "pass": obj.pass_boots,
             "done": obj.done_boots,
             "skip": obj.skip_boots,
+            "null": obj.null_boots,
         }
 
 
