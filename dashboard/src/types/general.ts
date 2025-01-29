@@ -34,6 +34,10 @@ export type TIssue = {
   incidents_info: IncidentsInfo;
 };
 
+interface IMisc {
+  platform?: string;
+}
+
 export type TestHistory = {
   start_time: string;
   status: Status;
@@ -41,6 +45,7 @@ export type TestHistory = {
   id: string;
   duration?: number;
   environment_compatible?: string[];
+  misc?: IMisc;
 };
 
 interface ITreeDetailsMisc {

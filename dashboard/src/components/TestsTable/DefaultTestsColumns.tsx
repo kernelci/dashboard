@@ -10,7 +10,7 @@ import { TableHeader } from '@/components/Table/TableHeader';
 
 import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 
-import TooltipHardware from '@/components/TestsTable/TooltipHardware';
+import TooltipHardware from '@/components/Table/TooltipHardware';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import {
