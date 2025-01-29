@@ -1,14 +1,17 @@
 from http import HTTPStatus
 from typing import Dict, Optional
-from django.http import JsonResponse
-from django.views import View
-from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.models import Incidents
-from kernelCI_app.typeModels.issues import IssueDetailsPathParameters
+from kernelCI_app.typeModels.issues import (
+    IssueDetailsPathParameters,
+)
+from kernelCI_app.typeModels.issueDetails import IssuesBuildResponse
 from pydantic import ValidationError
+from drf_spectacular.utils import extend_schema
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 
-class IssueDetailsBuilds(View):
+class IssueDetailsBuilds(APIView):
     def _fetch_incidents(self, *, issue_id: str, version: int) -> Optional[Dict]:
         fields = [
             "build__id",
@@ -39,23 +42,33 @@ class IssueDetailsBuilds(View):
             for build in builds
         ]
 
+    @extend_schema(responses=IssuesBuildResponse)
     def get(
         self, _request, issue_id: Optional[str], version: Optional[str]
-    ) -> JsonResponse:
+    ) -> Response:
         try:
             parsed_params = IssueDetailsPathParameters(
                 issue_id=issue_id, version=version
             )
         except ValidationError as e:
-            return create_error_response(e.json())
+            return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
         builds_data = self._fetch_incidents(
             issue_id=parsed_params.issue_id, version=parsed_params.version
         )
 
         if not builds_data:
-            return create_error_response(
-                error_message="No builds found for this issue", status_code=HTTPStatus.OK
+            return Response(
+                data={"error": "No builds found for this issue"},
+                status=HTTPStatus.OK,
             )
 
-        return JsonResponse(builds_data, safe=False)
+        try:
+            valid_response = IssuesBuildResponse(builds_data)
+        except ValidationError as e:
+            return Response(
+                data=e.json(),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(valid_response.model_dump())

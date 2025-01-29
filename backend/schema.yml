@@ -196,6 +196,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/CommonDetailsTestsResponse'
           description: ''
+  /api/issue/{issue_id}/version/{version}/builds:
+    get:
+      operationId: issue_version_builds_retrieve
+      parameters:
+      - in: path
+        name: issue_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+        required: true
+      tags:
+      - issue
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuesBuildResponse'
+          description: ''
   /api/log-downloader/:
     get:
       operationId: log_downloader_retrieve
@@ -805,6 +832,10 @@ components:
       - unknown_issues
       title: BuildSummary
       type: object
+    Build__Architecture:
+      anyOf:
+      - type: string
+      - type: 'null'
     Build__Command:
       anyOf:
       - type: string
@@ -813,6 +844,20 @@ components:
       anyOf:
       - type: string
       - type: 'null'
+    Build__Compiler:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Build__ConfigName:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Build__Duration:
+      anyOf:
+      - type: number
+      - type: 'null'
+    Build__Id:
+      type: string
     Build__InputFiles:
       anyOf:
       - items:
@@ -824,12 +869,25 @@ components:
       anyOf:
       - type: string
       - type: 'null'
+    Build__LogUrl:
+      anyOf:
+      - type: string
+      - type: 'null'
     Build__OutputFiles:
       anyOf:
       - items:
           type: object
         type: array
       - type: object
+      - type: 'null'
+    Build__StartTime:
+      anyOf:
+      - format: date-time
+        type: string
+      - type: 'null'
+    Build__Valid:
+      anyOf:
+      - type: boolean
       - type: 'null'
     Checkout__GitCommitHash:
       anyOf:
@@ -1187,6 +1245,40 @@ components:
       - incidents_info
       title: Issue
       type: object
+    IssueBuildItem:
+      properties:
+        id:
+          $ref: '#/components/schemas/Build__Id'
+        architecture:
+          $ref: '#/components/schemas/Build__Architecture'
+        config_name:
+          $ref: '#/components/schemas/Build__ConfigName'
+        valid:
+          $ref: '#/components/schemas/Build__Valid'
+        start_time:
+          $ref: '#/components/schemas/Build__StartTime'
+        duration:
+          $ref: '#/components/schemas/Build__Duration'
+        compiler:
+          $ref: '#/components/schemas/Build__Compiler'
+        log_url:
+          $ref: '#/components/schemas/Build__LogUrl'
+      required:
+      - id
+      - architecture
+      - config_name
+      - valid
+      - start_time
+      - duration
+      - compiler
+      - log_url
+      title: IssueBuildItem
+      type: object
+    IssuesBuildResponse:
+      items:
+        $ref: '#/components/schemas/IssueBuildItem'
+      title: IssuesBuildResponse
+      type: array
     LocalFilters:
       properties:
         issues:
