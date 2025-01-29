@@ -33,9 +33,6 @@ const Hardware = (): JSX.Element => {
 
   return (
     <>
-      <div className="w-full bg-lightGray py-10">
-        <HardwareListingPage inputFilter={hardwareSearch ?? ''} />
-      </div>
       <div className="fixed top-0 z-10 mx-[380px] flex w-full pl-6 pr-12 pt-5">
         <div className="flex w-2/3 items-center px-6">
           <DebounceInput
@@ -48,6 +45,9 @@ const Hardware = (): JSX.Element => {
             })}
           />
         </div>
+      </div>
+      <div className="w-full bg-lightGray py-10">
+        <HardwareListingPage inputFilter={hardwareSearch ?? ''} />
       </div>
     </>
   );
