@@ -90,7 +90,7 @@ export type BuildStatus = {
   null: number;
 };
 
-export interface StatusCount {
+export type StatusCount = {
   PASS?: number;
   FAIL?: number;
   MISS?: number;
@@ -98,7 +98,9 @@ export interface StatusCount {
   ERROR?: number;
   NULL?: number;
   DONE?: number;
-}
+};
+
+export type RequiredStatusCount = Required<StatusCount>;
 
 export type Architecture = Record<
   string,

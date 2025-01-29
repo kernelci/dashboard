@@ -20,7 +20,11 @@ import { routeTree } from './routeTree.gen';
 import './index.css';
 import { isDev } from './lib/utils/vite';
 import { ToastProvider } from './components/ui/toast';
-import type { RedirectFrom } from './types/general';
+import type {
+  BuildStatus,
+  RedirectFrom,
+  RequiredStatusCount,
+} from './types/general';
 import { parseSearch, stringifySearch } from './utils/search';
 
 declare global {
@@ -40,6 +44,16 @@ declare module '@tanstack/react-router' {
   interface HistoryState {
     id?: string;
     from?: RedirectFrom;
+    treeStatusCount?: {
+      builds?: BuildStatus;
+      boots?: RequiredStatusCount;
+      tests?: RequiredStatusCount;
+    };
+    hardwareStatusCount?: {
+      builds: BuildStatus;
+      boots: RequiredStatusCount;
+      tests: RequiredStatusCount;
+    };
   }
 }
 

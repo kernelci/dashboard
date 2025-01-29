@@ -24,7 +24,7 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import type { TreeTableBody } from '@/types/tree/Tree';
 import { RedirectFrom, zOrigin } from '@/types/general';
-import type { TFilter, TOrigins } from '@/types/general';
+import type { TFilter, TOrigins, BuildStatus } from '@/types/general';
 
 import { formattedBreakLineValue } from '@/locales/messages';
 
@@ -62,6 +62,8 @@ import CopyButton from '@/components/Button/CopyButton';
 
 import type { ListingTableColumnMeta } from '@/types/table';
 
+import { statusCountToRequiredStatusCount } from '@/utils/status';
+
 import { InputTime } from './InputTime';
 
 const MemoizedInputTime = memo(InputTime);
@@ -75,10 +77,6 @@ const getLinkProps = (
   return {
     to: '/tree/$treeId',
     params: { treeId: row.original.id },
-    state: {
-      id: row.original.id,
-      from: RedirectFrom.Tree,
-    },
     search: previousSearch => ({
       tableFilter: {
         bootsTable: possibleTestsTableFilter[0],
@@ -96,6 +94,34 @@ const getLinkProps = (
         headCommitHash: row.original.id,
       },
       intervalInDays: previousSearch.intervalInDays,
+    }),
+    state: s => ({
+      ...s,
+      id: row.original.id,
+      from: RedirectFrom.Tree,
+      treeStatusCount: {
+        builds: {
+          valid: row.original.buildStatus?.valid ?? 0,
+          invalid: row.original.buildStatus?.invalid ?? 0,
+          null: row.original.buildStatus?.null ?? 0,
+        } satisfies BuildStatus,
+        tests: statusCountToRequiredStatusCount({
+          DONE: row.original.testStatus?.done,
+          PASS: row.original.testStatus?.pass,
+          FAIL: row.original.testStatus?.fail,
+          ERROR: row.original.testStatus?.error,
+          MISS: row.original.testStatus?.miss,
+          SKIP: row.original.testStatus?.skip,
+        }),
+        boots: statusCountToRequiredStatusCount({
+          DONE: row.original.bootStatus?.done,
+          PASS: row.original.bootStatus?.pass,
+          FAIL: row.original.bootStatus?.fail,
+          ERROR: row.original.bootStatus?.error,
+          MISS: row.original.bootStatus?.miss,
+          SKIP: row.original.bootStatus?.skip,
+        }),
+      },
     }),
   };
 };

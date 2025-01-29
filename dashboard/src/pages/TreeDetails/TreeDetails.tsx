@@ -1,4 +1,9 @@
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import {
+  useNavigate,
+  useParams,
+  useRouterState,
+  useSearch,
+} from '@tanstack/react-router';
 import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
@@ -47,6 +52,10 @@ import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
 import { useTreeDetailsLazyLoadQuery } from '@/hooks/useTreeDetailsLazyLoadQuery';
 
 import { LoadingCircle } from '@/components/ui/loading-circle';
+
+import { useQueryInconsistencyInvalidator } from '@/hooks/useQueryInconsistencyInvalidator';
+
+import { statusCountToRequiredStatusCount } from '@/utils/status';
 
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
@@ -139,6 +148,29 @@ function TreeDetails(): JSX.Element {
     status: summaryQueryStatus,
   } = treeDetailsLazyLoaded.summary;
 
+  const treeRouterStatus = useRouterState({
+    select: s => s.location.state.treeStatusCount,
+  });
+
+  type TreeRouterStatus = typeof treeRouterStatus;
+
+  const comparedData: TreeRouterStatus = useMemo(() => {
+    if (!data) return undefined;
+
+    const { builds, tests, boots } = data.summary;
+
+    return {
+      builds: builds.status,
+      tests: statusCountToRequiredStatusCount(tests.status),
+      boots: statusCountToRequiredStatusCount(boots.status),
+    } satisfies TreeRouterStatus;
+  }, [data]);
+
+  useQueryInconsistencyInvalidator<TreeRouterStatus>({
+    referenceData: treeRouterStatus,
+    comparedData: comparedData,
+    navigate: navigate,
+  });
   const onFilterChange = useCallback(
     (newFilter: TFilter) => {
       navigate({

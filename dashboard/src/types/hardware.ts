@@ -1,14 +1,8 @@
-import type { StatusCount } from './general';
-
-interface BuildCount {
-  valid: number;
-  invalid: number;
-  null: number;
-}
+import type { BuildStatus, StatusCount } from './general';
 
 export interface HardwareItem {
   hardware_name: string;
-  build_status_summary: BuildCount;
+  build_status_summary: BuildStatus;
   test_status_summary: StatusCount;
   boot_status_summary: StatusCount;
 }
