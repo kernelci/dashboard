@@ -1,14 +1,17 @@
 from http import HTTPStatus
 from typing import Dict, Optional
-from django.http import JsonResponse
-from django.views import View
-from kernelCI_app.helpers.errorHandling import create_error_response
 from kernelCI_app.models import Incidents
-from kernelCI_app.typeModels.issues import IssueDetailsPathParameters
+from kernelCI_app.typeModels.issues import (
+    IssueDetailsPathParameters,
+)
+from kernelCI_app.typeModels.issueDetails import IssuesTestsResponse
+from drf_spectacular.utils import extend_schema
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from pydantic import ValidationError
 
 
-class IssueDetailsTests(View):
+class IssueDetailsTests(APIView):
     def _fetch_incidents(self, *, issue_id: str, version: int) -> Optional[Dict]:
         fields = [
             "test__id",
@@ -35,23 +38,35 @@ class IssueDetailsTests(View):
             for test in tests
         ]
 
+    @extend_schema(responses=IssuesTestsResponse)
     def get(
         self, _request, issue_id: Optional[str], version: Optional[str]
-    ) -> JsonResponse:
+    ) -> Response:
         try:
             parsed_params = IssueDetailsPathParameters(
                 issue_id=issue_id, version=version
             )
         except ValidationError as e:
-            return create_error_response(e.json())
+            return Response(
+                data=e.json(),
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
         tests_data = self._fetch_incidents(
             issue_id=parsed_params.issue_id, version=parsed_params.version
         )
 
         if not tests_data:
-            return create_error_response(
-                error_message="No tests found for this issue", status_code=HTTPStatus.OK
+            return Response(
+                data={"error": "No tests found for this issue"}, status=HTTPStatus.OK
             )
 
-        return JsonResponse(tests_data, safe=False)
+        try:
+            valid_response = IssuesTestsResponse(tests_data)
+        except ValidationError as e:
+            return Response(
+                data=e.json(),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(valid_response.model_dump())
