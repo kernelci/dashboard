@@ -11,6 +11,12 @@ from kernelCI_app.typeModels.databases import (
     Build__Duration,
     Build__Compiler,
     Build__LogUrl,
+    Test__Id,
+    Test__Status,
+    Test__Duration,
+    Test__Path,
+    Test__StartTime,
+    Test__EnvironmentCompatible,
 )
 
 
@@ -23,6 +29,19 @@ class IssueBuildItem(BaseModel):
     duration: Build__Duration
     compiler: Build__Compiler
     log_url: Build__LogUrl
+
+
+class IssueTestItem(BaseModel):
+    id: Test__Id
+    status: Test__Status
+    duration: Test__Duration
+    path: Test__Path
+    start_time: Test__StartTime
+    environment_compatible: Test__EnvironmentCompatible
+
+
+class IssuesTestsResponse(RootModel):
+    root: List[IssueTestItem]
 
 
 class IssuesBuildResponse(RootModel):
