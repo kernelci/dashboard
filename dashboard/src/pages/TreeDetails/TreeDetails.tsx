@@ -1,4 +1,9 @@
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import {
+  useNavigate,
+  useParams,
+  useRouterState,
+  useSearch,
+} from '@tanstack/react-router';
 import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
@@ -47,6 +52,8 @@ import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
 import { useTreeDetailsLazyLoadQuery } from '@/hooks/useTreeDetailsLazyLoadQuery';
 
 import { LoadingCircle } from '@/components/ui/loading-circle';
+
+import { useQueryInconsistencyInvalidator } from '@/hooks/useQueryInconsistencyInvalidator';
 
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
@@ -139,6 +146,49 @@ function TreeDetails(): JSX.Element {
     status: summaryQueryStatus,
   } = treeDetailsLazyLoaded.summary;
 
+  const treeRouterStatus = useRouterState({
+    select: s => s.location.state.treeStatusCount,
+  });
+
+  type TreeRouterStatus = typeof treeRouterStatus;
+
+  const comparedData: TreeRouterStatus = useMemo(() => {
+    if (!data) return {} satisfies TreeRouterStatus;
+
+    const { builds, tests, boots } = data.summary;
+
+    return {
+      buildsStatus: {
+        valid: builds.status.valid ?? 0,
+        invalid: builds.status.invalid ?? 0,
+        null: builds.status.null ?? 0,
+      },
+      testStatus: {
+        done: tests.status.DONE ?? 0,
+        fail: tests.status.FAIL ?? 0,
+        error: tests.status.ERROR ?? 0,
+        pass: tests.status.PASS ?? 0,
+        miss: tests.status.MISS ?? 0,
+        skip: tests.status.SKIP ?? 0,
+        null: tests.status.NULL ?? 0,
+      },
+      bootStatus: {
+        done: boots.status.DONE ?? 0,
+        error: boots.status.ERROR ?? 0,
+        fail: boots.status.FAIL ?? 0,
+        pass: boots.status.PASS ?? 0,
+        miss: boots.status.MISS ?? 0,
+        skip: boots.status.SKIP ?? 0,
+        null: boots.status.NULL ?? 0,
+      },
+    } satisfies TreeRouterStatus;
+  }, [data]);
+
+  useQueryInconsistencyInvalidator<TreeRouterStatus>({
+    referenceData: treeRouterStatus,
+    comparedData: comparedData,
+    navigate: navigate,
+  });
   const onFilterChange = useCallback(
     (newFilter: TFilter) => {
       navigate({

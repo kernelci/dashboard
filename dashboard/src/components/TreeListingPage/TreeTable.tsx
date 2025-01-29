@@ -94,6 +94,13 @@ const getLinkProps = (
       },
       intervalInDays: previousSearch.intervalInDays,
     }),
+    state: {
+      treeStatusCount: {
+        buildsStatus: row.original.buildStatus,
+        testStatus: row.original.bootStatus,
+        bootStatus: row.original.testStatus,
+      },
+    },
   };
 };
 

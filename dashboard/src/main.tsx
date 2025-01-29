@@ -20,8 +20,10 @@ import { routeTree } from './routeTree.gen';
 import './index.css';
 import { isDev } from './lib/utils/vite';
 import { ToastProvider } from './components/ui/toast';
-import type { RedirectFrom } from './types/general';
+import type { BuildStatus, RedirectFrom, StatusCount } from './types/general';
 import { parseSearch, stringifySearch } from './utils/search';
+import type { TableTestStatus } from './types/tree/Tree';
+import type { BuildCount } from './types/hardware';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -40,6 +42,16 @@ declare module '@tanstack/react-router' {
   interface HistoryState {
     id?: string;
     from?: RedirectFrom;
+    treeStatusCount?: {
+      buildsStatus?: BuildStatus;
+      bootStatus?: TableTestStatus;
+      testStatus?: TableTestStatus;
+    };
+    hardwareStatusCount?: {
+      buildsStatus: BuildCount;
+      bootStatus: StatusCount;
+      testStatus: StatusCount;
+    };
   }
 }
 

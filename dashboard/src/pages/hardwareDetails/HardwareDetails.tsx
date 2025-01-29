@@ -1,4 +1,9 @@
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import {
+  useNavigate,
+  useParams,
+  useRouterState,
+  useSearch,
+} from '@tanstack/react-router';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -44,6 +49,8 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { useHardwareDetailsLazyLoadQuery } from '@/hooks/useHardwareDetailsLazyLoadQuery';
+
+import { useQueryInconsistencyInvalidator } from '@/hooks/useQueryInconsistencyInvalidator';
 
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
@@ -147,6 +154,52 @@ function HardwareDetails(): JSX.Element {
       selectedIndexes: treeIndexes ?? [],
       treeCommits: treeCommits,
     });
+
+  const hardwareStatusHistoryState = useRouterState({
+    select: s => s.location.state.hardwareStatusCount,
+  });
+
+  type HardwareStatusComparedState = typeof hardwareStatusHistoryState;
+
+  const hardwareDataPreparedForInconsistencyValidation: HardwareStatusComparedState =
+    useMemo(() => {
+      const { data } = summaryResponse;
+      if (!data) return;
+
+      const { boots, builds, tests } = data;
+
+      return {
+        bootStatus: {
+          DONE: boots.status.DONE,
+          FAIL: boots.status.FAIL,
+          ERROR: boots.status.ERROR,
+          NULL: boots.status.NULL,
+          PASS: boots.status.PASS,
+          MISS: boots.status.MISS,
+          SKIP: boots.status.SKIP,
+        },
+        testStatus: {
+          DONE: tests.status.DONE,
+          FAIL: tests.status.FAIL,
+          ERROR: tests.status.ERROR,
+          NULL: tests.status.NULL,
+          PASS: tests.status.PASS,
+          MISS: tests.status.MISS,
+          SKIP: tests.status.SKIP,
+        },
+        buildsStatus: {
+          valid: builds.status.valid,
+          invalid: builds.status.invalid,
+          null: builds.status.null,
+        },
+      } satisfies HardwareStatusComparedState;
+    }, [summaryResponse]);
+
+  useQueryInconsistencyInvalidator<HardwareStatusComparedState>({
+    referenceData: hardwareStatusHistoryState,
+    comparedData: hardwareDataPreparedForInconsistencyValidation,
+    navigate: navigate,
+  });
 
   const hardwareTableForCommitHistory = useMemo(() => {
     const result: CommitHead[] = [];

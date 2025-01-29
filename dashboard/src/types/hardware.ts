@@ -1,10 +1,10 @@
 import type { StatusCount } from './general';
 
-interface BuildCount {
+export type BuildCount = {
   valid: number;
   invalid: number;
   null: number;
-}
+};
 
 export interface HardwareItem {
   hardware_name: string;

@@ -12,6 +12,16 @@ export type TreeFastPathResponse = Array<{
   start_time: string;
 }>;
 
+export type TableTestStatus = {
+  done: number;
+  pass: number;
+  error: number;
+  fail: number;
+  skip: number;
+  miss: number;
+  null: number;
+};
+
 export type TreeTableBody = {
   commitHash: string;
   commitName: string;
@@ -19,22 +29,8 @@ export type TreeTableBody = {
   patchsetHash: string;
   buildStatus?: BuildStatus;
   tree_name?: string | null;
-  testStatus?: {
-    done: number;
-    pass: number;
-    error: number;
-    fail: number;
-    skip: number;
-    miss: number;
-  };
-  bootStatus?: {
-    done: number;
-    pass: number;
-    error: number;
-    fail: number;
-    skip: number;
-    miss: number;
-  };
+  testStatus?: TableTestStatus;
+  bootStatus?: TableTestStatus;
   id: string;
   branch: string;
   date: string;
@@ -54,26 +50,9 @@ export type Tree = {
     valid: number;
     invalid: number;
     null: number;
-    total: number;
   };
-  test_status: {
-    fail: number;
-    error: number;
-    miss: number;
-    pass: number;
-    done: number;
-    skip: number;
-    null: number;
-    total: number;
-  };
-  boot_status: {
-    done: number;
-    pass: number;
-    error: number;
-    fail: number;
-    skip: number;
-    miss: number;
-  };
+  test_status: TableTestStatus;
+  boot_status: TableTestStatus;
 };
 
 export type TreeLatestResponse = {

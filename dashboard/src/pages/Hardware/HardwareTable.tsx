@@ -79,6 +79,13 @@ const getLinkProps = (
       endTimestampInSeconds,
       diffFilter: { ...previousSearch.diffFilter, ...newDiffFilter },
     }),
+    state: {
+      hardwareStatusCount: {
+        buildsStatus: row.original.build_status_summary,
+        testStatus: row.original.test_status_summary,
+        bootStatus: row.original.boot_status_summary,
+      },
+    },
   };
 };
 
