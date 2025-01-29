@@ -1,14 +1,16 @@
-from django.http import JsonResponse
-from django.views import View
 from querybuilder.query import Query
 from kernelCI_app.models import Builds
 from http import HTTPStatus
-from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.typeModels.buildDetails import BuildDetailsResponse
+from drf_spectacular.utils import extend_schema
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from pydantic import ValidationError
 
 
-class BuildDetails(View):
-
-    def get(self, request, build_id):
+class BuildDetails(APIView):
+    @extend_schema(responses=BuildDetailsResponse)
+    def get(self, request, build_id: str) -> Response:
         build_fields = [
             "id",
             "_timestamp",
@@ -27,7 +29,7 @@ class BuildDetails(View):
             "valid",
             "misc",
             "input_files",
-            "output_files"
+            "output_files",
         ]
 
         query = Query().from_table(Builds, build_fields)
@@ -48,8 +50,14 @@ class BuildDetails(View):
 
         records = query.select()
         if not records:
-            return create_error_response(
-                error_message="Build not found", status_code=HTTPStatus.OK
+            return Response(data={"error": "Build not found"}, status=HTTPStatus.OK)
+
+        try:
+            valid_response = BuildDetailsResponse(**records[0])
+        except ValidationError as e:
+            return Response(
+                data=e.json(),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
-        return JsonResponse(records[0])
+        return Response(valid_response.model_dump())
