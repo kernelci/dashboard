@@ -40,6 +40,8 @@ import type { TableKeys } from '@/utils/constants/tables';
 
 import { TableRowMemoized } from '@/components/Table/TableComponents';
 
+import { buildHardwareArray } from '@/utils/table';
+
 import {
   DETAILS_COLUMN_ID,
   MoreDetailsIcon,
@@ -47,8 +49,8 @@ import {
 } from '@/components/Table/DetailsColumn';
 import { TableHeader } from '@/components/Table/TableHeader';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
+import TooltipHardware from '@/components/Table/TooltipHardware';
 
 const defaultColumns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -97,21 +99,7 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
       <TableHeader column={column} intlKey="global.hardware" />
     ),
     cell: ({ row }): JSX.Element | string => {
-      return row.original.hardware?.[0] ? (
-        <Tooltip>
-          <TooltipTrigger>{row.original.hardware?.[0]}</TooltipTrigger>
-          <TooltipContent>
-            {row.original.hardware.map(hardware => (
-              <span key={hardware}>
-                {hardware}
-                <br />
-              </span>
-            ))}
-          </TooltipContent>
-        </Tooltip>
-      ) : (
-        '-'
-      );
+      return <TooltipHardware hardwares={row.original.hardware} />;
     },
   },
   {
@@ -153,16 +141,16 @@ export function BootsTable({
   const rawData = useMemo(
     (): TTestByCommitHashResponse => ({
       tests: testHistory
-        ? testHistory.map(
-            (e): TestByCommitHash => ({
+        ? testHistory.map((e): TestByCommitHash => {
+            return {
               duration: e.duration?.toString() ?? '',
               id: e.id,
               path: e.path,
               startTime: e.start_time,
               status: e.status,
-              hardware: e.environment_compatible,
-            }),
-          )
+              hardware: buildHardwareArray(e.environment_compatible, e.misc),
+            };
+          })
         : [],
     }),
     [testHistory],
