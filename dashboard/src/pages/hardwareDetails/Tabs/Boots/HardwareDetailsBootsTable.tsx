@@ -1,0 +1,108 @@
+import type { ColumnDef } from '@tanstack/react-table';
+
+import type { LinkProps } from '@tanstack/react-router';
+
+import {
+  DETAILS_COLUMN_ID,
+  MoreDetailsIcon,
+  MoreDetailsTableHeader,
+} from '@/components/Table/DetailsColumn';
+import { TableHeader } from '@/components/Table/TableHeader';
+
+import { TooltipDateTime } from '@/components/TooltipDateTime';
+
+import { getStatusGroup } from '@/utils/status';
+
+import type {
+  TestByCommitHash,
+  TestsTableFilter,
+} from '@/types/tree/TreeDetails';
+import type { TestHistory } from '@/types/general';
+
+import type { TableKeys } from '@/utils/constants/tables';
+
+import { BootsTable } from '@/components/BootsTable/BootsTable';
+
+export const columns: ColumnDef<TestByCommitHash>[] = [
+  {
+    accessorKey: 'path',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.path" />
+    ),
+  },
+  {
+    accessorKey: 'status',
+    filterFn: (row, columnId, filterValue) =>
+      getStatusGroup(row.getValue(columnId)) === filterValue,
+    header: ({ column }): JSX.Element => (
+      <TableHeader
+        column={column}
+        intlKey="global.status"
+        tooltipId="boots.statusTooltip"
+      />
+    ),
+  },
+  {
+    accessorKey: 'startTime',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="buildDetails.startTime" />
+    ),
+    cell: ({ row }): JSX.Element => (
+      <TooltipDateTime
+        dateTime={row.getValue('startTime')}
+        lineBreak={true}
+        showLabelTime={true}
+        showLabelTZ={true}
+      />
+    ),
+  },
+  {
+    accessorKey: 'duration',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.duration" />
+    ),
+    cell: ({ row }): string =>
+      row.getValue('duration') ? row.getValue('duration') : '-',
+  },
+  {
+    id: DETAILS_COLUMN_ID,
+    header: (): JSX.Element => <MoreDetailsTableHeader />,
+    cell: (): JSX.Element => <MoreDetailsIcon />,
+  },
+];
+
+interface IHardwareBootsTable {
+  tableKey: TableKeys;
+  testHistory?: TestHistory[];
+  filter: TestsTableFilter;
+  getRowLink: (testId: TestHistory['id']) => LinkProps;
+  onClickFilter: (newFilter: TestsTableFilter) => void;
+  updatePathFilter?: (pathFilter: string) => void;
+  currentPathFilter?: string;
+  searchParams?: LinkProps['search'];
+}
+
+export const HardwareDetailsBootsTable = ({
+  tableKey,
+  testHistory,
+  filter,
+  getRowLink,
+  onClickFilter,
+  updatePathFilter,
+  currentPathFilter,
+  searchParams,
+}: IHardwareBootsTable): JSX.Element => {
+  return (
+    <BootsTable
+      tableKey={tableKey}
+      getRowLink={getRowLink}
+      filter={filter}
+      testHistory={testHistory}
+      columns={columns}
+      onClickFilter={onClickFilter}
+      updatePathFilter={updatePathFilter}
+      currentPathFilter={currentPathFilter}
+      searchParams={searchParams}
+    />
+  );
+};

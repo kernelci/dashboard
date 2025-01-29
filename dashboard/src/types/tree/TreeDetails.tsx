@@ -226,6 +226,7 @@ export type TestByCommitHash = {
   status: Status;
   duration: string;
   startTime: string;
+  hardware?: string[];
 };
 
 export type TTestByCommitHashResponse = {

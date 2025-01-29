@@ -20,8 +20,6 @@ import type {
 } from '@/types/tree/TreeDetails';
 import { possibleTestsTableFilter } from '@/types/tree/TreeDetails';
 
-import { TooltipDateTime } from '@/components/TooltipDateTime';
-
 import { getStatusGroup } from '@/utils/status';
 
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
@@ -32,8 +30,6 @@ import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
 import TableStatusFilter from '@/components/Table/TableStatusFilter';
 
-import { TableHeader } from '@/components/Table/TableHeader';
-
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { useTestDetails, useTestIssues } from '@/api/testDetails';
@@ -42,15 +38,19 @@ import { usePaginationState } from '@/hooks/usePaginationState';
 
 import type { TableKeys } from '@/utils/constants/tables';
 
+import { TableRowMemoized } from '@/components/Table/TableComponents';
+
 import {
   DETAILS_COLUMN_ID,
   MoreDetailsIcon,
   MoreDetailsTableHeader,
 } from '@/components/Table/DetailsColumn';
+import { TableHeader } from '@/components/Table/TableHeader';
 
-import { TableRowMemoized } from '@/components/Table/TableComponents';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
+import { TooltipDateTime } from '@/components/TooltipDateTime';
 
-const columns: ColumnDef<TestByCommitHash>[] = [
+const defaultColumns: ColumnDef<TestByCommitHash>[] = [
   {
     accessorKey: 'path',
     header: ({ column }): JSX.Element => (
@@ -92,6 +92,29 @@ const columns: ColumnDef<TestByCommitHash>[] = [
       row.getValue('duration') ? row.getValue('duration') : '-',
   },
   {
+    accessorKey: 'hardware',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.hardware" />
+    ),
+    cell: ({ row }): JSX.Element | string => {
+      return row.original.hardware?.[0] ? (
+        <Tooltip>
+          <TooltipTrigger>{row.original.hardware?.[0]}</TooltipTrigger>
+          <TooltipContent>
+            {row.original.hardware.map(hardware => (
+              <span key={hardware}>
+                {hardware}
+                <br />
+              </span>
+            ))}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        '-'
+      );
+    },
+  },
+  {
     id: DETAILS_COLUMN_ID,
     header: (): JSX.Element => <MoreDetailsTableHeader />,
     cell: (): JSX.Element => <MoreDetailsIcon />,
@@ -102,6 +125,7 @@ interface IBootsTable {
   tableKey: TableKeys;
   testHistory?: TestHistory[];
   filter: TestsTableFilter;
+  columns?: ColumnDef<TestByCommitHash>[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   onClickFilter: (newFilter: TestsTableFilter) => void;
   updatePathFilter?: (pathFilter: string) => void;
@@ -114,6 +138,7 @@ export function BootsTable({
   tableKey,
   testHistory,
   filter,
+  columns = defaultColumns,
   getRowLink,
   onClickFilter,
   updatePathFilter,
@@ -135,6 +160,7 @@ export function BootsTable({
               path: e.path,
               startTime: e.start_time,
               status: e.status,
+              hardware: e.environment_compatible,
             }),
           )
         : [],
@@ -310,7 +336,7 @@ export function BootsTable({
         </TableCell>
       </TableRow>
     );
-  }, [modelRows, getRowLink, openLogSheet, currentLog]);
+  }, [modelRows, getRowLink, openLogSheet, currentLog, columns.length]);
 
   const handlePreviousItem = useCallback(() => {
     setLog(previousLog => {

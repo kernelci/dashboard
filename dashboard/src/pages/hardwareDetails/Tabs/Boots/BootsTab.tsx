@@ -8,8 +8,6 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
-import { BootsTable } from '@/components/BootsTable/BootsTable';
-
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
 import type {
@@ -38,6 +36,8 @@ import { sanitizePlatforms } from '@/utils/utils';
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 import { RedirectFrom } from '@/types/general';
 import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
+
+import { HardwareDetailsBootsTable } from './HardwareDetailsBootsTable';
 
 interface IBootsTab {
   hardwareId: string;
@@ -194,7 +194,7 @@ const BootsTab = ({
         fullDataResult={fullDataResult}
         tabData={fullDataResult?.data?.boots}
       >
-        <BootsTable
+        <HardwareDetailsBootsTable
           tableKey="hardwareDetailsBoots"
           getRowLink={getRowLink}
           filter={tableFilter.bootsTable}
