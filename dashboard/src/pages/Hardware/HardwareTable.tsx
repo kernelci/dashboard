@@ -40,7 +40,7 @@ import { PaginationInfo } from '@/components/Table/PaginationInfo';
 
 import type { HardwareTableItem } from '@/types/hardware';
 
-import { sumStatus } from '@/utils/status';
+import { statusCountToRequiredStatusCount, sumStatus } from '@/utils/status';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
 
@@ -71,16 +71,26 @@ const getLinkProps = (
     from: '/hardware',
     to: '/hardware/$hardwareId',
     params: { hardwareId: row.original.hardware_name },
-    state: {
-      id: row.original.hardware_name,
-      from: RedirectFrom.Hardware,
-    },
     search: previousSearch => ({
       ...previousSearch,
       currentPageTab: zPossibleTabValidator.parse(tabTarget),
       startTimestampInSeconds,
       endTimestampInSeconds,
       diffFilter: { ...previousSearch.diffFilter, ...newDiffFilter },
+    }),
+    state: s => ({
+      ...s,
+      id: row.original.hardware_name,
+      from: RedirectFrom.Hardware,
+      hardwareStatusCount: {
+        builds: row.original.build_status_summary,
+        tests: statusCountToRequiredStatusCount(
+          row.original.test_status_summary,
+        ),
+        boots: statusCountToRequiredStatusCount(
+          row.original.boot_status_summary,
+        ),
+      },
     }),
   };
 };

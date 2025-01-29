@@ -1,4 +1,9 @@
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import {
+  useNavigate,
+  useParams,
+  useRouterState,
+  useSearch,
+} from '@tanstack/react-router';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -44,6 +49,10 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { useHardwareDetailsLazyLoadQuery } from '@/hooks/useHardwareDetailsLazyLoadQuery';
+
+import { useQueryInconsistencyInvalidator } from '@/hooks/useQueryInconsistencyInvalidator';
+
+import { statusCountToRequiredStatusCount } from '@/utils/status';
 
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
@@ -152,6 +161,32 @@ function HardwareDetails(): JSX.Element {
       treeCommits: treeCommits,
       treeIndexesLength: treeIndexesLength,
     });
+
+  const hardwareStatusHistoryState = useRouterState({
+    select: s => s.location.state.hardwareStatusCount,
+  });
+
+  type HardwareStatusComparedState = typeof hardwareStatusHistoryState;
+
+  const hardwareDataPreparedForInconsistencyValidation: HardwareStatusComparedState =
+    useMemo(() => {
+      const { data } = summaryResponse;
+      if (!data) return;
+
+      const { boots, builds, tests } = data.summary;
+
+      return {
+        boots: statusCountToRequiredStatusCount(boots.status),
+        tests: statusCountToRequiredStatusCount(tests.status),
+        builds: builds.status,
+      } satisfies HardwareStatusComparedState;
+    }, [summaryResponse]);
+
+  useQueryInconsistencyInvalidator<HardwareStatusComparedState>({
+    referenceData: hardwareStatusHistoryState,
+    comparedData: hardwareDataPreparedForInconsistencyValidation,
+    navigate: navigate,
+  });
 
   const hardwareTableForCommitHistory = useMemo(() => {
     const result: CommitHead[] = [];

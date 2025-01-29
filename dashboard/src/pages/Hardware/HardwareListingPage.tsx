@@ -15,6 +15,8 @@ import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
+import type { BuildStatus, StatusCount } from '@/types/general';
+
 import { HardwareTable } from './HardwareTable';
 
 interface HardwareListingPageProps {
@@ -77,13 +79,13 @@ const HardwareListingPage = ({
         return hardware.hardware_name?.includes(inputFilter);
       })
       .map((hardware): HardwareTableItem => {
-        const buildCount = {
+        const buildCount: BuildStatus = {
           valid: hardware.build_status_summary?.valid,
           invalid: hardware.build_status_summary?.invalid,
           null: hardware.build_status_summary?.null,
         };
 
-        const testStatusCount = {
+        const testStatusCount: StatusCount = {
           DONE: hardware.test_status_summary.DONE,
           ERROR: hardware.test_status_summary.ERROR,
           FAIL: hardware.test_status_summary.FAIL,
@@ -93,7 +95,7 @@ const HardwareListingPage = ({
           NULL: hardware.test_status_summary.NULL,
         };
 
-        const bootStatusCount = {
+        const bootStatusCount: StatusCount = {
           DONE: hardware.boot_status_summary.DONE,
           ERROR: hardware.boot_status_summary.ERROR,
           FAIL: hardware.boot_status_summary.FAIL,

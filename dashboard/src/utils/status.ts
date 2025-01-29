@@ -1,5 +1,9 @@
 import type { Status } from '@/types/database';
-import type { StatusCount, BuildStatus } from '@/types/general';
+import type {
+  StatusCount,
+  BuildStatus,
+  RequiredStatusCount,
+} from '@/types/general';
 
 type StatusGroups = 'success' | 'failed' | 'inconclusive';
 
@@ -46,3 +50,17 @@ export function sumStatus(status: FlexibleStatus): number {
     0,
   );
 }
+
+export const statusCountToRequiredStatusCount = (
+  statusCount: StatusCount,
+): RequiredStatusCount => {
+  return {
+    PASS: statusCount.PASS ?? 0,
+    FAIL: statusCount.FAIL ?? 0,
+    MISS: statusCount.MISS ?? 0,
+    SKIP: statusCount.SKIP ?? 0,
+    ERROR: statusCount.ERROR ?? 0,
+    NULL: statusCount.NULL ?? 0,
+    DONE: statusCount.DONE ?? 0,
+  };
+};

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import type {
+  TableTestStatus,
   Tree,
   TreeFastPathResponse,
   TreeTableBody,
@@ -67,25 +68,27 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
           : undefined;
 
         const testStatus = isCompleteTree(tree)
-          ? {
-              done: tree.test_status.done,
+          ? ({
               error: tree.test_status.error,
               fail: tree.test_status.fail,
               miss: tree.test_status.miss,
               pass: tree.test_status.pass,
               skip: tree.test_status.skip,
-            }
+              done: tree.test_status.done,
+              null: tree.test_status.null,
+            } satisfies TableTestStatus)
           : undefined;
 
         const bootStatus = isCompleteTree(tree)
-          ? {
+          ? ({
               done: tree.boot_status.done,
               error: tree.boot_status.error,
               fail: tree.boot_status.fail,
               miss: tree.boot_status.miss,
               pass: tree.boot_status.pass,
               skip: tree.boot_status.skip,
-            }
+              null: tree.boot_status.null,
+            } satisfies TableTestStatus)
           : undefined;
 
         return {
