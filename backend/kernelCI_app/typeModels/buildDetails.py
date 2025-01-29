@@ -1,3 +1,6 @@
+from typing import List
+from pydantic import BaseModel, RootModel
+
 from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
 from kernelCI_app.typeModels.databases import (
     Origin,
@@ -12,6 +15,12 @@ from kernelCI_app.typeModels.databases import (
     Build__LogExcerpt,
     Build__InputFiles,
     Build__OutputFiles,
+    Test__Id,
+    Test__Duration,
+    Test__Path,
+    Test__Status,
+    Test__StartTime,
+    Test__EnvironmentCompatible,
 )
 
 
@@ -28,3 +37,16 @@ class BuildDetailsResponse(BuildHistoryItem):
     log_excerpt: Build__LogExcerpt
     input_files: Build__InputFiles
     output_files: Build__OutputFiles
+
+
+class BuildTestItem(BaseModel):
+    id: Test__Id
+    status: Test__Status
+    duration: Test__Duration
+    path: Test__Path
+    start_time: Test__StartTime
+    environment_compatible: Test__EnvironmentCompatible
+
+
+class BuildTestsResponse(RootModel):
+    root: List[BuildTestItem]

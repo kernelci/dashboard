@@ -11,9 +11,9 @@ NULL_STATUS = "NULL"
 failure_status_list = [ERROR_STATUS, FAIL_STATUS, MISS_STATUS]
 
 # "NULL" must be added manually because the database return None
-type StatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "NULL"]
+type StatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "NULL", "DONE"]
 
-type DatabaseStatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS"]
+type DatabaseStatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "DONE"]
 
 
 type Origin = str
@@ -38,6 +38,13 @@ type Build__LogExcerpt = Optional[str]
 type Build__LogUrl = Optional[str]
 type Build__InputFiles = Optional[Union[List[Dict[str, Any]], Dict[str, Any]]]
 type Build__OutputFiles = Optional[Union[List[Dict[str, Any]], Dict[str, Any]]]
+
+type Test__Id = str
+type Test__Status = Optional[DatabaseStatusValues]
+type Test__Duration = Optional[float]
+type Test__Path = Optional[str]
+type Test__StartTime = Optional[datetime]
+type Test__EnvironmentCompatible = Optional[List[str]]
 
 
 class Issues(BaseModel):
