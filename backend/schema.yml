@@ -26,6 +26,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/BuildDetailsResponse'
           description: ''
+  /api/build/{build_id}/tests:
+    get:
+      operationId: build_tests_retrieve
+      parameters:
+      - in: path
+        name: build_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - build
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildTestsResponse'
+          description: ''
   /api/hardware/{hardware_id}:
     post:
       operationId: hardware_create
@@ -832,6 +854,34 @@ components:
       - unknown_issues
       title: BuildSummary
       type: object
+    BuildTestItem:
+      properties:
+        id:
+          $ref: '#/components/schemas/Test__Id'
+        status:
+          $ref: '#/components/schemas/Test__Status'
+        duration:
+          $ref: '#/components/schemas/Test__Duration'
+        path:
+          $ref: '#/components/schemas/Test__Path'
+        start_time:
+          $ref: '#/components/schemas/Test__StartTime'
+        environment_compatible:
+          $ref: '#/components/schemas/Test__EnvironmentCompatible'
+      required:
+      - id
+      - status
+      - duration
+      - path
+      - start_time
+      - environment_compatible
+      title: BuildTestItem
+      type: object
+    BuildTestsResponse:
+      items:
+        $ref: '#/components/schemas/BuildTestItem'
+      title: BuildTestsResponse
+      type: array
     Build__Architecture:
       anyOf:
       - type: string
@@ -931,6 +981,15 @@ components:
       - tests
       title: CommonDetailsTestsResponse
       type: object
+    DatabaseStatusValues:
+      enum:
+      - FAIL
+      - PASS
+      - SKIP
+      - ERROR
+      - MISS
+      - DONE
+      type: string
     DetailsFilters:
       properties:
         all:
@@ -1521,6 +1580,31 @@ components:
       - failed_platforms
       title: TestSummary
       type: object
+    Test__Duration:
+      anyOf:
+      - type: number
+      - type: 'null'
+    Test__EnvironmentCompatible:
+      anyOf:
+      - items:
+          type: string
+        type: array
+      - type: 'null'
+    Test__Id:
+      type: string
+    Test__Path:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Test__StartTime:
+      anyOf:
+      - format: date-time
+        type: string
+      - type: 'null'
+    Test__Status:
+      anyOf:
+      - $ref: '#/components/schemas/DatabaseStatusValues'
+      - type: 'null'
     Tree:
       properties:
         index:
