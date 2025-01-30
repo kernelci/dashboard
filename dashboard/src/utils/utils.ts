@@ -206,3 +206,21 @@ export const isEmptyObject = (obj: Record<string, unknown>): boolean => {
   }
   return true;
 };
+
+type TIssueFilter = {
+  id: string;
+  version?: number;
+};
+
+export const version_prefix = 'v.';
+
+export const getIssueFilterLabel = (issueFilter: TIssueFilter): string => {
+  const issueId = issueFilter.id;
+  const issueVersion = issueFilter.version;
+
+  if (!issueVersion) return issueId;
+
+  const versionFormatted = `${version_prefix}${issueVersion}`;
+
+  return `${issueId} ${versionFormatted}`;
+};

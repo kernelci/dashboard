@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Union, Tuple
 
 from kernelCI_app.typeModels.issues import Issue
 from pydantic import BaseModel
@@ -98,7 +98,7 @@ class GlobalFilters(BaseModel):
 
 
 class LocalFilters(BaseModel):
-    issues: List[str]
+    issues: List[Tuple[str, Optional[int]]]
 
 
 class DetailsFilters(BaseModel):
