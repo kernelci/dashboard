@@ -6,7 +6,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { status as testStatuses } from '@/utils/constants/database';
 import type { IDrawerLink } from '@/components/Filter/Drawer';
 import FilterDrawer from '@/components/Filter/Drawer';
-import type { HardwareSummary } from '@/types/hardware/hardwareDetails';
 import { Skeleton } from '@/components/Skeleton';
 
 import {
@@ -18,13 +17,14 @@ import {
 import type { ISectionItem } from '@/components/Filter/CheckboxSection';
 import { isTFilterObjectKeys, type TFilter } from '@/types/general';
 import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
+import type { HardwareDetailsSummary } from '@/types/hardware/hardwareDetails';
 
 type TFilterValues = Record<string, boolean>;
 
 interface IHardwareDetailsFilter {
   paramFilter: TFilter;
   hardwareName: string;
-  data: HardwareSummary | undefined;
+  data: HardwareDetailsSummary | undefined;
   selectedTrees?: number[];
 }
 
@@ -33,7 +33,7 @@ type TFilterCreate = TFilter & {
 };
 
 export const createFilter = (
-  data: HardwareSummary | undefined,
+  data: HardwareDetailsSummary | undefined,
 ): TFilterCreate => {
   const buildStatus = { Success: false, Failure: false, Inconclusive: false };
 
@@ -54,10 +54,11 @@ export const createFilter = (
   const archs: TFilterValues = {};
   const compilers: TFilterValues = {};
   const trees: TFilterValues = {};
+  const compatibles: TFilterValues = {};
   const treeIndexes: number[] = [];
 
   if (data) {
-    data.trees.forEach(tree => {
+    data.common.trees.forEach(tree => {
       const treeIdx = Number(tree.index);
       const treeName = tree.tree_name ?? 'Unknown';
       const treeBranch = tree.git_repository_branch ?? 'Unknown';
@@ -71,24 +72,25 @@ export const createFilter = (
       treeIndexes.push(treeIdx);
     });
 
-    data.architectures.forEach(arch => {
+    data.filters.all.architectures.forEach(arch => {
       archs[arch ?? 'Unknown'] = false;
     });
-    data.compilers.forEach(compiler => {
+    data.filters.all.compilers.forEach(compiler => {
       compilers[compiler ?? 'Unknown'] = false;
     });
-    data.configs.forEach(config => {
+    data.filters.all.configs.forEach(config => {
       configs[config ?? 'Unknown'] = false;
     });
-    data.builds.issues.forEach(i => (buildIssue[i.id] = false));
-    data.boots.issues.forEach(i => (bootIssue[i.id] = false));
-    data.tests.issues.forEach(i => (testIssue[i.id] = false));
-    Object.keys(data.boots.platforms ?? {}).forEach(
-      i => (bootPlatform[i] = false),
+    data.filters.builds.issues.forEach(i => (buildIssue[i] = false));
+    data.filters.boots.issues.forEach(i => (bootIssue[i] = false));
+    data.filters.tests.issues.forEach(i => (testIssue[i] = false));
+    (data.filters.boots.platforms ?? []).forEach(
+      p => (bootPlatform[p] = false),
     );
-    Object.keys(data.tests.platforms ?? {}).forEach(
-      i => (testPlatform[i] = false),
+    (data.filters.tests.platforms ?? []).forEach(
+      p => (testPlatform[p] = false),
     );
+    data.common.compatibles.forEach(c => (compatibles[c] = false));
   }
 
   return {
@@ -105,6 +107,7 @@ export const createFilter = (
     testIssue,
     bootPlatform,
     testPlatform,
+    hardware: compatibles,
   };
 };
 
@@ -165,6 +168,12 @@ const sectionHardware: ISectionItem[] = [
     title: 'global.compilers',
     subtitle: 'filter.compilersSubtitle',
     sectionKey: 'compilers',
+    isGlobal: true,
+  },
+  {
+    title: 'hardwareDetails.compatibles',
+    subtitle: 'filter.compatiblesSubtitle',
+    sectionKey: 'hardware',
     isGlobal: true,
   },
 ];

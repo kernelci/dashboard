@@ -156,7 +156,7 @@ function HardwareDetails(): JSX.Element {
   const hardwareTableForCommitHistory = useMemo(() => {
     const result: CommitHead[] = [];
     if (!summaryResponse.isLoading && summaryResponse.data) {
-      summaryResponse.data.trees.forEach(tree => {
+      summaryResponse.data.common.trees.forEach(tree => {
         const commitHead: CommitHead = {
           treeName: tree.tree_name ?? '',
           repositoryUrl: tree.git_repository_url ?? '',
@@ -200,9 +200,12 @@ function HardwareDetails(): JSX.Element {
   const endDate = getFormattedDate(endTimestampInSeconds);
 
   const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
-    const { status: buildStatusSummary } = summaryResponse.data?.builds ?? {};
-    const { status: testStatusSummary } = summaryResponse.data?.tests ?? {};
-    const { status: bootStatusSummary } = summaryResponse.data?.boots ?? {};
+    const { status: buildStatusSummary } =
+      summaryResponse.data?.summary.builds ?? {};
+    const { status: testStatusSummary } =
+      summaryResponse.data?.summary.tests ?? {};
+    const { status: bootStatusSummary } =
+      summaryResponse.data?.summary.boots ?? {};
 
     return {
       'global.tests': testStatusSummary ? (
@@ -234,23 +237,23 @@ function HardwareDetails(): JSX.Element {
       ),
     };
   }, [
-    summaryResponse.data?.boots,
-    summaryResponse.data?.builds,
-    summaryResponse.data?.tests,
+    summaryResponse.data?.summary.boots,
+    summaryResponse.data?.summary.builds,
+    summaryResponse.data?.summary.tests,
   ]);
 
   const treeData = useMemo(
     () =>
       prepareTreeItems({
         isCommitHistoryDataLoading: commitHistoryIsLoading,
-        treeItems: summaryResponse.data?.trees,
+        treeItems: summaryResponse.data?.common.trees,
         commitHistoryData: commitHistoryData?.commit_history_table,
         isMainPageLoading:
           fullResponse.isLoading || fullResponse.isPlaceholderData,
       }),
     [
       commitHistoryIsLoading,
-      summaryResponse.data?.trees,
+      summaryResponse.data?.common.trees,
       commitHistoryData?.commit_history_table,
       fullResponse.isLoading,
       fullResponse.isPlaceholderData,
@@ -325,7 +328,7 @@ function HardwareDetails(): JSX.Element {
                     title={
                       <FormattedMessage id="hardwareDetails.compatibles" />
                     }
-                    compatibles={summaryResponse.data.compatibles}
+                    compatibles={summaryResponse.data.common.compatibles}
                     diffFilter={diffFilter}
                   />
                 </div>

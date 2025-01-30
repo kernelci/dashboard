@@ -2,11 +2,11 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { useCallback, useMemo } from 'react';
 
-import type { THardwareDetails } from '@/types/hardware/hardwareDetails';
+import type { HardwareDetailsSummary } from '@/types/hardware/hardwareDetails';
 import CommitNavigationGraph from '@/components/CommitNavigationGraph/CommitNavigationGraph';
 
 interface ICommitNavigationGraph {
-  trees: THardwareDetails['summary']['trees'];
+  trees: HardwareDetailsSummary['common']['trees'];
   hardwareId: string;
 }
 const HardwareCommitNavigationGraph = ({

@@ -113,6 +113,8 @@ export type StatusCounts = {
   [key in Status]: number | undefined;
 };
 
+export type PropertyStatusCounts = Record<string, StatusCounts>;
+
 export type ArchCompilerStatus = {
   arch: string;
   compiler: string;

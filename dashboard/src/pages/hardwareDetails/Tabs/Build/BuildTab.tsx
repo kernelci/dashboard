@@ -7,7 +7,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import type { UseQueryResult } from '@tanstack/react-query';
 
 import type {
-  HardwareSummary,
+  HardwareDetailsSummary,
   THardwareDetails,
 } from '@/types/hardware/hardwareDetails';
 import { sanitizeArchs, sanitizeConfigs } from '@/utils/utils';
@@ -33,9 +33,9 @@ import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/H
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
 interface IBuildTab {
-  trees: HardwareSummary['trees'];
+  trees: HardwareDetailsSummary['common']['trees'];
   hardwareId: string;
-  buildsSummary: HardwareSummary['builds'];
+  buildsSummary: HardwareDetailsSummary['summary']['builds'];
   fullDataResult?: UseQueryResult<THardwareDetails>;
 }
 

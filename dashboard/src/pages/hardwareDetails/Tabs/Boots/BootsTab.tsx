@@ -13,7 +13,7 @@ import { BootsTable } from '@/components/BootsTable/BootsTable';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
 import type {
-  HardwareSummary,
+  HardwareDetailsSummary,
   THardwareDetails,
 } from '@/types/hardware/hardwareDetails';
 
@@ -41,8 +41,8 @@ import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/H
 
 interface IBootsTab {
   hardwareId: string;
-  trees: HardwareSummary['trees'];
-  bootsSummary: HardwareSummary['boots'];
+  trees: HardwareDetailsSummary['common']['trees'];
+  bootsSummary: HardwareDetailsSummary['summary']['boots'];
   fullDataResult?: UseQueryResult<THardwareDetails>;
 }
 

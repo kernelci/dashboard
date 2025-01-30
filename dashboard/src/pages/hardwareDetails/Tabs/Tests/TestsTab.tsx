@@ -9,7 +9,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
 import type {
-  HardwareSummary,
+  HardwareDetailsSummary,
   THardwareDetails,
 } from '@/types/hardware/hardwareDetails';
 
@@ -40,8 +40,8 @@ import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
 interface ITestsTab {
   hardwareId: string;
-  trees: HardwareSummary['trees'];
-  testsSummary: HardwareSummary['tests'];
+  trees: HardwareDetailsSummary['common']['trees'];
+  testsSummary: HardwareDetailsSummary['summary']['tests'];
   fullDataResult?: UseQueryResult<THardwareDetails>;
 }
 

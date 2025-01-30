@@ -1,5 +1,6 @@
+from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Set, Union
 
 from kernelCI_app.typeModels.issues import Issue
 from pydantic import BaseModel
@@ -69,8 +70,8 @@ class TestSummary(BaseModel):
     configs: Dict[str, TestStatusCount]
     issues: List[Issue]
     unknown_issues: int
-    fail_reasons: Dict[str, int]
-    failed_platforms: List[str]
+    fail_reasons: defaultdict[str, int]
+    failed_platforms: Set
     environment_compatible: Optional[Dict] = None
     environment_misc: Optional[Dict] = None
     platforms: Optional[Dict[str, TestStatusCount]] = None
@@ -88,6 +89,23 @@ class Summary(BaseModel):
     builds: BuildSummary
     boots: TestSummary
     tests: TestSummary
+
+
+class GlobalFilters(BaseModel):
+    configs: List[str]
+    architectures: List[str]
+    compilers: List[str]
+
+
+class LocalFilters(BaseModel):
+    issues: List[str]
+
+
+class DetailsFilters(BaseModel):
+    all: GlobalFilters
+    builds: LocalFilters
+    boots: LocalFilters
+    tests: LocalFilters
 
 
 class CommonDetailsTestsResponse(BaseModel):
