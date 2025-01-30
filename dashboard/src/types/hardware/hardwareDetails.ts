@@ -6,7 +6,12 @@ import type {
   StatusCount,
   TestHistory,
 } from '@/types/general';
-import type { BuildSummary, TestSummary } from '@/types/tree/TreeDetails';
+
+import type {
+  GlobalFilters,
+  LocalFilters,
+  Summary,
+} from '@/types/commonDetails';
 
 type TTreesStatusSummary = {
   builds: Partial<BuildStatus>;
@@ -31,26 +36,35 @@ export type PreparedTrees = Trees & {
   isMainPageLoading: boolean;
 };
 
-export type HardwareSummary = {
-  builds: BuildSummary;
-  boots: TestSummary;
-  tests: TestSummary;
+type HardwareCommon = {
   trees: Trees[];
-  configs: string[];
-  architectures: string[];
-  compilers: string[];
   compatibles: string[];
 };
 
-export type HardwareDetailsSummaryResponse = {
-  summary: HardwareSummary;
+interface HardwareTestLocalFilters extends LocalFilters {
+  platforms: string[];
+}
+
+type HardwareDetailsFilters = {
+  all: GlobalFilters;
+  builds: LocalFilters;
+  boots: HardwareTestLocalFilters;
+  tests: HardwareTestLocalFilters;
+};
+
+export type HardwareDetailsSummary = {
+  summary: Summary;
+  filters: HardwareDetailsFilters;
+  common: HardwareCommon;
 };
 
 export type THardwareDetails = {
   builds: BuildsTabBuild[];
   tests: TestHistory[];
   boots: TestHistory[];
-  summary: HardwareSummary;
+  summary: Summary;
+  filters: HardwareDetailsFilters;
+  common: HardwareCommon;
 };
 
 export interface THardwareDetailsFilter

@@ -75,6 +75,7 @@ export const messages = {
     'filter.buildDuration': 'Build duration',
     'filter.buildIssue': 'Build Issue',
     'filter.buildStatus': 'Build Status',
+    'filter.compatiblesSubtitle': 'Please select one or more compatibles:',
     'filter.compilersSubtitle': 'Please select one or more compilers:',
     'filter.configsSubtitle': 'Please select one or more configs:',
     'filter.durationSubtitle': 'Please select the duration range:',

@@ -3,6 +3,8 @@ from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
 from kernelCI_app.typeModels.commonDetails import (
     BuildHistoryItem,
+    GlobalFilters,
+    LocalFilters,
     Summary,
     TestHistoryItem,
 )
@@ -64,12 +66,20 @@ class Tree(BaseModel):
     is_selected: Optional[bool]
 
 
-class HardwareSummary(Summary):
+class HardwareCommon(BaseModel):
     trees: List[Tree]
-    configs: List[str]
-    architectures: List[str]
-    compilers: List[str]
     compatibles: List[str]
+
+
+class HardwareTestLocalFilters(LocalFilters):
+    platforms: List[str]
+
+
+class HardwareDetailsFilters(BaseModel):
+    all: GlobalFilters
+    builds: LocalFilters
+    boots: HardwareTestLocalFilters
+    tests: HardwareTestLocalFilters
 
 
 class HardwareBuildHistoryItem(BuildHistoryItem):
@@ -82,11 +92,15 @@ class HardwareDetailsFullResponse(BaseModel):
     builds: List[HardwareBuildHistoryItem]
     boots: List[TestHistoryItem]
     tests: List[TestHistoryItem]
-    summary: HardwareSummary
+    summary: Summary
+    filters: HardwareDetailsFilters
+    common: HardwareCommon
 
 
 class HardwareDetailsSummaryResponse(BaseModel):
-    summary: HardwareSummary
+    summary: Summary
+    filters: HardwareDetailsFilters
+    common: HardwareCommon
 
 
 class HardwareDetailsBuildsResponse(BaseModel):

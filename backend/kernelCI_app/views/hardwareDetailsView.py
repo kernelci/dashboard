@@ -26,8 +26,19 @@ from kernelCI_app.helpers.hardwareDetails import (
     set_trees_status_summary,
     unstable_parse_post_body,
 )
+from kernelCI_app.typeModels.commonDetails import (
+    BuildSummary,
+    GlobalFilters,
+    LocalFilters,
+    Summary,
+    TestSummary,
+)
 from kernelCI_app.typeModels.hardwareDetails import (
+    HardwareCommon,
+    HardwareDetailsFilters,
     HardwareDetailsFullResponse,
+    HardwareDetailsPostBody,
+    HardwareTestLocalFilters,
     PossibleTestType,
     Tree,
 )
@@ -68,6 +79,17 @@ class HardwareDetails(APIView):
         }
         self.boots = generate_test_dict()
         self.tests = generate_test_dict()
+
+        self.unfiltered_build_issues = set()
+        self.unfiltered_boot_issues = set()
+        self.unfiltered_test_issues = set()
+
+        self.unfiltered_boot_platforms = set()
+        self.unfiltered_test_platforms = set()
+
+        self.global_configs = set()
+        self.global_architectures = set()
+        self.global_compilers = set()
 
         self.tree_status_summary = defaultdict(generate_tree_status_summary_dict)
 
@@ -151,6 +173,8 @@ class HardwareDetails(APIView):
     # Using post to receive a body request
     @extend_schema(
         responses=HardwareDetailsFullResponse,
+        request=HardwareDetailsPostBody,
+        methods=["POST"],
     )
     def post(self, request, hardware_id):
         try:
@@ -193,9 +217,7 @@ class HardwareDetails(APIView):
         )
 
         if len(records) == 0:
-            return Response(
-                data={"error": "Hardware not found"}, status=HTTPStatus.OK
-            )
+            return Response(data={"error": "Hardware not found"}, status=HTTPStatus.OK)
 
         is_all_selected = len(self.selected_commits) == 0
 
@@ -204,7 +226,8 @@ class HardwareDetails(APIView):
         self.builds["summary"] = create_details_build_summary(self.builds["items"])
         self._format_processing_for_response()
 
-        configs, archs, compilers = get_filter_options(
+        get_filter_options(
+            instance=self,
             records=records,
             selected_trees=trees_with_selected_commits,
             is_all_selected=is_all_selected,
@@ -214,47 +237,61 @@ class HardwareDetails(APIView):
             trees=trees, tree_status_summary=self.tree_status_summary
         )
 
-        response = {
-            "builds": self.builds["items"],
-            "boots": self.boots["history"],
-            "tests": self.tests["history"],
-            "summary": {
-                "builds": {
-                    "status": self.builds["summary"]["builds"],
-                    "architectures": self.builds["summary"]["architectures"],
-                    "configs": self.builds["summary"]["configs"],
-                    "issues": self.builds["issues"],
-                    "unknown_issues": self.builds["failedWithUnknownIssues"],
-                },
-                "boots": {
-                    "status": self.boots["statusSummary"],
-                    "architectures": self.boots["archSummary"],
-                    "configs": self.boots["configs"],
-                    "issues": self.boots["issues"],
-                    "unknown_issues": self.boots["failedWithUnknownIssues"],
-                    "platforms": self.boots["platforms"],
-                    "fail_reasons": self.boots["failReasons"],
-                    "failed_platforms": list(self.boots["platformsFailing"]),
-                },
-                "tests": {
-                    "status": self.tests["statusSummary"],
-                    "architectures": self.tests["archSummary"],
-                    "configs": self.tests["configs"],
-                    "issues": self.tests["issues"],
-                    "unknown_issues": self.tests["failedWithUnknownIssues"],
-                    "platforms": self.tests["platforms"],
-                    "fail_reasons": self.tests["failReasons"],
-                    "failed_platforms": list(self.tests["platformsFailing"]),
-                },
-                "trees": trees,
-                "configs": configs,
-                "architectures": archs,
-                "compilers": compilers,
-                "compatibles": list(self.processed_compatibles - {hardware_id}),
-            },
-        }
         try:
-            valid_response = HardwareDetailsFullResponse(**response)
+            valid_response = HardwareDetailsFullResponse(
+                builds=self.builds["items"],
+                boots=self.boots["history"],
+                tests=self.tests["history"],
+                summary=Summary(
+                    builds=BuildSummary(
+                        status=self.builds["summary"]["builds"],
+                        architectures=self.builds["summary"]["architectures"],
+                        configs=self.builds["summary"]["configs"],
+                        issues=self.builds["issues"],
+                        unknown_issues=self.builds["failedWithUnknownIssues"],
+                    ),
+                    boots=TestSummary(
+                        status=self.boots["statusSummary"],
+                        architectures=self.boots["archSummary"],
+                        configs=self.boots["configs"],
+                        issues=self.boots["issues"],
+                        unknown_issues=self.boots["failedWithUnknownIssues"],
+                        platforms=self.boots["platforms"],
+                        fail_reasons=self.boots["failReasons"],
+                        failed_platforms=list(self.boots["platformsFailing"]),
+                    ),
+                    tests=TestSummary(
+                        status=self.tests["statusSummary"],
+                        architectures=self.tests["archSummary"],
+                        configs=self.tests["configs"],
+                        issues=self.tests["issues"],
+                        unknown_issues=self.tests["failedWithUnknownIssues"],
+                        platforms=self.tests["platforms"],
+                        fail_reasons=self.tests["failReasons"],
+                        failed_platforms=list(self.tests["platformsFailing"]),
+                    ),
+                ),
+                filters=HardwareDetailsFilters(
+                    all=GlobalFilters(
+                        configs=self.global_configs,
+                        architectures=self.global_architectures,
+                        compilers=self.global_compilers,
+                    ),
+                    builds=LocalFilters(issues=list(self.unfiltered_build_issues)),
+                    boots=HardwareTestLocalFilters(
+                        issues=list(self.unfiltered_boot_issues),
+                        platforms=list(self.unfiltered_boot_platforms),
+                    ),
+                    tests=HardwareTestLocalFilters(
+                        issues=list(self.unfiltered_test_issues),
+                        platforms=list(self.unfiltered_test_platforms),
+                    ),
+                ),
+                common=HardwareCommon(
+                    trees=trees,
+                    compatibles=list(self.processed_compatibles - {hardware_id}),
+                ),
+            )
         except ValidationError as e:
             return Response(data=e.errors(), status=HTTPStatus.BAD_REQUEST)
 

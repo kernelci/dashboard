@@ -11,7 +11,7 @@ import Tabs from '@/components/Tabs/Tabs';
 import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
 import type {
-  HardwareSummary,
+  HardwareDetailsSummary,
   THardwareDetails,
 } from '@/types/hardware/hardwareDetails';
 
@@ -29,7 +29,7 @@ export interface IHardwareDetailsTab {
   filterListElement?: JSX.Element;
   countElements: TreeDetailsTabRightElement;
   fullDataResult?: UseQueryResult<THardwareDetails>;
-  summaryData: HardwareSummary;
+  summaryData: HardwareDetailsSummary;
 }
 
 const HardwareDetailsTabs = ({
@@ -67,8 +67,8 @@ const HardwareDetailsTabs = ({
         content: (
           <BuildTab
             hardwareId={hardwareId}
-            trees={summaryData.trees}
-            buildsSummary={summaryData.builds}
+            trees={summaryData.common.trees}
+            buildsSummary={summaryData.summary.builds}
             fullDataResult={fullDataResult}
           />
         ),
@@ -80,8 +80,8 @@ const HardwareDetailsTabs = ({
         content: (
           <BootsTab
             hardwareId={hardwareId}
-            trees={summaryData.trees}
-            bootsSummary={summaryData.boots}
+            trees={summaryData.common.trees}
+            bootsSummary={summaryData.summary.boots}
             fullDataResult={fullDataResult}
           />
         ),
@@ -93,8 +93,8 @@ const HardwareDetailsTabs = ({
         content: (
           <TestsTab
             hardwareId={hardwareId}
-            trees={summaryData.trees}
-            testsSummary={summaryData.tests}
+            trees={summaryData.common.trees}
+            testsSummary={summaryData.summary.tests}
             fullDataResult={fullDataResult}
           />
         ),
@@ -104,10 +104,10 @@ const HardwareDetailsTabs = ({
     ],
     [
       hardwareId,
-      summaryData.trees,
-      summaryData.builds,
-      summaryData.boots,
-      summaryData.tests,
+      summaryData.common.trees,
+      summaryData.summary.builds,
+      summaryData.summary.boots,
+      summaryData.summary.tests,
       fullDataResult,
       countElements,
     ],

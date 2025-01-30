@@ -27,12 +27,17 @@ from kernelCI_app.helpers.hardwareDetails import (
     unstable_parse_post_body,
 )
 from kernelCI_app.typeModels.commonDetails import (
+    GlobalFilters,
+    LocalFilters,
+    Summary,
     TestArchSummaryItem,
 )
 from kernelCI_app.typeModels.hardwareDetails import (
+    HardwareCommon,
+    HardwareDetailsFilters,
     HardwareDetailsPostBody,
     HardwareDetailsSummaryResponse,
-    HardwareSummary,
+    HardwareTestLocalFilters,
     PossibleTestType,
     Tree,
 )
@@ -83,6 +88,17 @@ class HardwareDetailsSummary(APIView):
             "boot": {},
             "test": {},
         }
+
+        self.unfiltered_build_issues = set()
+        self.unfiltered_boot_issues = set()
+        self.unfiltered_test_issues = set()
+
+        self.unfiltered_boot_platforms = set()
+        self.unfiltered_test_platforms = set()
+
+        self.global_configs = set()
+        self.global_architectures = set()
+        self.global_compilers = set()
 
         self.builds_summary = generate_build_summary_typed()
         self.boots_summary = generate_test_summary_typed()
@@ -242,7 +258,8 @@ class HardwareDetailsSummary(APIView):
 
         self._format_processing_for_response(hardware_id=hardware_id)
 
-        configs, archs, compilers = get_filter_options(
+        get_filter_options(
+            instance=self,
             records=records,
             selected_trees=trees_with_selected_commits,
             is_all_selected=is_all_selected,
@@ -254,14 +271,31 @@ class HardwareDetailsSummary(APIView):
 
         try:
             valid_response = HardwareDetailsSummaryResponse(
-                summary=HardwareSummary(
+                summary=Summary(
                     builds=self.builds_summary,
                     boots=self.boots_summary,
                     tests=self.tests_summary,
+                ),
+                filters=HardwareDetailsFilters(
+                    all=GlobalFilters(
+                        configs=self.global_configs,
+                        architectures=self.global_architectures,
+                        compilers=self.global_compilers,
+                    ),
+                    builds=LocalFilters(
+                        issues=list(self.unfiltered_build_issues),
+                    ),
+                    boots=HardwareTestLocalFilters(
+                        issues=list(self.unfiltered_boot_issues),
+                        platforms=list(self.unfiltered_boot_platforms),
+                    ),
+                    tests=HardwareTestLocalFilters(
+                        issues=list(self.unfiltered_test_issues),
+                        platforms=list(self.unfiltered_test_platforms)
+                    ),
+                ),
+                common=HardwareCommon(
                     trees=trees,
-                    configs=configs,
-                    architectures=archs,
-                    compilers=compilers,
                     compatibles=self.compatibles,
                 ),
             )

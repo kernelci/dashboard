@@ -4,13 +4,13 @@ import type { QuerySelectorStatus } from '@/components/QuerySwitcher/QuerySwitch
 import type { UseHardwareDetailsWithoutVariant } from '@/api/hardwareDetails';
 import { useHardwareDetails } from '@/api/hardwareDetails';
 import type {
-  HardwareSummary,
+  HardwareDetailsSummary,
   THardwareDetails,
 } from '@/types/hardware/hardwareDetails';
 
 export type HardwareDetailsLazyLoaded = {
   summary: {
-    data?: HardwareSummary;
+    data?: HardwareDetailsSummary;
     isLoading: boolean;
     status: QuerySelectorStatus;
     error: UseQueryResult['error'];
@@ -39,7 +39,7 @@ export const useHardwareDetailsLazyLoadQuery = (
 
   return {
     summary: {
-      data: summaryResult.data?.summary,
+      data: summaryResult.data,
       isLoading: summaryResult.isLoading,
       status: summaryResult.status,
       isPlaceholderData: summaryResult.isPlaceholderData,

@@ -4,15 +4,13 @@ import type { ReactNode } from 'react';
 
 import type {
   BuildsTabBuild,
-  BuildStatus,
-  Architecture,
   TestHistory,
-  TIssue,
   StatusCounts,
-  ArchCompilerStatus,
+  PropertyStatusCounts,
 } from '@/types/general';
 
 import type { Status } from '@/types/database';
+import type { DetailsFilters, Summary } from '@/types/commonDetails';
 
 export type AccordionItemBuilds = {
   id: string;
@@ -50,8 +48,6 @@ type ErrorMessageCounts = {
   [key: string]: number;
 };
 
-type PropertyStatusCounts = Record<string, StatusCounts>;
-
 export type TTreeTestsData = {
   statusCounts: StatusCounts;
   configStatusCounts: PropertyStatusCounts;
@@ -63,69 +59,25 @@ export type TTreeTestsData = {
   environmentCompatible: PropertyStatusCounts;
 };
 
-export type TestSummary = {
-  status: StatusCounts;
-  architectures: ArchCompilerStatus[];
-  configs: PropertyStatusCounts;
-  issues: TIssue[];
-  unknown_issues: number;
-  fail_reasons: Record<string, number>;
-  failed_platforms: string[];
-  environment_compatible?: PropertyStatusCounts;
-  environment_misc?: PropertyStatusCounts;
-  platforms?: PropertyStatusCounts;
-};
-
-export type BuildSummary = {
-  status: BuildStatus;
-  architectures: Architecture;
-  configs: Record<string, BuildStatus>;
-  issues: TIssue[];
-  unknown_issues: number;
-};
-
-type TreeSummary = {
-  boots: TestSummary;
-  builds: BuildSummary;
-  tests: TestSummary;
-};
-
 type TreeCommon = {
   hardware: string[];
   tree_url: string;
   git_commit_tags: string[];
 };
 
-type TreeGlobalFilters = {
-  configs: string[];
-  architectures: string[];
-  compilers: string[];
-};
-
-type TreeLocalFilters = {
-  issues: string[];
-};
-
-type TreeFilters = {
-  all: TreeGlobalFilters;
-  builds: TreeLocalFilters;
-  boots: TreeLocalFilters;
-  tests: TreeLocalFilters;
-};
-
 export type TreeDetailsFullData = {
   builds: BuildsTabBuild[];
   boots: TestHistory[];
   tests: TestHistory[];
-  summary: TreeSummary;
+  summary: Summary;
   common: TreeCommon;
-  filters: TreeFilters;
+  filters: DetailsFilters;
 };
 
 export type TreeDetailsSummary = {
-  summary: TreeSummary;
+  summary: Summary;
   common: TreeCommon;
-  filters: TreeFilters;
+  filters: DetailsFilters;
 };
 
 export type TreeDetailsBuilds = {

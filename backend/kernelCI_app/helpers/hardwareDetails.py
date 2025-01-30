@@ -8,6 +8,7 @@ from kernelCI_app.constants.hardwareDetails import (
     SELECTED_HEAD_TREE_VALUE,
 )
 from kernelCI_app.helpers.build import build_status_map
+from kernelCI_app.helpers.commonDetails import add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
@@ -432,7 +433,7 @@ def generate_test_summary_typed() -> TestSummary:
         issues=[],
         unknown_issues=0,
         fail_reasons={},
-        failed_platforms=[],
+        failed_platforms=set(),
     )
 
 
@@ -563,6 +564,10 @@ def handle_test_summary(
         status,
         getattr(task.platforms[test_platform], status) + 1,
     )
+
+    if is_test_failure(status):
+        task.failed_platforms.add(test_platform)
+        task.fail_reasons[extract_error_message(record["misc"])] += 1
 
     arch_key = f'{record["build__architecture"]}{record["build__compiler"]}'
     arch_summary = processed_archs.get(arch_key)
@@ -787,12 +792,8 @@ def decide_if_is_test_in_filter(
 
 
 def get_filter_options(
-    *, records: List[Dict], selected_trees: List[Tree], is_all_selected: bool
-) -> tuple[list[str], list[str], list[str]]:
-    configs = set()
-    archs = set()
-    compilers = set()
-
+    *, instance, records: List[Dict], selected_trees: List[Tree], is_all_selected: bool
+) -> None:
     for record in records:
         current_tree = get_current_record_tree_in_selection(
             record=record, selected_trees=selected_trees
@@ -802,11 +803,63 @@ def get_filter_options(
         ):
             continue
 
-        configs.add(record["build__config_name"])
-        archs.add(record["build__architecture"])
-        compilers.add(record["build__compiler"])
+        process_filters(instance=instance, record=record)
 
-    return list(configs), list(archs), list(compilers)
+
+def process_filters(*, instance, record: Dict) -> None:
+    incident_test_id = record["incidents__test_id"]
+
+    if record["build_id"] is not None:
+        build_issue_id = record["build__incidents__issue__id"]
+        build_issue_version = record["build__incidents__issue__version"]
+        build_valid = record["build__valid"]
+
+        instance.global_configs.add(record["build__config_name"])
+        instance.global_architectures.add(record["build__architecture"])
+        instance.global_compilers.add(record["build__compiler"])
+
+        build_issue_id, is_build_issue = should_increment_build_issue(
+            issue_id=build_issue_id,
+            incident_test_id=incident_test_id,
+            build_valid=build_valid,
+        )
+
+        is_invalid = build_valid is False
+        add_unfiltered_issue(
+            issue_id=build_issue_id,
+            issue_version=build_issue_version,
+            should_increment=is_build_issue,
+            issue_set=instance.unfiltered_build_issues,
+            is_invalid=is_invalid,
+        )
+
+    if record["id"] is not None:
+        if is_boot(record["path"]):
+            issue_set = instance.unfiltered_boot_issues
+            platform_set = instance.unfiltered_boot_platforms
+        else:
+            issue_set = instance.unfiltered_test_issues
+            platform_set = instance.unfiltered_test_platforms
+
+        test_issue_id = record["incidents__issue__id"]
+        test_issue_version = record["incidents__issue__version"]
+        test_issue_id, is_test_issue = should_increment_test_issue(
+            issue_id=test_issue_id,
+            incident_test_id=incident_test_id,
+        )
+
+        is_invalid = record["status"] == FAIL_STATUS
+        add_unfiltered_issue(
+            issue_id=test_issue_id,
+            issue_version=test_issue_version,
+            should_increment=is_test_issue,
+            issue_set=issue_set,
+            is_invalid=is_invalid,
+        )
+
+        environment_misc = handle_environment_misc(record["environment_misc"])
+        test_platform = env_misc_value_or_default(environment_misc).get("platform")
+        platform_set.add(test_platform)
 
 
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:

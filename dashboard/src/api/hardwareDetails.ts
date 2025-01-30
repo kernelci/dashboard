@@ -5,7 +5,7 @@ import type {
   CommitHead,
   CommitHistoryResponse,
   CommitHistoryTable,
-  HardwareDetailsSummaryResponse,
+  HardwareDetailsSummary,
   THardwareDetails,
   THardwareDetailsFilter,
   TTreeCommits,
@@ -97,7 +97,7 @@ const fetchHardwareDetails = async ({
 
 type HardwareDetailsResponseTable = {
   full: THardwareDetails;
-  summary: HardwareDetailsSummaryResponse;
+  summary: HardwareDetailsSummary;
   builds: BuildsTabBuild[];
   boots: TestHistory[];
   tests: TestHistory[];

@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from kernelCI_app.typeModels.commonDetails import (
     BuildHistoryItem,
+    DetailsFilters,
     Summary,
 )
 from pydantic import BaseModel
@@ -18,27 +19,10 @@ class TreeCommon(BaseModel):
     git_commit_tags: Optional[List[str]]
 
 
-class TreeGlobalFilters(BaseModel):
-    configs: List[str]
-    architectures: List[str]
-    compilers: List[str]
-
-
-class TreeLocalFilters(BaseModel):
-    issues: List[str]
-
-
-class TreeFilters(BaseModel):
-    all: TreeGlobalFilters
-    builds: TreeLocalFilters
-    boots: TreeLocalFilters
-    tests: TreeLocalFilters
-
-
 class SummaryResponse(BaseModel):
     common: TreeCommon
     summary: Summary
-    filters: TreeFilters
+    filters: DetailsFilters
 
 
 class TreeDetailsBuildsResponse(BaseModel):

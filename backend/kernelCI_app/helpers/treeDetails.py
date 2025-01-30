@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from typing import Any, Optional, TypedDict
+from kernelCI_app.helpers.commonDetails import add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
     is_test_failure,
     should_increment_build_issue,
@@ -512,27 +513,30 @@ def process_boots_summary(instance, row_data):
 
 
 def process_filters(instance, row_data: dict) -> None:
-    if row_data["build_id"] is not None:
-        instance.global_configs.add(row_data["build_config_name"])
-        instance.global_architectures.add(row_data["build_architecture"])
-        instance.global_compilers.add(row_data["build_config_name"])
-
     issue_id = row_data["issue_id"]
     issue_version = row_data["issue_version"]
     incident_test_id = row_data["incident_test_id"]
     build_valid = row_data["build_valid"]
 
     if row_data["build_id"] is not None:
+        instance.global_configs.add(row_data["build_config_name"])
+        instance.global_architectures.add(row_data["build_architecture"])
+        instance.global_compilers.add(row_data["build_compiler"])
+
         build_issue_id, is_build_issue = should_increment_build_issue(
             issue_id=issue_id,
             incident_test_id=incident_test_id,
             build_valid=build_valid,
         )
 
-        if build_issue_id is not None and issue_version is not None and is_build_issue:
-            instance.unfiltered_build_issues.add(build_issue_id)
-        elif build_valid is False:
-            instance.unfiltered_build_issues.add(UNKNOWN_STRING)
+        is_invalid = build_valid is False
+        add_unfiltered_issue(
+            issue_id=build_issue_id,
+            issue_version=issue_version,
+            should_increment=is_build_issue,
+            issue_set=instance.unfiltered_build_issues,
+            is_invalid=is_invalid,
+        )
 
     if row_data["test_id"] is not None:
         test_issue_id, is_test_issue = should_increment_test_issue(
@@ -545,7 +549,11 @@ def process_filters(instance, row_data: dict) -> None:
         else:
             issue_set = instance.unfiltered_test_issues
 
-        if test_issue_id is not None and issue_version is not None and is_test_issue:
-            issue_set.add(test_issue_id)
-        elif row_data["test_status"] == FAIL_STATUS:
-            issue_set.add(UNKNOWN_STRING)
+        is_invalid = row_data["test_status"] == FAIL_STATUS
+        add_unfiltered_issue(
+            issue_id=test_issue_id,
+            issue_version=issue_version,
+            should_increment=is_test_issue,
+            issue_set=issue_set,
+            is_invalid=is_invalid,
+        )

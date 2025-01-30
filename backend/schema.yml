@@ -15,6 +15,18 @@ paths:
         required: true
       tags:
       - hardware
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -682,6 +694,46 @@ components:
       - tests
       title: CommonDetailsTestsResponse
       type: object
+    DetailsFilters:
+      properties:
+        all:
+          $ref: '#/components/schemas/GlobalFilters'
+        builds:
+          $ref: '#/components/schemas/LocalFilters'
+        boots:
+          $ref: '#/components/schemas/LocalFilters'
+        tests:
+          $ref: '#/components/schemas/LocalFilters'
+      required:
+      - all
+      - builds
+      - boots
+      - tests
+      title: DetailsFilters
+      type: object
+    GlobalFilters:
+      properties:
+        configs:
+          items:
+            type: string
+          title: Configs
+          type: array
+        architectures:
+          items:
+            type: string
+          title: Architectures
+          type: array
+        compilers:
+          items:
+            type: string
+          title: Compilers
+          type: array
+      required:
+      - configs
+      - architectures
+      - compilers
+      title: GlobalFilters
+      type: object
     HardwareBuildHistoryItem:
       properties:
         id:
@@ -778,6 +830,23 @@ components:
       - issue_version
       title: HardwareBuildHistoryItem
       type: object
+    HardwareCommon:
+      properties:
+        trees:
+          items:
+            $ref: '#/components/schemas/Tree'
+          title: Trees
+          type: array
+        compatibles:
+          items:
+            type: string
+          title: Compatibles
+          type: array
+      required:
+      - trees
+      - compatibles
+      title: HardwareCommon
+      type: object
     HardwareDetailsBuildsResponse:
       properties:
         builds:
@@ -788,6 +857,23 @@ components:
       required:
       - builds
       title: HardwareDetailsBuildsResponse
+      type: object
+    HardwareDetailsFilters:
+      properties:
+        all:
+          $ref: '#/components/schemas/GlobalFilters'
+        builds:
+          $ref: '#/components/schemas/LocalFilters'
+        boots:
+          $ref: '#/components/schemas/HardwareTestLocalFilters'
+        tests:
+          $ref: '#/components/schemas/HardwareTestLocalFilters'
+      required:
+      - all
+      - builds
+      - boots
+      - tests
+      title: HardwareDetailsFilters
       type: object
     HardwareDetailsFullResponse:
       properties:
@@ -807,12 +893,18 @@ components:
           title: Tests
           type: array
         summary:
-          $ref: '#/components/schemas/HardwareSummary'
+          $ref: '#/components/schemas/Summary'
+        filters:
+          $ref: '#/components/schemas/HardwareDetailsFilters'
+        common:
+          $ref: '#/components/schemas/HardwareCommon'
       required:
       - builds
       - boots
       - tests
       - summary
+      - filters
+      - common
       title: HardwareDetailsFullResponse
       type: object
     HardwareDetailsPostBody:
@@ -851,54 +943,33 @@ components:
     HardwareDetailsSummaryResponse:
       properties:
         summary:
-          $ref: '#/components/schemas/HardwareSummary'
+          $ref: '#/components/schemas/Summary'
+        filters:
+          $ref: '#/components/schemas/HardwareDetailsFilters'
+        common:
+          $ref: '#/components/schemas/HardwareCommon'
       required:
       - summary
+      - filters
+      - common
       title: HardwareDetailsSummaryResponse
       type: object
-    HardwareSummary:
+    HardwareTestLocalFilters:
       properties:
-        builds:
-          $ref: '#/components/schemas/BuildSummary'
-        boots:
-          $ref: '#/components/schemas/TestSummary'
-        tests:
-          $ref: '#/components/schemas/TestSummary'
-        trees:
-          items:
-            $ref: '#/components/schemas/Tree'
-          title: Trees
-          type: array
-        configs:
+        issues:
           items:
             type: string
-          title: Configs
+          title: Issues
           type: array
-        architectures:
+        platforms:
           items:
             type: string
-          title: Architectures
-          type: array
-        compilers:
-          items:
-            type: string
-          title: Compilers
-          type: array
-        compatibles:
-          items:
-            type: string
-          title: Compatibles
+          title: Platforms
           type: array
       required:
-      - builds
-      - boots
-      - tests
-      - trees
-      - configs
-      - architectures
-      - compilers
-      - compatibles
-      title: HardwareSummary
+      - issues
+      - platforms
+      title: HardwareTestLocalFilters
       type: object
     IncidentInfo:
       properties:
@@ -937,6 +1008,17 @@ components:
       - incidents_info
       title: Issue
       type: object
+    LocalFilters:
+      properties:
+        issues:
+          items:
+            type: string
+          title: Issues
+          type: array
+      required:
+      - issues
+      title: LocalFilters
+      type: object
     Misc:
       properties:
         platform:
@@ -967,7 +1049,7 @@ components:
         summary:
           $ref: '#/components/schemas/Summary'
         filters:
-          $ref: '#/components/schemas/TreeFilters'
+          $ref: '#/components/schemas/DetailsFilters'
       required:
       - common
       - summary
@@ -1132,10 +1214,10 @@ components:
           title: Fail Reasons
           type: object
         failed_platforms:
-          items:
-            type: string
+          items: {}
           title: Failed Platforms
           type: array
+          uniqueItems: true
         environment_compatible:
           anyOf:
           - type: object
@@ -1262,57 +1344,6 @@ components:
       required:
       - builds
       title: TreeDetailsBuildsResponse
-      type: object
-    TreeFilters:
-      properties:
-        all:
-          $ref: '#/components/schemas/TreeGlobalFilters'
-        builds:
-          $ref: '#/components/schemas/TreeLocalFilters'
-        boots:
-          $ref: '#/components/schemas/TreeLocalFilters'
-        tests:
-          $ref: '#/components/schemas/TreeLocalFilters'
-      required:
-      - all
-      - builds
-      - boots
-      - tests
-      title: TreeFilters
-      type: object
-    TreeGlobalFilters:
-      properties:
-        configs:
-          items:
-            type: string
-          title: Configs
-          type: array
-        architectures:
-          items:
-            type: string
-          title: Architectures
-          type: array
-        compilers:
-          items:
-            type: string
-          title: Compilers
-          type: array
-      required:
-      - configs
-      - architectures
-      - compilers
-      title: TreeGlobalFilters
-      type: object
-    TreeLocalFilters:
-      properties:
-        issues:
-          items:
-            type: string
-          title: Issues
-          type: array
-      required:
-      - issues
-      title: TreeLocalFilters
       type: object
   securitySchemes:
     basicAuth:
