@@ -40,8 +40,10 @@ export type GlobalFilters = {
   compilers: string[];
 };
 
+export type IssueFilterItem = [string, number?];
+
 export type LocalFilters = {
-  issues: string[];
+  issues: IssueFilterItem[];
 };
 
 export type DetailsFilters = {
