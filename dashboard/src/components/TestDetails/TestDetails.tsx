@@ -246,7 +246,6 @@ const TestDetails = ({
   breadcrumb,
   testId,
 }: TestsDetailsProps): JSX.Element => {
-  const searchParams = useSearch({ from: '/test/$testId' });
   const { data, isLoading, status, error } = useTestDetails(testId ?? '');
   const {
     data: issueData,
@@ -284,7 +283,6 @@ const TestDetails = ({
             data={issueData}
             status={issueStatus}
             error={issueError?.message}
-            previousSearch={searchParams}
           />
         </div>
         <LogOrJsonSheetContent

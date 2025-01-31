@@ -4,17 +4,18 @@ import { FormattedMessage } from 'react-intl';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
-import type { LinkProps } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
 
 import { RiProhibited2Line } from 'react-icons/ri';
 
 import ListingItem from '@/components/ListingItem/ListingItem';
-import type { TIssue } from '@/types/general';
+import { zOrigin, type TIssue } from '@/types/general';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { TErrorVariant } from '@/components/DetailsPages/SectionError';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
+import { zTableFilterInfoValidator } from '@/types/tree/TreeDetails';
 
 import { IssueTooltip } from './IssueTooltip';
 
@@ -33,21 +34,16 @@ const IssueSection = ({
   data,
   status,
   error,
-  previousSearch,
   variant = 'error',
 }: {
   data?: TIssue[];
   status: UseQueryResult['status'];
   error?: string;
-  previousSearch: LinkProps['search'];
   variant?: TErrorVariant;
 }): JSX.Element => {
   const issueList = useMemo(
     () =>
       data?.map(issue => {
-        if (typeof previousSearch === 'object') {
-          previousSearch.issueVersion = issue.version;
-        }
         return (
           <Link
             key={issue.id + issue.version}
@@ -55,7 +51,14 @@ const IssueSection = ({
             to={'/issue/$issueId'}
             params={{ issueId: issue.id }}
             state={s => s}
-            search={previousSearch}
+            search={s => {
+              return {
+                ...s,
+                origin: zOrigin.parse(s.origin),
+                tableFilter: zTableFilterInfoValidator.parse(s.tableFilter),
+                issueVersion: issue.version,
+              };
+            }}
           >
             <ListingItem
               unknown={issue.incidents_info.incidentsCount}
@@ -65,7 +68,7 @@ const IssueSection = ({
           </Link>
         );
       }),
-    [data, previousSearch],
+    [data],
   );
 
   return (

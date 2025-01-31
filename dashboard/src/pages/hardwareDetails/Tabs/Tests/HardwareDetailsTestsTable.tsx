@@ -75,7 +75,6 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
 interface IHardwareDetailsTestTable
   extends Omit<ITestsTable, 'columns' | 'innerColumns ' | 'getRowLink'> {
   hardwareId: string;
-  searchParams?: LinkProps['search'];
 }
 
 const HardwareDetailsTestTable = ({
@@ -86,7 +85,6 @@ const HardwareDetailsTestTable = ({
   hardwareId,
   updatePathFilter,
   currentPathFilter,
-  searchParams,
 }: IHardwareDetailsTestTable): JSX.Element => {
   const getRowLink = useCallback(
     (bootId: string): LinkProps => ({
@@ -110,7 +108,6 @@ const HardwareDetailsTestTable = ({
       getRowLink={getRowLink}
       updatePathFilter={updatePathFilter}
       currentPathFilter={currentPathFilter}
-      searchParams={searchParams}
     />
   );
 };

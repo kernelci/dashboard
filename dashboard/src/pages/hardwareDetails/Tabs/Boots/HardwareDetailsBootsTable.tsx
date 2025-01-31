@@ -79,7 +79,6 @@ interface IHardwareBootsTable {
   onClickFilter: (newFilter: TestsTableFilter) => void;
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
-  searchParams?: LinkProps['search'];
 }
 
 export const HardwareDetailsBootsTable = ({
@@ -90,7 +89,6 @@ export const HardwareDetailsBootsTable = ({
   onClickFilter,
   updatePathFilter,
   currentPathFilter,
-  searchParams,
 }: IHardwareBootsTable): JSX.Element => {
   return (
     <BootsTable
@@ -102,7 +100,6 @@ export const HardwareDetailsBootsTable = ({
       onClickFilter={onClickFilter}
       updatePathFilter={updatePathFilter}
       currentPathFilter={currentPathFilter}
-      searchParams={searchParams}
     />
   );
 };

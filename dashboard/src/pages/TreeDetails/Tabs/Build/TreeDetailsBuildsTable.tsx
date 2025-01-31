@@ -18,8 +18,7 @@ export function TreeDetailsBuildsTable({
   buildItems,
 }: TTreeDetailsBuildsTable): JSX.Element {
   const { treeId } = useParams({ from: '/tree/$treeId' });
-  const searchParams = useSearch({ from: '/tree/$treeId' });
-  const { tableFilter } = searchParams;
+  const { tableFilter } = useSearch({ from: '/tree/$treeId' });
   const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const getRowLink = useCallback(
@@ -59,7 +58,6 @@ export function TreeDetailsBuildsTable({
       buildItems={buildItems}
       onClickFilter={onClickFilter}
       getRowLink={getRowLink}
-      searchParams={searchParams}
     />
   );
 }

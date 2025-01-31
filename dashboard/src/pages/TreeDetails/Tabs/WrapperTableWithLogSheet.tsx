@@ -20,7 +20,6 @@ interface TableWithLogSheetProps {
   issues?: TIssue[];
   status?: UseQueryResult['status'];
   error?: UseQueryResult['error'];
-  previousSearch?: LinkProps['search'];
 }
 
 const WrapperTableWithLogSheet = ({
@@ -34,7 +33,6 @@ const WrapperTableWithLogSheet = ({
   issues,
   status,
   error,
-  previousSearch,
 }: PropsWithChildren<TableWithLogSheetProps>): JSX.Element => {
   return (
     <div className="flex flex-col gap-6 pb-4">
@@ -48,7 +46,6 @@ const WrapperTableWithLogSheet = ({
           currentLinkProps={currentLinkProps}
           issues={issues}
           status={status}
-          previousSearch={previousSearch}
           error={error}
         />
       </Sheet>

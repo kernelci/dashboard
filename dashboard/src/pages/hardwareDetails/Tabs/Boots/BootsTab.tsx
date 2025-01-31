@@ -52,11 +52,9 @@ const BootsTab = ({
   bootsSummary,
   fullDataResult,
 }: IBootsTab): JSX.Element => {
-  const searchParams = useSearch({
+  const { tableFilter, diffFilter } = useSearch({
     from: '/hardware/$hardwareId',
   });
-
-  const { tableFilter, diffFilter } = searchParams;
 
   const currentPathFilter = diffFilter.bootPath
     ? Object.keys(diffFilter.bootPath)[0]
@@ -202,7 +200,6 @@ const BootsTab = ({
           onClickFilter={onClickFilter}
           updatePathFilter={updatePathFilter}
           currentPathFilter={currentPathFilter}
-          searchParams={searchParams}
         />
       </HardwareDetailsTabsQuerySwitcher>
     </div>

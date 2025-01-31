@@ -41,11 +41,10 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
     from: '/tree/$treeId',
   });
 
-  const searchParams = useSearch({
+  const { tableFilter, diffFilter } = useSearch({
     from: '/tree/$treeId',
   });
 
-  const { tableFilter, diffFilter } = searchParams;
   const currentPathFilter = diffFilter.bootPath
     ? Object.keys(diffFilter.bootPath)[0]
     : undefined;
@@ -226,7 +225,6 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
           getRowLink={getRowLink}
           updatePathFilter={updatePathFilter}
           currentPathFilter={currentPathFilter}
-          searchParams={searchParams}
         />
       </QuerySwitcher>
     </div>
