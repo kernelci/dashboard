@@ -24,13 +24,15 @@ const defaultValues = {
   hardwareSearch: '',
   treeIndexes: [],
   treeCommits: {},
+  issueVersion: undefined,
 };
 
 const issueDetailsSearchSchema = z.object({
   tableFilter: zTableFilterInfoValidator,
+  issueVersion: z.number().optional(),
 } satisfies SearchSchema);
 
-export const Route = createFileRoute('/issue/$issueId/version/$versionNumber')({
+export const Route = createFileRoute('/issue/$issueId')({
   validateSearch: issueDetailsSearchSchema,
   search: { middlewares: [stripSearchParams(defaultValues)] },
 });

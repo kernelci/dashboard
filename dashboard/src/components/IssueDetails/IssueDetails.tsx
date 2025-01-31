@@ -40,7 +40,7 @@ import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
 
 interface IIssueDetails {
   issueId: string;
-  versionNumber: string;
+  versionNumber?: number;
   tableFilter: TableFilter;
   onClickTestFilter: (filter: TestsTableFilter) => void;
   getTestTableRowLink: (testId: string) => LinkProps;

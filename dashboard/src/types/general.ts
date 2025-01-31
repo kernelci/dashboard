@@ -28,7 +28,7 @@ export type TIndividualTest = {
 
 export type TIssue = {
   id: string;
-  version: string;
+  version: number;
   comment?: string;
   report_url?: string;
   incidents_info: IncidentsInfo;
@@ -241,7 +241,8 @@ export type SearchParamsKeys =
   | 'treeIndexes'
   | 'treeCommits'
   | 'startTimestampInSeconds'
-  | 'endTimestampInSeconds';
+  | 'endTimestampInSeconds'
+  | 'issueVersion';
 export type SearchSchema = Partial<Record<SearchParamsKeys, ZodTypeAny>>;
 
 const requestFilters = {

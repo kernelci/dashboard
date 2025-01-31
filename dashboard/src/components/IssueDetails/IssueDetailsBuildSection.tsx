@@ -20,7 +20,7 @@ import { NOT_FOUND_STATUS } from '@/types/issueDetails';
 
 interface IIssueDetailsBuildSection {
   issueId: string;
-  versionNumber: string;
+  versionNumber?: number;
   buildTableFilter: TableFilter['buildsTable'];
   onClickFilter: (filter: BuildsTableFilter) => void;
   getTableRowLink: (testId: string) => LinkProps;

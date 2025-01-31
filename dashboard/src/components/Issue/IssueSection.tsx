@@ -44,22 +44,27 @@ const IssueSection = ({
 }): JSX.Element => {
   const issueList = useMemo(
     () =>
-      data?.map(issue => (
-        <Link
-          key={issue.id + issue.version}
-          className="mb-16 flex [&:not(:last-child)]:mb-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2"
-          to="/issue/$issueId/version/$versionNumber"
-          params={{ issueId: issue.id, versionNumber: issue.version }}
-          state={s => s}
-          search={previousSearch}
-        >
-          <ListingItem
-            unknown={issue.incidents_info.incidentsCount}
-            text={issue.comment ?? issue.id}
-            tooltip={issue.id}
-          />
-        </Link>
-      )),
+      data?.map(issue => {
+        if (typeof previousSearch === 'object') {
+          previousSearch.issueVersion = issue.version;
+        }
+        return (
+          <Link
+            key={issue.id + issue.version}
+            className="mb-16 flex [&:not(:last-child)]:mb-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2"
+            to={'/issue/$issueId'}
+            params={{ issueId: issue.id }}
+            state={s => s}
+            search={previousSearch}
+          >
+            <ListingItem
+              unknown={issue.incidents_info.incidentsCount}
+              text={issue.comment ?? issue.id}
+              tooltip={issue.id}
+            />
+          </Link>
+        );
+      }),
     [data, previousSearch],
   );
 
