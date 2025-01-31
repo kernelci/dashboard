@@ -46,10 +46,9 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
   const { isLoading: isSummaryLoading, error: summaryError } = summaryQuery;
   const summaryData = treeDetailsLazyLoaded.summary.data?.summary.tests;
 
-  const searchParams = useSearch({
+  const { tableFilter, diffFilter } = useSearch({
     from: '/tree/$treeId',
   });
-  const { tableFilter, diffFilter } = searchParams;
 
   const currentPathFilter = diffFilter.testPath
     ? Object.keys(diffFilter.testPath)[0]
@@ -225,7 +224,6 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
           getRowLink={getRowLink}
           updatePathFilter={updatePathFilter}
           currentPathFilter={currentPathFilter}
-          searchParams={searchParams}
         />
       </QuerySwitcher>
     </div>

@@ -26,7 +26,6 @@ interface ILogSheet {
   issues?: TIssue[];
   status?: UseQueryResult['status'];
   error?: UseQueryResult['error'];
-  previousSearch?: LinkProps['search'];
 }
 
 export interface IJsonContent {
@@ -44,7 +43,6 @@ export const LogOrJsonSheetContent = ({
   issues,
   status,
   error,
-  previousSearch,
 }: ILogSheet): JSX.Element => {
   return (
     <WrapperSheetContent
@@ -70,7 +68,6 @@ export const LogOrJsonSheetContent = ({
             data={issues}
             status={status ?? 'success'}
             error={error?.message}
-            previousSearch={previousSearch}
             variant="warning"
           />
         </>

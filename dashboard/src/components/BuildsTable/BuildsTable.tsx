@@ -44,7 +44,6 @@ export interface IBuildsTable {
   filter: BuildsTableFilter;
   onClickFilter: (filter: BuildsTableFilter) => void;
   getRowLink: (buildId: string) => LinkProps;
-  searchParams?: LinkProps['search'];
 }
 
 export function BuildsTable({
@@ -54,7 +53,6 @@ export function BuildsTable({
   filter,
   onClickFilter,
   getRowLink,
-  searchParams,
 }: IBuildsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const { pagination, paginationUpdater } = usePaginationState(tableKey);
@@ -295,7 +293,6 @@ export function BuildsTable({
       issues={issues}
       status={status}
       error={error}
-      previousSearch={searchParams}
     >
       <div className="flex items-center justify-between">
         <TableStatusFilter filters={filters} onClickBuild={onClickFilter} />
