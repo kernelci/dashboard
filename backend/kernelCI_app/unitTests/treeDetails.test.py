@@ -7,23 +7,34 @@ class TestShouldFilterTestIssue(unittest.TestCase):
 
     def test_no_issue_filters(self):
         self.assertFalse(
-            should_filter_test_issue(set(), UNKNOWN_STRING, "incident_test_1", "FAIL")
+            should_filter_test_issue(
+                issue_filters=set(),
+                issue_id=UNKNOWN_STRING,
+                issue_version=None,
+                incident_test_id="incident_test_1",
+                test_status="FAIL"
+            )
         )
 
     def test_unknown_filter_with_exclusively_build_issue(self):
         self.assertTrue(
             should_filter_test_issue(
-                {UNKNOWN_STRING}, "issue1", "incident_test_1", "PASS"
+                issue_filters={UNKNOWN_STRING},
+                issue_id="issue1",
+                issue_version=1,
+                incident_test_id="incident_test_1",
+                test_status="PASS"
             )
         )
 
     def test_unknown_issue_but_not_from_test(self):
         self.assertFalse(
             should_filter_test_issue(
-                {UNKNOWN_STRING},
-                "maestro:72697a4efbbd0eff7080781839b405bbf0902f79",
-                None,
-                "FAIL",
+                issue_filters={UNKNOWN_STRING},
+                issue_id="maestro:72697a4efbbd0eff7080781839b405bbf0902f79",
+                issue_version=0,
+                incident_test_id=None,
+                test_status="FAIL",
             )
         )
 

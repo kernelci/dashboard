@@ -28,6 +28,7 @@ import { MemoizedMoreDetailsIconLink } from '@/components/Button/MoreDetailsButt
 import { IssueTooltip } from '@/components/Issue/IssueTooltip';
 
 import { LinkIcon } from '@/components/Icons/Link';
+import { getIssueFilterLabel } from '@/utils/utils';
 
 interface IIssuesList {
   issues: TIssue[];
@@ -98,7 +99,7 @@ const IssuesList = ({
             <div className="overflow-hidden">
               <FilterLink
                 filterSection={issueFilterSection}
-                filterValue={issue.id}
+                filterValue={getIssueFilterLabel(issue)}
                 diffFilter={diffFilter}
               >
                 <ListingItem

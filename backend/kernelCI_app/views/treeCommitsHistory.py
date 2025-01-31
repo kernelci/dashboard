@@ -76,7 +76,8 @@ class TreeCommitsHistory(APIView):
                 "test_id": row[15],
                 "incidents_id": row[16],
                 "incidents_test_id": row[17],
-                "issue_id": row[18]
+                "issue_id": row[18],
+                "issue_version": row[19],
             }
             for row in rows
         ]
@@ -111,16 +112,21 @@ class TreeCommitsHistory(APIView):
         duration: int,
         commit_hash: str,
         issue_id: str,
+        issue_version: int,
         incident_test_id: Optional[str],
+        key: str,
     ) -> None:
         is_filtered_out = self.filterParams.is_build_filtered_out(
             duration=duration,
             valid=build_valid,
             issue_id=issue_id,
-            incident_test_id=incident_test_id,
+            issue_version=issue_version,
+            incident_test_id=incident_test_id
         )
         if is_filtered_out:
             return
+
+        self.processed_builds.add(key)
 
         label = "null"
         if build_valid is not None:
@@ -136,11 +142,13 @@ class TreeCommitsHistory(APIView):
         test_duration: int,
         test_path: str,
         issue_id: str,
+        issue_version: int,
         incident_test_id: str
     ) -> None:
         is_boot_filter_out = self.filterParams.is_boot_filtered_out(
             duration=test_duration,
             issue_id=issue_id,
+            issue_version=issue_version,
             path=test_path,
             status=test_status,
             incident_test_id=incident_test_id
@@ -163,11 +171,13 @@ class TreeCommitsHistory(APIView):
         test_duration: int,
         test_path: str,
         issue_id: str,
+        issue_version: int,
         incident_test_id: str
     ) -> None:
         is_nonboot_filter_out = self.filterParams.is_test_filtered_out(
             duration=test_duration,
             issue_id=issue_id,
+            issue_version=issue_version,
             path=test_path,
             status=test_status,
             incident_test_id=incident_test_id
@@ -225,7 +235,7 @@ class TreeCommitsHistory(APIView):
         test_status = row["test_status"] or "NULL"
         test_duration = row["test_duration"]
         test_path = row["test_path"]
-        issue_id = row["issue_id"]
+        issue_version = row["issue_version"]
         incident_test_id = row["incidents_test_id"]
         build_valid = row["build_valid"]
 
@@ -248,6 +258,7 @@ class TreeCommitsHistory(APIView):
                 test_duration=test_duration,
                 test_path=test_path,
                 issue_id=issue_id,
+                issue_version=issue_version,
                 incident_test_id=incident_test_id
             )
         else:
@@ -258,19 +269,25 @@ class TreeCommitsHistory(APIView):
                 test_duration=test_duration,
                 test_path=test_path,
                 issue_id=issue_id,
+                issue_version=issue_version,
                 incident_test_id=incident_test_id
             )
 
     def _process_builds(self, row: Dict) -> None:
-        if row["build_id"] is not None and row["build_id"] not in self.processed_builds:
-            commit_hash = row["git_commit_hash"]
-            self.processed_builds.add(row["build_id"])
+        build_id = row["build_id"]
+        commit_hash = row["git_commit_hash"]
+
+        key = f"{build_id}_{commit_hash}"
+
+        if build_id is not None and key not in self.processed_builds:
             self._process_builds_count(
                 build_valid=row["build_valid"],
                 duration=row["build_duration"],
                 commit_hash=commit_hash,
-                issue_id=row['issue_id'],
-                incident_test_id=row['incidents_test_id']
+                issue_id=row["issue_id"],
+                issue_version=row["issue_version"],
+                incident_test_id=row['incidents_test_id'],
+                key=key,
             )
 
     def _is_record_in_time_period(self, start_time: datetime) -> bool:
@@ -432,7 +449,8 @@ class TreeCommitsHistory(APIView):
             t.id AS test_id,
             ic.id AS incidents_id,
             ic.test_id AS incidents_test_id,
-            i.id AS issues_id
+            i.id AS issues_id,
+            i.version AS issues_version
         FROM earliest_commits AS c
         INNER JOIN builds AS b
         ON

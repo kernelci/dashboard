@@ -674,7 +674,7 @@ def process_issue(
 def update_issues(
     *,
     issue_id: Optional[str],
-    issue_version: Optional[str],
+    issue_version: Optional[int],
     incident_test_id: Optional[str],
     build_valid: Optional[bool],
     issue_comment: Optional[str],
@@ -746,6 +746,7 @@ def decide_if_is_build_in_filter(
         valid=build["valid"],
         duration=build["duration"],
         issue_id=build["issue_id"],
+        issue_version=build["issue_version"],
         incident_test_id=incident_test_id,
     )
     return is_build_not_processed and not is_build_filtered_out_result
@@ -764,6 +765,7 @@ def decide_if_is_test_in_filter(
     duration = record["duration"]
     path = record["path"]
     issue_id = record["incidents__issue__id"]
+    issue_version = record["incidents__issue__version"]
     incidents_test_id = record["incidents__test_id"]
     platform = env_misc_value_or_default(
         handle_environment_misc(record["environment_misc"])
@@ -775,6 +777,7 @@ def decide_if_is_test_in_filter(
             duration=duration,
             path=path,
             issue_id=issue_id,
+            issue_version=issue_version,
             incident_test_id=incidents_test_id,
             platform=platform,
         )
@@ -784,6 +787,7 @@ def decide_if_is_test_in_filter(
             duration=duration,
             path=path,
             issue_id=issue_id,
+            issue_version=issue_version,
             incident_test_id=incidents_test_id,
             platform=platform,
         )

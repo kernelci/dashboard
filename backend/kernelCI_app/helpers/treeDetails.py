@@ -378,6 +378,7 @@ def process_boots_issue(instance, row_data):
 
 def decide_if_is_build_filtered_out(instance, row_data):
     issue_id = row_data["issue_id"]
+    issue_version = row_data["issue_version"]
     build_valid = row_data["build_valid"]
     build_duration = row_data["build_duration"]
     incident_test_id = row_data["incident_test_id"]
@@ -386,6 +387,7 @@ def decide_if_is_build_filtered_out(instance, row_data):
         valid=build_valid,
         duration=build_duration,
         issue_id=issue_id,
+        issue_version=issue_version,
         incident_test_id=incident_test_id,
     )
     return is_build_filtered_out
@@ -395,12 +397,14 @@ def decide_if_is_boot_filtered_out(instance, row_data):
     test_status = row_data["test_status"]
     test_duration = row_data["test_duration"]
     issue_id = row_data["issue_id"]
+    issue_version = row_data["issue_version"]
     test_path = row_data["test_path"]
     incident_test_id = row_data["incident_test_id"]
 
     return instance.filters.is_boot_filtered_out(
         duration=test_duration,
         issue_id=issue_id,
+        issue_version=issue_version,
         path=test_path,
         status=test_status,
         incident_test_id=incident_test_id,

@@ -18,6 +18,7 @@ import type { ISectionItem } from '@/components/Filter/CheckboxSection';
 import { isTFilterObjectKeys, type TFilter } from '@/types/general';
 import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
 import type { HardwareDetailsSummary } from '@/types/hardware/hardwareDetails';
+import { getIssueFilterLabel } from '@/utils/utils';
 
 type TFilterValues = Record<string, boolean>;
 
@@ -81,9 +82,18 @@ export const createFilter = (
     data.filters.all.configs.forEach(config => {
       configs[config ?? 'Unknown'] = false;
     });
-    data.filters.builds.issues.forEach(i => (buildIssue[i] = false));
-    data.filters.boots.issues.forEach(i => (bootIssue[i] = false));
-    data.filters.tests.issues.forEach(i => (testIssue[i] = false));
+    data.filters.builds.issues.forEach(
+      i =>
+        (buildIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false),
+    );
+    data.filters.boots.issues.forEach(
+      i =>
+        (bootIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false),
+    );
+    data.filters.tests.issues.forEach(
+      i =>
+        (testIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false),
+    );
     (data.filters.boots.platforms ?? []).forEach(
       p => (bootPlatform[p] = false),
     );
