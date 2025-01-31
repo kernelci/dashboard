@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List, Tuple, TypedDict, Literal, Any
+from typing import Optional, Dict, List, Tuple, TypedDict, Literal, Any, Union
 from django.http import HttpResponseBadRequest
 import re
 from kernelCI_app.typeModels.databases import PASS_STATUS, failure_status_list
@@ -48,13 +48,42 @@ def is_issue_from_build(*, issue_id: Optional[str], incident_test_id: Optional[s
     return is_possible_build_issue
 
 
-# TODO: consider issue_version in the filter
-def is_issue_filtered_out(issue_id: Optional[str], issue_filters: set) -> bool:
-    return issue_id not in issue_filters
+def verify_issue_in_filter(
+    issue_filter_data: Union[Dict, str],
+    issue_id: Optional[str],
+    issue_version: Optional[int]
+) -> bool:
+    is_unknown_issue = False
+    if issue_filter_data == UNKNOWN_STRING:
+        filter_issue_id = UNKNOWN_STRING
+        filter_issue_version = None
+        is_unknown_issue = True
+    else:
+        filter_issue_id, filter_issue_version = issue_filter_data
+
+    is_issue_id_in_filter = filter_issue_id == issue_id
+    is_issue_version_filter = is_unknown_issue or filter_issue_version == issue_version
+
+    return is_issue_id_in_filter and is_issue_version_filter
+
+
+def is_issue_filtered_out(
+    *,
+    issue_id: Optional[str],
+    issue_filters: set,
+    issue_version: Optional[int]
+) -> bool:
+    in_filter = any(verify_issue_in_filter(issue, issue_id, issue_version) for issue in issue_filters)
+    return not in_filter
 
 
 def should_filter_test_issue(
-    issue_filters: set, issue_id: Optional[str], incident_test_id: Optional[str], test_status: Optional[str]
+    *,
+    issue_filters: set,
+    issue_id: Optional[str],
+    issue_version: Optional[int],
+    incident_test_id: Optional[str],
+    test_status: Optional[str]
 ) -> bool:
     has_issue_filter = len(issue_filters) > 0
     if not has_issue_filter:
@@ -74,7 +103,11 @@ def should_filter_test_issue(
     if is_exclusively_build_issue_result:
         issue_id = UNKNOWN_STRING
 
-    is_issue_filtered_out_result = is_issue_filtered_out(issue_id, issue_filters)
+    is_issue_filtered_out_result = is_issue_filtered_out(
+        issue_id=issue_id,
+        issue_version=issue_version,
+        issue_filters=issue_filters
+    )
 
     return is_issue_filtered_out_result
 
@@ -83,8 +116,9 @@ def should_filter_build_issue(
     *,
     issue_filters: set,
     issue_id: Optional[str],
+    issue_version: Optional[int],
     incident_test_id: Optional[str],
-    build_valid: Optional[bool],
+    build_valid: Optional[bool]
 ) -> bool:
     has_issue_filter = len(issue_filters) > 0
     if not has_issue_filter:
@@ -104,7 +138,11 @@ def should_filter_build_issue(
     if is_exclusively_test_issue_result:
         issue_id = UNKNOWN_STRING
 
-    is_issue_filtered_out_result = is_issue_filtered_out(issue_id, issue_filters)
+    is_issue_filtered_out_result = is_issue_filtered_out(
+        issue_id=issue_id,
+        issue_version=issue_version,
+        issue_filters=issue_filters
+    )
 
     return is_issue_filtered_out_result
 
@@ -290,7 +328,15 @@ class FilterParams:
 
     def _handle_issues(self, current_filter: ParsedFilter) -> None:
         tab = current_filter["field"].split(".")[0]
-        self.filterIssues[tab].add(current_filter["value"])
+
+        filter_value = current_filter["value"]
+        if filter_value == UNKNOWN_STRING:
+            self.filterIssues[tab].add((UNKNOWN_STRING, None))
+        else:
+            issue_id, issue_version = filter_value.rsplit(",", 1)
+            issue_version = int(issue_version) if issue_version != "null" else None
+
+            self.filterIssues[tab].add((issue_id, issue_version))
 
     def _handle_platforms(self, current_filter: ParsedFilter) -> None:
         tab = current_filter["field"].split(".")[0]
@@ -410,6 +456,7 @@ class FilterParams:
         duration: Optional[int],
         valid: Optional[bool],
         issue_id: Optional[str],
+        issue_version: Optional[int],
         incident_test_id: Optional[str],
     ) -> bool:
         return (
@@ -436,8 +483,9 @@ class FilterParams:
                 should_filter_build_issue(
                     issue_filters=self.filterIssues["build"],
                     issue_id=issue_id,
+                    issue_version=issue_version,
                     incident_test_id=incident_test_id,
-                    build_valid=valid,
+                    build_valid=valid
                 )
             )
         )
@@ -493,6 +541,7 @@ class FilterParams:
         status: Optional[str],
         duration: Optional[int],
         issue_id: Optional[str] = None,
+        issue_version: Optional[int] = None,
         incident_test_id: Optional[str] = "incident_test_id",
         platform: Optional[str] = None,
     ) -> bool:
@@ -517,7 +566,11 @@ class FilterParams:
                 and (toIntOrDefault(duration, 0) < self.filterBootDurationMin)
             )
             or should_filter_test_issue(
-                self.filterIssues["boot"], issue_id, incident_test_id, status
+                issue_filters=self.filterIssues["boot"],
+                issue_id=issue_id,
+                issue_version=issue_version,
+                incident_test_id=incident_test_id,
+                test_status=status
             )
             or (
                 len(self.filterPlatforms["boot"]) > 0
@@ -535,6 +588,7 @@ class FilterParams:
         status: Optional[str],
         duration: Optional[int],
         issue_id: Optional[str] = None,
+        issue_version: Optional[int] = None,
         incident_test_id: Optional[str] = "incident_test_id",
         platform: Optional[str] = None,
     ) -> bool:
@@ -559,7 +613,11 @@ class FilterParams:
                 and (toIntOrDefault(duration, 0) < self.filterTestDurationMin)
             )
             or should_filter_test_issue(
-                self.filterIssues["test"], issue_id, incident_test_id, status
+                issue_filters=self.filterIssues["test"],
+                issue_id=issue_id,
+                issue_version=issue_version,
+                incident_test_id=incident_test_id,
+                test_status=status
             )
             or (
                 len(self.filterPlatforms["test"]) > 0

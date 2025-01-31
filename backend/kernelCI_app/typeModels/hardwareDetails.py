@@ -85,7 +85,7 @@ class HardwareDetailsFilters(BaseModel):
 class HardwareBuildHistoryItem(BuildHistoryItem):
     tree_name: Optional[str]
     issue_id: Optional[str]
-    issue_version: Optional[str]
+    issue_version: Optional[int]
 
 
 class HardwareDetailsFullResponse(BaseModel):
