@@ -12,7 +12,7 @@ import { NOT_FOUND_STATUS } from '@/types/issueDetails';
 
 interface IIssueDetailsTestSection {
   issueId: string;
-  versionNumber: string;
+  versionNumber?: number;
   testTableFilter: TableFilter['testsTable'];
   onClickFilter: (filter: TestsTableFilter) => void;
   getTableRowLink: (testId: string) => LinkProps;

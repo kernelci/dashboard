@@ -18,7 +18,7 @@ import { RedirectFrom } from '@/types/general';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBreadcrumb';
 
-const ISSUE_ROUTE = '/issue/$issueId/version/$versionNumber';
+const ISSUE_ROUTE = '/issue/$issueId';
 
 const getBuildTableRowLink = (buildId: string): LinkProps => ({
   to: '/build/$buildId',
@@ -40,7 +40,7 @@ const getTestTableRowLink = (testId: string): LinkProps => ({
 
 const IssueDetailsPage = (): JSX.Element => {
   const searchParams = useSearch({ from: ISSUE_ROUTE });
-  const { issueId, versionNumber } = useParams({ from: ISSUE_ROUTE });
+  const { issueId } = useParams({ from: ISSUE_ROUTE });
   const navigate = useNavigate({ from: ISSUE_ROUTE });
   const historyState = useRouterState({ select: s => s.location.state });
 
@@ -105,7 +105,7 @@ const IssueDetailsPage = (): JSX.Element => {
   return (
     <IssueDetails
       issueId={issueId}
-      versionNumber={versionNumber}
+      versionNumber={searchParams.issueVersion}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       onClickTestFilter={onClickTestFilter}
       getTestTableRowLink={getTestTableRowLink}

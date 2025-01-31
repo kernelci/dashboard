@@ -49,15 +49,19 @@ const IssuesList = ({
   pageFrom,
 }: IIssuesList): JSX.Element => {
   const getIssueLink = useCallback(
-    (issueId: string, version: string): LinkProps => ({
-      to: '/issue/$issueId/version/$versionNumber',
-      params: {
-        issueId: issueId,
-        versionNumber: version,
-      },
-      search: s => s,
-      state: { id: detailsId, from: pageFrom },
-    }),
+    (issueId: string, version: number): LinkProps => {
+      return {
+        to: '/issue/$issueId',
+        params: {
+          issueId: issueId,
+        },
+        search: previousSearch => ({
+          ...previousSearch,
+          issueVersion: version,
+        }),
+        state: s => ({ ...s, id: detailsId, from: pageFrom }),
+      };
+    },
     [detailsId, pageFrom],
   );
 

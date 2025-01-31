@@ -1,53 +1,32 @@
-http http://localhost:8000/api/issue/maestro:f61865c29254c199ba015e5f48acfc070aff0eb0/version/0/builds
+# This will get the builds from the issue with the latest version
+http http://localhost:8000/api/issue/maestro:bba672c389cd8e575694e468d87a80b1b4074241/builds
+
+# To get the builds from the issue with the specific version use this as an example:
+# http http://localhost:8000/api/issue/maestro:bba672c389cd8e575694e468d87a80b1b4074241/builds?version=0
 
 # HTTP/1.1 200 OK
+# Allow: GET, HEAD, OPTIONS
 # Cache-Control: max-age=0
-# Content-Length: 872
+# Content-Length: 493
 # Content-Type: application/json
 # Cross-Origin-Opener-Policy: same-origin
-# Date: Mon, 23 Dec 2024 19:25:24 GMT
-# Expires: Mon, 23 Dec 2024 19:25:24 GMT
+# Date: Fri, 31 Jan 2025 13:11:33 GMT
+# Expires: Fri, 31 Jan 2025 13:11:33 GMT
 # Referrer-Policy: same-origin
 # Server: WSGIServer/0.2 CPython/3.12.7
-# Vary: origin
+# Vary: Accept, Cookie, origin
 # X-Content-Type-Options: nosniff
 # X-Frame-Options: DENY
 
 # [
 #     {
-#         "architecture": "arm",
+#         "architecture": "riscv",
 #         "compiler": "clang-17",
-#         "config_name": "imx_v6_v7_defconfig+allmodconfig",
+#         "config_name": "defconfig+allnoconfig",
 #         "duration": null,
-#         "id": "maestro:673fcc50923416c0c98dfea6",
-#         "start_time": "2024-11-22T00:12:00.124Z",
-#         "valid": false
-#     },
-#     {
-#         "architecture": "arm",
-#         "compiler": "clang-17",
-#         "config_name": "imx_v6_v7_defconfig+allmodconfig",
-#         "duration": null,
-#         "id": "maestro:67406b8c923416c0c98f75ad",
-#         "start_time": "2024-11-22T11:31:24.629Z",
-#         "valid": false
-#     },
-#     {
-#         "architecture": "arm",
-#         "compiler": "clang-17",
-#         "config_name": "imx_v6_v7_defconfig+allmodconfig",
-#         "duration": null,
-#         "id": "maestro:67409557923416c0c98fa534",
-#         "start_time": "2024-11-22T14:29:43.011Z",
-#         "valid": false
-#     },
-#     {
-#         "architecture": "arm",
-#         "compiler": "clang-17",
-#         "config_name": "imx_v6_v7_defconfig+allmodconfig",
-#         "duration": null,
-#         "id": "maestro:674079b4923416c0c98f79ba",
-#         "start_time": "2024-11-22T12:31:48.309Z",
+#         "id": "maestro:67952a5e09f33884b1941e14",
+#         "log_url": "https://kciapistagingstorage1.file.core.windows.net/production/kbuild-clang-17-riscv-android-defconfig-67952a5e09f33884b1941e14/build.log.gz?sv=2022-11-02&ss=f&srt=sco&sp=r&se=2026-10-18T13:36:18Z&st=2024-10-17T05:36:18Z&spr=https&sig=xFxYOOh5uXJWeN9I3YKAUvpGGQivo89HKZbD78gcxvc%3D",
+#         "start_time": "2025-01-25T18:15:58.287000Z",
 #         "valid": false
 #     }
 # ]

@@ -55,6 +55,7 @@ export const parseSearch = (searchStr: string): AnySchema => {
       x: 'number[]',
       st: 'number',
       et: 'number',
+      iv: 'number',
     },
   });
 
@@ -146,6 +147,7 @@ const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   treeCommits: 'c',
   startTimestampInSeconds: 'st',
   endTimestampInSeconds: 'et',
+  issueVersion: 'iv',
 } as const;
 
 const treeInfoMinifiedParams: Record<keyof TTreeInformation, string> = {

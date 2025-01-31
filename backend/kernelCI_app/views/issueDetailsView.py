@@ -1,14 +1,20 @@
 from http import HTTPStatus
 from typing import Dict, Optional
-from django.http import JsonResponse
-from django.views import View
-from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.helpers.issueDetails import fetch_latest_issue_version
 from kernelCI_app.models import Issues
-from kernelCI_app.typeModels.issues import IssueDetailsPathParameters
+from kernelCI_app.typeModels.issueDetails import (
+    IssueDetailsPathParameters,
+    IssueDetailsRequest,
+    IssueDetailsResponse,
+)
+from drf_spectacular.utils import extend_schema
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from pydantic import ValidationError
 
 
-class IssueDetails(View):
+class IssueDetails(APIView):
     def _fetch_issue(self, *, issue_id: str, version: int) -> Optional[Dict]:
         issue_fields = [
             "field_timestamp",
@@ -34,23 +40,30 @@ class IssueDetails(View):
 
         return query
 
-    def get(
-        self, _request, issue_id: Optional[str], version: Optional[str]
-    ) -> JsonResponse:
+    @extend_schema(
+        request=IssueDetailsRequest, responses=IssueDetailsResponse, methods=["GET"]
+    )
+    def get(self, _request, issue_id: Optional[str]) -> Response:
         try:
-            parsed_params = IssueDetailsPathParameters(
-                issue_id=issue_id, version=version
-            )
+            parsed_params = IssueDetailsPathParameters(issue_id=issue_id)
         except ValidationError as e:
-            return create_error_response(e.json())
+            return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
-        issue_data = self._fetch_issue(
-            issue_id=parsed_params.issue_id, version=parsed_params.version
-        )
+        version = _request.GET.get("version")
+        if version is None:
+            version_row = fetch_latest_issue_version(issue_id=parsed_params.issue_id)
+            if version_row is None:
+                return create_api_error_response(error_message="Issue not found", status_code=HTTPStatus.OK)
+            version = version_row["version"]
+
+        issue_data = self._fetch_issue(issue_id=parsed_params.issue_id, version=version)
 
         if not issue_data:
-            return create_error_response(
-                error_message="Issue not found", status_code=HTTPStatus.OK
-            )
+            return create_api_error_response(error_message="Issue not found", status_code=HTTPStatus.OK)
 
-        return JsonResponse(issue_data)
+        try:
+            valid_response = IssueDetailsResponse(**issue_data)
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        return Response(data=valid_response.model_dump())

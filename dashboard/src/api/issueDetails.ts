@@ -9,10 +9,15 @@ import { RequestData } from './commonRequest';
 
 const fetchIssueDetailsData = async (
   issueId: string,
-  versionNumber: string,
+  versionNumber?: number,
 ): Promise<TIssueDetails> => {
+  const params = {
+    version: versionNumber,
+  };
+
   const res = await RequestData.get<TIssueDetails & { _timestamp: string }>(
-    `/api/issue/${issueId}/version/${versionNumber}`,
+    `/api/issue/${issueId}`,
+    { params },
   );
 
   const { _timestamp, ...data } = res;
@@ -22,7 +27,7 @@ const fetchIssueDetailsData = async (
 
 export const useIssueDetails = (
   issueId: string,
-  versionNumber: string,
+  versionNumber?: number,
 ): UseQueryResult<TIssueDetails> => {
   return useQuery({
     queryKey: ['issueData', issueId, versionNumber],
@@ -32,10 +37,15 @@ export const useIssueDetails = (
 
 const fetchIssueDetailsTests = async (
   issueId: string,
-  versionNumber: string,
+  versionNumber?: number,
 ): Promise<TestHistory[]> => {
+  const params = {
+    version: versionNumber,
+  };
+
   const data = await RequestData.get<TestHistory[]>(
-    `/api/issue/${issueId}/version/${versionNumber}/tests`,
+    `/api/issue/${issueId}/tests`,
+    { params },
   );
 
   return data;
@@ -43,7 +53,7 @@ const fetchIssueDetailsTests = async (
 
 export const useIssueDetailsTests = (
   issueId: string,
-  versionNumber: string,
+  versionNumber?: number,
 ): UseQueryResult<TestHistory[], TErrorWithStatus> => {
   return useQuery({
     queryKey: ['issueTestsData', issueId, versionNumber],
@@ -53,10 +63,15 @@ export const useIssueDetailsTests = (
 
 const fetchIssueDetailsBuilds = async (
   issueId: string,
-  versionNumber: string,
+  versionNumber?: number,
 ): Promise<BuildsTableBuild[]> => {
+  const params = {
+    version: versionNumber,
+  };
+
   const data = await RequestData.get<BuildsTableBuild[]>(
-    `/api/issue/${issueId}/version/${versionNumber}/builds`,
+    `/api/issue/${issueId}/builds`,
+    { params },
   );
 
   return data;
@@ -64,7 +79,7 @@ const fetchIssueDetailsBuilds = async (
 
 export const useIssueDetailsBuilds = (
   issueId: string,
-  versionNumber: string,
+  versionNumber?: number,
 ): UseQueryResult<BuildsTableBuild[], TErrorWithStatus> => {
   return useQuery({
     queryKey: ['issueBuildsData', issueId, versionNumber],
