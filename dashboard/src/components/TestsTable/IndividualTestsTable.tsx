@@ -69,23 +69,19 @@ export function IndividualTestsTable({
     });
   }, [groupHeaders, sorting]);
 
-  const { rows } = useMemo(() => {
-    return table.getRowModel();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table, sorting]);
-
+  const modelRows = table.getRowModel().rows;
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
-    count: rows.length,
+    count: modelRows.length,
     estimateSize: () => ESTIMATED_ROW_HEIGHT,
     getScrollElement: () => parentRef.current,
     overscan: 5,
   });
   const virtualItems = virtualizer.getVirtualItems();
 
-  const sortedItems = useMemo(
-    (): TIndividualTest[] => rows.map(row => row.original),
-    [rows],
+  const originalItems = useMemo(
+    (): TIndividualTest[] => modelRows.map(row => row.original),
+    [modelRows],
   );
 
   const [currentLog, setLog] = useState<number | undefined>(undefined);
@@ -95,8 +91,7 @@ export function IndividualTestsTable({
 
   const tableRows = useMemo((): JSX.Element[] => {
     return virtualItems.map((virtualRow, idx) => {
-      const row = rows[virtualRow.index] as Row<TIndividualTest>;
-
+      const row = modelRows[virtualRow.index] as Row<TIndividualTest>;
       return (
         <TableRowMemoized<TIndividualTest>
           key={row.id}
@@ -108,7 +103,7 @@ export function IndividualTestsTable({
         />
       );
     });
-  }, [virtualItems, rows, openLogSheet, getRowLink, currentLog]);
+  }, [virtualItems, modelRows, openLogSheet, getRowLink, currentLog]);
 
   // if more performance is needed, try using translate as in the example from tanstack virtual instead of padding
   // https://tanstack.com/virtual/latest/docs/framework/react/examples/table
@@ -138,23 +133,23 @@ export function IndividualTestsTable({
     setLog(previousLog => {
       if (
         typeof previousLog === 'number' &&
-        previousLog < sortedItems.length - 1
+        previousLog < originalItems.length - 1
       )
         return previousLog + 1;
 
       return previousLog;
     });
-  }, [setLog, sortedItems.length]);
+  }, [setLog, originalItems.length]);
 
   const { data: dataTest, isLoading } = useTestDetails(
-    sortedItems.length > 0 ? sortedItems[currentLog ?? 0].id : '',
+    originalItems.length > 0 ? originalItems[currentLog ?? 0].id : '',
   );
 
   const navigationLogsActions = useMemo(
     () => ({
       nextItem: handleNextItem,
       hasNext:
-        typeof currentLog === 'number' && currentLog < sortedItems.length - 1,
+        typeof currentLog === 'number' && currentLog < originalItems.length - 1,
       previousItem: handlePreviousItem,
       hasPrevious: !!currentLog,
       isLoading,
@@ -162,7 +157,7 @@ export function IndividualTestsTable({
     [
       currentLog,
       isLoading,
-      sortedItems.length,
+      originalItems.length,
       handleNextItem,
       handlePreviousItem,
     ],
@@ -177,7 +172,7 @@ export function IndividualTestsTable({
     status,
     error,
   } = useTestIssues(
-    currentLog !== undefined ? sortedItems[currentLog]?.id : '',
+    currentLog !== undefined ? originalItems[currentLog]?.id : '',
   );
 
   return (
@@ -191,6 +186,7 @@ export function IndividualTestsTable({
       issues={issues}
       status={status}
       error={error}
+      wrapperClassName="pb-0"
     >
       <div
         ref={parentRef}
