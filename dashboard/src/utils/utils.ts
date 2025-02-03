@@ -163,6 +163,7 @@ export const sanitizeBuildTable = (
     buildErrors: isBuildError(build.valid),
     status: getBuildStatus(build.valid),
     buildLogs: build.log_url,
+    treeBranch: buildTreeBranch(build.tree_name, build.git_repository_branch),
   }));
 };
 

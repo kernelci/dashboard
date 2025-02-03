@@ -1,5 +1,7 @@
 import type { LinkProps } from '@tanstack/react-router';
 
+import type { ColumnDef } from '@tanstack/react-table';
+
 import { useIntl } from 'react-intl';
 
 import { useMemo } from 'react';
@@ -15,6 +17,9 @@ import type {
 import { useIssueDetailsBuilds } from '@/api/issueDetails';
 
 import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
+import { defaultBuildColumns } from '@/components/BuildsTable/DefaultBuildsColumns';
+import { TableHeader } from '@/components/Table/TableHeader';
+
 import { sanitizeBuildTable } from '@/utils/utils';
 import { NOT_FOUND_STATUS } from '@/types/issueDetails';
 
@@ -25,6 +30,16 @@ interface IIssueDetailsBuildSection {
   onClickFilter: (filter: BuildsTableFilter) => void;
   getTableRowLink: (testId: string) => LinkProps;
 }
+
+const columns: ColumnDef<AccordionItemBuilds>[] = [
+  {
+    accessorKey: 'treeBranch',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="hardwareDetails.treeBranch" />
+    ),
+  },
+  ...defaultBuildColumns,
+];
 
 export const IssueDetailsBuildSection = ({
   issueId,
@@ -65,6 +80,7 @@ export const IssueDetailsBuildSection = ({
             filter={buildTableFilter}
             getRowLink={getTableRowLink}
             onClickFilter={onClickFilter}
+            columns={columns}
           />
         </div>
       ) : (

@@ -39,14 +39,18 @@ class IssueDetailsPathParameters(BaseModel):
 
 
 class IssueBuildItem(BaseModel):
-    id: Build__Id
-    architecture: Build__Architecture
-    config_name: Build__ConfigName
-    valid: Build__Valid
-    start_time: Build__StartTime
-    duration: Build__Duration
-    compiler: Build__Compiler
-    log_url: Build__LogUrl
+    id: Build__Id = Field(alias="build__id")
+    architecture: Build__Architecture = Field(alias="build__architecture")
+    config_name: Build__ConfigName = Field(alias="build__config_name")
+    valid: Build__Valid = Field(alias="build__valid")
+    start_time: Build__StartTime = Field(alias="build__start_time")
+    duration: Build__Duration = Field(alias="build__duration")
+    compiler: Build__Compiler = Field(alias="build__compiler")
+    log_url: Build__LogUrl = Field(alias="build__log_url")
+    tree_name: Checkout__TreeName = Field(alias="build__checkout__tree_name")
+    git_repository_branch: Checkout__GitRepositoryBranch = Field(
+        alias="build__checkout__git_repository_branch"
+    )
 
 
 class IssueTestItem(BaseModel):

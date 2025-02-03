@@ -85,6 +85,8 @@ export type BuildsTableBuild = Pick<
   | 'duration'
   | 'compiler'
   | 'log_url'
+  | 'tree_name'
+  | 'git_repository_branch'
 >;
 
 export type BuildStatus = {
