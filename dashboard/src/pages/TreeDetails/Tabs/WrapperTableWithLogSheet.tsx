@@ -9,6 +9,7 @@ import { Sheet } from '@/components/Sheet';
 import { LogOrJsonSheetContent } from '@/components/Sheet/LogOrJsonSheetContent';
 import type { TNavigationLogActions } from '@/components/Sheet/WrapperSheetContent';
 import type { TIssue } from '@/types/general';
+import { cn } from '@/lib/utils';
 
 interface TableWithLogSheetProps {
   currentLog?: number;
@@ -20,6 +21,7 @@ interface TableWithLogSheetProps {
   issues?: TIssue[];
   status?: UseQueryResult['status'];
   error?: UseQueryResult['error'];
+  wrapperClassName?: string;
 }
 
 const WrapperTableWithLogSheet = ({
@@ -33,9 +35,10 @@ const WrapperTableWithLogSheet = ({
   issues,
   status,
   error,
+  wrapperClassName,
 }: PropsWithChildren<TableWithLogSheetProps>): JSX.Element => {
   return (
-    <div className="flex flex-col gap-6 pb-4">
+    <div className={cn('flex flex-col gap-6 pb-4', wrapperClassName)}>
       {children}
 
       <Sheet open={typeof currentLog === 'number'} onOpenChange={onOpenChange}>
