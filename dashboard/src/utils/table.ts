@@ -6,11 +6,9 @@ export const buildHardwareArray = (
   environment_compatible?: TestHistory['environment_compatible'],
   misc?: TestHistory['misc'],
 ): string[] | undefined => {
-  return environment_compatible
-    ? environment_compatible
-    : misc?.platform
-      ? [misc?.platform]
-      : undefined;
+  const miscArray: string[] = misc?.platform ? [misc.platform] : [];
+  const envArray: string[] = environment_compatible ?? [];
+  return miscArray.concat(envArray);
 };
 
 export const buildTreeBranch = (
