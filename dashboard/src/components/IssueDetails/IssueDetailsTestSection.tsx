@@ -1,14 +1,21 @@
 import type { LinkProps } from '@tanstack/react-router';
 
+import type { ColumnDef } from '@tanstack/react-table';
+
 import { useIntl } from 'react-intl';
 
 import { useIssueDetailsTests } from '@/api/issueDetails';
 
 import { TestsTable } from '@/components/TestsTable/TestsTable';
+import { defaultInnerColumns } from '@/components/TestsTable/DefaultTestsColumns';
+import { TableHeader } from '@/components/Table/TableHeader';
+
 import { Separator } from '@/components/ui/separator';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
 import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
 import { NOT_FOUND_STATUS } from '@/types/issueDetails';
+import type { TIndividualTest } from '@/types/general';
 
 interface IIssueDetailsTestSection {
   issueId: string;
@@ -17,6 +24,17 @@ interface IIssueDetailsTestSection {
   onClickFilter: (filter: TestsTableFilter) => void;
   getTableRowLink: (testId: string) => LinkProps;
 }
+
+const innerColumns: ColumnDef<TIndividualTest>[] = [
+  defaultInnerColumns[0],
+  {
+    accessorKey: 'treeBranch',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="hardwareDetails.treeBranch" />
+    ),
+  },
+  ...defaultInnerColumns.slice(1),
+];
 
 export const IssueDetailsTestSection = ({
   issueId,
@@ -49,6 +67,7 @@ export const IssueDetailsTestSection = ({
             onClickFilter={onClickFilter}
             filter={testTableFilter}
             getRowLink={getTableRowLink}
+            innerColumns={innerColumns}
           />
         </div>
       ) : (

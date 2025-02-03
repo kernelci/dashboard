@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel, RootModel, Field
 
 from kernelCI_app.typeModels.databases import (
     Build__Id,
@@ -29,6 +29,8 @@ from kernelCI_app.typeModels.databases import (
     Test__StartTime,
     Test__EnvironmentCompatible,
     Timestamp,
+    Checkout__TreeName,
+    Checkout__GitRepositoryBranch,
 )
 
 
@@ -48,12 +50,18 @@ class IssueBuildItem(BaseModel):
 
 
 class IssueTestItem(BaseModel):
-    id: Test__Id
-    status: Test__Status
-    duration: Test__Duration
-    path: Test__Path
-    start_time: Test__StartTime
-    environment_compatible: Test__EnvironmentCompatible
+    id: Test__Id = Field(alias="test__id")
+    status: Test__Status = Field(alias="test__status")
+    duration: Test__Duration = Field(alias="test__duration")
+    path: Test__Path = Field(alias="test__path")
+    start_time: Test__StartTime = Field(alias="test__start_time")
+    environment_compatible: Test__EnvironmentCompatible = Field(
+        alias="test__environment_compatible"
+    )
+    tree_name: Checkout__TreeName = Field(alias="test__build__checkout__tree_name")
+    git_repository_branch: Checkout__GitRepositoryBranch = Field(
+        alias="test__build__checkout__git_repository_branch"
+    )
 
 
 class IssueTestsResponse(RootModel):
