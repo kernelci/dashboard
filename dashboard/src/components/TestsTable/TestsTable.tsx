@@ -192,6 +192,7 @@ export function TestsTable({
     getRowCanExpand: _ => true,
     getExpandedRowModel: getExpandedRowModel(),
     onExpandedChange: setExpanded,
+    getRowId: row => row.path_group,
     state: {
       sorting,
       pagination,
