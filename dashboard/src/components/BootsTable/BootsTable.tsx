@@ -40,7 +40,7 @@ import type { TableKeys } from '@/utils/constants/tables';
 
 import { TableRowMemoized } from '@/components/Table/TableComponents';
 
-import { buildHardwareArray } from '@/utils/table';
+import { buildHardwareArray, buildTreeBranch } from '@/utils/table';
 
 import {
   DETAILS_COLUMN_ID,
@@ -147,6 +147,7 @@ export function BootsTable({
               startTime: e.start_time,
               status: e.status,
               hardware: buildHardwareArray(e.environment_compatible, e.misc),
+              treeBranch: buildTreeBranch(e.tree_name, e.git_repository_branch),
             };
           })
         : [],

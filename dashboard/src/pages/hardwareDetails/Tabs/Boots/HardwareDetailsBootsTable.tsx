@@ -31,6 +31,12 @@ export const columns: ColumnDef<TestByCommitHash>[] = [
     ),
   },
   {
+    accessorKey: 'treeBranch',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="hardwareDetails.treeBranch" />
+    ),
+  },
+  {
     accessorKey: 'status',
     filterFn: (row, columnId, filterValue) =>
       getStatusGroup(row.getValue(columnId)) === filterValue,

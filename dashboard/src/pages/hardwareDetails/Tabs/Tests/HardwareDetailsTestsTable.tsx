@@ -38,6 +38,12 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
     },
   },
   {
+    accessorKey: 'treeBranch',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="hardwareDetails.treeBranch" />
+    ),
+  },
+  {
     accessorKey: 'status',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.status" />

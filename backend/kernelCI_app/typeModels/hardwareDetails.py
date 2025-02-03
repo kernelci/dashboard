@@ -8,7 +8,11 @@ from kernelCI_app.typeModels.commonDetails import (
     Summary,
     TestHistoryItem,
 )
-from kernelCI_app.typeModels.databases import StatusValues
+from kernelCI_app.typeModels.databases import (
+    StatusValues,
+    Checkout__TreeName,
+    Checkout__GitRepositoryBranch,
+)
 from pydantic import BaseModel, BeforeValidator, Field
 
 
@@ -82,6 +86,11 @@ class HardwareDetailsFilters(BaseModel):
     tests: HardwareTestLocalFilters
 
 
+class HardwareTestHistoryItem(TestHistoryItem):
+    tree_name: Checkout__TreeName
+    git_repository_branch: Checkout__GitRepositoryBranch
+
+
 class HardwareBuildHistoryItem(BuildHistoryItem):
     tree_name: Optional[str]
     issue_id: Optional[str]
@@ -90,8 +99,8 @@ class HardwareBuildHistoryItem(BuildHistoryItem):
 
 class HardwareDetailsFullResponse(BaseModel):
     builds: List[HardwareBuildHistoryItem]
-    boots: List[TestHistoryItem]
-    tests: List[TestHistoryItem]
+    boots: List[HardwareTestHistoryItem]
+    tests: List[HardwareTestHistoryItem]
     summary: Summary
     filters: HardwareDetailsFilters
     common: HardwareCommon
@@ -105,6 +114,14 @@ class HardwareDetailsSummaryResponse(BaseModel):
 
 class HardwareDetailsBuildsResponse(BaseModel):
     builds: List[HardwareBuildHistoryItem]
+
+
+class HardwareDetailsBootsResponse(BaseModel):
+    boots: List[HardwareTestHistoryItem]
+
+
+class HardwareDetailsTestsResponse(BaseModel):
+    tests: List[HardwareTestHistoryItem]
 
 
 PossibleTestType = Literal["test", "boot"]

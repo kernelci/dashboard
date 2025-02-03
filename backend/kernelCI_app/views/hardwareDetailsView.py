@@ -20,11 +20,11 @@ from kernelCI_app.helpers.hardwareDetails import (
     get_trees_with_selected_commit,
     get_validated_current_tree,
     handle_build,
-    handle_test_or_boot,
     handle_tree_status_summary,
     mutate_properties_to_list,
     set_trees_status_summary,
     unstable_parse_post_body,
+    handle_test_history,
 )
 from kernelCI_app.typeModels.commonDetails import (
     BuildSummary,
@@ -106,7 +106,11 @@ class HardwareDetails(APIView):
 
         if should_process_test:
             self.processed_tests.add(record["id"])
-            handle_test_or_boot(record, self.boots if is_record_boot else self.tests)
+            test_or_boot_history = self.boots["history"] if is_record_boot else self.tests["history"]
+            handle_test_history(
+                record=record,
+                task=test_or_boot_history,
+            )
 
     def _process_build(self, record: Dict, tree_index: int) -> None:
         build = get_build(record, tree_index)
