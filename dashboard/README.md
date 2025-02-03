@@ -20,6 +20,13 @@ After establishing the connection with Google Cloud and running `backend`, run t
 pnpm dev
 ```
 
+## Running unit tests
+The frontend includes unit tests covering some parts of the source code. To run the tests, use the following command:
+
+```sh
+pnpm test
+```
+
 # Routing and State Management
 
 A big part of this project is to have shareable links

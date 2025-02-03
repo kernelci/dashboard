@@ -31,6 +31,15 @@ After connecting to Google Cloud, execute the server with:
 poetry run python3 manage.py runserver
 ```
 
+## Running unit tests
+The backend includes unit tests covering some parts of the source code. To run the tests, use the following command:
+
+```sh
+# run this for each test file in kernelCI_app/unitTests/
+poetry run python kernelCI_app/unitTests/<file-name.test.py>
+```
+
+Currently you must run this command for each test file in the `kernelCI_app/unitTests/` directory.
 
 
 # Deploy instructions
