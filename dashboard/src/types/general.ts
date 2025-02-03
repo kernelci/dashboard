@@ -24,6 +24,7 @@ export type TIndividualTest = {
   start_time: string;
   duration: string;
   hardware?: string[];
+  treeBranch?: string;
 };
 
 export type TIssue = {
@@ -46,6 +47,8 @@ export type TestHistory = {
   duration?: number;
   environment_compatible?: string[];
   misc?: IMisc;
+  tree_name?: string;
+  git_repository_branch?: string;
 };
 
 interface ITreeDetailsMisc {

@@ -39,7 +39,7 @@ import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { usePaginationState } from '@/hooks/usePaginationState';
 
 import type { TableKeys } from '@/utils/constants/tables';
-import { buildHardwareArray } from '@/utils/table';
+import { buildHardwareArray, buildTreeBranch } from '@/utils/table';
 
 import { IndividualTestsTable } from './IndividualTestsTable';
 import { defaultColumns, defaultInnerColumns } from './DefaultTestsColumns';
@@ -105,6 +105,7 @@ export function TestsTable({
           start_time: e.start_time,
           status: e.status,
           hardware: buildHardwareArray(e.environment_compatible, e.misc),
+          treeBranch: buildTreeBranch(e.tree_name, e.git_repository_branch),
         });
         switch (e.status) {
           case 'DONE':

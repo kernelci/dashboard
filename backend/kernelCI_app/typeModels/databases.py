@@ -24,6 +24,7 @@ type Checkout__TreeName = Optional[str]
 type Checkout__GitCommitHash = Optional[str]
 type Checkout__GitCommitName = Optional[str]
 type Checkout__GitCommitTags = Optional[List[str]]
+type Checkout__GitRepositoryBranch = Optional[str]
 
 type Build__Id = str
 type Build__Architecture = Optional[str]

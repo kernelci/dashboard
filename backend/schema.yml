@@ -114,7 +114,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommonDetailsBootsResponse'
+                $ref: '#/components/schemas/HardwareDetailsBootsResponse'
           description: ''
   /api/hardware/{hardware_id}/builds:
     post:
@@ -216,19 +216,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommonDetailsTestsResponse'
+                $ref: '#/components/schemas/HardwareDetailsTestsResponse'
           description: ''
-  /api/issue/{issue_id}/version/{version}/builds:
+  /api/issue/{issue_id}:
     get:
-      operationId: issue_version_builds_retrieve
+      operationId: issue_retrieve
       parameters:
       - in: path
         name: issue_id
-        schema:
-          type: string
-        required: true
-      - in: path
-        name: version
         schema:
           type: string
         required: true
@@ -243,19 +238,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssuesBuildResponse'
+                $ref: '#/components/schemas/IssueDetailsResponse'
           description: ''
-  /api/issue/{issue_id}/version/{version}/tests:
+  /api/issue/{issue_id}/builds:
     get:
-      operationId: issue_version_tests_retrieve
+      operationId: issue_builds_retrieve
       parameters:
       - in: path
         name: issue_id
-        schema:
-          type: string
-        required: true
-      - in: path
-        name: version
         schema:
           type: string
         required: true
@@ -270,7 +260,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssuesTestsResponse'
+                $ref: '#/components/schemas/IssueBuildsResponse'
+          description: ''
+  /api/issue/{issue_id}/tests:
+    get:
+      operationId: issue_tests_retrieve
+      parameters:
+      - in: path
+        name: issue_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - issue
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueTestsResponse'
           description: ''
   /api/log-downloader/:
     get:
@@ -937,10 +949,7 @@ components:
       type: string
     Build__InputFiles:
       anyOf:
-      - items:
-          type: object
-        type: array
-      - type: object
+      - $ref: '#/components/schemas/Jsonb'
       - type: 'null'
     Build__LogExcerpt:
       anyOf:
@@ -952,10 +961,7 @@ components:
       - type: 'null'
     Build__OutputFiles:
       anyOf:
-      - items:
-          type: object
-        type: array
-      - type: object
+      - $ref: '#/components/schemas/Jsonb'
       - type: 'null'
     Build__StartTime:
       anyOf:
@@ -979,6 +985,10 @@ components:
       - items:
           type: string
         type: array
+      - type: 'null'
+    Checkout__GitRepositoryBranch:
+      anyOf:
+      - type: string
       - type: 'null'
     Checkout__Id:
       type: string
@@ -1170,6 +1180,17 @@ components:
       - compatibles
       title: HardwareCommon
       type: object
+    HardwareDetailsBootsResponse:
+      properties:
+        boots:
+          items:
+            $ref: '#/components/schemas/HardwareTestHistoryItem'
+          title: Boots
+          type: array
+      required:
+      - boots
+      title: HardwareDetailsBootsResponse
+      type: object
     HardwareDetailsBuildsResponse:
       properties:
         builds:
@@ -1207,12 +1228,12 @@ components:
           type: array
         boots:
           items:
-            $ref: '#/components/schemas/TestHistoryItem'
+            $ref: '#/components/schemas/HardwareTestHistoryItem'
           title: Boots
           type: array
         tests:
           items:
-            $ref: '#/components/schemas/TestHistoryItem'
+            $ref: '#/components/schemas/HardwareTestHistoryItem'
           title: Tests
           type: array
         summary:
@@ -1276,6 +1297,97 @@ components:
       - filters
       - common
       title: HardwareDetailsSummaryResponse
+      type: object
+    HardwareDetailsTestsResponse:
+      properties:
+        tests:
+          items:
+            $ref: '#/components/schemas/HardwareTestHistoryItem'
+          title: Tests
+          type: array
+      required:
+      - tests
+      title: HardwareDetailsTestsResponse
+      type: object
+    HardwareTestHistoryItem:
+      properties:
+        id:
+          title: Id
+          type: string
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+        duration:
+          anyOf:
+          - type: integer
+          - type: number
+          - type: 'null'
+          title: Duration
+        path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Path
+        start_time:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: string
+          - type: 'null'
+          title: Start Time
+        environment_compatible:
+          anyOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Environment Compatible
+        config:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Config
+        log_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Log Url
+        architecture:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Architecture
+        compiler:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Compiler
+        misc:
+          anyOf:
+          - $ref: '#/components/schemas/Misc'
+          - type: 'null'
+        tree_name:
+          $ref: '#/components/schemas/Checkout__TreeName'
+        git_repository_branch:
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+      required:
+      - id
+      - status
+      - duration
+      - path
+      - start_time
+      - environment_compatible
+      - config
+      - log_url
+      - architecture
+      - compiler
+      - misc
+      - tree_name
+      - git_repository_branch
+      title: HardwareTestHistoryItem
       type: object
     HardwareTestLocalFilters:
       properties:
@@ -1360,6 +1472,55 @@ components:
       - log_url
       title: IssueBuildItem
       type: object
+    IssueBuildsResponse:
+      items:
+        $ref: '#/components/schemas/IssueBuildItem'
+      title: IssueBuildsResponse
+      type: array
+    IssueDetailsResponse:
+      properties:
+        field_timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        id:
+          $ref: '#/components/schemas/Issue__Id'
+        version:
+          $ref: '#/components/schemas/Issue__Version'
+        origin:
+          $ref: '#/components/schemas/Origin'
+        report_url:
+          $ref: '#/components/schemas/Issue__ReportUrl'
+        report_subject:
+          $ref: '#/components/schemas/Issue__ReportSubject'
+        culprit_code:
+          $ref: '#/components/schemas/Issue__CulpritCode'
+        culprit_tool:
+          $ref: '#/components/schemas/Issue__CulpritTool'
+        culprit_harness:
+          $ref: '#/components/schemas/Issue__CulpritHarness'
+        build_valid:
+          $ref: '#/components/schemas/Issue__BuildValid'
+        test_status:
+          $ref: '#/components/schemas/Issue__TestStatus'
+        comment:
+          $ref: '#/components/schemas/Issue__Comment'
+        misc:
+          $ref: '#/components/schemas/Issue__Misc'
+      required:
+      - field_timestamp
+      - id
+      - version
+      - origin
+      - report_url
+      - report_subject
+      - culprit_code
+      - culprit_tool
+      - culprit_harness
+      - build_valid
+      - test_status
+      - comment
+      - misc
+      title: IssueDetailsResponse
+      type: object
     IssueTestItem:
       properties:
         id:
@@ -1383,16 +1544,57 @@ components:
       - environment_compatible
       title: IssueTestItem
       type: object
-    IssuesBuildResponse:
-      items:
-        $ref: '#/components/schemas/IssueBuildItem'
-      title: IssuesBuildResponse
-      type: array
-    IssuesTestsResponse:
+    IssueTestsResponse:
       items:
         $ref: '#/components/schemas/IssueTestItem'
-      title: IssuesTestsResponse
+      title: IssueTestsResponse
       type: array
+    Issue__BuildValid:
+      anyOf:
+      - type: boolean
+      - type: 'null'
+    Issue__Comment:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Issue__CulpritCode:
+      anyOf:
+      - type: boolean
+      - type: 'null'
+    Issue__CulpritHarness:
+      anyOf:
+      - type: boolean
+      - type: 'null'
+    Issue__CulpritTool:
+      anyOf:
+      - type: boolean
+      - type: 'null'
+    Issue__Id:
+      type: string
+    Issue__Misc:
+      anyOf:
+      - $ref: '#/components/schemas/Jsonb'
+      - type: 'null'
+    Issue__ReportSubject:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Issue__ReportUrl:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Issue__TestStatus:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Issue__Version:
+      type: integer
+    Jsonb:
+      anyOf:
+      - type: object
+      - items:
+          type: object
+        type: array
     LocalFilters:
       properties:
         issues:
@@ -1660,6 +1862,9 @@ components:
       anyOf:
       - $ref: '#/components/schemas/DatabaseStatusValues'
       - type: 'null'
+    Timestamp:
+      format: date-time
+      type: string
     Tree:
       properties:
         index:

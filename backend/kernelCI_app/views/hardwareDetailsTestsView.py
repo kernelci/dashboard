@@ -15,12 +15,10 @@ from kernelCI_app.helpers.hardwareDetails import (
     handle_test_history,
     unstable_parse_post_body,
 )
-from kernelCI_app.typeModels.commonDetails import (
-    CommonDetailsTestsResponse,
-    TestHistoryItem,
-)
 from kernelCI_app.typeModels.hardwareDetails import (
     HardwareDetailsPostBody,
+    HardwareTestHistoryItem,
+    HardwareDetailsTestsResponse,
     Tree,
 )
 from kernelCI_app.utils import is_boot
@@ -45,7 +43,7 @@ class HardwareDetailsTests(APIView):
 
         self.processed_tests = set()
 
-        self.tests: List[TestHistoryItem] = []
+        self.tests: List[HardwareTestHistoryItem] = []
 
     def _process_test(self, record: Dict) -> None:
         is_record_boot = is_boot(record["path"])
@@ -91,7 +89,7 @@ class HardwareDetailsTests(APIView):
 
     # Using post to receive a body request
     @extend_schema(
-        responses=CommonDetailsTestsResponse,
+        responses=HardwareDetailsTestsResponse,
         request=HardwareDetailsPostBody,
         methods=["POST"],
     )
@@ -145,7 +143,7 @@ class HardwareDetailsTests(APIView):
         self._sanitize_records(records, trees_with_selected_commits, is_all_selected)
 
         try:
-            valid_response = CommonDetailsTestsResponse(
+            valid_response = HardwareDetailsTestsResponse(
                 tests=self.tests,
             )
         except ValidationError as e:

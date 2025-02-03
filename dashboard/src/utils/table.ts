@@ -1,3 +1,5 @@
+import { sanitizeTableValue } from '@/components/Table/tableUtils';
+
 import type { TestHistory } from '@/types/general';
 
 export const buildHardwareArray = (
@@ -9,4 +11,11 @@ export const buildHardwareArray = (
     : misc?.platform
       ? [misc?.platform]
       : undefined;
+};
+
+export const buildTreeBranch = (
+  treeName?: string,
+  gitRepositoryBranch?: string,
+): string => {
+  return `${sanitizeTableValue(treeName)} / ${sanitizeTableValue(gitRepositoryBranch)}`;
 };

@@ -12,11 +12,11 @@ import type {
   BuildStatus,
   StatusCount,
 } from '@/types/general';
-import { sanitizeTableValue } from '@/components/Table/tableUtils';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
 
 import { UNKNOWN_STRING } from './constants/backend';
 import { groupStatus } from './status';
+import { buildTreeBranch } from './table';
 
 export function formatDate(date: Date | string, short?: boolean): string {
   const options: Intl.DateTimeFormatOptions = {
@@ -146,7 +146,7 @@ export const sanitizeBuilds = (
     dtb: build.misc ? build.misc['dtb'] : undefined,
     systemMap: build.misc ? build.misc['system_map'] : undefined,
     modules: build.misc ? build.misc['modules'] : undefined,
-    treeBranch: `${sanitizeTableValue(build.tree_name)} / ${sanitizeTableValue(build.git_repository_branch)}`,
+    treeBranch: buildTreeBranch(build.tree_name, build.git_repository_branch),
   }));
 };
 

@@ -27,13 +27,13 @@ from kernelCI_app.typeModels.commonDetails import (
     BuildSummary,
     Misc,
     TestArchSummaryItem,
-    TestHistoryItem,
     TestStatusCount,
     TestSummary,
 )
 from kernelCI_app.typeModels.hardwareDetails import (
     DefaultRecordValues,
     HardwareBuildHistoryItem,
+    HardwareTestHistoryItem,
     HardwareDetailsPostBody,
     Tree,
 )
@@ -509,11 +509,11 @@ def handle_test_or_boot(record: Dict, task: Dict) -> None:
 def handle_test_history(
     *,
     record: Dict,
-    task: List[TestHistoryItem],
+    task: List[HardwareTestHistoryItem],
 ) -> None:
     create_record_test_platform(record=record)
 
-    test_history_item = TestHistoryItem(
+    test_history_item = HardwareTestHistoryItem(
         id=record["id"],
         status=record["status"],
         duration=record["duration"],
@@ -525,6 +525,8 @@ def handle_test_history(
         architecture=record["build__architecture"],
         compiler=record["build__compiler"],
         misc=Misc(platform=record["test_platform"]),
+        tree_name=record["build__checkout__tree_name"],
+        git_repository_branch=record["build__checkout__git_repository_branch"],
     )
 
     task.append(test_history_item)
