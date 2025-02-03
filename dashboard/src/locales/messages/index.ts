@@ -193,7 +193,7 @@ export const messages = {
     'hardwareDetails.treeBranch': 'Tree / Branch',
     'issue.noIssueFound': 'No issue found.',
     'issue.tooltip':
-      'Issues are objects that group several builds or tests based on their result, being related through an incident.{br}They can also be linked to an issue tracker website by a report URL.',
+      'Issues groups several builds or tests by matching result status and logs.{br}They may also be linked to an external issue tracker or mailing list discussion.',
     'issueDetails.buildValid': 'Build Valid',
     'issueDetails.comment': 'Comment',
     'issueDetails.culpritCode': 'Culprit Code',
