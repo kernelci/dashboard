@@ -27,25 +27,13 @@ class IssueDetailsBuilds(APIView):
             "build__duration",
             "build__compiler",
             "build__log_url",
+            "build__checkout__tree_name",
+            "build__checkout__git_repository_branch",
         ]
 
-        builds = Incidents.objects.filter(
+        return Incidents.objects.filter(
             issue_id=issue_id, issue_version=version
         ).values(*fields)
-
-        return [
-            {
-                "id": build["build__id"],
-                "architecture": build["build__architecture"],
-                "config_name": build["build__config_name"],
-                "valid": build["build__valid"],
-                "start_time": build["build__start_time"],
-                "duration": build["build__duration"],
-                "compiler": build["build__compiler"],
-                "log_url": build["build__log_url"],
-            }
-            for build in builds
-        ]
 
     @extend_schema(
         request=IssueDetailsRequest, responses=IssueBuildsResponse, methods=["GET"]

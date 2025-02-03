@@ -1445,31 +1445,37 @@ components:
       type: object
     IssueBuildItem:
       properties:
-        id:
+        build__id:
           $ref: '#/components/schemas/Build__Id'
-        architecture:
+        build__architecture:
           $ref: '#/components/schemas/Build__Architecture'
-        config_name:
+        build__config_name:
           $ref: '#/components/schemas/Build__ConfigName'
-        valid:
+        build__valid:
           $ref: '#/components/schemas/Build__Valid'
-        start_time:
+        build__start_time:
           $ref: '#/components/schemas/Build__StartTime'
-        duration:
+        build__duration:
           $ref: '#/components/schemas/Build__Duration'
-        compiler:
+        build__compiler:
           $ref: '#/components/schemas/Build__Compiler'
-        log_url:
+        build__log_url:
           $ref: '#/components/schemas/Build__LogUrl'
+        build__checkout__tree_name:
+          $ref: '#/components/schemas/Checkout__TreeName'
+        build__checkout__git_repository_branch:
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
       required:
-      - id
-      - architecture
-      - config_name
-      - valid
-      - start_time
-      - duration
-      - compiler
-      - log_url
+      - build__id
+      - build__architecture
+      - build__config_name
+      - build__valid
+      - build__start_time
+      - build__duration
+      - build__compiler
+      - build__log_url
+      - build__checkout__tree_name
+      - build__checkout__git_repository_branch
       title: IssueBuildItem
       type: object
     IssueBuildsResponse:
