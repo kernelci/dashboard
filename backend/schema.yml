@@ -1523,25 +1523,31 @@ components:
       type: object
     IssueTestItem:
       properties:
-        id:
+        test__id:
           $ref: '#/components/schemas/Test__Id'
-        status:
+        test__status:
           $ref: '#/components/schemas/Test__Status'
-        duration:
+        test__duration:
           $ref: '#/components/schemas/Test__Duration'
-        path:
+        test__path:
           $ref: '#/components/schemas/Test__Path'
-        start_time:
+        test__start_time:
           $ref: '#/components/schemas/Test__StartTime'
-        environment_compatible:
+        test__environment_compatible:
           $ref: '#/components/schemas/Test__EnvironmentCompatible'
+        test__build__checkout__tree_name:
+          $ref: '#/components/schemas/Checkout__TreeName'
+        test__build__checkout__git_repository_branch:
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
       required:
-      - id
-      - status
-      - duration
-      - path
-      - start_time
-      - environment_compatible
+      - test__id
+      - test__status
+      - test__duration
+      - test__path
+      - test__start_time
+      - test__environment_compatible
+      - test__build__checkout__tree_name
+      - test__build__checkout__git_repository_branch
       title: IssueTestItem
       type: object
     IssueTestsResponse:

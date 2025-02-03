@@ -23,23 +23,13 @@ class IssueDetailsTests(APIView):
             "test__path",
             "test__start_time",
             "test__environment_compatible",
+            "test__build__checkout__tree_name",
+            "test__build__checkout__git_repository_branch",
         ]
 
-        tests = Incidents.objects.filter(
+        return Incidents.objects.filter(
             issue_id=issue_id, issue_version=version
         ).values(*fields)
-
-        return [
-            {
-                "id": test["test__id"],
-                "duration": test["test__duration"],
-                "status": test["test__status"],
-                "path": test["test__path"],
-                "start_time": test["test__start_time"],
-                "environment_compatible": test["test__environment_compatible"],
-            }
-            for test in tests
-        ]
 
     @extend_schema(
         request=IssueDetailsRequest, responses=IssueTestsResponse, methods=["GET"]
