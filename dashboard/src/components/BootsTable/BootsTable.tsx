@@ -146,7 +146,10 @@ export function BootsTable({
               path: e.path,
               startTime: e.start_time,
               status: e.status,
-              hardware: buildHardwareArray(e.environment_compatible, e.misc),
+              hardware: buildHardwareArray(
+                e.environment_compatible,
+                e.environment_misc,
+              ),
               treeBranch: buildTreeBranch(e.tree_name, e.git_repository_branch),
             };
           })

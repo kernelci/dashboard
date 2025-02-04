@@ -234,7 +234,7 @@ def get_current_row_data(current_row: dict) -> dict:
         "log_url": current_row_data["test_log_url"],
         "architecture": current_row_data["build_architecture"],
         "compiler": current_row_data["build_compiler"],
-        "misc": {"platform": current_row_data["test_platform"]},
+        "environment_misc": {"platform": current_row_data["test_platform"]},
     }
 
     return current_row_data

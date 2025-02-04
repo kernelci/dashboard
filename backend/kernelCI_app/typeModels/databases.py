@@ -1,6 +1,8 @@
 from typing import List, Optional, Dict, Literal, Any, Union
 from datetime import datetime
 
+from kernelCI_app.typeModels.commonDetails import EnvironmentMisc
+
 FAIL_STATUS = "FAIL"
 ERROR_STATUS = "ERROR"
 MISS_STATUS = "MISS"
@@ -46,6 +48,7 @@ type Test__Duration = Optional[float]
 type Test__Path = Optional[str]
 type Test__StartTime = Optional[datetime]
 type Test__EnvironmentCompatible = Optional[List[str]]
+type Test__EnvironmentMisc = Optional[EnvironmentMisc]
 
 type Issue__Id = str
 type Issue__Version = int

@@ -25,7 +25,7 @@ from kernelCI_app.typeModels.commonDetails import (
     BuildArchitectures,
     BuildStatusCount,
     BuildSummary,
-    Misc,
+    EnvironmentMisc,
     TestArchSummaryItem,
     TestStatusCount,
     TestSummary,
@@ -527,7 +527,7 @@ def handle_test_history(
         log_url=record["log_url"],
         architecture=record["build__architecture"],
         compiler=record["build__compiler"],
-        misc=Misc(platform=record["test_platform"]),
+        environment_misc=EnvironmentMisc(platform=record["test_platform"]),
         tree_name=record["build__checkout__tree_name"],
         git_repository_branch=record["build__checkout__git_repository_branch"],
     )

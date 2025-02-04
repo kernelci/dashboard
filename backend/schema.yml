@@ -907,6 +907,8 @@ components:
           $ref: '#/components/schemas/Test__StartTime'
         environment_compatible:
           $ref: '#/components/schemas/Test__EnvironmentCompatible'
+        environment_misc:
+          $ref: '#/components/schemas/Test__EnvironmentMisc'
       required:
       - id
       - status
@@ -914,6 +916,7 @@ components:
       - path
       - start_time
       - environment_compatible
+      - environment_misc
       title: BuildTestItem
       type: object
     BuildTestsResponse:
@@ -1044,6 +1047,15 @@ components:
       - tests
       title: DetailsFilters
       type: object
+    EnvironmentMisc:
+      properties:
+        platform:
+          title: Platform
+          type: string
+      required:
+      - platform
+      title: EnvironmentMisc
+      type: object
     GlobalFilters:
       properties:
         configs:
@@ -1142,7 +1154,7 @@ components:
           title: Issue Id
         issue_version:
           anyOf:
-          - type: string
+          - type: integer
           - type: 'null'
           title: Issue Version
       required:
@@ -1365,9 +1377,9 @@ components:
           - type: string
           - type: 'null'
           title: Compiler
-        misc:
+        environment_misc:
           anyOf:
-          - $ref: '#/components/schemas/Misc'
+          - $ref: '#/components/schemas/EnvironmentMisc'
           - type: 'null'
         tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
@@ -1384,7 +1396,7 @@ components:
       - log_url
       - architecture
       - compiler
-      - misc
+      - environment_misc
       - tree_name
       - git_repository_branch
       title: HardwareTestHistoryItem
@@ -1393,7 +1405,14 @@ components:
       properties:
         issues:
           items:
-            type: string
+            maxItems: 2
+            minItems: 2
+            prefixItems:
+            - type: string
+            - anyOf:
+              - type: integer
+              - type: 'null'
+            type: array
           title: Issues
           type: array
         platforms:
@@ -1541,6 +1560,8 @@ components:
           $ref: '#/components/schemas/Test__StartTime'
         test__environment_compatible:
           $ref: '#/components/schemas/Test__EnvironmentCompatible'
+        test__environment_misc:
+          $ref: '#/components/schemas/Test__EnvironmentMisc'
         test__build__checkout__tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
         test__build__checkout__git_repository_branch:
@@ -1552,6 +1573,7 @@ components:
       - test__path
       - test__start_time
       - test__environment_compatible
+      - test__environment_misc
       - test__build__checkout__tree_name
       - test__build__checkout__git_repository_branch
       title: IssueTestItem
@@ -1611,21 +1633,19 @@ components:
       properties:
         issues:
           items:
-            type: string
+            maxItems: 2
+            minItems: 2
+            prefixItems:
+            - type: string
+            - anyOf:
+              - type: integer
+              - type: 'null'
+            type: array
           title: Issues
           type: array
       required:
       - issues
       title: LocalFilters
-      type: object
-    Misc:
-      properties:
-        platform:
-          title: Platform
-          type: string
-      required:
-      - platform
-      title: Misc
       type: object
     Origin:
       type: string
@@ -1729,9 +1749,9 @@ components:
           - type: string
           - type: 'null'
           title: Compiler
-        misc:
+        environment_misc:
           anyOf:
-          - $ref: '#/components/schemas/Misc'
+          - $ref: '#/components/schemas/EnvironmentMisc'
           - type: 'null'
       required:
       - id
@@ -1744,7 +1764,7 @@ components:
       - log_url
       - architecture
       - compiler
-      - misc
+      - environment_misc
       title: TestHistoryItem
       type: object
     TestStatusCount:
@@ -1858,6 +1878,10 @@ components:
       - items:
           type: string
         type: array
+      - type: 'null'
+    Test__EnvironmentMisc:
+      anyOf:
+      - $ref: '#/components/schemas/EnvironmentMisc'
       - type: 'null'
     Test__Id:
       type: string

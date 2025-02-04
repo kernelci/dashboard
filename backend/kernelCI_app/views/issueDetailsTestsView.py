@@ -23,6 +23,7 @@ class IssueDetailsTests(APIView):
             "test__path",
             "test__start_time",
             "test__environment_compatible",
+            "test__environment_misc",
             "test__build__checkout__tree_name",
             "test__build__checkout__git_repository_branch",
         ]
