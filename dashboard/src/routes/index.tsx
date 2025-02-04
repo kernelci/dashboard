@@ -1,8 +1,8 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
 import { makeZIntervalInDays, type SearchSchema } from '@/types/general';
+import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
 
 export const HomeSearchSchema = z.object({
   treeSearch: z.string().catch(''),

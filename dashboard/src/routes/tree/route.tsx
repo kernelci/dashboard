@@ -3,7 +3,7 @@ import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
 import { z } from 'zod';
 
 import { makeZIntervalInDays, type SearchSchema } from '@/types/general';
-import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
+import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
 
 const defaultValues = {
   intervalInDays: DEFAULT_TIME_SEARCH,
