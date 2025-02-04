@@ -28,6 +28,7 @@ from kernelCI_app.typeModels.databases import (
     Test__Path,
     Test__StartTime,
     Test__EnvironmentCompatible,
+    Test__EnvironmentMisc,
     Timestamp,
     Checkout__TreeName,
     Checkout__GitRepositoryBranch,
@@ -62,6 +63,7 @@ class IssueTestItem(BaseModel):
     environment_compatible: Test__EnvironmentCompatible = Field(
         alias="test__environment_compatible"
     )
+    environment_misc: Test__EnvironmentMisc = Field(alias="test__environment_misc")
     tree_name: Checkout__TreeName = Field(alias="test__build__checkout__tree_name")
     git_repository_branch: Checkout__GitRepositoryBranch = Field(
         alias="test__build__checkout__git_repository_branch"

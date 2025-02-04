@@ -31,7 +31,7 @@ class BuildArchitectures(BuildStatusCount):
     compilers: Optional[List[str]] = []
 
 
-class Misc(BaseModel):
+class EnvironmentMisc(BaseModel):
     platform: str
 
 
@@ -46,7 +46,7 @@ class TestHistoryItem(BaseModel):
     log_url: Optional[str]
     architecture: Optional[str]
     compiler: Optional[str]
-    misc: Optional[Misc]
+    environment_misc: Optional[EnvironmentMisc]
 
 
 class BuildHistoryItem(BaseModel):

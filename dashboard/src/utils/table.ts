@@ -4,9 +4,11 @@ import type { TestHistory } from '@/types/general';
 
 export const buildHardwareArray = (
   environment_compatible?: TestHistory['environment_compatible'],
-  misc?: TestHistory['misc'],
+  environment_misc?: TestHistory['environment_misc'],
 ): string[] | undefined => {
-  const miscArray: string[] = misc?.platform ? [misc.platform] : [];
+  const miscArray: string[] = environment_misc?.platform
+    ? [environment_misc.platform]
+    : [];
   const envArray: string[] = environment_compatible ?? [];
   return miscArray.concat(envArray);
 };

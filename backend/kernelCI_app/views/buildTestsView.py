@@ -11,7 +11,13 @@ class BuildTests(APIView):
     @extend_schema(responses=BuildTestsResponse)
     def get(self, request, build_id: str) -> Response:
         result = Tests.objects.filter(build_id=build_id).values(
-            "id", "duration", "status", "path", "start_time", "environment_compatible"
+            "id",
+            "duration",
+            "status",
+            "path",
+            "start_time",
+            "environment_compatible",
+            "environment_misc",
         )
 
         if not result:

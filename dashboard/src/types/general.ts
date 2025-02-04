@@ -35,7 +35,7 @@ export type TIssue = {
   incidents_info: IncidentsInfo;
 };
 
-interface IMisc {
+interface IEnvironmentMisc {
   platform?: string;
 }
 
@@ -46,7 +46,7 @@ export type TestHistory = {
   id: string;
   duration?: number;
   environment_compatible?: string[];
-  misc?: IMisc;
+  environment_misc?: IEnvironmentMisc;
   tree_name?: string;
   git_repository_branch?: string;
 };

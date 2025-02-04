@@ -21,6 +21,7 @@ from kernelCI_app.typeModels.databases import (
     Test__Status,
     Test__StartTime,
     Test__EnvironmentCompatible,
+    Test__EnvironmentMisc,
 )
 
 
@@ -46,6 +47,7 @@ class BuildTestItem(BaseModel):
     path: Test__Path
     start_time: Test__StartTime
     environment_compatible: Test__EnvironmentCompatible
+    environment_misc: Test__EnvironmentMisc
 
 
 class BuildTestsResponse(RootModel):

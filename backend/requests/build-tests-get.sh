@@ -1,49 +1,69 @@
-http 'http://localhost:8000/api/build/kernelci:kernelci.org:66a1d00e546da93e297e7073/tests'
+http 'http://localhost:8000/api/build/maestro:67a17df4661a7bc8748b9147/tests'
 
 # HTTP/1.1 200 OK
-# Content-Length: 9122
+# Allow: GET, HEAD, OPTIONS
+# Cache-Control: max-age=0
+# Content-Length: 2944
 # Content-Type: application/json
 # Cross-Origin-Opener-Policy: same-origin
-# Date: Wed, 31 Jul 2024 18:00:40 GMT
+# Date: Tue, 04 Feb 2025 13:17:47 GMT
+# Expires: Tue, 04 Feb 2025 13:17:47 GMT
 # Referrer-Policy: same-origin
-# Server: WSGIServer/0.2 CPython/3.12.0
-# Vary: origin
+# Server: WSGIServer/0.2 CPython/3.12.7
+# Vary: Accept, Cookie, origin
 # X-Content-Type-Options: nosniff
 # X-Frame-Options: DENY
 
 # [
-  #   {
-  #     "id": "kernelci:kernelci.org:66a1d0d262f8cae67a7e7095",
-  #     "duration": null,
-  #     "status": "PASS",
-  #     "path": "baseline.login",
-  #     "startTime": "2024-07-25T04:13:06.105Z",
-  #     "hardware": [
-  #               "google,veyron-jaq-rev5",
-  #               "google,veyron-jaq-rev4"
-  #      ]
-  #   },
-  #   {
-  #     "id": "kernelci:kernelci.org:66a1d0a38e8d1053a47e707c",
-  #     "duration": null,
-  #     "status": "PASS",
-  #     "path": "baseline.login",
-  #     "startTime": "2024-07-25T04:12:19.892Z",
-  #      "hardware": [
-  #                "google,veyron-jaq-rev5",
-  #                "google,veyron-jaq-rev4"
-  #            ]
-  #   },
-  #   {
-  #     "id": "kernelci:kernelci.org:66a1d0a38e8d1053a47e707e",
-  #     "duration": null,
-  #     "status": "PASS",
-  #     "path": "baseline.dmesg.emerg",
-  #     "startTime": "2024-07-25T04:12:19.927Z",
-  #     "hardware": [
-  #               "google,veyron-jaq-rev5",
-  #               "google,veyron-jaq-rev4"
-  #      ]
-  #   },
-  #   ...
-  # ]
+#     {
+#         "duration": null,
+#         "environment_compatible": [
+#             "radxa,rock-5b",
+#             "rockchip,rk3588"
+#         ],
+#         "id": "maestro:67a1876b661a7bc8748b9ee0",
+#         "misc": {
+#             "job_id": "17603386",
+#             "job_url": "https://lava.collabora.dev/scheduler/job/17603386",
+#             "platform": "rk3588-rock-5b"
+#         },
+#         "path": "boot",
+#         "start_time": "2025-02-04T03:20:11.382000Z",
+#         "status": "PASS"
+#     },
+#     {
+#         "duration": null,
+#         "environment_compatible": [
+#             "khadas,vim3",
+#             "amlogic,a311d",
+#             "amlogic,g12b"
+#         ],
+#         "id": "maestro:67a18766661a7bc8748b9ece",
+#         "environment_misc": {
+#             "job_id": "17603380",
+#             "job_url": "https://lava.collabora.dev/scheduler/job/17603380",
+#             "platform": "meson-g12b-a311d-khadas-vim3"
+#         },
+#         "path": "boot",
+#         "start_time": "2025-02-04T03:20:06.062000Z",
+#         "status": "PASS"
+#     },
+#     {
+#         "duration": null,
+#         "environment_compatible": [
+#             "mediatek,mt8390-evk",
+#             "mediatek,mt8390",
+#             "mediatek,mt8188"
+#         ],
+#         "id": "maestro:67a18767661a7bc8748b9ed4",
+#         "environemtn_misc": {
+#             "job_id": "17603382",
+#             "job_url": "https://lava.collabora.dev/scheduler/job/17603382",
+#             "platform": "mt8390-genio-700-evk"
+#         },
+#         "path": "boot",
+#         "start_time": "2025-02-04T03:20:07.904000Z",
+#         "status": "PASS"
+#     },
+#     ...
+# ]
