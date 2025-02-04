@@ -8,10 +8,12 @@ from kernelCI_app.typeModels.commonDetails import (
     Summary,
     TestHistoryItem,
 )
+
 from kernelCI_app.typeModels.databases import (
     StatusValues,
     Checkout__TreeName,
     Checkout__GitRepositoryBranch,
+    Issue__Version
 )
 from pydantic import BaseModel, BeforeValidator, Field
 
@@ -94,7 +96,7 @@ class HardwareTestHistoryItem(TestHistoryItem):
 class HardwareBuildHistoryItem(BuildHistoryItem):
     tree_name: Optional[str]
     issue_id: Optional[str]
-    issue_version: Optional[int]
+    issue_version: Optional[Issue__Version]
 
 
 class HardwareDetailsFullResponse(BaseModel):
