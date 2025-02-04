@@ -48,6 +48,7 @@ export const parseSearch = (searchStr: string): AnySchema => {
       i: 'number',
       df_bdx: 'number',
       df_bdm: 'number',
+      ls: 'number',
       df_btdx: 'number',
       df_btdm: 'number',
       df_tdx: 'number',
