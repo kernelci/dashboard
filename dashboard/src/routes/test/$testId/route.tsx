@@ -11,7 +11,7 @@ import {
   DEFAULT_ORIGIN,
   type SearchSchema,
 } from '@/types/general';
-import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
+import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
 
 const defaultValues = {
   origin: DEFAULT_ORIGIN,

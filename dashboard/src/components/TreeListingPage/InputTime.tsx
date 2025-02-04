@@ -12,10 +12,11 @@ import { Controller, useForm } from 'react-hook-form';
 import type { ChangeEvent } from 'react';
 import { useCallback } from 'react';
 
-import { DEFAULT_TIME_SEARCH } from '@/pages/treeConstants';
 import { toast } from '@/hooks/useToast';
 
-import DebounceInput from '../DebounceInput/DebounceInput';
+import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
+
+import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
 export function InputTime(): JSX.Element {
   const { formatMessage } = useIntl();
