@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { MdArrowBackIos, MdArrowForwardIos } from 'react-icons/md';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import type {
   AccordionItemBuilds,
@@ -37,11 +37,13 @@ interface IPaginationInfo {
     | Table<PreparedTrees>
     | Table<Trees>;
   intlLabel: MessagesKey;
+  onPaginationChange?: (pageSize: number) => void;
 }
 
 export function PaginationInfo({
   table,
   intlLabel,
+  onPaginationChange,
 }: IPaginationInfo): JSX.Element {
   const buttonsClassName = 'text-blue font-bold';
 
@@ -57,6 +59,15 @@ export function PaginationInfo({
   const startIndex = countData > 0 ? pageIndex * pageSize + 1 : 0;
   const endIndex = Math.min((pageIndex + 1) * pageSize, countData);
 
+  const onValueChange = useCallback(
+    (value: number) => {
+      if (onPaginationChange) onPaginationChange(value);
+
+      table.setPageSize(value);
+    },
+    [onPaginationChange, table],
+  );
+
   return (
     <div className="flex flex-row justify-end gap-4 text-sm">
       <div className="flex flex-row items-center gap-2">
@@ -70,7 +81,7 @@ export function PaginationInfo({
       </div>
       <ItemsPerPageSelector
         selected={table.getState().pagination.pageSize}
-        onValueChange={table.setPageSize}
+        onValueChange={onValueChange}
         values={ItemsPerPageValues}
       />
       <div className="flex flex-row items-center gap-2">
