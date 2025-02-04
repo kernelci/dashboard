@@ -56,6 +56,44 @@ export interface ITestsTable {
   currentPathFilter?: string;
 }
 
+type TPathTestsStatus = Pick<
+  TPathTests,
+  | 'done_tests'
+  | 'error_tests'
+  | 'fail_tests'
+  | 'miss_tests'
+  | 'pass_tests'
+  | 'skip_tests'
+  | 'null_tests'
+  | 'total_tests'
+>;
+
+const countStatus = (group: TPathTestsStatus, status?: string): void => {
+  group.total_tests++;
+  switch (status?.toUpperCase()) {
+    case StatusTable.DONE:
+      group.done_tests++;
+      break;
+    case StatusTable.ERROR:
+      group.error_tests++;
+      break;
+    case StatusTable.FAIL:
+      group.fail_tests++;
+      break;
+    case StatusTable.MISS:
+      group.miss_tests++;
+      break;
+    case StatusTable.PASS:
+      group.pass_tests++;
+      break;
+    case StatusTable.SKIP:
+      group.skip_tests++;
+      break;
+    default:
+      group.null_tests++;
+  }
+};
+
 // TODO: would be useful if the navigation happened within the table, so the parent component would only be required to pass the navigation url instead of the whole function for the update and the currentPath diffFilter (boots/tests Table)
 export function TestsTable({
   tableKey,
@@ -70,6 +108,7 @@ export function TestsTable({
 }: ITestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
+  const [globalFilter, setGlobalFilter] = useState<string | undefined>();
   const { pagination, paginationUpdater } = usePaginationState(tableKey);
 
   const intl = useIntl();
@@ -97,7 +136,6 @@ export function TestsTable({
             individual_tests: [],
           };
         }
-        groups[group].total_tests++;
         groups[group].individual_tests.push({
           id: e.id,
           duration: e.duration?.toString() ?? '',
@@ -107,39 +145,69 @@ export function TestsTable({
           hardware: buildHardwareArray(e.environment_compatible, e.misc),
           treeBranch: buildTreeBranch(e.tree_name, e.git_repository_branch),
         });
-        switch (e.status) {
-          case 'DONE':
-            groups[group].done_tests++;
-            break;
-          case 'ERROR':
-            groups[group].error_tests++;
-            break;
-          case 'FAIL':
-            groups[group].fail_tests++;
-            break;
-          case 'MISS':
-            groups[group].miss_tests++;
-            break;
-          case 'PASS':
-            groups[group].pass_tests++;
-            break;
-          case 'SKIP':
-            groups[group].skip_tests++;
-            break;
-          default:
-            groups[group].null_tests++;
-        }
       });
     }
     return Object.values(groups);
   }, [testHistory]);
 
+  const [globalStatusGroup, pathFilteredData] = useMemo((): [
+    TPathTestsStatus,
+    TPathTests[],
+  ] => {
+    const path = globalFilter;
+    const isValidPath = path !== undefined && path !== '';
+    const globalGroup: TPathTestsStatus = {
+      done_tests: 0,
+      fail_tests: 0,
+      miss_tests: 0,
+      pass_tests: 0,
+      null_tests: 0,
+      skip_tests: 0,
+      error_tests: 0,
+      total_tests: 0,
+    };
+
+    const filteredData = rawData.reduce<TPathTests[]>((acc, test) => {
+      const localGroup: TPathTestsStatus = {
+        done_tests: 0,
+        fail_tests: 0,
+        miss_tests: 0,
+        pass_tests: 0,
+        null_tests: 0,
+        skip_tests: 0,
+        error_tests: 0,
+        total_tests: 0,
+      };
+      const individualTest = test.individual_tests.filter(t => {
+        let dataIncludesPath = true;
+        if (isValidPath) dataIncludesPath = t.path.includes(path);
+        if (dataIncludesPath) {
+          countStatus(localGroup, t.status);
+          countStatus(globalGroup, t.status);
+        }
+        return dataIncludesPath;
+      });
+
+      if (individualTest.length > 0) {
+        acc.push({
+          path_group: test.path_group,
+          individual_tests: individualTest,
+          ...localGroup,
+        });
+      }
+
+      return acc;
+    }, []);
+
+    return [globalGroup, filteredData];
+  }, [globalFilter, rawData]);
+
   const data = useMemo((): TPathTests[] => {
     switch (filter) {
       case 'all':
-        return rawData;
+        return pathFilteredData;
       case 'success':
-        return rawData
+        return pathFilteredData
           ?.filter(tests => tests.pass_tests > 0)
           .map(test => ({
             ...test,
@@ -148,18 +216,16 @@ export function TestsTable({
             ),
           }));
       case 'failed':
-        return rawData
+        return pathFilteredData
           ?.filter(tests => tests.fail_tests > 0)
           .map(test => ({
             ...test,
-            individual_tests: test.individual_tests.filter(t => {
-              const result = t.status?.toUpperCase() === StatusTable.FAIL;
-
-              return result;
-            }),
+            individual_tests: test.individual_tests.filter(
+              t => t.status?.toUpperCase() === StatusTable.FAIL,
+            ),
           }));
       case 'inconclusive':
-        return rawData
+        return pathFilteredData
           ?.filter(
             tests =>
               tests.done_tests > 0 ||
@@ -179,7 +245,7 @@ export function TestsTable({
             }),
           }));
     }
-  }, [filter, rawData]);
+  }, [filter, pathFilteredData]);
 
   const table = useReactTable({
     data,
@@ -193,6 +259,7 @@ export function TestsTable({
     getRowCanExpand: _ => true,
     getExpandedRowModel: getExpandedRowModel(),
     onExpandedChange: setExpanded,
+    onGlobalFilterChange: setGlobalFilter,
     getRowId: row => row.path_group,
     state: {
       sorting,
@@ -201,31 +268,19 @@ export function TestsTable({
     },
   });
 
-  const { globalFilter } = table.getState();
-
   const filterCount: Record<(typeof possibleTestsTableFilter)[number], number> =
-    useMemo(() => {
-      const count = {
-        all: 0,
-        success: 0,
-        failed: 0,
-        inconclusive: 0,
-      };
-
-      const filteredData = globalFilter
-        ? rawData.filter(row => row.path_group.includes(globalFilter))
-        : rawData;
-
-      filteredData.forEach(tests => {
-        count.all += tests.total_tests;
-        count.success += tests.pass_tests;
-        count.failed += tests.fail_tests;
-        count.inconclusive +=
-          tests.total_tests - tests.pass_tests - tests.fail_tests;
-      });
-
-      return count;
-    }, [rawData, globalFilter]);
+    useMemo(
+      () => ({
+        all: globalStatusGroup.total_tests,
+        success: globalStatusGroup.pass_tests,
+        failed: globalStatusGroup.fail_tests,
+        inconclusive:
+          globalStatusGroup.total_tests -
+          globalStatusGroup.pass_tests -
+          globalStatusGroup.fail_tests,
+      }),
+      [globalStatusGroup],
+    );
 
   const filters = useMemo(
     () => [
@@ -271,10 +326,10 @@ export function TestsTable({
         updatePathFilter(e.target.value);
       }
       if (updatePathFilter === undefined) {
-        table.setGlobalFilter(String(e.target.value));
+        setGlobalFilter(String(e.target.value));
       }
     },
-    [table, updatePathFilter],
+    [setGlobalFilter, updatePathFilter],
   );
 
   const groupHeaders = table.getHeaderGroups()[0]?.headers;
