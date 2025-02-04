@@ -17,11 +17,15 @@ from kernelCI_app.helpers.hardwareDetails import (
     get_filter_options,
     get_hardware_details_data,
     get_hardware_trees_data,
+    get_processed_issue_key,
     get_trees_with_selected_commit,
     get_validated_current_tree,
     handle_build_summary,
     handle_test_summary,
     handle_tree_status_summary,
+    is_issue_processed,
+    is_test_processed,
+    process_issue,
     set_trees_status_summary,
     format_issue_summary_for_response,
     unstable_parse_post_body,
@@ -66,9 +70,15 @@ class HardwareDetailsSummary(APIView):
         self.processed_builds = set()
         self.processed_tests = set()
 
+        self.processed_issues: Dict[str, Set[str]] = {
+            "build": set(),
+            "boot": set(),
+            "test": set(),
+        }
+
         self.processed_compatibles: Set[str] = set()
 
-        self.processed_issues = {
+        self.issue_dicts = {
             "build": {
                 "issues": {},
                 "failedWithUnknownIssues": 0,
@@ -112,6 +122,12 @@ class HardwareDetailsSummary(APIView):
         test_type_key: PossibleTestType = "boot" if is_record_boot else "test"
         task = self.boots_summary if is_record_boot else self.tests_summary
 
+        is_test_processed_result = is_test_processed(
+            record=record, processed_tests=self.processed_tests
+        )
+        is_issue_processed_result = is_issue_processed(
+            record=record, processed_issues=self.processed_issues[test_type_key]
+        )
         should_process_test = decide_if_is_test_in_filter(
             instance=self,
             test_type=test_type_key,
@@ -119,14 +135,23 @@ class HardwareDetailsSummary(APIView):
             processed_tests=self.processed_tests,
         )
 
-        self.processed_tests.add(record["id"])
-        if should_process_test:
+        if should_process_test and not is_issue_processed_result and is_test_processed_result:
+            process_issue(
+                record=record,
+                task_issues_dict=self.issue_dicts[test_type_key],
+                issue_from="test",
+            )
+            processed_issue_key = get_processed_issue_key(record=record)
+            self.processed_issues[test_type_key].add(processed_issue_key)
+
+        if should_process_test and not is_test_processed_result:
             handle_test_summary(
                 record=record,
                 task=task,
-                processed_issues=self.processed_issues.get(test_type_key),
+                issue_dict=self.issue_dicts.get(test_type_key),
                 processed_archs=self.processed_architectures[test_type_key],
             )
+            self.processed_tests.add(record["id"])
 
     def _process_build(self, record: Dict, tree_index: int) -> None:
         build = get_build(record, tree_index)
@@ -144,7 +169,7 @@ class HardwareDetailsSummary(APIView):
             handle_build_summary(
                 record=record,
                 builds_summary=self.builds_summary,
-                processed_issues=self.processed_issues["build"],
+                issue_dict=self.issue_dicts["build"],
                 tree_index=tree_index,
             )
 
@@ -200,7 +225,7 @@ class HardwareDetailsSummary(APIView):
             builds_summary=self.builds_summary,
             boots_summary=self.boots_summary,
             tests_summary=self.tests_summary,
-            processed_issues=self.processed_issues,
+            issue_dicts=self.issue_dicts,
         )
 
     # Using post to receive a body request
@@ -221,10 +246,11 @@ class HardwareDetailsSummary(APIView):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
             return Response(
                 data={
-                    "error": "startTimeStamp and endTimeStamp must be a Unix Timestamp"
+                    "error": "startTimeStamp and endTimeStamp must be a Unix Timestamp",
+                    "exception": str(e),
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
@@ -291,7 +317,7 @@ class HardwareDetailsSummary(APIView):
                     ),
                     tests=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_test_issues),
-                        platforms=list(self.unfiltered_test_platforms)
+                        platforms=list(self.unfiltered_test_platforms),
                     ),
                 ),
                 common=HardwareCommon(

@@ -539,7 +539,7 @@ def handle_test_summary(
     *,
     record: Dict,
     task: TestSummary,
-    processed_issues: Dict,
+    issue_dict: Dict,
     processed_archs: Dict[str, TestArchSummaryItem],
 ) -> None:
     status = record["status"]
@@ -581,10 +581,12 @@ def handle_test_summary(
         processed_archs[arch_key] = arch_summary
     setattr(arch_summary.status, status, getattr(arch_summary.status, status) + 1)
 
-    process_issue(record=record, task_issues_dict=processed_issues, issue_from="test")
+    process_issue(record=record, task_issues_dict=issue_dict, issue_from="test")
 
 
-def handle_build_history(*, record: Dict, tree_idx: int, builds: List[HardwareBuildHistoryItem]) -> None:
+def handle_build_history(
+    *, record: Dict, tree_idx: int, builds: List[HardwareBuildHistoryItem]
+) -> None:
     build = get_build_typed(record=record, tree_idx=tree_idx)
     builds.append(build)
 
@@ -593,7 +595,7 @@ def handle_build_summary(
     *,
     record: Dict,
     builds_summary: BuildSummary,
-    processed_issues: Dict,
+    issue_dict: Dict,
     tree_index: int,
 ) -> None:
     build: HardwareBuildHistoryItem = get_build_typed(record, tree_idx=tree_index)
@@ -635,7 +637,7 @@ def handle_build_summary(
         ):
             builds_summary.architectures[arch].compilers.append(compiler)
 
-    process_issue(record=record, task_issues_dict=processed_issues, issue_from="build")
+    process_issue(record=record, task_issues_dict=issue_dict, issue_from="build")
 
 
 # deprecated, use handle_build_history and handle_build_summary separately instead, with typing
@@ -757,13 +759,35 @@ def decide_if_is_build_in_filter(
     return is_build_not_processed and not is_build_filtered_out_result
 
 
+def get_processed_issue_key(*, record: Dict) -> str:
+    issue_id = record["incidents__issue__id"]
+    issue_id_key = issue_id if issue_id is not None else UNKNOWN_STRING
+
+    issue_version = record["incidents__issue__version"]
+    issue_version_key = str(issue_version) if issue_version is not None else ""
+
+    processed_issue_key = (
+        record["id"]
+        + issue_id_key
+        + issue_version_key
+    )
+    return processed_issue_key
+
+
+def is_issue_processed(*, record: Dict, processed_issues: Set[str]) -> bool:
+    processed_issue_key = get_processed_issue_key(record=record)
+    is_issue_processed_result = processed_issue_key in processed_issues
+    return is_issue_processed_result
+
+
+def is_test_processed(*, record: Dict, processed_tests: Set[str]) -> bool:
+    is_test_processed_result = record["id"] in processed_tests
+    return is_test_processed_result
+
+
 def decide_if_is_test_in_filter(
     *, instance, test_type: PossibleTestType, record: Dict, processed_tests: Set[str]
 ) -> bool:
-    is_test_processed = record["id"] in processed_tests
-    if is_test_processed:
-        return False
-
     test_filter_pass = True
 
     status = record["status"]
@@ -911,17 +935,17 @@ def format_issue_summary_for_response(
     builds_summary: BuildSummary,
     boots_summary: TestSummary,
     tests_summary: TestSummary,
-    processed_issues: Dict,
+    issue_dicts: Dict,
 ) -> None:
     builds_summary.issues = convert_issues_dict_to_list_typed(
-        issues_dict=processed_issues["build"]["issues"]
+        issues_dict_list=issue_dicts["build"]["issues"]
     )
     boots_summary.issues = convert_issues_dict_to_list_typed(
-        issues_dict=processed_issues["boot"]["issues"]
+        issues_dict_list=issue_dicts["boot"]["issues"]
     )
     tests_summary.issues = convert_issues_dict_to_list_typed(
-        issues_dict=processed_issues["test"]["issues"]
+        issues_dict_list=issue_dicts["test"]["issues"]
     )
-    builds_summary.unknown_issues = processed_issues["build"]["failedWithUnknownIssues"]
-    boots_summary.unknown_issues = processed_issues["boot"]["failedWithUnknownIssues"]
-    tests_summary.unknown_issues = processed_issues["test"]["failedWithUnknownIssues"]
+    builds_summary.unknown_issues = issue_dicts["build"]["failedWithUnknownIssues"]
+    boots_summary.unknown_issues = issue_dicts["boot"]["failedWithUnknownIssues"]
+    tests_summary.unknown_issues = issue_dicts["test"]["failedWithUnknownIssues"]
