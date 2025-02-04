@@ -1,5 +1,7 @@
 import { z, type ZodTypeAny } from 'zod';
 
+import { DEFAULT_LISTING_ITEMS } from '@/utils/constants/general';
+
 import type { Status } from './database';
 import type { TTreeDetailsFilter } from './tree/TreeDetails';
 import type { THardwareDetailsFilter } from './hardware/hardwareDetails';
@@ -132,6 +134,10 @@ export type ArchCompilerStatus = {
   compiler: string;
   status: StatusCounts;
 };
+
+export const zListingSize = z
+  .optional(z.number().min(1).catch(DEFAULT_LISTING_ITEMS))
+  .default(DEFAULT_LISTING_ITEMS);
 
 const zIntervalInDaysUncatched = z.number().min(1);
 
