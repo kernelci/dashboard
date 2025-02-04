@@ -357,17 +357,18 @@ function HardwareDetails(): JSX.Element {
                 updateTreeFilters={updateTreeFilters}
                 setTreeIndexesLength={setTreeIndexesLength}
               />
-              {summaryResponse.data && (
-                <div className="mt-5">
-                  <MemoizedCompatibleHardware
-                    title={
-                      <FormattedMessage id="hardwareDetails.compatibles" />
-                    }
-                    compatibles={summaryResponse.data.common.compatibles}
-                    diffFilter={diffFilter}
-                  />
-                </div>
-              )}
+              {summaryResponse.data &&
+                summaryResponse.data.common.compatibles.length > 0 && (
+                  <div className="mt-5">
+                    <MemoizedCompatibleHardware
+                      title={
+                        <FormattedMessage id="hardwareDetails.compatibles" />
+                      }
+                      compatibles={summaryResponse.data.common.compatibles}
+                      diffFilter={diffFilter}
+                    />
+                  </div>
+                )}
             </>
           )}
           <div className="flex flex-col pb-2">
