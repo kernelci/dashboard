@@ -236,6 +236,7 @@ export type SearchParamsKeys =
   | 'tableFilter'
   | 'diffFilter'
   | 'treeSearch'
+  | 'listingSize'
   | 'hardwareSearch'
   | 'treeInfo'
   | 'treeIndexes'
