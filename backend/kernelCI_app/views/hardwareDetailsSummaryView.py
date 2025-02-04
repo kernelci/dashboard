@@ -254,22 +254,22 @@ class HardwareDetailsSummary(APIView):
 
         is_all_selected = len(self.selected_commits) == 0
 
-        self._sanitize_records(records, trees_with_selected_commits, is_all_selected)
-
-        self._format_processing_for_response(hardware_id=hardware_id)
-
-        get_filter_options(
-            instance=self,
-            records=records,
-            selected_trees=trees_with_selected_commits,
-            is_all_selected=is_all_selected,
-        )
-
-        set_trees_status_summary(
-            trees=trees, tree_status_summary=self.tree_status_summary
-        )
-
         try:
+            self._sanitize_records(records, trees_with_selected_commits, is_all_selected)
+
+            self._format_processing_for_response(hardware_id=hardware_id)
+
+            get_filter_options(
+                instance=self,
+                records=records,
+                selected_trees=trees_with_selected_commits,
+                is_all_selected=is_all_selected,
+            )
+
+            set_trees_status_summary(
+                trees=trees, tree_status_summary=self.tree_status_summary
+            )
+
             valid_response = HardwareDetailsSummaryResponse(
                 summary=Summary(
                     builds=self.builds_summary,
@@ -300,6 +300,6 @@ class HardwareDetailsSummary(APIView):
                 ),
             )
         except ValidationError as e:
-            return Response(data=e.errors(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)

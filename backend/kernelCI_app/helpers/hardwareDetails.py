@@ -43,6 +43,7 @@ from kernelCI_app.utils import (
     extract_error_message,
     is_boot,
 )
+from django.db import models
 from pydantic import ValidationError
 from django.db.models import Subquery
 from kernelCI_app.typeModels.hardwareDetails import (
@@ -102,7 +103,8 @@ def get_hardware_trees_data(
 
         trees_query_set = (
             Tests.objects.filter(
-                environment_compatible__contains=[hardware_id],
+                models.Q(environment_compatible__contains=[hardware_id])
+                | models.Q(environment_misc__platform=hardware_id),
                 origin=origin,
                 build__checkout__start_time__lte=end_datetime,
                 build__checkout__start_time__gte=start_datetime,
@@ -268,10 +270,11 @@ def query_records(
         "build__incidents__issue__id",
         "build__incidents__issue__version",
     ).filter(
+        models.Q(environment_compatible__contains=[hardware_id])
+        | models.Q(environment_misc__platform=hardware_id),
         start_time__gte=start_date,
         start_time__lte=end_date,
         build__checkout__origin=origin,
-        environment_compatible__contains=[hardware_id],
         # TODO Treat commit_hash collision (it can happen between repos)
         build__checkout__git_commit_hash__in=commit_hashes,
     )

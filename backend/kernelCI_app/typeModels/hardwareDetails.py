@@ -10,6 +10,7 @@ from kernelCI_app.typeModels.commonDetails import (
 )
 
 from kernelCI_app.typeModels.databases import (
+    Issue__Id,
     StatusValues,
     Checkout__TreeName,
     Checkout__GitRepositoryBranch,
@@ -94,8 +95,8 @@ class HardwareTestHistoryItem(TestHistoryItem):
 
 
 class HardwareBuildHistoryItem(BuildHistoryItem):
-    tree_name: Optional[str]
-    issue_id: Optional[str]
+    tree_name: Optional[Checkout__TreeName]
+    issue_id: Optional[Issue__Id]
     issue_version: Optional[Issue__Version]
 
 
