@@ -64,10 +64,6 @@ export const IssueDetails = ({
     versionNumber,
   );
 
-  const hasTest = data && data.test_status !== null;
-  const hasBuild = data && data.build_valid !== null;
-  const hasNothingIdentified = !hasTest && !hasBuild;
-
   const { formatMessage } = useIntl();
 
   const [jsonContent, setJsonContent] = useState<IJsonContent>();
@@ -140,14 +136,6 @@ export const IssueDetails = ({
                 linkText: valueOrEmpty(data.culprit_harness?.toString()),
               },
               {
-                title: 'issueDetails.buildValid',
-                linkText: valueOrEmpty(data.build_valid?.toString()),
-              },
-              {
-                title: 'globalTable.test',
-                linkText: valueOrEmpty(data.test_status),
-              },
-              {
                 title: 'issueDetails.comment',
                 linkText: shouldTruncate(valueOrEmpty(data.comment)) ? (
                   <TruncatedValueTooltip value={data.comment} />
@@ -184,24 +172,22 @@ export const IssueDetails = ({
         <Sheet>
           {breadcrumb}
           <SectionGroup sections={sectionsData} />
-          {(hasTest || hasNothingIdentified) && (
-            <IssueDetailsTestSection
-              issueId={issueId}
-              versionNumber={versionNumber}
-              testTableFilter={tableFilter.testsTable}
-              getTableRowLink={getTestTableRowLink}
-              onClickFilter={onClickTestFilter}
-            />
-          )}
-          {(hasBuild || hasNothingIdentified) && (
-            <IssueDetailsBuildSection
-              issueId={issueId}
-              versionNumber={versionNumber}
-              buildTableFilter={tableFilter.buildsTable}
-              getTableRowLink={getBuildTableRowLink}
-              onClickFilter={onClickBuildFilter}
-            />
-          )}
+
+          <IssueDetailsTestSection
+            issueId={issueId}
+            versionNumber={versionNumber}
+            testTableFilter={tableFilter.testsTable}
+            getTableRowLink={getTestTableRowLink}
+            onClickFilter={onClickTestFilter}
+          />
+
+          <IssueDetailsBuildSection
+            issueId={issueId}
+            versionNumber={versionNumber}
+            buildTableFilter={tableFilter.buildsTable}
+            getTableRowLink={getBuildTableRowLink}
+            onClickFilter={onClickBuildFilter}
+          />
           <LogOrJsonSheetContent type="json" jsonContent={jsonContent} />
         </Sheet>
       </ErrorBoundary>
