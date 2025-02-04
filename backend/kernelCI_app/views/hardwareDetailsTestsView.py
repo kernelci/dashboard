@@ -13,6 +13,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     get_trees_with_selected_commit,
     get_validated_current_tree,
     handle_test_history,
+    is_test_processed,
     unstable_parse_post_body,
 )
 from kernelCI_app.typeModels.hardwareDetails import (
@@ -50,6 +51,10 @@ class HardwareDetailsTests(APIView):
         if is_record_boot:
             return
 
+        is_test_processed_result = is_test_processed(record=record, processed_tests=self.processed_tests)
+        if (is_test_processed_result):
+            return
+
         should_process_test = decide_if_is_test_in_filter(
             instance=self,
             test_type="test",
@@ -57,12 +62,12 @@ class HardwareDetailsTests(APIView):
             processed_tests=self.processed_tests,
         )
 
-        self.processed_tests.add(record["id"])
         if should_process_test:
             handle_test_history(
                 record=record,
                 task=self.tests,
             )
+            self.processed_tests.add(record["id"])
 
     def _sanitize_records(
         self, records: List[Dict], trees: List[Tree], is_all_selected: bool

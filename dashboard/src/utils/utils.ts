@@ -235,7 +235,7 @@ export const getIssueFilterLabel = (issueFilter: TIssueFilter): string => {
   const issueId = issueFilter.id;
   const issueVersion = issueFilter.version;
 
-  if (!issueVersion) {
+  if (issueVersion === undefined || issueVersion === null) {
     return issueId;
   }
 

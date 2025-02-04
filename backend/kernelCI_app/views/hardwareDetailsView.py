@@ -17,11 +17,15 @@ from kernelCI_app.helpers.hardwareDetails import (
     get_filter_options,
     get_hardware_details_data,
     get_hardware_trees_data,
+    get_processed_issue_key,
     get_trees_with_selected_commit,
     get_validated_current_tree,
     handle_build,
     handle_tree_status_summary,
+    is_issue_processed,
+    is_test_processed,
     mutate_properties_to_list,
+    process_issue,
     set_trees_status_summary,
     unstable_parse_post_body,
     handle_test_history,
@@ -70,6 +74,12 @@ class HardwareDetails(APIView):
         self.processed_builds = set()
         self.processed_tests = set()
 
+        self.processed_issues: Dict[str, Set[str]] = {
+            "build": set(),
+            "boot": set(),
+            "test": set(),
+        }
+
         self.processed_compatibles: Set[str] = set()
 
         self.builds = {
@@ -95,16 +105,32 @@ class HardwareDetails(APIView):
 
     def _process_test(self, record: Dict) -> None:
         is_record_boot = is_boot(record["path"])
-        test_filter_key: PossibleTestType = "boot" if is_record_boot else "test"
+        test_type_key: PossibleTestType = "boot" if is_record_boot else "test"
+        task = self.boots if is_record_boot else self.tests
 
+        is_test_processed_result = is_test_processed(
+            record=record, processed_tests=self.processed_tests
+        )
+        is_issue_processed_result = is_issue_processed(
+            record=record, processed_issues=self.processed_issues[test_type_key]
+        )
         should_process_test = decide_if_is_test_in_filter(
             instance=self,
-            test_type=test_filter_key,
+            test_type=test_type_key,
             record=record,
             processed_tests=self.processed_tests,
         )
 
-        if should_process_test:
+        if should_process_test and not is_issue_processed_result and is_test_processed_result:
+            process_issue(
+                record=record,
+                task_issues_dict=task,
+                issue_from="test",
+            )
+            processed_issue_key = get_processed_issue_key(record=record)
+            self.processed_issues[test_type_key].add(processed_issue_key)
+
+        if should_process_test and not is_test_processed_result:
             self.processed_tests.add(record["id"])
             test_or_boot_history = self.boots["history"] if is_record_boot else self.tests["history"]
             handle_test_history(

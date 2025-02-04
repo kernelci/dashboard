@@ -34,9 +34,9 @@ def convert_issues_dict_to_list(issues_dict: Dict[str, Issue]) -> List[Issue]:
     return list(issues_dict.values())
 
 
-def convert_issues_dict_to_list_typed(*, issues_dict: Dict) -> List[Issue]:
+def convert_issues_dict_to_list_typed(*, issues_dict_list: Dict) -> List[Issue]:
     issues: List[Issue] = []
-    for issue in issues_dict.values():
+    for issue in issues_dict_list.values():
         issues.append(
             Issue(
                 id=issue["id"],
