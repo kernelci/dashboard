@@ -12,8 +12,6 @@ class Issues(models.Model):
     culprit_code = models.BooleanField(blank=True, null=True)
     culprit_tool = models.BooleanField(blank=True, null=True)
     culprit_harness = models.BooleanField(blank=True, null=True)
-    build_valid = models.BooleanField(blank=True, null=True)
-    test_status = models.TextField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
 

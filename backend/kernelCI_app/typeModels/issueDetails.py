@@ -17,8 +17,6 @@ from kernelCI_app.typeModels.databases import (
     Issue__CulpritCode,
     Issue__CulpritTool,
     Issue__CulpritHarness,
-    Issue__BuildValid,
-    Issue__TestStatus,
     Issue__Comment,
     Issue__Misc,
     Origin,
@@ -86,8 +84,6 @@ class IssueDetailsResponse(BaseModel):
     culprit_code: Issue__CulpritCode
     culprit_tool: Issue__CulpritTool
     culprit_harness: Issue__CulpritHarness
-    build_valid: Issue__BuildValid
-    test_status: Issue__TestStatus
     comment: Issue__Comment
     misc: Issue__Misc
 

@@ -16,7 +16,6 @@ http 'http://localhost:8000/api/issue/redhat:issue_2928'
 # X-Frame-Options: DENY
 
 # {
-#     "build_valid": null,
 #     "comment": "rt_ltp: pthread_kill_latency increase threshold based on hardware",
 #     "culprit_code": false,
 #     "culprit_harness": false,
@@ -27,7 +26,6 @@ http 'http://localhost:8000/api/issue/redhat:issue_2928'
 #     "origin": "redhat",
 #     "report_subject": null,
 #     "report_url": "https://gitlab.com/redhat/centos-stream/tests/kernel/kernel-tests/-/issues/2024",
-#     "test_status": null,
 #     "version": 1727250638
 # }
 
