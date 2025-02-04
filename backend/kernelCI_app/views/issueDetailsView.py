@@ -26,8 +26,6 @@ class IssueDetails(APIView):
             "culprit_code",
             "culprit_tool",
             "culprit_harness",
-            "build_valid",
-            "test_status",
             "comment",
             "misc",
         ]
