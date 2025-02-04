@@ -14,11 +14,11 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import type { LinkProps } from '@tanstack/react-router';
+import { useNavigate, useSearch, type LinkProps } from '@tanstack/react-router';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
@@ -302,10 +302,15 @@ export function HardwareTable({
   startTimestampInSeconds,
   endTimestampInSeconds,
 }: ITreeTable): JSX.Element {
+  const { listingSize } = useSearch({ strict: false });
+  const navigate = useNavigate({ from: '/hardware' });
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const { pagination, paginationUpdater } =
-    usePaginationState('hardwareListing');
+  const { pagination, paginationUpdater } = usePaginationState(
+    'hardwareListing',
+    listingSize,
+  );
 
   const data = useMemo(() => {
     return treeTableRows;
@@ -394,6 +399,16 @@ export function HardwareTable({
 
   const MemoizedInputTime = memo(InputTime);
 
+  const navigateWithPageSize = useCallback(
+    (pageSize: number) => {
+      navigate({
+        search: prev => ({ ...prev, listingSize: pageSize }),
+        state: s => s,
+      });
+    },
+    [navigate],
+  );
+
   return (
     <div className="flex flex-col gap-6 pb-4">
       <div className="flex items-center justify-between gap-4">
@@ -405,13 +420,21 @@ export function HardwareTable({
         </span>
         <div className="flex items-center justify-between gap-10">
           <MemoizedInputTime />
-          <PaginationInfo table={table} intlLabel="global.hardwares" />
+          <PaginationInfo
+            table={table}
+            intlLabel="global.hardwares"
+            onPaginationChange={navigateWithPageSize}
+          />
         </div>
       </div>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
       </BaseTable>
-      <PaginationInfo table={table} intlLabel="global.hardwares" />
+      <PaginationInfo
+        table={table}
+        intlLabel="global.hardwares"
+        onPaginationChange={navigateWithPageSize}
+      />
     </div>
   );
 }

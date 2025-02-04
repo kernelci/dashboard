@@ -13,12 +13,12 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
-import { Link, useSearch } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
@@ -322,11 +322,16 @@ interface ITreeTable {
 }
 
 export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
+  const { origin: unsafeOrigin, listingSize } = useSearch({ strict: false });
+  const navigate = useNavigate({ from: '/tree' });
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const { pagination, paginationUpdater } = usePaginationState('treeListing');
+  const { pagination, paginationUpdater } = usePaginationState(
+    'treeListing',
+    listingSize,
+  );
 
-  const { origin: unsafeOrigin } = useSearch({ strict: false });
   const origin = zOrigin.parse(unsafeOrigin);
 
   const columns = useMemo(() => getColumns(origin), [origin]);
@@ -422,6 +427,16 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
     );
   }, [modelRows, columns.length, origin]);
 
+  const navigateWithPageSize = useCallback(
+    (pageSize: number) => {
+      navigate({
+        search: prev => ({ ...prev, listingSize: pageSize }),
+        state: s => s,
+      });
+    },
+    [navigate],
+  );
+
   return (
     <div className="flex flex-col gap-6 pb-4">
       <div className="flex items-center justify-between gap-4">
@@ -433,13 +448,21 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
         </span>
         <div className="flex items-center justify-between gap-10">
           <MemoizedInputTime />
-          <PaginationInfo table={table} intlLabel="global.trees" />
+          <PaginationInfo
+            table={table}
+            intlLabel="global.trees"
+            onPaginationChange={navigateWithPageSize}
+          />
         </div>
       </div>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
       </BaseTable>
-      <PaginationInfo table={table} intlLabel="global.trees" />
+      <PaginationInfo
+        table={table}
+        intlLabel="global.trees"
+        onPaginationChange={navigateWithPageSize}
+      />
     </div>
   );
 }
