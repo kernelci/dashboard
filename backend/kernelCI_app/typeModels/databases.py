@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Literal, Any, Union
+from typing import List, Optional, Dict, Literal, Any, Union, Annotated
 from datetime import datetime
 
 from kernelCI_app.typeModels.commonDetails import EnvironmentMisc
@@ -16,7 +16,7 @@ type StatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "NULL", "DO
 
 type DatabaseStatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "DONE"]
 
-type Jsonb = Union[Dict[str, Any], List[Dict[str, Any]]]
+Jsonb = Annotated[Union[Dict[str, Any], List[Dict[str, Any]]], "Jsonb"]
 
 type Origin = str
 type Timestamp = datetime
@@ -27,6 +27,7 @@ type Checkout__GitCommitHash = Optional[str]
 type Checkout__GitCommitName = Optional[str]
 type Checkout__GitCommitTags = Optional[List[str]]
 type Checkout__GitRepositoryBranch = Optional[str]
+type Checkout__GitRepositoryUrl = Optional[str]
 
 type Build__Id = str
 type Build__Architecture = Optional[str]
@@ -49,6 +50,10 @@ type Test__Path = Optional[str]
 type Test__StartTime = Optional[datetime]
 type Test__EnvironmentCompatible = Optional[List[str]]
 type Test__EnvironmentMisc = Optional[EnvironmentMisc]
+type Test__LogExcerpt = Optional[str]
+type Test__LogUrl = Optional[str]
+type Test__Misc = Optional[Jsonb]
+type Test__OutputFiles = Optional[Jsonb]
 
 type Issue__Id = str
 type Issue__Version = int
