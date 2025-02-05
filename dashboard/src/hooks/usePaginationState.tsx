@@ -14,7 +14,9 @@ const DEFAULT_LISTING_SIZE = 10;
 
 const findClosestGreaterNumber = (sortedList: number[], x: number): number => {
   for (let i = 0; i < sortedList.length; i++) {
-    if (sortedList[i] >= x) return sortedList[i];
+    if (sortedList[i] >= x) {
+      return sortedList[i];
+    }
   }
 
   return sortedList.slice(-1)[0] ?? DEFAULT_LISTING_SIZE;

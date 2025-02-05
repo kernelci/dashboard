@@ -31,7 +31,9 @@ const StatusCard = ({
     return invalid + valid + nullables;
   }, [buildsSummary]);
 
-  if (!buildsSummary) return <></>;
+  if (!buildsSummary) {
+    return <></>;
+  }
 
   return (
     <BaseCard

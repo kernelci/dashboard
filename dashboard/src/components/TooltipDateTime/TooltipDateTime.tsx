@@ -23,7 +23,9 @@ const TooltipDateTime = ({
   showTooltip = true,
 }: TooltipDateTimeProps): JSX.Element => {
   const dateObj = new Date(dateTime);
-  if (!isValid(dateObj)) return <div>-</div>;
+  if (!isValid(dateObj)) {
+    return <div>-</div>;
+  }
 
   const date = dateFormat
     ? format(dateObj, dateFormat)

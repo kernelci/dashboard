@@ -66,8 +66,9 @@ export const createFilter = (
 
       let treeNameBranch = `${treeName}/${treeBranch}`;
 
-      if (treeName === 'Unknown' && treeBranch === 'Unknown')
+      if (treeName === 'Unknown' && treeBranch === 'Unknown') {
         treeNameBranch = 'Unknown';
+      }
 
       trees[`${treeNameBranch}__${treeIdx}`] = true;
       treeIndexes.push(treeIdx);
@@ -245,9 +246,11 @@ const HardwareDetailsFilter = ({
     (value: string) => {
       const idx = Number(value.split('__')[1] ?? NO_VALID_INDEX);
 
-      if (treeIndexes.includes(idx))
+      if (treeIndexes.includes(idx)) {
         setTreeIndexes(treeIndexes.filter(i => i !== idx));
-      else setTreeIndexes([...treeIndexes, idx]);
+      } else {
+        setTreeIndexes([...treeIndexes, idx]);
+      }
     },
     [treeIndexes],
   );

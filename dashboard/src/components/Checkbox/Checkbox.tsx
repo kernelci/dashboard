@@ -21,8 +21,11 @@ const Checkbox = ({
   isChecked = false,
 }: ICheckbox): JSX.Element => {
   let truncatedText = text;
-  if (isUrl(text)) truncatedText = truncateUrl(text);
-  else truncatedText = truncateBigText(text, maxCheckboxLength);
+  if (isUrl(text)) {
+    truncatedText = truncateUrl(text);
+  } else {
+    truncatedText = truncateBigText(text, maxCheckboxLength);
+  }
 
   return (
     <label

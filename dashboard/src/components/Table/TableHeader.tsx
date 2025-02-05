@@ -41,7 +41,7 @@ export const TableHeader = <T,>({
   tooltipId,
 }: ITableHeader<T>): JSX.Element => {
   const headerSort = useCallback(() => {
-    if (sortable)
+    if (sortable) {
       if (column.getIsSorted() === 'asc') {
         column.toggleSorting(true);
       } else if (column.getIsSorted() === 'desc') {
@@ -49,6 +49,7 @@ export const TableHeader = <T,>({
       } else {
         column.toggleSorting(false);
       }
+    }
   }, [column, sortable]);
 
   return (

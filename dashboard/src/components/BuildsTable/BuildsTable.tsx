@@ -105,11 +105,12 @@ export function BuildsTable({
 
     const count = possibleBuildsTableFilter.reduce(
       (acc, currentFilter) => {
-        if (dataFilter)
+        if (dataFilter) {
           acc[currentFilter] = dataFilter?.reduce(
             (total, row) => (row.status === currentFilter ? total + 1 : total),
             0,
           );
+        }
         return acc;
       },
       {} as Record<(typeof possibleBuildsTableFilter)[number], number>,
@@ -227,8 +228,9 @@ export function BuildsTable({
 
   const handlePreviousItem = useCallback(() => {
     setLog(previousLog => {
-      if (typeof previousLog === 'number' && previousLog > 0)
+      if (typeof previousLog === 'number' && previousLog > 0) {
         return previousLog - 1;
+      }
 
       return previousLog;
     });
@@ -239,8 +241,9 @@ export function BuildsTable({
       if (
         typeof previousLog === 'number' &&
         previousLog < sortedItems.length - 1
-      )
+      ) {
         return previousLog + 1;
+      }
 
       return previousLog;
     });

@@ -40,7 +40,9 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
   });
 
   const listItems: TreeTableBody[] = useMemo(() => {
-    if (!fastData || fastStatus === 'error') return [];
+    if (!fastData || fastStatus === 'error') {
+      return [];
+    }
 
     const hasCompleteData = !isLoading && !!data;
     const currentData = hasCompleteData ? data : fastData;
@@ -112,10 +114,14 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
         const treeNameComparison =
           currentATreeName.localeCompare(currentBTreeName);
 
-        if (treeNameComparison !== 0) return treeNameComparison;
+        if (treeNameComparison !== 0) {
+          return treeNameComparison;
+        }
 
         const branchComparison = a.branch.localeCompare(b.branch);
-        if (branchComparison !== 0) return branchComparison;
+        if (branchComparison !== 0) {
+          return branchComparison;
+        }
 
         return new Date(b.date).getTime() - new Date(a.date).getTime();
       });

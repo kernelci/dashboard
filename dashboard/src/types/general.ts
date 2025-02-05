@@ -338,7 +338,9 @@ export const getTargetFilter = (
   > = {};
 
   Object.entries(filter).forEach(([k, v]) => {
-    if (!targetFilter.includes(k)) return;
+    if (!targetFilter.includes(k)) {
+      return;
+    }
 
     const splitted = k.split('.');
     const field = splitted[splitted.length - 1];

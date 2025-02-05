@@ -54,10 +54,11 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
   );
 
   useEffect(() => {
-    if (unsafeOrigin === undefined)
+    if (unsafeOrigin === undefined) {
       navigate({
         search: previousSearch => ({ ...previousSearch, origin: origin }),
       });
+    }
   });
 
   return (

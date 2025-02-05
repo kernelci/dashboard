@@ -120,14 +120,17 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
     );
   }
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <Skeleton>
         <FormattedMessage id="global.loading" />
       </Skeleton>
     );
+  }
 
-  if (!data) return <div />;
+  if (!data) {
+    return <div />;
+  }
 
   if (bootsData?.length === 0) {
     return (

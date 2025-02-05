@@ -65,8 +65,9 @@ export const getLogspecSection = ({
         setSheetType: setSheetType,
         setJsonContent: setJsonContent,
       });
-      if (content !== undefined)
+      if (content !== undefined) {
         logspecSection.subsections?.[0].infos.push(content);
+      }
     }
   });
 

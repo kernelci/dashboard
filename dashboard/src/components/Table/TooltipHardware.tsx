@@ -26,7 +26,9 @@ const TooltipHardware = ({
 
   const hardwareTrigger = sanitizeTableValue(hardwares?.[0], false);
 
-  if (!shouldHaveTooltip) return <span>{hardwareTrigger}</span>;
+  if (!shouldHaveTooltip) {
+    return <span>{hardwareTrigger}</span>;
+  }
 
   return (
     <Tooltip>

@@ -16,7 +16,9 @@ const createFlatFilter = (filter: TFilter): string[] => {
   Object.entries(filter).forEach(([field, fieldValue]) => {
     if (typeof fieldValue === 'object') {
       Object.entries(fieldValue).forEach(([value, isSelected]) => {
-        if (isSelected) flatFilter.push(`${field}:${value}`);
+        if (isSelected) {
+          flatFilter.push(`${field}:${value}`);
+        }
       });
     } else {
       flatFilter.push(`${field}:${fieldValue}`);
