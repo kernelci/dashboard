@@ -442,6 +442,28 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/test/{test_id}:
+    get:
+      operationId: test_retrieve
+      parameters:
+      - in: path
+        name: test_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - test
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestDetailsResponse'
+          description: ''
   /api/tree/:
     get:
       operationId: tree_list
@@ -952,7 +974,10 @@ components:
       type: string
     Build__InputFiles:
       anyOf:
-      - $ref: '#/components/schemas/Jsonb'
+      - type: object
+      - items:
+          type: object
+        type: array
       - type: 'null'
     Build__LogExcerpt:
       anyOf:
@@ -964,7 +989,10 @@ components:
       - type: 'null'
     Build__OutputFiles:
       anyOf:
-      - $ref: '#/components/schemas/Jsonb'
+      - type: object
+      - items:
+          type: object
+        type: array
       - type: 'null'
     Build__StartTime:
       anyOf:
@@ -990,6 +1018,10 @@ components:
         type: array
       - type: 'null'
     Checkout__GitRepositoryBranch:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Checkout__GitRepositoryUrl:
       anyOf:
       - type: string
       - type: 'null'
@@ -1144,19 +1176,16 @@ components:
           title: Git Repository Branch
         tree_name:
           anyOf:
-          - type: string
+          - $ref: '#/components/schemas/Checkout__TreeName'
           - type: 'null'
-          title: Tree Name
         issue_id:
           anyOf:
-          - type: string
+          - $ref: '#/components/schemas/Issue__Id'
           - type: 'null'
-          title: Issue Id
         issue_version:
           anyOf:
-          - type: integer
+          - $ref: '#/components/schemas/Issue__Version'
           - type: 'null'
-          title: Issue Version
       required:
       - id
       - architecture
@@ -1522,10 +1551,6 @@ components:
           $ref: '#/components/schemas/Issue__CulpritTool'
         culprit_harness:
           $ref: '#/components/schemas/Issue__CulpritHarness'
-        build_valid:
-          $ref: '#/components/schemas/Issue__BuildValid'
-        test_status:
-          $ref: '#/components/schemas/Issue__TestStatus'
         comment:
           $ref: '#/components/schemas/Issue__Comment'
         misc:
@@ -1540,8 +1565,6 @@ components:
       - culprit_code
       - culprit_tool
       - culprit_harness
-      - build_valid
-      - test_status
       - comment
       - misc
       title: IssueDetailsResponse
@@ -1583,10 +1606,6 @@ components:
         $ref: '#/components/schemas/IssueTestItem'
       title: IssueTestsResponse
       type: array
-    Issue__BuildValid:
-      anyOf:
-      - type: boolean
-      - type: 'null'
     Issue__Comment:
       anyOf:
       - type: string
@@ -1607,7 +1626,10 @@ components:
       type: string
     Issue__Misc:
       anyOf:
-      - $ref: '#/components/schemas/Jsonb'
+      - type: object
+      - items:
+          type: object
+        type: array
       - type: 'null'
     Issue__ReportSubject:
       anyOf:
@@ -1617,18 +1639,8 @@ components:
       anyOf:
       - type: string
       - type: 'null'
-    Issue__TestStatus:
-      anyOf:
-      - type: string
-      - type: 'null'
     Issue__Version:
       type: integer
-    Jsonb:
-      anyOf:
-      - type: object
-      - items:
-          type: object
-        type: array
     LocalFilters:
       properties:
         issues:
@@ -1692,6 +1704,68 @@ components:
       - compiler
       - status
       title: TestArchSummaryItem
+      type: object
+    TestDetailsResponse:
+      properties:
+        id:
+          $ref: '#/components/schemas/Test__Id'
+        build_id:
+          $ref: '#/components/schemas/Build__Id'
+        status:
+          $ref: '#/components/schemas/Test__Status'
+        path:
+          $ref: '#/components/schemas/Test__Path'
+        log_excerpt:
+          $ref: '#/components/schemas/Test__LogExcerpt'
+        log_url:
+          $ref: '#/components/schemas/Test__LogUrl'
+        misc:
+          $ref: '#/components/schemas/Test__Misc'
+        environment_misc:
+          $ref: '#/components/schemas/Test__EnvironmentMisc'
+        start_time:
+          $ref: '#/components/schemas/Test__StartTime'
+        environment_compatible:
+          $ref: '#/components/schemas/Test__EnvironmentCompatible'
+        output_files:
+          $ref: '#/components/schemas/Test__OutputFiles'
+        compiler:
+          $ref: '#/components/schemas/Build__Compiler'
+        architecture:
+          $ref: '#/components/schemas/Build__Architecture'
+        config_name:
+          $ref: '#/components/schemas/Build__ConfigName'
+        git_commit_hash:
+          $ref: '#/components/schemas/Checkout__GitCommitHash'
+        git_repository_branch:
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        git_repository_url:
+          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+        git_commit_tags:
+          $ref: '#/components/schemas/Checkout__GitCommitTags'
+        tree_name:
+          $ref: '#/components/schemas/Checkout__TreeName'
+      required:
+      - id
+      - build_id
+      - status
+      - path
+      - log_excerpt
+      - log_url
+      - misc
+      - environment_misc
+      - start_time
+      - environment_compatible
+      - output_files
+      - compiler
+      - architecture
+      - config_name
+      - git_commit_hash
+      - git_repository_branch
+      - git_repository_url
+      - git_commit_tags
+      - tree_name
+      title: TestDetailsResponse
       type: object
     TestHistoryItem:
       properties:
@@ -1885,6 +1959,28 @@ components:
       - type: 'null'
     Test__Id:
       type: string
+    Test__LogExcerpt:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Test__LogUrl:
+      anyOf:
+      - type: string
+      - type: 'null'
+    Test__Misc:
+      anyOf:
+      - type: object
+      - items:
+          type: object
+        type: array
+      - type: 'null'
+    Test__OutputFiles:
+      anyOf:
+      - type: object
+      - items:
+          type: object
+        type: array
+      - type: 'null'
     Test__Path:
       anyOf:
       - type: string
