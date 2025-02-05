@@ -1,10 +1,12 @@
-from django.http import JsonResponse, HttpResponseBadRequest
-from kernelCI_app.utils import getErrorResponseBody
-from rest_framework.views import APIView
 from bs4 import BeautifulSoup, Tag
 import requests
 from http import HTTPStatus
-from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.typeModels.logDownloader import LogDownloaderResponse, LogDownloaderQueryParameters
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
 
 
 def scrape_log_data(url):
@@ -55,17 +57,27 @@ def scrape_log_data(url):
 
 
 class LogDownloaderView(APIView):
+    @extend_schema(
+        responses=LogDownloaderResponse,
+        parameters=[LogDownloaderQueryParameters],
+        methods=["GET"],
+    )
     def get(self, request):
         log_download_url = request.GET.get("log_download_url")
         parsed_data = scrape_log_data(log_download_url)
 
         error_message = parsed_data.get("error")
         if error_message:
-            return HttpResponseBadRequest(getErrorResponseBody(error_message))
+            return create_api_error_response(error_message=error_message)
 
         if not parsed_data['log_files']:
-            return create_error_response(
+            return create_api_error_response(
                 error_message="No log files found", status_code=HTTPStatus.OK
             )
 
-        return JsonResponse(parsed_data)
+        try:
+            valid_reponse = LogDownloaderResponse(**parsed_data)
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        return Response(valid_reponse.model_dump())
