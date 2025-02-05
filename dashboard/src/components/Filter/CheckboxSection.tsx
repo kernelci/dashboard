@@ -51,7 +51,9 @@ export interface ISectionItem {
 type SplitFilterString = `${string}__${string}`;
 
 const extractCheckboxValue = (value: SplitFilterString | undefined): string => {
-  if (!value) return '';
+  if (!value) {
+    return '';
+  }
 
   const valueSplit = value.split('__');
   return valueSplit[0];

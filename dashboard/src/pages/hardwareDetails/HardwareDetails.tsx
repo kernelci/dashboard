@@ -171,7 +171,9 @@ function HardwareDetails(): JSX.Element {
   const hardwareDataPreparedForInconsistencyValidation: HardwareStatusComparedState =
     useMemo(() => {
       const { data } = summaryResponse;
-      if (!data) return;
+      if (!data) {
+        return;
+      }
 
       const { boots, builds, tests } = data.summary;
 

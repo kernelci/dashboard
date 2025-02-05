@@ -43,7 +43,9 @@ export const useDiffFilterParams = (
     [currentDiffFilter],
   );
 
-  if (!currentDiffFilter) return {};
+  if (!currentDiffFilter) {
+    return {};
+  }
 
   // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
   newFilter[filterSection] = newFilter[filterSection] ?? {};

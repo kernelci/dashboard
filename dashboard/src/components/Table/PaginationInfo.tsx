@@ -61,7 +61,9 @@ export function PaginationInfo({
 
   const onValueChange = useCallback(
     (value: number) => {
-      if (onPaginationChange) onPaginationChange(value);
+      if (onPaginationChange) {
+        onPaginationChange(value);
+      }
 
       table.setPageSize(value);
     },

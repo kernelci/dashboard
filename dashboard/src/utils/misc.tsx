@@ -62,7 +62,7 @@ export const miscContentHandler = ({
       return true;
     });
 
-  if (showContent)
+  if (showContent) {
     return {
       unformattedTitle: fieldKey,
       link: isUrlResult ? stringField : undefined,
@@ -70,13 +70,17 @@ export const miscContentHandler = ({
       wrapperComponent: isObjectField ? SheetTrigger : undefined,
       onClick: isObjectField
         ? (): void => {
-            if (setSheetType !== undefined) setSheetType('json');
-            if (setJsonContent !== undefined)
+            if (setSheetType !== undefined) {
+              setSheetType('json');
+            }
+            if (setJsonContent !== undefined) {
               setJsonContent({ name: fieldKey, src: fieldValue });
+            }
           }
         : undefined,
       copyValue: isObjectField ? stringField : undefined,
       linkText: linkText,
       children: children,
     };
+  }
 };

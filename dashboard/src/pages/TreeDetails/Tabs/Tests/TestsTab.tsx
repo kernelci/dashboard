@@ -118,14 +118,17 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
     );
   }
 
-  if (isSummaryLoading)
+  if (isSummaryLoading) {
     return (
       <Skeleton>
         <FormattedMessage id="global.loading" />
       </Skeleton>
     );
+  }
 
-  if (!summaryData) return <div />;
+  if (!summaryData) {
+    return <div />;
+  }
 
   if (!fullIsLoading && data?.tests.length === 0) {
     return (

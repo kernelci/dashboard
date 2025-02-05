@@ -183,7 +183,9 @@ export function TestsTable({
       };
       const individualTest = test.individual_tests.filter(t => {
         let dataIncludesPath = true;
-        if (isValidPath) dataIncludesPath = t.path.includes(path);
+        if (isValidPath) {
+          dataIncludesPath = t.path.includes(path);
+        }
         if (dataIncludesPath) {
           countStatus(localGroup, t.status);
           countStatus(globalGroup, t.status);
@@ -377,7 +379,9 @@ export function TestsTable({
           <TableRow
             className="group cursor-pointer hover:bg-lightBlue"
             onClick={() => {
-              if (row.getCanExpand()) row.toggleExpanded();
+              if (row.getCanExpand()) {
+                row.toggleExpanded();
+              }
             }}
             data-state={row.getIsExpanded() ? 'open' : 'closed'}
           >

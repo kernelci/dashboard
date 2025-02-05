@@ -84,11 +84,15 @@ const CommitSelector = ({
 
   const navigateToThePast = useCallback(
     (commitHash: string) => {
-      if (treeIndex === null) return;
+      if (treeIndex === null) {
+        return;
+      }
       setTreeIndexesLength(rowLength);
 
       const newTreeCommits = { ...treeCommits, [treeIndex]: commitHash };
-      if (commitHash === headCommitHash) delete newTreeCommits[treeIndex];
+      if (commitHash === headCommitHash) {
+        delete newTreeCommits[treeIndex];
+      }
 
       navigate({
         search: current => {

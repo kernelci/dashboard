@@ -29,8 +29,12 @@ export function formatDate(date: Date | string, short?: boolean): string {
     timeZoneName: short ? undefined : 'short',
   };
 
-  if (typeof date === 'string') date = new Date(date);
-  if (isNaN(date.getTime())) return '-';
+  if (typeof date === 'string') {
+    date = new Date(date);
+  }
+  if (isNaN(date.getTime())) {
+    return '-';
+  }
 
   return new Intl.DateTimeFormat('en-US', options).format(date);
 }
@@ -42,7 +46,9 @@ export const getDateOffset = (date: Date): string => {
 export const sanitizeArchs = (
   archs: Architecture | undefined,
 ): ISummaryItem[] => {
-  if (!archs) return [];
+  if (!archs) {
+    return [];
+  }
   return Object.entries(archs).map(([key, value]) => ({
     arch: {
       text: key,
@@ -57,7 +63,9 @@ export const sanitizeArchs = (
 export const sanitizeConfigs = (
   configs: Record<string, BuildStatus> | undefined,
 ): IListingItem[] => {
-  if (!configs) return [];
+  if (!configs) {
+    return [];
+  }
 
   return Object.entries(configs).map(([key, value]) => ({
     text: key,
@@ -83,7 +91,9 @@ export const sanitizePlatforms = (
     | Record<string, StatusCount>
     | undefined,
 ): IListingItem[] => {
-  if (!platforms) return [];
+  if (!platforms) {
+    return [];
+  }
 
   if (isBuildPlatform(platforms)) {
     return Object.entries(platforms).map(([key, value]) => ({
@@ -127,7 +137,9 @@ const getBuildStatus = (
 export const sanitizeBuilds = (
   builds: BuildsTabBuild[] | undefined,
 ): AccordionItemBuilds[] => {
-  if (!builds) return [];
+  if (!builds) {
+    return [];
+  }
 
   return builds.map(build => ({
     id: build.id,
@@ -181,9 +193,11 @@ export const mapFiltersKeysToBackendCompatible = (
   Object.keys(filter).forEach(key => {
     const filterList = filter[key as keyof TTreeDetailsFilter];
     filterList?.forEach(value => {
-      if (!filterParam[`filter_${key}`])
+      if (!filterParam[`filter_${key}`]) {
         filterParam[`filter_${key}`] = [value.toString()];
-      else filterParam[`filter_${key}`].push(value.toString());
+      } else {
+        filterParam[`filter_${key}`].push(value.toString());
+      }
     });
   });
 
@@ -203,7 +217,9 @@ export const isStringRecord = (
 
 export const isEmptyObject = (obj: Record<string, unknown>): boolean => {
   for (const prop in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, prop)) return false;
+    if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+      return false;
+    }
   }
   return true;
 };
@@ -219,7 +235,9 @@ export const getIssueFilterLabel = (issueFilter: TIssueFilter): string => {
   const issueId = issueFilter.id;
   const issueVersion = issueFilter.version;
 
-  if (!issueVersion) return issueId;
+  if (!issueVersion) {
+    return issueId;
+  }
 
   const versionFormatted = `${version_prefix}${issueVersion}`;
 

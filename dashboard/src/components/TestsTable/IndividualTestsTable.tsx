@@ -109,7 +109,9 @@ export function IndividualTestsTable({
   // https://tanstack.com/virtual/latest/docs/framework/react/examples/table
   const [firstRowStyle, lastRowStyle]: [CSSProperties, CSSProperties] =
     useMemo(() => {
-      if (virtualItems.length === 0) return [{}, {}];
+      if (virtualItems.length === 0) {
+        return [{}, {}];
+      }
       return [
         { paddingTop: virtualItems[0].start },
         {
@@ -122,8 +124,9 @@ export function IndividualTestsTable({
 
   const handlePreviousItem = useCallback(() => {
     setLog(previousLog => {
-      if (typeof previousLog === 'number' && previousLog > 0)
+      if (typeof previousLog === 'number' && previousLog > 0) {
         return previousLog - 1;
+      }
 
       return previousLog;
     });
@@ -134,8 +137,9 @@ export function IndividualTestsTable({
       if (
         typeof previousLog === 'number' &&
         previousLog < originalItems.length - 1
-      )
+      ) {
         return previousLog + 1;
+      }
 
       return previousLog;
     });

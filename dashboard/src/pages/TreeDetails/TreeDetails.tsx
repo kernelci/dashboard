@@ -155,7 +155,9 @@ function TreeDetails(): JSX.Element {
   type TreeRouterStatus = typeof treeRouterStatus;
 
   const comparedData: TreeRouterStatus = useMemo(() => {
-    if (!data) return undefined;
+    if (!data) {
+      return undefined;
+    }
 
     const { builds, tests, boots } = data.summary;
 

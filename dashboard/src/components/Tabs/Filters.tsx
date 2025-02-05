@@ -30,7 +30,9 @@ export const mapFilterToReq = (filter: TFilter): TFilter => {
 
   Object.entries(filterFieldMap).forEach(([reqField, field]) => {
     const values = filter[field as TFilterKeys];
-    if (!values) return;
+    if (!values) {
+      return;
+    }
 
     if (typeof values === 'object') {
       Object.entries(values).forEach(([value, isSelected]) => {
@@ -261,7 +263,9 @@ const TreeSelectSection = ({
   const intl = useIntl();
 
   const filterItems = useMemo(() => {
-    if (!items) return {};
+    if (!items) {
+      return {};
+    }
 
     const filteredItems: Record<string, boolean> = {};
 

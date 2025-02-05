@@ -65,7 +65,9 @@ export function InputTime(): JSX.Element {
 
   const onInputTimeTextChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      if (!e.target.value) return;
+      if (!e.target.value) {
+        return;
+      }
       onSubmit();
     },
     [onSubmit],

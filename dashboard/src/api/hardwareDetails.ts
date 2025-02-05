@@ -31,8 +31,9 @@ const mapIndexesToSelectedTrees = (
 ): Record<string, string> => {
   const selectedTrees: Record<string, string> = {};
 
-  if (selectedIndexes.length === 0 && isEmptyObject(treeCommits))
+  if (selectedIndexes.length === 0 && isEmptyObject(treeCommits)) {
     return selectedTrees;
+  }
 
   const selectedArray =
     treeIndexesLength && selectedIndexes.length === 0
@@ -57,9 +58,11 @@ const mapFiltersKeysToBackendCompatible = (
   Object.keys(filter).forEach(key => {
     const filterList = filter[key as keyof THardwareDetailsFilter];
     filterList?.forEach(value => {
-      if (!filterParam[`filter_${key}`])
+      if (!filterParam[`filter_${key}`]) {
         filterParam[`filter_${key}`] = [value.toString()];
-      else filterParam[`filter_${key}`].push(value.toString());
+      } else {
+        filterParam[`filter_${key}`].push(value.toString());
+      }
     });
   });
 

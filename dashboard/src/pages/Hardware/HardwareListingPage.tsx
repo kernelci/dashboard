@@ -70,7 +70,9 @@ const HardwareListingPage = ({
   );
 
   const listItems: HardwareTableItem[] = useMemo(() => {
-    if (!data || error) return [];
+    if (!data || error) {
+      return [];
+    }
 
     const currentData = data.hardware;
 

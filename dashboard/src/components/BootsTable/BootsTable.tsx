@@ -330,8 +330,9 @@ export function BootsTable({
 
   const handlePreviousItem = useCallback(() => {
     setLog(previousLog => {
-      if (typeof previousLog === 'number' && previousLog > 0)
+      if (typeof previousLog === 'number' && previousLog > 0) {
         return previousLog - 1;
+      }
 
       return previousLog;
     });
@@ -342,8 +343,9 @@ export function BootsTable({
       if (
         typeof previousLog === 'number' &&
         previousLog < sortedItems.length - 1
-      )
+      ) {
         return previousLog + 1;
+      }
 
       return previousLog;
     });

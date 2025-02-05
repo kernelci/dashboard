@@ -38,7 +38,9 @@ const HardwareCommitNavigationGraph = ({
 
   const markClickHandle = useCallback(
     (commitHash: string) => {
-      if (treeIdx === null) return;
+      if (treeIdx === null) {
+        return;
+      }
 
       navigate({
         search: current => ({
@@ -51,7 +53,9 @@ const HardwareCommitNavigationGraph = ({
     [navigate, treeIdx, treeCommits],
   );
 
-  if (!tree) return <></>;
+  if (!tree) {
+    return <></>;
+  }
 
   const treeId = treeCommits?.[treeIdx] ?? tree['head_git_commit_hash'];
 

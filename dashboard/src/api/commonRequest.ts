@@ -8,7 +8,9 @@ export class RequestData {
   static async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const res = await http.get<ResponseData<T>>(url, config);
 
-    if (res.data.error) throw new Error(res.data.error);
+    if (res.data.error) {
+      throw new Error(res.data.error);
+    }
 
     return res.data;
   }
@@ -20,7 +22,9 @@ export class RequestData {
   ): Promise<T> {
     const res = await http.post<ResponseData<T>>(url, data, config);
 
-    if (res.data.error) throw new Error(res.data.error);
+    if (res.data.error) {
+      throw new Error(res.data.error);
+    }
 
     return res.data;
   }
