@@ -2,6 +2,7 @@ import type { BuildStatus, StatusCount } from './general';
 
 export interface HardwareItem {
   hardware_name: string;
+  platform: string | string[];
   build_status_summary: BuildStatus;
   test_status_summary: StatusCount;
   boot_status_summary: StatusCount;

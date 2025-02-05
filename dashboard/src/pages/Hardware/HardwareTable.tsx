@@ -50,6 +50,8 @@ import type { ListingTableColumnMeta } from '@/types/table';
 
 import { RedirectFrom, type TFilter } from '@/types/general';
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
+
 import { InputTime } from './InputTime';
 
 // TODO Extract and reuse the table
@@ -105,6 +107,29 @@ const getColumns = (
       header: ({ column }): JSX.Element => (
         <TableHeader column={column} intlKey="global.name" />
       ),
+      meta: {
+        tabTarget: 'global.builds',
+      },
+    },
+    {
+      accessorKey: 'platform',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="global.platform" />
+      ),
+      cell: ({ row }): JSX.Element => {
+        const platforms = row.original.platform;
+        if (Array.isArray(platforms)) {
+          return (
+            <Tooltip>
+              <TooltipTrigger>
+                <FormattedMessage id="hardware.multiplePlatforms" />
+              </TooltipTrigger>
+              <TooltipContent>{platforms.join(', ')}</TooltipContent>
+            </Tooltip>
+          );
+        }
+        return <>{platforms}</>;
+      },
       meta: {
         tabTarget: 'global.builds',
       },

@@ -58,6 +58,16 @@ const useHardwareListingTime = (): {
   return { startTimestampInSeconds, endTimestampInSeconds };
 };
 
+const includesInAnStringOrArray = (
+  searched: string | string[],
+  inputFilter: string,
+): boolean => {
+  if (Array.isArray(searched)) {
+    return searched.some(element => element.includes(inputFilter));
+  }
+  return searched.includes(inputFilter);
+};
+
 const HardwareListingPage = ({
   inputFilter,
 }: HardwareListingPageProps): JSX.Element => {
@@ -78,7 +88,10 @@ const HardwareListingPage = ({
 
     return currentData
       .filter(hardware => {
-        return hardware.hardware_name?.includes(inputFilter);
+        return (
+          hardware.hardware_name?.includes(inputFilter) ||
+          includesInAnStringOrArray(hardware.platform, inputFilter)
+        );
       })
       .map((hardware): HardwareTableItem => {
         const buildCount: BuildStatus = {
@@ -109,6 +122,7 @@ const HardwareListingPage = ({
 
         return {
           hardware_name: hardware.hardware_name ?? '',
+          platform: hardware.platform ?? '',
           build_status_summary: buildCount,
           test_status_summary: testStatusCount,
           boot_status_summary: bootStatusCount,
