@@ -70,6 +70,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/BuildTestsResponse'
           description: ''
+  /api/hardware/:
+    get:
+      operationId: hardware_retrieve
+      parameters:
+      - in: query
+        name: endTimeStampInSeconds
+        schema:
+          title: Endtimestampinseconds
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+      - in: query
+        name: startTimestampInSeconds
+        schema:
+          title: Starttimestampinseconds
+          type: string
+        required: true
+      tags:
+      - hardware
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareResponse'
+          description: ''
   /api/hardware/{hardware_id}:
     post:
       operationId: hardware_create
@@ -974,6 +1009,23 @@ components:
           title: 'Null'
       title: BuildStatusCount
       type: object
+    BuildStatusCountDict:
+      properties:
+        valid:
+          title: Valid
+          type: integer
+        invalid:
+          title: Invalid
+          type: integer
+        'null':
+          title: 'Null'
+          type: integer
+      required:
+      - valid
+      - invalid
+      - 'null'
+      title: BuildStatusCountDict
+      type: object
     BuildSummary:
       properties:
         status:
@@ -1438,6 +1490,50 @@ components:
       required:
       - tests
       title: HardwareDetailsTestsResponse
+      type: object
+    HardwareItem:
+      properties:
+        hardware_name:
+          title: Hardware Name
+          type: string
+        platform:
+          anyOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+            uniqueItems: true
+          title: Platform
+        test_status_summary:
+          additionalProperties:
+            type: integer
+          title: Test Status Summary
+          type: object
+        boot_status_summary:
+          additionalProperties:
+            type: integer
+          title: Boot Status Summary
+          type: object
+        build_status_summary:
+          $ref: '#/components/schemas/BuildStatusCountDict'
+      required:
+      - hardware_name
+      - platform
+      - test_status_summary
+      - boot_status_summary
+      - build_status_summary
+      title: HardwareItem
+      type: object
+    HardwareResponse:
+      properties:
+        hardware:
+          items:
+            $ref: '#/components/schemas/HardwareItem'
+          title: Hardware
+          type: array
+      required:
+      - hardware
+      title: HardwareResponse
       type: object
     HardwareTestHistoryItem:
       properties:

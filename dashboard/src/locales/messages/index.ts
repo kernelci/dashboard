@@ -151,6 +151,7 @@ export const messages = {
     'global.origin': 'Origin',
     'global.others': 'Others',
     'global.path': 'Path',
+    'global.platform': 'Platform',
     'global.prev': 'Prev',
     'global.projectUnderDevelopment':
       'This is an ongoing project.{br}' +
@@ -184,8 +185,9 @@ export const messages = {
     'globalTable.test': 'Test Status',
     'globalTable.tree': 'Tree',
     'hardware.details': 'Hardware Details',
+    'hardware.multiplePlatforms': 'Multiple Platforms',
     'hardware.path': 'Hardware',
-    'hardware.searchPlaceholder': 'Search by hardware name',
+    'hardware.searchPlaceholder': 'Search by hardware name or platform',
     'hardwareDetails.compatibles': 'Compatibles',
     'hardwareDetails.platforms': 'Platforms',
     'hardwareDetails.timeFrame':
