@@ -287,6 +287,13 @@ paths:
   /api/log-downloader/:
     get:
       operationId: log_downloader_retrieve
+      parameters:
+      - in: query
+        name: log_download_url
+        schema:
+          title: Log Download Url
+          type: string
+        required: true
       tags:
       - log-downloader
       security:
@@ -295,7 +302,11 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogDownloaderResponse'
+          description: ''
   /api/schema/:
     get:
       operationId: schema_retrieve
@@ -1658,6 +1669,46 @@ components:
       required:
       - issues
       title: LocalFilters
+      type: object
+    LogData:
+      properties:
+        specific_log_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Specific Log Url
+        file_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: File Name
+        file_size:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: File Size
+        date:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Date
+      required:
+      - specific_log_url
+      - file_name
+      - file_size
+      - date
+      title: LogData
+      type: object
+    LogDownloaderResponse:
+      properties:
+        log_files:
+          items:
+            $ref: '#/components/schemas/LogData'
+          title: Log Files
+          type: array
+      required:
+      - log_files
+      title: LogDownloaderResponse
       type: object
     Origin:
       type: string
