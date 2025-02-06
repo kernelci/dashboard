@@ -150,6 +150,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/HardwareDetailsBuildsResponse'
           description: ''
+  /api/hardware/{hardware_id}/commit-history:
+    post:
+      operationId: hardware_commit_history_create
+      parameters:
+      - in: path
+        name: hardware_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - hardware
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommitHistoryPostBody'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CommitHistoryPostBody'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CommitHistoryPostBody'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareCommitHistoryResponse'
+          description: ''
   /api/hardware/{hardware_id}/summary:
     post:
       operationId: hardware_summary_create
@@ -999,6 +1033,94 @@ components:
       anyOf:
       - type: string
       - type: 'null'
+    CommitHead:
+      properties:
+        treeName:
+          title: Treename
+          type: string
+        repositoryUrl:
+          title: Repositoryurl
+          type: string
+        branch:
+          title: Branch
+          type: string
+        commitHash:
+          title: Commithash
+          type: string
+      required:
+      - treeName
+      - repositoryUrl
+      - branch
+      - commitHash
+      title: CommitHead
+      type: object
+    CommitHistoryPostBody:
+      properties:
+        origin:
+          default: maestro
+          title: Origin
+          type: string
+        startTimestampInSeconds:
+          anyOf:
+          - type: string
+          - type: integer
+          title: Starttimestampinseconds
+        endTimestampInSeconds:
+          anyOf:
+          - type: string
+          - type: integer
+          title: Endtimestampinseconds
+        commitHeads:
+          items:
+            $ref: '#/components/schemas/CommitHead'
+          title: Commitheads
+          type: array
+      required:
+      - startTimestampInSeconds
+      - endTimestampInSeconds
+      - commitHeads
+      title: CommitHistoryPostBody
+      type: object
+    CommitHistoryValidCheckout:
+      properties:
+        git_commit_hash:
+          title: Git Commit Hash
+          type: string
+        tree_name:
+          title: Tree Name
+          type: string
+        git_repository_branch:
+          title: Git Repository Branch
+          type: string
+        git_repository_url:
+          title: Git Repository Url
+          type: string
+        git_commit_tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          default: []
+          title: Git Commit Tags
+        git_commit_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Git Commit Name
+        start_time:
+          format: date-time
+          title: Start Time
+          type: string
+      required:
+      - git_commit_hash
+      - tree_name
+      - git_repository_branch
+      - git_repository_url
+      - git_commit_name
+      - start_time
+      title: CommitHistoryValidCheckout
+      type: object
     CommonDetailsBootsResponse:
       properties:
         boots:
@@ -1174,6 +1296,19 @@ components:
       - issue_id
       - issue_version
       title: HardwareBuildHistoryItem
+      type: object
+    HardwareCommitHistoryResponse:
+      properties:
+        commit_history_table:
+          additionalProperties:
+            items:
+              $ref: '#/components/schemas/CommitHistoryValidCheckout'
+            type: array
+          title: Commit History Table
+          type: object
+      required:
+      - commit_history_table
+      title: HardwareCommitHistoryResponse
       type: object
     HardwareCommon:
       properties:

@@ -14,7 +14,7 @@ from kernelCI_app.typeModels.databases import (
     StatusValues,
     Checkout__TreeName,
     Checkout__GitRepositoryBranch,
-    Issue__Version
+    Issue__Version,
 )
 from pydantic import BaseModel, BeforeValidator, Field
 
@@ -125,6 +125,10 @@ class HardwareDetailsBootsResponse(BaseModel):
 
 class HardwareDetailsTestsResponse(BaseModel):
     tests: List[HardwareTestHistoryItem]
+
+
+class HardwareCommitHistoryResponse(BaseModel):
+    commit_history_table: Dict[str, List[CommitHistoryValidCheckout]]
 
 
 PossibleTestType = Literal["test", "boot"]

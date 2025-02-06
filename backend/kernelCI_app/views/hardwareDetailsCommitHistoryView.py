@@ -2,21 +2,23 @@ from collections import defaultdict
 from django.db import connection
 import json
 from typing import Dict, List, TypedDict
-from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
-from django.views import View
 from datetime import datetime, timezone
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import make_tree_identifier_key
 from kernelCI_app.typeModels.hardwareDetails import (
     CommitHead,
     CommitHistoryPostBody,
     CommitHistoryValidCheckout,
+    HardwareCommitHistoryResponse,
 )
 from pydantic import ValidationError
 from http import HTTPStatus
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
 
 
 class GenerateQueryParamsResponse(TypedDict):
@@ -58,7 +60,7 @@ def generate_query_params(
 # also the csrf protection require the usage of cookies which is not currently
 # supported in this project
 @method_decorator(csrf_exempt, name="dispatch")
-class HardwareDetailsCommitHistoryView(View):
+class HardwareDetailsCommitHistoryView(APIView):
     required_params_get = ["origin"]
     cache_key_get_tree_data = "hardwareDetailsTreeData"
     cache_key_get_full_data = "hardwareDetailsFullData"
@@ -178,7 +180,12 @@ class HardwareDetailsCommitHistoryView(View):
         return formatted_checkouts
 
     # Using post to receive a body request
-    def post(self, request, hardware_id) -> JsonResponse:
+    @extend_schema(
+        responses=HardwareCommitHistoryResponse,
+        request=CommitHistoryPostBody,
+        methods=["POST"],
+    )
+    def post(self, request, hardware_id) -> Response:
         try:
             body = json.loads(request.body)
 
@@ -196,14 +203,14 @@ class HardwareDetailsCommitHistoryView(View):
             commit_heads = post_body.commitHeads
 
         except ValidationError as e:
-            return create_error_response(e.json())
+            return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
         except json.JSONDecodeError:
-            return create_error_response(
-                "Invalid body, request body must be a valid json string"
+            return create_api_error_response(
+                error_message="Invalid body, request body must be a valid json string"
             )
         except (ValueError, TypeError):
-            return create_error_response(
-                "startTimestampInSeconds and endTimestampInSeconds must be a Unix Timestamp"
+            return create_api_error_response(
+                error_message="startTimestampInSeconds and endTimestampInSeconds must be a Unix Timestamp"
             )
 
         commit_history = self.get_commit_history(
@@ -214,8 +221,15 @@ class HardwareDetailsCommitHistoryView(View):
         )
 
         if not commit_history:
-            return create_error_response(
+            return create_api_error_response(
                 error_message="Commit history not found", status_code=HTTPStatus.OK
             )
 
-        return JsonResponse({"commit_history_table": commit_history}, safe=False)
+        try:
+            valid_response = HardwareCommitHistoryResponse(
+                commit_history_table=commit_history
+            )
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        return Response(valid_response.model_dump())
