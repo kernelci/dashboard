@@ -5,12 +5,22 @@ from kernelCI_app.typeModels.commonDetails import (
     DetailsFilters,
     Summary,
 )
+from kernelCI_app.typeModels.treeListing import BaseCheckouts
 from pydantic import BaseModel
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
 
 
 class TreeLatestPathParameters(BaseModel):
     tree_name: str
     branch: str
+
+
+class TreeLatestQueryParameters(BaseModel):
+    origin: str = DEFAULT_ORIGIN
+
+
+class TreeLatestResponse(BaseCheckouts):
+    api_url: str
 
 
 class TreeCommon(BaseModel):
