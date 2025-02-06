@@ -128,30 +128,30 @@ const CommitNavigationGraph = ({
   // TODO Extract the magic code to outside the component
   data?.forEach((item, index) => {
     if (currentPageTab === 'global.builds') {
-      series[0].data?.unshift(item.builds.valid_builds);
-      series[1].data?.unshift(item.builds.invalid_builds);
-      series[2].data?.unshift(item.builds.null_builds);
+      series[0].data?.unshift(item.builds.valid);
+      series[1].data?.unshift(item.builds.invalid);
+      series[2].data?.unshift(item.builds.null);
     }
     if (currentPageTab === 'global.boots') {
       const inconclusiveCount =
-        item.boots_tests.miss_count +
-        item.boots_tests.skip_count +
-        item.boots_tests.error_count +
-        item.boots_tests.done_count +
-        item.boots_tests.null_count;
-      series[0].data?.unshift(item.boots_tests.pass_count);
-      series[1].data?.unshift(item.boots_tests.fail_count);
+        item.boots.miss +
+        item.boots.skip +
+        item.boots.error +
+        item.boots.done +
+        item.boots.null;
+      series[0].data?.unshift(item.boots.pass);
+      series[1].data?.unshift(item.boots.fail);
       series[2].data?.unshift(inconclusiveCount);
     }
     if (currentPageTab === 'global.tests') {
       const inconclusiveCount =
-        item.non_boots_tests.miss_count +
-        item.non_boots_tests.skip_count +
-        item.non_boots_tests.error_count +
-        item.non_boots_tests.done_count +
-        item.non_boots_tests.null_count;
-      series[0].data?.unshift(item.non_boots_tests.pass_count);
-      series[1].data?.unshift(item.non_boots_tests.fail_count);
+        item.tests.miss +
+        item.tests.skip +
+        item.tests.error +
+        item.tests.done +
+        item.tests.null;
+      series[0].data?.unshift(item.tests.pass);
+      series[1].data?.unshift(item.tests.fail);
       series[2].data?.unshift(inconclusiveCount);
     }
     commitData.unshift({
