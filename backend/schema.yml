@@ -1186,14 +1186,14 @@ components:
       - type: 'null'
     Checkout:
       properties:
-        git_repository_branch:
-          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
         git_repository_url:
           $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_commit_hash:
           $ref: '#/components/schemas/Checkout__GitCommitHash'
         git_commit_name:
           $ref: '#/components/schemas/Checkout__GitCommitName'
+        git_repository_branch:
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
         start_time:
           $ref: '#/components/schemas/Timestamp'
         build_status:
@@ -1213,10 +1213,10 @@ components:
           title: Git Commit Tags
           type: array
       required:
-      - git_repository_branch
       - git_repository_url
       - git_commit_hash
       - git_commit_name
+      - git_repository_branch
       - start_time
       - build_status
       - test_status
@@ -1227,14 +1227,14 @@ components:
       type: object
     CheckoutFast:
       properties:
-        git_repository_branch:
-          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
         git_repository_url:
           $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_commit_hash:
           $ref: '#/components/schemas/Checkout__GitCommitHash'
         git_commit_name:
           $ref: '#/components/schemas/Checkout__GitCommitName'
+        git_repository_branch:
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
         start_time:
           $ref: '#/components/schemas/Timestamp'
         id:
@@ -1246,10 +1246,10 @@ components:
         git_commit_tags:
           $ref: '#/components/schemas/Checkout__GitCommitTags'
       required:
-      - git_repository_branch
       - git_repository_url
       - git_commit_hash
       - git_commit_name
+      - git_repository_branch
       - start_time
       - id
       - tree_name
