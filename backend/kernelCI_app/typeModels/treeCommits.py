@@ -1,22 +1,13 @@
 from datetime import datetime
 from typing import List
-from pydantic import BaseModel, RootModel, Field
+from pydantic import BaseModel, RootModel
 
 from kernelCI_app.typeModels.commonDetails import BuildStatusCount
+from kernelCI_app.typeModels.treeListing import TestStatusCount
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
     Checkout__GitCommitName
 )
-
-
-class TreeCommitsTestStatusCount(BaseModel):
-    fail_count: int = Field(alias="fail")
-    error_count: int = Field(alias="error")
-    miss_count: int = Field(alias="miss")
-    pass_count: int = Field(alias="pass")
-    done_count: int = Field(alias="done")
-    skip_count: int = Field(alias="skip")
-    null_count: int = Field(alias="null")
 
 
 class TreeCommitsQueryParameters(BaseModel):
@@ -33,8 +24,8 @@ class TreeCommitsData(BaseModel):
     git_commit_name: Checkout__GitCommitName
     earliest_start_time: datetime
     builds: BuildStatusCount
-    boots: TreeCommitsTestStatusCount
-    tests: TreeCommitsTestStatusCount
+    boots: TestStatusCount
+    tests: TestStatusCount
 
 
 class TreeCommitsResponse(RootModel):

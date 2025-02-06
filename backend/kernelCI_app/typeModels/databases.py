@@ -28,6 +28,7 @@ type Checkout__GitCommitName = Optional[str]
 type Checkout__GitCommitTags = Optional[List[str]]
 type Checkout__GitRepositoryBranch = Optional[str]
 type Checkout__GitRepositoryUrl = Optional[str]
+type Checkout__PatchsetHash = Optional[str]
 
 type Build__Id = str
 type Build__Architecture = Optional[str]

@@ -1,14 +1,25 @@
-from django.http import JsonResponse
-from django.views import View
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
 from kernelCI_app.models import Checkouts
 from kernelCI_app.utils import getQueryTimeInterval
 from http import HTTPStatus
-from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.typeModels.treeListing import (
+    TreeListingFastResponse,
+    TreeListingQueryParameters
+)
+from pydantic import ValidationError
 
 DEFAULT_ORIGIN = "maestro"
 
 
-class TreeViewFast(View):
+class TreeViewFast(APIView):
+    @extend_schema(
+        responses=TreeListingFastResponse,
+        parameters=[TreeListingQueryParameters],
+        methods=["GET"]
+    )
     def get(self, request):
         origin = request.GET.get("origin", DEFAULT_ORIGIN)
         interval_days = int(request.GET.get("intervalInDays", "7"))
@@ -57,11 +68,10 @@ class TreeViewFast(View):
         )
 
         if not checkouts:
-            return create_error_response(
+            return create_api_error_response(
                 error_message="Trees not found", status_code=HTTPStatus.OK
             )
 
-        # TODO Use django serializer
         response_data = [
             {
                 "id": checkout.id,
@@ -77,4 +87,11 @@ class TreeViewFast(View):
             for checkout in checkouts
         ]
 
-        return JsonResponse(response_data, safe=False)
+        try:
+            valid_response = TreeListingFastResponse(response_data)
+        except ValidationError as e:
+            return create_api_error_response(
+                error_message=e.json(), status_code=HTTPStatus.INTERNAL_SERVER_ERROR
+            )
+
+        return Response(valid_response.model_dump())
