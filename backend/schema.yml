@@ -26,6 +26,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/BuildDetailsResponse'
           description: ''
+  /api/build/{build_id}/issues:
+    get:
+      operationId: build_issues_retrieve
+      parameters:
+      - in: path
+        name: build_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - build
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuesResponse'
+          description: ''
   /api/build/{build_id}/tests:
     get:
       operationId: build_tests_retrieve
@@ -474,6 +496,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestDetailsResponse'
+          description: ''
+  /api/test/{test_id}/issues:
+    get:
+      operationId: test_issues_retrieve
+      parameters:
+      - in: path
+        name: test_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - test
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuesResponse'
           description: ''
   /api/tree/:
     get:
@@ -1686,6 +1730,11 @@ components:
       - type: 'null'
     Issue__Version:
       type: integer
+    IssuesResponse:
+      items:
+        $ref: '#/components/schemas/Issue'
+      title: IssuesResponse
+      type: array
     LocalFilters:
       properties:
         issues:

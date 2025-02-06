@@ -1,18 +1,21 @@
 from typing import Dict, List, Optional
-from django.http import JsonResponse
 from django.db import connection
-from django.views import View
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
 
-from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
     create_issue,
 )
 from http import HTTPStatus
 from kernelCI_app.typeModels.issues import Issue, IssueDict
+from kernelCI_app.typeModels.issuesView import IssuesResponse
 
 
-class IssueView(View):
+class IssueView(APIView):
     fields = ["incident_id", "id", "version", "comment", "report_url"]
 
     def get_dict_record(self, row) -> Dict[str, str]:
@@ -78,29 +81,44 @@ class IssueView(View):
             rows = cursor.fetchall()
         return self.sanitize_rows(rows)
 
+    @extend_schema(
+        responses=IssuesResponse
+    )
     def get(
         self, _request, test_id: Optional[str] = None, build_id: Optional[str] = None
-    ) -> JsonResponse:
+    ) -> Response:
         if test_id:
             test_issues = self.get_test_issues(test_id)
 
             if len(test_issues) == 0:
-                return create_error_response(
+                return create_api_error_response(
                     error_message="No issues were found for this test",
                     status_code=HTTPStatus.OK,
                 )
 
-            return JsonResponse(test_issues, safe=False)
+            try:
+                valid_test_response = IssuesResponse(test_issues)
+            except ValidationError as e:
+                return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+            return Response(valid_test_response.model_dump())
+
         if build_id:
             build_issues = self.get_build_issues(build_id)
 
             if len(build_issues) == 0:
-                return create_error_response(
+                return create_api_error_response(
                     error_message="No issues were found for this build",
                     status_code=HTTPStatus.OK,
                 )
 
-            return JsonResponse(build_issues, safe=False)
-        return create_error_response(
+            try:
+                valid_build_response = IssuesResponse(build_issues)
+            except ValidationError as e:
+                return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+            return Response(valid_build_response.model_dump())
+
+        return create_api_error_response(
             error_message="A test or build ID must be provided"
         )
