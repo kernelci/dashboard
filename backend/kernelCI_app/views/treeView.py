@@ -1,23 +1,72 @@
-from django.http import JsonResponse
+from typing import Dict
 from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
-from kernelCI_app.models import Checkouts
-from kernelCI_app.serializers import TreeSerializer
+from rest_framework.response import Response
 from kernelCI_app.utils import getQueryTimeInterval
-from kernelCI_app.helpers.errorHandling import ExceptionWithJsonResponse
+from kernelCI_app.helpers.errorHandling import (
+    ExceptionWithJsonResponse,
+    create_api_error_response
+)
 from kernelCI_app.helpers.date import parseIntervalInDaysGetParameter
 from http import HTTPStatus
-from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.typeModels.treeListing import (
+    TreeListingResponse,
+    TreeListingQueryParameters
+)
+from pydantic import ValidationError
+from django.db import connection
+
 
 DEFAULT_ORIGIN = "maestro"
 
 
 class TreeView(APIView):
-    # TODO Remove serializer, let's go full pydantic
+    def _sanitize_tree(self, checkout: Dict) -> Dict:
+        build_status = {
+            "valid": checkout[8],
+            "invalid": checkout[9],
+            "null": checkout[10],
+        }
+
+        test_status = {
+            "fail": checkout[11],
+            "error": checkout[12],
+            "miss": checkout[13],
+            "pass": checkout[14],
+            "done": checkout[15],
+            "skip": checkout[16],
+            "null": checkout[17],
+        }
+
+        boot_status = {
+            "fail": checkout[18],
+            "error": checkout[19],
+            "miss": checkout[20],
+            "pass": checkout[21],
+            "done": checkout[22],
+            "skip": checkout[23],
+            "null": checkout[24],
+        }
+
+        return {
+            "git_repository_branch": checkout[2],
+            "git_repository_url": checkout[3],
+            "git_commit_hash": checkout[4],
+            "git_commit_tags": checkout[5],
+            "git_commit_name": checkout[6],
+            "start_time": checkout[7],
+            "build_status": {**build_status},
+            "test_status": {**test_status},
+            "boot_status": {**boot_status},
+            "tree_names": checkout[25],
+        }
+
     @extend_schema(
-        responses=TreeSerializer(many=True),
+        responses=TreeListingResponse,
+        parameters=[TreeListingQueryParameters],
+        methods=["GET"]
     )
-    def get(self, request):
+    def get(self, request) -> Response:
         origin_param = request.GET.get("origin", DEFAULT_ORIGIN)
         try:
             interval_days = parseIntervalInDaysGetParameter(
@@ -36,8 +85,7 @@ class TreeView(APIView):
         # '1 as id' is necessary in this case because django raw queries must include the primary key.
         # In this case we don't need the primary key and adding it would alter the GROUP BY clause,
         # potentially causing the tree listing page show the same tree multiple times
-        checkouts = Checkouts.objects.raw(
-            """
+        query = """
             SELECT
                 1 as id,
                 checkouts.tree_name,
@@ -138,15 +186,23 @@ class TreeView(APIView):
             ORDER BY
                 checkouts.git_commit_hash;
             ;
-            """,
-            params,
-        )
+            """
+
+        checkouts = {}
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            checkouts = cursor.fetchall()
 
         if not checkouts:
-            return create_error_response(
-                error_message="Trees not found", status_code=HTTPStatus.OK
+            return create_api_error_response(error_message="Trees not found", status_code=HTTPStatus.OK)
+
+        checkouts = [self._sanitize_tree(checkout) for checkout in checkouts]
+
+        try:
+            valid_response = TreeListingResponse(checkouts)
+        except ValidationError as e:
+            return create_api_error_response(
+                error_message=e.json(), status_code=HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
-        serializer = TreeSerializer(checkouts, many=True)
-        resp = JsonResponse(serializer.data, safe=False)
-        return resp
+        return Response(valid_response.model_dump(by_alias=True))

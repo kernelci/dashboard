@@ -590,7 +590,20 @@ paths:
           description: ''
   /api/tree/:
     get:
-      operationId: tree_list
+      operationId: tree_retrieve
+      parameters:
+      - in: query
+        name: intervalInDays
+        schema:
+          title: Intervalindays
+          type: integer
+        required: true
+      - in: query
+        name: origin
+        schema:
+          title: Origin
+          type: string
+        required: true
       tags:
       - tree
       security:
@@ -602,9 +615,36 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Tree'
+                $ref: '#/components/schemas/TreeListingResponse'
+          description: ''
+  /api/tree-fast/:
+    get:
+      operationId: tree_fast_retrieve
+      parameters:
+      - in: query
+        name: intervalInDays
+        schema:
+          title: Intervalindays
+          type: integer
+        required: true
+      - in: query
+        name: origin
+        schema:
+          title: Origin
+          type: string
+        required: true
+      tags:
+      - tree-fast
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeListingFastResponse'
           description: ''
   /api/tree/{commit_hash}/boots:
     get:
@@ -1196,6 +1236,79 @@ components:
       anyOf:
       - type: boolean
       - type: 'null'
+    Checkout:
+      properties:
+        git_repository_branch:
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        git_repository_url:
+          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+        git_commit_hash:
+          $ref: '#/components/schemas/Checkout__GitCommitHash'
+        git_commit_name:
+          $ref: '#/components/schemas/Checkout__GitCommitName'
+        start_time:
+          $ref: '#/components/schemas/Timestamp'
+        build_status:
+          $ref: '#/components/schemas/BuildStatusCount'
+        test_status:
+          $ref: '#/components/schemas/TestStatusCount'
+        boot_status:
+          $ref: '#/components/schemas/TestStatusCount'
+        tree_names:
+          items:
+            $ref: '#/components/schemas/Checkout__TreeName'
+          title: Tree Names
+          type: array
+        git_commit_tags:
+          items:
+            $ref: '#/components/schemas/Checkout__GitCommitTags'
+          title: Git Commit Tags
+          type: array
+      required:
+      - git_repository_branch
+      - git_repository_url
+      - git_commit_hash
+      - git_commit_name
+      - start_time
+      - build_status
+      - test_status
+      - boot_status
+      - tree_names
+      - git_commit_tags
+      title: Checkout
+      type: object
+    CheckoutFast:
+      properties:
+        git_repository_branch:
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        git_repository_url:
+          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+        git_commit_hash:
+          $ref: '#/components/schemas/Checkout__GitCommitHash'
+        git_commit_name:
+          $ref: '#/components/schemas/Checkout__GitCommitName'
+        start_time:
+          $ref: '#/components/schemas/Timestamp'
+        id:
+          $ref: '#/components/schemas/Checkout__Id'
+        tree_name:
+          $ref: '#/components/schemas/Checkout__TreeName'
+        patchset_hash:
+          $ref: '#/components/schemas/Checkout__PatchsetHash'
+        git_commit_tags:
+          $ref: '#/components/schemas/Checkout__GitCommitTags'
+      required:
+      - git_repository_branch
+      - git_repository_url
+      - git_commit_hash
+      - git_commit_name
+      - start_time
+      - id
+      - tree_name
+      - patchset_hash
+      - git_commit_tags
+      title: CheckoutFast
+      type: object
     Checkout__GitCommitHash:
       anyOf:
       - type: string
@@ -1220,6 +1333,10 @@ components:
       - type: 'null'
     Checkout__Id:
       type: string
+    Checkout__PatchsetHash:
+      anyOf:
+      - type: string
+      - type: 'null'
     Checkout__TreeName:
       anyOf:
       - type: string
@@ -2569,6 +2686,16 @@ components:
       - builds
       title: TreeDetailsBuildsResponse
       type: object
+    TreeListingFastResponse:
+      items:
+        $ref: '#/components/schemas/CheckoutFast'
+      title: TreeListingFastResponse
+      type: array
+    TreeListingResponse:
+      items:
+        $ref: '#/components/schemas/Checkout'
+      title: TreeListingResponse
+      type: array
   securitySchemes:
     basicAuth:
       type: http
