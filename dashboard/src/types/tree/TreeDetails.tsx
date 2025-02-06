@@ -191,27 +191,27 @@ export type PaginatedCommitHistoryByTree = {
   git_commit_name?: string;
   earliest_start_time: string;
   builds: {
-    valid_builds: number;
-    invalid_builds: number;
-    null_builds: number;
+    valid: number;
+    invalid: number;
+    null: number;
   };
-  boots_tests: {
-    fail_count: number;
-    error_count: number;
-    miss_count: number;
-    pass_count: number;
-    done_count: number;
-    skip_count: number;
-    null_count: number;
+  boots: {
+    fail: number;
+    error: number;
+    miss: number;
+    pass: number;
+    done: number;
+    skip: number;
+    null: number;
   };
-  non_boots_tests: {
-    fail_count: number;
-    error_count: number;
-    miss_count: number;
-    pass_count: number;
-    done_count: number;
-    skip_count: number;
-    null_count: number;
+  tests: {
+    fail: number;
+    error: number;
+    miss: number;
+    pass: number;
+    done: number;
+    skip: number;
+    null: number;
   };
 };
 

@@ -21,9 +21,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from typing import Dict, List, Optional
-from kernelCI_app.helpers.treeDetails import (
-    create_checkouts_where_clauses
-)
+from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -107,7 +105,8 @@ class TreeCommitsHistory(APIView):
         }
 
     def _process_builds_count(
-        self, *,
+        self,
+        *,
         build_valid: bool,
         duration: int,
         commit_hash: str,
@@ -121,7 +120,7 @@ class TreeCommitsHistory(APIView):
             valid=build_valid,
             issue_id=issue_id,
             issue_version=issue_version,
-            incident_test_id=incident_test_id
+            incident_test_id=incident_test_id,
         )
         if is_filtered_out:
             return
@@ -135,7 +134,8 @@ class TreeCommitsHistory(APIView):
         self.commit_hashes[commit_hash]["builds_count"][label] += 1
 
     def _process_boots_count(
-        self, *,
+        self,
+        *,
         test_id: str,
         test_status: str,
         commit_hash: str,
@@ -143,7 +143,7 @@ class TreeCommitsHistory(APIView):
         test_path: str,
         issue_id: str,
         issue_version: int,
-        incident_test_id: str
+        incident_test_id: str,
     ) -> None:
         is_boot_filter_out = self.filterParams.is_boot_filtered_out(
             duration=test_duration,
@@ -151,7 +151,7 @@ class TreeCommitsHistory(APIView):
             issue_version=issue_version,
             path=test_path,
             status=test_status,
-            incident_test_id=incident_test_id
+            incident_test_id=incident_test_id,
         )
 
         is_boot_processed = test_id in self.processed_tests
@@ -164,7 +164,8 @@ class TreeCommitsHistory(APIView):
         self.commit_hashes[commit_hash]["boots_count"][label] += 1
 
     def _process_nonboots_count(
-        self, *,
+        self,
+        *,
         test_id: str,
         test_status: str,
         commit_hash: str,
@@ -172,7 +173,7 @@ class TreeCommitsHistory(APIView):
         test_path: str,
         issue_id: str,
         issue_version: int,
-        incident_test_id: str
+        incident_test_id: str,
     ) -> None:
         is_nonboot_filter_out = self.filterParams.is_test_filtered_out(
             duration=test_duration,
@@ -180,7 +181,7 @@ class TreeCommitsHistory(APIView):
             issue_version=issue_version,
             path=test_path,
             status=test_status,
-            incident_test_id=incident_test_id
+            incident_test_id=incident_test_id,
         )
 
         is_test_processed = test_id in self.processed_tests
@@ -230,8 +231,8 @@ class TreeCommitsHistory(APIView):
         return True
 
     def _process_tests(self, row: Dict) -> None:
-        test_id = row['test_id']
-        issue_id = row['issue_id']
+        test_id = row["test_id"]
+        issue_id = row["issue_id"]
         test_status = row["test_status"] or "NULL"
         test_duration = row["test_duration"]
         test_path = row["test_path"]
@@ -242,8 +243,7 @@ class TreeCommitsHistory(APIView):
         commit_hash = row["git_commit_hash"]
 
         if issue_id is None and (
-            build_valid in [False, None]
-            or test_status == FAIL_STATUS
+            build_valid in [False, None] or test_status == FAIL_STATUS
         ):
             issue_id = UNKNOWN_STRING
 
@@ -259,7 +259,7 @@ class TreeCommitsHistory(APIView):
                 test_path=test_path,
                 issue_id=issue_id,
                 issue_version=issue_version,
-                incident_test_id=incident_test_id
+                incident_test_id=incident_test_id,
             )
         else:
             self._process_nonboots_count(
@@ -270,7 +270,7 @@ class TreeCommitsHistory(APIView):
                 test_path=test_path,
                 issue_id=issue_id,
                 issue_version=issue_version,
-                incident_test_id=incident_test_id
+                incident_test_id=incident_test_id,
             )
 
     def _process_builds(self, row: Dict) -> None:
@@ -286,7 +286,7 @@ class TreeCommitsHistory(APIView):
                 commit_hash=commit_hash,
                 issue_id=row["issue_id"],
                 issue_version=row["issue_version"],
-                incident_test_id=row['incidents_test_id'],
+                incident_test_id=row["incidents_test_id"],
                 key=key,
             )
 
@@ -316,13 +316,18 @@ class TreeCommitsHistory(APIView):
                     build_misc_value_or_default(build_misc).get("platform")
                 ]
 
-            record_in_period = self._is_record_in_time_period(start_time=row['earliest_start_time'])
+            record_in_period = self._is_record_in_time_period(
+                start_time=row["earliest_start_time"]
+            )
 
-            record_filter_out = not record_in_period or self.filterParams.is_record_filtered_out(
-                hardwares=hardware_filter,
-                architecture=row["architecture"],
-                compiler=row["compiler"],
-                config_name=row["config_name"],
+            record_filter_out = (
+                not record_in_period
+                or self.filterParams.is_record_filtered_out(
+                    hardwares=hardware_filter,
+                    architecture=row["architecture"],
+                    compiler=row["compiler"],
+                    config_name=row["config_name"],
+                )
             )
 
             if record_filter_out:
@@ -354,8 +359,8 @@ class TreeCommitsHistory(APIView):
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
-        start_timestamp = request.GET.get("startTimestampInSeconds")
-        end_timestamp = request.GET.get("endTimestampInSeconds")
+        start_timestamp = request.GET.get("start_timestamp_in_seconds")
+        end_timestamp = request.GET.get("end_timestamp_in_seconds")
 
         missing_params = []
         if not origin_param:
@@ -384,12 +389,11 @@ class TreeCommitsHistory(APIView):
         }
 
         checkout_clauses = create_checkouts_where_clauses(
-            git_url=git_url_param,
-            git_branch=git_branch_param
+            git_url=git_url_param, git_branch=git_branch_param
         )
 
-        git_url_clause = checkout_clauses.get('git_url_clause')
-        git_branch_clause = checkout_clauses.get('git_branch_clause')
+        git_url_clause = checkout_clauses.get("git_url_clause")
+        git_branch_clause = checkout_clauses.get("git_branch_clause")
 
         query = f"""
         WITH earliest_commits AS (
@@ -475,7 +479,8 @@ class TreeCommitsHistory(APIView):
 
         if not rows:
             return create_error_response(
-                error_message="History of tree commits not found", status_code=HTTPStatus.OK
+                error_message="History of tree commits not found",
+                status_code=HTTPStatus.OK,
             )
 
         self._process_rows(rows)
@@ -489,27 +494,27 @@ class TreeCommitsHistory(APIView):
                     "git_commit_name": value["commit_name"],
                     "earliest_start_time": value["earliest_start_time"],
                     "builds": {
-                        "valid_builds": value["builds_count"]["true"],
-                        "invalid_builds": value["builds_count"]["false"],
-                        "null_builds": value["builds_count"]["null"],
+                        "valid": value["builds_count"]["true"],
+                        "invalid": value["builds_count"]["false"],
+                        "null": value["builds_count"]["null"],
                     },
-                    "boots_tests": {
-                        "fail_count": value["boots_count"]["fail"],
-                        "error_count": value["boots_count"]["error"],
-                        "miss_count": value["boots_count"]["miss"],
-                        "pass_count": value["boots_count"]["pass"],
-                        "done_count": value["boots_count"]["done"],
-                        "skip_count": value["boots_count"]["skip"],
-                        "null_count": value["boots_count"]["null"],
+                    "boots": {
+                        "fail": value["boots_count"]["fail"],
+                        "error": value["boots_count"]["error"],
+                        "miss": value["boots_count"]["miss"],
+                        "pass": value["boots_count"]["pass"],
+                        "done": value["boots_count"]["done"],
+                        "skip": value["boots_count"]["skip"],
+                        "null": value["boots_count"]["null"],
                     },
-                    "non_boots_tests": {
-                        "fail_count": value["tests_count"]["fail"],
-                        "error_count": value["tests_count"]["error"],
-                        "miss_count": value["tests_count"]["miss"],
-                        "pass_count": value["tests_count"]["pass"],
-                        "done_count": value["tests_count"]["done"],
-                        "skip_count": value["tests_count"]["skip"],
-                        "null_count": value["tests_count"]["null"],
+                    "tests": {
+                        "fail": value["tests_count"]["fail"],
+                        "error": value["tests_count"]["error"],
+                        "miss": value["tests_count"]["miss"],
+                        "pass": value["tests_count"]["pass"],
+                        "done": value["tests_count"]["done"],
+                        "skip": value["tests_count"]["skip"],
+                        "null": value["tests_count"]["null"],
                     },
                 }
             )
