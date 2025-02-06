@@ -778,6 +778,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/TreeCommitsResponse'
           description: ''
+  /api/tree/{commit_hash}/full:
+    get:
+      operationId: tree_full_retrieve
+      parameters:
+      - in: path
+        name: commit_hash
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: git_branch
+        schema:
+          title: Git Branch
+          type: string
+        required: true
+      - in: query
+        name: git_url
+        schema:
+          title: Git Url
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          title: Origin
+          type: string
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeDetailsFullResponse'
+          description: ''
   /api/tree/{commit_hash}/summary:
     get:
       operationId: tree_summary_retrieve
@@ -857,6 +897,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonDetailsTestsResponse'
+          description: ''
+  /api/tree/{tree_name}/{branch}:
+    get:
+      operationId: tree_retrieve_2
+      parameters:
+      - in: path
+        name: branch
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeLatestResponse'
           description: ''
 components:
   schemas:
@@ -2598,9 +2671,9 @@ components:
         builds:
           $ref: '#/components/schemas/BuildStatusCount'
         boots:
-          $ref: '#/components/schemas/TreeCommitsTestStatusCount'
+          $ref: '#/components/schemas/TestStatusCount'
         tests:
-          $ref: '#/components/schemas/TreeCommitsTestStatusCount'
+          $ref: '#/components/schemas/TestStatusCount'
       required:
       - git_commit_hash
       - git_commit_name
@@ -2615,39 +2688,6 @@ components:
         $ref: '#/components/schemas/TreeCommitsData'
       title: TreeCommitsResponse
       type: array
-    TreeCommitsTestStatusCount:
-      properties:
-        fail:
-          title: Fail
-          type: integer
-        error:
-          title: Error
-          type: integer
-        miss:
-          title: Miss
-          type: integer
-        pass:
-          title: Pass
-          type: integer
-        done:
-          title: Done
-          type: integer
-        skip:
-          title: Skip
-          type: integer
-        'null':
-          title: 'Null'
-          type: integer
-      required:
-      - fail
-      - error
-      - miss
-      - pass
-      - done
-      - skip
-      - 'null'
-      title: TreeCommitsTestStatusCount
-      type: object
     TreeCommon:
       properties:
         hardware:
@@ -2685,6 +2725,56 @@ components:
       required:
       - builds
       title: TreeDetailsBuildsResponse
+      type: object
+    TreeDetailsFullResponse:
+      properties:
+        common:
+          $ref: '#/components/schemas/TreeCommon'
+        summary:
+          $ref: '#/components/schemas/Summary'
+        filters:
+          $ref: '#/components/schemas/DetailsFilters'
+        tests:
+          items:
+            $ref: '#/components/schemas/TestHistoryItem'
+          title: Tests
+          type: array
+        boots:
+          items:
+            $ref: '#/components/schemas/TestHistoryItem'
+          title: Boots
+          type: array
+        builds:
+          items:
+            $ref: '#/components/schemas/BuildHistoryItem'
+          title: Builds
+          type: array
+      required:
+      - common
+      - summary
+      - filters
+      - tests
+      - boots
+      - builds
+      title: TreeDetailsFullResponse
+      type: object
+    TreeLatestResponse:
+      properties:
+        git_repository_url:
+          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+        git_commit_hash:
+          $ref: '#/components/schemas/Checkout__GitCommitHash'
+        git_commit_name:
+          $ref: '#/components/schemas/Checkout__GitCommitName'
+        api_url:
+          title: Api Url
+          type: string
+      required:
+      - git_repository_url
+      - git_commit_hash
+      - git_commit_name
+      - api_url
+      title: TreeLatestResponse
       type: object
     TreeListingFastResponse:
       items:

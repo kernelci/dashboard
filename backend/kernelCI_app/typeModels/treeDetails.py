@@ -4,6 +4,8 @@ from kernelCI_app.typeModels.commonDetails import (
     BuildHistoryItem,
     DetailsFilters,
     Summary,
+    CommonDetailsBootsResponse,
+    CommonDetailsTestsResponse,
 )
 from kernelCI_app.typeModels.treeListing import BaseCheckouts
 from pydantic import BaseModel
@@ -43,3 +45,12 @@ class TreeQueryParameters(BaseModel):
     origin: str
     git_url: str
     git_branch: str
+
+
+class TreeDetailsFullResponse(
+    TreeDetailsBuildsResponse,
+    CommonDetailsBootsResponse,
+    CommonDetailsTestsResponse,
+    SummaryResponse
+):
+    pass

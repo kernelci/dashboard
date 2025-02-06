@@ -1,11 +1,13 @@
 from typing import List
-from django.http import JsonResponse
 from http import HTTPStatus
-from django.views import View
-from kernelCI_app.helpers.errorHandling import create_error_response
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from kernelCI_app.helpers.filters import (
     FilterParams,
 )
+from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.treeDetails import (
     call_based_on_compatible_and_misc_platform,
     decide_if_is_boot_filtered_out,
@@ -33,9 +35,13 @@ from collections import defaultdict
 from kernelCI_app.viewCommon import create_details_build_summary
 
 from kernelCI_app.typeModels.issues import Issue, IssueDict
+from kernelCI_app.typeModels.treeDetails import (
+    TreeDetailsFullResponse,
+    TreeQueryParameters
+)
 
 
-class TreeDetails(View):
+class TreeDetails(APIView):
     def __init__(self):
         self.processedTests = set()
         self.filters = None
@@ -159,24 +165,29 @@ class TreeDetails(View):
         self.build_summary = create_details_build_summary(self.builds)
         self.build_issues = convert_issues_dict_to_list(self.processed_build_issues)
 
+    @extend_schema(
+        responses=TreeDetailsFullResponse,
+        parameters=[TreeQueryParameters],
+        methods=["GET"]
+    )
     def get(self, request, commit_hash: str | None):
         rows = get_tree_details_data(request, commit_hash)
 
         self.filters = FilterParams(request)
 
         if len(rows) == 0:
-            return create_error_response(
+            return create_api_error_response(
                 error_message="Tree not found", status_code=HTTPStatus.OK
             )
 
         self._sanitize_rows(rows)
 
-        return JsonResponse(
-            {
-                "builds": self.builds,
-                "boots": self.bootHistory,
-                "tests": self.testHistory,
-                "summary": {
+        try:
+            valid_response = TreeDetailsFullResponse(
+                builds=self.builds,
+                boots=self.bootHistory,
+                tests=self.testHistory,
+                summary={
                     "builds": {
                         "status": self.build_summary["builds"],
                         "architectures": self.build_summary["architectures"],
@@ -207,12 +218,12 @@ class TreeDetails(View):
                         "failed_platforms": list(self.testPlatformsWithErrors),
                     },
                 },
-                "common": {
+                common={
                     "hardware": list(self.hardwareUsed),
                     "tree_url": self.tree_url,
                     "git_commit_tags": self.git_commit_tags,
                 },
-                "filters": {
+                filters={
                     "all": {
                         "configs": list(self.global_configs),
                         "architectures": list(self.global_architectures),
@@ -227,7 +238,11 @@ class TreeDetails(View):
                     "tests": {
                         "issues": list(self.unfiltered_test_issues),
                     },
-                },
-            },
-            safe=False,
-        )
+                }
+            )
+        except ValidationError as e:
+            return create_api_error_response(
+                error_message=e.json(), status_code=HTTPStatus.INTERNAL_SERVER_ERROR
+            )
+
+        return Response(valid_response.model_dump())
