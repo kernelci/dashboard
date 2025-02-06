@@ -15,6 +15,7 @@ from pydantic import ValidationError
 
 
 class IssueDetails(APIView):
+    # TODO: combine fetching latest version here
     def _fetch_issue(self, *, issue_id: str, version: int) -> Optional[Dict]:
         issue_fields = [
             "field_timestamp",

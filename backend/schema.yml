@@ -375,6 +375,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/IssueTestsResponse'
           description: ''
+  /api/issue/extras/:
+    post:
+      operationId: issue_extras_create
+      tags:
+      - issue
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueExtraDetailsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IssueExtraDetailsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IssueExtraDetailsRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueExtraDetailsResponse'
+          description: ''
   /api/log-downloader/:
     get:
       operationId: log_downloader_retrieve
@@ -2126,6 +2154,30 @@ components:
       - misc
       title: IssueDetailsResponse
       type: object
+    IssueExtraDetailsRequest:
+      properties:
+        issues:
+          items:
+            maxItems: 2
+            minItems: 2
+            prefixItems:
+            - type: string
+            - type: integer
+            type: array
+          title: Issues
+          type: array
+      required:
+      - issues
+      title: IssueExtraDetailsRequest
+      type: object
+    IssueExtraDetailsResponse:
+      properties:
+        issues:
+          $ref: '#/components/schemas/ProcessedExtraDetailedIssues'
+      required:
+      - issues
+      title: IssueExtraDetailsResponse
+      type: object
     IssueTestItem:
       properties:
         id:
@@ -2163,6 +2215,43 @@ components:
         $ref: '#/components/schemas/IssueTestItem'
       title: IssueTestsResponse
       type: array
+    IssueWithExtraInfo:
+      properties:
+        id:
+          title: Id
+          type: string
+        version:
+          title: Version
+          type: integer
+        first_seen:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: First Seen
+        trees:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/TreeSetItem'
+            type: array
+          - type: 'null'
+          default: []
+          title: Trees
+        tags:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PossibleIssueTags'
+            type: array
+            uniqueItems: true
+          - type: 'null'
+          default: []
+          title: Tags
+      required:
+      - id
+      - version
+      title: IssueWithExtraInfo
+      type: object
     Issue__Comment:
       anyOf:
       - type: string
@@ -2263,6 +2352,18 @@ components:
       type: object
     Origin:
       type: string
+    PossibleIssueTags:
+      enum:
+      - mainline
+      - stable
+      - linux-next
+      type: string
+    ProcessedExtraDetailedIssues:
+      additionalProperties:
+        additionalProperties:
+          $ref: '#/components/schemas/IssueWithExtraInfo'
+        type: object
+      type: object
     Summary:
       properties:
         builds:
@@ -2786,6 +2887,23 @@ components:
         $ref: '#/components/schemas/Checkout'
       title: TreeListingResponse
       type: array
+    TreeSetItem:
+      properties:
+        tree_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tree Name
+        git_repository_branch:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Git Repository Branch
+      required:
+      - tree_name
+      - git_repository_branch
+      title: TreeSetItem
+      type: object
   securitySchemes:
     basicAuth:
       type: http
