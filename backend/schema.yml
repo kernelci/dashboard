@@ -582,6 +582,36 @@ paths:
         schema:
           type: string
         required: true
+      - in: query
+        name: end_time_stamp_in_seconds
+        schema:
+          title: End Time Stamp In Seconds
+          type: string
+        required: true
+      - in: query
+        name: git_branch
+        schema:
+          title: Git Branch
+          type: string
+        required: true
+      - in: query
+        name: git_url
+        schema:
+          title: Git Url
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          title: Origin
+          type: string
+        required: true
+      - in: query
+        name: start_time_stamp_in_seconds
+        schema:
+          title: Start Time Stamp In Seconds
+          type: string
+        required: true
       tags:
       - tree
       security:
@@ -590,7 +620,11 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCommitsResponse'
+          description: ''
   /api/tree/{commit_hash}/summary:
     get:
       operationId: tree_summary_retrieve
@@ -2106,6 +2140,69 @@ components:
       - selected_commit_status
       - is_selected
       title: Tree
+      type: object
+    TreeCommitsData:
+      properties:
+        git_commit_hash:
+          $ref: '#/components/schemas/Checkout__GitCommitHash'
+        git_commit_name:
+          $ref: '#/components/schemas/Checkout__GitCommitName'
+        earliest_start_time:
+          format: date-time
+          title: Earliest Start Time
+          type: string
+        builds:
+          $ref: '#/components/schemas/BuildStatusCount'
+        boots:
+          $ref: '#/components/schemas/TreeCommitsTestStatusCount'
+        tests:
+          $ref: '#/components/schemas/TreeCommitsTestStatusCount'
+      required:
+      - git_commit_hash
+      - git_commit_name
+      - earliest_start_time
+      - builds
+      - boots
+      - tests
+      title: TreeCommitsData
+      type: object
+    TreeCommitsResponse:
+      items:
+        $ref: '#/components/schemas/TreeCommitsData'
+      title: TreeCommitsResponse
+      type: array
+    TreeCommitsTestStatusCount:
+      properties:
+        fail:
+          title: Fail
+          type: integer
+        error:
+          title: Error
+          type: integer
+        miss:
+          title: Miss
+          type: integer
+        pass:
+          title: Pass
+          type: integer
+        done:
+          title: Done
+          type: integer
+        skip:
+          title: Skip
+          type: integer
+        'null':
+          title: 'Null'
+          type: integer
+      required:
+      - fail
+      - error
+      - miss
+      - pass
+      - done
+      - skip
+      - 'null'
+      title: TreeCommitsTestStatusCount
       type: object
     TreeCommon:
       properties:

@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
-from django.http import JsonResponse, HttpResponseBadRequest
 from django.db import connection
 from http import HTTPStatus
-from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
     UNKNOWN_STRING,
     FilterParams,
@@ -16,12 +15,17 @@ from kernelCI_app.helpers.misc import (
     env_misc_value_or_default,
 )
 from kernelCI_app.typeModels.databases import FAIL_STATUS
-from kernelCI_app.utils import getErrorResponseBody, is_boot
+from kernelCI_app.utils import is_boot
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from drf_spectacular.utils import extend_schema
 from typing import Dict, List, Optional
 from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
+from kernelCI_app.typeModels.treeCommits import (
+    TreeCommitsQueryParameters,
+    TreeCommitsResponse,
+)
+from pydantic import ValidationError
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -355,7 +359,12 @@ class TreeCommitsHistory(APIView):
         except Exception as ex:
             log_message(ex)
 
-    def get(self, request, commit_hash):
+    @extend_schema(
+        responses=TreeCommitsResponse,
+        parameters=[TreeCommitsQueryParameters],
+        methods=["GET"],
+    )
+    def get(self, request, commit_hash: Optional[str]) -> Response:
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
@@ -367,9 +376,8 @@ class TreeCommitsHistory(APIView):
             missing_params.append("origin")
 
         if missing_params:
-            return Response(
-                {"error": f"Missing parameters: {', '.join(missing_params)}"},
-                status=status.HTTP_400_BAD_REQUEST,
+            return create_api_error_response(
+                error_message=f"Missing parameters: {', '.join(missing_params)}",
             )
 
         if None not in (start_timestamp, end_timestamp):
@@ -379,7 +387,7 @@ class TreeCommitsHistory(APIView):
             self.filterParams = FilterParams(request)
             self.setup_filters()
         except InvalidComparisonOP as e:
-            return HttpResponseBadRequest(getErrorResponseBody(str(e)))
+            return create_api_error_response(error_message=str(e))
 
         self.field_values = {
             "commit_hash": commit_hash,
@@ -478,7 +486,7 @@ class TreeCommitsHistory(APIView):
             rows = cursor.fetchall()
 
         if not rows:
-            return create_error_response(
+            return create_api_error_response(
                 error_message="History of tree commits not found",
                 status_code=HTTPStatus.OK,
             )
@@ -519,4 +527,9 @@ class TreeCommitsHistory(APIView):
                 }
             )
 
-        return JsonResponse(results, safe=False)
+        try:
+            valid_response = TreeCommitsResponse(results)
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        return Response(valid_response.model_dump(by_alias=True))
