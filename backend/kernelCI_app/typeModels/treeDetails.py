@@ -30,6 +30,6 @@ class TreeDetailsBuildsResponse(BaseModel):
 
 
 class TreeQueryParameters(BaseModel):
-    origin: str = "maestro"
+    origin: str
     git_url: str
     git_branch: str

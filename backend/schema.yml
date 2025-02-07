@@ -518,9 +518,9 @@ paths:
       - in: query
         name: origin
         schema:
-          default: maestro
           title: Origin
           type: string
+        required: true
       tags:
       - tree
       security:
@@ -558,9 +558,9 @@ paths:
       - in: query
         name: origin
         schema:
-          default: maestro
           title: Origin
           type: string
+        required: true
       tags:
       - tree
       security:
@@ -601,6 +601,24 @@ paths:
         schema:
           type: string
         required: true
+      - in: query
+        name: git_branch
+        schema:
+          title: Git Branch
+          type: string
+        required: true
+      - in: query
+        name: git_url
+        schema:
+          title: Git Url
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          title: Origin
+          type: string
+        required: true
       tags:
       - tree
       security:
@@ -638,9 +656,9 @@ paths:
       - in: query
         name: origin
         schema:
-          default: maestro
           title: Origin
           type: string
+        required: true
       tags:
       - tree
       security:
@@ -1266,19 +1284,16 @@ components:
           title: Git Repository Branch
         tree_name:
           anyOf:
-          - type: string
+          - $ref: '#/components/schemas/Checkout__TreeName'
           - type: 'null'
-          title: Tree Name
         issue_id:
           anyOf:
-          - type: string
+          - $ref: '#/components/schemas/Issue__Id'
           - type: 'null'
-          title: Issue Id
         issue_version:
           anyOf:
-          - type: integer
+          - $ref: '#/components/schemas/Issue__Version'
           - type: 'null'
-          title: Issue Version
       required:
       - id
       - architecture
@@ -1298,6 +1313,35 @@ components:
       title: HardwareBuildHistoryItem
       type: object
     HardwareCommitHistoryResponse:
+      example:
+        commit_history_table:
+          commit_hash_1:
+          - git_commit_hash: string
+            git_commit_name: string
+            git_commit_tags:
+            - string
+            git_repository_branch: string
+            git_repository_url: string
+            start_time: datetime
+            tree_name: string
+          commit_hash_2:
+          - git_commit_hash: string
+            git_commit_name: string
+            git_commit_tags:
+            - string
+            git_repository_branch: string
+            git_repository_url: string
+            start_time: datetime
+            tree_name: string
+          commit_hash_3:
+          - git_commit_hash: string
+            git_commit_name: string
+            git_commit_tags:
+            - string
+            git_repository_branch: string
+            git_repository_url: string
+            start_time: datetime
+            tree_name: string
       properties:
         commit_history_table:
           additionalProperties:
@@ -1599,37 +1643,37 @@ components:
       type: object
     IssueBuildItem:
       properties:
-        build__id:
+        id:
           $ref: '#/components/schemas/Build__Id'
-        build__architecture:
+        architecture:
           $ref: '#/components/schemas/Build__Architecture'
-        build__config_name:
+        config_name:
           $ref: '#/components/schemas/Build__ConfigName'
-        build__valid:
+        valid:
           $ref: '#/components/schemas/Build__Valid'
-        build__start_time:
+        start_time:
           $ref: '#/components/schemas/Build__StartTime'
-        build__duration:
+        duration:
           $ref: '#/components/schemas/Build__Duration'
-        build__compiler:
+        compiler:
           $ref: '#/components/schemas/Build__Compiler'
-        build__log_url:
+        log_url:
           $ref: '#/components/schemas/Build__LogUrl'
-        build__checkout__tree_name:
+        tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
-        build__checkout__git_repository_branch:
+        git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
       required:
-      - build__id
-      - build__architecture
-      - build__config_name
-      - build__valid
-      - build__start_time
-      - build__duration
-      - build__compiler
-      - build__log_url
-      - build__checkout__tree_name
-      - build__checkout__git_repository_branch
+      - id
+      - architecture
+      - config_name
+      - valid
+      - start_time
+      - duration
+      - compiler
+      - log_url
+      - tree_name
+      - git_repository_branch
       title: IssueBuildItem
       type: object
     IssueBuildsResponse:
@@ -1657,10 +1701,6 @@ components:
           $ref: '#/components/schemas/Issue__CulpritTool'
         culprit_harness:
           $ref: '#/components/schemas/Issue__CulpritHarness'
-        build_valid:
-          $ref: '#/components/schemas/Issue__BuildValid'
-        test_status:
-          $ref: '#/components/schemas/Issue__TestStatus'
         comment:
           $ref: '#/components/schemas/Issue__Comment'
         misc:
@@ -1675,42 +1715,40 @@ components:
       - culprit_code
       - culprit_tool
       - culprit_harness
-      - build_valid
-      - test_status
       - comment
       - misc
       title: IssueDetailsResponse
       type: object
     IssueTestItem:
       properties:
-        test__id:
+        id:
           $ref: '#/components/schemas/Test__Id'
-        test__status:
+        status:
           $ref: '#/components/schemas/Test__Status'
-        test__duration:
+        duration:
           $ref: '#/components/schemas/Test__Duration'
-        test__path:
+        path:
           $ref: '#/components/schemas/Test__Path'
-        test__start_time:
+        start_time:
           $ref: '#/components/schemas/Test__StartTime'
-        test__environment_compatible:
+        environment_compatible:
           $ref: '#/components/schemas/Test__EnvironmentCompatible'
-        test__environment_misc:
+        environment_misc:
           $ref: '#/components/schemas/Test__EnvironmentMisc'
-        test__build__checkout__tree_name:
+        tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
-        test__build__checkout__git_repository_branch:
+        git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
       required:
-      - test__id
-      - test__status
-      - test__duration
-      - test__path
-      - test__start_time
-      - test__environment_compatible
-      - test__environment_misc
-      - test__build__checkout__tree_name
-      - test__build__checkout__git_repository_branch
+      - id
+      - status
+      - duration
+      - path
+      - start_time
+      - environment_compatible
+      - environment_misc
+      - tree_name
+      - git_repository_branch
       title: IssueTestItem
       type: object
     IssueTestsResponse:
@@ -1718,10 +1756,6 @@ components:
         $ref: '#/components/schemas/IssueTestItem'
       title: IssueTestsResponse
       type: array
-    Issue__BuildValid:
-      anyOf:
-      - type: boolean
-      - type: 'null'
     Issue__Comment:
       anyOf:
       - type: string
@@ -1749,10 +1783,6 @@ components:
       - type: string
       - type: 'null'
     Issue__ReportUrl:
-      anyOf:
-      - type: string
-      - type: 'null'
-    Issue__TestStatus:
       anyOf:
       - type: string
       - type: 'null'
