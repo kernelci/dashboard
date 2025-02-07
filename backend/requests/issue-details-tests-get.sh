@@ -1,7 +1,7 @@
 # This will get the tests from the issue with the latest version, for a specific version pass ?version=n (n being an integer)
 http 'http://localhost:8000/api/issue/maestro:0820fe153b255bf52750bbf1fecb198d8772f5a9/tests'
 
-HTTP/1.1 200 OK
+# HTTP/1.1 200 OK
 # Allow: GET, HEAD, OPTIONS
 # Cache-Control: max-age=0
 # Content-Length: 1589

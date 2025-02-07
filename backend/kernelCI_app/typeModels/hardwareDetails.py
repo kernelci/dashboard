@@ -130,5 +130,47 @@ class HardwareDetailsTestsResponse(BaseModel):
 class HardwareCommitHistoryResponse(BaseModel):
     commit_history_table: Dict[str, List[CommitHistoryValidCheckout]]
 
+    class Config:
+        # TODO: Implement this modification (additionalProp{n} -> commit_hash_{n}) dynamically
+        json_schema_extra = {
+            "example": {
+                "commit_history_table": {
+                    "commit_hash_1": [
+                        {
+                            "git_commit_hash": "string",
+                            "tree_name": "string",
+                            "git_repository_branch": "string",
+                            "git_repository_url": "string",
+                            "git_commit_tags": ["string"],
+                            "git_commit_name": "string",
+                            "start_time": "datetime",
+                        }
+                    ],
+                    "commit_hash_2": [
+                        {
+                            "git_commit_hash": "string",
+                            "tree_name": "string",
+                            "git_repository_branch": "string",
+                            "git_repository_url": "string",
+                            "git_commit_tags": ["string"],
+                            "git_commit_name": "string",
+                            "start_time": "datetime",
+                        }
+                    ],
+                    "commit_hash_3": [
+                        {
+                            "git_commit_hash": "string",
+                            "tree_name": "string",
+                            "git_repository_branch": "string",
+                            "git_repository_url": "string",
+                            "git_commit_tags": ["string"],
+                            "git_commit_name": "string",
+                            "start_time": "datetime",
+                        }
+                    ],
+                }
+            }
+        }
+
 
 PossibleTestType = Literal["test", "boot"]

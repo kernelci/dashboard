@@ -19,7 +19,7 @@ from kernelCI_app.helpers.treeDetails import (
     process_tests_issue,
     process_filters,
 )
-from kernelCI_app.typeModels.treeDetails import SummaryResponse
+from kernelCI_app.typeModels.treeDetails import SummaryResponse, TreeQueryParameters
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
 )
@@ -153,6 +153,8 @@ class TreeDetailsSummary(APIView):
 
     @extend_schema(
         responses=SummaryResponse,
+        parameters=[TreeQueryParameters],
+        methods=["GET"],
     )
     def get(self, request, commit_hash: str | None):
         rows = get_tree_details_data(request, commit_hash)

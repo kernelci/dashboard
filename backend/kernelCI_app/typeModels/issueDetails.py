@@ -38,33 +38,33 @@ class IssueDetailsPathParameters(BaseModel):
 
 
 class IssueBuildItem(BaseModel):
-    id: Build__Id = Field(alias="build__id")
-    architecture: Build__Architecture = Field(alias="build__architecture")
-    config_name: Build__ConfigName = Field(alias="build__config_name")
-    valid: Build__Valid = Field(alias="build__valid")
-    start_time: Build__StartTime = Field(alias="build__start_time")
-    duration: Build__Duration = Field(alias="build__duration")
-    compiler: Build__Compiler = Field(alias="build__compiler")
-    log_url: Build__LogUrl = Field(alias="build__log_url")
-    tree_name: Checkout__TreeName = Field(alias="build__checkout__tree_name")
+    id: Build__Id = Field(validation_alias="build__id")
+    architecture: Build__Architecture = Field(validation_alias="build__architecture")
+    config_name: Build__ConfigName = Field(validation_alias="build__config_name")
+    valid: Build__Valid = Field(validation_alias="build__valid")
+    start_time: Build__StartTime = Field(validation_alias="build__start_time")
+    duration: Build__Duration = Field(validation_alias="build__duration")
+    compiler: Build__Compiler = Field(validation_alias="build__compiler")
+    log_url: Build__LogUrl = Field(validation_alias="build__log_url")
+    tree_name: Checkout__TreeName = Field(validation_alias="build__checkout__tree_name")
     git_repository_branch: Checkout__GitRepositoryBranch = Field(
-        alias="build__checkout__git_repository_branch"
+        validation_alias="build__checkout__git_repository_branch"
     )
 
 
 class IssueTestItem(BaseModel):
-    id: Test__Id = Field(alias="test__id")
-    status: Test__Status = Field(alias="test__status")
-    duration: Test__Duration = Field(alias="test__duration")
-    path: Test__Path = Field(alias="test__path")
-    start_time: Test__StartTime = Field(alias="test__start_time")
+    id: Test__Id = Field(validation_alias="test__id")
+    status: Test__Status = Field(validation_alias="test__status")
+    duration: Test__Duration = Field(validation_alias="test__duration")
+    path: Test__Path = Field(validation_alias="test__path")
+    start_time: Test__StartTime = Field(validation_alias="test__start_time")
     environment_compatible: Test__EnvironmentCompatible = Field(
-        alias="test__environment_compatible"
+        validation_alias="test__environment_compatible"
     )
-    environment_misc: Test__EnvironmentMisc = Field(alias="test__environment_misc")
-    tree_name: Checkout__TreeName = Field(alias="test__build__checkout__tree_name")
+    environment_misc: Test__EnvironmentMisc = Field(validation_alias="test__environment_misc")
+    tree_name: Checkout__TreeName = Field(validation_alias="test__build__checkout__tree_name")
     git_repository_branch: Checkout__GitRepositoryBranch = Field(
-        alias="test__build__checkout__git_repository_branch"
+        validation_alias="test__build__checkout__git_repository_branch"
     )
 
 
