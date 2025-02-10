@@ -95,7 +95,10 @@ const IssuesList = ({
     <DumbListingContent>
       {issues.map(issue => {
         return (
-          <div key={issue.id} className="flex w-full justify-between gap-4">
+          <div
+            key={`${issue.id}${issue.version}`}
+            className="flex w-full justify-between gap-4"
+          >
             <div className="overflow-hidden">
               <FilterLink
                 filterSection={issueFilterSection}
