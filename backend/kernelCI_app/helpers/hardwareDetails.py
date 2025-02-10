@@ -692,14 +692,17 @@ def update_issues(
 ) -> None:
     can_insert_issue = True
     if issue_from == "build":
-        (issue_id, can_insert_issue) = should_increment_build_issue(
+        (issue_id, issue_version, can_insert_issue) = should_increment_build_issue(
             issue_id=issue_id,
+            issue_version=issue_version,
             incident_test_id=incident_test_id,
             build_valid=build_valid,
         )
     elif issue_from == "test":
-        (issue_id, can_insert_issue) = should_increment_test_issue(
-            issue_id, incident_test_id
+        (issue_id, issue_version, can_insert_issue) = should_increment_test_issue(
+            issue_id=issue_id,
+            issue_version=issue_version,
+            incident_test_id=incident_test_id,
         )
 
     if issue_id and issue_version is not None and can_insert_issue:
@@ -766,11 +769,7 @@ def get_processed_issue_key(*, record: Dict) -> str:
     issue_version = record["incidents__issue__version"]
     issue_version_key = str(issue_version) if issue_version is not None else ""
 
-    processed_issue_key = (
-        record["id"]
-        + issue_id_key
-        + issue_version_key
-    )
+    processed_issue_key = record["id"] + issue_id_key + issue_version_key
     return processed_issue_key
 
 
@@ -851,10 +850,13 @@ def process_filters(*, instance, record: Dict) -> None:
         instance.global_architectures.add(record["build__architecture"])
         instance.global_compilers.add(record["build__compiler"])
 
-        build_issue_id, is_build_issue = should_increment_build_issue(
-            issue_id=build_issue_id,
-            incident_test_id=incident_test_id,
-            build_valid=build_valid,
+        build_issue_id, build_issue_version, is_build_issue = (
+            should_increment_build_issue(
+                issue_id=build_issue_id,
+                issue_version=build_issue_version,
+                incident_test_id=incident_test_id,
+                build_valid=build_valid,
+            )
         )
 
         is_invalid = build_valid is False
@@ -876,8 +878,9 @@ def process_filters(*, instance, record: Dict) -> None:
 
         test_issue_id = record["incidents__issue__id"]
         test_issue_version = record["incidents__issue__version"]
-        test_issue_id, is_test_issue = should_increment_test_issue(
+        test_issue_id, test_issue_version, is_test_issue = should_increment_test_issue(
             issue_id=test_issue_id,
+            issue_version=test_issue_version,
             incident_test_id=incident_test_id,
         )
 
