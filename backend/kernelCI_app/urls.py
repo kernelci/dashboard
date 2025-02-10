@@ -100,6 +100,10 @@ urlpatterns = [
     path("hardware/",
          viewCache(views.HardwareView),
          name="hardware"),
+    path("issue/extras/",
+         viewCache(views.IssueExtraDetails),
+         name="issueExtraDetails"
+         ),
     path("issue/<str:issue_id>",
          viewCache(views.IssueDetails),
          name="issueDetails"),

@@ -1,5 +1,6 @@
 import json
 from typing import Union, List, Optional, Dict
+import typing_extensions
 from django.utils import timezone
 from datetime import timedelta
 
@@ -25,7 +26,10 @@ def create_issue(
     }
 
 
-# deprecated, use convert_issues_dict_to_list_typed instead and use type validation
+@typing_extensions.deprecated(
+    'The `convert_issues_dict_to_list` method is deprecated; use `convert_issues_dict_to_list_typed` '
+    'and use type validation.',
+)
 def convert_issues_dict_to_list(issues_dict: Dict[str, Issue]) -> List[Issue]:
     return list(issues_dict.values())
 
@@ -41,7 +45,7 @@ def convert_issues_dict_to_list_typed(*, issues_dict: Dict) -> List[Issue]:
                 report_url=issue["report_url"],
                 incidents_info=IncidentInfo(
                     incidentsCount=issue["incidents_info"]["incidentsCount"],
-                )
+                ),
             )
         )
     return issues
