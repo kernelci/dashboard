@@ -8,6 +8,8 @@ interface gitValues {
   commitName?: string;
 }
 
+const graphDisplaySize = 8;
+
 export const gitCommitValueSelector = ({
   commitTags,
   commitHash,
@@ -23,6 +25,21 @@ export const gitCommitValueSelector = ({
     hover = commitName ?? '';
   }
   return { content, hover };
+};
+
+export const getChartXLabel = ({
+  commitTags,
+  commitHash,
+  commitName,
+}: gitValues): string => {
+  let content = commitHash ?? commitName ?? '';
+  if (commitTags && commitTags.length > 0) {
+    content = `...${commitTags[0].slice(-graphDisplaySize)}`;
+  } else {
+    content = `${content.slice(0, graphDisplaySize)}`;
+  }
+
+  return content;
 };
 
 interface ICommitTagTooltip {

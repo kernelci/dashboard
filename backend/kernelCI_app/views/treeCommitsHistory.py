@@ -62,24 +62,25 @@ class TreeCommitsHistory(APIView):
             {
                 "git_commit_hash": row[0],
                 "git_commit_name": row[1],
-                "earliest_start_time": row[2],
-                "build_duration": row[3],
-                "architecture": row[4],
-                "compiler": row[5],
-                "config_name": row[6],
-                "build_valid": row[7],
-                "test_path": row[8],
-                "test_status": row[9],
-                "test_duration": row[10],
-                "hardware_compatibles": row[11],
-                "test_environment_misc": row[12],
-                "build_id": row[13],
-                "build_misc": row[14],
-                "test_id": row[15],
-                "incidents_id": row[16],
-                "incidents_test_id": row[17],
-                "issue_id": row[18],
-                "issue_version": row[19],
+                "git_commit_tags": row[2],
+                "earliest_start_time": row[3],
+                "build_duration": row[4],
+                "architecture": row[5],
+                "compiler": row[6],
+                "config_name": row[7],
+                "build_valid": row[8],
+                "test_path": row[9],
+                "test_status": row[10],
+                "test_duration": row[11],
+                "hardware_compatibles": row[12],
+                "test_environment_misc": row[13],
+                "build_id": row[14],
+                "build_misc": row[15],
+                "test_id": row[16],
+                "incidents_id": row[17],
+                "incidents_test_id": row[18],
+                "issue_id": row[19],
+                "issue_version": row[20],
             }
             for row in rows
         ]
@@ -341,6 +342,7 @@ class TreeCommitsHistory(APIView):
             if commit_hash not in self.commit_hashes:
                 self.commit_hashes[commit_hash] = self._create_commit_entry()
                 self.commit_hashes[commit_hash]["commit_name"] = row["git_commit_name"]
+                self.commit_hashes[commit_hash]["commit_tags"] = row["git_commit_tags"]
                 self.commit_hashes[commit_hash]["earliest_start_time"] = row[
                     "earliest_start_time"
                 ]
@@ -406,11 +408,12 @@ class TreeCommitsHistory(APIView):
         query = f"""
         WITH earliest_commits AS (
             SELECT
-                 id,
+                id,
                 git_commit_hash,
                 git_commit_name,
                 git_repository_branch,
                 git_repository_url,
+                git_commit_tags,
                 origin,
                 start_time,
                 time_order
@@ -421,6 +424,7 @@ class TreeCommitsHistory(APIView):
                     git_commit_name,
                     git_repository_branch,
                     git_repository_url,
+                    git_commit_tags,
                     origin,
                     start_time,
                     ROW_NUMBER() OVER (
@@ -445,6 +449,7 @@ class TreeCommitsHistory(APIView):
         SELECT
             c.git_commit_hash,
             c.git_commit_name,
+            c.git_commit_tags,
             c.start_time,
             b.duration,
             b.architecture,
@@ -500,6 +505,7 @@ class TreeCommitsHistory(APIView):
                 {
                     "git_commit_hash": key,
                     "git_commit_name": value["commit_name"],
+                    "git_commit_tags": value["commit_tags"],
                     "earliest_start_time": value["earliest_start_time"],
                     "builds": {
                         "valid": value["builds_count"]["true"],
