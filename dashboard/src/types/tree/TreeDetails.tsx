@@ -189,6 +189,7 @@ export type TTestByCommitHashResponse = {
 export type PaginatedCommitHistoryByTree = {
   git_commit_hash: string;
   git_commit_name?: string;
+  git_commit_tags?: string[];
   earliest_start_time: string;
   builds: {
     valid: number;
