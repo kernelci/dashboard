@@ -1,3 +1,5 @@
+import type { Status } from '@/types/database';
+
 export type TTestDetails = {
   architecture: string;
   build_id: string;
@@ -12,7 +14,7 @@ export type TTestDetails = {
   log_url: string | undefined;
   path: string;
   start_time: string;
-  status: string;
+  status: Status;
   environment_compatible?: string[];
   environment_misc?: Record<string, unknown>;
   misc?: Record<string, unknown>;

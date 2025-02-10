@@ -29,6 +29,7 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { LogViewIcon } from '@/components/Icons/LogView';
 import { LinkIcon } from '@/components/Icons/Link';
+import { StatusIcon } from '@/components/Icons/StatusIcons';
 
 const TestDetailsSections = ({
   test,
@@ -86,12 +87,14 @@ const TestDetailsSections = ({
     return {
       title: test.path,
       eyebrow: formatMessage({ id: 'test.details' }),
+      leftIcon: <StatusIcon status={test.status} />,
       subsections: [
         {
           infos: [
             {
               title: 'global.status',
               linkText: truncateBigText(test.status),
+              icon: <StatusIcon status={test.status} className="text-xl" />,
             },
             {
               title: 'global.tree',

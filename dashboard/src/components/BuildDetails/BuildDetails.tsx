@@ -1,5 +1,3 @@
-import { MdClose, MdCheck } from 'react-icons/md';
-
 import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useCallback, useMemo, useState } from 'react';
@@ -35,6 +33,7 @@ import { getFilesSection } from '@/components/Section/FilesSection';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { LogViewIcon } from '@/components/Icons/LogView';
+import { StatusIcon } from '@/components/Icons/StatusIcons';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -104,6 +103,7 @@ const BuildDetails = ({
             ? `${data.git_commit_name} • ${data.config_name}`
             : data.config_name,
         ),
+        leftIcon: <StatusIcon status={data?.valid} />,
         eyebrow: formatMessage({ id: 'buildDetails.buildDetails' }),
         subsections: [
           {
@@ -158,11 +158,7 @@ const BuildDetails = ({
                   : data.valid !== null
                     ? 'INVALID'
                     : 'NULL',
-                icon: data.valid ? (
-                  <MdCheck className="text-green text-xl" />
-                ) : (
-                  <MdClose className="text-red text-xl" />
-                ),
+                icon: <StatusIcon status={data?.valid} className="text-xl" />,
               },
               {
                 title: 'global.architecture',

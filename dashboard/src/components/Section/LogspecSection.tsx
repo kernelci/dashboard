@@ -33,7 +33,7 @@ export const getLogspecSection = ({
 
   const logspecSection: ISection = {
     title: title,
-    icon: <LogspecInfoIcon />,
+    rightIcon: <LogspecInfoIcon />,
     subsections: [
       {
         // General subsection

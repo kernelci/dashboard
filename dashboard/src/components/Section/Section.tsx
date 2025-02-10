@@ -12,7 +12,8 @@ import { LinkIcon } from '@/components/Icons/Link';
 
 export interface ISection {
   title: string;
-  icon?: JSX.Element;
+  rightIcon?: JSX.Element;
+  leftIcon?: JSX.Element;
   subsections?: ISubsection[];
   eyebrow?: string | ReactElement;
 }
@@ -84,7 +85,8 @@ const Section = ({
   title,
   subsections,
   eyebrow,
-  icon,
+  rightIcon,
+  leftIcon,
 }: ISection): JSX.Element => {
   const sections = useMemo(
     () =>
@@ -101,9 +103,10 @@ const Section = ({
     <div className="text-dim-gray flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <span className="text-sm">{eyebrow}</span>
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-row items-center gap-2">
+          {leftIcon}
           <span className="text-2xl font-bold">{title}</span>
-          {icon}
+          {rightIcon}
         </div>
       </div>
       {sections}
