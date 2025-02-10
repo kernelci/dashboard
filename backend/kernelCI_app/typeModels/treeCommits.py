@@ -6,7 +6,8 @@ from kernelCI_app.typeModels.commonDetails import BuildStatusCount
 from kernelCI_app.typeModels.treeListing import TestStatusCount
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
-    Checkout__GitCommitName
+    Checkout__GitCommitName,
+    Checkout__GitCommitTags
 )
 
 
@@ -22,6 +23,7 @@ class TreeCommitsQueryParameters(BaseModel):
 class TreeCommitsData(BaseModel):
     git_commit_hash: Checkout__GitCommitHash
     git_commit_name: Checkout__GitCommitName
+    git_commit_tags: Checkout__GitCommitTags
     earliest_start_time: datetime
     builds: BuildStatusCount
     boots: TestStatusCount
