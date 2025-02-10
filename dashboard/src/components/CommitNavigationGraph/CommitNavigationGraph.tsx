@@ -17,7 +17,28 @@ import type { TFilter } from '@/types/general';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
+import type { gitValues } from '@/components/Tooltip/CommitTagTooltip';
+
 const graphDisplaySize = 8;
+
+export const getChartXLabel = ({
+  commitTags,
+  commitHash,
+  commitName,
+}: gitValues): string => {
+  let content = commitHash ?? commitName ?? '';
+  if (commitTags && commitTags.length > 0) {
+    content = commitTags[0];
+
+    if (content.length > graphDisplaySize) {
+      content = `...${content.slice(-graphDisplaySize)}`;
+    }
+  } else {
+    content = `${content.slice(0, graphDisplaySize)}`;
+  }
+
+  return content;
+};
 
 interface ICommitNavigationGraph {
   origin: string;
@@ -120,6 +141,7 @@ const CommitNavigationGraph = ({
   type TCommitValue = {
     commitHash: string;
     commitName?: string;
+    commitTags?: string[];
     earliestStartTime?: string;
   };
 
@@ -157,8 +179,10 @@ const CommitNavigationGraph = ({
     commitData.unshift({
       commitHash: item.git_commit_hash,
       commitName: item.git_commit_name,
+      commitTags: item.git_commit_tags,
       earliestStartTime: item.earliest_start_time,
     });
+
     xAxisIndexes.push(index);
   });
 
@@ -186,6 +210,7 @@ const CommitNavigationGraph = ({
       },
     },
   ];
+
   return (
     <QuerySwitcher
       status={status}
@@ -225,9 +250,8 @@ const CommitNavigationGraph = ({
 
                   isCurrentCommit =
                     treeId === commitData[parsedPossibleIndex].commitHash;
-                  displayText = commitData[
-                    parsedPossibleIndex
-                  ]?.commitHash.slice(0, graphDisplaySize);
+
+                  displayText = getChartXLabel(commitData[parsedPossibleIndex]);
                 }
 
                 return (
