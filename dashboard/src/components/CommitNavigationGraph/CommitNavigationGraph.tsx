@@ -17,7 +17,7 @@ import type { TFilter } from '@/types/general';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
-const graphDisplaySize = 8;
+import { getChartXLabel } from '@/components/Tooltip/CommitTagTooltip';
 
 interface ICommitNavigationGraph {
   origin: string;
@@ -120,6 +120,7 @@ const CommitNavigationGraph = ({
   type TCommitValue = {
     commitHash: string;
     commitName?: string;
+    commitTags?: string[];
     earliestStartTime?: string;
   };
 
@@ -157,8 +158,10 @@ const CommitNavigationGraph = ({
     commitData.unshift({
       commitHash: item.git_commit_hash,
       commitName: item.git_commit_name,
+      commitTags: item.git_commit_tags,
       earliestStartTime: item.earliest_start_time,
     });
+
     xAxisIndexes.push(index);
   });
 
@@ -186,6 +189,7 @@ const CommitNavigationGraph = ({
       },
     },
   ];
+
   return (
     <QuerySwitcher
       status={status}
@@ -225,9 +229,8 @@ const CommitNavigationGraph = ({
 
                   isCurrentCommit =
                     treeId === commitData[parsedPossibleIndex].commitHash;
-                  displayText = commitData[
-                    parsedPossibleIndex
-                  ]?.commitHash.slice(0, graphDisplaySize);
+
+                  displayText = getChartXLabel(commitData[parsedPossibleIndex]);
                 }
 
                 return (
