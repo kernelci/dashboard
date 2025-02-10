@@ -300,8 +300,9 @@ def process_builds_issue(instance, row_data):
     build_valid = row_data["build_valid"]
     incident_test_id = row_data["incident_test_id"]
 
-    (issue_id, can_insert_issue) = should_increment_build_issue(
+    (issue_id, issue_version, can_insert_issue) = should_increment_build_issue(
         issue_id=issue_id,
+        issue_version=issue_version,
         incident_test_id=incident_test_id,
         build_valid=build_valid,
     )
@@ -330,8 +331,10 @@ def process_tests_issue(instance, row_data):
     issue_report_url = row_data["issue_report_url"]
     incident_test_id = row_data["incident_test_id"]
 
-    (issue_id, can_insert_issue) = should_increment_test_issue(
-        issue_id, incident_test_id
+    (issue_id, issue_version, can_insert_issue) = should_increment_test_issue(
+        issue_id=issue_id,
+        issue_version=issue_version,
+        incident_test_id=incident_test_id,
     )
 
     if issue_id and issue_version is not None and can_insert_issue:
@@ -357,8 +360,10 @@ def process_boots_issue(instance, row_data):
     issue_report_url = row_data["issue_report_url"]
     incident_test_id = row_data["incident_test_id"]
 
-    (issue_id, can_insert_issue) = should_increment_test_issue(
-        issue_id=issue_id, incident_test_id=incident_test_id
+    (issue_id, issue_version, can_insert_issue) = should_increment_test_issue(
+        issue_id=issue_id,
+        issue_version=issue_version,
+        incident_test_id=incident_test_id,
     )
 
     if issue_id and issue_version is not None and can_insert_issue:
@@ -527,8 +532,9 @@ def process_filters(instance, row_data: dict) -> None:
         instance.global_architectures.add(row_data["build_architecture"])
         instance.global_compilers.add(row_data["build_compiler"])
 
-        build_issue_id, is_build_issue = should_increment_build_issue(
+        build_issue_id, build_issue_version, is_build_issue = should_increment_build_issue(
             issue_id=issue_id,
+            issue_version=issue_version,
             incident_test_id=incident_test_id,
             build_valid=build_valid,
         )
@@ -536,15 +542,16 @@ def process_filters(instance, row_data: dict) -> None:
         is_invalid = build_valid is False
         add_unfiltered_issue(
             issue_id=build_issue_id,
-            issue_version=issue_version,
+            issue_version=build_issue_version,
             should_increment=is_build_issue,
             issue_set=instance.unfiltered_build_issues,
             is_invalid=is_invalid,
         )
 
     if row_data["test_id"] is not None:
-        test_issue_id, is_test_issue = should_increment_test_issue(
+        test_issue_id, test_issue_version, is_test_issue = should_increment_test_issue(
             issue_id=issue_id,
+            issue_version=issue_version,
             incident_test_id=incident_test_id,
         )
 
@@ -556,7 +563,7 @@ def process_filters(instance, row_data: dict) -> None:
         is_invalid = row_data["test_status"] == FAIL_STATUS
         add_unfiltered_issue(
             issue_id=test_issue_id,
-            issue_version=issue_version,
+            issue_version=test_issue_version,
             should_increment=is_test_issue,
             issue_set=issue_set,
             is_invalid=is_invalid,

@@ -16,33 +16,62 @@ def is_test_failure(test_status: str) -> bool:
     return test_status in failure_status_list
 
 
-def is_known_issue(issue_id: Optional[str]) -> bool:
-    return issue_id is not None and issue_id is not UNKNOWN_STRING
+def is_known_issue(issue_id: Optional[str], issue_version: Optional[int]) -> bool:
+    return (
+        issue_id is not None
+        and issue_version is not None
+        and issue_id is not UNKNOWN_STRING
+    )
 
 
-def is_exclusively_build_issue(issue_id: Optional[str], incident_test_id: Optional[str]) -> bool:
-    is_known_issue_result = is_known_issue(issue_id)
-    is_exclusively_build_issue_result = is_known_issue_result and incident_test_id is None
+def is_exclusively_build_issue(
+    issue_id: Optional[str],
+    issue_version: Optional[int],
+    incident_test_id: Optional[str],
+) -> bool:
+    is_known_issue_result = is_known_issue(issue_id, issue_version)
+    is_exclusively_build_issue_result = (
+        is_known_issue_result and incident_test_id is None
+    )
     return is_exclusively_build_issue_result
 
 
 def is_exclusively_test_issue(
-    *, issue_id: Optional[str], incident_test_id: Optional[str]
+    *,
+    issue_id: Optional[str],
+    issue_version: Optional[int],
+    incident_test_id: Optional[str],
 ) -> bool:
-    is_known_issue_result = is_known_issue(issue_id)
-    is_exclusively_test_issue_result = is_known_issue_result and incident_test_id is not None
+    is_known_issue_result = is_known_issue(issue_id, issue_version)
+    is_exclusively_test_issue_result = (
+        is_known_issue_result and incident_test_id is not None
+    )
     return is_exclusively_test_issue_result
 
 
-def is_issue_from_test(*, incident_test_id: Optional[str], issue_id: Optional[str]) -> bool:
-    is_known_issue_result = is_known_issue(issue_id=issue_id)
+def is_issue_from_test(
+    *,
+    incident_test_id: Optional[str],
+    issue_id: Optional[str],
+    issue_version: Optional[int],
+) -> bool:
+    is_known_issue_result = is_known_issue(
+        issue_id=issue_id, issue_version=issue_version
+    )
     is_possible_test_issue = incident_test_id is not None or not is_known_issue_result
 
     return is_possible_test_issue
 
 
-def is_issue_from_build(*, issue_id: Optional[str], incident_test_id: Optional[str]) -> bool:
-    is_known_issue_result = is_known_issue(issue_id=issue_id)
+def is_issue_from_build(
+    *,
+    issue_id: Optional[str],
+    issue_version: Optional[int],
+    incident_test_id: Optional[str],
+) -> bool:
+    is_known_issue_result = is_known_issue(
+        issue_id=issue_id, issue_version=issue_version
+    )
     is_possible_build_issue = incident_test_id is None or not is_known_issue_result
 
     return is_possible_build_issue
@@ -51,7 +80,7 @@ def is_issue_from_build(*, issue_id: Optional[str], incident_test_id: Optional[s
 def verify_issue_in_filter(
     issue_filter_data: Union[Dict, str],
     issue_id: Optional[str],
-    issue_version: Optional[int]
+    issue_version: Optional[int],
 ) -> bool:
     is_unknown_issue = False
     if issue_filter_data == UNKNOWN_STRING:
@@ -68,12 +97,14 @@ def verify_issue_in_filter(
 
 
 def is_issue_filtered_out(
-    *,
-    issue_id: Optional[str],
-    issue_filters: set,
-    issue_version: Optional[int]
+    *, issue_id: Optional[str], issue_filters: set, issue_version: Optional[int]
 ) -> bool:
-    in_filter = any(verify_issue_in_filter(issue, issue_id, issue_version) for issue in issue_filters)
+    in_filter = any(
+        verify_issue_in_filter(
+            issue_filter_data=issue, issue_id=issue_id, issue_version=issue_version
+        )
+        for issue in issue_filters
+    )
     return not in_filter
 
 
@@ -83,7 +114,7 @@ def should_filter_test_issue(
     issue_id: Optional[str],
     issue_version: Optional[int],
     incident_test_id: Optional[str],
-    test_status: Optional[str]
+    test_status: Optional[str],
 ) -> bool:
     has_issue_filter = len(issue_filters) > 0
     if not has_issue_filter:
@@ -95,7 +126,9 @@ def should_filter_test_issue(
     has_unknown_filter = UNKNOWN_STRING in issue_filters
 
     is_exclusively_build_issue_result = is_exclusively_build_issue(
-        issue_id=issue_id, incident_test_id=incident_test_id
+        issue_id=issue_id,
+        issue_version=issue_version,
+        incident_test_id=incident_test_id,
     )
 
     if is_exclusively_build_issue_result and has_unknown_filter:
@@ -104,9 +137,7 @@ def should_filter_test_issue(
         issue_id = UNKNOWN_STRING
 
     is_issue_filtered_out_result = is_issue_filtered_out(
-        issue_id=issue_id,
-        issue_version=issue_version,
-        issue_filters=issue_filters
+        issue_id=issue_id, issue_version=issue_version, issue_filters=issue_filters
     )
 
     return is_issue_filtered_out_result
@@ -118,7 +149,7 @@ def should_filter_build_issue(
     issue_id: Optional[str],
     issue_version: Optional[int],
     incident_test_id: Optional[str],
-    build_valid: Optional[bool]
+    build_valid: Optional[bool],
 ) -> bool:
     has_issue_filter = len(issue_filters) > 0
     if not has_issue_filter:
@@ -130,7 +161,9 @@ def should_filter_build_issue(
     has_unknown_filter = UNKNOWN_STRING in issue_filters
 
     is_exclusively_test_issue_result = is_exclusively_test_issue(
-        issue_id=issue_id, incident_test_id=incident_test_id
+        issue_id=issue_id,
+        issue_version=issue_version,
+        incident_test_id=incident_test_id,
     )
 
     if is_exclusively_test_issue_result and has_unknown_filter:
@@ -139,49 +172,58 @@ def should_filter_build_issue(
         issue_id = UNKNOWN_STRING
 
     is_issue_filtered_out_result = is_issue_filtered_out(
-        issue_id=issue_id,
-        issue_version=issue_version,
-        issue_filters=issue_filters
+        issue_id=issue_id, issue_version=issue_version, issue_filters=issue_filters
     )
 
     return is_issue_filtered_out_result
 
 
 def should_increment_test_issue(
-    issue_id: Optional[str], incident_test_id: Optional[str]
-) -> Tuple[str, bool]:
+    issue_id: Optional[str],
+    issue_version: Optional[int],
+    incident_test_id: Optional[str],
+) -> Tuple[str, int, bool]:
     is_exclusively_build_issue_result = is_exclusively_build_issue(
-        issue_id=issue_id, incident_test_id=incident_test_id
+        issue_id=issue_id,
+        issue_version=issue_version,
+        incident_test_id=incident_test_id,
     )
     if is_exclusively_build_issue_result:
-        return (UNKNOWN_STRING, False)
+        return (UNKNOWN_STRING, None, False)
 
     is_issue_from_test_result = is_issue_from_test(
-        incident_test_id=incident_test_id, issue_id=issue_id
+        issue_id=issue_id,
+        issue_version=issue_version,
+        incident_test_id=incident_test_id,
     )
 
-    return (issue_id, is_issue_from_test_result)
+    return (issue_id, issue_version, is_issue_from_test_result)
 
 
 def should_increment_build_issue(
     *,
     issue_id: Optional[str],
+    issue_version: Optional[int],
     incident_test_id: Optional[str],
     build_valid: Optional[bool],
-) -> Tuple[str, bool]:
+) -> Tuple[str, int, bool]:
     is_exclusively_test_issue_result = is_exclusively_test_issue(
-        issue_id=issue_id, incident_test_id=incident_test_id
+        issue_id=issue_id,
+        issue_version=issue_version,
+        incident_test_id=incident_test_id,
     )
     if is_exclusively_test_issue_result:
-        return (UNKNOWN_STRING, False)
+        return (UNKNOWN_STRING, None, False)
 
     is_issue_from_build_result = is_issue_from_build(
-        issue_id=issue_id, incident_test_id=incident_test_id
+        issue_id=issue_id,
+        issue_version=issue_version,
+        incident_test_id=incident_test_id,
     )
 
     result = is_issue_from_build_result and is_build_invalid(build_valid)
 
-    return (issue_id, result)
+    return (issue_id, issue_version, result)
 
 
 def toIntOrDefault(value, default):
@@ -485,7 +527,7 @@ class FilterParams:
                     issue_id=issue_id,
                     issue_version=issue_version,
                     incident_test_id=incident_test_id,
-                    build_valid=valid
+                    build_valid=valid,
                 )
             )
         )
@@ -570,7 +612,7 @@ class FilterParams:
                 issue_id=issue_id,
                 issue_version=issue_version,
                 incident_test_id=incident_test_id,
-                test_status=status
+                test_status=status,
             )
             or (
                 len(self.filterPlatforms["boot"]) > 0
@@ -617,7 +659,7 @@ class FilterParams:
                 issue_id=issue_id,
                 issue_version=issue_version,
                 incident_test_id=incident_test_id,
-                test_status=status
+                test_status=status,
             )
             or (
                 len(self.filterPlatforms["test"]) > 0
