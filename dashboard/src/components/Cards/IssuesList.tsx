@@ -15,7 +15,6 @@ import type {
   RedirectFrom,
   TFilter,
   TFilterObjectsKeys,
-  TIssue,
 } from '@/types/general';
 
 import FilterLink from '@/components/Tabs/FilterLink';
@@ -29,6 +28,7 @@ import { IssueTooltip } from '@/components/Issue/IssueTooltip';
 
 import { LinkIcon } from '@/components/Icons/Link';
 import { getIssueFilterLabel } from '@/utils/utils';
+import type { TIssue } from '@/types/issues';
 
 interface IIssuesList {
   issues: TIssue[];

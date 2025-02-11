@@ -4,8 +4,8 @@ import type {
   BuildStatus,
   PropertyStatusCounts,
   StatusCounts,
-  TIssue,
 } from './general';
+import type { TIssue } from './issues';
 
 type TestSummary = {
   status: StatusCounts;

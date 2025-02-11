@@ -1,9 +1,13 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 
-import type { TErrorWithStatus, TIssueDetails } from '@/types/issueDetails';
+import type { TIssueDetails } from '@/types/issueDetails';
 
-import type { BuildsTableBuild, TestHistory } from '@/types/general';
+import type {
+  BuildsTableBuild,
+  TErrorWithStatus,
+  TestHistory,
+} from '@/types/general';
 
 import { RequestData } from './commonRequest';
 
