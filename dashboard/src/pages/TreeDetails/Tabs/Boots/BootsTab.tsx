@@ -180,6 +180,8 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
           issueFilterSection="bootIssue"
           detailsId={treeId}
           pageFrom={RedirectFrom.Tree}
+          issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
+          extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
         />
       </DesktopGrid>
       <MobileGrid>
@@ -216,6 +218,8 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
             issueFilterSection="bootIssue"
             detailsId={treeId}
             pageFrom={RedirectFrom.Tree}
+            issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
+            extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
           />
         </InnerMobileGrid>
       </MobileGrid>

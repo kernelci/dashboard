@@ -4,8 +4,9 @@ import { useCallback, Fragment, memo } from 'react';
 
 import type { PropsWithChildren } from 'react';
 
-import ColoredCircle from '../ColoredCircle/ColoredCircle';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../Tooltip';
+import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 export interface IListingItem {
   leftIcon?: React.ReactNode;
@@ -98,7 +99,7 @@ const ListingItem = ({
     return (
       <Tooltip>
         <div className="flex w-full">
-          <TooltipTrigger className="max-w-[200px] overflow-hidden sm:max-w-[300px] md:max-w-[500px] lg:max-w-[700px] xl:max-w-[1000px]">
+          <TooltipTrigger className="max-w-[200px] overflow-hidden md:max-w-[100px] lg:max-w-[325px] xl:max-w-[475px] 2xl:max-w-[700px]">
             {children}
           </TooltipTrigger>
 

@@ -150,6 +150,8 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
           issueFilterSection="buildIssue"
           detailsId={treeId}
           pageFrom={RedirectFrom.Tree}
+          issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
+          extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
         />
       </DesktopGrid>
       <MobileGrid>
@@ -180,6 +182,8 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
           issueFilterSection="buildIssue"
           detailsId={treeId}
           pageFrom={RedirectFrom.Tree}
+          issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
+          extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
         />
       </MobileGrid>
 

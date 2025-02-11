@@ -1,6 +1,6 @@
 import { memo, useCallback } from 'react';
 
-import { useIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
 
@@ -29,6 +29,14 @@ import { IssueTooltip } from '@/components/Issue/IssueTooltip';
 import { LinkIcon } from '@/components/Icons/Link';
 import { getIssueFilterLabel } from '@/utils/utils';
 import type { TIssue } from '@/types/issues';
+import type { IssueExtraDetailsDict } from '@/types/issueExtras';
+
+import { LoadingCircle } from '@/components/ui/loading-circle';
+
+import { TooltipDateTime } from '@/components/TooltipDateTime';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
+
+import { Badge } from '@/components/ui/badge';
 
 interface IIssuesList {
   issues: TIssue[];
@@ -38,6 +46,8 @@ interface IIssuesList {
   issueFilterSection: TFilterObjectsKeys;
   detailsId?: string;
   pageFrom?: RedirectFrom;
+  issueExtraDetails?: IssueExtraDetailsDict;
+  extraDetailsLoading?: boolean; // TODO: make the isLoading not optional once applied to other pages
 }
 
 const IssuesList = ({
@@ -48,6 +58,8 @@ const IssuesList = ({
   issueFilterSection,
   detailsId,
   pageFrom,
+  issueExtraDetails,
+  extraDetailsLoading,
 }: IIssuesList): JSX.Element => {
   const getIssueLink = useCallback(
     (issueId: string, version: number): LinkProps => {
@@ -66,7 +78,7 @@ const IssuesList = ({
     [detailsId, pageFrom],
   );
 
-  const intl = useIntl();
+  const { formatMessage } = useIntl();
 
   failedWithUnknownIssues = failedWithUnknownIssues
     ? failedWithUnknownIssues
@@ -94,27 +106,68 @@ const IssuesList = ({
   ) : (
     <DumbListingContent>
       {issues.map(issue => {
+        const currentExtraDetails =
+          issueExtraDetails?.[issue.id][issue.version];
+
+        const tagPills = currentExtraDetails?.tags?.map(tag => {
+          return (
+            <Tooltip key={tag}>
+              <TooltipTrigger className="cursor-default">
+                <Badge variant="blueTag">{tag}</Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <FormattedMessage
+                  id="issue.alsoPresentTooltip"
+                  values={{ tree: tag }}
+                />
+              </TooltipContent>
+            </Tooltip>
+          );
+        });
+
+        const first_seen = currentExtraDetails?.first_seen;
+
         return (
           <div
             key={`${issue.id}${issue.version}`}
             className="flex w-full justify-between gap-4"
           >
-            <div className="overflow-hidden">
-              <FilterLink
-                filterSection={issueFilterSection}
-                filterValue={getIssueFilterLabel(issue)}
-                diffFilter={diffFilter}
-              >
-                <ListingItem
-                  unknown={issue.incidents_info.incidentsCount}
-                  hasBottomBorder
-                  text={
-                    issue.comment ??
-                    intl.formatMessage({ id: 'global.unknown' })
-                  }
-                  tooltip={issue.comment}
-                />
-              </FilterLink>
+            <div className="flex items-center gap-4">
+              <div className="overflow-hidden">
+                <FilterLink
+                  filterSection={issueFilterSection}
+                  filterValue={getIssueFilterLabel(issue)}
+                  diffFilter={diffFilter}
+                >
+                  <span className="flex items-center text-sm">
+                    <ListingItem
+                      unknown={issue.incidents_info.incidentsCount}
+                      hasBottomBorder
+                      text={
+                        issue.comment ?? formatMessage({ id: 'global.unknown' })
+                      }
+                      tooltip={issue.comment}
+                    />
+                    {extraDetailsLoading ? (
+                      <LoadingCircle className="mx-2" />
+                    ) : (
+                      first_seen && (
+                        <span className="pb-1 text-nowrap text-gray-600">
+                          <TooltipDateTime
+                            dateTime={first_seen}
+                            lineBreak={true}
+                            showRelative={true}
+                            message={`• ${formatMessage({ id: 'issue.firstSeen' })}: `}
+                          />
+                        </span>
+                      )
+                    )}
+                  </span>
+                </FilterLink>
+              </div>
+              {tagPills && !extraDetailsLoading && (
+                <div className="flex gap-3">{...tagPills}</div>
+              )}
             </div>
             <div className="flex items-center gap-4">
               {issue.report_url && (
@@ -140,7 +193,7 @@ const IssuesList = ({
         >
           <ListingItem
             unknown={failedWithUnknownIssues}
-            text={intl.formatMessage({ id: 'global.unknown' })}
+            text={formatMessage({ id: 'global.unknown' })}
           />
         </FilterLink>
       )}
