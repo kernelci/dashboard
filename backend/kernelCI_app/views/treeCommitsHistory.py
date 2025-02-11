@@ -3,10 +3,10 @@ from django.db import connection
 from http import HTTPStatus
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
-    UNKNOWN_STRING,
     FilterParams,
     InvalidComparisonOP,
 )
+from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import (
     handle_build_misc,

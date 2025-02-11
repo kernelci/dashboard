@@ -7,10 +7,10 @@ from kernelCI_app.cache import getQueryCache, setQueryCache
 from kernelCI_app.constants.hardwareDetails import (
     SELECTED_HEAD_TREE_VALUE,
 )
+from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.helpers.commonDetails import add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
-    UNKNOWN_STRING,
     FilterParams,
     is_test_failure,
     should_increment_build_issue,

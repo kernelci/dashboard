@@ -3,8 +3,8 @@ from django.http import HttpResponseBadRequest
 import re
 from kernelCI_app.typeModels.databases import PASS_STATUS, failure_status_list
 from kernelCI_app.utils import getErrorResponseBody
+from kernelCI_app.constants.general import UNKNOWN_STRING
 
-UNKNOWN_STRING = "Unknown"
 NULL_STRINGS = set(["null", UNKNOWN_STRING, "NULL"])
 
 
