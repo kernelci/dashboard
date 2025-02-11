@@ -14,7 +14,6 @@ import { Separator } from '@/components/ui/separator';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
-import { NOT_FOUND_STATUS } from '@/types/issueDetails';
 import type { TIndividualTest } from '@/types/general';
 
 interface IIssueDetailsTestSection {
@@ -49,7 +48,7 @@ export const IssueDetailsTestSection = ({
   );
   const { formatMessage } = useIntl();
 
-  if (!isLoading && error?.status === NOT_FOUND_STATUS) {
+  if (!isLoading && error) {
     return <></>;
   }
 
@@ -71,10 +70,7 @@ export const IssueDetailsTestSection = ({
           />
         </div>
       ) : (
-        <MemoizedSectionError
-          isLoading={isLoading}
-          errorMessage={error?.message}
-        />
+        <MemoizedSectionError isLoading={isLoading} />
       )}
     </>
   );
