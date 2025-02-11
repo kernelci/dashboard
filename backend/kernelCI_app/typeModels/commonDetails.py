@@ -1,9 +1,10 @@
+import json
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Optional, Set, Union, Tuple
+from typing import Dict, List, Optional, Set, Union, Tuple, Any
 
 from kernelCI_app.typeModels.issues import Issue
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class TestStatusCount(BaseModel):
@@ -62,6 +63,12 @@ class BuildHistoryItem(BaseModel):
     start_time: Optional[Union[datetime, str]]
     git_repository_url: Optional[str]
     git_repository_branch: Optional[str]
+
+    @field_validator("misc", mode="before")
+    @classmethod
+    def to_dict(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return json.loads(value)
 
 
 class TestSummary(BaseModel):

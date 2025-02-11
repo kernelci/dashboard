@@ -43,7 +43,7 @@ from kernelCI_app.utils import (
     extract_error_message,
     is_boot,
 )
-from django.db import models
+from django.db import models, connection
 from pydantic import ValidationError
 from django.db.models import Subquery
 from kernelCI_app.typeModels.hardwareDetails import (
@@ -231,53 +231,79 @@ def get_hardware_details_data(
 
 
 def query_records(
-    *, hardware_id: str, origin: str, trees: List[Tree], start_date=int, end_date=int
+    *, hardware_id: str, origin: str, trees: List[Tree], start_date: int, end_date: int
 ):
+
     commit_hashes = [tree.head_git_commit_hash for tree in trees]
 
-    return Tests.objects.values(
-        "id",
-        "environment_misc",
-        "path",
-        "comment",
-        "log_url",
-        "status",
-        "start_time",
-        "duration",
-        "misc",
-        "build_id",
-        "environment_compatible",
-        "build__architecture",
-        "build__config_name",
-        "build__misc",
-        "build__config_url",
-        "build__compiler",
-        "build__valid",
-        "build__duration",
-        "build__log_url",
-        "build__start_time",
-        "build__checkout__git_repository_url",
-        "build__checkout__git_repository_branch",
-        "build__checkout__git_commit_name",
-        "build__checkout__git_commit_hash",
-        "build__checkout__tree_name",
-        "incidents__id",
-        "incidents__issue__id",
-        "incidents__issue__version",
-        "incidents__issue__comment",
-        "incidents__issue__report_url",
-        "incidents__test_id",
-        "build__incidents__issue__id",
-        "build__incidents__issue__version",
-    ).filter(
-        models.Q(environment_compatible__contains=[hardware_id])
-        | models.Q(environment_misc__platform=hardware_id),
-        start_time__gte=start_date,
-        start_time__lte=end_date,
-        build__checkout__origin=origin,
-        # TODO Treat commit_hash collision (it can happen between repos)
-        build__checkout__git_commit_hash__in=commit_hashes,
-    )
+    # TODO Treat commit_hash collision (it can happen between repos)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                tests.id,
+                tests.environment_misc,
+                tests.path,
+                tests.comment,
+                tests.log_url,
+                tests.status,
+                tests.start_time,
+                tests.duration,
+                tests.misc,
+                tests.build_id,
+                tests.environment_compatible,
+                builds.architecture AS build__architecture,
+                builds.config_name AS build__config_name,
+                builds.misc AS build__misc,
+                builds.config_url AS build__config_url,
+                builds.compiler AS build__compiler,
+                builds.valid AS build__valid,
+                builds.duration AS build__duration,
+                builds.log_url AS build__log_url,
+                builds.start_time AS build__start_time,
+                checkouts.git_repository_url AS build__checkout__git_repository_url,
+                checkouts.git_repository_branch AS build__checkout__git_repository_branch,
+                checkouts.git_commit_name AS build__checkout__git_commit_name,
+                checkouts.git_commit_hash AS build__checkout__git_commit_hash,
+                checkouts.tree_name AS build__checkout__tree_name,
+                incidents.id AS incidents__id,
+                incidents.issue_id AS incidents__issue__id,
+                issues.version AS incidents__issue__version,
+                issues.comment AS incidents__issue__comment,
+                issues.report_url AS incidents__issue__report_url,
+                incidents.test_id AS incidents__test_id,
+                T7.issue_id AS build__incidents__issue__id,
+                T8.version AS build__incidents__issue__version
+            FROM
+                tests
+            INNER JOIN builds ON
+                tests.build_id = builds.id
+            INNER JOIN checkouts ON
+                builds.checkout_id = checkouts.id
+            LEFT OUTER JOIN incidents ON
+                tests.id = incidents.test_id
+            LEFT OUTER JOIN issues ON
+                incidents.issue_id = issues.id AND incidents.issue_version = issues.version
+            LEFT OUTER JOIN incidents T7 ON
+                builds.id = T7.build_id
+            LEFT OUTER JOIN issues T8 ON
+                T7.issue_id = T8.id AND T7.issue_version = T8.version
+            WHERE
+                (
+                    tests.environment_compatible @> ARRAY[%s]::TEXT[]
+                    OR tests.environment_misc ->> 'platform' = %s
+                )
+                AND checkouts.origin = %s
+                AND tests.start_time >= %s
+                AND tests.start_time <= %s
+                AND checkouts.git_commit_hash IN ({0})
+            """.format(",".join(['%s'] * len(commit_hashes))),
+            [hardware_id, hardware_id, origin, start_date, end_date] + commit_hashes
+        )
+
+        columns = [col[0] for col in cursor.description]
+        tests = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    return tests
 
 
 # deprecated, use get_arch_summary_typed
