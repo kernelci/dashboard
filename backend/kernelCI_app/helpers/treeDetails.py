@@ -5,8 +5,8 @@ from kernelCI_app.helpers.filters import (
     is_test_failure,
     should_increment_build_issue,
     should_increment_test_issue,
-    UNKNOWN_STRING,
 )
+from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.typeModels.databases import FAIL_STATUS
 from kernelCI_app.utils import (
     extract_error_message,

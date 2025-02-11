@@ -14,7 +14,7 @@ from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
-from kernelCI_app.helpers.filters import UNKNOWN_STRING
+from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import env_misc_value_or_default, handle_environment_misc
 from kernelCI_app.helpers.trees import get_tree_heads

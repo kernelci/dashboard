@@ -1,4 +1,4 @@
-from kernelCI_app.helpers.filters import UNKNOWN_STRING
+from kernelCI_app.constants.general import UNKNOWN_STRING
 from typing import Set
 
 

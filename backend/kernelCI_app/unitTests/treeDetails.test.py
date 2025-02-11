@@ -1,5 +1,6 @@
 import unittest
-from kernelCI_app.helpers.filters import should_filter_test_issue, UNKNOWN_STRING
+from kernelCI_app.helpers.filters import should_filter_test_issue
+from kernelCI_app.constants.general import UNKNOWN_STRING
 
 
 # TODO: replace with pytest
