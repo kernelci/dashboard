@@ -58,6 +58,7 @@ export const useIssueDetailsTests = (
   return useQuery({
     queryKey: ['issueTestsData', issueId, versionNumber],
     queryFn: () => fetchIssueDetailsTests(issueId, versionNumber),
+    retry: 1,
   });
 };
 
@@ -84,5 +85,6 @@ export const useIssueDetailsBuilds = (
   return useQuery({
     queryKey: ['issueBuildsData', issueId, versionNumber],
     queryFn: () => fetchIssueDetailsBuilds(issueId, versionNumber),
+    retry: 1,
   });
 };

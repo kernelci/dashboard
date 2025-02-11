@@ -21,7 +21,6 @@ import { defaultBuildColumns } from '@/components/BuildsTable/DefaultBuildsColum
 import { TableHeader } from '@/components/Table/TableHeader';
 
 import { sanitizeBuildTable } from '@/utils/utils';
-import { NOT_FOUND_STATUS } from '@/types/issueDetails';
 
 interface IIssueDetailsBuildSection {
   issueId: string;
@@ -62,7 +61,7 @@ export const IssueDetailsBuildSection = ({
     return sanitizeBuildTable(data);
   }, [data]);
 
-  if (!isLoading && error?.status === NOT_FOUND_STATUS) {
+  if (!isLoading && error) {
     return <></>;
   }
 
@@ -84,10 +83,7 @@ export const IssueDetailsBuildSection = ({
           />
         </div>
       ) : (
-        <MemoizedSectionError
-          isLoading={isLoading}
-          errorMessage={error?.message}
-        />
+        <MemoizedSectionError isLoading={isLoading} />
       )}
     </>
   );
