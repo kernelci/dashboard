@@ -37,7 +37,12 @@ interface IEnvironmentMisc {
   platform?: string;
 }
 
-export type TestHistory = {
+export type TreeBranchItem = {
+  tree_name?: string;
+  git_repository_branch?: string;
+};
+
+export type TestHistory = TreeBranchItem & {
   start_time: string;
   status: Status;
   path: string;
@@ -45,10 +50,11 @@ export type TestHistory = {
   duration?: number;
   environment_compatible?: string[];
   environment_misc?: IEnvironmentMisc;
-  tree_name?: string;
-  git_repository_branch?: string;
 };
 
+/**
+ * @deprecated Use a more generic approach to the misc field.
+ */
 interface ITreeDetailsMisc {
   kernel_type?: string;
   dtb?: string;
