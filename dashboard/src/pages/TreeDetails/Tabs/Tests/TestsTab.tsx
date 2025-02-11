@@ -178,6 +178,8 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
           issueFilterSection="testIssue"
           detailsId={treeId}
           pageFrom={RedirectFrom.Tree}
+          issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
+          extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
         />
       </DesktopGrid>
       <MobileGrid>
@@ -214,6 +216,8 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
             issueFilterSection="testIssue"
             detailsId={treeId}
             pageFrom={RedirectFrom.Tree}
+            issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
+            extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
           />
         </InnerMobileGrid>
       </MobileGrid>

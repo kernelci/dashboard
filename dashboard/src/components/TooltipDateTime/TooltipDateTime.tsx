@@ -1,16 +1,20 @@
-import { format, isValid } from 'date-fns';
+import { format, formatDistanceToNow, isValid } from 'date-fns';
+
+import { FormattedMessage } from 'react-intl';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { getDateOffset } from '@/utils/utils';
 
 type TooltipDateTimeProps = {
-  dateTime: string;
+  dateTime: string | Date;
   dateFormat?: string;
   timeFormat?: string;
   lineBreak?: boolean;
   showLabelTime?: boolean;
   showLabelTZ?: boolean;
   showTooltip?: boolean;
+  showRelative?: boolean;
+  message?: string;
 };
 
 const TooltipDateTime = ({
@@ -21,8 +25,10 @@ const TooltipDateTime = ({
   showLabelTime,
   showLabelTZ = false,
   showTooltip = true,
+  showRelative = false,
+  message,
 }: TooltipDateTimeProps): JSX.Element => {
-  const dateObj = new Date(dateTime);
+  const dateObj = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
   if (!isValid(dateObj)) {
     return <div>-</div>;
   }
@@ -38,9 +44,19 @@ const TooltipDateTime = ({
   return (
     <Tooltip>
       <TooltipTrigger>
-        <div>
-          {date} {showLabelTime ? time : ''} {showLabelTZ ? tz : ''}
-        </div>
+        {showRelative ? (
+          <>
+            <span className="pl-2">{message}</span>
+            <FormattedMessage
+              id="global.timeAgo"
+              values={{ time: formatDistanceToNow(dateObj) }}
+            />
+          </>
+        ) : (
+          <span>
+            {date} {showLabelTime ? time : ''} {showLabelTZ ? tz : ''}
+          </span>
+        )}
       </TooltipTrigger>
       {showTooltip && (
         <TooltipContent>

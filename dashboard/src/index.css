@@ -26,6 +26,9 @@
   --color-green: #53d07c;
   --color-red: #e15739;
   --color-blue: #11b3e6;
+  --color-dark-blue: #1d4ed8;
+  --color-light-blue: #e7f7fc;
+  --color-medium-light-blue: #bfdbfe;
 
   @keyframes accordion-down {
     from {

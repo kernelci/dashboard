@@ -166,6 +166,7 @@ export const messages = {
     'global.successCount': 'Success: {count}',
     'global.summary': 'Summary',
     'global.tests': 'Tests',
+    'global.timeAgo': '{time} ago',
     'global.tree': 'Tree',
     'global.trees': 'Trees',
     'global.underDevelopment': 'Under Development',
@@ -193,6 +194,8 @@ export const messages = {
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
     'hardwareDetails.treeBranch': 'Tree / Branch',
+    'issue.alsoPresentTooltip': 'Issue also present in {tree}',
+    'issue.firstSeen': 'First seen',
     'issue.noIssueFound': 'No issue found.',
     'issue.tooltip':
       'Issues groups several builds or tests by matching result status and logs.{br}They may also be linked to an external issue tracker or mailing list discussion.',
