@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { TTestDetails } from '@/types/tree/TestDetails';
 
-import type { TIssue } from '@/types/general';
+import type { TIssue } from '@/types/issues';
 
 import { RequestData } from './commonRequest';
 

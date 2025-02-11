@@ -9,13 +9,15 @@ import { Link } from '@tanstack/react-router';
 import { RiProhibited2Line } from 'react-icons/ri';
 
 import ListingItem from '@/components/ListingItem/ListingItem';
-import { zOrigin, type TIssue } from '@/types/general';
+import { zOrigin } from '@/types/general';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { TErrorVariant } from '@/components/DetailsPages/SectionError';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { zTableFilterInfoValidator } from '@/types/tree/TreeDetails';
+
+import type { TIssue } from '@/types/issues';
 
 import { IssueTooltip } from './IssueTooltip';
 

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { TBuildDetails } from '@/types/tree/BuildDetails';
 
-import type { TIssue } from '@/types/general';
+import type { TIssue } from '@/types/issues';
 
 import { RequestData } from './commonRequest';
 

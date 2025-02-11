@@ -16,13 +16,14 @@ import StatusChartMemoized, {
 } from '@/components/StatusChart/StatusCharts';
 import { groupStatus } from '@/utils/status';
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
-import type { ArchCompilerStatus, TIssue } from '@/types/general';
+import type { ArchCompilerStatus } from '@/types/general';
 import { NoIssueFound } from '@/components/Issue/IssueSection';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { Badge } from '@/components/ui/badge';
 import FilterLink from '@/components/Tabs/FilterLink';
 import { DumbSummary, MemoizedSummaryItem } from '@/components/Tabs/Summary';
+import type { TIssue } from '@/types/issues';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];

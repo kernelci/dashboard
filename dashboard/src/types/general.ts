@@ -5,7 +5,11 @@ import { DEFAULT_LISTING_ITEMS } from '@/utils/constants/general';
 import type { Status } from './database';
 import type { TTreeDetailsFilter } from './tree/TreeDetails';
 import type { THardwareDetailsFilter } from './hardware/hardwareDetails';
-type IncidentsInfo = { incidentsCount: number };
+
+export type TErrorWithStatus = Error & {
+  status: number;
+};
+
 export type TPathTests = {
   path_group: string;
   fail_tests: number;
@@ -27,14 +31,6 @@ export type TIndividualTest = {
   duration: string;
   hardware?: string[];
   treeBranch?: string;
-};
-
-export type TIssue = {
-  id: string;
-  version: number;
-  comment?: string;
-  report_url?: string;
-  incidents_info: IncidentsInfo;
 };
 
 interface IEnvironmentMisc {

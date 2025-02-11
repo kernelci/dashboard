@@ -12,7 +12,7 @@ import { MemoizedMoreDetailsButton } from '@/components/Button/MoreDetailsButton
 import { LogViewerCard } from '@/components/Log/LogViewerCard';
 import { LogExcerpt } from '@/components/Log/LogExcerpt';
 import IssueSection from '@/components/Issue/IssueSection';
-import type { TIssue } from '@/types/general';
+import type { TIssue } from '@/types/issues';
 
 export type SheetType = 'log' | 'json';
 

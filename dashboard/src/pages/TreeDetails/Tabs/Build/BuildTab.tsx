@@ -38,10 +38,11 @@ import {
   RedirectFrom,
   type BuildStatus,
   type TFilterObjectsKeys,
-  type TIssue,
 } from '@/types/general';
 
 import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+
+import type { TIssue } from '@/types/issues';
 
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 

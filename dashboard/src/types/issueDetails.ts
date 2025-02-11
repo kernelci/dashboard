@@ -1,14 +1,7 @@
-// TODO move this const
-export const NOT_FOUND_STATUS = 404;
+import type { IssueKeys } from './issues';
 
-export type TErrorWithStatus = Error & {
-  status: number;
-};
-
-export type TIssueDetails = {
+export type TIssueDetails = IssueKeys & {
   timestamp: string;
-  id: string;
-  version: number;
   origin: string;
   report_url?: string;
   report_subject?: string;
