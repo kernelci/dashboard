@@ -131,17 +131,6 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
             toggleFilterBySection={toggleFilterBySection}
             diffFilter={diffFilter}
           />
-          <MemoizedIssuesList
-            title={<FormattedMessage id="global.issues" />}
-            issues={treeDetailsData.buildsIssues || []}
-            failedWithUnknownIssues={
-              treeDetailsData.failedBuildsWithUnknownIssues
-            }
-            diffFilter={diffFilter}
-            issueFilterSection="buildIssue"
-            detailsId={treeId}
-            pageFrom={RedirectFrom.Tree}
-          />
         </div>
         <div>
           <TreeCommitNavigationGraph />
@@ -151,6 +140,17 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
             diffFilter={diffFilter}
           />
         </div>
+        <MemoizedIssuesList
+          title={<FormattedMessage id="global.issues" />}
+          issues={treeDetailsData.buildsIssues}
+          failedWithUnknownIssues={
+            treeDetailsData.failedBuildsWithUnknownIssues
+          }
+          diffFilter={diffFilter}
+          issueFilterSection="buildIssue"
+          detailsId={treeId}
+          pageFrom={RedirectFrom.Tree}
+        />
       </DesktopGrid>
       <MobileGrid>
         <TreeCommitNavigationGraph />

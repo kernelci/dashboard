@@ -161,15 +161,6 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
             archCompilerErrors={summaryData.architectures}
             diffFilter={diffFilter}
           />
-          <MemoizedIssuesList
-            title={<FormattedMessage id="global.issues" />}
-            issues={summaryData.issues}
-            failedWithUnknownIssues={summaryData.unknown_issues}
-            diffFilter={diffFilter}
-            issueFilterSection="testIssue"
-            detailsId={treeId}
-            pageFrom={RedirectFrom.Tree}
-          />
         </div>
         <div>
           <TreeCommitNavigationGraph />
@@ -179,6 +170,15 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
             diffFilter={diffFilter}
           />
         </div>
+        <MemoizedIssuesList
+          title={<FormattedMessage id="global.issues" />}
+          issues={summaryData.issues}
+          failedWithUnknownIssues={summaryData.unknown_issues}
+          diffFilter={diffFilter}
+          issueFilterSection="testIssue"
+          detailsId={treeId}
+          pageFrom={RedirectFrom.Tree}
+        />
       </DesktopGrid>
       <MobileGrid>
         <MemoizedStatusCard
@@ -198,15 +198,6 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
               archCompilerErrors={summaryData.architectures}
               diffFilter={diffFilter}
             />
-            <MemoizedIssuesList
-              title={<FormattedMessage id="global.issues" />}
-              issues={summaryData.issues}
-              failedWithUnknownIssues={summaryData.unknown_issues}
-              diffFilter={diffFilter}
-              issueFilterSection="testIssue"
-              detailsId={treeId}
-              pageFrom={RedirectFrom.Tree}
-            />
           </div>
           <div>
             <MemoizedHardwareTested
@@ -215,6 +206,15 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
               diffFilter={diffFilter}
             />
           </div>
+          <MemoizedIssuesList
+            title={<FormattedMessage id="global.issues" />}
+            issues={summaryData.issues}
+            failedWithUnknownIssues={summaryData.unknown_issues}
+            diffFilter={diffFilter}
+            issueFilterSection="testIssue"
+            detailsId={treeId}
+            pageFrom={RedirectFrom.Tree}
+          />
         </InnerMobileGrid>
       </MobileGrid>
 

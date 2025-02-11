@@ -163,15 +163,6 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
             archCompilerErrors={data.summary.boots.architectures}
             diffFilter={diffFilter}
           />
-          <MemoizedIssuesList
-            title={<FormattedMessage id="global.issues" />}
-            issues={data.summary.boots.issues}
-            failedWithUnknownIssues={data.summary.boots.unknown_issues}
-            diffFilter={diffFilter}
-            issueFilterSection="bootIssue"
-            detailsId={treeId}
-            pageFrom={RedirectFrom.Tree}
-          />
         </div>
         <div>
           <TreeCommitNavigationGraph />
@@ -181,6 +172,15 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
             diffFilter={diffFilter}
           />
         </div>
+        <MemoizedIssuesList
+          title={<FormattedMessage id="global.issues" />}
+          issues={data.summary.boots.issues}
+          failedWithUnknownIssues={data.summary.boots.unknown_issues}
+          diffFilter={diffFilter}
+          issueFilterSection="bootIssue"
+          detailsId={treeId}
+          pageFrom={RedirectFrom.Tree}
+        />
       </DesktopGrid>
       <MobileGrid>
         <MemoizedStatusCard
@@ -200,15 +200,6 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
               archCompilerErrors={data.summary.boots.architectures}
               diffFilter={diffFilter}
             />
-            <MemoizedIssuesList
-              title={<FormattedMessage id="global.issues" />}
-              issues={data.summary.boots.issues}
-              failedWithUnknownIssues={data.summary.boots.unknown_issues}
-              diffFilter={diffFilter}
-              issueFilterSection="bootIssue"
-              detailsId={treeId}
-              pageFrom={RedirectFrom.Tree}
-            />
           </div>
           <div>
             <MemoizedHardwareTested
@@ -217,6 +208,15 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
               diffFilter={diffFilter}
             />
           </div>
+          <MemoizedIssuesList
+            title={<FormattedMessage id="global.issues" />}
+            issues={data.summary.boots.issues}
+            failedWithUnknownIssues={data.summary.boots.unknown_issues}
+            diffFilter={diffFilter}
+            issueFilterSection="bootIssue"
+            detailsId={treeId}
+            pageFrom={RedirectFrom.Tree}
+          />
         </InnerMobileGrid>
       </MobileGrid>
       <QuerySwitcher data={bootsData} status={fullStatus}>
