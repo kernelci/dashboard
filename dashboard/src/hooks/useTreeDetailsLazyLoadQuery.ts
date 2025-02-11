@@ -7,6 +7,8 @@ import type {
   TreeDetailsSummary,
 } from '@/types/tree/TreeDetails';
 import type { QuerySelectorStatus } from '@/components/QuerySwitcher/QuerySwitcher';
+import { useIssueExtraDetails } from '@/api/issueExtras';
+import type { IssueExtraDetailsResponse } from '@/types/issueExtras';
 
 export type TreeDetailsLazyLoaded = {
   summary: {
@@ -20,6 +22,12 @@ export type TreeDetailsLazyLoaded = {
     data?: TreeDetailsFullData;
     isLoading: boolean;
     status: QuerySelectorStatus;
+  };
+  issuesExtras: {
+    data?: IssueExtraDetailsResponse;
+    isLoading: boolean;
+    status: QuerySelectorStatus;
+    error: UseQueryResult['error'];
   };
   common: {
     isAllReady: boolean;
@@ -41,6 +49,13 @@ export const useTreeDetailsLazyLoadQuery = (
     enabled: !!summaryResult.data,
   });
 
+  const issuesExtrasResult = useIssueExtraDetails({
+    buildIssues: summaryResult.data?.summary.builds.issues,
+    bootIssues: summaryResult.data?.summary.boots.issues,
+    testIssues: summaryResult.data?.summary.tests.issues,
+    enabled: !!summaryResult.data,
+  });
+
   return {
     summary: {
       data: summaryResult.data,
@@ -54,9 +69,18 @@ export const useTreeDetailsLazyLoadQuery = (
       isLoading: fullResult.isLoading,
       status: fullResult.status,
     },
+    issuesExtras: {
+      data: issuesExtrasResult.data,
+      isLoading: issuesExtrasResult.isLoading,
+      status: issuesExtrasResult.status,
+      error: issuesExtrasResult.error,
+    },
     common: {
-      isAllReady: !!summaryResult && !!fullResult,
-      isAnyLoading: summaryResult.isLoading || fullResult.isLoading,
+      isAllReady: !!summaryResult && !!fullResult && !!issuesExtrasResult,
+      isAnyLoading:
+        summaryResult.isLoading ||
+        fullResult.isLoading ||
+        issuesExtrasResult.isLoading,
     },
   };
 };
