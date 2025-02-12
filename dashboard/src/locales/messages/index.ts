@@ -206,6 +206,7 @@ export const messages = {
     'issueDetails.culpritTitle': 'Culprit',
     'issueDetails.culpritTool': 'Tool',
     'issueDetails.failedToFetch': 'Failed to fetch issue details',
+    'issueDetails.id': 'Issue Id',
     'issueDetails.issueDetails': 'Issue Details',
     'issueDetails.logspecData': 'Logspec Data',
     'issueDetails.notFound': 'Issue not found',
