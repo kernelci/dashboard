@@ -70,7 +70,7 @@ const TestDetailsSections = ({
         rel="noreferrer"
       >
         {truncateBigText(test.build_id)}
-        <LinkIcon className="text-xl text-blue" />
+        <LinkIcon className="text-blue text-xl" />
       </Link>
     );
   }, [historyState, test.build_id, searchParams]);
@@ -269,7 +269,7 @@ const TestDetails = ({
       }
     >
       <Sheet>
-        <div className="w-100 px-5 pb-8">
+        <div className="w-full px-5 pb-8">
           {breadcrumb}
 
           {data && (

@@ -53,7 +53,7 @@ const SectionError = ({
   }
 
   return (
-    <div className="flex flex-col items-center py-6 text-weakGray">
+    <div className="text-weak-gray flex flex-col items-center py-6">
       {variant === 'error' && !isLoading && (
         <RiProhibited2Line className="h-14 w-14" />
       )}

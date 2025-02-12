@@ -40,7 +40,7 @@ const CodeBlockDialog = ({ children }: PropsWithChildren): JSX.Element => {
         <DialogTrigger asChild className="p-2">
           <Button
             variant="outline"
-            className="absolute right-[20px] top-[10px] opacity-50 hover:opacity-100"
+            className="absolute top-[10px] right-[20px] opacity-50 hover:opacity-100"
           >
             <GoScreenFull size={25} />
           </Button>
@@ -108,7 +108,7 @@ const HighlightCounts = ({
         <li className="flex gap-1">
           <ColoredCircle
             quantity={highlightedCode.failCount}
-            backgroundClassName="bg-lightRed"
+            backgroundClassName="bg-light-red"
           />
           <FormattedMessage id="global.fails" defaultMessage={'Fails'} />
         </li>
@@ -126,7 +126,7 @@ const HighlightCounts = ({
               highlightedCode.failCount -
               highlightedCode.errorCount
             }
-            backgroundClassName="bg-mediumGray"
+            backgroundClassName="bg-medium-gray"
           />
           <FormattedMessage id="global.others" defaultMessage={'Others'} />
         </li>

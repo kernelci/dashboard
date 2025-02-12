@@ -375,7 +375,7 @@ function HardwareDetails(): JSX.Element {
           )}
           <div className="flex flex-col pb-2">
             <div className="sticky top-[4.5rem] z-10">
-              <div className="absolute right-0 top-2 py-4">
+              <div className="absolute top-2 right-0 py-4">
                 <HardwareDetailsFilter
                   paramFilter={diffFilter}
                   hardwareName={hardwareId}

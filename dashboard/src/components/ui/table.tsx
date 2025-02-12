@@ -5,9 +5,14 @@ import { Link, LinkProps as RouterLinkProps } from '@tanstack/react-router';
 
 const Table = React.forwardRef<
   HTMLTableElement,
-  (React.HTMLAttributes<HTMLTableElement> & { containerClassName?: string} )
+  React.HTMLAttributes<HTMLTableElement> & { containerClassName?: string }
 >(({ className, containerClassName, ...props }, ref) => (
-  <div className={cn("relative w-full overflow-auto rounded-lg border-x border-t border-darkGray", containerClassName)}>
+  <div
+    className={cn(
+      'border-dark-gray relative w-full overflow-auto rounded-lg border-x border-t',
+      containerClassName,
+    )}
+  >
     <table
       ref={ref}
       className={cn('w-full caption-bottom text-sm', className)}
@@ -44,7 +49,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      'border-t bg-slate-100/50 font-medium dark:bg-slate-800/50 [&>tr]:last:border-b-0',
+      'border-t bg-slate-100/50 font-medium dark:bg-slate-800/50 last:[&>tr]:border-b-0',
       className,
     )}
     {...props}
@@ -94,27 +99,25 @@ const TableCell = React.forwardRef<
 ));
 TableCell.displayName = 'TableCell';
 
-type TableCellWithLinkAttributes = React.TdHTMLAttributes<HTMLTableCellElement> & {
-  linkProps: RouterLinkProps
-  linkClassName?: string
-}
+type TableCellWithLinkAttributes =
+  React.TdHTMLAttributes<HTMLTableCellElement> & {
+    linkProps: RouterLinkProps;
+    linkClassName?: string;
+  };
 
 const TableCellWithLink = React.forwardRef<
   HTMLTableCellElement,
   TableCellWithLinkAttributes
 >(({ className, children, linkProps, linkClassName, ...props }, ref) => (
-    <td
-      ref={ref}
-      className={cn('align-middle [&:has([role=checkbox])]:pr-0', className)}
-      {...props}
-    >
-      <Link
-        className={cn('p-4 flex flex-1', linkClassName)}
-        {...linkProps}
-      >
-        {children}
-      </Link>
-    </td>
+  <td
+    ref={ref}
+    className={cn('align-middle [&:has([role=checkbox])]:pr-0', className)}
+    {...props}
+  >
+    <Link className={cn('flex flex-1 p-4', linkClassName)} {...linkProps}>
+      {children}
+    </Link>
+  </td>
 ));
 TableCellWithLink.displayName = 'TableCellWithLink';
 

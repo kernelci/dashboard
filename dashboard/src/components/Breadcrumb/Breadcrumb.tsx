@@ -46,7 +46,7 @@ type BreadcrumbSeparatorProps = Omit<
 const BreadcrumbSeparator = ({
   ...props
 }: BreadcrumbSeparatorProps): JSX.Element => {
-  return <BreadcrumbSeparatorComponent {...props} className="text-weakGray" />;
+  return <BreadcrumbSeparatorComponent {...props} className="text-weak-gray" />;
 };
 
 export {

@@ -22,10 +22,10 @@ export interface IListingItem {
 
 export enum ItemType {
   Warning = 'bg-yellow',
-  Error = 'bg-lightRed',
-  Success = 'bg-lightGreen',
-  Unknown = 'bg-mediumGray',
-  None = 'bg-lightGray',
+  Error = 'bg-light-red',
+  Success = 'bg-light-green',
+  Unknown = 'bg-medium-gray',
+  None = 'bg-light-gray',
 }
 
 // TODO Add Tooltip text
@@ -42,7 +42,7 @@ const ListingItem = ({
   tooltip,
 }: IListingItem): JSX.Element => {
   const hasBorder = hasBottomBorder
-    ? '[&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2 [&:not(:last-child)]:mb-2'
+    ? 'not-last:border-b not-last:pb-2 not-last:mb-2'
     : '';
   const hasErrors = errors && errors > 0 && showNumber;
   const hasWarnings = warnings && warnings > 0 && showNumber;

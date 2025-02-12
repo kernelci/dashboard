@@ -444,7 +444,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
   return (
     <div className="flex flex-col gap-6 pb-4">
       <div className="flex items-center justify-between gap-4">
-        <span className="text-left text-sm text-dimGray">
+        <span className="text-dim-gray text-left text-sm">
           <FormattedMessage
             id="global.projectUnderDevelopment"
             values={formattedBreakLineValue}

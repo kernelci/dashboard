@@ -40,21 +40,21 @@ export const GroupedTestStatus = ({
         <ColoredCircle
           quantity={successCount ?? 0}
           tooltipText="global.success"
-          backgroundClassName="bg-lightGreen"
+          backgroundClassName="bg-light-green"
         />
       }
       {
         <ColoredCircle
           quantity={failedCount}
           tooltipText="global.failed"
-          backgroundClassName="bg-lightRed"
+          backgroundClassName="bg-light-red"
         />
       }
       {!hideInconclusive && (
         <ColoredCircle
           quantity={inconclusiveCount ?? 0}
           tooltipText="global.inconclusive"
-          backgroundClassName="bg-mediumGray"
+          backgroundClassName="bg-medium-gray"
         />
       )}
     </div>
@@ -96,7 +96,7 @@ export const GroupedTestStatusWithLink = ({
           <ColoredCircle
             quantity={successCount ?? 0}
             tooltipText="global.success"
-            backgroundClassName="bg-lightGreen"
+            backgroundClassName="bg-light-green"
           />
         </Link>
       }
@@ -105,7 +105,7 @@ export const GroupedTestStatusWithLink = ({
           <ColoredCircle
             quantity={failedCount}
             tooltipText="global.failed"
-            backgroundClassName="bg-lightRed"
+            backgroundClassName="bg-light-red"
           />
         </Link>
       }
@@ -114,7 +114,7 @@ export const GroupedTestStatusWithLink = ({
           <ColoredCircle
             quantity={inconclusiveCount ?? 0}
             tooltipText="global.inconclusive"
-            backgroundClassName="bg-mediumGray"
+            backgroundClassName="bg-medium-gray"
           />
         </Link>
       )}
@@ -139,19 +139,19 @@ export const BuildStatus = ({
     <div className="flex flex-row gap-1">
       <ColoredCircle
         quantity={valid ?? 0}
-        backgroundClassName="bg-lightGreen"
+        backgroundClassName="bg-light-green"
         tooltipText="global.success"
       />
       <ColoredCircle
         quantity={invalid ?? 0}
-        backgroundClassName="bg-lightRed"
+        backgroundClassName="bg-light-red"
         tooltipText="global.failed"
       />
       {!hideInconclusive && (
         <ColoredCircle
           quantity={unknown ?? 0}
           tooltipText="global.inconclusive"
-          backgroundClassName="bg-lightGray"
+          backgroundClassName="bg-light-gray"
         />
       )}
     </div>
@@ -178,14 +178,14 @@ export const BuildStatusWithLink = ({
       <Link {...validLinkProps}>
         <ColoredCircle
           quantity={valid ?? 0}
-          backgroundClassName="bg-lightGreen"
+          backgroundClassName="bg-light-green"
           tooltipText="global.success"
         />
       </Link>
       <Link {...invalidLinkProps}>
         <ColoredCircle
           quantity={invalid ?? 0}
-          backgroundClassName="bg-lightRed"
+          backgroundClassName="bg-light-red"
           tooltipText="global.failed"
         />
       </Link>
@@ -194,7 +194,7 @@ export const BuildStatusWithLink = ({
           <ColoredCircle
             quantity={unknown ?? 0}
             tooltipText="global.inconclusive"
-            backgroundClassName="bg-lightGray"
+            backgroundClassName="bg-light-gray"
           />
         </Link>
       )}

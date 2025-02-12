@@ -48,7 +48,7 @@ export const LineChart = ({
   return (
     <div className="px-4">
       {labels && (
-        <div className="mb-0 mt-3 flex justify-end gap-2">{labels}</div>
+        <div className="mt-3 mb-0 flex justify-end gap-2">{labels}</div>
       )}
       <LineChartComponent
         className="w-full"

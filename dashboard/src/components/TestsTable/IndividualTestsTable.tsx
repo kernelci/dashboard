@@ -194,9 +194,9 @@ export function IndividualTestsTable({
     >
       <div
         ref={parentRef}
-        className="max-h-[400px] max-w-full overflow-auto bg-lightGray p-8"
+        className="bg-light-gray max-h-[400px] max-w-full overflow-auto p-8"
       >
-        <div className="rounded-lg border-x border-t border-darkGray bg-white text-sm text-black">
+        <div className="border-dark-gray rounded-lg border-x border-t bg-white text-sm text-black">
           <div style={firstRowStyle} />
           <table className="w-full">
             <DumbTableHeader>{tableHeaders}</DumbTableHeader>

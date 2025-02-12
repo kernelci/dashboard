@@ -58,12 +58,12 @@ const DrawerHeader = (): JSX.Element => {
 const DrawerLink = ({ link }: IDrawerLink): JSX.Element => {
   return (
     <div className="mb-8 flex items-center justify-between">
-      <div className="flex h-[52px] w-full flex-col border border-darkGray bg-white px-4 py-2">
-        <span className="text-xs text-darkGray2">
+      <div className="border-dark-gray flex h-[52px] w-full flex-col border bg-white px-4 py-2">
+        <span className="text-dark-gray2 text-xs">
           <FormattedMessage id={link.title} />
         </span>
         <a
-          className="text-base text-dimBlack underline"
+          className="text-dim-black text-base underline"
           href={link.url ?? '#'}
           target={link.url ? '_blank' : undefined}
           rel="noreferrer"
@@ -85,9 +85,7 @@ export const DrawerSection = ({
   return (
     <>
       {!hideSeparator && <Separator />}
-      <div className="[&:last-child]:pt-10 [&:not(:last-child)]:py-10">
-        {children}
-      </div>
+      <div className="not-last:py-10 last:pt-10">{children}</div>
     </>
   );
 };
@@ -156,7 +154,7 @@ const Drawer = ({
         />
       </DrawerTrigger>
 
-      <DrawerContent className="flex max-h-screen items-center bg-lightGray px-4">
+      <DrawerContent className="bg-light-gray flex max-h-screen items-center px-4">
         <DrawerHeader />
         <section className="max-h-full overflow-y-auto">
           <DrawerLink link={link} />
@@ -166,7 +164,7 @@ const Drawer = ({
           </div>
         </section>
 
-        <DrawerFooter className="mt-6 flex h-20 w-full flex-row justify-end gap-x-6 bg-white text-dimGray">
+        <DrawerFooter className="text-dim-gray mt-6 flex h-20 w-full flex-row justify-end gap-x-6 bg-white">
           <DrawerClose asChild>
             <Button variant="ghost" onClick={onCancel}>
               Cancel
@@ -174,7 +172,7 @@ const Drawer = ({
           </DrawerClose>
           <DrawerClose
             asChild
-            className="w-[200px] rounded-full bg-blue text-white"
+            className="bg-blue w-[200px] rounded-full text-white"
           >
             <Button variant="outline" onClick={onFilter}>
               Filter

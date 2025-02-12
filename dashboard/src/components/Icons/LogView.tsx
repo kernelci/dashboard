@@ -7,7 +7,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/Tooltip';
 export const LogViewIcon = (): JSX.Element => (
   <Tooltip>
     <TooltipTrigger>
-      <MdOutlineFileOpen className="text-lg font-bold text-blue" />
+      <MdOutlineFileOpen className="text-blue text-lg font-bold" />
     </TooltipTrigger>
     <TooltipContent>
       <FormattedMessage id="global.viewLog" />

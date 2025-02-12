@@ -21,7 +21,7 @@ import { IssueTooltip } from './IssueTooltip';
 
 export const NoIssueFound = (): JSX.Element => {
   return (
-    <div className="flex flex-col items-center py-6 text-weakGray">
+    <div className="text-weak-gray flex flex-col items-center py-6">
       <RiProhibited2Line className="h-14 w-14" />
       <h1 className="text-2xl font-semibold">
         <FormattedMessage id={'issue.noIssueFound'} />
@@ -47,7 +47,7 @@ const IssueSection = ({
         return (
           <Link
             key={issue.id + issue.version}
-            className="mb-16 flex [&:not(:last-child)]:mb-2 [&:not(:last-child)]:border-b [&:not(:last-child)]:pb-2"
+            className="mb-16 flex not-last:mb-2 not-last:border-b not-last:pb-2"
             to={'/issue/$issueId'}
             params={{ issueId: issue.id }}
             state={s => s}

@@ -27,8 +27,8 @@ const TimeRangeSection = ({
   onMaxChange,
 }: TimeRangeSection): JSX.Element => {
   return (
-    <div className="flex flex-col gap-y-2 text-dimGray">
-      <h3 className="mb-2 flex items-center gap-[0.4rem] text-xl font-semibold text-dimGray">
+    <div className="text-dim-gray flex flex-col gap-y-2">
+      <h3 className="text-dim-gray mb-2 flex items-center gap-[0.4rem] text-xl font-semibold">
         <FilterTypeIcon type={isGlobal ? 'global' : 'tab'} />
         <span>{title}</span>
       </h3>

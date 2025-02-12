@@ -28,11 +28,11 @@ export const BaseCard = ({
   return (
     <div
       className={cn(
-        'mb-6 flex h-fit w-full break-inside-avoid-column flex-col gap-2 rounded-xl border border-darkGray bg-white pt-4 text-black',
+        'border-dark-gray mb-6 flex h-fit w-full break-inside-avoid-column flex-col gap-2 rounded-xl border bg-white pt-4 text-black',
         className,
       )}
     >
-      <div className="border-b border-darkGray pb-2 pl-3 font-bold">
+      <div className="border-dark-gray border-b pb-2 pl-3 font-bold">
         {title}
       </div>
       <div>{children ? children : content}</div>

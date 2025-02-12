@@ -9,7 +9,7 @@ export const LoadingCircle = ({
   <div
     className={cn(
       className,
-      'text-surface inline-block h-6 w-6 animate-spin rounded-full border-[3px] border-solid border-x-current border-y-current border-e-transparent text-blue motion-reduce:animate-[spin_1.5s_linear_infinite]',
+      'text-surface text-blue inline-block h-6 w-6 animate-spin rounded-full border-[3px] border-solid border-x-current border-y-current border-e-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]',
     )}
     role="status"
     {...props}

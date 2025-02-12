@@ -310,7 +310,7 @@ function TreeDetails(): JSX.Element {
         </div>
         <div className="flex flex-col pb-2">
           <div className="sticky top-[4.5rem] z-10">
-            <div className="absolute right-0 top-2 py-4">
+            <div className="absolute top-2 right-0 py-4">
               {data ? (
                 <TreeDetailsFilter
                   paramFilter={diffFilter}
@@ -318,7 +318,7 @@ function TreeDetails(): JSX.Element {
                   data={data}
                 />
               ) : (
-                <LoadingCircle className="mr-8 mt-6" />
+                <LoadingCircle className="mt-6 mr-8" />
               )}
             </div>
           </div>

@@ -63,7 +63,7 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
 
   return (
     <div className="flex items-center">
-      <span className="mr-4 text-base font-medium text-dimGray">
+      <span className="text-dim-gray mr-4 text-base font-medium">
         <FormattedMessage id="global.origin" />
       </span>
       <Select onValueChange={onValueChange} value={origin}>

@@ -102,20 +102,20 @@ const SideMenu = (): JSX.Element => {
 
   return (
     <NavigationMenu
-      className="min-h-screen flex-col justify-start bg-bgSecondary pt-6"
+      className="bg-bg-secondary min-h-screen flex-col justify-start pt-6"
       orientation="vertical"
     >
       <div className="w-full px-4">
         <img src="/kernelci-logo-white.svg" className="max-w-[125px]" />
       </div>
 
-      <Separator className="my-4 bg-onSecondary-10" />
+      <Separator className="bg-on-secondary-10 my-4" />
 
-      <NavigationMenuList className="w-52 flex-col space-x-0 space-y-4">
+      <NavigationMenuList className="w-52 flex-col space-y-4 space-x-0">
         {routeItems.map(item => (
           <SideMenuItem item={item} key={item.idIntl}></SideMenuItem>
         ))}
-        <Separator className="my-4 bg-onSecondary-10" />
+        <Separator className="bg-on-secondary-10 my-4" />
         {linksItemElements}
         <SendFeedback className="w-full" />
       </NavigationMenuList>

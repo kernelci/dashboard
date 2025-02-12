@@ -377,7 +377,7 @@ export function TestsTable({
       modelRows.map(row => (
         <Fragment key={row.id}>
           <TableRow
-            className="group cursor-pointer hover:bg-lightBlue"
+            className="group hover:bg-light-blue cursor-pointer"
             onClick={() => {
               if (row.getCanExpand()) {
                 row.toggleExpanded();
