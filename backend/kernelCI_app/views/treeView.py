@@ -121,9 +121,8 @@ class TreeView(APIView):
                     AND tests.status = 'DONE' THEN 1 END) AS done_tests,
                 COUNT(CASE WHEN (tests.path <> 'boot' AND tests.path NOT LIKE 'boot.%%')
                     AND tests.status = 'SKIP' THEN 1 END) AS skip_tests,
-                SUM(CASE WHEN tests.status IS NULL AND tests.id IS NOT NULL THEN 1 ELSE 0 END)
-                    AS null_tests,
-
+                SUM(CASE WHEN (tests.path <> 'boot' AND tests.path NOT LIKE 'boot.%%')
+                    AND tests.status IS NULL AND tests.id IS NOT NULL THEN 1 ELSE 0 END) AS null_tests,
                 COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
                     AND tests.status = 'FAIL' THEN 1 END) AS fail_boots,
                 COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
@@ -136,7 +135,7 @@ class TreeView(APIView):
                     AND tests.status = 'DONE' THEN 1 END) AS done_boots,
                 COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
                     AND tests.status = 'SKIP' THEN 1 END) AS skip_boots,
-                COUNT(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
+                SUM(CASE WHEN (tests.path = 'boot' OR tests.path LIKE 'boot.%%')
                     AND tests.status IS NULL AND tests.id IS NOT NULL THEN 1 ELSE 0 END) AS null_boots,
                 COALESCE(
                     ARRAY_AGG(DISTINCT tree_name) FILTER (
