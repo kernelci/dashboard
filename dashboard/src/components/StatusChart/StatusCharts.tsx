@@ -124,9 +124,9 @@ const getColorClassName = (color: Colors): string => {
     case Colors.Yellow:
       return 'bg-yellow';
     case Colors.Gray:
-      return 'bg-mediumGray';
+      return 'bg-medium-gray';
     case Colors.DimGray:
-      return 'bg-dimGray';
+      return 'bg-dim-gray';
     case Colors.Blue:
       return 'bg-blue';
     default:
@@ -158,7 +158,7 @@ const ChartLegend = ({ chartValues, onClick }: IChartLegend): JSX.Element => {
             className="flex flex-row text-left"
           >
             {chartValue && (
-              <div className="pr-2 pt-1">
+              <div className="pt-1 pr-2">
                 <ColoredCircle
                   backgroundClassName={getColorClassName(chartValue.color)}
                 />
@@ -166,7 +166,7 @@ const ChartLegend = ({ chartValues, onClick }: IChartLegend): JSX.Element => {
             )}
             <div className="flex flex-col">
               <span className="font-bold">{chartValue?.value}</span>
-              <span className="text-darkGray2">{status}</span>
+              <span className="text-dark-gray2">{status}</span>
             </div>
           </WrapperElement>
         )

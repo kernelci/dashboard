@@ -32,7 +32,7 @@ const SummarySection = ({ title, columns }: ISummarySection): JSX.Element => {
   );
 
   return (
-    <div className="min-h-[100px] text-dimGray">
+    <div className="text-dim-gray min-h-[100px]">
       <h4 className="mb-6 text-xl font-semibold">{title}</h4>
       <div className="flex justify-between">{columnComponents}</div>
     </div>

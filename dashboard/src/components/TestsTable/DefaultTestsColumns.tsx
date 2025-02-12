@@ -65,7 +65,7 @@ export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
       return (
         <Tooltip>
           <TooltipTrigger>
-            <div className="max-w-80 overflow-clip text-ellipsis text-nowrap">
+            <div className="max-w-80 overflow-clip text-nowrap text-ellipsis">
               {row.getValue('path')}
             </div>
           </TooltipTrigger>

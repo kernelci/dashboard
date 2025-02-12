@@ -75,7 +75,7 @@ const TableRowComponent = <T extends BaseComponentType>({
 
   return (
     <TableRow
-      className={cn('cursor-pointer hover:bg-lightBlue', className)}
+      className={cn('hover:bg-light-blue cursor-pointer', className)}
       key={row.id}
     >
       {row.getVisibleCells().map((cell, cellIdx) => (

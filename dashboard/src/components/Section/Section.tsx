@@ -43,7 +43,7 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
             unformattedTitle={info.unformattedTitle}
             icon={
               info.link && !info.icon ? (
-                <LinkIcon className="text-xl text-blue" />
+                <LinkIcon className="text-blue text-xl" />
               ) : (
                 info.icon
               )
@@ -72,7 +72,7 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
   return (
     <div>
       <span className="text-xl">{title}</span>
-      <div className="grid grid-cols-2 gap-8 border-t border-darkGray py-8">
+      <div className="border-dark-gray grid grid-cols-2 gap-8 border-t py-8">
         {items}
       </div>
       <div className="w-[80vw]">{children}</div>
@@ -98,7 +98,7 @@ const Section = ({
     [subsections],
   );
   return (
-    <div className="flex flex-col gap-4 text-dimGray">
+    <div className="text-dim-gray flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <span className="text-sm">{eyebrow}</span>
         <div className="flex flex-row gap-2">

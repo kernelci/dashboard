@@ -16,7 +16,7 @@ const MoreDetailsLinkButton = ({
     <Button
       asChild
       variant="outline"
-      className="w-min rounded-full border-2 border-black text-sm text-dimGray hover:bg-mediumGray"
+      className="text-dim-gray hover:bg-medium-gray w-min rounded-full border-2 border-black text-sm"
     >
       <Link {...linkProps}>
         <div className="flex gap-2">

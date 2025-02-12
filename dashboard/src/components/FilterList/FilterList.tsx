@@ -28,9 +28,9 @@ export interface IFilterButton
 }
 
 const baseButtonClassNames =
-  'text-sm h-10 pr-2 rounded-md flex items-center bg-darkGray hover:bg-mediumGray';
+  'text-sm h-10 pr-2 rounded-md flex items-center bg-dark-gray hover:bg-medium-gray';
 const primaryClassNames = 'bg-blue text-white';
-const secondaryClassNames = 'bg-darkGray text-black';
+const secondaryClassNames = 'bg-dark-gray text-black';
 
 const FilterButton = ({
   text,
@@ -104,7 +104,7 @@ const FilterList = ({
     <div className="flex flex-wrap items-center gap-4">
       {buttonList}
       <FilterButton
-        className="hover:bg-darkGray2"
+        className="hover:bg-dark-gray2"
         text={intl.formatMessage({ id: 'global.cleanAll' })}
         variant="primary"
         onClick={onClickCleanAll}

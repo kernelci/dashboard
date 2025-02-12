@@ -10,7 +10,7 @@ interface ICheckbox {
 }
 
 const containerClass =
-  'min-w-[300px] p-4 border-[2px] border-darkGray rounded cursor-pointer text-dimGray';
+  'min-w-[300px] p-4 border-[2px] border-dark-gray rounded-sm cursor-pointer text-dim-gray';
 
 const maxCheckboxLength = 30;
 

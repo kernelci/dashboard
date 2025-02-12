@@ -24,7 +24,7 @@ const HardwareBreadcrumb = ({
 }): JSX.Element => {
   const hardwareId = useRouterState({ select: s => s.location.state.id });
   return (
-    <Breadcrumb className="pb-6 pt-6">
+    <Breadcrumb className="pt-6 pb-6">
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink to="/hardware" search={searchParams}>

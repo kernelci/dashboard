@@ -36,7 +36,7 @@ const Trees = (): JSX.Element => {
 
   return (
     <>
-      <div className="fixed top-0 z-10 mx-[380px] flex w-full pl-6 pr-12 pt-5">
+      <div className="fixed top-0 z-10 mx-[380px] flex w-full pt-5 pr-12 pl-6">
         <div className="flex w-2/3 items-center px-6">
           <DebounceInput
             debouncedSideEffect={onInputSearchTextChange}
@@ -47,7 +47,7 @@ const Trees = (): JSX.Element => {
           />
         </div>
       </div>
-      <div className="w-full bg-lightGray py-10">
+      <div className="bg-light-gray w-full py-10">
         <TreeListingPage inputFilter={treeSearch} />
       </div>
     </>

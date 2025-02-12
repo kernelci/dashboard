@@ -105,7 +105,7 @@ const CheckboxSubsection = ({
 }: ICheckboxSubsection): JSX.Element => {
   return (
     <div>
-      <h4 className="mb-2 mt-6 text-sm font-medium text-dimGray">{title}</h4>
+      <h4 className="text-dim-gray mt-6 mb-2 text-sm font-medium">{title}</h4>
       <CheckboxList items={items} onClickItem={onClickItem} />
     </div>
   );
@@ -135,11 +135,11 @@ const CheckboxSection = ({
 
   return (
     <div className={cls(className)}>
-      <h3 className="mb-2 flex items-center gap-[0.4rem] text-xl font-semibold text-dimGray">
+      <h3 className="text-dim-gray mb-2 flex items-center gap-[0.4rem] text-xl font-semibold">
         <FilterTypeIcon type={isGlobal ? 'global' : 'tab'} />
         <span>{title}</span>
       </h3>
-      <h4 className="mb-6 text-sm text-dimGray">{subtitle}</h4>
+      <h4 className="text-dim-gray mb-6 text-sm">{subtitle}</h4>
       {items && <CheckboxList items={items} onClickItem={onClickItem} />}
       {subsectionComponents}
     </div>

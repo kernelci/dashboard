@@ -49,7 +49,7 @@ export const DumbSummary = ({
 }: IDumbSummary): JSX.Element => {
   return (
     <BaseTable
-      className="!rounded-[0rem] bg-mediumGray"
+      className="bg-medium-gray rounded-[0rem]!"
       headers={summaryHeaders}
       body={<TableBody>{children}</TableBody>}
     />

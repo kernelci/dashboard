@@ -159,9 +159,9 @@ const BuildDetails = ({
                     ? 'INVALID'
                     : 'NULL',
                 icon: data.valid ? (
-                  <MdCheck className="text-xl text-green" />
+                  <MdCheck className="text-green text-xl" />
                 ) : (
-                  <MdClose className="text-xl text-red" />
+                  <MdClose className="text-red text-xl" />
                 ),
               },
               {

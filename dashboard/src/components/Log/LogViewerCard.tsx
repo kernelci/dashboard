@@ -22,7 +22,7 @@ const LogLink = ({
 }): JSX.Element => (
   <a
     href={combinedLogUrl}
-    className="border-b border-b-transparent transition-all hover:border-b-blue hover:text-blue"
+    className="hover:border-b-blue hover:text-blue border-b border-b-transparent transition-all"
   >
     {children}
   </a>
@@ -106,7 +106,7 @@ export const LogViewerCard = ({
               link: (
                 <a
                   href={logUrl}
-                  className="flex gap-2 text-blue transition-all hover:underline"
+                  className="text-blue flex gap-2 transition-all hover:underline"
                 >
                   <span>{truncateUrl(logUrl)}</span>
                   <GrDocumentDownload className="text-blue" />

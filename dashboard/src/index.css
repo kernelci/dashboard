@@ -1,3 +1,79 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import './tailwindcss-animate.css';
+
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  --color-bg-secondary: #343638;
+  --color-light-blue: #e7f7fc;
+  --color-on-secondary-10: #ffffff1a;
+  --color-white: #ffffff;
+  --color-light-gray: #f4f4f4;
+  --color-medium-gray: #eaeaea;
+  --color-dark-gray: #d6d6d6;
+  --color-dark-gray2: #767676;
+  --color-dim-gray: #454545;
+  --color-dim-black: #333333;
+  --color-weak-gray: #b3b3b3;
+  --color-black: #000000;
+  --color-light-red: #ffbbbb;
+  --color-yellow: #ffd27c;
+  --color-light-green: #c9fada;
+  --color-green: #53d07c;
+  --color-red: #e15739;
+  --color-blue: #11b3e6;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (width >= --theme(--breakpoint-sm)) {
+    max-width: none;
+  }
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}

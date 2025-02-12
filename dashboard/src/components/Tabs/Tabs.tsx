@@ -34,7 +34,7 @@ const TabsComponent = ({
     () =>
       tabs.map(tab => (
         <TabsTrigger
-          className="border-b-2 border-transparent bg-transparent px-4 text-lg data-[state=active]:border-blue"
+          className="data-[state=active]:border-blue border-b-2 border-transparent bg-transparent px-4 text-lg"
           disabled={tab.disabled}
           key={tab.name}
           value={tab.name}
@@ -63,8 +63,8 @@ const TabsComponent = ({
       defaultValue={defaultTab}
       className="w-full"
     >
-      <div className="sticky top-16 z-[5] rounded-md bg-lightGray pb-6 pt-12">
-        <TabsList className="w-full justify-start rounded-none border-b border-darkGray bg-transparent">
+      <div className="bg-light-gray sticky top-16 z-5 rounded-md pt-12 pb-6">
+        <TabsList className="border-dark-gray w-full justify-start rounded-none border-b bg-transparent">
           {tabsTrigger}
         </TabsList>
         {filterListElement && <div className="pt-6">{filterListElement}</div>}

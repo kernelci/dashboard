@@ -11,7 +11,7 @@ interface IButtonWithIcon extends React.ComponentProps<typeof Button> {
 }
 
 const buttonsClassName =
-  'bg-lightGray border-2 border-black text-black rounded-full items-center gap-2 hover:bg-darkGray px-6';
+  'bg-light-gray border-2 border-black text-black rounded-full items-center gap-2 hover:bg-dark-gray px-6';
 
 const ButtonWithIcon = ({
   icon,

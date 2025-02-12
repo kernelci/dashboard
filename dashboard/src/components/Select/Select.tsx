@@ -11,7 +11,7 @@ const Select = (props: React.ComponentProps<typeof SelectUI>): JSX.Element => {
 
   return (
     <SelectUI {...propsWithoutChildren}>
-      <SelectTrigger className="w-auto rounded-full border-2 border-dimGray px-6 py-4 text-base font-medium text-dimGray">
+      <SelectTrigger className="border-dim-gray text-dim-gray w-auto rounded-full border-2 px-6 py-4 text-base font-medium">
         <SelectValue placeholder="" />
       </SelectTrigger>
       <SelectContent>{children}</SelectContent>

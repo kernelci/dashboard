@@ -135,7 +135,7 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
       <BaseCard
         title={<FormattedMessage id="global.info" />}
         content={
-          <p className="p-4 text-[1.3rem] text-darkGray">
+          <p className="text-dark-gray p-4 text-[1.3rem]">
             <FormattedMessage id="testsTab.noTest" />
           </p>
         }

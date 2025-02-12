@@ -57,7 +57,7 @@ export const IssueDetailsTestSection = ({
       <h2 className="text-2xl font-bold">
         {formatMessage({ id: 'global.tests' })}
       </h2>
-      <Separator className="my-6 bg-darkGray" />
+      <Separator className="bg-dark-gray my-6" />
       {data ? (
         <div className="flex flex-col gap-6">
           <TestsTable

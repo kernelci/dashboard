@@ -137,7 +137,7 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
       <BaseCard
         title={<FormattedMessage id="bootsTab.info" />}
         content={
-          <p className="p-4 text-[1.3rem] text-darkGray">
+          <p className="text-dark-gray p-4 text-[1.3rem]">
             <FormattedMessage id="bootsTab.info.description" />
           </p>
         }

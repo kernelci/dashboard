@@ -7,7 +7,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/Tooltip';
 export const JsonViewIcon = (): JSX.Element => (
   <Tooltip>
     <TooltipTrigger>
-      <AiOutlineFileSearch className="text-lg text-blue" />
+      <AiOutlineFileSearch className="text-blue text-lg" />
     </TooltipTrigger>
     <TooltipContent>
       <FormattedMessage id="global.viewJson" />

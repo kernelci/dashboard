@@ -1,14 +1,14 @@
-import { useToast } from "@/hooks/useToast"
+import { useToast } from '@/hooks/useToast';
 import {
   Toast,
   ToastClose,
   ToastDescription,
   ToastTitle,
   ToastViewport,
-} from "@/components/ui/toast"
+} from '@/components/ui/toast';
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { toasts } = useToast();
 
   return (
     <>
@@ -24,9 +24,9 @@ export function Toaster() {
             {action}
             <ToastClose />
           </Toast>
-        )
+        );
       })}
       <ToastViewport />
     </>
-  )
+  );
 }

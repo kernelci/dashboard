@@ -38,7 +38,7 @@ const TableStatusFilter = ({
           variant="outline"
           key={filter.label}
           className={classNames(
-            'border border-black hover:bg-lightBlue',
+            'hover:bg-light-blue border border-black',
             index === 0 ? 'rounded-l-full' : 'rounded-l-none',
             index === filters.length - 1 ? 'rounded-r-full' : 'rounded-r-none',
             filter.isSelected

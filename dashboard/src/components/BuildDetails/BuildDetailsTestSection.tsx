@@ -34,7 +34,7 @@ const BuildDetailsTestSection = ({
       <span className="text-2xl font-bold">
         {intl.formatMessage({ id: 'buildDetails.testResults' })}
       </span>
-      <Separator className="my-6 bg-darkGray" />
+      <Separator className="bg-dark-gray my-6" />
       {hasTest ? (
         <div className="flex flex-col gap-6">
           <TestsTable
