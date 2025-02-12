@@ -118,7 +118,7 @@ export const IssueDetails = ({
     }
     return [
       {
-        title: data.id,
+        title: data.comment ?? data.id,
         eyebrow: formatMessage({ id: 'issueDetails.issueDetails' }),
         subsections: [
           {
@@ -153,11 +153,11 @@ export const IssueDetails = ({
                 linkText: getCulpritValue(data),
               },
               {
-                title: 'issueDetails.comment',
-                linkText: shouldTruncate(valueOrEmpty(data.comment)) ? (
-                  <TruncatedValueTooltip value={data.comment} />
+                title: 'issueDetails.id',
+                linkText: shouldTruncate(valueOrEmpty(data.id)) ? (
+                  <TruncatedValueTooltip value={data.id} />
                 ) : (
-                  valueOrEmpty(data.comment)
+                  data.id
                 ),
               },
             ],
