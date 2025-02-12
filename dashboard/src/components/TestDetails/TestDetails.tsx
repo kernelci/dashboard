@@ -1,8 +1,9 @@
 import { useIntl } from 'react-intl';
 
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 
+import type { LinkProps } from '@tanstack/react-router';
 import { Link, useRouterState, useSearch } from '@tanstack/react-router';
 
 import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
@@ -31,6 +32,21 @@ import { LogViewIcon } from '@/components/Icons/LogView';
 import { LinkIcon } from '@/components/Icons/Link';
 import { StatusIcon } from '@/components/Icons/StatusIcons';
 
+const LinkItem = ({ children, ...props }: LinkProps): JSX.Element => {
+  return (
+    <Link
+      {...props}
+      className="flex flex-row items-center gap-1 underline hover:text-slate-900"
+      target="_blank"
+      rel="noreferrer"
+    >
+      {children}
+    </Link>
+  );
+};
+
+const MemoizedLinkItem = memo(LinkItem);
+
 const TestDetailsSections = ({
   test,
   setSheetType,
@@ -48,8 +64,9 @@ const TestDetailsSections = ({
     formatMessage({ id: 'global.unknown' });
 
   const buildDetailsLink = useMemo(() => {
-    let linkTo = '';
+    let linkTo: LinkProps['to'] = '/build/$buildId';
     let linkParams = {};
+
     if (historyState.from === RedirectFrom.Hardware && historyState.id) {
       linkTo = '/hardware/$hardwareId/build/$buildId';
       linkParams = { hardwareId: historyState.id, buildId: test.build_id };
@@ -57,24 +74,44 @@ const TestDetailsSections = ({
       linkTo = '/tree/$treeId/build/$buildId';
       linkParams = { treeId: historyState.id, buildId: test.build_id };
     } else {
-      linkTo = '/build/$buildId';
       linkParams = { buildId: test.build_id };
     }
 
     return (
-      <Link
-        to={linkTo}
-        params={linkParams}
-        search={searchParams}
-        className="flex flex-row items-center gap-1 underline hover:text-slate-900"
-        target="_blank"
-        rel="noreferrer"
-      >
+      <MemoizedLinkItem to={linkTo} params={linkParams} search={searchParams}>
         {truncateBigText(test.build_id)}
         <LinkIcon className="text-blue text-xl" />
-      </Link>
+      </MemoizedLinkItem>
     );
   }, [historyState, test.build_id, searchParams]);
+
+  const treeDetailsLink = useMemo(() => {
+    return (
+      <MemoizedLinkItem
+        to="/tree/$treeId"
+        params={{ treeId: test.git_commit_hash }}
+        search={{
+          ...searchParams,
+          treeInfo: {
+            gitBranch: test.git_repository_branch,
+            gitUrl: test.git_repository_url,
+            treeName: test.tree_name,
+            commitName: test.git_commit_hash,
+            headCommitHash: test.git_commit_hash,
+          },
+        }}
+      >
+        {truncateBigText(test.git_commit_hash)}
+        <LinkIcon className="text-blue text-xl" />
+      </MemoizedLinkItem>
+    );
+  }, [
+    searchParams,
+    test.git_commit_hash,
+    test.git_repository_branch,
+    test.git_repository_url,
+    test.tree_name,
+  ]);
 
   const hasUsefulLogInfo = test.log_url || test.log_excerpt;
 
@@ -126,6 +163,7 @@ const TestDetailsSections = ({
             {
               title: 'testDetails.gitCommitHash',
               linkText: valueOrEmpty(test.git_commit_hash),
+              linkComponent: treeDetailsLink,
               copyValue: valueOrEmpty(test.git_commit_hash),
             },
             {
@@ -194,9 +232,10 @@ const TestDetailsSections = ({
     test.id,
     formatMessage,
     hasUsefulLogInfo,
+    setSheetToLog,
+    treeDetailsLink,
     buildDetailsLink,
     hardware,
-    setSheetToLog,
   ]);
 
   const miscSection: ISection | undefined = useMemo(():
