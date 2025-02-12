@@ -1587,6 +1587,43 @@ components:
       - platform
       title: EnvironmentMisc
       type: object
+    ExtraIssuesData:
+      properties:
+        first_incident:
+          $ref: '#/components/schemas/FirstIncident'
+        versions:
+          additionalProperties:
+            $ref: '#/components/schemas/IssueWithExtraInfo'
+          title: Versions
+          type: object
+      required:
+      - first_incident
+      - versions
+      title: ExtraIssuesData
+      type: object
+    FirstIncident:
+      properties:
+        first_seen:
+          $ref: '#/components/schemas/Timestamp'
+        git_commit_hash:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitHash'
+          - type: 'null'
+        git_repository_url:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+          - type: 'null'
+        git_repository_branch:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+          - type: 'null'
+      required:
+      - first_seen
+      - git_commit_hash
+      - git_repository_url
+      - git_repository_branch
+      title: FirstIncident
+      type: object
     GlobalFilters:
       properties:
         configs:
@@ -2223,13 +2260,6 @@ components:
         version:
           title: Version
           type: integer
-        first_seen:
-          anyOf:
-          - format: date-time
-            type: string
-          - type: 'null'
-          default: null
-          title: First Seen
         trees:
           anyOf:
           - items:
@@ -2360,9 +2390,7 @@ components:
       type: string
     ProcessedExtraDetailedIssues:
       additionalProperties:
-        additionalProperties:
-          $ref: '#/components/schemas/IssueWithExtraInfo'
-        type: object
+        $ref: '#/components/schemas/ExtraIssuesData'
       type: object
     Summary:
       properties:
@@ -2765,6 +2793,8 @@ components:
           $ref: '#/components/schemas/Checkout__GitCommitHash'
         git_commit_name:
           $ref: '#/components/schemas/Checkout__GitCommitName'
+        git_commit_tags:
+          $ref: '#/components/schemas/Checkout__GitCommitTags'
         earliest_start_time:
           format: date-time
           title: Earliest Start Time
@@ -2778,6 +2808,7 @@ components:
       required:
       - git_commit_hash
       - git_commit_name
+      - git_commit_tags
       - earliest_start_time
       - builds
       - boots

@@ -106,10 +106,11 @@ const IssuesList = ({
   ) : (
     <DumbListingContent>
       {issues.map(issue => {
-        const currentExtraDetails =
-          issueExtraDetails?.[issue.id][issue.version];
+        const currentExtraDetailsId = issueExtraDetails?.[issue.id];
+        const currentExtraDetailsVersion =
+          currentExtraDetailsId?.['versions'][issue.version];
 
-        const tagPills = currentExtraDetails?.tags?.map(tag => {
+        const tagPills = currentExtraDetailsVersion?.tags?.map(tag => {
           return (
             <Tooltip key={tag}>
               <TooltipTrigger className="cursor-default">
@@ -125,7 +126,24 @@ const IssuesList = ({
           );
         });
 
-        const first_seen = currentExtraDetails?.first_seen;
+        if (
+          detailsId === currentExtraDetailsId?.first_incident.git_commit_hash
+        ) {
+          tagPills?.unshift(
+            <Tooltip>
+              <TooltipTrigger className="cursor-default">
+                <Badge variant="greenTag">
+                  {formatMessage({ id: 'global.new' })}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <FormattedMessage id="issue.newIssue" />
+              </TooltipContent>
+            </Tooltip>,
+          );
+        }
+
+        const first_seen = currentExtraDetailsId?.first_incident.first_seen;
 
         return (
           <div
