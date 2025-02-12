@@ -112,6 +112,7 @@ const getLinkProps = (
           ERROR: row.original.testStatus?.error,
           MISS: row.original.testStatus?.miss,
           SKIP: row.original.testStatus?.skip,
+          NULL: row.original.testStatus?.null,
         }),
         boots: statusCountToRequiredStatusCount({
           DONE: row.original.bootStatus?.done,
@@ -120,6 +121,7 @@ const getLinkProps = (
           ERROR: row.original.bootStatus?.error,
           MISS: row.original.bootStatus?.miss,
           SKIP: row.original.bootStatus?.skip,
+          NULL: row.original.bootStatus?.null,
         }),
       },
     }),
@@ -246,6 +248,7 @@ const getColumns = (origin: TOrigins): ColumnDef<TreeTableBody>[] => {
             miss={row.original.bootStatus.miss}
             done={row.original.bootStatus.done}
             error={row.original.bootStatus.error}
+            nullStatus={row.original.bootStatus.null}
             passLinkProps={getLinkProps(row, origin, tabTarget, {
               bootStatus: { PASS: true },
             })}
@@ -290,6 +293,7 @@ const getColumns = (origin: TOrigins): ColumnDef<TreeTableBody>[] => {
             miss={row.original.testStatus.miss}
             done={row.original.testStatus.done}
             error={row.original.testStatus.error}
+            nullStatus={row.original.testStatus.null}
             passLinkProps={getLinkProps(row, origin, tabTarget, {
               testStatus: { PASS: true },
             })}
