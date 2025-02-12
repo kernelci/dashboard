@@ -2,11 +2,11 @@ from collections import defaultdict
 from typing import Dict, List, Set, Tuple
 
 from kernelCI_app.helpers.logger import log_message
-from django.db.models import Min
 from kernelCI_app.typeModels.issues import (
     IssueWithExtraInfo,
     ProcessedExtraDetailedIssues,
     TreeSetItem,
+    FirstIncident,
 )
 from kernelCI_app.models import Incidents, Checkouts
 
@@ -48,32 +48,67 @@ def assign_issue_first_seen(
         versions_per_issue[issue_id].add(issue_version)
 
     # TODO: use '=' instead of 'IN' when the list has a single element
-    incident_records = (
-        Incidents.objects.filter(issue_id__in=issue_id_list)
-        .values("issue_id")
-        .annotate(
-            first_seen=Min("field_timestamp"),
-            issue_version=Min("issue_version"),
+    incident_records = Incidents.objects.raw(
+        """
+        WITH first_incident AS (
+            SELECT
+                IC.issue_id,
+                MIN(IC.issue_version) AS min_issue_version,
+                MIN(IC._timestamp) AS first_seen
+            FROM
+                incidents IC
+            WHERE
+                IC.issue_id IN ({0})
+            GROUP BY
+                IC.issue_id
         )
+        SELECT
+            IC.id,
+            IC.issue_id,
+            IC._timestamp AS first_seen,
+            IC.issue_version,
+            C.git_commit_hash,
+            C.git_repository_url,
+            C.git_repository_branch
+        FROM
+            incidents IC
+        LEFT JOIN tests T ON IC.test_id = T.id
+        LEFT JOIN builds B ON (IC.build_id = B.id OR T.build_id = B.id)
+        LEFT JOIN checkouts C ON B.checkout_id = C.id
+        JOIN first_incident FI ON (
+            IC.issue_id = FI.issue_id
+            AND IC.issue_version = FI.min_issue_version
+            AND IC."_timestamp" = FI.first_seen
+        )
+        """.format(", ".join(["%s"] * len(issue_id_list))),
+        issue_id_list,
     )
 
     for record in incident_records:
-        record_issue_id = record["issue_id"]
-        first_seen = record["first_seen"]
+        record_issue_id = record.issue_id
+        first_seen = record.first_seen
+        first_git_commit_hash = record.git_commit_hash
+        first_git_repository_url = record.git_repository_url
+        first_git_repository_branch = record.git_repository_branch
 
         processed_issue_from_id = processed_issues_table.get(record_issue_id)
         if processed_issue_from_id is None:
             processed_issues_table[record_issue_id] = {}
             processed_issue_from_id = processed_issues_table[record_issue_id]
+            processed_issue_from_id["first_incident"] = FirstIncident(
+                first_seen=first_seen,
+                git_commit_hash=first_git_commit_hash,
+                git_repository_url=first_git_repository_url,
+                git_repository_branch=first_git_repository_branch,
+            )
 
         for version in versions_per_issue[record_issue_id]:
             processed_issue_from_version = processed_issue_from_id.get(version)
+            processed_issue_from_id["versions"] = {}
             if processed_issue_from_version is None:
-                processed_issue_from_id[version] = IssueWithExtraInfo(
+                processed_issue_from_id["versions"][version] = IssueWithExtraInfo(
                     id=record_issue_id, version=version, first_seen=first_seen
                 )
-            else:
-                processed_issue_from_version.first_seen = first_seen
 
 
 def assign_issue_trees(
@@ -81,7 +116,6 @@ def assign_issue_trees(
     issue_key_list: List[Tuple[str, int]],
     processed_issues_table: ProcessedExtraDetailedIssues,
 ) -> None:
-
     # TODO: use '=' instead of 'IN' when the list has a single element
     tuple_param_list = []
     params = {}
@@ -135,10 +169,10 @@ def assign_issue_trees(
 
         processed_issue_from_id = processed_issues_table.get(issue_id)
         if processed_issue_from_id is None:
-            processed_issues_table[issue_id] = {}
-            processed_issue_from_id = processed_issues_table[issue_id]
+            log_message("Got tree for issue id that is not on the list")
+            continue
 
-        current_detailed_issue = processed_issue_from_id.get(issue_version)
+        current_detailed_issue = processed_issue_from_id["versions"].get(issue_version)
         if current_detailed_issue is None:
             log_message("Got tree for issue version that is not on the list")
             continue

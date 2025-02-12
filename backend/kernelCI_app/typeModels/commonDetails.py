@@ -3,8 +3,9 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Union, Tuple, Any
 
-from kernelCI_app.typeModels.issues import Issue
 from pydantic import BaseModel, field_validator
+from kernelCI_app.typeModels.issues import Issue
+from kernelCI_app.typeModels.databases import EnvironmentMisc
 
 
 class TestStatusCount(BaseModel):
@@ -30,10 +31,6 @@ class TestArchSummaryItem(BaseModel):
 
 class BuildArchitectures(BuildStatusCount):
     compilers: Optional[List[str]] = []
-
-
-class EnvironmentMisc(BaseModel):
-    platform: str
 
 
 class TestHistoryItem(BaseModel):

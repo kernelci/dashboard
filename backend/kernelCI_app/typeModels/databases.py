@@ -1,7 +1,6 @@
 from typing import List, Optional, Dict, Literal, Any, Union, Annotated
 from datetime import datetime
-
-from kernelCI_app.typeModels.commonDetails import EnvironmentMisc
+from pydantic import BaseModel
 
 FAIL_STATUS = "FAIL"
 ERROR_STATUS = "ERROR"
@@ -17,6 +16,11 @@ type StatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "NULL", "DO
 type DatabaseStatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "DONE"]
 
 Jsonb = Annotated[Union[Dict[str, Any], List[Dict[str, Any]]], "Jsonb"]
+
+
+class EnvironmentMisc(BaseModel):
+    platform: str
+
 
 type Origin = str
 type Timestamp = datetime
