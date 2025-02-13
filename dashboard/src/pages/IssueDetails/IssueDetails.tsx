@@ -6,7 +6,7 @@ import {
   useSearch,
 } from '@tanstack/react-router';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 
 import { IssueDetails } from '@/components/IssueDetails/IssueDetails';
 import type { PossibleTableFilters } from '@/types/tree/TreeDetails';

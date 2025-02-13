@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, type JSX } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 

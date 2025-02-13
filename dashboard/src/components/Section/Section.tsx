@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode, ElementType } from 'react';
+import type { ReactElement, ReactNode, ElementType, JSX } from 'react';
 import { useMemo } from 'react';
 
 import type { DialogTriggerProps } from '@radix-ui/react-dialog';

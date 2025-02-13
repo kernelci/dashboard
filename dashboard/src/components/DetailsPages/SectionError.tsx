@@ -1,4 +1,4 @@
-import { Fragment, memo, useMemo } from 'react';
+import { Fragment, memo, useMemo, type JSX } from 'react';
 import { RiProhibited2Line } from 'react-icons/ri';
 import type { MessageDescriptor } from 'react-intl';
 import { FormattedMessage } from 'react-intl';

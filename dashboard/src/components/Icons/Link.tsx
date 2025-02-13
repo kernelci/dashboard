@@ -1,4 +1,4 @@
-import type { HTMLProps } from 'react';
+import type { HTMLProps, JSX } from 'react';
 import { MdLink } from 'react-icons/md';
 
 export const LinkIcon = ({

@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, JSX } from 'react';
 
 import { cn } from '@/lib/utils';
 

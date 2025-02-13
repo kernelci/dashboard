@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { ControllerRenderProps, FieldError } from 'react-hook-form';
 import { Controller, useForm } from 'react-hook-form';
 
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, JSX } from 'react';
 import { useCallback } from 'react';
 
 import { toast } from '@/hooks/useToast';

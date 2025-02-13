@@ -1,7 +1,7 @@
 import { PieChart } from '@mui/x-charts/PieChart';
 
 import { MdArrowDownward, MdArrowUpward } from 'react-icons/md';
-import type { ReactElement } from 'react';
+import type { ReactElement, JSX } from 'react';
 import React, { useMemo } from 'react';
 
 import { useDrawingArea } from '@mui/x-charts';

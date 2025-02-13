@@ -4,6 +4,7 @@ import {
   useRouterState,
   useSearch,
 } from '@tanstack/react-router';
+import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';

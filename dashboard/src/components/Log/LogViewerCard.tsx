@@ -2,7 +2,7 @@ import { GrDocumentDownload } from 'react-icons/gr';
 
 import { FormattedMessage } from 'react-intl';
 
-import { memo } from 'react';
+import { memo, type JSX } from 'react';
 
 import { useLogFiles } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';

@@ -1,5 +1,7 @@
 import { Link, type LinkProps } from '@tanstack/react-router';
 
+import type { JSX } from 'react';
+
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import { groupStatus } from '@/utils/status';
 

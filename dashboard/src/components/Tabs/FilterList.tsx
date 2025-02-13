@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 
 import FilterList from '@/components/FilterList/FilterList';
 import type { TFilter } from '@/types/general';

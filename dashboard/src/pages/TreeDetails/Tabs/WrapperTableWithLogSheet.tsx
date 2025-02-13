@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 

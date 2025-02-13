@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction, JSX } from 'react';
 import { memo, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 

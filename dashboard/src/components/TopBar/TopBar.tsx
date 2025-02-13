@@ -7,7 +7,7 @@ import {
   useRouterState,
 } from '@tanstack/react-router';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, type JSX } from 'react';
 
 import Select, { SelectItem } from '@/components/Select/Select';
 import type { TOrigins } from '@/types/general';

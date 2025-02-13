@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type JSX } from 'react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 

@@ -1,4 +1,4 @@
-import type { ElementType, ReactElement, ReactNode } from 'react';
+import type { ElementType, ReactElement, ReactNode, JSX } from 'react';
 import { Fragment, memo } from 'react';
 
 import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';

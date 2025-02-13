@@ -14,7 +14,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState, type JSX } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 

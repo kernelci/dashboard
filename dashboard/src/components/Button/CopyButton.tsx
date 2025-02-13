@@ -1,6 +1,6 @@
 import { MdOutlineCopyAll } from 'react-icons/md';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type JSX } from 'react';
 
 import { AlertDialog, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';

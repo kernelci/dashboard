@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, JSX } from 'react';
 
 import { Link } from '@tanstack/react-router';
 import type { LinkProps } from '@tanstack/react-router';

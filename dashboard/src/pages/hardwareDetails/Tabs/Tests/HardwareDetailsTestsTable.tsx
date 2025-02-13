@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
-import { useCallback } from 'react';
+import { useCallback, type JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 

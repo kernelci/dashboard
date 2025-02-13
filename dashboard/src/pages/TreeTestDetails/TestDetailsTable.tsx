@@ -1,5 +1,7 @@
 import { ErrorBoundary } from 'react-error-boundary';
 
+import type { JSX } from 'react';
+
 import type { TTestDetails } from '@/types/tree/TestDetails';
 
 type TTestDetailsTableProps = {

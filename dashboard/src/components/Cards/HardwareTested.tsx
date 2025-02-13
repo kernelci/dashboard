@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type JSX } from 'react';
 
 import type { IBaseCard } from '@/components/Cards/BaseCard';
 import BaseCard from '@/components/Cards/BaseCard';

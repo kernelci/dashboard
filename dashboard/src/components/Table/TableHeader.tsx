@@ -7,7 +7,7 @@ import { LiaQuestionCircle } from 'react-icons/lia';
 
 import { z } from 'zod';
 
-import { useCallback } from 'react';
+import { useCallback, type JSX } from 'react';
 
 import type { MessagesKey } from '@/locales/messages';
 import { formattedBreakLineValue } from '@/locales/messages';

@@ -1,5 +1,7 @@
 import cls from 'classnames';
 
+import type { JSX } from 'react';
+
 import { isUrl, truncateBigText, truncateUrl } from '@/lib/string';
 
 interface ICheckbox {

@@ -1,3 +1,5 @@
+import type { JSX } from 'react';
+
 import CopyButton from '@/components/Button/CopyButton';
 
 import { Tooltip, TooltipTrigger, TooltipContent } from './Tooltip';

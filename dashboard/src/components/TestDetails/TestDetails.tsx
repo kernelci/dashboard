@@ -1,7 +1,7 @@
 import { useIntl } from 'react-intl';
 
 import { memo, useCallback, useMemo, useState } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction, JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 import { Link, useRouterState, useSearch } from '@tanstack/react-router';

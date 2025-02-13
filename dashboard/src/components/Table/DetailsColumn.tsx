@@ -1,6 +1,8 @@
 import { LiaInfoCircleSolid } from 'react-icons/lia';
 import { FormattedMessage } from 'react-intl';
 
+import type { JSX } from 'react';
+
 export const DETAILS_COLUMN_ID = 'details';
 
 export const MoreDetailsIcon = (): JSX.Element => (

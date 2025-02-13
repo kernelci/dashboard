@@ -1,6 +1,6 @@
 import { useIntl } from 'react-intl';
 
-import { memo, useMemo } from 'react';
+import { memo, useMemo, type JSX } from 'react';
 
 import { z } from 'zod';
 

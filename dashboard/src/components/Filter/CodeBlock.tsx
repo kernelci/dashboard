@@ -3,7 +3,7 @@ import { LiaInfoCircleSolid } from 'react-icons/lia';
 
 import { FormattedMessage } from 'react-intl';
 
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, JSX } from 'react';
 import { memo, useMemo } from 'react';
 
 import { cn } from '@/lib/utils';

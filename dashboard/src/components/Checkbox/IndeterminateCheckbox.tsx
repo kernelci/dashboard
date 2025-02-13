@@ -1,4 +1,4 @@
-import { useEffect, useRef, type HTMLProps } from 'react';
+import { useEffect, useRef, type HTMLProps, type JSX } from 'react';
 
 import { cn } from '@/lib/utils';
 

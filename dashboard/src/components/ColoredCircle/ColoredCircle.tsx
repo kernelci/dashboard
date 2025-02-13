@@ -1,5 +1,7 @@
 import { useIntl } from 'react-intl';
 
+import type { JSX } from 'react';
+
 import type { MessagesKey } from '@/locales/messages';
 
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/Tooltip';

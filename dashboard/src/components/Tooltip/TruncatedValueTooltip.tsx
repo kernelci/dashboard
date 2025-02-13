@@ -1,3 +1,5 @@
+import type { JSX } from 'react';
+
 import { truncateBigText, truncateUrl, valueOrEmpty } from '@/lib/string';
 
 import { cn } from '@/lib/utils';

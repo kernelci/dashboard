@@ -2,6 +2,8 @@ import { AiOutlineFileSearch } from 'react-icons/ai';
 
 import { FormattedMessage } from 'react-intl';
 
+import type { JSX } from 'react';
+
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/Tooltip';
 
 export const JsonViewIcon = (): JSX.Element => (

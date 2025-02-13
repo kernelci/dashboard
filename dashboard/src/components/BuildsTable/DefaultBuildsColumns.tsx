@@ -1,5 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
+import type { JSX } from 'react';
+
 import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 import { TableHeader } from '@/components/Table/TableHeader';
 

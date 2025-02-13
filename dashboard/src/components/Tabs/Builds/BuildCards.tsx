@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { memo, useMemo } from 'react';
+import { memo, useMemo, type JSX } from 'react';
 
 import BaseCard from '@/components/Cards/BaseCard';
 import { GroupedTestStatus } from '@/components/Status/Status';

@@ -7,7 +7,7 @@ import {
 
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type JSX } from 'react';
 
 import {
   Breadcrumb,

@@ -13,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { Fragment, useCallback, useMemo, useState } from 'react';
+import { Fragment, useCallback, useMemo, useState, type JSX } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 

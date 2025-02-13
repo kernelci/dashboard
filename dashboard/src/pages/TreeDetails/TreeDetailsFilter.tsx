@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type JSX } from 'react';
 
 import { useNavigate } from '@tanstack/react-router';
 

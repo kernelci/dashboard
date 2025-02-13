@@ -1,6 +1,8 @@
 import type { LinkProps } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
 
+import type { JSX } from 'react';
+
 import { useDiffFilterParams } from '@/components/Tabs/tabsUtils';
 import type { TFilter, TFilterObjectsKeys } from '@/types/general';
 
@@ -11,7 +13,8 @@ interface FilterLinkProps {
   diffFilter: TFilter;
   className?: string;
   from?: LinkProps['from'];
-  to?: LinkProps['to'];
+  // TODO: make linter accept the LinkProps['to'] type
+  to?: LinkProps['to'] | (string & {});
 }
 
 const FilterLink = ({

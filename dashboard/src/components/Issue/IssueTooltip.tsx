@@ -2,6 +2,8 @@ import { LiaQuestionCircle } from 'react-icons/lia';
 
 import { FormattedMessage } from 'react-intl';
 
+import type { JSX } from 'react';
+
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { formattedBreakLineValue } from '@/locales/messages';
 import { cn } from '@/lib/utils';

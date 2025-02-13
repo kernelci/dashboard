@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { MdArrowBackIos, MdArrowForwardIos } from 'react-icons/md';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 
 import type {
   AccordionItemBuilds,

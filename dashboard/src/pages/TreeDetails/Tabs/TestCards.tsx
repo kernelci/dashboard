@@ -1,5 +1,5 @@
 import { FormattedMessage } from 'react-intl';
-import { memo, useMemo } from 'react';
+import { memo, useMemo, type JSX } from 'react';
 
 import { Link } from '@tanstack/react-router';
 
