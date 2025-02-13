@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-router';
 
 // Uncomment for TanStack Router  devtools
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 // import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 
 import SideMenu from '@/components/SideMenu/SideMenu';
