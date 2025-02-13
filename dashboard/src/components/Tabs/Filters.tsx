@@ -19,7 +19,7 @@ import type {
   TFilterNumberKeys,
 } from '@/types/general';
 import { filterFieldMap, zFilterObjectsKeys } from '@/types/general';
-import { UNKNOWN_STRING } from '@/utils/constants/backend';
+import { UNCATEGORIZED_STRING } from '@/utils/constants/backend';
 import { version_prefix } from '@/utils/utils';
 
 export const NO_VALID_INDEX = -1;
@@ -55,10 +55,10 @@ export const mapFilterToReq = (filter: TFilter): TFilter => {
           }
 
           if (reqField.includes('issue')) {
-            let issue_id = UNKNOWN_STRING;
+            let issue_id = UNCATEGORIZED_STRING;
             let issue_version = null;
 
-            if (value !== UNKNOWN_STRING) {
+            if (value !== UNCATEGORIZED_STRING) {
               const split_issue_data = value.split(` ${version_prefix}`);
               issue_version = split_issue_data.pop();
               issue_id = split_issue_data.join(` ${version_prefix}`);

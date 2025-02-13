@@ -4,12 +4,13 @@ import json
 from typing import Dict, List, Literal, Optional, Set
 
 from kernelCI_app.cache import getQueryCache, setQueryCache
+from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.constants.hardwareDetails import (
     SELECTED_HEAD_TREE_VALUE,
 )
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.build import build_status_map
-from kernelCI_app.helpers.commonDetails import add_unfiltered_issue
+from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
     FilterParams,
     is_test_failure,
@@ -892,15 +893,19 @@ def process_filters(*, instance, record: Dict) -> None:
             should_increment=is_build_issue,
             issue_set=instance.unfiltered_build_issues,
             is_invalid=is_invalid,
+            unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
+            unknown_issue_flag_tab="build",
         )
 
     if record["id"] is not None:
         if is_boot(record["path"]):
             issue_set = instance.unfiltered_boot_issues
             platform_set = instance.unfiltered_boot_platforms
+            flag_tab: PossibleTabs = "boot"
         else:
             issue_set = instance.unfiltered_test_issues
             platform_set = instance.unfiltered_test_platforms
+            flag_tab: PossibleTabs = "test"
 
         test_issue_id = record["incidents__issue__id"]
         test_issue_version = record["incidents__issue__version"]
@@ -917,6 +922,8 @@ def process_filters(*, instance, record: Dict) -> None:
             should_increment=is_test_issue,
             issue_set=issue_set,
             is_invalid=is_invalid,
+            unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
+            unknown_issue_flag_tab=flag_tab,
         )
 
         environment_misc = handle_environment_misc(record["environment_misc"])
@@ -954,9 +961,9 @@ def assign_default_record_values(record: Dict) -> None:
         record["build__incidents__issue__id"] is None
         and record["build__valid"] is not True
     ):
-        record["build__incidents__issue__id"] = UNKNOWN_STRING
+        record["build__incidents__issue__id"] = UNCATEGORIZED_STRING
     if record["incidents__issue__id"] is None and record["status"] == FAIL_STATUS:
-        record["incidents__issue__id"] = UNKNOWN_STRING
+        record["incidents__issue__id"] = UNCATEGORIZED_STRING
 
 
 def format_issue_summary_for_response(

@@ -199,6 +199,7 @@ export const messages = {
     'issue.noIssueFound': 'No issue found.',
     'issue.tooltip':
       'Issues groups several builds or tests by matching result status and logs.{br}They may also be linked to an external issue tracker or mailing list discussion.',
+    'issue.uncategorized': 'Uncategorized',
     'issueDetails.buildValid': 'Build Valid',
     'issueDetails.comment': 'Comment',
     'issueDetails.culpritCode': 'Code',

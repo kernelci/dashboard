@@ -2029,6 +2029,9 @@ components:
             type: array
           title: Issues
           type: array
+        has_unknown_issue:
+          title: Has Unknown Issue
+          type: boolean
         platforms:
           items:
             type: string
@@ -2036,6 +2039,7 @@ components:
           type: array
       required:
       - issues
+      - has_unknown_issue
       - platforms
       title: HardwareTestLocalFilters
       type: object
@@ -2306,8 +2310,12 @@ components:
             type: array
           title: Issues
           type: array
+        has_unknown_issue:
+          title: Has Unknown Issue
+          type: boolean
       required:
       - issues
+      - has_unknown_issue
       title: LocalFilters
       type: object
     LogData:
@@ -2765,6 +2773,8 @@ components:
           $ref: '#/components/schemas/Checkout__GitCommitHash'
         git_commit_name:
           $ref: '#/components/schemas/Checkout__GitCommitName'
+        git_commit_tags:
+          $ref: '#/components/schemas/Checkout__GitCommitTags'
         earliest_start_time:
           format: date-time
           title: Earliest Start Time
@@ -2778,6 +2788,7 @@ components:
       required:
       - git_commit_hash
       - git_commit_name
+      - git_commit_tags
       - earliest_start_time
       - builds
       - boots

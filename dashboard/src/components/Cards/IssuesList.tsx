@@ -21,7 +21,7 @@ import FilterLink from '@/components/Tabs/FilterLink';
 
 import LinkWithIcon from '@/components/LinkWithIcon/LinkWithIcon';
 
-import { UNKNOWN_STRING } from '@/utils/constants/backend';
+import { UNCATEGORIZED_STRING } from '@/utils/constants/backend';
 
 import { MemoizedMoreDetailsIconLink } from '@/components/Button/MoreDetailsButton';
 import { IssueTooltip } from '@/components/Issue/IssueTooltip';
@@ -144,7 +144,8 @@ const IssuesList = ({
                       unknown={issue.incidents_info.incidentsCount}
                       hasBottomBorder
                       text={
-                        issue.comment ?? formatMessage({ id: 'global.unknown' })
+                        issue.comment ??
+                        formatMessage({ id: 'issue.uncategorized' })
                       }
                       tooltip={issue.comment}
                     />
@@ -176,7 +177,7 @@ const IssuesList = ({
                   icon={<LinkIcon className="h-4 w-4" />}
                 />
               )}
-              {issue.id !== UNKNOWN_STRING && (
+              {issue.id !== UNCATEGORIZED_STRING && (
                 <MemoizedMoreDetailsIconLink
                   linkProps={getIssueLink(issue.id, issue.version)}
                 />
@@ -188,12 +189,12 @@ const IssuesList = ({
       {failedWithUnknownIssues && (
         <FilterLink
           filterSection={issueFilterSection}
-          filterValue={'Unknown'}
+          filterValue={UNCATEGORIZED_STRING}
           diffFilter={diffFilter}
         >
           <ListingItem
             unknown={failedWithUnknownIssues}
-            text={formatMessage({ id: 'global.unknown' })}
+            text={formatMessage({ id: 'issue.uncategorized' })}
           />
         </FilterLink>
       )}
