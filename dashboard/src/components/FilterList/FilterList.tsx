@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 import { IoClose } from 'react-icons/io5';
 import classNames from 'classnames';
 import { useIntl } from 'react-intl';

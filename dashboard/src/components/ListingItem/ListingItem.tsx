@@ -1,8 +1,7 @@
 import classNames from 'classnames';
 
+import type { PropsWithChildren, JSX } from 'react';
 import { useCallback, Fragment, memo } from 'react';
-
-import type { PropsWithChildren } from 'react';
 
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 

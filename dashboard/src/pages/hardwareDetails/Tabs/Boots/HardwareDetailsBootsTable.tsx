@@ -2,6 +2,8 @@ import type { ColumnDef } from '@tanstack/react-table';
 
 import type { LinkProps } from '@tanstack/react-router';
 
+import type { JSX } from 'react';
+
 import {
   DETAILS_COLUMN_ID,
   MoreDetailsIcon,

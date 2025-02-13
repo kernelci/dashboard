@@ -1,6 +1,6 @@
 import cls from 'classnames';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 
 import type { MessageDescriptor } from 'react-intl';
 

@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
+import type { JSX } from 'react';
+
 import { truncateBigText, shouldTruncate, valueOrEmpty } from '@/lib/string';
 
 import type { FirstIncident } from '@/types/issueExtras';

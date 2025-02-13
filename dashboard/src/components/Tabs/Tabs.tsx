@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactElement } from 'react';
+import type { ComponentProps, ReactElement, JSX } from 'react';
 import { useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';

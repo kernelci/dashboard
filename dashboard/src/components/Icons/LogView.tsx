@@ -2,6 +2,8 @@ import { MdOutlineFileOpen } from 'react-icons/md';
 
 import { FormattedMessage } from 'react-intl';
 
+import type { JSX } from 'react';
+
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/Tooltip';
 
 export const LogViewIcon = (): JSX.Element => (

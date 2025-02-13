@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import type { ReactElement } from 'react';
+import type { ReactElement, JSX } from 'react';
 import { useCallback, useMemo } from 'react';
 
 import type { UseQueryResult } from '@tanstack/react-query';

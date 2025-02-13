@@ -1,5 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 
+import type { JSX } from 'react';
+
 import { Input } from '@/components/ui/input';
 
 import { FilterTypeIcon } from './Drawer';

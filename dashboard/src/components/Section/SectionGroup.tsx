@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type JSX } from 'react';
 
 import type { ISection } from './Section';
 import Section from './Section';

@@ -6,7 +6,7 @@ import {
   useSearch,
 } from '@tanstack/react-router';
 
-import { useCallback } from 'react';
+import { useCallback, type JSX } from 'react';
 
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 import {

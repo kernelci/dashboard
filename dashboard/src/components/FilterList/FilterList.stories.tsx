@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
 import { IntlProvider } from 'react-intl';
 
+import type { JSX } from 'react';
+
 import { LOCALES } from '../../locales/constants';
 
 import { messages } from '../../locales/messages';

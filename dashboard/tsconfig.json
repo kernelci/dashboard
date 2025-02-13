@@ -10,6 +10,10 @@
   ],
   "compilerOptions": {
     "baseUrl": ".",
+    "jsx": "react-jsx",
+    "strict": true, // Optional: Enables strict mode
+    "moduleResolution": "node",
+    "esModuleInterop": true,
     "paths": {
       "@/*": [
         "./src/*"

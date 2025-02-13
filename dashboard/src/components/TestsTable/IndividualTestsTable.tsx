@@ -7,7 +7,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, JSX } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';

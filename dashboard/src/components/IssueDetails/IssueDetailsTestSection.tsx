@@ -4,6 +4,8 @@ import type { ColumnDef } from '@tanstack/react-table';
 
 import { useIntl } from 'react-intl';
 
+import type { JSX } from 'react';
+
 import { useIssueDetailsTests } from '@/api/issueDetails';
 
 import { TestsTable } from '@/components/TestsTable/TestsTable';

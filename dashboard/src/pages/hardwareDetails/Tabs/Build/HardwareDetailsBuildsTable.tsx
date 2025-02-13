@@ -3,7 +3,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 
 import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
 import { TableHeader } from '@/components/Table/TableHeader';

@@ -8,7 +8,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
 import type { LinkProps } from '@tanstack/react-router';
 
 import { FormattedMessage, useIntl } from 'react-intl';

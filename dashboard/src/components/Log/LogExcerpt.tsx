@@ -1,5 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 
+import type { JSX } from 'react';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import CodeBlock from '@/components/Filter/CodeBlock';
 

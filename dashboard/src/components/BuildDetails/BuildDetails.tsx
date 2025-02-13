@@ -1,6 +1,6 @@
 import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 

@@ -3,6 +3,8 @@ import { FormattedMessage } from 'react-intl';
 import type { LinkProps } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
 
+import type { JSX } from 'react';
+
 import type { MessagesKey } from '@/locales/messages';
 
 import { NavigationMenuLink } from '../ui/navigation-menu';

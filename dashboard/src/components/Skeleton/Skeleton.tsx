@@ -1,4 +1,4 @@
-import type { ReactNode, ComponentProps } from 'react';
+import type { ReactNode, ComponentProps, JSX } from 'react';
 
 import { Skeleton as SkeletonComponent } from '@/components/ui/skeleton'; //to avoid name conflict we rename the import
 

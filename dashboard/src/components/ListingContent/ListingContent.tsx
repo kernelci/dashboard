@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement, ReactNode, JSX } from 'react';
 import { useMemo } from 'react';
 
 import type { IListingItem } from '@/components/ListingItem/ListingItem';

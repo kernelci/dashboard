@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl';
 import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 
 import BaseCard from '@/components/Cards/BaseCard';
 import { Skeleton } from '@/components/Skeleton';

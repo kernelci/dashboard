@@ -1,5 +1,7 @@
 import { useParams, useRouterState } from '@tanstack/react-router';
 
+import type { JSX } from 'react';
+
 import TestDetails from '@/components/TestDetails/TestDetails';
 
 import { RedirectFrom } from '@/types/general';

@@ -2,6 +2,8 @@ import { format, formatDistanceToNow, isValid } from 'date-fns';
 
 import { FormattedMessage } from 'react-intl';
 
+import type { JSX } from 'react';
+
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { getDateOffset } from '@/utils/utils';
 

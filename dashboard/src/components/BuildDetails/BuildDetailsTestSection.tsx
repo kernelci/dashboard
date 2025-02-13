@@ -2,6 +2,8 @@ import { useIntl } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
 
+import type { JSX } from 'react';
+
 import { Separator } from '@/components/ui/separator';
 
 import { useBuildTests } from '@/api/buildTests';

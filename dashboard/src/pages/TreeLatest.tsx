@@ -2,6 +2,8 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage } from 'react-intl';
 
+import type { JSX } from 'react';
+
 import { useTreeLatest } from '@/api/tree';
 
 import {

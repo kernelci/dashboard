@@ -2,6 +2,8 @@ import { FormattedMessage } from 'react-intl';
 
 import { LiaQuestionCircleSolid } from 'react-icons/lia';
 
+import type { JSX } from 'react';
+
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 export const LogspecInfoIcon = (): JSX.Element => (

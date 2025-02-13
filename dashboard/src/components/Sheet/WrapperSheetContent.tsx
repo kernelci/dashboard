@@ -1,7 +1,7 @@
 import type { MessageDescriptor } from 'react-intl';
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { useCallback } from 'react';
+import { useCallback, type JSX } from 'react';
 
 import type { ReactNode } from '@tanstack/react-router';
 

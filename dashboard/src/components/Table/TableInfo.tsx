@@ -1,7 +1,7 @@
 import { MdArrowBackIos, MdArrowForwardIos } from 'react-icons/md';
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 
 import type { MessagesKey } from '@/locales/messages';
 

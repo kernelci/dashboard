@@ -1,7 +1,7 @@
 import { MdOutlineFeedback } from 'react-icons/md';
 import { FormattedMessage } from 'react-intl';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type JSX } from 'react';
 
 import { useLocation } from '@tanstack/react-router';
 

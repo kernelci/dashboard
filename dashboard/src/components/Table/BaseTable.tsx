@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactElement, ReactNode } from 'react';
+import type { ComponentProps, ReactElement, ReactNode, JSX } from 'react';
 
 import classNames from 'classnames';
 

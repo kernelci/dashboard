@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type JSX } from 'react';
 import type { MessageDescriptor } from 'react-intl';
 import { FormattedMessage } from 'react-intl';
 import { IoChevronDown, IoClose } from 'react-icons/io5';

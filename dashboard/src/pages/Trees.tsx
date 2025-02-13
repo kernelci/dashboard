@@ -1,4 +1,4 @@
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, JSX } from 'react';
 import { useCallback } from 'react';
 
 import { useIntl } from 'react-intl';

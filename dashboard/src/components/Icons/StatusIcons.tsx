@@ -2,6 +2,8 @@ import { match, P } from 'ts-pattern';
 
 import { MdCheck, MdClose, MdOutlinePending } from 'react-icons/md';
 
+import type { JSX } from 'react';
+
 import { cn } from '@/lib/utils';
 
 import type { Status } from '@/types/database';

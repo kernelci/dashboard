@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type JSX } from 'react';
 import { roundToNearestMinutes } from 'date-fns';
 
 import { useSearch } from '@tanstack/react-router';

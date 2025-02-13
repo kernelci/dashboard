@@ -1,7 +1,7 @@
 import type { LinkProps } from '@tanstack/react-router';
 import type { Cell, Row } from '@tanstack/react-table';
 import { flexRender } from '@tanstack/react-table';
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, type JSX } from 'react';
 
 import { TableCellWithLink, TableRow } from '@/components/ui/table';
 

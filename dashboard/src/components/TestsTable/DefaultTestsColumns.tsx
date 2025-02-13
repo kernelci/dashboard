@@ -1,5 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
+import type { JSX } from 'react';
+
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import type { TIndividualTest, TPathTests } from '@/types/general';

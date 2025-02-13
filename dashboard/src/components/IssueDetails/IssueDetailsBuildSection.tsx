@@ -4,7 +4,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 
 import { useIntl } from 'react-intl';
 
-import { useMemo } from 'react';
+import { useMemo, type JSX } from 'react';
 
 import { Separator } from '@/components/ui/separator';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';

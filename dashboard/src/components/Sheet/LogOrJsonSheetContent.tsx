@@ -4,6 +4,8 @@ import ReactJsonView from '@microlink/react-json-view';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
+import type { JSX } from 'react';
+
 import type { TNavigationLogActions } from '@/components/Sheet/WrapperSheetContent';
 import { WrapperSheetContent } from '@/components/Sheet/WrapperSheetContent';
 

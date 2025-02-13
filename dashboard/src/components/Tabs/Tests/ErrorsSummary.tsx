@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type JSX } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import type { IBaseCard } from '@/components/Cards/BaseCard';

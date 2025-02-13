@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import { Button } from '@/components/ui/button';
