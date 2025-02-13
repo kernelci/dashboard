@@ -272,7 +272,7 @@ const TestDetails = ({
       }
     >
       <Sheet>
-        <div className="w-full px-5 pb-8">
+        <div className="w-full pb-8">
           {breadcrumb}
 
           {data && (
