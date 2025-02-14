@@ -19,6 +19,7 @@ import { isTFilterObjectKeys, type TFilter } from '@/types/general';
 import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
 import type { HardwareDetailsSummary } from '@/types/hardware/hardwareDetails';
 import { getIssueFilterLabel } from '@/utils/utils';
+import { UNCATEGORIZED_STRING } from '@/utils/constants/backend';
 
 type TFilterValues = Record<string, boolean>;
 
@@ -83,18 +84,34 @@ export const createFilter = (
     data.filters.all.configs.forEach(config => {
       configs[config ?? 'Unknown'] = false;
     });
-    data.filters.builds.issues.forEach(
+
+    const buildFilters = data.filters.builds;
+    buildFilters.issues.forEach(
       i =>
         (buildIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false),
     );
-    data.filters.boots.issues.forEach(
+    if (buildFilters.has_unknown_issue) {
+      buildIssue[UNCATEGORIZED_STRING] = false;
+    }
+
+    const bootFilters = data.filters.boots;
+    bootFilters.issues.forEach(
       i =>
         (bootIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false),
     );
-    data.filters.tests.issues.forEach(
+    if (bootFilters.has_unknown_issue) {
+      bootIssue[UNCATEGORIZED_STRING] = false;
+    }
+
+    const testFilters = data.filters.tests;
+    testFilters.issues.forEach(
       i =>
         (testIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false),
     );
+    if (testFilters.has_unknown_issue) {
+      testIssue[UNCATEGORIZED_STRING] = false;
+    }
+
     (data.filters.boots.platforms ?? []).forEach(
       p => (bootPlatform[p] = false),
     );

@@ -6,7 +6,7 @@ from kernelCI_app.helpers.filters import (
     FilterParams,
     InvalidComparisonOP,
 )
-from kernelCI_app.constants.general import UNKNOWN_STRING
+from kernelCI_app.constants.general import UNCATEGORIZED_STRING, UNKNOWN_STRING
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import (
     handle_build_misc,
@@ -250,7 +250,7 @@ class TreeCommitsHistory(APIView):
         if issue_id is None and (
             build_valid in [False, None] or test_status == FAIL_STATUS
         ):
-            issue_id = UNKNOWN_STRING
+            issue_id = UNCATEGORIZED_STRING
 
         if test_id is None:
             return

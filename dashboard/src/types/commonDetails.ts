@@ -44,6 +44,7 @@ export type IssueFilterItem = [string, number?];
 
 export type LocalFilters = {
   issues: IssueFilterItem[];
+  has_unknown_issue: boolean;
 };
 
 export type DetailsFilters = {

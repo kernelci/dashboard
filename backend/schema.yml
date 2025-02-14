@@ -2066,6 +2066,9 @@ components:
             type: array
           title: Issues
           type: array
+        has_unknown_issue:
+          title: Has Unknown Issue
+          type: boolean
         platforms:
           items:
             type: string
@@ -2073,6 +2076,7 @@ components:
           type: array
       required:
       - issues
+      - has_unknown_issue
       - platforms
       title: HardwareTestLocalFilters
       type: object
@@ -2336,8 +2340,12 @@ components:
             type: array
           title: Issues
           type: array
+        has_unknown_issue:
+          title: Has Unknown Issue
+          type: boolean
       required:
       - issues
+      - has_unknown_issue
       title: LocalFilters
       type: object
     LogData:

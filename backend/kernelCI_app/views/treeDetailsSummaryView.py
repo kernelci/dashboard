@@ -1,5 +1,7 @@
+from typing import Dict
 from pydantic import ValidationError
 from rest_framework.response import Response
+from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.treeDetails import (
     call_based_on_compatible_and_misc_platform,
@@ -19,7 +21,19 @@ from kernelCI_app.helpers.treeDetails import (
     process_tests_issue,
     process_filters,
 )
-from kernelCI_app.typeModels.treeDetails import SummaryResponse, TreeQueryParameters
+from kernelCI_app.typeModels.commonDetails import (
+    BuildSummary,
+    DetailsFilters,
+    GlobalFilters,
+    LocalFilters,
+    Summary,
+    TestSummary,
+)
+from kernelCI_app.typeModels.treeDetails import (
+    SummaryResponse,
+    TreeCommon,
+    TreeQueryParameters,
+)
 from kernelCI_app.utils import (
     convert_issues_dict_to_list,
 )
@@ -74,6 +88,11 @@ class TreeDetailsSummary(APIView):
         self.unfiltered_test_issues = set()
         self.unfiltered_boot_issues = set()
         self.unfiltered_build_issues = set()
+        self.unfiltered_uncategorized_issue_flags: Dict[PossibleTabs, bool] = {
+            "build": False,
+            "boot": False,
+            "test": False,
+        }
 
     def _process_boots_test(self, row_data):
         test_id = row_data["test_id"]
@@ -168,64 +187,71 @@ class TreeDetailsSummary(APIView):
 
         self._sanitize_rows(rows)
 
-        response = {
-            "common": {
-                "tree_url": self.tree_url,
-                "hardware": list(self.hardwareUsed),
-                "git_commit_tags": self.git_commit_tags,
-            },
-            "summary": {
-                "builds": {
-                    "status": self.build_summary["builds"],
-                    "architectures": self.build_summary["architectures"],
-                    "configs": self.build_summary["configs"],
-                    "issues": self.build_issues,
-                    "unknown_issues": self.failed_builds_with_unknown_issues
-                },
-                "boots": {
-                    "status": self.bootStatusSummary,
-                    "architectures": list(self.bootArchSummary.values()),
-                    "configs": self.bootConfigs,
-                    "issues": self.bootIssues,
-                    "unknown_issues": self.failedBootsWithUnknownIssues,
-                    "environment_compatible": self.bootEnvironmentCompatible,
-                    "environment_misc": self.bootEnvironmentMisc,
-                    "fail_reasons": self.bootFailReasons,
-                    "failed_platforms": list(self.bootPlatformsFailing),
-                },
-                "tests": {
-                    "status": self.testStatusSummary,
-                    "architectures": list(self.test_arch_summary.values()),
-                    "configs": self.test_configs,
-                    "issues": self.testIssues,
-                    "unknown_issues": self.failedTestsWithUnknownIssues,
-                    "environment_compatible": self.testEnvironmentCompatible,
-                    "environment_misc": self.testEnvironmentMisc,
-                    "fail_reasons": self.testFailReasons,
-                    "failed_platforms": list(self.testPlatformsWithErrors),
-                },
-            },
-            "filters": {
-                "all": {
-                    "configs": list(self.global_configs),
-                    "architectures": list(self.global_architectures),
-                    "compilers": list(self.global_compilers),
-                },
-                "builds": {
-                    "issues": list(self.unfiltered_build_issues),
-                },
-                "boots": {
-                    "issues": list(self.unfiltered_boot_issues),
-                },
-                "tests": {
-                    "issues": list(self.unfiltered_test_issues),
-                },
-            },
-        }
-
         try:
-            SummaryResponse(**response)
+            valid_response = SummaryResponse(
+                common=TreeCommon(
+                    tree_url=self.tree_url,
+                    hardware=list(self.hardwareUsed),
+                    git_commit_tags=self.git_commit_tags,
+                ),
+                summary=Summary(
+                    builds=BuildSummary(
+                        status=self.build_summary["builds"],
+                        architectures=self.build_summary["architectures"],
+                        configs=self.build_summary["configs"],
+                        issues=self.build_issues,
+                        unknown_issues=self.failed_builds_with_unknown_issues,
+                    ),
+                    boots=TestSummary(
+                        status=self.bootStatusSummary,
+                        architectures=list(self.bootArchSummary.values()),
+                        configs=self.bootConfigs,
+                        issues=self.bootIssues,
+                        unknown_issues=self.failedBootsWithUnknownIssues,
+                        environment_compatible=self.bootEnvironmentCompatible,
+                        environment_misc=self.bootEnvironmentMisc,
+                        fail_reasons=self.bootFailReasons,
+                        failed_platforms=list(self.bootPlatformsFailing),
+                    ),
+                    tests=TestSummary(
+                        status=self.testStatusSummary,
+                        architectures=list(self.test_arch_summary.values()),
+                        configs=self.test_configs,
+                        issues=self.testIssues,
+                        unknown_issues=self.failedTestsWithUnknownIssues,
+                        environment_compatible=self.testEnvironmentCompatible,
+                        environment_misc=self.testEnvironmentMisc,
+                        fail_reasons=self.testFailReasons,
+                        failed_platforms=list(self.testPlatformsWithErrors),
+                    ),
+                ),
+                filters=DetailsFilters(
+                    all=GlobalFilters(
+                        configs=list(self.global_configs),
+                        architectures=list(self.global_architectures),
+                        compilers=list(self.global_compilers),
+                    ),
+                    builds=LocalFilters(
+                        issues=list(self.unfiltered_build_issues),
+                        has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
+                            "build"
+                        ],
+                    ),
+                    boots=LocalFilters(
+                        issues=list(self.unfiltered_boot_issues),
+                        has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
+                            "boot"
+                        ],
+                    ),
+                    tests=LocalFilters(
+                        issues=list(self.unfiltered_test_issues),
+                        has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
+                            "test"
+                        ],
+                    ),
+                ),
+            )
         except ValidationError as e:
-            return Response(data=e.errors())
+            return Response(data=e.errors(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(response)
+        return Response(valid_response.model_dump())

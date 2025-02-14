@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from typing import Any, Optional, TypedDict
-from kernelCI_app.helpers.commonDetails import add_unfiltered_issue
+from kernelCI_app.constants.general import UNCATEGORIZED_STRING
+from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
     is_test_failure,
     should_increment_build_issue,
@@ -218,7 +219,7 @@ def get_current_row_data(current_row: dict) -> dict:
         or current_row_data["build_valid"] is None
         or current_row_data["test_status"] == FAIL_STATUS
     ):
-        current_row_data["issue_id"] = UNKNOWN_STRING
+        current_row_data["issue_id"] = UNCATEGORIZED_STRING
     current_row_data["build_misc"] = handle_build_misc(current_row_data["build_misc"])
     if current_row_data["test_path"] is None:
         current_row_data["test_path"] = UNKNOWN_STRING
@@ -545,6 +546,8 @@ def process_filters(instance, row_data: dict) -> None:
             issue_version=build_issue_version,
             should_increment=is_build_issue,
             issue_set=instance.unfiltered_build_issues,
+            unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
+            unknown_issue_flag_tab="build",
             is_invalid=is_invalid,
         )
 
@@ -557,8 +560,10 @@ def process_filters(instance, row_data: dict) -> None:
 
         if is_boot(row_data["test_path"]):
             issue_set = instance.unfiltered_boot_issues
+            flag_tab: PossibleTabs = "boot"
         else:
             issue_set = instance.unfiltered_test_issues
+            flag_tab: PossibleTabs = "test"
 
         is_invalid = row_data["test_status"] == FAIL_STATUS
         add_unfiltered_issue(
@@ -567,4 +572,6 @@ def process_filters(instance, row_data: dict) -> None:
             should_increment=is_test_issue,
             issue_set=issue_set,
             is_invalid=is_invalid,
+            unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
+            unknown_issue_flag_tab=flag_tab,
         )

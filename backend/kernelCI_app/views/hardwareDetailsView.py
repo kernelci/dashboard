@@ -5,6 +5,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
 from http import HTTPStatus
+from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.hardwareDetails import (
     assign_default_record_values,
@@ -256,6 +257,12 @@ class HardwareDetails(APIView):
         self.builds["summary"] = create_details_build_summary(self.builds["items"])
         self._format_processing_for_response()
 
+        self.unfiltered_uncategorized_issue_flags: Dict[PossibleTabs, bool] = {
+            "build": False,
+            "boot": False,
+            "test": False,
+        }
+
         get_filter_options(
             instance=self,
             records=records,
@@ -307,14 +314,25 @@ class HardwareDetails(APIView):
                         architectures=self.global_architectures,
                         compilers=self.global_compilers,
                     ),
-                    builds=LocalFilters(issues=list(self.unfiltered_build_issues)),
+                    builds=LocalFilters(
+                        issues=list(self.unfiltered_build_issues),
+                        has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
+                            "build"
+                        ],
+                    ),
                     boots=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_boot_issues),
                         platforms=list(self.unfiltered_boot_platforms),
+                        has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
+                            "boot"
+                        ],
                     ),
                     tests=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_test_issues),
                         platforms=list(self.unfiltered_test_platforms),
+                        has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
+                            "test"
+                        ],
                     ),
                 ),
                 common=HardwareCommon(

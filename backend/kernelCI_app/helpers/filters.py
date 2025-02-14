@@ -1,6 +1,8 @@
 from typing import Optional, Dict, List, Tuple, TypedDict, Literal, Any, Union
 from django.http import HttpResponseBadRequest
 import re
+from kernelCI_app.constants.general import UNCATEGORIZED_STRING
+from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.typeModels.databases import PASS_STATUS, failure_status_list
 from kernelCI_app.utils import getErrorResponseBody
 from kernelCI_app.constants.general import UNKNOWN_STRING
@@ -20,8 +22,18 @@ def is_known_issue(issue_id: Optional[str], issue_version: Optional[int]) -> boo
     return (
         issue_id is not None
         and issue_version is not None
-        and issue_id is not UNKNOWN_STRING
+        and issue_id is not UNCATEGORIZED_STRING
     )
+
+
+def is_unknown_build_issue(
+    issue_id: Optional[str],
+    issue_version: Optional[int],
+    incident_test_id: Optional[str],
+) -> bool:
+    is_unknown_issue = not is_known_issue(issue_id, issue_version)
+    is_issue_from_build = incident_test_id is None
+    return is_unknown_issue and is_issue_from_build
 
 
 def is_exclusively_build_issue(
@@ -83,9 +95,8 @@ def verify_issue_in_filter(
     issue_version: Optional[int],
 ) -> bool:
     is_unknown_issue = False
-    if issue_filter_data == UNKNOWN_STRING:
-        filter_issue_id = UNKNOWN_STRING
-        filter_issue_version = None
+    if issue_filter_data == UNCATEGORIZED_STRING:
+        filter_issue_id = UNCATEGORIZED_STRING
         is_unknown_issue = True
     else:
         filter_issue_id, filter_issue_version = issue_filter_data
@@ -123,7 +134,7 @@ def should_filter_test_issue(
     if test_status == PASS_STATUS:
         return True
 
-    has_unknown_filter = UNKNOWN_STRING in issue_filters
+    has_uncategorized_filter = UNCATEGORIZED_STRING in issue_filters
 
     is_exclusively_build_issue_result = is_exclusively_build_issue(
         issue_id=issue_id,
@@ -131,10 +142,10 @@ def should_filter_test_issue(
         incident_test_id=incident_test_id,
     )
 
-    if is_exclusively_build_issue_result and has_unknown_filter:
+    if is_exclusively_build_issue_result and has_uncategorized_filter:
         return False
     if is_exclusively_build_issue_result:
-        issue_id = UNKNOWN_STRING
+        issue_id = UNCATEGORIZED_STRING
 
     is_issue_filtered_out_result = is_issue_filtered_out(
         issue_id=issue_id, issue_version=issue_version, issue_filters=issue_filters
@@ -158,18 +169,23 @@ def should_filter_build_issue(
     if not is_build_invalid(build_valid):
         return True
 
-    has_unknown_filter = UNKNOWN_STRING in issue_filters
+    has_uncategorized_filter = UNCATEGORIZED_STRING in issue_filters
 
     is_exclusively_test_issue_result = is_exclusively_test_issue(
         issue_id=issue_id,
         issue_version=issue_version,
         incident_test_id=incident_test_id,
     )
+    is_unknown_build_issue_result = is_unknown_build_issue(
+        issue_id=issue_id,
+        issue_version=issue_version,
+        incident_test_id=incident_test_id,
+    )
 
-    if is_exclusively_test_issue_result and has_unknown_filter:
+    if is_exclusively_test_issue_result and has_uncategorized_filter:
         return False
-    if is_exclusively_test_issue_result:
-        issue_id = UNKNOWN_STRING
+    if is_exclusively_test_issue_result or is_unknown_build_issue_result:
+        issue_id = UNCATEGORIZED_STRING
 
     is_issue_filtered_out_result = is_issue_filtered_out(
         issue_id=issue_id, issue_version=issue_version, issue_filters=issue_filters
@@ -189,7 +205,7 @@ def should_increment_test_issue(
         incident_test_id=incident_test_id,
     )
     if is_exclusively_build_issue_result:
-        return (UNKNOWN_STRING, None, False)
+        return (UNCATEGORIZED_STRING, None, False)
 
     is_issue_from_test_result = is_issue_from_test(
         issue_id=issue_id,
@@ -213,7 +229,7 @@ def should_increment_build_issue(
         incident_test_id=incident_test_id,
     )
     if is_exclusively_test_issue_result:
-        return (UNKNOWN_STRING, None, False)
+        return (UNCATEGORIZED_STRING, None, False)
 
     is_issue_from_build_result = is_issue_from_build(
         issue_id=issue_id,
@@ -283,7 +299,11 @@ class FilterParams:
         self.filterTestPath = ""
         self.filterBootPath = ""
         self.filterBuildValid = set()
-        self.filterIssues = {"build": set(), "boot": set(), "test": set()}
+        self.filterIssues: dict[PossibleTabs, set[tuple[str, Optional[int]]]] = {
+            "build": set(),
+            "boot": set(),
+            "test": set(),
+        }
         self.filterPlatforms = {
             "boot": set(),
             "test": set(),
@@ -372,8 +392,8 @@ class FilterParams:
         tab = current_filter["field"].split(".")[0]
 
         filter_value = current_filter["value"]
-        if filter_value == UNKNOWN_STRING:
-            self.filterIssues[tab].add((UNKNOWN_STRING, None))
+        if filter_value == UNCATEGORIZED_STRING:
+            self.filterIssues[tab].add((UNCATEGORIZED_STRING, None))
         else:
             issue_id, issue_version = filter_value.rsplit(",", 1)
             issue_version = int(issue_version) if issue_version != "null" else None

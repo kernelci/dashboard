@@ -103,6 +103,7 @@ class GlobalFilters(BaseModel):
 
 class LocalFilters(BaseModel):
     issues: List[Tuple[str, Optional[int]]]
+    has_unknown_issue: bool
 
 
 class DetailsFilters(BaseModel):

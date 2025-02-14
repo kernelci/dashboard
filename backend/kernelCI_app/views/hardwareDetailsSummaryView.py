@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
 from http import HTTPStatus
 import json
+from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.helpers.hardwareDetails import (
     assign_default_record_values,
     decide_if_is_build_in_filter,
@@ -102,6 +103,11 @@ class HardwareDetailsSummary(APIView):
         self.unfiltered_build_issues = set()
         self.unfiltered_boot_issues = set()
         self.unfiltered_test_issues = set()
+        self.unfiltered_uncategorized_issue_flags: Dict[PossibleTabs, bool] = {
+            "build": False,
+            "boot": False,
+            "test": False,
+        }
 
         self.unfiltered_boot_platforms = set()
         self.unfiltered_test_platforms = set()
@@ -135,7 +141,11 @@ class HardwareDetailsSummary(APIView):
             processed_tests=self.processed_tests,
         )
 
-        if should_process_test and not is_issue_processed_result and is_test_processed_result:
+        if (
+            should_process_test
+            and not is_issue_processed_result
+            and is_test_processed_result
+        ):
             process_issue(
                 record=record,
                 task_issues_dict=self.issue_dicts[test_type_key],
@@ -281,7 +291,9 @@ class HardwareDetailsSummary(APIView):
         is_all_selected = len(self.selected_commits) == 0
 
         try:
-            self._sanitize_records(records, trees_with_selected_commits, is_all_selected)
+            self._sanitize_records(
+                records, trees_with_selected_commits, is_all_selected
+            )
 
             self._format_processing_for_response(hardware_id=hardware_id)
 
@@ -310,14 +322,23 @@ class HardwareDetailsSummary(APIView):
                     ),
                     builds=LocalFilters(
                         issues=list(self.unfiltered_build_issues),
+                        has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
+                            "build"
+                        ],
                     ),
                     boots=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_boot_issues),
                         platforms=list(self.unfiltered_boot_platforms),
+                        has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
+                            "boot"
+                        ],
                     ),
                     tests=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_test_issues),
                         platforms=list(self.unfiltered_test_platforms),
+                        has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
+                            "test"
+                        ],
                     ),
                 ),
                 common=HardwareCommon(
