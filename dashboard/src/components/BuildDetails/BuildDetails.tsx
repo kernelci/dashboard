@@ -176,6 +176,10 @@ const BuildDetails = ({
                 title: 'global.command',
                 linkText: valueOrEmpty(data.command),
               },
+              {
+                title: 'buildDetails.buildId',
+                linkText: buildId,
+              },
             ],
           },
           {
@@ -188,10 +192,6 @@ const BuildDetails = ({
                 icon: hasUsefulLogInfo ? <LogViewIcon /> : undefined,
                 wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
                 onClick: hasUsefulLogInfo ? setSheetToLog : undefined,
-              },
-              {
-                title: 'buildDetails.buildId',
-                linkText: buildId,
               },
               {
                 title: 'buildDetails.kernelConfig',

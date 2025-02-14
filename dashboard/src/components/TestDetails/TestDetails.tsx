@@ -234,7 +234,7 @@ const TestDetailsSections = ({
               ),
             },
             {
-              title: 'testDetails.jobId',
+              title: 'testDetails.testId',
               linkText: test.id,
             },
             {
