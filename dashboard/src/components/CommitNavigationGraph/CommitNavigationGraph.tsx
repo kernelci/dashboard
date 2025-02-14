@@ -2,10 +2,21 @@ import { useIntl } from 'react-intl';
 
 import { memo, useMemo, type JSX } from 'react';
 
-import { z } from 'zod';
+import type { LineSeriesType } from '@mui/x-charts';
+import {
+  ChartsAxisHighlight,
+  ChartsLegend,
+  ChartsReferenceLine,
+  ChartsTooltip,
+  ChartsXAxis,
+  ChartsYAxis,
+  LineHighlightPlot,
+  LinePlot,
+  MarkPlot,
+  ResponsiveChartContainer,
+} from '@mui/x-charts';
 
 import { Colors } from '@/components/StatusChart/StatusCharts';
-import { LineChart } from '@/components/LineChart';
 import BaseCard from '@/components/Cards/BaseCard';
 import type { TLineChartProps } from '@/components/LineChart/LineChart';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
@@ -21,7 +32,7 @@ import type { gitValues } from '@/components/Tooltip/CommitTagTooltip';
 
 const graphDisplaySize = 8;
 
-export const getChartXLabel = ({
+const getChartXLabel = ({
   commitTags,
   commitHash,
   commitName,
@@ -52,6 +63,7 @@ interface ICommitNavigationGraph {
   endTimestampInSeconds?: number;
   onMarkClick: (commitHash: string, commitName?: string) => void;
 }
+
 const CommitNavigationGraph = ({
   origin,
   currentPageTab,
@@ -114,18 +126,20 @@ const CommitNavigationGraph = ({
   }, [currentPageTab]);
 
   // Transform the data to fit the format required by the MUI LineChart component
-  const series: TLineChartProps['series'] = [
+  const series: LineSeriesType[] = [
     {
       id: 'good',
       label: formatMessage({ id: messagesId.good }),
       data: [],
       color: Colors.Green,
+      type: 'line',
     },
     {
       label: formatMessage({ id: messagesId.bad }),
       id: 'bad',
       data: [],
       color: Colors.Red,
+      type: 'line',
     },
     {
       label: formatMessage({ id: messagesId.mid }),
@@ -135,6 +149,7 @@ const CommitNavigationGraph = ({
       highlightScope: {
         highlight: 'item',
       },
+      type: 'line',
     },
   ];
 
@@ -212,7 +227,11 @@ const CommitNavigationGraph = ({
           );
         }
 
-        return `commitIndex-${value}`;
+        return getChartXLabel({
+          commitTags: currentCommitData.commitTags,
+          commitHash: currentCommitData.commitHash,
+          commitName: currentCommitData.commitName,
+        });
       },
     },
   ];
@@ -232,76 +251,35 @@ const CommitNavigationGraph = ({
       <BaseCard
         title={formatMessage({ id: messagesId.graphName })}
         content={
-          <LineChart
-            xAxis={xAxis}
-            series={series}
-            slots={{
-              axisTickLabel: chartTextProps => {
-                let displayText = chartTextProps.text;
-                const splitResult = chartTextProps.text.split('-');
-
-                const possibleIdentifier = splitResult[0];
-
-                let isCurrentCommit = false;
-                if (possibleIdentifier === 'commitIndex') {
-                  const possibleIndex = splitResult[1];
-                  const possibleIndexNumber = parseInt(possibleIndex);
-                  const parsedPossibleIndex = z
-                    .number()
-                    .catch(e => {
-                      console.error('Error parsing index', e);
-                      return 0;
-                    })
-                    .parse(possibleIndexNumber);
-
-                  isCurrentCommit =
-                    treeId === commitData[parsedPossibleIndex].commitHash;
-
-                  displayText = getChartXLabel(commitData[parsedPossibleIndex]);
+          <ResponsiveChartContainer xAxis={xAxis} series={series} height={300}>
+            <LinePlot />
+            <ChartsXAxis tickLabelStyle={{ fontSize: 15 }} />
+            <ChartsYAxis tickLabelStyle={{ fontSize: 15 }} />
+            <ChartsReferenceLine
+              x={3} // This should be the currentCommit position
+              lineStyle={{
+                strokeDasharray: '5,5',
+                stroke: 'blue',
+                strokeWidth: 2,
+              }}
+              labelStyle={{ fontSize: '10' }}
+              labelAlign="start"
+            />
+            <MarkPlot
+              onItemClick={(_event, payload) => {
+                const commitIndex = payload.dataIndex ?? 0;
+                const commitHash = commitData[commitIndex].commitHash;
+                const commitName = commitData[commitIndex].commitName;
+                if (commitHash) {
+                  onMarkClick(commitHash, commitName);
                 }
-
-                return (
-                  <>
-                    {isCurrentCommit && (
-                      <>
-                        <polygon points="-5,-200 5,-200 0,-190" fill="blue" />
-                        <line
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="-200"
-                          stroke="blue"
-                          strokeWidth="1.2"
-                          strokeDasharray="5,5"
-                        />
-                      </>
-                    )}
-
-                    <text
-                      className="MuiChartsAxis-tickLabel"
-                      x="0"
-                      y="9"
-                      textAnchor="middle"
-                      dominantBaseline="hanging"
-                      style={{ fontSize: '0.9rem' }}
-                    >
-                      <tspan x="0" dy="0px" dominantBaseline="hanging">
-                        {displayText}
-                      </tspan>
-                    </text>
-                  </>
-                );
-              },
-            }}
-            onMarkClick={(_event, payload) => {
-              const commitIndex = payload.dataIndex ?? 0;
-              const commitHash = commitData[commitIndex].commitHash;
-              const commitName = commitData[commitIndex].commitName;
-              if (commitHash) {
-                onMarkClick(commitHash, commitName);
-              }
-            }}
-          />
+              }}
+            />
+            <ChartsLegend />
+            <ChartsAxisHighlight x="line" />
+            <ChartsTooltip trigger="axis" />
+            <LineHighlightPlot />
+          </ResponsiveChartContainer>
         }
       />
     </QuerySwitcher>
