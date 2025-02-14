@@ -17,6 +17,11 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { BuildStatus, StatusCount } from '@/types/general';
 
+import {
+  matchesRegexOrIncludes,
+  includesInAnStringOrStringArray,
+} from '@/lib/string';
+
 import { HardwareTable } from './HardwareTable';
 
 interface HardwareListingPageProps {
@@ -58,16 +63,6 @@ const useHardwareListingTime = (): {
   return { startTimestampInSeconds, endTimestampInSeconds };
 };
 
-const includesInAnStringOrArray = (
-  searched: string | string[],
-  inputFilter: string,
-): boolean => {
-  if (Array.isArray(searched)) {
-    return searched.some(element => element.includes(inputFilter));
-  }
-  return searched.includes(inputFilter);
-};
-
 const HardwareListingPage = ({
   inputFilter,
 }: HardwareListingPageProps): JSX.Element => {
@@ -89,8 +84,8 @@ const HardwareListingPage = ({
     return currentData
       .filter(hardware => {
         return (
-          hardware.hardware_name?.includes(inputFilter) ||
-          includesInAnStringOrArray(hardware.platform, inputFilter)
+          matchesRegexOrIncludes(hardware.hardware_name, inputFilter) ||
+          includesInAnStringOrStringArray(hardware.platform, inputFilter)
         );
       })
       .map((hardware): HardwareTableItem => {

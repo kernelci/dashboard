@@ -15,6 +15,8 @@ import { Toaster } from '@/components/ui/toaster';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
+import { matchesRegexOrIncludes } from '@/lib/string';
+
 import { TreeTable } from './TreeTable';
 
 interface ITreeListingPage {
@@ -52,12 +54,14 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
     return currentData
       .filter(tree => {
         return (
-          tree.git_commit_hash?.includes(inputFilter) ||
-          tree.git_repository_branch?.includes(inputFilter) ||
-          tree.git_repository_url?.includes(inputFilter) ||
+          matchesRegexOrIncludes(tree.git_commit_hash, inputFilter) ||
+          matchesRegexOrIncludes(tree.git_repository_branch, inputFilter) ||
+          matchesRegexOrIncludes(tree.git_repository_url, inputFilter) ||
           (isCompleteTree(tree)
-            ? tree.tree_names?.some(name => name.includes(inputFilter))
-            : tree.tree_name?.includes(inputFilter))
+            ? tree.tree_names?.some(name =>
+                matchesRegexOrIncludes(name, inputFilter),
+              )
+            : matchesRegexOrIncludes(tree.tree_name, inputFilter))
         );
       })
       .map((tree): TreeTableBody => {

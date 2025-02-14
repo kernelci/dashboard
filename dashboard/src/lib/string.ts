@@ -47,3 +47,31 @@ export const truncateUrl = (
   const lastPath = pathname ? pathname.slice(-endPathLength) : '';
   return `${domain}...${lastPath}`;
 };
+
+export const matchesRegexOrIncludes = (
+  text: string | undefined | null,
+  pattern: string,
+): boolean => {
+  if (!text) {
+    return false;
+  }
+  try {
+    const regex = new RegExp(pattern, 'i');
+    return regex.test(text);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (e) {
+    return text.includes(pattern);
+  }
+};
+
+export const includesInAnStringOrStringArray = (
+  searched: string | string[],
+  inputFilter: string,
+): boolean => {
+  if (Array.isArray(searched)) {
+    return searched.some(element =>
+      matchesRegexOrIncludes(element, inputFilter),
+    );
+  }
+  return matchesRegexOrIncludes(searched, inputFilter);
+};
