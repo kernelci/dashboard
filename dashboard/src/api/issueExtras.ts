@@ -64,9 +64,11 @@ export const useIssueExtraDetails = ({
     testIssues,
   });
 
+  const isValidBody = issueKeyList.length !== 0;
+
   return useQuery({
     queryKey: ['issueExtraData', issueKeyList],
     queryFn: () => fetchIssueExtraDetailsData(issueKeyList),
-    enabled,
+    enabled: isValidBody && enabled,
   });
 };
