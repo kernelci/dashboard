@@ -47,6 +47,27 @@ const LinkItem = ({ children, ...props }: LinkProps): JSX.Element => {
 
 const MemoizedLinkItem = memo(LinkItem);
 
+const getTestHardware = ({
+  misc,
+  compatibles,
+  defaultValue,
+}: {
+  misc?: Record<string, unknown>;
+  compatibles?: string[];
+  defaultValue?: string;
+}): string => {
+  const platform = misc?.['platform'];
+  if (typeof platform === 'string' && platform !== '') {
+    return platform;
+  }
+
+  if (compatibles && compatibles.length > 0) {
+    return compatibles[0];
+  }
+
+  return defaultValue ?? '-';
+};
+
 const TestDetailsSections = ({
   test,
   setSheetType,
@@ -59,9 +80,13 @@ const TestDetailsSections = ({
   const { formatMessage } = useIntl();
   const historyState = useRouterState({ select: s => s.location.state });
   const searchParams = useSearch({ from: '/test/$testId' });
-  const hardware: string =
-    test.environment_compatible?.join(' | ') ??
-    formatMessage({ id: 'global.unknown' });
+  const hardware: string = useMemo(() => {
+    return getTestHardware({
+      misc: test.environment_misc,
+      compatibles: test.environment_compatible,
+      defaultValue: formatMessage({ id: 'global.unknown' }),
+    });
+  }, [formatMessage, test.environment_compatible, test.environment_misc]);
 
   const buildDetailsLink = useMemo(() => {
     let linkTo: LinkProps['to'] = '/build/$buildId';
@@ -212,6 +237,10 @@ const TestDetailsSections = ({
               title: 'testDetails.jobId',
               linkText: test.id,
             },
+            {
+              title: 'global.compatibles',
+              linkText: valueOrEmpty(test.environment_compatible?.join(' | ')),
+            },
           ],
         },
       ],
@@ -230,6 +259,7 @@ const TestDetailsSections = ({
     test.build_id,
     test.start_time,
     test.id,
+    test.environment_compatible,
     formatMessage,
     hasUsefulLogInfo,
     setSheetToLog,

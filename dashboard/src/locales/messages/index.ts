@@ -114,6 +114,7 @@ export const messages = {
     'global.cleanAll': 'Clean all',
     'global.close': 'Close',
     'global.command': 'Command',
+    'global.compatibles': 'Compatibles',
     'global.compiler': 'Compiler',
     'global.compilers': 'Compilers',
     'global.config': 'Config',
@@ -191,7 +192,6 @@ export const messages = {
     'hardware.path': 'Hardware',
     'hardware.searchPlaceholder':
       'Search by hardware name or platform with a regex',
-    'hardwareDetails.compatibles': 'Compatibles',
     'hardwareDetails.platforms': 'Platforms',
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',

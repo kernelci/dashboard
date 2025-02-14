@@ -363,9 +363,7 @@ function HardwareDetails(): JSX.Element {
                 summaryResponse.data.common.compatibles.length > 0 && (
                   <div className="mt-5">
                     <MemoizedCompatibleHardware
-                      title={
-                        <FormattedMessage id="hardwareDetails.compatibles" />
-                      }
+                      title={<FormattedMessage id="global.compatibles" />}
                       compatibles={summaryResponse.data.common.compatibles}
                       diffFilter={diffFilter}
                     />
