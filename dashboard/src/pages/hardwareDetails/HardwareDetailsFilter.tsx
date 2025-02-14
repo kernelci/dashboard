@@ -182,7 +182,7 @@ const sectionHardware: ISectionItem[] = [
     isGlobal: true,
   },
   {
-    title: 'hardwareDetails.compatibles',
+    title: 'global.compatibles',
     subtitle: 'filter.compatiblesSubtitle',
     sectionKey: 'hardware',
     isGlobal: true,
