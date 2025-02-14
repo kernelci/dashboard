@@ -1,6 +1,8 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { LineChart as LineChartComponent } from '@mui/x-charts/LineChart';
 
+import { axisClasses } from '@mui/x-charts/ChartsAxis/axisClasses';
+
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 
 interface ILineChartLabel {
@@ -47,16 +49,25 @@ export const LineChart = ({
 }: TLineChartProps): JSX.Element => {
   return (
     <div className="px-4">
-      {labels && (
+      {/* {labels && (
         <div className="mt-3 mb-0 flex justify-end gap-2">{labels}</div>
-      )}
+      )} */}
       <LineChartComponent
         className="w-full"
         xAxis={xAxis}
-        sx={sx}
+        // xAxis={[{ data: [1, 2, 3, 4, 5] }]}
+        // sx={sx}
         slots={slots}
-        slotProps={slotProps}
+        // slotProps={{ axisLabel: { className: 'font-red' } }}
+        sx={_ => ({
+          [`.${axisClasses.root}`]: {
+            [`.${axisClasses.tickLabel}`]: {
+              fontSize: '15px !important',
+            },
+          },
+        })}
         series={series}
+        // series={[{ data: [1, 5, 3, 10] }, {data: [2, 4, 4, 5]}]}
         onMarkClick={onMarkClick}
         height={300}
       />
