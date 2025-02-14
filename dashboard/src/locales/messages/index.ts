@@ -188,7 +188,8 @@ export const messages = {
     'hardware.details': 'Hardware Details',
     'hardware.multiplePlatforms': 'Multiple Platforms',
     'hardware.path': 'Hardware',
-    'hardware.searchPlaceholder': 'Search by hardware name or platform',
+    'hardware.searchPlaceholder':
+      'Search by hardware name or platform with a regex',
     'hardwareDetails.compatibles': 'Compatibles',
     'hardwareDetails.platforms': 'Platforms',
     'hardwareDetails.timeFrame':
@@ -260,7 +261,7 @@ export const messages = {
     'testsTab.testStatus': 'Test status',
     'tree.details': 'Trees Details',
     'tree.path': 'Trees',
-    'tree.searchPlaceholder': 'Search by tree, branch or tag',
+    'tree.searchPlaceholder': 'Search by tree, branch or tag with a regex',
     'treeDetails.bootsHistory': 'Boots History',
     'treeDetails.branch': 'Branch',
     'treeDetails.buildsHistory': 'Builds History',
