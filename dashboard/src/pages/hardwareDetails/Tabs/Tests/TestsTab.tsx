@@ -113,15 +113,6 @@ const TestsTab = ({
             archCompilerErrors={testsSummary.architectures}
             diffFilter={diffFilter}
           />
-          <MemoizedIssuesList
-            title={<FormattedMessage id="global.issues" />}
-            issues={testsSummary.issues}
-            failedWithUnknownIssues={testsSummary.unknown_issues}
-            diffFilter={diffFilter}
-            issueFilterSection="testIssue"
-            detailsId={hardwareId}
-            pageFrom={RedirectFrom.Hardware}
-          />
         </div>
         <div>
           <HardwareCommitNavigationGraph
@@ -139,6 +130,15 @@ const TestsTab = ({
             diffFilter={diffFilter}
           />
         </div>
+        <MemoizedIssuesList
+          title={<FormattedMessage id="global.issues" />}
+          issues={testsSummary.issues}
+          failedWithUnknownIssues={testsSummary.unknown_issues}
+          diffFilter={diffFilter}
+          issueFilterSection="testIssue"
+          detailsId={hardwareId}
+          pageFrom={RedirectFrom.Hardware}
+        />
       </DesktopGrid>
       <MobileGrid>
         <MemoizedStatusCard
@@ -163,16 +163,16 @@ const TestsTab = ({
               archCompilerErrors={testsSummary.architectures}
               diffFilter={diffFilter}
             />
-            <MemoizedIssuesList
-              title={<FormattedMessage id="global.issues" />}
-              issues={testsSummary.issues}
-              failedWithUnknownIssues={testsSummary.unknown_issues}
-              diffFilter={diffFilter}
-              issueFilterSection="testIssue"
-              detailsId={hardwareId}
-              pageFrom={RedirectFrom.Hardware}
-            />
           </div>
+          <MemoizedIssuesList
+            title={<FormattedMessage id="global.issues" />}
+            issues={testsSummary.issues}
+            failedWithUnknownIssues={testsSummary.unknown_issues}
+            diffFilter={diffFilter}
+            issueFilterSection="testIssue"
+            detailsId={hardwareId}
+            pageFrom={RedirectFrom.Hardware}
+          />
         </InnerMobileGrid>
       </MobileGrid>
       <HardwareDetailsTabsQuerySwitcher
