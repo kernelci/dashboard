@@ -1,9 +1,9 @@
 import type { LinkProps } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
 
-import type { JSX } from 'react';
+import { useMemo, type JSX } from 'react';
 
-import { useDiffFilterParams } from '@/components/Tabs/tabsUtils';
+import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import type { TFilter, TFilterObjectsKeys } from '@/types/general';
 
 interface FilterLinkProps {
@@ -26,10 +26,9 @@ const FilterLink = ({
   to,
   diffFilter,
 }: FilterLinkProps): JSX.Element => {
-  const handleDiffFilter = useDiffFilterParams(
-    filterValue,
-    filterSection,
-    diffFilter,
+  const handleDiffFilter = useMemo(
+    () => generateDiffFilter(filterValue, filterSection, diffFilter),
+    [diffFilter, filterSection, filterValue],
   );
 
   return (

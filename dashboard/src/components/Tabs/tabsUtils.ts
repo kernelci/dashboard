@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-
 import {
   isTFilterNumberKeys,
   isTFilterObjectKeys,
@@ -33,29 +31,22 @@ export const cleanFalseFilters = (diffFilter: TFilter): TFilter => {
   return cleanedFilter;
 };
 
-export const useDiffFilterParams = (
+export const generateDiffFilter = (
   filterValue: string,
-  filterSection: TFilterObjectsKeys,
+  filterSectionKey: TFilterObjectsKeys,
   currentDiffFilter: TFilter,
 ): TFilter => {
-  const newFilter = useMemo(
-    () => structuredClone(currentDiffFilter) || {},
-    [currentDiffFilter],
-  );
+  const newFilter = structuredClone(currentDiffFilter) || {};
 
-  if (!currentDiffFilter) {
-    return {};
-  }
-
-  // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
-  newFilter[filterSection] = newFilter[filterSection] ?? {};
-
-  const configs = newFilter[filterSection];
-  if (configs[filterValue]) {
-    delete configs[filterValue];
+  const filterSectionData = newFilter[filterSectionKey] ?? {};
+  if (filterSectionData[filterValue]) {
+    delete filterSectionData[filterValue];
   } else {
-    configs[filterValue] = true;
+    filterSectionData[filterValue] = true;
   }
 
-  return newFilter;
+  return {
+    ...newFilter,
+    [filterSectionKey]: filterSectionData,
+  };
 };
