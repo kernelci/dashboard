@@ -102,15 +102,6 @@ const BuildTab = ({
             toggleFilterBySection={toggleFilterBySection}
             diffFilter={diffFilter}
           />
-          <MemoizedIssuesList
-            title={<FormattedMessage id="global.issues" />}
-            issues={buildsSummary.issues}
-            failedWithUnknownIssues={buildsSummary.unknown_issues}
-            diffFilter={diffFilter}
-            issueFilterSection="buildIssue"
-            detailsId={hardwareId}
-            pageFrom={RedirectFrom.Hardware}
-          />
         </div>
         <div>
           <HardwareCommitNavigationGraph
@@ -123,6 +114,15 @@ const BuildTab = ({
             diffFilter={diffFilter}
           />
         </div>
+        <MemoizedIssuesList
+          title={<FormattedMessage id="global.issues" />}
+          issues={buildsSummary.issues}
+          failedWithUnknownIssues={buildsSummary.unknown_issues}
+          diffFilter={diffFilter}
+          issueFilterSection="buildIssue"
+          detailsId={hardwareId}
+          pageFrom={RedirectFrom.Hardware}
+        />
       </DesktopGrid>
       <MobileGrid>
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
@@ -141,16 +141,16 @@ const BuildTab = ({
             toggleFilterBySection={toggleFilterBySection}
             diffFilter={diffFilter}
           />
+          <MemoizedIssuesList
+            title={<FormattedMessage id="global.issues" />}
+            issues={buildsSummary.issues}
+            failedWithUnknownIssues={buildsSummary.unknown_issues}
+            diffFilter={diffFilter}
+            issueFilterSection="buildIssue"
+            detailsId={hardwareId}
+            pageFrom={RedirectFrom.Hardware}
+          />
         </InnerMobileGrid>
-        <MemoizedIssuesList
-          title={<FormattedMessage id="global.issues" />}
-          issues={buildsSummary.issues}
-          failedWithUnknownIssues={buildsSummary.unknown_issues}
-          diffFilter={diffFilter}
-          issueFilterSection="buildIssue"
-          detailsId={hardwareId}
-          pageFrom={RedirectFrom.Hardware}
-        />
       </MobileGrid>
 
       <div className="flex flex-col gap-4">
