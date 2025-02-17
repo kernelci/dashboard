@@ -1,4 +1,4 @@
-import { memo, useCallback, type JSX } from 'react';
+import { memo, useCallback, useMemo, type JSX } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
@@ -101,11 +101,34 @@ const IssuesList = ({
     </div>
   );
 
+  const sortedIssues = useMemo(() => {
+    if (!extraDetailsLoading && issueExtraDetails !== undefined) {
+      const sortedIssueExtraDetails = Object.values(issueExtraDetails).sort(
+        (a, b) =>
+          new Date(b.first_incident.first_seen).getTime() -
+          new Date(a.first_incident.first_seen).getTime(),
+      );
+
+      const issueIndexMap = new Map(
+        sortedIssueExtraDetails.flatMap((obj, index) =>
+          Object.values(obj.versions).map(version => [version.id, index]),
+        ),
+      );
+
+      return issues.sort((a, b) => {
+        const aIdx = issueIndexMap.get(a.id) ?? -1;
+        const bIdx = issueIndexMap.get(b.id) ?? -1;
+        return aIdx - bIdx;
+      });
+    }
+    return issues;
+  }, [extraDetailsLoading, issueExtraDetails, issues]);
+
   const contentElement = !hasIssue ? (
     <NoIssueFound />
   ) : (
     <DumbListingContent>
-      {issues.map(issue => {
+      {sortedIssues.map(issue => {
         const currentExtraDetailsId = issueExtraDetails?.[issue.id];
         const currentExtraDetailsVersion =
           currentExtraDetailsId?.['versions'][issue.version];
