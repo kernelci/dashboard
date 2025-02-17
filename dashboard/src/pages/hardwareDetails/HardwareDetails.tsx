@@ -5,7 +5,7 @@ import {
   useSearch,
 } from '@tanstack/react-router';
 
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useCallback, useMemo, useState, type JSX } from 'react';
 
@@ -53,6 +53,8 @@ import { useHardwareDetailsLazyLoadQuery } from '@/hooks/useHardwareDetailsLazyL
 import { useQueryInconsistencyInvalidator } from '@/hooks/useQueryInconsistencyInvalidator';
 
 import { statusCountToRequiredStatusCount } from '@/utils/status';
+
+import PageWithTitle from '@/components/PageWithTitle';
 
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
@@ -102,6 +104,8 @@ function HardwareDetails(): JSX.Element {
     diffFilter,
     origin,
   } = useSearch({ from: '/hardware/$hardwareId' });
+
+  const { formatMessage } = useIntl();
 
   const { hardwareId } = useParams({ from: '/hardware/$hardwareId' });
 
@@ -298,103 +302,110 @@ function HardwareDetails(): JSX.Element {
   );
 
   return (
-    <QuerySwitcher
-      status={summaryResponse.status}
-      data={summaryResponse.data}
-      customError={
-        <MemoizedSectionError
-          isLoading={summaryResponse.isLoading}
-          errorMessage={summaryResponse.error?.message}
-          emptyLabel={'global.error'}
-        />
-      }
+    <PageWithTitle
+      title={formatMessage(
+        { id: 'title.hardwareDetails' },
+        { hardwareName: hardwareId },
+      )}
     >
-      <div className="flex flex-col pt-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink
-                    to="/hardware"
-                    search={previousParams => {
-                      return {
-                        intervalInDays: previousParams.intervalInDays,
-                        origin: previousParams.origin,
-                        hardwareSearch: previousParams.hardwareSearch,
-                      };
-                    }}
-                    state={s => s}
-                  >
-                    <FormattedMessage id="hardware.path" />
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>
-                    <span>{hardwareId}</span>
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-          <p className="text-sm font-medium text-gray-900">
-            <FormattedMessage
-              id="hardwareDetails.timeFrame"
-              values={{
-                startDate: startDate,
-                startTime: startTime,
-                endDate: endDate,
-                endTime: endTime,
-              }}
-            />
-          </p>
-        </div>
-        <div className="mt-5">
-          {!!treeData && (
-            <>
-              <HardwareHeader
-                treeItems={treeData}
-                selectedIndexes={treeIndexes}
-                updateTreeFilters={updateTreeFilters}
-                setTreeIndexesLength={setTreeIndexesLength}
-              />
-              {summaryResponse.data &&
-                summaryResponse.data.common.compatibles.length > 0 && (
-                  <div className="mt-5">
-                    <MemoizedCompatibleHardware
-                      title={<FormattedMessage id="global.compatibles" />}
-                      compatibles={summaryResponse.data.common.compatibles}
-                      diffFilter={diffFilter}
-                    />
-                  </div>
-                )}
-            </>
-          )}
-          <div className="flex flex-col pb-2">
-            <div className="sticky top-[4.5rem] z-10">
-              <div className="absolute top-2 right-0 py-4">
-                <HardwareDetailsFilter
-                  paramFilter={diffFilter}
-                  hardwareName={hardwareId}
-                  data={summaryResponse.data}
-                  selectedTrees={treeIndexes}
-                />
-              </div>
+      <QuerySwitcher
+        status={summaryResponse.status}
+        data={summaryResponse.data}
+        customError={
+          <MemoizedSectionError
+            isLoading={summaryResponse.isLoading}
+            errorMessage={summaryResponse.error?.message}
+            emptyLabel={'global.error'}
+          />
+        }
+      >
+        <div className="flex flex-col pt-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink
+                      to="/hardware"
+                      search={previousParams => {
+                        return {
+                          intervalInDays: previousParams.intervalInDays,
+                          origin: previousParams.origin,
+                          hardwareSearch: previousParams.hardwareSearch,
+                        };
+                      }}
+                      state={s => s}
+                    >
+                      <FormattedMessage id="hardware.path" />
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>
+                      <span>{hardwareId}</span>
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
             </div>
-            {summaryResponse.data && (
-              <HardwareDetailsTabs
-                hardwareId={hardwareId}
-                filterListElement={filterListElement}
-                countElements={tabsCounts}
-                summaryData={summaryResponse.data}
-                fullDataResult={fullResponse}
+            <p className="text-sm font-medium text-gray-900">
+              <FormattedMessage
+                id="hardwareDetails.timeFrame"
+                values={{
+                  startDate: startDate,
+                  startTime: startTime,
+                  endDate: endDate,
+                  endTime: endTime,
+                }}
               />
+            </p>
+          </div>
+          <div className="mt-5">
+            {!!treeData && (
+              <>
+                <HardwareHeader
+                  treeItems={treeData}
+                  selectedIndexes={treeIndexes}
+                  updateTreeFilters={updateTreeFilters}
+                  setTreeIndexesLength={setTreeIndexesLength}
+                />
+                {summaryResponse.data &&
+                  summaryResponse.data.common.compatibles.length > 0 && (
+                    <div className="mt-5">
+                      <MemoizedCompatibleHardware
+                        title={<FormattedMessage id="global.compatibles" />}
+                        compatibles={summaryResponse.data.common.compatibles}
+                        diffFilter={diffFilter}
+                      />
+                    </div>
+                  )}
+              </>
             )}
+            <div className="flex flex-col pb-2">
+              <div className="sticky top-[4.5rem] z-10">
+                <div className="absolute top-2 right-0 py-4">
+                  <HardwareDetailsFilter
+                    paramFilter={diffFilter}
+                    hardwareName={hardwareId}
+                    data={summaryResponse.data}
+                    selectedTrees={treeIndexes}
+                  />
+                </div>
+              </div>
+              {summaryResponse.data && (
+                <HardwareDetailsTabs
+                  hardwareId={hardwareId}
+                  filterListElement={filterListElement}
+                  countElements={tabsCounts}
+                  summaryData={summaryResponse.data}
+                  fullDataResult={fullResponse}
+                />
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </QuerySwitcher>
+      </QuerySwitcher>
+    </PageWithTitle>
   );
 }
 

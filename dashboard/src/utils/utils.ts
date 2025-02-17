@@ -14,6 +14,8 @@ import type {
 } from '@/types/general';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
 
+import { valueOrEmpty } from '@/lib/string';
+
 import { UNKNOWN_STRING } from './constants/backend';
 import { groupStatus } from './status';
 import { buildTreeBranch } from './table';
@@ -248,4 +250,12 @@ export const getIssueFilterLabel = (issueFilter: TIssueFilter): string => {
   const versionFormatted = `${version_prefix}${issueVersion}`;
 
   return `${issueId} ${versionFormatted}`;
+};
+
+export const getTitle = (title?: string, loading?: boolean): string => {
+  if (loading) {
+    return 'Loading...';
+  }
+
+  return valueOrEmpty(title);
 };

@@ -9,7 +9,7 @@ import type { ISection } from '@/components/Section/Section';
 import { useBuildDetails, useBuildIssues } from '@/api/buildDetails';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
-import { formatDate, getBuildStatus } from '@/utils/utils';
+import { formatDate, getBuildStatus, getTitle } from '@/utils/utils';
 
 import IssueSection from '@/components/Issue/IssueSection';
 
@@ -37,6 +37,8 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { LogViewIcon } from '@/components/Icons/LogView';
 import { StatusIcon } from '@/components/Icons/StatusIcons';
+
+import PageWithTitle from '@/components/PageWithTitle';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -212,43 +214,52 @@ const BuildDetails = ({
     );
   }, [generalSections, miscSection, filesSection]);
 
-  return (
-    <QuerySwitcher
-      status={status}
-      data={data}
-      customError={
-        <MemoizedSectionError
-          isLoading={isLoading}
-          errorMessage={error?.message}
-          emptyLabel={'global.error'}
-        />
-      }
-    >
-      <ErrorBoundary FallbackComponent={UnexpectedError}>
-        <Sheet>
-          {breadcrumb}
+  const buildTitle = `${data?.tree_name} ${data?.git_commit_name}`;
 
-          <SectionGroup sections={sectionsData} />
-          <BuildDetailsTestSection
-            buildId={buildId ?? ''}
-            onClickFilter={onClickFilter}
-            tableFilter={tableFilter}
-            getRowLink={getTestTableRowLink}
+  return (
+    <PageWithTitle
+      title={formatMessage(
+        { id: 'title.buildDetails' },
+        { buildName: getTitle(buildTitle, isLoading) },
+      )}
+    >
+      <QuerySwitcher
+        status={status}
+        data={data}
+        customError={
+          <MemoizedSectionError
+            isLoading={isLoading}
+            errorMessage={error?.message}
+            emptyLabel={'global.error'}
           />
-          <IssueSection
-            data={issueData}
-            status={issueStatus}
-            error={issueError?.message}
-          />
-          <LogOrJsonSheetContent
-            type={sheetType}
-            jsonContent={jsonContent}
-            logUrl={data?.log_url}
-            logExcerpt={data?.log_excerpt}
-          />
-        </Sheet>
-      </ErrorBoundary>
-    </QuerySwitcher>
+        }
+      >
+        <ErrorBoundary FallbackComponent={UnexpectedError}>
+          <Sheet>
+            {breadcrumb}
+
+            <SectionGroup sections={sectionsData} />
+            <BuildDetailsTestSection
+              buildId={buildId ?? ''}
+              onClickFilter={onClickFilter}
+              tableFilter={tableFilter}
+              getRowLink={getTestTableRowLink}
+            />
+            <IssueSection
+              data={issueData}
+              status={issueStatus}
+              error={issueError?.message}
+            />
+            <LogOrJsonSheetContent
+              type={sheetType}
+              jsonContent={jsonContent}
+              logUrl={data?.log_url}
+              logExcerpt={data?.log_excerpt}
+            />
+          </Sheet>
+        </ErrorBoundary>
+      </QuerySwitcher>
+    </PageWithTitle>
   );
 };
 
