@@ -15,7 +15,7 @@ import BaseTable from '@/components/Table/BaseTable';
 
 import FilterLink from '@/components/Tabs/FilterLink';
 
-import { useDiffFilterParams } from '@/components/Tabs/tabsUtils';
+import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import type { TFilter } from '@/types/general';
 
 export interface ISummaryItem {
@@ -90,7 +90,10 @@ const SummaryItem = ({
   leftIcon,
   diffFilter,
 }: ISummaryItemWithFilter): JSX.Element => {
-  const handleDiffFilter = useDiffFilterParams(arch.text, 'archs', diffFilter);
+  const handleDiffFilter = useMemo(
+    () => generateDiffFilter(arch.text, 'archs', diffFilter),
+    [arch.text, diffFilter],
+  );
 
   const compilersElement = useMemo(() => {
     return compilers?.map(compiler => (

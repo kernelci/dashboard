@@ -30,6 +30,8 @@ import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 
 import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
 
+import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
+
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
 interface IBuildTab {
@@ -58,15 +60,11 @@ const BuildTab = ({
       navigate({
         search: previousParams => {
           const { diffFilter: currentDiffFilter } = previousParams;
-          const newFilter = structuredClone(currentDiffFilter);
-          // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
-          newFilter[filterSection] = newFilter[filterSection] ?? {};
-          const configs = newFilter[filterSection];
-          if (configs[filterSectionKey]) {
-            delete configs[filterSectionKey];
-          } else {
-            configs[filterSectionKey] = true;
-          }
+          const newFilter = generateDiffFilter(
+            filterSectionKey,
+            filterSection,
+            currentDiffFilter,
+          );
 
           return {
             ...previousParams,

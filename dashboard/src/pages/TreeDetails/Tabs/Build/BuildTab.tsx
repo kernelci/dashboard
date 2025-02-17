@@ -44,6 +44,8 @@ import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
 import type { TIssue } from '@/types/issues';
 
+import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
+
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
 interface BuildTab {
@@ -79,15 +81,11 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
       navigate({
         search: previousParams => {
           const { diffFilter: currentDiffFilter } = previousParams;
-          const newFilter = structuredClone(currentDiffFilter);
-          // This seems redundant but we do this to keep the pointer to newFilter[filterSection]
-          newFilter[filterSection] = newFilter[filterSection] ?? {};
-          const configs = newFilter[filterSection];
-          if (configs[filterSectionKey]) {
-            delete configs[filterSectionKey];
-          } else {
-            configs[filterSectionKey] = true;
-          }
+          const newFilter = generateDiffFilter(
+            filterSectionKey,
+            filterSection,
+            currentDiffFilter,
+          );
 
           return {
             ...previousParams,
