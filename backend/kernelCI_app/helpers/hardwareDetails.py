@@ -298,6 +298,8 @@ def query_records(
                 AND tests.start_time >= %s
                 AND tests.start_time <= %s
                 AND checkouts.git_commit_hash IN ({0})
+            ORDER BY
+                issues."_timestamp" DESC
             """.format(",".join(['%s'] * len(commit_hashes))),
             [hardware_id, hardware_id, origin, start_date, end_date] + commit_hashes
         )
