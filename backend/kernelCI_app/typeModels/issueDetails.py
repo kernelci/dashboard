@@ -31,6 +31,7 @@ from kernelCI_app.typeModels.databases import (
     Checkout__TreeName,
     Checkout__GitRepositoryBranch,
 )
+from kernelCI_app.typeModels.issues import ProcessedExtraDetailedIssues
 
 
 class IssueDetailsPathParameters(BaseModel):
@@ -88,6 +89,7 @@ class IssueDetailsResponse(BaseModel):
     culprit_harness: Issue__CulpritHarness
     comment: Issue__Comment
     misc: Issue__Misc
+    extra: Optional[ProcessedExtraDetailedIssues]
 
 
 class IssueDetailsRequest(BaseModel):

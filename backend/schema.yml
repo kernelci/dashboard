@@ -2181,6 +2181,10 @@ components:
           $ref: '#/components/schemas/Issue__Comment'
         misc:
           $ref: '#/components/schemas/Issue__Misc'
+        extra:
+          anyOf:
+          - $ref: '#/components/schemas/ProcessedExtraDetailedIssues'
+          - type: 'null'
       required:
       - field_timestamp
       - id
@@ -2193,6 +2197,7 @@ components:
       - culprit_harness
       - comment
       - misc
+      - extra
       title: IssueDetailsResponse
       type: object
     IssueExtraDetailsRequest:

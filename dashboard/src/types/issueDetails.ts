@@ -1,3 +1,4 @@
+import type { IssueExtraDetailsDict } from './issueExtras';
 import type { IssueKeys } from './issues';
 
 export type TIssueDetails = IssueKeys & {
@@ -10,4 +11,5 @@ export type TIssueDetails = IssueKeys & {
   culprit_harness?: boolean;
   comment?: string;
   misc?: Record<string, unknown>;
+  extra?: IssueExtraDetailsDict;
 };
