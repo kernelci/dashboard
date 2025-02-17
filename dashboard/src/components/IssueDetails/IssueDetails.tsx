@@ -17,9 +17,8 @@ import { getMiscSection } from '@/components/Section/MiscSection';
 import { useIssueDetails } from '@/api/issueDetails';
 
 import type {
-  BuildsTableFilter,
   TableFilter,
-  TestsTableFilter,
+  PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
@@ -44,9 +43,9 @@ interface IIssueDetails {
   issueId: string;
   versionNumber?: number;
   tableFilter: TableFilter;
-  onClickTestFilter: (filter: TestsTableFilter) => void;
+  onClickTestFilter: (filter: PossibleTableFilters) => void;
   getTestTableRowLink: (testId: string) => LinkProps;
-  onClickBuildFilter: (filter: BuildsTableFilter) => void;
+  onClickBuildFilter: (filter: PossibleTableFilters) => void;
   getBuildTableRowLink: (testId: string) => LinkProps;
   breadcrumb?: JSX.Element;
 }

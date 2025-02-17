@@ -19,11 +19,11 @@ import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import TableStatusFilter from '@/components/Table/TableStatusFilter';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
-import type {
-  AccordionItemBuilds,
-  BuildsTableFilter,
+import {
+  possibleTableFilters,
+  type AccordionItemBuilds,
+  type PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
-import { possibleBuildsTableFilter } from '@/types/tree/TreeDetails';
 
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 
@@ -35,14 +35,16 @@ import { TableRowMemoized } from '@/components/Table/TableComponents';
 
 import { useBuildDetails, useBuildIssues } from '@/api/buildDetails';
 
+import { getBuildStatusGroup } from '@/utils/status';
+
 import { defaultBuildColumns } from './DefaultBuildsColumns';
 
 export interface IBuildsTable {
   tableKey: TableKeys;
   buildItems: AccordionItemBuilds[];
   columns?: ColumnDef<AccordionItemBuilds>[];
-  filter: BuildsTableFilter;
-  onClickFilter: (filter: BuildsTableFilter) => void;
+  filter: PossibleTableFilters;
+  onClickFilter: (filter: PossibleTableFilters) => void;
   getRowLink: (buildId: string) => LinkProps;
 }
 
@@ -96,26 +98,22 @@ export function BuildsTable({
 
   const { globalFilter } = table.getState();
 
-  const filterCount = useMemo(() => {
+  const filterCount: Record<PossibleTableFilters, number> = useMemo(() => {
     const rowsOriginal = table
       .getPrePaginationRowModel()
       .rows.map(row => row.original);
 
     const dataFilter = globalFilter ? rowsOriginal : rawData;
 
-    const count = possibleBuildsTableFilter.reduce(
-      (acc, currentFilter) => {
-        if (dataFilter) {
-          acc[currentFilter] = dataFilter?.reduce(
-            (total, row) => (row.status === currentFilter ? total + 1 : total),
-            0,
-          );
-        }
-        return acc;
-      },
-      {} as Record<(typeof possibleBuildsTableFilter)[number], number>,
-    );
+    const count: Record<PossibleTableFilters, number> = {
+      all: 0,
+      success: 0,
+      failed: 0,
+      inconclusive: 0,
+    };
+
     count.all = dataFilter ? dataFilter.length : 0;
+    dataFilter.forEach(build => count[getBuildStatusGroup(build.status)]++);
 
     return count;
   }, [rawData, globalFilter, table]);
@@ -125,34 +123,34 @@ export function BuildsTable({
       {
         label: intl.formatMessage(
           { id: 'global.allCount' },
-          { count: filterCount[possibleBuildsTableFilter[2]] },
+          { count: filterCount[possibleTableFilters[0]] },
         ),
-        value: possibleBuildsTableFilter[2],
-        isSelected: filter === possibleBuildsTableFilter[2],
+        value: possibleTableFilters[0],
+        isSelected: filter === possibleTableFilters[0],
       },
       {
         label: intl.formatMessage(
           { id: 'global.successCount' },
-          { count: filterCount[possibleBuildsTableFilter[1]] },
+          { count: filterCount[possibleTableFilters[1]] },
         ),
-        value: possibleBuildsTableFilter[1],
-        isSelected: filter === possibleBuildsTableFilter[1],
+        value: possibleTableFilters[1],
+        isSelected: filter === possibleTableFilters[1],
       },
       {
         label: intl.formatMessage(
           { id: 'global.failedCount' },
-          { count: filterCount[possibleBuildsTableFilter[0]] },
+          { count: filterCount[possibleTableFilters[2]] },
         ),
-        value: possibleBuildsTableFilter[0],
-        isSelected: filter === possibleBuildsTableFilter[0],
+        value: possibleTableFilters[2],
+        isSelected: filter === possibleTableFilters[2],
       },
       {
         label: intl.formatMessage(
           { id: 'global.inconclusiveCount' },
-          { count: filterCount[possibleBuildsTableFilter[3]] },
+          { count: filterCount[possibleTableFilters[3]] },
         ),
-        value: possibleBuildsTableFilter[3],
-        isSelected: filter === possibleBuildsTableFilter[3],
+        value: possibleTableFilters[3],
+        isSelected: filter === possibleTableFilters[3],
       },
     ],
     [intl, filterCount, filter],

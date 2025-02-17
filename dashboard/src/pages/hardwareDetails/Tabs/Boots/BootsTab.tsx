@@ -17,7 +17,7 @@ import type {
 
 import {
   zTableFilterInfoDefault,
-  type TestsTableFilter,
+  type PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
 
 import {
@@ -91,7 +91,7 @@ const BootsTab = ({
   );
 
   const onClickFilter = useCallback(
-    (newFilter: TestsTableFilter): void => {
+    (newFilter: PossibleTableFilters): void => {
       navigate({
         search: previousParams => {
           return {

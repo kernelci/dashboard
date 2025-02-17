@@ -128,10 +128,16 @@ const isBuildError = (build_valid: boolean | null): number => {
   return build_valid || build_valid === null ? 0 : 1;
 };
 
-const getBuildStatus = (
-  build_valid: boolean | null,
+export const getBuildStatus = (
+  build_valid?: boolean | null,
 ): AccordionItemBuilds['status'] => {
-  return build_valid === null ? 'null' : build_valid ? 'valid' : 'invalid';
+  if (build_valid === true) {
+    return 'pass';
+  }
+  if (build_valid === false) {
+    return 'fail';
+  }
+  return 'null';
 };
 
 export const sanitizeBuilds = (

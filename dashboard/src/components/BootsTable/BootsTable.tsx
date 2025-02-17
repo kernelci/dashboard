@@ -15,10 +15,10 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import type {
   TestByCommitHash,
-  TestsTableFilter,
+  PossibleTableFilters,
   TTestByCommitHashResponse,
 } from '@/types/tree/TreeDetails';
-import { possibleTestsTableFilter } from '@/types/tree/TreeDetails';
+import { possibleTableFilters } from '@/types/tree/TreeDetails';
 
 import { getStatusGroup } from '@/utils/status';
 
@@ -112,10 +112,10 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
 interface IBootsTable {
   tableKey: TableKeys;
   testHistory?: TestHistory[];
-  filter: TestsTableFilter;
+  filter: PossibleTableFilters;
   columns?: ColumnDef<TestByCommitHash>[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
-  onClickFilter: (newFilter: TestsTableFilter) => void;
+  onClickFilter: (newFilter: PossibleTableFilters) => void;
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
 }
@@ -177,29 +177,28 @@ export function BootsTable({
 
   const { globalFilter } = table.getState();
 
-  const filterCount: Record<(typeof possibleTestsTableFilter)[number], number> =
-    useMemo(() => {
-      const count = {
-        all: 0,
-        success: 0,
-        failed: 0,
-        inconclusive: 0,
-      };
+  const filterCount: Record<PossibleTableFilters, number> = useMemo(() => {
+    const count: Record<PossibleTableFilters, number> = {
+      all: 0,
+      success: 0,
+      failed: 0,
+      inconclusive: 0,
+    };
 
-      const rowsOriginal = table
-        .getPrePaginationRowModel()
-        .rows.map(row => row.original);
+    const rowsOriginal = table
+      .getPrePaginationRowModel()
+      .rows.map(row => row.original);
 
-      const dataFilter = globalFilter ? rowsOriginal : testsData;
+    const dataFilter = globalFilter ? rowsOriginal : testsData;
 
-      count.all = dataFilter.length;
-      dataFilter.forEach(test => count[getStatusGroup(test.status)]++);
+    count.all = dataFilter.length;
+    dataFilter.forEach(test => count[getStatusGroup(test.status)]++);
 
-      return count;
-    }, [testsData, globalFilter, table]);
+    return count;
+  }, [testsData, globalFilter, table]);
 
   const checkIfFilterIsSelected = useCallback(
-    (possibleFilter: TestsTableFilter): boolean => {
+    (possibleFilter: PossibleTableFilters): boolean => {
       return possibleFilter === filter;
     },
     [filter],
@@ -210,34 +209,34 @@ export function BootsTable({
       {
         label: intl.formatMessage(
           { id: 'global.allCount' },
-          { count: filterCount[possibleTestsTableFilter[0]] },
+          { count: filterCount[possibleTableFilters[0]] },
         ),
-        value: possibleTestsTableFilter[0],
-        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[0]),
+        value: possibleTableFilters[0],
+        isSelected: checkIfFilterIsSelected(possibleTableFilters[0]),
       },
       {
         label: intl.formatMessage(
           { id: 'global.successCount' },
-          { count: filterCount[possibleTestsTableFilter[1]] },
+          { count: filterCount[possibleTableFilters[1]] },
         ),
-        value: possibleTestsTableFilter[1],
-        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[1]),
+        value: possibleTableFilters[1],
+        isSelected: checkIfFilterIsSelected(possibleTableFilters[1]),
       },
       {
         label: intl.formatMessage(
           { id: 'global.failedCount' },
-          { count: filterCount[possibleTestsTableFilter[2]] },
+          { count: filterCount[possibleTableFilters[2]] },
         ),
-        value: possibleTestsTableFilter[2],
-        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[2]),
+        value: possibleTableFilters[2],
+        isSelected: checkIfFilterIsSelected(possibleTableFilters[2]),
       },
       {
         label: intl.formatMessage(
           { id: 'global.inconclusiveCount' },
-          { count: filterCount[possibleTestsTableFilter[3]] },
+          { count: filterCount[possibleTableFilters[3]] },
         ),
-        value: possibleTestsTableFilter[3],
-        isSelected: checkIfFilterIsSelected(possibleTestsTableFilter[3]),
+        value: possibleTableFilters[3],
+        isSelected: checkIfFilterIsSelected(possibleTableFilters[3]),
       },
     ],
     [intl, filterCount, checkIfFilterIsSelected],

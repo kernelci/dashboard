@@ -11,7 +11,7 @@ import BaseCard from '@/components/Cards/BaseCard';
 
 import {
   zTableFilterInfoDefault,
-  type TestsTableFilter,
+  type PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
@@ -86,7 +86,7 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
   );
 
   const onClickFilter = useCallback(
-    (filter: TestsTableFilter): void => {
+    (filter: PossibleTableFilters): void => {
       navigate({
         search: previousParams => {
           return {

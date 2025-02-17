@@ -10,7 +10,7 @@ import {
 
 import {
   zTableFilterInfoDefault,
-  type TestsTableFilter,
+  type PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 
@@ -37,7 +37,7 @@ const BuildDetailsPage = (): JSX.Element => {
   );
 
   const onClickFilter = useCallback(
-    (filter: TestsTableFilter): void => {
+    (filter: PossibleTableFilters): void => {
       navigate({
         search: previousParams => {
           return {

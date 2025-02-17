@@ -4,6 +4,7 @@ import type {
   BuildStatus,
   RequiredStatusCount,
 } from '@/types/general';
+import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
 type StatusGroups = 'success' | 'failed' | 'inconclusive';
 
@@ -35,6 +36,19 @@ export function groupStatus(counts: GroupStatusCount): GroupedStatus {
       (counts.nullCount ?? 0),
   };
 }
+
+export const getBuildStatusGroup = (
+  buildStatus: AccordionItemBuilds['status'],
+): StatusGroups => {
+  switch (buildStatus) {
+    case 'pass':
+      return 'success';
+    case 'fail':
+      return 'failed';
+    default:
+      return 'inconclusive';
+  }
+};
 
 export const getStatusGroup = (status: Status): StatusGroups => {
   if (status === 'PASS') {

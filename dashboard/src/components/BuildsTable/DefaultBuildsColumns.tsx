@@ -12,6 +12,7 @@ import {
   MoreDetailsIcon,
   MoreDetailsTableHeader,
 } from '@/components/Table/DetailsColumn';
+import { getBuildStatusGroup } from '@/utils/status';
 
 export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
   {
@@ -86,7 +87,8 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
         ? row.getValue('status')!.toString().toUpperCase()
         : 'NULL';
     },
-    filterFn: 'equals',
+    filterFn: (row, columnId, filterValue) =>
+      getBuildStatusGroup(row.getValue(columnId)) === filterValue,
   },
   {
     id: DETAILS_COLUMN_ID,

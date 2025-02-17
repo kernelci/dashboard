@@ -15,7 +15,7 @@ import { getStatusGroup } from '@/utils/status';
 
 import type {
   TestByCommitHash,
-  TestsTableFilter,
+  PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
 import type { TestHistory } from '@/types/general';
 
@@ -80,9 +80,9 @@ export const columns: ColumnDef<TestByCommitHash>[] = [
 interface IHardwareBootsTable {
   tableKey: TableKeys;
   testHistory?: TestHistory[];
-  filter: TestsTableFilter;
+  filter: PossibleTableFilters;
   getRowLink: (testId: TestHistory['id']) => LinkProps;
-  onClickFilter: (newFilter: TestsTableFilter) => void;
+  onClickFilter: (newFilter: PossibleTableFilters) => void;
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
 }

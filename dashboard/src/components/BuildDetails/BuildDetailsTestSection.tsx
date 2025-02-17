@@ -6,7 +6,10 @@ import { Separator } from '@/components/ui/separator';
 
 import { useBuildTests } from '@/api/buildTests';
 
-import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
+import type {
+  TableFilter,
+  PossibleTableFilters,
+} from '@/types/tree/TreeDetails';
 
 import { TestsTable } from '@/components/TestsTable/TestsTable';
 
@@ -14,7 +17,7 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 interface IBuildDetailsTestSection {
   buildId: string;
-  onClickFilter: (filter: TestsTableFilter) => void;
+  onClickFilter: (filter: PossibleTableFilters) => void;
   tableFilter: TableFilter;
   getRowLink: (testId: string) => LinkProps;
 }

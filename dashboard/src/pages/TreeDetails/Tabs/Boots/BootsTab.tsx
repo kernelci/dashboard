@@ -13,7 +13,7 @@ import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
 import {
   zTableFilterInfoDefault,
-  type TestsTableFilter,
+  type PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
 import {
   DesktopGrid,
@@ -68,7 +68,7 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
   );
 
   const onClickFilter = useCallback(
-    (newFilter: TestsTableFilter): void => {
+    (newFilter: PossibleTableFilters): void => {
       navigate({
         search: previousParams => {
           return {

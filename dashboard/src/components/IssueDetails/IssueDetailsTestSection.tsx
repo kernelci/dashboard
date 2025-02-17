@@ -13,14 +13,17 @@ import { TableHeader } from '@/components/Table/TableHeader';
 import { Separator } from '@/components/ui/separator';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
-import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
+import type {
+  TableFilter,
+  PossibleTableFilters,
+} from '@/types/tree/TreeDetails';
 import type { TIndividualTest } from '@/types/general';
 
 interface IIssueDetailsTestSection {
   issueId: string;
   versionNumber?: number;
   testTableFilter: TableFilter['testsTable'];
-  onClickFilter: (filter: TestsTableFilter) => void;
+  onClickFilter: (filter: PossibleTableFilters) => void;
   getTableRowLink: (testId: string) => LinkProps;
 }
 
