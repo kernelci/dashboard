@@ -140,6 +140,8 @@ def get_tree_details_data(request, commit_hash):
         WHERE
             tests.origin = %(origin_param)s OR
             tests.origin IS NULL
+        ORDER BY
+            issues."_timestamp" DESC
         """
         with connection.cursor() as cursor:
             cursor.execute(query, params)
