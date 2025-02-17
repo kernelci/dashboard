@@ -36,6 +36,10 @@ import { getFirstIncidentSection } from '@/components/Section/FirstIncidentSecti
 
 import type { TIssueDetails } from '@/types/issueDetails';
 
+import PageWithTitle from '@/components/PageWithTitle';
+
+import { getTitle } from '@/utils/utils';
+
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 
 import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
@@ -184,40 +188,47 @@ export const IssueDetails = ({
   }, [generalSections, logspecSection, miscSection, firstIncidentSection]);
 
   return (
-    <QuerySwitcher
-      status={status}
-      data={data}
-      customError={
-        <MemoizedSectionError
-          isLoading={isLoading}
-          errorMessage={error?.message}
-          emptyLabel={'global.error'}
-        />
-      }
+    <PageWithTitle
+      title={formatMessage(
+        { id: 'title.issueDetails' },
+        { issueName: getTitle(data?.comment, isLoading) },
+      )}
     >
-      <ErrorBoundary FallbackComponent={UnexpectedError}>
-        <Sheet>
-          {breadcrumb}
-          <SectionGroup sections={sectionsData} />
-
-          <IssueDetailsTestSection
-            issueId={issueId}
-            versionNumber={versionNumber}
-            testTableFilter={tableFilter.testsTable}
-            getTableRowLink={getTestTableRowLink}
-            onClickFilter={onClickTestFilter}
+      <QuerySwitcher
+        status={status}
+        data={data}
+        customError={
+          <MemoizedSectionError
+            isLoading={isLoading}
+            errorMessage={error?.message}
+            emptyLabel={'global.error'}
           />
+        }
+      >
+        <ErrorBoundary FallbackComponent={UnexpectedError}>
+          <Sheet>
+            {breadcrumb}
+            <SectionGroup sections={sectionsData} />
 
-          <IssueDetailsBuildSection
-            issueId={issueId}
-            versionNumber={versionNumber}
-            buildTableFilter={tableFilter.buildsTable}
-            getTableRowLink={getBuildTableRowLink}
-            onClickFilter={onClickBuildFilter}
-          />
-          <LogOrJsonSheetContent type="json" jsonContent={jsonContent} />
-        </Sheet>
-      </ErrorBoundary>
-    </QuerySwitcher>
+            <IssueDetailsTestSection
+              issueId={issueId}
+              versionNumber={versionNumber}
+              testTableFilter={tableFilter.testsTable}
+              getTableRowLink={getTestTableRowLink}
+              onClickFilter={onClickTestFilter}
+            />
+
+            <IssueDetailsBuildSection
+              issueId={issueId}
+              versionNumber={versionNumber}
+              buildTableFilter={tableFilter.buildsTable}
+              getTableRowLink={getBuildTableRowLink}
+              onClickFilter={onClickBuildFilter}
+            />
+            <LogOrJsonSheetContent type="json" jsonContent={jsonContent} />
+          </Sheet>
+        </ErrorBoundary>
+      </QuerySwitcher>
+    </PageWithTitle>
   );
 };

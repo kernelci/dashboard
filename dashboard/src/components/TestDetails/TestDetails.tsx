@@ -32,6 +32,9 @@ import { LogViewIcon } from '@/components/Icons/LogView';
 import { LinkIcon } from '@/components/Icons/Link';
 import { StatusIcon } from '@/components/Icons/StatusIcons';
 
+import PageWithTitle from '@/components/PageWithTitle';
+import { getTitle } from '@/utils/utils';
+
 const LinkItem = ({ children, ...props }: LinkProps): JSX.Element => {
   return (
     <Link
@@ -318,6 +321,8 @@ const TestDetails = ({
   breadcrumb,
   testId,
 }: TestsDetailsProps): JSX.Element => {
+  const { formatMessage } = useIntl();
+
   const { data, isLoading, status, error } = useTestDetails(testId ?? '');
   const {
     data: issueData,
@@ -329,42 +334,49 @@ const TestDetails = ({
   const [jsonContent, setJsonContent] = useState<IJsonContent>();
 
   return (
-    <QuerySwitcher
-      status={status}
-      data={data}
-      customError={
-        <MemoizedSectionError
-          isLoading={isLoading}
-          errorMessage={error?.message}
-          emptyLabel={'global.error'}
-        />
-      }
+    <PageWithTitle
+      title={formatMessage(
+        { id: 'title.testDetails' },
+        { testName: getTitle(data?.path, isLoading) },
+      )}
     >
-      <Sheet>
-        <div className="w-full pb-8">
-          {breadcrumb}
-
-          {data && (
-            <TestDetailsSections
-              test={data}
-              setSheetType={setSheetType}
-              setJsonContent={setJsonContent}
-            />
-          )}
-          <IssueSection
-            data={issueData}
-            status={issueStatus}
-            error={issueError?.message}
+      <QuerySwitcher
+        status={status}
+        data={data}
+        customError={
+          <MemoizedSectionError
+            isLoading={isLoading}
+            errorMessage={error?.message}
+            emptyLabel={'global.error'}
           />
-        </div>
-        <LogOrJsonSheetContent
-          type={sheetType}
-          jsonContent={jsonContent}
-          logUrl={data?.log_url}
-          logExcerpt={data?.log_excerpt}
-        />
-      </Sheet>
-    </QuerySwitcher>
+        }
+      >
+        <Sheet>
+          <div className="w-full pb-8">
+            {breadcrumb}
+
+            {data && (
+              <TestDetailsSections
+                test={data}
+                setSheetType={setSheetType}
+                setJsonContent={setJsonContent}
+              />
+            )}
+            <IssueSection
+              data={issueData}
+              status={issueStatus}
+              error={issueError?.message}
+            />
+          </div>
+          <LogOrJsonSheetContent
+            type={sheetType}
+            jsonContent={jsonContent}
+            logUrl={data?.log_url}
+            logExcerpt={data?.log_excerpt}
+          />
+        </Sheet>
+      </QuerySwitcher>
+    </PageWithTitle>
   );
 };
 

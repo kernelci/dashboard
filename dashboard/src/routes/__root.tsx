@@ -10,9 +10,12 @@ import {
 
 // import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 
+import { useIntl } from 'react-intl';
+
+import type { JSX } from 'react';
+
 import SideMenu from '@/components/SideMenu/SideMenu';
 import TopBar from '@/components/TopBar/TopBar';
-
 import { DEFAULT_ORIGIN, type SearchSchema, zOrigin } from '@/types/general';
 
 const defaultValues = {
@@ -23,11 +26,12 @@ const RouteSchema = z.object({
   origin: zOrigin,
 } satisfies SearchSchema);
 
-export const Route = createRootRoute({
-  validateSearch: RouteSchema,
-  search: { middlewares: [stripSearchParams(defaultValues)] },
-  component: () => (
+const RouteComponent = (): JSX.Element => {
+  const { formatMessage } = useIntl();
+
+  return (
     <>
+      <title>{formatMessage({ id: 'title.default' })}</title>
       <div className="h-full w-full">
         <div className="flex w-full flex-row justify-between">
           <SideMenu />
@@ -39,5 +43,11 @@ export const Route = createRootRoute({
       </div>
       {/*     <TanStackRouterDevtools /> */}
     </>
-  ),
+  );
+};
+
+export const Route = createRootRoute({
+  validateSearch: RouteSchema,
+  search: { middlewares: [stripSearchParams(defaultValues)] },
+  component: RouteComponent,
 });
