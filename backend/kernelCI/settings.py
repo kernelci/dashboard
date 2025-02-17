@@ -120,7 +120,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     'TITLE': 'KernelCI Dashboard API',
     'DESCRIPTION': 'API for the KernelCI dashboard',
-    'VERSION': '1.0.0',
+    'VERSION': '0.9.0',
 }
 
 
