@@ -1617,11 +1617,21 @@ components:
           anyOf:
           - $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
           - type: 'null'
+        git_commit_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitName'
+          - type: 'null'
+        tree_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__TreeName'
+          - type: 'null'
       required:
       - first_seen
       - git_commit_hash
       - git_repository_url
       - git_repository_branch
+      - git_commit_name
+      - tree_name
       title: FirstIncident
       type: object
     GlobalFilters:
