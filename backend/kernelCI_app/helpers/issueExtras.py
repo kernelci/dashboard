@@ -69,7 +69,9 @@ def assign_issue_first_seen(
             IC.issue_version,
             C.git_commit_hash,
             C.git_repository_url,
-            C.git_repository_branch
+            C.git_repository_branch,
+            C.git_commit_name,
+            C.tree_name
         FROM
             incidents IC
         LEFT JOIN tests T ON IC.test_id = T.id
@@ -90,6 +92,8 @@ def assign_issue_first_seen(
         first_git_commit_hash = record.git_commit_hash
         first_git_repository_url = record.git_repository_url
         first_git_repository_branch = record.git_repository_branch
+        first_git_commit_name = record.git_commit_name
+        first_tree_name = record.tree_name
 
         processed_issue_from_id = processed_issues_table.get(record_issue_id)
         if processed_issue_from_id is None:
@@ -100,6 +104,8 @@ def assign_issue_first_seen(
                 git_commit_hash=first_git_commit_hash,
                 git_repository_url=first_git_repository_url,
                 git_repository_branch=first_git_repository_branch,
+                git_commit_name=first_git_commit_name,
+                tree_name=first_tree_name
             )
 
         for version in versions_per_issue[record_issue_id]:

@@ -46,7 +46,7 @@ const TooltipDateTime = ({
       <TooltipTrigger>
         {showRelative ? (
           <>
-            <span className="pl-2">{message}</span>
+            {message && <span className="pl-2">{message}</span>}
             <FormattedMessage
               id="global.timeAgo"
               values={{ time: formatDistanceToNow(dateObj) }}

@@ -33,6 +33,7 @@ import {
 } from '@/components/Sheet/LogOrJsonSheetContent';
 
 import { getLogspecSection } from '@/components/Section/LogspecSection';
+import { getFirstIncidentSection } from '@/components/Section/FirstIncidentSection';
 
 import type { TIssueDetails } from '@/types/issueDetails';
 
@@ -112,6 +113,13 @@ export const IssueDetails = ({
     });
   }, [data?.misc, formatMessage]);
 
+  const firstIncidentSection: ISection | undefined = useMemo(() => {
+    return getFirstIncidentSection({
+      firstIncident: data?.extra?.[issueId]?.first_incident,
+      title: formatMessage({ id: 'issueDetails.firstIncidentData' }),
+    });
+  }, [data?.extra, formatMessage, issueId]);
+
   const generalSections: ISection[] = useMemo(() => {
     if (!data) {
       return [];
@@ -168,10 +176,13 @@ export const IssueDetails = ({
   }, [data, formatMessage, getCulpritValue]);
 
   const sectionsData: ISection[] = useMemo(() => {
-    return [...generalSections, logspecSection, miscSection].filter(
-      section => section !== undefined,
-    );
-  }, [generalSections, logspecSection, miscSection]);
+    return [
+      ...generalSections,
+      firstIncidentSection,
+      logspecSection,
+      miscSection,
+    ].filter(section => !!section);
+  }, [generalSections, logspecSection, miscSection, firstIncidentSection]);
 
   return (
     <QuerySwitcher

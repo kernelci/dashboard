@@ -6,6 +6,8 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
     Checkout__GitRepositoryUrl,
     Checkout__GitRepositoryBranch,
+    Checkout__GitCommitName,
+    Checkout__TreeName,
 )
 
 
@@ -49,6 +51,8 @@ class FirstIncident(BaseModel):
     git_commit_hash: Optional[Checkout__GitCommitHash]
     git_repository_url: Optional[Checkout__GitRepositoryUrl]
     git_repository_branch: Optional[Checkout__GitRepositoryBranch]
+    git_commit_name: Optional[Checkout__GitCommitName]
+    tree_name: Optional[Checkout__TreeName]
 
 
 class ExtraIssuesData(BaseModel):

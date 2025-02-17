@@ -186,13 +186,13 @@ const TestDetailsSections = ({
               onClick: hasUsefulLogInfo ? setSheetToLog : undefined,
             },
             {
-              title: 'testDetails.gitCommitHash',
+              title: 'commonDetails.gitCommitHash',
               linkText: valueOrEmpty(test.git_commit_hash),
               linkComponent: treeDetailsLink,
               copyValue: valueOrEmpty(test.git_commit_hash),
             },
             {
-              title: 'testDetails.gitRepositoryUrl',
+              title: 'commonDetails.gitRepositoryUrl',
               linkText: shouldTruncate(
                 valueOrEmpty(test.git_repository_url),
               ) ? (
@@ -206,7 +206,7 @@ const TestDetailsSections = ({
               link: test.git_repository_url,
             },
             {
-              title: 'testDetails.gitRepositoryBranch',
+              title: 'commonDetails.gitRepositoryBranch',
               linkText: valueOrEmpty(test.git_repository_branch),
             },
             {
