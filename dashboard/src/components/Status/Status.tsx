@@ -36,20 +36,16 @@ export const GroupedTestStatus = ({
   });
   return (
     <div className="flex flex-row gap-1">
-      {
-        <ColoredCircle
-          quantity={successCount ?? 0}
-          tooltipText="global.success"
-          backgroundClassName="bg-light-green"
-        />
-      }
-      {
-        <ColoredCircle
-          quantity={failedCount}
-          tooltipText="global.failed"
-          backgroundClassName="bg-light-red"
-        />
-      }
+      <ColoredCircle
+        quantity={successCount ?? 0}
+        tooltipText="global.success"
+        backgroundClassName="bg-light-green"
+      />
+      <ColoredCircle
+        quantity={failedCount}
+        tooltipText="global.failed"
+        backgroundClassName="bg-light-red"
+      />
       {!hideInconclusive && (
         <ColoredCircle
           quantity={inconclusiveCount ?? 0}
