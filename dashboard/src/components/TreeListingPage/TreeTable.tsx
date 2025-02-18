@@ -29,8 +29,7 @@ import type { TFilter, TOrigins, BuildStatus } from '@/types/general';
 import { formattedBreakLineValue } from '@/locales/messages';
 
 import {
-  possibleBuildsTableFilter,
-  possibleTestsTableFilter,
+  possibleTableFilters,
   zPossibleTabValidator,
 } from '@/types/tree/TreeDetails';
 
@@ -79,9 +78,9 @@ const getLinkProps = (
     params: { treeId: row.original.id },
     search: previousSearch => ({
       tableFilter: {
-        bootsTable: possibleTestsTableFilter[0],
-        buildsTable: possibleBuildsTableFilter[2],
-        testsTable: possibleTestsTableFilter[0],
+        bootsTable: possibleTableFilters[0],
+        buildsTable: possibleTableFilters[0],
+        testsTable: possibleTableFilters[0],
       },
       origin: origin,
       currentPageTab: zPossibleTabValidator.parse(tabTarget),

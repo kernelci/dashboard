@@ -7,7 +7,7 @@ import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
 import {
   zTableFilterInfoDefault,
   type AccordionItemBuilds,
-  type BuildsTableFilter,
+  type PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
 
 export interface TTreeDetailsBuildsTable {
@@ -34,7 +34,7 @@ export function TreeDetailsBuildsTable({
   );
 
   const onClickFilter = useCallback(
-    (newFilter: BuildsTableFilter): void => {
+    (newFilter: PossibleTableFilters): void => {
       navigate({
         search: previousParams => {
           return {

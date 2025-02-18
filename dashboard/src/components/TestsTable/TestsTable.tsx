@@ -19,8 +19,8 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
 
-import type { TestsTableFilter } from '@/types/tree/TreeDetails';
-import { possibleTestsTableFilter } from '@/types/tree/TreeDetails';
+import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
+import { possibleTableFilters } from '@/types/tree/TreeDetails';
 
 import type { TestHistory, TIndividualTest, TPathTests } from '@/types/general';
 
@@ -47,8 +47,8 @@ import { defaultColumns, defaultInnerColumns } from './DefaultTestsColumns';
 export interface ITestsTable {
   tableKey: TableKeys;
   testHistory?: TestHistory[];
-  onClickFilter: (filter: TestsTableFilter) => void;
-  filter: TestsTableFilter;
+  onClickFilter: (filter: PossibleTableFilters) => void;
+  filter: PossibleTableFilters;
   columns?: ColumnDef<TPathTests>[];
   innerColumns?: ColumnDef<TIndividualTest>[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
@@ -273,53 +273,52 @@ export function TestsTable({
     },
   });
 
-  const filterCount: Record<(typeof possibleTestsTableFilter)[number], number> =
-    useMemo(
-      () => ({
-        all: globalStatusGroup.total_tests,
-        success: globalStatusGroup.pass_tests,
-        failed: globalStatusGroup.fail_tests,
-        inconclusive:
-          globalStatusGroup.total_tests -
-          globalStatusGroup.pass_tests -
-          globalStatusGroup.fail_tests,
-      }),
-      [globalStatusGroup],
-    );
+  const filterCount: Record<PossibleTableFilters, number> = useMemo(
+    () => ({
+      all: globalStatusGroup.total_tests,
+      success: globalStatusGroup.pass_tests,
+      failed: globalStatusGroup.fail_tests,
+      inconclusive:
+        globalStatusGroup.total_tests -
+        globalStatusGroup.pass_tests -
+        globalStatusGroup.fail_tests,
+    }),
+    [globalStatusGroup],
+  );
 
   const filters = useMemo(
     () => [
       {
         label: intl.formatMessage(
           { id: 'global.allCount' },
-          { count: filterCount[possibleTestsTableFilter[0]] },
+          { count: filterCount[possibleTableFilters[0]] },
         ),
-        value: possibleTestsTableFilter[0],
-        isSelected: filter === possibleTestsTableFilter[0],
+        value: possibleTableFilters[0],
+        isSelected: filter === possibleTableFilters[0],
       },
       {
         label: intl.formatMessage(
           { id: 'global.successCount' },
-          { count: filterCount[possibleTestsTableFilter[1]] },
+          { count: filterCount[possibleTableFilters[1]] },
         ),
-        value: possibleTestsTableFilter[1],
-        isSelected: filter === possibleTestsTableFilter[1],
+        value: possibleTableFilters[1],
+        isSelected: filter === possibleTableFilters[1],
       },
       {
         label: intl.formatMessage(
           { id: 'global.failedCount' },
-          { count: filterCount[possibleTestsTableFilter[2]] },
+          { count: filterCount[possibleTableFilters[2]] },
         ),
-        value: possibleTestsTableFilter[2],
-        isSelected: filter === possibleTestsTableFilter[2],
+        value: possibleTableFilters[2],
+        isSelected: filter === possibleTableFilters[2],
       },
       {
         label: intl.formatMessage(
           { id: 'global.inconclusiveCount' },
-          { count: filterCount[possibleTestsTableFilter[3]] },
+          { count: filterCount[possibleTableFilters[3]] },
         ),
-        value: possibleTestsTableFilter[3],
-        isSelected: filter === possibleTestsTableFilter[3],
+        value: possibleTableFilters[3],
+        isSelected: filter === possibleTableFilters[3],
       },
     ],
     [filterCount, intl, filter],

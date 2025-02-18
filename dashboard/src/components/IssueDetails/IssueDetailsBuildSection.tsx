@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import type {
   AccordionItemBuilds,
-  BuildsTableFilter,
+  PossibleTableFilters,
   TableFilter,
 } from '@/types/tree/TreeDetails';
 
@@ -26,7 +26,7 @@ interface IIssueDetailsBuildSection {
   issueId: string;
   versionNumber?: number;
   buildTableFilter: TableFilter['buildsTable'];
-  onClickFilter: (filter: BuildsTableFilter) => void;
+  onClickFilter: (filter: PossibleTableFilters) => void;
   getTableRowLink: (testId: string) => LinkProps;
 }
 

@@ -9,10 +9,7 @@ import {
 import { useCallback, useMemo } from 'react';
 
 import { IssueDetails } from '@/components/IssueDetails/IssueDetails';
-import type {
-  BuildsTableFilter,
-  TestsTableFilter,
-} from '@/types/tree/TreeDetails';
+import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
 import { zTableFilterInfoDefault } from '@/types/tree/TreeDetails';
 import { RedirectFrom } from '@/types/general';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
@@ -67,7 +64,7 @@ const IssueDetailsPage = (): JSX.Element => {
   }, [historyState.from, historyState.id, searchParams]);
 
   const onClickTestFilter = useCallback(
-    (filter: TestsTableFilter): void => {
+    (filter: PossibleTableFilters): void => {
       navigate({
         search: previousParams => {
           return {
@@ -85,7 +82,7 @@ const IssueDetailsPage = (): JSX.Element => {
   );
 
   const onClickBuildFilter = useCallback(
-    (filter: BuildsTableFilter): void => {
+    (filter: PossibleTableFilters): void => {
       navigate({
         search: previousParams => {
           return {

@@ -20,7 +20,7 @@ export type AccordionItemBuilds = {
   date?: string;
   buildErrors?: number;
   buildTime?: string | ReactNode;
-  status: 'valid' | 'invalid' | 'null';
+  status: 'pass' | 'fail' | 'null';
   kernelImage?: string;
   buildLogs?: string;
   kernelConfig?: string;
@@ -98,14 +98,7 @@ export const possibleTabs = [
   'global.tests',
 ] as const;
 
-export const possibleBuildsTableFilter = [
-  'invalid',
-  'valid',
-  'all',
-  'null',
-] as const;
-
-export const possibleTestsTableFilter = [
+export const possibleTableFilters = [
   'all',
   'success',
   'failed',
@@ -114,12 +107,10 @@ export const possibleTestsTableFilter = [
 
 export const defaultValidadorValues: {
   tab: (typeof possibleTabs)[number];
-  buildsTableFilter: (typeof possibleBuildsTableFilter)[number];
-  testsTableFilter: (typeof possibleTestsTableFilter)[number];
+  tableFilter: (typeof possibleTableFilters)[number];
 } = {
   tab: 'global.builds',
-  buildsTableFilter: 'all',
-  testsTableFilter: 'all',
+  tableFilter: 'all',
 };
 
 export const zPossibleTabValidator = z
@@ -129,27 +120,22 @@ export const zPossibleTabValidator = z
 
 export type PossibleTabs = z.infer<typeof zPossibleTabValidator>;
 
-export const zBuildsTableFilterValidator = z
-  .enum(possibleBuildsTableFilter)
-  .catch(defaultValidadorValues.buildsTableFilter);
+export const zTableFilterValidator = z
+  .enum(possibleTableFilters)
+  .catch(defaultValidadorValues.tableFilter);
 
-export const zTestsTableFilterValidator = z
-  .enum(possibleTestsTableFilter)
-  .catch(defaultValidadorValues.testsTableFilter);
-
-export type BuildsTableFilter = z.infer<typeof zBuildsTableFilterValidator>;
-export type TestsTableFilter = z.infer<typeof zTestsTableFilterValidator>;
+export type PossibleTableFilters = z.infer<typeof zTableFilterValidator>;
 
 export const zTableFilterInfo = object({
-  buildsTable: zBuildsTableFilterValidator,
-  bootsTable: zTestsTableFilterValidator,
-  testsTable: zTestsTableFilterValidator,
+  buildsTable: zTableFilterValidator,
+  bootsTable: zTableFilterValidator,
+  testsTable: zTableFilterValidator,
 });
 
 export const zTableFilterInfoDefault = {
-  buildsTable: zBuildsTableFilterValidator.parse(''),
-  bootsTable: zTestsTableFilterValidator.parse(''),
-  testsTable: zTestsTableFilterValidator.parse(''),
+  buildsTable: zTableFilterValidator.parse(''),
+  bootsTable: zTableFilterValidator.parse(''),
+  testsTable: zTableFilterValidator.parse(''),
 };
 
 export const zTableFilterInfoValidator = zTableFilterInfo

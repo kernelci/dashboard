@@ -4,9 +4,8 @@ import { type AnySchema, parseSearchWith } from '@tanstack/react-router';
 
 import { type SearchParamsKeys, type TFilterKeys } from '@/types/general';
 import type {
-  possibleBuildsTableFilter,
   possibleTabs,
-  possibleTestsTableFilter,
+  possibleTableFilters,
   TableFilter,
   TTreeInformation,
 } from '@/types/tree/TreeDetails';
@@ -203,9 +202,7 @@ const minifiedParams: MinifiedParams = {
 } as const;
 
 type MinifiedValues = Record<
-  | (typeof possibleTabs)[number]
-  | (typeof possibleBuildsTableFilter)[number]
-  | (typeof possibleTestsTableFilter)[number],
+  (typeof possibleTabs)[number] | (typeof possibleTableFilters)[number],
   string
 >;
 type MinifiedValuesKeys = keyof MinifiedValues;
@@ -215,9 +212,6 @@ const minifiedValues: MinifiedValues = {
   success: 's',
   failed: 'f',
   inconclusive: 'i',
-  valid: 'v',
-  invalid: 'iv',
-  null: 'n',
 
   // CurrentPageTab values
   'global.builds': 'b',

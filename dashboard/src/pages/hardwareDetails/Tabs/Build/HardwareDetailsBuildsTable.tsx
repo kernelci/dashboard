@@ -11,7 +11,7 @@ import { TableHeader } from '@/components/Table/TableHeader';
 import {
   zTableFilterInfoDefault,
   type AccordionItemBuilds,
-  type BuildsTableFilter,
+  type PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
 import { defaultBuildColumns } from '@/components/BuildsTable/DefaultBuildsColumns';
 import { sanitizeBuilds } from '@/utils/utils';
@@ -55,7 +55,7 @@ export function HardwareDetailsBuildsTable({
   );
 
   const onClickFilter = useCallback(
-    (filter: BuildsTableFilter) => {
+    (filter: PossibleTableFilters) => {
       navigate({
         search: previousParams => {
           return {

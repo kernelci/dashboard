@@ -11,7 +11,7 @@ import { useCallback } from 'react';
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 import {
   zTableFilterInfoDefault,
-  type TestsTableFilter,
+  type PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
 import { RedirectFrom } from '@/types/general';
 import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBreadcrumb';
@@ -39,7 +39,7 @@ const HardwareBuildDetails = (): JSX.Element => {
   );
 
   const onClickFilter = useCallback(
-    (filter: TestsTableFilter): void => {
+    (filter: PossibleTableFilters): void => {
       navigate({
         search: previousParams => {
           return {

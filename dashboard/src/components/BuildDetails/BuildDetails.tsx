@@ -9,7 +9,7 @@ import type { ISection } from '@/components/Section/Section';
 import { useBuildDetails, useBuildIssues } from '@/api/buildDetails';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
-import { formatDate } from '@/utils/utils';
+import { formatDate, getBuildStatus } from '@/utils/utils';
 
 import IssueSection from '@/components/Issue/IssueSection';
 
@@ -17,7 +17,10 @@ import { shouldTruncate, valueOrEmpty } from '@/lib/string';
 
 import { Sheet, SheetTrigger } from '@/components/Sheet';
 
-import type { TableFilter, TestsTableFilter } from '@/types/tree/TreeDetails';
+import type {
+  TableFilter,
+  PossibleTableFilters,
+} from '@/types/tree/TreeDetails';
 
 import type {
   IJsonContent,
@@ -40,7 +43,7 @@ import BuildDetailsTestSection from './BuildDetailsTestSection';
 interface BuildDetailsProps {
   breadcrumb?: JSX.Element;
   buildId?: string;
-  onClickFilter: (filter: TestsTableFilter) => void;
+  onClickFilter: (filter: PossibleTableFilters) => void;
   tableFilter: TableFilter;
   getTestTableRowLink: (testId: string) => LinkProps;
 }
@@ -153,11 +156,7 @@ const BuildDetails = ({
               },
               {
                 title: 'global.status',
-                linkText: data.valid
-                  ? 'VALID'
-                  : data.valid !== null
-                    ? 'INVALID'
-                    : 'NULL',
+                linkText: getBuildStatus(data.valid).toUpperCase(),
                 icon: <StatusIcon status={data?.valid} className="text-xl" />,
               },
               {

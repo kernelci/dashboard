@@ -3,17 +3,14 @@ import { useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import { Button } from '@/components/ui/button';
-import type {
-  BuildsTableFilter,
-  TestsTableFilter,
-} from '@/types/tree/TreeDetails';
+import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
 
 interface ITableStatusFilter {
-  onClickBuild?: (value: BuildsTableFilter) => void;
-  onClickTest?: (value: TestsTableFilter) => void;
+  onClickBuild?: (value: PossibleTableFilters) => void;
+  onClickTest?: (value: PossibleTableFilters) => void;
   filters: {
     label: string;
-    value: BuildsTableFilter | TestsTableFilter;
+    value: PossibleTableFilters;
     isSelected: boolean;
   }[];
 }
@@ -24,9 +21,9 @@ const TableStatusFilter = ({
   onClickTest,
 }: ITableStatusFilter): JSX.Element => {
   const onClickFilter = useCallback(
-    (filter: BuildsTableFilter | TestsTableFilter) => {
-      onClickBuild?.(filter as BuildsTableFilter);
-      onClickTest?.(filter as TestsTableFilter);
+    (filter: PossibleTableFilters) => {
+      onClickBuild?.(filter);
+      onClickTest?.(filter);
     },
     [onClickBuild, onClickTest],
   );
