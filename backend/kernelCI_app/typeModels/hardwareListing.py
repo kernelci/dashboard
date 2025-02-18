@@ -1,6 +1,6 @@
 from datetime import datetime
-from pydantic import BaseModel
-from typing import TypedDict
+from pydantic import BaseModel, BeforeValidator, Field
+from typing import Annotated, TypedDict
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.typeModels.databases import StatusValues
@@ -28,12 +28,19 @@ class HardwareResponse(BaseModel):
 # documentation purposes. This model is not used in the code.
 # TODO Remove timestamp from the api and this model
 class HardwareQueryParamsDocumentationOnly(BaseModel):
-    origin: str = DEFAULT_ORIGIN
+    origin: Annotated[
+        str,
+        Field(default=DEFAULT_ORIGIN),
+    ]
     startTimestampInSeconds: str
     endTimeStampInSeconds: str
 
 
 class HardwareQueryParams(BaseModel):
-    origin: str = DEFAULT_ORIGIN
+    origin: Annotated[
+        str,
+        Field(default=DEFAULT_ORIGIN),
+        BeforeValidator(lambda o: DEFAULT_ORIGIN if o is None else o),
+    ]
     start_date: datetime
     end_date: datetime

@@ -4,10 +4,11 @@ import typing_extensions
 from django.utils import timezone
 from datetime import timedelta
 
+from kernelCI_app.constants.general import DEFAULT_INTERVAL_IN_DAYS
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.issues import IncidentInfo, Issue, IssueDict
 
-DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
+DEFAULT_QUERY_TIME_INTERVAL = {"days": DEFAULT_INTERVAL_IN_DAYS}
 
 
 def create_issue(
@@ -27,8 +28,8 @@ def create_issue(
 
 
 @typing_extensions.deprecated(
-    'The `convert_issues_dict_to_list` method is deprecated; use `convert_issues_dict_to_list_typed` '
-    'and use type validation.',
+    "The `convert_issues_dict_to_list` method is deprecated; use `convert_issues_dict_to_list_typed` "
+    "and use type validation.",
 )
 def convert_issues_dict_to_list(issues_dict: Dict[str, Issue]) -> List[Issue]:
     return list(issues_dict.values())
@@ -77,7 +78,7 @@ def getErrorResponseBody(reason: str) -> bytes:
 
 
 def string_to_json(string: str) -> Optional[dict]:
-    if (string):
+    if string:
         try:
             return json.loads(string)
         except json.JSONDecodeError as e:

@@ -9,10 +9,9 @@ class ExceptionWithJsonResponse(Exception):
         Exception.__init__(self)
         self.message = message
         self.status_code = status_code
-        self.json_response = JsonResponse({"error": message}, status=status_code)
 
-    def getJsonResponse(self):
-        return self.json_response
+    def getRestResponse(self):
+        return Response(data={"error": self.message}, status=self.status_code)
 
 
 @typing_extensions.deprecated(

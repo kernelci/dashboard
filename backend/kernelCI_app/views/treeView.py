@@ -2,22 +2,17 @@ from typing import Dict
 from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 from kernelCI_app.utils import getQueryTimeInterval
 from kernelCI_app.helpers.errorHandling import (
-    ExceptionWithJsonResponse,
     create_api_error_response,
 )
-from kernelCI_app.helpers.date import parseIntervalInDaysGetParameter
 from http import HTTPStatus
 from kernelCI_app.typeModels.treeListing import (
     TreeListingResponse,
-    TreeListingQueryParameters,
 )
 from pydantic import ValidationError
 from django.db import connection
-
-
-DEFAULT_ORIGIN = "maestro"
 
 
 class TreeView(APIView):
@@ -63,17 +58,20 @@ class TreeView(APIView):
 
     @extend_schema(
         responses=TreeListingResponse,
-        parameters=[TreeListingQueryParameters],
-        methods=["GET"],
+        parameters=[ListingQueryParameters],
+        methods=["GET"]
     )
     def get(self, request) -> Response:
-        origin_param = request.GET.get("origin", DEFAULT_ORIGIN)
         try:
-            interval_days = parseIntervalInDaysGetParameter(
-                request.GET.get("intervalInDays", 3)
+            request_params = ListingQueryParameters(
+                origin=request.GET.get("origin"),
+                interval_in_days=request.GET.get("intervalInDays")
             )
-        except ExceptionWithJsonResponse as e:
-            return e.getJsonResponse()
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
+
+        origin_param = request_params.origin
+        interval_days = request_params.interval_in_days
 
         interval_days_data = {"days": interval_days}
 
