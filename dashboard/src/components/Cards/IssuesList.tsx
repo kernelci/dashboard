@@ -132,9 +132,7 @@ const IssuesList = ({
           tagPills?.unshift(
             <Tooltip>
               <TooltipTrigger className="cursor-default">
-                <Badge variant="greenTag">
-                  {formatMessage({ id: 'global.new' })}
-                </Badge>
+                <div className="starburst bg-red aspect-square w-[24px]"></div>
               </TooltipTrigger>
               <TooltipContent>
                 <FormattedMessage id="issue.newIssue" />
@@ -150,7 +148,7 @@ const IssuesList = ({
             key={`${issue.id}${issue.version}`}
             className="flex w-full justify-between gap-4"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className="overflow-hidden">
                 <FilterLink
                   filterSection={issueFilterSection}
