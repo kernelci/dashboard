@@ -46,7 +46,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssuesResponse'
+                $ref: '#/components/schemas/DetailsIssuesResponse'
           description: ''
   /api/build/{build_id}/tests:
     get:
@@ -638,7 +638,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssuesResponse'
+                $ref: '#/components/schemas/DetailsIssuesResponse'
           description: ''
   /api/tree/:
     get:
@@ -1602,6 +1602,11 @@ components:
       - tests
       title: DetailsFilters
       type: object
+    DetailsIssuesResponse:
+      items:
+        $ref: '#/components/schemas/Issue'
+      title: DetailsIssuesResponse
+      type: array
     EnvironmentMisc:
       properties:
         platform:
@@ -1978,11 +1983,15 @@ components:
         test_status_summary:
           additionalProperties:
             type: integer
+          propertyNames:
+            $ref: '#/components/schemas/StatusValues'
           title: Test Status Summary
           type: object
         boot_status_summary:
           additionalProperties:
             type: integer
+          propertyNames:
+            $ref: '#/components/schemas/StatusValues'
           title: Boot Status Summary
           type: object
         build_status_summary:
@@ -2360,11 +2369,6 @@ components:
       - type: 'null'
     Issue__Version:
       type: integer
-    IssuesResponse:
-      items:
-        $ref: '#/components/schemas/Issue'
-      title: IssuesResponse
-      type: array
     LocalFilters:
       properties:
         issues:
@@ -2439,6 +2443,16 @@ components:
       additionalProperties:
         $ref: '#/components/schemas/ExtraIssuesData'
       type: object
+    StatusValues:
+      enum:
+      - FAIL
+      - PASS
+      - SKIP
+      - ERROR
+      - MISS
+      - 'NULL'
+      - DONE
+      type: string
     Summary:
       properties:
         builds:
