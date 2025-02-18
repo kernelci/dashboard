@@ -45,6 +45,7 @@ from rest_framework.views import APIView
 from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.helpers.errorHandling import create_error_response
 from http import HTTPStatus
+from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 
 
 class TreeDetailsSummary(APIView):
@@ -154,7 +155,9 @@ class TreeDetailsSummary(APIView):
             if is_record_filter_out:
                 continue
 
-            if row_data["build_id"] is not None:
+            if row_data["build_id"] is not None and not row_data["build_id"].startswith(
+                MAESTRO_DUMMY_BUILD_PREFIX
+            ):
                 self._process_builds(row_data)
 
             if row_data["test_id"] is None:

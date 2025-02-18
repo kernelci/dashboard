@@ -5,13 +5,13 @@ from rest_framework.response import Response
 from kernelCI_app.utils import getQueryTimeInterval
 from kernelCI_app.helpers.errorHandling import (
     ExceptionWithJsonResponse,
-    create_api_error_response
+    create_api_error_response,
 )
 from kernelCI_app.helpers.date import parseIntervalInDaysGetParameter
 from http import HTTPStatus
 from kernelCI_app.typeModels.treeListing import (
     TreeListingResponse,
-    TreeListingQueryParameters
+    TreeListingQueryParameters,
 )
 from pydantic import ValidationError
 from django.db import connection
@@ -64,7 +64,7 @@ class TreeView(APIView):
     @extend_schema(
         responses=TreeListingResponse,
         parameters=[TreeListingQueryParameters],
-        methods=["GET"]
+        methods=["GET"],
     )
     def get(self, request) -> Response:
         origin_param = request.GET.get("origin", DEFAULT_ORIGIN)
@@ -105,10 +105,12 @@ class TreeView(APIView):
                 END AS git_commit_tags,
                 MAX(checkouts.git_commit_name) AS git_commit_name,
                 MAX(checkouts.start_time) AS start_time,
-                COUNT(DISTINCT CASE WHEN builds.valid = true THEN builds.id END) AS valid_builds,
-                COUNT(DISTINCT CASE WHEN builds.valid = false THEN builds.id END) AS invalid_builds,
-                COUNT(DISTINCT CASE WHEN builds.valid IS NULL AND builds.id IS NOT NULL THEN builds.id END)
-                    AS null_builds,
+                COUNT(DISTINCT CASE WHEN (builds.valid = true AND builds.id NOT LIKE 'maestro:dummy_%%')
+                    THEN builds.id END) AS valid_builds,
+                COUNT(DISTINCT CASE WHEN (builds.valid = false AND builds.id NOT LIKE 'maestro:dummy_%%')
+                    THEN builds.id END) AS invalid_builds,
+                COUNT(DISTINCT CASE WHEN (builds.valid IS NULL AND builds.id IS NOT NULL
+                    AND builds.id NOT LIKE 'maestro:dummy_%%') THEN builds.id END) AS null_builds,
                 COUNT(CASE WHEN (tests.path <> 'boot' AND tests.path NOT LIKE 'boot.%%')
                     AND tests.status = 'FAIL' THEN 1 END) AS fail_tests,
                 COUNT(CASE WHEN (tests.path <> 'boot' AND tests.path NOT LIKE 'boot.%%')
@@ -193,7 +195,9 @@ class TreeView(APIView):
             checkouts = cursor.fetchall()
 
         if not checkouts:
-            return create_api_error_response(error_message="Trees not found", status_code=HTTPStatus.OK)
+            return create_api_error_response(
+                error_message="Trees not found", status_code=HTTPStatus.OK
+            )
 
         checkouts = [self._sanitize_tree(checkout) for checkout in checkouts]
 

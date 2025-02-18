@@ -26,6 +26,7 @@ from kernelCI_app.typeModels.treeCommits import (
     TreeCommitsResponse,
 )
 from pydantic import ValidationError
+from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -284,7 +285,11 @@ class TreeCommitsHistory(APIView):
 
         key = f"{build_id}_{commit_hash}"
 
-        if build_id is not None and key not in self.processed_builds:
+        if (
+            build_id is not None
+            and key not in self.processed_builds
+            and not build_id.startswith(MAESTRO_DUMMY_BUILD_PREFIX)
+        ):
             self._process_builds_count(
                 build_valid=row["build_valid"],
                 duration=row["build_duration"],

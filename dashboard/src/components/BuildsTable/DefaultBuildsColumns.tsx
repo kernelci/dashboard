@@ -20,7 +20,11 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
   {
     accessorKey: 'config',
     header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="global.config" />
+      <TableHeader
+        column={column}
+        intlKey="global.config"
+        tooltipId="build.dummyInfo"
+      />
     ),
   },
   {

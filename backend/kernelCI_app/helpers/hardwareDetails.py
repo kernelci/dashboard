@@ -4,7 +4,7 @@ import json
 from typing import Dict, List, Literal, Optional, Set
 
 from kernelCI_app.cache import getQueryCache, setQueryCache
-from kernelCI_app.constants.general import UNCATEGORIZED_STRING
+from kernelCI_app.constants.general import UNCATEGORIZED_STRING, MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.constants.hardwareDetails import (
     SELECTED_HEAD_TREE_VALUE,
 )
@@ -234,7 +234,6 @@ def get_hardware_details_data(
 def query_records(
     *, hardware_id: str, origin: str, trees: List[Tree], start_date: int, end_date: int
 ):
-
     commit_hashes = [tree.head_git_commit_hash for tree in trees]
 
     # TODO Treat commit_hash collision (it can happen between repos)
@@ -301,7 +300,7 @@ def query_records(
             ORDER BY
                 issues."_timestamp" DESC
             """.format(",".join(['%s'] * len(commit_hashes))),
-            [hardware_id, hardware_id, origin, start_date, end_date] + commit_hashes
+            [hardware_id, hardware_id, origin, start_date, end_date] + commit_hashes,
         )
 
         columns = [col[0] for col in cursor.description]
@@ -781,6 +780,7 @@ def decide_if_is_build_in_filter(
     incident_test_id: Optional[str],
 ) -> bool:
     is_build_not_processed = build["id"] not in processed_builds
+    is_build_dummy = build["id"].startswith(MAESTRO_DUMMY_BUILD_PREFIX)
     is_build_filtered_out_result = instance.filters.is_build_filtered_out(
         valid=build["valid"],
         duration=build["duration"],
@@ -788,7 +788,11 @@ def decide_if_is_build_in_filter(
         issue_version=build["issue_version"],
         incident_test_id=incident_test_id,
     )
-    return is_build_not_processed and not is_build_filtered_out_result
+    return (
+        is_build_not_processed
+        and not is_build_filtered_out_result
+        and not is_build_dummy
+    )
 
 
 def get_processed_issue_key(*, record: Dict) -> str:
