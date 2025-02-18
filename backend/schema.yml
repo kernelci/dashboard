@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: KernelCI Dashboard API
-  version: 1.0.0
+  version: 0.9.0
   description: API for the KernelCI dashboard
 paths:
   /api/build/{build_id}:
@@ -318,6 +318,14 @@ paths:
         schema:
           type: string
         required: true
+      - in: query
+        name: version
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Version
       tags:
       - issue
       security:
@@ -340,6 +348,14 @@ paths:
         schema:
           type: string
         required: true
+      - in: query
+        name: version
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Version
       tags:
       - issue
       security:
@@ -362,6 +378,14 @@ paths:
         schema:
           type: string
         required: true
+      - in: query
+        name: version
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Version
       tags:
       - issue
       security:

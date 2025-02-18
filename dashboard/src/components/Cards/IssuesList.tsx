@@ -36,7 +36,7 @@ import { LoadingCircle } from '@/components/ui/loading-circle';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
-import { Badge } from '@/components/ui/badge';
+import { BranchBadge } from '@/components/Badge/BranchBadge';
 
 interface IIssuesList {
   issues: TIssue[];
@@ -134,19 +134,7 @@ const IssuesList = ({
           currentExtraDetailsId?.['versions'][issue.version];
 
         const tagPills = currentExtraDetailsVersion?.tags?.map(tag => {
-          return (
-            <Tooltip key={tag}>
-              <TooltipTrigger className="cursor-default">
-                <Badge variant="blueTag">{tag}</Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <FormattedMessage
-                  id="issue.alsoPresentTooltip"
-                  values={{ tree: tag }}
-                />
-              </TooltipContent>
-            </Tooltip>
-          );
+          return <BranchBadge key={tag} tag={tag} />;
         });
 
         if (

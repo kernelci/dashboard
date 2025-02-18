@@ -92,5 +92,5 @@ class IssueDetailsResponse(BaseModel):
     extra: Optional[ProcessedExtraDetailedIssues]
 
 
-class IssueDetailsRequest(BaseModel):
-    version: Optional[str]
+class IssueDetailsQueryParameters(BaseModel):
+    version: Optional[int] = None
