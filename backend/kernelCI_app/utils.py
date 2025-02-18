@@ -5,7 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.typeModels.issues import IncidentInfo, Issue
+from kernelCI_app.typeModels.issues import IncidentInfo, Issue, IssueDict
 
 DEFAULT_QUERY_TIME_INTERVAL = {"days": 7}
 
@@ -34,9 +34,9 @@ def convert_issues_dict_to_list(issues_dict: Dict[str, Issue]) -> List[Issue]:
     return list(issues_dict.values())
 
 
-def convert_issues_dict_to_list_typed(*, issues_dict_list: Dict) -> List[Issue]:
+def convert_issues_dict_to_list_typed(*, issues_dict: IssueDict) -> List[Issue]:
     issues: List[Issue] = []
-    for issue in issues_dict_list.values():
+    for issue in issues_dict.values():
         issues.append(
             Issue(
                 id=issue["id"],

@@ -4,7 +4,10 @@ import json
 from typing import Dict, List, Literal, Optional, Set
 
 from kernelCI_app.cache import getQueryCache, setQueryCache
-from kernelCI_app.constants.general import UNCATEGORIZED_STRING, MAESTRO_DUMMY_BUILD_PREFIX
+from kernelCI_app.constants.general import (
+    UNCATEGORIZED_STRING,
+    MAESTRO_DUMMY_BUILD_PREFIX,
+)
 from kernelCI_app.constants.hardwareDetails import (
     SELECTED_HEAD_TREE_VALUE,
 )
@@ -299,7 +302,9 @@ def query_records(
                 AND checkouts.git_commit_hash IN ({0})
             ORDER BY
                 issues."_timestamp" DESC
-            """.format(",".join(['%s'] * len(commit_hashes))),
+            """.format(
+                ",".join(["%s"] * len(commit_hashes))
+            ),
             [hardware_id, hardware_id, origin, start_date, end_date] + commit_hashes,
         )
 
@@ -980,13 +985,13 @@ def format_issue_summary_for_response(
     issue_dicts: Dict,
 ) -> None:
     builds_summary.issues = convert_issues_dict_to_list_typed(
-        issues_dict_list=issue_dicts["build"]["issues"]
+        issues_dict=issue_dicts["build"]["issues"]
     )
     boots_summary.issues = convert_issues_dict_to_list_typed(
-        issues_dict_list=issue_dicts["boot"]["issues"]
+        issues_dict=issue_dicts["boot"]["issues"]
     )
     tests_summary.issues = convert_issues_dict_to_list_typed(
-        issues_dict_list=issue_dicts["test"]["issues"]
+        issues_dict=issue_dicts["test"]["issues"]
     )
     builds_summary.unknown_issues = issue_dicts["build"]["failedWithUnknownIssues"]
     boots_summary.unknown_issues = issue_dicts["boot"]["failedWithUnknownIssues"]
