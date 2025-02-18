@@ -202,7 +202,7 @@ export const messages = {
     'hardwareDetails.treeBranch': 'Tree / Branch',
     'issue.alsoPresentTooltip': 'Issue also present in {tree}',
     'issue.firstSeen': 'First seen',
-    'issue.newIssue': 'This is the first time this issue was seen',
+    'issue.newIssue': 'New issue: This is the first time this issue was seen',
     'issue.noIssueFound': 'No issue found.',
     'issue.tooltip':
       'Issues groups several builds or tests by matching result status and logs.{br}They may also be linked to an external issue tracker or mailing list discussion.',
