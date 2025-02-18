@@ -17,6 +17,10 @@ urlpatterns = [
          viewCache(views.TestDetails),
          name="testDetails"
          ),
+    path("t/<str:test_id>",
+         viewCache(views.TestDetails),
+         name="testDetailsShort"
+         ),
     path("tree/",
          viewCache(views.TreeView),
          name="tree"
@@ -56,6 +60,10 @@ urlpatterns = [
     path("build/<str:build_id>",
          viewCache(views.BuildDetails),
          name="buildDetails"
+         ),
+    path("b/<str:build_id>",
+         viewCache(views.BuildDetails),
+         name="buildDetailsShort"
          ),
     path("build/<str:build_id>/tests",
          viewCache(views.BuildTests),
@@ -107,6 +115,9 @@ urlpatterns = [
     path("issue/<str:issue_id>",
          viewCache(views.IssueDetails),
          name="issueDetails"),
+    path("i/<str:issue_id>",
+         viewCache(views.IssueDetails),
+         name="issueDetailsShort"),
     path("issue/<str:issue_id>/tests",
          viewCache(views.IssueDetailsTests),
          name="issueDetailsTests"),
