@@ -309,9 +309,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/HardwareDetailsTestsResponse'
           description: ''
-  /api/issue/{issue_id}:
+  /api/issue/:
     get:
       operationId: issue_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+      tags:
+      - issue
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueListingResponse'
+          description: ''
+  /api/issue/{issue_id}:
+    get:
+      operationId: issue_retrieve_2
       parameters:
       - in: path
         name: issue_id
@@ -645,17 +675,18 @@ paths:
       operationId: tree_retrieve
       parameters:
       - in: query
-        name: intervalInDays
+        name: interval_in_days
         schema:
-          title: Intervalindays
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
           type: integer
-        required: true
       - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
-        required: true
       tags:
       - tree
       security:
@@ -674,17 +705,18 @@ paths:
       operationId: tree_fast_retrieve
       parameters:
       - in: query
-        name: intervalInDays
+        name: interval_in_days
         schema:
-          title: Intervalindays
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
           type: integer
-        required: true
       - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
-        required: true
       tags:
       - tree-fast
       security:
@@ -2266,6 +2298,49 @@ components:
       required:
       - issues
       title: IssueExtraDetailsResponse
+      type: object
+    IssueListingItem:
+      properties:
+        field_timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        id:
+          $ref: '#/components/schemas/Issue__Id'
+        comment:
+          $ref: '#/components/schemas/Issue__Comment'
+        version:
+          $ref: '#/components/schemas/Issue__Version'
+        culprit_code:
+          $ref: '#/components/schemas/Issue__CulpritCode'
+        culprit_tool:
+          $ref: '#/components/schemas/Issue__CulpritTool'
+        culprit_harness:
+          $ref: '#/components/schemas/Issue__CulpritHarness'
+      required:
+      - field_timestamp
+      - id
+      - comment
+      - version
+      - culprit_code
+      - culprit_tool
+      - culprit_harness
+      title: IssueListingItem
+      type: object
+    IssueListingResponse:
+      properties:
+        issues:
+          items:
+            $ref: '#/components/schemas/IssueListingItem'
+          title: Issues
+          type: array
+        extras:
+          additionalProperties:
+            $ref: '#/components/schemas/FirstIncident'
+          title: Extras
+          type: object
+      required:
+      - issues
+      - extras
+      title: IssueListingResponse
       type: object
     IssueTestItem:
       properties:

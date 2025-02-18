@@ -2,27 +2,34 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from kernelCI_app.models import Checkouts
+from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 from kernelCI_app.utils import getQueryTimeInterval
 from http import HTTPStatus
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.treeListing import (
     TreeListingFastResponse,
-    TreeListingQueryParameters
 )
 from pydantic import ValidationError
-
-DEFAULT_ORIGIN = "maestro"
 
 
 class TreeViewFast(APIView):
     @extend_schema(
         responses=TreeListingFastResponse,
-        parameters=[TreeListingQueryParameters],
-        methods=["GET"]
+        parameters=[ListingQueryParameters],
+        methods=["GET"],
     )
     def get(self, request):
-        origin = request.GET.get("origin", DEFAULT_ORIGIN)
-        interval_days = int(request.GET.get("intervalInDays", "7"))
+        try:
+            request_params = ListingQueryParameters(
+                origin=(request.GET.get("origin")),
+                interval_in_days=request.GET.get("intervalInDays"),
+            )
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
+
+        origin = request_params.origin
+        interval_days = request_params.interval_in_days
+
         interval_days_data = {"days": interval_days}
 
         checkouts = Checkouts.objects.raw(

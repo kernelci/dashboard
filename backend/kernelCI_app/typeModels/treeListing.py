@@ -56,8 +56,3 @@ class TreeListingResponse(RootModel):
 
 class TreeListingFastResponse(RootModel):
     root: List[CheckoutFast]
-
-
-class TreeListingQueryParameters(BaseModel):
-    origin: str
-    intervalInDays: int
