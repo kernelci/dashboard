@@ -22,6 +22,7 @@ export const messages = {
     'bootsTab.info.description':
       'ℹ️ There is no boot test data available for this tree',
     'bootsTab.success': 'Success',
+    'build.dummyInfo': 'Dummy builds are hidden from this table',
     'build.statusTooltip':
       'Success - builds completed successfully{br}' +
       'Failed - builds failed{br}' +

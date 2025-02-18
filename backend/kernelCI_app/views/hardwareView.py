@@ -14,7 +14,7 @@ from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
-from kernelCI_app.constants.general import UNKNOWN_STRING
+from kernelCI_app.constants.general import UNKNOWN_STRING, MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import env_misc_value_or_default, handle_environment_misc
 from kernelCI_app.helpers.trees import get_tree_heads
@@ -112,7 +112,9 @@ class HardwareView(APIView):
         self.hardware[current_hardware][status_count][test_status] += 1
 
         build_key = test["build__id"] + current_hardware
-        if build_key in self.processed_builds:
+        if build_key in self.processed_builds or test["build__id"].startswith(
+            MAESTRO_DUMMY_BUILD_PREFIX
+        ):
             return
 
         self.processed_builds.add(build_key)
@@ -122,7 +124,9 @@ class HardwareView(APIView):
         if build_status is not None:
             self.hardware[current_hardware]["build_status_summary"][build_status] += 1
         else:
-            log_message(f"Hardware Listing -> Unknown Build status: {test["build__valid"]}")
+            log_message(
+                f"Hardware Listing -> Unknown Build status: {test["build__valid"]}"
+            )
 
     def _get_results(
         self, start_date: datetime, end_date: datetime, origin: str

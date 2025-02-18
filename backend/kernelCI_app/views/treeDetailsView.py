@@ -49,6 +49,7 @@ from kernelCI_app.typeModels.treeDetails import (
     TreeDetailsFullResponse,
     TreeQueryParameters,
 )
+from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 
 
 class TreeDetails(APIView):
@@ -164,7 +165,9 @@ class TreeDetails(APIView):
             if is_record_filter_out:
                 continue
 
-            if row_data["build_id"] is not None:
+            if row_data["build_id"] is not None and not row_data["build_id"].startswith(
+                MAESTRO_DUMMY_BUILD_PREFIX
+            ):
                 self._process_builds(row_data)
 
             if row_data["test_id"] is None:
