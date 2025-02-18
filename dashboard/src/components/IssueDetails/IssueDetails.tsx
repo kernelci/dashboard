@@ -31,6 +31,8 @@ import {
   LogOrJsonSheetContent,
 } from '@/components/Sheet/LogOrJsonSheetContent';
 
+import { BranchBadge } from '@/components/Badge/BranchBadge';
+
 import { getLogspecSection } from '@/components/Section/LogspecSection';
 import { getFirstIncidentSection } from '@/components/Section/FirstIncidentSection';
 
@@ -119,6 +121,18 @@ export const IssueDetails = ({
     });
   }, [data?.extra, formatMessage, issueId]);
 
+  const tagPills = useMemo(() => {
+    if (data?.extra?.[issueId]?.versions !== undefined) {
+      return (
+        <div className="flex gap-3">
+          {Object.values(data.extra[issueId].versions)[0].tags?.map(tag => (
+            <BranchBadge key={tag} tag={tag} />
+          ))}
+        </div>
+      );
+    }
+  }, [data, issueId]);
+
   const generalSections: ISection[] = useMemo(() => {
     if (!data) {
       return [];
@@ -127,6 +141,7 @@ export const IssueDetails = ({
       {
         title: data.comment ?? data.id,
         eyebrow: formatMessage({ id: 'issueDetails.issueDetails' }),
+        subtitle: tagPills,
         subsections: [
           {
             infos: [
@@ -172,7 +187,7 @@ export const IssueDetails = ({
         ],
       },
     ];
-  }, [data, formatMessage, getCulpritValue]);
+  }, [data, tagPills, formatMessage, getCulpritValue]);
 
   const sectionsData: ISection[] = useMemo(() => {
     return [

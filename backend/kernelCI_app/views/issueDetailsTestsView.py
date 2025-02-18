@@ -5,7 +5,7 @@ from kernelCI_app.models import Incidents
 from kernelCI_app.helpers.issueDetails import fetch_latest_issue_version
 from kernelCI_app.typeModels.issueDetails import (
     IssueDetailsPathParameters,
-    IssueDetailsRequest,
+    IssueDetailsQueryParameters,
     IssueTestsResponse,
 )
 from drf_spectacular.utils import extend_schema
@@ -33,25 +33,26 @@ class IssueDetailsTests(APIView):
         ).values(*fields)
 
     @extend_schema(
-        request=IssueDetailsRequest, responses=IssueTestsResponse, methods=["GET"]
+        parameters=[IssueDetailsQueryParameters], responses=IssueTestsResponse, methods=["GET"]
     )
     def get(self, _request, issue_id: Optional[str]) -> Response:
         try:
+            version = _request.GET.get("version")
             parsed_params = IssueDetailsPathParameters(issue_id=issue_id)
+            parsed_query = IssueDetailsQueryParameters(version=version)
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
-        version = _request.GET.get("version")
-        if version is None:
+        if parsed_query.version is None:
             version_row = fetch_latest_issue_version(issue_id=parsed_params.issue_id)
             if version_row is None:
                 return create_api_error_response(
                     error_message="Issue not found", status_code=HTTPStatus.OK
                 )
-            version = version_row["version"]
+            parsed_query.version = version_row["version"]
 
         tests_data = self._fetch_incidents(
-            issue_id=parsed_params.issue_id, version=version
+            issue_id=parsed_params.issue_id, version=parsed_query.version
         )
 
         if not tests_data:

@@ -5,7 +5,7 @@ from kernelCI_app.helpers.issueDetails import fetch_latest_issue_version
 from kernelCI_app.models import Issues
 from kernelCI_app.typeModels.issueDetails import (
     IssueDetailsPathParameters,
-    IssueDetailsRequest,
+    IssueDetailsQueryParameters,
     IssueDetailsResponse,
 )
 from kernelCI_app.helpers.issueExtras import process_issues_extra_details
@@ -44,26 +44,31 @@ class IssueDetails(APIView):
         return query
 
     @extend_schema(
-        request=IssueDetailsRequest, responses=IssueDetailsResponse, methods=["GET"]
+        parameters=[IssueDetailsQueryParameters],
+        responses=IssueDetailsResponse,
+        methods=["GET"],
     )
     def get(self, _request, issue_id: Optional[str]) -> Response:
         try:
+            version = _request.GET.get("version")
             parsed_params = IssueDetailsPathParameters(issue_id=issue_id)
+            parsed_query = IssueDetailsQueryParameters(version=version)
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
-        version = _request.GET.get("version")
-        if version is None:
+        if parsed_query.version is None:
             version_row = fetch_latest_issue_version(issue_id=parsed_params.issue_id)
             if version_row is None:
                 return create_api_error_response(
                     error_message="Issue not found", status_code=HTTPStatus.OK
                 )
-            version = version_row["version"]
+            parsed_query.version = version_row["version"]
 
-        issue_data = self._fetch_issue(issue_id=parsed_params.issue_id, version=version)
+        issue_data = self._fetch_issue(
+            issue_id=parsed_params.issue_id, version=parsed_query.version
+        )
         process_issues_extra_details(
-            issue_key_list=[(issue_id, version)],
+            issue_key_list=[(issue_id, parsed_query.version)],
             processed_issues_table=self.processed_issue_extras,
         )
 

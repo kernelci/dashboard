@@ -12,6 +12,7 @@ import { LinkIcon } from '@/components/Icons/Link';
 
 export interface ISection {
   title: string;
+  subtitle?: string | ReactElement;
   rightIcon?: JSX.Element;
   leftIcon?: JSX.Element;
   subsections?: ISubsection[];
@@ -83,6 +84,7 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
 
 const Section = ({
   title,
+  subtitle,
   subsections,
   eyebrow,
   rightIcon,
@@ -108,6 +110,7 @@ const Section = ({
           <span className="text-2xl font-bold">{title}</span>
           {rightIcon}
         </div>
+        {subtitle}
       </div>
       {sections}
     </div>
