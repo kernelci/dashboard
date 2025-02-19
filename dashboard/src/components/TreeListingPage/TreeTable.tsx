@@ -13,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { memo, useCallback, useMemo, useState, type JSX } from 'react';
+import { useCallback, useMemo, useState, type JSX } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -65,9 +65,7 @@ import type { ListingTableColumnMeta } from '@/types/table';
 
 import { statusCountToRequiredStatusCount } from '@/utils/status';
 
-import { InputTime } from './InputTime';
-
-const MemoizedInputTime = memo(InputTime);
+import { MemoizedInputTime } from '@/components/InputTime';
 
 const RELATIVE_DAYS_EDGE = 3;
 
@@ -466,7 +464,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
           />
         </span>
         <div className="flex items-center justify-between gap-10">
-          <MemoizedInputTime />
+          <MemoizedInputTime navigateFrom="/tree" />
           <PaginationInfo
             table={table}
             intlLabel="global.trees"

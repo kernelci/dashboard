@@ -14,7 +14,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { memo, useCallback, useMemo, useState, type JSX } from 'react';
+import { useCallback, useMemo, useState, type JSX } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -51,11 +51,10 @@ import type { ListingTableColumnMeta } from '@/types/table';
 import { RedirectFrom, type TFilter } from '@/types/general';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
-
-import { InputTime } from './InputTime';
+import { MemoizedInputTime } from '@/components/InputTime';
+import { DEFAULT_HARDWARE_INTERVAL_IN_DAYS } from '@/utils/constants/hardware';
 
 // TODO Extract and reuse the table
-
 interface ITreeTable {
   treeTableRows: HardwareTableItem[];
   startTimestampInSeconds: number;
@@ -422,8 +421,6 @@ export function HardwareTable({
     endTimestampInSeconds,
   ]);
 
-  const MemoizedInputTime = memo(InputTime);
-
   const navigateWithPageSize = useCallback(
     (pageSize: number) => {
       navigate({
@@ -444,7 +441,10 @@ export function HardwareTable({
           />
         </span>
         <div className="flex items-center justify-between gap-10">
-          <MemoizedInputTime />
+          <MemoizedInputTime
+            navigateFrom="/hardware"
+            defaultInterval={DEFAULT_HARDWARE_INTERVAL_IN_DAYS}
+          />
           <PaginationInfo
             table={table}
             intlLabel="global.hardwares"
