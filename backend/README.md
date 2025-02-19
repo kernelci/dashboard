@@ -35,12 +35,19 @@ poetry run python3 manage.py runserver
 The backend includes unit tests covering some parts of the source code. To run the tests, use the following command:
 
 ```sh
-# run this for each test file in kernelCI_app/unitTests/
-poetry run python kernelCI_app/unitTests/<file-name.test.py>
+poetry run pytest
 ```
 
-Currently you must run this command for each test file in the `kernelCI_app/unitTests/` directory.
+All unit test files must follow this naming convention: `*_test.py`.
 
+endpoints using the built-in `requests` library from python. Because of that, it's necessary to be running the server for the django tests to be performed. When running pytest with the server
+
+
+The django tests are being done 'externally', that means, instead of using the utilies the framework
+has for testing (like `Client` from Django or `APIClient` from DRF) we are performing requests to the
+endpoints using the built-in `requests` library from python. Because of that, it's necessary to be running
+the server for the django tests to be performed. When running pytest with the server offline, all django 
+tests will be skipped.
 
 # Deploy instructions
 

@@ -1,3 +1,21 @@
 #!/usr/bin/env sh
 
-#TODO: pre-pushes python test
+echo "[!] --- Make sure that cloud-sql-proxy is running"
+echo "[!] --- Make sure that you have all environment variables set"
+
+# Check if the server is already running
+SERVER_RUNNING=`ps aux | awk '$(NF-1)=="manage.py" && $NF=="runserver"' | wc -l`
+if [ $SERVER_RUNNING -eq 0 ]; then
+    poetry run python3 manage.py runserver &
+    SERVER_PID=$!
+    # Wait some time to make sure the server is up and running
+    sleep 5
+fi
+
+poetry run pytest
+TEST_STATUS=$?
+
+if [ -n "$SERVER_PID" ]; then
+    kill $SERVER_PID
+fi
+exit $TEST_STATUS
