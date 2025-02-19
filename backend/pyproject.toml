@@ -24,6 +24,11 @@ drf-spectacular = "^0.28.0"
 black = "^24.4.2"
 mypy = "^1.10.0"
 flake8 = "^7.1.0"
+pytest = "^8.3.4"
+pytest-django = "^4.10.0"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "kernelCI.settings"
 
 [build-system]
 requires = ["poetry-core"]
