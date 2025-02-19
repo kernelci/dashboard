@@ -20,6 +20,8 @@ import { FormattedMessage } from 'react-intl';
 import type { LinkProps } from '@tanstack/react-router';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 
+import { differenceInDays } from 'date-fns';
+
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import type { TreeTableBody } from '@/types/tree/Tree';
@@ -66,6 +68,16 @@ import { statusCountToRequiredStatusCount } from '@/utils/status';
 import { InputTime } from './InputTime';
 
 const MemoizedInputTime = memo(InputTime);
+
+const RELATIVE_DAYS_EDGE = 3;
+
+const shouldShowRelative = (date: string): boolean => {
+  const treeDate = new Date(date);
+  const currentDate = new Date();
+  const days = differenceInDays(currentDate, treeDate);
+
+  return days <= RELATIVE_DAYS_EDGE;
+};
 
 const getLinkProps = (
   row: Row<TreeTableBody>,
@@ -186,7 +198,11 @@ const getColumns = (origin: TOrigins): ColumnDef<TreeTableBody>[] => {
         <TableHeader column={column} intlKey="global.date" />
       ),
       cell: ({ row }): JSX.Element => (
-        <TooltipDateTime dateTime={row.getValue('date')} lineBreak={true} />
+        <TooltipDateTime
+          dateTime={row.getValue('date')}
+          lineBreak={true}
+          showRelative={shouldShowRelative(row.getValue('date'))}
+        />
       ),
       meta: {
         tabTarget: 'global.builds',
