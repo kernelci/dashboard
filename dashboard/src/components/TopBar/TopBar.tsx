@@ -10,12 +10,10 @@ import {
 import { useCallback, useEffect, useMemo, type JSX } from 'react';
 
 import Select, { SelectItem } from '@/components/Select/Select';
-import type { TOrigins } from '@/types/general';
+import type { PossibleMonitorPath, TOrigins } from '@/types/general';
 import { zOrigin, zOriginEnum } from '@/types/general';
 
-type PossiblePath = '/tree' | '/hardware';
-
-const getTargetPath = (basePath: string): PossiblePath => {
+const getTargetPath = (basePath: string): PossibleMonitorPath => {
   switch (basePath) {
     case 'tree':
       return '/tree';

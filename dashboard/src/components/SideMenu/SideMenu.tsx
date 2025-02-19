@@ -19,12 +19,14 @@ import {
 
 import { Separator } from '@/components/ui/separator';
 
+import type { PossibleMonitorPath } from '@/types/general';
+
 import SendFeedback from './SendFeedback';
 
 import NavLink from './NavLink';
 
 type RouteMenuItems = {
-  navigateTo: '/tree' | '/hardware';
+  navigateTo: PossibleMonitorPath;
   idIntl: MessagesKey;
   icon: JSX.Element;
   selected: boolean;

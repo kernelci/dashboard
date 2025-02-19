@@ -360,3 +360,5 @@ export enum RedirectFrom {
   Tree = 'tree',
   Hardware = 'hardware',
 }
+
+export type PossibleMonitorPath = '/tree' | '/hardware';

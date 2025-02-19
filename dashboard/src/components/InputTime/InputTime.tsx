@@ -10,27 +10,34 @@ import type { ControllerRenderProps, FieldError } from 'react-hook-form';
 import { Controller, useForm } from 'react-hook-form';
 
 import type { ChangeEvent, JSX } from 'react';
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 
 import { toast } from '@/hooks/useToast';
 
+import DebounceInput from '@/components/DebounceInput/DebounceInput';
+import type { PossibleMonitorPath } from '@/types/general';
 import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
 
-import DebounceInput from '@/components/DebounceInput/DebounceInput';
+const TOAST_TIMEOUT = 3000;
 
-export function InputTime(): JSX.Element {
+const validateStringToNumber = (val: string): boolean => {
+  const convertedNumber = parseInt(val);
+  return !Number.isNaN(convertedNumber) && convertedNumber > 0;
+};
+
+const InputTime = ({
+  navigateFrom,
+  defaultInterval = DEFAULT_TIME_SEARCH,
+}: {
+  navigateFrom: PossibleMonitorPath;
+  defaultInterval?: number;
+}): JSX.Element => {
   const { formatMessage } = useIntl();
-
-  const navigate = useNavigate({ from: '/' });
-  const { intervalInDays: interval } = useSearch({ from: '/tree' });
-
-  function validateString(val: string): boolean {
-    const convertedNumber = parseInt(val);
-    return !Number.isNaN(convertedNumber) && convertedNumber > 0;
-  }
+  const navigate = useNavigate({ from: navigateFrom });
+  const { intervalInDays: interval } = useSearch({ from: navigateFrom });
 
   const InputTimeSchema = z.object({
-    intervalInDays: z.string().refine(validateString, {
+    intervalInDays: z.string().refine(validateStringToNumber, {
       message: formatMessage({ id: 'filter.invalid' }),
     }),
   });
@@ -38,7 +45,7 @@ export function InputTime(): JSX.Element {
   const { handleSubmit, control } = useForm<z.infer<typeof InputTimeSchema>>({
     resolver: zodResolver(InputTimeSchema),
     defaultValues: {
-      intervalInDays: `${DEFAULT_TIME_SEARCH}`,
+      intervalInDays: `${defaultInterval}`,
     },
   });
 
@@ -57,8 +64,7 @@ export function InputTime(): JSX.Element {
         className: 'border-red bg-red text-slate-50 shadow-xl',
       });
 
-      // eslint-disable-next-line no-magic-numbers
-      setTimeout(dismiss, 3000);
+      setTimeout(dismiss, TOAST_TIMEOUT);
     },
   );
 
@@ -96,10 +102,8 @@ export function InputTime(): JSX.Element {
         type="number"
         min={1}
         className={`${fieldError ? 'border-red' : 'border-gray'} mx-[10px] flex w-[100px] flex-1 rounded-md border`}
-        startingValue={
-          interval ? interval.toString() : `${DEFAULT_TIME_SEARCH}`
-        }
-        placeholder="7"
+        startingValue={interval ? interval.toString() : `${defaultInterval}`}
+        placeholder="3"
         {...rest}
       />
     );
@@ -118,4 +122,6 @@ export function InputTime(): JSX.Element {
       <FormattedMessage id="global.days" />
     </div>
   );
-}
+};
+
+export const MemoizedInputTime = memo(InputTime);
