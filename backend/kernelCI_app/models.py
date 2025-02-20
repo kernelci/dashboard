@@ -3,7 +3,9 @@ from django.contrib.postgres.fields import ArrayField
 
 
 class Issues(models.Model):
-    field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
+    field_timestamp = models.DateTimeField(
+        db_column="_timestamp", blank=True, null=True
+    )
     id = models.TextField(primary_key=True)
     version = models.IntegerField()
     origin = models.TextField()
@@ -17,12 +19,14 @@ class Issues(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'issues'
-        unique_together = (('id', 'version'),)
+        db_table = "issues"
+        unique_together = (("id", "version"),)
 
 
 class Checkouts(models.Model):
-    field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
+    field_timestamp = models.DateTimeField(
+        db_column="_timestamp", blank=True, null=True
+    )
     id = models.TextField(primary_key=True)
     origin = models.TextField()
     tree_name = models.TextField(blank=True, null=True)
@@ -44,11 +48,13 @@ class Checkouts(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'checkouts'
+        db_table = "checkouts"
 
 
 class Builds(models.Model):
-    field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
+    field_timestamp = models.DateTimeField(
+        db_column="_timestamp", blank=True, null=True
+    )
     checkout = models.ForeignKey(Checkouts, on_delete=models.DO_NOTHING)
     id = models.TextField(primary_key=True)
     origin = models.TextField()
@@ -69,16 +75,20 @@ class Builds(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'builds'
+        db_table = "builds"
 
 
 class Tests(models.Model):
-    field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
+    field_timestamp = models.DateTimeField(
+        db_column="_timestamp", blank=True, null=True
+    )
     build = models.ForeignKey(Builds, on_delete=models.DO_NOTHING)
     id = models.TextField(primary_key=True)
     origin = models.TextField()
     environment_comment = models.TextField(blank=True, null=True)
-    environment_compatible = ArrayField(models.TextField(), blank=True, default=list, null=True)
+    environment_compatible = ArrayField(
+        models.TextField(), blank=True, default=list, null=True
+    )
     environment_misc = models.JSONField(blank=True, null=True)
     path = models.TextField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
@@ -93,11 +103,13 @@ class Tests(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'tests'
+        db_table = "tests"
 
 
 class Incidents(models.Model):
-    field_timestamp = models.DateTimeField(db_column='_timestamp', blank=True, null=True)
+    field_timestamp = models.DateTimeField(
+        db_column="_timestamp", blank=True, null=True
+    )
     id = models.TextField(primary_key=True)
     origin = models.TextField()
     issue = models.ForeignKey(Issues, on_delete=models.DO_NOTHING)
@@ -110,4 +122,4 @@ class Incidents(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'incidents'
+        db_table = "incidents"

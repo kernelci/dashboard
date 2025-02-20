@@ -16,5 +16,5 @@ def validate_required_params(request, required_params: list[str]):
     for p in required_params:
         if not request.GET.get(p):
             return HttpResponseBadRequest(
-                getErrorResponseBody(f'missing required field `{p}`')
+                getErrorResponseBody(f"missing required field `{p}`")
             )

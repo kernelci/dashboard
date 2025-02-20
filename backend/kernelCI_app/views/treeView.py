@@ -59,13 +59,13 @@ class TreeView(APIView):
     @extend_schema(
         responses=TreeListingResponse,
         parameters=[ListingQueryParameters],
-        methods=["GET"]
+        methods=["GET"],
     )
     def get(self, request) -> Response:
         try:
             request_params = ListingQueryParameters(
                 origin=request.GET.get("origin"),
-                interval_in_days=request.GET.get("intervalInDays")
+                interval_in_days=request.GET.get("intervalInDays"),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)

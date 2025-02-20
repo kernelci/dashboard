@@ -122,7 +122,11 @@ class HardwareDetails(APIView):
             processed_tests=self.processed_tests,
         )
 
-        if should_process_test and not is_issue_processed_result and is_test_processed_result:
+        if (
+            should_process_test
+            and not is_issue_processed_result
+            and is_test_processed_result
+        ):
             process_issue(
                 record=record,
                 task_issues_dict=task,
@@ -133,7 +137,9 @@ class HardwareDetails(APIView):
 
         if should_process_test and not is_test_processed_result:
             self.processed_tests.add(record["id"])
-            test_or_boot_history = self.boots["history"] if is_record_boot else self.tests["history"]
+            test_or_boot_history = (
+                self.boots["history"] if is_record_boot else self.tests["history"]
+            )
             handle_test_history(
                 record=record,
                 task=test_or_boot_history,

@@ -62,8 +62,12 @@ class IssueTestItem(BaseModel):
     environment_compatible: Test__EnvironmentCompatible = Field(
         validation_alias="test__environment_compatible"
     )
-    environment_misc: Test__EnvironmentMisc = Field(validation_alias="test__environment_misc")
-    tree_name: Checkout__TreeName = Field(validation_alias="test__build__checkout__tree_name")
+    environment_misc: Test__EnvironmentMisc = Field(
+        validation_alias="test__environment_misc"
+    )
+    tree_name: Checkout__TreeName = Field(
+        validation_alias="test__build__checkout__tree_name"
+    )
     git_repository_branch: Checkout__GitRepositoryBranch = Field(
         validation_alias="test__build__checkout__git_repository_branch"
     )

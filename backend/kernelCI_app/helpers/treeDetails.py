@@ -535,11 +535,13 @@ def process_filters(instance, row_data: dict) -> None:
         instance.global_architectures.add(row_data["build_architecture"])
         instance.global_compilers.add(row_data["build_compiler"])
 
-        build_issue_id, build_issue_version, is_build_issue = should_increment_build_issue(
-            issue_id=issue_id,
-            issue_version=issue_version,
-            incident_test_id=incident_test_id,
-            build_valid=build_valid,
+        build_issue_id, build_issue_version, is_build_issue = (
+            should_increment_build_issue(
+                issue_id=issue_id,
+                issue_version=issue_version,
+                incident_test_id=incident_test_id,
+                build_valid=build_valid,
+            )
         )
 
         is_invalid = build_valid is False

@@ -51,8 +51,10 @@ class HardwareDetailsTests(APIView):
         if is_record_boot:
             return
 
-        is_test_processed_result = is_test_processed(record=record, processed_tests=self.processed_tests)
-        if (is_test_processed_result):
+        is_test_processed_result = is_test_processed(
+            record=record, processed_tests=self.processed_tests
+        )
+        if is_test_processed_result:
             return
 
         should_process_test = decide_if_is_test_in_filter(

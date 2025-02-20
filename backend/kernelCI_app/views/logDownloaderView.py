@@ -2,7 +2,10 @@ from bs4 import BeautifulSoup, Tag
 import requests
 from http import HTTPStatus
 from kernelCI_app.helpers.errorHandling import create_api_error_response
-from kernelCI_app.typeModels.logDownloader import LogDownloaderResponse, LogDownloaderQueryParameters
+from kernelCI_app.typeModels.logDownloader import (
+    LogDownloaderResponse,
+    LogDownloaderQueryParameters,
+)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
@@ -70,7 +73,7 @@ class LogDownloaderView(APIView):
         if error_message:
             return create_api_error_response(error_message=error_message)
 
-        if not parsed_data['log_files']:
+        if not parsed_data["log_files"]:
             return create_api_error_response(
                 error_message="No log files found", status_code=HTTPStatus.OK
             )

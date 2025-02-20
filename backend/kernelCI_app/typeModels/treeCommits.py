@@ -7,7 +7,7 @@ from kernelCI_app.typeModels.treeListing import TestStatusCount
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
     Checkout__GitCommitName,
-    Checkout__GitCommitTags
+    Checkout__GitCommitTags,
 )
 
 
