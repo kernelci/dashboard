@@ -33,7 +33,9 @@ class IssueDetailsTests(APIView):
         ).values(*fields)
 
     @extend_schema(
-        parameters=[IssueDetailsQueryParameters], responses=IssueTestsResponse, methods=["GET"]
+        parameters=[IssueDetailsQueryParameters],
+        responses=IssueTestsResponse,
+        methods=["GET"],
     )
     def get(self, _request, issue_id: Optional[str]) -> Response:
         try:

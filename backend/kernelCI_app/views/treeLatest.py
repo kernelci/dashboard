@@ -15,7 +15,7 @@ from kernelCI_app.models import Checkouts
 from kernelCI_app.typeModels.treeDetails import (
     TreeLatestPathParameters,
     TreeLatestResponse,
-    TreeLatestQueryParameters
+    TreeLatestQueryParameters,
 )
 
 
@@ -46,7 +46,7 @@ class TreeLatest(APIView):
     @extend_schema(
         responses=TreeLatestResponse,
         parameters=[TreeLatestQueryParameters],
-        methods=["GET"]
+        methods=["GET"],
     )
     def get(self, request, tree_name: str, branch: str) -> JsonResponse:
         try:

@@ -1,3 +1,17 @@
 #!/usr/bin/env sh
 
+poetry run black --check .
+BLACK_STATUS=$?
+
+if [ $BLACK_STATUS -ne 0 ]; then
+  exit 1
+fi
+
 poetry run flake8
+FLAKE8_STATUS=$?
+
+if [ $FLAKE8_STATUS -ne 0 ]; then
+  exit 1
+fi
+
+exit 0

@@ -13,7 +13,7 @@ class TestShouldFilterTestIssue(unittest.TestCase):
                 issue_id=UNKNOWN_STRING,
                 issue_version=None,
                 incident_test_id="incident_test_1",
-                test_status="FAIL"
+                test_status="FAIL",
             )
         )
 
@@ -24,7 +24,7 @@ class TestShouldFilterTestIssue(unittest.TestCase):
                 issue_id="issue1",
                 issue_version=1,
                 incident_test_id="incident_test_1",
-                test_status="PASS"
+                test_status="PASS",
             )
         )
 

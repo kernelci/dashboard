@@ -25,7 +25,8 @@ def get_tree_heads(origin: str, start_date: datetime, end_date: datetime):
             *tree_id_fields,
             "-start_time",
         )
-        .distinct(*tree_id_fields).values_list("git_commit_hash", flat=True)
+        .distinct(*tree_id_fields)
+        .values_list("git_commit_hash", flat=True)
     )
 
     return checkouts_subquery

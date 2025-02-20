@@ -9,19 +9,19 @@ from kernelCI_app.typeModels.databases import (
     Checkout__PatchsetHash,
     Checkout__GitRepositoryBranch,
     Checkout__GitRepositoryUrl,
-    Timestamp
+    Timestamp,
 )
 from pydantic import BaseModel, Field, RootModel
 
 
 class TestStatusCount(BaseModel):
-    pass_count: int = Field(alias='pass')
-    error_count: int = Field(alias='error')
-    fail_count: int = Field(alias='fail')
-    skip_count: int = Field(alias='skip')
-    miss_count: int = Field(alias='miss')
-    done_count: int = Field(alias='done')
-    null_count: int = Field(alias='null')
+    pass_count: int = Field(alias="pass")
+    error_count: int = Field(alias="error")
+    fail_count: int = Field(alias="fail")
+    skip_count: int = Field(alias="skip")
+    miss_count: int = Field(alias="miss")
+    done_count: int = Field(alias="done")
+    null_count: int = Field(alias="null")
 
 
 class BaseCheckouts(BaseModel):

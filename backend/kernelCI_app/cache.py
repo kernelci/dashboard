@@ -18,8 +18,9 @@ def __createCacheParamsHash(params: dict):
     return hash(params_string)
 
 
-def setQueryCache(key, params, rows, commit_hash=None, build_id=None, test_id=None,
-                  timeout=timeout):
+def setQueryCache(
+    key, params, rows, commit_hash=None, build_id=None, test_id=None, timeout=timeout
+):
     params_hash = __createCacheParamsHash(params)
     hash_key = "%s-%s" % (key, params_hash)
 

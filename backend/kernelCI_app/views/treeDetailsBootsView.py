@@ -22,7 +22,7 @@ from kernelCI_app.typeModels.treeDetails import (
 )
 from kernelCI_app.typeModels.commonDetails import (
     CommonDetailsBootsResponse,
-    TestHistoryItem
+    TestHistoryItem,
 )
 
 

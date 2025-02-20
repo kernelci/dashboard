@@ -82,7 +82,9 @@ def assign_issue_first_seen(
             AND IC.issue_version = FI.min_issue_version
             AND IC."_timestamp" = FI.first_seen
         )
-        """.format(", ".join(["%s"] * len(issue_id_list))),
+        """.format(
+            ", ".join(["%s"] * len(issue_id_list))
+        ),
         issue_id_list,
     )
 
@@ -105,7 +107,7 @@ def assign_issue_first_seen(
                 git_repository_url=first_git_repository_url,
                 git_repository_branch=first_git_repository_branch,
                 git_commit_name=first_git_commit_name,
-                tree_name=first_tree_name
+                tree_name=first_tree_name,
             )
 
         for version in versions_per_issue[record_issue_id]:

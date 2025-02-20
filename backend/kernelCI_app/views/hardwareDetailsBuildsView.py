@@ -137,7 +137,8 @@ class HardwareDetailsBuilds(APIView):
 
         if len(records) == 0:
             return Response(
-                data={"error": "No builds found for this hardware"}, status=HTTPStatus.OK
+                data={"error": "No builds found for this hardware"},
+                status=HTTPStatus.OK,
             )
 
         is_all_selected = len(self.selected_commits) == 0
@@ -151,6 +152,8 @@ class HardwareDetailsBuilds(APIView):
                 builds=self.builds,
             )
         except ValidationError as e:
-            return Response(data={"error": e.errors()}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return Response(
+                data={"error": e.errors()}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+            )
 
         return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)

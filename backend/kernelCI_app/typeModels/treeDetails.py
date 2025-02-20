@@ -51,6 +51,6 @@ class TreeDetailsFullResponse(
     TreeDetailsBuildsResponse,
     CommonDetailsBootsResponse,
     CommonDetailsTestsResponse,
-    SummaryResponse
+    SummaryResponse,
 ):
     pass

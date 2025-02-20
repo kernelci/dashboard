@@ -15,8 +15,8 @@ class ExceptionWithJsonResponse(Exception):
 
 
 @typing_extensions.deprecated(
-    'The `create_error_response` method is deprecated; use `create_api_error_response` '
-    'and use the rest_framework.response type instead.',
+    "The `create_error_response` method is deprecated; use `create_api_error_response` "
+    "and use the rest_framework.response type instead.",
     category=None,
 )
 def create_error_response(
