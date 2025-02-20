@@ -1,8 +1,9 @@
 from datetime import datetime
 from pydantic import BaseModel
-from typing import List, TypedDict, Union, Set
+from typing import TypedDict
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from kernelCI_app.typeModels.databases import StatusValues
 
 
 class BuildStatusCountDict(TypedDict):
@@ -11,16 +12,16 @@ class BuildStatusCountDict(TypedDict):
     null: int
 
 
-class HardwareItem(TypedDict):
+class HardwareItem(BaseModel):
     hardware_name: str
-    platform: Union[str, Set[str]]
-    test_status_summary: dict[str, int]
-    boot_status_summary: dict[str, int]
+    platform: str | set[str]
+    test_status_summary: dict[StatusValues, int]
+    boot_status_summary: dict[StatusValues, int]
     build_status_summary: BuildStatusCountDict
 
 
 class HardwareResponse(BaseModel):
-    hardware: List[HardwareItem]
+    hardware: list[HardwareItem]
 
 
 # Since OpenAPI does not support timestamp as datetime we add an extra model just for
