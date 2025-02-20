@@ -14,7 +14,7 @@ import {
 } from '@/types/general';
 import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
 
-const defaultValues = {
+export const buildDetailsDefaultValues = {
   origin: DEFAULT_ORIGIN,
   tableFilter: zTableFilterInfoDefault,
   diffFilter: DEFAULT_DIFF_FILTER,
@@ -26,11 +26,11 @@ const defaultValues = {
   treeCommits: {},
 };
 
-const buildDetailsSearchSchema = z.object({
+export const buildDetailsSearchSchema = z.object({
   tableFilter: zTableFilterInfoValidator,
 } satisfies SearchSchema);
 
 export const Route = createFileRoute('/build/$buildId')({
   validateSearch: buildDetailsSearchSchema,
-  search: { middlewares: [stripSearchParams(defaultValues)] },
+  search: { middlewares: [stripSearchParams(buildDetailsDefaultValues)] },
 });

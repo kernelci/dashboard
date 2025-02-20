@@ -13,7 +13,7 @@ import {
 } from '@/types/general';
 import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
 
-const defaultValues = {
+export const testDetailsDefaultValues = {
   origin: DEFAULT_ORIGIN,
   tableFilter: zTableFilterInfoDefault,
   diffFilter: DEFAULT_DIFF_FILTER,
@@ -25,9 +25,9 @@ const defaultValues = {
   treeCommits: {},
 };
 
-const testDetailsSearchSchema = z.object({} satisfies SearchSchema);
+export const testDetailsSearchSchema = z.object({} satisfies SearchSchema);
 
 export const Route = createFileRoute('/test/$testId')({
   validateSearch: testDetailsSearchSchema,
-  search: { middlewares: [stripSearchParams(defaultValues)] },
+  search: { middlewares: [stripSearchParams(testDetailsDefaultValues)] },
 });
