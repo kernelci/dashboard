@@ -1,10 +1,10 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/(alternatives)/t/$treeId/')({
+export const Route = createFileRoute('/(alternatives)/b/$buildId/')({
   loaderDeps: ({ search }) => ({ search }),
   loader: ({ deps, params }) => {
     throw redirect({
-      to: '/tree/$treeId',
+      to: '/build/$buildId',
       search: deps.search,
       params,
     });

@@ -14,7 +14,7 @@ import {
 } from '@/types/general';
 import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
 
-const defaultValues = {
+export const issueDetailsDefaultValues = {
   origin: DEFAULT_ORIGIN,
   tableFilter: zTableFilterInfoDefault,
   diffFilter: DEFAULT_DIFF_FILTER,
@@ -27,12 +27,12 @@ const defaultValues = {
   issueVersion: undefined,
 };
 
-const issueDetailsSearchSchema = z.object({
+export const issueDetailsSearchSchema = z.object({
   tableFilter: zTableFilterInfoValidator,
   issueVersion: z.number().optional(),
 } satisfies SearchSchema);
 
 export const Route = createFileRoute('/issue/$issueId')({
   validateSearch: issueDetailsSearchSchema,
-  search: { middlewares: [stripSearchParams(defaultValues)] },
+  search: { middlewares: [stripSearchParams(issueDetailsDefaultValues)] },
 });

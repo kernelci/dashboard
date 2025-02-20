@@ -21,32 +21,30 @@ import { Route as TestTestIdRouteImport } from './routes/test/$testId/route'
 import { Route as IssueIssueIdRouteImport } from './routes/issue/$issueId/route'
 import { Route as HardwareHardwareIdRouteImport } from './routes/hardware/$hardwareId/route'
 import { Route as BuildBuildIdRouteImport } from './routes/build/$buildId/route'
-import { Route as alternativesTRouteImport } from './routes/(alternatives)/t/route'
 import { Route as TreeTreeIdIndexImport } from './routes/tree/$treeId/index'
 import { Route as TestTestIdIndexImport } from './routes/test/$testId/index'
 import { Route as IssueIssueIdIndexImport } from './routes/issue/$issueId/index'
 import { Route as HardwareHardwareIdIndexImport } from './routes/hardware/$hardwareId/index'
 import { Route as BuildBuildIdIndexImport } from './routes/build/$buildId/index'
-import { Route as alternativesTIndexImport } from './routes/(alternatives)/t/index'
 import { Route as HardwareHardwareIdTestRouteImport } from './routes/hardware/$hardwareId/test/route'
 import { Route as HardwareHardwareIdBuildRouteImport } from './routes/hardware/$hardwareId/build/route'
 import { Route as HardwareHardwareIdBootRouteImport } from './routes/hardware/$hardwareId/boot/route'
-import { Route as alternativesTTreeIdRouteImport } from './routes/(alternatives)/t/$treeId/route'
+import { Route as alternativesTTestIdRouteImport } from './routes/(alternatives)/t/$testId/route'
+import { Route as alternativesIIssueIdRouteImport } from './routes/(alternatives)/i/$issueId/route'
+import { Route as alternativesBBuildIdRouteImport } from './routes/(alternatives)/b/$buildId/route'
 import { Route as TreeTreeNameBranchIndexImport } from './routes/tree/$treeName/$branch/index'
 import { Route as HardwareHardwareIdTestIndexImport } from './routes/hardware/$hardwareId/test/index'
 import { Route as HardwareHardwareIdBuildIndexImport } from './routes/hardware/$hardwareId/build/index'
 import { Route as HardwareHardwareIdBootIndexImport } from './routes/hardware/$hardwareId/boot/index'
-import { Route as alternativesTTreeIdIndexImport } from './routes/(alternatives)/t/$treeId/index'
+import { Route as alternativesTTestIdIndexImport } from './routes/(alternatives)/t/$testId/index'
+import { Route as alternativesIIssueIdIndexImport } from './routes/(alternatives)/i/$issueId/index'
+import { Route as alternativesBBuildIdIndexImport } from './routes/(alternatives)/b/$buildId/index'
 import { Route as TreeTreeIdTestTestIdRouteImport } from './routes/tree/$treeId/test/$testId/route'
 import { Route as TreeTreeIdTestTestIdIndexImport } from './routes/tree/$treeId/test/$testId/index'
 import { Route as TreeTreeIdBuildBuildIdIndexImport } from './routes/tree/$treeId/build/$buildId/index'
 import { Route as HardwareHardwareIdTestTestIdIndexImport } from './routes/hardware/$hardwareId/test/$testId/index'
 import { Route as HardwareHardwareIdBuildBuildIdIndexImport } from './routes/hardware/$hardwareId/build/$buildId/index'
 import { Route as HardwareHardwareIdBootBootIdIndexImport } from './routes/hardware/$hardwareId/boot/$bootId/index'
-import { Route as alternativesTTreeNameBranchIndexImport } from './routes/(alternatives)/t/$treeName/$branch/index'
-import { Route as alternativesTTreeIdTestTestIdRouteImport } from './routes/(alternatives)/t/$treeId/test/$testId/route'
-import { Route as alternativesTTreeIdTestTestIdIndexImport } from './routes/(alternatives)/t/$treeId/test/$testId/index'
-import { Route as alternativesTTreeIdBuildBuildIdIndexImport } from './routes/(alternatives)/t/$treeId/build/$buildId/index'
 
 // Create/Update Routes
 
@@ -110,12 +108,6 @@ const BuildBuildIdRouteRoute = BuildBuildIdRouteImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const alternativesTRouteRoute = alternativesTRouteImport.update({
-  id: '/(alternatives)/t',
-  path: '/t',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const TreeTreeIdIndexRoute = TreeTreeIdIndexImport.update({
   id: '/',
   path: '/',
@@ -146,12 +138,6 @@ const BuildBuildIdIndexRoute = BuildBuildIdIndexImport.update({
   getParentRoute: () => BuildBuildIdRouteRoute,
 } as any)
 
-const alternativesTIndexRoute = alternativesTIndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => alternativesTRouteRoute,
-} as any)
-
 const HardwareHardwareIdTestRouteRoute =
   HardwareHardwareIdTestRouteImport.update({
     id: '/test',
@@ -173,10 +159,22 @@ const HardwareHardwareIdBootRouteRoute =
     getParentRoute: () => HardwareHardwareIdRouteRoute,
   } as any)
 
-const alternativesTTreeIdRouteRoute = alternativesTTreeIdRouteImport.update({
-  id: '/$treeId',
-  path: '/$treeId',
-  getParentRoute: () => alternativesTRouteRoute,
+const alternativesTTestIdRouteRoute = alternativesTTestIdRouteImport.update({
+  id: '/(alternatives)/t/$testId',
+  path: '/t/$testId',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const alternativesIIssueIdRouteRoute = alternativesIIssueIdRouteImport.update({
+  id: '/(alternatives)/i/$issueId',
+  path: '/i/$issueId',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const alternativesBBuildIdRouteRoute = alternativesBBuildIdRouteImport.update({
+  id: '/(alternatives)/b/$buildId',
+  path: '/b/$buildId',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const TreeTreeNameBranchIndexRoute = TreeTreeNameBranchIndexImport.update({
@@ -206,10 +204,22 @@ const HardwareHardwareIdBootIndexRoute =
     getParentRoute: () => HardwareHardwareIdBootRouteRoute,
   } as any)
 
-const alternativesTTreeIdIndexRoute = alternativesTTreeIdIndexImport.update({
+const alternativesTTestIdIndexRoute = alternativesTTestIdIndexImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => alternativesTTreeIdRouteRoute,
+  getParentRoute: () => alternativesTTestIdRouteRoute,
+} as any)
+
+const alternativesIIssueIdIndexRoute = alternativesIIssueIdIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => alternativesIIssueIdRouteRoute,
+} as any)
+
+const alternativesBBuildIdIndexRoute = alternativesBBuildIdIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => alternativesBBuildIdRouteRoute,
 } as any)
 
 const TreeTreeIdTestTestIdRouteRoute = TreeTreeIdTestTestIdRouteImport.update({
@@ -252,34 +262,6 @@ const HardwareHardwareIdBootBootIdIndexRoute =
     getParentRoute: () => HardwareHardwareIdBootRouteRoute,
   } as any)
 
-const alternativesTTreeNameBranchIndexRoute =
-  alternativesTTreeNameBranchIndexImport.update({
-    id: '/$treeName/$branch/',
-    path: '/$treeName/$branch/',
-    getParentRoute: () => alternativesTRouteRoute,
-  } as any)
-
-const alternativesTTreeIdTestTestIdRouteRoute =
-  alternativesTTreeIdTestTestIdRouteImport.update({
-    id: '/test/$testId',
-    path: '/test/$testId',
-    getParentRoute: () => alternativesTTreeIdRouteRoute,
-  } as any)
-
-const alternativesTTreeIdTestTestIdIndexRoute =
-  alternativesTTreeIdTestTestIdIndexImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => alternativesTTreeIdTestTestIdRouteRoute,
-  } as any)
-
-const alternativesTTreeIdBuildBuildIdIndexRoute =
-  alternativesTTreeIdBuildBuildIdIndexImport.update({
-    id: '/build/$buildId/',
-    path: '/build/$buildId/',
-    getParentRoute: () => alternativesTTreeIdRouteRoute,
-  } as any)
-
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -303,13 +285,6 @@ declare module '@tanstack/react-router' {
       path: '/tree'
       fullPath: '/tree'
       preLoaderRoute: typeof TreeRouteImport
-      parentRoute: typeof rootRoute
-    }
-    '/(alternatives)/t': {
-      id: '/(alternatives)/t'
-      path: '/t'
-      fullPath: '/t'
-      preLoaderRoute: typeof alternativesTRouteImport
       parentRoute: typeof rootRoute
     }
     '/build/$buildId': {
@@ -361,12 +336,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TreeIndexImport
       parentRoute: typeof TreeRouteImport
     }
-    '/(alternatives)/t/$treeId': {
-      id: '/(alternatives)/t/$treeId'
-      path: '/$treeId'
-      fullPath: '/t/$treeId'
-      preLoaderRoute: typeof alternativesTTreeIdRouteImport
-      parentRoute: typeof alternativesTRouteImport
+    '/(alternatives)/b/$buildId': {
+      id: '/(alternatives)/b/$buildId'
+      path: '/b/$buildId'
+      fullPath: '/b/$buildId'
+      preLoaderRoute: typeof alternativesBBuildIdRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/(alternatives)/i/$issueId': {
+      id: '/(alternatives)/i/$issueId'
+      path: '/i/$issueId'
+      fullPath: '/i/$issueId'
+      preLoaderRoute: typeof alternativesIIssueIdRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/(alternatives)/t/$testId': {
+      id: '/(alternatives)/t/$testId'
+      path: '/t/$testId'
+      fullPath: '/t/$testId'
+      preLoaderRoute: typeof alternativesTTestIdRouteImport
+      parentRoute: typeof rootRoute
     }
     '/hardware/$hardwareId/boot': {
       id: '/hardware/$hardwareId/boot'
@@ -388,13 +377,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/hardware/$hardwareId/test'
       preLoaderRoute: typeof HardwareHardwareIdTestRouteImport
       parentRoute: typeof HardwareHardwareIdRouteImport
-    }
-    '/(alternatives)/t/': {
-      id: '/(alternatives)/t/'
-      path: '/'
-      fullPath: '/t/'
-      preLoaderRoute: typeof alternativesTIndexImport
-      parentRoute: typeof alternativesTRouteImport
     }
     '/build/$buildId/': {
       id: '/build/$buildId/'
@@ -438,12 +420,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TreeTreeIdTestTestIdRouteImport
       parentRoute: typeof TreeTreeIdRouteImport
     }
-    '/(alternatives)/t/$treeId/': {
-      id: '/(alternatives)/t/$treeId/'
+    '/(alternatives)/b/$buildId/': {
+      id: '/(alternatives)/b/$buildId/'
       path: '/'
-      fullPath: '/t/$treeId/'
-      preLoaderRoute: typeof alternativesTTreeIdIndexImport
-      parentRoute: typeof alternativesTTreeIdRouteImport
+      fullPath: '/b/$buildId/'
+      preLoaderRoute: typeof alternativesBBuildIdIndexImport
+      parentRoute: typeof alternativesBBuildIdRouteImport
+    }
+    '/(alternatives)/i/$issueId/': {
+      id: '/(alternatives)/i/$issueId/'
+      path: '/'
+      fullPath: '/i/$issueId/'
+      preLoaderRoute: typeof alternativesIIssueIdIndexImport
+      parentRoute: typeof alternativesIIssueIdRouteImport
+    }
+    '/(alternatives)/t/$testId/': {
+      id: '/(alternatives)/t/$testId/'
+      path: '/'
+      fullPath: '/t/$testId/'
+      preLoaderRoute: typeof alternativesTTestIdIndexImport
+      parentRoute: typeof alternativesTTestIdRouteImport
     }
     '/hardware/$hardwareId/boot/': {
       id: '/hardware/$hardwareId/boot/'
@@ -472,20 +468,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/tree/$treeName/$branch'
       preLoaderRoute: typeof TreeTreeNameBranchIndexImport
       parentRoute: typeof TreeRouteImport
-    }
-    '/(alternatives)/t/$treeId/test/$testId': {
-      id: '/(alternatives)/t/$treeId/test/$testId'
-      path: '/test/$testId'
-      fullPath: '/t/$treeId/test/$testId'
-      preLoaderRoute: typeof alternativesTTreeIdTestTestIdRouteImport
-      parentRoute: typeof alternativesTTreeIdRouteImport
-    }
-    '/(alternatives)/t/$treeName/$branch/': {
-      id: '/(alternatives)/t/$treeName/$branch/'
-      path: '/$treeName/$branch'
-      fullPath: '/t/$treeName/$branch'
-      preLoaderRoute: typeof alternativesTTreeNameBranchIndexImport
-      parentRoute: typeof alternativesTRouteImport
     }
     '/hardware/$hardwareId/boot/$bootId/': {
       id: '/hardware/$hardwareId/boot/$bootId/'
@@ -521,20 +503,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/tree/$treeId/test/$testId/'
       preLoaderRoute: typeof TreeTreeIdTestTestIdIndexImport
       parentRoute: typeof TreeTreeIdTestTestIdRouteImport
-    }
-    '/(alternatives)/t/$treeId/build/$buildId/': {
-      id: '/(alternatives)/t/$treeId/build/$buildId/'
-      path: '/build/$buildId'
-      fullPath: '/t/$treeId/build/$buildId'
-      preLoaderRoute: typeof alternativesTTreeIdBuildBuildIdIndexImport
-      parentRoute: typeof alternativesTTreeIdRouteImport
-    }
-    '/(alternatives)/t/$treeId/test/$testId/': {
-      id: '/(alternatives)/t/$treeId/test/$testId/'
-      path: '/'
-      fullPath: '/t/$treeId/test/$testId/'
-      preLoaderRoute: typeof alternativesTTreeIdTestTestIdIndexImport
-      parentRoute: typeof alternativesTTreeIdTestTestIdRouteImport
     }
   }
 }
@@ -675,56 +643,6 @@ const TreeRouteRouteWithChildren = TreeRouteRoute._addFileChildren(
   TreeRouteRouteChildren,
 )
 
-interface alternativesTTreeIdTestTestIdRouteRouteChildren {
-  alternativesTTreeIdTestTestIdIndexRoute: typeof alternativesTTreeIdTestTestIdIndexRoute
-}
-
-const alternativesTTreeIdTestTestIdRouteRouteChildren: alternativesTTreeIdTestTestIdRouteRouteChildren =
-  {
-    alternativesTTreeIdTestTestIdIndexRoute:
-      alternativesTTreeIdTestTestIdIndexRoute,
-  }
-
-const alternativesTTreeIdTestTestIdRouteRouteWithChildren =
-  alternativesTTreeIdTestTestIdRouteRoute._addFileChildren(
-    alternativesTTreeIdTestTestIdRouteRouteChildren,
-  )
-
-interface alternativesTTreeIdRouteRouteChildren {
-  alternativesTTreeIdIndexRoute: typeof alternativesTTreeIdIndexRoute
-  alternativesTTreeIdTestTestIdRouteRoute: typeof alternativesTTreeIdTestTestIdRouteRouteWithChildren
-  alternativesTTreeIdBuildBuildIdIndexRoute: typeof alternativesTTreeIdBuildBuildIdIndexRoute
-}
-
-const alternativesTTreeIdRouteRouteChildren: alternativesTTreeIdRouteRouteChildren =
-  {
-    alternativesTTreeIdIndexRoute: alternativesTTreeIdIndexRoute,
-    alternativesTTreeIdTestTestIdRouteRoute:
-      alternativesTTreeIdTestTestIdRouteRouteWithChildren,
-    alternativesTTreeIdBuildBuildIdIndexRoute:
-      alternativesTTreeIdBuildBuildIdIndexRoute,
-  }
-
-const alternativesTTreeIdRouteRouteWithChildren =
-  alternativesTTreeIdRouteRoute._addFileChildren(
-    alternativesTTreeIdRouteRouteChildren,
-  )
-
-interface alternativesTRouteRouteChildren {
-  alternativesTTreeIdRouteRoute: typeof alternativesTTreeIdRouteRouteWithChildren
-  alternativesTIndexRoute: typeof alternativesTIndexRoute
-  alternativesTTreeNameBranchIndexRoute: typeof alternativesTTreeNameBranchIndexRoute
-}
-
-const alternativesTRouteRouteChildren: alternativesTRouteRouteChildren = {
-  alternativesTTreeIdRouteRoute: alternativesTTreeIdRouteRouteWithChildren,
-  alternativesTIndexRoute: alternativesTIndexRoute,
-  alternativesTTreeNameBranchIndexRoute: alternativesTTreeNameBranchIndexRoute,
-}
-
-const alternativesTRouteRouteWithChildren =
-  alternativesTRouteRoute._addFileChildren(alternativesTRouteRouteChildren)
-
 interface BuildBuildIdRouteRouteChildren {
   BuildBuildIdIndexRoute: typeof BuildBuildIdIndexRoute
 }
@@ -759,11 +677,52 @@ const TestTestIdRouteRouteWithChildren = TestTestIdRouteRoute._addFileChildren(
   TestTestIdRouteRouteChildren,
 )
 
+interface alternativesBBuildIdRouteRouteChildren {
+  alternativesBBuildIdIndexRoute: typeof alternativesBBuildIdIndexRoute
+}
+
+const alternativesBBuildIdRouteRouteChildren: alternativesBBuildIdRouteRouteChildren =
+  {
+    alternativesBBuildIdIndexRoute: alternativesBBuildIdIndexRoute,
+  }
+
+const alternativesBBuildIdRouteRouteWithChildren =
+  alternativesBBuildIdRouteRoute._addFileChildren(
+    alternativesBBuildIdRouteRouteChildren,
+  )
+
+interface alternativesIIssueIdRouteRouteChildren {
+  alternativesIIssueIdIndexRoute: typeof alternativesIIssueIdIndexRoute
+}
+
+const alternativesIIssueIdRouteRouteChildren: alternativesIIssueIdRouteRouteChildren =
+  {
+    alternativesIIssueIdIndexRoute: alternativesIIssueIdIndexRoute,
+  }
+
+const alternativesIIssueIdRouteRouteWithChildren =
+  alternativesIIssueIdRouteRoute._addFileChildren(
+    alternativesIIssueIdRouteRouteChildren,
+  )
+
+interface alternativesTTestIdRouteRouteChildren {
+  alternativesTTestIdIndexRoute: typeof alternativesTTestIdIndexRoute
+}
+
+const alternativesTTestIdRouteRouteChildren: alternativesTTestIdRouteRouteChildren =
+  {
+    alternativesTTestIdIndexRoute: alternativesTTestIdIndexRoute,
+  }
+
+const alternativesTTestIdRouteRouteWithChildren =
+  alternativesTTestIdRouteRoute._addFileChildren(
+    alternativesTTestIdRouteRouteChildren,
+  )
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/hardware': typeof HardwareRouteRouteWithChildren
   '/tree': typeof TreeRouteRouteWithChildren
-  '/t': typeof alternativesTRouteRouteWithChildren
   '/build/$buildId': typeof BuildBuildIdRouteRouteWithChildren
   '/hardware/$hardwareId': typeof HardwareHardwareIdRouteRouteWithChildren
   '/issue/$issueId': typeof IssueIssueIdRouteRouteWithChildren
@@ -771,56 +730,53 @@ export interface FileRoutesByFullPath {
   '/tree/$treeId': typeof TreeTreeIdRouteRouteWithChildren
   '/hardware/': typeof HardwareIndexRoute
   '/tree/': typeof TreeIndexRoute
-  '/t/$treeId': typeof alternativesTTreeIdRouteRouteWithChildren
+  '/b/$buildId': typeof alternativesBBuildIdRouteRouteWithChildren
+  '/i/$issueId': typeof alternativesIIssueIdRouteRouteWithChildren
+  '/t/$testId': typeof alternativesTTestIdRouteRouteWithChildren
   '/hardware/$hardwareId/boot': typeof HardwareHardwareIdBootRouteRouteWithChildren
   '/hardware/$hardwareId/build': typeof HardwareHardwareIdBuildRouteRouteWithChildren
   '/hardware/$hardwareId/test': typeof HardwareHardwareIdTestRouteRouteWithChildren
-  '/t/': typeof alternativesTIndexRoute
   '/build/$buildId/': typeof BuildBuildIdIndexRoute
   '/hardware/$hardwareId/': typeof HardwareHardwareIdIndexRoute
   '/issue/$issueId/': typeof IssueIssueIdIndexRoute
   '/test/$testId/': typeof TestTestIdIndexRoute
   '/tree/$treeId/': typeof TreeTreeIdIndexRoute
   '/tree/$treeId/test/$testId': typeof TreeTreeIdTestTestIdRouteRouteWithChildren
-  '/t/$treeId/': typeof alternativesTTreeIdIndexRoute
+  '/b/$buildId/': typeof alternativesBBuildIdIndexRoute
+  '/i/$issueId/': typeof alternativesIIssueIdIndexRoute
+  '/t/$testId/': typeof alternativesTTestIdIndexRoute
   '/hardware/$hardwareId/boot/': typeof HardwareHardwareIdBootIndexRoute
   '/hardware/$hardwareId/build/': typeof HardwareHardwareIdBuildIndexRoute
   '/hardware/$hardwareId/test/': typeof HardwareHardwareIdTestIndexRoute
   '/tree/$treeName/$branch': typeof TreeTreeNameBranchIndexRoute
-  '/t/$treeId/test/$testId': typeof alternativesTTreeIdTestTestIdRouteRouteWithChildren
-  '/t/$treeName/$branch': typeof alternativesTTreeNameBranchIndexRoute
   '/hardware/$hardwareId/boot/$bootId': typeof HardwareHardwareIdBootBootIdIndexRoute
   '/hardware/$hardwareId/build/$buildId': typeof HardwareHardwareIdBuildBuildIdIndexRoute
   '/hardware/$hardwareId/test/$testId': typeof HardwareHardwareIdTestTestIdIndexRoute
   '/tree/$treeId/build/$buildId': typeof TreeTreeIdBuildBuildIdIndexRoute
   '/tree/$treeId/test/$testId/': typeof TreeTreeIdTestTestIdIndexRoute
-  '/t/$treeId/build/$buildId': typeof alternativesTTreeIdBuildBuildIdIndexRoute
-  '/t/$treeId/test/$testId/': typeof alternativesTTreeIdTestTestIdIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/hardware': typeof HardwareIndexRoute
   '/tree': typeof TreeIndexRoute
-  '/t': typeof alternativesTIndexRoute
   '/build/$buildId': typeof BuildBuildIdIndexRoute
   '/hardware/$hardwareId': typeof HardwareHardwareIdIndexRoute
   '/issue/$issueId': typeof IssueIssueIdIndexRoute
   '/test/$testId': typeof TestTestIdIndexRoute
   '/tree/$treeId': typeof TreeTreeIdIndexRoute
-  '/t/$treeId': typeof alternativesTTreeIdIndexRoute
+  '/b/$buildId': typeof alternativesBBuildIdIndexRoute
+  '/i/$issueId': typeof alternativesIIssueIdIndexRoute
+  '/t/$testId': typeof alternativesTTestIdIndexRoute
   '/hardware/$hardwareId/boot': typeof HardwareHardwareIdBootIndexRoute
   '/hardware/$hardwareId/build': typeof HardwareHardwareIdBuildIndexRoute
   '/hardware/$hardwareId/test': typeof HardwareHardwareIdTestIndexRoute
   '/tree/$treeName/$branch': typeof TreeTreeNameBranchIndexRoute
-  '/t/$treeName/$branch': typeof alternativesTTreeNameBranchIndexRoute
   '/hardware/$hardwareId/boot/$bootId': typeof HardwareHardwareIdBootBootIdIndexRoute
   '/hardware/$hardwareId/build/$buildId': typeof HardwareHardwareIdBuildBuildIdIndexRoute
   '/hardware/$hardwareId/test/$testId': typeof HardwareHardwareIdTestTestIdIndexRoute
   '/tree/$treeId/build/$buildId': typeof TreeTreeIdBuildBuildIdIndexRoute
   '/tree/$treeId/test/$testId': typeof TreeTreeIdTestTestIdIndexRoute
-  '/t/$treeId/build/$buildId': typeof alternativesTTreeIdBuildBuildIdIndexRoute
-  '/t/$treeId/test/$testId': typeof alternativesTTreeIdTestTestIdIndexRoute
 }
 
 export interface FileRoutesById {
@@ -828,7 +784,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/hardware': typeof HardwareRouteRouteWithChildren
   '/tree': typeof TreeRouteRouteWithChildren
-  '/(alternatives)/t': typeof alternativesTRouteRouteWithChildren
   '/build/$buildId': typeof BuildBuildIdRouteRouteWithChildren
   '/hardware/$hardwareId': typeof HardwareHardwareIdRouteRouteWithChildren
   '/issue/$issueId': typeof IssueIssueIdRouteRouteWithChildren
@@ -836,31 +791,30 @@ export interface FileRoutesById {
   '/tree/$treeId': typeof TreeTreeIdRouteRouteWithChildren
   '/hardware/': typeof HardwareIndexRoute
   '/tree/': typeof TreeIndexRoute
-  '/(alternatives)/t/$treeId': typeof alternativesTTreeIdRouteRouteWithChildren
+  '/(alternatives)/b/$buildId': typeof alternativesBBuildIdRouteRouteWithChildren
+  '/(alternatives)/i/$issueId': typeof alternativesIIssueIdRouteRouteWithChildren
+  '/(alternatives)/t/$testId': typeof alternativesTTestIdRouteRouteWithChildren
   '/hardware/$hardwareId/boot': typeof HardwareHardwareIdBootRouteRouteWithChildren
   '/hardware/$hardwareId/build': typeof HardwareHardwareIdBuildRouteRouteWithChildren
   '/hardware/$hardwareId/test': typeof HardwareHardwareIdTestRouteRouteWithChildren
-  '/(alternatives)/t/': typeof alternativesTIndexRoute
   '/build/$buildId/': typeof BuildBuildIdIndexRoute
   '/hardware/$hardwareId/': typeof HardwareHardwareIdIndexRoute
   '/issue/$issueId/': typeof IssueIssueIdIndexRoute
   '/test/$testId/': typeof TestTestIdIndexRoute
   '/tree/$treeId/': typeof TreeTreeIdIndexRoute
   '/tree/$treeId/test/$testId': typeof TreeTreeIdTestTestIdRouteRouteWithChildren
-  '/(alternatives)/t/$treeId/': typeof alternativesTTreeIdIndexRoute
+  '/(alternatives)/b/$buildId/': typeof alternativesBBuildIdIndexRoute
+  '/(alternatives)/i/$issueId/': typeof alternativesIIssueIdIndexRoute
+  '/(alternatives)/t/$testId/': typeof alternativesTTestIdIndexRoute
   '/hardware/$hardwareId/boot/': typeof HardwareHardwareIdBootIndexRoute
   '/hardware/$hardwareId/build/': typeof HardwareHardwareIdBuildIndexRoute
   '/hardware/$hardwareId/test/': typeof HardwareHardwareIdTestIndexRoute
   '/tree/$treeName/$branch/': typeof TreeTreeNameBranchIndexRoute
-  '/(alternatives)/t/$treeId/test/$testId': typeof alternativesTTreeIdTestTestIdRouteRouteWithChildren
-  '/(alternatives)/t/$treeName/$branch/': typeof alternativesTTreeNameBranchIndexRoute
   '/hardware/$hardwareId/boot/$bootId/': typeof HardwareHardwareIdBootBootIdIndexRoute
   '/hardware/$hardwareId/build/$buildId/': typeof HardwareHardwareIdBuildBuildIdIndexRoute
   '/hardware/$hardwareId/test/$testId/': typeof HardwareHardwareIdTestTestIdIndexRoute
   '/tree/$treeId/build/$buildId/': typeof TreeTreeIdBuildBuildIdIndexRoute
   '/tree/$treeId/test/$testId/': typeof TreeTreeIdTestTestIdIndexRoute
-  '/(alternatives)/t/$treeId/build/$buildId/': typeof alternativesTTreeIdBuildBuildIdIndexRoute
-  '/(alternatives)/t/$treeId/test/$testId/': typeof alternativesTTreeIdTestTestIdIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -869,7 +823,6 @@ export interface FileRouteTypes {
     | '/'
     | '/hardware'
     | '/tree'
-    | '/t'
     | '/build/$buildId'
     | '/hardware/$hardwareId'
     | '/issue/$issueId'
@@ -877,61 +830,57 @@ export interface FileRouteTypes {
     | '/tree/$treeId'
     | '/hardware/'
     | '/tree/'
-    | '/t/$treeId'
+    | '/b/$buildId'
+    | '/i/$issueId'
+    | '/t/$testId'
     | '/hardware/$hardwareId/boot'
     | '/hardware/$hardwareId/build'
     | '/hardware/$hardwareId/test'
-    | '/t/'
     | '/build/$buildId/'
     | '/hardware/$hardwareId/'
     | '/issue/$issueId/'
     | '/test/$testId/'
     | '/tree/$treeId/'
     | '/tree/$treeId/test/$testId'
-    | '/t/$treeId/'
+    | '/b/$buildId/'
+    | '/i/$issueId/'
+    | '/t/$testId/'
     | '/hardware/$hardwareId/boot/'
     | '/hardware/$hardwareId/build/'
     | '/hardware/$hardwareId/test/'
     | '/tree/$treeName/$branch'
-    | '/t/$treeId/test/$testId'
-    | '/t/$treeName/$branch'
     | '/hardware/$hardwareId/boot/$bootId'
     | '/hardware/$hardwareId/build/$buildId'
     | '/hardware/$hardwareId/test/$testId'
     | '/tree/$treeId/build/$buildId'
     | '/tree/$treeId/test/$testId/'
-    | '/t/$treeId/build/$buildId'
-    | '/t/$treeId/test/$testId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/hardware'
     | '/tree'
-    | '/t'
     | '/build/$buildId'
     | '/hardware/$hardwareId'
     | '/issue/$issueId'
     | '/test/$testId'
     | '/tree/$treeId'
-    | '/t/$treeId'
+    | '/b/$buildId'
+    | '/i/$issueId'
+    | '/t/$testId'
     | '/hardware/$hardwareId/boot'
     | '/hardware/$hardwareId/build'
     | '/hardware/$hardwareId/test'
     | '/tree/$treeName/$branch'
-    | '/t/$treeName/$branch'
     | '/hardware/$hardwareId/boot/$bootId'
     | '/hardware/$hardwareId/build/$buildId'
     | '/hardware/$hardwareId/test/$testId'
     | '/tree/$treeId/build/$buildId'
     | '/tree/$treeId/test/$testId'
-    | '/t/$treeId/build/$buildId'
-    | '/t/$treeId/test/$testId'
   id:
     | '__root__'
     | '/'
     | '/hardware'
     | '/tree'
-    | '/(alternatives)/t'
     | '/build/$buildId'
     | '/hardware/$hardwareId'
     | '/issue/$issueId'
@@ -939,31 +888,30 @@ export interface FileRouteTypes {
     | '/tree/$treeId'
     | '/hardware/'
     | '/tree/'
-    | '/(alternatives)/t/$treeId'
+    | '/(alternatives)/b/$buildId'
+    | '/(alternatives)/i/$issueId'
+    | '/(alternatives)/t/$testId'
     | '/hardware/$hardwareId/boot'
     | '/hardware/$hardwareId/build'
     | '/hardware/$hardwareId/test'
-    | '/(alternatives)/t/'
     | '/build/$buildId/'
     | '/hardware/$hardwareId/'
     | '/issue/$issueId/'
     | '/test/$testId/'
     | '/tree/$treeId/'
     | '/tree/$treeId/test/$testId'
-    | '/(alternatives)/t/$treeId/'
+    | '/(alternatives)/b/$buildId/'
+    | '/(alternatives)/i/$issueId/'
+    | '/(alternatives)/t/$testId/'
     | '/hardware/$hardwareId/boot/'
     | '/hardware/$hardwareId/build/'
     | '/hardware/$hardwareId/test/'
     | '/tree/$treeName/$branch/'
-    | '/(alternatives)/t/$treeId/test/$testId'
-    | '/(alternatives)/t/$treeName/$branch/'
     | '/hardware/$hardwareId/boot/$bootId/'
     | '/hardware/$hardwareId/build/$buildId/'
     | '/hardware/$hardwareId/test/$testId/'
     | '/tree/$treeId/build/$buildId/'
     | '/tree/$treeId/test/$testId/'
-    | '/(alternatives)/t/$treeId/build/$buildId/'
-    | '/(alternatives)/t/$treeId/test/$testId/'
   fileRoutesById: FileRoutesById
 }
 
@@ -971,20 +919,24 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HardwareRouteRoute: typeof HardwareRouteRouteWithChildren
   TreeRouteRoute: typeof TreeRouteRouteWithChildren
-  alternativesTRouteRoute: typeof alternativesTRouteRouteWithChildren
   BuildBuildIdRouteRoute: typeof BuildBuildIdRouteRouteWithChildren
   IssueIssueIdRouteRoute: typeof IssueIssueIdRouteRouteWithChildren
   TestTestIdRouteRoute: typeof TestTestIdRouteRouteWithChildren
+  alternativesBBuildIdRouteRoute: typeof alternativesBBuildIdRouteRouteWithChildren
+  alternativesIIssueIdRouteRoute: typeof alternativesIIssueIdRouteRouteWithChildren
+  alternativesTTestIdRouteRoute: typeof alternativesTTestIdRouteRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HardwareRouteRoute: HardwareRouteRouteWithChildren,
   TreeRouteRoute: TreeRouteRouteWithChildren,
-  alternativesTRouteRoute: alternativesTRouteRouteWithChildren,
   BuildBuildIdRouteRoute: BuildBuildIdRouteRouteWithChildren,
   IssueIssueIdRouteRoute: IssueIssueIdRouteRouteWithChildren,
   TestTestIdRouteRoute: TestTestIdRouteRouteWithChildren,
+  alternativesBBuildIdRouteRoute: alternativesBBuildIdRouteRouteWithChildren,
+  alternativesIIssueIdRouteRoute: alternativesIIssueIdRouteRouteWithChildren,
+  alternativesTTestIdRouteRoute: alternativesTTestIdRouteRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -1000,10 +952,12 @@ export const routeTree = rootRoute
         "/",
         "/hardware",
         "/tree",
-        "/(alternatives)/t",
         "/build/$buildId",
         "/issue/$issueId",
-        "/test/$testId"
+        "/test/$testId",
+        "/(alternatives)/b/$buildId",
+        "/(alternatives)/i/$issueId",
+        "/(alternatives)/t/$testId"
       ]
     },
     "/": {
@@ -1022,14 +976,6 @@ export const routeTree = rootRoute
         "/tree/$treeId",
         "/tree/",
         "/tree/$treeName/$branch/"
-      ]
-    },
-    "/(alternatives)/t": {
-      "filePath": "(alternatives)/t/route.tsx",
-      "children": [
-        "/(alternatives)/t/$treeId",
-        "/(alternatives)/t/",
-        "/(alternatives)/t/$treeName/$branch/"
       ]
     },
     "/build/$buildId": {
@@ -1077,13 +1023,22 @@ export const routeTree = rootRoute
       "filePath": "tree/index.tsx",
       "parent": "/tree"
     },
-    "/(alternatives)/t/$treeId": {
-      "filePath": "(alternatives)/t/$treeId/route.tsx",
-      "parent": "/(alternatives)/t",
+    "/(alternatives)/b/$buildId": {
+      "filePath": "(alternatives)/b/$buildId/route.tsx",
       "children": [
-        "/(alternatives)/t/$treeId/",
-        "/(alternatives)/t/$treeId/test/$testId",
-        "/(alternatives)/t/$treeId/build/$buildId/"
+        "/(alternatives)/b/$buildId/"
+      ]
+    },
+    "/(alternatives)/i/$issueId": {
+      "filePath": "(alternatives)/i/$issueId/route.tsx",
+      "children": [
+        "/(alternatives)/i/$issueId/"
+      ]
+    },
+    "/(alternatives)/t/$testId": {
+      "filePath": "(alternatives)/t/$testId/route.tsx",
+      "children": [
+        "/(alternatives)/t/$testId/"
       ]
     },
     "/hardware/$hardwareId/boot": {
@@ -1109,10 +1064,6 @@ export const routeTree = rootRoute
         "/hardware/$hardwareId/test/",
         "/hardware/$hardwareId/test/$testId/"
       ]
-    },
-    "/(alternatives)/t/": {
-      "filePath": "(alternatives)/t/index.tsx",
-      "parent": "/(alternatives)/t"
     },
     "/build/$buildId/": {
       "filePath": "build/$buildId/index.tsx",
@@ -1141,9 +1092,17 @@ export const routeTree = rootRoute
         "/tree/$treeId/test/$testId/"
       ]
     },
-    "/(alternatives)/t/$treeId/": {
-      "filePath": "(alternatives)/t/$treeId/index.tsx",
-      "parent": "/(alternatives)/t/$treeId"
+    "/(alternatives)/b/$buildId/": {
+      "filePath": "(alternatives)/b/$buildId/index.tsx",
+      "parent": "/(alternatives)/b/$buildId"
+    },
+    "/(alternatives)/i/$issueId/": {
+      "filePath": "(alternatives)/i/$issueId/index.tsx",
+      "parent": "/(alternatives)/i/$issueId"
+    },
+    "/(alternatives)/t/$testId/": {
+      "filePath": "(alternatives)/t/$testId/index.tsx",
+      "parent": "/(alternatives)/t/$testId"
     },
     "/hardware/$hardwareId/boot/": {
       "filePath": "hardware/$hardwareId/boot/index.tsx",
@@ -1160,17 +1119,6 @@ export const routeTree = rootRoute
     "/tree/$treeName/$branch/": {
       "filePath": "tree/$treeName/$branch/index.tsx",
       "parent": "/tree"
-    },
-    "/(alternatives)/t/$treeId/test/$testId": {
-      "filePath": "(alternatives)/t/$treeId/test/$testId/route.tsx",
-      "parent": "/(alternatives)/t/$treeId",
-      "children": [
-        "/(alternatives)/t/$treeId/test/$testId/"
-      ]
-    },
-    "/(alternatives)/t/$treeName/$branch/": {
-      "filePath": "(alternatives)/t/$treeName/$branch/index.tsx",
-      "parent": "/(alternatives)/t"
     },
     "/hardware/$hardwareId/boot/$bootId/": {
       "filePath": "hardware/$hardwareId/boot/$bootId/index.tsx",
@@ -1191,14 +1139,6 @@ export const routeTree = rootRoute
     "/tree/$treeId/test/$testId/": {
       "filePath": "tree/$treeId/test/$testId/index.tsx",
       "parent": "/tree/$treeId/test/$testId"
-    },
-    "/(alternatives)/t/$treeId/build/$buildId/": {
-      "filePath": "(alternatives)/t/$treeId/build/$buildId/index.tsx",
-      "parent": "/(alternatives)/t/$treeId"
-    },
-    "/(alternatives)/t/$treeId/test/$testId/": {
-      "filePath": "(alternatives)/t/$treeId/test/$testId/index.tsx",
-      "parent": "/(alternatives)/t/$treeId/test/$testId"
     }
   }
 }
