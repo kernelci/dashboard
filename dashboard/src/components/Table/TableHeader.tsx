@@ -68,7 +68,7 @@ export const TableHeader = <T,>({
           <TooltipTrigger className="ml-2">
             <LiaQuestionCircle />
           </TooltipTrigger>
-          <TooltipContent className="font-normal">
+          <TooltipContent className="font-normal whitespace-pre-line">
             <FormattedMessage id={tooltipId} values={formattedBreakLineValue} />
           </TooltipContent>
         </Tooltip>
