@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List, Tuple, TypedDict, Literal, Any, Union
+from typing import Optional, Dict, List, Tuple, TypedDict, Literal, Any, Union, Callable
 from django.http import HttpResponseBadRequest
 import re
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
@@ -249,6 +249,28 @@ def toIntOrDefault(value, default):
         return default
 
 
+type FilterFields = Literal[
+    "boot.status",
+    "boot.duration",
+    "test.status",
+    "test.duration",
+    "duration",
+    "config_name",
+    "compiler",
+    "architecture",
+    "valid",
+    "test.hardware",
+    "test.path",
+    "boot.path",
+    "build.issue",
+    "boot.issue",
+    "test.issue",
+    "boot.platform",
+    "test.platform",
+]
+type FilterHandlers = dict[FilterFields, Callable]
+
+
 class InvalidComparisonOP(
     Exception,
 ):
@@ -309,7 +331,7 @@ class FilterParams:
             "test": set(),
         }
 
-        self.filter_handlers = {
+        self.filter_handlers: FilterHandlers = {
             "boot.status": self._handle_boot_status,
             "boot.duration": self._handle_boot_duration,
             "test.status": self._handle_test_status,
