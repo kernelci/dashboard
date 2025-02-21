@@ -10,4 +10,5 @@ export type TableKeys =
   | 'hardwareDetailsTrees'
   | 'buildDetailsTests'
   | 'issueDetailsTests'
-  | 'issueDetailsBuilds';
+  | 'issueDetailsBuilds'
+  | 'issueListing';

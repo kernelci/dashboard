@@ -175,6 +175,7 @@ export const messages = {
     'global.tests': 'Tests',
     'global.timeAgo': '{time} ago',
     'global.tree': 'Tree',
+    'global.treeBranch': 'Tree / Branch',
     'global.trees': 'Trees',
     'global.underDevelopment': 'Under Development',
     'global.unknown': 'Unknown',
@@ -200,11 +201,11 @@ export const messages = {
     'hardwareDetails.platforms': 'Platforms',
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
-    'hardwareDetails.treeBranch': 'Tree / Branch',
     'issue.alsoPresentTooltip': 'Issue also present in {tree}',
     'issue.firstSeen': 'First seen',
     'issue.newIssue': 'New issue: This is the first time this issue was seen',
     'issue.noIssueFound': 'No issue found.',
+    'issue.searchPlaceholder': 'Search by issue comment with a regex',
     'issue.tooltip':
       'Issues groups several builds or tests by matching result status and logs.{br}They may also be linked to an external issue tracker or mailing list discussion.',
     'issue.uncategorized': 'Uncategorized',
@@ -223,6 +224,8 @@ export const messages = {
     'issueDetails.reportSubject': 'Report Subject',
     'issueDetails.reportUrl': 'Report URL',
     'issueDetails.version': 'Version',
+    'issueListing.treeBranchTooltip':
+      'The tree name and git repository branch of the first incident\nClick a cell to see details of that checkout',
     'jsonSheet.title': 'JSON Viewer',
     'logSheet.downloadLog': 'You can download the full log here: {link}',
     'logSheet.fileName': 'File Name',
@@ -236,6 +239,7 @@ export const messages = {
     'routes.buildDetails': 'Build',
     'routes.hardwareMonitor': 'Hardware',
     'routes.issueDetails': 'Issue',
+    'routes.issueMonitor': 'Issues',
     'routes.sendFeedback': 'Send us Feedback',
     'routes.sendFeedbackMsg':
       'Thank you for your feedback!\nWe greatly appreciate your input. You are welcome to send us the feedback via email or by creating an issue on our GitHub repository.',

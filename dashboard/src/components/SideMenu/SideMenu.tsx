@@ -2,6 +2,8 @@ import { useMemo, type JSX } from 'react';
 
 import { MdOutlineMonitorHeart } from 'react-icons/md';
 
+import { RxRadiobutton } from 'react-icons/rx';
+
 import { ImTree } from 'react-icons/im';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
@@ -82,6 +84,12 @@ const SideMenu = (): JSX.Element => {
       navigateTo: '/hardware',
       idIntl: 'routes.hardwareMonitor',
       icon: <MdOutlineMonitorHeart className="size-5" />,
+      selected: false,
+    },
+    {
+      navigateTo: '/issue',
+      idIntl: 'routes.issueMonitor',
+      icon: <RxRadiobutton className="size-5" />,
       selected: false,
     },
   ];

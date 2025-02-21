@@ -6,45 +6,25 @@ import { MdArrowBackIos, MdArrowForwardIos } from 'react-icons/md';
 
 import { useCallback, useMemo, type JSX } from 'react';
 
-import type {
-  AccordionItemBuilds,
-  TestByCommitHash,
-} from '@/types/tree/TreeDetails';
-
 import { ItemsPerPageValues } from '@/utils/constants/general';
-
-import type { TPathTests } from '@/types/general';
 
 import type { MessagesKey } from '@/locales/messages';
 
-import type { TreeTableBody } from '@/types/tree/Tree';
-
-import type { HardwareTableItem } from '@/types/hardware';
-
 import { Button } from '@/components/ui/button';
-import type { PreparedTrees, Trees } from '@/types/hardware/hardwareDetails';
 
 import { ItemsPerPageSelector } from './TableInfo';
 
-interface IPaginationInfo {
-  //TODO Use Generic
-  table:
-    | Table<TestByCommitHash>
-    | Table<TPathTests>
-    | Table<AccordionItemBuilds>
-    | Table<TreeTableBody>
-    | Table<HardwareTableItem>
-    | Table<PreparedTrees>
-    | Table<Trees>;
+interface IPaginationInfo<T> {
+  table: Table<T>;
   intlLabel: MessagesKey;
   onPaginationChange?: (pageSize: number) => void;
 }
 
-export function PaginationInfo({
+export function PaginationInfo<T>({
   table,
   intlLabel,
   onPaginationChange,
-}: IPaginationInfo): JSX.Element {
+}: IPaginationInfo<T>): JSX.Element {
   const buttonsClassName = 'text-blue font-bold';
 
   const filteredRowModel = table.getFilteredRowModel();

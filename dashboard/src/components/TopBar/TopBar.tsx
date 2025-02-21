@@ -19,6 +19,8 @@ const getTargetPath = (basePath: string): PossibleMonitorPath => {
       return '/tree';
     case 'hardware':
       return '/hardware';
+    case 'issue':
+      return '/issue';
     default:
       return '/tree';
   }
@@ -100,9 +102,9 @@ const TopBar = (): JSX.Element => {
         <span className="mr-14 text-2xl">
           <TitleName basePath={basePath} />
         </span>
-        {(basePath === 'tree' || basePath === 'hardware') && (
-          <OriginSelect basePath={basePath} />
-        )}
+        {(basePath === 'tree' ||
+          basePath === 'hardware' ||
+          basePath === 'issue') && <OriginSelect basePath={basePath} />}
       </div>
     </div>
   );

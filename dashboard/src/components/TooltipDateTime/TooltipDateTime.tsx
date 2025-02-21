@@ -47,13 +47,13 @@ const TooltipDateTime = ({
     <Tooltip>
       <TooltipTrigger>
         {showRelative ? (
-          <>
+          <div className="text-start">
             {message && <span className="pl-2">{message}</span>}
             <FormattedMessage
               id="global.timeAgo"
               values={{ time: formatDistanceToNow(dateObj) }}
             />
-          </>
+          </div>
         ) : (
           <span>
             {date} {showLabelTime ? time : ''} {showLabelTZ ? tz : ''}

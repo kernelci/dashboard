@@ -1,6 +1,6 @@
 import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useCallback, useMemo, useState, type JSX } from 'react';
+import { useMemo, useState, type JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 
@@ -36,11 +36,11 @@ import { BranchBadge } from '@/components/Badge/BranchBadge';
 import { getLogspecSection } from '@/components/Section/LogspecSection';
 import { getFirstIncidentSection } from '@/components/Section/FirstIncidentSection';
 
-import type { TIssueDetails } from '@/types/issueDetails';
-
 import PageWithTitle from '@/components/PageWithTitle';
 
 import { getTitle } from '@/utils/utils';
+
+import { IssueCulprit } from '@/components/Issue/IssueCulprit';
 
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 
@@ -56,11 +56,6 @@ interface IIssueDetails {
   getBuildTableRowLink: (testId: string) => LinkProps;
   breadcrumb?: JSX.Element;
 }
-
-type CulpritIssue = Pick<
-  TIssueDetails,
-  'culprit_code' | 'culprit_harness' | 'culprit_tool'
->;
 
 export const IssueDetails = ({
   issueId,
@@ -80,25 +75,6 @@ export const IssueDetails = ({
   const { formatMessage } = useIntl();
 
   const [jsonContent, setJsonContent] = useState<IJsonContent>();
-
-  const getCulpritValue = useCallback(
-    ({ culprit_code, culprit_harness, culprit_tool }: CulpritIssue): string => {
-      const result: string[] = [];
-
-      if (culprit_code) {
-        result.push(formatMessage({ id: 'issueDetails.culpritCode' }));
-      }
-      if (culprit_harness) {
-        result.push(formatMessage({ id: 'issueDetails.culpritHarness' }));
-      }
-      if (culprit_tool) {
-        result.push(formatMessage({ id: 'issueDetails.culpritTool' }));
-      }
-
-      return valueOrEmpty(result.join(', '));
-    },
-    [formatMessage],
-  );
 
   const miscSection: ISection | undefined = useMemo(():
     | ISection
@@ -176,7 +152,13 @@ export const IssueDetails = ({
               },
               {
                 title: 'issueDetails.culpritTitle',
-                linkText: getCulpritValue(data),
+                linkText: (
+                  <IssueCulprit
+                    culprit_code={data.culprit_code}
+                    culprit_harness={data.culprit_harness}
+                    culprit_tool={data.culprit_tool}
+                  />
+                ),
               },
               {
                 title: 'issueDetails.id',
@@ -191,7 +173,7 @@ export const IssueDetails = ({
         ],
       },
     ];
-  }, [data, tagPills, formatMessage, getCulpritValue]);
+  }, [data, tagPills, formatMessage]);
 
   const sectionsData: ISection[] = useMemo(() => {
     return [
