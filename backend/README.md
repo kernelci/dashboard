@@ -49,6 +49,15 @@ endpoints using the built-in `requests` library from python. Because of that, it
 the server for the django tests to be performed. When running pytest with the server offline, all django 
 tests will be skipped.
 
+Also, since django tests might be slow (depending on the endpoint you are requesting, each test case
+can take between 1.5s and 5s) we added a new command-line flag to run all test cases. By default, only a
+subset of tests cases is run to save time, especially during push. To run all test cases, use the
+`--run-all` flag:
+
+```sh
+poetry run pytest --run-all
+```
+
 # Deploy instructions
 
 To check if it is ready for a deploy you can run 
