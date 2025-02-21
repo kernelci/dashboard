@@ -3,7 +3,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
-from kernelCI_app.utils import getQueryTimeInterval
+from kernelCI_app.utils import get_query_time_interval
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
@@ -77,7 +77,7 @@ class TreeView(APIView):
 
         params = {
             "origin_param": origin_param,
-            "interval_param": getQueryTimeInterval(**interval_days_data).timestamp(),
+            "interval_param": get_query_time_interval(**interval_days_data).timestamp(),
         }
 
         # '1 as id' is necessary in this case because django raw queries must include the primary key.

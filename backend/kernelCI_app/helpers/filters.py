@@ -4,7 +4,7 @@ import re
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.typeModels.databases import PASS_STATUS, failure_status_list
-from kernelCI_app.utils import getErrorResponseBody
+from kernelCI_app.utils import get_error_body_response
 from kernelCI_app.constants.general import UNKNOWN_STRING
 
 NULL_STRINGS = set(["null", UNKNOWN_STRING, "NULL"])
@@ -242,14 +242,14 @@ def should_increment_build_issue(
     return (issue_id, issue_version, result)
 
 
-def toIntOrDefault(value, default):
+def to_int_or_default(value, default):
     try:
         return int(value)
     except ValueError:
         return default
 
 
-class InvalidComparisonOP(
+class InvalidComparisonOPError(
     Exception,
 ):
     pass
@@ -335,7 +335,7 @@ class FilterParams:
         else:
             self.create_filters_from_req(data)
 
-        self._processFilters()
+        self._process_filters()
 
     def _handle_boot_status(self, current_filter: ParsedFilter) -> None:
         self.filterBootStatus.add(current_filter["value"])
@@ -344,9 +344,9 @@ class FilterParams:
         value = current_filter["value"]
         operation = current_filter["comparison_op"]
         if operation == "lte":
-            self.filterBootDurationMax = toIntOrDefault(value, None)
+            self.filterBootDurationMax = to_int_or_default(value, None)
         else:
-            self.filterBootDurationMin = toIntOrDefault(value, None)
+            self.filterBootDurationMin = to_int_or_default(value, None)
 
     def _handle_test_status(self, current_filter: ParsedFilter) -> None:
         self.filterTestStatus.add(current_filter["value"])
@@ -355,9 +355,9 @@ class FilterParams:
         value = current_filter["value"]
         operation = current_filter["comparison_op"]
         if operation == "lte":
-            self.filterTestDurationMax = toIntOrDefault(value, None)
+            self.filterTestDurationMax = to_int_or_default(value, None)
         else:
-            self.filterTestDurationMin = toIntOrDefault(value, None)
+            self.filterTestDurationMin = to_int_or_default(value, None)
 
     def _handle_config_name(self, current_filter: ParsedFilter) -> None:
         self.filterConfigs.add(current_filter["value"])
@@ -384,9 +384,9 @@ class FilterParams:
         value = current_filter["value"][0]
         operation = current_filter["comparison_op"]
         if operation == "lte":
-            self.filterBuildDurationMax = toIntOrDefault(value, None)
+            self.filterBuildDurationMax = to_int_or_default(value, None)
         else:
-            self.filterBuildDurationMin = toIntOrDefault(value, None)
+            self.filterBuildDurationMin = to_int_or_default(value, None)
 
     def _handle_issues(self, current_filter: ParsedFilter) -> None:
         tab = current_filter["field"].split(".")[0]
@@ -404,15 +404,15 @@ class FilterParams:
         tab = current_filter["field"].split(".")[0]
         self.filterPlatforms[tab].add(current_filter["value"])
 
-    def _processFilters(self):
+    def _process_filters(self):
         try:
             for current_filter in self.filters:
                 field = current_filter["field"]
                 # Delegate to the appropriate handler based on the field
                 if field in self.filter_handlers:
                     self.filter_handlers[field](current_filter)
-        except InvalidComparisonOP as e:
-            return HttpResponseBadRequest(getErrorResponseBody(str(e)))
+        except InvalidComparisonOPError as e:
+            return HttpResponseBadRequest(get_error_body_response(str(e)))
 
     def create_filters_from_body(self, body: Dict):
         filters = body.get("filter", {})
@@ -486,7 +486,7 @@ class FilterParams:
 
     def validate_comparison_op(self, op):
         if op not in self.comparison_ops.keys():
-            raise InvalidComparisonOP(
+            raise InvalidComparisonOPError(
                 f"Filter with invalid comparison operator `{op}` found`"
             )
 
@@ -535,11 +535,11 @@ class FilterParams:
             )
             or (
                 self.filterBuildDurationMax is not None
-                and (toIntOrDefault(duration, 0) > self.filterBuildDurationMax)
+                and (to_int_or_default(duration, 0) > self.filterBuildDurationMax)
             )
             or (
                 self.filterBuildDurationMin is not None
-                and (toIntOrDefault(duration, 0) < self.filterBuildDurationMin)
+                and (to_int_or_default(duration, 0) < self.filterBuildDurationMin)
             )
             or (
                 should_filter_build_issue(
@@ -621,11 +621,11 @@ class FilterParams:
             )
             or (
                 self.filterBootDurationMax is not None
-                and (toIntOrDefault(duration, 0) > self.filterBootDurationMax)
+                and (to_int_or_default(duration, 0) > self.filterBootDurationMax)
             )
             or (
                 self.filterBootDurationMin is not None
-                and (toIntOrDefault(duration, 0) < self.filterBootDurationMin)
+                and (to_int_or_default(duration, 0) < self.filterBootDurationMin)
             )
             or should_filter_test_issue(
                 issue_filters=self.filterIssues["boot"],
@@ -668,11 +668,11 @@ class FilterParams:
             )
             or (
                 self.filterTestDurationMax is not None
-                and (toIntOrDefault(duration, 0) > self.filterTestDurationMax)
+                and (to_int_or_default(duration, 0) > self.filterTestDurationMax)
             )
             or (
                 self.filterTestDurationMin is not None
-                and (toIntOrDefault(duration, 0) < self.filterTestDurationMin)
+                and (to_int_or_default(duration, 0) < self.filterTestDurationMin)
             )
             or should_filter_test_issue(
                 issue_filters=self.filterIssues["test"],

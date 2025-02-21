@@ -7,9 +7,9 @@ def sanitize_details_issues_rows(*, rows) -> list[Issue]:
     for row in rows:
         issue_id = row["id"]
         issue_version = row["version"]
-        currentIssue = result.get((issue_id, issue_version))
-        if currentIssue:
-            currentIssue["incidents_info"]["incidentsCount"] += 1
+        current_issue = result.get((issue_id, issue_version))
+        if current_issue:
+            current_issue["incidents_info"]["incidentsCount"] += 1
         else:
             result[(issue_id, issue_version)] = create_issue(
                 issue_id=issue_id,

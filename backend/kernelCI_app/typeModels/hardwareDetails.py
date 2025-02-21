@@ -31,24 +31,24 @@ class DefaultRecordValues(BaseModel):
 
 class HardwareDetailsPostBody(BaseModel):
     origin: str = Field(default="maestro")
-    startTimestampInSeconds: Union[str, int]
-    endTimestampInSeconds: Union[str, int]
-    selectedCommits: Dict[str, str]
+    startTimestampInSeconds: Union[str, int]  # noqa: N815
+    endTimestampInSeconds: Union[str, int]  # noqa: N815
+    selectedCommits: Dict[str, str]  # noqa: N815
     filter: Optional[Dict]
 
 
 class CommitHead(BaseModel):
-    treeName: str
-    repositoryUrl: str
-    branch: str
-    commitHash: str
+    treeName: str  # noqa: N815
+    repositoryUrl: str  # noqa: N815
+    branch: str  # noqa: N815
+    commitHash: str  # noqa: N815
 
 
 class CommitHistoryPostBody(BaseModel):
     origin: str = Field(default="maestro")
-    startTimestampInSeconds: Union[str, int]
-    endTimestampInSeconds: Union[str, int]
-    commitHeads: List[CommitHead]
+    startTimestampInSeconds: Union[str, int]  # noqa: N815
+    endTimestampInSeconds: Union[str, int]  # noqa: N815
+    commitHeads: List[CommitHead]  # noqa: N815
 
 
 class CommitHistoryValidCheckout(BaseModel):

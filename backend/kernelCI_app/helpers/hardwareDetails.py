@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import json
 from typing import Dict, List, Literal, Optional, Set
 
-from kernelCI_app.cache import getQueryCache, setQueryCache
+from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.constants.general import (
     UNCATEGORIZED_STRING,
     MAESTRO_DUMMY_BUILD_PREFIX,
@@ -92,7 +92,7 @@ def get_hardware_trees_data(
         "end_datetime": end_datetime,
     }
 
-    trees: List[Tree] = getQueryCache(cache_key, trees_cache_params)
+    trees: List[Tree] = get_query_cache(cache_key, trees_cache_params)
 
     if not trees:
         # We need a subquery because if we filter by any hardware, it will get the
@@ -149,7 +149,7 @@ def get_hardware_trees_data(
                 )
             )
 
-        setQueryCache(cache_key, trees_cache_params, trees)
+        set_query_cache(cache_key, trees_cache_params, trees)
 
     return trees
 
@@ -219,7 +219,7 @@ def get_hardware_details_data(
         "end_date": end_datetime,
     }
 
-    records = getQueryCache(cache_key, tests_cache_params)
+    records = get_query_cache(cache_key, tests_cache_params)
 
     if not records:
         records = query_records(
@@ -229,7 +229,7 @@ def get_hardware_details_data(
             start_date=start_datetime,
             end_date=end_datetime,
         )
-        setQueryCache(cache_key, tests_cache_params, records)
+        set_query_cache(cache_key, tests_cache_params, records)
 
     return records
 
@@ -522,12 +522,12 @@ def handle_test_or_boot(record: Dict, task: Dict) -> None:
         task["platformsFailing"].add(test_platform)
         task["failReasons"][extract_error_message(record["misc"])] += 1
 
-    archKey = f'{record["build__architecture"]}{record["build__compiler"]}'
-    archSummary = task["archSummary"].get(archKey)
-    if not archSummary:
-        archSummary = get_arch_summary(record)
-        task["archSummary"][archKey] = archSummary
-    archSummary["status"][status] += 1
+    arch_key = f'{record["build__architecture"]}{record["build__compiler"]}'
+    arch_summary = task["archSummary"].get(arch_key)
+    if not arch_summary:
+        arch_summary = get_arch_summary(record)
+        task["archSummary"][arch_key] = arch_summary
+    arch_summary["status"][status] += 1
 
     update_issues(
         issue_id=record["incidents__issue__id"],

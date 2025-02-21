@@ -54,26 +54,26 @@ def convert_issues_dict_to_list_typed(*, issues_dict: IssueDict) -> List[Issue]:
 
 # TODO misc is not stable and should be used as a POC only
 def extract_error_message(misc: Union[str, dict, None]):
-    parsedEnv = None
+    parsed_env = None
     if misc is None:
         return "unknown error"
     elif isinstance(misc, dict):
-        parsedEnv = misc
+        parsed_env = misc
     else:
-        parsedEnv = json.loads(misc)
-    error_message = parsedEnv.get("error_msg")
+        parsed_env = json.loads(misc)
+    error_message = parsed_env.get("error_msg")
     if error_message:
         return error_message
     return "unknown error"
 
 
-def getQueryTimeInterval(**kwargs):
+def get_query_time_interval(**kwargs):
     if not kwargs:
         return timezone.now() - timedelta(**DEFAULT_QUERY_TIME_INTERVAL)
     return timezone.now() - timedelta(**kwargs)
 
 
-def getErrorResponseBody(reason: str) -> bytes:
+def get_error_body_response(reason: str) -> bytes:
     return json.dumps({"error": True, "reason": reason}).encode("utf-8")
 
 

@@ -1,9 +1,9 @@
 from typing import Union
 from django.http import HttpResponseBadRequest
-from kernelCI_app.utils import getErrorResponseBody
+from kernelCI_app.utils import get_error_body_response
 
 
-def isBooleanOrStringTrue(value: Union[bool, str]) -> bool:
+def is_boolean_or_string_true(value: Union[bool, str]) -> bool:
     if isinstance(value, bool):
         return value
     elif isinstance(value, str):
@@ -16,5 +16,5 @@ def validate_required_params(request, required_params: list[str]):
     for p in required_params:
         if not request.GET.get(p):
             return HttpResponseBadRequest(
-                getErrorResponseBody(f"missing required field `{p}`")
+                get_error_body_response(f"missing required field `{p}`")
             )

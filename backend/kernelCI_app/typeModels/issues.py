@@ -12,7 +12,7 @@ from kernelCI_app.typeModels.databases import (
 
 
 class IncidentInfo(BaseModel):
-    incidentsCount: int
+    incidentsCount: int  # noqa: N815
 
 
 class IssueKeys(BaseModel):

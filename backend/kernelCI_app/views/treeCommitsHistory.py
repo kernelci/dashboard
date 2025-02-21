@@ -4,7 +4,7 @@ from http import HTTPStatus
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
     FilterParams,
-    InvalidComparisonOP,
+    InvalidComparisonOPError,
 )
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING, UNKNOWN_STRING
 from kernelCI_app.helpers.logger import log_message
@@ -393,7 +393,7 @@ class TreeCommitsHistory(APIView):
         try:
             self.filterParams = FilterParams(request)
             self.setup_filters()
-        except InvalidComparisonOP as e:
+        except InvalidComparisonOPError as e:
             return create_api_error_response(error_message=str(e))
 
         self.field_values = {

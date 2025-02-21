@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from kernelCI_app.cache import runCacheInvalidator
+from kernelCI_app.cache import run_cache_invalidator
 
 
 class KernelciAppConfig(AppConfig):
@@ -7,5 +7,5 @@ class KernelciAppConfig(AppConfig):
     name = "kernelCI_app"
 
     def ready(self) -> None:
-        runCacheInvalidator()
+        run_cache_invalidator()
         return super().ready()

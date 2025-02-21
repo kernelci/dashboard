@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-from utils.validation import isBooleanOrStringTrue
+from utils.validation import is_boolean_or_string_true
 import os
 import json
 
@@ -45,14 +45,14 @@ DEBUG = False
 
 ENV_DEBUG = get_json_env_var("DEBUG", False)
 
-if isBooleanOrStringTrue(ENV_DEBUG):
+if is_boolean_or_string_true(ENV_DEBUG):
     DEBUG = True
 
 DEBUG_SQL_QUERY = False
 
 ENV_DEBUG_SQL_QUERY = get_json_env_var("DEBUG_SQL_QUERY", False)
 
-if isBooleanOrStringTrue(ENV_DEBUG_SQL_QUERY) and DEBUG:
+if is_boolean_or_string_true(ENV_DEBUG_SQL_QUERY) and DEBUG:
     DEBUG_SQL_QUERY = True
 
 SESSION_COOKIE_SECURE = True

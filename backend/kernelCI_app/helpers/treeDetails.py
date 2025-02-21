@@ -19,7 +19,7 @@ from kernelCI_app.helpers.misc import (
     build_misc_value_or_default,
     env_misc_value_or_default,
 )
-from kernelCI_app.cache import getQueryCache, setQueryCache
+from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.utils import is_boot
 from django.db import connection
 
@@ -58,7 +58,7 @@ def get_tree_details_data(request, commit_hash):
         "git_branch_param": git_branch_param,
     }
 
-    rows = getQueryCache(cache_key, params)
+    rows = get_query_cache(cache_key, params)
     if rows is None:
         checkout_clauses = create_checkouts_where_clauses(
             git_url=git_url_param, git_branch=git_branch_param
@@ -146,7 +146,7 @@ def get_tree_details_data(request, commit_hash):
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             rows = cursor.fetchall()
-            setQueryCache(cache_key, params, rows)
+            set_query_cache(cache_key, params, rows)
 
     return rows
 
@@ -341,9 +341,9 @@ def process_tests_issue(instance, row_data):
     )
 
     if issue_id and issue_version is not None and can_insert_issue:
-        currentIssue = instance.testIssuesTable.get((issue_id, issue_version))
-        if currentIssue:
-            currentIssue["incidents_info"]["incidentsCount"] += 1
+        current_issue = instance.testIssuesTable.get((issue_id, issue_version))
+        if current_issue:
+            current_issue["incidents_info"]["incidentsCount"] += 1
         else:
             instance.testIssuesTable[(issue_id, issue_version)] = create_issue(
                 issue_id=issue_id,
@@ -370,9 +370,9 @@ def process_boots_issue(instance, row_data):
     )
 
     if issue_id and issue_version is not None and can_insert_issue:
-        currentIssue = instance.bootsIssuesTable.get((issue_id, issue_version))
-        if currentIssue:
-            currentIssue["incidents_info"]["incidentsCount"] += 1
+        current_issue = instance.bootsIssuesTable.get((issue_id, issue_version))
+        if current_issue:
+            current_issue["incidents_info"]["incidentsCount"] += 1
         else:
             instance.bootsIssuesTable[(issue_id, issue_version)] = create_issue(
                 issue_id=issue_id,
@@ -434,13 +434,13 @@ def decide_if_is_test_filtered_out(instance, row_data):
     test_status = row_data["test_status"]
     test_duration = row_data["test_duration"]
     issue_id = row_data["issue_id"]
-    testPath = row_data["test_path"]
+    test_path = row_data["test_path"]
     incident_test_id = row_data["incident_test_id"]
 
     return instance.filters.is_test_filtered_out(
         duration=test_duration,
         issue_id=issue_id,
-        path=testPath,
+        path=test_path,
         status=test_status,
         incident_test_id=incident_test_id,
     )
@@ -498,17 +498,17 @@ def process_boots_summary(instance, row_data):
         instance.bootStatusSummary.get(test_status, 0) + 1
     )
 
-    archKey = "%s-%s" % (build_arch, build_compiler)
-    archSummary = instance.bootArchSummary.get(
-        archKey,
+    arch_key = "%s-%s" % (build_arch, build_compiler)
+    arch_summary = instance.bootArchSummary.get(
+        arch_key,
         {"arch": build_arch, "compiler": build_compiler, "status": {}},
     )
-    archSummary["status"][test_status] = archSummary["status"].get(test_status, 0) + 1
-    instance.bootArchSummary[archKey] = archSummary
+    arch_summary["status"][test_status] = arch_summary["status"].get(test_status, 0) + 1
+    instance.bootArchSummary[arch_key] = arch_summary
 
-    configSummary = instance.bootConfigs.get(build_config, {})
-    configSummary[test_status] = configSummary.get(test_status, 0) + 1
-    instance.bootConfigs[build_config] = configSummary
+    config_summary = instance.bootConfigs.get(build_config, {})
+    config_summary[test_status] = config_summary.get(test_status, 0) + 1
+    instance.bootConfigs[build_config] = config_summary
 
     if is_test_failure(test_status):
         instance.bootPlatformsFailing.add(test_platform)

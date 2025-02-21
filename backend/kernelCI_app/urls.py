@@ -12,14 +12,14 @@ timeout = settings.CACHE_TIMEOUT
 cache = cache_page(timeout)
 
 
-def viewCache(view):
+def view_cache(view):
     return cache(view.as_view())
 
 
 urlpatterns = [
-    path("test/<str:test_id>", viewCache(views.TestDetails), name="testDetails"),
-    path("tree/", viewCache(views.TreeView), name="tree"),
-    path("tree-fast/", viewCache(views.TreeViewFast), name="tree-fast"),
+    path("test/<str:test_id>", view_cache(views.TestDetails), name="testDetails"),
+    path("tree/", view_cache(views.TreeView), name="tree"),
+    path("tree-fast/", view_cache(views.TreeViewFast), name="tree-fast"),
     path(
         "tree/<str:commit_hash>/full",
         views.TreeDetails.as_view(),
@@ -47,40 +47,40 @@ urlpatterns = [
     ),
     path(
         "tree/<str:commit_hash>/commits",
-        viewCache(views.TreeCommitsHistory),
+        view_cache(views.TreeCommitsHistory),
         name="treeCommits",
     ),
     path(
         "tree/<str:tree_name>/<str:branch>",
-        viewCache(views.TreeLatest),
+        view_cache(views.TreeLatest),
         name="treeLatest",
     ),
-    path("build/<str:build_id>", viewCache(views.BuildDetails), name="buildDetails"),
-    path("build/<str:build_id>/tests", viewCache(views.BuildTests), name="buildTests"),
+    path("build/<str:build_id>", view_cache(views.BuildDetails), name="buildDetails"),
+    path("build/<str:build_id>/tests", view_cache(views.BuildTests), name="buildTests"),
     path(
         "build/<str:build_id>/issues",
-        viewCache(views.BuildIssuesView),
+        view_cache(views.BuildIssuesView),
         name="buildIssues",
     ),
     path(
         "test/<str:test_id>/issues",
-        viewCache(views.TestIssuesView),
+        view_cache(views.TestIssuesView),
         name="testIssues",
     ),
-    path("log-downloader/", viewCache(views.LogDownloaderView), name="logDownloader"),
+    path("log-downloader/", view_cache(views.LogDownloaderView), name="logDownloader"),
     path(
         "hardware/<str:hardware_id>",
-        viewCache(views.HardwareDetails),
+        view_cache(views.HardwareDetails),
         name="hardwareDetails",
     ),
     path(
         "hardware/<str:hardware_id>/builds",
-        viewCache(views.HardwareDetailsBuilds),
+        view_cache(views.HardwareDetailsBuilds),
         name="hardwareDetailsBuilds",
     ),
     path(
         "hardware/<str:hardware_id>/commit-history",
-        viewCache(views.HardwareDetailsCommitHistoryView),
+        view_cache(views.HardwareDetailsCommitHistoryView),
         name="hardwareDetailsCommitHistory",
     ),
     path(
@@ -98,18 +98,20 @@ urlpatterns = [
         views.HardwareDetailsTests.as_view(),
         name="hardwareDetailsTests",
     ),
-    path("hardware/", viewCache(views.HardwareView), name="hardware"),
-    path("issue/", viewCache(views.IssueView), name="issue"),
-    path("issue/extras/", viewCache(views.IssueExtraDetails), name="issueExtraDetails"),
-    path("issue/<str:issue_id>", viewCache(views.IssueDetails), name="issueDetails"),
+    path("hardware/", view_cache(views.HardwareView), name="hardware"),
+    path("issue/", view_cache(views.IssueView), name="issue"),
+    path(
+        "issue/extras/", view_cache(views.IssueExtraDetails), name="issueExtraDetails"
+    ),
+    path("issue/<str:issue_id>", view_cache(views.IssueDetails), name="issueDetails"),
     path(
         "issue/<str:issue_id>/tests",
-        viewCache(views.IssueDetailsTests),
+        view_cache(views.IssueDetailsTests),
         name="issueDetailsTests",
     ),
     path(
         "issue/<str:issue_id>/builds",
-        viewCache(views.IssueDetailsBuilds),
+        view_cache(views.IssueDetailsBuilds),
         name="issueDetailsBuilds",
     ),
     # DRF Spectacular

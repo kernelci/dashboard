@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from kernelCI_app.models import Checkouts
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
-from kernelCI_app.utils import getQueryTimeInterval
+from kernelCI_app.utils import get_query_time_interval
 from http import HTTPStatus
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.treeListing import (
@@ -71,7 +71,7 @@ class TreeViewFast(APIView):
             ORDER BY
                 tree_name ASC;
             """,
-            [origin, getQueryTimeInterval(**interval_days_data).timestamp()],
+            [origin, get_query_time_interval(**interval_days_data).timestamp()],
         )
 
         if not checkouts:

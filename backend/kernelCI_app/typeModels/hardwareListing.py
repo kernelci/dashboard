@@ -32,8 +32,8 @@ class HardwareQueryParamsDocumentationOnly(BaseModel):
         str,
         Field(default=DEFAULT_ORIGIN),
     ]
-    startTimestampInSeconds: str
-    endTimeStampInSeconds: str
+    startTimestampInSeconds: str  # noqa: N815
+    endTimeStampInSeconds: str  # noqa: N815
 
 
 class HardwareQueryParams(BaseModel):
