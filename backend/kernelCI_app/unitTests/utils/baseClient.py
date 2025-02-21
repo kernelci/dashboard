@@ -28,7 +28,7 @@ class BaseClient(ABC):
         url = f"{url}{query_string}"
         return url
 
-    def get_filters(*, filters: dict[FilterFields, Any]) -> dict[str, Any]:
+    def get_filters(self, *, filters: dict[FilterFields, Any]) -> dict[str, Any]:
         prefix = "filter_"
         return {f"{prefix}{key}": value for key, value in filters.items()}
 
