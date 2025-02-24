@@ -2,7 +2,14 @@ from kernelCI_app.unitTests.utils.healthCheck import online
 from kernelCI_app.unitTests.utils.issueClient import IssueClient
 from kernelCI_app.unitTests.utils.asserts import (
     assert_status_code_and_error_response,
+    assert_has_fields_in_response_content,
 )
+from kernelCI_app.unitTests.utils.fields.issues import (
+    issues_expected_fields,
+    issues_listing_fields,
+)
+from kernelCI_app.unitTests.utils.fields.tests import test_expected_fields
+from kernelCI_app.unitTests.utils.fields.builds import build_expected_fields
 from kernelCI_app.utils import string_to_json
 import pytest
 from http import HTTPStatus
@@ -35,9 +42,8 @@ def test_list(origin, interval_in_day, status_code, has_error_body):
             fields=issues_listing_fields, response_content=content
         )
 
-    if "issues" in content:
         assert_has_fields_in_response_content(
-            fields=issues_fields, response_content=content["issues"][0]
+            fields=issues_expected_fields, response_content=content["issues"][0]
         )
 
 
@@ -64,6 +70,11 @@ def test_details(issue_id, issue_version, status_code, has_error_body):
         status_code=status_code,
         should_error=has_error_body,
     )
+
+    if not has_error_body:
+        assert_has_fields_in_response_content(
+            fields=issues_expected_fields, response_content=content
+        )
 
 
 @online
@@ -101,6 +112,11 @@ def test_extra_details(issues_list, status_code, has_error_body):
         should_error=has_error_body,
     )
 
+    if not has_error_body:
+        assert_has_fields_in_response_content(
+            fields=["issues"], response_content=content
+        )
+
 
 @online
 @pytest.mark.parametrize(
@@ -123,7 +139,7 @@ def test_issue_tests(issue_id, issue_version, status_code, has_error_body):
 
     if not has_error_body:
         assert_has_fields_in_response_content(
-            fields=test_fields, response_content=content[0]
+            fields=test_expected_fields, response_content=content[0]
         )
 
 
@@ -153,5 +169,5 @@ def test_issue_builds(issue_id, issue_version, status_code, has_error_body):
 
     if not has_error_body:
         assert_has_fields_in_response_content(
-            fields=build_field, response_content=content[0]
+            fields=build_expected_fields, response_content=content[0]
         )

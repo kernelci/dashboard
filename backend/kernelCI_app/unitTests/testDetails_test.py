@@ -2,8 +2,9 @@ from kernelCI_app.unitTests.utils.healthCheck import online
 from kernelCI_app.unitTests.utils.testClient import TestClient
 from kernelCI_app.unitTests.utils.asserts import (
     assert_status_code_and_error_response,
+    assert_has_fields_in_response_content,
 )
-from kernelCI_app.unitTests.utils.fields.tests import test_fields
+from kernelCI_app.unitTests.utils.fields.tests import test_expected_fields
 from kernelCI_app.unitTests.utils.fields.issues import issues_resource_fields
 from kernelCI_app.utils import string_to_json
 import pytest
@@ -33,7 +34,7 @@ def test_get(test_id, status_code, has_error_body):
 
     if not has_error_body:
         assert_has_fields_in_response_content(
-            fields=test_fields, response_content=content
+            fields=test_expected_fields, response_content=content
         )
 
 

@@ -2,7 +2,9 @@ from kernelCI_app.unitTests.utils.healthCheck import online
 from kernelCI_app.unitTests.utils.buildClient import BuildClient
 from kernelCI_app.unitTests.utils.asserts import (
     assert_status_code_and_error_response,
+    assert_has_fields_in_response_content,
 )
+from kernelCI_app.unitTests.utils.fields.builds import build_expected_fields
 from kernelCI_app.utils import string_to_json
 import pytest
 from http import HTTPStatus
@@ -26,3 +28,8 @@ def test_get(build_id, status_code, has_error_body):
         status_code=status_code,
         should_error=has_error_body,
     )
+
+    if not has_error_body:
+        assert_has_fields_in_response_content(
+            fields=build_expected_fields, response_content=content
+        )
