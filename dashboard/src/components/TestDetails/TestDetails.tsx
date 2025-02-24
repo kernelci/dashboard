@@ -14,7 +14,7 @@ import {
 
 import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
 import type { TTestDetails } from '@/types/tree/TestDetails';
-import { Sheet, SheetTrigger } from '@/components/Sheet';
+import { Sheet } from '@/components/Sheet';
 import { useTestDetails, useTestIssues } from '@/api/testDetails';
 
 import { RedirectFrom } from '@/types/general';
@@ -34,7 +34,6 @@ import { getFilesSection } from '@/components/Section/FilesSection';
 import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
-import { LogViewIcon } from '@/components/Icons/LogView';
 import { LinkIcon } from '@/components/Icons/Link';
 import { StatusIcon } from '@/components/Icons/StatusIcons';
 
@@ -43,6 +42,7 @@ import { getTitle } from '@/utils/utils';
 import { getTestHardware } from '@/lib/test';
 
 import { MemoizedTestDetailsOGTags } from '@/components/OpenGraphTags/TestDetailsOGTags';
+import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
 
 const LinkItem = ({ children, ...props }: LinkProps): JSX.Element => {
   return (
@@ -129,8 +129,6 @@ const TestDetailsSections = ({
     test.tree_name,
   ]);
 
-  const hasUsefulLogInfo = test.log_url || test.log_excerpt;
-
   const setSheetToLog = useCallback(
     (): void => setSheetType('log'),
     [setSheetType],
@@ -139,6 +137,7 @@ const TestDetailsSections = ({
   const generalSection: ISection = useMemo(() => {
     return {
       title: test.path,
+      subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
       eyebrow: formatMessage({ id: 'test.details' }),
       leftIcon: <StatusIcon status={test.status} />,
       subsections: [
@@ -167,14 +166,12 @@ const TestDetailsSections = ({
             },
             {
               title: 'global.logs',
-              icon: hasUsefulLogInfo ? <LogViewIcon /> : undefined,
               linkText: shouldTruncate(valueOrEmpty(test.log_url)) ? (
                 <TruncatedValueTooltip value={test.log_url} isUrl={true} />
               ) : (
                 valueOrEmpty(test.log_url)
               ),
-              wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
-              onClick: hasUsefulLogInfo ? setSheetToLog : undefined,
+              link: test.log_url,
             },
             {
               title: 'commonDetails.gitCommitHash',
@@ -252,7 +249,6 @@ const TestDetailsSections = ({
     test.id,
     test.environment_compatible,
     formatMessage,
-    hasUsefulLogInfo,
     setSheetToLog,
     treeDetailsLink,
     buildDetailsLink,

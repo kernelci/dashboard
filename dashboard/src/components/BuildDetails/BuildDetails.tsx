@@ -20,7 +20,7 @@ import IssueSection from '@/components/Issue/IssueSection';
 
 import { shouldTruncate, valueOrEmpty } from '@/lib/string';
 
-import { Sheet, SheetTrigger } from '@/components/Sheet';
+import { Sheet } from '@/components/Sheet';
 
 import type {
   TableFilter,
@@ -40,12 +40,12 @@ import { getFilesSection } from '@/components/Section/FilesSection';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
-import { LogViewIcon } from '@/components/Icons/LogView';
 import { StatusIcon } from '@/components/Icons/StatusIcons';
 
 import PageWithTitle from '@/components/PageWithTitle';
 
 import { MemoizedBuildDetailsOGTags } from '@/components/OpenGraphTags/BuildDetailsOGTags';
+import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -73,8 +73,6 @@ const BuildDetails = ({
   const { logOpen } = useSearch({ from: '/build/$buildId' });
   const navigate = useNavigate({ from: '/build/$buildId' });
   const { formatMessage } = useIntl();
-
-  const hasUsefulLogInfo = data?.log_url || data?.log_excerpt;
 
   const [sheetType, setSheetType] = useState<SheetType>('log');
   const [jsonContent, setJsonContent] = useState<IJsonContent>();
@@ -124,6 +122,7 @@ const BuildDetails = ({
     return [
       {
         title: buildDetailsTitle,
+        subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
         leftIcon: <StatusIcon status={data?.valid} />,
         eyebrow: formatMessage({ id: 'buildDetails.buildDetails' }),
         subsections: [
@@ -206,9 +205,7 @@ const BuildDetails = ({
                 linkText: (
                   <TruncatedValueTooltip value={data.log_url} isUrl={true} />
                 ),
-                icon: hasUsefulLogInfo ? <LogViewIcon /> : undefined,
-                wrapperComponent: hasUsefulLogInfo ? SheetTrigger : undefined,
-                onClick: hasUsefulLogInfo ? setSheetToLog : undefined,
+                link: data.log_url,
               },
               {
                 title: 'buildDetails.kernelConfig',
@@ -222,14 +219,7 @@ const BuildDetails = ({
         ],
       },
     ];
-  }, [
-    data,
-    buildDetailsTitle,
-    formatMessage,
-    buildId,
-    hasUsefulLogInfo,
-    setSheetToLog,
-  ]);
+  }, [data, buildDetailsTitle, setSheetToLog, formatMessage, buildId]);
 
   const sectionsData: ISection[] = useMemo(() => {
     return [...generalSections, miscSection, filesSection].filter(
