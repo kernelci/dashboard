@@ -364,6 +364,7 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
             type={sheetType}
             jsonContent={jsonContent}
             logUrl={data?.log_url}
+            hideIssueSection
             logExcerpt={data?.log_excerpt}
           />
         </Sheet>

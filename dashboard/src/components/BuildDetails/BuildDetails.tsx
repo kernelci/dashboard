@@ -272,6 +272,7 @@ const BuildDetails = ({
             <LogOrJsonSheetContent
               type={sheetType}
               jsonContent={jsonContent}
+              hideIssueSection
               logUrl={data?.log_url}
               logExcerpt={data?.log_excerpt}
             />

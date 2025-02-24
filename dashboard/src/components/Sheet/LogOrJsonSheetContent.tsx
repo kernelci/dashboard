@@ -26,6 +26,7 @@ interface ILogSheet {
   navigationLogsActions?: TNavigationLogActions;
   currentLinkProps?: LinkProps;
   issues?: TIssue[];
+  hideIssueSection?: boolean;
   status?: UseQueryResult['status'];
   error?: UseQueryResult['error'];
 }
@@ -43,6 +44,7 @@ export const LogOrJsonSheetContent = ({
   navigationLogsActions,
   currentLinkProps,
   issues,
+  hideIssueSection,
   status,
   error,
 }: ILogSheet): JSX.Element => {
@@ -66,12 +68,15 @@ export const LogOrJsonSheetContent = ({
             logExcerpt={logExcerpt}
             isLoading={navigationLogsActions?.isLoading}
           />
-          <IssueSection
-            data={issues}
-            status={status ?? 'success'}
-            error={error?.message}
-            variant="warning"
-          />
+
+          {!hideIssueSection && (
+            <IssueSection
+              data={issues}
+              status={status ?? 'success'}
+              error={error?.message}
+              variant="warning"
+            />
+          )}
         </>
       ) : (
         <ReactJsonView
