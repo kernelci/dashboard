@@ -38,11 +38,11 @@ interface BootsTabProps {
 
 const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
   const { treeId } = useParams({
-    from: '/tree/$treeId',
+    from: '/_main/tree/$treeId',
   });
 
   const { tableFilter, diffFilter } = useSearch({
-    from: '/tree/$treeId',
+    from: '/_main/tree/$treeId',
   });
 
   const currentPathFilter = diffFilter.bootPath

@@ -23,7 +23,7 @@ const CompatibleLink = ({
   compatible: string;
   diffFilter: TFilter;
 }): JSX.Element => {
-  const { currentPageTab } = useSearch({ from: '/hardware/$hardwareId' });
+  const { currentPageTab } = useSearch({ from: '/_main/hardware/$hardwareId' });
   return (
     <FilterLink
       filterValue={compatible}

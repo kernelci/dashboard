@@ -39,7 +39,7 @@ interface TestsTabProps {
 }
 
 const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
-  const { treeId } = useParams({ from: '/tree/$treeId' });
+  const { treeId } = useParams({ from: '/_main/tree/$treeId' });
 
   const { full: fullQuery, summary: summaryQuery } = treeDetailsLazyLoaded;
   const { data, status, isLoading: fullIsLoading } = fullQuery;
@@ -47,7 +47,7 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
   const summaryData = treeDetailsLazyLoaded.summary.data?.summary.tests;
 
   const { tableFilter, diffFilter } = useSearch({
-    from: '/tree/$treeId',
+    from: '/_main/tree/$treeId',
   });
 
   const currentPathFilter = diffFilter.testPath

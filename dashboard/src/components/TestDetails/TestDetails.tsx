@@ -70,7 +70,7 @@ const TestDetailsSections = ({
 }): JSX.Element => {
   const { formatMessage } = useIntl();
   const historyState = useRouterState({ select: s => s.location.state });
-  const searchParams = useSearch({ from: '/test/$testId' });
+  const searchParams = useSearch({ from: '/_main/test/$testId' });
   const hardware: string = useMemo(() => {
     return getTestHardware({
       misc: test.environment_misc,
@@ -301,10 +301,10 @@ interface TestsDetailsProps {
 }
 
 const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
-  const { testId } = useParams({ from: '/test/$testId' });
+  const { testId } = useParams({ from: '/_main/test/$testId' });
 
   const { formatMessage } = useIntl();
-  const { logOpen } = useSearch({ from: '/test/$testId' });
+  const { logOpen } = useSearch({ from: '/_main/test/$testId' });
   const navigate = useNavigate({ from: '/test/$testId' });
 
   const { data, isLoading, status, error } = useTestDetails(testId ?? '');

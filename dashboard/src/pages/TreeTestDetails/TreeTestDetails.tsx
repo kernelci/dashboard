@@ -6,7 +6,7 @@ import TestDetails from '@/components/TestDetails/TestDetails';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 
 const TreeTestDetails = (): JSX.Element => {
-  const searchParams = useSearch({ from: '/test/$testId/' });
+  const searchParams = useSearch({ from: '/_main/test/$testId/' });
 
   return (
     <TestDetails

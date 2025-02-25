@@ -22,7 +22,7 @@ const HardwareCommitNavigationGraph = ({
     startTimestampInSeconds,
     endTimestampInSeconds,
   } = useSearch({
-    from: '/hardware/$hardwareId',
+    from: '/_main/hardware/$hardwareId',
   });
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });

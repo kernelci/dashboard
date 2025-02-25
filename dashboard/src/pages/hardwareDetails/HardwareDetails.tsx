@@ -103,11 +103,11 @@ function HardwareDetails(): JSX.Element {
     endTimestampInSeconds,
     diffFilter,
     origin,
-  } = useSearch({ from: '/hardware/$hardwareId' });
+  } = useSearch({ from: '/_main/hardware/$hardwareId' });
 
   const { formatMessage } = useIntl();
 
-  const { hardwareId } = useParams({ from: '/hardware/$hardwareId' });
+  const { hardwareId } = useParams({ from: '/_main/hardware/$hardwareId' });
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 

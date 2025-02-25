@@ -15,8 +15,10 @@ const badgeVariants = cva(
         destructive:
           'border-transparent bg-red-500 text-slate-50 hover:bg-red-500/80 dark:bg-red-900 dark:text-slate-50 dark:hover:bg-red-900/80',
         outline: 'text-slate-950 dark:text-slate-50',
-        blueTag: 'text-dark-blue outline-medium-light-blue border-none bg-light-blue font-medium capitalize outline-1',
-        greenTag: 'text-dark-green outline-medium-light-green border-none bg-light-green font-medium capitalize outline-1',
+        blueTag:
+          'text-dark-blue outline-medium-light-blue border-none bg-light-blue font-medium capitalize outline-1',
+        greenTag:
+          'text-dark-green outline-medium-light-green border-none bg-light-green font-medium capitalize outline-1',
       },
     },
     defaultVariants: {

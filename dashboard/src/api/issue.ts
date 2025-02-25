@@ -18,7 +18,7 @@ const fetchIssueListing = async (
 };
 
 export const useIssueListing = (): UseQueryResult<IssueListingResponse> => {
-  const { origin, intervalInDays } = useSearch({ from: '/issue' });
+  const { origin, intervalInDays } = useSearch({ from: '/_main/issue' });
 
   const queryKey = ['issueTable', origin, intervalInDays];
 

@@ -151,8 +151,8 @@ const TreeHeader = ({
 function TreeDetails(): JSX.Element {
   const { formatMessage } = useIntl();
 
-  const { treeId } = useParams({ from: '/tree/$treeId' });
-  const searchParams = useSearch({ from: '/tree/$treeId' });
+  const { treeId } = useParams({ from: '/_main/tree/$treeId' });
+  const searchParams = useSearch({ from: '/_main/tree/$treeId' });
   const { diffFilter, treeInfo } = searchParams;
   const navigate = useNavigate({ from: '/tree/$treeId' });
 

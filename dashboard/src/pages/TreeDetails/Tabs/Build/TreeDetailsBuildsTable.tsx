@@ -17,8 +17,8 @@ export interface TTreeDetailsBuildsTable {
 export function TreeDetailsBuildsTable({
   buildItems,
 }: TTreeDetailsBuildsTable): JSX.Element {
-  const { treeId } = useParams({ from: '/tree/$treeId' });
-  const { tableFilter } = useSearch({ from: '/tree/$treeId' });
+  const { treeId } = useParams({ from: '/_main/tree/$treeId' });
+  const { tableFilter } = useSearch({ from: '/_main/tree/$treeId' });
   const navigate = useNavigate({ from: '/tree/$treeId' });
 
   const getRowLink = useCallback(

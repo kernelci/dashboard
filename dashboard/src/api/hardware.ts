@@ -32,7 +32,7 @@ export const useHardwareListing = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
 ): UseQueryResult<HardwareListingResponse> => {
-  const { origin } = useSearch({ from: '/hardware' });
+  const { origin } = useSearch({ from: '/_main/hardware' });
 
   const queryKey = [
     'hardwareListing',

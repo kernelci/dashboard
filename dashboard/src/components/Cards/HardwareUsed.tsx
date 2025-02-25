@@ -23,7 +23,7 @@ const HardwareLink = ({
   hardware: string;
   diffFilter: TFilter;
 }): JSX.Element => {
-  const { currentPageTab } = useSearch({ from: '/tree/$treeId' });
+  const { currentPageTab } = useSearch({ from: '/_main/tree/$treeId' });
   return (
     <FilterLink
       filterValue={hardware}

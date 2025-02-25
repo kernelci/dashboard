@@ -12,7 +12,7 @@ import { RedirectFrom } from '@/types/general';
 import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBreadcrumb';
 
 const HardwareBuildDetails = (): JSX.Element => {
-  const searchParams = useSearch({ from: '/build/$buildId' });
+  const searchParams = useSearch({ from: '/_main/build/$buildId' });
   const historyState = useRouterState({ select: s => s.location.state });
   const hardwareId = historyState.id;
 

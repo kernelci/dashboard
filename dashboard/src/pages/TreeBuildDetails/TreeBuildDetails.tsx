@@ -12,7 +12,7 @@ import { RedirectFrom } from '@/types/general';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 
 const TreeBuildDetails = (): JSX.Element => {
-  const searchParams = useSearch({ from: '/build/$buildId' });
+  const searchParams = useSearch({ from: '/_main/build/$buildId' });
   const historyState = useRouterState({ select: s => s.location.state });
   const treeId = historyState.id;
 

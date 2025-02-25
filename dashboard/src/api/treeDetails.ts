@@ -30,7 +30,7 @@ const useTreeSearchParameters = (): TreeSearchParameters => {
   const {
     origin,
     treeInfo: { gitUrl, gitBranch },
-  } = useSearch({ from: '/tree/$treeId' });
+  } = useSearch({ from: '/_main/tree/$treeId' });
 
   return { origin, gitUrl, gitBranch };
 };

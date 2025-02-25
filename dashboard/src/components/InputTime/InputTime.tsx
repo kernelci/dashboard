@@ -34,7 +34,9 @@ const InputTime = ({
 }): JSX.Element => {
   const { formatMessage } = useIntl();
   const navigate = useNavigate({ from: navigateFrom });
-  const { intervalInDays: interval } = useSearch({ from: navigateFrom });
+  const { intervalInDays: interval } = useSearch({
+    from: `/_main${navigateFrom}`,
+  });
 
   const InputTimeSchema = z.object({
     intervalInDays: z.string().refine(validateStringToNumber, {

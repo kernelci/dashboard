@@ -31,7 +31,7 @@ const TreeDetailsTab = ({
   treeDetailsLazyLoaded,
 }: ITreeDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
-    from: '/tree/$treeId',
+    from: '/_main/tree/$treeId',
   });
   const navigate = useNavigate({ from: '/tree/$treeId' });
   const treeDetailsTab: ITabItem[] = useMemo(

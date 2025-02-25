@@ -81,7 +81,7 @@ const CommitSelector = ({
   setTreeIndexesLength: IHardwareHeader['setTreeIndexesLength'];
 }): JSX.Element => {
   const navigate = useNavigate({ from: '/hardware/$hardwareId/' });
-  const { treeCommits } = useSearch({ from: '/hardware/$hardwareId' });
+  const { treeCommits } = useSearch({ from: '/_main/hardware/$hardwareId' });
 
   const navigateToThePast = useCallback(
     (commitHash: string) => {
