@@ -2,7 +2,7 @@ import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useCallback, useMemo, useState, type JSX } from 'react';
 
-import type { LinkProps } from '@tanstack/react-router';
+import { useParams, type LinkProps } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
 import type { ISection } from '@/components/Section/Section';
@@ -39,6 +39,8 @@ import { LogViewIcon } from '@/components/Icons/LogView';
 import { StatusIcon } from '@/components/Icons/StatusIcons';
 
 import PageWithTitle from '@/components/PageWithTitle';
+
+import { MemoizedBuildDetailsOGTags } from '@/components/OpenGraphTags/BuildDetailsOGTags';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -96,17 +98,20 @@ const BuildDetails = ({
     [setSheetType],
   );
 
+  const buildDetailsTitle: string = useMemo(() => {
+    if (data?.git_commit_name && data.config_name) {
+      return `${data.git_commit_name} • ${data.config_name}`;
+    }
+    return data?.git_commit_name ?? data?.config_name ?? buildId;
+  }, [buildId, data]);
+
   const generalSections: ISection[] = useMemo(() => {
     if (!data) {
       return [];
     }
     return [
       {
-        title: valueOrEmpty(
-          data.git_commit_name
-            ? `${data.git_commit_name} • ${data.config_name}`
-            : data.config_name,
-        ),
+        title: buildDetailsTitle,
         leftIcon: <StatusIcon status={data?.valid} />,
         eyebrow: formatMessage({ id: 'buildDetails.buildDetails' }),
         subsections: [
@@ -205,7 +210,14 @@ const BuildDetails = ({
         ],
       },
     ];
-  }, [data, formatMessage, hasUsefulLogInfo, buildId, setSheetToLog]);
+  }, [
+    data,
+    buildDetailsTitle,
+    formatMessage,
+    buildId,
+    hasUsefulLogInfo,
+    setSheetToLog,
+  ]);
 
   const sectionsData: ISection[] = useMemo(() => {
     return [...generalSections, miscSection, filesSection].filter(
@@ -213,15 +225,21 @@ const BuildDetails = ({
     );
   }, [generalSections, miscSection, filesSection]);
 
-  const buildTitle = `${data?.tree_name} ${data?.git_commit_name}`;
+  const buildDetailsTabTitle: string = useMemo(() => {
+    const buildTitle = `${data?.tree_name} ${data?.git_commit_name}`;
+    return formatMessage(
+      { id: 'title.buildDetails' },
+      { buildName: getTitle(buildTitle, isLoading) },
+    );
+  }, [data?.git_commit_name, data?.tree_name, formatMessage, isLoading]);
 
   return (
-    <PageWithTitle
-      title={formatMessage(
-        { id: 'title.buildDetails' },
-        { buildName: getTitle(buildTitle, isLoading) },
-      )}
-    >
+    <PageWithTitle title={buildDetailsTabTitle}>
+      <MemoizedBuildDetailsOGTags
+        tabTitle={buildDetailsTabTitle}
+        descriptionTitle={buildDetailsTitle}
+        data={data}
+      />
       <QuerySwitcher
         status={status}
         data={data}

@@ -201,6 +201,8 @@ export const messages = {
     'hardwareDetails.platforms': 'Platforms',
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
+    'hardwareListing.description': 'List of hardware from kernel tests',
+    'hardwareListing.title': 'Hardware Listing ― KCI Dashboard',
     'issue.alsoPresentTooltip': 'Issue also present in {tree}',
     'issue.firstSeen': 'First seen',
     'issue.newIssue': 'New issue: This is the first time this issue was seen',
@@ -224,6 +226,8 @@ export const messages = {
     'issueDetails.reportSubject': 'Report Subject',
     'issueDetails.reportUrl': 'Report URL',
     'issueDetails.version': 'Version',
+    'issueListing.description': 'List of issues from builds and tests',
+    'issueListing.title': 'Issue Listing ― KCI Dashboard',
     'issueListing.treeBranchTooltip':
       'The tree name and git repository branch of the first incident\nClick a cell to see details of that checkout',
     'jsonSheet.title': 'JSON Viewer',
@@ -250,6 +254,10 @@ export const messages = {
     'table.itemsPerPage': 'Items per page:',
     'table.of': 'of',
     'table.showing': 'Showing:',
+    'tag.failCount': '{count} Fail',
+    'tag.inconclusiveCount': '{count} Inconclusive',
+    'tag.noBuildsOrTestsData': 'No builds or tests data.',
+    'tag.passCount': '{count} Pass',
     'test.details': 'Test Details',
     'test.statusTooltip':
       'Success - tests with PASS status{br}' +
@@ -294,6 +302,8 @@ export const messages = {
     'treeDetails.testsInconclusive': 'Inconclusive tests',
     'treeDetails.testsSuccess': 'Success tests',
     'treeDetails.validBuilds': 'Success builds',
+    'treeListing.description': 'List of trees for kernel builds and tests',
+    'treeListing.title': 'Tree Listing ― KCI Dashboard',
   },
 };
 

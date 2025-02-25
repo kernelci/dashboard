@@ -9,6 +9,8 @@ import { z } from 'zod';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
+import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags';
+
 import { IssueListingPage } from './IssueListingPage';
 
 const IssueListing = (): JSX.Element => {
@@ -36,6 +38,7 @@ const IssueListing = (): JSX.Element => {
 
   return (
     <>
+      <MemoizedListingOGTags monitor="/issue" search={issueSearch} />
       <div className="fixed top-0 z-10 mx-[380px] flex w-full pt-5 pr-12 pl-6">
         <div className="flex w-2/3 items-center px-6">
           <DebounceInput

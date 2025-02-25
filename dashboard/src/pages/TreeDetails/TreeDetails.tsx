@@ -30,10 +30,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
-import {
-  BuildStatus as BuildStatusComponent,
-  GroupedTestStatus,
-} from '@/components/Status/Status';
+import { GroupedTestStatus } from '@/components/Status/Status';
 
 import type { TFilter } from '@/types/general';
 
@@ -56,9 +53,12 @@ import { LoadingCircle } from '@/components/ui/loading-circle';
 
 import { useQueryInconsistencyInvalidator } from '@/hooks/useQueryInconsistencyInvalidator';
 
-import { statusCountToRequiredStatusCount } from '@/utils/status';
+import type { GroupedStatus } from '@/utils/status';
+import { groupStatus, statusCountToRequiredStatusCount } from '@/utils/status';
 
 import PageWithTitle from '@/components/PageWithTitle';
+
+import { MemoizedTreeHardwareDetailsOGTags } from '@/components/OpenGraphTags/TreeHardwareDetailsOGTags';
 
 import TreeDetailsFilter from './TreeDetailsFilter';
 import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
@@ -239,52 +239,82 @@ function TreeDetails(): JSX.Element {
     ],
   );
 
-  const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
-    const { valid, invalid } = data?.summary.builds.status ?? {};
+  const [buildStatusCount, bootStatusCount, testStatusCount]: [
+    GroupedStatus,
+    GroupedStatus,
+    GroupedStatus,
+  ] = useMemo(() => {
+    const { status: buildStatusSummary } = data?.summary.builds ?? {};
     const { status: testStatusSummary } = data?.summary.tests ?? {};
-
     const { status: bootStatusSummary } = data?.summary.boots ?? {};
 
+    const buildCount = groupStatus({
+      passCount: buildStatusSummary?.valid,
+      failCount: buildStatusSummary?.invalid,
+      nullCount: buildStatusSummary?.null,
+    });
+
+    const bootCount = groupStatus({
+      passCount: bootStatusSummary?.PASS,
+      failCount: bootStatusSummary?.FAIL,
+      doneCount: bootStatusSummary?.DONE,
+      errorCount: bootStatusSummary?.ERROR,
+      missCount: bootStatusSummary?.MISS,
+      skipCount: bootStatusSummary?.SKIP,
+      nullCount: bootStatusSummary?.NULL,
+    });
+
+    const testCount = groupStatus({
+      passCount: testStatusSummary?.PASS,
+      failCount: testStatusSummary?.FAIL,
+      doneCount: testStatusSummary?.DONE,
+      errorCount: testStatusSummary?.ERROR,
+      missCount: testStatusSummary?.MISS,
+      skipCount: testStatusSummary?.SKIP,
+      nullCount: testStatusSummary?.NULL,
+    });
+
+    return [buildCount, bootCount, testCount];
+  }, [data?.summary.boots, data?.summary.builds, data?.summary.tests]);
+
+  const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
     return {
-      'global.tests': testStatusSummary ? (
+      'global.tests': (
         <GroupedTestStatus
-          fail={testStatusSummary.FAIL}
-          pass={testStatusSummary.PASS}
+          preCalculatedGroupedStatus={testStatusCount}
           hideInconclusive
         />
-      ) : (
-        <></>
       ),
-      'global.boots': bootStatusSummary ? (
+      'global.boots': (
         <GroupedTestStatus
-          fail={bootStatusSummary.FAIL}
-          pass={bootStatusSummary.PASS}
+          preCalculatedGroupedStatus={bootStatusCount}
           hideInconclusive
         />
-      ) : (
-        <></>
       ),
-      'global.builds': data ? (
-        <BuildStatusComponent
-          valid={valid}
-          invalid={invalid}
+      'global.builds': (
+        <GroupedTestStatus
+          preCalculatedGroupedStatus={buildStatusCount}
           hideInconclusive
         />
-      ) : (
-        <></>
       ),
     };
-  }, [data]);
+  }, [bootStatusCount, buildStatusCount, testStatusCount]);
+
+  const treeDetailsTitle = formatMessage(
+    { id: 'title.treeDetails' },
+    {
+      treeName: getTreeName(treeId, treeInfo.treeName, treeInfo.gitBranch),
+    },
+  );
 
   return (
-    <PageWithTitle
-      title={formatMessage(
-        { id: 'title.treeDetails' },
-        {
-          treeName: getTreeName(treeId, treeInfo.treeName, treeInfo.gitBranch),
-        },
-      )}
-    >
+    <PageWithTitle title={treeDetailsTitle}>
+      <MemoizedTreeHardwareDetailsOGTags
+        title={treeDetailsTitle}
+        buildCount={buildStatusCount}
+        bootCount={bootStatusCount}
+        testCount={testStatusCount}
+      />
       <QuerySwitcher
         status={summaryQueryStatus}
         data={data}

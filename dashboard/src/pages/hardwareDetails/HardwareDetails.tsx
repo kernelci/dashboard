@@ -29,10 +29,7 @@ import type {
 
 import MemoizedCompatibleHardware from '@/components/Cards/CompatibleHardware';
 
-import {
-  GroupedTestStatus,
-  BuildStatus as BuildStatusComponent,
-} from '@/components/Status/Status';
+import { GroupedTestStatus } from '@/components/Status/Status';
 
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 
@@ -52,9 +49,12 @@ import { useHardwareDetailsLazyLoadQuery } from '@/hooks/useHardwareDetailsLazyL
 
 import { useQueryInconsistencyInvalidator } from '@/hooks/useQueryInconsistencyInvalidator';
 
-import { statusCountToRequiredStatusCount } from '@/utils/status';
+import type { GroupedStatus } from '@/utils/status';
+import { groupStatus, statusCountToRequiredStatusCount } from '@/utils/status';
 
 import PageWithTitle from '@/components/PageWithTitle';
+
+import { MemoizedTreeHardwareDetailsOGTags } from '@/components/OpenGraphTags/TreeHardwareDetailsOGTags';
 
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
@@ -240,7 +240,11 @@ function HardwareDetails(): JSX.Element {
   const startDate = getFormattedDate(startTimestampInSeconds);
   const endDate = getFormattedDate(endTimestampInSeconds);
 
-  const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
+  const [buildStatusCount, bootStatusCount, testStatusCount]: [
+    GroupedStatus,
+    GroupedStatus,
+    GroupedStatus,
+  ] = useMemo(() => {
     const { status: buildStatusSummary } =
       summaryResponse.data?.summary.builds ?? {};
     const { status: testStatusSummary } =
@@ -248,40 +252,63 @@ function HardwareDetails(): JSX.Element {
     const { status: bootStatusSummary } =
       summaryResponse.data?.summary.boots ?? {};
 
-    return {
-      'global.tests': testStatusSummary ? (
-        <GroupedTestStatus
-          fail={testStatusSummary.FAIL}
-          pass={testStatusSummary.PASS}
-          hideInconclusive
-        />
-      ) : (
-        <></>
-      ),
-      'global.boots': bootStatusSummary ? (
-        <GroupedTestStatus
-          fail={bootStatusSummary.FAIL}
-          pass={bootStatusSummary.PASS}
-          hideInconclusive
-        />
-      ) : (
-        <></>
-      ),
-      'global.builds': buildStatusSummary ? (
-        <BuildStatusComponent
-          valid={buildStatusSummary.valid}
-          invalid={buildStatusSummary.invalid}
-          hideInconclusive
-        />
-      ) : (
-        <></>
-      ),
-    };
+    const buildCount = groupStatus({
+      passCount: buildStatusSummary?.valid,
+      failCount: buildStatusSummary?.invalid,
+      nullCount: buildStatusSummary?.null,
+    });
+
+    const bootCount = groupStatus({
+      passCount: bootStatusSummary?.PASS,
+      failCount: bootStatusSummary?.FAIL,
+      doneCount: bootStatusSummary?.DONE,
+      errorCount: bootStatusSummary?.ERROR,
+      missCount: bootStatusSummary?.MISS,
+      skipCount: bootStatusSummary?.SKIP,
+      nullCount: bootStatusSummary?.NULL,
+    });
+
+    const testCount = groupStatus({
+      passCount: testStatusSummary?.PASS,
+      failCount: testStatusSummary?.FAIL,
+      doneCount: testStatusSummary?.DONE,
+      errorCount: testStatusSummary?.ERROR,
+      missCount: testStatusSummary?.MISS,
+      skipCount: testStatusSummary?.SKIP,
+      nullCount: testStatusSummary?.NULL,
+    });
+
+    return [buildCount, bootCount, testCount];
   }, [
     summaryResponse.data?.summary.boots,
     summaryResponse.data?.summary.builds,
     summaryResponse.data?.summary.tests,
   ]);
+
+  const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
+    return {
+      'global.tests': (
+        <GroupedTestStatus
+          preCalculatedGroupedStatus={testStatusCount}
+          hideInconclusive
+        />
+      ),
+
+      'global.boots': (
+        <GroupedTestStatus
+          preCalculatedGroupedStatus={bootStatusCount}
+          hideInconclusive
+        />
+      ),
+
+      'global.builds': (
+        <GroupedTestStatus
+          preCalculatedGroupedStatus={buildStatusCount}
+          hideInconclusive
+        />
+      ),
+    };
+  }, [bootStatusCount, buildStatusCount, testStatusCount]);
 
   const treeData = useMemo(
     () =>
@@ -301,13 +328,21 @@ function HardwareDetails(): JSX.Element {
     ],
   );
 
+  const hardwareTitle = useMemo(() => {
+    return formatMessage(
+      { id: 'title.hardwareDetails' },
+      { hardwareName: hardwareId },
+    );
+  }, [formatMessage, hardwareId]);
+
   return (
-    <PageWithTitle
-      title={formatMessage(
-        { id: 'title.hardwareDetails' },
-        { hardwareName: hardwareId },
-      )}
-    >
+    <PageWithTitle title={hardwareTitle}>
+      <MemoizedTreeHardwareDetailsOGTags
+        buildCount={buildStatusCount}
+        bootCount={bootStatusCount}
+        testCount={testStatusCount}
+        title={hardwareTitle}
+      />
       <QuerySwitcher
         status={summaryResponse.status}
         data={summaryResponse.data}

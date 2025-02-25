@@ -3,6 +3,7 @@ import { Link, type LinkProps } from '@tanstack/react-router';
 import type { JSX } from 'react';
 
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
+import type { GroupedStatus } from '@/utils/status';
 import { groupStatus } from '@/utils/status';
 
 interface ITestStatus {
@@ -15,6 +16,7 @@ interface ITestStatus {
   nullStatus?: number;
   forceNumber?: boolean;
   hideInconclusive?: boolean;
+  preCalculatedGroupedStatus?: GroupedStatus;
 }
 
 export const GroupedTestStatus = ({
@@ -26,20 +28,23 @@ export const GroupedTestStatus = ({
   skip,
   nullStatus,
   hideInconclusive = false,
+  preCalculatedGroupedStatus,
 }: ITestStatus): JSX.Element => {
-  const { successCount, inconclusiveCount, failedCount } = groupStatus({
-    doneCount: done,
-    errorCount: error,
-    failCount: fail,
-    missCount: miss,
-    passCount: pass,
-    skipCount: skip,
-    nullCount: nullStatus,
-  });
+  const { successCount, inconclusiveCount, failedCount } =
+    preCalculatedGroupedStatus ??
+    groupStatus({
+      doneCount: done,
+      errorCount: error,
+      failCount: fail,
+      missCount: miss,
+      passCount: pass,
+      skipCount: skip,
+      nullCount: nullStatus,
+    });
   return (
     <div className="flex flex-row gap-1">
       <ColoredCircle
-        quantity={successCount ?? 0}
+        quantity={successCount}
         tooltipText="global.success"
         backgroundClassName="bg-light-green"
       />
