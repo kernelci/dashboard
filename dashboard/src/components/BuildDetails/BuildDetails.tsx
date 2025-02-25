@@ -44,7 +44,6 @@ import BuildDetailsTestSection from './BuildDetailsTestSection';
 
 interface BuildDetailsProps {
   breadcrumb?: JSX.Element;
-  buildId?: string;
   onClickFilter: (filter: PossibleTableFilters) => void;
   tableFilter: TableFilter;
   getTestTableRowLink: (testId: string) => LinkProps;
@@ -52,17 +51,17 @@ interface BuildDetailsProps {
 
 const BuildDetails = ({
   breadcrumb,
-  buildId,
   onClickFilter,
   tableFilter,
   getTestTableRowLink,
 }: BuildDetailsProps): JSX.Element => {
-  const { data, isLoading, status, error } = useBuildDetails(buildId ?? '');
+  const { buildId } = useParams({ from: '/build/$buildId' });
+  const { data, isLoading, status, error } = useBuildDetails(buildId);
   const {
     data: issueData,
     status: issueStatus,
     error: issueError,
-  } = useBuildIssues(buildId ?? '');
+  } = useBuildIssues(buildId);
 
   const { formatMessage } = useIntl();
 

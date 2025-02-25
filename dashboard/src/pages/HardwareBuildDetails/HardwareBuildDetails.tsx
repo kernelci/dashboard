@@ -1,10 +1,5 @@
 import type { LinkProps } from '@tanstack/react-router';
-import {
-  useNavigate,
-  useParams,
-  useRouterState,
-  useSearch,
-} from '@tanstack/react-router';
+import { useNavigate, useRouterState, useSearch } from '@tanstack/react-router';
 
 import { useCallback, type JSX } from 'react';
 
@@ -18,7 +13,6 @@ import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBrea
 
 const HardwareBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
-  const { buildId } = useParams({ from: '/build/$buildId' });
   const historyState = useRouterState({ select: s => s.location.state });
   const hardwareId = historyState.id;
 
@@ -58,7 +52,6 @@ const HardwareBuildDetails = (): JSX.Element => {
 
   return (
     <BuildDetails
-      buildId={buildId}
       breadcrumb={
         <MemoizedHardwareBreadcrumb
           searchParams={searchParams}

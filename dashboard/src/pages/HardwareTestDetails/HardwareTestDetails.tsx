@@ -1,4 +1,4 @@
-import { useParams, useSearch } from '@tanstack/react-router';
+import { useSearch } from '@tanstack/react-router';
 
 import type { JSX } from 'react';
 
@@ -7,11 +7,9 @@ import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBrea
 
 const HardwareTestDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/test/$testId/' });
-  const { testId } = useParams({ from: '/test/$testId/' });
 
   return (
     <TestDetails
-      testId={testId}
       breadcrumb={
         <MemoizedHardwareBreadcrumb
           searchParams={searchParams}
