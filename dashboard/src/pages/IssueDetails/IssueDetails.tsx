@@ -1,10 +1,5 @@
 import type { LinkProps } from '@tanstack/react-router';
-import {
-  useNavigate,
-  useParams,
-  useRouterState,
-  useSearch,
-} from '@tanstack/react-router';
+import { useNavigate, useRouterState, useSearch } from '@tanstack/react-router';
 
 import { useCallback, useMemo, type JSX } from 'react';
 
@@ -37,7 +32,6 @@ const getTestTableRowLink = (testId: string): LinkProps => ({
 
 const IssueDetailsPage = (): JSX.Element => {
   const searchParams = useSearch({ from: ISSUE_ROUTE });
-  const { issueId } = useParams({ from: ISSUE_ROUTE });
   const navigate = useNavigate({ from: ISSUE_ROUTE });
   const historyState = useRouterState({ select: s => s.location.state });
 
@@ -101,7 +95,6 @@ const IssueDetailsPage = (): JSX.Element => {
 
   return (
     <IssueDetails
-      issueId={issueId}
       versionNumber={searchParams.issueVersion}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       onClickTestFilter={onClickTestFilter}

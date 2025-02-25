@@ -4,7 +4,12 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction, JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
-import { Link, useRouterState, useSearch } from '@tanstack/react-router';
+import {
+  Link,
+  useParams,
+  useRouterState,
+  useSearch,
+} from '@tanstack/react-router';
 
 import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
 import type { TTestDetails } from '@/types/tree/TestDetails';
@@ -314,13 +319,11 @@ const TestDetailsSections = ({
 
 interface TestsDetailsProps {
   breadcrumb?: JSX.Element;
-  testId?: string;
 }
 
-const TestDetails = ({
-  breadcrumb,
-  testId,
-}: TestsDetailsProps): JSX.Element => {
+const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
+  const { testId } = useParams({ from: '/test/$testId' });
+
   const { formatMessage } = useIntl();
 
   const { data, isLoading, status, error } = useTestDetails(testId ?? '');

@@ -2,7 +2,7 @@ import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useMemo, useState, type JSX } from 'react';
 
-import type { LinkProps } from '@tanstack/react-router';
+import { useParams, type LinkProps } from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
 import type { ISection } from '@/components/Section/Section';
@@ -47,7 +47,6 @@ import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
 
 interface IIssueDetails {
-  issueId: string;
   versionNumber?: number;
   tableFilter: TableFilter;
   onClickTestFilter: (filter: PossibleTableFilters) => void;
@@ -58,7 +57,6 @@ interface IIssueDetails {
 }
 
 export const IssueDetails = ({
-  issueId,
   versionNumber,
   tableFilter,
   onClickTestFilter,
@@ -67,6 +65,7 @@ export const IssueDetails = ({
   getBuildTableRowLink,
   breadcrumb,
 }: IIssueDetails): JSX.Element => {
+  const { issueId } = useParams({ from: '/issue/$issueId' });
   const { data, isLoading, status, error } = useIssueDetails(
     issueId,
     versionNumber,

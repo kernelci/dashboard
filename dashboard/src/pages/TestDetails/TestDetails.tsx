@@ -1,4 +1,4 @@
-import { useParams, useRouterState } from '@tanstack/react-router';
+import { useRouterState } from '@tanstack/react-router';
 
 import type { JSX } from 'react';
 
@@ -11,7 +11,6 @@ import HardwareTestDetails from '@/pages/HardwareTestDetails';
 
 const TestDetailsPage = (): JSX.Element => {
   const historyState = useRouterState({ select: s => s.location.state });
-  const { testId } = useParams({ from: '/test/$testId' });
 
   if (historyState.id !== undefined) {
     if (historyState.from === RedirectFrom.Tree) {
@@ -23,7 +22,7 @@ const TestDetailsPage = (): JSX.Element => {
     }
   }
 
-  return <TestDetails testId={testId} />;
+  return <TestDetails />;
 };
 
 export default TestDetailsPage;

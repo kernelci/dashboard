@@ -1,12 +1,7 @@
 import { useCallback, type JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
-import {
-  useSearch,
-  useParams,
-  useNavigate,
-  useRouterState,
-} from '@tanstack/react-router';
+import { useSearch, useNavigate, useRouterState } from '@tanstack/react-router';
 
 import {
   zTableFilterInfoDefault,
@@ -21,7 +16,6 @@ import HardwareBuildDetails from '@/pages/HardwareBuildDetails';
 
 const BuildDetailsPage = (): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
-  const { buildId } = useParams({ from: '/build/$buildId' });
   const navigate = useNavigate({ from: '/build/$buildId' });
   const historyState = useRouterState({ select: s => s.location.state });
 
@@ -66,7 +60,6 @@ const BuildDetailsPage = (): JSX.Element => {
 
   return (
     <BuildDetails
-      buildId={buildId}
       onClickFilter={onClickFilter}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}

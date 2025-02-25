@@ -1,10 +1,5 @@
 import type { LinkProps } from '@tanstack/react-router';
-import {
-  useNavigate,
-  useParams,
-  useRouterState,
-  useSearch,
-} from '@tanstack/react-router';
+import { useNavigate, useRouterState, useSearch } from '@tanstack/react-router';
 
 import { useCallback, type JSX } from 'react';
 
@@ -18,7 +13,6 @@ import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 
 const TreeBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/build/$buildId' });
-  const { buildId } = useParams({ from: '/build/$buildId' });
   const historyState = useRouterState({ select: s => s.location.state });
   const treeId = historyState.id;
 
@@ -56,7 +50,6 @@ const TreeBuildDetails = (): JSX.Element => {
 
   return (
     <BuildDetails
-      buildId={buildId}
       breadcrumb={
         <MemoizedTreeBreadcrumb
           searchParams={searchParams}
