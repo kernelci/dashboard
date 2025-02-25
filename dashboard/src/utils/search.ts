@@ -150,6 +150,7 @@ const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   startTimestampInSeconds: 'st',
   endTimestampInSeconds: 'et',
   issueVersion: 'iv',
+  logOpen: 'l',
 } as const;
 
 const treeInfoMinifiedParams: Record<keyof TTreeInformation, string> = {

@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import type {
   ArchCompilerStatus,
   Architecture,
@@ -53,3 +55,9 @@ export type DetailsFilters = {
   boots: LocalFilters;
   tests: LocalFilters;
 };
+
+export const DEFAULT_LOG_OPEN = false;
+export const zLogOpen = z
+  .boolean()
+  .catch(DEFAULT_LOG_OPEN)
+  .default(DEFAULT_LOG_OPEN);
