@@ -39,6 +39,9 @@ import { StatusIcon } from '@/components/Icons/StatusIcons';
 
 import PageWithTitle from '@/components/PageWithTitle';
 import { getTitle } from '@/utils/utils';
+import { getTestHardware } from '@/lib/test';
+
+import { MemoizedTestDetailsOGTags } from '@/components/OpenGraphTags/TestDetailsOGTags';
 
 const LinkItem = ({ children, ...props }: LinkProps): JSX.Element => {
   return (
@@ -54,27 +57,6 @@ const LinkItem = ({ children, ...props }: LinkProps): JSX.Element => {
 };
 
 const MemoizedLinkItem = memo(LinkItem);
-
-const getTestHardware = ({
-  misc,
-  compatibles,
-  defaultValue,
-}: {
-  misc?: Record<string, unknown>;
-  compatibles?: string[];
-  defaultValue?: string;
-}): string => {
-  const platform = misc?.['platform'];
-  if (typeof platform === 'string' && platform !== '') {
-    return platform;
-  }
-
-  if (compatibles && compatibles.length > 0) {
-    return compatibles[0];
-  }
-
-  return defaultValue ?? '-';
-};
 
 const TestDetailsSections = ({
   test,
@@ -336,13 +318,16 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
   const [sheetType, setSheetType] = useState<SheetType>('log');
   const [jsonContent, setJsonContent] = useState<IJsonContent>();
 
+  const testDetailsTabTitle: string = useMemo(() => {
+    return formatMessage(
+      { id: 'title.testDetails' },
+      { testName: getTitle(data?.path, isLoading) },
+    );
+  }, [data?.path, formatMessage, isLoading]);
+
   return (
-    <PageWithTitle
-      title={formatMessage(
-        { id: 'title.testDetails' },
-        { testName: getTitle(data?.path, isLoading) },
-      )}
-    >
+    <PageWithTitle title={testDetailsTabTitle}>
+      <MemoizedTestDetailsOGTags title={testDetailsTabTitle} data={data} />
       <QuerySwitcher
         status={status}
         data={data}

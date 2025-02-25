@@ -8,6 +8,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import HardwareListingPage from '@/pages/Hardware/HardwareListingPage';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
+import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags';
 
 const Hardware = (): JSX.Element => {
   const { hardwareSearch } = useSearch({
@@ -29,10 +30,11 @@ const Hardware = (): JSX.Element => {
     [navigate],
   );
 
-  const intl = useIntl();
+  const { formatMessage } = useIntl();
 
   return (
     <>
+      <MemoizedListingOGTags monitor="/hardware" search={hardwareSearch} />
       <div className="fixed top-0 z-10 mx-[380px] flex w-full pt-5 pr-12 pl-6">
         <div className="flex w-2/3 items-center px-6">
           <DebounceInput
@@ -40,7 +42,7 @@ const Hardware = (): JSX.Element => {
             className="w-2/3"
             type="text"
             startingValue={hardwareSearch}
-            placeholder={intl.formatMessage({
+            placeholder={formatMessage({
               id: 'hardware.searchPlaceholder',
             })}
           />

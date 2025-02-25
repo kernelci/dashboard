@@ -18,7 +18,7 @@ type GroupStatusCount = {
   nullCount?: number;
 };
 
-type GroupedStatus = {
+export type GroupedStatus = {
   successCount: number;
   inconclusiveCount: number;
   failedCount: number;

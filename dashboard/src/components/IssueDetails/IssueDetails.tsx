@@ -40,7 +40,9 @@ import PageWithTitle from '@/components/PageWithTitle';
 
 import { getTitle } from '@/utils/utils';
 
-import { IssueCulprit } from '@/components/Issue/IssueCulprit';
+import { getIssueCulprit } from '@/lib/issue';
+
+import { MemoizedIssueDetailsOGTags } from '@/components/OpenGraphTags/IssueDetailsOGTags';
 
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 
@@ -112,6 +114,20 @@ export const IssueDetails = ({
     }
   }, [data, issueId]);
 
+  const issueCulprit = useMemo(() => {
+    return getIssueCulprit({
+      culprit_code: data?.culprit_code,
+      culprit_harness: data?.culprit_harness,
+      culprit_tool: data?.culprit_tool,
+      formatMessage: formatMessage,
+    });
+  }, [
+    data?.culprit_code,
+    data?.culprit_harness,
+    data?.culprit_tool,
+    formatMessage,
+  ]);
+
   const generalSections: ISection[] = useMemo(() => {
     if (!data) {
       return [];
@@ -151,13 +167,7 @@ export const IssueDetails = ({
               },
               {
                 title: 'issueDetails.culpritTitle',
-                linkText: (
-                  <IssueCulprit
-                    culprit_code={data.culprit_code}
-                    culprit_harness={data.culprit_harness}
-                    culprit_tool={data.culprit_tool}
-                  />
-                ),
+                linkText: issueCulprit,
               },
               {
                 title: 'issueDetails.id',
@@ -172,7 +182,7 @@ export const IssueDetails = ({
         ],
       },
     ];
-  }, [data, tagPills, formatMessage]);
+  }, [data, tagPills, formatMessage, issueCulprit]);
 
   const sectionsData: ISection[] = useMemo(() => {
     return [
@@ -183,13 +193,21 @@ export const IssueDetails = ({
     ].filter(section => !!section);
   }, [generalSections, logspecSection, miscSection, firstIncidentSection]);
 
+  const issueDetailsTabTitle = useMemo(() => {
+    return formatMessage(
+      { id: 'title.issueDetails' },
+      { issueName: getTitle(data?.comment, isLoading) },
+    );
+  }, [data?.comment, formatMessage, isLoading]);
+
   return (
-    <PageWithTitle
-      title={formatMessage(
-        { id: 'title.issueDetails' },
-        { issueName: getTitle(data?.comment, isLoading) },
-      )}
-    >
+    <PageWithTitle title={issueDetailsTabTitle}>
+      <MemoizedIssueDetailsOGTags
+        title={issueDetailsTabTitle}
+        issueCulprit={issueCulprit}
+        issueId={issueId}
+        data={data}
+      />
       <QuerySwitcher
         status={status}
         data={data}

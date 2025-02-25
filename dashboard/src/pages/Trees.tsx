@@ -10,6 +10,7 @@ import { z } from 'zod';
 import TreeListingPage from '@/components/TreeListingPage/TreeListingPage';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
+import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags';
 
 const Trees = (): JSX.Element => {
   const { treeSearch: unsafeTreeSearch } = useSearch({
@@ -32,10 +33,11 @@ const Trees = (): JSX.Element => {
     [navigate],
   );
 
-  const intl = useIntl();
+  const { formatMessage } = useIntl();
 
   return (
     <>
+      <MemoizedListingOGTags monitor="/tree" search={treeSearch} />
       <div className="fixed top-0 z-10 mx-[380px] flex w-full pt-5 pr-12 pl-6">
         <div className="flex w-2/3 items-center px-6">
           <DebounceInput
@@ -43,7 +45,7 @@ const Trees = (): JSX.Element => {
             className="w-2/3"
             type="text"
             startingValue={treeSearch}
-            placeholder={intl.formatMessage({ id: 'tree.searchPlaceholder' })}
+            placeholder={formatMessage({ id: 'tree.searchPlaceholder' })}
           />
         </div>
       </div>
