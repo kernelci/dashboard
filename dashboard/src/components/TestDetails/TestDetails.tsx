@@ -7,6 +7,7 @@ import type { LinkProps } from '@tanstack/react-router';
 import {
   Link,
   useParams,
+  useNavigate,
   useRouterState,
   useSearch,
 } from '@tanstack/react-router';
@@ -307,6 +308,8 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
   const { testId } = useParams({ from: '/test/$testId' });
 
   const { formatMessage } = useIntl();
+  const { logOpen } = useSearch({ from: '/test/$testId' });
+  const navigate = useNavigate({ from: '/test/$testId' });
 
   const { data, isLoading, status, error } = useTestDetails(testId ?? '');
   const {
@@ -317,6 +320,11 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
 
   const [sheetType, setSheetType] = useState<SheetType>('log');
   const [jsonContent, setJsonContent] = useState<IJsonContent>();
+  const logOpenChange = useCallback(
+    (isOpen: boolean) =>
+      navigate({ search: s => ({ ...s, logOpen: isOpen }), state: s => s }),
+    [navigate],
+  );
 
   const testDetailsTabTitle: string = useMemo(() => {
     return formatMessage(
@@ -339,7 +347,7 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
           />
         }
       >
-        <Sheet>
+        <Sheet open={logOpen} onOpenChange={logOpenChange}>
           <div className="w-full pb-8">
             {breadcrumb}
 
