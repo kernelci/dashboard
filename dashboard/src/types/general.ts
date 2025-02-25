@@ -257,7 +257,8 @@ export type SearchParamsKeys =
   | 'treeCommits'
   | 'startTimestampInSeconds'
   | 'endTimestampInSeconds'
-  | 'issueVersion';
+  | 'issueVersion'
+  | 'logOpen';
 export type SearchSchema = Partial<Record<SearchParamsKeys, ZodTypeAny>>;
 
 const requestFilters = {

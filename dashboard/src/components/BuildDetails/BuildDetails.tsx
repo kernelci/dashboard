@@ -2,7 +2,12 @@ import { useIntl } from 'react-intl';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useCallback, useMemo, useState, type JSX } from 'react';
 
-import { useParams, type LinkProps } from '@tanstack/react-router';
+import {
+  useNavigate,
+  useParams,
+  useSearch,
+  type LinkProps,
+} from '@tanstack/react-router';
 
 import SectionGroup from '@/components/Section/SectionGroup';
 import type { ISection } from '@/components/Section/Section';
@@ -65,12 +70,19 @@ const BuildDetails = ({
     error: issueError,
   } = useBuildIssues(buildId);
 
+  const { logOpen } = useSearch({ from: '/build/$buildId' });
+  const navigate = useNavigate({ from: '/build/$buildId' });
   const { formatMessage } = useIntl();
 
   const hasUsefulLogInfo = data?.log_url || data?.log_excerpt;
 
   const [sheetType, setSheetType] = useState<SheetType>('log');
   const [jsonContent, setJsonContent] = useState<IJsonContent>();
+  const logOpenChange = useCallback(
+    (isOpen: boolean) =>
+      navigate({ search: s => ({ ...s, logOpen: isOpen }), state: s => s }),
+    [navigate],
+  );
 
   const miscSection: ISection | undefined = useMemo(():
     | ISection
@@ -252,7 +264,7 @@ const BuildDetails = ({
         }
       >
         <ErrorBoundary FallbackComponent={UnexpectedError}>
-          <Sheet>
+          <Sheet open={logOpen} onOpenChange={logOpenChange}>
             {breadcrumb}
 
             <SectionGroup sections={sectionsData} />
