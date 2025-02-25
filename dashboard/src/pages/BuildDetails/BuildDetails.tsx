@@ -15,7 +15,7 @@ import TreeBuildDetails from '@/pages/TreeBuildDetails';
 import HardwareBuildDetails from '@/pages/HardwareBuildDetails';
 
 const BuildDetailsPage = (): JSX.Element => {
-  const searchParams = useSearch({ from: '/build/$buildId' });
+  const searchParams = useSearch({ from: '/_main/build/$buildId' });
   const navigate = useNavigate({ from: '/build/$buildId' });
   const historyState = useRouterState({ select: s => s.location.state });
 

@@ -62,7 +62,7 @@ const BuildDetails = ({
   tableFilter,
   getTestTableRowLink,
 }: BuildDetailsProps): JSX.Element => {
-  const { buildId } = useParams({ from: '/build/$buildId' });
+  const { buildId } = useParams({ from: '/_main/build/$buildId' });
   const { data, isLoading, status, error } = useBuildDetails(buildId);
   const {
     data: issueData,
@@ -70,7 +70,7 @@ const BuildDetails = ({
     error: issueError,
   } = useBuildIssues(buildId);
 
-  const { logOpen } = useSearch({ from: '/build/$buildId' });
+  const { logOpen } = useSearch({ from: '/_main/build/$buildId' });
   const navigate = useNavigate({ from: '/build/$buildId' });
   const { formatMessage } = useIntl();
 

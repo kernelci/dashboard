@@ -12,7 +12,7 @@ import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags'
 
 const Hardware = (): JSX.Element => {
   const { hardwareSearch } = useSearch({
-    from: '/hardware',
+    from: '/_main/hardware',
   });
 
   const navigate = useNavigate({ from: '/hardware' });

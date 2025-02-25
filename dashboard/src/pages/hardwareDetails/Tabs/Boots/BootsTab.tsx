@@ -53,7 +53,7 @@ const BootsTab = ({
   fullDataResult,
 }: IBootsTab): JSX.Element => {
   const { tableFilter, diffFilter } = useSearch({
-    from: '/hardware/$hardwareId',
+    from: '/_main/hardware/$hardwareId',
   });
 
   const currentPathFilter = diffFilter.bootPath

@@ -40,7 +40,7 @@ const HardwareDetailsTabs = ({
   summaryData,
 }: IHardwareDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
-    from: '/hardware/$hardwareId',
+    from: '/_main/hardware/$hardwareId',
   });
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });

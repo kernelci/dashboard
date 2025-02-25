@@ -27,7 +27,7 @@ export const useTreeTable = ({
 }: {
   enabled: boolean;
 }): UseQueryResult<Tree[]> => {
-  const { origin, intervalInDays } = useSearch({ from: '/tree' });
+  const { origin, intervalInDays } = useSearch({ from: '/_main/tree' });
 
   const queryKey = ['treeTable', origin, intervalInDays];
 
@@ -49,7 +49,7 @@ const fetchTreeFastCheckoutData = async (
 };
 
 export const useTreeTableFast = (): UseQueryResult<TreeFastPathResponse> => {
-  const { origin, intervalInDays } = useSearch({ from: '/tree' });
+  const { origin, intervalInDays } = useSearch({ from: '/_main/tree' });
 
   const queryKey = ['treeTableFast', origin, intervalInDays];
 

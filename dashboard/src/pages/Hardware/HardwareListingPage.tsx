@@ -49,7 +49,7 @@ const useHardwareListingTime = (): {
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
 } => {
-  const { intervalInDays } = useSearch({ from: '/hardware' });
+  const { intervalInDays } = useSearch({ from: '/_main/hardware' });
   const [timestamps, setTimeStamps] = useState(() => {
     return calculateTimeStamp(intervalInDays);
   });

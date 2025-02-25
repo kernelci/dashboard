@@ -17,9 +17,11 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { Skeleton } from '@/components/Skeleton';
 
 export const TreeLatest = (): JSX.Element | void => {
-  const searchParams = useSearch({ from: '/tree/$treeName/$branch/' });
+  const searchParams = useSearch({ from: '/_main/tree/$treeName/$branch/' });
   const navigate = useNavigate();
-  const { treeName, branch } = useParams({ from: '/tree/$treeName/$branch/' });
+  const { treeName, branch } = useParams({
+    from: '/_main/tree/$treeName/$branch/',
+  });
   const { isLoading, data, error } = useTreeLatest(
     treeName,
     branch,

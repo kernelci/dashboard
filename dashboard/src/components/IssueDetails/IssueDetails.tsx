@@ -67,7 +67,7 @@ export const IssueDetails = ({
   getBuildTableRowLink,
   breadcrumb,
 }: IIssueDetails): JSX.Element => {
-  const { issueId } = useParams({ from: '/issue/$issueId' });
+  const { issueId } = useParams({ from: '/_main/issue/$issueId' });
   const { data, isLoading, status, error } = useIssueDetails(
     issueId,
     versionNumber,

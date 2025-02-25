@@ -10,8 +10,6 @@ import { RedirectFrom } from '@/types/general';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBreadcrumb';
 
-const ISSUE_ROUTE = '/issue/$issueId';
-
 const getBuildTableRowLink = (buildId: string): LinkProps => ({
   to: '/build/$buildId',
   params: {
@@ -31,8 +29,8 @@ const getTestTableRowLink = (testId: string): LinkProps => ({
 });
 
 const IssueDetailsPage = (): JSX.Element => {
-  const searchParams = useSearch({ from: ISSUE_ROUTE });
-  const navigate = useNavigate({ from: ISSUE_ROUTE });
+  const searchParams = useSearch({ from: '/_main/issue/$issueId' });
+  const navigate = useNavigate({ from: '/issue/$issueId' });
   const historyState = useRouterState({ select: s => s.location.state });
 
   const breadcrumbComponent = useMemo(() => {

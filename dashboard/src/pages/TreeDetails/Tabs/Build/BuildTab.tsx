@@ -67,10 +67,10 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
   });
 
   const { diffFilter } = useSearch({
-    from: '/tree/$treeId',
+    from: '/_main/tree/$treeId',
   });
 
-  const { treeId } = useParams({ from: '/tree/$treeId' });
+  const { treeId } = useParams({ from: '/_main/tree/$treeId' });
 
   const summaryData = treeDetailsLazyLoaded.summary?.data?.summary.builds;
   const { data: fullData, status: fullStatus } = treeDetailsLazyLoaded.full;

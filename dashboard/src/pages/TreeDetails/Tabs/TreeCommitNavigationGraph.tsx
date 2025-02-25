@@ -10,10 +10,10 @@ const TreeCommitNavigationGraph = (): React.ReactNode => {
     currentPageTab,
     diffFilter,
     treeInfo: { gitUrl, gitBranch, headCommitHash },
-  } = useSearch({ from: '/tree/$treeId' });
+  } = useSearch({ from: '/_main/tree/$treeId' });
 
   const { treeId } = useParams({
-    from: '/tree/$treeId',
+    from: '/_main/tree/$treeId',
   });
 
   const navigate = useNavigate({
