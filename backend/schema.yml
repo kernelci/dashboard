@@ -2514,6 +2514,14 @@ components:
       - stable
       - linux-next
       type: string
+    PossibleRegressionType:
+      enum:
+      - regression
+      - fixed
+      - unstable
+      - pass
+      - fail
+      type: string
     ProcessedExtraDetailedIssues:
       additionalProperties:
         $ref: '#/components/schemas/ExtraIssuesData'
@@ -2612,6 +2620,13 @@ components:
           $ref: '#/components/schemas/Checkout__GitCommitTags'
         tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
+        status_history:
+          items:
+            $ref: '#/components/schemas/TestStatusHistoryItem'
+          title: Status History
+          type: array
+        regression_type:
+          $ref: '#/components/schemas/PossibleRegressionType'
       required:
       - id
       - build_id
@@ -2632,6 +2647,8 @@ components:
       - git_repository_url
       - git_commit_tags
       - tree_name
+      - status_history
+      - regression_type
       title: TestDetailsResponse
       type: object
     TestHistoryItem:
@@ -2747,6 +2764,23 @@ components:
           default: 0
           title: 'Null'
       title: TestStatusCount
+      type: object
+    TestStatusHistoryItem:
+      properties:
+        field_timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        id:
+          $ref: '#/components/schemas/Test__Id'
+        status:
+          $ref: '#/components/schemas/Test__Status'
+        git_commit_hash:
+          $ref: '#/components/schemas/Checkout__GitCommitHash'
+      required:
+      - field_timestamp
+      - id
+      - status
+      - git_commit_hash
+      title: TestStatusHistoryItem
       type: object
     TestSummary:
       properties:
