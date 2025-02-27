@@ -67,7 +67,6 @@ const BootsTab = ({
         testId: bootId,
         hardwareId: hardwareId,
       },
-      search: s => s,
     }),
     [hardwareId],
   );

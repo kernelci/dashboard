@@ -1,18 +1,18 @@
-import { useSearch } from '@tanstack/react-router';
-
 import type { JSX } from 'react';
+
+import { useSearchStore } from '@/hooks/store/useSearchStore';
 
 import TestDetails from '@/components/TestDetails/TestDetails';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 
 const TreeTestDetails = (): JSX.Element => {
-  const searchParams = useSearch({ from: '/_main/test/$testId/' });
+  const previousSearch = useSearchStore(s => s.previousSearch);
 
   return (
     <TestDetails
       breadcrumb={
         <MemoizedTreeBreadcrumb
-          searchParams={searchParams}
+          searchParams={previousSearch}
           locationMessage="test.details"
         />
       }
