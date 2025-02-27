@@ -68,10 +68,9 @@ const IssuesList = ({
         params: {
           issueId: issueId,
         },
-        search: previousSearch => ({
-          ...previousSearch,
+        search: {
           issueVersion: version,
-        }),
+        },
         state: s => ({ ...s, id: detailsId, from: pageFrom }),
       };
     },

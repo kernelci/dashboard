@@ -5,9 +5,11 @@ import {
   useSearch,
 } from '@tanstack/react-router';
 import type { JSX } from 'react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
+
+import { useSearchStore } from '@/hooks/store/useSearchStore';
 
 import {
   Breadcrumb,
@@ -155,6 +157,12 @@ function TreeDetails(): JSX.Element {
   const searchParams = useSearch({ from: '/_main/tree/$treeId' });
   const { diffFilter, treeInfo } = searchParams;
   const navigate = useNavigate({ from: '/tree/$treeId' });
+  const updatePreviousSearch = useSearchStore(s => s.updatePreviousSearch);
+
+  useEffect(
+    () => updatePreviousSearch(searchParams),
+    [searchParams, updatePreviousSearch],
+  );
 
   const reqFilter = mapFilterToReq(diffFilter);
 

@@ -9,6 +9,7 @@ import { zTableFilterInfoDefault } from '@/types/tree/TreeDetails';
 import { RedirectFrom } from '@/types/general';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBreadcrumb';
+import { useSearchStore } from '@/hooks/store/useSearchStore';
 
 const getBuildTableRowLink = (buildId: string): LinkProps => ({
   to: '/build/$buildId',
@@ -32,13 +33,14 @@ const IssueDetailsPage = (): JSX.Element => {
   const searchParams = useSearch({ from: '/_main/issue/$issueId' });
   const navigate = useNavigate({ from: '/issue/$issueId' });
   const historyState = useRouterState({ select: s => s.location.state });
+  const previousSearch = useSearchStore(s => s.previousSearch);
 
   const breadcrumbComponent = useMemo(() => {
     if (historyState.id !== undefined) {
       if (historyState.from === RedirectFrom.Tree) {
         return (
           <MemoizedTreeBreadcrumb
-            searchParams={searchParams}
+            searchParams={previousSearch}
             locationMessage="issueDetails.issueDetails"
           />
         );
@@ -47,13 +49,13 @@ const IssueDetailsPage = (): JSX.Element => {
       if (historyState.from === RedirectFrom.Hardware) {
         return (
           <MemoizedHardwareBreadcrumb
-            searchParams={searchParams}
+            searchParams={previousSearch}
             locationMessage="issueDetails.issueDetails"
           />
         );
       }
     }
-  }, [historyState.from, historyState.id, searchParams]);
+  }, [historyState.from, historyState.id, previousSearch]);
 
   const onClickTestFilter = useCallback(
     (filter: PossibleTableFilters): void => {

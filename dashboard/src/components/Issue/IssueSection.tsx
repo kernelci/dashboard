@@ -9,13 +9,10 @@ import { Link } from '@tanstack/react-router';
 import { RiProhibited2Line } from 'react-icons/ri';
 
 import ListingItem from '@/components/ListingItem/ListingItem';
-import { zOrigin } from '@/types/general';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { TErrorVariant } from '@/components/DetailsPages/SectionError';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
-
-import { zTableFilterInfoValidator } from '@/types/tree/TreeDetails';
 
 import type { TIssue } from '@/types/issues';
 
@@ -50,16 +47,11 @@ const IssueSection = ({
           <Link
             key={issue.id + issue.version}
             className="mb-16 flex not-last:mb-2 not-last:border-b not-last:pb-2"
-            to={'/issue/$issueId'}
+            to="/issue/$issueId"
             params={{ issueId: issue.id }}
             state={s => s}
-            search={s => {
-              return {
-                ...s,
-                origin: zOrigin.parse(s.origin),
-                tableFilter: zTableFilterInfoValidator.parse(s.tableFilter),
-                issueVersion: issue.version,
-              };
+            search={{
+              issueVersion: issue.version,
             }}
           >
             <ListingItem

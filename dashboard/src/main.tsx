@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+
 import { QueryClient } from '@tanstack/react-query';
 
 import { IntlProvider } from 'react-intl';
