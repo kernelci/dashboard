@@ -1,3 +1,4 @@
+from typing import Literal
 from pydantic import BaseModel, Field
 
 from kernelCI_app.typeModels.databases import (
@@ -20,7 +21,19 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitRepositoryUrl,
     Checkout__GitCommitTags,
     Checkout__TreeName,
+    Timestamp,
 )
+
+type PossibleRegressionType = Literal["regression", "fixed", "unstable", "pass", "fail"]
+
+
+class TestStatusHistoryItem(BaseModel):
+    field_timestamp: Timestamp
+    id: Test__Id
+    status: Test__Status
+    git_commit_hash: Checkout__GitCommitHash = Field(
+        validation_alias="build__checkout__git_commit_hash"
+    )
 
 
 class TestDetailsResponse(BaseModel):
@@ -51,3 +64,5 @@ class TestDetailsResponse(BaseModel):
         validation_alias="build__checkout__git_commit_tags"
     )
     tree_name: Checkout__TreeName = Field(validation_alias="build__checkout__tree_name")
+    status_history: list[TestStatusHistoryItem]
+    regression_type: PossibleRegressionType
