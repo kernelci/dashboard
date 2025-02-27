@@ -1,5 +1,14 @@
 import type { Status } from '@/types/database';
 
+export type TestStatusHistoryItem = {
+  field_timestamp: Date;
+  id: string;
+  status: Status;
+  git_commit_hash: string;
+};
+
+type PossibleRegressionType = 'regression' | 'fixed' | 'unstable';
+
 export type TTestDetails = {
   architecture: string;
   build_id: string;
@@ -20,4 +29,6 @@ export type TTestDetails = {
   misc?: Record<string, unknown>;
   output_files?: Record<string, unknown>;
   tree_name?: string;
+  status_history: TestStatusHistoryItem[];
+  regression_type: PossibleRegressionType;
 };
