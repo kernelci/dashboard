@@ -98,19 +98,17 @@ const prepareTreeItems = ({
   });
 
 function HardwareDetails(): JSX.Element {
-  const {
-    treeIndexes,
-    treeCommits,
-    startTimestampInSeconds,
-    endTimestampInSeconds,
-    diffFilter,
-    origin,
-  } = useSearch({ from: '/_main/hardware/$hardwareId' });
+  const { treeIndexes, treeCommits, diffFilter, origin } = useSearch({
+    from: '/_main/hardware/$hardwareId',
+  });
+  const { startTimestampInSeconds, endTimestampInSeconds } = useSearch({
+    from: '/_main/hardware/$hardwareId/',
+  });
 
   const { formatMessage } = useIntl();
 
   const { hardwareId } = useParams({ from: '/_main/hardware/$hardwareId' });
-  const searchParams = useSearch({ from: '/_main/hardware/$hardwareId' });
+  const searchParams = useSearch({ from: '/_main/hardware/$hardwareId/' });
   const updatePreviousSearch = useSearchStore(s => s.updatePreviousSearch);
 
   useEffect(
