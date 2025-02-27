@@ -3,27 +3,13 @@ import { z } from 'zod';
 import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
 
 import {
-  defaultValidadorValues,
   zTableFilterInfoDefault,
   zTableFilterInfoValidator,
 } from '@/types/tree/TreeDetails';
-import {
-  DEFAULT_DIFF_FILTER,
-  DEFAULT_ORIGIN,
-  type SearchSchema,
-} from '@/types/general';
-import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
+import { type SearchSchema } from '@/types/general';
 
 export const issueDetailsDefaultValues = {
-  origin: DEFAULT_ORIGIN,
   tableFilter: zTableFilterInfoDefault,
-  diffFilter: DEFAULT_DIFF_FILTER,
-  currentPageTab: defaultValidadorValues.tab,
-  intervalInDays: DEFAULT_TIME_SEARCH,
-  treeSearch: '',
-  hardwareSearch: '',
-  treeIndexes: [],
-  treeCommits: {},
   issueVersion: undefined,
 };
 

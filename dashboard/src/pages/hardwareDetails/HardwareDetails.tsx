@@ -7,7 +7,9 @@ import {
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { useCallback, useMemo, useState, type JSX } from 'react';
+import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
+
+import { useSearchStore } from '@/hooks/store/useSearchStore';
 
 import {
   Breadcrumb,
@@ -108,6 +110,13 @@ function HardwareDetails(): JSX.Element {
   const { formatMessage } = useIntl();
 
   const { hardwareId } = useParams({ from: '/_main/hardware/$hardwareId' });
+  const searchParams = useSearch({ from: '/_main/hardware/$hardwareId' });
+  const updatePreviousSearch = useSearchStore(s => s.updatePreviousSearch);
+
+  useEffect(
+    () => updatePreviousSearch(searchParams),
+    [searchParams, updatePreviousSearch],
+  );
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 
