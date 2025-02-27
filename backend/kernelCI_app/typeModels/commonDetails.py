@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Set, Union, Tuple, Any
 
 from pydantic import BaseModel, field_validator
+from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.issues import Issue
 from kernelCI_app.typeModels.databases import EnvironmentMisc
 
@@ -66,6 +67,10 @@ class BuildHistoryItem(BaseModel):
     def to_dict(cls, value: Any) -> Any:
         if isinstance(value, str):
             return json.loads(value)
+        elif isinstance(value, dict):
+            return value
+        else:
+            log_message("Invalid misc for BuildHistoryItem")
 
 
 class TestSummary(BaseModel):
