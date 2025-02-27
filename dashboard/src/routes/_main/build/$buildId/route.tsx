@@ -14,7 +14,10 @@ import {
 } from '@/types/general';
 import { DEFAULT_LOG_OPEN, zLogOpen } from '@/types/commonDetails';
 
-import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
+import {
+  DEFAULT_LISTING_ITEMS,
+  DEFAULT_TIME_SEARCH,
+} from '@/utils/constants/general';
 
 export const buildDetailsDefaultValues = {
   origin: DEFAULT_ORIGIN,
@@ -27,6 +30,7 @@ export const buildDetailsDefaultValues = {
   treeIndexes: [],
   treeCommits: {},
   logOpen: DEFAULT_LOG_OPEN,
+  listingSize: DEFAULT_LISTING_ITEMS,
 };
 
 export const buildDetailsSearchSchema = z.object({

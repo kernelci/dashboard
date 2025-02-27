@@ -12,11 +12,14 @@ import {
 import { zTreeCommits } from '@/types/hardware/hardwareDetails';
 import {
   DEFAULT_DIFF_FILTER,
+  DEFAULT_ORIGIN,
   type SearchSchema,
   zDiffFilter,
+  zOrigin,
 } from '@/types/general';
 
 const defaultValues = {
+  origin: DEFAULT_ORIGIN,
   currentPageTab: defaultValidadorValues.tab,
   treeIndexes: [],
   treeCommits: {},
@@ -24,6 +27,7 @@ const defaultValues = {
   diffFilter: DEFAULT_DIFF_FILTER,
 };
 const hardwareDetailsSearchSchema = z.object({
+  origin: zOrigin,
   currentPageTab: zPossibleTabValidator,
   treeIndexes: z.array(z.number().int()).default([]),
   treeCommits: zTreeCommits,
