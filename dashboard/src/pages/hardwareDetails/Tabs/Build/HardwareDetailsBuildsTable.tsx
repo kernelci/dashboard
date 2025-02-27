@@ -49,7 +49,6 @@ export function HardwareDetailsBuildsTable({
         buildId: buildId,
         hardwareId: hardwareId,
       },
-      search: s => s,
     }),
     [hardwareId],
   );

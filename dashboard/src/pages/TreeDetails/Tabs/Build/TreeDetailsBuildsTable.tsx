@@ -28,7 +28,6 @@ export function TreeDetailsBuildsTable({
         buildId: buildId,
         treeId: treeId,
       },
-      search: s => s,
     }),
     [treeId],
   );

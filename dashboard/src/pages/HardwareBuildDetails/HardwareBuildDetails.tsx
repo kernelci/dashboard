@@ -3,6 +3,8 @@ import { useNavigate, useRouterState, useSearch } from '@tanstack/react-router';
 
 import { useCallback, type JSX } from 'react';
 
+import { useSearchStore } from '@/hooks/store/useSearchStore';
+
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 import {
   zTableFilterInfoDefault,
@@ -13,13 +15,12 @@ import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBrea
 
 const HardwareBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/_main/build/$buildId' });
-  const historyState = useRouterState({ select: s => s.location.state });
-  const hardwareId = historyState.id;
+  const hardwareId = useRouterState({ select: s => s.location.state.id });
+  const previousSearch = useSearchStore(s => s.previousSearch);
 
   const navigate = useNavigate({
     from: '/hardware/$hardwareId/build/$buildId',
   });
-
   const getTestTableRowLink = useCallback(
     (testId: string): LinkProps => ({
       to: '/hardware/$hardwareId/test/$testId',
@@ -54,7 +55,7 @@ const HardwareBuildDetails = (): JSX.Element => {
     <BuildDetails
       breadcrumb={
         <MemoizedHardwareBreadcrumb
-          searchParams={searchParams}
+          searchParams={previousSearch}
           locationMessage="buildDetails.buildDetails"
         />
       }

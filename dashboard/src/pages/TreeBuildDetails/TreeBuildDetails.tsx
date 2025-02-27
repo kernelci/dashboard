@@ -10,11 +10,12 @@ import {
 } from '@/types/tree/TreeDetails';
 import { RedirectFrom } from '@/types/general';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
+import { useSearchStore } from '@/hooks/store/useSearchStore';
 
 const TreeBuildDetails = (): JSX.Element => {
   const searchParams = useSearch({ from: '/_main/build/$buildId' });
-  const historyState = useRouterState({ select: s => s.location.state });
-  const treeId = historyState.id;
+  const treeId = useRouterState({ select: s => s.location.state.id });
+  const previousSearch = useSearchStore(s => s.previousSearch);
 
   const navigate = useNavigate({ from: '/tree/$treeId/build/$buildId' });
 
@@ -52,7 +53,7 @@ const TreeBuildDetails = (): JSX.Element => {
     <BuildDetails
       breadcrumb={
         <MemoizedTreeBreadcrumb
-          searchParams={searchParams}
+          searchParams={previousSearch}
           locationMessage="buildDetails.buildDetails"
         />
       }
