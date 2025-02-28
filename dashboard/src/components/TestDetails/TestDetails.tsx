@@ -1,6 +1,6 @@
-import { useIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
-import { memo, useCallback, useMemo, useState } from 'react';
+import { Fragment, memo, useCallback, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction, JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
@@ -11,6 +11,8 @@ import {
   useRouterState,
   useSearch,
 } from '@tanstack/react-router';
+
+import { MdChevronRight } from 'react-icons/md';
 
 import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
 import type { TTestDetails } from '@/types/tree/TestDetails';
@@ -43,6 +45,14 @@ import { getTestHardware } from '@/lib/test';
 
 import { MemoizedTestDetailsOGTags } from '@/components/OpenGraphTags/TestDetailsOGTags';
 import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
+
+import { TooltipIcon } from '@/components/Icons/TooltipIcon';
+
+import { Badge } from '@/components/ui/badge';
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
+
+import { StatusHistoryItem } from './StatusHistoryItem';
 
 const LinkItem = ({ children, ...props }: LinkProps): JSX.Element => {
   return (
@@ -133,6 +143,54 @@ const TestDetailsSections = ({
     (): void => setSheetType('log'),
     [setSheetType],
   );
+
+  const regressionSection: ISection = useMemo(() => {
+    return {
+      title: formatMessage({ id: 'testDetails.statusHistory' }),
+      rightIcon: (
+        <TooltipIcon
+          tooltipId="testDetails.statusHistoryTooltip"
+          tooltipValues={{ amount: test.status_history.length }}
+          iconClassName="size-5"
+          contentClassName="whitespace-pre-line"
+        />
+      ),
+      subtitle: (
+        <div>
+          <Tooltip>
+            <TooltipTrigger>
+              <Badge variant="blueTag">{test.regression_type}</Badge>
+            </TooltipTrigger>
+            <TooltipContent className="whitespace-pre-line">
+              <FormattedMessage id="testDetails.regressionTypeTooltip" />
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      ),
+      subsections: [
+        {
+          infos: [
+            {
+              children: (
+                <div className="flex items-center">
+                  {test.status_history.reverse().map((historyItem, index) => {
+                    return (
+                      <Fragment key={historyItem.id}>
+                        <StatusHistoryItem historyItem={historyItem} />
+                        {index !== test.status_history.length - 1 && (
+                          <MdChevronRight />
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </div>
+              ),
+            },
+          ],
+        },
+      ],
+    };
+  }, [formatMessage, test.regression_type, test.status_history]);
 
   const generalSection: ISection = useMemo(() => {
     return {
@@ -287,11 +345,18 @@ const TestDetailsSections = ({
   const sectionsData: ISection[] = useMemo(() => {
     return [
       generalSection,
+      regressionSection,
       miscSection,
       environmentMiscSection,
       filesSection,
     ].filter(section => section !== undefined);
-  }, [generalSection, miscSection, environmentMiscSection, filesSection]);
+  }, [
+    generalSection,
+    regressionSection,
+    miscSection,
+    environmentMiscSection,
+    filesSection,
+  ]);
 
   return <SectionGroup sections={sectionsData} />;
 };
