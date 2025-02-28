@@ -82,7 +82,7 @@ export const IssueDetails = ({
     | undefined => {
     return getMiscSection({
       misc: data?.misc,
-      title: formatMessage({ id: 'globalDetails.miscData' }),
+      title: formatMessage({ id: 'commonDetails.miscData' }),
       setJsonContent: setJsonContent,
     });
   }, [data?.misc, formatMessage]);

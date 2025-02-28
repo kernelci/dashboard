@@ -157,7 +157,7 @@ const TestDetailsSections = ({
               linkText: valueOrEmpty(test.path),
             },
             {
-              title: 'global.arch',
+              title: 'global.architecture',
               linkText: valueOrEmpty(test.architecture),
             },
             {
@@ -198,7 +198,7 @@ const TestDetailsSections = ({
               linkText: valueOrEmpty(test.git_repository_branch),
             },
             {
-              title: 'globalDetails.gitCommitTag',
+              title: 'commonDetails.gitCommitTag',
               linkText: valueOrEmpty(test.git_commit_tags?.[0]),
             },
             {
@@ -260,7 +260,7 @@ const TestDetailsSections = ({
     | undefined => {
     return getMiscSection({
       misc: test.misc,
-      title: formatMessage({ id: 'globalDetails.miscData' }),
+      title: formatMessage({ id: 'commonDetails.miscData' }),
       setSheetType: setSheetType,
       setJsonContent: setJsonContent,
     });
@@ -271,7 +271,7 @@ const TestDetailsSections = ({
     | undefined => {
     return getMiscSection({
       misc: test.environment_misc,
-      title: formatMessage({ id: 'globalDetails.environmentMiscData' }),
+      title: formatMessage({ id: 'commonDetails.environmentMiscData' }),
     });
   }, [formatMessage, test.environment_misc]);
 
@@ -280,7 +280,7 @@ const TestDetailsSections = ({
     | undefined => {
     return getFilesSection({
       outputFiles: test.output_files,
-      title: formatMessage({ id: 'globalDetails.artifacts' }),
+      title: formatMessage({ id: 'commonDetails.artifacts' }),
     });
   }, [formatMessage, test.output_files]);
 

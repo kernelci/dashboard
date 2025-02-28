@@ -87,7 +87,7 @@ const BuildDetails = ({
     | undefined => {
     return getMiscSection({
       misc: data?.misc,
-      title: formatMessage({ id: 'globalDetails.miscData' }),
+      title: formatMessage({ id: 'commonDetails.miscData' }),
       setSheetType: setSheetType,
       setJsonContent: setJsonContent,
     });
@@ -99,7 +99,7 @@ const BuildDetails = ({
     return getFilesSection({
       inputFiles: data?.input_files,
       outputFiles: data?.output_files,
-      title: formatMessage({ id: 'globalDetails.artifacts' }),
+      title: formatMessage({ id: 'commonDetails.artifacts' }),
     });
   }, [data?.input_files, data?.output_files, formatMessage]);
 
@@ -133,7 +133,7 @@ const BuildDetails = ({
                 linkText: valueOrEmpty(data.tree_name),
               },
               {
-                title: 'buildDetails.gitUrl',
+                title: 'commonDetails.gitRepositoryUrl',
                 linkText: shouldTruncate(
                   valueOrEmpty(data.git_repository_url),
                 ) ? (
@@ -147,11 +147,11 @@ const BuildDetails = ({
                 link: data.git_repository_url,
               },
               {
-                title: 'buildDetails.gitBranch',
+                title: 'commonDetails.gitRepositoryBranch',
                 linkText: valueOrEmpty(data.git_repository_branch),
               },
               {
-                title: 'buildDetails.gitCommit',
+                title: 'commonDetails.gitCommitHash',
                 linkText: valueOrEmpty(data.git_commit_hash),
                 copyValue: valueOrEmpty(data.git_commit_hash),
               },
@@ -160,7 +160,7 @@ const BuildDetails = ({
                 linkText: valueOrEmpty(data.git_commit_name),
               },
               {
-                title: 'globalDetails.gitCommitTag',
+                title: 'commonDetails.gitCommitTag',
                 linkText: valueOrEmpty(data.git_commit_tags?.[0]),
               },
               {
@@ -168,7 +168,7 @@ const BuildDetails = ({
                 linkText: formatDate(valueOrEmpty(data.start_time)),
               },
               {
-                title: 'buildDetails.defconfig',
+                title: 'global.config',
                 linkText: valueOrEmpty(data.config_name),
               },
               {
@@ -181,11 +181,11 @@ const BuildDetails = ({
                 linkText: valueOrEmpty(data.architecture),
               },
               {
-                title: 'buildDetails.buildTime',
+                title: 'global.buildTime',
                 linkText: data.duration ? `${data.duration} sec` : '-',
               },
               {
-                title: 'buildDetails.compiler',
+                title: 'global.compiler',
                 linkText: valueOrEmpty(data.compiler),
               },
               {
@@ -222,7 +222,7 @@ const BuildDetails = ({
   }, [data, buildDetailsTitle, setSheetToLog, formatMessage, buildId]);
 
   const sectionsData: ISection[] = useMemo(() => {
-    return [...generalSections, miscSection, filesSection].filter(
+    return [...generalSections, filesSection, miscSection].filter(
       section => section !== undefined,
     );
   }, [generalSections, miscSection, filesSection]);
