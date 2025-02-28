@@ -1,0 +1,61 @@
+trees:
+  mainline:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+    branch: master
+  next:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+    branch: master
+  arm64:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git
+    branch: for-kernelci
+  broonie-regulator-for-linus:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/regulator.git
+    branch: for-linus
+  broonie-regulator-for-next:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/regulator.git
+    branch: for-next
+  broonie-spi-for-linus:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git
+    branch: for-linus
+  broonie-spi-for-next:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git
+    branch: for-next
+  broonie-sound-for-linus:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound.git
+    branch: for-linus
+  broonie-sound-for-next:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound.git
+    branch: for-next
+  android-mailine:
+    giturl: https://android.googlesource.com/kernel/common
+    branch: android-mainline
+  android15-6.6:
+    giturl: https://android.googlesource.com/kernel/common
+    branch: android15-6.6
+  android16-6.12:
+    giturl: https://android.googlesource.com/kernel/common
+    branch: android16-6.12
+  chromiumos-5.10:
+    giturl: https://chromium.googlesource.com/chromiumos/third_party/kernel
+    branch: chromeos-5.10
+  chromiumos-5.15:
+    giturl: https://chromium.googlesource.com/chromiumos/third_party/kernel
+    branch: chromeos-5.15
+  chromiumos-5.4:
+    giturl: https://chromium.googlesource.com/chromiumos/third_party/kernel
+    branch: chromeos-5.4
+  chromiumos-6.1:
+    giturl: https://chromium.googlesource.com/chromiumos/third_party/kernel
+    branch: chromeos-6.1
+  chromiumos-6.6:
+    giturl: https://chromium.googlesource.com/chromiumos/third_party/kernel
+    branch: chromeos-6.6
+  chromiumos-6.12:
+    giturl: https://chromium.googlesource.com/chromiumos/third_party/kernel
+    branch: chromeos-6.12
+  mediatek-for-next:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/mediatek/linux.git
+    branch: for-next
+  linus-next:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/sashal/linus-next.git
+    branch: linus-next
