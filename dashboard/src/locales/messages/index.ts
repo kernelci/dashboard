@@ -267,6 +267,16 @@ export const messages = {
     'testDetails.buildInfo': 'Build Info',
     'testDetails.failedToFetch': 'Failed to fetch test details',
     'testDetails.notFound': 'Test not found',
+    'testDetails.regressionTypeTooltip':
+      'The regression type of the test.\n' +
+      'Pass - test passed in all previous tests\n' +
+      'Fail - test failed in all previous tests\n' +
+      'Fixed - test was failing but passed in the last iterations\n' +
+      'Regression - test was passing but failed in the last iterations\n' +
+      'Unstable - test has inconclusive results or is not consistent',
+    'testDetails.statusHistory': 'Status History',
+    'testDetails.statusHistoryTooltip':
+      'The {amount} previous tests before the current test.\nClick on an icon to see details of that specific test.',
     'testDetails.testId': 'Test Id',
     'testStatus.done': 'Done',
     'testStatus.error': 'Error',
