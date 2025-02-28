@@ -1,0 +1,35 @@
+
+{% extends "base.txt" %}
+{% block header %}{% endblock %}
+{% block content %}
+{% if build_issues %}
+Build regressions:
+-------------
+{% for issue in build_issues %}
+#kernelci issue {{ issue["id"] }}
+- Comment: {{ issue["comment"] }}
+- Timestamp: {{ issue["_timestamp"] }}
+- Tree: {{ issue["tree_name"] }}/{{ issue["git_repository_branch"] }}
+- Commit HEAD: {{ issue["git_commit_hash"] }}
+- Incidents Count: {{issue["incident_count"]}}
+- Dashboard: https://d.kernelci.org/issue/{{ issue["id"] }}
+- Grafana: https://grafana.kernelci.org/d/issue/issue?var-id={{ issue["id"] }}
+---
+{% endfor %}
+{% endif %}
+{% if boot_issues %}
+Boot regressions:
+-------------
+{% for issue in boot_issues %}
+#kernelci issue {{ issue["id"] }}
+- Comment: {{ issue["comment"] }}
+- Timestamp: {{ issue["_timestamp"].strftime('%Y-%m-%d %H:%M %Z') }}
+- Tree: {{ issue["tree_name"] }}/{{ issue["git_repository_branch"]}}
+- Commit HEAD: {{ issue["git_commit_hash"] }}
+- Incidents Count: {{issue["incident_count"]}}
+- Dashboard: https://d.kernelci.org/issue/{{ issue["id"] }}
+- Grafana: https://grafana.kernelci.org/d/issue/issue?var-id={{ issue["id"] }}
+---
+{% endfor %}
+{% endif %}
+{%- endblock %}

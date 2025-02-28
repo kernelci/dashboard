@@ -1,0 +1,47 @@
+
+{% extends "base.txt" %}
+{% block header %}{% endblock %}
+{% block content %}
+
+Hello,
+
+New boot regression found on {{ issue["tree_name"] }}/{{ issue["git_repository_branch"] }}:
+
+---
+{{ issue["comment"]}}
+---
+
+- dashboard: https://d.kernelci.org/issue/{{ issue["id"] }}
+- giturl: {{ issue["git_repository_url"]}}
+- commit HEAD:  {{ issue["git_commit_hash"] }}
+
+{% if "misc" in issue.keys() and "logspec" in issue["misc"].keys() %}
+Log excerpt:
+=====================================================
+{{ issue["misc"]["logspec"]["error"]["log_excerpt"] }}
+=====================================================
+{% endif %}
+
+# Hardware platforms affected:
+{% for boot in boots %}
+## {{boot["environment_misc"]["platform"]}}
+- dashboard: https://d.kernelci.org/test/{{ boot["id"] }}
+{% if boot["environment_compatible"] -%}
+- compatibles:{{" "}}
+{%- for c in boot["environment_compatible"]-%}
+ {{ c }} {%- if not loop.last %} | {% endif -%}
+{%- endfor -%}
+{% endif %}
+- {{ boot['platform_count'] }} fails since {{ boot['oldest_timestamp'].strftime('%Y-%m-%d %H:%M %Z') }}
+- test path: {{ boot["path"] }}
+- last pass: https://d.kernelci.org/test/{{ boot["last_pass_id"] }}
+    - on {{ boot["last_pass"].strftime('%Y-%m-%d %H:%M %Z') }}
+    - commit hash:  {{ boot["last_pass_commit"] }}
+    - test id:  {{ boot["last_pass_id"] }}
+{% endfor %}
+
+#kernelci issue {{ issue["id"] }}
+
+Reported-by: kernelci.org bot <bot@kernelci.org>
+
+{%- endblock -%}

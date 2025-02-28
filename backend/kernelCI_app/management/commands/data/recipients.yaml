@@ -1,0 +1,27 @@
+trees:
+  android:
+    - tkjos@google.com
+    - joneslee@google.com
+  stable:
+    - stable@vger.kernel.org
+  stable-rc:
+    - stable@vger.kernel.org
+  mainline:
+    - laura.nao@collabora.com
+    - shreeya.patel@collabora.com
+    - broonie@kernel.org
+  cip:
+    - cip-dev@lists.cip-project.org
+  chromiumos:
+    - laura.nao@collabora.com
+    - shreeya.patel@collabora.com
+  broonie-sound:
+    - broonie@kernel.org
+  broonie-spi:
+    - broonie@kernel.org
+  broonie-regulator:
+    - broonie@kernel.org
+  sashal-next:
+    - sashal@kernel.org
+  mediatek:
+    - angelogioacchino.delregno@collabora.com
