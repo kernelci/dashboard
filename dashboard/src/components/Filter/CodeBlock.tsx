@@ -212,7 +212,7 @@ const CodeBlock = ({
       <div className="py-4 pl-3">
         <span className="font-bold">
           <FormattedMessage
-            id="buildAccordion.logExcerpt"
+            id="global.logExcerpt"
             defaultMessage="Log Excerpt"
           />
         </span>

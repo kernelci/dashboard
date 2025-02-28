@@ -207,29 +207,16 @@ const TestDetailsSections = ({
               icon: <StatusIcon status={test.status} className="text-xl" />,
             },
             {
-              title: 'global.tree',
-              linkText: truncateBigText(test.tree_name),
-            },
-            {
               title: 'global.path',
               linkText: valueOrEmpty(test.path),
             },
             {
-              title: 'global.arch',
-              linkText: valueOrEmpty(test.architecture),
+              title: 'global.tree',
+              linkText: truncateBigText(test.tree_name),
             },
             {
-              title: 'global.compiler',
-              linkText: valueOrEmpty(test.compiler),
-            },
-            {
-              title: 'global.logs',
-              linkText: shouldTruncate(valueOrEmpty(test.log_url)) ? (
-                <TruncatedValueTooltip value={test.log_url} isUrl={true} />
-              ) : (
-                valueOrEmpty(test.log_url)
-              ),
-              link: test.log_url,
+              title: 'commonDetails.gitRepositoryBranch',
+              linkText: valueOrEmpty(test.git_repository_branch),
             },
             {
               title: 'commonDetails.gitCommitHash',
@@ -252,21 +239,25 @@ const TestDetailsSections = ({
               link: test.git_repository_url,
             },
             {
-              title: 'commonDetails.gitRepositoryBranch',
-              linkText: valueOrEmpty(test.git_repository_branch),
+              title: 'commonDetails.gitCommitTag',
+              linkText: valueOrEmpty(test.git_commit_tags?.[0]),
             },
             {
-              title: 'globalDetails.gitCommitTag',
-              linkText: valueOrEmpty(test.git_commit_tags?.[0]),
+              title: 'global.hardware',
+              linkText: hardware,
+            },
+            {
+              title: 'global.architecture',
+              linkText: valueOrEmpty(test.architecture),
+            },
+            {
+              title: 'global.compiler',
+              linkText: valueOrEmpty(test.compiler),
             },
             {
               title: 'testDetails.buildInfo',
               linkText: truncateBigText(test.build_id),
               linkComponent: buildDetailsLink,
-            },
-            {
-              title: 'global.hardware',
-              linkText: hardware,
             },
             {
               title: 'global.startTime',
@@ -280,12 +271,21 @@ const TestDetailsSections = ({
               ),
             },
             {
-              title: 'testDetails.testId',
-              linkText: test.id,
+              title: 'global.logs',
+              linkText: shouldTruncate(valueOrEmpty(test.log_url)) ? (
+                <TruncatedValueTooltip value={test.log_url} isUrl={true} />
+              ) : (
+                valueOrEmpty(test.log_url)
+              ),
+              link: test.log_url,
             },
             {
               title: 'global.compatibles',
               linkText: valueOrEmpty(test.environment_compatible?.join(' | ')),
+            },
+            {
+              title: 'testDetails.testId',
+              linkText: test.id,
             },
           ],
         },
@@ -318,7 +318,7 @@ const TestDetailsSections = ({
     | undefined => {
     return getMiscSection({
       misc: test.misc,
-      title: formatMessage({ id: 'globalDetails.miscData' }),
+      title: formatMessage({ id: 'commonDetails.miscData' }),
       setSheetType: setSheetType,
       setJsonContent: setJsonContent,
     });
@@ -329,7 +329,7 @@ const TestDetailsSections = ({
     | undefined => {
     return getMiscSection({
       misc: test.environment_misc,
-      title: formatMessage({ id: 'globalDetails.environmentMiscData' }),
+      title: formatMessage({ id: 'commonDetails.environmentMiscData' }),
     });
   }, [formatMessage, test.environment_misc]);
 
@@ -338,7 +338,7 @@ const TestDetailsSections = ({
     | undefined => {
     return getFilesSection({
       outputFiles: test.output_files,
-      title: formatMessage({ id: 'globalDetails.artifacts' }),
+      title: formatMessage({ id: 'commonDetails.artifacts' }),
     });
   }, [formatMessage, test.output_files]);
 
