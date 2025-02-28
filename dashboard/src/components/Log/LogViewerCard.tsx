@@ -4,6 +4,8 @@ import { FormattedMessage } from 'react-intl';
 
 import { memo, type JSX } from 'react';
 
+import { Link } from '@tanstack/react-router';
+
 import { useLogFiles } from '@/api/treeDetails';
 import BaseCard from '@/components/Cards/BaseCard';
 import { truncateUrl } from '@/lib/string';
@@ -96,6 +98,14 @@ export const LogViewerCard = ({
       className="gap-0"
       title={<FormattedMessage id="global.fullLogs" />}
     >
+      <Link
+        to="/log-viewer"
+        className="text-blue"
+        search={{ url: logUrl ?? '' }}
+        title="Log Viewer"
+      >
+        aaaa
+      </Link>
       <div className="px-2 py-3 font-mono text-[#454545]">
         {isLoading ? (
           <FormattedMessage id="global.loading" />

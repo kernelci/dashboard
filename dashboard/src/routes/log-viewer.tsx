@@ -1,7 +1,6 @@
 import { createFileRoute, useSearch } from '@tanstack/react-router';
 import type { JSX } from 'react';
 import { z } from 'zod';
-import { useState } from 'react';
 import pako from 'pako';
 import { useQuery } from '@tanstack/react-query';
 
@@ -13,9 +12,13 @@ async function fetchAndDecompressLog(url: string): Promise<{
   content: string;
   type: 'json' | 'text';
 }> {
+  // Use our Django backend proxy to avoid CORS issues
+  const proxyUrl = `/api/log-proxy?url=${encodeURIComponent(url)}`;
+
   // Fetch the gzipped file
-  const response = await fetch(url);
+  const response = await fetch(proxyUrl);
   if (!response.ok) {
+    console.log(response);
     throw new Error(`Failed to fetch logs: ${response.statusText}`);
   }
 
