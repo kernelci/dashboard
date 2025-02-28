@@ -3,17 +3,16 @@ import type { Column } from '@tanstack/react-table';
 import { FormattedMessage } from 'react-intl';
 
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import { LiaQuestionCircle } from 'react-icons/lia';
 
 import { z } from 'zod';
 
 import { useCallback, type JSX } from 'react';
 
 import type { MessagesKey } from '@/locales/messages';
-import { formattedBreakLineValue } from '@/locales/messages';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { Button } from '@/components/ui/button';
+
+import { TooltipIcon } from '@/components/Icons/TooltipIcon';
 
 export interface ITableHeader<T> {
   column: Column<T>;
@@ -64,14 +63,11 @@ export const TableHeader = <T,>({
         {sortable && sortedArrow[zSortingMethod.parse(column.getIsSorted())]}
       </Button>
       {tooltipId && (
-        <Tooltip>
-          <TooltipTrigger className="ml-2">
-            <LiaQuestionCircle />
-          </TooltipTrigger>
-          <TooltipContent className="font-normal whitespace-pre-line">
-            <FormattedMessage id={tooltipId} values={formattedBreakLineValue} />
-          </TooltipContent>
-        </Tooltip>
+        <TooltipIcon
+          triggerClassName="ml-2"
+          contentClassName="font-normal whitespace-pre-line"
+          tooltipId={tooltipId}
+        />
       )}
     </span>
   );

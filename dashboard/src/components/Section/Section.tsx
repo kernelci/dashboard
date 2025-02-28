@@ -30,12 +30,20 @@ export interface ISubsection {
 }
 
 export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
-  const children: JSX.Element[] = useMemo(() => [], []);
-  const items = useMemo(
-    () =>
-      infos.map(info => {
+  const [items, children] = useMemo(() => {
+    const childrenList: JSX.Element[] = [];
+    const itemList = infos
+      .map(info => {
         const WrapperComponent = info.wrapperComponent;
-        const LinkComponent = (
+        const shouldHaveLinkComponent =
+          info.title !== undefined ||
+          info.link !== undefined ||
+          info.linkComponent !== undefined ||
+          info.linkText !== undefined ||
+          info.unformattedTitle !== undefined ||
+          info.icon !== undefined ||
+          info.onClick !== undefined;
+        const LinkComponent = shouldHaveLinkComponent && (
           <LinkWithIcon
             key={info.title?.toString()}
             title={info.title}
@@ -55,29 +63,38 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
         );
 
         if (info.children !== undefined) {
-          children.push(info.children);
+          childrenList.push(info.children);
         } else {
-          return (
-            <div key={info.title} className="flex flex-row items-end">
-              {WrapperComponent ? (
-                <WrapperComponent asChild>{LinkComponent}</WrapperComponent>
-              ) : (
-                <>{LinkComponent}</>
-              )}
-              {info.copyValue && <CopyButton value={info.copyValue} />}
-            </div>
-          );
+          if (
+            WrapperComponent !== undefined ||
+            LinkComponent !== undefined ||
+            info.copyValue !== undefined
+          ) {
+            return (
+              <div key={info.title} className="flex flex-row items-end">
+                {WrapperComponent ? (
+                  <WrapperComponent asChild>{LinkComponent}</WrapperComponent>
+                ) : (
+                  <>{LinkComponent}</>
+                )}
+                {info.copyValue && <CopyButton value={info.copyValue} />}
+              </div>
+            );
+          }
         }
-      }),
-    [infos, children],
-  );
+      })
+      .filter(item => item !== undefined);
+
+    return [itemList, childrenList];
+  }, [infos]);
+
   return (
     <div>
-      <span className="text-xl">{title}</span>
-      <div className="border-dark-gray grid grid-cols-2 gap-8 border-t py-8">
-        {items}
-      </div>
-      <div className="w-[80vw]">{children}</div>
+      {title && <span className="text-xl">{title}</span>}
+      {items.length > 0 && (
+        <div className="border-dark-gray grid grid-cols-2 gap-8">{items}</div>
+      )}
+      {children.length > 0 && <div className="w-[80vw]">{children}</div>}
     </div>
   );
 };
@@ -101,13 +118,14 @@ const Section = ({
       )),
     [subsections],
   );
+
   return (
-    <div className="text-dim-gray flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <span className="text-sm">{eyebrow}</span>
+    <div className="text-dim-gray mb-10 flex flex-col gap-4">
+      <div className="border-dark-gray flex flex-col gap-2 border-b pb-4">
+        {eyebrow && <span className="text-sm">{eyebrow}</span>}
         <div className="flex flex-row items-center gap-2">
           {leftIcon}
-          <span className="text-2xl font-bold">{title}</span>
+          {title && <span className="text-2xl font-bold">{title}</span>}
           {rightIcon}
         </div>
         {subtitle}
