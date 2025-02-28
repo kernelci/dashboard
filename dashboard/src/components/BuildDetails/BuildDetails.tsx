@@ -87,7 +87,7 @@ const BuildDetails = ({
     | undefined => {
     return getMiscSection({
       misc: data?.misc,
-      title: formatMessage({ id: 'globalDetails.miscData' }),
+      title: formatMessage({ id: 'commonDetails.miscData' }),
       setSheetType: setSheetType,
       setJsonContent: setJsonContent,
     });
@@ -99,7 +99,7 @@ const BuildDetails = ({
     return getFilesSection({
       inputFiles: data?.input_files,
       outputFiles: data?.output_files,
-      title: formatMessage({ id: 'globalDetails.artifacts' }),
+      title: formatMessage({ id: 'commonDetails.artifacts' }),
     });
   }, [data?.input_files, data?.output_files, formatMessage]);
 
@@ -129,11 +129,30 @@ const BuildDetails = ({
           {
             infos: [
               {
+                title: 'global.status',
+                linkText: getBuildStatus(data.valid).toUpperCase(),
+                icon: <StatusIcon status={data?.valid} className="text-xl" />,
+              },
+              {
+                title: 'buildDetails.gitDescribe',
+                linkText: valueOrEmpty(data.git_commit_name),
+              },
+              {
                 title: 'global.tree',
                 linkText: valueOrEmpty(data.tree_name),
               },
               {
-                title: 'buildDetails.gitUrl',
+                title: 'commonDetails.gitRepositoryBranch',
+                linkText: valueOrEmpty(data.git_repository_branch),
+              },
+              {
+                title: 'commonDetails.gitCommitHash',
+                linkText: valueOrEmpty(data.git_commit_hash),
+                linkComponent: treeDetailsLink,
+                copyValue: valueOrEmpty(data.git_commit_hash),
+              },
+              {
+                title: 'commonDetails.gitRepositoryUrl',
                 linkText: shouldTruncate(
                   valueOrEmpty(data.git_repository_url),
                 ) ? (
@@ -147,50 +166,32 @@ const BuildDetails = ({
                 link: data.git_repository_url,
               },
               {
-                title: 'buildDetails.gitBranch',
-                linkText: valueOrEmpty(data.git_repository_branch),
-              },
-              {
-                title: 'buildDetails.gitCommit',
-                linkText: valueOrEmpty(data.git_commit_hash),
-                copyValue: valueOrEmpty(data.git_commit_hash),
-              },
-              {
-                title: 'buildDetails.gitDescribe',
-                linkText: valueOrEmpty(data.git_commit_name),
-              },
-              {
-                title: 'globalDetails.gitCommitTag',
+                title: 'commonDetails.gitCommitTag',
                 linkText: valueOrEmpty(data.git_commit_tags?.[0]),
               },
               {
-                title: 'global.date',
-                linkText: formatDate(valueOrEmpty(data.start_time)),
-              },
-              {
-                title: 'buildDetails.defconfig',
-                linkText: valueOrEmpty(data.config_name),
-              },
-              {
-                title: 'global.status',
-                linkText: getBuildStatus(data.valid).toUpperCase(),
-                icon: <StatusIcon status={data?.valid} className="text-xl" />,
+                title: 'global.command',
+                linkText: valueOrEmpty(data.command),
               },
               {
                 title: 'global.architecture',
                 linkText: valueOrEmpty(data.architecture),
               },
               {
-                title: 'buildDetails.buildTime',
-                linkText: data.duration ? `${data.duration} sec` : '-',
-              },
-              {
-                title: 'buildDetails.compiler',
+                title: 'global.compiler',
                 linkText: valueOrEmpty(data.compiler),
               },
               {
-                title: 'global.command',
-                linkText: valueOrEmpty(data.command),
+                title: 'global.config',
+                linkText: valueOrEmpty(data.config_name),
+              },
+              {
+                title: 'global.date',
+                linkText: formatDate(valueOrEmpty(data.start_time)),
+              },
+              {
+                title: 'global.buildTime',
+                linkText: data.duration ? `${data.duration} sec` : '-',
               },
               {
                 title: 'buildDetails.buildId',
@@ -222,7 +223,7 @@ const BuildDetails = ({
   }, [data, buildDetailsTitle, setSheetToLog, formatMessage, buildId]);
 
   const sectionsData: ISection[] = useMemo(() => {
-    return [...generalSections, miscSection, filesSection].filter(
+    return [...generalSections, filesSection, miscSection].filter(
       section => section !== undefined,
     );
   }, [generalSections, miscSection, filesSection]);
