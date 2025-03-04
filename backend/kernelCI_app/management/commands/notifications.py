@@ -16,7 +16,17 @@ from kernelCI_app.management.commands.libs.email import (
     gmail_setup_service,
     gmail_send_email,
 )
-from kernelCI_app.management.commands.libs.kcidb import *
+from kernelCI_app.management.commands.libs.kcidb import (
+    kcidb_new_issues,
+    kcidb_issue_details,
+    kcidb_build_incidents,
+    kcidb_test_incidents,
+    kcidb_last_test_without_issue,
+    kcidb_last_test_without_issue_koike,
+    kcidb_latest_checkout_results,
+    kcidb_tests_results,
+    kcidb_connect,
+)
 
 
 STORAGE_FILE = "found_issues.json"
