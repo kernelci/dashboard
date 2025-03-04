@@ -1,8 +1,6 @@
 
 {% block header %}{% endblock %}
-
 {% block content %}{% endblock %}
-
 {% block footer %}
 --
 This is an experimental report format. Please send feedback in!
