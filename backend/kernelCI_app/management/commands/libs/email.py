@@ -47,8 +47,11 @@ def gmail_setup_service(credentials_file):
     return service
 
 
-def gmail_send_email(service, user_id, email):
+def gmail_send_email(service, sender_email, to, subject, message_text, cc, reply_to):
     """Send an email using the Gmail API."""
+
+    user_id = "me"
+    email = create_email(sender_email, to, subject, message_text, cc, reply_to)
 
     try:
         sent_message = (
@@ -95,14 +98,3 @@ def create_email(sender, to, subject, message_text, cc, reply_to):
     # Encode the message as base64
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
     return {"raw": raw}
-
-
-def ask_confirmation():
-    while True:
-        choice = input(">> Do you want to send the email? (y/n): ").strip().lower()
-        if choice in ["y", "yes"]:
-            return True
-        elif choice in ["n", "no"]:
-            return False
-        else:
-            print("Please enter 'y' or 'n'.")

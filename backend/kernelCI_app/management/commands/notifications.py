@@ -12,7 +12,10 @@ from urllib.parse import quote_plus
 
 from django.core.management.base import BaseCommand
 
-from kernelCI_app.management.commands.libs.email import *
+from kernelCI_app.management.commands.libs.email import (
+    gmail_setup_service,
+    gmail_send_email,
+)
 from kernelCI_app.management.commands.libs.kcidb import *
 
 
@@ -21,6 +24,17 @@ STORAGE_FILE = "found_issues.json"
 KERNELCI_RESULTS = "kernelci-results@groups.io"
 KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
 REGRESSIONS_LIST = "regressions@lists.linux.dev"
+
+
+def ask_confirmation():
+    while True:
+        choice = input(">> Do you want to send the email? (y/n): ").strip().lower()
+        if choice in ["y", "yes"]:
+            return True
+        elif choice in ["n", "no"]:
+            return False
+        else:
+            print("Please enter 'y' or 'n'.")
 
 
 def send_email_report(service, report, email_args, tree_name=None):
@@ -69,8 +83,9 @@ def send_email_report(service, report, email_args, tree_name=None):
 
     print(f"sending {subject}.")
 
-    email = create_email(sender_email, to, subject, message_text, cc, reply_to)
-    return gmail_send_email(service, "me", email)
+    return gmail_send_email(
+        service, sender_email, to, subject, message_text, cc, reply_to
+    )
 
 
 def setup_jinja_template(file):
