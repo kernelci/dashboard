@@ -1,6 +1,27 @@
 
 {% extends "base.txt" %}
 
+{% macro render_issues(issues) -%}
+{%- for platform, configs in issues.items() %}
+Hardware: {{ platform }}
+    {%- for config_name, paths in configs.items() %}
+            {%- for path, test_group in paths.items() %}
+- {{path}} ({{config_name}})
+  last run: https://d.kernelci.org/test/{{test_group[0]["id"]}}
+  history:  {%- for t in test_group | reverse -%}
+                {%- if t["status"] == "PASS" -%}
+                    {{- "✅  " -}}
+                {%- elif t["status"] == "FAIL" -%}
+                    {{- "❌  " -}}
+                {%- else -%} {# Inconclusive (other statuses) #}
+                    {{- "⚠️  " -}}
+                {%- endif -%}
+            {%- endfor %}
+            {% endfor %}
+    {%- endfor -%}
+{%- endfor -%}
+{%- endmacro %}
+
 {% block header %}{% endblock %}
 {% block content %}
 Hello,
@@ -16,11 +37,31 @@ commit hash: {{ checkout["git_commit_hash"] }}
 origin: {{ checkout["origin"] }}
 test start time: {{ checkout["_timestamp"] }}
 
-{{ test_status}}
+### POSSIBLE REGRESSIONS
+{%- if new_issues %}
+    {{ render_issues(new_issues) }}
+{% else %}
 
----
-Display history for each test.
+  No possible regressions observed.
+{% endif %}
+
+### FIXED REGRESSIONS
+{%- if fixed_issues %}
+    {{ render_issues(fixed_issues) }}
+{% else %}
+
+  No fixed regressions observed.
+{% endif %}
+
+### UNSTABLE TESTS
+{%- if unstable_tests %}
+    {{ render_issues(unstable_tests) }}
+{% else %}
+
+  No unstable tests observed.
+{% endif %}
+
 Sent every day if there were changes in the past 24 hours.
 Legend: ✅ PASS   ❌ FAIL  ⚠️ INCONCLUSIVE
-{% endblock %}
+{%- endblock -%}
 

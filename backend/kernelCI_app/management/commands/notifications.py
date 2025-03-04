@@ -6,7 +6,6 @@ import yaml
 
 from collections import defaultdict
 from datetime import datetime, timezone
-from io import StringIO
 from types import SimpleNamespace
 from urllib.parse import quote_plus
 
@@ -352,45 +351,7 @@ def generate_issue_report(service, conn, issue_id, email_args, ask_ignore=False)
         mark_issue_as_sent(issue_id, msg_id)
 
 
-def add_to_test_results_buffer(buffer, grouped):
-    has_changes = False
-    for platform, configs in grouped.items():
-        printed_platform = False
-
-        for config_name, paths in configs.items():
-            for path, test_group in paths.items():
-                unique_statuses = {t["status"] for t in test_group}
-                if len(unique_statuses) == 1:
-                    continue
-
-                if not printed_platform:
-                    buffer.write(f"\nHardware: {platform}\n")
-                    printed_platform = True
-
-                buffer.write(f"- {path} ({config_name})\n")
-                buffer.write(
-                    f"  last run: https://d.kernelci.org/test/{test_group[0]["id"]}\n"
-                )
-
-                has_changes = True
-                status_line = ["history: "]
-
-                for t in reversed(test_group):
-                    if t["status"] == "PASS":
-                        status_line.append("✅ ")
-                    elif t["status"] == "FAIL":
-                        status_line.append("❌ ")
-                    else:  # Inconclusive or other statuses
-                        status_line.append("⚠️ ")
-
-                buffer.write(f"  {' '.join(status_line)}\n")
-                buffer.write("\n")
-
-    return has_changes
-
-
 def evaluate_test_results(conn, checkout, path):
-    buffer = StringIO()
     origin = checkout["origin"]
     giturl = checkout["git_repository_url"]
     branch = checkout["git_repository_branch"]
@@ -411,6 +372,10 @@ def evaluate_test_results(conn, checkout, path):
     for platform, configs in grouped.items():
         for config_name, paths in configs.items():
             for path, test_group in paths.items():
+                unique_statuses = {t["status"] for t in test_group}
+                if len(unique_statuses) == 1:
+                    continue
+
                 first_test = True
                 possible_regression = True
                 fixed_regression = True
@@ -453,24 +418,7 @@ def evaluate_test_results(conn, checkout, path):
                 else:
                     unstable_tests[platform][config_name][t["path"]] = test_group
 
-    buffer.write("\n### POSSIBLE REGRESSIONS\n")
-    has_changes = add_to_test_results_buffer(buffer, new_issues)
-    if not has_changes:
-        buffer.write("\nNo possible regressions observed.\n")
-
-    buffer.write("\n### FIXED REGRESSIONS\n")
-    has_changes = add_to_test_results_buffer(buffer, fixed_issues)
-    if not has_changes:
-        buffer.write("\nNo fixed regressions observed.\n")
-
-    buffer.write("\n### UNSTABLE TESTS\n")
-    has_changes = add_to_test_results_buffer(buffer, unstable_tests)
-    if not has_changes:
-        buffer.write("\nNo unstable tests observed.\n")
-
-    content = buffer.getvalue()
-    buffer.close()
-    return content
+    return new_issues, fixed_issues, unstable_tests
 
 
 def run_checkout_summary(service, conn, origin, email_args):
@@ -485,11 +433,18 @@ def run_checkout_summary(service, conn, origin, email_args):
         checkout["giturl_safe"] = quote_plus(checkout["git_repository_url"])
         path = tree["path"] if "path" in tree else "%"
 
-        test_status = evaluate_test_results(conn, checkout, path)
+        new_issues, fixed_issues, unstable_tests = evaluate_test_results(
+            conn, checkout, path
+        )
 
         report = {}
         template = setup_jinja_template("summary.txt.j2")
-        report["content"] = template.render(checkout=checkout, test_status=test_status)
+        report["content"] = template.render(
+            checkout=checkout,
+            new_issues=new_issues,
+            fixed_issues=fixed_issues,
+            unstable_tests=unstable_tests,
+        )
         report["title"] = (
             f"[STATUS] {checkout["tree_name"]}/{checkout["git_repository_branch"]}"
             f" - {checkout["git_commit_hash"]}"
