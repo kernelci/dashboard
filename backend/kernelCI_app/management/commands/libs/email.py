@@ -12,13 +12,14 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 
-TOKEN_FILE = 'gmail_api_token.json'
+TOKEN_FILE = "gmail_api_token.json"
+
 
 def gmail_setup_service(credentials_file):
     """Authenticate with Gmail using OAuth2 and get credentials."""
     creds = None
     # Define the required Gmail API scope
-    scopes = ['https://mail.google.com/']
+    scopes = ["https://mail.google.com/"]
 
     # Load tokens if available
     if os.path.exists(TOKEN_FILE):
@@ -31,34 +32,44 @@ def gmail_setup_service(credentials_file):
         else:
             print(credentials_file)
             if not credentials_file or not os.path.exists(credentials_file):
-                print("Missing Gmail API credentials file for the token generation. (use --credentials-file)")
+                print(
+                    "Missing Gmail API credentials file for the token generation. (use --credentials-file)"
+                )
                 sys.exit(1)
             flow = InstalledAppFlow.from_client_secrets_file(credentials_file, scopes)
             creds = flow.run_local_server(port=0)
 
         # Save the credentials for future use
-        with open(TOKEN_FILE, 'w') as token:
+        with open(TOKEN_FILE, "w") as token:
             token.write(creds.to_json())
 
-    service = build('gmail', 'v1', credentials=creds)
+    service = build("gmail", "v1", credentials=creds)
     return service
+
 
 def gmail_send_email(service, user_id, email):
     """Send an email using the Gmail API."""
 
     try:
-        sent_message = service.users().messages().send(userId=user_id, body=email).execute()
+        sent_message = (
+            service.users().messages().send(userId=user_id, body=email).execute()
+        )
 
-        full_message = service.users().messages().get(
-            userId=user_id,
-            id=sent_message['id'],
-            format='full'
-        ).execute()
+        full_message = (
+            service.users()
+            .messages()
+            .get(userId=user_id, id=sent_message["id"], format="full")
+            .execute()
+        )
 
-        headers = full_message['payload']['headers']
+        headers = full_message["payload"]["headers"]
         message_id = next(
-            (header['value'] for header in headers if header['name'].lower() == 'message-id'),
-            None
+            (
+                header["value"]
+                for header in headers
+                if header["name"].lower() == "message-id"
+            ),
+            None,
         )
         print(f"Message sent successfully! Message ID: {message_id}")
 
@@ -73,17 +84,17 @@ def create_email(sender, to, subject, message_text, cc, reply_to):
     message.set_content(message_text)
     # Set email headers
     if to:
-        message['to'] = to
+        message["to"] = to
     if cc:
-        message['cc'] = cc
-    message['from'] = sender
-    message['subject'] = subject
+        message["cc"] = cc
+    message["from"] = sender
+    message["subject"] = subject
     if reply_to:
-        message['Reply-To'] = reply_to
+        message["Reply-To"] = reply_to
 
     # Encode the message as base64
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
-    return {'raw': raw}
+    return {"raw": raw}
 
 
 def ask_confirmation():

@@ -9,7 +9,7 @@ import psycopg2
 def kcidb_execute_query(conn, query, params=None):
     try:
         with conn.cursor() as cur:
-            #print(cur.mogrify(query, params).decode('utf-8'))
+            # print(cur.mogrify(query, params).decode('utf-8'))
             cur.execute(query, params)
             rows = cur.fetchall()
             if not rows:
@@ -30,10 +30,7 @@ def kcidb_execute_query(conn, query, params=None):
 def kcidb_new_issues(conn, origin):
     """Fetch issues from the last few days, including related checkouts."""
 
-    params = {
-            "origin": origin,
-            "interval": '4 days'
-            }
+    params = {"origin": origin, "interval": "4 days"}
 
     query = """
         WITH ranked_issues AS (
@@ -268,7 +265,8 @@ def kcidb_test_incidents(conn, issue_id):
                 t.*,
                 t.environment_misc->>'platform' AS platform,
                 COUNT(*) OVER (PARTITION BY t.environment_misc->>'platform') AS platform_count,
-                ROW_NUMBER() OVER (PARTITION BY t.environment_misc->>'platform' ORDER BY t._timestamp ASC) as rn_oldest
+                ROW_NUMBER() OVER
+                    (PARTITION BY t.environment_misc->>'platform' ORDER BY t._timestamp ASC) AS rn_oldest
             FROM tests t
             LEFT JOIN incidents inc ON inc.test_id = t.id
             WHERE inc.issue_id = %(issue_id)s
@@ -299,14 +297,14 @@ def kcidb_last_test_without_issue(conn, issue, incident):
     """Fetches build incidents of a given issue."""
 
     params = {
-            "origin": "maestro",
-            "issue_id": issue["id"],
-            "path": incident["path"],
-            "platform": incident["platform"],
-            "timestamp": incident["oldest_timestamp"],
-            "giturl": issue["git_repository_url"],
-            "branch": issue["git_repository_branch"]
-            }
+        "origin": "maestro",
+        "issue_id": issue["id"],
+        "path": incident["path"],
+        "platform": incident["platform"],
+        "timestamp": incident["oldest_timestamp"],
+        "giturl": issue["git_repository_url"],
+        "branch": issue["git_repository_branch"],
+    }
 
     query = """
     WITH ranked_tests AS (
@@ -316,7 +314,8 @@ def kcidb_last_test_without_issue(conn, issue, incident):
             c.tree_name,
             c.git_repository_branch,
             c.git_commit_hash,
-            ROW_NUMBER() OVER (PARTITION BY t.environment_misc->>'platform', t.path ORDER BY t._timestamp DESC) as rn
+            ROW_NUMBER() OVER
+                (PARTITION BY t.environment_misc->>'platform', t.path ORDER BY t._timestamp DESC) as rn
         FROM tests t
         LEFT JOIN builds b ON b.id = t.build_id
         LEFT JOIN checkouts c ON c.id = b.checkout_id
@@ -342,15 +341,15 @@ def kcidb_last_test_without_issue_koike(conn, issue, incident):
     """Fetches build incidents of a given issue."""
 
     params = {
-            "origin": "maestro",
-            "issue_id": issue["id"],
-            "path": incident["path"],
-            "platform": incident["platform"],
-            "timestamp": incident["oldest_timestamp"],
-            "giturl": issue["git_repository_url"],
-            "branch": issue["git_repository_branch"],
-            "interval": "18 days"
-            }
+        "origin": "maestro",
+        "issue_id": issue["id"],
+        "path": incident["path"],
+        "platform": incident["platform"],
+        "timestamp": incident["oldest_timestamp"],
+        "giturl": issue["git_repository_url"],
+        "branch": issue["git_repository_branch"],
+        "interval": "18 days",
+    }
 
     query = """
     WITH tests_with_issue AS (
@@ -391,12 +390,12 @@ def kcidb_latest_checkout_results(conn, origin, giturl, branch):
     """
 
     params = {
-            "origin": origin,
-            "giturl": giturl,
-            "branch": branch,
-            "interval_min": "5 hours",
-            "interval_max": "29 hours"
-            }
+        "origin": origin,
+        "giturl": giturl,
+        "branch": branch,
+        "interval_min": "5 hours",
+        "interval_max": "29 hours",
+    }
 
     query = """
             SELECT *
@@ -417,13 +416,13 @@ def kcidb_tests_results(conn, origin, giturl, branch, hash, path):
     """Fetches build incidents of a given issue."""
 
     params = {
-            "origin": origin,
-            "giturl": giturl,
-            "branch": branch,
-            "hash": hash,
-            "path": path,
-            "interval": "25 days"
-            }
+        "origin": origin,
+        "giturl": giturl,
+        "branch": branch,
+        "hash": hash,
+        "path": path,
+        "interval": "25 days",
+    }
 
     query = """
             WITH latest_checkout AS (
@@ -472,9 +471,10 @@ def kcidb_tests_results(conn, origin, giturl, branch, hash, path):
 def kcidb_connect():
     """Connect to PostgreSQL using the .pg_service.conf configuration."""
     try:
-        conn = psycopg2.connect("service=kcidb-local-proxy")  # Uses the configuration from ~/.pg_service.conf
+        conn = psycopg2.connect(
+            "service=kcidb-local-proxy"
+        )  # Uses the configuration from ~/.pg_service.conf
         return conn
     except psycopg2.Error as e:
         print(f"Database connection failed: {e}")
         return None
-
