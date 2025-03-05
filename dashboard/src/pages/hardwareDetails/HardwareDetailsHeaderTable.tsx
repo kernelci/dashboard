@@ -280,8 +280,8 @@ const getColumns = (
         const statusSummary = row.original.selected_commit_status?.builds;
         return (
           <GroupedTestStatus
-            fail={statusSummary?.invalid}
-            pass={statusSummary?.valid}
+            fail={statusSummary?.fail}
+            pass={statusSummary?.pass}
             nullStatus={statusSummary?.null}
           />
         );

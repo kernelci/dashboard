@@ -11,7 +11,6 @@ from kernelCI_app.helpers.treeDetails import (
     decide_if_is_test_filtered_out,
     get_build,
     get_current_row_data,
-    get_tree_details_data,
     process_boots_issue,
     process_tree_url,
     is_test_boots_test,
@@ -21,6 +20,7 @@ from kernelCI_app.helpers.treeDetails import (
     process_tests_issue,
     process_filters,
 )
+from kernelCI_app.queries.tree import get_tree_details_data
 from kernelCI_app.typeModels.commonDetails import (
     BuildSummary,
     DetailsFilters,
@@ -257,4 +257,4 @@ class TreeDetailsSummary(APIView):
         except ValidationError as e:
             return Response(data=e.errors(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(valid_response.model_dump())
+        return Response(valid_response.model_dump(by_alias=True))

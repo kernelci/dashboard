@@ -74,9 +74,9 @@ class HardwareView(APIView):
                     hardware,
                     ARRAY_AGG(DISTINCT platform) AS platform,
                     COUNT(DISTINCT CASE WHEN "valid" = TRUE AND build_id
-                                    NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS valid_builds,
+                                    NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS pass_builds,
                     COUNT(DISTINCT CASE WHEN "valid" = FALSE AND build_id
-                                    NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS invalid_builds,
+                                    NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS fail_builds,
                     COUNT(DISTINCT CASE WHEN "valid" IS NULL AND build_id IS
                                     NOT NULL AND build_id NOT LIKE 'maestro:dummy_%%' THEN build_id END)
                                     AS null_builds,
@@ -179,8 +179,8 @@ class HardwareView(APIView):
                             "NULL": hardware["null_boots"],
                         },
                         build_status_summary={
-                            "valid": hardware["valid_builds"],
-                            "invalid": hardware["invalid_builds"],
+                            "pass": hardware["pass_builds"],
+                            "fail": hardware["fail_builds"],
                             "null": hardware["null_builds"],
                         },
                     )
@@ -222,4 +222,4 @@ class HardwareView(APIView):
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(data=result.model_dump(), status=HTTPStatus.OK)
+        return Response(data=result.model_dump(by_alias=True), status=HTTPStatus.OK)

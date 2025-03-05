@@ -3,10 +3,25 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Union, Tuple, Any
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.issues import Issue
-from kernelCI_app.typeModels.databases import EnvironmentMisc
+from kernelCI_app.typeModels.databases import (
+    EnvironmentMisc,
+    Build__Id,
+    Build__Architecture,
+    Build__ConfigName,
+    Build__Misc,
+    Build__ConfigUrl,
+    Build__Compiler,
+    Build__Valid,
+    Build__Status,
+    Build__LogUrl,
+    Build__StartTime,
+    Build__Duration,
+    Checkout__GitRepositoryUrl,
+    Checkout__GitRepositoryBranch,
+)
 
 
 class TestStatusCount(BaseModel):
@@ -19,9 +34,13 @@ class TestStatusCount(BaseModel):
 
 
 class BuildStatusCount(BaseModel):
-    valid: Optional[int] = 0
-    invalid: Optional[int] = 0
-    null: Optional[int] = 0
+    pass_count: int = Field(default=0, alias="pass")
+    fail_count: int = Field(default=0, alias="fail")
+    error_count: int = Field(default=0, alias="error")
+    skip_count: int = Field(default=0, alias="skip")
+    miss_count: int = Field(default=0, alias="miss")
+    done_count: int = Field(default=0, alias="done")
+    null_count: int = Field(default=0, alias="null")
 
 
 class TestArchSummaryItem(BaseModel):
@@ -49,18 +68,19 @@ class TestHistoryItem(BaseModel):
 
 
 class BuildHistoryItem(BaseModel):
-    id: str
-    architecture: Optional[str]
-    config_name: Optional[str]
-    misc: Optional[dict]
-    config_url: Optional[str]
-    compiler: Optional[str]
-    valid: Optional[bool]
-    duration: Optional[Union[int, float]]
-    log_url: Optional[str]
-    start_time: Optional[Union[datetime, str]]
-    git_repository_url: Optional[str]
-    git_repository_branch: Optional[str]
+    id: Build__Id
+    architecture: Build__Architecture
+    config_name: Build__ConfigName
+    misc: Build__Misc
+    config_url: Build__ConfigUrl
+    compiler: Build__Compiler
+    valid: Build__Valid = None
+    status: Build__Status = None
+    duration: Build__Duration
+    log_url: Build__LogUrl
+    start_time: Build__StartTime
+    git_repository_url: Checkout__GitRepositoryUrl
+    git_repository_branch: Checkout__GitRepositoryBranch
 
     @field_validator("misc", mode="before")
     @classmethod

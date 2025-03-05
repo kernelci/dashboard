@@ -90,9 +90,13 @@ const HardwareListingPage = ({
       })
       .map((hardware): HardwareTableItem => {
         const buildCount: BuildStatus = {
-          valid: hardware.build_status_summary?.valid,
-          invalid: hardware.build_status_summary?.invalid,
+          pass: hardware.build_status_summary?.pass,
+          fail: hardware.build_status_summary?.fail,
           null: hardware.build_status_summary?.null,
+          error: hardware.build_status_summary?.error,
+          miss: hardware.build_status_summary?.miss,
+          done: hardware.build_status_summary?.done,
+          skip: hardware.build_status_summary?.skip,
         };
 
         const testStatusCount: StatusCount = {

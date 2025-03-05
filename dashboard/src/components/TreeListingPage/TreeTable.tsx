@@ -99,9 +99,13 @@ const getLinkProps = (
       from: RedirectFrom.Tree,
       treeStatusCount: {
         builds: {
-          valid: row.original.buildStatus?.valid ?? 0,
-          invalid: row.original.buildStatus?.invalid ?? 0,
+          pass: row.original.buildStatus?.pass ?? 0,
+          fail: row.original.buildStatus?.fail ?? 0,
           null: row.original.buildStatus?.null ?? 0,
+          error: row.original.buildStatus?.error ?? 0,
+          miss: row.original.buildStatus?.miss ?? 0,
+          done: row.original.buildStatus?.done ?? 0,
+          skip: row.original.buildStatus?.skip ?? 0,
         } satisfies BuildStatus,
         tests: statusCountToRequiredStatusCount({
           DONE: row.original.testStatus?.done,
@@ -209,8 +213,8 @@ const getColumns = (origin: TOrigins): ColumnDef<TreeTableBody>[] => {
           .tabTarget;
         return row.original.buildStatus ? (
           <BuildStatusWithLink
-            valid={row.original.buildStatus.valid}
-            invalid={row.original.buildStatus.invalid}
+            valid={row.original.buildStatus.pass}
+            invalid={row.original.buildStatus.fail}
             unknown={row.original.buildStatus.null}
             validLinkProps={getLinkProps(row, origin, tabTarget, {
               buildStatus: { Success: true },

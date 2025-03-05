@@ -404,7 +404,14 @@ def test_invalid_filters(invalid_filters_input):
         "failed_platforms": [],
         "issues": [],
         "platforms": None,
-        "status": {"ERROR": 0, "FAIL": 0, "MISS": 0, "NULL": 0, "PASS": 0, "SKIP": 0},
+        "status": {
+            "ERROR": 0,
+            "FAIL": 0,
+            "MISS": 0,
+            "NULL": 0,
+            "PASS": 0,
+            "SKIP": 0,
+        },
         "unknown_issues": 0,
     }
 
@@ -412,7 +419,15 @@ def test_invalid_filters(invalid_filters_input):
         "architectures": {},
         "configs": {},
         "issues": [],
-        "status": {"invalid": 0, "null": 0, "valid": 0},
+        "status": {
+            "pass": 0,
+            "fail": 0,
+            "null": 0,
+            "error": 0,
+            "miss": 0,
+            "skip": 0,
+            "done": 0,
+        },
         "unknown_issues": 0,
     }
 

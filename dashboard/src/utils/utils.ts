@@ -13,6 +13,7 @@ import type {
   StatusCount,
 } from '@/types/general';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
+import type { Status } from '@/types/database';
 
 import { valueOrEmpty } from '@/lib/string';
 
@@ -54,8 +55,8 @@ export const sanitizeArchs = (
   return Object.entries(archs).map(([key, value]) => ({
     arch: {
       text: key,
-      errors: value.invalid,
-      success: value.valid,
+      errors: value.fail,
+      success: value.pass,
       unknown: value.null,
     },
     compilers: value.compilers,
@@ -71,8 +72,8 @@ export const sanitizeConfigs = (
 
   return Object.entries(configs).map(([key, value]) => ({
     text: key,
-    errors: value.invalid,
-    success: value.valid,
+    errors: value.fail,
+    success: value.pass,
     unknown: value.null,
   }));
 };
@@ -100,8 +101,8 @@ export const sanitizePlatforms = (
   if (isBuildPlatform(platforms)) {
     return Object.entries(platforms).map(([key, value]) => ({
       text: key,
-      errors: value.invalid,
-      success: value.valid,
+      errors: value.fail,
+      success: value.pass,
       unknown: value.null,
     }));
   } else {
@@ -132,14 +133,18 @@ const isBuildError = (build_valid: boolean | null): number => {
 
 export const getBuildStatus = (
   build_valid?: boolean | null,
+  build_status?: Status,
 ): AccordionItemBuilds['status'] => {
+  if (build_status !== undefined && build_status !== null) {
+    return build_status;
+  }
   if (build_valid === true) {
-    return 'pass';
+    return 'PASS';
   }
   if (build_valid === false) {
-    return 'fail';
+    return 'FAIL';
   }
-  return 'null';
+  return 'NULL';
 };
 
 export const sanitizeBuilds = (
@@ -190,7 +195,9 @@ export const sanitizeBuildTable = (
 export const sanitizeBuildsSummary = (
   buildsSummary: BuildStatus | undefined,
 ): BuildStatus =>
-  buildsSummary ? buildsSummary : { invalid: 0, null: 0, valid: 0 };
+  buildsSummary
+    ? buildsSummary
+    : { fail: 0, null: 0, pass: 0, error: 0, miss: 0, done: 0, skip: 0 };
 
 // TODO, remove this function, is just a step further towards the final implementation
 export const mapFiltersKeysToBackendCompatible = (

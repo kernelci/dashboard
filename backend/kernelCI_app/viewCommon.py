@@ -10,7 +10,7 @@ class BuildDict(TypedDict):
 
 
 def create_default_build_status():
-    return {"valid": 0, "invalid": 0, "null": 0}
+    return {"pass": 0, "fail": 0, "null": 0}
 
 
 def create_details_build_summary(builds: list[BuildDict]):
@@ -19,7 +19,7 @@ def create_details_build_summary(builds: list[BuildDict]):
     arch_summ = {}
 
     for build in builds:
-        status_key = build_status_map.get(build["valid"])
+        status_key = build_status_map(build["valid"])
         build_summ[status_key] += 1
 
         if config := build["config_name"]:

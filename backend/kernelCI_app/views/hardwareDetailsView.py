@@ -349,4 +349,4 @@ class HardwareDetails(APIView):
         except ValidationError as e:
             return Response(data=e.errors(), status=HTTPStatus.BAD_REQUEST)
 
-        return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)
+        return Response(valid_response.model_dump(by_alias=True))

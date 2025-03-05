@@ -123,7 +123,7 @@ const BuildDetails = ({
       {
         title: buildDetailsTitle,
         subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
-        leftIcon: <StatusIcon status={data?.valid} />,
+        leftIcon: <StatusIcon status={data?.valid ?? data?.status} />,
         eyebrow: formatMessage({ id: 'buildDetails.buildDetails' }),
         subsections: [
           {
@@ -173,8 +173,13 @@ const BuildDetails = ({
               },
               {
                 title: 'global.status',
-                linkText: getBuildStatus(data.valid).toUpperCase(),
-                icon: <StatusIcon status={data?.valid} className="text-xl" />,
+                linkText: getBuildStatus(data.valid, data.status).toUpperCase(),
+                icon: (
+                  <StatusIcon
+                    status={data?.valid ?? data.status}
+                    className="text-xl"
+                  />
+                ),
               },
               {
                 title: 'global.architecture',
