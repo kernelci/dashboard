@@ -24,7 +24,7 @@ export const issueListingSearchSchema = z.object({
   listingSize: zListingSize,
 } satisfies SearchSchema);
 
-export const Route = createFileRoute('/_main/issue')({
+export const Route = createFileRoute('/_main/issues')({
   validateSearch: issueListingSearchSchema,
   search: { middlewares: [stripSearchParams(issueListingDefaultValues)] },
 });

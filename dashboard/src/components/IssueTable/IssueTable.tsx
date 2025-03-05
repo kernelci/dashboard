@@ -51,7 +51,7 @@ const getLinkProps = (
     row.original.git_commit_hash !== undefined
   ) {
     return {
-      from: '/issue',
+      from: '/issues',
       to: '/tree/$treeId',
       params: { treeId: row.original.git_commit_hash },
       state: s => s,
@@ -69,7 +69,7 @@ const getLinkProps = (
   }
 
   return {
-    from: '/issue',
+    from: '/issues',
     to: '/issue/$issueId',
     params: { issueId: row.original.id },
     state: s => ({
@@ -162,8 +162,8 @@ interface IIssueTable {
 }
 
 export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
-  const { listingSize } = useSearch({ strict: false });
-  const navigate = useNavigate({ from: '/issue' });
+  const { listingSize } = useSearch({ from: '/_main/issues' });
+  const navigate = useNavigate({ from: '/issues' });
 
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -267,7 +267,7 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
           />
         </span>
         <div className="flex items-center justify-between gap-10">
-          <MemoizedInputTime navigateFrom="/issue" />
+          <MemoizedInputTime navigateFrom="/issues" />
           <PaginationInfo
             table={table}
             intlLabel="global.issues"

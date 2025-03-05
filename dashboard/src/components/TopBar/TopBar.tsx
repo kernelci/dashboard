@@ -15,12 +15,10 @@ import { zOrigin, zOriginEnum } from '@/types/general';
 
 const getTargetPath = (basePath: string): PossibleMonitorPath => {
   switch (basePath) {
-    case 'tree':
-      return '/tree';
     case 'hardware':
       return '/hardware';
-    case 'issue':
-      return '/issue';
+    case 'issues':
+      return '/issues';
     default:
       return '/tree';
   }
@@ -79,6 +77,8 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
       return <FormattedMessage id="routes.treeMonitor" />;
     case 'hardware':
       return <FormattedMessage id="routes.hardwareMonitor" />;
+    case 'issues':
+      return <FormattedMessage id="routes.issueMonitor" />;
     case 'build':
       return <FormattedMessage id="routes.buildDetails" />;
     case 'test':
@@ -104,7 +104,7 @@ const TopBar = (): JSX.Element => {
         </span>
         {(basePath === 'tree' ||
           basePath === 'hardware' ||
-          basePath === 'issue') && <OriginSelect basePath={basePath} />}
+          basePath === 'issues') && <OriginSelect basePath={basePath} />}
       </div>
     </div>
   );
