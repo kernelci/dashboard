@@ -363,4 +363,4 @@ export enum RedirectFrom {
   Hardware = 'hardware',
 }
 
-export type PossibleMonitorPath = '/tree' | '/hardware' | '/issue';
+export type PossibleMonitorPath = '/tree' | '/hardware' | '/issues';

@@ -87,7 +87,7 @@ const SideMenu = (): JSX.Element => {
       selected: false,
     },
     {
-      navigateTo: '/issue',
+      navigateTo: '/issues',
       idIntl: 'routes.issueMonitor',
       icon: <RxRadiobutton className="size-5" />,
       selected: false,
