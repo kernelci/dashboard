@@ -13,6 +13,7 @@ import type {
   StatusCount,
 } from '@/types/general';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
+import type { Status } from '@/types/database';
 
 import { valueOrEmpty } from '@/lib/string';
 
@@ -51,15 +52,27 @@ export const sanitizeArchs = (
   if (!archs) {
     return [];
   }
-  return Object.entries(archs).map(([key, value]) => ({
-    arch: {
-      text: key,
-      errors: value.invalid,
-      success: value.valid,
-      unknown: value.null,
-    },
-    compilers: value.compilers,
-  }));
+  return Object.entries(archs).map(([key, value]) => {
+    const { successCount, failedCount, inconclusiveCount } = groupStatus({
+      doneCount: value.DONE,
+      errorCount: value.ERROR,
+      failCount: value.FAIL,
+      missCount: value.MISS,
+      passCount: value.PASS,
+      skipCount: value.SKIP,
+      nullCount: value.NULL,
+    });
+
+    return {
+      arch: {
+        text: key,
+        errors: failedCount,
+        success: successCount,
+        unknown: inconclusiveCount,
+      },
+      compilers: value.compilers,
+    };
+  });
 };
 
 export const sanitizeConfigs = (
@@ -69,22 +82,24 @@ export const sanitizeConfigs = (
     return [];
   }
 
-  return Object.entries(configs).map(([key, value]) => ({
-    text: key,
-    errors: value.invalid,
-    success: value.valid,
-    unknown: value.null,
-  }));
-};
+  return Object.entries(configs).map(([key, value]) => {
+    const { successCount, failedCount, inconclusiveCount } = groupStatus({
+      doneCount: value.DONE,
+      errorCount: value.ERROR,
+      failCount: value.FAIL,
+      missCount: value.MISS,
+      passCount: value.PASS,
+      skipCount: value.SKIP,
+      nullCount: value.NULL,
+    });
 
-const isBuildPlatform = (
-  platforms: Record<string, BuildStatus> | Record<string, StatusCount>,
-): platforms is Record<string, BuildStatus> => {
-  const platform = platforms[Object.keys(platforms)[0]];
-  return (
-    platform &&
-    ('valid' in platform || 'invalid' in platform || 'null' in platform)
-  );
+    return {
+      text: key,
+      errors: failedCount,
+      success: successCount,
+      unknown: inconclusiveCount,
+    };
+  });
 };
 
 export const sanitizePlatforms = (
@@ -97,49 +112,29 @@ export const sanitizePlatforms = (
     return [];
   }
 
-  if (isBuildPlatform(platforms)) {
-    return Object.entries(platforms).map(([key, value]) => ({
-      text: key,
-      errors: value.invalid,
-      success: value.valid,
-      unknown: value.null,
-    }));
-  } else {
-    return Object.entries(platforms).map(([key, value]) => {
-      const { successCount, failedCount, inconclusiveCount } = groupStatus({
-        doneCount: value.DONE,
-        errorCount: value.ERROR,
-        failCount: value.FAIL,
-        missCount: value.MISS,
-        passCount: value.PASS,
-        skipCount: value.SKIP,
-        nullCount: value.NULL,
-      });
-
-      return {
-        text: key,
-        errors: failedCount,
-        success: successCount,
-        unknown: inconclusiveCount,
-      };
+  return Object.entries(platforms).map(([key, value]) => {
+    const { successCount, failedCount, inconclusiveCount } = groupStatus({
+      doneCount: value.DONE,
+      errorCount: value.ERROR,
+      failCount: value.FAIL,
+      missCount: value.MISS,
+      passCount: value.PASS,
+      skipCount: value.SKIP,
+      nullCount: value.NULL,
     });
-  }
+
+    return {
+      text: key,
+      errors: failedCount,
+      success: successCount,
+      unknown: inconclusiveCount,
+    };
+  });
 };
 
-const isBuildError = (build_valid: boolean | null): number => {
-  return build_valid || build_valid === null ? 0 : 1;
-};
-
-export const getBuildStatus = (
-  build_valid?: boolean | null,
-): AccordionItemBuilds['status'] => {
-  if (build_valid === true) {
-    return 'pass';
-  }
-  if (build_valid === false) {
-    return 'fail';
-  }
-  return 'null';
+// TODO: Check if it's still necessary and remove it if not
+const isBuildError = (build_status: Status): number => {
+  return build_status === 'FAIL' ? 1 : 0;
 };
 
 export const sanitizeBuilds = (
@@ -158,8 +153,8 @@ export const sanitizeBuilds = (
     date: build.start_time,
     buildTime: build.duration,
     compiler: build.compiler === UNKNOWN_STRING ? undefined : build.compiler,
-    buildErrors: isBuildError(build.valid),
-    status: getBuildStatus(build.valid),
+    buildErrors: isBuildError(build.status),
+    status: build.status,
     buildLogs: build.log_url,
     kernelConfig: build.config_url,
     kernelImage: build.misc ? build.misc['kernel_type'] : undefined,
@@ -180,8 +175,8 @@ export const sanitizeBuildTable = (
     date: build.start_time,
     buildTime: build.duration,
     compiler: build.compiler,
-    buildErrors: isBuildError(build.valid),
-    status: getBuildStatus(build.valid),
+    buildErrors: isBuildError(build.status),
+    status: build.status,
     buildLogs: build.log_url,
     treeBranch: buildTreeBranch(build.tree_name, build.git_repository_branch),
   }));
@@ -190,7 +185,9 @@ export const sanitizeBuildTable = (
 export const sanitizeBuildsSummary = (
   buildsSummary: BuildStatus | undefined,
 ): BuildStatus =>
-  buildsSummary ? buildsSummary : { invalid: 0, null: 0, valid: 0 };
+  buildsSummary
+    ? buildsSummary
+    : { FAIL: 0, NULL: 0, PASS: 0, ERROR: 0, MISS: 0, DONE: 0, SKIP: 0 };
 
 // TODO, remove this function, is just a step further towards the final implementation
 export const mapFiltersKeysToBackendCompatible = (

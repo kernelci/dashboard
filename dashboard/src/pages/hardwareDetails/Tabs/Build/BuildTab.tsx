@@ -14,7 +14,7 @@ import { sanitizeArchs, sanitizeConfigs } from '@/utils/utils';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
-import { MemoizedStatusCard } from '@/components/Tabs/Builds/StatusCard';
+import { MemoizedStatusCard } from '@/components/Tabs/StatusCard';
 
 import {
   DesktopGrid,
@@ -92,8 +92,10 @@ const BuildTab = ({
       <DesktopGrid>
         <div>
           <MemoizedStatusCard
+            title={<FormattedMessage id="buildTab.buildStatus" />}
             toggleFilterBySection={toggleFilterBySection}
-            buildsSummary={buildsSummary.status}
+            statusCounts={buildsSummary.status}
+            filterStatusKey="buildStatus"
           />
           <MemoizedErrorsSummaryBuild
             summaryBody={archSummary}
@@ -125,8 +127,10 @@ const BuildTab = ({
       <MobileGrid>
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
         <MemoizedStatusCard
+          title={<FormattedMessage id="buildTab.buildStatus" />}
           toggleFilterBySection={toggleFilterBySection}
-          buildsSummary={buildsSummary.status}
+          statusCounts={buildsSummary.status}
+          filterStatusKey="buildStatus"
         />
         <InnerMobileGrid>
           <MemoizedErrorsSummaryBuild

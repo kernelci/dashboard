@@ -46,11 +46,7 @@ export type Tree = {
   git_repository_url?: string;
   git_commit_name?: string;
   git_commit_tags: string[];
-  build_status: {
-    valid: number;
-    invalid: number;
-    null: number;
-  };
+  build_status: BuildStatus;
   test_status: TableTestStatus;
   boot_status: TableTestStatus;
 };

@@ -1053,24 +1053,34 @@ components:
   schemas:
     BuildArchitectures:
       properties:
-        valid:
-          anyOf:
-          - type: integer
-          - type: 'null'
+        PASS:
           default: 0
-          title: Valid
-        invalid:
-          anyOf:
-          - type: integer
-          - type: 'null'
+          title: Pass
+          type: integer
+        FAIL:
           default: 0
-          title: Invalid
-        'null':
-          anyOf:
-          - type: integer
-          - type: 'null'
+          title: Fail
+          type: integer
+        ERROR:
+          default: 0
+          title: Error
+          type: integer
+        SKIP:
+          default: 0
+          title: Skip
+          type: integer
+        MISS:
+          default: 0
+          title: Miss
+          type: integer
+        DONE:
+          default: 0
+          title: Done
+          type: integer
+        'NULL':
           default: 0
           title: 'Null'
+          type: integer
         compilers:
           anyOf:
           - items:
@@ -1084,66 +1094,29 @@ components:
     BuildDetailsResponse:
       properties:
         id:
-          title: Id
-          type: string
+          $ref: '#/components/schemas/Build__Id'
         architecture:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Architecture
+          $ref: '#/components/schemas/Build__Architecture'
         config_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Config Name
+          $ref: '#/components/schemas/Build__ConfigName'
         misc:
-          anyOf:
-          - type: object
-          - type: 'null'
-          title: Misc
+          $ref: '#/components/schemas/Build__Misc'
         config_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Config Url
+          $ref: '#/components/schemas/Build__ConfigUrl'
         compiler:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Compiler
-        valid:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Valid
+          $ref: '#/components/schemas/Build__Compiler'
+        status:
+          $ref: '#/components/schemas/Build__Status'
         duration:
-          anyOf:
-          - type: integer
-          - type: number
-          - type: 'null'
-          title: Duration
+          $ref: '#/components/schemas/Build__Duration'
         log_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Log Url
+          $ref: '#/components/schemas/Build__LogUrl'
         start_time:
-          anyOf:
-          - format: date-time
-            type: string
-          - type: string
-          - type: 'null'
-          title: Start Time
+          $ref: '#/components/schemas/Build__StartTime'
         git_repository_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Git Repository Url
+          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_repository_branch:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Git Repository Branch
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
         checkout_id:
           $ref: '#/components/schemas/Checkout__Id'
         command:
@@ -1173,7 +1146,7 @@ components:
       - misc
       - config_url
       - compiler
-      - valid
+      - status
       - duration
       - log_url
       - start_time
@@ -1195,66 +1168,29 @@ components:
     BuildHistoryItem:
       properties:
         id:
-          title: Id
-          type: string
+          $ref: '#/components/schemas/Build__Id'
         architecture:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Architecture
+          $ref: '#/components/schemas/Build__Architecture'
         config_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Config Name
+          $ref: '#/components/schemas/Build__ConfigName'
         misc:
-          anyOf:
-          - type: object
-          - type: 'null'
-          title: Misc
+          $ref: '#/components/schemas/Build__Misc'
         config_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Config Url
+          $ref: '#/components/schemas/Build__ConfigUrl'
         compiler:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Compiler
-        valid:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Valid
+          $ref: '#/components/schemas/Build__Compiler'
+        status:
+          $ref: '#/components/schemas/Build__Status'
         duration:
-          anyOf:
-          - type: integer
-          - type: number
-          - type: 'null'
-          title: Duration
+          $ref: '#/components/schemas/Build__Duration'
         log_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Log Url
+          $ref: '#/components/schemas/Build__LogUrl'
         start_time:
-          anyOf:
-          - format: date-time
-            type: string
-          - type: string
-          - type: 'null'
-          title: Start Time
+          $ref: '#/components/schemas/Build__StartTime'
         git_repository_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Git Repository Url
+          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_repository_branch:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Git Repository Branch
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
       required:
       - id
       - architecture
@@ -1262,7 +1198,7 @@ components:
       - misc
       - config_url
       - compiler
-      - valid
+      - status
       - duration
       - log_url
       - start_time
@@ -1272,42 +1208,35 @@ components:
       type: object
     BuildStatusCount:
       properties:
-        valid:
-          anyOf:
-          - type: integer
-          - type: 'null'
+        PASS:
           default: 0
-          title: Valid
-        invalid:
-          anyOf:
-          - type: integer
-          - type: 'null'
+          title: Pass
+          type: integer
+        FAIL:
           default: 0
-          title: Invalid
-        'null':
-          anyOf:
-          - type: integer
-          - type: 'null'
+          title: Fail
+          type: integer
+        ERROR:
+          default: 0
+          title: Error
+          type: integer
+        SKIP:
+          default: 0
+          title: Skip
+          type: integer
+        MISS:
+          default: 0
+          title: Miss
+          type: integer
+        DONE:
+          default: 0
+          title: Done
+          type: integer
+        'NULL':
           default: 0
           title: 'Null'
+          type: integer
       title: BuildStatusCount
-      type: object
-    BuildStatusCountDict:
-      properties:
-        valid:
-          title: Valid
-          type: integer
-        invalid:
-          title: Invalid
-          type: integer
-        'null':
-          title: 'Null'
-          type: integer
-      required:
-      - valid
-      - invalid
-      - 'null'
-      title: BuildStatusCountDict
       type: object
     BuildSummary:
       properties:
@@ -1390,6 +1319,10 @@ components:
       anyOf:
       - type: string
       - type: 'null'
+    Build__ConfigUrl:
+      anyOf:
+      - type: string
+      - type: 'null'
     Build__Duration:
       anyOf:
       - type: number
@@ -1411,6 +1344,13 @@ components:
       anyOf:
       - type: string
       - type: 'null'
+    Build__Misc:
+      anyOf:
+      - type: object
+      - items:
+          type: object
+        type: array
+      - type: 'null'
     Build__OutputFiles:
       anyOf:
       - type: object
@@ -1423,9 +1363,9 @@ components:
       - format: date-time
         type: string
       - type: 'null'
-    Build__Valid:
+    Build__Status:
       anyOf:
-      - type: boolean
+      - $ref: '#/components/schemas/StatusValues'
       - type: 'null'
     Checkout:
       properties:
@@ -1755,70 +1695,31 @@ components:
     HardwareBuildHistoryItem:
       properties:
         id:
-          title: Id
-          type: string
+          $ref: '#/components/schemas/Build__Id'
         architecture:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Architecture
+          $ref: '#/components/schemas/Build__Architecture'
         config_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Config Name
+          $ref: '#/components/schemas/Build__ConfigName'
         misc:
-          anyOf:
-          - type: object
-          - type: 'null'
-          title: Misc
+          $ref: '#/components/schemas/Build__Misc'
         config_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Config Url
+          $ref: '#/components/schemas/Build__ConfigUrl'
         compiler:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Compiler
-        valid:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Valid
+          $ref: '#/components/schemas/Build__Compiler'
+        status:
+          $ref: '#/components/schemas/Build__Status'
         duration:
-          anyOf:
-          - type: integer
-          - type: number
-          - type: 'null'
-          title: Duration
+          $ref: '#/components/schemas/Build__Duration'
         log_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Log Url
+          $ref: '#/components/schemas/Build__LogUrl'
         start_time:
-          anyOf:
-          - format: date-time
-            type: string
-          - type: string
-          - type: 'null'
-          title: Start Time
+          $ref: '#/components/schemas/Build__StartTime'
         git_repository_url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Git Repository Url
+          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_repository_branch:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Git Repository Branch
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
         tree_name:
-          anyOf:
-          - $ref: '#/components/schemas/Checkout__TreeName'
-          - type: 'null'
+          $ref: '#/components/schemas/Checkout__TreeName'
         issue_id:
           anyOf:
           - $ref: '#/components/schemas/Issue__Id'
@@ -1834,7 +1735,7 @@ components:
       - misc
       - config_url
       - compiler
-      - valid
+      - status
       - duration
       - log_url
       - start_time
@@ -2047,21 +1948,11 @@ components:
             uniqueItems: true
           title: Platform
         test_status_summary:
-          additionalProperties:
-            type: integer
-          propertyNames:
-            $ref: '#/components/schemas/StatusValues'
-          title: Test Status Summary
-          type: object
+          $ref: '#/components/schemas/TestStatusCount'
         boot_status_summary:
-          additionalProperties:
-            type: integer
-          propertyNames:
-            $ref: '#/components/schemas/StatusValues'
-          title: Boot Status Summary
-          type: object
+          $ref: '#/components/schemas/TestStatusCount'
         build_status_summary:
-          $ref: '#/components/schemas/BuildStatusCountDict'
+          $ref: '#/components/schemas/BuildStatusCount'
       required:
       - hardware_name
       - platform
@@ -2234,8 +2125,8 @@ components:
           $ref: '#/components/schemas/Build__Architecture'
         config_name:
           $ref: '#/components/schemas/Build__ConfigName'
-        valid:
-          $ref: '#/components/schemas/Build__Valid'
+        status:
+          $ref: '#/components/schemas/Build__Status'
         start_time:
           $ref: '#/components/schemas/Build__StartTime'
         duration:
@@ -2252,7 +2143,7 @@ components:
       - id
       - architecture
       - config_name
-      - valid
+      - status
       - start_time
       - duration
       - compiler
@@ -2785,6 +2676,12 @@ components:
           - type: 'null'
           default: 0
           title: Miss
+        DONE:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Done
         'NULL':
           anyOf:
           - type: integer

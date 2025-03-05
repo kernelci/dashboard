@@ -31,10 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import {
-  BuildStatusWithLink,
-  GroupedTestStatusWithLink,
-} from '@/components/Status/Status';
+import { GroupedTestStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 
@@ -148,35 +145,45 @@ const getColumns = (
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
         return row.original.build_status_summary ? (
-          <BuildStatusWithLink
-            valid={row.original.build_status_summary.valid}
-            invalid={row.original.build_status_summary.invalid}
-            unknown={row.original.build_status_summary.null}
-            validLinkProps={getLinkProps(
+          <GroupedTestStatusWithLink
+            pass={row.original.build_status_summary.PASS}
+            skip={row.original.build_status_summary.SKIP}
+            fail={row.original.build_status_summary.FAIL}
+            miss={row.original.build_status_summary.MISS}
+            done={row.original.build_status_summary.DONE}
+            error={row.original.build_status_summary.ERROR}
+            nullStatus={row.original.build_status_summary.NULL}
+            passLinkProps={getLinkProps(
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
               tabTarget,
               {
-                buildStatus: { Success: true },
+                buildStatus: { PASS: true },
               },
             )}
-            invalidLinkProps={getLinkProps(
+            failLinkProps={getLinkProps(
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
               tabTarget,
               {
-                buildStatus: { Failed: true },
+                buildStatus: { FAIL: true },
               },
             )}
-            unknownLinkProps={getLinkProps(
+            inconclusiveLinkProps={getLinkProps(
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
               tabTarget,
               {
-                buildStatus: { Inconclusive: true },
+                buildStatus: {
+                  MISS: true,
+                  ERROR: true,
+                  SKIP: true,
+                  DONE: true,
+                  NULL: true,
+                },
               },
             )}
           />

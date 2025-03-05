@@ -8,7 +8,7 @@ import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNaviga
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
-import { MemoizedStatusCard } from '@/components/Tabs/Builds/StatusCard';
+import { MemoizedStatusCard } from '@/components/Tabs/StatusCard';
 
 import { MemoizedConfigsCard } from '@/components/Tabs/Builds/ConfigsCard';
 
@@ -121,8 +121,10 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
       <DesktopGrid>
         <div>
           <MemoizedStatusCard
+            title={<FormattedMessage id="buildTab.buildStatus" />}
             toggleFilterBySection={toggleFilterBySection}
-            buildsSummary={treeDetailsData.buildsSummary}
+            statusCounts={treeDetailsData.buildsSummary}
+            filterStatusKey="buildStatus"
           />
           <MemoizedErrorsSummaryBuild
             summaryBody={treeDetailsData.architectures}
@@ -155,8 +157,10 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
       <MobileGrid>
         <TreeCommitNavigationGraph />
         <MemoizedStatusCard
+          title={<FormattedMessage id="buildTab.buildStatus" />}
           toggleFilterBySection={toggleFilterBySection}
-          buildsSummary={treeDetailsData.buildsSummary}
+          statusCounts={treeDetailsData.buildsSummary}
+          filterStatusKey="buildStatus"
         />
         <InnerMobileGrid>
           <MemoizedErrorsSummaryBuild

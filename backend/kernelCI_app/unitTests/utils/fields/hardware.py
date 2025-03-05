@@ -6,8 +6,7 @@ hardware_listing_fields = [
     "build_status_summary",
 ]
 
-test_status_summary_fields = ["FAIL", "PASS", "SKIP", "ERROR", "MISS", "NULL", "DONE"]
-build_status_summary_fields = ["valid", "invalid", "null"]
+status_summary_fields = ["FAIL", "PASS", "SKIP", "ERROR", "MISS", "NULL", "DONE"]
 
 hardware_summary = ["common", "summary", "filters"]
 hardware_summary_common = ["trees", "compatibles"]

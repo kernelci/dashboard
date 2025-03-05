@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from django.db import connection
 from http import HTTPStatus
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
@@ -14,19 +13,20 @@ from kernelCI_app.helpers.misc import (
     build_misc_value_or_default,
     env_misc_value_or_default,
 )
-from kernelCI_app.typeModels.databases import FAIL_STATUS
+from kernelCI_app.typeModels.databases import FAIL_STATUS, NULL_STATUS, StatusValues
 from kernelCI_app.utils import is_boot
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from typing import Dict, List, Optional
-from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
 from kernelCI_app.typeModels.treeCommits import (
     TreeCommitsQueryParameters,
     TreeCommitsResponse,
 )
 from pydantic import ValidationError
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
+from kernelCI_app.helpers.build import build_status_map
+from kernelCI_app.queries.tree import get_tree_commit_history
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -37,7 +37,6 @@ class TreeCommitsHistory(APIView):
         self.filterParams = None
         self.start_datetime = None
         self.end_datetime = None
-        self.field_values = dict()
         self.processed_builds = set()
         self.processed_tests = set()
 
@@ -56,7 +55,7 @@ class TreeCommitsHistory(APIView):
         self.filterHardware = self.filterParams.filterHardware
         self.filterTestPath = self.filterParams.filterTestPath
         self.filterBootPath = self.filterParams.filterBootPath
-        self.filterBuildValid = self.filterParams.filterBuildValid
+        self.filterBuildStatus = self.filterParams.filterBuildStatus
 
     def sanitize_rows(self, rows: Dict) -> List:
         return [
@@ -69,7 +68,7 @@ class TreeCommitsHistory(APIView):
                 "architecture": row[5],
                 "compiler": row[6],
                 "config_name": row[7],
-                "build_valid": row[8],
+                "build_status": build_status_map(row[8]),
                 "test_path": row[9],
                 "test_status": row[10],
                 "test_duration": row[11],
@@ -87,33 +86,27 @@ class TreeCommitsHistory(APIView):
         ]
 
     def _create_commit_entry(self) -> Dict:
+        empty_status_dict = {
+            "fail": 0,
+            "error": 0,
+            "miss": 0,
+            "pass": 0,
+            "done": 0,
+            "skip": 0,
+            "null": 0,
+        }
+
         return {
             "commit_name": "",
-            "builds_count": {"true": 0, "false": 0, "null": 0},
-            "boots_count": {
-                "fail": 0,
-                "error": 0,
-                "miss": 0,
-                "pass": 0,
-                "done": 0,
-                "skip": 0,
-                "null": 0,
-            },
-            "tests_count": {
-                "fail": 0,
-                "error": 0,
-                "miss": 0,
-                "pass": 0,
-                "done": 0,
-                "skip": 0,
-                "null": 0,
-            },
+            "builds_count": dict(empty_status_dict),
+            "boots_count": dict(empty_status_dict),
+            "tests_count": dict(empty_status_dict),
         }
 
     def _process_builds_count(
         self,
         *,
-        build_valid: bool,
+        build_status: StatusValues,
         duration: int,
         commit_hash: str,
         issue_id: str,
@@ -123,7 +116,7 @@ class TreeCommitsHistory(APIView):
     ) -> None:
         is_filtered_out = self.filterParams.is_build_filtered_out(
             duration=duration,
-            valid=build_valid,
+            build_status=build_status,
             issue_id=issue_id,
             issue_version=issue_version,
             incident_test_id=incident_test_id,
@@ -133,10 +126,7 @@ class TreeCommitsHistory(APIView):
 
         self.processed_builds.add(key)
 
-        label = "null"
-        if build_valid is not None:
-            label = str(build_valid).lower()
-
+        label = build_status.lower()
         self.commit_hashes[commit_hash]["builds_count"][label] += 1
 
     def _process_boots_count(
@@ -244,12 +234,12 @@ class TreeCommitsHistory(APIView):
         test_path = row["test_path"]
         issue_version = row["issue_version"]
         incident_test_id = row["incidents_test_id"]
-        build_valid = row["build_valid"]
+        build_status = row["build_status"]
 
         commit_hash = row["git_commit_hash"]
 
         if issue_id is None and (
-            build_valid in [False, None] or test_status == FAIL_STATUS
+            build_status in [FAIL_STATUS, NULL_STATUS] or test_status == FAIL_STATUS
         ):
             issue_id = UNCATEGORIZED_STRING
 
@@ -291,7 +281,7 @@ class TreeCommitsHistory(APIView):
             and not build_id.startswith(MAESTRO_DUMMY_BUILD_PREFIX)
         ):
             self._process_builds_count(
-                build_valid=row["build_valid"],
+                build_status=row["build_status"],
                 duration=row["build_duration"],
                 commit_hash=commit_hash,
                 issue_id=row["issue_id"],
@@ -366,12 +356,8 @@ class TreeCommitsHistory(APIView):
         except Exception as ex:
             log_message(ex)
 
-    @extend_schema(
-        responses=TreeCommitsResponse,
-        parameters=[TreeCommitsQueryParameters],
-        methods=["GET"],
-    )
-    def get(self, request, commit_hash: Optional[str]) -> Response:
+    # TODO: use pydantic
+    def get_params(self, request) -> tuple[str, str, str, str, str, list[str]]:
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
@@ -381,6 +367,30 @@ class TreeCommitsHistory(APIView):
         missing_params = []
         if not origin_param:
             missing_params.append("origin")
+
+        return (
+            origin_param,
+            git_url_param,
+            git_branch_param,
+            start_timestamp,
+            end_timestamp,
+            missing_params,
+        )
+
+    @extend_schema(
+        responses=TreeCommitsResponse,
+        parameters=[TreeCommitsQueryParameters],
+        methods=["GET"],
+    )
+    def get(self, request, commit_hash: Optional[str]) -> Response:
+        (
+            origin_param,
+            git_url_param,
+            git_branch_param,
+            start_timestamp,
+            end_timestamp,
+            missing_params,
+        ) = self.get_params(request)
 
         if missing_params:
             return create_api_error_response(
@@ -396,104 +406,23 @@ class TreeCommitsHistory(APIView):
         except InvalidComparisonOPError as e:
             return create_api_error_response(error_message=str(e))
 
-        self.field_values = {
-            "commit_hash": commit_hash,
-            "origin_param": origin_param,
-            "git_url_param": git_url_param,
-            "git_branch_param": git_branch_param,
-        }
-
-        checkout_clauses = create_checkouts_where_clauses(
-            git_url=git_url_param, git_branch=git_branch_param
+        rows = get_tree_commit_history(
+            commit_hash=commit_hash,
+            origin=origin_param,
+            git_url=git_url_param,
+            git_branch=git_branch_param,
         )
 
-        git_url_clause = checkout_clauses.get("git_url_clause")
-        git_branch_clause = checkout_clauses.get("git_branch_clause")
-
-        query = f"""
-        WITH earliest_commits AS (
-            SELECT
-                id,
-                git_commit_hash,
-                git_commit_name,
-                git_repository_branch,
-                git_repository_url,
-                git_commit_tags,
-                origin,
-                start_time,
-                time_order
-            FROM (
-                SELECT
-                    id,
-                    git_commit_hash,
-                    git_commit_name,
-                    git_repository_branch,
-                    git_repository_url,
-                    git_commit_tags,
-                    origin,
-                    start_time,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY git_repository_url, git_repository_branch, origin, git_commit_hash
-                        ORDER BY start_time DESC
-                    ) AS time_order
-                FROM   checkouts
-                WHERE  {git_branch_clause}
-                    AND {git_url_clause}
-                    AND origin = %(origin_param)s
-                    AND git_commit_hash IS NOT NULL
-                    AND start_time <= (SELECT Max(start_time) AS head_start_time
-                                        FROM   checkouts
-                                        WHERE  git_commit_hash = %(commit_hash)s
-                                                AND origin = %(origin_param)s
-                                                AND {git_url_clause})
-                ORDER  BY start_time DESC) AS checkouts_time_order
-            WHERE
-                time_order = 1
-            LIMIT 6
-        )
-        SELECT
-            c.git_commit_hash,
-            c.git_commit_name,
-            c.git_commit_tags,
-            c.start_time,
-            b.duration,
-            b.architecture,
-            b.compiler,
-            b.config_name,
-            b.valid,
-            t.path,
-            t.status,
-            t.duration,
-            t.environment_compatible,
-            t.environment_misc,
-            b.id AS build_id,
-            b.misc AS build_misc,
-            t.id AS test_id,
-            ic.id AS incidents_id,
-            ic.test_id AS incidents_test_id,
-            i.id AS issues_id,
-            i.version AS issues_version
-        FROM earliest_commits AS c
-        INNER JOIN builds AS b
-        ON
-            c.id = b.checkout_id
-        LEFT JOIN tests AS t
-        ON
-            t.build_id = b.id
-        LEFT JOIN incidents AS ic
-            ON t.id = ic.test_id OR
-                b.id = ic.build_id
-        LEFT JOIN issues AS i
-            ON ic.issue_id = i.id
-        """
-
-        # Execute the query
-        with connection.cursor() as cursor:
-            cursor.execute(
-                query,
-                self.field_values,
+        # Temporary during schema transition
+        if rows is None:
+            message = (
+                "This error was probably caused because the server was using"
+                "an old version of the database. Please try requesting again"
             )
-            rows = cursor.fetchall()
+            return create_api_error_response(
+                error_message=message,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
         if not rows:
             return create_api_error_response(
@@ -513,9 +442,13 @@ class TreeCommitsHistory(APIView):
                     "git_commit_tags": value["commit_tags"],
                     "earliest_start_time": value["earliest_start_time"],
                     "builds": {
-                        "valid": value["builds_count"]["true"],
-                        "invalid": value["builds_count"]["false"],
-                        "null": value["builds_count"]["null"],
+                        "FAIL": value["builds_count"]["fail"],
+                        "ERROR": value["builds_count"]["error"],
+                        "MISS": value["builds_count"]["miss"],
+                        "PASS": value["builds_count"]["pass"],
+                        "DONE": value["builds_count"]["done"],
+                        "SKIP": value["builds_count"]["skip"],
+                        "NULL": value["builds_count"]["null"],
                     },
                     "boots": {
                         "fail": value["boots_count"]["fail"],

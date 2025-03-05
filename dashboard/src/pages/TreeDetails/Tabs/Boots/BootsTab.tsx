@@ -25,12 +25,13 @@ import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 
-import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
-import { RedirectFrom } from '@/types/general';
+import { MemoizedStatusCard } from '@/components/Tabs/StatusCard';
+import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 
 import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNavigationGraph';
 import type { TreeDetailsLazyLoaded } from '@/hooks/useTreeDetailsLazyLoadQuery';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
 interface BootsTabProps {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
@@ -77,6 +78,28 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
               bootsTable: newFilter,
             },
+          };
+        },
+        state: s => s,
+      });
+    },
+    [navigate],
+  );
+
+  const toggleFilterBySection = useCallback(
+    (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
+      navigate({
+        search: previousParams => {
+          const { diffFilter: currentDiffFilter } = previousParams;
+          const newFilter = generateDiffFilter(
+            filterSectionKey,
+            filterSection,
+            currentDiffFilter,
+          );
+
+          return {
+            ...previousParams,
+            diffFilter: newFilter,
           };
         },
         state: s => s,
@@ -151,6 +174,8 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
           <MemoizedStatusCard
             title={<FormattedMessage id="bootsTab.bootStatus" />}
             statusCounts={data.summary.boots.status}
+            toggleFilterBySection={toggleFilterBySection}
+            filterStatusKey="bootStatus"
           />
           <MemoizedConfigList
             title={<FormattedMessage id="bootsTab.configs" />}
@@ -187,6 +212,8 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
         <MemoizedStatusCard
           title={<FormattedMessage id="bootsTab.bootStatus" />}
           statusCounts={data.summary.boots.status}
+          toggleFilterBySection={toggleFilterBySection}
+          filterStatusKey="bootStatus"
         />
         <TreeCommitNavigationGraph />
         <InnerMobileGrid>

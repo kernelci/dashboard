@@ -9,6 +9,7 @@ PASS_STATUS = "PASS"
 NULL_STATUS = "NULL"
 
 failure_status_list = [ERROR_STATUS, FAIL_STATUS, MISS_STATUS]
+build_fail_status_list = [FAIL_STATUS, NULL_STATUS]
 
 # "NULL" must be added manually because the database return None
 type StatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "NULL", "DONE"]
@@ -39,6 +40,7 @@ type Build__Architecture = Optional[str]
 type Build__ConfigName = Optional[str]
 type Build__ConfigUrl = Optional[str]
 type Build__Valid = Optional[bool]
+type Build__Status = Optional[StatusValues]
 type Build__StartTime = Optional[datetime]
 type Build__Duration = Optional[float]
 type Build__Compiler = Optional[str]

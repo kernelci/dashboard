@@ -43,7 +43,10 @@ from collections import defaultdict
 from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from kernelCI_app.viewCommon import create_details_build_summary
-from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.helpers.errorHandling import (
+    create_api_error_response,
+    create_error_response,
+)
 from http import HTTPStatus
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 
@@ -179,7 +182,24 @@ class TreeDetailsSummary(APIView):
         methods=["GET"],
     )
     def get(self, request, commit_hash: str | None):
-        rows = get_tree_details_data(request, commit_hash)
+        origin_param = request.GET.get("origin")
+        git_url_param = request.GET.get("git_url")
+        git_branch_param = request.GET.get("git_branch")
+
+        rows = get_tree_details_data(
+            origin_param, git_url_param, git_branch_param, commit_hash
+        )
+
+        # Temporary during schema transition
+        if rows is None:
+            message = (
+                "This error was probably caused because the server was using"
+                "an old version of the database. Please try requesting again"
+            )
+            return create_api_error_response(
+                error_message=message,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
         if len(rows) == 0:
             return create_error_response(

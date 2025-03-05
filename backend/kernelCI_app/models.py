@@ -70,6 +70,7 @@ class Builds(models.Model):
     log_url = models.TextField(blank=True, null=True)
     log_excerpt = models.CharField(max_length=16384, blank=True, null=True)
     valid = models.BooleanField(blank=True, null=True)
+    status = models.TextField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
 
     class Meta:

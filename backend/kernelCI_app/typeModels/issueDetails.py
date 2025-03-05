@@ -1,11 +1,12 @@
-from typing import List, Optional
-from pydantic import BaseModel, RootModel, Field
+from typing import List, Optional, Any
+from pydantic import BaseModel, RootModel, Field, field_validator
+from kernelCI_app.helpers.build import build_status_map
 
 from kernelCI_app.typeModels.databases import (
     Build__Id,
     Build__Architecture,
     Build__ConfigName,
-    Build__Valid,
+    Build__Status,
     Build__StartTime,
     Build__Duration,
     Build__Compiler,
@@ -42,7 +43,7 @@ class IssueBuildItem(BaseModel):
     id: Build__Id = Field(validation_alias="build__id")
     architecture: Build__Architecture = Field(validation_alias="build__architecture")
     config_name: Build__ConfigName = Field(validation_alias="build__config_name")
-    valid: Build__Valid = Field(validation_alias="build__valid")
+    status: Build__Status = Field(validation_alias="build_status")
     start_time: Build__StartTime = Field(validation_alias="build__start_time")
     duration: Build__Duration = Field(validation_alias="build__duration")
     compiler: Build__Compiler = Field(validation_alias="build__compiler")
@@ -51,6 +52,13 @@ class IssueBuildItem(BaseModel):
     git_repository_branch: Checkout__GitRepositoryBranch = Field(
         validation_alias="build__checkout__git_repository_branch"
     )
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def valid_to_status(cls, value: Any) -> str:
+        if isinstance(value, bool) or value is None:
+            return build_status_map(value)
+        return value
 
 
 class IssueTestItem(BaseModel):

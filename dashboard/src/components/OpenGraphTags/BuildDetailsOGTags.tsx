@@ -3,7 +3,6 @@ import { memo, useMemo } from 'react';
 
 import { useIntl } from 'react-intl';
 
-import { getBuildStatus } from '@/utils/utils';
 import type { TBuildDetails } from '@/types/tree/BuildDetails';
 
 import { OpenGraphTags } from './OpenGraphTags';
@@ -25,9 +24,7 @@ const BuildDetailsOGTags = ({
     }
 
     const statusDescription =
-      formatMessage({ id: 'global.status' }) +
-      ': ' +
-      getBuildStatus(data.valid).toUpperCase();
+      formatMessage({ id: 'global.status' }) + ': ' + data.status.toUpperCase();
 
     const treeDescription =
       formatMessage({ id: 'global.treeBranch' }) +

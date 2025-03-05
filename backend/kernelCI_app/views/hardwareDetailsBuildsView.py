@@ -15,13 +15,15 @@ from kernelCI_app.helpers.hardwareDetails import (
     assign_default_record_values,
     decide_if_is_build_in_filter,
     decide_if_is_full_record_filtered_out,
-    get_build,
-    get_hardware_details_data,
-    get_hardware_trees_data,
+    get_build_typed,
     get_trees_with_selected_commit,
     get_validated_current_tree,
     handle_build_history,
     unstable_parse_post_body,
+)
+from kernelCI_app.queries.hardware import (
+    get_hardware_details_data,
+    get_hardware_trees_data,
 )
 from kernelCI_app.typeModels.hardwareDetails import (
     HardwareBuildHistoryItem,
@@ -51,8 +53,8 @@ class HardwareDetailsBuilds(APIView):
         self.builds: List[HardwareBuildHistoryItem] = []
 
     def _process_build(self, record: Dict, tree_index: int) -> None:
-        build = get_build(record, tree_index)
-        build_id = build["id"]
+        build = get_build_typed(record, tree_index)
+        build_id = build.id
 
         should_process_build = decide_if_is_build_in_filter(
             instance=self,
@@ -142,6 +144,17 @@ class HardwareDetailsBuilds(APIView):
             end_datetime=self.end_datetime,
         )
 
+        # Temporary during schema transition
+        if records is None:
+            message = (
+                "This error was probably caused because the server was using"
+                "an old version of the database. Please try requesting again"
+            )
+            return create_api_error_response(
+                error_message=message,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
         if len(records) == 0:
             return Response(
                 data={"error": "No builds found for this hardware"},
@@ -163,4 +176,4 @@ class HardwareDetailsBuilds(APIView):
                 data={"error": e.errors()}, status=HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
-        return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)
+        return Response(valid_response.model_dump())

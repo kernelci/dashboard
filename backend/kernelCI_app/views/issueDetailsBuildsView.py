@@ -1,6 +1,5 @@
 from http import HTTPStatus
-from typing import Dict, Optional
-from kernelCI_app.models import Incidents
+from typing import Optional
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
@@ -10,6 +9,7 @@ from kernelCI_app.typeModels.issueDetails import (
     IssueDetailsPathParameters,
     IssueDetailsQueryParameters,
 )
+from kernelCI_app.queries.issues import get_issue_builds
 from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,24 +17,6 @@ from pydantic import ValidationError
 
 
 class IssueDetailsBuilds(APIView):
-    def _fetch_incidents(self, *, issue_id: str, version: int) -> Optional[Dict]:
-        fields = [
-            "build__id",
-            "build__architecture",
-            "build__config_name",
-            "build__valid",
-            "build__start_time",
-            "build__duration",
-            "build__compiler",
-            "build__log_url",
-            "build__checkout__tree_name",
-            "build__checkout__git_repository_branch",
-        ]
-
-        return Incidents.objects.filter(
-            issue_id=issue_id, issue_version=version
-        ).values(*fields)
-
     @extend_schema(
         parameters=[IssueDetailsQueryParameters],
         responses=IssueBuildsResponse,
@@ -56,9 +38,20 @@ class IssueDetailsBuilds(APIView):
                 )
             parsed_query.version = version_row["version"]
 
-        builds_data = self._fetch_incidents(
+        builds_data = get_issue_builds(
             issue_id=parsed_params.issue_id, version=parsed_query.version
         )
+
+        # Temporary during schema transition
+        if builds_data is None:
+            message = (
+                "This error was probably caused because the server was using"
+                "an old version of the database. Please try requesting again"
+            )
+            return create_api_error_response(
+                error_message=message,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
         if not builds_data:
             return create_api_error_response(
