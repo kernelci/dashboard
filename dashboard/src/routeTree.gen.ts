@@ -14,9 +14,11 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as MainRouteImport } from './routes/_main/route'
 import { Route as MainIndexImport } from './routes/_main/index'
 import { Route as MainTreeRouteImport } from './routes/_main/tree/route'
+import { Route as MainIssuesRouteImport } from './routes/_main/issues/route'
 import { Route as MainIssueRouteImport } from './routes/_main/issue/route'
 import { Route as MainHardwareRouteImport } from './routes/_main/hardware/route'
 import { Route as MainTreeIndexImport } from './routes/_main/tree/index'
+import { Route as MainIssuesIndexImport } from './routes/_main/issues/index'
 import { Route as MainIssueIndexImport } from './routes/_main/issue/index'
 import { Route as MainHardwareIndexImport } from './routes/_main/hardware/index'
 import { Route as MainTreeTreeIdRouteImport } from './routes/_main/tree/$treeId/route'
@@ -66,6 +68,12 @@ const MainTreeRouteRoute = MainTreeRouteImport.update({
   getParentRoute: () => MainRouteRoute,
 } as any)
 
+const MainIssuesRouteRoute = MainIssuesRouteImport.update({
+  id: '/issues',
+  path: '/issues',
+  getParentRoute: () => MainRouteRoute,
+} as any)
+
 const MainIssueRouteRoute = MainIssueRouteImport.update({
   id: '/issue',
   path: '/issue',
@@ -82,6 +90,12 @@ const MainTreeIndexRoute = MainTreeIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainTreeRouteRoute,
+} as any)
+
+const MainIssuesIndexRoute = MainIssuesIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MainIssuesRouteRoute,
 } as any)
 
 const MainIssueIndexRoute = MainIssueIndexImport.update({
@@ -300,6 +314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainIssueRouteImport
       parentRoute: typeof MainRouteImport
     }
+    '/_main/issues': {
+      id: '/_main/issues'
+      path: '/issues'
+      fullPath: '/issues'
+      preLoaderRoute: typeof MainIssuesRouteImport
+      parentRoute: typeof MainRouteImport
+    }
     '/_main/tree': {
       id: '/_main/tree'
       path: '/tree'
@@ -369,6 +390,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/issue/'
       preLoaderRoute: typeof MainIssueIndexImport
       parentRoute: typeof MainIssueRouteImport
+    }
+    '/_main/issues/': {
+      id: '/_main/issues/'
+      path: '/'
+      fullPath: '/issues/'
+      preLoaderRoute: typeof MainIssuesIndexImport
+      parentRoute: typeof MainIssuesRouteImport
     }
     '/_main/tree/': {
       id: '/_main/tree/'
@@ -600,6 +628,18 @@ const MainIssueRouteRouteWithChildren = MainIssueRouteRoute._addFileChildren(
   MainIssueRouteRouteChildren,
 )
 
+interface MainIssuesRouteRouteChildren {
+  MainIssuesIndexRoute: typeof MainIssuesIndexRoute
+}
+
+const MainIssuesRouteRouteChildren: MainIssuesRouteRouteChildren = {
+  MainIssuesIndexRoute: MainIssuesIndexRoute,
+}
+
+const MainIssuesRouteRouteWithChildren = MainIssuesRouteRoute._addFileChildren(
+  MainIssuesRouteRouteChildren,
+)
+
 interface MainTreeTreeIdRouteRouteChildren {
   MainTreeTreeIdIndexRoute: typeof MainTreeTreeIdIndexRoute
   MainTreeTreeIdBuildBuildIdIndexRoute: typeof MainTreeTreeIdBuildBuildIdIndexRoute
@@ -717,6 +757,7 @@ const MainalternativesTTestIdRouteRouteWithChildren =
 interface MainRouteRouteChildren {
   MainHardwareRouteRoute: typeof MainHardwareRouteRouteWithChildren
   MainIssueRouteRoute: typeof MainIssueRouteRouteWithChildren
+  MainIssuesRouteRoute: typeof MainIssuesRouteRouteWithChildren
   MainTreeRouteRoute: typeof MainTreeRouteRouteWithChildren
   MainIndexRoute: typeof MainIndexRoute
   MainalternativesIRouteRoute: typeof MainalternativesIRouteRouteWithChildren
@@ -729,6 +770,7 @@ interface MainRouteRouteChildren {
 const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainHardwareRouteRoute: MainHardwareRouteRouteWithChildren,
   MainIssueRouteRoute: MainIssueRouteRouteWithChildren,
+  MainIssuesRouteRoute: MainIssuesRouteRouteWithChildren,
   MainTreeRouteRoute: MainTreeRouteRouteWithChildren,
   MainIndexRoute: MainIndexRoute,
   MainalternativesIRouteRoute: MainalternativesIRouteRouteWithChildren,
@@ -748,6 +790,7 @@ export interface FileRoutesByFullPath {
   '': typeof MainRouteRouteWithChildren
   '/hardware': typeof MainHardwareRouteRouteWithChildren
   '/issue': typeof MainIssueRouteRouteWithChildren
+  '/issues': typeof MainIssuesRouteRouteWithChildren
   '/tree': typeof MainTreeRouteRouteWithChildren
   '/': typeof MainIndexRoute
   '/i': typeof MainalternativesIRouteRouteWithChildren
@@ -758,6 +801,7 @@ export interface FileRoutesByFullPath {
   '/tree/$treeId': typeof MainTreeTreeIdRouteRouteWithChildren
   '/hardware/': typeof MainHardwareIndexRoute
   '/issue/': typeof MainIssueIndexRoute
+  '/issues/': typeof MainIssuesIndexRoute
   '/tree/': typeof MainTreeIndexRoute
   '/b/$buildId': typeof MainalternativesBBuildIdRouteRouteWithChildren
   '/i/$issueId': typeof MainalternativesIIssueIdRouteRouteWithChildren
@@ -786,6 +830,7 @@ export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
   '/hardware': typeof MainHardwareIndexRoute
   '/issue': typeof MainIssueIndexRoute
+  '/issues': typeof MainIssuesIndexRoute
   '/tree': typeof MainTreeIndexRoute
   '/i': typeof MainalternativesIIndexRoute
   '/build/$buildId': typeof MainBuildBuildIdIndexRoute
@@ -812,6 +857,7 @@ export interface FileRoutesById {
   '/_main': typeof MainRouteRouteWithChildren
   '/_main/hardware': typeof MainHardwareRouteRouteWithChildren
   '/_main/issue': typeof MainIssueRouteRouteWithChildren
+  '/_main/issues': typeof MainIssuesRouteRouteWithChildren
   '/_main/tree': typeof MainTreeRouteRouteWithChildren
   '/_main/': typeof MainIndexRoute
   '/_main/(alternatives)/i': typeof MainalternativesIRouteRouteWithChildren
@@ -822,6 +868,7 @@ export interface FileRoutesById {
   '/_main/tree/$treeId': typeof MainTreeTreeIdRouteRouteWithChildren
   '/_main/hardware/': typeof MainHardwareIndexRoute
   '/_main/issue/': typeof MainIssueIndexRoute
+  '/_main/issues/': typeof MainIssuesIndexRoute
   '/_main/tree/': typeof MainTreeIndexRoute
   '/_main/(alternatives)/b/$buildId': typeof MainalternativesBBuildIdRouteRouteWithChildren
   '/_main/(alternatives)/i/$issueId': typeof MainalternativesIIssueIdRouteRouteWithChildren
@@ -852,6 +899,7 @@ export interface FileRouteTypes {
     | ''
     | '/hardware'
     | '/issue'
+    | '/issues'
     | '/tree'
     | '/'
     | '/i'
@@ -862,6 +910,7 @@ export interface FileRouteTypes {
     | '/tree/$treeId'
     | '/hardware/'
     | '/issue/'
+    | '/issues/'
     | '/tree/'
     | '/b/$buildId'
     | '/i/$issueId'
@@ -889,6 +938,7 @@ export interface FileRouteTypes {
     | '/'
     | '/hardware'
     | '/issue'
+    | '/issues'
     | '/tree'
     | '/i'
     | '/build/$buildId'
@@ -913,6 +963,7 @@ export interface FileRouteTypes {
     | '/_main'
     | '/_main/hardware'
     | '/_main/issue'
+    | '/_main/issues'
     | '/_main/tree'
     | '/_main/'
     | '/_main/(alternatives)/i'
@@ -923,6 +974,7 @@ export interface FileRouteTypes {
     | '/_main/tree/$treeId'
     | '/_main/hardware/'
     | '/_main/issue/'
+    | '/_main/issues/'
     | '/_main/tree/'
     | '/_main/(alternatives)/b/$buildId'
     | '/_main/(alternatives)/i/$issueId'
@@ -974,6 +1026,7 @@ export const routeTree = rootRoute
       "children": [
         "/_main/hardware",
         "/_main/issue",
+        "/_main/issues",
         "/_main/tree",
         "/_main/",
         "/_main/(alternatives)/i",
@@ -997,6 +1050,13 @@ export const routeTree = rootRoute
       "children": [
         "/_main/issue/$issueId",
         "/_main/issue/"
+      ]
+    },
+    "/_main/issues": {
+      "filePath": "_main/issues/route.tsx",
+      "parent": "/_main",
+      "children": [
+        "/_main/issues/"
       ]
     },
     "/_main/tree": {
@@ -1070,6 +1130,10 @@ export const routeTree = rootRoute
     "/_main/issue/": {
       "filePath": "_main/issue/index.tsx",
       "parent": "/_main/issue"
+    },
+    "/_main/issues/": {
+      "filePath": "_main/issues/index.tsx",
+      "parent": "/_main/issues"
     },
     "/_main/tree/": {
       "filePath": "_main/tree/index.tsx",
