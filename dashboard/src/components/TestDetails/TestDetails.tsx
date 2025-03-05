@@ -1,11 +1,10 @@
 import { useIntl } from 'react-intl';
 
-import { memo, useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction, JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 import {
-  Link,
   useParams,
   useNavigate,
   useRouterState,
@@ -44,20 +43,7 @@ import { getTestHardware } from '@/lib/test';
 import { MemoizedTestDetailsOGTags } from '@/components/OpenGraphTags/TestDetailsOGTags';
 import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
 
-const LinkItem = ({ children, ...props }: LinkProps): JSX.Element => {
-  return (
-    <Link
-      {...props}
-      className="flex flex-row items-center gap-1 underline hover:text-slate-900"
-      target="_blank"
-      rel="noreferrer"
-    >
-      {children}
-    </Link>
-  );
-};
-
-const MemoizedLinkItem = memo(LinkItem);
+import MemoizedLinkItem from '@/components/DetailsLink/DetailsLink';
 
 const TestDetailsSections = ({
   test,
@@ -157,7 +143,7 @@ const TestDetailsSections = ({
               linkText: valueOrEmpty(test.path),
             },
             {
-              title: 'global.arch',
+              title: 'global.architecture',
               linkText: valueOrEmpty(test.architecture),
             },
             {
@@ -198,7 +184,7 @@ const TestDetailsSections = ({
               linkText: valueOrEmpty(test.git_repository_branch),
             },
             {
-              title: 'globalDetails.gitCommitTag',
+              title: 'commonDetails.gitCommitTag',
               linkText: valueOrEmpty(test.git_commit_tags?.[0]),
             },
             {
@@ -260,7 +246,7 @@ const TestDetailsSections = ({
     | undefined => {
     return getMiscSection({
       misc: test.misc,
-      title: formatMessage({ id: 'globalDetails.miscData' }),
+      title: formatMessage({ id: 'commonDetails.miscData' }),
       setSheetType: setSheetType,
       setJsonContent: setJsonContent,
     });
@@ -271,7 +257,7 @@ const TestDetailsSections = ({
     | undefined => {
     return getMiscSection({
       misc: test.environment_misc,
-      title: formatMessage({ id: 'globalDetails.environmentMiscData' }),
+      title: formatMessage({ id: 'commonDetails.environmentMiscData' }),
     });
   }, [formatMessage, test.environment_misc]);
 
@@ -280,7 +266,7 @@ const TestDetailsSections = ({
     | undefined => {
     return getFilesSection({
       outputFiles: test.output_files,
-      title: formatMessage({ id: 'globalDetails.artifacts' }),
+      title: formatMessage({ id: 'commonDetails.artifacts' }),
     });
   }, [formatMessage, test.output_files]);
 

@@ -18,7 +18,7 @@ import { formatDate, getBuildStatus, getTitle } from '@/utils/utils';
 
 import IssueSection from '@/components/Issue/IssueSection';
 
-import { shouldTruncate, valueOrEmpty } from '@/lib/string';
+import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
 
 import { Sheet } from '@/components/Sheet';
 
@@ -46,6 +46,9 @@ import PageWithTitle from '@/components/PageWithTitle';
 
 import { MemoizedBuildDetailsOGTags } from '@/components/OpenGraphTags/BuildDetailsOGTags';
 import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
+
+import MemoizedLinkItem from '@/components/DetailsLink/DetailsLink';
+import { LinkIcon } from '@/components/Icons/Link';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -82,12 +85,35 @@ const BuildDetails = ({
     [navigate],
   );
 
+  const treeDetailsLink = useMemo(
+    () => (
+      <MemoizedLinkItem
+        to="/tree/$treeId"
+        params={{ treeId: data?.git_commit_hash }}
+        state={s => s}
+        search={{
+          treeInfo: {
+            gitBranch: data?.git_repository_branch,
+            gitUrl: data?.git_repository_url,
+            treeName: data?.tree_name,
+            commitName: data?.git_commit_name,
+            headCommitHash: data?.git_commit_hash,
+          },
+        }}
+      >
+        {truncateBigText(data?.git_commit_hash)}
+        <LinkIcon className="text-blue text-xl" />
+      </MemoizedLinkItem>
+    ),
+    [data],
+  );
+
   const miscSection: ISection | undefined = useMemo(():
     | ISection
     | undefined => {
     return getMiscSection({
       misc: data?.misc,
-      title: formatMessage({ id: 'globalDetails.miscData' }),
+      title: formatMessage({ id: 'commonDetails.miscData' }),
       setSheetType: setSheetType,
       setJsonContent: setJsonContent,
     });
@@ -99,7 +125,7 @@ const BuildDetails = ({
     return getFilesSection({
       inputFiles: data?.input_files,
       outputFiles: data?.output_files,
-      title: formatMessage({ id: 'globalDetails.artifacts' }),
+      title: formatMessage({ id: 'commonDetails.artifacts' }),
     });
   }, [data?.input_files, data?.output_files, formatMessage]);
 
@@ -133,7 +159,7 @@ const BuildDetails = ({
                 linkText: valueOrEmpty(data.tree_name),
               },
               {
-                title: 'buildDetails.gitUrl',
+                title: 'commonDetails.gitRepositoryUrl',
                 linkText: shouldTruncate(
                   valueOrEmpty(data.git_repository_url),
                 ) ? (
@@ -147,12 +173,13 @@ const BuildDetails = ({
                 link: data.git_repository_url,
               },
               {
-                title: 'buildDetails.gitBranch',
+                title: 'commonDetails.gitRepositoryBranch',
                 linkText: valueOrEmpty(data.git_repository_branch),
               },
               {
-                title: 'buildDetails.gitCommit',
+                title: 'commonDetails.gitCommitHash',
                 linkText: valueOrEmpty(data.git_commit_hash),
+                linkComponent: treeDetailsLink,
                 copyValue: valueOrEmpty(data.git_commit_hash),
               },
               {
@@ -160,7 +187,7 @@ const BuildDetails = ({
                 linkText: valueOrEmpty(data.git_commit_name),
               },
               {
-                title: 'globalDetails.gitCommitTag',
+                title: 'commonDetails.gitCommitTag',
                 linkText: valueOrEmpty(data.git_commit_tags?.[0]),
               },
               {
@@ -168,7 +195,7 @@ const BuildDetails = ({
                 linkText: formatDate(valueOrEmpty(data.start_time)),
               },
               {
-                title: 'buildDetails.defconfig',
+                title: 'global.config',
                 linkText: valueOrEmpty(data.config_name),
               },
               {
@@ -181,11 +208,11 @@ const BuildDetails = ({
                 linkText: valueOrEmpty(data.architecture),
               },
               {
-                title: 'buildDetails.buildTime',
+                title: 'global.buildTime',
                 linkText: data.duration ? `${data.duration} sec` : '-',
               },
               {
-                title: 'buildDetails.compiler',
+                title: 'global.compiler',
                 linkText: valueOrEmpty(data.compiler),
               },
               {
@@ -219,10 +246,17 @@ const BuildDetails = ({
         ],
       },
     ];
-  }, [data, buildDetailsTitle, setSheetToLog, formatMessage, buildId]);
+  }, [
+    data,
+    buildDetailsTitle,
+    setSheetToLog,
+    formatMessage,
+    buildId,
+    treeDetailsLink,
+  ]);
 
   const sectionsData: ISection[] = useMemo(() => {
-    return [...generalSections, miscSection, filesSection].filter(
+    return [...generalSections, filesSection, miscSection].filter(
       section => section !== undefined,
     );
   }, [generalSections, miscSection, filesSection]);
