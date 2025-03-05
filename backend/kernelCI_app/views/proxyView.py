@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,21 +8,17 @@ from drf_spectacular.utils import extend_schema
 
 
 class ProxyView(APIView):
-    """
-    Proxy view for fetching log files and handling CORS issues.
-    """
-    
     @extend_schema(
-        description="Proxy endpoint to fetch log files from external sources",
-        responses={200: bytes},  # Raw binary response
+        description="Proxy endpoint to fetch from external sources and handle CORS issues",
+        responses={200: bytes}, 
     )
     def get(self, request):
         url = request.GET.get('url')
-        if not url:
-            return Response({"error": "URL parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+        parsed_url = urlparse(url)
+        if not parsed_url.scheme or not parsed_url.netloc:
+            return Response({"error": "Invalid URL"}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            # Forward the request to the target URL
-            response = requests.get(url, stream=True)
+            response = requests.get(url, stream=True, timeout=20)
             
             if response.status_code != 200:
                 return Response(
@@ -29,19 +26,13 @@ class ProxyView(APIView):
                     status=response.status_code
                 )
             
-            # Create a Django response with the same content type
-            
             proxy_response = HttpResponse(
                 content=response.content,
                 content_type=response.headers.get('Content-Type', 'application/octet-stream')
             )
-
-            
-            # Add Content-Disposition if present
             if 'Content-Disposition' in response.headers:
                 proxy_response['Content-Disposition'] = response.headers['Content-Disposition']
             
-            # Add Content-Length if present
             if 'Content-Length' in response.headers:
                 proxy_response['Content-Length'] = response.headers['Content-Length']
                 
@@ -49,6 +40,6 @@ class ProxyView(APIView):
             
         except requests.RequestException as e:
             return Response(
-                {"error": f"Error fetching the resource: {str(e)}"},
+                {"error": f"Error fetching the resource"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

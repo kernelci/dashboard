@@ -3,6 +3,9 @@ import type { JSX } from 'react';
 import { z } from 'zod';
 import pako from 'pako';
 import { useQuery } from '@tanstack/react-query';
+import { minutesToMilliseconds } from 'date-fns';
+
+import { LogExcerpt } from '@/components/Log/LogExcerpt';
 
 const logViewerSchema = z.object({
   url: z.string(),
@@ -50,7 +53,8 @@ async function fetchAndDecompressLog(url: string): Promise<{
   };
 }
 
-const FIVE_MINUTES_MS = 5 * 60 * 1000;
+// eslint-disable-next-line no-magic-numbers
+const STALE_DURATION_MS = minutesToMilliseconds(60);
 
 function RouteComponent(): JSX.Element {
   const { url } = useSearch({ from: '/log-viewer' });
@@ -59,14 +63,11 @@ function RouteComponent(): JSX.Element {
     queryKey: ['logs', url],
     queryFn: () => fetchAndDecompressLog(url),
     enabled: !!url,
-    staleTime: FIVE_MINUTES_MS, // 5 minutes
+    staleTime: STALE_DURATION_MS,
     refetchOnWindowFocus: false,
   });
 
-  const renderLogContent = () => {
-    if (isLoading) {
-      return <div>Loading logs...</div>;
-    }
+  const renderLogContent = (): JSX.Element => {
     if (error) {
       return (
         <div className="error">
@@ -75,7 +76,7 @@ function RouteComponent(): JSX.Element {
         </div>
       );
     }
-    if (!data) {
+    if (!isLoading && !data) {
       return <div>No log content available</div>;
     }
 
@@ -89,7 +90,17 @@ function RouteComponent(): JSX.Element {
         return <div>Error parsing JSON: {String(e)}</div>;
       }
     } else {
-      return <pre className="text-logs">{data.content}</pre>;
+      return (
+        <>
+          <div>aqui</div>
+          <LogExcerpt
+            isLoading={isLoading}
+            logExcerpt={data?.content}
+            variant="log-viewer"
+          />
+          ;
+        </>
+      );
     }
   };
 
