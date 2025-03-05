@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /tree$
+Allow: /hardware$
+Allow: /issue$
+Disallow: /tree/
+Disallow: /hardware/
+Disallow: /issue/
+Disallow: /build/
+Disallow: /test/
