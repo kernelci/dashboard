@@ -7,13 +7,13 @@ import {
 import {
   issueListingDefaultValues,
   issueListingSearchSchema,
-} from '@/routes/_main/issue/route';
+} from '@/routes/_main/issues/route';
 
 export const Route = createFileRoute('/_main/(alternatives)/i')({
   loaderDeps: ({ search }) => ({ search }),
   loader: ({ deps, params }) => {
     throw redirect({
-      to: '/issue',
+      to: '/issues',
       search: deps.search,
       params,
     });

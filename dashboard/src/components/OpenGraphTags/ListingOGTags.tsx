@@ -27,7 +27,7 @@ const ListingOGTags = ({
       case '/hardware':
         descriptionId = 'hardwareListing.description';
         break;
-      case '/issue':
+      case '/issues':
         descriptionId = 'issueListing.description';
         break;
     }
@@ -45,7 +45,7 @@ const ListingOGTags = ({
         return formatMessage({ id: 'treeListing.title' });
       case '/hardware':
         return formatMessage({ id: 'hardwareListing.title' });
-      case '/issue':
+      case '/issues':
         return formatMessage({ id: 'issueListing.title' });
     }
   }, [formatMessage, monitor]);
