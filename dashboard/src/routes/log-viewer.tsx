@@ -8,17 +8,26 @@ const logViewerSchema = z.object({
   url: z.string(),
 });
 
+const tryParseJson = (): boolean => {
+  try {
+    JSON.parse(decompressedText);
+    return true;
+  } catch (_) {
+    return false;
+  }
+};
+
 async function fetchAndDecompressLog(url: string): Promise<{
   content: string;
   type: 'json' | 'text';
 }> {
   // Use our Django backend proxy to avoid CORS issues
-  const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
+  const proxyUrl = `http://localhost:8000/api/proxy?url=${encodeURIComponent(url)}`;
 
   // Fetch the gzipped file
   const response = await fetch(proxyUrl);
   if (!response.ok) {
-    console.log(response);
+    console.error(response);
     throw new Error(`Failed to fetch logs: ${response.statusText}`);
   }
 
@@ -33,22 +42,15 @@ async function fetchAndDecompressLog(url: string): Promise<{
   const decompressedText = textDecoder.decode(decompressedData);
 
   // Determine if JSON or plain text
-  const isJson =
-    url.endsWith('.json.gz') ||
-    (() => {
-      try {
-        JSON.parse(decompressedText);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    })();
+  const isJson = url.endsWith('.json.gz') || tryParseJson();
 
   return {
     content: decompressedText,
     type: isJson ? 'json' : 'text',
   };
 }
+
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
 function RouteComponent(): JSX.Element {
   const { url } = useSearch({ from: '/log-viewer' });
@@ -57,7 +59,7 @@ function RouteComponent(): JSX.Element {
     queryKey: ['logs', url],
     queryFn: () => fetchAndDecompressLog(url),
     enabled: !!url,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: FIVE_MINUTES_MS, // 5 minutes
     refetchOnWindowFocus: false,
   });
 

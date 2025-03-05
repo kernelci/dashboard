@@ -19,7 +19,6 @@ class ProxyView(APIView):
         url = request.GET.get('url')
         if not url:
             return Response({"error": "URL parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
         try:
             # Forward the request to the target URL
             response = requests.get(url, stream=True)
@@ -31,10 +30,12 @@ class ProxyView(APIView):
                 )
             
             # Create a Django response with the same content type
+            
             proxy_response = HttpResponse(
                 content=response.content,
                 content_type=response.headers.get('Content-Type', 'application/octet-stream')
             )
+
             
             # Add Content-Disposition if present
             if 'Content-Disposition' in response.headers:
