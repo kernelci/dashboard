@@ -3,7 +3,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Union, Tuple, Any
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.issues import Issue
 from kernelCI_app.typeModels.databases import (
@@ -34,9 +34,13 @@ class TestStatusCount(BaseModel):
 
 
 class BuildStatusCount(BaseModel):
-    valid: Optional[int] = 0
-    invalid: Optional[int] = 0
-    null: Optional[int] = 0
+    pass_count: int = Field(default=0, alias="pass")
+    fail_count: int = Field(default=0, alias="fail")
+    error_count: int = Field(default=0, alias="error")
+    skip_count: int = Field(default=0, alias="skip")
+    miss_count: int = Field(default=0, alias="miss")
+    done_count: int = Field(default=0, alias="done")
+    null_count: int = Field(default=0, alias="null")
 
 
 class TestArchSummaryItem(BaseModel):

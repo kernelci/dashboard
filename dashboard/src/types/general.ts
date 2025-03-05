@@ -94,8 +94,12 @@ export type BuildsTableBuild = Pick<
 >;
 
 export type BuildStatus = {
-  valid: number;
-  invalid: number;
+  pass: number;
+  fail: number;
+  error: number;
+  miss: number;
+  done: number;
+  skip: number;
   null: number;
 };
 

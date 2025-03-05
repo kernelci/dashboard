@@ -27,6 +27,7 @@ from kernelCI_app.typeModels.treeCommits import (
 )
 from pydantic import ValidationError
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
+from kernelCI_app.helpers.build import build_status_map
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -87,27 +88,21 @@ class TreeCommitsHistory(APIView):
         ]
 
     def _create_commit_entry(self) -> Dict:
+        empty_status_dict = {
+            "fail": 0,
+            "error": 0,
+            "miss": 0,
+            "pass": 0,
+            "done": 0,
+            "skip": 0,
+            "null": 0,
+        }
+
         return {
             "commit_name": "",
-            "builds_count": {"true": 0, "false": 0, "null": 0},
-            "boots_count": {
-                "fail": 0,
-                "error": 0,
-                "miss": 0,
-                "pass": 0,
-                "done": 0,
-                "skip": 0,
-                "null": 0,
-            },
-            "tests_count": {
-                "fail": 0,
-                "error": 0,
-                "miss": 0,
-                "pass": 0,
-                "done": 0,
-                "skip": 0,
-                "null": 0,
-            },
+            "builds_count": dict(empty_status_dict),
+            "boots_count": dict(empty_status_dict),
+            "tests_count": dict(empty_status_dict),
         }
 
     def _process_builds_count(
@@ -133,10 +128,7 @@ class TreeCommitsHistory(APIView):
 
         self.processed_builds.add(key)
 
-        label = "null"
-        if build_valid is not None:
-            label = str(build_valid).lower()
-
+        label = build_status_map(build_valid)
         self.commit_hashes[commit_hash]["builds_count"][label] += 1
 
     def _process_boots_count(
@@ -513,8 +505,12 @@ class TreeCommitsHistory(APIView):
                     "git_commit_tags": value["commit_tags"],
                     "earliest_start_time": value["earliest_start_time"],
                     "builds": {
-                        "valid": value["builds_count"]["true"],
-                        "invalid": value["builds_count"]["false"],
+                        "fail": value["builds_count"]["fail"],
+                        "error": value["builds_count"]["error"],
+                        "miss": value["builds_count"]["miss"],
+                        "pass": value["builds_count"]["pass"],
+                        "done": value["builds_count"]["done"],
+                        "skip": value["builds_count"]["skip"],
                         "null": value["builds_count"]["null"],
                     },
                     "boots": {

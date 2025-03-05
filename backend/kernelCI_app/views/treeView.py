@@ -18,8 +18,8 @@ from django.db import connection
 class TreeView(APIView):
     def _sanitize_tree(self, checkout: Dict) -> Dict:
         build_status = {
-            "valid": checkout[8],
-            "invalid": checkout[9],
+            "pass": checkout[8],
+            "fail": checkout[9],
             "null": checkout[10],
         }
 
@@ -104,9 +104,9 @@ class TreeView(APIView):
                 MAX(checkouts.git_commit_name) AS git_commit_name,
                 MAX(checkouts.start_time) AS start_time,
                 COUNT(DISTINCT CASE WHEN (builds.valid = true AND builds.id NOT LIKE 'maestro:dummy_%%')
-                    THEN builds.id END) AS valid_builds,
+                    THEN builds.id END) AS pass_builds,
                 COUNT(DISTINCT CASE WHEN (builds.valid = false AND builds.id NOT LIKE 'maestro:dummy_%%')
-                    THEN builds.id END) AS invalid_builds,
+                    THEN builds.id END) AS fail_builds,
                 COUNT(DISTINCT CASE WHEN (builds.valid IS NULL AND builds.id IS NOT NULL
                     AND builds.id NOT LIKE 'maestro:dummy_%%') THEN builds.id END) AS null_builds,
                 COUNT(CASE WHEN (tests.path <> 'boot' AND tests.path NOT LIKE 'boot.%%')

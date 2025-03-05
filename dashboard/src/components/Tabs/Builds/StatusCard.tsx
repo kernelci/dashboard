@@ -24,8 +24,8 @@ const StatusCard = ({
   const { formatMessage } = useIntl();
 
   const totalStatus = useMemo(() => {
-    const invalid = buildsSummary?.invalid ?? 0;
-    const valid = buildsSummary?.valid ?? 0;
+    const invalid = buildsSummary?.fail ?? 0;
+    const valid = buildsSummary?.pass ?? 0;
     const nullables = buildsSummary?.null ?? 0;
 
     return invalid + valid + nullables;
@@ -48,12 +48,12 @@ const StatusCard = ({
           }}
           elements={[
             {
-              value: buildsSummary.valid ?? 0,
+              value: buildsSummary.pass ?? 0,
               label: 'global.success',
               color: Colors.Green,
             },
             {
-              value: buildsSummary.invalid ?? 0,
+              value: buildsSummary.fail ?? 0,
               label: 'global.failed',
               color: Colors.Red,
             },

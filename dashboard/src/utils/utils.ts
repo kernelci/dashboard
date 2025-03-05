@@ -55,8 +55,8 @@ export const sanitizeArchs = (
   return Object.entries(archs).map(([key, value]) => ({
     arch: {
       text: key,
-      errors: value.invalid,
-      success: value.valid,
+      errors: value.fail,
+      success: value.pass,
       unknown: value.null,
     },
     compilers: value.compilers,
@@ -72,8 +72,8 @@ export const sanitizeConfigs = (
 
   return Object.entries(configs).map(([key, value]) => ({
     text: key,
-    errors: value.invalid,
-    success: value.valid,
+    errors: value.fail,
+    success: value.pass,
     unknown: value.null,
   }));
 };
@@ -101,8 +101,8 @@ export const sanitizePlatforms = (
   if (isBuildPlatform(platforms)) {
     return Object.entries(platforms).map(([key, value]) => ({
       text: key,
-      errors: value.invalid,
-      success: value.valid,
+      errors: value.fail,
+      success: value.pass,
       unknown: value.null,
     }));
   } else {
@@ -195,7 +195,9 @@ export const sanitizeBuildTable = (
 export const sanitizeBuildsSummary = (
   buildsSummary: BuildStatus | undefined,
 ): BuildStatus =>
-  buildsSummary ? buildsSummary : { invalid: 0, null: 0, valid: 0 };
+  buildsSummary
+    ? buildsSummary
+    : { fail: 0, null: 0, pass: 0, error: 0, miss: 0, done: 0, skip: 0 };
 
 // TODO, remove this function, is just a step further towards the final implementation
 export const mapFiltersKeysToBackendCompatible = (

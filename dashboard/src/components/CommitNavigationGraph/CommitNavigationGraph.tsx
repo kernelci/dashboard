@@ -150,9 +150,15 @@ const CommitNavigationGraph = ({
   // TODO Extract the magic code to outside the component
   data?.forEach((item, index) => {
     if (currentPageTab === 'global.builds') {
-      series[0].data?.unshift(item.builds.valid);
-      series[1].data?.unshift(item.builds.invalid);
-      series[2].data?.unshift(item.builds.null);
+      const inconclusiveCount =
+        item.builds.miss +
+        item.builds.skip +
+        item.builds.error +
+        item.builds.done +
+        item.builds.null;
+      series[0].data?.unshift(item.builds.pass);
+      series[1].data?.unshift(item.builds.fail);
+      series[2].data?.unshift(inconclusiveCount);
     }
     if (currentPageTab === 'global.boots') {
       const inconclusiveCount =

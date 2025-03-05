@@ -260,8 +260,8 @@ function HardwareDetails(): JSX.Element {
       summaryResponse.data?.summary.boots ?? {};
 
     const buildCount = groupStatus({
-      passCount: buildStatusSummary?.valid,
-      failCount: buildStatusSummary?.invalid,
+      passCount: buildStatusSummary?.pass,
+      failCount: buildStatusSummary?.fail,
       nullCount: buildStatusSummary?.null,
     });
 

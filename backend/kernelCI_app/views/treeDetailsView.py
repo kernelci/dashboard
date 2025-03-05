@@ -272,4 +272,4 @@ class TreeDetails(APIView):
                 error_message=e.json(), status_code=HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
-        return Response(valid_response.model_dump())
+        return Response(valid_response.model_dump(by_alias=True))

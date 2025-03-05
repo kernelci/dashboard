@@ -4,8 +4,8 @@ from kernelCI_app.typeModels.databases import StatusValues
 type SummaryFields = Literal["builds", "boots", "tests"]
 
 FILTER_TO_VALID = {
-    "true": "valid",
-    "false": "invalid",
+    "true": "pass",
+    "false": "fail",
     "none": "null",
 }
 

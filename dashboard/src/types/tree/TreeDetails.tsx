@@ -7,10 +7,13 @@ import type {
   TestHistory,
   StatusCounts,
   PropertyStatusCounts,
+  BuildStatus,
 } from '@/types/general';
 
 import type { Status } from '@/types/database';
 import type { DetailsFilters, Summary } from '@/types/commonDetails';
+
+import type { TableTestStatus } from './Tree';
 
 export type AccordionItemBuilds = {
   id: string;
@@ -177,29 +180,9 @@ export type PaginatedCommitHistoryByTree = {
   git_commit_name?: string;
   git_commit_tags?: string[];
   earliest_start_time: string;
-  builds: {
-    valid: number;
-    invalid: number;
-    null: number;
-  };
-  boots: {
-    fail: number;
-    error: number;
-    miss: number;
-    pass: number;
-    done: number;
-    skip: number;
-    null: number;
-  };
-  tests: {
-    fail: number;
-    error: number;
-    miss: number;
-    pass: number;
-    done: number;
-    skip: number;
-    null: number;
-  };
+  builds: BuildStatus;
+  boots: TableTestStatus;
+  tests: TableTestStatus;
 };
 
 export type BuildCountsResponse = {
