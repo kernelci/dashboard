@@ -13,6 +13,7 @@ export interface ILinkWithIcon {
   linkComponent?: ReactElement;
   onClick?: () => void;
   unformattedTitle?: string;
+  titleIcon?: JSX.Element;
 }
 
 const LinkWithIcon = ({
@@ -23,14 +24,18 @@ const LinkWithIcon = ({
   linkComponent,
   onClick,
   unformattedTitle,
+  titleIcon,
 }: ILinkWithIcon): JSX.Element => {
   const WrapperLink = link ? 'a' : 'div';
   return (
     <div className="flex flex-col items-start gap-2 text-sm">
       {(title && (
-        <span className="font-bold">
-          <FormattedMessage id={title} />
-        </span>
+        <div className="flex flex-row gap-[5px]">
+          <span className="font-bold">
+            <FormattedMessage id={title} />
+          </span>
+          {titleIcon}
+        </div>
       )) ||
         (unformattedTitle && <p className="font-bold">{unformattedTitle}</p>)}
       {linkComponent ?? (

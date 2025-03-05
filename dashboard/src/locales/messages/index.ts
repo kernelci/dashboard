@@ -196,6 +196,8 @@ export const messages = {
     'issueDetails.reportSubject': 'Report Subject',
     'issueDetails.reportUrl': 'Report URL',
     'issueDetails.version': 'Version',
+    'issueListing.culpritInfo':
+      'Layers of the execution stack responsible for the issue.  If all are false, the issue is considered invalid.',
     'issueListing.description': 'List of issues from builds and tests',
     'issueListing.title': 'Issue Listing ― KCI Dashboard',
     'issueListing.treeBranchTooltip':
