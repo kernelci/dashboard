@@ -59,3 +59,11 @@ trees:
   linus-next:
     giturl: https://git.kernel.org/pub/scm/linux/kernel/git/sashal/linus-next.git
     branch: linus-next
+  media-commiters_fixes:
+    giturl: https://gitlab.freedesktop.org/linux-media/media-committers.git
+    branch: fixes
+    path: fluster%
+  media-commiters_next:
+    giturl: https://gitlab.freedesktop.org/linux-media/media-committers.git
+    branch: next
+    path: fluster%
