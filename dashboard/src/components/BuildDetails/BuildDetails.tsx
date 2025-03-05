@@ -18,7 +18,7 @@ import { formatDate, getBuildStatus, getTitle } from '@/utils/utils';
 
 import IssueSection from '@/components/Issue/IssueSection';
 
-import { shouldTruncate, valueOrEmpty } from '@/lib/string';
+import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
 
 import { Sheet } from '@/components/Sheet';
 
@@ -46,6 +46,9 @@ import PageWithTitle from '@/components/PageWithTitle';
 
 import { MemoizedBuildDetailsOGTags } from '@/components/OpenGraphTags/BuildDetailsOGTags';
 import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
+
+import MemoizedLinkItem from '@/components/DetailsLink';
+import { LinkIcon } from '@/components/Icons/Link';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -80,6 +83,29 @@ const BuildDetails = ({
     (isOpen: boolean) =>
       navigate({ search: s => ({ ...s, logOpen: isOpen }), state: s => s }),
     [navigate],
+  );
+
+  const treeDetailsLink = useMemo(
+    () => (
+      <MemoizedLinkItem
+        to="/tree/$treeId"
+        params={{ treeId: data?.git_commit_hash }}
+        state={s => s}
+        search={{
+          treeInfo: {
+            gitBranch: data?.git_repository_branch,
+            gitUrl: data?.git_repository_url,
+            treeName: data?.tree_name,
+            commitName: data?.git_commit_name,
+            headCommitHash: data?.git_commit_hash,
+          },
+        }}
+      >
+        {truncateBigText(data?.git_commit_hash)}
+        <LinkIcon className="text-blue text-xl" />
+      </MemoizedLinkItem>
+    ),
+    [data],
   );
 
   const miscSection: ISection | undefined = useMemo(():
@@ -220,7 +246,14 @@ const BuildDetails = ({
         ],
       },
     ];
-  }, [data, buildDetailsTitle, setSheetToLog, formatMessage, buildId]);
+  }, [
+    data,
+    buildDetailsTitle,
+    setSheetToLog,
+    formatMessage,
+    buildId,
+    treeDetailsLink,
+  ]);
 
   const sectionsData: ISection[] = useMemo(() => {
     return [...generalSections, filesSection, miscSection].filter(

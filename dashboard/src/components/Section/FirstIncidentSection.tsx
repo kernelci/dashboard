@@ -1,5 +1,3 @@
-import { Link } from '@tanstack/react-router';
-
 import type { JSX } from 'react';
 
 import { truncateBigText, shouldTruncate, valueOrEmpty } from '@/lib/string';
@@ -10,6 +8,8 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { TruncatedValueTooltip } from '@/components/Tooltip/TruncatedValueTooltip';
 import { LinkIcon } from '@/components/Icons/Link';
 
+import MemoizedLinkItem from '@/components/DetailsLink';
+
 import type { ISection, SubsectionLink } from './Section';
 
 const FirstIncidentLink = ({
@@ -19,10 +19,7 @@ const FirstIncidentLink = ({
 }): JSX.Element => {
   if (firstIncident?.git_commit_hash !== undefined) {
     return (
-      <Link
-        className="flex flex-row items-center gap-1 underline hover:text-slate-900"
-        target="_blank"
-        rel="noreferrer"
+      <MemoizedLinkItem
         to="/tree/$treeId"
         params={{ treeId: firstIncident.git_commit_hash }}
         state={s => s}
@@ -39,7 +36,7 @@ const FirstIncidentLink = ({
       >
         {truncateBigText(firstIncident.git_commit_hash)}
         <LinkIcon className="text-blue text-xl" />
-      </Link>
+      </MemoizedLinkItem>
     );
   }
 
