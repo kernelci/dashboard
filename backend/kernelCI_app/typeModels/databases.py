@@ -37,6 +37,7 @@ type Checkout__PatchsetHash = Optional[str]
 type Build__Id = str
 type Build__Architecture = Optional[str]
 type Build__ConfigName = Optional[str]
+type Build__ConfigUrl = Optional[str]
 type Build__Valid = Optional[bool]
 type Build__StartTime = Optional[datetime]
 type Build__Duration = Optional[float]
@@ -47,6 +48,7 @@ type Build__LogExcerpt = Optional[str]
 type Build__LogUrl = Optional[str]
 type Build__InputFiles = Optional[Jsonb]
 type Build__OutputFiles = Optional[Jsonb]
+type Build__Misc = Optional[Jsonb]
 
 type Test__Id = str
 type Test__Status = Optional[DatabaseStatusValues]
