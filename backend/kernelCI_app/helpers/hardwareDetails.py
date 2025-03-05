@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import json
 from typing import Dict, List, Literal, Optional, Set
 
-from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.constants.general import (
     UNCATEGORIZED_STRING,
     MAESTRO_DUMMY_BUILD_PREFIX,
@@ -16,22 +15,24 @@ from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
     FilterParams,
-    is_test_failure,
+    is_status_failure,
     should_increment_build_issue,
     should_increment_test_issue,
 )
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import env_misc_value_or_default, handle_environment_misc
-from kernelCI_app.helpers.trees import get_tree_heads
-from kernelCI_app.models import Tests
-from kernelCI_app.typeModels.databases import FAIL_STATUS, NULL_STATUS
+from kernelCI_app.typeModels.databases import (
+    FAIL_STATUS,
+    NULL_STATUS,
+    StatusValues,
+    build_fail_status_list,
+)
 from kernelCI_app.typeModels.commonDetails import (
     BuildArchitectures,
-    BuildStatusCount,
     BuildSummary,
     EnvironmentMisc,
     TestArchSummaryItem,
-    TestStatusCount,
+    StatusCount,
     TestSummary,
 )
 from kernelCI_app.typeModels.hardwareDetails import (
@@ -47,9 +48,7 @@ from kernelCI_app.utils import (
     extract_error_message,
     is_boot,
 )
-from django.db import models, connection
 from pydantic import ValidationError
-from django.db.models import Subquery
 from kernelCI_app.typeModels.hardwareDetails import (
     PossibleTestType,
 )
@@ -72,86 +71,6 @@ def unstable_parse_post_body(*, instance, request) -> None:
     instance.selected_commits = post_body.selectedCommits
 
     instance.filters = FilterParams(body, process_body=True)
-
-
-def get_hardware_trees_data(
-    *,
-    hardware_id: str,
-    origin: str,
-    selected_commits: Dict[str, str],
-    start_datetime: datetime,
-    end_datetime: datetime,
-) -> List[Tree]:
-    cache_key = "hardwareDetailsTreeData"
-
-    trees_cache_params = {
-        "hardware_id": hardware_id,
-        "origin": origin,
-        "selected_commits": json.dumps(selected_commits),
-        "start_datetime": start_datetime,
-        "end_datetime": end_datetime,
-    }
-
-    trees: List[Tree] = get_query_cache(cache_key, trees_cache_params)
-
-    if not trees:
-        # We need a subquery because if we filter by any hardware, it will get the
-        # last head that has that hardware, but not the real head of the trees
-        trees_subquery = get_tree_heads(origin, start_datetime, end_datetime)
-
-        tree_id_fields = [
-            "build__checkout__tree_name",
-            "build__checkout__git_repository_branch",
-            "build__checkout__git_repository_url",
-        ]
-
-        trees_query_set = (
-            Tests.objects.filter(
-                models.Q(environment_compatible__contains=[hardware_id])
-                | models.Q(environment_misc__platform=hardware_id),
-                origin=origin,
-                build__checkout__start_time__lte=end_datetime,
-                build__checkout__start_time__gte=start_datetime,
-                build__checkout__git_commit_hash__in=Subquery(trees_subquery),
-            )
-            .values(
-                *tree_id_fields,
-                "build__checkout__git_commit_name",
-                "build__checkout__git_commit_hash",
-                "build__checkout__git_commit_tags",
-            )
-            .distinct(
-                *tree_id_fields,
-                "build__checkout__git_commit_hash",
-            )
-            .order_by(
-                *tree_id_fields,
-                "build__checkout__git_commit_hash",
-                "-build__checkout__start_time",
-            )
-        )
-
-        trees = []
-        for idx, tree in enumerate(trees_query_set):
-            trees.append(
-                Tree(
-                    index=str(idx),
-                    tree_name=tree["build__checkout__tree_name"],
-                    git_repository_branch=tree[
-                        "build__checkout__git_repository_branch"
-                    ],
-                    git_repository_url=tree["build__checkout__git_repository_url"],
-                    head_git_commit_name=tree["build__checkout__git_commit_name"],
-                    head_git_commit_hash=tree["build__checkout__git_commit_hash"],
-                    head_git_commit_tag=tree["build__checkout__git_commit_tags"],
-                    selected_commit_status=None,
-                    is_selected=None,
-                )
-            )
-
-        set_query_cache(cache_key, trees_cache_params, trees)
-
-    return trees
 
 
 def set_trees_status_summary(
@@ -201,118 +120,6 @@ def get_trees_with_selected_commit(
     return selected
 
 
-def get_hardware_details_data(
-    *,
-    hardware_id: str,
-    origin: str,
-    trees_with_selected_commits: List[Tree],
-    start_datetime: datetime,
-    end_datetime: datetime,
-):
-    cache_key = "hardwareDetailsFullData"
-
-    tests_cache_params = {
-        "hardware_id": hardware_id,
-        "origin": origin,
-        "trees": trees_with_selected_commits,
-        "start_date": start_datetime,
-        "end_date": end_datetime,
-    }
-
-    records = get_query_cache(cache_key, tests_cache_params)
-
-    if not records:
-        records = query_records(
-            hardware_id=hardware_id,
-            origin=origin,
-            trees=trees_with_selected_commits,
-            start_date=start_datetime,
-            end_date=end_datetime,
-        )
-        set_query_cache(cache_key, tests_cache_params, records)
-
-    return records
-
-
-def query_records(
-    *, hardware_id: str, origin: str, trees: List[Tree], start_date: int, end_date: int
-):
-    commit_hashes = [tree.head_git_commit_hash for tree in trees]
-
-    # TODO Treat commit_hash collision (it can happen between repos)
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT
-                tests.id,
-                tests.environment_misc,
-                tests.path,
-                tests.comment,
-                tests.log_url,
-                tests.status,
-                tests.start_time,
-                tests.duration,
-                tests.misc,
-                tests.build_id,
-                tests.environment_compatible,
-                builds.architecture AS build__architecture,
-                builds.config_name AS build__config_name,
-                builds.misc AS build__misc,
-                builds.config_url AS build__config_url,
-                builds.compiler AS build__compiler,
-                builds.valid AS build__valid,
-                builds.duration AS build__duration,
-                builds.log_url AS build__log_url,
-                builds.start_time AS build__start_time,
-                checkouts.git_repository_url AS build__checkout__git_repository_url,
-                checkouts.git_repository_branch AS build__checkout__git_repository_branch,
-                checkouts.git_commit_name AS build__checkout__git_commit_name,
-                checkouts.git_commit_hash AS build__checkout__git_commit_hash,
-                checkouts.tree_name AS build__checkout__tree_name,
-                incidents.id AS incidents__id,
-                incidents.issue_id AS incidents__issue__id,
-                issues.version AS incidents__issue__version,
-                issues.comment AS incidents__issue__comment,
-                issues.report_url AS incidents__issue__report_url,
-                incidents.test_id AS incidents__test_id,
-                T7.issue_id AS build__incidents__issue__id,
-                T8.version AS build__incidents__issue__version
-            FROM
-                tests
-            INNER JOIN builds ON
-                tests.build_id = builds.id
-            INNER JOIN checkouts ON
-                builds.checkout_id = checkouts.id
-            LEFT OUTER JOIN incidents ON
-                tests.id = incidents.test_id
-            LEFT OUTER JOIN issues ON
-                incidents.issue_id = issues.id AND incidents.issue_version = issues.version
-            LEFT OUTER JOIN incidents T7 ON
-                builds.id = T7.build_id
-            LEFT OUTER JOIN issues T8 ON
-                T7.issue_id = T8.id AND T7.issue_version = T8.version
-            WHERE
-                (
-                    tests.environment_compatible @> ARRAY[%s]::TEXT[]
-                    OR tests.environment_misc ->> 'platform' = %s
-                )
-                AND checkouts.origin = %s
-                AND tests.start_time >= %s
-                AND tests.start_time <= %s
-                AND checkouts.git_commit_hash IN ({0})
-            ORDER BY
-                issues."_timestamp" DESC
-            """.format(
-                ",".join(["%s"] * len(commit_hashes))
-            ),
-            [hardware_id, hardware_id, origin, start_date, end_date] + commit_hashes,
-        )
-
-        columns = [col[0] for col in cursor.description]
-        tests = [dict(zip(columns, row)) for row in cursor.fetchall()]
-    return tests
-
-
 # deprecated, use get_arch_summary_typed
 def get_arch_summary(record: Dict) -> Dict:
     return {
@@ -326,30 +133,8 @@ def get_arch_summary_typed(record: Dict) -> TestArchSummaryItem:
     return TestArchSummaryItem(
         arch=record["build__architecture"],
         compiler=record["build__compiler"],
-        status=TestStatusCount(),
+        status=StatusCount(),
     )
-
-
-# deprecated, use get_build_typed
-def get_build(record: Dict, tree_idx: int) -> Dict:
-    return {
-        "id": record["build_id"],
-        "architecture": record["build__architecture"],
-        "config_name": record["build__config_name"],
-        "misc": record["build__misc"],
-        "config_url": record["build__config_url"],
-        "compiler": record["build__compiler"],
-        "valid": record["build__valid"],
-        "duration": record["build__duration"],
-        "log_url": record["build__log_url"],
-        "start_time": record["build__start_time"],
-        "git_repository_url": record["build__checkout__git_repository_url"],
-        "git_repository_branch": record["build__checkout__git_repository_branch"],
-        "tree_name": record["build__checkout__tree_name"],
-        "issue_id": record["build__incidents__issue__id"],
-        "issue_version": record["build__incidents__issue__version"],
-        "tree_index": tree_idx,
-    }
 
 
 def get_build_typed(record: Dict, tree_idx: int) -> HardwareBuildHistoryItem:
@@ -360,7 +145,7 @@ def get_build_typed(record: Dict, tree_idx: int) -> HardwareBuildHistoryItem:
         misc=record["build__misc"],
         config_url=record["build__config_url"],
         compiler=record["build__compiler"],
-        valid=record["build__valid"],
+        valid=record["build__status"],
         duration=record["build__duration"],
         log_url=record["build__log_url"],
         start_time=record["build__start_time"],
@@ -453,7 +238,7 @@ def generate_test_dict() -> Dict[str, any]:
 
 def generate_build_summary_typed() -> BuildSummary:
     return BuildSummary(
-        status=BuildStatusCount(),
+        status=StatusCount(),
         architectures={},
         configs={},
         issues=[],
@@ -463,7 +248,7 @@ def generate_build_summary_typed() -> BuildSummary:
 
 def generate_test_summary_typed() -> TestSummary:
     return TestSummary(
-        status=TestStatusCount(),
+        status=StatusCount(),
         architectures=[],
         configs={},
         issues=[],
@@ -494,7 +279,7 @@ def handle_tree_status_summary(
     tree_status_summary[tree_index][test_type_key][record["status"]] += 1
 
     if record["build_id"] not in processed_builds:
-        build_status = build_status_map.get(record["build__valid"])
+        build_status = build_status_map(record["build__status"])
         tree_status_summary[tree_index]["builds"][build_status] += 1
 
 
@@ -518,7 +303,7 @@ def handle_test_or_boot(record: Dict, task: Dict) -> None:
 
     task["platforms"][test_platform][status] += 1
 
-    if is_test_failure(status):
+    if is_status_failure(status):
         task["platformsFailing"].add(test_platform)
         task["failReasons"][extract_error_message(record["misc"])] += 1
 
@@ -533,7 +318,7 @@ def handle_test_or_boot(record: Dict, task: Dict) -> None:
         issue_id=record["incidents__issue__id"],
         issue_version=record["incidents__issue__version"],
         incident_test_id=record["incidents__test_id"],
-        build_valid=record["build__valid"],
+        build_status=record["build__status"],
         issue_comment=record["incidents__issue__comment"],
         issue_report_url=record["incidents__issue__report_url"],
         task=task,
@@ -584,7 +369,7 @@ def handle_test_summary(
 
     config_name = record["build__config_name"]
     if task.configs.get(config_name) is None:
-        task.configs[config_name] = TestStatusCount()
+        task.configs[config_name] = StatusCount()
     setattr(
         task.configs[config_name],
         status,
@@ -596,14 +381,14 @@ def handle_test_summary(
     if task.platforms is None:
         task.platforms = {}
     if task.platforms.get(test_platform) is None:
-        task.platforms[test_platform] = TestStatusCount()
+        task.platforms[test_platform] = StatusCount()
     setattr(
         task.platforms[test_platform],
         status,
         getattr(task.platforms[test_platform], status) + 1,
     )
 
-    if is_test_failure(status):
+    if is_status_failure(status):
         task.failed_platforms.add(test_platform)
         task.fail_reasons[extract_error_message(record["misc"])] += 1
 
@@ -634,7 +419,7 @@ def handle_build_summary(
     build: HardwareBuildHistoryItem = get_build_typed(record, tree_idx=tree_index)
 
     # TODO: use build_status_map values or BuildStatusCount keys
-    status_key: Literal["valid", "invalid", "null"] = build_status_map.get(build.valid)
+    status_key = build_status_map(build.status)
     setattr(
         builds_summary.status,
         status_key,
@@ -644,7 +429,7 @@ def handle_build_summary(
     if config := build.config_name:
         build_config_summary = builds_summary.configs.get(config)
         if not build_config_summary:
-            build_config_summary = BuildStatusCount()
+            build_config_summary = StatusCount()
             builds_summary.configs[config] = build_config_summary
         setattr(
             builds_summary.configs[config],
@@ -680,11 +465,13 @@ def handle_build(*, instance, record: Dict, build: Dict) -> None:
         issue_id=record["incidents__issue__id"],
         issue_version=record["incidents__issue__version"],
         incident_test_id=record["incidents__test_id"],
-        build_valid=record["build__valid"],
+        build_status=record["build__status"],
         issue_comment=record["incidents__issue__comment"],
         issue_report_url=record["incidents__issue__report_url"],
         task=instance.builds,
-        is_failed_task=record["build__valid"] is not True,
+        is_failed_task=is_status_failure(
+            record["build__status"], build_fail_status_list
+        ),
         issue_from="build",
     )
 
@@ -693,7 +480,9 @@ def process_issue(
     *, record, task_issues_dict: Dict, issue_from: Literal["build", "test"]
 ) -> None:
     if issue_from == "build":
-        is_failed_task = record["build__valid"] is not True
+        is_failed_task = is_status_failure(
+            record["build__status"], build_fail_status_list
+        )
     else:
         is_failed_task = record["status"] == FAIL_STATUS
 
@@ -701,7 +490,7 @@ def process_issue(
         issue_id=record["incidents__issue__id"],
         issue_version=record["incidents__issue__version"],
         incident_test_id=record["incidents__test_id"],
-        build_valid=record["build__valid"],
+        build_status=record["build__status"],
         issue_comment=record["incidents__issue__comment"],
         issue_report_url=record["incidents__issue__report_url"],
         is_failed_task=is_failed_task,
@@ -716,7 +505,7 @@ def update_issues(
     issue_id: Optional[str],
     issue_version: Optional[int],
     incident_test_id: Optional[str],
-    build_valid: Optional[bool],
+    build_status: StatusValues,
     issue_comment: Optional[str],
     issue_report_url: Optional[str],
     task: Dict,
@@ -729,7 +518,7 @@ def update_issues(
             issue_id=issue_id,
             issue_version=issue_version,
             incident_test_id=incident_test_id,
-            build_valid=build_valid,
+            build_status=build_status,
         )
     elif issue_from == "test":
         (issue_id, issue_version, can_insert_issue) = should_increment_test_issue(
@@ -780,17 +569,17 @@ def decide_if_is_full_record_filtered_out(
 def decide_if_is_build_in_filter(
     *,
     instance,
-    build: Dict,
+    build: HardwareBuildHistoryItem,
     processed_builds: Set[str],
     incident_test_id: Optional[str],
 ) -> bool:
-    is_build_not_processed = build["id"] not in processed_builds
-    is_build_dummy = build["id"].startswith(MAESTRO_DUMMY_BUILD_PREFIX)
+    is_build_not_processed = build.id not in processed_builds
+    is_build_dummy = build.id.startswith(MAESTRO_DUMMY_BUILD_PREFIX)
     is_build_filtered_out_result = instance.filters.is_build_filtered_out(
-        valid=build["valid"],
-        duration=build["duration"],
-        issue_id=build["issue_id"],
-        issue_version=build["issue_version"],
+        build_status=build.status,
+        duration=build.duration,
+        issue_id=build.issue_id,
+        issue_version=build.issue_version,
         incident_test_id=incident_test_id,
     )
     return (
@@ -882,7 +671,7 @@ def process_filters(*, instance, record: Dict) -> None:
     if record["build_id"] is not None:
         build_issue_id = record["build__incidents__issue__id"]
         build_issue_version = record["build__incidents__issue__version"]
-        build_valid = record["build__valid"]
+        build_status = record["build__status"]
 
         instance.global_configs.add(record["build__config_name"])
         instance.global_architectures.add(record["build__architecture"])
@@ -893,17 +682,17 @@ def process_filters(*, instance, record: Dict) -> None:
                 issue_id=build_issue_id,
                 issue_version=build_issue_version,
                 incident_test_id=incident_test_id,
-                build_valid=build_valid,
+                build_status=build_status,
             )
         )
 
-        is_invalid = build_valid is False
+        is_failed_build = build_status == FAIL_STATUS
         add_unfiltered_issue(
             issue_id=build_issue_id,
             issue_version=build_issue_version,
             should_increment=is_build_issue,
             issue_set=instance.unfiltered_build_issues,
-            is_invalid=is_invalid,
+            is_failed_task=is_failed_build,
             unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
             unknown_issue_flag_tab="build",
         )
@@ -926,13 +715,13 @@ def process_filters(*, instance, record: Dict) -> None:
             incident_test_id=incident_test_id,
         )
 
-        is_invalid = record["status"] == FAIL_STATUS
+        is_failed_test = record["status"] == FAIL_STATUS
         add_unfiltered_issue(
             issue_id=test_issue_id,
             issue_version=test_issue_version,
             should_increment=is_test_issue,
             issue_set=issue_set,
-            is_invalid=is_invalid,
+            is_failed_task=is_failed_test,
             unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
             unknown_issue_flag_tab=flag_tab,
         )
@@ -968,9 +757,8 @@ def assign_default_record_values(record: Dict) -> None:
         record["build__compiler"] = UNKNOWN_STRING
     if record["build__config_name"] is None:
         record["build__config_name"] = UNKNOWN_STRING
-    if (
-        record["build__incidents__issue__id"] is None
-        and record["build__valid"] is not True
+    if record["build__incidents__issue__id"] is None and is_status_failure(
+        record["build__status"], build_fail_status_list
     ):
         record["build__incidents__issue__id"] = UNCATEGORIZED_STRING
     if record["incidents__issue__id"] is None and record["status"] == FAIL_STATUS:

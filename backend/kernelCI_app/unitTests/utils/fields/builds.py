@@ -2,7 +2,7 @@ build_details_expected_fields = [
     "id",
     "architecture",
     "config_name",
-    "valid",
+    "status",
     "start_time",
     "duration",
     "compiler",

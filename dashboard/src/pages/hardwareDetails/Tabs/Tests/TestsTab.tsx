@@ -24,15 +24,16 @@ import {
   InnerMobileGrid,
 } from '@/components/Tabs/TabGrid';
 
-import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
+import { MemoizedStatusCard } from '@/components/Tabs/StatusCard';
 import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 import { MemoizedPlatformsCard } from '@/components/Cards/PlatformsCard';
+import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
 import { sanitizePlatforms } from '@/utils/utils';
 
-import { RedirectFrom } from '@/types/general';
+import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 
 import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
 
@@ -95,6 +96,28 @@ const TestsTab = ({
     [navigate],
   );
 
+  const toggleFilterBySection = useCallback(
+    (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
+      navigate({
+        search: previousParams => {
+          const { diffFilter: currentDiffFilter } = previousParams;
+          const newFilter = generateDiffFilter(
+            filterSectionKey,
+            filterSection,
+            currentDiffFilter,
+          );
+
+          return {
+            ...previousParams,
+            diffFilter: newFilter,
+          };
+        },
+        state: s => s,
+      });
+    },
+    [navigate],
+  );
+
   const platformItems = useMemo(
     () => sanitizePlatforms(testsSummary.platforms),
     [testsSummary.platforms],
@@ -107,6 +130,8 @@ const TestsTab = ({
           <MemoizedStatusCard
             title={<FormattedMessage id="testsTab.testStatus" />}
             statusCounts={testsSummary.status}
+            toggleFilterBySection={toggleFilterBySection}
+            filterStatusKey="testStatus"
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
@@ -144,6 +169,8 @@ const TestsTab = ({
         <MemoizedStatusCard
           title={<FormattedMessage id="bootsTab.bootStatus" />}
           statusCounts={testsSummary.status}
+          toggleFilterBySection={toggleFilterBySection}
+          filterStatusKey="testStatus"
         />
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
         <InnerMobileGrid>

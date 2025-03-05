@@ -1,5 +1,5 @@
 from typing import List
-from kernelCI_app.typeModels.commonDetails import BuildStatusCount
+from kernelCI_app.typeModels.commonDetails import StatusCount
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
     Checkout__GitCommitName,
@@ -36,7 +36,7 @@ class CommonCheckouts(BaseCheckouts):
 
 
 class Checkout(CommonCheckouts):
-    build_status: BuildStatusCount
+    build_status: StatusCount
     test_status: TestStatusCount
     boot_status: TestStatusCount
     tree_names: List[Checkout__TreeName]

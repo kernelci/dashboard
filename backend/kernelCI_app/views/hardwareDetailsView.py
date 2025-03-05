@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
 from http import HTTPStatus
 from kernelCI_app.helpers.commonDetails import PossibleTabs
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.hardwareDetails import (
     assign_default_record_values,
@@ -14,10 +15,8 @@ from kernelCI_app.helpers.hardwareDetails import (
     decide_if_is_test_in_filter,
     generate_test_dict,
     generate_tree_status_summary_dict,
-    get_build,
+    get_build_typed,
     get_filter_options,
-    get_hardware_details_data,
-    get_hardware_trees_data,
     get_processed_issue_key,
     get_trees_with_selected_commit,
     get_validated_current_tree,
@@ -30,6 +29,10 @@ from kernelCI_app.helpers.hardwareDetails import (
     set_trees_status_summary,
     unstable_parse_post_body,
     handle_test_history,
+)
+from kernelCI_app.queries.hardware import (
+    get_hardware_details_data,
+    get_hardware_trees_data,
 )
 from kernelCI_app.typeModels.commonDetails import (
     BuildSummary,
@@ -53,7 +56,6 @@ from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from typing import Dict, List, Set
-from kernelCI_app.helpers.errorHandling import create_api_error_response
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -147,7 +149,7 @@ class HardwareDetails(APIView):
             )
 
     def _process_build(self, record: Dict, tree_index: int) -> None:
-        build = get_build(record, tree_index)
+        build = get_build_typed(record, tree_index)
         build_id = record["build_id"]
 
         should_process_build = decide_if_is_build_in_filter(
@@ -260,6 +262,17 @@ class HardwareDetails(APIView):
             end_datetime=self.end_datetime,
         )
 
+        # Temporary during schema transition
+        if records is None:
+            message = (
+                "This error was probably caused because the server was using"
+                "an old version of the database. Please try requesting again"
+            )
+            return create_api_error_response(
+                error_message=message,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
         if len(records) == 0:
             return Response(data={"error": "Hardware not found"}, status=HTTPStatus.OK)
 
@@ -356,4 +369,4 @@ class HardwareDetails(APIView):
         except ValidationError as e:
             return Response(data=e.errors(), status=HTTPStatus.BAD_REQUEST)
 
-        return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)
+        return Response(valid_response.model_dump())

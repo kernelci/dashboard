@@ -1,56 +1,34 @@
-from querybuilder.query import Query
-from kernelCI_app.models import Builds
 from http import HTTPStatus
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.buildDetails import BuildDetailsResponse
 from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
+from kernelCI_app.queries.build import get_build_details
 
 
 class BuildDetails(APIView):
     @extend_schema(responses=BuildDetailsResponse)
     def get(self, request, build_id: str) -> Response:
-        build_fields = [
-            "id",
-            "_timestamp",
-            "checkout_id",
-            "origin",
-            "comment",
-            "start_time",
-            "log_excerpt",
-            "duration",
-            "architecture",
-            "command",
-            "compiler",
-            "config_name",
-            "config_url",
-            "log_url",
-            "valid",
-            "misc",
-            "input_files",
-            "output_files",
-        ]
+        records = get_build_details(build_id)
 
-        query = Query().from_table(Builds, build_fields)
-        query.join(
-            "checkouts",
-            join_type="LEFT JOIN",
-            fields=[
-                "tree_name",
-                "git_repository_branch",
-                "git_commit_name",
-                "git_repository_url",
-                "git_commit_hash",
-                "git_commit_tags",
-            ],
-            condition="checkouts.id = builds.checkout_id",
-        )
-        query.where(**{"builds.id__eq": build_id})
+        # Temporary during schema transition
+        if records is None:
+            message = (
+                "This error was probably caused because the server was using"
+                "an old version of the database. Please try requesting again"
+            )
+            return create_api_error_response(
+                error_message=message,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
-        records = query.select()
         if not records:
-            return Response(data={"error": "Build not found"}, status=HTTPStatus.OK)
+            return create_api_error_response(
+                error_message="Build not found",
+                status_code=HTTPStatus.OK,
+            )
 
         try:
             valid_response = BuildDetailsResponse(**records[0])

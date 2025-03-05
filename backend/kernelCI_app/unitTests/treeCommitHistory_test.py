@@ -68,9 +68,11 @@ def test_no_filters(
     [
         (ARM64_TREE, {"boot.status": "FAIL"}),
         (ARM64_TREE, {"test.status": "PASS"}),
+        (ARM64_TREE, {"build.status": "FAIL"}),
+        (ARM64_TREE, {"build.status": "PASS"}),
     ],
 )
-def test_test_status_filter(pytestconfig, tree: dict, filters: dict) -> None:
+def test_status_filter(pytestconfig, tree: dict, filters: dict) -> None:
     response, content = request_data(tree, filters)
     assert_status_code_and_error_response(
         response=response,
@@ -88,32 +90,5 @@ def test_test_status_filter(pytestconfig, tree: dict, filters: dict) -> None:
 
     for commit_history in content_list:
         for field, value in commit_history[task].items():
-            if field.lower() != filter_value.lower():
-                assert value == 0
-
-
-@online
-@pytest.mark.parametrize(
-    "tree, filters",
-    [
-        (ARM64_TREE, {"valid": "invalid"}),
-        (ARM64_TREE, {"valid": "valid"}),
-    ],
-)
-def test_build_status_filter(pytestconfig, tree: dict, filters: dict) -> None:
-    response, content = request_data(tree, filters)
-    assert_status_code_and_error_response(
-        response=response,
-        content=content,
-        status_code=HTTPStatus.OK,
-        should_error=False,
-    )
-
-    filter_value = list(filters.values())[0]
-
-    content_list = content if pytestconfig.getoption("--run-all") else content[:1]
-
-    for commit_history in content_list:
-        for field, value in commit_history["builds"].items():
             if field.lower() != filter_value.lower():
                 assert value == 0

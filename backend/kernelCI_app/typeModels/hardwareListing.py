@@ -1,23 +1,17 @@
 from datetime import datetime
 from pydantic import BaseModel, BeforeValidator, Field
-from typing import Annotated, TypedDict
+from typing import Annotated
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
-from kernelCI_app.typeModels.databases import StatusValues
-
-
-class BuildStatusCountDict(TypedDict):
-    valid: int
-    invalid: int
-    null: int
+from kernelCI_app.typeModels.commonDetails import StatusCount
 
 
 class HardwareItem(BaseModel):
     hardware_name: str
     platform: str | set[str]
-    test_status_summary: dict[StatusValues, int]
-    boot_status_summary: dict[StatusValues, int]
-    build_status_summary: BuildStatusCountDict
+    test_status_summary: StatusCount
+    boot_status_summary: StatusCount
+    build_status_summary: StatusCount
 
 
 class HardwareResponse(BaseModel):

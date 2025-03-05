@@ -5,7 +5,10 @@ from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from http import HTTPStatus
-from kernelCI_app.helpers.errorHandling import create_error_response
+from kernelCI_app.helpers.errorHandling import (
+    create_api_error_response,
+    create_error_response,
+)
 from kernelCI_app.helpers.filters import (
     FilterParams,
 )
@@ -73,9 +76,26 @@ class TreeDetailsTests(APIView):
         responses=CommonDetailsTestsResponse,
     )
     def get(self, request, commit_hash: str | None):
-        rows = get_tree_details_data(request, commit_hash)
+        origin_param = request.GET.get("origin")
+        git_url_param = request.GET.get("git_url")
+        git_branch_param = request.GET.get("git_branch")
+
+        rows = get_tree_details_data(
+            origin_param, git_url_param, git_branch_param, commit_hash
+        )
 
         self.filters = FilterParams(request)
+
+        # Temporary during schema transition
+        if rows is None:
+            message = (
+                "This error was probably caused because the server was using"
+                "an old version of the database. Please try requesting again"
+            )
+            return create_api_error_response(
+                error_message=message,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
         if len(rows) == 0:
             return create_error_response(
@@ -91,4 +111,4 @@ class TreeDetailsTests(APIView):
         except ValidationError as e:
             return Response(data=e.errors(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)
+        return Response(valid_response.model_dump())

@@ -8,8 +8,7 @@ from kernelCI_app.unitTests.utils.asserts import (
 )
 from kernelCI_app.unitTests.utils.fields.hardware import (
     hardware_listing_fields,
-    test_status_summary_fields,
-    build_status_summary_fields,
+    status_summary_fields,
 )
 from kernelCI_app.utils import string_to_json
 from http import HTTPStatus
@@ -67,15 +66,15 @@ def test_post_hardware_listing(
             response_content=hardware[0],
         )
         assert_has_fields_in_response_content(
-            fields=test_status_summary_fields,
+            fields=status_summary_fields,
             response_content=hardware[0]["test_status_summary"],
         )
         assert_has_fields_in_response_content(
-            fields=test_status_summary_fields,
+            fields=status_summary_fields,
             response_content=hardware[0]["boot_status_summary"],
         )
         assert_has_fields_in_response_content(
-            fields=build_status_summary_fields,
+            fields=status_summary_fields,
             response_content=hardware[0]["build_status_summary"],
         )
 
@@ -86,14 +85,14 @@ def test_post_hardware_listing(
                     response_content=hardware,
                 )
                 assert_has_fields_in_response_content(
-                    fields=test_status_summary_fields,
+                    fields=status_summary_fields,
                     response_content=hardware["test_status_summary"],
                 )
                 assert_has_fields_in_response_content(
-                    fields=test_status_summary_fields,
+                    fields=status_summary_fields,
                     response_content=hardware["boot_status_summary"],
                 )
                 assert_has_fields_in_response_content(
-                    fields=build_status_summary_fields,
+                    fields=status_summary_fields,
                     response_content=hardware["build_status_summary"],
                 )

@@ -8,13 +8,15 @@ from kernelCI_app.helpers.hardwareDetails import (
     assign_default_record_values,
     decide_if_is_full_record_filtered_out,
     decide_if_is_test_in_filter,
-    get_hardware_details_data,
-    get_hardware_trees_data,
     get_trees_with_selected_commit,
     get_validated_current_tree,
     handle_test_history,
     is_test_processed,
     unstable_parse_post_body,
+)
+from kernelCI_app.queries.hardware import (
+    get_hardware_details_data,
+    get_hardware_trees_data,
 )
 from kernelCI_app.typeModels.hardwareDetails import (
     HardwareDetailsPostBody,
@@ -149,6 +151,17 @@ class HardwareDetailsBoots(APIView):
             end_datetime=self.end_datetime,
         )
 
+        # Temporary during schema transition
+        if records is None:
+            message = (
+                "This error was probably caused because the server was using"
+                "an old version of the database. Please try requesting again"
+            )
+            return create_api_error_response(
+                error_message=message,
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
         if len(records) == 0:
             return Response(
                 data={"error": "No boots found for this hardware"}, status=HTTPStatus.OK
@@ -165,4 +178,4 @@ class HardwareDetailsBoots(APIView):
         except ValidationError as e:
             return Response(data=e.errors(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)
+        return Response(valid_response.model_dump())

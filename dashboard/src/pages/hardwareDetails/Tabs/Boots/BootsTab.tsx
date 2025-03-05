@@ -26,7 +26,7 @@ import {
   InnerMobileGrid,
 } from '@/components/Tabs/TabGrid';
 
-import MemoizedStatusCard from '@/components/Tabs/Tests/StatusCard';
+import { MemoizedStatusCard } from '@/components/Tabs/StatusCard';
 import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
 import { MemoizedPlatformsCard } from '@/components/Cards/PlatformsCard';
@@ -34,8 +34,9 @@ import { MemoizedPlatformsCard } from '@/components/Cards/PlatformsCard';
 import { sanitizePlatforms } from '@/utils/utils';
 
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
-import { RedirectFrom } from '@/types/general';
+import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
+import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
 import { HardwareDetailsBootsTable } from './HardwareDetailsBootsTable';
 
@@ -107,6 +108,28 @@ const BootsTab = ({
     [navigate],
   );
 
+  const toggleFilterBySection = useCallback(
+    (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
+      navigate({
+        search: previousParams => {
+          const { diffFilter: currentDiffFilter } = previousParams;
+          const newFilter = generateDiffFilter(
+            filterSectionKey,
+            filterSection,
+            currentDiffFilter,
+          );
+
+          return {
+            ...previousParams,
+            diffFilter: newFilter,
+          };
+        },
+        state: s => s,
+      });
+    },
+    [navigate],
+  );
+
   const platformItems = useMemo(
     () => sanitizePlatforms(bootsSummary.platforms),
     [bootsSummary.platforms],
@@ -119,6 +142,8 @@ const BootsTab = ({
           <MemoizedStatusCard
             title={<FormattedMessage id="bootsTab.bootStatus" />}
             statusCounts={bootsSummary.status}
+            toggleFilterBySection={toggleFilterBySection}
+            filterStatusKey="bootStatus"
           />
           <MemoizedErrorsSummary
             title={<FormattedMessage id="global.summary" />}
@@ -156,6 +181,8 @@ const BootsTab = ({
         <MemoizedStatusCard
           title={<FormattedMessage id="bootsTab.bootStatus" />}
           statusCounts={bootsSummary.status}
+          toggleFilterBySection={toggleFilterBySection}
+          filterStatusKey="bootStatus"
         />
         <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
         <InnerMobileGrid>
