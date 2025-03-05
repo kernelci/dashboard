@@ -4,7 +4,7 @@ export const OpenGraphTags = ({
   title,
   url,
   description,
-  imageUrl = 'https://dashboard.kernelci.org/kernelci-logo-card.png',
+  imageUrl = 'https://dashboard.kernelci.org/kernelCI_logo-card.png',
   type = 'website',
 }: {
   title: string;
