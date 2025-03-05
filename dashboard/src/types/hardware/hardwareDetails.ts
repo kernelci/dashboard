@@ -71,10 +71,10 @@ export interface THardwareDetailsFilter
   extends Partial<{
     [K in keyof Omit<
       BuildsTabBuild,
-      'test_status' | 'misc' | 'valid' | 'tree_name' | 'tree_index'
+      'test_status' | 'misc' | 'status' | 'tree_name' | 'tree_index'
     >]: BuildsTabBuild[K][];
   }> {
-  valid?: string[];
+  status?: string[];
 }
 
 export const zTreeCommits = z.record(z.string()).default({});

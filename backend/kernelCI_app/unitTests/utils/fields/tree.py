@@ -38,7 +38,15 @@ tree_listing = [
     "boot_status",
     "tree_names",
 ]
-tree_listing_build_status = ["valid", "invalid", "null"]
+tree_listing_build_status = [
+    "FAIL",
+    "ERROR",
+    "MISS",
+    "PASS",
+    "DONE",
+    "SKIP",
+    "NULL",
+]
 tree_listing_test_status = [
     "fail",
     "error",
@@ -67,9 +75,13 @@ tree_commit_history_tests = [
     "null",
 ]
 tree_commit_history_builds = [
-    "valid",
-    "invalid",
-    "null",
+    "FAIL",
+    "ERROR",
+    "MISS",
+    "PASS",
+    "DONE",
+    "SKIP",
+    "NULL",
 ]
 
 tree_builds_expected_fields = [
@@ -79,7 +91,7 @@ tree_builds_expected_fields = [
     "misc",
     "config_url",
     "compiler",
-    "valid",
+    "status",
     "duration",
     "log_url",
     "start_time",

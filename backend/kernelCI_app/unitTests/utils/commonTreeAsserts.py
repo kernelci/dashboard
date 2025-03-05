@@ -9,12 +9,6 @@ from kernelCI_app.unitTests.utils.fields.tree import (
 
 type SummaryFields = Literal["builds", "boots", "tests"]
 
-FILTER_TO_VALID = {
-    "true": "valid",
-    "false": "invalid",
-    "none": "null",
-}
-
 
 def assert_summary_issues(
     content: dict, task: SummaryFields, value: StatusValues

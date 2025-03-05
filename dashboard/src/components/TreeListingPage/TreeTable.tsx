@@ -47,10 +47,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import { sanitizeTableValue } from '@/components/Table/tableUtils';
 
-import {
-  BuildStatusWithLink,
-  GroupedTestStatusWithLink,
-} from '@/components/Status/Status';
+import { GroupedTestStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import {
@@ -99,9 +96,13 @@ const getLinkProps = (
       from: RedirectFrom.Tree,
       treeStatusCount: {
         builds: {
-          valid: row.original.buildStatus?.valid ?? 0,
-          invalid: row.original.buildStatus?.invalid ?? 0,
-          null: row.original.buildStatus?.null ?? 0,
+          PASS: row.original.buildStatus?.PASS ?? 0,
+          FAIL: row.original.buildStatus?.FAIL ?? 0,
+          NULL: row.original.buildStatus?.NULL ?? 0,
+          ERROR: row.original.buildStatus?.ERROR ?? 0,
+          MISS: row.original.buildStatus?.MISS ?? 0,
+          DONE: row.original.buildStatus?.DONE ?? 0,
+          SKIP: row.original.buildStatus?.SKIP ?? 0,
         } satisfies BuildStatus,
         tests: statusCountToRequiredStatusCount({
           DONE: row.original.testStatus?.done,
@@ -208,18 +209,28 @@ const getColumns = (origin: TOrigins): ColumnDef<TreeTableBody>[] => {
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
         return row.original.buildStatus ? (
-          <BuildStatusWithLink
-            valid={row.original.buildStatus.valid}
-            invalid={row.original.buildStatus.invalid}
-            unknown={row.original.buildStatus.null}
-            validLinkProps={getLinkProps(row, origin, tabTarget, {
-              buildStatus: { Success: true },
+          <GroupedTestStatusWithLink
+            pass={row.original.buildStatus.PASS}
+            skip={row.original.buildStatus.SKIP}
+            fail={row.original.buildStatus.FAIL}
+            miss={row.original.buildStatus.MISS}
+            done={row.original.buildStatus.DONE}
+            error={row.original.buildStatus.ERROR}
+            nullStatus={row.original.buildStatus.NULL}
+            passLinkProps={getLinkProps(row, origin, tabTarget, {
+              buildStatus: { PASS: true },
             })}
-            invalidLinkProps={getLinkProps(row, origin, tabTarget, {
-              buildStatus: { Failed: true },
+            failLinkProps={getLinkProps(row, origin, tabTarget, {
+              buildStatus: { FAIL: true },
             })}
-            unknownLinkProps={getLinkProps(row, origin, tabTarget, {
-              buildStatus: { Inconclusive: true },
+            inconclusiveLinkProps={getLinkProps(row, origin, tabTarget, {
+              buildStatus: {
+                MISS: true,
+                ERROR: true,
+                SKIP: true,
+                DONE: true,
+                NULL: true,
+              },
             })}
           />
         ) : (

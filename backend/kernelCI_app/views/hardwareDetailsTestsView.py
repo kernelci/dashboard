@@ -8,13 +8,15 @@ from kernelCI_app.helpers.hardwareDetails import (
     assign_default_record_values,
     decide_if_is_full_record_filtered_out,
     decide_if_is_test_in_filter,
-    get_hardware_details_data,
-    get_hardware_trees_data,
     get_trees_with_selected_commit,
     get_validated_current_tree,
     handle_test_history,
     is_test_processed,
     unstable_parse_post_body,
+)
+from kernelCI_app.queries.hardware import (
+    get_hardware_details_data,
+    get_hardware_trees_data,
 )
 from kernelCI_app.typeModels.hardwareDetails import (
     HardwareDetailsPostBody,
@@ -147,7 +149,7 @@ class HardwareDetailsTests(APIView):
             end_datetime=self.end_datetime,
         )
 
-        if len(records) == 0:
+        if records is None or len(records) == 0:
             return Response(
                 data={"error": "No tests found for this hardware"}, status=HTTPStatus.OK
             )
@@ -163,4 +165,4 @@ class HardwareDetailsTests(APIView):
         except ValidationError as e:
             return Response(data=e.errors(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)
+        return Response(valid_response.model_dump())

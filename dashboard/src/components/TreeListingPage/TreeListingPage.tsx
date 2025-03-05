@@ -67,9 +67,13 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
       .map((tree): TreeTableBody => {
         const buildStatus = isCompleteTree(tree)
           ? {
-              valid: tree.build_status.valid,
-              invalid: tree.build_status.invalid,
-              null: tree.build_status.null,
+              PASS: tree.build_status.PASS,
+              FAIL: tree.build_status.FAIL,
+              NULL: tree.build_status.NULL,
+              ERROR: tree.build_status.ERROR,
+              MISS: tree.build_status.MISS,
+              DONE: tree.build_status.DONE,
+              SKIP: tree.build_status.SKIP,
             }
           : undefined;
 

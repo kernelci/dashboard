@@ -7,7 +7,6 @@ from kernelCI_app.unitTests.utils.healthCheck import online
 from kernelCI_app.unitTests.utils.client.treeClient import TreeClient
 from kernelCI_app.unitTests.utils.commonTreeAsserts import (
     assert_common_summary_status_fields,
-    FILTER_TO_VALID,
 )
 from kernelCI_app.unitTests.utils.fields import tree
 from kernelCI_app.unitTests.utils.asserts import (
@@ -124,7 +123,7 @@ def pytest_generate_tests(metafunc):
         if metafunc.config.getoption("--run-all"):
             extra_cases = [
                 ("test.status", "tests"),
-                ("valid", "builds"),
+                ("build.status", "builds"),
                 ("config_name", None),
                 ("architecture", None),
                 ("boot.issue", "boots"),
@@ -223,9 +222,9 @@ def test_filter_test_status(test_status_input):
 @pytest.mark.parametrize(
     "base_tree, filters",
     [
-        (ANDROID_MAINLINE_TREE, {"valid": "true"}),
-        (ANDROID_MAINLINE_TREE, {"valid": "false"}),
-        (ANDROID_MAINLINE_TREE, {"valid": "none"}),
+        (ANDROID_MAINLINE_TREE, {"build.status": "PASS"}),
+        (ANDROID_MAINLINE_TREE, {"build.status": "FAIL"}),
+        (ANDROID_MAINLINE_TREE, {"build.status": "NONE"}),
     ],
 )
 def test_filter_build_status(base_tree, filters):
@@ -237,7 +236,7 @@ def test_filter_build_status(base_tree, filters):
     assert_status_code(response=response, status_code=HTTPStatus.OK)
     assert "error" not in content
 
-    value = FILTER_TO_VALID.get(list(filters.values())[0])
+    value = list(filters.values())[0]
 
     assert_common_summary_status_fields(content, "builds", value)
     task_summary = content["summary"]["builds"]
@@ -404,7 +403,15 @@ def test_invalid_filters(invalid_filters_input):
         "failed_platforms": [],
         "issues": [],
         "platforms": None,
-        "status": {"ERROR": 0, "FAIL": 0, "MISS": 0, "NULL": 0, "PASS": 0, "SKIP": 0},
+        "status": {
+            "ERROR": 0,
+            "FAIL": 0,
+            "MISS": 0,
+            "NULL": 0,
+            "PASS": 0,
+            "SKIP": 0,
+            "DONE": 0,
+        },
         "unknown_issues": 0,
     }
 
@@ -412,7 +419,15 @@ def test_invalid_filters(invalid_filters_input):
         "architectures": {},
         "configs": {},
         "issues": [],
-        "status": {"invalid": 0, "null": 0, "valid": 0},
+        "status": {
+            "PASS": 0,
+            "FAIL": 0,
+            "NULL": 0,
+            "ERROR": 0,
+            "MISS": 0,
+            "SKIP": 0,
+            "DONE": 0,
+        },
         "unknown_issues": 0,
     }
 

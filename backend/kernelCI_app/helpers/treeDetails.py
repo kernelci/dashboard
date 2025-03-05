@@ -2,13 +2,15 @@ from collections.abc import Callable
 from typing import Any, Optional, TypedDict
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
+from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
 from kernelCI_app.helpers.filters import (
     is_test_failure,
     should_increment_build_issue,
     should_increment_test_issue,
 )
+from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.constants.general import UNKNOWN_STRING
-from kernelCI_app.typeModels.databases import FAIL_STATUS
+from kernelCI_app.typeModels.databases import FAIL_STATUS, NULL_STATUS
 from kernelCI_app.utils import (
     extract_error_message,
     create_issue,
@@ -68,7 +70,7 @@ def get_current_row_data(current_row: dict) -> dict:
         "build_config_name": current_row[20],
         "build_config_url": current_row[21],
         "build_log_url": current_row[22],
-        "build_valid": current_row[23],
+        "build_status": current_row[23],
         "build_misc": current_row[24],
         "checkout_id": current_row[25],
         "checkout_git_repository_url": current_row[26],
@@ -94,6 +96,9 @@ def get_current_row_data(current_row: dict) -> dict:
     current_row_data["test_error"] = extract_error_message(
         current_row_data["test_misc"]
     )
+    current_row_data["build_status"] = build_status_map(
+        current_row_data["build_status"]
+    ).upper()
     if current_row_data["test_environment_compatible"] is None:
         current_row_data["test_environment_compatible"] = UNKNOWN_STRING
     else:
@@ -107,8 +112,8 @@ def get_current_row_data(current_row: dict) -> dict:
     if current_row_data["build_config_name"] is None:
         current_row_data["build_config_name"] = UNKNOWN_STRING
     if current_row_data["issue_id"] is None and (
-        current_row_data["build_valid"] is False
-        or current_row_data["build_valid"] is None
+        current_row_data["build_status"] == FAIL_STATUS
+        or current_row_data["build_status"] == NULL_STATUS
         or current_row_data["test_status"] == FAIL_STATUS
     ):
         current_row_data["issue_id"] = UNCATEGORIZED_STRING
@@ -167,21 +172,21 @@ def is_test_boots_test(row_data: dict) -> bool:
     return is_boot(test_path)
 
 
-def get_build(row_data: dict) -> dict:
-    return {
-        "id": row_data["build_id"],
-        "architecture": row_data["build_architecture"],
-        "config_name": row_data["build_config_name"],
-        "misc": row_data["build_misc"],
-        "config_url": row_data["build_config_url"],
-        "compiler": row_data["build_compiler"],
-        "valid": row_data["build_valid"],
-        "duration": row_data["build_duration"],
-        "log_url": row_data["build_log_url"],
-        "start_time": row_data["build_start_time"],
-        "git_repository_url": row_data["checkout_git_repository_url"],
-        "git_repository_branch": row_data["checkout_git_repository_branch"],
-    }
+def get_build(row_data: dict) -> BuildHistoryItem:
+    return BuildHistoryItem(
+        id=row_data["build_id"],
+        architecture=row_data["build_architecture"],
+        config_name=row_data["build_config_name"],
+        misc=row_data["build_misc"],
+        config_url=row_data["build_config_url"],
+        compiler=row_data["build_compiler"],
+        valid=row_data["build_status"],
+        duration=row_data["build_duration"],
+        log_url=row_data["build_log_url"],
+        start_time=row_data["build_start_time"],
+        git_repository_url=row_data["checkout_git_repository_url"],
+        git_repository_branch=row_data["checkout_git_repository_branch"],
+    )
 
 
 def process_builds_issue(instance, row_data):
@@ -190,14 +195,14 @@ def process_builds_issue(instance, row_data):
     issue_comment = row_data["issue_comment"]
     issue_report_url = row_data["issue_report_url"]
     issue_version = row_data["issue_version"]
-    build_valid = row_data["build_valid"]
+    build_status = row_data["build_status"]
     incident_test_id = row_data["incident_test_id"]
 
     (issue_id, issue_version, can_insert_issue) = should_increment_build_issue(
         issue_id=issue_id,
         issue_version=issue_version,
         incident_test_id=incident_test_id,
-        build_valid=build_valid,
+        build_status=build_status,
     )
 
     if issue_id and issue_version is not None and can_insert_issue:
@@ -212,7 +217,7 @@ def process_builds_issue(instance, row_data):
                 issue_version=issue_version,
             )
 
-    elif build_id not in instance.processed_builds and build_valid is False:
+    elif build_id not in instance.processed_builds and build_status == FAIL_STATUS:
         instance.failed_builds_with_unknown_issues += 1
 
 
@@ -277,12 +282,12 @@ def process_boots_issue(instance, row_data):
 def decide_if_is_build_filtered_out(instance, row_data):
     issue_id = row_data["issue_id"]
     issue_version = row_data["issue_version"]
-    build_valid = row_data["build_valid"]
+    build_status = row_data["build_status"]
     build_duration = row_data["build_duration"]
     incident_test_id = row_data["incident_test_id"]
 
     is_build_filtered_out = instance.filters.is_build_filtered_out(
-        valid=build_valid,
+        build_status=build_status,
         duration=build_duration,
         issue_id=issue_id,
         issue_version=issue_version,
@@ -418,7 +423,7 @@ def process_filters(instance, row_data: dict) -> None:
     issue_id = row_data["issue_id"]
     issue_version = row_data["issue_version"]
     incident_test_id = row_data["incident_test_id"]
-    build_valid = row_data["build_valid"]
+    build_status = row_data["build_status"]
 
     if row_data["build_id"] is not None:
         instance.global_configs.add(row_data["build_config_name"])
@@ -430,11 +435,11 @@ def process_filters(instance, row_data: dict) -> None:
                 issue_id=issue_id,
                 issue_version=issue_version,
                 incident_test_id=incident_test_id,
-                build_valid=build_valid,
+                build_status=build_status,
             )
         )
 
-        is_invalid = build_valid is False
+        is_failed_build = build_status == FAIL_STATUS
         add_unfiltered_issue(
             issue_id=build_issue_id,
             issue_version=build_issue_version,
@@ -442,7 +447,7 @@ def process_filters(instance, row_data: dict) -> None:
             issue_set=instance.unfiltered_build_issues,
             unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
             unknown_issue_flag_tab="build",
-            is_invalid=is_invalid,
+            is_failed_task=is_failed_build,
         )
 
     if row_data["test_id"] is not None:
@@ -459,13 +464,13 @@ def process_filters(instance, row_data: dict) -> None:
             issue_set = instance.unfiltered_test_issues
             flag_tab: PossibleTabs = "test"
 
-        is_invalid = row_data["test_status"] == FAIL_STATUS
+        is_failed_test = row_data["test_status"] == FAIL_STATUS
         add_unfiltered_issue(
             issue_id=test_issue_id,
             issue_version=test_issue_version,
             should_increment=is_test_issue,
             issue_set=issue_set,
-            is_invalid=is_invalid,
+            is_failed_task=is_failed_test,
             unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
             unknown_issue_flag_tab=flag_tab,
         )

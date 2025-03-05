@@ -39,7 +39,7 @@ NEXT_PENDING_FIXES_BROONIE = {
             git_branch="pending-fixes",
         ),
         "filters": {
-            "valid": "true",
+            "build.status": "PASS",
             "config_name": "defconfig",
             "architecture": "x86_64",
         },

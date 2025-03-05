@@ -27,11 +27,11 @@ interface ITreeDetailsFilter {
 }
 
 export const createFilter = (data: TreeDetailsSummary | undefined): TFilter => {
-  const buildStatus = { Success: false, Failed: false, Inconclusive: false };
-
+  const buildStatus: TFilterValues = {};
   const bootStatus: TFilterValues = {};
   const testStatus: TFilterValues = {};
   testStatuses.forEach(s => {
+    buildStatus[s] = false;
     bootStatus[s] = false;
     testStatus[s] = false;
   });

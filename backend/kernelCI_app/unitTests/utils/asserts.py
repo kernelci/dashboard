@@ -41,8 +41,9 @@ def assert_build_filters(*, filters: dict, build: dict):
             if filter_key.startswith("boot.") or filter_key.startswith("test."):
                 continue
 
-            if filter_key == "valid":
-                filter_value = filter_value == "true"
+            if filter_key.startswith("build."):
+                filter_key = filter_key.split(".")[1]
+
             assert (
                 build[filter_key] == filter_value
             ), f"Wrong value for filter field {filter_key}. {build[filter_key]} != {filter_value}"
