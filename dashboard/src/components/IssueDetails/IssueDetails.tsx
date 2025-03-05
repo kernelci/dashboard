@@ -44,6 +44,8 @@ import { getIssueCulprit } from '@/lib/issue';
 
 import { MemoizedIssueDetailsOGTags } from '@/components/OpenGraphTags/IssueDetailsOGTags';
 
+import { TooltipIcon } from '@/components/Icons/TooltipIcon';
+
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 
 import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
@@ -168,6 +170,7 @@ export const IssueDetails = ({
               {
                 title: 'issueDetails.culpritTitle',
                 linkText: issueCulprit,
+                titleIcon: <TooltipIcon tooltipId="issueListing.culpritInfo" />,
               },
               {
                 title: 'issueDetails.id',

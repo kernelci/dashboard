@@ -48,6 +48,7 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
             key={info.title?.toString()}
             title={info.title}
             link={info.link}
+            titleIcon={info.titleIcon}
             linkComponent={info.linkComponent}
             linkText={info.linkText}
             unformattedTitle={info.unformattedTitle}

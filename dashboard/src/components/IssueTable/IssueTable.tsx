@@ -98,12 +98,6 @@ const columns: ColumnDef<IssueListingTableItem>[] = [
       ),
   },
   {
-    accessorKey: 'version',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="issueDetails.version" />
-    ),
-  },
-  {
     id: 'culprit',
     accessorFn: (original, _): boolean[] => {
       return [
@@ -113,7 +107,11 @@ const columns: ColumnDef<IssueListingTableItem>[] = [
       ];
     },
     header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="issueDetails.culpritTitle" />
+      <TableHeader
+        column={column}
+        intlKey="issueDetails.culpritTitle"
+        tooltipId="issueListing.culpritInfo"
+      />
     ),
     cell: ({ row }): JSX.Element => (
       <IssueCulprit
