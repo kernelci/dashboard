@@ -351,6 +351,40 @@ def generate_issue_report(service, conn, issue_id, email_args, ask_ignore=False)
         mark_issue_as_sent(issue_id, msg_id)
 
 
+def categorize_test_history(test_group):
+    first_test_flag = True
+    status_changed = False
+
+    for test in test_group:
+        test_status = test["status"]
+        if first_test_flag:
+            if test_status == "PASS":
+                history_task = "pass"
+                starting_status = "PASS"
+                opposite_status = "FAIL"
+            elif test_status == "FAIL":
+                history_task = "fail"
+                starting_status = "FAIL"
+                opposite_status = "PASS"
+            else:
+                return "unstable"
+            first_test_flag = False
+            continue
+
+        is_inconclusive = test_status != "PASS" and test_status != "FAIL"
+
+        if test_status == opposite_status:
+            status_changed = True
+            if history_task == "pass":
+                history_task = "fixed"
+            elif history_task == "fail":
+                history_task = "regression"
+        if (status_changed and test_status == starting_status) or is_inconclusive:
+            return "unstable"
+
+    return history_task
+
+
 def evaluate_test_results(conn, checkout, path):
     origin = checkout["origin"]
     giturl = checkout["git_repository_url"]
@@ -376,44 +410,11 @@ def evaluate_test_results(conn, checkout, path):
                 if len(unique_statuses) == 1:
                     continue
 
-                first_test = True
-                possible_regression = True
-                fixed_regression = True
-                status_changed = False
-                for t in test_group:
-                    if first_test:
-                        if t["status"] == "PASS":
-                            possible_regression = False
-                        elif t["status"] == "FAIL":
-                            fixed_regression = False
-                        else:
-                            possible_regression = False
-                            fixed_regression = False
-                        first_test = False
-                    else:
-                        if possible_regression:
-                            if t["status"] == "FAIL" and not status_changed:
-                                continue
-                            elif t["status"] == "FAIL" and status_changed:
-                                possible_regression = False
-                            elif t["status"] == "PASS":
-                                status_changed = True
-                            elif t["status"] != "PASS" and t["status"] != "FAIL":
-                                possible_regression = False
+                category = categorize_test_history(test_group)
 
-                        if fixed_regression:
-                            if t["status"] == "PASS" and not status_changed:
-                                continue
-                            elif t["status"] == "PASS" and status_changed:
-                                fixed_regression = False
-                            elif t["status"] == "FAIL":
-                                status_changed = True
-                            elif t["status"] != "PASS" and t["status"] != "FAIL":
-                                fixed_regression = False
-
-                if possible_regression:
+                if category == "regression":
                     new_issues[platform][config_name][t["path"]] = test_group
-                elif fixed_regression:
+                elif category == "fixed":
                     fixed_issues[platform][config_name][t["path"]] = test_group
                 else:
                     unstable_tests[platform][config_name][t["path"]] = test_group
