@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from drf_spectacular.utils import extend_schema
 
 
-class LogProxyView(APIView):
+class ProxyView(APIView):
     """
     Proxy view for fetching log files and handling CORS issues.
     """

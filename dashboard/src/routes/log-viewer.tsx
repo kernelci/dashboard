@@ -13,7 +13,7 @@ async function fetchAndDecompressLog(url: string): Promise<{
   type: 'json' | 'text';
 }> {
   // Use our Django backend proxy to avoid CORS issues
-  const proxyUrl = `/api/log-proxy?url=${encodeURIComponent(url)}`;
+  const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
 
   // Fetch the gzipped file
   const response = await fetch(proxyUrl);
