@@ -6,6 +6,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
+from kernelCI_app.helpers.build import map_valid_status_field
 
 
 class BuildDetails(APIView):
@@ -26,7 +27,7 @@ class BuildDetails(APIView):
             "config_name",
             "config_url",
             "log_url",
-            "valid",
+            map_valid_status_field("valid"),
             "misc",
             "input_files",
             "output_files",

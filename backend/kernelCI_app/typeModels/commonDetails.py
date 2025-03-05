@@ -15,6 +15,7 @@ from kernelCI_app.typeModels.databases import (
     Build__ConfigUrl,
     Build__Compiler,
     Build__Valid,
+    Build__Status,
     Build__LogUrl,
     Build__StartTime,
     Build__Duration,
@@ -69,7 +70,8 @@ class BuildHistoryItem(BaseModel):
     misc: Build__Misc
     config_url: Build__ConfigUrl
     compiler: Build__Compiler
-    valid: Build__Valid
+    valid: Build__Valid = None
+    status: Build__Status = None
     duration: Build__Duration
     log_url: Build__LogUrl
     start_time: Build__StartTime

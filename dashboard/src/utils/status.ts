@@ -41,9 +41,9 @@ export const getBuildStatusGroup = (
   buildStatus: AccordionItemBuilds['status'],
 ): StatusGroups => {
   switch (buildStatus) {
-    case 'pass':
+    case 'PASS':
       return 'success';
-    case 'fail':
+    case 'FAIL':
       return 'failed';
     default:
       return 'inconclusive';

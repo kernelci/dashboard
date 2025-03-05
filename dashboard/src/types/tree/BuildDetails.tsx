@@ -1,3 +1,5 @@
+import type { Status } from '@/types/database';
+
 export type TBuildDetails = {
   timestamp: string;
   id: string;
@@ -7,6 +9,7 @@ export type TBuildDetails = {
   comment?: string;
   config_name?: string;
   valid?: boolean;
+  status?: Status;
   start_time?: string;
   duration?: string;
   compiler?: string;

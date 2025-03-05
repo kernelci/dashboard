@@ -13,6 +13,7 @@ import type {
   StatusCount,
 } from '@/types/general';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
+import type { Status } from '@/types/database';
 
 import { valueOrEmpty } from '@/lib/string';
 
@@ -132,14 +133,18 @@ const isBuildError = (build_valid: boolean | null): number => {
 
 export const getBuildStatus = (
   build_valid?: boolean | null,
+  build_status?: Status,
 ): AccordionItemBuilds['status'] => {
+  if (build_status !== undefined && build_status !== null) {
+    return build_status;
+  }
   if (build_valid === true) {
-    return 'pass';
+    return 'PASS';
   }
   if (build_valid === false) {
-    return 'fail';
+    return 'FAIL';
   }
-  return 'null';
+  return 'NULL';
 };
 
 export const sanitizeBuilds = (

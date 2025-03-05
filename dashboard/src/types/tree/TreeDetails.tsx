@@ -20,7 +20,7 @@ export type AccordionItemBuilds = {
   date?: string;
   buildErrors?: number;
   buildTime?: string | ReactNode;
-  status: 'pass' | 'fail' | 'null';
+  status: Status;
   kernelImage?: string;
   buildLogs?: string;
   kernelConfig?: string;
