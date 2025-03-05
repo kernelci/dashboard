@@ -40,7 +40,6 @@ class Checkouts(models.Model):
     message_id = models.TextField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
     start_time = models.DateTimeField(blank=True, null=True)
-    contacts = models.JSONField(blank=True, null=True)
     log_url = models.TextField(blank=True, null=True)
     log_excerpt = models.CharField(max_length=16384, blank=True, null=True)
     valid = models.BooleanField(blank=True, null=True)
