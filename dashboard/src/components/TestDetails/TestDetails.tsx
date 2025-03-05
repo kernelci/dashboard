@@ -1,11 +1,10 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { Fragment, memo, useCallback, useMemo, useState } from 'react';
+import { Fragment, useCallback, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction, JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 import {
-  Link,
   useParams,
   useNavigate,
   useRouterState,
@@ -52,22 +51,9 @@ import { Badge } from '@/components/ui/badge';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
+import MemoizedLinkItem from '@/components/DetailsLink';
+
 import { StatusHistoryItem } from './StatusHistoryItem';
-
-const LinkItem = ({ children, ...props }: LinkProps): JSX.Element => {
-  return (
-    <Link
-      {...props}
-      className="flex flex-row items-center gap-1 underline hover:text-slate-900"
-      target="_blank"
-      rel="noreferrer"
-    >
-      {children}
-    </Link>
-  );
-};
-
-const MemoizedLinkItem = memo(LinkItem);
 
 const TestDetailsSections = ({
   test,
