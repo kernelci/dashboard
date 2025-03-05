@@ -13,9 +13,9 @@ from kernelCI_app.helpers.treeDetails import (
     decide_if_is_full_row_filtered_out,
     decide_if_is_test_filtered_out,
     get_current_row_data,
-    get_tree_details_data,
     is_test_boots_test,
 )
+from kernelCI_app.queries.tree import get_tree_details_data
 from kernelCI_app.typeModels.treeDetails import (
     TreeQueryParameters,
 )
