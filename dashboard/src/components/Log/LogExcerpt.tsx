@@ -3,6 +3,7 @@ import { FormattedMessage } from 'react-intl';
 import type { JSX } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
+import type { CodeBlockVariant } from '@/components/Filter/CodeBlock';
 import CodeBlock from '@/components/Filter/CodeBlock';
 
 //TODO Localize the fallback string
@@ -20,11 +21,13 @@ const FallbackLog = `
 interface ILogExcerpt {
   isLoading?: boolean;
   logExcerpt?: string;
+  variant: CodeBlockVariant;
 }
 
 export const LogExcerpt = ({
   isLoading,
   logExcerpt,
+  variant,
 }: ILogExcerpt): JSX.Element => {
   if (isLoading) {
     return (
@@ -34,5 +37,5 @@ export const LogExcerpt = ({
     );
   }
 
-  return <CodeBlock code={logExcerpt ?? FallbackLog} />;
+  return <CodeBlock code={logExcerpt ?? FallbackLog} variant={variant} />;
 };

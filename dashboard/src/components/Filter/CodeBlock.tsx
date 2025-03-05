@@ -20,9 +20,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+export type CodeBlockVariant = 'default' | 'log-viewer';
+
 type TCodeBlockProps = {
   code: string;
   className?: string;
+  variant?: CodeBlockVariant;
   highlightsClassnames?: string;
 };
 
@@ -193,6 +196,7 @@ const generateHighlightedCode = (code: string): IHighlightedCode => {
 const CodeBlock = ({
   code,
   highlightsClassnames,
+  variant = 'default',
 }: TCodeBlockProps): JSX.Element => {
   const highlightedCode: IHighlightedCode = useMemo(
     () => generateHighlightedCode(code),
@@ -218,13 +222,15 @@ const CodeBlock = ({
         </span>
       </div>
 
-      <CodeBlockDialog>
-        <MemoizedCode
-          className="max-h-[100%]"
-          highlightedCode={highlightedCode.highlightedCode}
-          footer={footerElement}
-        />
-      </CodeBlockDialog>
+      {variant !== 'log-viewer' && (
+        <CodeBlockDialog>
+          <MemoizedCode
+            className="max-h-[100%]"
+            highlightedCode={highlightedCode.highlightedCode}
+            footer={footerElement}
+          />
+        </CodeBlockDialog>
+      )}
 
       <MemoizedCode
         className="max-h-[425px]"
