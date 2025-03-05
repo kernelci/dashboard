@@ -1,11 +1,10 @@
 import { useIntl } from 'react-intl';
 
-import { memo, useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction, JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 import {
-  Link,
   useParams,
   useNavigate,
   useRouterState,
@@ -44,20 +43,7 @@ import { getTestHardware } from '@/lib/test';
 import { MemoizedTestDetailsOGTags } from '@/components/OpenGraphTags/TestDetailsOGTags';
 import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
 
-const LinkItem = ({ children, ...props }: LinkProps): JSX.Element => {
-  return (
-    <Link
-      {...props}
-      className="flex flex-row items-center gap-1 underline hover:text-slate-900"
-      target="_blank"
-      rel="noreferrer"
-    >
-      {children}
-    </Link>
-  );
-};
-
-const MemoizedLinkItem = memo(LinkItem);
+import MemoizedLinkItem from '@/components/DetailsLink/DetailsLink';
 
 const TestDetailsSections = ({
   test,
