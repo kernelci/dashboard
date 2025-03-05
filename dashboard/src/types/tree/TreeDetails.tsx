@@ -7,10 +7,13 @@ import type {
   TestHistory,
   StatusCounts,
   PropertyStatusCounts,
+  BuildStatus,
 } from '@/types/general';
 
 import type { Status } from '@/types/database';
 import type { DetailsFilters, Summary } from '@/types/commonDetails';
+
+import type { TableTestStatus } from './Tree';
 
 export type AccordionItemBuilds = {
   id: string;
@@ -20,7 +23,7 @@ export type AccordionItemBuilds = {
   date?: string;
   buildErrors?: number;
   buildTime?: string | ReactNode;
-  status: 'pass' | 'fail' | 'null';
+  status: Status;
   kernelImage?: string;
   buildLogs?: string;
   kernelConfig?: string;
@@ -34,10 +37,10 @@ export interface TTreeDetailsFilter
   extends Partial<{
     [K in keyof Omit<
       BuildsTabBuild,
-      'test_status' | 'misc' | 'valid' | 'tree_name' | 'tree_index'
+      'test_status' | 'misc' | 'status' | 'tree_name' | 'tree_index'
     >]: BuildsTabBuild[K][];
   }> {
-  valid?: string[];
+  status?: string[];
 }
 
 type CompilersPerArchitecture = {
@@ -177,29 +180,9 @@ export type PaginatedCommitHistoryByTree = {
   git_commit_name?: string;
   git_commit_tags?: string[];
   earliest_start_time: string;
-  builds: {
-    valid: number;
-    invalid: number;
-    null: number;
-  };
-  boots: {
-    fail: number;
-    error: number;
-    miss: number;
-    pass: number;
-    done: number;
-    skip: number;
-    null: number;
-  };
-  tests: {
-    fail: number;
-    error: number;
-    miss: number;
-    pass: number;
-    done: number;
-    skip: number;
-    null: number;
-  };
+  builds: BuildStatus;
+  boots: TableTestStatus;
+  tests: TableTestStatus;
 };
 
 export type BuildCountsResponse = {

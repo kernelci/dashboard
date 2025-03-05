@@ -14,10 +14,8 @@ from kernelCI_app.helpers.hardwareDetails import (
     generate_build_summary_typed,
     generate_test_summary_typed,
     generate_tree_status_summary_dict,
-    get_build,
+    get_build_typed,
     get_filter_options,
-    get_hardware_details_data,
-    get_hardware_trees_data,
     get_processed_issue_key,
     get_trees_with_selected_commit,
     get_validated_current_tree,
@@ -30,6 +28,10 @@ from kernelCI_app.helpers.hardwareDetails import (
     set_trees_status_summary,
     format_issue_summary_for_response,
     unstable_parse_post_body,
+)
+from kernelCI_app.queries.hardware import (
+    get_hardware_details_data,
+    get_hardware_trees_data,
 )
 from kernelCI_app.typeModels.commonDetails import (
     GlobalFilters,
@@ -164,7 +166,7 @@ class HardwareDetailsSummary(APIView):
             self.processed_tests.add(record["id"])
 
     def _process_build(self, record: Dict, tree_index: int) -> None:
-        build = get_build(record, tree_index)
+        build = get_build_typed(record, tree_index)
         build_id = record["build_id"]
 
         should_process_build = decide_if_is_build_in_filter(
@@ -349,4 +351,4 @@ class HardwareDetailsSummary(APIView):
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(data=valid_response.model_dump(), status=HTTPStatus.OK)
+        return Response(valid_response.model_dump())

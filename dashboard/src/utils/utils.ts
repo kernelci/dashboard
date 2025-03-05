@@ -13,6 +13,7 @@ import type {
   StatusCount,
 } from '@/types/general';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
+import type { Status } from '@/types/database';
 
 import { valueOrEmpty } from '@/lib/string';
 
@@ -54,9 +55,9 @@ export const sanitizeArchs = (
   return Object.entries(archs).map(([key, value]) => ({
     arch: {
       text: key,
-      errors: value.invalid,
-      success: value.valid,
-      unknown: value.null,
+      errors: value.FAIL,
+      success: value.PASS,
+      unknown: value.NULL,
     },
     compilers: value.compilers,
   }));
@@ -71,9 +72,9 @@ export const sanitizeConfigs = (
 
   return Object.entries(configs).map(([key, value]) => ({
     text: key,
-    errors: value.invalid,
-    success: value.valid,
-    unknown: value.null,
+    errors: value.FAIL,
+    success: value.PASS,
+    unknown: value.NULL,
   }));
 };
 
@@ -100,9 +101,9 @@ export const sanitizePlatforms = (
   if (isBuildPlatform(platforms)) {
     return Object.entries(platforms).map(([key, value]) => ({
       text: key,
-      errors: value.invalid,
-      success: value.valid,
-      unknown: value.null,
+      errors: value.FAIL,
+      success: value.PASS,
+      unknown: value.NULL,
     }));
   } else {
     return Object.entries(platforms).map(([key, value]) => {
@@ -126,20 +127,8 @@ export const sanitizePlatforms = (
   }
 };
 
-const isBuildError = (build_valid: boolean | null): number => {
-  return build_valid || build_valid === null ? 0 : 1;
-};
-
-export const getBuildStatus = (
-  build_valid?: boolean | null,
-): AccordionItemBuilds['status'] => {
-  if (build_valid === true) {
-    return 'pass';
-  }
-  if (build_valid === false) {
-    return 'fail';
-  }
-  return 'null';
+const isBuildError = (build_status: Status): number => {
+  return build_status === 'FAIL' ? 0 : 1;
 };
 
 export const sanitizeBuilds = (
@@ -158,8 +147,8 @@ export const sanitizeBuilds = (
     date: build.start_time,
     buildTime: build.duration,
     compiler: build.compiler === UNKNOWN_STRING ? undefined : build.compiler,
-    buildErrors: isBuildError(build.valid),
-    status: getBuildStatus(build.valid),
+    buildErrors: isBuildError(build.status),
+    status: build.status,
     buildLogs: build.log_url,
     kernelConfig: build.config_url,
     kernelImage: build.misc ? build.misc['kernel_type'] : undefined,
@@ -180,8 +169,8 @@ export const sanitizeBuildTable = (
     date: build.start_time,
     buildTime: build.duration,
     compiler: build.compiler,
-    buildErrors: isBuildError(build.valid),
-    status: getBuildStatus(build.valid),
+    buildErrors: isBuildError(build.status),
+    status: build.status,
     buildLogs: build.log_url,
     treeBranch: buildTreeBranch(build.tree_name, build.git_repository_branch),
   }));
@@ -190,7 +179,9 @@ export const sanitizeBuildTable = (
 export const sanitizeBuildsSummary = (
   buildsSummary: BuildStatus | undefined,
 ): BuildStatus =>
-  buildsSummary ? buildsSummary : { invalid: 0, null: 0, valid: 0 };
+  buildsSummary
+    ? buildsSummary
+    : { FAIL: 0, NULL: 0, PASS: 0, ERROR: 0, MISS: 0, DONE: 0, SKIP: 0 };
 
 // TODO, remove this function, is just a step further towards the final implementation
 export const mapFiltersKeysToBackendCompatible = (

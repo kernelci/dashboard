@@ -66,7 +66,7 @@ export type BuildsTabBuild = {
   id: string;
   architecture: string;
   config_name: string;
-  valid: boolean | null;
+  status: Status;
   start_time: string;
   duration: string;
   compiler: string;
@@ -84,7 +84,7 @@ export type BuildsTableBuild = Pick<
   | 'id'
   | 'architecture'
   | 'config_name'
-  | 'valid'
+  | 'status'
   | 'start_time'
   | 'duration'
   | 'compiler'
@@ -94,9 +94,13 @@ export type BuildsTableBuild = Pick<
 >;
 
 export type BuildStatus = {
-  valid: number;
-  invalid: number;
-  null: number;
+  PASS: number;
+  FAIL: number;
+  ERROR: number;
+  MISS: number;
+  DONE: number;
+  SKIP: number;
+  NULL: number;
 };
 
 export type StatusCount = {
@@ -267,7 +271,6 @@ const requestFilters = {
     'hardwareDetails.config_name',
     'hardwareDetails.architecture',
     'hardwareDetails.compiler',
-    'hardwareDetails.valid',
     'hardwareDetails.duration_[gte]',
     'hardwareDetails.duration_[lte]',
   ],
@@ -275,7 +278,6 @@ const requestFilters = {
     'treeDetails.config_name',
     'treeDetails.architecture',
     'treeDetails.compiler',
-    'treeDetails.valid',
     'treeDetails.duration_[gte]',
     'treeDetails.duration_[lte]',
   ],
@@ -294,6 +296,7 @@ const requestFilters = {
     'boot.issue',
     'boot.platform',
     'test.platform',
+    'build.status',
   ],
 } as const;
 
@@ -305,14 +308,12 @@ export const filterFieldMap = {
   'hardwareDetails.config_name': 'configs',
   'hardwareDetails.architecture': 'archs',
   'hardwareDetails.compiler': 'compilers',
-  'hardwareDetails.valid': 'buildStatus',
   'hardwareDetails.duration_[gte]': 'buildDurationMin',
   'hardwareDetails.duration_[lte]': 'buildDurationMax',
   'hardwareDetails.trees': 'trees',
   'treeDetails.config_name': 'configs',
   'treeDetails.architecture': 'archs',
   'treeDetails.compiler': 'compilers',
-  'treeDetails.valid': 'buildStatus',
   'treeDetails.duration_[gte]': 'buildDurationMin',
   'treeDetails.duration_[lte]': 'buildDurationMax',
   'boot.status': 'bootStatus',
@@ -329,6 +330,7 @@ export const filterFieldMap = {
   'test.issue': 'testIssue',
   'boot.platform': 'bootPlatform',
   'test.platform': 'testPlatform',
+  'build.status': 'buildStatus',
 } as const satisfies Record<TRequestFiltersValues, TFilterKeys>;
 
 export const getTargetFilter = (

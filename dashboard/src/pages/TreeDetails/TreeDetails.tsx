@@ -257,9 +257,9 @@ function TreeDetails(): JSX.Element {
     const { status: bootStatusSummary } = data?.summary.boots ?? {};
 
     const buildCount = groupStatus({
-      passCount: buildStatusSummary?.valid,
-      failCount: buildStatusSummary?.invalid,
-      nullCount: buildStatusSummary?.null,
+      passCount: buildStatusSummary?.PASS,
+      failCount: buildStatusSummary?.FAIL,
+      nullCount: buildStatusSummary?.NULL,
     });
 
     const bootCount = groupStatus({

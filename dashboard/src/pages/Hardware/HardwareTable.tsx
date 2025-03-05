@@ -149,9 +149,9 @@ const getColumns = (
           .tabTarget;
         return row.original.build_status_summary ? (
           <BuildStatusWithLink
-            valid={row.original.build_status_summary.valid}
-            invalid={row.original.build_status_summary.invalid}
-            unknown={row.original.build_status_summary.null}
+            valid={row.original.build_status_summary.PASS}
+            invalid={row.original.build_status_summary.FAIL}
+            unknown={row.original.build_status_summary.NULL}
             validLinkProps={getLinkProps(
               row,
               startTimestampInSeconds,
