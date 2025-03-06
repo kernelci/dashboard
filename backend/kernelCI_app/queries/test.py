@@ -42,20 +42,22 @@ def get_test_status_history(
     platform: str,
     current_test_timestamp: datetime,
 ):
-    return (
-        Tests.objects.values(
-            "field_timestamp",
-            "id",
-            "status",
-            "build__checkout__git_commit_hash",
-        )
-        .filter(
-            path=path,
-            build__checkout__origin=origin,
-            build__checkout__git_repository_url=git_repository_url,
-            build__checkout__git_repository_branch=git_repository_branch,
-            environment_misc__platform=platform,
-            field_timestamp__lte=current_test_timestamp,
-        )
-        .order_by("-field_timestamp")[:10]
+    query = Tests.objects.values(
+        "field_timestamp",
+        "id",
+        "status",
+        "build__checkout__git_commit_hash",
+    ).filter(
+        path=path,
+        build__checkout__origin=origin,
+        build__checkout__git_repository_url=git_repository_url,
+        build__checkout__git_repository_branch=git_repository_branch,
+        field_timestamp__lte=current_test_timestamp,
     )
+
+    if platform is None:
+        query = query.filter(environment_misc__platform__isnull=True)
+    else:
+        query = query.filter(environment_misc__platform=platform)
+
+    return query.order_by("-field_timestamp")[:10]
