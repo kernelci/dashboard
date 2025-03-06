@@ -62,12 +62,14 @@ class TestDetails(APIView):
                 error_message="Test not found", status_code=HTTPStatus.OK
             )
 
+        platform = response["environment_misc"].get("platform")
+
         status_history_response = get_test_status_history(
             path=response["path"],
             origin=response["build__checkout__origin"],
             git_repository_url=response["build__checkout__git_repository_url"],
             git_repository_branch=response["build__checkout__git_repository_branch"],
-            platform=response["environment_misc"]["platform"],
+            platform=platform,
             current_test_timestamp=response["field_timestamp"],
         )
 
