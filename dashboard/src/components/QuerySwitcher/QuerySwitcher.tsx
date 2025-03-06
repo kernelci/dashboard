@@ -6,6 +6,7 @@ import { FormattedMessage } from 'react-intl';
 import { cn } from '@/lib/utils';
 
 import { Skeleton } from '@/components/ui/skeleton';
+import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
 export type QuerySelectorStatus = UseQueryResult['status'];
 
@@ -46,7 +47,7 @@ const QuerySwitcher = ({
             customError
           ) : (
             <div>
-              <FormattedMessage id="global.error" />
+              <UnexpectedError />
             </div>
           )}
         </>

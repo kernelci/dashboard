@@ -36,16 +36,17 @@ export const truncateUrl = (
   if (!shouldTruncate(url, domainLength + endPathLength)) {
     return url;
   }
-  const searchParamsRegex = /\?.*$/;
-  const replacedUrl = url
-    .replace(protocolRegex, '')
-    .replace(searchParamsRegex, '');
-  const splittedUrl = replacedUrl.split('/');
-  const hostname = splittedUrl[0];
-  const pathname = splittedUrl?.pop();
-  const domain = hostname ? hostname.slice(0, domainLength) : '';
-  const lastPath = pathname ? pathname.slice(-endPathLength) : '';
-  return `${domain}...${lastPath}`;
+
+  try {
+    const urlObject = new URL(url);
+
+    const domain = urlObject.hostname.slice(0, domainLength);
+    const lastPath = urlObject.pathname.slice(-endPathLength);
+    return `${domain}...${lastPath}`;
+  } catch {
+    console.error('Non URL passing to truncateUrl', url);
+    return url;
+  }
 };
 
 export const matchesRegexOrIncludes = (

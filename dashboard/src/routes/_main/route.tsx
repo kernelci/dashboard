@@ -1,10 +1,4 @@
-import { z } from 'zod';
-
-import {
-  createFileRoute,
-  Outlet,
-  stripSearchParams,
-} from '@tanstack/react-router';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 
 // Uncomment for TanStack Router  devtools
 
@@ -16,15 +10,6 @@ import type { JSX } from 'react';
 
 import SideMenu from '@/components/SideMenu/SideMenu';
 import TopBar from '@/components/TopBar/TopBar';
-import { DEFAULT_ORIGIN, type SearchSchema, zOrigin } from '@/types/general';
-
-const defaultValues = {
-  origin: DEFAULT_ORIGIN,
-};
-
-const RouteSchema = z.object({
-  origin: zOrigin,
-} satisfies SearchSchema);
 
 const RouteComponent = (): JSX.Element => {
   const { formatMessage } = useIntl();
@@ -47,7 +32,5 @@ const RouteComponent = (): JSX.Element => {
 };
 
 export const Route = createFileRoute('/_main')({
-  validateSearch: RouteSchema,
-  search: { middlewares: [stripSearchParams(defaultValues)] },
   component: RouteComponent,
 });

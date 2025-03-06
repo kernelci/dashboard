@@ -67,6 +67,7 @@ export const LogOrJsonSheetContent = ({
           <LogExcerpt
             logExcerpt={logExcerpt}
             isLoading={navigationLogsActions?.isLoading}
+            variant="default"
           />
 
           {!hideIssueSection && (
