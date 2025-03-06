@@ -480,6 +480,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/LogDownloaderResponse'
           description: ''
+  /api/proxy/:
+    get:
+      operationId: proxy_retrieve
+      description: Proxy endpoint to fetch from external sources and handle CORS issues
+      tags:
+      - proxy
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/schema/:
     get:
       operationId: schema_retrieve

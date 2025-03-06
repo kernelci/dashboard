@@ -211,6 +211,8 @@ export const messages = {
       'This log url is not supported in the log viewer yet, but you can still download the log in the link above',
     'logSheet.noLogFound': 'No logs available',
     'logSheet.title': 'Logs Viewer',
+    'logViewer.download': 'Download full log',
+    'logViewer.viewFullLog': 'View full log for {fileName}',
     'logspec.info':
       "This is the same logspec data that's in the misc data section",
     'routes.buildDetails': 'Build',

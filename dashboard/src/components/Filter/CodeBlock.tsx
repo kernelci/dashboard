@@ -6,6 +6,8 @@ import { FormattedMessage } from 'react-intl';
 import type { PropsWithChildren, JSX } from 'react';
 import { memo, useMemo } from 'react';
 
+import { useSearch } from '@tanstack/react-router';
+
 import { cn } from '@/lib/utils';
 
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
@@ -19,10 +21,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { zOrigin } from '@/types/general';
+
+export type CodeBlockVariant = 'default' | 'log-viewer';
 
 type TCodeBlockProps = {
   code: string;
   className?: string;
+  variant?: CodeBlockVariant;
   highlightsClassnames?: string;
 };
 
@@ -60,26 +66,35 @@ const CodeBlockDialog = ({ children }: PropsWithChildren): JSX.Element => {
 };
 
 const Code = ({
-  highlightedCode,
+  parsedCode,
   className,
-  footer,
+  statsElement,
+  variant,
+  disableHighlight,
 }: {
-  highlightedCode: string;
+  parsedCode: string;
   className?: string;
-  footer?: JSX.Element;
+  statsElement?: JSX.Element;
+  variant: CodeBlockVariant;
+  disableHighlight?: boolean;
 }): JSX.Element => {
   return (
     <>
+      {variant === 'log-viewer' && statsElement}
       <pre
         className={cn(
           'w-full max-w-[100vw] overflow-x-auto rounded-md bg-[#DDDDDD] p-4 font-mono text-sm leading-4 text-[#767676]',
           className,
         )}
       >
-        <div dangerouslySetInnerHTML={{ __html: highlightedCode }}></div>
+        {disableHighlight ? (
+          <>parsedCode</>
+        ) : (
+          <div dangerouslySetInnerHTML={{ __html: parsedCode }}></div>
+        )}
       </pre>
 
-      {footer}
+      {variant !== 'log-viewer' && statsElement}
     </>
   );
 };
@@ -193,45 +208,84 @@ const generateHighlightedCode = (code: string): IHighlightedCode => {
 const CodeBlock = ({
   code,
   highlightsClassnames,
+  variant = 'default',
 }: TCodeBlockProps): JSX.Element => {
-  const highlightedCode: IHighlightedCode = useMemo(
-    () => generateHighlightedCode(code),
-    [code],
-  );
+  const { origin: unsafeOrigin } = useSearch({ strict: false });
 
-  const footerElement =
-    highlightedCode.highlightCount > 0 ? (
+  const parsedOrigin = zOrigin.parse(unsafeOrigin);
+  // TODO Disable highlight based on filesize
+  const disableHighlight =
+    parsedOrigin === 'redhat' && variant === 'log-viewer';
+
+  const parsedCode: IHighlightedCode | string = useMemo(() => {
+    if (disableHighlight) {
+      return code;
+    }
+
+    return generateHighlightedCode(code);
+  }, [code, disableHighlight]);
+
+  const statsElement =
+    !disableHighlight &&
+    typeof parsedCode !== 'string' &&
+    parsedCode.highlightCount > 0 ? (
       <HighlightCounts
-        highlightedCode={highlightedCode}
+        highlightedCode={parsedCode}
         highlightsClassnames={highlightsClassnames}
       />
     ) : undefined;
 
   return (
-    <div>
-      <div className="py-4 pl-3">
-        <span className="font-bold">
-          <FormattedMessage
-            id="global.logExcerpt"
-            defaultMessage="Log Excerpt"
-          />
-        </span>
-      </div>
+    <>
+      <div className="h-full">
+        <div className="pl-3">
+          {variant === 'log-viewer' && (
+            <h3 className="py-1 text-2xl font-bold">
+              <FormattedMessage
+                id="global.fullLogs"
+                defaultMessage="Log Excerpt"
+              />
+            </h3>
+          )}
+          {variant === 'default' && (
+            <h3 className="py-4 font-bold">
+              <FormattedMessage
+                id="global.logExcerpt"
+                defaultMessage="Log Excerpt"
+              />
+            </h3>
+          )}
+        </div>
 
-      <CodeBlockDialog>
+        {variant !== 'log-viewer' && (
+          <CodeBlockDialog>
+            <MemoizedCode
+              className="max-h-[100%]"
+              parsedCode={
+                typeof parsedCode === 'string'
+                  ? parsedCode
+                  : parsedCode.highlightedCode
+              }
+              statsElement={statsElement}
+              variant={variant}
+            />
+          </CodeBlockDialog>
+        )}
+
         <MemoizedCode
-          className="max-h-[100%]"
-          highlightedCode={highlightedCode.highlightedCode}
-          footer={footerElement}
+          className={cn('', {
+            'max-h-[425px]': variant !== 'log-viewer',
+          })}
+          variant={variant}
+          parsedCode={
+            typeof parsedCode === 'string'
+              ? parsedCode
+              : parsedCode.highlightedCode
+          }
+          statsElement={statsElement}
         />
-      </CodeBlockDialog>
-
-      <MemoizedCode
-        className="max-h-[425px]"
-        highlightedCode={highlightedCode.highlightedCode}
-        footer={footerElement}
-      />
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as LogViewerImport } from './routes/log-viewer'
 import { Route as MainRouteImport } from './routes/_main/route'
 import { Route as MainIndexImport } from './routes/_main/index'
 import { Route as MainTreeRouteImport } from './routes/_main/tree/route'
@@ -48,6 +49,12 @@ import { Route as MainHardwareHardwareIdBuildBuildIdIndexImport } from './routes
 import { Route as MainHardwareHardwareIdBootBootIdIndexImport } from './routes/_main/hardware/$hardwareId/boot/$bootId/index'
 
 // Create/Update Routes
+
+const LogViewerRoute = LogViewerImport.update({
+  id: '/log-viewer',
+  path: '/log-viewer',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const MainRouteRoute = MainRouteImport.update({
   id: '/_main',
@@ -284,6 +291,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: ''
       preLoaderRoute: typeof MainRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/log-viewer': {
+      id: '/log-viewer'
+      path: '/log-viewer'
+      fullPath: '/log-viewer'
+      preLoaderRoute: typeof LogViewerImport
       parentRoute: typeof rootRoute
     }
     '/_main/hardware': {
@@ -746,6 +760,7 @@ const MainRouteRouteWithChildren = MainRouteRoute._addFileChildren(
 
 export interface FileRoutesByFullPath {
   '': typeof MainRouteRouteWithChildren
+  '/log-viewer': typeof LogViewerRoute
   '/hardware': typeof MainHardwareRouteRouteWithChildren
   '/issues': typeof MainIssuesRouteRouteWithChildren
   '/tree': typeof MainTreeRouteRouteWithChildren
@@ -783,6 +798,7 @@ export interface FileRoutesByFullPath {
 }
 
 export interface FileRoutesByTo {
+  '/log-viewer': typeof LogViewerRoute
   '/': typeof MainIndexRoute
   '/hardware': typeof MainHardwareIndexRoute
   '/issues': typeof MainIssuesIndexRoute
@@ -810,6 +826,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/_main': typeof MainRouteRouteWithChildren
+  '/log-viewer': typeof LogViewerRoute
   '/_main/hardware': typeof MainHardwareRouteRouteWithChildren
   '/_main/issues': typeof MainIssuesRouteRouteWithChildren
   '/_main/tree': typeof MainTreeRouteRouteWithChildren
@@ -850,6 +867,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | ''
+    | '/log-viewer'
     | '/hardware'
     | '/issues'
     | '/tree'
@@ -886,6 +904,7 @@ export interface FileRouteTypes {
     | '/tree/$treeId/test/$testId'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/log-viewer'
     | '/'
     | '/hardware'
     | '/issues'
@@ -911,6 +930,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_main'
+    | '/log-viewer'
     | '/_main/hardware'
     | '/_main/issues'
     | '/_main/tree'
@@ -950,10 +970,12 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   MainRouteRoute: typeof MainRouteRouteWithChildren
+  LogViewerRoute: typeof LogViewerRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   MainRouteRoute: MainRouteRouteWithChildren,
+  LogViewerRoute: LogViewerRoute,
 }
 
 export const routeTree = rootRoute
@@ -966,7 +988,8 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_main"
+        "/_main",
+        "/log-viewer"
       ]
     },
     "/_main": {
@@ -983,6 +1006,9 @@ export const routeTree = rootRoute
         "/_main/(alternatives)/b/$buildId",
         "/_main/(alternatives)/t/$testId"
       ]
+    },
+    "/log-viewer": {
+      "filePath": "log-viewer.tsx"
     },
     "/_main/hardware": {
       "filePath": "_main/hardware/route.tsx",
