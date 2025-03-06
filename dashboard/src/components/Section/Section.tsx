@@ -89,12 +89,12 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
   }, [infos]);
 
   return (
-    <div>
+    <div className="border-dark-gray border-t pt-4">
       {title && <span className="text-xl">{title}</span>}
       {items.length > 0 && (
-        <div className="border-dark-gray grid grid-cols-2 gap-8">{items}</div>
+        <div className="grid grid-cols-2 gap-8 pb-4">{items}</div>
       )}
-      {children.length > 0 && <div className="w-[80vw]">{children}</div>}
+      {children.length > 0 && <div className="mb-4 w-[80vw]">{children}</div>}
     </div>
   );
 };
@@ -107,7 +107,7 @@ const Section = ({
   rightIcon,
   leftIcon,
 }: ISection): JSX.Element => {
-  const sections = useMemo(
+  const sections: JSX.Element[] | undefined = useMemo(
     () =>
       subsections?.map((subsection, index) => (
         <Subsection
@@ -120,8 +120,8 @@ const Section = ({
   );
 
   return (
-    <div className="text-dim-gray mb-10 flex flex-col gap-4">
-      <div className="border-dark-gray flex flex-col gap-2 border-b pb-4">
+    <div className="text-dim-gray mb-6 flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
         {eyebrow && <span className="text-sm">{eyebrow}</span>}
         <div className="flex flex-row items-center gap-2">
           {leftIcon}
