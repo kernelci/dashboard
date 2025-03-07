@@ -178,6 +178,7 @@ export const messages = {
     'issue.firstSeen': 'First seen',
     'issue.newIssue': 'New issue: This is the first time this issue was seen',
     'issue.noIssueFound': 'No issue found.',
+    'issue.path': 'Issues',
     'issue.searchPlaceholder': 'Search by issue comment with a regex',
     'issue.tooltip':
       'Issues groups several builds or tests by matching result status and logs.{br}They may also be linked to an external issue tracker or mailing list discussion.',

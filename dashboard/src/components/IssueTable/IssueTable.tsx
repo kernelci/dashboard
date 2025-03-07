@@ -41,6 +41,7 @@ import { valueOrEmpty } from '@/lib/string';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { shouldShowRelativeDate } from '@/lib/date';
+import { RedirectFrom } from '@/types/general';
 
 const getLinkProps = (
   row: Row<IssueListingTableItem>,
@@ -74,6 +75,8 @@ const getLinkProps = (
     params: { issueId: row.original.id },
     state: s => ({
       ...s,
+      id: row.original.id,
+      from: RedirectFrom.Issues,
     }),
   };
 };
