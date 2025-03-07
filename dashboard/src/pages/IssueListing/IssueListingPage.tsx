@@ -1,4 +1,6 @@
-import { useMemo, type JSX } from 'react';
+import { useEffect, useMemo, type JSX } from 'react';
+
+import { useSearch } from '@tanstack/react-router';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
@@ -10,6 +12,7 @@ import { useIssueListing } from '@/api/issue';
 import { IssueTable } from '@/components/IssueTable/IssueTable';
 import { matchesRegexOrIncludes } from '@/lib/string';
 import type { IssueListingResponse } from '@/types/issueListing';
+import { useSearchStore } from '@/hooks/store/useSearchStore';
 
 interface IIssueListingPage {
   inputFilter: string;
@@ -19,6 +22,13 @@ export const IssueListingPage = ({
   inputFilter,
 }: IIssueListingPage): JSX.Element => {
   const { data, status, error, isLoading } = useIssueListing();
+  const searchParams = useSearch({ from: '/_main/issues' });
+  const updatePreviousSearch = useSearchStore(s => s.updatePreviousSearch);
+
+  useEffect(
+    () => updatePreviousSearch(searchParams),
+    [searchParams, updatePreviousSearch],
+  );
 
   const filteredData = useMemo((): IssueListingResponse => {
     if (!data) {

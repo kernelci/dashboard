@@ -10,6 +10,7 @@ import { RedirectFrom } from '@/types/general';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBreadcrumb';
 import { useSearchStore } from '@/hooks/store/useSearchStore';
+import { MemoizedIssueBreadcrumb } from '@/components/Breadcrumb/IssueBreadcrumb';
 
 const getBuildTableRowLink = (buildId: string): LinkProps => ({
   to: '/build/$buildId',
@@ -49,6 +50,15 @@ const IssueDetailsPage = (): JSX.Element => {
       if (historyState.from === RedirectFrom.Hardware) {
         return (
           <MemoizedHardwareBreadcrumb
+            searchParams={previousSearch}
+            locationMessage="issueDetails.issueDetails"
+          />
+        );
+      }
+
+      if (historyState.from === RedirectFrom.Issues) {
+        return (
+          <MemoizedIssueBreadcrumb
             searchParams={previousSearch}
             locationMessage="issueDetails.issueDetails"
           />

@@ -361,6 +361,7 @@ export const getTargetFilter = (
 export enum RedirectFrom {
   Tree = 'tree',
   Hardware = 'hardware',
+  Issues = 'issues',
 }
 
 export type PossibleMonitorPath = '/tree' | '/hardware' | '/issues';
