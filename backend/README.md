@@ -91,6 +91,17 @@ For debugging we have two env variables
 ## Open API generate
 You can update the OpenAPI schema by running the `generate-schema.sh` script
 
+
+## Discord Webhook Integration
+
+The webdashboard backend can send notifications to discord via a webhook. In order to enable that, export an environment variable with the URL to the discord webhook called `DISCORD_WEBHOOK_URL`, which should be in the structure of:
+
+`export DISCORD_WEBHOOK_URL https://discord.com/api/webhooks/<webhook_id>/<webhook_token>`
+
+For an introduction on discord webhooks, visit https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks.
+
+For more detailed developer resources, visit https://discord.com/developers/docs/resources/webhook.
+
 ## IDE Specific:
 You are free to use whichever tool you would like, but here are tips for specific IDEs
 
