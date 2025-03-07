@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Optional
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.test import get_test_details_data, get_test_status_history
 from kernelCI_app.typeModels.databases import FAIL_STATUS, PASS_STATUS
@@ -62,7 +63,10 @@ class TestDetails(APIView):
                 error_message="Test not found", status_code=HTTPStatus.OK
             )
 
-        platform = response["environment_misc"].get("platform")
+        environment_misc = response.get("environment_misc")
+        platform: Optional[str] = None
+        if environment_misc is not None:
+            platform = environment_misc.get("platform")
 
         status_history_response = get_test_status_history(
             path=response["path"],

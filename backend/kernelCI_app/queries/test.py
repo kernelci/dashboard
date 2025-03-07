@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 from kernelCI_app.models import Tests
 
 
@@ -39,7 +40,7 @@ def get_test_status_history(
     origin: str,
     git_repository_url: str,
     git_repository_branch: str,
-    platform: str,
+    platform: Optional[str],
     current_test_timestamp: datetime,
 ):
     query = Tests.objects.values(
