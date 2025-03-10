@@ -9,7 +9,7 @@ from kernelCI_app.unitTests.utils.fields.issues import (
     issues_listing_fields,
 )
 from kernelCI_app.unitTests.utils.fields.tests import issue_tests_expected_fields
-from kernelCI_app.unitTests.utils.fields.builds import build_expected_fields
+from kernelCI_app.unitTests.utils.fields.builds import build_details_expected_fields
 from kernelCI_app.utils import string_to_json
 import pytest
 from http import HTTPStatus
@@ -169,5 +169,5 @@ def test_issue_builds(issue_id, issue_version, status_code, has_error_body):
 
     if not has_error_body:
         assert_has_fields_in_response_content(
-            fields=build_expected_fields, response_content=content[0]
+            fields=build_details_expected_fields, response_content=content[0]
         )
