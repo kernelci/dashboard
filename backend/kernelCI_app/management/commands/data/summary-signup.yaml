@@ -2,9 +2,11 @@ trees:
   mainline:
     giturl: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
     branch: master
+    always: yes
   next:
     giturl: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
     branch: master
+    always: yes
   arm64:
     giturl: https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git
     branch: for-kernelci

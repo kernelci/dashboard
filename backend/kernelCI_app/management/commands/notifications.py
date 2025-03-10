@@ -438,6 +438,15 @@ def run_checkout_summary(service, email_args):
 
         new_issues, fixed_issues, unstable_tests = evaluate_test_results(checkout, path)
 
+        always = True if "always" in tree.keys() and tree["always"] else False
+
+        if not always:
+            if not new_issues and not fixed_issues and not unstable_tests:
+                print(
+                    f"No changes for {tree["giturl"]} branch: {tree["branch"]} (origin: {origin})"
+                )
+                continue
+
         report = {}
         template = setup_jinja_template("summary.txt.j2")
         report["content"] = template.render(
