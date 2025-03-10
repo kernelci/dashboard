@@ -10,6 +10,7 @@ Build regressions:
 - Comment: {{ issue["comment"] }}
 - Timestamp: {{ issue["_timestamp"] }}
 - Tree: {{ issue["tree_name"] }}/{{ issue["git_repository_branch"] }}
+- Origin: {{ issue["origin"] }}
 - Commit HEAD: {{ issue["git_commit_hash"] }}
 - Incidents Count: {{issue["incident_count"]}}
 - Dashboard: https://d.kernelci.org/issue/{{ issue["id"] }}
@@ -24,6 +25,7 @@ Boot regressions:
 #kernelci issue {{ issue["id"] }}
 - Comment: {{ issue["comment"] }}
 - Timestamp: {{ issue["_timestamp"].strftime('%Y-%m-%d %H:%M %Z') }}
+- Origin: {{ issue["origin"] }}
 - Tree: {{ issue["tree_name"] }}/{{ issue["git_repository_branch"]}}
 - Commit HEAD: {{ issue["git_commit_hash"] }}
 - Incidents Count: {{issue["incident_count"]}}
