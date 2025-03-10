@@ -1,5 +1,5 @@
 from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.hardwareClient import HardwareClient
+from kernelCI_app.unitTests.utils.client.hardwareClient import HardwareClient
 from kernelCI_app.unitTests.utils.asserts import assert_status_code_and_error_response
 from kernelCI_app.utils import string_to_json
 from http import HTTPStatus

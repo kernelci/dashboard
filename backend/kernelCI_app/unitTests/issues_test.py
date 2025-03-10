@@ -1,5 +1,5 @@
 from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.issueClient import IssueClient
+from kernelCI_app.unitTests.utils.client.issueClient import IssueClient
 from kernelCI_app.unitTests.utils.asserts import (
     assert_status_code_and_error_response,
     assert_has_fields_in_response_content,

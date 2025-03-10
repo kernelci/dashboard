@@ -3,7 +3,7 @@ import requests
 from django.urls import reverse
 from kernelCI_app.helpers.filters import FilterFields
 from kernelCI_app.typeModels.treeDetails import TreeQueryParameters
-from kernelCI_app.unitTests.utils.baseClient import BaseClient
+from kernelCI_app.unitTests.utils.client.baseClient import BaseClient
 
 
 class TreeClient(BaseClient):
