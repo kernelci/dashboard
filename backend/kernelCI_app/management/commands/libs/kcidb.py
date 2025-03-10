@@ -3,12 +3,12 @@
 
 
 import sys
-import psycopg2
+from django.db import connection
 
 
-def kcidb_execute_query(conn, query, params=None):
+def kcidb_execute_query(query, params=None):
     try:
-        with conn.cursor() as cur:
+        with connection.cursor() as cur:
             # print(cur.mogrify(query, params).decode('utf-8'))
             cur.execute(query, params)
             rows = cur.fetchall()
@@ -22,12 +22,12 @@ def kcidb_execute_query(conn, query, params=None):
                 result.append(row_dict)
 
             return result
-    except psycopg2.Error as e:
+    except Exception as e:
         print(f"Query execution failed: {e}")
         sys.exit()
 
 
-def kcidb_new_issues(conn, origin):
+def kcidb_new_issues(origin):
     """Fetch issues from the last few days, including related checkouts."""
 
     params = {"origin": origin, "interval": "4 days"}
@@ -149,10 +149,10 @@ def kcidb_new_issues(conn, origin):
         ORDER BY fi._timestamp DESC;
         """
 
-    return kcidb_execute_query(conn, query, params)
+    return kcidb_execute_query(query, params)
 
 
-def kcidb_issue_details(conn, issue_id):
+def kcidb_issue_details(issue_id):
     """Fetches details of a given issue."""
 
     params = {"issue_id": issue_id}
@@ -234,10 +234,10 @@ def kcidb_issue_details(conn, issue_id):
             fi.git_commit_name
     """
 
-    return kcidb_execute_query(conn, query, params)
+    return kcidb_execute_query(query, params)
 
 
-def kcidb_build_incidents(conn, issue_id):
+def kcidb_build_incidents(issue_id):
     """Fetches build incidents of a given issue."""
 
     params = {"issue_id": issue_id}
@@ -251,10 +251,10 @@ def kcidb_build_incidents(conn, issue_id):
         ORDER BY b.config_name, b.architecture, b.compiler, b._timestamp DESC;
     """
 
-    return kcidb_execute_query(conn, query, params)
+    return kcidb_execute_query(query, params)
 
 
-def kcidb_test_incidents(conn, issue_id):
+def kcidb_test_incidents(issue_id):
     """Fetches test incidents of a given issue."""
 
     params = {"issue_id": issue_id}
@@ -290,10 +290,10 @@ def kcidb_test_incidents(conn, issue_id):
         ORDER BY platform, _timestamp DESC;
     """
 
-    return kcidb_execute_query(conn, query, params)
+    return kcidb_execute_query(query, params)
 
 
-def kcidb_last_test_without_issue(conn, issue, incident):
+def kcidb_last_test_without_issue(issue, incident):
     """Fetches build incidents of a given issue."""
 
     params = {
@@ -334,10 +334,10 @@ def kcidb_last_test_without_issue(conn, issue, incident):
             WHERE rn = 1
     """
 
-    return kcidb_execute_query(conn, query, params)
+    return kcidb_execute_query(query, params)
 
 
-def kcidb_last_test_without_issue_koike(conn, issue, incident):
+def kcidb_last_test_without_issue_koike(issue, incident):
     """Fetches build incidents of a given issue."""
 
     params = {
@@ -379,10 +379,10 @@ def kcidb_last_test_without_issue_koike(conn, issue, incident):
         LIMIT 1;
     """
 
-    return kcidb_execute_query(conn, query, params)
+    return kcidb_execute_query(query, params)
 
 
-def kcidb_latest_checkout_results(conn, origin, giturl, branch):
+def kcidb_latest_checkout_results(origin, giturl, branch):
     """
     Fetches checkouts between in the past 5 to 29 hours.
     As KCIDB doesn't have an end of testing signal, we have
@@ -408,11 +408,11 @@ def kcidb_latest_checkout_results(conn, origin, giturl, branch):
                 ORDER BY c._timestamp DESC
                 LIMIT 1
         """
-    result = kcidb_execute_query(conn, query, params)
+    result = kcidb_execute_query(query, params)
     return result[0] if result else None
 
 
-def kcidb_tests_results(conn, origin, giturl, branch, hash, path):
+def kcidb_tests_results(origin, giturl, branch, hash, path):
     """Fetches build incidents of a given issue."""
 
     params = {
@@ -465,16 +465,4 @@ def kcidb_tests_results(conn, origin, giturl, branch, hash, path):
             ORDER BY path, start_time DESC NULLS LAST;
         """
 
-    return kcidb_execute_query(conn, query, params)
-
-
-def kcidb_connect():
-    """Connect to PostgreSQL using the .pg_service.conf configuration."""
-    try:
-        conn = psycopg2.connect(
-            "service=kcidb-local-proxy"
-        )  # Uses the configuration from ~/.pg_service.conf
-        return conn
-    except psycopg2.Error as e:
-        print(f"Database connection failed: {e}")
-        return None
+    return kcidb_execute_query(query, params)

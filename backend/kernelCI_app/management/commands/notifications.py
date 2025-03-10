@@ -24,7 +24,6 @@ from kernelCI_app.management.commands.libs.kcidb import (
     kcidb_last_test_without_issue_koike,
     kcidb_latest_checkout_results,
     kcidb_tests_results,
-    kcidb_connect,
 )
 
 
@@ -241,8 +240,8 @@ def get_recipient_list(tree_name):
         return None
 
 
-def generate_issues_summary(dbconn, service, origin, email_args):
-    issues = kcidb_new_issues(dbconn, origin)
+def generate_issues_summary(service, origin, email_args):
+    issues = kcidb_new_issues(origin)
     build_issues = []
     boot_issues = []
     for issue in issues:
@@ -311,8 +310,8 @@ def generate_boot_issue_report(issue, incidents):
     return report
 
 
-def generate_issue_report(service, conn, issue_id, email_args, ask_ignore=False):
-    result = kcidb_issue_details(conn, issue_id)
+def generate_issue_report(service, issue_id, email_args, ask_ignore=False):
+    result = kcidb_issue_details(issue_id)
     if not result:
         print("issue not found!")
         sys.exit(-1)
@@ -333,14 +332,14 @@ def generate_issue_report(service, conn, issue_id, email_args, ask_ignore=False)
         issue["misc"] = json.loads(issue["misc"])
 
     if issue["build_id"]:
-        incidents = kcidb_build_incidents(conn, issue_id)
+        incidents = kcidb_build_incidents(issue_id)
         report = generate_build_issue_report(issue, incidents)
     elif issue["test_id"]:
-        incidents = kcidb_test_incidents(conn, issue_id)
+        incidents = kcidb_test_incidents(issue_id)
         for incident in incidents:
-            last_test = kcidb_last_test_without_issue(conn, issue, incident)
+            last_test = kcidb_last_test_without_issue(issue, incident)
             print(f"https://dashboard.kernelci.org/test/{last_test[0]["id"]}")
-            last_test = kcidb_last_test_without_issue_koike(conn, issue, incident)
+            last_test = kcidb_last_test_without_issue_koike(issue, incident)
             print(f"https://dashboard.kernelci.org/test/{last_test[0]["id"]}")
             incident["last_pass"] = last_test[0]["start_time"]
             incident["last_pass_commit"] = last_test[0]["git_commit_hash"]
@@ -388,12 +387,12 @@ def categorize_test_history(test_group):
     return history_task
 
 
-def evaluate_test_results(conn, checkout, path):
+def evaluate_test_results(checkout, path):
     origin = checkout["origin"]
     giturl = checkout["git_repository_url"]
     branch = checkout["git_repository_branch"]
     commit_hash = checkout["git_commit_hash"]
-    tests = kcidb_tests_results(conn, origin, giturl, branch, commit_hash, path)
+    tests = kcidb_tests_results(origin, giturl, branch, commit_hash, path)
 
     # Group by platform, then by config_name, then by path
     grouped = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
@@ -425,21 +424,17 @@ def evaluate_test_results(conn, checkout, path):
     return new_issues, fixed_issues, unstable_tests
 
 
-def run_checkout_summary(service, conn, origin, email_args):
+def run_checkout_summary(service, origin, email_args):
     data = read_yaml_file("data/summary-signup.yaml")
     for tree in data["trees"].values():
-        checkout = kcidb_latest_checkout_results(
-            conn, origin, tree["giturl"], tree["branch"]
-        )
+        checkout = kcidb_latest_checkout_results(origin, tree["giturl"], tree["branch"])
         if not checkout:
             continue
 
         checkout["giturl_safe"] = quote_plus(checkout["git_repository_url"])
         path = tree["path"] if "path" in tree else "%"
 
-        new_issues, fixed_issues, unstable_tests = evaluate_test_results(
-            conn, checkout, path
-        )
+        new_issues, fixed_issues, unstable_tests = evaluate_test_results(checkout, path)
 
         report = {}
         template = setup_jinja_template("summary.txt.j2")
@@ -542,7 +537,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Setup connections
         service = gmail_setup_service(options.get("credentials_file"))
-        dbconn = kcidb_connect()
         origin = "maestro"
 
         # Create the email_args namespace
@@ -564,12 +558,12 @@ class Command(BaseCommand):
         self.stdout.write(f"Running action: {action}")
 
         if action == "new_issues":
-            generate_issues_summary(dbconn, service, origin, email_args)
+            generate_issues_summary(service, origin, email_args)
 
         elif action == "issue_report":
             email_args.update = options.get("update_storage", False)
             if options.get("all", False):
-                create_and_send_issue_reports(service, dbconn, email_args)
+                create_and_send_issue_reports(service, email_args)
             else:
                 issue_id = options.get("id")
                 if not issue_id:
@@ -577,13 +571,13 @@ class Command(BaseCommand):
                         self.style.ERROR("You must provide an issue ID or use --all")
                     )
                     return
-                generate_issue_report(service, dbconn, issue_id, email_args)
+                generate_issue_report(service, issue_id, email_args)
                 self.stdout.write(
                     self.style.SUCCESS(f"Issue report generated for issue {issue_id}")
                 )
 
         elif action == "summary":
-            run_checkout_summary(service, dbconn, origin, email_args)
+            run_checkout_summary(service, origin, email_args)
 
         elif action == "fake_report":
             run_fake_report(service, email_args)
