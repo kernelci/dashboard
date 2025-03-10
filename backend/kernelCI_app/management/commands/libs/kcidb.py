@@ -244,7 +244,10 @@ def kcidb_build_incidents(issue_id):
 
     query = """
         SELECT DISTINCT ON (b.config_name, b.architecture, b.compiler)
-            b.*
+            b.id,
+            b.config_name,
+            b.architecture,
+            b.compiler
         FROM builds b
             LEFT JOIN incidents inc ON inc.build_id = b.id
         WHERE inc.issue_id = %(issue_id)s
@@ -262,7 +265,10 @@ def kcidb_test_incidents(issue_id):
     query = """
         WITH ranked_tests AS (
             SELECT
-                t.*,
+                t.id,
+                t._timestamp,
+                t.path,
+                t.environment_compatible,
                 t.environment_misc->>'platform' AS platform,
                 COUNT(*) OVER (PARTITION BY t.environment_misc->>'platform') AS platform_count,
                 ROW_NUMBER() OVER
@@ -398,8 +404,14 @@ def kcidb_latest_checkout_results(origin, giturl, branch):
     }
 
     query = """
-            SELECT *
-                FROM checkouts c
+            SELECT
+                _timestamp,
+                origin,
+                tree_name,
+                git_repository_url,
+                git_repository_branch,
+                git_commit_hash
+            FROM checkouts c
                 WHERE c.origin = %(origin)s
                 AND c.git_repository_url = %(giturl)s
                 AND c.git_repository_branch = %(branch)s
