@@ -239,8 +239,8 @@ def get_recipient_list(tree_name):
         return None
 
 
-def generate_issues_summary(service, origin, email_args):
-    issues = kcidb_new_issues(origin)
+def generate_issues_summary(service, email_args):
+    issues = kcidb_new_issues()
     build_issues = []
     boot_issues = []
     for issue in issues:
@@ -554,7 +554,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Running action: {action}")
 
         if action == "new_issues":
-            generate_issues_summary(service, origin, email_args)
+            generate_issues_summary(service, email_args)
 
         elif action == "issue_report":
             email_args.update = options.get("update_storage", False)
