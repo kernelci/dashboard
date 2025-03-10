@@ -7,6 +7,11 @@ from kernelCI_app.unitTests.utils.client.baseClient import BaseClient
 
 
 class TreeClient(BaseClient):
+    def get_tree_listing_fast(self, *, query: dict) -> requests.Response:
+        path = reverse("tree-fast")
+        url = self.get_endpoint(path=path, query=query)
+        return requests.get(url)
+
     def get_tree_details_summary(
         self,
         *,
