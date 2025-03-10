@@ -14,3 +14,14 @@ tree_test_summary = [
     "fail_reasons",
     "failed_platforms",
 ]
+tree_fast = [
+    "id",
+    "tree_name",
+    "git_repository_branch",
+    "git_repository_url",
+    "git_commit_hash",
+    "git_commit_name",
+    "git_commit_tags",
+    "patchset_hash",
+    "start_time",
+]
