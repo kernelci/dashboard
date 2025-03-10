@@ -12,6 +12,8 @@ issues_expected_fields = [
 
 issues_resource_fields = [
     "id",
-    "comment",
     "version",
+    "comment",
+    "report_url",
+    "incidents_info",
 ]
