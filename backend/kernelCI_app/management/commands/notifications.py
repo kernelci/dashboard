@@ -398,10 +398,10 @@ def evaluate_test_results(conn, checkout, path):
     fixed_issues = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     unstable_tests = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
-    for t in tests:
-        platform = t.get("platform", "unknown platform")
-        config_name = t.get("config_name", "unknown config")
-        grouped[platform][config_name][t["path"]].append(t)
+    for test in tests:
+        platform = test.get("platform", "unknown platform")
+        config_name = test.get("config_name", "unknown config")
+        grouped[platform][config_name][test["path"]].append(test)
 
     for platform, configs in grouped.items():
         for config_name, paths in configs.items():
@@ -413,11 +413,11 @@ def evaluate_test_results(conn, checkout, path):
                 category = categorize_test_history(test_group)
 
                 if category == "regression":
-                    new_issues[platform][config_name][t["path"]] = test_group
+                    new_issues[platform][config_name][path] = test_group
                 elif category == "fixed":
-                    fixed_issues[platform][config_name][t["path"]] = test_group
+                    fixed_issues[platform][config_name][path] = test_group
                 else:
-                    unstable_tests[platform][config_name][t["path"]] = test_group
+                    unstable_tests[platform][config_name][path] = test_group
 
     return new_issues, fixed_issues, unstable_tests
 
