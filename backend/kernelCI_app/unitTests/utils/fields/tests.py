@@ -18,6 +18,11 @@ test_expected_fields = [
     "environment_misc",
     "tree_name",
     "git_repository_branch",
+    "origin",
+    "field_timestamp",
+]
+
+status_history_expected_fields = [
     "status_history",
     "regression_type",
 ]

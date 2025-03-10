@@ -688,6 +688,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/DetailsIssuesResponse'
           description: ''
+  /api/test/status-history:
+    get:
+      operationId: test_status_history_retrieve
+      tags:
+      - test
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestStatusHistoryResponse'
+          description: ''
   /api/tree/:
     get:
       operationId: tree_retrieve
@@ -2638,13 +2654,10 @@ components:
           $ref: '#/components/schemas/Checkout__GitCommitTags'
         tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
-        status_history:
-          items:
-            $ref: '#/components/schemas/TestStatusHistoryItem'
-          title: Status History
-          type: array
-        regression_type:
-          $ref: '#/components/schemas/PossibleRegressionType'
+        origin:
+          $ref: '#/components/schemas/Origin'
+        field_timestamp:
+          $ref: '#/components/schemas/Timestamp'
       required:
       - id
       - build_id
@@ -2665,8 +2678,8 @@ components:
       - git_repository_url
       - git_commit_tags
       - tree_name
-      - status_history
-      - regression_type
+      - origin
+      - field_timestamp
       title: TestDetailsResponse
       type: object
     TestHistoryItem:
@@ -2800,6 +2813,20 @@ components:
       - git_commit_hash
       title: TestStatusHistoryItem
       type: object
+    TestStatusHistoryResponse:
+      properties:
+        status_history:
+          items:
+            $ref: '#/components/schemas/TestStatusHistoryItem'
+          title: Status History
+          type: array
+        regression_type:
+          $ref: '#/components/schemas/PossibleRegressionType'
+      required:
+      - status_history
+      - regression_type
+      title: TestStatusHistoryResponse
+      type: object
     TestSummary:
       properties:
         status:
@@ -2874,7 +2901,10 @@ components:
       - type: 'null'
     Test__EnvironmentMisc:
       anyOf:
-      - $ref: '#/components/schemas/EnvironmentMisc'
+      - type: object
+      - items:
+          type: object
+        type: array
       - type: 'null'
     Test__Id:
       type: string
