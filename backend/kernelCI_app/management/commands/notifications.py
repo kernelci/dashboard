@@ -11,6 +11,8 @@ from urllib.parse import quote_plus
 
 from django.core.management.base import BaseCommand
 
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
+
 from kernelCI_app.management.commands.libs.email import (
     gmail_setup_service,
     gmail_send_email,
@@ -420,9 +422,13 @@ def evaluate_test_results(checkout, path):
     return new_issues, fixed_issues, unstable_tests
 
 
-def run_checkout_summary(service, origin, email_args):
+def run_checkout_summary(service, email_args):
     data = read_yaml_file("data/summary-signup.yaml")
     for tree in data["trees"].values():
+        if "origin" in tree.keys():
+            origin = tree["origin"]
+        else:
+            origin = DEFAULT_ORIGIN
         checkout = kcidb_latest_checkout_results(origin, tree["giturl"], tree["branch"])
         if not checkout:
             continue
@@ -533,7 +539,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Setup connections
         service = gmail_setup_service(options.get("credentials_file"))
-        origin = "maestro"
 
         # Create the email_args namespace
         email_args = SimpleNamespace()
@@ -573,7 +578,7 @@ class Command(BaseCommand):
                 )
 
         elif action == "summary":
-            run_checkout_summary(service, origin, email_args)
+            run_checkout_summary(service, email_args)
 
         elif action == "fake_report":
             run_fake_report(service, email_args)
