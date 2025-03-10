@@ -14,10 +14,12 @@ const fetchTestDetails = async (testId: string): Promise<TTestDetails> => {
 
 export const useTestDetails = (
   testId: string,
+  config: { enabled?: boolean } = { enabled: true },
 ): UseQueryResult<TTestDetails> => {
   return useQuery({
     queryKey: ['testDetailsData', testId],
     queryFn: () => fetchTestDetails(testId),
+    ...config,
   });
 };
 

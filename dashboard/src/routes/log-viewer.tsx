@@ -5,6 +5,8 @@ import { LogViewer } from '@/pages/LogViewer';
 
 const logViewerSchema = z.object({
   url: z.string(),
+  type: z.enum(['build', 'test']).optional(),
+  itemId: z.string().optional(),
 });
 
 export const Route = createFileRoute('/log-viewer')({
