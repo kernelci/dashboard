@@ -1,7 +1,7 @@
 import requests
 from django.urls import reverse
 
-from kernelCI_app.unitTests.utils.baseClient import BaseClient
+from kernelCI_app.unitTests.utils.client.baseClient import BaseClient
 
 
 class TestClient(BaseClient):
