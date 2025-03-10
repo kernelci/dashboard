@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from kernelCI_app.utils import string_to_json
 from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.treeClient import TreeClient
+from kernelCI_app.unitTests.utils.client.treeClient import TreeClient
 from kernelCI_app.unitTests.utils.commonTreeAsserts import (
     assert_common_summary_status_fields,
     FILTER_TO_VALID,

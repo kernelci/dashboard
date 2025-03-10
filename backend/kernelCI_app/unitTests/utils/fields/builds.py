@@ -1,4 +1,4 @@
-build_expected_fields = [
+build_details_expected_fields = [
     "id",
     "architecture",
     "config_name",
@@ -9,4 +9,14 @@ build_expected_fields = [
     "log_url",
     "tree_name",
     "git_repository_branch",
+]
+
+build_tests_expected_fields = [
+    "id",
+    "duration",
+    "status",
+    "path",
+    "start_time",
+    "environment_compatible",
+    "environment_misc",
 ]
