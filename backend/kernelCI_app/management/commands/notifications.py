@@ -329,6 +329,9 @@ def generate_issue_report(service, conn, issue_id, email_args, ask_ignore=False)
         mark_issue_as_ignore(issue["id"])
         return
 
+    if isinstance(issue["misc"], str):
+        issue["misc"] = json.loads(issue["misc"])
+
     if issue["build_id"]:
         incidents = kcidb_build_incidents(conn, issue_id)
         report = generate_build_issue_report(issue, incidents)
