@@ -13,10 +13,16 @@ import {
 
 import { MdChevronRight } from 'react-icons/md';
 
+import type { UseQueryResult } from '@tanstack/react-query';
+
 import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
-import type { TTestDetails } from '@/types/tree/TestDetails';
+import type { TTestDetails, TestStatusHistory } from '@/types/tree/TestDetails';
 import { Sheet } from '@/components/Sheet';
-import { useTestDetails, useTestIssues } from '@/api/testDetails';
+import {
+  useTestDetails,
+  useTestIssues,
+  useTestStatusHistory,
+} from '@/api/testDetails';
 
 import { RedirectFrom } from '@/types/general';
 
@@ -57,10 +63,16 @@ import { StatusHistoryItem } from './StatusHistoryItem';
 
 const TestDetailsSections = ({
   test,
+  statusHistory,
+  statusHistoryStatus,
+  statusHistoryError,
   setSheetType,
   setJsonContent,
 }: {
   test: TTestDetails;
+  statusHistory?: TestStatusHistory;
+  statusHistoryStatus: UseQueryResult['status'];
+  statusHistoryError: UseQueryResult['error'];
   setSheetType: Dispatch<SetStateAction<SheetType>>;
   setJsonContent: Dispatch<SetStateAction<IJsonContent | undefined>>;
 }): JSX.Element => {
@@ -130,22 +142,39 @@ const TestDetailsSections = ({
     [setSheetType],
   );
 
-  const regressionSection: ISection = useMemo(() => {
+  const regressionData: JSX.Element[] | undefined = useMemo(() => {
+    return statusHistory?.status_history.reverse().map((historyItem, index) => {
+      return (
+        <Fragment key={historyItem.id}>
+          <StatusHistoryItem historyItem={historyItem} />
+          {index !== statusHistory.status_history.length - 1 && (
+            <MdChevronRight />
+          )}
+        </Fragment>
+      );
+    });
+  }, [statusHistory?.status_history]);
+
+  const regressionSection: ISection | undefined = useMemo(() => {
+    if (statusHistoryStatus === 'error') {
+      return;
+    }
+
     return {
       title: formatMessage({ id: 'testDetails.statusHistory' }),
       rightIcon: (
         <TooltipIcon
           tooltipId="testDetails.statusHistoryTooltip"
-          tooltipValues={{ amount: test.status_history.length }}
+          tooltipValues={{ amount: statusHistory?.status_history.length }}
           iconClassName="size-5"
           contentClassName="whitespace-pre-line"
         />
       ),
-      subtitle: (
+      subtitle: statusHistory && (
         <div>
           <Tooltip>
             <TooltipTrigger>
-              <Badge variant="blueTag">{test.regression_type}</Badge>
+              <Badge variant="blueTag">{statusHistory?.regression_type}</Badge>
             </TooltipTrigger>
             <TooltipContent className="whitespace-pre-line">
               <FormattedMessage id="testDetails.regressionTypeTooltip" />
@@ -158,25 +187,34 @@ const TestDetailsSections = ({
           infos: [
             {
               children: (
-                <div className="flex items-center">
-                  {test.status_history.reverse().map((historyItem, index) => {
-                    return (
-                      <Fragment key={historyItem.id}>
-                        <StatusHistoryItem historyItem={historyItem} />
-                        {index !== test.status_history.length - 1 && (
-                          <MdChevronRight />
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                </div>
+                <QuerySwitcher
+                  skeletonClassname="h-[100px]"
+                  status={statusHistoryStatus}
+                  data={statusHistory}
+                  customError={
+                    <MemoizedSectionError
+                      isLoading={statusHistoryStatus === 'pending'}
+                      errorMessage={statusHistoryError?.message}
+                      emptyLabel="global.error"
+                      variant="warning"
+                    />
+                  }
+                >
+                  <div className="flex items-center">{regressionData}</div>
+                </QuerySwitcher>
               ),
             },
           ],
         },
       ],
     };
-  }, [formatMessage, test.regression_type, test.status_history]);
+  }, [
+    formatMessage,
+    regressionData,
+    statusHistory,
+    statusHistoryError?.message,
+    statusHistoryStatus,
+  ]);
 
   const generalSection: ISection = useMemo(() => {
     return {
@@ -363,7 +401,26 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
     data: issueData,
     status: issueStatus,
     error: issueError,
-  } = useTestIssues(testId ?? '');
+  } = useTestIssues(testId ?? '', data !== undefined);
+  const {
+    data: statusHistoryData,
+    status: statusHistoryStatus,
+    error: statusHistoryError,
+  } = useTestStatusHistory(
+    data !== undefined
+      ? {
+          path: data.path,
+          origin: data.origin,
+          git_repository_url: data.git_repository_url,
+          git_repository_branch: data.git_repository_branch,
+          platform:
+            typeof data.environment_misc?.['platform'] === 'string'
+              ? data.environment_misc['platform']
+              : undefined,
+          current_test_timestamp: data.field_timestamp,
+        }
+      : undefined,
+  );
 
   const [sheetType, setSheetType] = useState<SheetType>('log');
   const [jsonContent, setJsonContent] = useState<IJsonContent>();
@@ -401,6 +458,9 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
             {data && (
               <TestDetailsSections
                 test={data}
+                statusHistory={statusHistoryData}
+                statusHistoryStatus={statusHistoryStatus}
+                statusHistoryError={statusHistoryError}
                 setSheetType={setSheetType}
                 setJsonContent={setJsonContent}
               />
