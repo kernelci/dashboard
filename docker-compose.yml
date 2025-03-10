@@ -45,6 +45,7 @@ services:
             - DB_DEFAULT_USER=${DB_DEFAULT_USER:-kernelci}
             - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
             - DEBUG=False
+            - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
 
     dashboard:
         build: ./dashboard
