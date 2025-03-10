@@ -25,3 +25,26 @@ tree_fast = [
     "patchset_hash",
     "start_time",
 ]
+
+tree_listing = [
+    "git_repository_branch",
+    "git_repository_url",
+    "git_commit_hash",
+    "git_commit_tags",
+    "git_commit_name",
+    "start_time",
+    "build_status",
+    "test_status",
+    "boot_status",
+    "tree_names",
+]
+tree_listing_build_status = ["valid", "invalid", "null"]
+tree_listing_test_status = [
+    "fail",
+    "error",
+    "miss",
+    "pass",
+    "done",
+    "skip",
+    "null",
+]

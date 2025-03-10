@@ -5,7 +5,12 @@ from kernelCI_app.unitTests.utils.asserts import (
     assert_has_fields_in_response_content,
 )
 from kernelCI_app.utils import string_to_json
-from kernelCI_app.unitTests.utils.fields.tree import tree_fast
+from kernelCI_app.unitTests.utils.fields.tree import (
+    tree_fast,
+    tree_listing,
+    tree_listing_test_status,
+    tree_listing_build_status,
+)
 from http import HTTPStatus
 
 
@@ -103,4 +108,57 @@ def test_tree_listing_fast(
                 assert_has_fields_in_response_content(
                     fields=tree_fast,
                     response_content=tree,
+                )
+
+
+@online
+def test_tree_listing(
+    pytestconfig,
+    tree_listing_input,
+) -> None:
+    query, status_code, has_error_body = tree_listing_input
+    response = client.get_tree_listing(query=query)
+    content = string_to_json(response.content.decode())
+    assert_status_code_and_error_response(
+        response=response,
+        content=content,
+        status_code=status_code,
+        should_error=has_error_body,
+    )
+
+    if not has_error_body:
+        assert_has_fields_in_response_content(
+            fields=tree_listing,
+            response_content=content[0],
+        )
+        assert_has_fields_in_response_content(
+            fields=tree_listing_test_status,
+            response_content=content[0]["test_status"],
+        )
+        assert_has_fields_in_response_content(
+            fields=tree_listing_test_status,
+            response_content=content[0]["boot_status"],
+        )
+        assert_has_fields_in_response_content(
+            fields=tree_listing_build_status,
+            response_content=content[0]["build_status"],
+        )
+
+        if pytestconfig.getoption("--run-all") and len(content) > 1:
+            for tree in content[1:]:
+                assert_has_fields_in_response_content(
+                    fields=tree_listing,
+                    response_content=tree,
+                )
+                assert_has_fields_in_response_content(
+                    fields=tree_listing_test_status,
+                    response_content=tree["test_status"],
+                )
+                assert_has_fields_in_response_content(
+                    fields=tree_listing_test_status,
+                    response_content=tree["boot_status"],
+                )
+                assert_has_fields_in_response_content(
+                    fields=tree_listing_build_status,
+                    response_content=tree["build_status"],
                 )
