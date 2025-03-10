@@ -30,7 +30,7 @@ file_env DB_DEFAULT_PASSWORD
 
 export DB_DEFAULT="{
     \"ENGINE\": \"${DB_DEFAULT_ENGINE:=django.db.backends.postgresql}\",
-    \"NAME\": \"${DB_DEFAULT_NAME:=playground_kcidb}\",
+    \"NAME\": \"${DB_DEFAULT_NAME:=kcidb}\",
     \"USER\": \"${DB_DEFAULT_USER:=kernelci}\",
     \"PASSWORD\": \"$DB_DEFAULT_PASSWORD\",
     \"HOST\": \"${DB_DEFAULT_HOST:=cloudsql-proxy}\",
