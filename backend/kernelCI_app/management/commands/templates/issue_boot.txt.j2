@@ -24,7 +24,7 @@ Log excerpt:
 
 # Hardware platforms affected:
 {% for boot in boots %}
-## {{boot["environment_misc"]["platform"]}}
+## {{boot["platform"]}}
 - dashboard: https://d.kernelci.org/test/{{ boot["id"] }}
 {% if boot["environment_compatible"] -%}
 - compatibles:{{" "}}
