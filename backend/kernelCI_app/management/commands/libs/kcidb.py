@@ -310,50 +310,6 @@ def kcidb_last_test_without_issue(issue, incident):
         "timestamp": incident["oldest_timestamp"],
         "giturl": issue["git_repository_url"],
         "branch": issue["git_repository_branch"],
-    }
-
-    query = """
-    WITH ranked_tests AS (
-        SELECT
-            t.*,
-            c.git_repository_url,
-            c.tree_name,
-            c.git_repository_branch,
-            c.git_commit_hash,
-            ROW_NUMBER() OVER
-                (PARTITION BY t.environment_misc->>'platform', t.path ORDER BY t._timestamp DESC) as rn
-        FROM tests t
-        LEFT JOIN builds b ON b.id = t.build_id
-        LEFT JOIN checkouts c ON c.id = b.checkout_id
-        WHERE t.origin = %(origin)s
-            AND t._timestamp < %(timestamp)s
-            AND t.environment_misc->>'platform' = %(platform)s
-            AND t.path = %(path)s
-            AND t.status = 'PASS'
-            AND c.git_repository_url = %(giturl)s
-            AND c.git_repository_branch = %(branch)s
-        LIMIT 10
-    )
-
-        SELECT *
-            FROM ranked_tests
-            WHERE rn = 1
-    """
-
-    return kcidb_execute_query(query, params)
-
-
-def kcidb_last_test_without_issue_koike(issue, incident):
-    """Fetches build incidents of a given issue."""
-
-    params = {
-        "origin": "maestro",
-        "issue_id": issue["id"],
-        "path": incident["path"],
-        "platform": incident["platform"],
-        "timestamp": incident["oldest_timestamp"],
-        "giturl": issue["git_repository_url"],
-        "branch": issue["git_repository_branch"],
         "interval": "18 days",
     }
 

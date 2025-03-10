@@ -21,7 +21,6 @@ from kernelCI_app.management.commands.libs.kcidb import (
     kcidb_build_incidents,
     kcidb_test_incidents,
     kcidb_last_test_without_issue,
-    kcidb_last_test_without_issue_koike,
     kcidb_latest_checkout_results,
     kcidb_tests_results,
 )
@@ -338,9 +337,6 @@ def generate_issue_report(service, issue_id, email_args, ask_ignore=False):
         incidents = kcidb_test_incidents(issue_id)
         for incident in incidents:
             last_test = kcidb_last_test_without_issue(issue, incident)
-            print(f"https://dashboard.kernelci.org/test/{last_test[0]["id"]}")
-            last_test = kcidb_last_test_without_issue_koike(issue, incident)
-            print(f"https://dashboard.kernelci.org/test/{last_test[0]["id"]}")
             incident["last_pass"] = last_test[0]["start_time"]
             incident["last_pass_commit"] = last_test[0]["git_commit_hash"]
             incident["last_pass_id"] = last_test[0]["id"]
