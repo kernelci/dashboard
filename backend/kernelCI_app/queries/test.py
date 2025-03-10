@@ -33,7 +33,6 @@ def get_test_details_data(*, test_id):
     )
 
 
-# TODO: combine with the test_details query
 def get_test_status_history(
     *,
     path: str,
@@ -43,17 +42,17 @@ def get_test_status_history(
     platform: Optional[str],
     current_test_timestamp: datetime,
 ):
-    query = Tests.objects.values(
-        "field_timestamp",
-        "id",
-        "status",
-        "build__checkout__git_commit_hash",
-    ).filter(
+    query = Tests.objects.filter(
         path=path,
         build__checkout__origin=origin,
         build__checkout__git_repository_url=git_repository_url,
         build__checkout__git_repository_branch=git_repository_branch,
         field_timestamp__lte=current_test_timestamp,
+    ).values(
+        "field_timestamp",
+        "id",
+        "status",
+        "build__checkout__git_commit_hash",
     )
 
     if platform is None:
