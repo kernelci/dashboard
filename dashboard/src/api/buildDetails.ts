@@ -21,10 +21,12 @@ const fetchBuildDetailsData = async (
 
 export const useBuildDetails = (
   buildId: string,
+  config: { enabled?: boolean } = { enabled: true },
 ): UseQueryResult<TBuildDetails> => {
   return useQuery({
     queryKey: ['treeData', buildId],
     queryFn: () => fetchBuildDetailsData(buildId),
+    ...config,
   });
 };
 
