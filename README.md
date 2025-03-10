@@ -57,10 +57,27 @@ If you are going to use a database user other than `kernelci`, set it to `DB_DEF
 ```sh
 export DB_DEFAULT_USER=<user>
 ```
+
+> For other optional envs, check the [backend README](backend/README.md).
+
 Startup the services:
  ```sh
  docker compose up --build -d
  ```
+
+> Tip: you can create a quick script to set all the necessary envs and start the services.
+
+```sh
+export DB_DEFAULT_USER=email@email.com
+export DJANGO_SECRET_KEY=$(openssl rand -base64 22)
+export DB_DEFAULT_NAME=kcidb
+export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
+
+docker compose up --build
+```
+
+> Last Tip: You can set the env Debug=True in the docker-compose.yml file if you want to get a better understanding of what is happening.
+
 
 ## Deploying to production
 
