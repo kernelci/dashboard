@@ -14,3 +14,8 @@ class BuildClient(BaseClient):
         path = reverse("buildTests", kwargs={"build_id": build_id})
         url = self.get_endpoint(path=path)
         return requests.get(url)
+
+    def get_build_issues(self, *, build_id: str) -> requests.Response:
+        path = reverse("buildIssues", kwargs={"build_id": build_id})
+        url = self.get_endpoint(path=path)
+        return requests.get(url)
