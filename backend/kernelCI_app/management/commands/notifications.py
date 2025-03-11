@@ -29,6 +29,7 @@ from kernelCI_app.management.commands.libs.kcidb import (
 
 
 STORAGE_FILE = "found_issues.json"
+SUMMARY_SIGNUP_FILE = "data/summary-signup.yaml"
 
 KERNELCI_RESULTS = "kernelci-results@groups.io"
 KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
@@ -422,8 +423,8 @@ def evaluate_test_results(checkout, path):
     return new_issues, fixed_issues, unstable_tests
 
 
-def run_checkout_summary(service, email_args):
-    data = read_yaml_file("data/summary-signup.yaml")
+def run_checkout_summary(service, signup_file, email_args):
+    data = read_yaml_file(signup_file)
     for tree in data["trees"].values():
         if "origin" in tree.keys():
             origin = tree["origin"]
@@ -538,6 +539,13 @@ class Command(BaseCommand):
             help="Update json storage as we manipulate and report issues (for issue_report action)",
         )
 
+        # Summary specific arguments
+        parser.add_argument(
+            "--summary-signup-file",
+            type=str,
+            help="Pass alternative summary signup file",
+        )
+
         # Fake report specific arguments
         parser.add_argument(
             "--tree",
@@ -587,7 +595,10 @@ class Command(BaseCommand):
                 )
 
         elif action == "summary":
-            run_checkout_summary(service, email_args)
+            signup_file = options.get("summary_signup_file")
+            if not signup_file:
+                signup_file = SUMMARY_SIGNUP_FILE
+            run_checkout_summary(service, signup_file, email_args)
 
         elif action == "fake_report":
             run_fake_report(service, email_args)
