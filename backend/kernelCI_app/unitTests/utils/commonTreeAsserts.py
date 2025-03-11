@@ -1,5 +1,11 @@
 from typing import Literal
 from kernelCI_app.typeModels.databases import StatusValues
+from kernelCI_app.unitTests.utils.asserts import assert_has_fields_in_response_content
+from kernelCI_app.unitTests.utils.fields.tree import (
+    tree_commit_history,
+    tree_commit_history_builds,
+    tree_commit_history_tests,
+)
 
 type SummaryFields = Literal["builds", "boots", "tests"]
 
@@ -50,3 +56,18 @@ def assert_common_summary_status_fields(
                 assert count == 0
 
     assert_summary_issues(content, task, value)
+
+
+def assert_tree_commit_history_fields(tree: dict) -> None:
+    assert_has_fields_in_response_content(
+        fields=tree_commit_history, response_content=tree
+    )
+    assert_has_fields_in_response_content(
+        fields=tree_commit_history_tests, response_content=tree["tests"]
+    )
+    assert_has_fields_in_response_content(
+        fields=tree_commit_history_tests, response_content=tree["boots"]
+    )
+    assert_has_fields_in_response_content(
+        fields=tree_commit_history_builds, response_content=tree["builds"]
+    )

@@ -48,3 +48,26 @@ tree_listing_test_status = [
     "skip",
     "null",
 ]
+tree_commit_history = [
+    "git_commit_hash",
+    "git_commit_name",
+    "git_commit_tags",
+    "earliest_start_time",
+    "builds",
+    "boots",
+    "tests",
+]
+tree_commit_history_tests = [
+    "fail",
+    "error",
+    "miss",
+    "pass",
+    "done",
+    "skip",
+    "null",
+]
+tree_commit_history_builds = [
+    "valid",
+    "invalid",
+    "null",
+]
