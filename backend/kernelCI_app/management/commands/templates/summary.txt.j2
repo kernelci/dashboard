@@ -8,13 +8,13 @@ Hardware: {{ platform }}
             {%- for path, test_group in paths.items() %}
 - {{path}} ({{config_name}})
   last run: https://d.kernelci.org/test/{{test_group[0]["id"]}}
-  history:  {%- for t in test_group | reverse -%}
+  history:  {% for t in test_group | reverse -%}
                 {%- if t["status"] == "PASS" -%}
-                    {{- "✅  " -}}
+                    {{- "> ✅  " -}}
                 {%- elif t["status"] == "FAIL" -%}
-                    {{- "❌  " -}}
+                    {{- "> ❌  " -}}
                 {%- else -%} {# Inconclusive (other statuses) #}
-                    {{- "⚠️  " -}}
+                    {{- "> ⚠️  " -}}
                 {%- endif -%}
             {%- endfor %}
             {% endfor %}
