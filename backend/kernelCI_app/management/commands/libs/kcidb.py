@@ -9,7 +9,7 @@ from django.db import connection
 def kcidb_execute_query(query, params=None):
     try:
         with connection.cursor() as cur:
-            # print(cur.mogrify(query, params).decode('utf-8'))
+            # print(cur.mogrify(query, params))
             cur.execute(query, params)
             rows = cur.fetchall()
             if not rows:
