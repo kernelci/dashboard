@@ -396,17 +396,11 @@ def kcidb_tests_results(origin, giturl, branch, hash, path):
         "branch": branch,
         "hash": hash,
         "path": path,
-        "interval": "25 days",
+        "interval": "30 days",
     }
 
     query = """
-            WITH latest_checkout AS (
-                SELECT
-                    _timestamp
-                FROM checkouts
-                WHERE git_commit_hash = %(hash)s
-            ),
-            ranked_tests AS (
+            WITH prefiltered_tests AS (
                 SELECT
                     t.id,
                     t.path,
@@ -416,28 +410,59 @@ def kcidb_tests_results(origin, giturl, branch, hash, path):
                     b.architecture,
                     b.compiler,
                     b.config_name,
-                    c.git_commit_hash,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY t.path
-                        ORDER BY t.start_time DESC NULLS LAST
-                    ) as rn
+                    c.git_commit_hash
                 FROM tests t
                 JOIN builds b ON t.build_id = b.id
                 JOIN checkouts c ON b.checkout_id = c.id
-                JOIN latest_checkout lc on lc._timestamp > c._timestamp
                 WHERE t.origin = %(origin)s
                     AND c.git_repository_url = %(giturl)s
                     AND c.git_repository_branch = %(branch)s
                     AND t.path LIKE %(path)s
                     AND t.environment_misc->>'platform' != 'kubernetes'
-                    AND c._timestamp >= NOW() - INTERVAL %(interval)s
-                    AND b._timestamp >= NOW() - INTERVAL %(interval)s
-                    AND t._timestamp >= NOW() - INTERVAL %(interval)s
+                    AND C.start_time < (
+                        SELECT MAX(start_time) FROM checkouts
+                          WHERE git_commit_hash = %(hash)s
+                        )
+                    AND c.start_time >= NOW() - INTERVAL %(interval)s
+                    AND b.start_time >= NOW() - INTERVAL %(interval)s
+                    AND t.start_time >= NOW() - INTERVAL %(interval)s
+            ),
+            top1_filter AS (
+                SELECT path, platform, config_name
+                FROM (
+                    SELECT
+                        path,
+                        platform,
+                        config_name,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY path, platform, config_name
+                            ORDER BY start_time DESC NULLS LAST
+                        ) AS rn,
+                        git_commit_hash
+                    FROM prefiltered_tests
+                ) ranked
+                WHERE rn = 1 AND git_commit_hash = %(hash)s
+            ),
+            final_prefilter AS (
+                SELECT p.*
+                FROM prefiltered_tests p
+                JOIN top1_filter t1
+                ON p.path = t1.path
+                AND p.platform = t1.platform
+                AND p.config_name = t1.config_name
+            ),
+            ranked_tests AS (
+                SELECT *,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY path, platform, config_name
+                        ORDER BY start_time DESC NULLS LAST
+                    ) as rn
+                FROM final_prefilter
             )
             SELECT *
             FROM ranked_tests
-            WHERE rn <= 9
-            ORDER BY path, start_time DESC NULLS LAST;
+            WHERE rn <= 5
+            ORDER BY path, platform, config_name, start_time DESC NULLS LAST;
         """
 
     return kcidb_execute_query(query, params)
