@@ -454,13 +454,13 @@ def run_checkout_summary(service, origin, email_args):
         send_email_report(service, report, email_args)
 
 
-def create_and_send_issue_reports(service, conn, email_args):
+def create_and_send_issue_reports(service, email_args):
     unsent_issues = get_unsent_issues()
     for issue_id, details in unsent_issues.items():
         if details["type"] != "build":
             continue
 
-        generate_issue_report(service, conn, issue_id, email_args, ask_ignore=True)
+        generate_issue_report(service, issue_id, email_args, ask_ignore=True)
 
 
 def run_fake_report(service, email_args):
