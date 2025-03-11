@@ -396,18 +396,18 @@ def kcidb_tests_results(origin, giturl, branch, hash, path):
         "branch": branch,
         "hash": hash,
         "path": path,
-        "interval": "25 days",
+        "interval": "30 days",
     }
 
     query = """
             WITH latest_checkout AS (
                 SELECT
-                    _timestamp
+                    start_time
                 FROM checkouts
                 WHERE git_commit_hash = %(hash)s
             ),
             ranked_tests AS (
-                SELECT
+                SELECT DISTINCT ON (t.id)
                     t.id,
                     t.path,
                     t.status,
@@ -424,15 +424,15 @@ def kcidb_tests_results(origin, giturl, branch, hash, path):
                 FROM tests t
                 JOIN builds b ON t.build_id = b.id
                 JOIN checkouts c ON b.checkout_id = c.id
-                JOIN latest_checkout lc on lc._timestamp > c._timestamp
+                JOIN latest_checkout lc on lc.start_time > c.start_time
                 WHERE t.origin = %(origin)s
                     AND c.git_repository_url = %(giturl)s
                     AND c.git_repository_branch = %(branch)s
                     AND t.path LIKE %(path)s
                     AND t.environment_misc->>'platform' != 'kubernetes'
-                    AND c._timestamp >= NOW() - INTERVAL %(interval)s
-                    AND b._timestamp >= NOW() - INTERVAL %(interval)s
-                    AND t._timestamp >= NOW() - INTERVAL %(interval)s
+                    AND c.start_time >= NOW() - INTERVAL %(interval)s
+                    AND b.start_time >= NOW() - INTERVAL %(interval)s
+                    AND t.start_time >= NOW() - INTERVAL %(interval)s
             )
             SELECT *
             FROM ranked_tests
