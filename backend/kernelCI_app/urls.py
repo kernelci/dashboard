@@ -17,6 +17,11 @@ def view_cache(view):
 
 
 urlpatterns = [
+    path(
+        "test/status-history",
+        view_cache(views.TestStatusHistory),
+        name="testStatusHistory",
+    ),
     path("test/<str:test_id>", view_cache(views.TestDetails), name="testDetails"),
     path("tree/", view_cache(views.TreeView), name="tree"),
     path("tree-fast/", view_cache(views.TreeViewFast), name="tree-fast"),

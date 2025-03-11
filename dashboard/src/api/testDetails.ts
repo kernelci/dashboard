@@ -1,7 +1,11 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 
-import type { TTestDetails } from '@/types/tree/TestDetails';
+import type {
+  TTestDetails,
+  TestStatusHistory,
+  TestStatusHistoryParams,
+} from '@/types/tree/TestDetails';
 
 import type { TIssue } from '@/types/issues';
 
@@ -27,10 +31,35 @@ const fetchTestIssues = async (testId: string): Promise<TIssue[]> => {
   return data;
 };
 
-export const useTestIssues = (testId: string): UseQueryResult<TIssue[]> => {
+export const useTestIssues = (
+  testId: string,
+  enabled = true,
+): UseQueryResult<TIssue[]> => {
   return useQuery({
     queryKey: ['testIssues', testId],
-    enabled: testId !== '',
+    enabled: testId !== '' && enabled,
     queryFn: () => fetchTestIssues(testId),
+  });
+};
+
+const fetchTestStatusHistory = async (
+  params?: TestStatusHistoryParams,
+): Promise<TestStatusHistory> => {
+  const data = await RequestData.get<TestStatusHistory>(
+    `/api/test/status-history`,
+    {
+      params,
+    },
+  );
+  return data;
+};
+
+export const useTestStatusHistory = (
+  params?: TestStatusHistoryParams,
+): UseQueryResult<TestStatusHistory> => {
+  return useQuery({
+    queryKey: ['testStatusHistoryData', params],
+    queryFn: () => fetchTestStatusHistory(params),
+    enabled: params !== undefined && Object.keys(params).length > 0,
   });
 };

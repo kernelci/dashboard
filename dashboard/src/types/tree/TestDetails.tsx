@@ -1,19 +1,5 @@
 import type { Status } from '@/types/database';
 
-export type TestStatusHistoryItem = {
-  field_timestamp: Date;
-  id: string;
-  status: Status;
-  git_commit_hash: string;
-};
-
-type PossibleRegressionType =
-  | 'regression'
-  | 'fixed'
-  | 'unstable'
-  | 'pass'
-  | 'fail';
-
 export type TTestDetails = {
   architecture: string;
   build_id: string;
@@ -34,6 +20,34 @@ export type TTestDetails = {
   misc?: Record<string, unknown>;
   output_files?: Record<string, unknown>;
   tree_name?: string;
+  origin?: string;
+  field_timestamp: string;
+};
+
+export type TestStatusHistoryItem = {
+  field_timestamp: string;
+  id: string;
+  status: Status;
+  git_commit_hash: string;
+};
+
+type PossibleRegressionType =
+  | 'regression'
+  | 'fixed'
+  | 'unstable'
+  | 'pass'
+  | 'fail';
+
+export type TestStatusHistory = {
   status_history: TestStatusHistoryItem[];
   regression_type: PossibleRegressionType;
+};
+
+export type TestStatusHistoryParams = {
+  path?: string;
+  origin?: string;
+  git_repository_url?: string;
+  git_repository_branch?: string;
+  platform?: string;
+  current_test_timestamp?: string;
 };
