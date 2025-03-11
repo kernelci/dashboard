@@ -1,0 +1,157 @@
+trees:
+  Rust-for-Linux:
+    url: https://github.com/Rust-for-Linux/linux.git
+  aaptel:
+    url: https://github.com/aaptel/linux.git
+  agross:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git
+  amlogic:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/amlogic/linux.git
+  android:
+    url: https://android.googlesource.com/kernel/common
+  ardb:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/ardb/linux.git
+  arm64:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git
+  arnd:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git
+  block:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
+  bpf:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf.git
+  bpf-next:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git
+  broonie-misc:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/misc.git
+  broonie-regmap:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/regmap.git
+  broonie-regulator:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/regulator.git
+  broonie-sound:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound.git
+  broonie-spi:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git
+  c10s:
+    url: https://gitlab.com/cki-project/kernel-ark.git
+  c10s-coverage:
+    url: https://gitlab.com/redhat/centos-stream/src/kernel/centos-stream-10.git
+  c9s:
+    url: https://gitlab.com/redhat/centos-stream/src/kernel/centos-stream-9.git
+  chrome-platform:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/chrome-platform/linux.git
+  chromiumos:
+    url: https://chromium.googlesource.com/chromiumos/third_party/kernel
+  cip:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git
+  cip-kernel-linux-cip:
+    url: https://gitlab.com/cip-project/cip-kernel/linux-cip.git
+  clk:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/clk/linux.git
+  collabora-chromeos-kernel:
+    url: https://gitlab.collabora.com/google/chromeos-kernel.git
+  collabora-next:
+    url: https://gitlab.collabora.com/kernel/collabora-next.git
+  davem-net:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git
+  davem-net-next:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git
+  efi:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/efi/efi.git
+  gfs2:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/gfs2/linux-gfs2.git
+  gregkh-usb:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git
+  hyperv:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/hyperv/linux.git
+  khilman:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux.git
+  krzysztof:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux.git
+  kselftest:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/shuah/linux-kselftest.git
+  kvm:
+    url: https://git.kernel.org/pub/scm/virt/kvm/kvm.git
+  kvmarm:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/kvmarm/kvmarm.git
+  lee-backlight:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/lee/backlight.git
+  lee-mfd:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/lee/mfd.git
+  libfabric:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/rdma/rdma.git
+  linusw:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-gpio.git
+  mainline:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+  media:
+    url: https://git.linuxtv.org/media.git
+  media-committers:
+    url: https://gitlab.freedesktop.org/linux-media/media-committers.git
+  mediatek:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/mediatek/linux.git
+  net-next:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git
+  netdev-testing:
+    url: https://github.com/linux-netdev/testing.git
+  next:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+  omap:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux-omap.git
+  padovan:
+    url: https://github.com/padovan/linux.git
+  pm:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
+  printk:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/printk/linux.git
+  renesas:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-devel.git
+  riscv:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/riscv/linux.git
+  robh:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git
+  rppt:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/rppt/memblock.git
+  sashal-next:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/sashal/linus-next.git
+  scsi:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+  soc:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/soc/soc.git
+  stable:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
+  stable-linux-stable:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+  stable-linux-stable-rc-queues:
+    url: https://gitlab.com/Linaro/lkft/mirrors/stable/linux-stable-rc-queues
+  stable-rc:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git
+  stable-rt:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-stable-rt.git
+  tegra:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git
+  thermal:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/thermal/linux.git
+  third_party-kernel:
+    url: https://chromium.googlesource.com/chromiumos/third_party/kernel.git
+  tip:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git
+  tnguy-net:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/tnguy/net-queue.git
+  tnguy-next:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/tnguy/next-queue.git
+  torvalds-linux-mainline:
+    url: https://gitlab.com/Linaro/lkft/mirrors/torvalds/linux-mainline
+  ulfh:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/ulfh/mmc.git
+  upstream-arm-acpi:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git
+  upstream-nf:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/netfilter/nf.git
+  upstream-nf-next:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/netfilter/nf-next.git
+  upstream-rt-devel:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git
+  upstream-xfs:
+    url: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+  vireshk:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
