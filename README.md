@@ -37,6 +37,7 @@ Add a `application_default_credentials.json` file with your ADC in the root of t
 gcloud auth application-default login
 cp ~/.config/gcloud/application_default_credentials.json .
 ```
+**Important**: Check the `application_default_credentials.json` file permissions with `ls -l` to see if docker has access to it.
 
 After setting up your connection with Google Cloud with the following commands:
 
@@ -57,10 +58,37 @@ If you are going to use a database user other than `kernelci`, set it to `DB_DEF
 ```sh
 export DB_DEFAULT_USER=<user>
 ```
+
+> For other optional envs, check the [backend README](backend/README.md).
+
 Startup the services:
  ```sh
  docker compose up --build -d
  ```
+ Docker exposes port 80 (that you don't need to enter in the URL) instead of 5173 and 8000 that is used when running the dashboard project outside of docker.
+ So you can hit the frontend with `http://localhost`  and the backend with `http://localhost/api` when running locally.
+
+Make sure that docker has the right permissions and has access to the environment variables. One way to do that is to set up a docker permission group.
+
+If you are running the commands for exporting the environment variables and running docker separately, you can run docker with admin privileges and allowing environment variables with:
+```sh
+sudo -E docker compose up --build -d
+```
+Or you can also run the env exports and docker compose within the root user by running `sudo su`.
+
+> Tip: you can create a quick script to set all the necessary envs and start the services. This will also allow docker to see the environment variables correclty.
+
+```sh
+export DB_DEFAULT_USER=email@email.com
+export DJANGO_SECRET_KEY=$(openssl rand -base64 22)
+export DB_DEFAULT_NAME=kcidb
+export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
+
+docker compose up --build
+```
+
+> Last Tip: You can set the env Debug=True in the docker-compose.yml file if you want to get a better understanding of what is happening.
+
 
 ## Deploying to production
 
