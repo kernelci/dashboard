@@ -6,6 +6,7 @@ from drf_spectacular.utils import extend_schema
 from http import HTTPStatus
 import json
 from kernelCI_app.helpers.commonDetails import PossibleTabs
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.hardwareDetails import (
     assign_default_record_values,
     decide_if_is_build_in_filter,
@@ -272,6 +273,12 @@ class HardwareDetailsSummary(APIView):
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
         )
+
+        if len(trees) == 0:
+            return create_api_error_response(
+                error_message="This hardware isn't associated with any commit",
+                status_code=HTTPStatus.OK,
+            )
 
         trees_with_selected_commits = get_trees_with_selected_commit(
             trees=trees, selected_commits=self.selected_commits
