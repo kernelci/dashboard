@@ -71,3 +71,32 @@ tree_commit_history_builds = [
     "invalid",
     "null",
 ]
+
+tree_builds_expected_fields = [
+    "id",
+    "architecture",
+    "config_name",
+    "misc",
+    "config_url",
+    "compiler",
+    "valid",
+    "duration",
+    "log_url",
+    "start_time",
+    "git_repository_url",
+    "git_repository_branch",
+]
+
+tree_tests_expected_fields = [
+    "id",
+    "status",
+    "duration",
+    "path",
+    "start_time",
+    "environment_compatible",
+    "config",
+    "log_url",
+    "architecture",
+    "compiler",
+    "environment_misc",
+]
