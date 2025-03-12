@@ -241,13 +241,19 @@ export const messages = {
       'Inconclusive groups tests with ERROR, MISS, SKIP, DONE, and unknown statuses defined by KCIDB.',
     'testDetails.buildInfo': 'Build Info',
     'testDetails.notFound': 'Test not found',
+    'testDetails.regressionTooltip.fixed':
+      'Test was failing but passed in the last iterations',
+    'testDetails.regressionTooltip.regression':
+      'Test was passing but failed in the last iterations',
+    'testDetails.regressionTooltip.unstable':
+      'Test has inconclusive results or is not consistent',
     'testDetails.regressionTypeTooltip':
       'The regression type of the test.\n' +
-      'Pass - test passed in all previous tests\n' +
-      'Fail - test failed in all previous tests\n' +
-      'Fixed - test was failing but passed in the last iterations\n' +
-      'Regression - test was passing but failed in the last iterations\n' +
-      'Unstable - test has inconclusive results or is not consistent',
+      'Pass - Test passed in all previous tests\n' +
+      'Fail - Test failed in all previous tests\n' +
+      'Fixed - {fixedTooltip}\n' +
+      'Regression - {regressionTooltip}\n' +
+      'Unstable - {unstableTooltip}',
     'testDetails.statusHistory': 'Status History',
     'testDetails.statusHistoryTooltip':
       'The {amount} previous tests before the current test.\nClick on an icon to see details of that specific test.',
