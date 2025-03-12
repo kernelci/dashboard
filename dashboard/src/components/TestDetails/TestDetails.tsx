@@ -417,7 +417,8 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
             typeof data.environment_misc?.['platform'] === 'string'
               ? data.environment_misc['platform']
               : undefined,
-          current_test_timestamp: data.field_timestamp,
+          current_test_start_time: data.start_time,
+          config_name: data.config_name,
         }
       : undefined,
   );

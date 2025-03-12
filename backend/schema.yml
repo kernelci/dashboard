@@ -2656,8 +2656,6 @@ components:
           $ref: '#/components/schemas/Checkout__TreeName'
         origin:
           $ref: '#/components/schemas/Origin'
-        field_timestamp:
-          $ref: '#/components/schemas/Timestamp'
       required:
       - id
       - build_id
@@ -2679,7 +2677,6 @@ components:
       - git_commit_tags
       - tree_name
       - origin
-      - field_timestamp
       title: TestDetailsResponse
       type: object
     TestHistoryItem:
@@ -2798,19 +2795,16 @@ components:
       type: object
     TestStatusHistoryItem:
       properties:
-        field_timestamp:
-          $ref: '#/components/schemas/Timestamp'
+        start_time:
+          $ref: '#/components/schemas/Test__StartTime'
         id:
           $ref: '#/components/schemas/Test__Id'
         status:
           $ref: '#/components/schemas/Test__Status'
-        git_commit_hash:
-          $ref: '#/components/schemas/Checkout__GitCommitHash'
       required:
-      - field_timestamp
+      - start_time
       - id
       - status
-      - git_commit_hash
       title: TestStatusHistoryItem
       type: object
     TestStatusHistoryResponse:

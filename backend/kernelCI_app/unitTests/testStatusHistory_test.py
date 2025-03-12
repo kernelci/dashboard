@@ -19,13 +19,16 @@ client = TestClient()
     "params, status_code, has_error_body",
     [
         (
+            # https://staging.dashboard.kernelci.org:9000/test/maestro%3A67ce452318018371957dbf70
             TestStatusHistoryRequest(
                 path="fluster.debian.v4l2.gstreamer_av1.validate-fluster-results",
                 origin="maestro",
                 git_repository_url="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
                 git_repository_branch="master",
                 platform="mt8195-cherry-tomato-r2",
-                current_test_timestamp="2025-03-10T01:52:01.230777Z",
+                current_test_start_time="2025-03-10T01:49:23.064000Z",
+                config_name="defconfig+lab-setup+arm64-chromebook"
+                + "+CONFIG_MODULE_COMPRESS=n+CONFIG_MODULE_COMPRESS_NONE=y",
             ),
             HTTPStatus.OK,
             False,
@@ -34,7 +37,7 @@ client = TestClient()
             TestStatusHistoryRequest(
                 path="unexistent",
                 origin="maestro",
-                current_test_timestamp="2025-03-10T01:39:01.486560Z",
+                current_test_start_time="2025-03-10T01:39:01.486560Z",
             ),
             HTTPStatus.BAD_REQUEST,
             True,

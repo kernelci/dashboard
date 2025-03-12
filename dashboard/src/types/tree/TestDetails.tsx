@@ -25,10 +25,9 @@ export type TTestDetails = {
 };
 
 export type TestStatusHistoryItem = {
-  field_timestamp: string;
+  start_time: string;
   id: string;
   status: Status;
-  git_commit_hash: string;
 };
 
 type PossibleRegressionType =
@@ -49,5 +48,6 @@ export type TestStatusHistoryParams = {
   git_repository_url?: string;
   git_repository_branch?: string;
   platform?: string;
-  current_test_timestamp?: string;
+  current_test_start_time?: string;
+  config_name?: string;
 };
