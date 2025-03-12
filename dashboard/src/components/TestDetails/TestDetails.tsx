@@ -143,22 +143,74 @@ const TestDetailsSections = ({
   );
 
   const regressionData: JSX.Element[] | undefined = useMemo(() => {
-    return statusHistory?.status_history.reverse().map((historyItem, index) => {
-      return (
-        <Fragment key={historyItem.id}>
-          <StatusHistoryItem historyItem={historyItem} />
-          {index !== statusHistory.status_history.length - 1 && (
-            <MdChevronRight />
-          )}
-        </Fragment>
-      );
-    });
-  }, [statusHistory?.status_history]);
+    return statusHistory?.status_history
+      .slice()
+      .reverse()
+      .map((historyItem, index) => {
+        return (
+          <Fragment key={historyItem.id}>
+            <StatusHistoryItem
+              historyItem={historyItem}
+              isCurrentTest={historyItem.id === test.id}
+            />
+            {index !== statusHistory.status_history.length - 1 && (
+              <MdChevronRight className="mt-6 size-6" />
+            )}
+          </Fragment>
+        );
+      });
+  }, [statusHistory?.status_history, test.id]);
 
   const regressionSection: ISection | undefined = useMemo(() => {
     if (statusHistoryStatus === 'error') {
       return;
     }
+
+    const regressionTypeTooltip: string | null = ((): string | null => {
+      switch (statusHistory?.regression_type) {
+        case 'fixed':
+          return formatMessage({ id: 'testDetails.regressionTooltip.fixed' });
+        case 'regression':
+          return formatMessage({
+            id: 'testDetails.regressionTooltip.regression',
+          });
+        case 'unstable':
+          return formatMessage({
+            id: 'testDetails.regressionTooltip.unstable',
+          });
+        default:
+          return null;
+      }
+    })();
+
+    const regressionSubtitle = (
+      <div>
+        <Tooltip>
+          <TooltipTrigger>
+            <Badge variant="blueTag">{statusHistory?.regression_type}</Badge>
+          </TooltipTrigger>
+          <TooltipContent className="whitespace-pre-line">
+            <FormattedMessage
+              id="testDetails.regressionTypeTooltip"
+              values={{
+                fixedTooltip: formatMessage({
+                  id: 'testDetails.regressionTooltip.fixed',
+                }),
+                regressionTooltip: formatMessage({
+                  id: 'testDetails.regressionTooltip.regression',
+                }),
+                unstableTooltip: formatMessage({
+                  id: 'testDetails.regressionTooltip.unstable',
+                }),
+              }}
+            />
+          </TooltipContent>
+        </Tooltip>
+        {regressionTypeTooltip !== null && (
+          <span> - {regressionTypeTooltip}</span>
+        )}
+      </div>
+    );
 
     return {
       title: formatMessage({ id: 'testDetails.statusHistory' }),
@@ -170,18 +222,7 @@ const TestDetailsSections = ({
           contentClassName="whitespace-pre-line"
         />
       ),
-      subtitle: statusHistory && (
-        <div>
-          <Tooltip>
-            <TooltipTrigger>
-              <Badge variant="blueTag">{statusHistory?.regression_type}</Badge>
-            </TooltipTrigger>
-            <TooltipContent className="whitespace-pre-line">
-              <FormattedMessage id="testDetails.regressionTypeTooltip" />
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      ),
+      subtitle: statusHistory && regressionSubtitle,
       subsections: [
         {
           infos: [
