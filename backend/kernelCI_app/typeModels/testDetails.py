@@ -22,7 +22,6 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitRepositoryUrl,
     Checkout__GitCommitTags,
     Checkout__TreeName,
-    Timestamp,
 )
 
 
@@ -55,19 +54,15 @@ class TestDetailsResponse(BaseModel):
     )
     tree_name: Checkout__TreeName = Field(validation_alias="build__checkout__tree_name")
     origin: Origin = Field(validation_alias="build__checkout__origin")
-    field_timestamp: Timestamp
 
 
 type PossibleRegressionType = Literal["regression", "fixed", "unstable", "pass", "fail"]
 
 
 class TestStatusHistoryItem(BaseModel):
-    field_timestamp: Timestamp
+    start_time: Test__StartTime
     id: Test__Id
     status: Test__Status
-    git_commit_hash: Checkout__GitCommitHash = Field(
-        validation_alias="build__checkout__git_commit_hash"
-    )
 
 
 class TestStatusHistoryResponse(BaseModel):
@@ -81,4 +76,5 @@ class TestStatusHistoryRequest(BaseModel):
     git_repository_url: Checkout__GitRepositoryUrl = None
     git_repository_branch: Checkout__GitRepositoryBranch = None
     platform: Optional[str] = None
-    current_test_timestamp: Timestamp
+    current_test_start_time: Test__StartTime = None
+    config_name: Build__ConfigName = None

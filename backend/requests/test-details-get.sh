@@ -3,11 +3,11 @@ http 'http://localhost:8000/api/test/maestro:67a182c5661a7bc8748b9905'
 # HTTP/1.1 200 OK
 # Allow: GET, HEAD, OPTIONS
 # Cache-Control: max-age=0
-# Content-Length: 18677
+# Content-Length: 18629
 # Content-Type: application/json
 # Cross-Origin-Opener-Policy: same-origin
-# Date: Mon, 10 Mar 2025 19:59:02 GMT
-# Expires: Mon, 10 Mar 2025 19:59:02 GMT
+# Date: Thu, 13 Mar 2025 11:40:18 GMT
+# Expires: Thu, 13 Mar 2025 11:40:18 GMT
 # Referrer-Policy: same-origin
 # Server: WSGIServer/0.2 CPython/3.12.7
 # Vary: Accept, Cookie, origin
@@ -23,7 +23,6 @@ http 'http://localhost:8000/api/test/maestro:67a182c5661a7bc8748b9905'
 #     "environment_misc": {
 #         "platform": "kubernetes"
 #     },
-#     "field_timestamp": "2025-02-04T03:02:01.190150Z",
 #     "git_commit_hash": "170c9fb62732486d54f4876cfee81654f217364c",
 #     "git_commit_tags": [],
 #     "git_repository_branch": "android15-6.6",

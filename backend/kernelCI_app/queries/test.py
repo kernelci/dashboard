@@ -1,6 +1,13 @@
-import datetime
 from typing import Optional
 from kernelCI_app.models import Tests
+from kernelCI_app.typeModels.databases import (
+    Build__ConfigName,
+    Checkout__GitRepositoryBranch,
+    Checkout__GitRepositoryUrl,
+    Origin,
+    Test__Path,
+    Test__StartTime,
+)
 
 
 def get_test_details_data(*, test_id):
@@ -18,7 +25,6 @@ def get_test_details_data(*, test_id):
             "start_time",
             "environment_compatible",
             "output_files",
-            "field_timestamp",
             "build__compiler",
             "build__architecture",
             "build__config_name",
@@ -35,29 +41,26 @@ def get_test_details_data(*, test_id):
 
 def get_test_status_history(
     *,
-    path: str,
-    origin: str,
-    git_repository_url: str,
-    git_repository_branch: str,
+    path: Test__Path,
+    origin: Origin,
+    git_repository_url: Checkout__GitRepositoryUrl,
+    git_repository_branch: Checkout__GitRepositoryBranch,
     platform: Optional[str],
-    current_test_timestamp: datetime,
+    current_test_start_time: Test__StartTime,
+    config_name: Build__ConfigName,
 ):
     query = Tests.objects.filter(
         path=path,
         build__checkout__origin=origin,
         build__checkout__git_repository_url=git_repository_url,
         build__checkout__git_repository_branch=git_repository_branch,
-        field_timestamp__lte=current_test_timestamp,
-    ).values(
-        "field_timestamp",
-        "id",
-        "status",
-        "build__checkout__git_commit_hash",
-    )
+        start_time__lte=current_test_start_time,
+        build__config_name=config_name,
+    ).values("start_time", "id", "status")
 
     if platform is None:
         query = query.filter(environment_misc__platform__isnull=True)
     else:
         query = query.filter(environment_misc__platform=platform)
 
-    return query.order_by("-field_timestamp")[:10]
+    return query.order_by("-start_time")[:10]

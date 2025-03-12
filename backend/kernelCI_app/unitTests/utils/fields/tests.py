@@ -19,7 +19,6 @@ test_expected_fields = [
     "tree_name",
     "git_repository_branch",
     "origin",
-    "field_timestamp",
 ]
 
 status_history_expected_fields = [
