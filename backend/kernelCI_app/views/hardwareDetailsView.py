@@ -53,6 +53,7 @@ from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from typing import Dict, List, Set
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -240,6 +241,12 @@ class HardwareDetails(APIView):
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
         )
+
+        if len(trees) == 0:
+            return create_api_error_response(
+                error_message="This hardware isn't associated with any commit",
+                status_code=HTTPStatus.OK,
+            )
 
         trees_with_selected_commits = get_trees_with_selected_commit(
             trees=trees, selected_commits=self.selected_commits
