@@ -44,3 +44,13 @@ class HardwareClient(BaseClient):
         path = reverse("hardwareDetailsSummary", kwargs={"hardware_id": hardware_id})
         url = self.get_endpoint(path=path)
         return requests.post(url, data=json.dumps(body.model_dump()))
+
+    def post_hardware_details_full(
+        self,
+        *,
+        hardware_id: str,
+        body: HardwareDetailsPostBody,
+    ):
+        path = reverse("hardwareDetails", kwargs={"hardware_id": hardware_id})
+        url = self.get_endpoint(path=path)
+        return requests.post(url, data=json.dumps(body.model_dump()))
