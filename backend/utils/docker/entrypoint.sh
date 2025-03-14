@@ -46,4 +46,10 @@ if [ "$SETUP_DJANGO" = 1 ]; then
     exit 0
 fi
 
+# Add cron jobs from django-crontab
+poetry run ./manage.py crontab add
+
+# Start cron jobs
+crond start
+
 exec gunicorn kernelCI.wsgi:application "$@"

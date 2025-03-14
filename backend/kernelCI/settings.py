@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "kernelCI_app",
     "rest_framework",
     "drf_spectacular",
+    "django_crontab",
 ]
 
 MIDDLEWARE = [
@@ -124,6 +125,15 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API for the KernelCI dashboard",
     "VERSION": "0.9.0",
 }
+
+# To run cronjobs locally, execute
+# poetry run ./manage.py crontab arg
+# where "arg" is add, remove or show
+CRONJOBS = [
+    # Example for running tasks that are not commands, uncomment to run for testing
+    # ('* * * * *', 'kernelCI_app.tasks.example_task'),
+    ("0 0 * * 0", "django.core.management.call_command", ["treeproof"])
+]
 
 
 # Database
