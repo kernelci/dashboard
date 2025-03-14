@@ -57,6 +57,7 @@ GOOGLE_JUNIPER_HARDWARE_WITH_FILTERS = copy.deepcopy(
 GOOGLE_JUNIPER_HARDWARE_WITH_FILTERS["body"].filter = {
     "filter_architecture": ["arm64"],
     "filter_boot.status": ["PASS"],
+    "filter_build.status": ["PASS"],
 }
 
 HARDWARE_WITH_UNEXISTENT_FILTER_VALUE = copy.deepcopy(
@@ -76,7 +77,6 @@ HARDWARE_WITH_GLOBAL_FILTER = {
             "filter_architecture": ["i386"],
             "filter_config_name": ["defconfig"],
             "filter_compiler": ["gcc-12"],
-            "filter_valid": ["true"],
         },
     ),
 }

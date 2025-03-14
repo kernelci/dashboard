@@ -4,15 +4,22 @@ from django.http import HttpResponseBadRequest
 import re
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs
-from kernelCI_app.typeModels.databases import PASS_STATUS, failure_status_list
+from kernelCI_app.typeModels.databases import (
+    PASS_STATUS,
+    NULL_STATUS,
+    FAIL_STATUS,
+    StatusValues,
+    failure_status_list,
+)
 from kernelCI_app.utils import get_error_body_response
 from kernelCI_app.constants.general import UNKNOWN_STRING
 
 NULL_STRINGS = set(["null", UNKNOWN_STRING, "NULL"])
 
 
-def is_build_invalid(build_valid: Optional[bool]) -> bool:
-    return build_valid is None or build_valid is False
+# TODO: Check if this function could be replaced by is_test_failure
+def is_build_invalid(build_status: StatusValues) -> bool:
+    return build_status == NULL_STATUS or build_status == FAIL_STATUS
 
 
 def is_test_failure(test_status: str) -> bool:
@@ -161,13 +168,13 @@ def should_filter_build_issue(
     issue_id: Optional[str],
     issue_version: Optional[int],
     incident_test_id: Optional[str],
-    build_valid: Optional[bool],
+    build_status: StatusValues,
 ) -> bool:
     has_issue_filter = len(issue_filters) > 0
     if not has_issue_filter:
         return False
 
-    if not is_build_invalid(build_valid):
+    if not is_build_invalid(build_status):
         return True
 
     has_uncategorized_filter = UNCATEGORIZED_STRING in issue_filters
@@ -222,7 +229,7 @@ def should_increment_build_issue(
     issue_id: Optional[str],
     issue_version: Optional[int],
     incident_test_id: Optional[str],
-    build_valid: Optional[bool],
+    build_status: StatusValues,
 ) -> Tuple[str, int, bool]:
     is_exclusively_test_issue_result = is_exclusively_test_issue(
         issue_id=issue_id,
@@ -238,7 +245,7 @@ def should_increment_build_issue(
         incident_test_id=incident_test_id,
     )
 
-    result = is_issue_from_build_result and is_build_invalid(build_valid)
+    result = is_issue_from_build_result and is_build_invalid(build_status)
 
     return (issue_id, issue_version, result)
 
@@ -255,11 +262,11 @@ type FilterFields = Literal[
     "boot.duration",
     "test.status",
     "test.duration",
+    "build.status",
     "duration",
     "config_name",
     "compiler",
     "architecture",
-    "valid",
     "test.hardware",
     "test.path",
     "boot.path",
@@ -321,7 +328,7 @@ class FilterParams:
         self.filterHardware = set()
         self.filterTestPath = ""
         self.filterBootPath = ""
-        self.filterBuildValid = set()
+        self.filterBuildStatus = set()
         self.filterIssues: dict[PossibleTabs, set[tuple[str, Optional[int]]]] = {
             "build": set(),
             "boot": set(),
@@ -337,11 +344,11 @@ class FilterParams:
             "boot.duration": self._handle_boot_duration,
             "test.status": self._handle_test_status,
             "test.duration": self._handle_test_duration,
-            "duration": self._handle_build_duration,
+            "build.status": self._handle_build_status,
+            "build.duration": self._handle_build_duration,
             "config_name": self._handle_config_name,
             "compiler": self._handle_compiler,
             "architecture": self._handle_architecture,
-            "valid": self._handle_build_valid,
             "test.hardware": self._handle_hardware,
             "test.path": self._handle_path,
             "boot.path": self._handle_path,
@@ -400,8 +407,8 @@ class FilterParams:
         else:
             self.filterTestPath = current_filter["value"]
 
-    def _handle_build_valid(self, current_filter: ParsedFilter) -> None:
-        self.filterBuildValid.add(current_filter["value"])
+    def _handle_build_status(self, current_filter: ParsedFilter) -> None:
+        self.filterBuildStatus.add(current_filter["value"])
 
     def _handle_build_duration(self, current_filter: ParsedFilter) -> None:
         value = current_filter["value"][0]
@@ -539,15 +546,15 @@ class FilterParams:
         self,
         *,
         duration: Optional[int],
-        valid: Optional[bool],
+        build_status: StatusValues,
         issue_id: Optional[str],
         issue_version: Optional[int],
         incident_test_id: Optional[str],
     ) -> bool:
         return (
             (
-                len(self.filterBuildValid) > 0
-                and (str(valid).lower() not in self.filterBuildValid)
+                len(self.filterBuildStatus) > 0
+                and (build_status.upper() not in self.filterBuildStatus)
             )
             or (
                 (
@@ -570,7 +577,7 @@ class FilterParams:
                     issue_id=issue_id,
                     issue_version=issue_version,
                     incident_test_id=incident_test_id,
-                    build_valid=valid,
+                    build_status=build_status,
                 )
             )
         )

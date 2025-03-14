@@ -2,13 +2,15 @@ from collections.abc import Callable
 from typing import Any, Optional, TypedDict
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
+from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
 from kernelCI_app.helpers.filters import (
     is_test_failure,
     should_increment_build_issue,
     should_increment_test_issue,
 )
+from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.constants.general import UNKNOWN_STRING
-from kernelCI_app.typeModels.databases import FAIL_STATUS
+from kernelCI_app.typeModels.databases import FAIL_STATUS, NULL_STATUS
 from kernelCI_app.utils import (
     extract_error_message,
     create_issue,
@@ -19,9 +21,7 @@ from kernelCI_app.helpers.misc import (
     build_misc_value_or_default,
     env_misc_value_or_default,
 )
-from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.utils import is_boot
-from django.db import connection
 
 
 class CheckoutWhereClauses(TypedDict):
@@ -44,153 +44,45 @@ def create_checkouts_where_clauses(
     return {"git_url_clause": git_url_clause, "git_branch_clause": git_branch_clause}
 
 
-def get_tree_details_data(request, commit_hash):
-    cache_key = "treeDetails"
-
-    origin_param = request.GET.get("origin")
-    git_url_param = request.GET.get("git_url")
-    git_branch_param = request.GET.get("git_branch")
-
-    params = {
-        "commit_hash": commit_hash,
-        "origin_param": origin_param,
-        "git_url_param": git_url_param,
-        "git_branch_param": git_branch_param,
-    }
-
-    rows = get_query_cache(cache_key, params)
-    if rows is None:
-        checkout_clauses = create_checkouts_where_clauses(
-            git_url=git_url_param, git_branch=git_branch_param
-        )
-
-        git_url_clause = checkout_clauses.get("git_url_clause")
-        git_branch_clause = checkout_clauses.get("git_branch_clause")
-
-        query = f"""
-        SELECT
-                tests.build_id AS tests_build_id,
-                tests.id AS tests_id,
-                tests.origin AS tests_origin,
-                tests.environment_comment AS tests_environment_comment,
-                tests.environment_misc AS tests_environment_misc,
-                tests.path AS tests_path,
-                tests.comment AS tests_comment,
-                tests.log_url AS tests_log_url,
-                tests.status AS tests_status,
-                tests.waived AS tests_waived,
-                tests.start_time AS tests_start_time,
-                tests.duration AS tests_duration,
-                tests.number_value AS tests_number_value,
-                tests.misc AS tests_misc,
-                tests.environment_compatible AS tests_environment_compatible,
-                builds_filter.*,
-                incidents.id AS incidents_id,
-                incidents.test_id AS incidents_test_id,
-                incidents.present AS incidents_present,
-                issues.id AS issues_id,
-                issues.version AS issues_version,
-                issues.comment AS issues_comment,
-                issues.report_url AS issues_report_url
-        FROM
-            (
-                SELECT
-                    builds.checkout_id AS builds_checkout_id,
-                    builds.id AS builds_id,
-                    builds.comment AS builds_comment,
-                    builds.start_time AS builds_start_time,
-                    builds.duration AS builds_duration,
-                    builds.architecture AS builds_architecture,
-                    builds.command AS builds_command,
-                    builds.compiler AS builds_compiler,
-                    builds.config_name AS builds_config_name,
-                    builds.config_url AS builds_config_url,
-                    builds.log_url AS builds_log_url,
-                    builds.valid AS builds_valid,
-                    builds.misc AS builds_misc,
-                    tree_head.*
-                FROM
-                    (
-                        SELECT
-                            checkouts.id AS checkout_id,
-                            checkouts.git_repository_url AS checkouts_git_repository_url,
-                            checkouts.git_repository_branch AS checkouts_git_repository_branch,
-                            checkouts.git_commit_tags
-                        FROM
-                            checkouts
-                        WHERE
-                            checkouts.git_commit_hash = %(commit_hash)s AND
-                            {git_url_clause} AND
-                            {git_branch_clause} AND
-                            checkouts.origin = %(origin_param)s
-                    ) AS tree_head
-                INNER JOIN builds
-                    ON tree_head.checkout_id = builds.checkout_id
-                WHERE
-                    builds.origin = %(origin_param)s
-            ) AS builds_filter
-        LEFT JOIN tests
-            ON builds_filter.builds_id = tests.build_id
-        LEFT JOIN incidents
-            ON tests.id = incidents.test_id OR
-               builds_filter.builds_id = incidents.build_id
-        LEFT JOIN issues
-            ON incidents.issue_id = issues.id
-            AND incidents.issue_version = issues.version
-        WHERE
-            tests.origin = %(origin_param)s OR
-            tests.origin IS NULL
-        ORDER BY
-            issues."_timestamp" DESC
-        """
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-            set_query_cache(cache_key, params, rows)
-
-    return rows
-
-
 def get_current_row_data(current_row: dict) -> dict:
-    tmp_test_env_comp_key = 14
+    tmp_test_env_comp_key = 12
     current_row_data = {
-        "test_id": current_row[1],
-        "test_origin": current_row[2],
-        "test_environment_comment": current_row[3],
-        "test_environment_misc": current_row[4],
-        "test_path": current_row[5],
-        "test_comment": current_row[6],
-        "test_log_url": current_row[7],
-        "test_status": current_row[8],
-        "test_waived": current_row[9],
-        "test_start_time": current_row[10],
-        "test_duration": current_row[11],
-        "test_number_value": current_row[12],
-        "test_misc": current_row[13],
+        "test_id": current_row[0],
+        "test_origin": current_row[1],
+        "test_environment_comment": current_row[2],
+        "test_environment_misc": current_row[3],
+        "test_path": current_row[4],
+        "test_comment": current_row[5],
+        "test_log_url": current_row[6],
+        "test_status": current_row[7],
+        "test_start_time": current_row[8],
+        "test_duration": current_row[9],
+        "test_number_value": current_row[10],
+        "test_misc": current_row[11],
         "test_environment_compatible": current_row[tmp_test_env_comp_key],
-        "build_id": current_row[16],
-        "build_comment": current_row[17],
-        "build_start_time": current_row[18],
-        "build_duration": current_row[19],
-        "build_architecture": current_row[20],
-        "build_command": current_row[21],
-        "build_compiler": current_row[22],
-        "build_config_name": current_row[23],
-        "build_config_url": current_row[24],
-        "build_log_url": current_row[25],
-        "build_valid": current_row[26],
-        "build_misc": current_row[27],
-        "checkout_id": current_row[28],
-        "checkout_git_repository_url": current_row[29],
-        "checkout_git_repository_branch": current_row[30],
-        "checkout_git_commit_tags": current_row[31],
-        "incident_id": current_row[32],
-        "incident_test_id": current_row[33],
-        "incident_present": current_row[34],
-        "issue_id": current_row[35],
-        "issue_version": current_row[36],
-        "issue_comment": current_row[37],
-        "issue_report_url": current_row[38],
+        "build_id": current_row[13],
+        "build_comment": current_row[14],
+        "build_start_time": current_row[15],
+        "build_duration": current_row[16],
+        "build_architecture": current_row[17],
+        "build_command": current_row[18],
+        "build_compiler": current_row[19],
+        "build_config_name": current_row[20],
+        "build_config_url": current_row[21],
+        "build_log_url": current_row[22],
+        "build_status": current_row[23],
+        "build_misc": current_row[24],
+        "checkout_id": current_row[25],
+        "checkout_git_repository_url": current_row[26],
+        "checkout_git_repository_branch": current_row[27],
+        "checkout_git_commit_tags": current_row[28],
+        "incident_id": current_row[29],
+        "incident_test_id": current_row[30],
+        "incident_present": current_row[31],
+        "issue_id": current_row[32],
+        "issue_version": current_row[33],
+        "issue_comment": current_row[34],
+        "issue_report_url": current_row[35],
     }
 
     environment_misc = handle_environment_misc(
@@ -204,6 +96,9 @@ def get_current_row_data(current_row: dict) -> dict:
     current_row_data["test_error"] = extract_error_message(
         current_row_data["test_misc"]
     )
+    current_row_data["build_status"] = build_status_map(
+        current_row_data["build_status"]
+    ).upper()
     if current_row_data["test_environment_compatible"] is None:
         current_row_data["test_environment_compatible"] = UNKNOWN_STRING
     else:
@@ -217,8 +112,8 @@ def get_current_row_data(current_row: dict) -> dict:
     if current_row_data["build_config_name"] is None:
         current_row_data["build_config_name"] = UNKNOWN_STRING
     if current_row_data["issue_id"] is None and (
-        current_row_data["build_valid"] is False
-        or current_row_data["build_valid"] is None
+        current_row_data["build_status"] == FAIL_STATUS
+        or current_row_data["build_status"] == NULL_STATUS
         or current_row_data["test_status"] == FAIL_STATUS
     ):
         current_row_data["issue_id"] = UNCATEGORIZED_STRING
@@ -277,21 +172,21 @@ def is_test_boots_test(row_data: dict) -> bool:
     return is_boot(test_path)
 
 
-def get_build(row_data: dict) -> dict:
-    return {
-        "id": row_data["build_id"],
-        "architecture": row_data["build_architecture"],
-        "config_name": row_data["build_config_name"],
-        "misc": row_data["build_misc"],
-        "config_url": row_data["build_config_url"],
-        "compiler": row_data["build_compiler"],
-        "valid": row_data["build_valid"],
-        "duration": row_data["build_duration"],
-        "log_url": row_data["build_log_url"],
-        "start_time": row_data["build_start_time"],
-        "git_repository_url": row_data["checkout_git_repository_url"],
-        "git_repository_branch": row_data["checkout_git_repository_branch"],
-    }
+def get_build(row_data: dict) -> BuildHistoryItem:
+    return BuildHistoryItem(
+        id=row_data["build_id"],
+        architecture=row_data["build_architecture"],
+        config_name=row_data["build_config_name"],
+        misc=row_data["build_misc"],
+        config_url=row_data["build_config_url"],
+        compiler=row_data["build_compiler"],
+        valid=row_data["build_status"],
+        duration=row_data["build_duration"],
+        log_url=row_data["build_log_url"],
+        start_time=row_data["build_start_time"],
+        git_repository_url=row_data["checkout_git_repository_url"],
+        git_repository_branch=row_data["checkout_git_repository_branch"],
+    )
 
 
 def process_builds_issue(instance, row_data):
@@ -300,14 +195,14 @@ def process_builds_issue(instance, row_data):
     issue_comment = row_data["issue_comment"]
     issue_report_url = row_data["issue_report_url"]
     issue_version = row_data["issue_version"]
-    build_valid = row_data["build_valid"]
+    build_status = row_data["build_status"]
     incident_test_id = row_data["incident_test_id"]
 
     (issue_id, issue_version, can_insert_issue) = should_increment_build_issue(
         issue_id=issue_id,
         issue_version=issue_version,
         incident_test_id=incident_test_id,
-        build_valid=build_valid,
+        build_status=build_status,
     )
 
     if issue_id and issue_version is not None and can_insert_issue:
@@ -322,7 +217,7 @@ def process_builds_issue(instance, row_data):
                 issue_version=issue_version,
             )
 
-    elif build_id not in instance.processed_builds and build_valid is False:
+    elif build_id not in instance.processed_builds and build_status == FAIL_STATUS:
         instance.failed_builds_with_unknown_issues += 1
 
 
@@ -387,12 +282,12 @@ def process_boots_issue(instance, row_data):
 def decide_if_is_build_filtered_out(instance, row_data):
     issue_id = row_data["issue_id"]
     issue_version = row_data["issue_version"]
-    build_valid = row_data["build_valid"]
+    build_status = row_data["build_status"]
     build_duration = row_data["build_duration"]
     incident_test_id = row_data["incident_test_id"]
 
     is_build_filtered_out = instance.filters.is_build_filtered_out(
-        valid=build_valid,
+        build_status=build_status,
         duration=build_duration,
         issue_id=issue_id,
         issue_version=issue_version,
@@ -528,7 +423,7 @@ def process_filters(instance, row_data: dict) -> None:
     issue_id = row_data["issue_id"]
     issue_version = row_data["issue_version"]
     incident_test_id = row_data["incident_test_id"]
-    build_valid = row_data["build_valid"]
+    build_status = row_data["build_status"]
 
     if row_data["build_id"] is not None:
         instance.global_configs.add(row_data["build_config_name"])
@@ -540,11 +435,11 @@ def process_filters(instance, row_data: dict) -> None:
                 issue_id=issue_id,
                 issue_version=issue_version,
                 incident_test_id=incident_test_id,
-                build_valid=build_valid,
+                build_status=build_status,
             )
         )
 
-        is_invalid = build_valid is False
+        is_failed_build = build_status == FAIL_STATUS
         add_unfiltered_issue(
             issue_id=build_issue_id,
             issue_version=build_issue_version,
@@ -552,7 +447,7 @@ def process_filters(instance, row_data: dict) -> None:
             issue_set=instance.unfiltered_build_issues,
             unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
             unknown_issue_flag_tab="build",
-            is_invalid=is_invalid,
+            is_failed_task=is_failed_build,
         )
 
     if row_data["test_id"] is not None:
@@ -569,13 +464,13 @@ def process_filters(instance, row_data: dict) -> None:
             issue_set = instance.unfiltered_test_issues
             flag_tab: PossibleTabs = "test"
 
-        is_invalid = row_data["test_status"] == FAIL_STATUS
+        is_failed_test = row_data["test_status"] == FAIL_STATUS
         add_unfiltered_issue(
             issue_id=test_issue_id,
             issue_version=test_issue_version,
             should_increment=is_test_issue,
             issue_set=issue_set,
-            is_invalid=is_invalid,
+            is_failed_task=is_failed_test,
             unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
             unknown_issue_flag_tab=flag_tab,
         )

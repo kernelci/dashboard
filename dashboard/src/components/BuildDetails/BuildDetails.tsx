@@ -14,7 +14,7 @@ import type { ISection } from '@/components/Section/Section';
 import { useBuildDetails, useBuildIssues } from '@/api/buildDetails';
 import UnexpectedError from '@/components/UnexpectedError/UnexpectedError';
 
-import { formatDate, getBuildStatus, getTitle } from '@/utils/utils';
+import { formatDate, getTitle } from '@/utils/utils';
 
 import IssueSection from '@/components/Issue/IssueSection';
 
@@ -149,15 +149,15 @@ const BuildDetails = ({
       {
         title: buildDetailsTitle,
         subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
-        leftIcon: <StatusIcon status={data?.valid} />,
+        leftIcon: <StatusIcon status={data?.status} />,
         eyebrow: formatMessage({ id: 'buildDetails.buildDetails' }),
         subsections: [
           {
             infos: [
               {
                 title: 'global.status',
-                linkText: getBuildStatus(data.valid).toUpperCase(),
-                icon: <StatusIcon status={data?.valid} className="text-xl" />,
+                linkText: data.status.toUpperCase(),
+                icon: <StatusIcon status={data.status} className="text-xl" />,
               },
               {
                 title: 'buildDetails.gitDescribe',

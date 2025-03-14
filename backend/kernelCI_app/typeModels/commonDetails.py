@@ -3,10 +3,25 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Union, Tuple, Any
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.issues import Issue
-from kernelCI_app.typeModels.databases import EnvironmentMisc
+from kernelCI_app.typeModels.databases import (
+    EnvironmentMisc,
+    Build__Id,
+    Build__Architecture,
+    Build__ConfigName,
+    Build__Misc,
+    Build__ConfigUrl,
+    Build__Compiler,
+    Build__Status,
+    Build__LogUrl,
+    Build__StartTime,
+    Build__Duration,
+    Checkout__GitRepositoryUrl,
+    Checkout__GitRepositoryBranch,
+)
+from kernelCI_app.helpers.build import build_status_map
 
 
 class TestStatusCount(BaseModel):
@@ -15,13 +30,18 @@ class TestStatusCount(BaseModel):
     FAIL: Optional[int] = 0
     SKIP: Optional[int] = 0
     MISS: Optional[int] = 0
+    DONE: Optional[int] = 0
     NULL: Optional[int] = 0
 
 
 class BuildStatusCount(BaseModel):
-    valid: Optional[int] = 0
-    invalid: Optional[int] = 0
-    null: Optional[int] = 0
+    PASS: int = 0
+    FAIL: int = 0
+    ERROR: int = 0
+    SKIP: int = 0
+    MISS: int = 0
+    DONE: int = 0
+    NULL: int = 0
 
 
 class TestArchSummaryItem(BaseModel):
@@ -49,18 +69,18 @@ class TestHistoryItem(BaseModel):
 
 
 class BuildHistoryItem(BaseModel):
-    id: str
-    architecture: Optional[str]
-    config_name: Optional[str]
-    misc: Optional[dict]
-    config_url: Optional[str]
-    compiler: Optional[str]
-    valid: Optional[bool]
-    duration: Optional[Union[int, float]]
-    log_url: Optional[str]
-    start_time: Optional[Union[datetime, str]]
-    git_repository_url: Optional[str]
-    git_repository_branch: Optional[str]
+    id: Build__Id
+    architecture: Build__Architecture
+    config_name: Build__ConfigName
+    misc: Build__Misc
+    config_url: Build__ConfigUrl
+    compiler: Build__Compiler
+    status: Build__Status = Field(validation_alias="valid")
+    duration: Build__Duration
+    log_url: Build__LogUrl
+    start_time: Build__StartTime
+    git_repository_url: Checkout__GitRepositoryUrl
+    git_repository_branch: Checkout__GitRepositoryBranch
 
     @field_validator("misc", mode="before")
     @classmethod
@@ -71,6 +91,13 @@ class BuildHistoryItem(BaseModel):
             return value
         else:
             log_message("Invalid misc for BuildHistoryItem")
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def valid_to_status(cls, value: Any) -> str:
+        if isinstance(value, bool) or value is None:
+            return build_status_map(value)
+        return value
 
 
 class TestSummary(BaseModel):

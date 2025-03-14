@@ -95,7 +95,7 @@ class HardwareTestHistoryItem(TestHistoryItem):
 
 
 class HardwareBuildHistoryItem(BuildHistoryItem):
-    tree_name: Optional[Checkout__TreeName]
+    tree_name: Checkout__TreeName
     issue_id: Optional[Issue__Id]
     issue_version: Optional[Issue__Version]
 
