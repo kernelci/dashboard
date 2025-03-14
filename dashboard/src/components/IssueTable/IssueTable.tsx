@@ -8,7 +8,13 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import type { Row, SortingState, ColumnDef, Cell } from '@tanstack/react-table';
+import type {
+  Row,
+  SortingState,
+  ColumnDef,
+  Cell,
+  VisibilityState,
+} from '@tanstack/react-table';
 
 import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -175,6 +181,10 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
       desc: true,
     },
   ]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    culprit: false,
+  });
+
   const { pagination, paginationUpdater } = usePaginationState(
     'issueListing',
     listingSize,
@@ -185,10 +195,15 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
       return [];
     }
 
-    return issueListing.issues.map(issue => ({
-      ...issue,
-      ...issueListing.extras[issue.id],
-    }));
+    return issueListing.issues.reduce((acc, issue) => {
+      if (issue.culprit_code) {
+        acc.push({
+          ...issue,
+          ...issueListing.extras[issue.id],
+        });
+      }
+      return acc;
+    }, [] as IssueListingTableItem[]);
   }, [issueListing]);
 
   const table = useReactTable({
@@ -199,9 +214,11 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
     state: {
       sorting,
       pagination,
+      columnVisibility,
     },
   });
 
