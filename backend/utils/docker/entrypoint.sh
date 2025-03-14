@@ -46,4 +46,10 @@ if [ "$SETUP_DJANGO" = 1 ]; then
     exit 0
 fi
 
+# Add/update cron jobs
+poetry run ./manage.py crontab add
+
+# Trap the SIGTERM signal to remove cron jobs when the container stops
+trap 'poetry run ./manage.py crontab remove; exit 0' SIGTERM
+
 exec gunicorn kernelCI.wsgi:application "$@"
