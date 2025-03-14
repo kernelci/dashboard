@@ -68,9 +68,10 @@ const IssuesList = ({
         params: {
           issueId: issueId,
         },
-        search: {
+        search: s => ({
+          origin: s.origin,
           issueVersion: version,
-        },
+        }),
         state: s => ({ ...s, id: detailsId, from: pageFrom }),
       };
     },

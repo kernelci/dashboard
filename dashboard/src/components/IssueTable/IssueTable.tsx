@@ -78,6 +78,9 @@ const getLinkProps = (
       id: row.original.id,
       from: RedirectFrom.Issues,
     }),
+    search: s => ({
+      origin: s.origin,
+    }),
   };
 };
 

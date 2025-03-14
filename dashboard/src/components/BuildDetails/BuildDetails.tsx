@@ -91,7 +91,8 @@ const BuildDetails = ({
         to="/tree/$treeId"
         params={{ treeId: data?.git_commit_hash }}
         state={s => s}
-        search={{
+        search={s => ({
+          origin: s.origin,
           treeInfo: {
             gitBranch: data?.git_repository_branch,
             gitUrl: data?.git_repository_url,
@@ -99,7 +100,7 @@ const BuildDetails = ({
             commitName: data?.git_commit_name,
             headCommitHash: data?.git_commit_hash,
           },
-        }}
+        })}
       >
         {truncateBigText(data?.git_commit_hash)}
         <LinkIcon className="text-blue text-xl" />

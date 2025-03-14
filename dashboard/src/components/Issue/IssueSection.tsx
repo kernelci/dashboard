@@ -50,9 +50,10 @@ const IssueSection = ({
             to="/issue/$issueId"
             params={{ issueId: issue.id }}
             state={s => s}
-            search={{
+            search={s => ({
+              origin: s.origin,
               issueVersion: issue.version,
-            }}
+            })}
           >
             <ListingItem
               unknown={issue.incidents_info.incidentsCount}
