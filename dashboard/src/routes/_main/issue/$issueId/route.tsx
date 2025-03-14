@@ -6,9 +6,10 @@ import {
   zTableFilterInfoDefault,
   zTableFilterInfoValidator,
 } from '@/types/tree/TreeDetails';
-import { type SearchSchema } from '@/types/general';
+import { DEFAULT_ORIGIN, type SearchSchema } from '@/types/general';
 
 export const issueDetailsDefaultValues = {
+  origin: DEFAULT_ORIGIN,
   tableFilter: zTableFilterInfoDefault,
   issueVersion: undefined,
 };

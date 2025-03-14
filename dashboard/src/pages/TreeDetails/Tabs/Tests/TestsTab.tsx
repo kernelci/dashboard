@@ -79,6 +79,9 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
           testId: bootId,
           treeId: treeId,
         },
+        search: s => ({
+          origin: s.origin,
+        }),
       };
     },
     [treeId],

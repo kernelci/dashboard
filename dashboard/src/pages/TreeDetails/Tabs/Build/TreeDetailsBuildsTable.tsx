@@ -28,6 +28,9 @@ export function TreeDetailsBuildsTable({
         buildId: buildId,
         treeId: treeId,
       },
+      search: s => ({
+        origin: s.origin,
+      }),
     }),
     [treeId],
   );
