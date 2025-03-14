@@ -68,6 +68,9 @@ const BootsTab = ({
         testId: bootId,
         hardwareId: hardwareId,
       },
+      search: s => ({
+        origin: s.origin,
+      }),
     }),
     [hardwareId],
   );

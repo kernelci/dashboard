@@ -120,6 +120,9 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
         testId: bootId,
         treeId: treeId,
       },
+      search: s => ({
+        origin: s.origin,
+      }),
     }),
     [treeId],
   );
