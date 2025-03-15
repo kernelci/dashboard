@@ -25,3 +25,7 @@ trees:
     - sashal@kernel.org
   mediatek:
     - angelogioacchino.delregno@collabora.com
+  arnd:
+    - arnd@arndb.de
+  robh:
+    - robh@kernel.org
