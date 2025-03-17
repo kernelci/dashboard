@@ -30,7 +30,7 @@ def kcidb_execute_query(query, params=None):
 def kcidb_new_issues():
     """Fetch issues from the last few days, including related checkouts."""
 
-    params = {"interval": "4 days"}
+    params = {"interval": "1 hour"}
 
     query = """
         WITH ranked_issues AS (

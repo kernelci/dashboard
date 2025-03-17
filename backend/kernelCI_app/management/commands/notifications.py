@@ -12,6 +12,7 @@ from urllib.parse import quote_plus
 from django.core.management.base import BaseCommand
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from kernelCI_app.helpers.system import is_production_instance
 
 from kernelCI_app.management.commands.libs.email import (
     gmail_setup_service,
@@ -243,6 +244,9 @@ def get_recipient_list(tree_name):
 
 
 def look_for_new_issues(service, email_args):
+    if is_production_instance():
+        return
+
     issues = kcidb_new_issues()
     build_issues = []
     boot_issues = []
@@ -269,6 +273,13 @@ def look_for_new_issues(service, email_args):
     report["title"] = f"new issues summary - {now.strftime("%Y-%m-%d %H:%M %Z")}"
 
     send_email_report(service, report, email_args)
+
+    email_args.add_mailing_lists = True
+    email_args.update = True
+    for issue in new_build_issues:
+        if issue["origin"] == "maestro":
+            email_args.tree_name = issue["tree_name"]
+            generate_issue_report(service, issue["id"], email_args)
 
 
 def ask_ignore_issue():
