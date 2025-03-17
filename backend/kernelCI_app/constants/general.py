@@ -7,3 +7,5 @@ UNCATEGORIZED_STRING = "Uncategorized"
 MAESTRO_DUMMY_BUILD_PREFIX = "maestro:dummy_"
 
 SCHEMA_VERSION_ENV = "SCHEMA_VERSION"
+
+PRODUCTION_HOST = "https://dashboard.kernelci.org"
