@@ -242,7 +242,7 @@ def get_recipient_list(tree_name):
         return None
 
 
-def generate_issues_summary(service, email_args):
+def look_for_new_issues(service, email_args):
     issues = kcidb_new_issues()
     build_issues = []
     boot_issues = []
@@ -258,7 +258,7 @@ def generate_issues_summary(service, email_args):
     new_boot_issues = exclude_already_found_and_store(boot_issues)
     if not new_build_issues and not new_boot_issues:
         print("No new issues")
-        return None
+        return
 
     template = setup_jinja_template("issues.txt.j2")
     report = {}
@@ -576,7 +576,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Running action: {action}")
 
         if action == "new_issues":
-            generate_issues_summary(service, email_args)
+            look_for_new_issues(service, email_args)
 
         elif action == "issue_report":
             email_args.update = options.get("update_storage", False)
