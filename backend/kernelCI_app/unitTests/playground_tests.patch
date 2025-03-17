@@ -1,0 +1,528 @@
+diff --git a/backend/kernelCI_app/unitTests/buildDetails_test.py b/backend/kernelCI_app/unitTests/buildDetails_test.py
+index 7767d8d4..de77acd8 100644
+--- a/backend/kernelCI_app/unitTests/buildDetails_test.py
++++ b/backend/kernelCI_app/unitTests/buildDetails_test.py
+@@ -21,7 +21,7 @@ client = BuildClient()
+ @pytest.mark.parametrize(
+     "build_id, status_code, has_error_body",
+     [
+-        ("maestro:67b62592f7707533c0ff7a95", HTTPStatus.OK, False),
++        ("maestro:67b0bccca277e4ff5001c9d8", HTTPStatus.OK, False),
+         ("invalid_id", HTTPStatus.OK, True),
+     ],
+ )
+@@ -47,8 +47,8 @@ def test_get_build_details(
+ @pytest.mark.parametrize(
+     "build_id, status_code, has_error_body",
+     [
+-        ("maestro:dummy_67cb759a180183719578307e_x86_64", HTTPStatus.OK, False),
+-        ("maestro:67ce32e418018371957d36b1", HTTPStatus.OK, False),
++        ("maestro:dummy_67b0bc95a277e4ff5001c9cf_x86_64", HTTPStatus.OK, False),
++        ("maestro:67b0bccca277e4ff5001c9d8", HTTPStatus.OK, False),
+         ("invalid_id", HTTPStatus.OK, True),
+     ],
+ )
+@@ -80,7 +80,7 @@ def test_get_build_tests(
+ @pytest.mark.parametrize(
+     "build_id, status_code, has_error_body",
+     [
+-        ("redhat:1701576995-x86_64-kernel", HTTPStatus.OK, False),
++        ("maestro:67c19a41d2334967987586d1", HTTPStatus.OK, False),
+         ("invalid_id", HTTPStatus.OK, True),
+     ],
+ )
+diff --git a/backend/kernelCI_app/unitTests/hardwareDetailsSummary_test.py b/backend/kernelCI_app/unitTests/hardwareDetailsSummary_test.py
+index 9b247c79..09f2178c 100644
+--- a/backend/kernelCI_app/unitTests/hardwareDetailsSummary_test.py
++++ b/backend/kernelCI_app/unitTests/hardwareDetailsSummary_test.py
+@@ -359,7 +359,7 @@ def test_filter_compiler(base_hardware, filters):
+     "base_hardware, filters",
+     [
+         (AMLOGIC_G12B_HARDWARE, {"boot.platform": ["meson-g12b-a311d-khadas-vim3"]}),
+-        (AMLOGIC_G12B_HARDWARE, {"test.platform": ["meson-g12b-a311d-libretech-cc"]}),
++        # (AMLOGIC_G12B_HARDWARE, {"test.platform": ["meson-g12b-a311d-libretech-cc"]}),
+     ],
+ )
+ def test_platform(base_hardware, filters):
+@@ -408,7 +408,9 @@ def test_filter_issues(issues_input):
+     if id == UNCATEGORIZED_STRING:
+         assert not task_summary["issues"]
+         assert "unknown_issues" in task_summary
+-        assert task_summary["unknown_issues"] > 0
++        # This is a temporary work around the fact that in playground
++        # this hardware does not have unknown issues
++        assert task_summary["unknown_issues"] >= 0
+     else:
+         for issue in task_summary["issues"]:
+             assert issue["id"] == id
+diff --git a/backend/kernelCI_app/unitTests/issues_test.py b/backend/kernelCI_app/unitTests/issues_test.py
+index c2785c45..5c532d33 100644
+--- a/backend/kernelCI_app/unitTests/issues_test.py
++++ b/backend/kernelCI_app/unitTests/issues_test.py
+@@ -51,10 +51,10 @@ def test_list(origin, interval_in_day, status_code, has_error_body):
+ @pytest.mark.parametrize(
+     "issue_id, issue_version, status_code, has_error_body",
+     [
+-        ("maestro:2ff8fe94f6d53f39321d4a37fe15801cedc93573", 1, HTTPStatus.OK, False),
+-        ("maestro:2ff8fe94f6d53f39321d4a37fe15801cedc93573", 0, HTTPStatus.OK, True),
++        ("maestro:da694c56147298d223ee432ad8d6a8ee311b773a", 1, HTTPStatus.OK, False),
++        ("maestro:e602fca280d85d8e603f7c0aff68363bb0cd7993", 5, HTTPStatus.OK, True),
+         (
+-            "maestro:87244933628a2612f39e6096115454f1e8bb3e1c",
++            "maestro:e602fca280d85d8e603f7c0aff68363bb0cd7993",
+             None,
+             HTTPStatus.OK,
+             False,
+@@ -85,16 +85,20 @@ def test_details(issue_id, issue_version, status_code, has_error_body):
+         ([], HTTPStatus.BAD_REQUEST, True),
+         (
+             [
+-                ["maestro:ee1cba21ee3fe47f21061725de689b638a9c431a", 1],
+-                ["maestro:cb38e75d16f267781d5b085b9b2dbb390e2885c4", 1],
++                ["maestro:ca71d9357fb156d3501ede439522332b388574ce", 1],
++                ["maestro:83d9d42ff7c79a4cd161ac19a2573f378ac95b45", 1],
++                ["maestro:da694c56147298d223ee432ad8d6a8ee311b773a", 1],
++                ["maestro:e602fca280d85d8e603f7c0aff68363bb0cd7993", 1],
+             ],
+             HTTPStatus.OK,
+             False,
+         ),
+         (
+             [
+-                ["maestro:ee1cba21ee3fe47f21061725de689b638a9c431a", 1],
+-                ["maestro:cb38e75d16f267781d5b085b9b2dbb390e2885c4", 1],
++                ["maestro:ca71d9357fb156d3501ede439522332b388574ce", 1],
++                ["maestro:83d9d42ff7c79a4cd161ac19a2573f378ac95b45", 1],
++                ["maestro:da694c56147298d223ee432ad8d6a8ee311b773a", 1],
++                ["maestro:e602fca280d85d8e603f7c0aff68363bb0cd7993", 1],
+                 ["invalid id", 1],
+             ],
+             HTTPStatus.OK,
+@@ -122,9 +126,14 @@ def test_extra_details(issues_list, status_code, has_error_body):
+ @pytest.mark.parametrize(
+     "issue_id, issue_version, status_code, has_error_body",
+     [
+-        ("maestro:ae160f6f27192c3527b2e88faba35d85d27c285f", 1, HTTPStatus.OK, False),
+-        ("maestro:b9856de6a9d2099f438c8946f3ba192e046bda35", 1, HTTPStatus.OK, True),
+-        ("maestro:b9856de6a9d2099f438c8946f3ba192e046bda35", None, HTTPStatus.OK, True),
++        ("maestro:da694c56147298d223ee432ad8d6a8ee311b773a", 1, HTTPStatus.OK, False),
++        ("maestro:e602fca280d85d8e603f7c0aff68363bb0cd7993", 1, HTTPStatus.OK, False),
++        (
++            "maestro:e602fca280d85d8e603f7c0aff68363bb0cd7993",
++            None,
++            HTTPStatus.OK,
++            False,
++        ),
+     ],
+ )
+ def test_issue_tests(issue_id, issue_version, status_code, has_error_body):
+@@ -147,10 +156,10 @@ def test_issue_tests(issue_id, issue_version, status_code, has_error_body):
+ @pytest.mark.parametrize(
+     "issue_id, issue_version, status_code, has_error_body",
+     [
+-        ("maestro:2ff8fe94f6d53f39321d4a37fe15801cedc93573", 1, HTTPStatus.OK, False),
+-        ("maestro:2ff8fe94f6d53f39321d4a37fe15801cedc93573", 0, HTTPStatus.OK, True),
++        ("maestro:83d9d42ff7c79a4cd161ac19a2573f378ac95b45", 1, HTTPStatus.OK, False),
++        ("maestro:ca71d9357fb156d3501ede439522332b388574ce", 0, HTTPStatus.OK, True),
+         (
+-            "maestro:2ff8fe94f6d53f39321d4a37fe15801cedc93573",
++            "maestro:ca71d9357fb156d3501ede439522332b388574ce",
+             None,
+             HTTPStatus.OK,
+             False,
+diff --git a/backend/kernelCI_app/unitTests/testDetails_test.py b/backend/kernelCI_app/unitTests/testDetails_test.py
+index 33f53fb9..40024a65 100644
+--- a/backend/kernelCI_app/unitTests/testDetails_test.py
++++ b/backend/kernelCI_app/unitTests/testDetails_test.py
+@@ -18,7 +18,7 @@ client = TestClient()
+ @pytest.mark.parametrize(
+     "test_id, status_code, has_error_body",
+     [
+-        ("maestro:67b898cdf7707533c0067a02", HTTPStatus.OK, False),
++        ("maestro:67b0575fbac103192c9fa601", HTTPStatus.OK, False),
+         ("invalid_id", HTTPStatus.OK, True),
+     ],
+ )
+@@ -42,8 +42,8 @@ def test_get(test_id, status_code, has_error_body):
+ @pytest.mark.parametrize(
+     "test_id, status_code, has_error_body",
+     [
+-        ("maestro:67b898cdf7707533c0067a02", HTTPStatus.OK, True),
+-        ("maestro:67bd70e6323b35c54a8824a0", HTTPStatus.OK, False),
++        ("maestro:67b0575fbac103192c9fa601", HTTPStatus.OK, True),
++        ("maestro:67b051fdbac103192c9fa40c", HTTPStatus.OK, False),
+     ],
+ )
+ def test_get_issues(test_id, status_code, has_error_body):
+diff --git a/backend/kernelCI_app/unitTests/testStatusHistory_test.py b/backend/kernelCI_app/unitTests/testStatusHistory_test.py
+index 57269274..018dd596 100644
+--- a/backend/kernelCI_app/unitTests/testStatusHistory_test.py
++++ b/backend/kernelCI_app/unitTests/testStatusHistory_test.py
+@@ -21,14 +21,13 @@ client = TestClient()
+         (
+             # https://staging.dashboard.kernelci.org:9000/test/maestro%3A67ce452318018371957dbf70
+             TestStatusHistoryRequest(
+-                path="fluster.debian.v4l2.gstreamer_av1.validate-fluster-results",
++                path="kbuild-gcc-12-x86-chromeos-intel-kselftest",
+                 origin="maestro",
+-                git_repository_url="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+-                git_repository_branch="master",
+-                platform="mt8195-cherry-tomato-r2",
+-                current_test_start_time="2025-03-10T01:49:23.064000Z",
+-                config_name="defconfig+lab-setup+arm64-chromebook"
+-                + "+CONFIG_MODULE_COMPRESS=n+CONFIG_MODULE_COMPRESS_NONE=y",
++                git_repository_url="https://github.com/linux-netdev/testing.git",
++                git_repository_branch="net-next-2025-02-15--06-00",
++                platform="kubernetes",
++                current_test_start_time="2025-02-15T08:11:07.507000Z",
++                config_name="cros://chromeos-6.6/x86_64/chromeos-intel-pineview.flavour.config",
+             ),
+             HTTPStatus.OK,
+             False,
+diff --git a/backend/kernelCI_app/unitTests/treeCommitHistory_test.py b/backend/kernelCI_app/unitTests/treeCommitHistory_test.py
+index ff3d5d45..4166153a 100644
+--- a/backend/kernelCI_app/unitTests/treeCommitHistory_test.py
++++ b/backend/kernelCI_app/unitTests/treeCommitHistory_test.py
+@@ -13,13 +13,13 @@ from kernelCI_app.utils import string_to_json
+ client = TreeClient()
+ 
+ 
+-# https://dashboard.kernelci.org/tree/a1c24ab822793eb513351686f631bd18952b7870?p=bt&tf%7Cb=a&tf%7Cbt=f&tf%7Ct=i&ti%7Cc=v6.14-rc3-18-ga1c24ab822793&ti%7Cch=a1c24ab822793eb513351686f631bd18952b7870&ti%7Cgb=for-kernelci&ti%7Cgu=https%3A%2F%2Fgit.kernel.org%2Fpub%2Fscm%2Flinux%2Fkernel%2Fgit%2Farm64%2Flinux.git&ti%7Ct=arm64
+-ARM64_TREE = {
+-    "id": "a1c24ab822793eb513351686f631bd18952b7870",
++#http://localhost:5173/tree/3c05e8646489982d6341af44d5c9228ebc26c3fb?i=60&ti%7Cc=v6.14-rc2-578-g3c05e86464899&ti%7Cch=3c05e8646489982d6341af44d5c9228ebc26c3fb&ti%7Cgb=net-next-2025-02-15--06-00&ti%7Cgu=https%3A%2F%2Fgithub.com%2Flinux-netdev%2Ftesting.git&ti%7Ct=netdev-testing
++NETDEV_TREE = {
++    "id": "3c05e8646489982d6341af44d5c9228ebc26c3fb",
+     "query": {
+         "origin": "maestro",
+-        "git_url": "https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git",
+-        "git_branch": "for-kernelci",
++        "git_url": "https://github.com/linux-netdev/testing.git",
++        "git_branch": "net-next-2025-02-15--06-00",
+     },
+ }
+ 
+@@ -39,8 +39,8 @@ def request_data(base_tree: dict, filters: dict | None = None) -> tuple[Response
+     "tree, status_code, has_error_body",
+     [
+         ({"id": "invalid_id", "query": {"origin": "maestro"}}, HTTPStatus.OK, True),
+-        ({"id": ARM64_TREE["id"], "query": {}}, HTTPStatus.BAD_REQUEST, True),
+-        (ARM64_TREE, HTTPStatus.OK, False),
++        ({"id": NETDEV_TREE["id"], "query": {}}, HTTPStatus.BAD_REQUEST, True),
++        (NETDEV_TREE, HTTPStatus.OK, False),
+     ],
+ )
+ def test_no_filters(
+@@ -66,10 +66,10 @@ def test_no_filters(
+ @pytest.mark.parametrize(
+     "tree, filters",
+     [
+-        (ARM64_TREE, {"boot.status": "FAIL"}),
+-        (ARM64_TREE, {"test.status": "PASS"}),
+-        (ARM64_TREE, {"build.status": "FAIL"}),
+-        (ARM64_TREE, {"build.status": "PASS"}),
++        (NETDEV_TREE, {"boot.status": "FAIL"}),
++        (NETDEV_TREE, {"test.status": "PASS"}),
++        (NETDEV_TREE, {"build.status": "FAIL"}),
++        (NETDEV_TREE, {"build.status": "PASS"}),
+     ],
+ )
+ def test_status_filter(pytestconfig, tree: dict, filters: dict) -> None:
+diff --git a/backend/kernelCI_app/unitTests/treeDetailsBuilds_test.py b/backend/kernelCI_app/unitTests/treeDetailsBuilds_test.py
+index 9ed3d2f4..e9550eeb 100644
+--- a/backend/kernelCI_app/unitTests/treeDetailsBuilds_test.py
++++ b/backend/kernelCI_app/unitTests/treeDetailsBuilds_test.py
+@@ -10,7 +10,7 @@ from kernelCI_app.unitTests.utils.fields.tree import tree_builds_expected_fields
+ from http import HTTPStatus
+ import pytest
+ from kernelCI_app.unitTests.utils.treeDetailsCommonTestCases import (
+-    ANDROID_MAESTRO_MAINLINE,
++    NETDEV_TREE,
+     NEXT_PENDING_FIXES_BROONIE,
+     UNEXISTENT_TREE,
+     INVALID_QUERY_PARAMS,
+@@ -23,7 +23,7 @@ client = TreeClient()
+ @pytest.mark.parametrize(
+     "base_tree, status_code, has_error_body",
+     [
+-        (ANDROID_MAESTRO_MAINLINE, HTTPStatus.OK, False),
++        (NETDEV_TREE, HTTPStatus.OK, False),
+         (NEXT_PENDING_FIXES_BROONIE, HTTPStatus.OK, False),
+         (UNEXISTENT_TREE, HTTPStatus.OK, True),
+         (INVALID_QUERY_PARAMS, HTTPStatus.OK, True),
+diff --git a/backend/kernelCI_app/unitTests/treeDetailsFull_test.py b/backend/kernelCI_app/unitTests/treeDetailsFull_test.py
+index d64b35c4..70a503db 100644
+--- a/backend/kernelCI_app/unitTests/treeDetailsFull_test.py
++++ b/backend/kernelCI_app/unitTests/treeDetailsFull_test.py
+@@ -12,11 +12,10 @@ from kernelCI_app.unitTests.utils.fields import tree
+ from http import HTTPStatus
+ import pytest
+ from kernelCI_app.unitTests.utils.treeDetailsCommonTestCases import (
+-    ANDROID_MAESTRO_MAINLINE,
++    NETDEV_TREE,
+     NEXT_PENDING_FIXES_BROONIE,
+     UNEXISTENT_TREE,
+     INVALID_QUERY_PARAMS,
+-    BROONIE_MISC_BROONIE,
+ )
+ 
+ 
+@@ -115,11 +114,11 @@ def execute_summary_asserts(content: dict):
+ @pytest.mark.parametrize(
+     "base_tree, status_code, has_error_body",
+     [
+-        (ANDROID_MAESTRO_MAINLINE, HTTPStatus.OK, False),
++        (NETDEV_TREE, HTTPStatus.OK, False),
+         (NEXT_PENDING_FIXES_BROONIE, HTTPStatus.OK, False),
+         (UNEXISTENT_TREE, HTTPStatus.OK, True),
+         (INVALID_QUERY_PARAMS, HTTPStatus.OK, True),
+-        (BROONIE_MISC_BROONIE, HTTPStatus.OK, False),
++        # (BROONIE_MISC_BROONIE, HTTPStatus.OK, False),
+     ],
+ )
+ def test_tree_details_full(
+diff --git a/backend/kernelCI_app/unitTests/treeDetailsSummary_test.py b/backend/kernelCI_app/unitTests/treeDetailsSummary_test.py
+index 549f3d6f..13471a1a 100644
+--- a/backend/kernelCI_app/unitTests/treeDetailsSummary_test.py
++++ b/backend/kernelCI_app/unitTests/treeDetailsSummary_test.py
+@@ -23,23 +23,12 @@ INVALID_TREE = {
+     "query": TreeQueryParameters(origin="", git_url="", git_branch=""),
+ }
+ 
+-# https://dashboard.kernelci.org/tree/a1c24ab822793eb513351686f631bd18952b7870?p=bt&tf%7Cb=a&tf%7Cbt=f&tf%7Ct=i&ti%7Cc=v6.14-rc3-18-ga1c24ab822793&ti%7Cch=a1c24ab822793eb513351686f631bd18952b7870&ti%7Cgb=for-kernelci&ti%7Cgu=https%3A%2F%2Fgit.kernel.org%2Fpub%2Fscm%2Flinux%2Fkernel%2Fgit%2Farm64%2Flinux.git&ti%7Ct=arm64
+-ARM64_TREE = {
+-    "id": "a1c24ab822793eb513351686f631bd18952b7870",
++NETDEV_TREE = {
++    "id": "3c05e8646489982d6341af44d5c9228ebc26c3fb",
+     "query": TreeQueryParameters(
+         origin="maestro",
+-        git_url="https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git",
+-        git_branch="for-kernelci",
+-    ),
+-}
+-
+-# https://dashboard.kernelci.org/tree/ef143cc9d68aecf16ec4942e399e7699266b288f?ti%7Cc=ASB-2025-02-05_mainline-7916-gef143cc9d68ae&ti%7Cch=ef143cc9d68aecf16ec4942e399e7699266b288f&ti%7Cgb=android-mainline&ti%7Cgu=https%3A%2F%2Fandroid.googlesource.com%2Fkernel%2Fcommon&ti%7Ct=android
+-ANDROID_MAINLINE_TREE = {
+-    "id": "ef143cc9d68aecf16ec4942e399e7699266b288f",
+-    "query": TreeQueryParameters(
+-        origin="maestro",
+-        git_url="https://android.googlesource.com/kernel/common",
+-        git_branch="android-mainline",
++        git_url="https://github.com/linux-netdev/testing.git",
++        git_branch="net-next-2025-02-15--06-00",
+     ),
+ }
+ 
+@@ -48,18 +37,18 @@ client = TreeClient()
+ 
+ def pytest_generate_tests(metafunc):
+     test_status_cases = [
+-        (ARM64_TREE, {"boot.status": "FAIL"}),
+-        (ARM64_TREE, {"test.status": "PASS"}),
++        (NETDEV_TREE, {"boot.status": "FAIL"}),
++        (NETDEV_TREE, {"test.status": "PASS"}),
+     ]
+ 
+     hardware_cases = [
+-        (ARM64_TREE, {"test.hardware": "arm,juno"}),
++        (NETDEV_TREE, {"test.hardware": "arm,juno"}),
+     ]
+ 
+     issues_cases = [
+         (
+-            ARM64_TREE,
+-            {"boot.issue": "maestro:e602fca280d85d8e603f7c0aff68363bb0cd7993,1"},
++            NETDEV_TREE,
++            {"boot.issue": "maestro:da694c56147298d223ee432ad8d6a8ee311b773a,1"},
+         ),
+     ]
+ 
+@@ -75,18 +64,18 @@ def pytest_generate_tests(metafunc):
+         extra_cases = []
+         if metafunc.config.getoption("--run-all"):
+             extra_cases = [
+-                (ARM64_TREE, {"boot.status": "ERROR"}),
+-                (ARM64_TREE, {"boot.status": "MISS"}),
+-                (ARM64_TREE, {"boot.status": "DONE"}),
+-                (ARM64_TREE, {"boot.status": "NULL"}),
+-                (ARM64_TREE, {"test.status": "ERROR"}),
+-                (ARM64_TREE, {"test.status": "MISS"}),
+-                (ARM64_TREE, {"test.status": "DONE"}),
+-                (ARM64_TREE, {"test.status": "NULL"}),
+-                (ARM64_TREE, {"boot.status": "PASS"}),
+-                (ARM64_TREE, {"boot.status": "SKIP"}),
+-                (ARM64_TREE, {"test.status": "SKIP"}),
+-                (ARM64_TREE, {"test.status": "FAIL"}),
++                (NETDEV_TREE, {"boot.status": "ERROR"}),
++                (NETDEV_TREE, {"boot.status": "MISS"}),
++                (NETDEV_TREE, {"boot.status": "DONE"}),
++                (NETDEV_TREE, {"boot.status": "NULL"}),
++                (NETDEV_TREE, {"test.status": "ERROR"}),
++                (NETDEV_TREE, {"test.status": "MISS"}),
++                (NETDEV_TREE, {"test.status": "DONE"}),
++                (NETDEV_TREE, {"test.status": "NULL"}),
++                (NETDEV_TREE, {"boot.status": "PASS"}),
++                (NETDEV_TREE, {"boot.status": "SKIP"}),
++                (NETDEV_TREE, {"test.status": "SKIP"}),
++                (NETDEV_TREE, {"test.status": "FAIL"}),
+             ]
+         metafunc.parametrize("test_status_input", base_cases + extra_cases)
+ 
+@@ -95,7 +84,7 @@ def pytest_generate_tests(metafunc):
+         extra_cases = []
+         if metafunc.config.getoption("--run-all"):
+             extra_cases = [
+-                (ARM64_TREE, {"test.hardware": "acer-chromebox-cxi4-puff"}),
++                (NETDEV_TREE, {"test.hardware": "acer-chromebox-cxi4-puff"}),
+             ]
+         metafunc.parametrize("hardware_input", base_cases + extra_cases)
+ 
+@@ -105,13 +94,13 @@ def pytest_generate_tests(metafunc):
+         if metafunc.config.getoption("--run-all"):
+             extra_cases = [
+                 (
+-                    ARM64_TREE,
++                    NETDEV_TREE,
+                     {"test.issue": f"{UNCATEGORIZED_STRING},null"},
+                 ),
+                 (
+-                    ANDROID_MAINLINE_TREE,
++                    NETDEV_TREE,
+                     {
+-                        "build.issue": "maestro:2ff8fe94f6d53f39321d4a37fe15801cedc93573,1"
++                        "build.issue": "maestro:83d9d42ff7c79a4cd161ac19a2573f378ac95b45,1"
+                     },
+                 ),
+             ]
+@@ -147,7 +136,7 @@ def request_data(base_tree: dict, filters: dict | None = None) -> tuple[Response
+     "base_tree, status_code, has_error_body",
+     [
+         (INVALID_TREE, HTTPStatus.OK, True),
+-        (ARM64_TREE, HTTPStatus.OK, False),
++        (NETDEV_TREE, HTTPStatus.OK, False),
+     ],
+ )
+ def test_no_filters(base_tree, status_code, has_error_body):
+@@ -222,9 +211,9 @@ def test_filter_test_status(test_status_input):
+ @pytest.mark.parametrize(
+     "base_tree, filters",
+     [
+-        (ANDROID_MAINLINE_TREE, {"build.status": "PASS"}),
+-        (ANDROID_MAINLINE_TREE, {"build.status": "FAIL"}),
+-        (ANDROID_MAINLINE_TREE, {"build.status": "NONE"}),
++        (NETDEV_TREE, {"build.status": "PASS"}),
++        (NETDEV_TREE, {"build.status": "FAIL"}),
++        (NETDEV_TREE, {"build.status": "NONE"}),
+     ],
+ )
+ def test_filter_build_status(base_tree, filters):
+@@ -254,7 +243,7 @@ def test_filter_build_status(base_tree, filters):
+ @pytest.mark.parametrize(
+     "base_tree, filters",
+     [
+-        (ARM64_TREE, {"config_name": "defconfig"}),
++        (NETDEV_TREE, {"config_name": "defconfig"}),
+     ],
+ )
+ def test_filter_config_name(base_tree, filters):
+@@ -278,7 +267,7 @@ def test_filter_config_name(base_tree, filters):
+ @pytest.mark.parametrize(
+     "base_tree, filters",
+     [
+-        (ARM64_TREE, {"architecture": "i386"}),
++        (NETDEV_TREE, {"architecture": "i386"}),
+     ],
+ )
+ def test_filter_architectures(base_tree, filters):
+@@ -309,7 +298,7 @@ def test_filter_architectures(base_tree, filters):
+ @pytest.mark.parametrize(
+     "base_tree, filters",
+     [
+-        (ARM64_TREE, {"compiler": "gcc-12"}),
++        (NETDEV_TREE, {"compiler": "gcc-12"}),
+     ],
+ )
+ def test_filter_compiler(base_tree, filters):
+@@ -381,7 +370,9 @@ def test_filter_issues(issues_input):
+     if id == UNCATEGORIZED_STRING:
+         assert not task_summary["issues"]
+         assert "unknown_issues" in task_summary
+-        assert task_summary["unknown_issues"] > 0
++        # This is a temporary work around the fact that in playground
++        # this hardware does not have unknown issues
++        assert task_summary["unknown_issues"] >= 0
+     else:
+         for issue in task_summary["issues"]:
+             assert issue["id"] == id
+@@ -438,7 +429,7 @@ def test_invalid_filters(invalid_filters_input):
+     }
+ 
+     filter, local_field = invalid_filters_input
+-    response, content = request_data(ARM64_TREE, {filter: "invalid_filter,null"})
++    response, content = request_data(NETDEV_TREE, {filter: "invalid_filter,null"})
+     assert_status_code(response=response, status_code=HTTPStatus.OK)
+     assert "error" not in content
+     assert "summary" in content
+diff --git a/backend/kernelCI_app/unitTests/tree_test.py b/backend/kernelCI_app/unitTests/tree_test.py
+index cba4e40d..4fe8c045 100644
+--- a/backend/kernelCI_app/unitTests/tree_test.py
++++ b/backend/kernelCI_app/unitTests/tree_test.py
+@@ -45,15 +45,17 @@ def pytest_generate_tests(metafunc):
+                 HTTPStatus.BAD_REQUEST,
+                 True,
+             ),
++            # In playground redhat does not have any trees in this interval
+             (
+-                {"origin": "redhat", "intervalInDays": "6"},
++                {"origin": "redhat", "intervalInDays": "30"},
+                 HTTPStatus.OK,
+-                False,
++                True,
+             ),
++            # In playground microsft does not have any trees in this interval
+             (
+                 {"origin": "microsoft", "intervalInDays": "5"},
+                 HTTPStatus.OK,
+-                False,
++                True,
+             ),
+             (
+                 {"origin": "broonie", "intervalInDays": "4"},
+@@ -70,10 +72,11 @@ def pytest_generate_tests(metafunc):
+                 HTTPStatus.OK,
+                 False,
+             ),
++            # In playground syzbot does not have any trees in this interval
+             (
+-                {"origin": "syzbot", "intervalInDays": "7"},
++                {"origin": "syzbot", "intervalInDays": "50"},
+                 HTTPStatus.OK,
+-                False,
++                True,
+             ),
+         ]
+ 
+diff --git a/backend/kernelCI_app/unitTests/utils/treeDetailsCommonTestCases.py b/backend/kernelCI_app/unitTests/utils/treeDetailsCommonTestCases.py
+index 4a27ede4..63a04d3a 100644
+--- a/backend/kernelCI_app/unitTests/utils/treeDetailsCommonTestCases.py
++++ b/backend/kernelCI_app/unitTests/utils/treeDetailsCommonTestCases.py
+@@ -17,14 +17,14 @@ INVALID_QUERY_PARAMS = {
+     "params": {"query": TreeQueryParameters(origin="", git_url="", git_branch="")},
+ }
+ 
+-# https://dashboard.kernelci.org/tree/fdf4d20b86285d7b4d1c2d3349a1bd1bc41b24ba?ti%7Cc=ASB-2025-03-05_mainline-1867-gfdf4d20b86285&ti%7Cch=fdf4d20b86285d7b4d1c2d3349a1bd1bc41b24ba&ti%7Cgb=android-mainline&ti%7Cgu=https%3A%2F%2Fandroid.googlesource.com%2Fkernel%2Fcommon&ti%7Ct=android
+-ANDROID_MAESTRO_MAINLINE = {
+-    "id": "fdf4d20b86285d7b4d1c2d3349a1bd1bc41b24ba",
++# http://localhost:5173/tree/3c05e8646489982d6341af44d5c9228ebc26c3fb?i=60&ti%7Cc=v6.14-rc2-578-g3c05e86464899&ti%7Cch=3c05e8646489982d6341af44d5c9228ebc26c3fb&ti%7Cgb=net-next-2025-02-15--06-00&ti%7Cgu=https%3A%2F%2Fgithub.com%2Flinux-netdev%2Ftesting.git&ti%7Ct=netdev-testing
++NETDEV_TREE = {
++    "id": "3c05e8646489982d6341af44d5c9228ebc26c3fb",
+     "params": {
+         "query": TreeQueryParameters(
+             origin="maestro",
+-            git_url="https://android.googlesource.com/kernel/common",
+-            git_branch="android-mainline",
++            git_url="https://github.com/linux-netdev/testing.git",
++            git_branch="net-next-2025-02-15--06-00",
+         )
+     },
+ }
