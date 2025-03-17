@@ -44,7 +44,7 @@ def kcidb_new_issues():
             ROW_NUMBER() OVER (PARTITION BY i.id ORDER BY i.version DESC) AS rn
         FROM
             public.issues i
-        WHERE i._timestamp >= NOW() - INTERVAL '4 days'
+        WHERE i._timestamp >= NOW() - INTERVAL %(interval)s
         ),
 
         highest_version AS (
