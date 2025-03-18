@@ -15,7 +15,7 @@ const ButtonOpenLogSheet = ({
     onClick={setSheetToLog}
   >
     <FormattedMessage id="global.viewLog" />
-    <SearchIcon />
+    <SearchIcon className="text-blue" />
   </SheetTrigger>
 );
 

@@ -17,7 +17,8 @@ import type { TestHistory, TIndividualTest } from '@/types/general';
 import { DumbTableHeader, TableHead } from '@/components/Table/BaseTable';
 import { TableBody } from '@/components/ui/table';
 
-import { useTestDetails, useTestIssues } from '@/api/testDetails';
+import { useTestIssues } from '@/api/testDetails';
+import { useLogData } from '@/hooks/useLogData';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 
 import { TableRowMemoized } from '@/components/Table/TableComponents';
@@ -145,8 +146,9 @@ export function IndividualTestsTable({
     });
   }, [setLog, originalItems.length]);
 
-  const { data: dataTest, isLoading } = useTestDetails(
+  const { data: logData, isLoading } = useLogData(
     originalItems.length > 0 ? originalItems[currentLog ?? 0].id : '',
+    'test',
   );
 
   const navigationLogsActions = useMemo(
@@ -168,8 +170,8 @@ export function IndividualTestsTable({
   );
 
   const currentLinkProps = useMemo(() => {
-    return getRowLink(dataTest?.id ?? '');
-  }, [dataTest?.id, getRowLink]);
+    return getRowLink(logData?.id ?? '');
+  }, [logData?.id, getRowLink]);
 
   const {
     data: issues,
@@ -182,8 +184,7 @@ export function IndividualTestsTable({
   return (
     <WrapperTableWithLogSheet
       currentLog={currentLog}
-      logExcerpt={dataTest?.log_excerpt}
-      logUrl={dataTest?.log_url}
+      logData={logData}
       navigationLogsActions={navigationLogsActions}
       onOpenChange={onOpenChange}
       currentLinkProps={currentLinkProps}

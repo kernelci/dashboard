@@ -32,7 +32,8 @@ import TableStatusFilter from '@/components/Table/TableStatusFilter';
 
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
-import { useTestDetails, useTestIssues } from '@/api/testDetails';
+import { useTestIssues } from '@/api/testDetails';
+import { useLogData } from '@/hooks/useLogData';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 import { usePaginationState } from '@/hooks/usePaginationState';
 
@@ -350,8 +351,9 @@ export function BootsTable({
     });
   }, [setLog, sortedItems.length]);
 
-  const { data: dataTest, isLoading } = useTestDetails(
+  const { data: logData, isLoading } = useLogData(
     sortedItems.length > 0 ? sortedItems[currentLog ?? 0].id : '',
+    'test',
   );
 
   const navigationLogsActions = useMemo(
@@ -373,8 +375,8 @@ export function BootsTable({
   );
 
   const currentLinkProps = useMemo(() => {
-    return getRowLink(dataTest?.id ?? '');
-  }, [dataTest?.id, getRowLink]);
+    return getRowLink(logData?.id ?? '');
+  }, [logData?.id, getRowLink]);
 
   const {
     data: issues,
@@ -387,8 +389,7 @@ export function BootsTable({
   return (
     <WrapperTableWithLogSheet
       currentLog={currentLog}
-      logExcerpt={dataTest?.log_excerpt}
-      logUrl={dataTest?.log_url}
+      logData={logData}
       navigationLogsActions={navigationLogsActions}
       onOpenChange={onOpenChange}
       currentLinkProps={currentLinkProps}

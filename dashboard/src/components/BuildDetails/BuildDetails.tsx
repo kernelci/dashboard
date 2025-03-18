@@ -49,6 +49,7 @@ import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
 
 import MemoizedLinkItem from '@/components/DetailsLink';
 import { LinkIcon } from '@/components/Icons/Link';
+import { processLogData } from '@/hooks/useLogData';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -72,6 +73,12 @@ const BuildDetails = ({
     status: issueStatus,
     error: issueError,
   } = useBuildIssues(buildId);
+  const logData = useMemo(() => {
+    if (!data) {
+      return undefined;
+    }
+    return processLogData(buildId, { type: 'build', ...data });
+  }, [buildId, data]);
 
   const { logOpen } = useSearch({ from: '/_main/build/$buildId' });
   const navigate = useNavigate({ from: '/build/$buildId' });
@@ -308,8 +315,7 @@ const BuildDetails = ({
               type={sheetType}
               jsonContent={jsonContent}
               hideIssueSection
-              logUrl={data?.log_url}
-              logExcerpt={data?.log_excerpt}
+              logData={logData}
             />
           </Sheet>
         </ErrorBoundary>

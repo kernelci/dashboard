@@ -15,14 +15,14 @@ import { LogViewerCard } from '@/components/Log/LogViewerCard';
 import { LogExcerpt } from '@/components/Log/LogExcerpt';
 import IssueSection from '@/components/Issue/IssueSection';
 import type { TIssue } from '@/types/issues';
+import type { LogData } from '@/hooks/useLogData';
 
 export type SheetType = 'log' | 'json';
 
 interface ILogSheet {
   type?: SheetType;
   jsonContent?: IJsonContent;
-  logExcerpt?: string;
-  logUrl?: string;
+  logData?: LogData;
   navigationLogsActions?: TNavigationLogActions;
   currentLinkProps?: LinkProps;
   issues?: TIssue[];
@@ -39,8 +39,7 @@ export interface IJsonContent {
 export const LogOrJsonSheetContent = ({
   type = 'log',
   jsonContent,
-  logExcerpt,
-  logUrl,
+  logData,
   navigationLogsActions,
   currentLinkProps,
   issues,
@@ -59,13 +58,13 @@ export const LogOrJsonSheetContent = ({
       }
     >
       {type === 'log' ? (
-        <>
+        <div className="flex h-screen flex-col">
           <LogViewerCard
-            logUrl={logUrl}
+            logData={logData}
             isLoading={navigationLogsActions?.isLoading}
           />
           <LogExcerpt
-            logExcerpt={logExcerpt}
+            logExcerpt={logData?.log_excerpt}
             isLoading={navigationLogsActions?.isLoading}
             variant="default"
           />
@@ -78,7 +77,7 @@ export const LogOrJsonSheetContent = ({
               variant="warning"
             />
           )}
-        </>
+        </div>
       ) : (
         <ReactJsonView
           src={jsonContent?.src ?? {}}
