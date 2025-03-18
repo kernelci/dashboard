@@ -135,6 +135,7 @@ CRONJOBS = [
     ("0 0 * * 0", "django.core.management.call_command", ["treeproof"])
 ]
 
+GMAIL_API_TOKEN = get_json_env_var("GMAIL_API_TOKEN", "")
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
