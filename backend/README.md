@@ -58,6 +58,22 @@ subset of tests cases is run to save time, especially during push. To run all te
 poetry run pytest --run-all
 ```
 
+## Cron jobs
+
+We have support for cron jobs using django-crontab. To set up cron jobs, edit the `CRONJOBS` variable in /backend/kernelCI/settings.py
+
+To run said cron jobs locally, execute
+```poetry run ./manage.py crontab add```
+You don't need to run the backend or server for those cron jobs to work, they will be run in your machine.
+You can also use other args such as `show` to show the cron jobs and `remove` to remove them.
+
+These cron jobs will also be automatically executed from the backend container if you are running with docker.
+You can check that the cron jobs are listed inside the docker container with
+```docker exec -it dashboard-backend-1 crontab -l```
+or
+```docker exec -it dashboard-backend-1 poetry run ./manage.py crontab show```
+
+
 # Deploy instructions
 
 To check if it is ready for a deploy you can run 
