@@ -83,7 +83,7 @@ const Code = ({
       {variant === 'log-viewer' && statsElement}
       <pre
         className={cn(
-          'w-full max-w-[100vw] overflow-x-auto rounded-md bg-[#DDDDDD] p-4 font-mono text-sm leading-4 text-[#767676]',
+          'max-h-[80%] w-full max-w-[100vw] overflow-auto rounded-md bg-[#DDDDDD] p-4 font-mono text-sm leading-4 text-[#767676]',
           className,
         )}
       >
@@ -237,7 +237,7 @@ const CodeBlock = ({
 
   return (
     <>
-      <div className="h-full">
+      <div className="min-h-[300px]">
         <div className="pl-3">
           {variant === 'log-viewer' && (
             <h3 className="py-1 text-2xl font-bold">
@@ -273,9 +273,6 @@ const CodeBlock = ({
         )}
 
         <MemoizedCode
-          className={cn('', {
-            'max-h-[425px]': variant !== 'log-viewer',
-          })}
           variant={variant}
           parsedCode={
             typeof parsedCode === 'string'

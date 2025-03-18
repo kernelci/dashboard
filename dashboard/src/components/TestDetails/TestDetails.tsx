@@ -58,6 +58,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import MemoizedLinkItem from '@/components/DetailsLink';
+import { processLogData } from '@/hooks/useLogData';
 
 import { StatusHistoryItem } from './StatusHistoryItem';
 
@@ -464,6 +465,13 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
       : undefined,
   );
 
+  const logData = useMemo(() => {
+    if (!data) {
+      return undefined;
+    }
+    return processLogData(testId, { type: 'test', ...data });
+  }, [testId, data]);
+
   const [sheetType, setSheetType] = useState<SheetType>('log');
   const [jsonContent, setJsonContent] = useState<IJsonContent>();
   const logOpenChange = useCallback(
@@ -516,9 +524,8 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
           <LogOrJsonSheetContent
             type={sheetType}
             jsonContent={jsonContent}
-            logUrl={data?.log_url}
+            logData={logData}
             hideIssueSection
-            logExcerpt={data?.log_excerpt}
           />
         </Sheet>
       </QuerySwitcher>

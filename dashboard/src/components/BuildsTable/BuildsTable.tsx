@@ -33,7 +33,8 @@ import type { TableKeys } from '@/utils/constants/tables';
 
 import { TableRowMemoized } from '@/components/Table/TableComponents';
 
-import { useBuildDetails, useBuildIssues } from '@/api/buildDetails';
+import { useBuildIssues } from '@/api/buildDetails';
+import { useLogData } from '@/hooks/useLogData';
 
 import { getBuildStatusGroup } from '@/utils/status';
 
@@ -247,8 +248,9 @@ export function BuildsTable({
     });
   }, [setLog, sortedItems.length]);
 
-  const { data: dataBuildCount, isLoading } = useBuildDetails(
+  const { data: logData, isLoading } = useLogData(
     sortedItems.length > 0 ? sortedItems[currentLog ?? 0]?.id : '',
+    'build',
   );
 
   const navigationLogsActions = useMemo(
@@ -284,10 +286,7 @@ export function BuildsTable({
   return (
     <WrapperTableWithLogSheet
       currentLog={currentLog}
-      logExcerpt={dataBuildCount?.log_excerpt}
-      logUrl={
-        sortedItems.length > 0 ? sortedItems[currentLog ?? 0]?.buildLogs : ''
-      }
+      logData={logData}
       navigationLogsActions={navigationLogsActions}
       onOpenChange={onOpenChange}
       currentLinkProps={currentLinkProps}

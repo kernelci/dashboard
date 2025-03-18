@@ -10,12 +10,12 @@ import { LogOrJsonSheetContent } from '@/components/Sheet/LogOrJsonSheetContent'
 import type { TNavigationLogActions } from '@/components/Sheet/WrapperSheetContent';
 import { cn } from '@/lib/utils';
 import type { TIssue } from '@/types/issues';
+import type { LogData } from '@/hooks/useLogData';
 
 interface TableWithLogSheetProps {
   currentLog?: number;
   onOpenChange?: () => void;
-  logExcerpt?: string;
-  logUrl?: string;
+  logData: LogData;
   navigationLogsActions?: TNavigationLogActions;
   currentLinkProps: LinkProps;
   issues?: TIssue[];
@@ -27,8 +27,7 @@ interface TableWithLogSheetProps {
 const WrapperTableWithLogSheet = ({
   children,
   currentLog,
-  logExcerpt,
-  logUrl,
+  logData,
   navigationLogsActions,
   onOpenChange,
   currentLinkProps,
@@ -43,8 +42,7 @@ const WrapperTableWithLogSheet = ({
 
       <Sheet open={typeof currentLog === 'number'} onOpenChange={onOpenChange}>
         <LogOrJsonSheetContent
-          logExcerpt={logExcerpt}
-          logUrl={logUrl}
+          logData={logData}
           navigationLogsActions={navigationLogsActions}
           currentLinkProps={currentLinkProps}
           issues={issues}

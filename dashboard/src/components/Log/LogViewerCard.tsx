@@ -1,21 +1,53 @@
-import { FormattedMessage } from 'react-intl';
-import { LuFileJson } from 'react-icons/lu';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useMemo, type JSX } from 'react';
 
 import { Link } from '@tanstack/react-router';
 
-import BaseCard from '@/components/Cards/BaseCard';
+import { SearchIcon } from '@/components/Icons/SearchIcon';
+import { StatusIcon } from '@/components/Icons/StatusIcons';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
+
+import type { LogData } from '@/hooks/useLogData';
+import { valueOrEmpty } from '@/lib/string';
 
 interface ILogViewerCard {
   isLoading?: boolean;
-  logUrl?: string;
+  logData?: LogData;
+  variant?: 'full' | 'modal';
 }
+
+const getTreeBranchHash = (
+  treeName?: string,
+  branch?: string,
+  commitHash?: string,
+): string | undefined => {
+  if (!treeName && !branch && !commitHash) {
+    return undefined;
+  }
+
+  let result = [treeName, branch].filter(Boolean).join('/');
+  if (commitHash) {
+    result = result ? `${result} • ${commitHash}` : commitHash;
+  }
+  return result;
+};
 
 export const LogViewerCard = ({
   isLoading,
-  logUrl,
+  logData,
+  variant = 'modal',
 }: ILogViewerCard): JSX.Element => {
+  const { formatMessage } = useIntl();
+
+  const logUrl = logData?.log_url;
+  const itemId = logData?.id;
+  const itemType = logData?.type;
+  const hardware = valueOrEmpty(
+    logData?.hardware,
+    formatMessage({ id: 'global.unknown' }),
+  );
+
   const fileName = useMemo(() => {
     try {
       return new URL(logUrl ?? '').pathname.split('/').pop();
@@ -24,39 +56,73 @@ export const LogViewerCard = ({
       return logUrl ?? '';
     }
   }, [logUrl]);
+
+  const linkComponent = useMemo(() => {
+    if (logUrl) {
+      return (
+        <>
+          <Link
+            to="/log-viewer"
+            className="text-blue flex items-center gap-1 underline transition hover:brightness-125"
+            search={s => ({
+              url: logUrl,
+              itemId: itemId,
+              type: itemType,
+              origin: s.origin,
+            })}
+            state={s => s}
+          >
+            <FormattedMessage
+              id="logViewer.viewFullLog"
+              values={{ fileName }}
+            />
+            <div className="flex w-10 justify-center">
+              <SearchIcon className="text-blue w-full" />
+            </div>
+          </Link>
+        </>
+      );
+    } else {
+      return <FormattedMessage id="logSheet.noLogFound" />;
+    }
+  }, [logUrl, itemId, itemType, fileName]);
+
   return (
-    <BaseCard
-      className="gap-0"
-      title={<FormattedMessage id="global.fullLogs" />}
-    >
-      <div className="p-4 text-lg font-medium">
+    <div className="gap-0">
+      <div className="flex items-start justify-between p-4 text-lg">
         {isLoading ? (
           <FormattedMessage id="global.loading" />
         ) : (
           <>
-            {logUrl ? (
-              <>
-                <Link
-                  to="/log-viewer"
-                  className="flex items-center gap-1 underline transition hover:brightness-125"
-                  search={s => ({ url: logUrl ?? '', origin: s.origin })}
-                  title="Log Viewer"
-                >
-                  <FormattedMessage
-                    id="logViewer.viewFullLog"
-                    values={{ fileName }}
-                  />
-                  <div className="flex w-10 justify-center">
-                    <LuFileJson className="text-blue w-full" />
-                  </div>
-                </Link>
-              </>
-            ) : (
-              <FormattedMessage id="logSheet.noLogFound" />
-            )}
+            <div>
+              <span className="font-medium">
+                {getTreeBranchHash(
+                  logData?.tree_name,
+                  logData?.git_repository_branch,
+                  logData?.git_commit_hash,
+                )}
+              </span>
+              <div className="mb-3 text-sm">
+                <FormattedMessage
+                  id="title.hardwareDetails"
+                  values={{
+                    hardwareName: `${hardware} (${logData?.architecture})`,
+                  }}
+                />
+              </div>
+              {variant === 'modal' && linkComponent}
+            </div>
+            <Tooltip>
+              <TooltipTrigger>
+                <div className="flex max-w-max flex-row items-center gap-2 rounded-md bg-gray-200 p-3">
+                  <StatusIcon status={logData?.status} /> {logData?.title}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>{logData?.status}</TooltipContent>
+            </Tooltip>
           </>
         )}
       </div>
-    </BaseCard>
+    </div>
   );
 };
