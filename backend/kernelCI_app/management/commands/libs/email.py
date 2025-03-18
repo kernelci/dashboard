@@ -11,8 +11,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-
-TOKEN_FILE = "gmail_api_token.json"
+from django.conf import settings
 
 
 def gmail_setup_service(credentials_file):
@@ -22,8 +21,8 @@ def gmail_setup_service(credentials_file):
     scopes = ["https://mail.google.com/"]
 
     # Load tokens if available
-    if os.path.exists(TOKEN_FILE):
-        creds = Credentials.from_authorized_user_file(TOKEN_FILE, scopes)
+    if os.path.exists(settings.GMAIL_API_TOKEN):
+        creds = Credentials.from_authorized_user_file(settings.GMAIL_API_TOKEN, scopes)
 
     # If there are no valid credentials, initiate a new OAuth flow
     if not creds or not creds.valid:
@@ -40,7 +39,7 @@ def gmail_setup_service(credentials_file):
             creds = flow.run_local_server(port=0)
 
         # Save the credentials for future use
-        with open(TOKEN_FILE, "w") as token:
+        with open(settings.GMAIL_API_TOKEN, "w") as token:
             token.write(creds.to_json())
 
     service = build("gmail", "v1", credentials=creds)
