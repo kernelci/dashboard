@@ -146,6 +146,17 @@ CRONJOBS = [
             "--ignore-recipients",
         ],
     ),
+    (
+        "59 * * * *",
+        "django.core.management.call_command",
+        [
+            "notifications",
+            "--action=new_issues",
+            "--cc=gus@collabora.com",
+            "--send",
+            "--yes",
+        ],
+    ),
 ]
 
 GMAIL_API_TOKEN = get_json_env_var("GMAIL_API_TOKEN", "")
