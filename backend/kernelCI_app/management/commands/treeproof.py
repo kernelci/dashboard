@@ -6,6 +6,14 @@ import os
 from django.conf import settings
 
 
+def process_dict(d):
+    for key, value in d.items():
+        if isinstance(value, dict) and "url" in value:
+            d[key] = value["url"]
+        elif isinstance(value, dict):
+            process_dict(value)
+
+
 class Command(BaseCommand):
     def __init__(self):
         self.maestro_trees = dict()
@@ -50,8 +58,8 @@ class Command(BaseCommand):
             if tree_name not in origin_trees:
                 origin_trees[tree_name] = git_url
 
-    def _merge_trees(self):
-        merged_trees = {}
+    def _merge_trees(self, default_trees: dict = {}):
+        merged_trees = default_trees
 
         for tree, git_url in self.maestro_trees.items():
             tree_in_dict = tree in merged_trees
@@ -78,10 +86,24 @@ class Command(BaseCommand):
         return trees_yml
 
     def handle(self, *args, **options):
+        filepath = os.path.join(settings.BACKEND_DATA_DIR, "trees-name.yaml")
+
+        if os.path.exists(filepath):
+            with open(filepath, "r") as file:
+                trees_from_file = yaml.safe_load(file)
+
+                if trees_from_file is None:
+                    trees_from_file = {}
+                else:
+                    process_dict(trees_from_file)
+                    trees_from_file = trees_from_file["trees"]
+        else:
+            trees_from_file = {}
+
         self._get_trees_proofs()
         self._get_trees_proofs(is_maestro=True)
 
-        merged_dict = self._merge_trees()
+        merged_dict = self._merge_trees(default_trees=trees_from_file)
         formatted_dict = self._format_trees_to_yml_format(merged_dict)
 
         filepath = os.path.join(settings.BACKEND_DATA_DIR, "trees-name.yaml")
