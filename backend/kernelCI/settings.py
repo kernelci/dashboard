@@ -132,7 +132,19 @@ SPECTACULAR_SETTINGS = {
 CRONJOBS = [
     # Example for running tasks that are not commands, uncomment to run for testing
     # ('* * * * *', 'kernelCI_app.tasks.example_task'),
-    ("0 0 * * 0", "django.core.management.call_command", ["treeproof"])
+    ("0 0 * * 0", "django.core.management.call_command", ["treeproof"]),
+    (
+        "40 * * * *",
+        "django.core.management.call_command",
+        [
+            "notifications",
+            "--action=fake_report",
+            "--cc=gus@collabora.com",
+            "--send",
+            "--yes",
+            "--ignore-recipients",
+        ],
+    ),
 ]
 
 GMAIL_API_TOKEN = get_json_env_var("GMAIL_API_TOKEN", "")
