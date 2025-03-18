@@ -107,7 +107,7 @@ class HardwareDetailsTests(APIView):
         try:
             unstable_parse_post_body(instance=self, request=request)
         except ValidationError as e:
-            return Response(data={"error": e.json()}, status=HTTPStatus.BAD_REQUEST)
+            return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
         except json.JSONDecodeError:
             return Response(
                 data={
@@ -174,6 +174,6 @@ class HardwareDetailsTests(APIView):
                 tests=self.tests,
             )
         except ValidationError as e:
-            return Response(data=e.errors(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(valid_response.model_dump())

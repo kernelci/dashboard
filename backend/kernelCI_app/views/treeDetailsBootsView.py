@@ -105,6 +105,6 @@ class TreeDetailsBoots(APIView):
                 boots=self.bootHistory,
             )
         except ValidationError as e:
-            return Response(data=e.errors(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(valid_response.model_dump())

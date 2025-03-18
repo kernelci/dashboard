@@ -52,7 +52,7 @@ class TreeLatest(APIView):
         try:
             parsed_params = TreeLatestPathParameters(tree_name=tree_name, branch=branch)
         except ValidationError as e:
-            return create_api_error_response(error_message=e.json())
+            return Response(data=e.json, status=HTTPStatus.BAD_REQUEST)
 
         tree_not_found_error_message = "Tree not found."
         origin = request.GET.get("origin")
@@ -95,8 +95,6 @@ class TreeLatest(APIView):
         try:
             valid_response = TreeLatestResponse(**response_data)
         except ValidationError as e:
-            return create_api_error_response(
-                error_message=e.json(), status_code=HTTPStatus.INTERNAL_SERVER_ERROR
-            )
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(valid_response.model_dump())

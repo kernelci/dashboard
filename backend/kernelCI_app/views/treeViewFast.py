@@ -97,8 +97,6 @@ class TreeViewFast(APIView):
         try:
             valid_response = TreeListingFastResponse(response_data)
         except ValidationError as e:
-            return create_api_error_response(
-                error_message=e.json(), status_code=HTTPStatus.INTERNAL_SERVER_ERROR
-            )
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(valid_response.model_dump())
