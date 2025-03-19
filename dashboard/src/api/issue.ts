@@ -15,7 +15,6 @@ type IssueListingParams = {
 };
 
 const fetchIssueListing = async (
-  origin: string,
   intervalInDays?: number,
   culpritCode?: boolean,
   culpritHarness?: boolean,

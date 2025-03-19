@@ -102,9 +102,9 @@ const TopBar = (): JSX.Element => {
         <span className="mr-14 text-2xl">
           <TitleName basePath={basePath} />
         </span>
-        {(basePath === 'tree' ||
-          basePath === 'hardware' ||
-          basePath === 'issues') && <OriginSelect basePath={basePath} />}
+        {(basePath === 'tree' || basePath === 'hardware') && (
+          <OriginSelect basePath={basePath} />
+        )}
       </div>
     </div>
   );
