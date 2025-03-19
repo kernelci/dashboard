@@ -435,6 +435,9 @@ def evaluate_test_results(checkout, path):
 
 
 def run_checkout_summary(service, signup_file, email_args):
+    if is_production_instance():
+        return
+
     data = read_yaml_file(signup_file)
     for tree in data["trees"].values():
         if "origin" in tree.keys():
