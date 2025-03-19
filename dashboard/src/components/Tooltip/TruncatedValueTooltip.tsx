@@ -9,9 +9,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './Tooltip';
 export const TruncatedValueTooltip = ({
   value,
   isUrl = false,
+  isClickable = false,
 }: {
   value: string | undefined;
   isUrl?: boolean;
+  isClickable?: boolean;
 }): JSX.Element => {
   if (!value) {
     return <span>{valueOrEmpty(value)}</span>;
@@ -20,7 +22,10 @@ export const TruncatedValueTooltip = ({
   return (
     <Tooltip>
       <TooltipTrigger
-        className={cn('', isUrl ? 'cursor-pointer' : 'cursor-default')}
+        className={cn(
+          '',
+          isClickable || isUrl ? 'cursor-pointer' : 'cursor-default',
+        )}
       >
         {isUrl ? truncateUrl(value) : truncateBigText(value)}
       </TooltipTrigger>

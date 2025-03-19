@@ -56,7 +56,8 @@ export const miscContentHandler = ({
       ) : (
         <TruncatedValueTooltip
           value={stringField}
-          isUrl={isUrlResult || isObjectField}
+          isUrl={isUrlResult}
+          isClickable={isObjectField}
         />
       );
       return true;
