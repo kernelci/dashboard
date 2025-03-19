@@ -115,6 +115,12 @@ const columns: ColumnDef<IssueListingTableItem>[] = [
       ),
   },
   {
+    accessorKey: 'origin',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.origin" />
+    ),
+  },
+  {
     id: 'culprit',
     accessorFn: (original, _): boolean[] => {
       return [
