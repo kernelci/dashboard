@@ -30,3 +30,13 @@ hardware_test_summary = [
     "fail_reasons",
     "failed_platforms",
 ]
+
+hardware_history_checkouts = [
+    "git_commit_hash",
+    "tree_name",
+    "git_repository_branch",
+    "git_repository_url",
+    "git_commit_tags",
+    "git_commit_name",
+    "start_time",
+]
