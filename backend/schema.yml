@@ -2715,10 +2715,13 @@ components:
           $ref: '#/components/schemas/Test__Id'
         status:
           $ref: '#/components/schemas/Test__Status'
+        git_commit_hash:
+          $ref: '#/components/schemas/Checkout__GitCommitHash'
       required:
       - start_time
       - id
       - status
+      - git_commit_hash
       title: TestStatusHistoryItem
       type: object
     TestStatusHistoryResponse:

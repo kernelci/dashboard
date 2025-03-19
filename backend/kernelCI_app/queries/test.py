@@ -68,7 +68,12 @@ def get_test_status_history(
         build__checkout__git_repository_branch=git_repository_branch,
         start_time__lte=current_test_start_time,
         build__config_name=config_name,
-    ).values("start_time", "id", "status")
+    ).values(
+        "start_time",
+        "id",
+        "status",
+        "build__checkout__git_commit_hash",
+    )
 
     if platform is None:
         query = query.filter(environment_misc__platform__isnull=True)

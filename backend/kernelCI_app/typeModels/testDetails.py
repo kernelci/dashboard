@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 from typing_extensions import Annotated
-from pydantic import BaseModel, BeforeValidator
+from pydantic import BaseModel, BeforeValidator, Field
 
 from kernelCI_app.typeModels.databases import (
     Origin,
@@ -59,6 +59,9 @@ class TestStatusHistoryItem(BaseModel):
     start_time: Test__StartTime
     id: Test__Id
     status: Test__Status
+    git_commit_hash: Checkout__GitCommitHash = Field(
+        validation_alias="build__checkout__git_commit_hash"
+    )
 
 
 class TestStatusHistoryResponse(BaseModel):

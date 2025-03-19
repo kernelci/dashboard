@@ -115,6 +115,7 @@ export const messages = {
     'global.github': 'GitHub',
     'global.hardware': 'Hardware',
     'global.hardwares': 'Hardwares',
+    'global.id': 'Id',
     'global.inconclusive': 'Inconclusive',
     'global.inconclusiveCount': 'Inconclusive: {count}',
     'global.info': 'Info',

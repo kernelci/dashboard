@@ -28,6 +28,7 @@ export type TestStatusHistoryItem = {
   start_time: string;
   id: string;
   status: Status;
+  git_commit_hash?: string;
 };
 
 type PossibleRegressionType =
