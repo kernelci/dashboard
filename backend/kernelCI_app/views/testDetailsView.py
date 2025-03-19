@@ -17,13 +17,13 @@ class TestDetails(APIView):
     def get(self, _request, test_id: str) -> Response:
         response = get_test_details_data(test_id=test_id)
 
-        if response is None:
+        if not response:
             return create_api_error_response(
                 error_message="Test not found", status_code=HTTPStatus.OK
             )
 
         try:
-            valid_response = TestDetailsResponse(**response)
+            valid_response = TestDetailsResponse(**response[0])
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 

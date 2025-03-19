@@ -1,4 +1,7 @@
 from typing import Optional
+
+from django.db import connection
+from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.models import Tests
 from kernelCI_app.typeModels.databases import (
     Build__ConfigName,
@@ -10,33 +13,42 @@ from kernelCI_app.typeModels.databases import (
 )
 
 
-def get_test_details_data(*, test_id):
-    return (
-        Tests.objects.filter(id=test_id)
-        .values(
-            "id",
-            "build_id",
-            "status",
-            "path",
-            "log_excerpt",
-            "log_url",
-            "misc",
-            "environment_misc",
-            "start_time",
-            "environment_compatible",
-            "output_files",
-            "build__compiler",
-            "build__architecture",
-            "build__config_name",
-            "build__checkout__git_commit_hash",
-            "build__checkout__git_repository_branch",
-            "build__checkout__git_repository_url",
-            "build__checkout__git_commit_tags",
-            "build__checkout__tree_name",
-            "build__checkout__origin",
-        )
-        .first()
-    )
+def get_test_details_data(*, test_id: str) -> list[dict]:
+    params = {"test_id": test_id}
+
+    query = """
+    SELECT
+        T.ID,
+        T.BUILD_ID,
+        T.STATUS,
+        T.PATH,
+        T.LOG_EXCERPT,
+        T.LOG_URL,
+        T.MISC,
+        T.ENVIRONMENT_MISC,
+        T.START_TIME,
+        T.ENVIRONMENT_COMPATIBLE,
+        T.OUTPUT_FILES,
+        B.COMPILER,
+        B.ARCHITECTURE,
+        B.CONFIG_NAME,
+        C.GIT_COMMIT_HASH,
+        C.GIT_REPOSITORY_BRANCH,
+        C.GIT_REPOSITORY_URL,
+        C.GIT_COMMIT_TAGS,
+        C.TREE_NAME,
+        C.ORIGIN
+    FROM
+        TESTS T
+        LEFT JOIN BUILDS B ON T.BUILD_ID = B.ID
+        LEFT JOIN CHECKOUTS C ON B.CHECKOUT_ID = C.ID
+    WHERE
+        T.ID = %(test_id)s
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return dict_fetchall(cursor)
 
 
 def get_test_status_history(
