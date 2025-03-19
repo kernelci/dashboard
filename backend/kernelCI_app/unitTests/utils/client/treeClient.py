@@ -67,3 +67,14 @@ class TreeClient(BaseClient):
         path = reverse("treeDetailsBuildsView", kwargs={"commit_hash": tree_id})
         url = self.get_endpoint(path=path, query=query.model_dump(), filters=filters)
         return requests.get(url)
+
+    def get_tree_details_boots(
+        self,
+        *,
+        tree_id: str,
+        query: TreeQueryParameters,
+        filters: dict[FilterFields, Any] | None = None,
+    ) -> requests.Response:
+        path = reverse("treeDetailsBootsView", kwargs={"commit_hash": tree_id})
+        url = self.get_endpoint(path=path, query=query.model_dump(), filters=filters)
+        return requests.get(url)
