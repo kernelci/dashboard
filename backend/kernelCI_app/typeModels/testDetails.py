@@ -1,5 +1,6 @@
 from typing import Literal, Optional
-from pydantic import BaseModel, Field
+from typing_extensions import Annotated
+from pydantic import BaseModel, BeforeValidator
 
 from kernelCI_app.typeModels.databases import (
     Origin,
@@ -23,6 +24,7 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitTags,
     Checkout__TreeName,
 )
+from kernelCI_app.utils import validate_str_to_dict
 
 
 class TestDetailsResponse(BaseModel):
@@ -32,28 +34,22 @@ class TestDetailsResponse(BaseModel):
     path: Test__Path
     log_excerpt: Test__LogExcerpt
     log_url: Test__LogUrl
-    misc: Test__Misc
-    environment_misc: Test__EnvironmentMisc
+    misc: Annotated[Test__Misc, BeforeValidator(validate_str_to_dict)]
+    environment_misc: Annotated[
+        Test__EnvironmentMisc, BeforeValidator(validate_str_to_dict)
+    ]
     start_time: Test__StartTime
     environment_compatible: Test__EnvironmentCompatible
-    output_files: Test__OutputFiles
-    compiler: Build__Compiler = Field(validation_alias="build__compiler")
-    architecture: Build__Architecture = Field(validation_alias="build__architecture")
-    config_name: Build__ConfigName = Field(validation_alias="build__config_name")
-    git_commit_hash: Checkout__GitCommitHash = Field(
-        validation_alias="build__checkout__git_commit_hash"
-    )
-    git_repository_branch: Checkout__GitRepositoryBranch = Field(
-        validation_alias="build__checkout__git_repository_branch"
-    )
-    git_repository_url: Checkout__GitRepositoryUrl = Field(
-        validation_alias="build__checkout__git_repository_url"
-    )
-    git_commit_tags: Checkout__GitCommitTags = Field(
-        validation_alias="build__checkout__git_commit_tags"
-    )
-    tree_name: Checkout__TreeName = Field(validation_alias="build__checkout__tree_name")
-    origin: Origin = Field(validation_alias="build__checkout__origin")
+    output_files: Annotated[Test__OutputFiles, BeforeValidator(validate_str_to_dict)]
+    compiler: Build__Compiler
+    architecture: Build__Architecture
+    config_name: Build__ConfigName
+    git_commit_hash: Checkout__GitCommitHash
+    git_repository_branch: Checkout__GitRepositoryBranch
+    git_repository_url: Checkout__GitRepositoryUrl
+    git_commit_tags: Checkout__GitCommitTags
+    tree_name: Checkout__TreeName
+    origin: Optional[Origin]
 
 
 type PossibleRegressionType = Literal["regression", "fixed", "unstable", "pass", "fail"]

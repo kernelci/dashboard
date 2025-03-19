@@ -2574,7 +2574,9 @@ components:
         tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
         origin:
-          $ref: '#/components/schemas/Origin'
+          anyOf:
+          - $ref: '#/components/schemas/Origin'
+          - type: 'null'
       required:
       - id
       - build_id
