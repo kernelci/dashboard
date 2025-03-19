@@ -1,8 +1,10 @@
 from http import HTTPStatus
-from typing import Dict, Optional
+from typing import Optional
+
+from django.http import HttpRequest
 from kernelCI_app.helpers.errorHandling import create_api_error_response
-from kernelCI_app.models import Incidents
 from kernelCI_app.helpers.issueDetails import fetch_latest_issue_version
+from kernelCI_app.queries.issues import get_issue_tests
 from kernelCI_app.typeModels.issueDetails import (
     IssueDetailsPathParameters,
     IssueDetailsQueryParameters,
@@ -15,29 +17,12 @@ from pydantic import ValidationError
 
 
 class IssueDetailsTests(APIView):
-    def _fetch_incidents(self, *, issue_id: str, version: int) -> Optional[Dict]:
-        fields = [
-            "test__id",
-            "test__duration",
-            "test__status",
-            "test__path",
-            "test__start_time",
-            "test__environment_compatible",
-            "test__environment_misc",
-            "test__build__checkout__tree_name",
-            "test__build__checkout__git_repository_branch",
-        ]
-
-        return Incidents.objects.filter(
-            issue_id=issue_id, issue_version=version
-        ).values(*fields)
-
     @extend_schema(
         parameters=[IssueDetailsQueryParameters],
         responses=IssueTestsResponse,
         methods=["GET"],
     )
-    def get(self, _request, issue_id: Optional[str]) -> Response:
+    def get(self, _request: HttpRequest, issue_id: Optional[str]) -> Response:
         try:
             version = _request.GET.get("version")
             parsed_params = IssueDetailsPathParameters(issue_id=issue_id)
@@ -53,7 +38,7 @@ class IssueDetailsTests(APIView):
                 )
             parsed_query.version = version_row["version"]
 
-        tests_data = self._fetch_incidents(
+        tests_data = get_issue_tests(
             issue_id=parsed_params.issue_id, version=parsed_query.version
         )
 

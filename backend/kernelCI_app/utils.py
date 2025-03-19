@@ -88,3 +88,9 @@ def string_to_json(string: str) -> Optional[dict]:
 
 def is_boot(path: str | None) -> bool:
     return path is not None and (path == "boot" or path.startswith("boot."))
+
+
+def validate_str_to_dict(value):
+    if isinstance(value, str):
+        return json.loads(value)
+    return value
