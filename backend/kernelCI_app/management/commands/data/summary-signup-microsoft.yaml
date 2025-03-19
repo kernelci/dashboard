@@ -1,0 +1,26 @@
+trees:
+  mainline:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+    branch: master
+    origin: microsoft
+    always: true
+  next:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+    branch: master
+    origin: microsoft
+  stable-6.12:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
+    branch: linux-6.12.y
+    origin: microsoft
+  stable-6.6:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
+    branch: linux-6.6.y
+    origin: microsoft
+  hyperv-next:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/hyperv/linux.git
+    branch: hyperv-next
+    origin: microsoft
+  hyperv-fixes:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/hyperv/linux.git
+    branch: hyperv-fixes
+    origin: microsoft
