@@ -5,6 +5,7 @@ export type IssueListingItem = IssueKeys & {
   field_timestamp: Date;
   comment?: string;
   culprit_code?: boolean;
+  origin: string;
   culprit_tool?: boolean;
   culprit_harness?: boolean;
 };
