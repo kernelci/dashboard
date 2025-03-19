@@ -2,11 +2,8 @@ from kernelCI_app.unitTests.utils.healthCheck import online
 from kernelCI_app.unitTests.utils.client.treeClient import TreeClient
 from kernelCI_app.unitTests.utils.asserts import (
     assert_status_code_and_error_response,
-    assert_has_fields_in_response_content,
-    assert_build_filters,
 )
 from kernelCI_app.utils import string_to_json
-from kernelCI_app.unitTests.utils.fields.tree import tree_builds_expected_fields
 from http import HTTPStatus
 import pytest
 from kernelCI_app.unitTests.utils.treeDetailsCommonTestCases import (
@@ -14,6 +11,9 @@ from kernelCI_app.unitTests.utils.treeDetailsCommonTestCases import (
     NEXT_PENDING_FIXES_BROONIE,
     UNEXISTENT_TREE,
     INVALID_QUERY_PARAMS,
+)
+from kernelCI_app.unitTests.utils.commonTreeAsserts import (
+    execute_builds_asserts,
 )
 
 client = TreeClient()
@@ -51,21 +51,4 @@ def test_tree_details_build(
     )
 
     if not has_error_body:
-        assert "builds" in content
-
-        if "builds" in content:
-            first_build = content["builds"][0]
-
-            assert_has_fields_in_response_content(
-                fields=tree_builds_expected_fields, response_content=first_build
-            )
-
-            assert_build_filters(filters=filters, build=first_build)
-
-            if pytestconfig.getoption("--run-all") and len(content["builds"]) > 1:
-                for build in content["builds"][1:]:
-                    assert_has_fields_in_response_content(
-                        fields=tree_builds_expected_fields, response_content=build
-                    )
-
-                    assert_build_filters(filters=filters, build=build)
+        execute_builds_asserts(pytestconfig, content, filters)
