@@ -86,6 +86,7 @@ const getLinkProps = (
     }),
     search: s => ({
       origin: s.origin,
+      issueVersion: row.original.version,
     }),
   };
 };

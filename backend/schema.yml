@@ -1054,33 +1054,47 @@ components:
     BuildArchitectures:
       properties:
         PASS:
+          anyOf:
+          - type: integer
+          - type: 'null'
           default: 0
           title: Pass
-          type: integer
-        FAIL:
-          default: 0
-          title: Fail
-          type: integer
         ERROR:
+          anyOf:
+          - type: integer
+          - type: 'null'
           default: 0
           title: Error
-          type: integer
+        FAIL:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Fail
         SKIP:
+          anyOf:
+          - type: integer
+          - type: 'null'
           default: 0
           title: Skip
-          type: integer
         MISS:
+          anyOf:
+          - type: integer
+          - type: 'null'
           default: 0
           title: Miss
-          type: integer
         DONE:
+          anyOf:
+          - type: integer
+          - type: 'null'
           default: 0
           title: Done
-          type: integer
         'NULL':
+          anyOf:
+          - type: integer
+          - type: 'null'
           default: 0
           title: 'Null'
-          type: integer
         compilers:
           anyOf:
           - items:
@@ -1206,42 +1220,10 @@ components:
       - git_repository_branch
       title: BuildHistoryItem
       type: object
-    BuildStatusCount:
-      properties:
-        PASS:
-          default: 0
-          title: Pass
-          type: integer
-        FAIL:
-          default: 0
-          title: Fail
-          type: integer
-        ERROR:
-          default: 0
-          title: Error
-          type: integer
-        SKIP:
-          default: 0
-          title: Skip
-          type: integer
-        MISS:
-          default: 0
-          title: Miss
-          type: integer
-        DONE:
-          default: 0
-          title: Done
-          type: integer
-        'NULL':
-          default: 0
-          title: 'Null'
-          type: integer
-      title: BuildStatusCount
-      type: object
     BuildSummary:
       properties:
         status:
-          $ref: '#/components/schemas/BuildStatusCount'
+          $ref: '#/components/schemas/StatusCount'
         architectures:
           additionalProperties:
             $ref: '#/components/schemas/BuildArchitectures'
@@ -1249,7 +1231,7 @@ components:
           type: object
         configs:
           additionalProperties:
-            $ref: '#/components/schemas/BuildStatusCount'
+            $ref: '#/components/schemas/StatusCount'
           title: Configs
           type: object
         issues:
@@ -1380,7 +1362,7 @@ components:
         start_time:
           $ref: '#/components/schemas/Timestamp'
         build_status:
-          $ref: '#/components/schemas/BuildStatusCount'
+          $ref: '#/components/schemas/StatusCount'
         test_status:
           $ref: '#/components/schemas/TestStatusCount'
         boot_status:
@@ -1948,11 +1930,11 @@ components:
             uniqueItems: true
           title: Platform
         test_status_summary:
-          $ref: '#/components/schemas/TestStatusCount'
+          $ref: '#/components/schemas/StatusCount'
         boot_status_summary:
-          $ref: '#/components/schemas/TestStatusCount'
+          $ref: '#/components/schemas/StatusCount'
         build_status_summary:
-          $ref: '#/components/schemas/BuildStatusCount'
+          $ref: '#/components/schemas/StatusCount'
       required:
       - hardware_name
       - platform
@@ -2451,6 +2433,52 @@ components:
       additionalProperties:
         $ref: '#/components/schemas/ExtraIssuesData'
       type: object
+    StatusCount:
+      properties:
+        PASS:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Pass
+        ERROR:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Error
+        FAIL:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Fail
+        SKIP:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Skip
+        MISS:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Miss
+        DONE:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Done
+        'NULL':
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: 'Null'
+      title: StatusCount
+      type: object
     StatusValues:
       enum:
       - FAIL
@@ -2498,7 +2526,7 @@ components:
           title: Compiler
           type: string
         status:
-          $ref: '#/components/schemas/TestStatusCount'
+          $ref: '#/components/schemas/StatusCount'
       required:
       - arch
       - compiler
@@ -2646,48 +2674,35 @@ components:
       type: object
     TestStatusCount:
       properties:
-        PASS:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 0
+        pass:
           title: Pass
-        ERROR:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 0
+          type: integer
+        error:
           title: Error
-        FAIL:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 0
+          type: integer
+        fail:
           title: Fail
-        SKIP:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 0
+          type: integer
+        skip:
           title: Skip
-        MISS:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 0
+          type: integer
+        miss:
           title: Miss
-        DONE:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 0
+          type: integer
+        done:
           title: Done
-        'NULL':
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 0
+          type: integer
+        'null':
           title: 'Null'
+          type: integer
+      required:
+      - pass
+      - error
+      - fail
+      - skip
+      - miss
+      - done
+      - 'null'
       title: TestStatusCount
       type: object
     TestStatusHistoryItem:
@@ -2721,7 +2736,7 @@ components:
     TestSummary:
       properties:
         status:
-          $ref: '#/components/schemas/TestStatusCount'
+          $ref: '#/components/schemas/StatusCount'
         architectures:
           items:
             $ref: '#/components/schemas/TestArchSummaryItem'
@@ -2729,7 +2744,7 @@ components:
           type: array
         configs:
           additionalProperties:
-            $ref: '#/components/schemas/TestStatusCount'
+            $ref: '#/components/schemas/StatusCount'
           title: Configs
           type: object
         issues:
@@ -2765,7 +2780,7 @@ components:
         platforms:
           anyOf:
           - additionalProperties:
-              $ref: '#/components/schemas/TestStatusCount'
+              $ref: '#/components/schemas/StatusCount'
             type: object
           - type: 'null'
           default: null
@@ -2909,7 +2924,7 @@ components:
           title: Earliest Start Time
           type: string
         builds:
-          $ref: '#/components/schemas/BuildStatusCount'
+          $ref: '#/components/schemas/StatusCount'
         boots:
           $ref: '#/components/schemas/TestStatusCount'
         tests:

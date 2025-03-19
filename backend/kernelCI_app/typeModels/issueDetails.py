@@ -1,5 +1,6 @@
-from typing import List, Optional, Any
-from pydantic import BaseModel, RootModel, Field, field_validator
+from typing import List, Optional
+from typing_extensions import Annotated
+from pydantic import BaseModel, BeforeValidator, RootModel, Field, field_validator
 from kernelCI_app.helpers.build import build_status_map
 
 from kernelCI_app.typeModels.databases import (
@@ -34,51 +35,45 @@ from kernelCI_app.typeModels.databases import (
 )
 from kernelCI_app.typeModels.issues import ProcessedExtraDetailedIssues
 
+from kernelCI_app.utils import validate_str_to_dict
+
 
 class IssueDetailsPathParameters(BaseModel):
     issue_id: str
 
 
 class IssueBuildItem(BaseModel):
-    id: Build__Id = Field(validation_alias="build__id")
-    architecture: Build__Architecture = Field(validation_alias="build__architecture")
-    config_name: Build__ConfigName = Field(validation_alias="build__config_name")
+    id: Build__Id
+    architecture: Build__Architecture
+    config_name: Build__ConfigName
     status: Build__Status = Field(validation_alias="build_status")
-    start_time: Build__StartTime = Field(validation_alias="build__start_time")
-    duration: Build__Duration = Field(validation_alias="build__duration")
-    compiler: Build__Compiler = Field(validation_alias="build__compiler")
-    log_url: Build__LogUrl = Field(validation_alias="build__log_url")
-    tree_name: Checkout__TreeName = Field(validation_alias="build__checkout__tree_name")
-    git_repository_branch: Checkout__GitRepositoryBranch = Field(
-        validation_alias="build__checkout__git_repository_branch"
-    )
+    start_time: Build__StartTime
+    duration: Build__Duration
+    compiler: Build__Compiler
+    log_url: Build__LogUrl
+    tree_name: Checkout__TreeName
+    git_repository_branch: Checkout__GitRepositoryBranch
 
     @field_validator("status", mode="before")
     @classmethod
-    def valid_to_status(cls, value: Any) -> str:
+    def valid_to_status(cls, value) -> str:
         if isinstance(value, bool) or value is None:
             return build_status_map(value)
         return value
 
 
 class IssueTestItem(BaseModel):
-    id: Test__Id = Field(validation_alias="test__id")
-    status: Test__Status = Field(validation_alias="test__status")
-    duration: Test__Duration = Field(validation_alias="test__duration")
-    path: Test__Path = Field(validation_alias="test__path")
-    start_time: Test__StartTime = Field(validation_alias="test__start_time")
-    environment_compatible: Test__EnvironmentCompatible = Field(
-        validation_alias="test__environment_compatible"
-    )
-    environment_misc: Test__EnvironmentMisc = Field(
-        validation_alias="test__environment_misc"
-    )
-    tree_name: Checkout__TreeName = Field(
-        validation_alias="test__build__checkout__tree_name"
-    )
-    git_repository_branch: Checkout__GitRepositoryBranch = Field(
-        validation_alias="test__build__checkout__git_repository_branch"
-    )
+    id: Test__Id
+    status: Test__Status
+    duration: Test__Duration
+    path: Test__Path
+    start_time: Test__StartTime
+    environment_compatible: Test__EnvironmentCompatible
+    environment_misc: Annotated[
+        Test__EnvironmentMisc, BeforeValidator(validate_str_to_dict)
+    ]
+    tree_name: Checkout__TreeName
+    git_repository_branch: Checkout__GitRepositoryBranch
 
 
 class IssueTestsResponse(RootModel):
