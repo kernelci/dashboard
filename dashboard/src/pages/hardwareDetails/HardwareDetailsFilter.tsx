@@ -37,11 +37,11 @@ type TFilterCreate = TFilter & {
 export const createFilter = (
   data: HardwareDetailsSummary | undefined,
 ): TFilterCreate => {
-  const buildStatus = { Success: false, Failure: false, Inconclusive: false };
-
+  const buildStatus: TFilterValues = {};
   const bootStatus: TFilterValues = {};
   const testStatus: TFilterValues = {};
   testStatuses.forEach(s => {
+    buildStatus[s] = false;
     bootStatus[s] = false;
     testStatus[s] = false;
   });
