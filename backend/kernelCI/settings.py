@@ -157,6 +157,20 @@ CRONJOBS = [
             "--yes",
         ],
     ),
+    (
+        "30 14 * * *",
+        "django.core.management.call_command",
+        [
+            "notifications",
+            "--action=summary",
+            "--to=Johnson.George@microsoft.com",
+            "--cc=gus@collabora.com",
+            "--ignore-recipients",
+            "--send",
+            "--yes",
+            "--summary-signup-file=data/summary-signup-microsoft.yaml",
+        ],
+    ),
 ]
 
 GMAIL_API_TOKEN = get_json_env_var("GMAIL_API_TOKEN", "")
