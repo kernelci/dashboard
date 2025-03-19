@@ -1,4 +1,4 @@
-http 'localhost:8000/api/issue/?origin=maestro&intervalInDays=1'
+http 'localhost:8000/api/issue/?&intervalInDays=1&culpritCode=true'
 
 # HTTP/1.1 200 OK
 # Allow: GET, HEAD, OPTIONS
@@ -15,61 +15,63 @@ http 'localhost:8000/api/issue/?origin=maestro&intervalInDays=1'
 # X-Frame-Options: DENY
 
 # {
-#     "extras": {
-#         "maestro:031929b615e8ecfed14a89cef2b564108c3aa42c": {
-#             "first_seen": "2025-02-17T20:40:01.251254Z",
-#             "git_commit_hash": "a1c2670b1577474f7ae60d5dec1d35a053d354f0",
-#             "git_commit_name": "v6.1.124-16535-ga1c2670b1577",
-#             "git_repository_branch": "chromeos-6.1",
-#             "git_repository_url": "https://chromium.googlesource.com/chromiumos/third_party/kernel",
-#             "tree_name": "chromiumos"
-#         },
-#         "maestro:069157741b947b2f589c971be301429c4bb72515": {
-#             "first_seen": "2025-02-17T20:40:01.251254Z",
-#             "git_commit_hash": "a1c2670b1577474f7ae60d5dec1d35a053d354f0",
-#             "git_commit_name": "v6.1.124-16535-ga1c2670b1577",
-#             "git_repository_branch": "chromeos-6.1",
-#             "git_repository_url": "https://chromium.googlesource.com/chromiumos/third_party/kernel",
-#             "tree_name": "chromiumos"
-#         },
-#         "maestro:11eb365e0d1a4de6c80b036cd2e7a3fe5c276587": {
-#             "first_seen": "2024-11-12T10:30:20.456672Z",
-#             "git_commit_hash": "d145d3aa80067e115a679d903fba256c3d1f39a1",
-#             "git_commit_name": "v5.4.285-53-gd145d3aa8006",
-#             "git_repository_branch": "linux-5.4.y",
-#             "git_repository_url": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git",
-#             "tree_name": "stable-rc"
-#         },
-#         ...
-#     },
-#     "issues": [
-#         {
-#             "comment": " call to undeclared function 'stack_trace_save_tsk'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration] in kernel/sched/core.o (kernel/sched/core.c) [logspec:kbuild,kbuild.compiler.error]",
-#             "culprit_code": true,
-#             "culprit_harness": false,
-#             "culprit_tool": false,
-#             "field_timestamp": "2025-02-19T22:51:01.778279Z",
-#             "id": "maestro:87244933628a2612f39e6096115454f1e8bb3e1c",
-#             "version": 1
-#         },
-#         {
-#             "comment": " implicit declaration of function ‘stack_trace_save_tsk’ [-Werror=implicit-function-declaration] in kernel/sched/core.o (kernel/sched/core.c) [logspec:kbuild,kbuild.compiler.error]",
-#             "culprit_code": true,
-#             "culprit_harness": false,
-#             "culprit_tool": false,
-#             "field_timestamp": "2025-02-19T23:42:17.982170Z",
-#             "id": "maestro:2ff8fe94f6d53f39321d4a37fe15801cedc93573",
-#             "version": 1
-#         },
-#         {
-#             "comment": " implicit declaration of function 'drm_connector_helper_hpd_irq_event' [-Werror,-Wimplicit-function-declaration] in drivers/gpu/drm/rockchip/cdn-dp-core.o (drivers/gpu/drm/rockchip/cdn-dp-core.c) [logspec:kbuild,kbuild.compiler.error]",
-#             "culprit_code": true,
-#             "culprit_harness": false,
-#             "culprit_tool": false,
-#             "field_timestamp": "2025-02-20T11:50:02.465668Z",
-#             "id": "maestro:3feccbb8dd7c7976251cf4457318fc92c3eb2efb",
-#             "version": 1
-#         },
-#         ...
-#     ]
-# }
+#     "issues":[
+#        {
+#           "field_timestamp":"2025-03-21T05:50:33.654300Z",
+#           "id":"maestro:cd18b383b75d152345cbe08983013da942678433",
+#           "comment":" NULL pointer dereference at virtual address 0000000000000030 [logspec:generic_linux_boot,linux.kernel.null_pointer_dereference]",
+#           "origin":"maestro",
+#           "version":1,
+#           "culprit_code":true,
+#           "culprit_tool":false,
+#           "culprit_harness":false
+#        },
+#        {
+#           "field_timestamp":"2025-03-20T19:02:01.275697Z",
+#           "id":"redhat:issue_3652",
+#           "comment":"networking/netfilter/upstream_test/nftables  upstream-binary-nftables-tests-shell kernel warning net/core/flow_dissector.c",
+#           "origin":"redhat",
+#           "version":1742488543,
+#           "culprit_code":true,
+#           "culprit_tool":false,
+#           "culprit_harness":false
+#        },
+#        {
+#           "field_timestamp":"2025-03-21T11:22:57.073931Z",
+#           "id":"redhat:issue_3585",
+#           "comment":"[RHEL10] [internal-testsuite] perf-pipe-recording-and-injection-test FAIL",
+#           "origin":"redhat",
+#           "version":1741311124,
+#           "culprit_code":true,
+#           "culprit_tool":false,
+#           "culprit_harness":false
+#        },
+       
+#     ],
+#     "extras":{
+#        "redhat:issue_3492":{
+#           "first_seen":"2025-02-12T13:00:01.018238Z",
+#           "git_commit_hash":null,
+#           "git_repository_url":null,
+#           "git_repository_branch":null,
+#           "git_commit_name":null,
+#           "tree_name":null
+#        },
+#        "maestro:e602fca280d85d8e603f7c0aff68363bb0cd7993":{
+#           "first_seen":"2025-01-21T00:24:05.705873Z",
+#           "git_commit_hash":"d73a4602e973e9e922f00c537a4643907a547ade",
+#           "git_repository_url":"https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git",
+#           "git_repository_branch":"main",
+#           "git_commit_name":"pm-6.13-rc8-1598-gd73a4602e973",
+#           "tree_name":"net-next"
+#        },
+#        "maestro:da694c56147298d223ee432ad8d6a8ee311b773a":{
+#           "first_seen":"2025-01-21T00:22:10.827866Z",
+#           "git_commit_hash":"d73a4602e973e9e922f00c537a4643907a547ade",
+#           "git_repository_url":"https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git",
+#           "git_repository_branch":"main",
+#           "git_commit_name":"pm-6.13-rc8-1598-gd73a4602e973",
+#           "tree_name":"net-next"
+#        }
+#     }
+#  }

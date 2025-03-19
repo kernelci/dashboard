@@ -17,17 +17,17 @@ from kernelCI_app.typeModels.issueListing import (
 from kernelCI_app.typeModels.issues import FirstIncident, ProcessedExtraDetailedIssues
 
 
-def get_issue_listing_data(origin: str, interval_date):
+def get_issue_listing_data(interval_date):
     issues_records = Issues.objects.values(
         "id",
         "field_timestamp",
         "comment",
         "version",
+        "origin",
         "culprit_code",
         "culprit_harness",
         "culprit_tool",
     ).filter(
-        origin=origin,
         field_timestamp__gte=interval_date,
     )
     return issues_records
@@ -54,13 +54,11 @@ class IssueView(APIView):
     def get(self, _request) -> Response:
         try:
             request_params = ListingQueryParameters(
-                origin=(_request.GET.get("origin")),
                 interval_in_days=_request.GET.get("intervalInDays"),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
-        origin_param = request_params.origin
         interval_in_days = request_params.interval_in_days
 
         interval_date = datetime.now(timezone.utc) - timedelta(days=interval_in_days)
@@ -68,9 +66,7 @@ class IssueView(APIView):
             hour=0, minute=0, second=0, microsecond=0
         )
 
-        self.issue_records = get_issue_listing_data(
-            origin=origin_param, interval_date=interval_param
-        )
+        self.issue_records = get_issue_listing_data(interval_date=interval_param)
 
         if len(self.issue_records) == 0:
             return create_api_error_response(

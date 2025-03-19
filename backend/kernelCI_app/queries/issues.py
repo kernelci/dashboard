@@ -6,6 +6,8 @@ from kernelCI_app.helpers.logger import log_message
 import typing_extensions
 from kernelCI_app.helpers.build import valid_do_not_exist_exception, valid_status_field
 from kernelCI_app.constants.general import SCHEMA_VERSION_ENV
+from datetime import datetime
+from django.db.models import Q
 
 
 @typing_extensions.deprecated(
@@ -84,3 +86,36 @@ def get_issue_tests(*, issue_id: str, version: int) -> list[dict]:
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         return dict_fetchall(cursor)
+
+
+def get_issue_listing_data(
+    *,
+    interval_date: datetime,
+    culprit_code: bool | None,
+    culprit_harness: bool | None,
+    culprit_tool: bool | None,
+) -> list[dict]:
+    filters = Q(field_timestamp__gte=interval_date)
+
+    culprit_query = Q()
+
+    if culprit_code:
+        culprit_query |= Q(culprit_code=True)
+    if culprit_harness:
+        culprit_query |= Q(culprit_harness=True)
+    if culprit_tool:
+        culprit_query |= Q(culprit_tool=True)
+
+    filters = filters & culprit_query
+
+    issues_records = Issues.objects.values(
+        "id",
+        "field_timestamp",
+        "comment",
+        "version",
+        "origin",
+        "culprit_code",
+        "culprit_harness",
+        "culprit_tool",
+    ).filter(filters)
+    return issues_records

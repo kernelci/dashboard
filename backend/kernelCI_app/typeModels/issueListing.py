@@ -8,6 +8,7 @@ from kernelCI_app.typeModels.databases import (
     Issue__Id,
     Issue__Version,
     Timestamp,
+    Origin,
 )
 from kernelCI_app.typeModels.issues import FirstIncident
 
@@ -16,6 +17,7 @@ class IssueListingItem(BaseModel):
     field_timestamp: Timestamp
     id: Issue__Id
     comment: Issue__Comment
+    origin: Origin
     version: Issue__Version
     culprit_code: Issue__CulpritCode
     culprit_tool: Issue__CulpritTool
