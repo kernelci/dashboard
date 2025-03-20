@@ -10,7 +10,6 @@ import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import ListingItem, { ItemType } from '@/components/ListingItem/ListingItem';
 
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
-import { NoIssueFound } from '@/components/Issue/IssueSection';
 import type {
   RedirectFrom,
   TFilter,
@@ -37,6 +36,7 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import { BranchBadge } from '@/components/Badge/BranchBadge';
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 interface IIssuesList {
   issues: TIssue[];
@@ -125,7 +125,12 @@ const IssuesList = ({
   }, [extraDetailsLoading, issueExtraDetails, issues]);
 
   const contentElement = !hasIssue ? (
-    <NoIssueFound />
+    <MemoizedSectionError
+      isEmpty={true}
+      isLoading={false}
+      emptyLabel="issue.noIssueFound"
+      variant="warning"
+    />
   ) : (
     <DumbListingContent>
       {sortedIssues.map(issue => {

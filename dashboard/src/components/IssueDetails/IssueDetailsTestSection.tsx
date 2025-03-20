@@ -75,7 +75,10 @@ export const IssueDetailsTestSection = ({
           />
         </div>
       ) : (
-        <MemoizedSectionError isLoading={isLoading} />
+        <MemoizedSectionError
+          isLoading={isLoading}
+          emptyLabel="issueDetails.noTestResults"
+        />
       )}
     </>
   );

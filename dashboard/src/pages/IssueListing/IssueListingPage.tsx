@@ -54,7 +54,7 @@ export const IssueListingPage = ({
         <MemoizedSectionError
           isLoading={isLoading}
           errorMessage={error?.message}
-          emptyLabel={'global.error'}
+          emptyLabel="issueListing.notFound"
         />
       }
     >
