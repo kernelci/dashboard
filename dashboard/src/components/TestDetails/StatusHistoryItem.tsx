@@ -10,6 +10,8 @@ import { Link } from '@tanstack/react-router';
 
 import { TiArrowSortedDown } from 'react-icons/ti';
 
+import { useIntl } from 'react-intl';
+
 import type { TestStatusHistoryItem } from '@/types/tree/TestDetails';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
@@ -60,6 +62,8 @@ export const StatusHistoryItem = ({
     }
   }, [historyItem.status, iconsClassName, isCurrentTest]);
 
+  const { formatMessage } = useIntl();
+
   return (
     <Tooltip>
       <TooltipTrigger>
@@ -76,10 +80,18 @@ export const StatusHistoryItem = ({
         </Link>
       </TooltipTrigger>
       <TooltipContent>
-        <p className="text-center">
-          {historyItem.id}
+        <p>
+          {formatMessage({ id: 'global.id' }) + ': ' + historyItem.id}
           <br />
-          {historyItem.status}
+          {formatMessage({ id: 'global.status' }) + ': ' + historyItem.status}
+          {historyItem.git_commit_hash && (
+            <>
+              <br />
+              {formatMessage({ id: 'commonDetails.gitCommitHash' }) +
+                ': ' +
+                historyItem.git_commit_hash}
+            </>
+          )}
         </p>
       </TooltipContent>
     </Tooltip>

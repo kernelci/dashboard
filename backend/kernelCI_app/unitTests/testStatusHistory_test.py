@@ -5,7 +5,10 @@ from kernelCI_app.unitTests.utils.asserts import (
     assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
 )
-from kernelCI_app.unitTests.utils.fields.tests import status_history_expected_fields
+from kernelCI_app.unitTests.utils.fields.tests import (
+    status_history_response_expected_fields,
+    status_history_item_fields,
+)
 from kernelCI_app.utils import string_to_json
 import pytest
 from http import HTTPStatus
@@ -44,7 +47,12 @@ client = TestClient()
         ),
     ],
 )
-def test_get(params: TestStatusHistoryRequest, status_code, has_error_body):
+def test_get(
+    pytestconfig,
+    params: TestStatusHistoryRequest,
+    status_code,
+    has_error_body,
+):
     response = client.get_test_status_history(query=params)
     content = string_to_json(response.content.decode())
     assert_status_code_and_error_response(
@@ -56,5 +64,14 @@ def test_get(params: TestStatusHistoryRequest, status_code, has_error_body):
 
     if not has_error_body:
         assert_has_fields_in_response_content(
-            fields=status_history_expected_fields, response_content=content
+            fields=status_history_response_expected_fields, response_content=content
         )
+
+        status_history = content.get("status_history", [])
+
+        for status_history_item in status_history:
+            assert_has_fields_in_response_content(
+                fields=status_history_item_fields, response_content=status_history_item
+            )
+            if not pytestconfig.getoption("--run-all"):
+                break

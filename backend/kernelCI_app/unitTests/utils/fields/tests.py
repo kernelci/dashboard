@@ -21,7 +21,14 @@ test_expected_fields = [
     "origin",
 ]
 
-status_history_expected_fields = [
+status_history_response_expected_fields = [
     "status_history",
     "regression_type",
+]
+
+status_history_item_fields = [
+    "id",
+    "status",
+    "start_time",
+    "git_commit_hash",
 ]
