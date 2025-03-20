@@ -6,17 +6,19 @@ import {
   zListingSize,
   type SearchSchema,
 } from '@/types/general';
-import { DEFAULT_HARDWARE_INTERVAL_IN_DAYS } from '@/utils/constants/hardware';
-import { DEFAULT_LISTING_ITEMS } from '@/utils/constants/general';
+import {
+  DEFAULT_LISTING_ITEMS,
+  REDUCED_TIME_SEARCH,
+} from '@/utils/constants/general';
 
 const defaultValues = {
-  intervalInDays: DEFAULT_HARDWARE_INTERVAL_IN_DAYS,
+  intervalInDays: REDUCED_TIME_SEARCH,
   hardwareSearch: '',
   listingSize: DEFAULT_LISTING_ITEMS,
 };
 
 const zHardwareSchema = z.object({
-  intervalInDays: makeZIntervalInDays(DEFAULT_HARDWARE_INTERVAL_IN_DAYS),
+  intervalInDays: makeZIntervalInDays(REDUCED_TIME_SEARCH),
   hardwareSearch: z.string().catch(''),
   listingSize: zListingSize,
 } satisfies SearchSchema);
