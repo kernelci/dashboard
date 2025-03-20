@@ -49,7 +49,7 @@ import { RedirectFrom, type TFilter } from '@/types/general';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { MemoizedInputTime } from '@/components/InputTime';
-import { DEFAULT_HARDWARE_INTERVAL_IN_DAYS } from '@/utils/constants/hardware';
+import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 // TODO Extract and reuse the table
 interface ITreeTable {
@@ -450,7 +450,7 @@ export function HardwareTable({
         <div className="flex items-center justify-between gap-10">
           <MemoizedInputTime
             navigateFrom="/hardware"
-            defaultInterval={DEFAULT_HARDWARE_INTERVAL_IN_DAYS}
+            defaultInterval={REDUCED_TIME_SEARCH}
           />
           <PaginationInfo
             table={table}

@@ -9,11 +9,11 @@ import {
 } from '@/types/general';
 import {
   DEFAULT_LISTING_ITEMS,
-  DEFAULT_TIME_SEARCH,
+  REDUCED_TIME_SEARCH,
 } from '@/utils/constants/general';
 
 export const issueListingDefaultValues = {
-  intervalInDays: DEFAULT_TIME_SEARCH,
+  intervalInDays: REDUCED_TIME_SEARCH,
   issueSearch: '',
   listingSize: DEFAULT_LISTING_ITEMS,
   culpritCode: true,
@@ -22,7 +22,7 @@ export const issueListingDefaultValues = {
 };
 
 export const issueListingSearchSchema = z.object({
-  intervalInDays: makeZIntervalInDays(DEFAULT_TIME_SEARCH),
+  intervalInDays: makeZIntervalInDays(REDUCED_TIME_SEARCH),
   issueSearch: z.string().catch(''),
   listingSize: zListingSize,
   culpritCode: z.boolean().catch(true),

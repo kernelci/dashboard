@@ -48,6 +48,7 @@ import { valueOrEmpty } from '@/lib/string';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { shouldShowRelativeDate } from '@/lib/date';
 import { RedirectFrom } from '@/types/general';
+import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 const getLinkProps = (
   row: Row<IssueListingTableItem>,
@@ -294,7 +295,10 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
           />
         </span>
         <div className="flex items-center justify-between gap-10">
-          <MemoizedInputTime navigateFrom="/issues" />
+          <MemoizedInputTime
+            navigateFrom="/issues"
+            defaultInterval={REDUCED_TIME_SEARCH}
+          />
           <PaginationInfo
             table={table}
             intlLabel="global.issues"
