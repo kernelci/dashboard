@@ -6,10 +6,12 @@ from kernelCI_app.unitTests.utils.client.baseClient import BaseClient
 
 class IssueClient(BaseClient):
     def get_issues_list(
-        self, *, origin: str | None, interval_in_days: int | None
+        self, *, interval_in_days: int | None, culprit_data: dict | None
     ) -> requests.Response:
         path = reverse("issue")
-        query = {"origin": origin, "intervalInDays": interval_in_days}
+        if culprit_data is None:
+            culprit_data = {}
+        query = {"intervalInDays": interval_in_days, **culprit_data}
         url = self.get_endpoint(path=path, query=query)
         return requests.get(url)
 
