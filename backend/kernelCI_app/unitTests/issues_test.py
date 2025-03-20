@@ -17,18 +17,52 @@ from http import HTTPStatus
 
 client = IssueClient()
 
+CULPRIT_CODE = {
+    "culpritCode": True,
+    "excludes_fields": ["culprit_tool", "culprit_harness"],
+}
+
+CULPRIT_TOOL = {
+    "culpritTool": True,
+    "excludes_fields": ["culprit_code", "culprit_harness"],
+}
+
+CULPRIT_HARNESS = {
+    "culpritHarness": True,
+    "excludes_fields": ["culprit_code", "culprit_tool"],
+}
+
+CULPRIT_CODE_AND_TOOL = {
+    "culpritCode": True,
+    "culpritTool": True,
+    "excludes_fields": ["culprit_harness"],
+}
+
+
+def pytest_generate_tests(metafunc):
+    issues_listing_base_cases = [
+        (5, CULPRIT_CODE, HTTPStatus.OK, False),
+        (5, CULPRIT_TOOL, HTTPStatus.OK, False),
+        (5, CULPRIT_HARNESS, HTTPStatus.OK, False),
+        (-5, None, HTTPStatus.BAD_REQUEST, True),
+    ]
+
+    if metafunc.config.getoption("--run-all"):
+        issues_listing_base_cases += [
+            (5, CULPRIT_CODE_AND_TOOL, HTTPStatus.OK, False),
+            (5, None, HTTPStatus.OK, False),
+        ]
+
+    if "issue_listing_input" in metafunc.fixturenames:
+        metafunc.parametrize("issue_listing_input", issues_listing_base_cases)
+
 
 @online
-@pytest.mark.parametrize(
-    "origin, interval_in_day, status_code, has_error_body",
-    [
-        ("maestro", 7, HTTPStatus.OK, False),
-        ("maestro", -5, HTTPStatus.BAD_REQUEST, True),
-        ("invalid origin", 5, HTTPStatus.OK, True),
-    ],
-)
-def test_list(origin, interval_in_day, status_code, has_error_body):
-    response = client.get_issues_list(origin=origin, interval_in_days=interval_in_day)
+def test_list(pytestconfig, issue_listing_input):
+    interval_in_day, culprit_data, status_code, has_error_body = issue_listing_input
+    response = client.get_issues_list(
+        interval_in_days=interval_in_day, culprit_data=culprit_data
+    )
     content = string_to_json(response.content.decode())
     assert_status_code_and_error_response(
         response=response,
@@ -45,6 +79,15 @@ def test_list(origin, interval_in_day, status_code, has_error_body):
         assert_has_fields_in_response_content(
             fields=issues_expected_fields, response_content=content["issues"][0]
         )
+
+        if culprit_data is not None:
+            for culprit in culprit_data["excludes_fields"]:
+                assert not content["issues"][0][culprit]
+
+            if pytestconfig.getoption("--run-all") and len(content["issues"]) > 1:
+                for culprit in culprit_data["excludes_fields"]:
+                    for issue in content["issues"][1:]:
+                        assert not issue[culprit]
 
 
 @online
