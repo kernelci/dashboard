@@ -1,12 +1,10 @@
 import { FormattedMessage } from 'react-intl';
 import { memo, useMemo, type JSX } from 'react';
 
-import { Link } from '@tanstack/react-router';
-
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import type { IBaseCard } from '@/components/Cards/BaseCard';
 import BaseCard from '@/components/Cards/BaseCard';
-import ListingItem, { ItemType } from '@/components/ListingItem/ListingItem';
+import ListingItem from '@/components/ListingItem/ListingItem';
 import { GroupedTestStatus } from '@/components/Status/Status';
 import type { TTreeTestsData } from '@/types/tree/TreeDetails';
 
@@ -15,15 +13,12 @@ import StatusChartMemoized, {
   Colors,
 } from '@/components/StatusChart/StatusCharts';
 import { groupStatus } from '@/utils/status';
-import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import type { ArchCompilerStatus } from '@/types/general';
-import { NoIssueFound } from '@/components/Issue/IssueSection';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { Badge } from '@/components/ui/badge';
 import FilterLink from '@/components/Tabs/FilterLink';
 import { DumbSummary, MemoizedSummaryItem } from '@/components/Tabs/Summary';
-import type { TIssue } from '@/types/issues';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
@@ -274,51 +269,6 @@ const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
 };
 
 export const MemoizedStatusChart = memo(StatusChart);
-
-interface IIssuesList {
-  issues: TIssue[];
-  title: IBaseCard['title'];
-}
-
-const IssuesList = ({ issues, title }: IIssuesList): JSX.Element => {
-  const hasIssue = issues.length > 0;
-
-  const titleElement = (
-    <span>
-      {title}
-      {hasIssue && (
-        <ColoredCircle
-          className="ml-2 font-normal"
-          backgroundClassName={ItemType.Error}
-          quantity={issues.length}
-        />
-      )}
-    </span>
-  );
-
-  const contentElement = !hasIssue ? (
-    <NoIssueFound />
-  ) : (
-    <DumbListingContent>
-      {issues.map(issue => {
-        return (
-          <Link key={issue.id} to={issue.report_url} target="_blank">
-            <ListingItem
-              unknown={issue.incidents_info.incidentsCount}
-              hasBottomBorder
-              text={issue.comment ?? ''}
-              tooltip={issue.comment}
-            />
-          </Link>
-        );
-      })}
-    </DumbListingContent>
-  );
-
-  return <BaseCard title={titleElement} content={contentElement} />;
-};
-
-export const MemoizedIssuesList = memo(IssuesList);
 
 interface IHardwareUsed {
   title: IBaseCard['title'];

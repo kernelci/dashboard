@@ -138,7 +138,7 @@ const HardwareListingPage = ({
         <MemoizedSectionError
           isLoading={isLoading}
           errorMessage={error?.message}
-          emptyLabel={'global.error'}
+          emptyLabel="hardwareListing.notFound"
         />
       }
     >

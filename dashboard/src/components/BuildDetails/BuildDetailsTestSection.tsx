@@ -16,6 +16,7 @@ import type {
 import { TestsTable } from '@/components/TestsTable/TestsTable';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 interface IBuildDetailsTestSection {
   buildId: string;
@@ -31,16 +32,26 @@ const BuildDetailsTestSection = ({
   getRowLink,
 }: IBuildDetailsTestSection): JSX.Element => {
   const intl = useIntl();
-  const { data, error, isLoading } = useBuildTests(buildId);
+  const { data, error, status, isLoading } = useBuildTests(buildId);
 
-  const hasTest = data && data.length > 0;
   return (
     <>
       <span className="text-2xl font-bold">
         {intl.formatMessage({ id: 'buildDetails.testResults' })}
       </span>
       <Separator className="bg-dark-gray my-6" />
-      {hasTest ? (
+      <QuerySwitcher
+        skeletonClassname="h-[100px]"
+        status={status}
+        data={data}
+        customError={
+          <MemoizedSectionError
+            isLoading={isLoading}
+            errorMessage={error?.message}
+            emptyLabel="buildDetails.noTestResults"
+          />
+        }
+      >
         <div className="flex flex-col gap-6">
           <TestsTable
             tableKey="buildDetailsTests"
@@ -50,14 +61,7 @@ const BuildDetailsTestSection = ({
             getRowLink={getRowLink}
           />
         </div>
-      ) : (
-        <MemoizedSectionError
-          isLoading={isLoading}
-          errorMessage={error?.message}
-          isEmpty={data?.length === 0}
-          emptyLabel={'buildDetails.noTestResults'}
-        />
-      )}
+      </QuerySwitcher>
     </>
   );
 };

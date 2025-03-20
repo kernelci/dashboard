@@ -9,7 +9,7 @@ export class RequestData {
     const res = await http.get<ResponseData<T>>(url, config);
 
     if (res.data.error) {
-      throw new Error(res.data.error);
+      throw new Error(`${res.status}:${res.data.error}`);
     }
 
     return res.data;

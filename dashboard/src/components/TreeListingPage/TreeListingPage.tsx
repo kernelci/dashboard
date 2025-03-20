@@ -147,7 +147,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
         <MemoizedSectionError
           isLoading={isFastLoading}
           errorMessage={fastError?.message}
-          emptyLabel={'global.error'}
+          emptyLabel="treeListing.notFound"
         />
       }
     >

@@ -32,7 +32,7 @@ export const messages = {
     'buildDetails.buildLogs': 'Build Logs',
     'buildDetails.gitDescribe': 'Git Describe',
     'buildDetails.kernelConfig': 'Kernel Config',
-    'buildDetails.noTestResults': 'No test results found.',
+    'buildDetails.noTestResults': 'No tests executed for this build',
     'buildDetails.startTime': 'Start Time',
     'buildDetails.testResults': 'Test Results',
     'buildTab.buildStatus': 'Build status',
@@ -174,11 +174,12 @@ export const messages = {
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
     'hardwareListing.description': 'List of hardware from kernel tests',
+    'hardwareListing.notFound': 'No hardware information available',
     'hardwareListing.title': 'Hardware Listing ― KCI Dashboard',
     'issue.alsoPresentTooltip': 'Issue also present in {tree}',
     'issue.firstSeen': 'First seen',
     'issue.newIssue': 'New issue: This is the first time this issue was seen',
-    'issue.noIssueFound': 'No issue found.',
+    'issue.noIssueFound': 'No issues found for this tree checkout',
     'issue.path': 'Issues',
     'issue.searchPlaceholder': 'Search by issue comment with a regex',
     'issue.tooltip':
@@ -194,6 +195,8 @@ export const messages = {
     'issueDetails.id': 'Issue Id',
     'issueDetails.issueDetails': 'Issue Details',
     'issueDetails.logspecData': 'Logspec Data',
+    'issueDetails.noBuildResults': 'No builds associated with this issue',
+    'issueDetails.noTestResults': 'No tests associated with this issue',
     'issueDetails.notFound': 'Issue not found',
     'issueDetails.reportSubject': 'Report Subject',
     'issueDetails.reportUrl': 'Report URL',
@@ -201,6 +204,7 @@ export const messages = {
     'issueListing.culpritInfo':
       'Layers of the execution stack responsible for the issue.  If all are false, the issue is considered invalid.',
     'issueListing.description': 'List of issues from builds and tests',
+    'issueListing.notFound': 'No issue information available',
     'issueListing.title': 'Issue Listing ― KCI Dashboard',
     'issueListing.treeBranchTooltip':
       'The tree name and git repository branch of the first incident\nClick a cell to see details of that checkout',
@@ -294,6 +298,7 @@ export const messages = {
     'treeDetails.testsSuccess': 'Success tests',
     'treeDetails.validBuilds': 'Success builds',
     'treeListing.description': 'List of trees for kernel builds and tests',
+    'treeListing.notFound': 'No tree information available',
     'treeListing.title': 'Tree Listing ― KCI Dashboard',
   },
 };

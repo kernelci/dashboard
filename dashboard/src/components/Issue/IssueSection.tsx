@@ -6,8 +6,6 @@ import type { UseQueryResult } from '@tanstack/react-query';
 
 import { Link } from '@tanstack/react-router';
 
-import { RiProhibited2Line } from 'react-icons/ri';
-
 import ListingItem from '@/components/ListingItem/ListingItem';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
@@ -17,17 +15,6 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import type { TIssue } from '@/types/issues';
 
 import { IssueTooltip } from './IssueTooltip';
-
-export const NoIssueFound = (): JSX.Element => {
-  return (
-    <div className="text-weak-gray flex flex-col items-center py-6">
-      <RiProhibited2Line className="h-14 w-14" />
-      <h1 className="text-2xl font-semibold">
-        <FormattedMessage id={'issue.noIssueFound'} />
-      </h1>
-    </div>
-  );
-};
 
 const IssueSection = ({
   data,
@@ -82,7 +69,7 @@ const IssueSection = ({
           <MemoizedSectionError
             isLoading={status === 'pending'}
             errorMessage={error}
-            emptyLabel={'global.error'}
+            emptyLabel="issue.noIssueFound"
             variant={variant}
           />
         }
