@@ -135,18 +135,6 @@ CRONJOBS = [
     # ('* * * * *', 'kernelCI_app.tasks.example_task'),
     ("0 0 * * 0", "django.core.management.call_command", ["treeproof"]),
     (
-        "40 * * * *",
-        "django.core.management.call_command",
-        [
-            "notifications",
-            "--action=fake_report",
-            "--cc=gus@collabora.com",
-            "--send",
-            "--yes",
-            "--ignore-recipients",
-        ],
-    ),
-    (
         "59 * * * *",
         "django.core.management.call_command",
         [
