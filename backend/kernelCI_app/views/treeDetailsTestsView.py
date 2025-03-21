@@ -5,10 +5,7 @@ from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from http import HTTPStatus
-from kernelCI_app.helpers.errorHandling import (
-    create_api_error_response,
-    create_error_response,
-)
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
     FilterParams,
 )
@@ -75,7 +72,7 @@ class TreeDetailsTests(APIView):
         parameters=[TreeQueryParameters],
         responses=CommonDetailsTestsResponse,
     )
-    def get(self, request, commit_hash: str | None):
+    def get(self, request, commit_hash: str | None) -> Response:
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
@@ -86,20 +83,10 @@ class TreeDetailsTests(APIView):
 
         self.filters = FilterParams(request)
 
-        # Temporary during schema transition
-        if rows is None:
-            message = (
-                "This error was probably caused because the server was using"
-                "an old version of the database. Please try requesting again"
-            )
-            return create_api_error_response(
-                error_message=message,
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
         if len(rows) == 0:
-            return create_error_response(
-                error_message="No tests found for this tree", status_code=HTTPStatus.OK
+            return create_api_error_response(
+                error_message="No tests found for this tree",
+                status_code=HTTPStatus.OK,
             )
 
         try:

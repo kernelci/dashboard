@@ -294,19 +294,11 @@ class HardwareDetailsSummary(APIView):
             end_datetime=self.end_datetime,
         )
 
-        # Temporary during schema transition
-        if records is None:
-            message = (
-                "This error was probably caused because the server was using"
-                "an old version of the database. Please try requesting again"
-            )
-            return create_api_error_response(
-                error_message=message,
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
         if len(records) == 0:
-            return Response(data={"error": "Hardware not found"}, status=HTTPStatus.OK)
+            return create_api_error_response(
+                error_message="Hardware not found",
+                status_code=HTTPStatus.OK,
+            )
 
         is_all_selected = len(self.selected_commits) == 0
 
