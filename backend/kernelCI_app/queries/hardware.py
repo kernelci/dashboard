@@ -340,9 +340,6 @@ def get_hardware_details_data(
     return records
 
 
-@typing_extensions.deprecated(
-    "This implementation is temporary while the schema is being updated."
-)
 def query_records(
     *, hardware_id: str, origin: str, trees: list[Tree], start_date: int, end_date: int
 ) -> list[dict] | None:
@@ -430,6 +427,13 @@ def query_records(
         if is_valid_does_not_exist_exception(e):
             set_schema_version(version="5")
             log_message("Hardware Details -- Schema version updated to 5")
+            return query_records(
+                hardware_id=hardware_id,
+                origin=origin,
+                trees=trees,
+                start_date=start_date,
+                end_date=end_date,
+            )
         else:
             raise
 
