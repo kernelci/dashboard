@@ -42,17 +42,6 @@ class IssueDetailsBuilds(APIView):
             issue_id=parsed_params.issue_id, version=parsed_query.version
         )
 
-        # Temporary during schema transition
-        if builds_data is None:
-            message = (
-                "This error was probably caused because the server was using"
-                "an old version of the database. Please try requesting again"
-            )
-            return create_api_error_response(
-                error_message=message,
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
         if not builds_data:
             return create_api_error_response(
                 error_message="No builds found for this issue",

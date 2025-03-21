@@ -13,17 +13,6 @@ class BuildDetails(APIView):
     def get(self, request, build_id: str) -> Response:
         records = get_build_details(build_id)
 
-        # Temporary during schema transition
-        if records is None:
-            message = (
-                "This error was probably caused because the server was using"
-                "an old version of the database. Please try requesting again"
-            )
-            return create_api_error_response(
-                error_message=message,
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
         if not records:
             return create_api_error_response(
                 error_message="Build not found",
