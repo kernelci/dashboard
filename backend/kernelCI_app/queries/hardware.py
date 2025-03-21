@@ -1,5 +1,8 @@
-import os
 import json
+from kernelCI_app.helpers.environment import (
+    get_schema_version,
+    set_schema_version,
+)
 from kernelCI_app.helpers.logger import log_message
 import typing_extensions
 from datetime import datetime
@@ -10,10 +13,12 @@ from django.db.models import Subquery
 from kernelCI_app.models import Tests
 from kernelCI_app.helpers.trees import get_tree_heads
 from kernelCI_app.helpers.database import dict_fetchall
-from kernelCI_app.helpers.build import valid_do_not_exist_exception, valid_status_field
+from kernelCI_app.helpers.build import (
+    is_valid_does_not_exist_exception,
+    valid_status_field,
+)
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.typeModels.hardwareDetails import Tree
-from kernelCI_app.constants.general import SCHEMA_VERSION_ENV
 
 
 @typing_extensions.deprecated(
@@ -23,12 +28,12 @@ def get_hardware_listing_data(
     start_date: datetime, end_date: datetime, origin: str
 ) -> list[dict]:
     try:
-        if os.getenv(SCHEMA_VERSION_ENV) != "5":
+        if get_schema_version() != "5":
             return get_hardware_listing_valid(start_date, end_date, origin)
         return get_hardware_listing_status(start_date, end_date, origin)
     except ProgrammingError as e:
-        if valid_do_not_exist_exception(e):
-            os.environ[SCHEMA_VERSION_ENV] = "5"
+        if is_valid_does_not_exist_exception(e):
+            set_schema_version(version="5")
             log_message("Hardware Listing -- Schema version updated to 5")
             return get_hardware_listing_status(start_date, end_date, origin)
         else:
@@ -422,8 +427,8 @@ def query_records(
 
             return dict_fetchall(cursor)
     except ProgrammingError as e:
-        if valid_do_not_exist_exception(e):
-            os.environ[SCHEMA_VERSION_ENV] = "5"
+        if is_valid_does_not_exist_exception(e):
+            set_schema_version(version="5")
             log_message("Hardware Details -- Schema version updated to 5")
         else:
             raise
