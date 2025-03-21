@@ -1,15 +1,17 @@
-import os
 import typing_extensions
 from typing import TypedDict, Optional
 from django.db import connection
 from django.db.utils import ProgrammingError
 
+from kernelCI_app.helpers.environment import get_schema_version, set_schema_version
 from kernelCI_app.utils import get_query_time_interval
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
-from kernelCI_app.helpers.build import valid_do_not_exist_exception, valid_status_field
+from kernelCI_app.helpers.build import (
+    is_valid_does_not_exist_exception,
+    valid_status_field,
+)
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.constants.general import SCHEMA_VERSION_ENV
 
 
 class IntervalInDays(TypedDict):
@@ -23,12 +25,12 @@ def get_tree_listing_data(
     origin: str, interval_in_days: IntervalInDays
 ) -> Optional[list[tuple]]:
     try:
-        if os.getenv(SCHEMA_VERSION_ENV) != "5":
+        if get_schema_version() != "5":
             return get_tree_listing_valid(origin, interval_in_days)
         return get_tree_listing_status(origin, interval_in_days)
     except ProgrammingError as e:
-        if valid_do_not_exist_exception(e):
-            os.environ[SCHEMA_VERSION_ENV] = "5"
+        if is_valid_does_not_exist_exception(e):
+            set_schema_version("5")
             log_message("Tree Listing Status -- Schema version updated to 5")
             return get_tree_listing_status(origin, interval_in_days)
         else:
@@ -398,8 +400,8 @@ def get_tree_details_data(
                 rows = cursor.fetchall()
                 set_query_cache(cache_key, params, rows)
         except ProgrammingError as e:
-            if valid_do_not_exist_exception(e):
-                os.environ[SCHEMA_VERSION_ENV] = "5"
+            if is_valid_does_not_exist_exception(e):
+                set_schema_version(version="5")
                 log_message("Tree Details -- Schema version updated to 5")
             else:
                 raise
@@ -512,8 +514,8 @@ def get_tree_commit_history(
             )
             return cursor.fetchall()
     except ProgrammingError as e:
-        if valid_do_not_exist_exception(e):
-            os.environ[SCHEMA_VERSION_ENV] = "5"
+        if is_valid_does_not_exist_exception(e):
+            set_schema_version(version="5")
             log_message("Tree Commit History -- Schema version updated to 5")
         else:
             raise

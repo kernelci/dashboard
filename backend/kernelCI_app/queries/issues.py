@@ -1,12 +1,14 @@
-import os
 from django.db import connection
 from django.db.utils import ProgrammingError
 from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.helpers.environment import set_schema_version
 from kernelCI_app.helpers.logger import log_message
 import typing_extensions
 from kernelCI_app.models import Issues
-from kernelCI_app.helpers.build import valid_do_not_exist_exception, valid_status_field
-from kernelCI_app.constants.general import SCHEMA_VERSION_ENV
+from kernelCI_app.helpers.build import (
+    is_valid_does_not_exist_exception,
+    valid_status_field,
+)
 from datetime import datetime
 from django.db.models import Q
 
@@ -48,8 +50,8 @@ def get_issue_builds(*, issue_id: str, version: int) -> list[dict]:
             cursor.execute(query, params)
             return dict_fetchall(cursor)
     except ProgrammingError as e:
-        if valid_do_not_exist_exception(e):
-            os.environ[SCHEMA_VERSION_ENV] = "5"
+        if is_valid_does_not_exist_exception(e):
+            set_schema_version(version="5")
             log_message("Issue Builds -- Schema version updated to 5")
         else:
             raise
