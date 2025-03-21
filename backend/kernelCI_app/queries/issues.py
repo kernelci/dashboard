@@ -3,7 +3,6 @@ from django.db.utils import ProgrammingError
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.environment import set_schema_version
 from kernelCI_app.helpers.logger import log_message
-import typing_extensions
 from kernelCI_app.models import Issues
 from kernelCI_app.helpers.build import (
     is_valid_does_not_exist_exception,
@@ -13,9 +12,6 @@ from datetime import datetime
 from django.db.models import Q
 
 
-@typing_extensions.deprecated(
-    "This implementation is temporary while the schema is being updated."
-)
 def get_issue_builds(*, issue_id: str, version: int) -> list[dict]:
     params = {
         "issue_id": issue_id,
@@ -53,6 +49,7 @@ def get_issue_builds(*, issue_id: str, version: int) -> list[dict]:
         if is_valid_does_not_exist_exception(e):
             set_schema_version(version="5")
             log_message("Issue Builds -- Schema version updated to 5")
+            return get_issue_builds(issue_id=issue_id, version=version)
         else:
             raise
 

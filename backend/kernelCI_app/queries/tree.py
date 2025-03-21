@@ -297,9 +297,6 @@ def get_tree_listing_status(
         return cursor.fetchall()
 
 
-@typing_extensions.deprecated(
-    "This implementation is temporary while the schema is being updated."
-)
 def get_tree_details_data(
     origin_param: str, git_url_param: str, git_branch_param: str, commit_hash: str
 ) -> Optional[list[tuple]]:
@@ -403,15 +400,18 @@ def get_tree_details_data(
             if is_valid_does_not_exist_exception(e):
                 set_schema_version(version="5")
                 log_message("Tree Details -- Schema version updated to 5")
+                return get_tree_details_data(
+                    origin_param=origin_param,
+                    git_url_param=git_url_param,
+                    commit_hash=commit_hash,
+                    git_branch_param=git_branch_param,
+                )
             else:
                 raise
 
     return rows
 
 
-@typing_extensions.deprecated(
-    "This implementation is temporary while the schema is being updated."
-)
 def get_tree_commit_history(
     commit_hash: str, origin: str, git_url: str, git_branch: str
 ) -> Optional[list[tuple]]:
@@ -517,5 +517,11 @@ def get_tree_commit_history(
         if is_valid_does_not_exist_exception(e):
             set_schema_version(version="5")
             log_message("Tree Commit History -- Schema version updated to 5")
+            return get_tree_commit_history(
+                commit_hash=commit_hash,
+                origin=origin,
+                git_url=git_url,
+                git_branch=git_branch,
+            )
         else:
             raise
