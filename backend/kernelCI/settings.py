@@ -191,7 +191,11 @@ DATABASES = {
                 "connect_timeout": 5,
             },
         },
-    )
+    ),
+    "cache": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BACKEND_DATA_DIR, "cache.sqlite3"),
+    },
 }
 
 if DEBUG:
