@@ -16,12 +16,18 @@ export const issueListingDefaultValues = {
   intervalInDays: DEFAULT_TIME_SEARCH,
   issueSearch: '',
   listingSize: DEFAULT_LISTING_ITEMS,
+  culpritCode: true,
+  culpritTool: false,
+  culpritHarness: false,
 };
 
 export const issueListingSearchSchema = z.object({
   intervalInDays: makeZIntervalInDays(DEFAULT_TIME_SEARCH),
   issueSearch: z.string().catch(''),
   listingSize: zListingSize,
+  culpritCode: z.boolean().catch(true),
+  culpritTool: z.boolean().catch(false),
+  culpritHarness: z.boolean().catch(false),
 } satisfies SearchSchema);
 
 export const Route = createFileRoute('/_main/issues')({

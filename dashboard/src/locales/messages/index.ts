@@ -193,6 +193,8 @@ export const messages = {
     'issueDetails.firstIncidentData': 'First Incident Data',
     'issueDetails.id': 'Issue Id',
     'issueDetails.issueDetails': 'Issue Details',
+    'issueDetails.issueListingInfo':
+      'The culprit for all issues listed is code',
     'issueDetails.logspecData': 'Logspec Data',
     'issueDetails.notFound': 'Issue not found',
     'issueDetails.reportSubject': 'Report Subject',

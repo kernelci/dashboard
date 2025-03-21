@@ -9,28 +9,12 @@ from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
 from kernelCI_app.helpers.issueExtras import assign_issue_first_seen
-from kernelCI_app.models import Issues
-from kernelCI_app.typeModels.commonListing import ListingQueryParameters
+from kernelCI_app.queries.issues import get_issue_listing_data
 from kernelCI_app.typeModels.issueListing import (
     IssueListingResponse,
+    IssueListingQueryParameters,
 )
 from kernelCI_app.typeModels.issues import FirstIncident, ProcessedExtraDetailedIssues
-
-
-def get_issue_listing_data(interval_date):
-    issues_records = Issues.objects.values(
-        "id",
-        "field_timestamp",
-        "comment",
-        "version",
-        "origin",
-        "culprit_code",
-        "culprit_harness",
-        "culprit_tool",
-    ).filter(
-        field_timestamp__gte=interval_date,
-    )
-    return issues_records
 
 
 class IssueView(APIView):
@@ -47,26 +31,37 @@ class IssueView(APIView):
             self.first_incidents[issue_extras_id] = issue_extras_data["first_incident"]
 
     @extend_schema(
-        parameters=[ListingQueryParameters],
+        parameters=[IssueListingQueryParameters],
         responses=IssueListingResponse,
         methods=["GET"],
     )
     def get(self, _request) -> Response:
         try:
-            request_params = ListingQueryParameters(
+            request_params = IssueListingQueryParameters(
                 interval_in_days=_request.GET.get("intervalInDays"),
+                culprit_code=_request.GET.get("culpritCode"),
+                culprit_harness=_request.GET.get("culpritHarness"),
+                culprit_tool=_request.GET.get("culpritTool"),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
         interval_in_days = request_params.interval_in_days
+        culprit_code = request_params.culprit_code
+        culprit_harness = request_params.culprit_harness
+        culprit_tool = request_params.culprit_tool
 
         interval_date = datetime.now(timezone.utc) - timedelta(days=interval_in_days)
         interval_param = interval_date.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
 
-        self.issue_records = get_issue_listing_data(interval_date=interval_param)
+        self.issue_records = get_issue_listing_data(
+            interval_date=interval_param,
+            culprit_code=culprit_code,
+            culprit_harness=culprit_harness,
+            culprit_tool=culprit_tool,
+        )
 
         if len(self.issue_records) == 0:
             return create_api_error_response(
