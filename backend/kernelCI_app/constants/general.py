@@ -6,6 +6,7 @@ UNCATEGORIZED_STRING = "Uncategorized"
 
 MAESTRO_DUMMY_BUILD_PREFIX = "maestro:dummy_"
 
-SCHEMA_VERSION_ENV = "SCHEMA_VERSION"
+SCHEMA_VERSION_ENV_NAME = "schema-version"
+SCHEMA_VERSION_ENV_FILE = "kernelCI/envconfig/schema-version.yaml"
 
 PRODUCTION_HOST = "https://dashboard.kernelci.org"
