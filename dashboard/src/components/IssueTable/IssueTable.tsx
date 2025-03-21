@@ -96,7 +96,11 @@ const columns: ColumnDef<IssueListingTableItem>[] = [
     id: 'comment',
     accessorKey: 'comment',
     header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="issueDetails.comment" />
+      <TableHeader
+        column={column}
+        intlKey="issueDetails.comment"
+        tooltipId="issueDetails.issueListingInfo"
+      />
     ),
     cell: ({ row }): JSX.Element | string =>
       row.getValue('comment') ? (
@@ -196,15 +200,10 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
       return [];
     }
 
-    return issueListing.issues.reduce((acc, issue) => {
-      if (issue.culprit_code) {
-        acc.push({
-          ...issue,
-          ...issueListing.extras[issue.id],
-        });
-      }
-      return acc;
-    }, [] as IssueListingTableItem[]);
+    return issueListing.issues.map(issue => ({
+      ...issue,
+      ...issueListing.extras[issue.id],
+    }));
   }, [issueListing]);
 
   const table = useReactTable({

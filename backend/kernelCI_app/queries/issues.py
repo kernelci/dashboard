@@ -4,6 +4,7 @@ from django.db.utils import ProgrammingError
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.logger import log_message
 import typing_extensions
+from kernelCI_app.models import Issues
 from kernelCI_app.helpers.build import valid_do_not_exist_exception, valid_status_field
 from kernelCI_app.constants.general import SCHEMA_VERSION_ENV
 from datetime import datetime

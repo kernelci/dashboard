@@ -7,23 +7,58 @@ import type { IssueListingResponse } from '@/types/issueListing';
 
 import { RequestData } from './commonRequest';
 
+type IssueListingParams = {
+  intervalInDays?: number;
+  culpritCode?: boolean;
+  culpritHarness?: boolean;
+  culpritTool?: boolean;
+};
+
 const fetchIssueListing = async (
   origin: string,
   intervalInDays?: number,
+  culpritCode?: boolean,
+  culpritHarness?: boolean,
+  culpritTool?: boolean,
 ): Promise<IssueListingResponse> => {
+  const params: IssueListingParams = { intervalInDays };
+
+  if (culpritCode) {
+    params['culpritCode'] = true;
+  }
+  if (culpritHarness) {
+    params['culpritHarness'] = true;
+  }
+  if (culpritTool) {
+    params['culpritTool'] = true;
+  }
+
   const data = await RequestData.get<IssueListingResponse>('/api/issue/', {
-    params: { origin, intervalInDays },
+    params,
   });
   return data;
 };
 
 export const useIssueListing = (): UseQueryResult<IssueListingResponse> => {
-  const { origin, intervalInDays } = useSearch({ from: '/_main/issues' });
+  const { intervalInDays, culpritCode, culpritHarness, culpritTool } =
+    useSearch({ from: '/_main/issues' });
 
-  const queryKey = ['issueTable', origin, intervalInDays];
+  const queryKey = [
+    'issueTable',
+    intervalInDays,
+    culpritCode,
+    culpritHarness,
+    culpritTool,
+  ];
 
   return useQuery({
     queryKey,
-    queryFn: () => fetchIssueListing(origin, intervalInDays),
+    queryFn: () =>
+      fetchIssueListing(
+        intervalInDays,
+        culpritCode,
+        culpritHarness,
+        culpritTool,
+      ),
   });
 };

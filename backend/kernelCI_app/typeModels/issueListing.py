@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 
 from kernelCI_app.typeModels.databases import (
     Issue__Comment,
@@ -11,6 +12,12 @@ from kernelCI_app.typeModels.databases import (
     Origin,
 )
 from kernelCI_app.typeModels.issues import FirstIncident
+
+
+class IssueListingQueryParameters(ListingQueryParameters):
+    culprit_code: bool | None = False
+    culprit_harness: bool | None = False
+    culprit_tool: bool | None = False
 
 
 class IssueListingItem(BaseModel):

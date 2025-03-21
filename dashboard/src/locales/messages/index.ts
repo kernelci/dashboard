@@ -194,6 +194,8 @@ export const messages = {
     'issueDetails.firstIncidentData': 'First Incident Data',
     'issueDetails.id': 'Issue Id',
     'issueDetails.issueDetails': 'Issue Details',
+    'issueDetails.issueListingInfo':
+      'The culprit for all issues listed is code',
     'issueDetails.logspecData': 'Logspec Data',
     'issueDetails.noBuildResults': 'No builds associated with this issue',
     'issueDetails.noTestResults': 'No tests associated with this issue',
