@@ -413,17 +413,6 @@ class TreeCommitsHistory(APIView):
             git_branch=git_branch_param,
         )
 
-        # Temporary during schema transition
-        if rows is None:
-            message = (
-                "This error was probably caused because the server was using"
-                "an old version of the database. Please try requesting again"
-            )
-            return create_api_error_response(
-                error_message=message,
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
         if not rows:
             return create_api_error_response(
                 error_message="History of tree commits not found",

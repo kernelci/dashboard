@@ -17,21 +17,10 @@ class BuildTests(APIView):
     def get(self, request, build_id: str) -> Response:
         result = get_build_tests(build_id)
 
-        # Temporary during schema transition
-        if result is None:
-            message = (
-                "This error was probably caused because the server was using"
-                "an old version of the database. Please try requesting again"
-            )
-            return create_api_error_response(
-                error_message=message,
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
         if not result:
-            return Response(
-                data={"error": "No tests found for this build"},
-                status=HTTPStatus.OK,
+            return create_api_error_response(
+                error_message="No tests found for this build",
+                status_code=HTTPStatus.OK,
             )
 
         if (

@@ -199,20 +199,10 @@ class TreeDetails(APIView):
 
         self.filters = FilterParams(request)
 
-        # Temporary during schema transition
-        if rows is None:
-            message = (
-                "This error was probably caused because the server was using"
-                "an old version of the database. Please try requesting again"
-            )
-            return create_api_error_response(
-                error_message=message,
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
         if len(rows) == 0:
             return create_api_error_response(
-                error_message="Tree not found", status_code=HTTPStatus.OK
+                error_message="Tree not found",
+                status_code=HTTPStatus.OK,
             )
 
         self._sanitize_rows(rows)
@@ -285,8 +275,6 @@ class TreeDetails(APIView):
                 ),
             )
         except ValidationError as e:
-            return create_api_error_response(
-                error_message=e.json(), status_code=HTTPStatus.INTERNAL_SERVER_ERROR
-            )
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(valid_response.model_dump())

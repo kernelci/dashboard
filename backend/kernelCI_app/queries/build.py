@@ -1,17 +1,15 @@
-import os
 from django.db.utils import ProgrammingError
-import typing_extensions
 from typing import Optional
 from querybuilder.query import Query
+from kernelCI_app.helpers.environment import set_schema_version
 from kernelCI_app.models import Builds, Tests
-from kernelCI_app.helpers.build import valid_do_not_exist_exception, valid_status_field
-from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.constants.general import SCHEMA_VERSION_ENV
-
-
-@typing_extensions.deprecated(
-    "This implementation is temporary while the schema is being updated."
+from kernelCI_app.helpers.build import (
+    is_valid_does_not_exist_exception,
+    valid_status_field,
 )
+from kernelCI_app.helpers.logger import log_message
+
+
 def get_build_details(build_id: str) -> Optional[list[dict]]:
     build_fields = [
         "id",
@@ -53,16 +51,14 @@ def get_build_details(build_id: str) -> Optional[list[dict]]:
     try:
         return query.select()
     except ProgrammingError as e:
-        if valid_do_not_exist_exception(e):
-            os.environ[SCHEMA_VERSION_ENV] = "5"
+        if is_valid_does_not_exist_exception(e):
+            set_schema_version(version="5")
             log_message("Build Details -- Schema version updated to 5")
+            return get_build_details(build_id=build_id)
         else:
             raise
 
 
-@typing_extensions.deprecated(
-    "This implementation is temporary while the schema is being updated."
-)
 def get_build_tests(build_id: str) -> Optional[list[dict]]:
     try:
         result = Tests.objects.filter(build_id=build_id).values(
@@ -75,10 +71,11 @@ def get_build_tests(build_id: str) -> Optional[list[dict]]:
             "environment_misc",
             f"build__{valid_status_field()}",
         )
-        return result
+        return list(result)
     except ProgrammingError as e:
-        if valid_do_not_exist_exception(e):
-            os.environ[SCHEMA_VERSION_ENV] = "5"
+        if is_valid_does_not_exist_exception(e):
+            set_schema_version(version="5")
             log_message("Build Details Tests -- Schema version updated to 5")
+            return get_build_tests(build_id=build_id)
         else:
             raise
