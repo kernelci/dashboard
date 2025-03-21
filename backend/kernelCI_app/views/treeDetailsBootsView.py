@@ -4,10 +4,7 @@ from http import HTTPStatus
 from drf_spectacular.utils import extend_schema
 from kernelCI_app.typeModels.issues import Issue
 from pydantic import ValidationError
-from kernelCI_app.helpers.errorHandling import (
-    create_api_error_response,
-    create_error_response,
-)
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
     FilterParams,
 )
@@ -71,7 +68,7 @@ class TreeDetailsBoots(APIView):
         methods=["GET"],
         responses=CommonDetailsBootsResponse,
     )
-    def get(self, request, commit_hash: str | None):
+    def get(self, request, commit_hash: str | None) -> Response:
         origin_param = request.GET.get("origin")
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch")
@@ -82,20 +79,10 @@ class TreeDetailsBoots(APIView):
 
         self.filters = FilterParams(request)
 
-        # Temporary during schema transition
-        if rows is None:
-            message = (
-                "This error was probably caused because the server was using"
-                "an old version of the database. Please try requesting again"
-            )
-            return create_api_error_response(
-                error_message=message,
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
         if len(rows) == 0:
-            return create_error_response(
-                error_message="No boots found for this tree", status_code=HTTPStatus.OK
+            return create_api_error_response(
+                error_message="No boots found for this tree",
+                status_code=HTTPStatus.OK,
             )
 
         try:

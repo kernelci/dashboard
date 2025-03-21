@@ -6,7 +6,7 @@ from kernelCI_app.constants.general import (
 )
 from kernelCI_app.helpers.logger import log_message
 
-DEFAULT_SCHEMA_VERSION = "4"
+DEFAULT_SCHEMA_VERSION = "5"
 
 
 def get_yaml_data(*, file: str):

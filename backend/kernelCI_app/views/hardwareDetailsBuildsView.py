@@ -98,7 +98,7 @@ class HardwareDetailsBuilds(APIView):
         methods=["POST"],
         responses=HardwareDetailsBuildsResponse,
     )
-    def post(self, request, hardware_id):
+    def post(self, request, hardware_id) -> Response:
         try:
             unstable_parse_post_body(instance=self, request=request)
         except ValidationError as e:
@@ -144,21 +144,10 @@ class HardwareDetailsBuilds(APIView):
             end_datetime=self.end_datetime,
         )
 
-        # Temporary during schema transition
-        if records is None:
-            message = (
-                "This error was probably caused because the server was using"
-                "an old version of the database. Please try requesting again"
-            )
-            return create_api_error_response(
-                error_message=message,
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
         if len(records) == 0:
-            return Response(
-                data={"error": "No builds found for this hardware"},
-                status=HTTPStatus.OK,
+            return create_api_error_response(
+                error_message="No builds found for this hardware",
+                status_code=HTTPStatus.OK,
             )
 
         is_all_selected = len(self.selected_commits) == 0
