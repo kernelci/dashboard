@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "kernelCI_app",
+    "kernelCI_cache",
     "rest_framework",
     "drf_spectacular",
     "django_crontab",
@@ -178,6 +179,8 @@ GMAIL_API_TOKEN = get_json_env_var("GMAIL_API_TOKEN", "")
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+DATABASE_ROUTERS = ["kernelCI_app.routers.disableMigrateRouter.DisableMigrateRouter"]
+
 DATABASES = {
     "default": get_json_env_var(
         "DB_DEFAULT",
@@ -191,7 +194,11 @@ DATABASES = {
                 "connect_timeout": 5,
             },
         },
-    )
+    ),
+    "cache": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BACKEND_DATA_DIR, "cache.sqlite3"),
+    },
 }
 
 if DEBUG:
@@ -246,16 +253,10 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
-class DisableMigrations:
-    def __contains__(self, item):
-        return True
-
-    def __getitem__(self, item):
-        return None
-
-
-MIGRATION_MODULES = DisableMigrations()
+MIGRATION_MODULES = {
+    "kernelCI_app": None,
+    "kernelCI_cache": "kernelCI_cache.migrations",
+}
 
 CORS_ALLOW_ALL_ORIGINS = False
 

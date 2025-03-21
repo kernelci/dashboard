@@ -6,6 +6,7 @@ from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
+from kernelCI_cache.checkouts import populate_checkouts_cache_db
 from kernelCI_app.queries.tree import get_tree_listing_data
 from http import HTTPStatus
 from kernelCI_app.typeModels.treeListing import (
@@ -92,6 +93,7 @@ class TreeView(APIView):
 
         try:
             valid_response = TreeListingResponse(checkouts)
+            populate_checkouts_cache_db(checkouts, origin_param)
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
