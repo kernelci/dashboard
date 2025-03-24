@@ -245,7 +245,8 @@ def get_tree_details_data(
                             checkouts.id AS checkout_id,
                             checkouts.git_repository_url AS checkouts_git_repository_url,
                             checkouts.git_repository_branch AS checkouts_git_repository_branch,
-                            checkouts.git_commit_tags
+                            checkouts.git_commit_tags,
+                            checkouts.origin as checkouts_origin
                         FROM
                             checkouts
                         WHERE
@@ -254,10 +255,10 @@ def get_tree_details_data(
                             {git_branch_clause} AND
                             checkouts.origin = %(origin_param)s
                     ) AS tree_head
-                INNER JOIN builds
+                LEFT JOIN builds
                     ON tree_head.checkout_id = builds.checkout_id
                 WHERE
-                    builds.origin = %(origin_param)s
+                    tree_head.checkouts_origin = %(origin_param)s
             ) AS builds_filter
         LEFT JOIN tests
             ON builds_filter.builds_id = tests.build_id
@@ -375,7 +376,7 @@ def get_tree_commit_history(
         i.id AS issues_id,
         i.version AS issues_version
     FROM earliest_commits AS c
-    INNER JOIN builds AS b
+    LEFT JOIN builds AS b
     ON
         c.id = b.checkout_id
     LEFT JOIN tests AS t

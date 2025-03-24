@@ -3,12 +3,14 @@ from http import HTTPStatus
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from kernelCI_app.helpers.commonDetails import PossibleTabs
+from kernelCI_app.helpers.discordWebhook import send_discord_notification
 from kernelCI_app.helpers.filters import (
     FilterParams,
 )
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.helpers.logger import create_endpoint_notification
 from kernelCI_app.helpers.treeDetails import (
     call_based_on_compatible_and_misc_platform,
     decide_if_is_boot_filtered_out,
@@ -201,9 +203,22 @@ class TreeDetails(APIView):
 
         if len(rows) == 0:
             return create_api_error_response(
-                error_message="Tree not found",
+                error_message="Tree checkout not found",
                 status_code=HTTPStatus.OK,
             )
+
+        if len(rows) == 1:
+            row_data = get_current_row_data(current_row=rows[0])
+            if row_data["build_id"] is None:
+                notification = create_endpoint_notification(
+                    message="Found checkout without builds",
+                    request=request,
+                )
+                send_discord_notification(content=notification)
+                return create_api_error_response(
+                    error_message="No builds found for this tree checkout",
+                    status_code=HTTPStatus.OK,
+                )
 
         self._sanitize_rows(rows)
 
