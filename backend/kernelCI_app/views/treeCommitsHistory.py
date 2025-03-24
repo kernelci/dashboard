@@ -330,7 +330,9 @@ class TreeCommitsHistory(APIView):
                 )
             )
 
-            if record_filter_out:
+            is_record_checkout_only = row["build_id"] is None and row["test_id"] is None
+
+            if record_filter_out and not is_record_checkout_only:
                 continue
 
             commit_hash = row["git_commit_hash"]

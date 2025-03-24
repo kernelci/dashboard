@@ -76,13 +76,14 @@ def get_current_row_data(current_row: dict) -> dict:
         "checkout_git_repository_url": current_row[26],
         "checkout_git_repository_branch": current_row[27],
         "checkout_git_commit_tags": current_row[28],
-        "incident_id": current_row[29],
-        "incident_test_id": current_row[30],
-        "incident_present": current_row[31],
-        "issue_id": current_row[32],
-        "issue_version": current_row[33],
-        "issue_comment": current_row[34],
-        "issue_report_url": current_row[35],
+        "checkout_origin": current_row[29],
+        "incident_id": current_row[30],
+        "incident_test_id": current_row[31],
+        "incident_present": current_row[32],
+        "issue_id": current_row[33],
+        "issue_version": current_row[34],
+        "issue_comment": current_row[35],
+        "issue_report_url": current_row[36],
     }
 
     environment_misc = handle_environment_misc(

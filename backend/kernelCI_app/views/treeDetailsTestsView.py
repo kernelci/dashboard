@@ -85,9 +85,17 @@ class TreeDetailsTests(APIView):
 
         if len(rows) == 0:
             return create_api_error_response(
-                error_message="No tests found for this tree",
+                error_message="Tree checkout not found",
                 status_code=HTTPStatus.OK,
             )
+
+        if len(rows) == 1:
+            row_data = get_current_row_data(current_row=rows[0])
+            if row_data["test_id"] is None:
+                return create_api_error_response(
+                    error_message="No tests found for this tree checkout",
+                    status_code=HTTPStatus.OK,
+                )
 
         try:
             self._sanitize_rows(rows)
