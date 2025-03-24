@@ -2,7 +2,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 
 import type { TBuildDetails } from '@/types/tree/BuildDetails';
-
+import type { ApiUseQueryOptions } from '@/types/api';
 import type { TIssue } from '@/types/issues';
 
 import { RequestData } from './commonRequest';
@@ -21,7 +21,10 @@ const fetchBuildDetailsData = async (
 
 export const useBuildDetails = (
   buildId: string,
-  config: { enabled?: boolean } = { enabled: true },
+  config: ApiUseQueryOptions<TBuildDetails> = {
+    enabled: true,
+    refetchOnWindowFocus: false,
+  },
 ): UseQueryResult<TBuildDetails> => {
   return useQuery({
     queryKey: ['treeData', buildId],
@@ -41,5 +44,6 @@ export const useBuildIssues = (buildId: string): UseQueryResult<TIssue[]> => {
     queryKey: ['buildIssues', buildId],
     queryFn: () => fetchBuildIssues(buildId),
     enabled: buildId !== '',
+    refetchOnWindowFocus: false,
   });
 };

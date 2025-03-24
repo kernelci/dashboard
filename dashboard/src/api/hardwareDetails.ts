@@ -179,6 +179,7 @@ export const useHardwareDetails = <T extends HardwareDetailsVariants>({
     queryFn: () => fetchHardwareDetails({ hardwareId, body, variant }),
     placeholderData: previousData => previousData,
     enabled: enabled,
+    refetchOnWindowFocus: false,
   });
 };
 

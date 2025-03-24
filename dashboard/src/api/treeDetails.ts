@@ -123,6 +123,7 @@ export const useTreeDetails = <T extends TreeDetailsVariants>({
         },
       }),
     enabled,
+    refetchOnWindowFocus: false,
     placeholderData: previousData => previousData,
   });
 };

@@ -19,5 +19,6 @@ export const useBuildTests = (
   return useQuery({
     queryKey: ['buildTests', buildId],
     queryFn: () => fetchBuildTestsData(buildId),
+    refetchOnWindowFocus: false,
   });
 };

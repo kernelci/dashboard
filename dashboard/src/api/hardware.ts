@@ -49,5 +49,6 @@ export const useHardwareListing = (
         startTimestampInSeconds,
         endTimestampInSeconds,
       ),
+    refetchOnWindowFocus: false,
   });
 };
