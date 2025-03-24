@@ -6,6 +6,11 @@ import { FormattedMessage } from 'react-intl';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { MessagesKey } from '@/locales/messages';
 
+export type TabRightElementRecord = Record<
+  'buildTab' | 'bootTab' | 'testTab',
+  ReactElement
+>;
+
 export interface ITabItem {
   name: MessagesKey;
   content: ReactElement;
