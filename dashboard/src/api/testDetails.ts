@@ -8,6 +8,7 @@ import type {
 } from '@/types/tree/TestDetails';
 
 import type { TIssue } from '@/types/issues';
+import type { ApiUseQueryOptions } from '@/types/api';
 
 import { RequestData } from './commonRequest';
 
@@ -18,7 +19,10 @@ const fetchTestDetails = async (testId: string): Promise<TTestDetails> => {
 
 export const useTestDetails = (
   testId: string,
-  config: { enabled?: boolean } = { enabled: true },
+  config: ApiUseQueryOptions<TTestDetails> = {
+    enabled: true,
+    refetchOnWindowFocus: false,
+  },
 ): UseQueryResult<TTestDetails> => {
   return useQuery({
     queryKey: ['testDetailsData', testId],
@@ -41,6 +45,7 @@ export const useTestIssues = (
     queryKey: ['testIssues', testId],
     enabled: testId !== '' && enabled,
     queryFn: () => fetchTestIssues(testId),
+    refetchOnWindowFocus: false,
   });
 };
 

@@ -63,6 +63,7 @@ export const useIssueDetailsTests = (
     queryKey: ['issueTestsData', issueId, versionNumber],
     queryFn: () => fetchIssueDetailsTests(issueId, versionNumber),
     retry: 1,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -90,5 +91,6 @@ export const useIssueDetailsBuilds = (
     queryKey: ['issueBuildsData', issueId, versionNumber],
     queryFn: () => fetchIssueDetailsBuilds(issueId, versionNumber),
     retry: 1,
+    refetchOnWindowFocus: false,
   });
 };
