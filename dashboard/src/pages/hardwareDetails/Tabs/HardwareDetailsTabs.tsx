@@ -1,11 +1,11 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import type { ReactElement, JSX } from 'react';
+import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
-import type { ITabItem } from '@/components/Tabs/Tabs';
+import type { ITabItem, TabRightElementRecord } from '@/components/Tabs/Tabs';
 import Tabs from '@/components/Tabs/Tabs';
 
 import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
@@ -19,15 +19,10 @@ import BuildTab from './Build';
 import BootsTab from './Boots';
 import TestsTab from './Tests';
 
-export type TreeDetailsTabRightElement = Record<
-  'global.builds' | 'global.boots' | 'global.tests',
-  ReactElement
->;
-
 export interface IHardwareDetailsTab {
   hardwareId: string;
   filterListElement?: JSX.Element;
-  countElements: TreeDetailsTabRightElement;
+  countElements: TabRightElementRecord;
   fullDataResult?: UseQueryResult<THardwareDetails>;
   summaryData: HardwareDetailsSummary;
 }
@@ -73,7 +68,7 @@ const HardwareDetailsTabs = ({
             fullDataResult={fullDataResult}
           />
         ),
-        rightElement: countElements['global.builds'],
+        rightElement: countElements['buildTab'],
         disabled: false,
       },
       {
@@ -86,7 +81,7 @@ const HardwareDetailsTabs = ({
             fullDataResult={fullDataResult}
           />
         ),
-        rightElement: countElements['global.boots'],
+        rightElement: countElements['bootTab'],
         disabled: false,
       },
       {
@@ -99,7 +94,7 @@ const HardwareDetailsTabs = ({
             fullDataResult={fullDataResult}
           />
         ),
-        rightElement: countElements['global.tests'],
+        rightElement: countElements['testTab'],
         disabled: false,
       },
     ],

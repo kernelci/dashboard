@@ -1,9 +1,9 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import type { ReactElement, JSX } from 'react';
+import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
 
-import type { ITabItem } from '@/components/Tabs/Tabs';
+import type { ITabItem, TabRightElementRecord } from '@/components/Tabs/Tabs';
 import Tabs from '@/components/Tabs/Tabs';
 
 import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
@@ -14,15 +14,10 @@ import BuildTab from './Build';
 import BootsTab from './Boots';
 import TestsTab from './Tests';
 
-export type TreeDetailsTabRightElement = Record<
-  'global.builds' | 'global.boots' | 'global.tests',
-  ReactElement
->;
-
 export interface ITreeDetailsTab {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
   filterListElement?: JSX.Element;
-  countElements: TreeDetailsTabRightElement;
+  countElements: TabRightElementRecord;
 }
 
 const TreeDetailsTab = ({
@@ -40,19 +35,19 @@ const TreeDetailsTab = ({
         name: 'global.builds',
         content: <BuildTab treeDetailsLazyLoaded={treeDetailsLazyLoaded} />,
         disabled: false,
-        rightElement: countElements['global.builds'],
+        rightElement: countElements['buildTab'],
       },
       {
         name: 'global.boots',
         content: <BootsTab treeDetailsLazyLoaded={treeDetailsLazyLoaded} />,
         disabled: false,
-        rightElement: countElements['global.boots'],
+        rightElement: countElements['bootTab'],
       },
       {
         name: 'global.tests',
         content: <TestsTab treeDetailsLazyLoaded={treeDetailsLazyLoaded} />,
         disabled: false,
-        rightElement: countElements['global.tests'],
+        rightElement: countElements['testTab'],
       },
     ],
     [countElements, treeDetailsLazyLoaded],

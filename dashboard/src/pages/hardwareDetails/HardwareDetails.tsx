@@ -58,8 +58,9 @@ import PageWithTitle from '@/components/PageWithTitle';
 
 import { MemoizedTreeHardwareDetailsOGTags } from '@/components/OpenGraphTags/TreeHardwareDetailsOGTags';
 
+import type { TabRightElementRecord } from '@/components/Tabs/Tabs';
+
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
-import type { TreeDetailsTabRightElement } from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsFilter from './HardwareDetailsFilter';
 
@@ -296,23 +297,23 @@ function HardwareDetails(): JSX.Element {
     summaryResponse.data?.summary.tests,
   ]);
 
-  const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
+  const tabsCounts: TabRightElementRecord = useMemo(() => {
     return {
-      'global.tests': (
+      testTab: (
         <GroupedTestStatus
           preCalculatedGroupedStatus={testStatusCount}
           hideInconclusive
         />
       ),
 
-      'global.boots': (
+      bootTab: (
         <GroupedTestStatus
           preCalculatedGroupedStatus={bootStatusCount}
           hideInconclusive
         />
       ),
 
-      'global.builds': (
+      buildTab: (
         <GroupedTestStatus
           preCalculatedGroupedStatus={buildStatusCount}
           hideInconclusive

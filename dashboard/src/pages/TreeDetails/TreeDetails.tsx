@@ -62,8 +62,9 @@ import PageWithTitle from '@/components/PageWithTitle';
 
 import { MemoizedTreeHardwareDetailsOGTags } from '@/components/OpenGraphTags/TreeHardwareDetailsOGTags';
 
+import type { TabRightElementRecord } from '@/components/Tabs/Tabs';
+
 import TreeDetailsFilter from './TreeDetailsFilter';
-import type { TreeDetailsTabRightElement } from './Tabs/TreeDetailsTab';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
 
 interface ITreeHeader {
@@ -289,21 +290,21 @@ function TreeDetails(): JSX.Element {
     return [buildCount, bootCount, testCount];
   }, [data?.summary.boots, data?.summary.builds, data?.summary.tests]);
 
-  const tabsCounts: TreeDetailsTabRightElement = useMemo(() => {
+  const tabsCounts: TabRightElementRecord = useMemo(() => {
     return {
-      'global.tests': (
+      testTab: (
         <GroupedTestStatus
           preCalculatedGroupedStatus={testStatusCount}
           hideInconclusive
         />
       ),
-      'global.boots': (
+      bootTab: (
         <GroupedTestStatus
           preCalculatedGroupedStatus={bootStatusCount}
           hideInconclusive
         />
       ),
-      'global.builds': (
+      buildTab: (
         <GroupedTestStatus
           preCalculatedGroupedStatus={buildStatusCount}
           hideInconclusive
