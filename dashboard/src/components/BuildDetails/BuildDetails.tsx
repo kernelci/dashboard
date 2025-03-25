@@ -291,7 +291,7 @@ const BuildDetails = ({
           <MemoizedSectionError
             isLoading={isLoading}
             errorMessage={error?.message}
-            emptyLabel={'global.error'}
+            emptyLabel="buildDetails.notFound"
           />
         }
       >

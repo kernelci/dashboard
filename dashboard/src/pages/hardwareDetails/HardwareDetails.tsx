@@ -361,7 +361,7 @@ function HardwareDetails(): JSX.Element {
           <MemoizedSectionError
             isLoading={summaryResponse.isLoading}
             errorMessage={summaryResponse.error?.message}
-            emptyLabel={'global.error'}
+            emptyLabel="hardwareDetails.notFound"
           />
         }
       >

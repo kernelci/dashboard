@@ -33,6 +33,7 @@ export const messages = {
     'buildDetails.gitDescribe': 'Git Describe',
     'buildDetails.kernelConfig': 'Kernel Config',
     'buildDetails.noTestResults': 'No tests executed for this build',
+    'buildDetails.notFound': 'Build not found',
     'buildDetails.startTime': 'Start Time',
     'buildDetails.testResults': 'Test Results',
     'buildTab.buildStatus': 'Build status',
@@ -170,6 +171,7 @@ export const messages = {
     'hardware.path': 'Hardware',
     'hardware.searchPlaceholder':
       'Search by hardware name or platform with a regex',
+    'hardwareDetails.notFound': 'Hardware not found',
     'hardwareDetails.platforms': 'Platforms',
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
@@ -293,6 +295,7 @@ export const messages = {
     'treeDetails.inconclusiveBuilds': 'Inconclusive Builds',
     'treeDetails.inconclusiveTests': 'Inconclusive Tests',
     'treeDetails.invalidBuilds': 'Failed builds',
+    'treeDetails.notFound': 'Tree not found',
     'treeDetails.successBoots': 'Success boots',
     'treeDetails.testsFailed': 'Failed tests',
     'treeDetails.testsHistory': 'Tests History',
