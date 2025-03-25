@@ -497,7 +497,7 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
           <MemoizedSectionError
             isLoading={isLoading}
             errorMessage={error?.message}
-            emptyLabel={'global.error'}
+            emptyLabel="testDetails.notFound"
           />
         }
       >

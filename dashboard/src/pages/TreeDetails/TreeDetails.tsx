@@ -334,7 +334,7 @@ function TreeDetails(): JSX.Element {
           <MemoizedSectionError
             isLoading={isLoading}
             errorMessage={error?.message}
-            emptyLabel={'global.error'}
+            emptyLabel="treeDetails.notFound"
           />
         }
       >

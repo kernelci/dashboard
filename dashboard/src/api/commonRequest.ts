@@ -23,7 +23,7 @@ export class RequestData {
     const res = await http.post<ResponseData<T>>(url, data, config);
 
     if (res.data.error) {
-      throw new Error(res.data.error);
+      throw new Error(`${res.status}:${res.data.error}`);
     }
 
     return res.data;

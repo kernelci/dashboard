@@ -218,7 +218,7 @@ export const IssueDetails = ({
           <MemoizedSectionError
             isLoading={isLoading}
             errorMessage={error?.message}
-            emptyLabel={'global.error'}
+            emptyLabel="issueDetails.notFound"
           />
         }
       >
