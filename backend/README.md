@@ -38,6 +38,8 @@ The backend includes unit tests covering some parts of the source code. To run t
 poetry run pytest
 ```
 
+This command runs the tests, splitted into 4 processes. Each process runs a test file. If a test fails for any reason, it's retried up to 4 times.
+This behavior is due to the flags we are passing to `addopts` in the `pyproject.toml` settings file.
 All unit test files must follow this naming convention: `*_test.py`.
 
 endpoints using the built-in `requests` library from python. Because of that, it's necessary to be running the server for the django tests to be performed. When running pytest with the server
