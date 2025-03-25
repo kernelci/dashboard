@@ -22,6 +22,7 @@ export type TreeDetailsLazyLoaded = {
     data?: TreeDetailsFullData;
     isLoading: boolean;
     status: QuerySelectorStatus;
+    error: UseQueryResult['error'];
   };
   issuesExtras: {
     data?: IssueExtraDetailsResponse;
@@ -68,6 +69,7 @@ export const useTreeDetailsLazyLoadQuery = (
       data: fullResult.data,
       isLoading: fullResult.isLoading,
       status: fullResult.status,
+      error: fullResult.error,
     },
     issuesExtras: {
       data: issuesExtrasResult.data,

@@ -12,6 +12,7 @@ interface ISectionError {
   emptyLabel?: MessageDescriptor['id'];
   customEmptyDataComponent?: JSX.Element;
   variant?: TErrorVariant;
+  forceErrorMessageUse?: boolean;
 }
 
 type IErrorMessage = {
@@ -37,11 +38,14 @@ const SectionError = ({
   emptyLabel = 'global.noResults',
   customEmptyDataComponent,
   variant = 'error',
+  forceErrorMessageUse = false,
 }: ISectionError): JSX.Element => {
   let errorStatusCode: number | undefined;
+  let errorResponseMessage: string | undefined;
   const splittedError = errorMessage?.split(':');
   if (splittedError && splittedError.length > 1) {
     errorStatusCode = parseInt(splittedError[0]);
+    errorResponseMessage = splittedError[1];
   }
 
   const message = useMemo((): MessageDescriptor['id'] => {
@@ -69,9 +73,11 @@ const SectionError = ({
       <p className="text-2xl font-semibold">
         <FormattedMessage id={message} />
       </p>
-      {errorMessage && errorStatusCode !== HttpStatusCode.Ok && (
+      {((errorMessage && errorStatusCode !== HttpStatusCode.Ok) ||
+        forceErrorMessageUse) && (
         <p>
-          {globalErrorMessage[variant].label}: {errorMessage}
+          {globalErrorMessage[variant].label}:{' '}
+          {errorResponseMessage ?? errorMessage}
         </p>
       )}
     </div>

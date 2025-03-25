@@ -234,6 +234,8 @@ export const messages = {
     'routes.testDetails': 'Test',
     'routes.treeMonitor': 'Trees',
     'routes.unknown': 'Unknown',
+    'tab.findOnPreviousCheckoutsTooltip':
+      'You may still find {tab} on previous checkouts',
     'tab.name': 'Name',
     'table.itemsPerPage': 'Items per page:',
     'table.of': 'of',
@@ -295,7 +297,6 @@ export const messages = {
     'treeDetails.inconclusiveBuilds': 'Inconclusive Builds',
     'treeDetails.inconclusiveTests': 'Inconclusive Tests',
     'treeDetails.invalidBuilds': 'Failed builds',
-    'treeDetails.notFound': 'Tree not found',
     'treeDetails.successBoots': 'Success boots',
     'treeDetails.testsFailed': 'Failed tests',
     'treeDetails.testsHistory': 'Tests History',

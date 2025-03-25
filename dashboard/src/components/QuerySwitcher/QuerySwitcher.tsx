@@ -43,9 +43,7 @@ const QuerySwitcher = ({
     case 'error':
       return (
         <>
-          {customError ? (
-            customError
-          ) : (
+          {customError ?? (
             <div>
               <UnexpectedError />
             </div>
@@ -56,7 +54,7 @@ const QuerySwitcher = ({
 
   if (!data) {
     return (
-      <div>
+      <div className="text-weak-gray flex flex-col items-center py-6 text-2xl font-semibold">
         <FormattedMessage id="global.noDataAvailable" />
       </div>
     );

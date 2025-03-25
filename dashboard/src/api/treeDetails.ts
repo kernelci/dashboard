@@ -124,6 +124,7 @@ export const useTreeDetails = <T extends TreeDetailsVariants>({
       }),
     enabled,
     refetchOnWindowFocus: false,
+    // TODO: check the cases when the real previous data is null/undefined
     placeholderData: previousData => previousData,
   });
 };
