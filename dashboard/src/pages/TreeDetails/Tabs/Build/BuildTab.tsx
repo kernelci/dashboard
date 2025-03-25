@@ -1,4 +1,4 @@
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useCallback, useMemo, type JSX } from 'react';
 
@@ -46,6 +46,8 @@ import type { TIssue } from '@/types/issues';
 
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
 interface BuildTab {
@@ -72,9 +74,29 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
 
   const { treeId } = useParams({ from: '/_main/tree/$treeId' });
 
-  const summaryData = treeDetailsLazyLoaded.summary?.data?.summary.builds;
-  const { data: fullData, status: fullStatus } = treeDetailsLazyLoaded.full;
-  const buildsData = fullData?.builds;
+  const {
+    data: summaryData,
+    status: summaryStatus,
+    error: summaryError,
+    isLoading: summaryIsLoading,
+  } = useMemo(
+    () => treeDetailsLazyLoaded.summary,
+    [treeDetailsLazyLoaded.summary],
+  );
+
+  const summaryBuildsData = useMemo(
+    () => summaryData?.summary.builds,
+    [summaryData?.summary.builds],
+  );
+
+  const {
+    data: fullData,
+    status: fullStatus,
+    error: fullError,
+    isLoading: fullIsLoading,
+  } = useMemo(() => treeDetailsLazyLoaded.full, [treeDetailsLazyLoaded.full]);
+
+  const fullBuildsData = useMemo(() => fullData?.builds, [fullData?.builds]);
 
   const toggleFilterBySection = useCallback(
     (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
@@ -100,103 +122,149 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
 
   const treeDetailsData: IBuildsTab = useMemo(
     () => ({
-      architectures: sanitizeArchs(summaryData?.architectures),
-      configs: sanitizeConfigs(summaryData?.configs),
-      buildsSummary: sanitizeBuildsSummary(summaryData?.status),
-      buildsIssues: summaryData?.issues || [],
-      failedBuildsWithUnknownIssues: summaryData?.unknown_issues,
-      builds: sanitizeBuilds(buildsData),
+      architectures: sanitizeArchs(summaryBuildsData?.architectures),
+      configs: sanitizeConfigs(summaryBuildsData?.configs),
+      buildsSummary: sanitizeBuildsSummary(summaryBuildsData?.status),
+      buildsIssues: summaryBuildsData?.issues || [],
+      failedBuildsWithUnknownIssues: summaryBuildsData?.unknown_issues,
+      builds: sanitizeBuilds(fullBuildsData),
     }),
     [
-      buildsData,
-      summaryData?.architectures,
-      summaryData?.configs,
-      summaryData?.issues,
-      summaryData?.status,
-      summaryData?.unknown_issues,
+      fullBuildsData,
+      summaryBuildsData?.architectures,
+      summaryBuildsData?.configs,
+      summaryBuildsData?.issues,
+      summaryBuildsData?.status,
+      summaryBuildsData?.unknown_issues,
     ],
   );
-  return (
-    <div className="flex flex-col gap-8 pt-4">
-      <DesktopGrid>
-        <div>
-          <MemoizedStatusCard
-            title={<FormattedMessage id="buildTab.buildStatus" />}
-            toggleFilterBySection={toggleFilterBySection}
-            statusCounts={treeDetailsData.buildsSummary}
-            filterStatusKey="buildStatus"
-          />
-          <MemoizedErrorsSummaryBuild
-            summaryBody={treeDetailsData.architectures}
-            toggleFilterBySection={toggleFilterBySection}
-            diffFilter={diffFilter}
-          />
-        </div>
-        <div>
-          <TreeCommitNavigationGraph />
-          <MemoizedConfigsCard
-            configs={treeDetailsData.configs}
-            toggleFilterBySection={toggleFilterBySection}
-            diffFilter={diffFilter}
-          />
-        </div>
-        <MemoizedIssuesList
-          title={<FormattedMessage id="global.issues" />}
-          issues={treeDetailsData.buildsIssues}
-          failedWithUnknownIssues={
-            treeDetailsData.failedBuildsWithUnknownIssues
-          }
-          diffFilter={diffFilter}
-          issueFilterSection="buildIssue"
-          detailsId={treeId}
-          pageFrom={RedirectFrom.Tree}
-          issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
-          extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
-        />
-      </DesktopGrid>
-      <MobileGrid>
-        <TreeCommitNavigationGraph />
-        <MemoizedStatusCard
-          title={<FormattedMessage id="buildTab.buildStatus" />}
-          toggleFilterBySection={toggleFilterBySection}
-          statusCounts={treeDetailsData.buildsSummary}
-          filterStatusKey="buildStatus"
-        />
-        <InnerMobileGrid>
-          <MemoizedErrorsSummaryBuild
-            summaryBody={treeDetailsData.architectures}
-            toggleFilterBySection={toggleFilterBySection}
-            diffFilter={diffFilter}
-          />
-          <MemoizedConfigsCard
-            configs={treeDetailsData.configs}
-            toggleFilterBySection={toggleFilterBySection}
-            diffFilter={diffFilter}
-          />
-        </InnerMobileGrid>
-        <MemoizedIssuesList
-          title={<FormattedMessage id="global.issues" />}
-          issues={treeDetailsData.buildsIssues}
-          failedWithUnknownIssues={
-            treeDetailsData.failedBuildsWithUnknownIssues
-          }
-          diffFilter={diffFilter}
-          issueFilterSection="buildIssue"
-          detailsId={treeId}
-          pageFrom={RedirectFrom.Tree}
-          issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
-          extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
-        />
-      </MobileGrid>
 
-      <QuerySwitcher data={buildsData} status={fullStatus}>
-        <div className="flex flex-col gap-4">
-          <div className="text-lg">
-            <FormattedMessage id="global.builds" />
-          </div>
-          <TreeDetailsBuildsTable buildItems={treeDetailsData.builds} />
+  const { formatMessage } = useIntl();
+
+  return (
+    <div>
+      <QuerySwitcher
+        data={summaryData}
+        status={summaryStatus}
+        skeletonClassname="max-h-[100px]"
+        customError={
+          <MemoizedSectionError
+            isLoading={summaryIsLoading}
+            errorMessage={summaryError?.message}
+            forceErrorMessageUse
+            variant="warning"
+          />
+        }
+      >
+        <div className="flex flex-col gap-8 pt-4">
+          <DesktopGrid>
+            <div>
+              <MemoizedStatusCard
+                title={<FormattedMessage id="buildTab.buildStatus" />}
+                toggleFilterBySection={toggleFilterBySection}
+                statusCounts={treeDetailsData.buildsSummary}
+                filterStatusKey="buildStatus"
+              />
+              <MemoizedErrorsSummaryBuild
+                summaryBody={treeDetailsData.architectures}
+                toggleFilterBySection={toggleFilterBySection}
+                diffFilter={diffFilter}
+              />
+            </div>
+            <div>
+              <TreeCommitNavigationGraph />
+              <MemoizedConfigsCard
+                configs={treeDetailsData.configs}
+                toggleFilterBySection={toggleFilterBySection}
+                diffFilter={diffFilter}
+              />
+            </div>
+            <MemoizedIssuesList
+              title={<FormattedMessage id="global.issues" />}
+              issues={treeDetailsData.buildsIssues}
+              failedWithUnknownIssues={
+                treeDetailsData.failedBuildsWithUnknownIssues
+              }
+              diffFilter={diffFilter}
+              issueFilterSection="buildIssue"
+              detailsId={treeId}
+              pageFrom={RedirectFrom.Tree}
+              issueExtraDetails={
+                treeDetailsLazyLoaded.issuesExtras.data?.issues
+              }
+              extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
+            />
+          </DesktopGrid>
+          <MobileGrid>
+            <TreeCommitNavigationGraph />
+            <MemoizedStatusCard
+              title={<FormattedMessage id="buildTab.buildStatus" />}
+              toggleFilterBySection={toggleFilterBySection}
+              statusCounts={treeDetailsData.buildsSummary}
+              filterStatusKey="buildStatus"
+            />
+            <InnerMobileGrid>
+              <MemoizedErrorsSummaryBuild
+                summaryBody={treeDetailsData.architectures}
+                toggleFilterBySection={toggleFilterBySection}
+                diffFilter={diffFilter}
+              />
+              <MemoizedConfigsCard
+                configs={treeDetailsData.configs}
+                toggleFilterBySection={toggleFilterBySection}
+                diffFilter={diffFilter}
+              />
+            </InnerMobileGrid>
+            <MemoizedIssuesList
+              title={<FormattedMessage id="global.issues" />}
+              issues={treeDetailsData.buildsIssues}
+              failedWithUnknownIssues={
+                treeDetailsData.failedBuildsWithUnknownIssues
+              }
+              diffFilter={diffFilter}
+              issueFilterSection="buildIssue"
+              detailsId={treeId}
+              pageFrom={RedirectFrom.Tree}
+              issueExtraDetails={
+                treeDetailsLazyLoaded.issuesExtras.data?.issues
+              }
+              extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
+            />
+          </MobileGrid>
+
+          <QuerySwitcher
+            data={fullBuildsData}
+            status={fullStatus}
+            customError={
+              <MemoizedSectionError
+                isLoading={fullIsLoading}
+                errorMessage={fullError?.message}
+                emptyLabel={'global.error'}
+              />
+            }
+          >
+            <div className="flex flex-col gap-4">
+              <div className="text-lg">
+                <FormattedMessage id="global.builds" />
+              </div>
+              <TreeDetailsBuildsTable buildItems={treeDetailsData.builds} />
+            </div>
+          </QuerySwitcher>
         </div>
       </QuerySwitcher>
+      {summaryError !== null && (
+        <div className="mx-48 max-2xl:mx-0">
+          <div className="px-4 pb-2">
+            <FormattedMessage
+              id="tab.findOnPreviousCheckoutsTooltip"
+              values={{
+                tab: formatMessage({ id: 'global.builds' }).toLowerCase(),
+              }}
+            />
+          </div>
+          <TreeCommitNavigationGraph />
+        </div>
+      )}
     </div>
   );
 };

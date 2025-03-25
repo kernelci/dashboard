@@ -2,6 +2,8 @@ import { memo, useMemo, type JSX } from 'react';
 
 import { useSearch } from '@tanstack/react-router';
 
+import type { UseQueryResult } from '@tanstack/react-query';
+
 import type { IBaseCard } from '@/components/Cards/BaseCard';
 import BaseCard from '@/components/Cards/BaseCard';
 
@@ -10,10 +12,13 @@ import type { TFilter } from '@/types/general';
 
 import FilterLink from '@/components/Tabs/FilterLink';
 
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+
 interface IHardwareUsed {
   title: IBaseCard['title'];
   hardwareUsed?: string[];
   diffFilter: TFilter;
+  queryStatus: UseQueryResult['status'];
 }
 
 const HardwareLink = ({
@@ -46,23 +51,30 @@ const HardwareUsed = ({
   hardwareUsed,
   title,
   diffFilter,
+  queryStatus,
 }: IHardwareUsed): JSX.Element => {
   const hardwareSorted = useMemo(() => hardwareUsed?.sort(), [hardwareUsed]);
 
   return (
     <BaseCard
       title={title}
-      className="mb-0"
+      className="mb-0 gap-0"
       content={
-        <div className="flex flex-row flex-wrap gap-4 p-4">
-          {hardwareSorted?.map(hardware => (
-            <MemoizedHardwareLink
-              key={hardware}
-              hardware={hardware}
-              diffFilter={diffFilter}
-            />
-          ))}
-        </div>
+        <QuerySwitcher
+          status={queryStatus}
+          data={hardwareUsed}
+          skeletonClassname="h-[50px]"
+        >
+          <div className="flex flex-row flex-wrap gap-4 p-4">
+            {hardwareSorted?.map(hardware => (
+              <MemoizedHardwareLink
+                key={hardware}
+                hardware={hardware}
+                diffFilter={diffFilter}
+              />
+            ))}
+          </div>
+        </QuerySwitcher>
       }
     />
   );

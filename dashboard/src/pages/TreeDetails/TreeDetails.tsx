@@ -30,8 +30,6 @@ import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
-import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
-
 import { GroupedTestStatus } from '@/components/Status/Status';
 
 import type { TFilter } from '@/types/general';
@@ -45,7 +43,6 @@ import DetailsFilterList from '@/components/Tabs/FilterList';
 import { truncateUrl } from '@/lib/string';
 
 import CopyButton from '@/components/Button/CopyButton';
-import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
 
@@ -114,6 +111,7 @@ const TreeHeader = ({
     ),
     [commitName, commitHash, commitTags],
   );
+
   return (
     <DumbBaseTable>
       <DumbTableHeader>
@@ -175,7 +173,6 @@ function TreeDetails(): JSX.Element {
   const {
     data,
     isLoading,
-    error,
     status: summaryQueryStatus,
   } = treeDetailsLazyLoaded.summary;
 
@@ -328,81 +325,72 @@ function TreeDetails(): JSX.Element {
         bootCount={bootStatusCount}
         testCount={testStatusCount}
       />
-      <QuerySwitcher
-        status={summaryQueryStatus}
-        data={data}
-        customError={
-          <MemoizedSectionError
-            isLoading={isLoading}
-            errorMessage={error?.message}
-            emptyLabel="treeDetails.notFound"
+      <div className="flex flex-col pt-8">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                to="/tree"
+                search={previousParams => {
+                  return {
+                    intervalInDays: previousParams.intervalInDays,
+                    origin: previousParams.origin,
+                  };
+                }}
+                state={s => s}
+              >
+                <FormattedMessage id="tree.path" />
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                <FormattedMessage id="tree.details" />
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <div className="mt-5">
+          <TreeHeader
+            gitBranch={treeInfo?.gitBranch}
+            treeNames={treeInfo?.treeName}
+            gitUrl={treeInfo?.gitUrl}
+            commitHash={treeId}
+            commitName={treeInfo?.commitName}
+            commitTags={data?.common.git_commit_tags}
           />
-        }
-      >
-        <div className="flex flex-col pt-8">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink
-                  to="/tree"
-                  search={previousParams => {
-                    return {
-                      intervalInDays: previousParams.intervalInDays,
-                      origin: previousParams.origin,
-                    };
-                  }}
-                  state={s => s}
-                >
-                  <FormattedMessage id="tree.path" />
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>
-                  <FormattedMessage id="tree.details" />
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <div className="mt-5">
-            <TreeHeader
-              gitBranch={treeInfo?.gitBranch}
-              treeNames={treeInfo?.treeName}
-              gitUrl={treeInfo?.gitUrl}
-              commitHash={treeId}
-              commitName={treeInfo?.commitName}
-              commitTags={data?.common.git_commit_tags}
-            />
-          </div>
-          <div className="mt-5">
+        </div>
+        <div className="mt-5">
+          {data && (
             <MemoizedHardwareUsed
               title={<FormattedMessage id="treeDetails.hardwareUsed" />}
               hardwareUsed={data?.common.hardware}
               diffFilter={diffFilter}
+              queryStatus={summaryQueryStatus}
             />
-          </div>
-          <div className="flex flex-col pb-2">
-            <div className="sticky top-[4.5rem] z-10">
-              <div className="absolute top-2 right-0 py-4">
-                {data ? (
-                  <TreeDetailsFilter
-                    paramFilter={diffFilter}
-                    treeUrl={data.common.tree_url}
-                    data={data}
-                  />
-                ) : (
-                  <LoadingCircle className="mt-6 mr-8" />
-                )}
-              </div>
-            </div>
-            <TreeDetailsTab
-              treeDetailsLazyLoaded={treeDetailsLazyLoaded}
-              filterListElement={filterListElement}
-              countElements={tabsCounts}
-            />
-          </div>
+          )}
         </div>
-      </QuerySwitcher>
+        <div className="flex flex-col pb-2">
+          <div className="sticky top-[4.5rem] z-10">
+            <div className="absolute top-2 right-0 py-4">
+              {data ? (
+                <TreeDetailsFilter
+                  paramFilter={diffFilter}
+                  treeUrl={data.common.tree_url}
+                  data={data}
+                />
+              ) : (
+                isLoading && <LoadingCircle className="mt-6 mr-8" />
+              )}
+            </div>
+          </div>
+          <TreeDetailsTab
+            treeDetailsLazyLoaded={treeDetailsLazyLoaded}
+            filterListElement={filterListElement}
+            countElements={tabsCounts}
+          />
+        </div>
+      </div>
     </PageWithTitle>
   );
 }

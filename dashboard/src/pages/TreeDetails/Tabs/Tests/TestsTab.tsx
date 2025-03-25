@@ -1,13 +1,9 @@
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
 import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
 
 import { useCallback, useMemo, type JSX } from 'react';
-
-import { Skeleton } from '@/components/Skeleton';
-
-import BaseCard from '@/components/Cards/BaseCard';
 
 import {
   zTableFilterInfoDefault,
@@ -34,6 +30,7 @@ import TreeCommitNavigationGraph from '@/pages/TreeDetails/Tabs/TreeCommitNaviga
 import type { TreeDetailsLazyLoaded } from '@/hooks/useTreeDetailsLazyLoadQuery';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 interface TestsTabProps {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
@@ -42,10 +39,27 @@ interface TestsTabProps {
 const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
   const { treeId } = useParams({ from: '/_main/tree/$treeId' });
 
-  const { full: fullQuery, summary: summaryQuery } = treeDetailsLazyLoaded;
-  const { data, status, isLoading: fullIsLoading } = fullQuery;
-  const { isLoading: isSummaryLoading, error: summaryError } = summaryQuery;
-  const summaryData = treeDetailsLazyLoaded.summary.data?.summary.tests;
+  const {
+    data: summaryData,
+    status: summaryStatus,
+    error: summaryError,
+    isLoading: summaryIsLoading,
+  } = useMemo(
+    () => treeDetailsLazyLoaded.summary,
+    [treeDetailsLazyLoaded.summary],
+  );
+
+  const summaryTestsData = useMemo(
+    () => summaryData?.summary.tests,
+    [summaryData?.summary.tests],
+  );
+
+  const { data: fullData, status: fullStatus } = useMemo(
+    () => treeDetailsLazyLoaded.full,
+    [treeDetailsLazyLoaded.full],
+  );
+
+  const fullTestsData = useMemo(() => fullData?.tests, [fullData?.tests]);
 
   const { tableFilter, diffFilter } = useSearch({
     from: '/_main/tree/$treeId',
@@ -130,138 +144,160 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
 
   const hardwareData = useMemo(() => {
     return {
-      ...summaryData?.environment_compatible,
-      ...summaryData?.environment_misc,
+      ...summaryTestsData?.environment_compatible,
+      ...summaryTestsData?.environment_misc,
     };
-  }, [summaryData?.environment_compatible, summaryData?.environment_misc]);
+  }, [
+    summaryTestsData?.environment_compatible,
+    summaryTestsData?.environment_misc,
+  ]);
 
-  if (summaryError || !treeId) {
-    return (
-      <div>
-        <FormattedMessage id="bootsTab.success" />
-      </div>
-    );
-  }
+  const isEmptySummary = useMemo((): boolean => {
+    if (!summaryTestsData) {
+      return true;
+    }
+    return Object.values(summaryTestsData.status).every(value => value === 0);
+  }, [summaryTestsData]);
 
-  if (isSummaryLoading) {
-    return (
-      <Skeleton>
-        <FormattedMessage id="global.loading" />
-      </Skeleton>
-    );
-  }
+  const nonEmptyData = useMemo(() => {
+    if (isEmptySummary) {
+      return undefined;
+    } else {
+      return summaryTestsData;
+    }
+  }, [isEmptySummary, summaryTestsData]);
 
-  if (!summaryData) {
-    return <div />;
-  }
-
-  if (!fullIsLoading && data?.tests.length === 0) {
-    return (
-      <BaseCard
-        title={<FormattedMessage id="global.info" />}
-        content={
-          <p className="text-dark-gray p-4 text-[1.3rem]">
-            <FormattedMessage id="testsTab.noTest" />
-          </p>
-        }
-      />
-    );
-  }
+  const { formatMessage } = useIntl();
 
   return (
-    <div className="flex flex-col gap-8 pt-4">
-      <DesktopGrid>
-        <div>
-          <MemoizedStatusCard
-            title={<FormattedMessage id="testsTab.testStatus" />}
-            statusCounts={summaryData.status}
-            toggleFilterBySection={toggleFilterBySection}
-            filterStatusKey="testStatus"
+    <div>
+      <QuerySwitcher
+        data={nonEmptyData}
+        status={summaryStatus}
+        skeletonClassname="max-h-[100px]"
+        customError={
+          <MemoizedSectionError
+            isLoading={summaryIsLoading}
+            errorMessage={summaryError?.message}
+            forceErrorMessageUse
+            variant="warning"
           />
-          <MemoizedConfigList
-            title={<FormattedMessage id="global.configs" />}
-            configStatusCounts={summaryData.configs}
-            diffFilter={diffFilter}
-          />
-          <MemoizedErrorsSummary
-            title={<FormattedMessage id="global.summary" />}
-            archCompilerErrors={summaryData.architectures}
-            diffFilter={diffFilter}
-          />
-        </div>
-        <div>
-          <TreeCommitNavigationGraph />
-          <MemoizedHardwareTested
-            title={<FormattedMessage id="testsTab.hardwareTested" />}
-            environmentCompatible={hardwareData}
-            diffFilter={diffFilter}
-          />
-        </div>
-        <MemoizedIssuesList
-          title={<FormattedMessage id="global.issues" />}
-          issues={summaryData.issues}
-          failedWithUnknownIssues={summaryData.unknown_issues}
-          diffFilter={diffFilter}
-          issueFilterSection="testIssue"
-          detailsId={treeId}
-          pageFrom={RedirectFrom.Tree}
-          issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
-          extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
-        />
-      </DesktopGrid>
-      <MobileGrid>
-        <MemoizedStatusCard
-          title={<FormattedMessage id="testsTab.testStatus" />}
-          statusCounts={summaryData.status}
-          toggleFilterBySection={toggleFilterBySection}
-          filterStatusKey="testStatus"
-        />
-        <TreeCommitNavigationGraph />
-        <InnerMobileGrid>
-          <div>
-            <MemoizedConfigList
-              title={<FormattedMessage id="global.configs" />}
-              configStatusCounts={summaryData.configs}
+        }
+      >
+        <div className="flex flex-col gap-8 pt-4">
+          <DesktopGrid>
+            <div>
+              <MemoizedStatusCard
+                title={<FormattedMessage id="testsTab.testStatus" />}
+                statusCounts={summaryTestsData?.status}
+                toggleFilterBySection={toggleFilterBySection}
+                filterStatusKey="testStatus"
+              />
+              <MemoizedConfigList
+                title={<FormattedMessage id="global.configs" />}
+                configStatusCounts={summaryTestsData?.configs ?? {}}
+                diffFilter={diffFilter}
+              />
+              <MemoizedErrorsSummary
+                title={<FormattedMessage id="global.summary" />}
+                archCompilerErrors={summaryTestsData?.architectures ?? []}
+                diffFilter={diffFilter}
+              />
+            </div>
+            <div>
+              <TreeCommitNavigationGraph />
+              <MemoizedHardwareTested
+                title={<FormattedMessage id="testsTab.hardwareTested" />}
+                environmentCompatible={hardwareData}
+                diffFilter={diffFilter}
+              />
+            </div>
+            <MemoizedIssuesList
+              title={<FormattedMessage id="global.issues" />}
+              issues={summaryTestsData?.issues ?? []}
+              failedWithUnknownIssues={summaryTestsData?.unknown_issues}
               diffFilter={diffFilter}
+              issueFilterSection="testIssue"
+              detailsId={treeId}
+              pageFrom={RedirectFrom.Tree}
+              issueExtraDetails={
+                treeDetailsLazyLoaded.issuesExtras.data?.issues
+              }
+              extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
             />
-            <MemoizedErrorsSummary
-              title={<FormattedMessage id="global.summary" />}
-              archCompilerErrors={summaryData.architectures}
-              diffFilter={diffFilter}
+          </DesktopGrid>
+          <MobileGrid>
+            <MemoizedStatusCard
+              title={<FormattedMessage id="testsTab.testStatus" />}
+              statusCounts={summaryTestsData?.status}
+              toggleFilterBySection={toggleFilterBySection}
+              filterStatusKey="testStatus"
             />
-          </div>
-          <div>
-            <MemoizedHardwareTested
-              title={<FormattedMessage id="testsTab.hardwareTested" />}
-              environmentCompatible={hardwareData}
-              diffFilter={diffFilter}
-            />
-          </div>
-          <MemoizedIssuesList
-            title={<FormattedMessage id="global.issues" />}
-            issues={summaryData.issues}
-            failedWithUnknownIssues={summaryData.unknown_issues}
-            diffFilter={diffFilter}
-            issueFilterSection="testIssue"
-            detailsId={treeId}
-            pageFrom={RedirectFrom.Tree}
-            issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
-            extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
-          />
-        </InnerMobileGrid>
-      </MobileGrid>
+            <TreeCommitNavigationGraph />
+            <InnerMobileGrid>
+              <div>
+                <MemoizedConfigList
+                  title={<FormattedMessage id="global.configs" />}
+                  configStatusCounts={summaryTestsData?.configs ?? {}}
+                  diffFilter={diffFilter}
+                />
+                <MemoizedErrorsSummary
+                  title={<FormattedMessage id="global.summary" />}
+                  archCompilerErrors={summaryTestsData?.architectures ?? []}
+                  diffFilter={diffFilter}
+                />
+              </div>
+              <div>
+                <MemoizedHardwareTested
+                  title={<FormattedMessage id="testsTab.hardwareTested" />}
+                  environmentCompatible={hardwareData}
+                  diffFilter={diffFilter}
+                />
+              </div>
+              <MemoizedIssuesList
+                title={<FormattedMessage id="global.issues" />}
+                issues={summaryTestsData?.issues ?? []}
+                failedWithUnknownIssues={summaryTestsData?.unknown_issues}
+                diffFilter={diffFilter}
+                issueFilterSection="testIssue"
+                detailsId={treeId}
+                pageFrom={RedirectFrom.Tree}
+                issueExtraDetails={
+                  treeDetailsLazyLoaded.issuesExtras.data?.issues
+                }
+                extraDetailsLoading={
+                  treeDetailsLazyLoaded.issuesExtras.isLoading
+                }
+              />
+            </InnerMobileGrid>
+          </MobileGrid>
 
-      <QuerySwitcher status={status} data={data}>
-        <TestsTable
-          tableKey="treeDetailsTests"
-          testHistory={data?.tests ?? []}
-          onClickFilter={onClickFilter}
-          filter={tableFilter.testsTable}
-          getRowLink={getRowLink}
-          updatePathFilter={updatePathFilter}
-          currentPathFilter={currentPathFilter}
-        />
+          <QuerySwitcher status={fullStatus} data={fullData}>
+            <TestsTable
+              tableKey="treeDetailsTests"
+              testHistory={fullTestsData}
+              onClickFilter={onClickFilter}
+              filter={tableFilter.testsTable}
+              getRowLink={getRowLink}
+              updatePathFilter={updatePathFilter}
+              currentPathFilter={currentPathFilter}
+            />
+          </QuerySwitcher>
+        </div>
       </QuerySwitcher>
+      {isEmptySummary && (
+        <div className="mx-48 max-2xl:mx-0">
+          <div className="px-4 pb-2">
+            <FormattedMessage
+              id="tab.findOnPreviousCheckoutsTooltip"
+              values={{
+                tab: formatMessage({ id: 'global.tests' }).toLowerCase(),
+              }}
+            />
+          </div>
+          <TreeCommitNavigationGraph />
+        </div>
+      )}
     </div>
   );
 };
