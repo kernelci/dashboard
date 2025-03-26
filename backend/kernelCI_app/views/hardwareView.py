@@ -91,7 +91,7 @@ class HardwareView(APIView):
         try:
             query_params = HardwareQueryParams(
                 start_date=request.GET.get("startTimestampInSeconds"),
-                end_date=request.GET.get("endTimeStampInSeconds"),
+                end_date=request.GET.get("endTimestampInSeconds"),
                 origin=request.GET.get("origin"),
             )
 
