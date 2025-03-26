@@ -47,7 +47,6 @@ services:
             - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
             - DEBUG=False
             - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
-            - SCHEMA_VERSION="4"
 
     dashboard:
         build: ./dashboard
