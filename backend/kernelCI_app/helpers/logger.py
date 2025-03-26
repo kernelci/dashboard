@@ -1,5 +1,7 @@
 from django.http import HttpRequest
-from datetime import datetime
+
+from kernelCI_app.constants.general import PRODUCTION_HOST, STAGING_HOST
+from kernelCI_app.helpers.system import get_running_instance
 
 
 # For logging that we care about, we create a function so we can easily use
@@ -9,15 +11,22 @@ def log_message(message: str) -> None:
 
 
 def create_endpoint_notification(*, message: str, request: HttpRequest) -> str:
-    return (
-        message
-        + "\n\nEndpoint:\n"
-        + request.build_absolute_uri()
-        + (
-            ("\nBody:\n```json\n" + request.body.decode("utf-8") + "```")
-            if request.body
-            else ""
-        )
-        + "\nAccessed in: "
-        + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    running_instance = get_running_instance()
+    request_path = request.get_full_path()
+
+    if running_instance is None:
+        request_path = request.build_absolute_uri()
+    elif running_instance == "production":
+        request_path = PRODUCTION_HOST + request_path
+    else:
+        request_path = STAGING_HOST + request_path
+
+    endpoint_clause = "\n\nEndpoint:\n" + request_path
+
+    body_clause = (
+        ("\nBody:\n```json\n" + request.body.decode("utf-8") + "```")
+        if request.body
+        else ""
     )
+
+    return message + endpoint_clause + body_clause
