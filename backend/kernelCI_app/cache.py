@@ -2,6 +2,9 @@ from django.core.cache import cache
 from django.conf import settings
 
 timeout = settings.CACHE_TIMEOUT
+DISCORD_NOTIFICATION_COOLDOWN = 600
+
+DISCORD_NOTIFICATION_KEY = "discord_notification"
 
 _commit_lookup = {}
 _build_lookup = {}
@@ -31,6 +34,18 @@ def set_query_cache(
 def get_query_cache(key, params: dict):
     params_hash = _create_cache_params_hash(params)
     return cache.get("%s-%s" % (key, params_hash))
+
+
+def set_notification_cache(*, notification: str) -> None:
+    notification_hash = hash(notification)
+    hash_key = f"{DISCORD_NOTIFICATION_KEY}-{notification_hash}"
+    return cache.set(hash_key, notification, DISCORD_NOTIFICATION_COOLDOWN)
+
+
+def get_notification_cache(*, notification: str) -> str:
+    notification_hash = hash(notification)
+    hash_key = f"{DISCORD_NOTIFICATION_KEY}-{notification_hash}"
+    return cache.get(hash_key)
 
 
 def _add_to_lookup(cache_key, property_key, lookup):

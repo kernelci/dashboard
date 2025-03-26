@@ -10,3 +10,4 @@ SCHEMA_VERSION_ENV_NAME = "schema-version"
 SCHEMA_VERSION_ENV_FILE = "kernelCI/envconfig/schema-version.yaml"
 
 PRODUCTION_HOST = "https://dashboard.kernelci.org"
+STAGING_HOST = "https://staging.dashboard.kernelci.org:9000"
