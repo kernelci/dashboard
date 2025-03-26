@@ -22,7 +22,7 @@ from http import HTTPStatus
             HardwareQueryParamsDocumentationOnly(
                 origin="maestro",
                 startTimestampInSeconds="1741192200",
-                endTimeStampInSeconds="1741624200",
+                endTimestampInSeconds="1741624200",
             ),
             False,
         ),
@@ -31,7 +31,7 @@ from http import HTTPStatus
             HardwareQueryParamsDocumentationOnly(
                 origin="redhat",
                 startTimestampInSeconds="1741192200",
-                endTimeStampInSeconds="1741624200",
+                endTimestampInSeconds="1741624200",
             ),
             True,
         ),
@@ -39,7 +39,7 @@ from http import HTTPStatus
             HardwareQueryParamsDocumentationOnly(
                 origin="invalid_origin",
                 startTimestampInSeconds="1741192200",
-                endTimeStampInSeconds="1741624200",
+                endTimestampInSeconds="1741624200",
             ),
             True,
         ),

@@ -12,14 +12,14 @@ import { RequestData } from './commonRequest';
 const fetchHardwareListing = async (
   origin: TOrigins,
   startTimestampInSeconds: number,
-  endTimeStampInSeconds: number,
+  endTimestampInSeconds: number,
 ): Promise<HardwareListingResponse> => {
   const data = await RequestData.get<HardwareListingResponse>(
     '/api/hardware/',
     {
       params: {
         startTimestampInSeconds,
-        endTimeStampInSeconds,
+        endTimestampInSeconds,
         origin,
       },
     },
