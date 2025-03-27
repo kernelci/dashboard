@@ -4,9 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.helpers.discordWebhook import send_discord_notification
-from kernelCI_app.helpers.filters import (
-    FilterParams,
-)
+from kernelCI_app.helpers.filters import FilterParams
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 from kernelCI_app.helpers.errorHandling import create_api_error_response
