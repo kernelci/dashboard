@@ -79,8 +79,10 @@ class BuildHistoryItem(BaseModel):
             return json.loads(value)
         elif isinstance(value, dict):
             return value
+        elif value is None:
+            return None
         else:
-            log_message("Invalid misc for BuildHistoryItem")
+            log_message(f"Invalid misc for BuildHistoryItem;\nType: {type(value)}")
 
     @field_validator("status", mode="before")
     @classmethod
