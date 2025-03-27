@@ -6,8 +6,6 @@ import { FormattedMessage } from 'react-intl';
 import type { PropsWithChildren, JSX } from 'react';
 import { memo, useMemo } from 'react';
 
-import { useSearch } from '@tanstack/react-router';
-
 import { cn } from '@/lib/utils';
 
 import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
@@ -21,7 +19,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { zOrigin } from '@/types/general';
 
 export type CodeBlockVariant = 'default' | 'log-viewer';
 
@@ -88,7 +85,7 @@ const Code = ({
         )}
       >
         {disableHighlight ? (
-          <>parsedCode</>
+          <>{parsedCode}</>
         ) : (
           <div dangerouslySetInnerHTML={{ __html: parsedCode }}></div>
         )}
@@ -205,17 +202,14 @@ const generateHighlightedCode = (code: string): IHighlightedCode => {
   };
 };
 
+const MAX_HIGHLIGHT_CODE_LENGTH = 6000000;
+
 const CodeBlock = ({
   code,
   highlightsClassnames,
   variant = 'default',
 }: TCodeBlockProps): JSX.Element => {
-  const { origin: unsafeOrigin } = useSearch({ strict: false });
-
-  const parsedOrigin = zOrigin.parse(unsafeOrigin);
-  // TODO Disable highlight based on filesize
-  const disableHighlight =
-    parsedOrigin === 'redhat' && variant === 'log-viewer';
+  const disableHighlight = code.length >= MAX_HIGHLIGHT_CODE_LENGTH;
 
   const parsedCode: IHighlightedCode | string = useMemo(() => {
     if (disableHighlight) {
@@ -257,6 +251,11 @@ const CodeBlock = ({
           )}
         </div>
 
+        {disableHighlight && (
+          <span className="text-gray-500">
+            <FormattedMessage id="logViewer.disabledHighlight" />
+          </span>
+        )}
         {variant !== 'log-viewer' && (
           <CodeBlockDialog>
             <MemoizedCode

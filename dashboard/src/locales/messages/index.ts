@@ -220,6 +220,8 @@ export const messages = {
       'This log url is not supported in the log viewer yet, but you can still download the log in the link above',
     'logSheet.noLogFound': 'No logs available',
     'logSheet.title': 'Log Viewer',
+    'logViewer.disabledHighlight':
+      'The text highlight was disabled in this log due to the log size',
     'logViewer.download': 'Download full log',
     'logViewer.viewFullLog': 'View full log for {fileName}',
     'logspec.info':
