@@ -43,5 +43,5 @@ EXPOSE 8000
 
 VOLUME ["/backend/data"]
 
-CMD ["--workers=5", "--forwarded-allow-ips=*", "--bind=0.0.0.0:8000"]
+CMD ["--workers=5", "--forwarded-allow-ips=*", "--bind=0.0.0.0:8000", "--timeout=240"]
 ENTRYPOINT ["/entrypoint.sh"]
