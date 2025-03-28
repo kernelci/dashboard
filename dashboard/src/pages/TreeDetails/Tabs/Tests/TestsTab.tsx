@@ -287,14 +287,16 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
       </QuerySwitcher>
       {isEmptySummary && (
         <div className="mx-48 max-2xl:mx-0">
-          <div className="px-4 pb-2">
-            <FormattedMessage
-              id="tab.findOnPreviousCheckoutsTooltip"
-              values={{
-                tab: formatMessage({ id: 'global.tests' }).toLowerCase(),
-              }}
-            />
-          </div>
+          {summaryError !== null && (
+            <div className="px-4 pb-2">
+              <FormattedMessage
+                id="tab.findOnPreviousCheckoutsTooltip"
+                values={{
+                  tab: formatMessage({ id: 'global.tests' }).toLowerCase(),
+                }}
+              />
+            </div>
+          )}
           <TreeCommitNavigationGraph />
         </div>
       )}
