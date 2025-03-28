@@ -21,6 +21,23 @@ interface IBreadcrumb {
   components: IBreadcrumbComponent[];
 }
 
+type BreadcrumbBaseRoute = { path: LinkProps['to']; messageId: MessagesKey };
+type BreadcrumbDetailsRoute = BreadcrumbBaseRoute & { paramKey: string };
+
+type BreadcrumbRouteValues = {
+  base: BreadcrumbBaseRoute;
+  details: BreadcrumbDetailsRoute;
+  build: BreadcrumbBaseRoute;
+  test: BreadcrumbBaseRoute;
+};
+
+type BreadcrumbRouteKeys = 'tree' | 'hardware';
+
+export type BreadcrumbRoute = Record<
+  BreadcrumbRouteKeys,
+  BreadcrumbRouteValues
+>;
+
 const BreadcrumbGenerator = ({ components }: IBreadcrumb): JSX.Element => {
   return (
     <Breadcrumb className="pt-6 pb-6">
