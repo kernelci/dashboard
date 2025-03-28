@@ -41,5 +41,7 @@ RUN O='0 1 2' \
 
 EXPOSE 8000
 
+VOLUME ["/backend/data"]
+
 CMD ["--workers=5", "--forwarded-allow-ips=*", "--bind=0.0.0.0:8000"]
 ENTRYPOINT ["/entrypoint.sh"]
