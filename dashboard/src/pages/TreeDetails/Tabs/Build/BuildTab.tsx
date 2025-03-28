@@ -139,6 +139,13 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
     ],
   );
 
+  const isEmptySummary = useMemo((): boolean => {
+    if (!summaryBuildsData) {
+      return true;
+    }
+    return Object.values(summaryBuildsData.status).every(value => value === 0);
+  }, [summaryBuildsData]);
+
   const { formatMessage } = useIntl();
 
   return (
@@ -252,16 +259,18 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
           </QuerySwitcher>
         </div>
       </QuerySwitcher>
-      {summaryError !== null && (
+      {isEmptySummary && (
         <div className="mx-48 max-2xl:mx-0">
-          <div className="px-4 pb-2">
-            <FormattedMessage
-              id="tab.findOnPreviousCheckoutsTooltip"
-              values={{
-                tab: formatMessage({ id: 'global.builds' }).toLowerCase(),
-              }}
-            />
-          </div>
+          {summaryError !== null && (
+            <div className="px-4 pb-2">
+              <FormattedMessage
+                id="tab.findOnPreviousCheckoutsTooltip"
+                values={{
+                  tab: formatMessage({ id: 'global.builds' }).toLowerCase(),
+                }}
+              />
+            </div>
+          )}
           <TreeCommitNavigationGraph />
         </div>
       )}
