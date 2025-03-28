@@ -3,6 +3,7 @@ from django.db import connection
 from django.db.utils import ProgrammingError
 
 from kernelCI_app.helpers.environment import get_schema_version, set_schema_version
+from kernelCI_app.models import Checkouts
 from kernelCI_app.utils import get_query_time_interval
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
@@ -177,6 +178,55 @@ def get_tree_listing_data(
             )
         else:
             raise
+
+
+def get_tree_listing_fast(*, origin: Optional[str] = None, interval: dict):
+    origin_clause = f"origin = '{origin}' AND" if origin is not None else ""
+    interval_timestamp = get_query_time_interval(**interval).timestamp()
+
+    checkouts = Checkouts.objects.raw(
+        f"""
+        WITH ordered_checkouts AS (
+            SELECT
+                id,
+                tree_name,
+                git_repository_branch,
+                git_repository_url,
+                git_commit_hash,
+                git_commit_name,
+                git_commit_tags,
+                patchset_hash,
+                start_time,
+                ROW_NUMBER() OVER (
+                    PARTITION BY git_repository_url, git_repository_branch
+                    ORDER BY start_time DESC
+                ) AS time_order
+            FROM
+                checkouts
+            WHERE
+                {origin_clause}
+                start_time >= TO_TIMESTAMP({interval_timestamp})
+        )
+        SELECT
+            id,
+            tree_name,
+            git_repository_branch,
+            git_repository_url,
+            git_commit_hash,
+            git_commit_name,
+            git_commit_tags,
+            patchset_hash,
+            start_time
+        FROM
+            ordered_checkouts
+        WHERE
+            time_order = 1
+        ORDER BY
+            tree_name ASC;
+        """,
+    )
+
+    return checkouts
 
 
 def get_tree_details_data(
