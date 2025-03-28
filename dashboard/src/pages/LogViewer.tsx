@@ -15,6 +15,7 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { useLogData } from '@/hooks/useLogData';
 import { LogViewerCard } from '@/components/Log/LogViewerCard';
 import {
+  type BreadcrumbRoute,
   MemoizedBreadcrumbGenerator,
   type IBreadcrumbComponent,
 } from '@/components/Breadcrumb/BreadcrumbGenerator';
@@ -38,51 +39,92 @@ export function LogViewer(): JSX.Element {
     }
 
     const components: IBreadcrumbComponent[] = [];
-    if (historyState.id !== undefined) {
-      if (historyState.from === 'tree') {
-        components.push({ linkProps: { to: '/tree' }, messageId: 'tree.path' });
-        components.push({
-          linkProps: {
-            to: '/tree/$treeId',
-            params: { treeId: historyState.id },
-            state: s => s,
-            search: previousSearch,
-          },
+    const routes: BreadcrumbRoute = {
+      tree: {
+        base: { path: '/tree', messageId: 'tree.path' },
+        details: {
+          path: '/tree/$treeId',
+          paramKey: 'treeId',
           messageId: 'tree.details',
-        });
-      } else if (historyState.from === 'hardware') {
-        components.push({
-          linkProps: { to: '/hardware' },
-          messageId: 'hardware.path',
-        });
+        },
+        build: {
+          path: '/tree/$treeId/build/$buildId',
+          messageId: 'buildDetails.buildDetails',
+        },
+        test: { path: '/tree/$treeId/test/$testId', messageId: 'test.details' },
+      },
+      hardware: {
+        base: { path: '/hardware', messageId: 'hardware.path' },
+        details: {
+          path: '/hardware/$hardwareId',
+          paramKey: 'hardwareId',
+          messageId: 'hardware.details',
+        },
+        build: {
+          path: '/hardware/$hardwareId/build/$buildId',
+          messageId: 'buildDetails.buildDetails',
+        },
+        test: {
+          path: '/hardware/$hardwareId/test/$testId',
+          messageId: 'test.details',
+        },
+      },
+    };
+
+    const historyFrom = historyState.from as keyof typeof routes;
+    if (historyState.id !== undefined && routes[historyFrom]) {
+      const { base, details, build, test } = routes[historyFrom];
+
+      components.push({
+        linkProps: { to: base.path, search: s => ({ origin: s.origin }) },
+        messageId: base.messageId,
+      });
+
+      components.push({
+        linkProps: {
+          to: details.path,
+          params: { [details.paramKey]: historyState.id },
+          state: s => s,
+          search: previousSearch,
+        },
+        messageId: details.messageId,
+      });
+
+      if (type === 'build') {
         components.push({
           linkProps: {
-            to: '/hardware/$hardwareId',
-            params: { hardwareId: historyState.id },
-            state: s => s,
-            search: previousSearch,
+            to: build.path,
+            params: { [details.paramKey]: historyState.id, buildId: itemId },
           },
-          messageId: 'hardware.details',
+          messageId: build.messageId,
+        });
+      } else {
+        components.push({
+          linkProps: {
+            to: test.path,
+            params: { [details.paramKey]: historyState.id, buildId: itemId },
+          },
+          messageId: test.messageId,
         });
       }
-    }
-
-    if (type === 'build') {
-      components.push({
-        linkProps: {
-          to: '/build/$buildId',
-          params: { buildId: itemId },
-        },
-        messageId: 'buildDetails.buildDetails',
-      });
-    } else if (type === 'test') {
-      components.push({
-        linkProps: {
-          to: '/test/$testId',
-          params: { buildId: itemId },
-        },
-        messageId: 'test.details',
-      });
+    } else {
+      if (type === 'build') {
+        components.push({
+          linkProps: {
+            to: '/build/$buildId',
+            params: { buildId: itemId },
+          },
+          messageId: 'buildDetails.buildDetails',
+        });
+      } else if (type === 'test') {
+        components.push({
+          linkProps: {
+            to: '/test/$testId',
+            params: { buildId: itemId },
+          },
+          messageId: 'test.details',
+        });
+      }
     }
 
     components.push({ linkProps: {}, messageId: 'logSheet.title' });
