@@ -269,7 +269,7 @@ const TestDetailsSections = ({
           infos: [
             {
               title: 'global.status',
-              linkText: truncateBigText(test.status),
+              linkText: truncateBigText(valueOrEmpty(test.status, 'NULL')),
               icon: <StatusIcon status={test.status} className="text-xl" />,
             },
             {
