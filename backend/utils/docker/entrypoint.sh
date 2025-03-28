@@ -46,10 +46,13 @@ if [ "$SETUP_DJANGO" = 1 ]; then
     exit 0
 fi
 
-# Add cron jobs from django-crontab
+# Add and start cronjobs
 poetry run ./manage.py crontab add
-
-# Start cron jobs
 crond start
+
+# Update the sqlite cache db
+chmod +x ./migrate-cache-db.sh
+./migrate-cache-db.sh
+
 
 exec gunicorn kernelCI.wsgi:application "$@"

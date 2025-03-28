@@ -37,7 +37,7 @@ class CheckoutsCache(models.Model):
     test_null = models.IntegerField(default=0)
 
     class Meta:
-        db_table = "Checkouts"
+        db_table = "checkouts_cache"
         constraints = [
             models.UniqueConstraint(
                 fields=[

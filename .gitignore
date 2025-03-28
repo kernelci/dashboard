@@ -3,3 +3,6 @@ application_default_credentials.json
 .vscode
 .env
 .idea
+
+# Binary SQLite database
+backend/data/cache.sqlite3
