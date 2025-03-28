@@ -60,6 +60,8 @@ import { MemoizedTreeHardwareDetailsOGTags } from '@/components/OpenGraphTags/Tr
 
 import type { TabRightElementRecord } from '@/components/Tabs/Tabs';
 
+import { isEmptyObject } from '@/utils/utils';
+
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsFilter from './HardwareDetailsFilter';
@@ -200,6 +202,7 @@ function HardwareDetails(): JSX.Element {
     referenceData: hardwareStatusHistoryState,
     comparedData: hardwareDataPreparedForInconsistencyValidation,
     navigate: navigate,
+    enabled: isEmptyObject(reqFilter),
   });
 
   const hardwareTableForCommitHistory = useMemo(() => {

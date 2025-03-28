@@ -60,6 +60,7 @@ import PageWithTitle from '@/components/PageWithTitle';
 import { MemoizedTreeHardwareDetailsOGTags } from '@/components/OpenGraphTags/TreeHardwareDetailsOGTags';
 
 import type { TabRightElementRecord } from '@/components/Tabs/Tabs';
+import { isEmptyObject } from '@/utils/utils';
 
 import TreeDetailsFilter from './TreeDetailsFilter';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
@@ -200,6 +201,7 @@ function TreeDetails(): JSX.Element {
     referenceData: treeRouterStatus,
     comparedData: comparedData,
     navigate: navigate,
+    enabled: isEmptyObject(reqFilter),
   });
   const onFilterChange = useCallback(
     (newFilter: TFilter) => {
