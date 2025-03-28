@@ -61,6 +61,9 @@ subset of tests cases is run to save time, especially during push. To run all te
 poetry run pytest --run-all
 ```
 
+The command above is also executed in our CI system, and every pull request must pass the tests before
+it can be merged.
+
 ## Cron jobs
 
 We have support for cron jobs using django-crontab. To set up cron jobs, edit the `CRONJOBS` variable in /backend/kernelCI/settings.py

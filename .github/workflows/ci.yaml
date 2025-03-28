@@ -134,6 +134,42 @@ jobs:
         run: poetry run black --check .
         working-directory: ./backend
 
+      - name: Configure credentials variables
+        run: |
+          echo -n "${{ secrets.PG_JSON }}" | base64 --decode > application_default_credentials.json
+          chmod 777 application_default_credentials.json
+          mkdir -p backend/runtime/secrets
+          echo "${{ secrets.PG_PASSWORD }}" > backend/runtime/secrets/postgres_password_secret
+          echo "DB_DEFAULT_USER=${{ secrets.PG_USERNAME }}" >> $GITHUB_ENV
+          echo "DJANGO_SECRET_KEY=$(openssl rand -base64 22)" >> $GITHUB_ENV
+          echo "DB_DEFAULT_NAME=kcidb" >> $GITHUB_ENV
+
+      - name: Run database proxy and backend docker services
+        run: docker compose up backend -d --build
+
+      - name: Wait for backend to be ready
+        run: |
+          for i in {1..20}; do
+            BACKEND_STATUS=$(docker ps -q -f "name=dashboard_backend_service" -f "status=running")
+            PROXY_STATUS=$(docker ps -q -f "name=cloudsql-proxy" -f "status=running")
+
+            if [[ -n "$BACKEND_STATUS" && -n "$PROXY_STATUS" ]] then
+                echo "Backend is ready!"
+                docker ps
+                sleep 5
+                break
+            fi
+            echo "Waiting for backend to be ready... $i"
+            sleep 10
+          done
+
+      - name: Run tests
+        run: poetry run pytest --run-all
+        working-directory: ./backend
+
+      - name: Clean containers
+        run: docker compose down --volumes --remove-orphans && docker system prune -af
+
   deploy-staging:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
