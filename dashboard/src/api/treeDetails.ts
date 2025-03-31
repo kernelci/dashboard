@@ -18,6 +18,8 @@ import { getTargetFilter, type TFilter } from '@/types/general';
 
 import { mapFiltersKeysToBackendCompatible } from '@/utils/utils';
 
+import { retryHandler } from '@/utils/query';
+
 import { RequestData } from './commonRequest';
 
 type TreeSearchParameters = {
@@ -157,7 +159,7 @@ export const useLogFiles = (
   return useQuery({
     queryKey: [logUrl],
     enabled,
-    retry: 1,
+    retry: retryHandler(1),
     queryFn: () => fetchLogFiles(logUrl),
   });
 };
