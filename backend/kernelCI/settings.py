@@ -205,10 +205,12 @@ if DEBUG:
     print("DEBUG: DEFAULT DATABASE:", DATABASES)
 
 
+REDIS_HOST = get_json_env_var("REDIS_HOST", "127.0.0.1")
+
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "ecom",
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:6379",
     }
 }
 

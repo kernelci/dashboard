@@ -1,6 +1,7 @@
 # Backend
 
-To run it, it's necessary to have Poetry installed. Then run,
+To run it, it's necessary to have Poetry installed. To run it outside the docker
+you will also need to have redis installed and a server running. Then run,
 
 ```sh
 poetry install

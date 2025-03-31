@@ -23,6 +23,14 @@ services:
             - private
         restart: always
 
+    redis:
+        image: redis:8.0-M04-alpine
+        restart: always
+        networks:
+            - private
+        ports:
+            - 6379:6379
+
     backend:
         build: ./backend
         restart: always
@@ -36,6 +44,7 @@ services:
               mode: host
         depends_on:
             - cloudsql-proxy
+            - redis
         secrets:
             - postgres_password_secret
         environment:
@@ -47,6 +56,7 @@ services:
             - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
             - DEBUG=False
             - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+            - REDIS_HOST=redis
         volumes:
             - db-data:/backend/data
 
