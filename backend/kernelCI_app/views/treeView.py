@@ -18,46 +18,48 @@ from pydantic import ValidationError
 class TreeView(APIView):
     def _sanitize_tree(self, checkout: Dict) -> Dict:
         build_status = {
-            "PASS": checkout[8],
-            "FAIL": checkout[9],
-            "NULL": checkout[10],
-            "ERROR": checkout[11],
-            "MISS": checkout[12],
-            "DONE": checkout[13],
-            "SKIP": checkout[14],
+            "PASS": checkout[10],
+            "FAIL": checkout[11],
+            "NULL": checkout[12],
+            "ERROR": checkout[13],
+            "MISS": checkout[14],
+            "DONE": checkout[15],
+            "SKIP": checkout[16],
         }
 
         test_status = {
-            "fail": checkout[15],
-            "error": checkout[16],
-            "miss": checkout[17],
-            "pass": checkout[18],
-            "done": checkout[19],
-            "skip": checkout[20],
-            "null": checkout[21],
+            "fail": checkout[17],
+            "error": checkout[18],
+            "miss": checkout[19],
+            "pass": checkout[20],
+            "done": checkout[21],
+            "skip": checkout[22],
+            "null": checkout[23],
         }
 
         boot_status = {
-            "fail": checkout[22],
-            "error": checkout[23],
-            "miss": checkout[24],
-            "pass": checkout[25],
-            "done": checkout[26],
-            "skip": checkout[27],
-            "null": checkout[28],
+            "fail": checkout[24],
+            "error": checkout[25],
+            "miss": checkout[26],
+            "pass": checkout[27],
+            "done": checkout[28],
+            "skip": checkout[29],
+            "null": checkout[30],
         }
 
         return {
             "git_repository_branch": checkout[2],
             "git_repository_url": checkout[3],
             "git_commit_hash": checkout[4],
-            "git_commit_tags": checkout[5],
-            "git_commit_name": checkout[6],
-            "start_time": checkout[7],
+            "origin_builds_finish_time": checkout[5],
+            "origin_tests_finish_time": checkout[6],
+            "git_commit_tags": checkout[7],
+            "git_commit_name": checkout[8],
+            "start_time": checkout[9],
             "build_status": {**build_status},
             "test_status": {**test_status},
             "boot_status": {**boot_status},
-            "tree_names": checkout[29],
+            "tree_names": checkout[31],
         }
 
     @extend_schema(

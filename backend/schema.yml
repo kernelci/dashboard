@@ -1385,6 +1385,10 @@ components:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
         start_time:
           $ref: '#/components/schemas/Timestamp'
+        origin_builds_finish_time:
+          $ref: '#/components/schemas/Checkout__OriginBuildsFinishTime'
+        origin_tests_finish_time:
+          $ref: '#/components/schemas/Checkout__OriginTestsFinishTime'
         build_status:
           $ref: '#/components/schemas/StatusCount'
         test_status:
@@ -1407,6 +1411,8 @@ components:
       - git_commit_name
       - git_repository_branch
       - start_time
+      - origin_builds_finish_time
+      - origin_tests_finish_time
       - build_status
       - test_status
       - boot_status
@@ -1426,6 +1432,10 @@ components:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
         start_time:
           $ref: '#/components/schemas/Timestamp'
+        origin_builds_finish_time:
+          $ref: '#/components/schemas/Checkout__OriginBuildsFinishTime'
+        origin_tests_finish_time:
+          $ref: '#/components/schemas/Checkout__OriginTestsFinishTime'
         id:
           $ref: '#/components/schemas/Checkout__Id'
         tree_name:
@@ -1440,6 +1450,8 @@ components:
       - git_commit_name
       - git_repository_branch
       - start_time
+      - origin_builds_finish_time
+      - origin_tests_finish_time
       - id
       - tree_name
       - patchset_hash
@@ -1470,6 +1482,16 @@ components:
       - type: 'null'
     Checkout__Id:
       type: string
+    Checkout__OriginBuildsFinishTime:
+      anyOf:
+      - format: date-time
+        type: string
+      - type: 'null'
+    Checkout__OriginTestsFinishTime:
+      anyOf:
+      - format: date-time
+        type: string
+      - type: 'null'
     Checkout__PatchsetHash:
       anyOf:
       - type: string

@@ -34,6 +34,8 @@ type Checkout__GitCommitTags = Optional[List[str]]
 type Checkout__GitRepositoryBranch = Optional[str]
 type Checkout__GitRepositoryUrl = Optional[str]
 type Checkout__PatchsetHash = Optional[str]
+type Checkout__OriginBuildsFinishTime = Optional[datetime]
+type Checkout__OriginTestsFinishTime = Optional[datetime]
 
 type Build__Id = str
 type Build__Architecture = Optional[str]

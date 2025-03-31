@@ -1,7 +1,7 @@
 from django.db import connection
 from django.db.utils import ProgrammingError
 from kernelCI_app.helpers.database import dict_fetchall
-from kernelCI_app.helpers.environment import set_schema_version
+from kernelCI_app.helpers.environment import DEFAULT_SCHEMA_VERSION, set_schema_version
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.models import Issues
 from kernelCI_app.helpers.build import (
@@ -47,8 +47,10 @@ def get_issue_builds(*, issue_id: str, version: int) -> list[dict]:
             return dict_fetchall(cursor)
     except ProgrammingError as e:
         if is_valid_does_not_exist_exception(e):
-            set_schema_version(version="5")
-            log_message("Issue Builds -- Schema version updated to 5")
+            set_schema_version()
+            log_message(
+                f"Issue Builds -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
+            )
             return get_issue_builds(issue_id=issue_id, version=version)
         else:
             raise

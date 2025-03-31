@@ -2,7 +2,11 @@ from typing import TypedDict, Optional
 from django.db import connection
 from django.db.utils import ProgrammingError
 
-from kernelCI_app.helpers.environment import get_schema_version, set_schema_version
+from kernelCI_app.helpers.environment import (
+    DEFAULT_SCHEMA_VERSION,
+    get_schema_version,
+    set_schema_version,
+)
 from kernelCI_app.models import Checkouts
 from kernelCI_app.utils import get_query_time_interval
 from kernelCI_app.cache import get_query_cache, set_query_cache
@@ -72,6 +76,8 @@ def get_tree_listing_data(
                 checkouts.git_repository_branch,
                 checkouts.git_repository_url,
                 checkouts.git_commit_hash,
+                checkouts.origin_builds_finish_time,
+                checkouts.origin_tests_finish_time,
                 CASE
                     WHEN COUNT(DISTINCT checkouts.git_commit_tags) > 0 THEN
                     COALESCE(
@@ -158,7 +164,9 @@ def get_tree_listing_data(
                 checkouts.git_commit_hash,
                 checkouts.git_repository_branch,
                 checkouts.git_repository_url,
-                checkouts.tree_name
+                checkouts.tree_name,
+                checkouts.origin_builds_finish_time,
+                checkouts.origin_tests_finish_time
             ORDER BY
                 checkouts.git_commit_hash;
             ;
@@ -170,8 +178,10 @@ def get_tree_listing_data(
             return cursor.fetchall()
     except ProgrammingError as e:
         if is_valid_does_not_exist_exception(e):
-            set_schema_version(version="5")
-            log_message("Tree Listing Status -- Schema version updated to 5")
+            set_schema_version()
+            log_message(
+                f"Tree Listing Status -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
+            )
             return get_tree_listing_data(
                 origin=origin,
                 interval_in_days=interval_in_days,
@@ -197,6 +207,8 @@ def get_tree_listing_fast(*, origin: Optional[str] = None, interval: dict):
                 git_commit_tags,
                 patchset_hash,
                 start_time,
+                origin_builds_finish_time,
+                origin_tests_finish_time,
                 ROW_NUMBER() OVER (
                     PARTITION BY git_repository_url, git_repository_branch
                     ORDER BY start_time DESC
@@ -208,15 +220,7 @@ def get_tree_listing_fast(*, origin: Optional[str] = None, interval: dict):
                 start_time >= TO_TIMESTAMP({interval_timestamp})
         )
         SELECT
-            id,
-            tree_name,
-            git_repository_branch,
-            git_repository_url,
-            git_commit_hash,
-            git_commit_name,
-            git_commit_tags,
-            patchset_hash,
-            start_time
+            *
         FROM
             ordered_checkouts
         WHERE
@@ -331,8 +335,10 @@ def get_tree_details_data(
                 set_query_cache(cache_key, params, rows)
         except ProgrammingError as e:
             if is_valid_does_not_exist_exception(e):
-                set_schema_version(version="5")
-                log_message("Tree Details -- Schema version updated to 5")
+                set_schema_version()
+                log_message(
+                    f"Tree Details -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
+                )
                 return get_tree_details_data(
                     origin_param=origin_param,
                     git_url_param=git_url_param,
@@ -448,8 +454,10 @@ def get_tree_commit_history(
             return cursor.fetchall()
     except ProgrammingError as e:
         if is_valid_does_not_exist_exception(e):
-            set_schema_version(version="5")
-            log_message("Tree Commit History -- Schema version updated to 5")
+            set_schema_version()
+            log_message(
+                f"Tree Commit History -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
+            )
             return get_tree_commit_history(
                 commit_hash=commit_hash,
                 origin=origin,

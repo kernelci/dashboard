@@ -1,3 +1,4 @@
+from typing import Optional
 import yaml
 
 from kernelCI_app.constants.general import (
@@ -6,7 +7,7 @@ from kernelCI_app.constants.general import (
 )
 from kernelCI_app.helpers.logger import log_message
 
-DEFAULT_SCHEMA_VERSION = "5"
+DEFAULT_SCHEMA_VERSION = "5.1"
 
 
 def get_yaml_data(*, file: str):
@@ -36,7 +37,7 @@ def get_schema_version() -> str:
     return schema_version
 
 
-def set_schema_version(*, version: str) -> None:
+def set_schema_version(*, version: Optional[str] = DEFAULT_SCHEMA_VERSION) -> None:
     if version is not None and version != "":
         set_yaml_data(
             file=SCHEMA_VERSION_ENV_FILE, data={SCHEMA_VERSION_ENV_NAME: version}

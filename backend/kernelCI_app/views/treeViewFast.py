@@ -52,6 +52,8 @@ class TreeViewFast(APIView):
                 "git_commit_tags": checkout.git_commit_tags,
                 "patchset_hash": checkout.patchset_hash,
                 "start_time": checkout.start_time,
+                "origin_builds_finish_time": checkout.origin_builds_finish_time,
+                "origin_tests_finish_time": checkout.origin_tests_finish_time,
             }
             for checkout in checkouts
         ]
