@@ -27,6 +27,7 @@ import type {
   RequiredStatusCount,
 } from './types/general';
 import { parseSearch, stringifySearch } from './utils/search';
+import { retryHandler } from './utils/query';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -63,6 +64,7 @@ const queryClient = new QueryClient({
     queries: {
       // eslint-disable-next-line no-magic-numbers
       staleTime: 1000 * 60 * 5, // 5 minutes,
+      retry: retryHandler(),
     },
   },
 });

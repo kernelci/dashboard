@@ -3,11 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { TIssueDetails } from '@/types/issueDetails';
 
-import type {
-  BuildsTableBuild,
-  TErrorWithStatus,
-  TestHistory,
-} from '@/types/general';
+import type { BuildsTableBuild, TestHistory } from '@/types/general';
 
 import { RequestData } from './commonRequest';
 
@@ -58,11 +54,10 @@ const fetchIssueDetailsTests = async (
 export const useIssueDetailsTests = (
   issueId: string,
   versionNumber?: number,
-): UseQueryResult<TestHistory[], TErrorWithStatus> => {
+): UseQueryResult<TestHistory[]> => {
   return useQuery({
     queryKey: ['issueTestsData', issueId, versionNumber],
     queryFn: () => fetchIssueDetailsTests(issueId, versionNumber),
-    retry: 1,
     refetchOnWindowFocus: false,
   });
 };
@@ -86,11 +81,10 @@ const fetchIssueDetailsBuilds = async (
 export const useIssueDetailsBuilds = (
   issueId: string,
   versionNumber?: number,
-): UseQueryResult<BuildsTableBuild[], TErrorWithStatus> => {
+): UseQueryResult<BuildsTableBuild[]> => {
   return useQuery({
     queryKey: ['issueBuildsData', issueId, versionNumber],
     queryFn: () => fetchIssueDetailsBuilds(issueId, versionNumber),
-    retry: 1,
     refetchOnWindowFocus: false,
   });
 };

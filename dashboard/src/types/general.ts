@@ -6,10 +6,6 @@ import type { Status } from './database';
 import type { TTreeDetailsFilter } from './tree/TreeDetails';
 import type { THardwareDetailsFilter } from './hardware/hardwareDetails';
 
-export type TErrorWithStatus = Error & {
-  status: number;
-};
-
 export type TPathTests = {
   path_group: string;
   fail_tests: number;
