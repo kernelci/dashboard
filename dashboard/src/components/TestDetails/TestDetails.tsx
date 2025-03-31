@@ -1,4 +1,5 @@
 import { FormattedMessage, useIntl } from 'react-intl';
+import { roundToNearestMinutes } from 'date-fns';
 
 import { Fragment, useCallback, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction, JSX } from 'react';
@@ -15,7 +16,12 @@ import { MdChevronRight } from 'react-icons/md';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 
-import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
+import {
+  EMPTY_VALUE,
+  shouldTruncate,
+  truncateBigText,
+  valueOrEmpty,
+} from '@/lib/string';
 import type { TTestDetails, TestStatusHistory } from '@/types/tree/TestDetails';
 import { Sheet } from '@/components/Sheet';
 import {
@@ -59,6 +65,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import MemoizedLinkItem from '@/components/DetailsLink';
 import { processLogData } from '@/hooks/useLogData';
+
+import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
+import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 import { StatusHistoryItem } from './StatusHistoryItem';
 
@@ -136,6 +145,76 @@ const TestDetailsSections = ({
     test.git_repository_branch,
     test.git_repository_url,
     test.tree_name,
+  ]);
+
+  const endTimestampInSeconds = dateObjectToTimestampInSeconds(
+    roundToNearestMinutes(new Date(), {
+      nearestTo: 30,
+    }),
+  );
+  const startTimestampInSeconds =
+    endTimestampInSeconds - daysToSeconds(REDUCED_TIME_SEARCH);
+
+  const hardwareDetailsLink = useMemo(() => {
+    if (hardware === formatMessage({ id: 'global.unknown' })) {
+      return <span>{hardware}</span>;
+    }
+
+    return (
+      <MemoizedLinkItem
+        to="/hardware/$hardwareId"
+        params={{ hardwareId: hardware }}
+        state={s => s}
+        search={{
+          origin: searchParams.origin,
+          startTimestampInSeconds: startTimestampInSeconds,
+          endTimestampInSeconds: endTimestampInSeconds,
+        }}
+      >
+        {hardware}
+        <LinkIcon className="text-blue text-xl" />
+      </MemoizedLinkItem>
+    );
+  }, [
+    searchParams,
+    hardware,
+    formatMessage,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+  ]);
+
+  const compatiblesLink = useMemo(() => {
+    if (!test.environment_compatible) {
+      return <span>{EMPTY_VALUE}</span>;
+    }
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {test.environment_compatible.map(
+          (compatible: string): JSX.Element => (
+            <MemoizedLinkItem
+              key={compatible}
+              to="/hardware/$hardwareId"
+              params={{ hardwareId: compatible }}
+              state={s => s}
+              search={{
+                origin: searchParams.origin,
+                startTimestampInSeconds: startTimestampInSeconds,
+                endTimestampInSeconds: endTimestampInSeconds,
+              }}
+            >
+              {compatible}
+              <LinkIcon className="text-blue text-xl" />
+            </MemoizedLinkItem>
+          ),
+        )}
+      </div>
+    );
+  }, [
+    searchParams,
+    test.environment_compatible,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
   ]);
 
   const setSheetToLog = useCallback(
@@ -311,6 +390,7 @@ const TestDetailsSections = ({
             {
               title: 'global.hardware',
               linkText: hardware,
+              linkComponent: hardwareDetailsLink,
             },
             {
               title: 'global.architecture',
@@ -348,6 +428,7 @@ const TestDetailsSections = ({
             {
               title: 'global.compatibles',
               linkText: valueOrEmpty(test.environment_compatible?.join(' | ')),
+              linkComponent: compatiblesLink,
             },
             {
               title: 'testDetails.testId',
@@ -375,6 +456,8 @@ const TestDetailsSections = ({
     formatMessage,
     setSheetToLog,
     treeDetailsLink,
+    hardwareDetailsLink,
+    compatiblesLink,
     buildDetailsLink,
     hardware,
   ]);

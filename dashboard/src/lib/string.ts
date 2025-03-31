@@ -1,6 +1,8 @@
+export const EMPTY_VALUE = '-';
+
 export const valueOrEmpty = (
   value: string | undefined,
-  emptyValue = '-',
+  emptyValue = EMPTY_VALUE,
 ): string => value || emptyValue;
 
 export const shouldTruncate = (value: string, maxLength = 50): boolean =>
