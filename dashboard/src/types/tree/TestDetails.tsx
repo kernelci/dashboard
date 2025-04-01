@@ -51,4 +51,5 @@ export type TestStatusHistoryParams = {
   platform?: string;
   current_test_start_time?: string;
   config_name?: string;
+  field_timestamp?: string;
 };

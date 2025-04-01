@@ -23,11 +23,13 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitRepositoryUrl,
     Checkout__GitCommitTags,
     Checkout__TreeName,
+    Timestamp,
 )
 from kernelCI_app.utils import validate_str_to_dict
 
 
 class TestDetailsResponse(BaseModel):
+    field_timestamp: Timestamp = Field(validation_alias="_timestamp")
     id: Test__Id
     build_id: Build__Id
     status: Test__Status
@@ -77,3 +79,4 @@ class TestStatusHistoryRequest(BaseModel):
     platform: Optional[str] = None
     current_test_start_time: Test__StartTime = None
     config_name: Build__ConfigName = None
+    field_timestamp: Timestamp = None

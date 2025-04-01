@@ -544,6 +544,7 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
               : undefined,
           current_test_start_time: data.start_time,
           config_name: data.config_name,
+          field_timestamp: data.field_timestamp,
         }
       : undefined,
   );
