@@ -1,5 +1,3 @@
-import os
-
 from kernelCI_app.models import Checkouts
 from kernelCI_app.queries.tree import (
     get_tree_listing_data_by_checkout_id,
@@ -9,25 +7,6 @@ from kernelCI_cache.checkouts import populate_checkouts_cache_db
 from kernelCI_cache.queries.checkouts import get_all_checkout_ids
 from datetime import timedelta
 from django.utils.timezone import now
-
-
-def example_task():
-    """
-    Example task that increments a counter file.\n
-    This is a temporary example until we have real tasks. It can be deleted once that happens.
-    """
-    counter_file = os.path.join(os.path.dirname(__file__), "counter.txt")
-
-    try:
-        with open(counter_file, "r") as file:
-            counter = int(file.read().strip())
-    except FileNotFoundError:
-        counter = 0
-
-    counter += 1
-
-    with open(counter_file, "w") as file:
-        file.write(str(counter))
 
 
 def _is_checkout_done(*, checkout: dict | Checkouts) -> bool:
