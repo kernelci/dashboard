@@ -13,7 +13,7 @@ def build_status_map(status: Optional[bool | str]) -> str:
 
 
 def valid_status_field() -> str:
-    is_new_schema = get_schema_version() == "5"
+    is_new_schema = float(get_schema_version()) >= 5
     return "status" if is_new_schema else "valid"
 
 

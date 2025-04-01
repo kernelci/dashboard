@@ -3,6 +3,7 @@ from django.db import models
 
 class CheckoutsCache(models.Model):
     field_timestamp = models.DateTimeField(db_column="_timestamp")
+    checkout_id = models.TextField()
     origin = models.TextField()
     tree_name = models.TextField(blank=True, null=True)
     start_time = models.DateTimeField(blank=True, null=True)
@@ -35,6 +36,8 @@ class CheckoutsCache(models.Model):
     test_skip = models.IntegerField(default=0)
     test_error = models.IntegerField(default=0)
     test_null = models.IntegerField(default=0)
+
+    unstable = models.BooleanField(default=True)
 
     class Meta:
         db_table = "checkouts_cache"
