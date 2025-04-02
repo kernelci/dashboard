@@ -1421,11 +1421,8 @@ components:
           $ref: '#/components/schemas/TestStatusCount'
         boot_status:
           $ref: '#/components/schemas/TestStatusCount'
-        tree_names:
-          items:
-            $ref: '#/components/schemas/Checkout__TreeName'
-          title: Tree Names
-          type: array
+        tree_name:
+          $ref: '#/components/schemas/Checkout__TreeName'
         git_commit_tags:
           items:
             $ref: '#/components/schemas/Checkout__GitCommitTags'
@@ -1442,7 +1439,7 @@ components:
       - build_status
       - test_status
       - boot_status
-      - tree_names
+      - tree_name
       - git_commit_tags
       title: Checkout
       type: object
