@@ -7,7 +7,7 @@ import type {
   TestHistory,
   StatusCounts,
   PropertyStatusCounts,
-  BuildStatus,
+  RequiredStatusCount,
 } from '@/types/general';
 
 import type { Status } from '@/types/database';
@@ -180,7 +180,7 @@ export type PaginatedCommitHistoryByTree = {
   git_commit_name?: string;
   git_commit_tags?: string[];
   earliest_start_time: string;
-  builds: BuildStatus;
+  builds: RequiredStatusCount;
   boots: TableTestStatus;
   tests: TableTestStatus;
 };

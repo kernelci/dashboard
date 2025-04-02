@@ -1,7 +1,6 @@
 import { useMemo, type JSX } from 'react';
 
 import type {
-  TableTestStatus,
   Tree,
   TreeFastPathResponse,
   TreeTableBody,
@@ -59,56 +58,20 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
         );
       })
       .map((tree): TreeTableBody => {
-        const buildStatus = isCompleteTree(tree)
-          ? {
-              PASS: tree.build_status.PASS,
-              FAIL: tree.build_status.FAIL,
-              NULL: tree.build_status.NULL,
-              ERROR: tree.build_status.ERROR,
-              MISS: tree.build_status.MISS,
-              DONE: tree.build_status.DONE,
-              SKIP: tree.build_status.SKIP,
-            }
-          : undefined;
+        if (!isCompleteTree(tree)) {
+          return {
+            git_commit_hash: tree.git_commit_hash,
+            patchset_hash: tree.patchset_hash,
+            tree_name: tree.tree_name,
+            git_repository_branch: tree.git_repository_branch,
+            start_time: tree.start_time,
+            git_repository_url: tree.git_repository_url,
+            git_commit_name: tree.git_commit_name,
+            git_commit_tags: tree.git_commit_tags ?? [],
+          };
+        }
 
-        const testStatus = isCompleteTree(tree)
-          ? ({
-              error: tree.test_status.error,
-              fail: tree.test_status.fail,
-              miss: tree.test_status.miss,
-              pass: tree.test_status.pass,
-              skip: tree.test_status.skip,
-              done: tree.test_status.done,
-              null: tree.test_status.null,
-            } satisfies TableTestStatus)
-          : undefined;
-
-        const bootStatus = isCompleteTree(tree)
-          ? ({
-              done: tree.boot_status.done,
-              error: tree.boot_status.error,
-              fail: tree.boot_status.fail,
-              miss: tree.boot_status.miss,
-              pass: tree.boot_status.pass,
-              skip: tree.boot_status.skip,
-              null: tree.boot_status.null,
-            } satisfies TableTestStatus)
-          : undefined;
-
-        return {
-          commitHash: tree.git_commit_hash ?? '',
-          commitName: tree.git_commit_name ?? '',
-          commitTag: tree.git_commit_tags,
-          patchsetHash: tree.patchset_hash ?? '',
-          buildStatus,
-          testStatus,
-          bootStatus,
-          id: tree.git_commit_hash ?? '',
-          tree_name: tree.tree_name,
-          branch: tree.git_repository_branch ?? '',
-          date: tree.start_time ?? '',
-          url: tree.git_repository_url ?? '',
-        };
+        return tree;
       })
       .sort((a, b) => {
         const currentATreeName = a.tree_name ?? '';
@@ -120,12 +83,19 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
           return treeNameComparison;
         }
 
-        const branchComparison = a.branch.localeCompare(b.branch);
+        const currentABranch = a.git_repository_branch ?? '';
+        const currentBBranch = b.git_repository_branch ?? '';
+        const branchComparison = currentABranch.localeCompare(currentBBranch);
         if (branchComparison !== 0) {
           return branchComparison;
         }
 
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
+        if (a.start_time === undefined || b.start_time === undefined) {
+          return 0;
+        }
+        return (
+          new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+        );
       });
   }, [data, fastData, inputFilter, isLoading, fastStatus]);
 
