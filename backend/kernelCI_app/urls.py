@@ -130,4 +130,5 @@ urlpatterns = [
         "schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"
     ),
     path("proxy/", views.ProxyView.as_view(), name="proxyView"),
+    path("origins/", views.OriginsView.as_view(), name="originsView"),
 ]

@@ -220,7 +220,7 @@ def get_hardware_details_data(
             start_date=start_datetime,
             end_date=end_datetime,
         )
-        set_query_cache(cache_key, tests_cache_params, records)
+        set_query_cache(key=cache_key, params=tests_cache_params, rows=records)
 
     return records
 
@@ -400,6 +400,6 @@ def get_hardware_trees_data(
                 )
             )
 
-        set_query_cache(cache_key, trees_cache_params, trees)
+        set_query_cache(key=cache_key, params=trees_cache_params, rows=trees)
 
     return trees

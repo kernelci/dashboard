@@ -1,3 +1,4 @@
+from typing import Optional
 from django.core.cache import cache
 from django.conf import settings
 
@@ -19,10 +20,20 @@ def _create_cache_params_hash(params: dict):
 
 
 def set_query_cache(
-    key, params, rows, commit_hash=None, build_id=None, test_id=None, timeout=timeout
+    *,
+    key,
+    params=None,
+    rows,
+    commit_hash=None,
+    build_id=None,
+    test_id=None,
+    timeout=timeout,
 ):
-    params_hash = _create_cache_params_hash(params)
-    hash_key = "%s-%s" % (key, params_hash)
+    if params is not None:
+        params_hash = _create_cache_params_hash(params)
+        hash_key = "%s-%s" % (key, params_hash)
+    else:
+        hash_key = "%s" % key
 
     _add_to_lookup(hash_key, commit_hash, _commit_lookup)
     _add_to_lookup(hash_key, build_id, _build_lookup)
@@ -31,9 +42,11 @@ def set_query_cache(
     return cache.set(hash_key, rows, timeout)
 
 
-def get_query_cache(key, params: dict):
-    params_hash = _create_cache_params_hash(params)
-    return cache.get("%s-%s" % (key, params_hash))
+def get_query_cache(key, params: Optional[dict] = None):
+    if params is not None:
+        params_hash = _create_cache_params_hash(params)
+        return cache.get("%s-%s" % (key, params_hash))
+    return cache.get("%s" % key)
 
 
 def set_notification_cache(*, notification: str) -> None:

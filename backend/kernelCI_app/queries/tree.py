@@ -422,7 +422,7 @@ def get_tree_details_data(
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
                 rows = cursor.fetchall()
-                set_query_cache(cache_key, params, rows)
+                set_query_cache(key=cache_key, params=params, rows=rows)
         except ProgrammingError as e:
             if is_valid_does_not_exist_exception(e):
                 set_schema_version()
