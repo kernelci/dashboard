@@ -1,4 +1,4 @@
-import type { BuildStatus } from '@/types/general';
+import type { RequiredStatusCount } from '@/types/general';
 
 export type TreeFastPathResponse = Array<{
   id: string;
@@ -22,22 +22,7 @@ export type TableTestStatus = {
   null: number;
 };
 
-export type TreeTableBody = {
-  commitHash: string;
-  commitName: string;
-  commitTag?: string[];
-  patchsetHash: string;
-  buildStatus?: BuildStatus;
-  tree_name?: string | null;
-  testStatus?: TableTestStatus;
-  bootStatus?: TableTestStatus;
-  id: string;
-  branch: string;
-  date: string;
-  url: string;
-};
-
-export type Tree = {
+type BaseTree = {
   git_commit_hash?: string;
   patchset_hash?: string;
   tree_name?: string;
@@ -45,11 +30,18 @@ export type Tree = {
   start_time?: string;
   git_repository_url?: string;
   git_commit_name?: string;
-  git_commit_tags: string[];
-  build_status: BuildStatus;
-  test_status: TableTestStatus;
-  boot_status: TableTestStatus;
+  git_commit_tags?: string[];
 };
+
+type AllTabCounts = {
+  build_status?: RequiredStatusCount;
+  test_status?: TableTestStatus;
+  boot_status?: TableTestStatus;
+};
+
+export type TreeTableBody = BaseTree & AllTabCounts;
+
+export type Tree = BaseTree & Required<AllTabCounts>;
 
 export type TreeLatestResponse = {
   api_url: string;

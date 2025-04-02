@@ -9,7 +9,7 @@ import type {
   Architecture,
   BuildsTabBuild,
   BuildsTableBuild,
-  BuildStatus,
+  RequiredStatusCount,
   StatusCount,
 } from '@/types/general';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
@@ -76,7 +76,7 @@ export const sanitizeArchs = (
 };
 
 export const sanitizeConfigs = (
-  configs: Record<string, BuildStatus> | undefined,
+  configs: Record<string, RequiredStatusCount> | undefined,
 ): IListingItem[] => {
   if (!configs) {
     return [];
@@ -104,7 +104,7 @@ export const sanitizeConfigs = (
 
 export const sanitizePlatforms = (
   platforms:
-    | Record<string, BuildStatus>
+    | Record<string, RequiredStatusCount>
     | Record<string, StatusCount>
     | undefined,
 ): IListingItem[] => {
@@ -183,8 +183,8 @@ export const sanitizeBuildTable = (
 };
 
 export const sanitizeBuildsSummary = (
-  buildsSummary: BuildStatus | undefined,
-): BuildStatus =>
+  buildsSummary: RequiredStatusCount | undefined,
+): RequiredStatusCount =>
   buildsSummary
     ? buildsSummary
     : { FAIL: 0, NULL: 0, PASS: 0, ERROR: 0, MISS: 0, DONE: 0, SKIP: 0 };

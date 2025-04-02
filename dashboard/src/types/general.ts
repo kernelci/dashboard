@@ -89,16 +89,6 @@ export type BuildsTableBuild = Pick<
   | 'git_repository_branch'
 >;
 
-export type BuildStatus = {
-  PASS: number;
-  FAIL: number;
-  ERROR: number;
-  MISS: number;
-  DONE: number;
-  SKIP: number;
-  NULL: number;
-};
-
 export type StatusCount = {
   PASS?: number;
   FAIL?: number;
@@ -113,7 +103,7 @@ export type RequiredStatusCount = Required<StatusCount>;
 
 export type Architecture = Record<
   string,
-  BuildStatus & {
+  RequiredStatusCount & {
     compilers: string[];
   }
 >;

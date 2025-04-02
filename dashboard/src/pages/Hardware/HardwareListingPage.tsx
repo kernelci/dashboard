@@ -15,7 +15,7 @@ import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
-import type { BuildStatus, StatusCount } from '@/types/general';
+import type { RequiredStatusCount, StatusCount } from '@/types/general';
 
 import {
   matchesRegexOrIncludes,
@@ -89,7 +89,7 @@ const HardwareListingPage = ({
         );
       })
       .map((hardware): HardwareTableItem => {
-        const buildCount: BuildStatus = {
+        const buildCount: RequiredStatusCount = {
           PASS: hardware.build_status_summary?.PASS,
           FAIL: hardware.build_status_summary?.FAIL,
           NULL: hardware.build_status_summary?.NULL,

@@ -34,11 +34,8 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
 
-import {
-  RedirectFrom,
-  type BuildStatus,
-  type TFilterObjectsKeys,
-} from '@/types/general';
+import { RedirectFrom } from '@/types/general';
+import type { RequiredStatusCount, TFilterObjectsKeys } from '@/types/general';
 
 import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
@@ -57,7 +54,7 @@ interface BuildTab {
 export interface IBuildsTab {
   architectures: ISummaryItem[];
   configs: IListingItem[];
-  buildsSummary: BuildStatus;
+  buildsSummary: RequiredStatusCount;
   buildsIssues: TIssue[];
   failedBuildsWithUnknownIssues?: number;
   builds: AccordionItemBuilds[];
