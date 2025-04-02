@@ -504,6 +504,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/LogDownloaderResponse'
           description: ''
+  /api/origins/:
+    get:
+      operationId: origins_retrieve
+      tags:
+      - origins
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+          description: ''
   /api/proxy/:
     get:
       operationId: proxy_retrieve
@@ -2584,6 +2610,8 @@ components:
       type: object
     TestDetailsResponse:
       properties:
+        field_timestamp:
+          $ref: '#/components/schemas/Timestamp'
         id:
           $ref: '#/components/schemas/Test__Id'
         build_id:
@@ -2627,6 +2655,7 @@ components:
           - $ref: '#/components/schemas/Origin'
           - type: 'null'
       required:
+      - field_timestamp
       - id
       - build_id
       - status
@@ -2904,8 +2933,10 @@ components:
       - $ref: '#/components/schemas/DatabaseStatusValues'
       - type: 'null'
     Timestamp:
-      format: date-time
-      type: string
+      anyOf:
+      - format: date-time
+        type: string
+      - type: 'null'
     Tree:
       properties:
         index:
