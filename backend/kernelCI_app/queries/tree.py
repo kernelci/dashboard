@@ -107,8 +107,8 @@ def get_tree_listing_data(
         "interval_param": get_query_time_interval(**interval_in_days).timestamp(),
     }
 
-    # '1 as id' is necessary in this case because django raw queries must include the primary key.
-    # In this case we don't need the primary key and adding it would alter the GROUP BY clause,
+    # 'MAX(checkouts.id) as id' is necessary in this case because
+    # if we just added the id in the query it would alter the GROUP BY clause,
     # potentially causing the tree listing page show the same tree multiple times
     query = f"""
             SELECT
@@ -133,12 +133,6 @@ def get_tree_listing_data(
                 MAX(checkouts.git_commit_name) AS git_commit_name,
                 MAX(checkouts.start_time) AS start_time,
                 {count_clauses}
-                COALESCE(
-                    ARRAY_AGG(DISTINCT tree_name) FILTER (
-                        WHERE tree_name IS NOT NULL
-                    ),
-                    ARRAY[]::TEXT[]
-                ) AS tree_names,
                 checkouts.origin
             FROM
                 checkouts
@@ -263,7 +257,6 @@ def get_tree_listing_data_by_checkout_id(*, checkout_ids: list[str]):
     query = f"""
             SELECT
                 MAX(checkouts.id) AS id,
-                checkouts.origin,
                 checkouts.tree_name,
                 checkouts.git_repository_branch,
                 checkouts.git_repository_url,
@@ -284,12 +277,7 @@ def get_tree_listing_data_by_checkout_id(*, checkout_ids: list[str]):
                 MAX(checkouts.git_commit_name) AS git_commit_name,
                 MAX(checkouts.start_time) AS start_time,
                 {count_clauses}
-                COALESCE(
-                    ARRAY_AGG(DISTINCT tree_name) FILTER (
-                        WHERE tree_name IS NOT NULL
-                    ),
-                    ARRAY[]::TEXT[]
-                ) AS tree_names
+                checkouts.origin
             FROM
                 checkouts
             LEFT JOIN

@@ -13,15 +13,12 @@ def populate_checkouts_cache_db(
     origin: Optional[Origin] = None,
 ) -> None:
     for checkout in data:
-        tree_name = (
-            checkout["tree_names"][0] if len(checkout["tree_names"]) >= 1 else ""
-        )
         origin_field = origin if origin is not None else checkout["origin"]
 
         # TODO: When we add patchset_hash to the TreeView, it should be added here too
         lookup_fields = {
             "origin": origin_field,
-            "tree_name": tree_name,
+            "tree_name": checkout["tree_name"],
             "git_commit_hash": checkout["git_commit_hash"],
             "git_repository_url": checkout["git_repository_url"],
             "git_repository_branch": checkout["git_repository_branch"],
