@@ -1,5 +1,6 @@
 import json
 from kernelCI_app.helpers.environment import (
+    DEFAULT_SCHEMA_VERSION,
     get_schema_version,
     set_schema_version,
 )
@@ -178,8 +179,10 @@ def get_hardware_listing_data(
             return dict_fetchall(cursor)
     except ProgrammingError as e:
         if is_valid_does_not_exist_exception(e):
-            set_schema_version(version="5")
-            log_message("Hardware Listing -- Schema version updated to 5")
+            set_schema_version()
+            log_message(
+                f"Hardware Listing -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
+            )
             return get_hardware_listing_data(
                 start_date=start_date,
                 end_date=end_date,
@@ -307,8 +310,10 @@ def query_records(
             return dict_fetchall(cursor)
     except ProgrammingError as e:
         if is_valid_does_not_exist_exception(e):
-            set_schema_version(version="5")
-            log_message("Hardware Details -- Schema version updated to 5")
+            set_schema_version()
+            log_message(
+                f"Hardware Details -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
+            )
             return query_records(
                 hardware_id=hardware_id,
                 origin=origin,

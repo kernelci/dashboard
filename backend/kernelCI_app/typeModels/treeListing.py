@@ -9,6 +9,8 @@ from kernelCI_app.typeModels.databases import (
     Checkout__PatchsetHash,
     Checkout__GitRepositoryBranch,
     Checkout__GitRepositoryUrl,
+    Checkout__OriginBuildsFinishTime,
+    Checkout__OriginTestsFinishTime,
     Timestamp,
 )
 from pydantic import BaseModel, Field, RootModel
@@ -33,6 +35,8 @@ class BaseCheckouts(BaseModel):
 class CommonCheckouts(BaseCheckouts):
     git_repository_branch: Checkout__GitRepositoryBranch
     start_time: Timestamp
+    origin_builds_finish_time: Checkout__OriginBuildsFinishTime
+    origin_tests_finish_time: Checkout__OriginTestsFinishTime
 
 
 class Checkout(CommonCheckouts):

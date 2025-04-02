@@ -44,6 +44,8 @@ class Checkouts(models.Model):
     log_excerpt = models.CharField(max_length=16384, blank=True, null=True)
     valid = models.BooleanField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
+    origin_builds_finish_time = models.DateTimeField(blank=True, null=True)
+    origin_tests_finish_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         managed = False

@@ -132,8 +132,7 @@ SPECTACULAR_SETTINGS = {
 # poetry run ./manage.py crontab arg
 # where "arg" is add, remove or show
 CRONJOBS = [
-    # Example for running tasks that are not commands, uncomment to run for testing
-    # ('* * * * *', 'kernelCI_app.tasks.example_task'),
+    ("0 * * * *", "kernelCI_app.tasks.update_checkout_cache"),
     ("0 0 * * 0", "django.core.management.call_command", ["treeproof"]),
     (
         "59 * * * *",

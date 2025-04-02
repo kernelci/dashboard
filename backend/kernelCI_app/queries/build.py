@@ -1,7 +1,7 @@
 from django.db.utils import ProgrammingError
 from typing import Optional
 from querybuilder.query import Query
-from kernelCI_app.helpers.environment import set_schema_version
+from kernelCI_app.helpers.environment import DEFAULT_SCHEMA_VERSION, set_schema_version
 from kernelCI_app.models import Builds, Tests
 from kernelCI_app.helpers.build import (
     is_valid_does_not_exist_exception,
@@ -52,8 +52,10 @@ def get_build_details(build_id: str) -> Optional[list[dict]]:
         return query.select()
     except ProgrammingError as e:
         if is_valid_does_not_exist_exception(e):
-            set_schema_version(version="5")
-            log_message("Build Details -- Schema version updated to 5")
+            set_schema_version()
+            log_message(
+                f"Build Details -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
+            )
             return get_build_details(build_id=build_id)
         else:
             raise
@@ -74,8 +76,10 @@ def get_build_tests(build_id: str) -> Optional[list[dict]]:
         return list(result)
     except ProgrammingError as e:
         if is_valid_does_not_exist_exception(e):
-            set_schema_version(version="5")
-            log_message("Build Details Tests -- Schema version updated to 5")
+            set_schema_version()
+            log_message(
+                f"Build Details Tests -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
+            )
             return get_build_tests(build_id=build_id)
         else:
             raise
