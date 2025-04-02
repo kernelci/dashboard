@@ -1,12 +1,11 @@
 import pytest
-from kernelCI_app.unitTests.utils.healthCheck import online
 from kernelCI_app.typeModels.hardwareListing import HardwareQueryParamsDocumentationOnly
-from kernelCI_app.unitTests.utils.client.hardwareClient import HardwareClient
-from kernelCI_app.unitTests.utils.asserts import (
+from kernelCI_app.tests.utils.client.hardwareClient import HardwareClient
+from kernelCI_app.tests.utils.asserts import (
     assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
 )
-from kernelCI_app.unitTests.utils.fields.hardware import (
+from kernelCI_app.tests.utils.fields.hardware import (
     hardware_listing_fields,
     status_summary_fields,
 )
@@ -14,7 +13,6 @@ from kernelCI_app.utils import string_to_json
 from http import HTTPStatus
 
 
-@online
 @pytest.mark.parametrize(
     "query, has_error_body",
     [

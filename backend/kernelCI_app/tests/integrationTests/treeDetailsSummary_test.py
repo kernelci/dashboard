@@ -3,13 +3,12 @@ from requests import Response
 from http import HTTPStatus
 
 from kernelCI_app.utils import string_to_json
-from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.client.treeClient import TreeClient
-from kernelCI_app.unitTests.utils.commonTreeAsserts import (
+from kernelCI_app.tests.utils.client.treeClient import TreeClient
+from kernelCI_app.tests.utils.commonTreeAsserts import (
     assert_common_summary_status_fields,
 )
-from kernelCI_app.unitTests.utils.fields import tree
-from kernelCI_app.unitTests.utils.asserts import (
+from kernelCI_app.tests.utils.fields import tree
+from kernelCI_app.tests.utils.asserts import (
     assert_has_fields_in_response_content,
     assert_status_code,
     assert_error_response,
@@ -142,7 +141,6 @@ def request_data(base_tree: dict, filters: dict | None = None) -> tuple[Response
     return response, content
 
 
-@online
 @pytest.mark.parametrize(
     "base_tree, status_code, has_error_body",
     [
@@ -180,7 +178,6 @@ def test_no_filters(base_tree, status_code, has_error_body):
         )
 
 
-@online
 def test_filter_test_status(test_status_input):
     """
     Tests for the status filter for both boots and tests
@@ -218,7 +215,6 @@ def test_filter_test_status(test_status_input):
                 assert count == 0
 
 
-@online
 @pytest.mark.parametrize(
     "base_tree, filters",
     [
@@ -250,7 +246,6 @@ def test_filter_build_status(base_tree, filters):
                 assert count == 0
 
 
-@online
 @pytest.mark.parametrize(
     "base_tree, filters",
     [
@@ -274,7 +269,6 @@ def test_filter_config_name(base_tree, filters):
             assert config in values
 
 
-@online
 @pytest.mark.parametrize(
     "base_tree, filters",
     [
@@ -305,7 +299,6 @@ def test_filter_architectures(base_tree, filters):
         assert arch in values
 
 
-@online
 @pytest.mark.parametrize(
     "base_tree, filters",
     [
@@ -337,7 +330,6 @@ def test_filter_compiler(base_tree, filters):
             assert compiler in values
 
 
-@online
 def test_filter_hardware(hardware_input):
     base_tree, filters = hardware_input
     response, content = request_data(base_tree, filters)
@@ -361,7 +353,6 @@ def test_filter_hardware(hardware_input):
             assert platform in values
 
 
-@online
 def test_filter_issues(issues_input):
     base_tree, filters = issues_input
     response, content = request_data(base_tree, filters)
@@ -392,7 +383,6 @@ def test_filter_issues(issues_input):
     assert pass_count == 0
 
 
-@online
 def test_invalid_filters(invalid_filters_input):
     empty_test = {
         "architectures": [],

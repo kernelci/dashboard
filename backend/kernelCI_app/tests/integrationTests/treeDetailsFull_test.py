@@ -1,15 +1,15 @@
-from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.client.treeClient import TreeClient
-from kernelCI_app.unitTests.utils.asserts import (
-    assert_status_code_and_error_response,
-)
+from kernelCI_app.tests.utils.client.treeClient import TreeClient
+from kernelCI_app.tests.utils.asserts import assert_status_code_and_error_response
 from kernelCI_app.utils import string_to_json
-from kernelCI_app.unitTests.utils.commonTreeAsserts import (
+from kernelCI_app.tests.utils.commonTreeAsserts import (
+    execute_boots_asserts,
+    execute_builds_asserts,
+    execute_summary_asserts,
     execute_tests_asserts,
 )
 from http import HTTPStatus
 import pytest
-from kernelCI_app.unitTests.utils.treeDetailsCommonTestCases import (
+from kernelCI_app.tests.utils.treeDetailsCommonTestCases import (
     ANDROID_MAESTRO_MAINLINE,
     NEXT_PENDING_FIXES_BROONIE,
     UNEXISTENT_TREE,
@@ -21,7 +21,6 @@ from kernelCI_app.unitTests.utils.treeDetailsCommonTestCases import (
 client = TreeClient()
 
 
-@online
 @pytest.mark.parametrize(
     "base_tree, status_code, has_error_body",
     [
@@ -32,7 +31,7 @@ client = TreeClient()
         (BROONIE_MISC_BROONIE, HTTPStatus.OK, False),
     ],
 )
-def test_tree_details_tests(
+def test_tree_details_full(
     pytestconfig,
     base_tree: dict,
     status_code: HTTPStatus,
@@ -43,7 +42,7 @@ def test_tree_details_tests(
     query = params["query"]
     filters = params.get("filters")
 
-    response = client.get_tree_details_tests(tree_id=id, query=query, filters=filters)
+    response = client.get_tree_details_full(tree_id=id, query=query, filters=filters)
     content = string_to_json(response.content.decode())
 
     assert_status_code_and_error_response(
@@ -54,4 +53,7 @@ def test_tree_details_tests(
     )
 
     if not has_error_body:
+        execute_summary_asserts(content)
+        execute_builds_asserts(pytestconfig, content, filters)
+        execute_boots_asserts(pytestconfig, content, filters)
         execute_tests_asserts(pytestconfig, content, filters)

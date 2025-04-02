@@ -1,10 +1,9 @@
 import pytest
 from http import HTTPStatus
 from requests import Response
-from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.client.treeClient import TreeClient
-from kernelCI_app.unitTests.utils.asserts import assert_status_code_and_error_response
-from kernelCI_app.unitTests.utils.commonTreeAsserts import (
+from kernelCI_app.tests.utils.client.treeClient import TreeClient
+from kernelCI_app.tests.utils.asserts import assert_status_code_and_error_response
+from kernelCI_app.tests.utils.commonTreeAsserts import (
     assert_tree_commit_history_fields,
 )
 from kernelCI_app.utils import string_to_json
@@ -34,7 +33,6 @@ def request_data(base_tree: dict, filters: dict | None = None) -> tuple[Response
     return response, content
 
 
-@online
 @pytest.mark.parametrize(
     "tree, status_code, has_error_body",
     [
@@ -62,7 +60,6 @@ def test_no_filters(
             assert_tree_commit_history_fields(tree)
 
 
-@online
 @pytest.mark.parametrize(
     "tree, filters",
     [

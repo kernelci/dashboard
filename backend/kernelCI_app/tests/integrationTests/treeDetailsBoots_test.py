@@ -1,13 +1,12 @@
-from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.client.treeClient import TreeClient
-from kernelCI_app.unitTests.utils.asserts import (
+from kernelCI_app.tests.utils.client.treeClient import TreeClient
+from kernelCI_app.tests.utils.asserts import (
     assert_status_code_and_error_response,
 )
 from kernelCI_app.utils import string_to_json
-from kernelCI_app.unitTests.utils.commonTreeAsserts import execute_boots_asserts
+from kernelCI_app.tests.utils.commonTreeAsserts import execute_boots_asserts
 from http import HTTPStatus
 import pytest
-from kernelCI_app.unitTests.utils.treeDetailsCommonTestCases import (
+from kernelCI_app.tests.utils.treeDetailsCommonTestCases import (
     ANDROID_MAESTRO_MAINLINE,
     NEXT_PENDING_FIXES_BROONIE,
     UNEXISTENT_TREE,
@@ -19,7 +18,6 @@ from kernelCI_app.unitTests.utils.treeDetailsCommonTestCases import (
 client = TreeClient()
 
 
-@online
 @pytest.mark.parametrize(
     "base_tree, status_code, has_error_body",
     [
