@@ -1,9 +1,5 @@
 import type { Status } from '@/types/database';
-import type {
-  StatusCount,
-  BuildStatus,
-  RequiredStatusCount,
-} from '@/types/general';
+import type { StatusCount, RequiredStatusCount } from '@/types/general';
 import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
 type StatusGroups = 'success' | 'failed' | 'inconclusive';
@@ -60,7 +56,7 @@ export const getStatusGroup = (status: Status): StatusGroups => {
   return 'inconclusive';
 };
 
-type FlexibleStatus = BuildStatus | GroupStatusCount | StatusCount;
+type FlexibleStatus = RequiredStatusCount | GroupStatusCount | StatusCount;
 
 export function sumStatus(status: FlexibleStatus): number {
   return Object.values(status).reduce(

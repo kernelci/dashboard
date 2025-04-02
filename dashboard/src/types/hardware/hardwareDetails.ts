@@ -1,11 +1,6 @@
 import { z } from 'zod';
 
-import type {
-  BuildsTabBuild,
-  BuildStatus,
-  StatusCount,
-  TestHistory,
-} from '@/types/general';
+import type { BuildsTabBuild, StatusCount, TestHistory } from '@/types/general';
 
 import type {
   GlobalFilters,
@@ -14,7 +9,7 @@ import type {
 } from '@/types/commonDetails';
 
 type TTreesStatusSummary = {
-  builds: Partial<BuildStatus>;
+  builds: StatusCount;
   boots: StatusCount;
   tests: StatusCount;
 };

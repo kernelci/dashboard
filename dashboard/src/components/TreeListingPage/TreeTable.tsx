@@ -24,7 +24,7 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import type { TreeTableBody } from '@/types/tree/Tree';
 import { DEFAULT_ORIGIN, RedirectFrom } from '@/types/general';
-import type { TFilter, BuildStatus } from '@/types/general';
+import type { TFilter } from '@/types/general';
 
 import { formattedBreakLineValue } from '@/locales/messages';
 
@@ -62,6 +62,7 @@ import { statusCountToRequiredStatusCount } from '@/utils/status';
 
 import { MemoizedInputTime } from '@/components/InputTime';
 import { shouldShowRelativeDate } from '@/lib/date';
+import { valueOrEmpty } from '@/lib/string';
 
 const getLinkProps = (
   row: Row<TreeTableBody>,
@@ -71,7 +72,7 @@ const getLinkProps = (
 ): LinkProps => {
   return {
     to: '/tree/$treeId',
-    params: { treeId: row.original.id },
+    params: { treeId: row.original.git_commit_hash },
     search: previousSearch => ({
       tableFilter: {
         bootsTable: possibleTableFilters[0],
@@ -82,45 +83,45 @@ const getLinkProps = (
       currentPageTab: zPossibleTabValidator.parse(tabTarget),
       diffFilter: diffFilter ?? {},
       treeInfo: {
-        gitUrl: row.original.url,
-        gitBranch: row.original.branch,
+        gitUrl: row.original.git_repository_url,
+        gitBranch: row.original.git_repository_branch,
         treeName: row.original.tree_name ?? undefined,
-        commitName: row.original.commitName,
-        headCommitHash: row.original.id,
+        commitName: row.original.git_commit_name,
+        headCommitHash: row.original.git_commit_hash,
       },
       intervalInDays: previousSearch.intervalInDays,
     }),
     state: s => ({
       ...s,
-      id: row.original.id,
+      id: row.original.git_commit_hash,
       from: RedirectFrom.Tree,
       treeStatusCount: {
-        builds: {
-          PASS: row.original.buildStatus?.PASS ?? 0,
-          FAIL: row.original.buildStatus?.FAIL ?? 0,
-          NULL: row.original.buildStatus?.NULL ?? 0,
-          ERROR: row.original.buildStatus?.ERROR ?? 0,
-          MISS: row.original.buildStatus?.MISS ?? 0,
-          DONE: row.original.buildStatus?.DONE ?? 0,
-          SKIP: row.original.buildStatus?.SKIP ?? 0,
-        } satisfies BuildStatus,
+        builds: statusCountToRequiredStatusCount({
+          PASS: row.original.build_status?.PASS,
+          FAIL: row.original.build_status?.FAIL,
+          NULL: row.original.build_status?.NULL,
+          DONE: row.original.build_status?.DONE,
+          ERROR: row.original.build_status?.ERROR,
+          MISS: row.original.build_status?.MISS,
+          SKIP: row.original.build_status?.SKIP,
+        }),
         tests: statusCountToRequiredStatusCount({
-          DONE: row.original.testStatus?.done,
-          PASS: row.original.testStatus?.pass,
-          FAIL: row.original.testStatus?.fail,
-          ERROR: row.original.testStatus?.error,
-          MISS: row.original.testStatus?.miss,
-          SKIP: row.original.testStatus?.skip,
-          NULL: row.original.testStatus?.null,
+          PASS: row.original.test_status?.pass,
+          FAIL: row.original.test_status?.fail,
+          NULL: row.original.test_status?.null,
+          DONE: row.original.test_status?.done,
+          ERROR: row.original.test_status?.error,
+          MISS: row.original.test_status?.miss,
+          SKIP: row.original.test_status?.skip,
         }),
         boots: statusCountToRequiredStatusCount({
-          DONE: row.original.bootStatus?.done,
-          PASS: row.original.bootStatus?.pass,
-          FAIL: row.original.bootStatus?.fail,
-          ERROR: row.original.bootStatus?.error,
-          MISS: row.original.bootStatus?.miss,
-          SKIP: row.original.bootStatus?.skip,
-          NULL: row.original.bootStatus?.null,
+          PASS: row.original.boot_status?.pass,
+          FAIL: row.original.boot_status?.fail,
+          NULL: row.original.boot_status?.null,
+          DONE: row.original.boot_status?.done,
+          ERROR: row.original.boot_status?.error,
+          MISS: row.original.boot_status?.miss,
+          SKIP: row.original.boot_status?.skip,
         }),
       },
     }),
@@ -138,13 +139,15 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
         return (
           <Tooltip>
             <TooltipTrigger>
-              <div>
-                {sanitizeTableValue(row.getValue('tree_name') ?? '', false)}
-              </div>
+              {sanitizeTableValue(row.getValue('tree_name') ?? '', false)}
             </TooltipTrigger>
             <TooltipContent>
-              <a href={row.original.url} target="_blank" rel="noreferrer">
-                {sanitizeTableValue(row.original.url, false)}
+              <a
+                href={row.original.git_repository_url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {sanitizeTableValue(row.original.git_repository_url, false)}
               </a>
             </TooltipContent>
           </Tooltip>
@@ -155,25 +158,26 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
       },
     },
     {
-      accessorKey: 'branch',
+      accessorKey: 'git_repository_branch',
       header: ({ column }): JSX.Element => (
         <TableHeader column={column} intlKey="globalTable.branch" />
       ),
+      cell: ({ row }) => valueOrEmpty(row.getValue('git_repository_branch')),
       meta: {
         tabTarget: 'global.builds',
       },
     },
     {
-      id: 'commitTag',
-      accessorKey: 'commitTag',
+      id: 'git_commit_tags',
+      accessorKey: 'git_commit_tags',
       header: ({ column }): JSX.Element => (
         <TableHeader column={column} intlKey="globalTable.commitTag" />
       ),
       cell: ({ row }): JSX.Element => (
         <CommitTagTooltip
-          commitHash={row.original.commitHash}
-          commitName={row.original.commitName}
-          commitTags={row.original.commitTag}
+          commitName={row.original.git_commit_name}
+          commitHash={row.original.git_commit_hash}
+          commitTags={row.original.git_commit_tags}
         />
       ),
       meta: {
@@ -181,15 +185,15 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
       },
     },
     {
-      accessorKey: 'date',
+      accessorKey: 'start_time',
       header: ({ column }): JSX.Element => (
         <TableHeader column={column} intlKey="global.date" />
       ),
       cell: ({ row }): JSX.Element => (
         <TooltipDateTime
-          dateTime={row.getValue('date')}
+          dateTime={row.getValue('start_time')}
           lineBreak={true}
-          showRelative={shouldShowRelativeDate(row.getValue('date'))}
+          showRelative={shouldShowRelativeDate(row.getValue('start_time'))}
         />
       ),
       meta: {
@@ -208,15 +212,15 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
       cell: ({ column, row }): JSX.Element => {
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
-        return row.original.buildStatus ? (
+        return row.original.build_status ? (
           <GroupedTestStatusWithLink
-            pass={row.original.buildStatus.PASS}
-            skip={row.original.buildStatus.SKIP}
-            fail={row.original.buildStatus.FAIL}
-            miss={row.original.buildStatus.MISS}
-            done={row.original.buildStatus.DONE}
-            error={row.original.buildStatus.ERROR}
-            nullStatus={row.original.buildStatus.NULL}
+            pass={row.original.build_status.PASS}
+            skip={row.original.build_status.SKIP}
+            fail={row.original.build_status.FAIL}
+            miss={row.original.build_status.MISS}
+            done={row.original.build_status.DONE}
+            error={row.original.build_status.ERROR}
+            nullStatus={row.original.build_status.NULL}
             passLinkProps={getLinkProps(row, origin, tabTarget, {
               buildStatus: { PASS: true },
             })}
@@ -253,15 +257,15 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
       cell: ({ column, row }): JSX.Element => {
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
-        return row.original.bootStatus ? (
+        return row.original.boot_status ? (
           <GroupedTestStatusWithLink
-            pass={row.original.bootStatus.pass}
-            skip={row.original.bootStatus.skip}
-            fail={row.original.bootStatus.fail}
-            miss={row.original.bootStatus.miss}
-            done={row.original.bootStatus.done}
-            error={row.original.bootStatus.error}
-            nullStatus={row.original.bootStatus.null}
+            pass={row.original.boot_status.pass}
+            skip={row.original.boot_status.skip}
+            fail={row.original.boot_status.fail}
+            miss={row.original.boot_status.miss}
+            done={row.original.boot_status.done}
+            error={row.original.boot_status.error}
+            nullStatus={row.original.boot_status.null}
             passLinkProps={getLinkProps(row, origin, tabTarget, {
               bootStatus: { PASS: true },
             })}
@@ -298,15 +302,15 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
       cell: ({ column, row }): JSX.Element => {
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
-        return row.original.testStatus ? (
+        return row.original.test_status ? (
           <GroupedTestStatusWithLink
-            pass={row.original.testStatus.pass}
-            skip={row.original.testStatus.skip}
-            fail={row.original.testStatus.fail}
-            miss={row.original.testStatus.miss}
-            done={row.original.testStatus.done}
-            error={row.original.testStatus.error}
-            nullStatus={row.original.testStatus.null}
+            pass={row.original.test_status.pass}
+            skip={row.original.test_status.skip}
+            fail={row.original.test_status.fail}
+            miss={row.original.test_status.miss}
+            done={row.original.test_status.done}
+            error={row.original.test_status.error}
+            nullStatus={row.original.test_status.null}
             passLinkProps={getLinkProps(row, origin, tabTarget, {
               testStatus: { PASS: true },
             })}
@@ -404,7 +408,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
             // that receives LinkProps and returns the CommitTagTooltip component. However,
             // I couldn't figure out how to achieve this using TanStack Table, as
             // `cell.getValue()` would return an array instead of the expected function.
-            return cell.column.columnDef.id === 'commitTag' ? (
+            return cell.column.columnDef.id === 'git_commit_tags' ? (
               <TableCell key={cell.id}>
                 <Link
                   className="inline-block"
@@ -415,9 +419,9 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
                 <CopyButton
                   value={
                     gitCommitValueSelector({
-                      commitHash: cell.row.original.commitHash,
-                      commitName: cell.row.original.commitName,
-                      commitTags: cell.row.original.commitTag,
+                      commitHash: cell.row.original.git_commit_hash,
+                      commitName: cell.row.original.git_commit_name,
+                      commitTags: cell.row.original.git_commit_tags,
                     }).content
                   }
                 />
