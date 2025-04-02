@@ -40,7 +40,7 @@ export type TreeTableBody = {
 export type Tree = {
   git_commit_hash?: string;
   patchset_hash?: string;
-  tree_names: string[];
+  tree_name?: string;
   git_repository_branch?: string;
   start_time?: string;
   git_repository_url?: string;

@@ -49,19 +49,13 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
     const hasCompleteData = !isLoading && !!data;
     const currentData = hasCompleteData ? data : fastData;
 
-    // TODO remove tree_names since is a field that should not exist
-
     return currentData
       .filter(tree => {
         return (
           matchesRegexOrIncludes(tree.git_commit_hash, inputFilter) ||
           matchesRegexOrIncludes(tree.git_repository_branch, inputFilter) ||
           matchesRegexOrIncludes(tree.git_repository_url, inputFilter) ||
-          (isCompleteTree(tree)
-            ? tree.tree_names?.some(name =>
-                matchesRegexOrIncludes(name, inputFilter),
-              )
-            : matchesRegexOrIncludes(tree.tree_name, inputFilter))
+          matchesRegexOrIncludes(tree.tree_name, inputFilter)
         );
       })
       .map((tree): TreeTableBody => {
@@ -110,7 +104,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
           testStatus,
           bootStatus,
           id: tree.git_commit_hash ?? '',
-          tree_name: isCompleteTree(tree) ? tree.tree_names[0] : tree.tree_name,
+          tree_name: tree.tree_name,
           branch: tree.git_repository_branch ?? '',
           date: tree.start_time ?? '',
           url: tree.git_repository_url ?? '',

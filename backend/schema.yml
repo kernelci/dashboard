@@ -1395,11 +1395,8 @@ components:
           $ref: '#/components/schemas/TestStatusCount'
         boot_status:
           $ref: '#/components/schemas/TestStatusCount'
-        tree_names:
-          items:
-            $ref: '#/components/schemas/Checkout__TreeName'
-          title: Tree Names
-          type: array
+        tree_name:
+          $ref: '#/components/schemas/Checkout__TreeName'
         git_commit_tags:
           items:
             $ref: '#/components/schemas/Checkout__GitCommitTags'
@@ -1416,7 +1413,7 @@ components:
       - build_status
       - test_status
       - boot_status
-      - tree_names
+      - tree_name
       - git_commit_tags
       title: Checkout
       type: object
@@ -2584,6 +2581,8 @@ components:
       type: object
     TestDetailsResponse:
       properties:
+        field_timestamp:
+          $ref: '#/components/schemas/Timestamp'
         id:
           $ref: '#/components/schemas/Test__Id'
         build_id:
@@ -2627,6 +2626,7 @@ components:
           - $ref: '#/components/schemas/Origin'
           - type: 'null'
       required:
+      - field_timestamp
       - id
       - build_id
       - status
@@ -2904,8 +2904,10 @@ components:
       - $ref: '#/components/schemas/DatabaseStatusValues'
       - type: 'null'
     Timestamp:
-      format: date-time
-      type: string
+      anyOf:
+      - format: date-time
+        type: string
+      - type: 'null'
     Tree:
       properties:
         index:

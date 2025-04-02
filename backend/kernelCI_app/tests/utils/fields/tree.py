@@ -36,7 +36,7 @@ tree_listing = [
     "build_status",
     "test_status",
     "boot_status",
-    "tree_names",
+    "tree_name",
 ]
 tree_listing_build_status = [
     "FAIL",

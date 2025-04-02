@@ -48,6 +48,7 @@ class TreeView(APIView):
 
         return {
             "id": checkout[0],
+            "tree_name": checkout[1],
             "git_repository_branch": checkout[2],
             "git_repository_url": checkout[3],
             "git_commit_hash": checkout[4],
@@ -59,7 +60,6 @@ class TreeView(APIView):
             "build_status": {**build_status},
             "test_status": {**test_status},
             "boot_status": {**boot_status},
-            "tree_names": checkout[31],
         }
 
     @extend_schema(
