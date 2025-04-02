@@ -1,12 +1,11 @@
-from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.client.hardwareClient import HardwareClient
-from kernelCI_app.unitTests.utils.asserts import (
+from kernelCI_app.tests.utils.client.hardwareClient import HardwareClient
+from kernelCI_app.tests.utils.asserts import (
     assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
 )
-from kernelCI_app.unitTests.utils.fields import hardware
+from kernelCI_app.tests.utils.fields import hardware
 from kernelCI_app.utils import string_to_json
-from kernelCI_app.unitTests.utils.hardwareDetailsCommonTestCases import (
+from kernelCI_app.tests.utils.hardwareDetailsCommonTestCases import (
     ALLWINNER_HARDWARE,
     UNEXISTENT_HARDWARE_ID,
     BAD_REQUEST_REQUEST_BODY,
@@ -48,7 +47,6 @@ def pytest_generate_tests(metafunc):
         )
 
 
-@online
 def test_hardware_details_full(test_hardware_details, expected_response):
     expected_status, has_error, check_emptiness = expected_response.values()
     hardware_id = test_hardware_details["id"]

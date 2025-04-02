@@ -1,16 +1,15 @@
-from kernelCI_app.unitTests.utils.healthCheck import online
 import pytest
 from kernelCI_app.typeModels.hardwareDetails import (
     CommitHistoryPostBody,
     CommitHead,
 )
-from kernelCI_app.unitTests.utils.client.hardwareClient import HardwareClient
+from kernelCI_app.tests.utils.client.hardwareClient import HardwareClient
 from kernelCI_app.utils import string_to_json
-from kernelCI_app.unitTests.utils.asserts import (
+from kernelCI_app.tests.utils.asserts import (
     assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
 )
-from kernelCI_app.unitTests.utils.fields.hardware import hardware_history_checkouts
+from kernelCI_app.tests.utils.fields.hardware import hardware_history_checkouts
 from http import HTTPStatus
 import copy
 
@@ -62,7 +61,6 @@ SABRELITE_HARDWARE["body"].commitHeads = [
 ]
 
 
-@online
 @pytest.mark.parametrize(
     "base_hardware, status_code, has_error_body",
     [

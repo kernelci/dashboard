@@ -1,8 +1,7 @@
-from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.client.hardwareClient import HardwareClient
-from kernelCI_app.unitTests.utils.asserts import assert_status_code_and_error_response
+from kernelCI_app.tests.utils.client.hardwareClient import HardwareClient
+from kernelCI_app.tests.utils.asserts import assert_status_code_and_error_response
 from kernelCI_app.utils import string_to_json
-from kernelCI_app.unitTests.utils.hardwareDetailsCommonTestCases import (
+from kernelCI_app.tests.utils.hardwareDetailsCommonTestCases import (
     BAD_REQUEST_REQUEST_BODY,
     GOOGLE_JUNIPER_HARDWARE_WITHOUT_FILTERS,
     HARDWARE_WITH_UNEXISTENT_FILTER_VALUE,
@@ -56,7 +55,6 @@ def pytest_generate_tests(metafunc):
         )
 
 
-@online
 def test_get_hardware_details_boots(test_hardware_boots: dict, expected_response: dict):
     expected_status, has_error, check_emptiness = expected_response.values()
     hardware_id = test_hardware_boots["id"]
@@ -74,7 +72,6 @@ def test_get_hardware_details_boots(test_hardware_boots: dict, expected_response
         assert len(content["boots"]) == 0
 
 
-@online
 def test_get_hardware_details_builds(
     test_hardware_builds: dict, expected_response: dict
 ):
@@ -94,7 +91,6 @@ def test_get_hardware_details_builds(
         assert len(content["builds"]) == 0
 
 
-@online
 def test_get_hardware_details_tests(test_hardware_tests: dict, expected_response: dict):
     expected_status, has_error, check_emptiness = expected_response.values()
     hardware_id = test_hardware_tests["id"]

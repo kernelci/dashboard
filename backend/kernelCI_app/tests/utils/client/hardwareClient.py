@@ -1,6 +1,6 @@
 import requests
 from django.urls import reverse
-from kernelCI_app.unitTests.utils.client.baseClient import BaseClient
+from kernelCI_app.tests.utils.client.baseClient import BaseClient
 from kernelCI_app.typeModels.hardwareDetails import HardwareDetailsPostBody
 from kernelCI_app.typeModels.hardwareListing import HardwareQueryParamsDocumentationOnly
 import json

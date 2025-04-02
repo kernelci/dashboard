@@ -1,11 +1,10 @@
 from kernelCI_app.typeModels.testDetails import TestStatusHistoryRequest
-from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.client.testClient import TestClient
-from kernelCI_app.unitTests.utils.asserts import (
+from kernelCI_app.tests.utils.client.testClient import TestClient
+from kernelCI_app.tests.utils.asserts import (
     assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
 )
-from kernelCI_app.unitTests.utils.fields.tests import (
+from kernelCI_app.tests.utils.fields.tests import (
     status_history_response_expected_fields,
     status_history_item_fields,
 )
@@ -17,7 +16,6 @@ from http import HTTPStatus
 client = TestClient()
 
 
-@online
 @pytest.mark.parametrize(
     "params, status_code, has_error_body",
     [

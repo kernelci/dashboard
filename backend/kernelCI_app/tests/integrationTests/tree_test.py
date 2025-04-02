@@ -1,11 +1,10 @@
-from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.client.treeClient import TreeClient
-from kernelCI_app.unitTests.utils.asserts import (
+from kernelCI_app.tests.utils.client.treeClient import TreeClient
+from kernelCI_app.tests.utils.asserts import (
     assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
 )
 from kernelCI_app.utils import string_to_json
-from kernelCI_app.unitTests.utils.fields.tree import (
+from kernelCI_app.tests.utils.fields.tree import (
     tree_fast,
     tree_listing,
     tree_listing_test_status,
@@ -83,7 +82,6 @@ def pytest_generate_tests(metafunc):
         )
 
 
-@online
 def test_tree_listing_fast(
     pytestconfig,
     tree_listing_input,
@@ -112,7 +110,6 @@ def test_tree_listing_fast(
                 )
 
 
-@online
 def test_tree_listing(
     pytestconfig,
     tree_listing_input,
@@ -165,7 +162,6 @@ def test_tree_listing(
                 )
 
 
-@online
 @pytest.mark.parametrize(
     "tree_name, branch, query, has_error_body",
     [

@@ -1,15 +1,14 @@
-from kernelCI_app.unitTests.utils.healthCheck import online
-from kernelCI_app.unitTests.utils.client.issueClient import IssueClient
-from kernelCI_app.unitTests.utils.asserts import (
+from kernelCI_app.tests.utils.client.issueClient import IssueClient
+from kernelCI_app.tests.utils.asserts import (
     assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
 )
-from kernelCI_app.unitTests.utils.fields.issues import (
+from kernelCI_app.tests.utils.fields.issues import (
     issues_expected_fields,
     issues_listing_fields,
 )
-from kernelCI_app.unitTests.utils.fields.tests import issue_tests_expected_fields
-from kernelCI_app.unitTests.utils.fields.builds import build_details_expected_fields
+from kernelCI_app.tests.utils.fields.tests import issue_tests_expected_fields
+from kernelCI_app.tests.utils.fields.builds import build_details_expected_fields
 from kernelCI_app.utils import string_to_json
 import pytest
 from http import HTTPStatus
@@ -57,7 +56,6 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("issue_listing_input", issues_listing_base_cases)
 
 
-@online
 def test_list(pytestconfig, issue_listing_input):
     interval_in_day, culprit_data, status_code, has_error_body = issue_listing_input
     response = client.get_issues_list(
@@ -90,7 +88,6 @@ def test_list(pytestconfig, issue_listing_input):
                         assert not issue[culprit]
 
 
-@online
 @pytest.mark.parametrize(
     "issue_id, issue_version, status_code, has_error_body",
     [
@@ -120,7 +117,6 @@ def test_details(issue_id, issue_version, status_code, has_error_body):
         )
 
 
-@online
 @pytest.mark.parametrize(
     "issues_list, status_code, has_error_body",
     [
@@ -161,7 +157,6 @@ def test_extra_details(issues_list, status_code, has_error_body):
         )
 
 
-@online
 @pytest.mark.parametrize(
     "issue_id, issue_version, status_code, has_error_body",
     [
@@ -186,7 +181,6 @@ def test_issue_tests(issue_id, issue_version, status_code, has_error_body):
         )
 
 
-@online
 @pytest.mark.parametrize(
     "issue_id, issue_version, status_code, has_error_body",
     [
