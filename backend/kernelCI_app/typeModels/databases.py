@@ -24,7 +24,7 @@ class EnvironmentMisc(BaseModel):
 
 
 type Origin = str
-type Timestamp = datetime
+type Timestamp = Optional[datetime]
 
 type Checkout__Id = str
 type Checkout__TreeName = Optional[str]

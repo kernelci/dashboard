@@ -10,6 +10,7 @@ from kernelCI_app.typeModels.databases import (
     Origin,
     Test__Path,
     Test__StartTime,
+    Timestamp,
 )
 
 
@@ -18,6 +19,7 @@ def get_test_details_data(*, test_id: str) -> list[dict]:
 
     query = """
     SELECT
+        T._TIMESTAMP,
         T.ID,
         T.BUILD_ID,
         T.STATUS,
@@ -58,15 +60,15 @@ def get_test_status_history(
     git_repository_url: Checkout__GitRepositoryUrl,
     git_repository_branch: Checkout__GitRepositoryBranch,
     platform: Optional[str],
-    current_test_start_time: Test__StartTime,
+    test_start_time: Test__StartTime,
     config_name: Build__ConfigName,
+    field_timestamp: Timestamp
 ):
     query = Tests.objects.filter(
         path=path,
         build__checkout__origin=origin,
         build__checkout__git_repository_url=git_repository_url,
         build__checkout__git_repository_branch=git_repository_branch,
-        start_time__lte=current_test_start_time,
         build__config_name=config_name,
     ).values(
         "start_time",
@@ -80,4 +82,18 @@ def get_test_status_history(
     else:
         query = query.filter(environment_misc__platform=platform)
 
-    return query.order_by("-start_time")[:10]
+    if test_start_time is None:
+        if field_timestamp is None:
+            query = query.filter(
+                start_time__isnull=True,
+                field_timestamp__isnull=True,
+            )
+        else:
+            query = query.filter(field_timestamp__lte=field_timestamp)
+    else:
+        query = query.filter(start_time__lte=test_start_time)
+
+    if test_start_time is not None:
+        return query.order_by("-start_time")[:10]
+    else:
+        return query.order_by("-field_timestamp")[:10]

@@ -67,6 +67,7 @@ class TestStatusHistory(APIView):
                 platform=request.GET.get("platform"),
                 current_test_start_time=request.GET.get("current_test_start_time"),
                 config_name=request.GET.get("config_name"),
+                field_timestamp=request.GET.get("field_timestamp"),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
@@ -77,8 +78,9 @@ class TestStatusHistory(APIView):
             git_repository_url=params.git_repository_url,
             git_repository_branch=params.git_repository_branch,
             platform=params.platform,
-            current_test_start_time=params.current_test_start_time,
+            test_start_time=params.current_test_start_time,
             config_name=params.config_name,
+            field_timestamp=params.field_timestamp,
         )
 
         if len(status_history_response) == 0:
