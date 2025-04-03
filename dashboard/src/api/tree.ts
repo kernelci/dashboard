@@ -35,6 +35,7 @@ export const useTreeTable = ({
     queryKey,
     queryFn: () => fetchTreeCheckoutData(origin, intervalInDays),
     enabled,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -81,5 +82,6 @@ export const useTreeLatest = (
   return useQuery({
     queryKey: ['treeLatest', treeName, branch, origin],
     queryFn: () => fetchTreeLatest(treeName, branch, origin),
+    refetchOnWindowFocus: false,
   });
 };

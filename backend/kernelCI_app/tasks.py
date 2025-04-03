@@ -4,6 +4,7 @@ from kernelCI_app.queries.tree import (
     get_tree_listing_fast,
 )
 from kernelCI_cache.checkouts import populate_checkouts_cache_db
+from kernelCI_cache.constants import NO_CACHE_ORIGINS, UNSTABLE_CHECKOUT_THRESHOLD
 from kernelCI_cache.queries.checkouts import get_all_checkout_ids
 from datetime import timedelta
 from django.utils.timezone import now
@@ -23,7 +24,7 @@ def _is_checkout_done(*, checkout: dict | Checkouts) -> bool:
 
 
 def _is_checkout_unstable(*, checkout: dict | Checkouts) -> bool:
-    three_days_ago = now() - timedelta(days=3)
+    three_days_ago = now() - timedelta(days=UNSTABLE_CHECKOUT_THRESHOLD)
     if isinstance(checkout, Checkouts):
         start_time = checkout.start_time
     else:
@@ -49,6 +50,9 @@ def update_checkout_cache():
 
     for checkout in all_kcidb_checkouts:
         if not isinstance(checkout, Checkouts):
+            continue
+
+        if checkout.origin in NO_CACHE_ORIGINS:
             continue
 
         if checkout.id not in all_sqlite_checkout_ids:
