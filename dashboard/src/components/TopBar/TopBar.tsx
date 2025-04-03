@@ -10,8 +10,8 @@ import {
 import { useCallback, useEffect, useMemo, type JSX } from 'react';
 
 import Select, { SelectItem } from '@/components/Select/Select';
-import type { PossibleMonitorPath, TOrigins } from '@/types/general';
-import { zOrigin, zOriginEnum } from '@/types/general';
+import { DEFAULT_ORIGIN, type PossibleMonitorPath } from '@/types/general';
+import { useOrigins } from '@/api/origin';
 
 const getTargetPath = (basePath: string): PossibleMonitorPath => {
   switch (basePath) {
@@ -25,14 +25,14 @@ const getTargetPath = (basePath: string): PossibleMonitorPath => {
 };
 
 const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
-  const { origin: unsafeOrigin } = useSearch({ strict: false });
-  const origin = zOrigin.parse(unsafeOrigin);
+  const { origin } = useSearch({ strict: false });
+  const validOrigins = useOrigins();
 
   const targetPath = getTargetPath(basePath);
   const navigate = useNavigate({ from: targetPath });
 
   const onValueChange = useCallback(
-    (value: TOrigins) => {
+    (value: string) => {
       navigate({
         to: targetPath,
         search: previousSearch => ({ ...previousSearch, origin: value }),
@@ -43,21 +43,28 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
 
   const selectItems = useMemo(
     () =>
-      zOriginEnum.options.map(option => (
+      validOrigins.data?.map(option => (
         <SelectItem key={option} value={option}>
           {option}
         </SelectItem>
       )),
-    [],
+    [validOrigins.data],
   );
 
   useEffect(() => {
-    if (unsafeOrigin === undefined) {
+    if (origin === undefined) {
       navigate({
-        search: previousSearch => ({ ...previousSearch, origin: origin }),
+        search: previousSearch => ({
+          ...previousSearch,
+          origin: DEFAULT_ORIGIN,
+        }),
       });
     }
   });
+
+  if (validOrigins.status === 'pending') {
+    return <FormattedMessage id="global.loading" />;
+  }
 
   return (
     <div className="flex items-center">

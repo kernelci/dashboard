@@ -23,8 +23,8 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import type { TreeTableBody } from '@/types/tree/Tree';
-import { RedirectFrom, zOrigin } from '@/types/general';
-import type { TFilter, TOrigins, BuildStatus } from '@/types/general';
+import { DEFAULT_ORIGIN, RedirectFrom } from '@/types/general';
+import type { TFilter, BuildStatus } from '@/types/general';
 
 import { formattedBreakLineValue } from '@/locales/messages';
 
@@ -65,7 +65,7 @@ import { shouldShowRelativeDate } from '@/lib/date';
 
 const getLinkProps = (
   row: Row<TreeTableBody>,
-  origin: TOrigins,
+  origin: string,
   tabTarget?: string,
   diffFilter?: TFilter,
 ): LinkProps => {
@@ -127,7 +127,7 @@ const getLinkProps = (
   };
 };
 
-const getColumns = (origin: TOrigins): ColumnDef<TreeTableBody>[] => {
+const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
   return [
     {
       accessorKey: 'tree_name',
@@ -340,6 +340,7 @@ interface ITreeTable {
 
 export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
   const { origin: unsafeOrigin, listingSize } = useSearch({ strict: false });
+  const origin = unsafeOrigin ?? DEFAULT_ORIGIN;
   const navigate = useNavigate({ from: '/tree' });
 
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -348,8 +349,6 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
     'treeListing',
     listingSize,
   );
-
-  const origin = zOrigin.parse(unsafeOrigin);
 
   const columns = useMemo(() => getColumns(origin), [origin]);
 
