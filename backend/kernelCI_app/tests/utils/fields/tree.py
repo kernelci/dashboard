@@ -27,16 +27,19 @@ tree_fast = [
 ]
 
 tree_listing = [
+    "id",
+    "tree_name",
     "git_repository_branch",
     "git_repository_url",
     "git_commit_hash",
-    "git_commit_tags",
     "git_commit_name",
+    "git_commit_tags",
     "start_time",
     "build_status",
     "test_status",
     "boot_status",
-    "tree_name",
+    "origin_builds_finish_time",
+    "origin_tests_finish_time",
 ]
 tree_listing_build_status = [
     "FAIL",
