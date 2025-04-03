@@ -40,6 +40,7 @@ class CommonCheckouts(BaseCheckouts):
 
 
 class Checkout(CommonCheckouts):
+    id: Checkout__Id = Field(validation_alias="checkout_id")
     build_status: StatusCount
     test_status: TestStatusCount
     boot_status: TestStatusCount

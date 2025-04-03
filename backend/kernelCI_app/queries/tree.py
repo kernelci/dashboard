@@ -1,4 +1,4 @@
-from typing import TypedDict, Optional
+from typing import Optional
 from django.db import connection
 from django.db.utils import ProgrammingError
 
@@ -93,26 +93,55 @@ def _get_tree_listing_count_clause() -> str:
     return build_count_clause + test_count_clause + boot_count_clause
 
 
-class IntervalInDays(TypedDict):
-    days: int
-
-
-def get_tree_listing_data(
-    origin: str, interval_in_days: IntervalInDays
-) -> Optional[list[tuple]]:
+def get_tree_listing_data(origin: str, interval_in_days: int) -> Optional[list[dict]]:
     count_clauses = _get_tree_listing_count_clause()
 
     params = {
         "origin_param": origin,
-        "interval_param": get_query_time_interval(**interval_in_days).timestamp(),
+        "interval_param": interval_in_days,
     }
 
     # 'MAX(checkouts.id) as id' is necessary in this case because
     # if we just added the id in the query it would alter the GROUP BY clause,
     # potentially causing the tree listing page show the same tree multiple times
+    #
+    # The JOIN FTC with IS NOT DISTINCT FROM is necessary because the fields can be NULL,
+    # in which case a simple `WHERE (git_branch, git_url, git_hash) IN FTC` wouldn't work
+    # since the NULL comparison would return UNKNOWN
+    #
+    # TODO: reuse the FIRST_TREE_CHECKOUT query
     query = f"""
+            WITH
+                ORDERED_CHECKOUTS_BY_TREE AS (
+                    SELECT
+                        GIT_REPOSITORY_BRANCH,
+                        GIT_REPOSITORY_URL,
+                        GIT_COMMIT_HASH,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY
+                                GIT_REPOSITORY_BRANCH,
+                                GIT_REPOSITORY_URL
+                            ORDER BY
+                                START_TIME DESC
+                        ) AS TIME_ORDER
+                    FROM
+                        CHECKOUTS
+                    WHERE
+                        ORIGIN = %(origin_param)s
+                        AND START_TIME >= NOW() - INTERVAL '{interval_in_days} days'
+                ),
+                FIRST_TREE_CHECKOUT AS (
+                    SELECT
+                        GIT_REPOSITORY_BRANCH,
+                        GIT_REPOSITORY_URL,
+                        GIT_COMMIT_HASH
+                    FROM
+                        ORDERED_CHECKOUTS_BY_TREE
+                    WHERE
+                        TIME_ORDER = 1
+                )
             SELECT
-                MAX(checkouts.id) as id,
+                MAX(checkouts.id) AS checkout_id,
                 checkouts.tree_name,
                 checkouts.git_repository_branch,
                 checkouts.git_repository_url,
@@ -120,11 +149,11 @@ def get_tree_listing_data(
                 checkouts.origin_builds_finish_time,
                 checkouts.origin_tests_finish_time,
                 CASE
-                    WHEN COUNT(DISTINCT checkouts.git_commit_tags) > 0 THEN
-                    COALESCE(
+                    WHEN COUNT(DISTINCT checkouts.git_commit_tags) > 0 THEN COALESCE(
                         ARRAY_AGG(DISTINCT checkouts.git_commit_tags) FILTER (
-                            WHERE checkouts.git_commit_tags IS NOT NULL
-                            AND checkouts.git_commit_tags::TEXT <> '{"{}"}'
+                            WHERE
+                                checkouts.git_commit_tags IS NOT NULL
+                                AND checkouts.git_commit_tags::TEXT <> '{"{}"}'
                         ),
                         ARRAY[]::TEXT[]
                     )
@@ -136,41 +165,15 @@ def get_tree_listing_data(
                 checkouts.origin
             FROM
                 checkouts
-            LEFT JOIN
-                builds ON builds.checkout_id = checkouts.id
-            LEFT JOIN
-                tests ON tests.build_id = builds.id
-            WHERE
-                checkouts.git_commit_hash IN (
-                    SELECT
-                        git_commit_hash
-                    FROM
-                        (
-                            SELECT
-                                git_repository_branch,
-                                git_repository_url,
-                                git_commit_hash,
-                                ROW_NUMBER() OVER (
-                                    PARTITION BY
-                                        git_repository_url,
-                                        git_repository_branch,
-                                        origin
-                                    ORDER BY start_time DESC
-                                ) AS time_order
-                            FROM
-                                checkouts
-                            WHERE
-                                origin = %(origin_param)s
-                                AND start_time >= TO_TIMESTAMP(%(interval_param)s)
-                        ) AS ordered_checkouts_by_tree
-                    WHERE
-                        time_order = 1
-                    ORDER BY
-                        git_repository_branch,
-                        git_repository_url,
-                        time_order
+                LEFT JOIN builds ON builds.checkout_id = checkouts.id
+                LEFT JOIN tests ON tests.build_id = builds.id
+                JOIN FIRST_TREE_CHECKOUT FTC ON (
+                    checkouts.git_repository_branch IS NOT DISTINCT FROM FTC.GIT_REPOSITORY_BRANCH
+                    AND checkouts.git_repository_url IS NOT DISTINCT FROM FTC.GIT_REPOSITORY_URL
+                    AND checkouts.git_commit_hash = FTC.GIT_COMMIT_HASH
                 )
-                AND checkouts.origin = %(origin_param)s
+            WHERE
+                checkouts.origin = %(origin_param)s
             GROUP BY
                 checkouts.git_commit_hash,
                 checkouts.git_repository_branch,
@@ -180,14 +183,13 @@ def get_tree_listing_data(
                 checkouts.origin_tests_finish_time,
                 checkouts.origin
             ORDER BY
-                checkouts.git_commit_hash;
-            ;
+                checkouts.git_commit_hash
             """
 
     try:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
-            return cursor.fetchall()
+            return dict_fetchall(cursor=cursor)
     except ProgrammingError as e:
         if is_valid_does_not_exist_exception(e):
             set_schema_version()
@@ -225,8 +227,8 @@ def get_tree_listing_fast(*, origin: Optional[str] = None, interval: dict):
                 origin_tests_finish_time,
                 ROW_NUMBER() OVER (
                     PARTITION BY
-                        git_repository_url,
                         git_repository_branch,
+                        git_repository_url,
                         origin
                     ORDER BY start_time DESC
                 ) AS time_order

@@ -28,6 +28,7 @@ def populate_checkouts_cache_db(
             "checkout_id": checkout["id"],
             "start_time": checkout["start_time"],
             "git_commit_tags": json.dumps(checkout["git_commit_tags"]),
+            "git_commit_name": checkout["git_commit_name"],
             "origin_builds_finish_time": checkout["origin_builds_finish_time"],
             "origin_tests_finish_time": checkout["origin_tests_finish_time"],
             "pass_builds": checkout["pass_builds"],
