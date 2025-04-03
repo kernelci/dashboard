@@ -8,7 +8,7 @@ import type {
   TreeFastPathResponse,
   TreeLatestResponse,
 } from '@/types/tree/Tree';
-import { DEFAULT_ORIGIN, type TOrigins } from '@/types/general';
+import { DEFAULT_ORIGIN } from '@/types/general';
 
 import { RequestData } from './commonRequest';
 
@@ -62,7 +62,7 @@ export const useTreeTableFast = (): UseQueryResult<TreeFastPathResponse> => {
 const fetchTreeLatest = async (
   treeName: string,
   branch: string,
-  origin?: TOrigins,
+  origin?: string,
 ): Promise<TreeLatestResponse> => {
   const data = await RequestData.get<TreeLatestResponse>(
     `/api/tree/${treeName}/${branch}`,
@@ -76,7 +76,7 @@ const fetchTreeLatest = async (
 export const useTreeLatest = (
   treeName: string,
   branch: string,
-  origin?: TOrigins,
+  origin?: string,
 ): UseQueryResult<TreeLatestResponse> => {
   return useQuery({
     queryKey: ['treeLatest', treeName, branch, origin],

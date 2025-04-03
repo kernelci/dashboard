@@ -5,12 +5,10 @@ import { useSearch } from '@tanstack/react-router';
 
 import type { HardwareListingResponse } from '@/types/hardware';
 
-import type { TOrigins } from '@/types/general';
-
 import { RequestData } from './commonRequest';
 
 const fetchHardwareListing = async (
-  origin: TOrigins,
+  origin: string,
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
 ): Promise<HardwareListingResponse> => {

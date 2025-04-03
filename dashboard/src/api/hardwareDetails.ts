@@ -10,12 +10,7 @@ import type {
   THardwareDetailsFilter,
   TTreeCommits,
 } from '@/types/hardware/hardwareDetails';
-import type {
-  BuildsTabBuild,
-  TestHistory,
-  TFilter,
-  TOrigins,
-} from '@/types/general';
+import type { BuildsTabBuild, TestHistory, TFilter } from '@/types/general';
 import { getTargetFilter } from '@/types/general';
 
 import { isEmptyObject } from '@/utils/utils';
@@ -79,7 +74,7 @@ type HardwareDetailsVariants =
 type fetchHardwareDetailsBody = {
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
-  origin: TOrigins;
+  origin: string;
   selectedCommits: Record<string, string>;
   filter?: Record<string, string[]>;
 };
@@ -124,7 +119,7 @@ export type UseHardwareDetailsWithoutVariant = {
   hardwareId: string;
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
-  origin: TOrigins;
+  origin: string;
   filter: TFilter;
   selectedIndexes: number[];
   treeCommits: TTreeCommits;

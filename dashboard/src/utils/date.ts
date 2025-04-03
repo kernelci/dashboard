@@ -1,4 +1,5 @@
 const MILLISECONDS_IN_ONE_SECOND = 1000;
+export const MILLISECONDS_IN_ONE_HOUR = 3600000;
 const SECONDS_IN_ONE_DAY = 86400;
 
 export const dateObjectToTimestampInSeconds = (date: Date): number => {
