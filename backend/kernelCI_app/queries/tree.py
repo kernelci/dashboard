@@ -1,4 +1,4 @@
-from typing import TypedDict, Optional
+from typing import Optional
 from django.db import connection
 from django.db.utils import ProgrammingError
 
@@ -93,101 +93,104 @@ def _get_tree_listing_count_clause() -> str:
     return build_count_clause + test_count_clause + boot_count_clause
 
 
-class IntervalInDays(TypedDict):
-    days: int
-
-
-def get_tree_listing_data(
-    origin: str, interval_in_days: IntervalInDays
-) -> Optional[list[tuple]]:
+def get_tree_listing_data(origin: str, interval_in_days: int) -> Optional[list[dict]]:
     count_clauses = _get_tree_listing_count_clause()
 
     params = {
         "origin_param": origin,
-        "interval_param": get_query_time_interval(**interval_in_days).timestamp(),
+        "interval_param": interval_in_days,
     }
 
     # 'MAX(checkouts.id) as id' is necessary in this case because
     # if we just added the id in the query it would alter the GROUP BY clause,
     # potentially causing the tree listing page show the same tree multiple times
+    #
+    # The JOIN FTC with IS NOT DISTINCT FROM is necessary because the tree names
+    # can be NULL, in which case a simple (tree_name, git_commit_hash) IN FTC wouldn't work
+    # since the NULL comparison would return UNKNOWN
+    #
+    # TODO: reuse the FIRST_TREE_CHECKOUT query
     query = f"""
+            WITH
+                ORDERED_CHECKOUTS_BY_TREE AS (
+                    SELECT
+                        CHECKOUTS.ID,
+                        TREE_NAME,
+                        GIT_REPOSITORY_BRANCH,
+                        GIT_REPOSITORY_URL,
+                        GIT_COMMIT_HASH,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY
+                                TREE_NAME,
+                                GIT_REPOSITORY_URL,
+                                GIT_REPOSITORY_BRANCH
+                            ORDER BY
+                                START_TIME DESC
+                        ) AS TIME_ORDER
+                    FROM
+                        CHECKOUTS
+                    WHERE
+                        ORIGIN = %(origin_param)s
+                        AND START_TIME >= NOW() - INTERVAL '{interval_in_days} days'
+                ),
+                FIRST_TREE_CHECKOUT AS (
+                    SELECT
+                        TREE_NAME,
+                        GIT_COMMIT_HASH
+                    FROM
+                        ORDERED_CHECKOUTS_BY_TREE
+                    WHERE
+                        TIME_ORDER = 1
+                )
             SELECT
-                MAX(checkouts.id) as id,
-                checkouts.tree_name,
-                checkouts.git_repository_branch,
-                checkouts.git_repository_url,
-                checkouts.git_commit_hash,
-                checkouts.origin_builds_finish_time,
-                checkouts.origin_tests_finish_time,
+                MAX(CHECKOUTS.ID) AS CHECKOUT_ID,
+                CHECKOUTS.TREE_NAME,
+                CHECKOUTS.GIT_REPOSITORY_BRANCH,
+                CHECKOUTS.GIT_REPOSITORY_URL,
+                CHECKOUTS.GIT_COMMIT_HASH,
+                CHECKOUTS.ORIGIN_BUILDS_FINISH_TIME,
+                CHECKOUTS.ORIGIN_TESTS_FINISH_TIME,
                 CASE
-                    WHEN COUNT(DISTINCT checkouts.git_commit_tags) > 0 THEN
-                    COALESCE(
-                        ARRAY_AGG(DISTINCT checkouts.git_commit_tags) FILTER (
-                            WHERE checkouts.git_commit_tags IS NOT NULL
-                            AND checkouts.git_commit_tags::TEXT <> '{"{}"}'
+                    WHEN COUNT(DISTINCT CHECKOUTS.GIT_COMMIT_TAGS) > 0 THEN COALESCE(
+                        ARRAY_AGG(DISTINCT CHECKOUTS.GIT_COMMIT_TAGS) FILTER (
+                            WHERE
+                                CHECKOUTS.GIT_COMMIT_TAGS IS NOT NULL
+                                AND CHECKOUTS.GIT_COMMIT_TAGS::TEXT <> '{"{}"}'
                         ),
                         ARRAY[]::TEXT[]
                     )
                     ELSE ARRAY[]::TEXT[]
-                END AS git_commit_tags,
-                MAX(checkouts.git_commit_name) AS git_commit_name,
-                MAX(checkouts.start_time) AS start_time,
+                END AS GIT_COMMIT_TAGS,
+                MAX(CHECKOUTS.GIT_COMMIT_NAME) AS GIT_COMMIT_NAME,
+                MAX(CHECKOUTS.START_TIME) AS START_TIME,
                 {count_clauses}
-                checkouts.origin
+                CHECKOUTS.ORIGIN
             FROM
-                checkouts
-            LEFT JOIN
-                builds ON builds.checkout_id = checkouts.id
-            LEFT JOIN
-                tests ON tests.build_id = builds.id
-            WHERE
-                checkouts.git_commit_hash IN (
-                    SELECT
-                        git_commit_hash
-                    FROM
-                        (
-                            SELECT
-                                git_repository_branch,
-                                git_repository_url,
-                                git_commit_hash,
-                                ROW_NUMBER() OVER (
-                                    PARTITION BY
-                                        git_repository_url,
-                                        git_repository_branch,
-                                        origin
-                                    ORDER BY start_time DESC
-                                ) AS time_order
-                            FROM
-                                checkouts
-                            WHERE
-                                origin = %(origin_param)s
-                                AND start_time >= TO_TIMESTAMP(%(interval_param)s)
-                        ) AS ordered_checkouts_by_tree
-                    WHERE
-                        time_order = 1
-                    ORDER BY
-                        git_repository_branch,
-                        git_repository_url,
-                        time_order
+                CHECKOUTS
+                LEFT JOIN BUILDS ON BUILDS.CHECKOUT_ID = CHECKOUTS.ID
+                LEFT JOIN TESTS ON TESTS.BUILD_ID = BUILDS.ID
+                JOIN FIRST_TREE_CHECKOUT FTC ON (
+                    CHECKOUTS.TREE_NAME IS NOT DISTINCT FROM FTC.TREE_NAME
+                    AND CHECKOUTS.GIT_COMMIT_HASH = FTC.GIT_COMMIT_HASH
                 )
-                AND checkouts.origin = %(origin_param)s
+            WHERE
+                CHECKOUTS.ORIGIN = %(origin_param)s
             GROUP BY
-                checkouts.git_commit_hash,
-                checkouts.git_repository_branch,
-                checkouts.git_repository_url,
-                checkouts.tree_name,
-                checkouts.origin_builds_finish_time,
-                checkouts.origin_tests_finish_time,
-                checkouts.origin
+                CHECKOUTS.GIT_COMMIT_HASH,
+                CHECKOUTS.GIT_REPOSITORY_BRANCH,
+                CHECKOUTS.GIT_REPOSITORY_URL,
+                CHECKOUTS.TREE_NAME,
+                CHECKOUTS.ORIGIN_BUILDS_FINISH_TIME,
+                CHECKOUTS.ORIGIN_TESTS_FINISH_TIME,
+                CHECKOUTS.ORIGIN
             ORDER BY
-                checkouts.git_commit_hash;
-            ;
+                CHECKOUTS.GIT_REPOSITORY_BRANCH NULLS FIRST
             """
 
     try:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
-            return cursor.fetchall()
+            return dict_fetchall(cursor=cursor)
     except ProgrammingError as e:
         if is_valid_does_not_exist_exception(e):
             set_schema_version()
