@@ -9,15 +9,28 @@ issue_tests_expected_fields = [
     "git_repository_branch",
 ]
 
-test_expected_fields = [
+test_details_expected_fields = [
+    "field_timestamp",
     "id",
+    "build_id",
     "status",
     "path",
+    "log_excerpt",
+    "log_url",
+    "misc",
+    "environment_misc",
     "start_time",
     "environment_compatible",
-    "environment_misc",
-    "tree_name",
+    "output_files",
+    "input_files",
+    "compiler",
+    "architecture",
+    "config_name",
+    "git_commit_hash",
     "git_repository_branch",
+    "git_repository_url",
+    "git_commit_tags",
+    "tree_name",
     "origin",
 ]
 
