@@ -100,6 +100,7 @@ class Tests(models.Model):
     start_time = models.DateTimeField(blank=True, null=True)
     duration = models.FloatField(blank=True, null=True)
     output_files = models.JSONField(blank=True, null=True)
+    input_files = models.JSONField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
 
     class Meta:

@@ -66,6 +66,7 @@ type Test__LogExcerpt = Optional[str]
 type Test__LogUrl = Optional[str]
 type Test__Misc = Optional[Jsonb]
 type Test__OutputFiles = Optional[Jsonb]
+type Test__InputFiles = Optional[Jsonb]
 
 type Issue__Id = str
 type Issue__Version = int

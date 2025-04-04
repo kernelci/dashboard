@@ -486,10 +486,11 @@ const TestDetailsSections = ({
     | ISection
     | undefined => {
     return getFilesSection({
+      inputFiles: test.input_files,
       outputFiles: test.output_files,
       title: formatMessage({ id: 'commonDetails.artifacts' }),
     });
-  }, [formatMessage, test.output_files]);
+  }, [formatMessage, test.input_files, test.output_files]);
 
   const sectionsData: ISection[] = useMemo(() => {
     return [

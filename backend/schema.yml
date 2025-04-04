@@ -2634,6 +2634,8 @@ components:
           $ref: '#/components/schemas/Test__EnvironmentCompatible'
         output_files:
           $ref: '#/components/schemas/Test__OutputFiles'
+        input_files:
+          $ref: '#/components/schemas/Test__InputFiles'
         compiler:
           $ref: '#/components/schemas/Build__Compiler'
         architecture:
@@ -2667,6 +2669,7 @@ components:
       - start_time
       - environment_compatible
       - output_files
+      - input_files
       - compiler
       - architecture
       - config_name
@@ -2897,6 +2900,13 @@ components:
       - type: 'null'
     Test__Id:
       type: string
+    Test__InputFiles:
+      anyOf:
+      - type: object
+      - items:
+          type: object
+        type: array
+      - type: 'null'
     Test__LogExcerpt:
       anyOf:
       - type: string

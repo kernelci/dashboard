@@ -15,6 +15,7 @@ from kernelCI_app.typeModels.databases import (
     Test__StartTime,
     Test__EnvironmentCompatible,
     Test__OutputFiles,
+    Test__InputFiles,
     Build__Compiler,
     Build__Architecture,
     Build__ConfigName,
@@ -43,6 +44,7 @@ class TestDetailsResponse(BaseModel):
     start_time: Test__StartTime
     environment_compatible: Test__EnvironmentCompatible
     output_files: Annotated[Test__OutputFiles, BeforeValidator(validate_str_to_dict)]
+    input_files: Annotated[Test__InputFiles, BeforeValidator(validate_str_to_dict)]
     compiler: Build__Compiler
     architecture: Build__Architecture
     config_name: Build__ConfigName

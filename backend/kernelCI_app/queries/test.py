@@ -31,6 +31,7 @@ def get_test_details_data(*, test_id: str) -> list[dict]:
         T.START_TIME,
         T.ENVIRONMENT_COMPATIBLE,
         T.OUTPUT_FILES,
+        T.INPUT_FILES,
         B.COMPILER,
         B.ARCHITECTURE,
         B.CONFIG_NAME,
