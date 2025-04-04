@@ -3,8 +3,8 @@ import { z } from 'zod';
 import type {
   ArchCompilerStatus,
   Architecture,
-  BuildStatus,
   PropertyStatusCounts,
+  RequiredStatusCount,
   StatusCounts,
 } from './general';
 import type { TIssue } from './issues';
@@ -23,9 +23,9 @@ type TestSummary = {
 };
 
 type BuildSummary = {
-  status: BuildStatus;
+  status: RequiredStatusCount;
   architectures: Architecture;
-  configs: Record<string, BuildStatus>;
+  configs: Record<string, RequiredStatusCount>;
   issues: TIssue[];
   unknown_issues: number;
 };

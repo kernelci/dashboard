@@ -1,9 +1,9 @@
-import type { BuildStatus, StatusCount } from './general';
+import type { RequiredStatusCount, StatusCount } from './general';
 
 export interface HardwareItem {
   hardware_name: string;
   platform: string | string[];
-  build_status_summary: BuildStatus;
+  build_status_summary: RequiredStatusCount;
   test_status_summary: StatusCount;
   boot_status_summary: StatusCount;
 }
