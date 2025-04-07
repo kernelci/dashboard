@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from kernelCI_app.queries.checkout import get_origins
 from drf_spectacular.utils import extend_schema
 
+EXCLUDED_ORIGINS = ["kernelci"]
+
 
 class OriginsView(APIView):
     @extend_schema(
@@ -15,5 +17,9 @@ class OriginsView(APIView):
         origins = get_origins()
         if len(origins) == 0:
             return create_api_error_response(error_message="No origins found")
+
+        for excluded in EXCLUDED_ORIGINS:
+            if excluded in origins:
+                origins.remove(excluded)
 
         return Response(origins)
