@@ -906,21 +906,27 @@ paths:
       - in: query
         name: end_time_stamp_in_seconds
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: End Time Stamp In Seconds
-          type: string
-        required: true
       - in: query
         name: git_branch
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Git Branch
-          type: string
-        required: true
       - in: query
         name: git_url
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Git Url
-          type: string
-        required: true
       - in: query
         name: origin
         schema:
@@ -930,9 +936,11 @@ paths:
       - in: query
         name: start_time_stamp_in_seconds
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Start Time Stamp In Seconds
-          type: string
-        required: true
       tags:
       - tree
       security:
@@ -1415,6 +1423,8 @@ components:
           $ref: '#/components/schemas/Checkout__OriginBuildsFinishTime'
         origin_tests_finish_time:
           $ref: '#/components/schemas/Checkout__OriginTestsFinishTime'
+        id:
+          $ref: '#/components/schemas/Checkout__Id'
         build_status:
           $ref: '#/components/schemas/StatusCount'
         test_status:
@@ -1436,6 +1446,7 @@ components:
       - start_time
       - origin_builds_finish_time
       - origin_tests_finish_time
+      - id
       - build_status
       - test_status
       - boot_status
