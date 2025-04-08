@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.models import Checkouts
 from kernelCI_app.typeModels.treeDetails import (
     TreeLatestPathParameters,
@@ -27,6 +28,7 @@ class TreeLatest(APIView):
             "git_commit_hash",
             "git_commit_name",
             "git_repository_url",
+            "tree_name",
         ]
 
         query = (
@@ -68,11 +70,37 @@ class TreeLatest(APIView):
             origin=origin,
         )
 
+        tree_url_to_name = get_tree_url_to_name_map()
+
         if tree_data is None:
-            return create_api_error_response(
-                error_message=tree_not_found_error_message,
-                status_code=HTTPStatus.OK,
+            # It is possible that the user is trying to fetch a shortcut where
+            # the tree name was gotten from the trees-name file, in which case
+            # the real tree_name in the database could be null. This means that
+            # the tree exists, but the database doesn't see the tree_name.
+            # If this happpens, we can give another try with an empty tree_name
+            # and validate it with the file using its git_repository_url
+            tree_data = self._fetch_latest_tree(
+                tree_name=None, branch=parsed_params.branch, origin=origin
             )
+
+            if tree_data is not None:
+                defined_tree_name = tree_url_to_name.get(
+                    tree_data.get("git_repository_url", "")
+                )
+
+            if tree_data is None or defined_tree_name != tree_name:
+                return create_api_error_response(
+                    error_message=tree_not_found_error_message,
+                    status_code=HTTPStatus.OK,
+                )
+
+        # Since the priority is now the tree name from the yaml file,
+        # if a tree had a name A in kcidb but it has name B on the file,
+        # searching for the name A will return with its name replaced
+        defined_tree_name = tree_url_to_name.get(
+            tree_data["git_repository_url"], tree_data["tree_name"]
+        )
+        tree_data["tree_name"] = defined_tree_name
 
         base_url = reverse(
             "treeDetailsView",

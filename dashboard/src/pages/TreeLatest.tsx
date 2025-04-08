@@ -40,7 +40,7 @@ export const TreeLatest = (): JSX.Element | void => {
         treeInfo: {
           gitBranch: branch,
           gitUrl: data.git_repository_url || undefined,
-          treeName: treeName,
+          treeName: data.tree_name,
           commitName: data.git_commit_name || undefined,
           headCommitHash: data.git_commit_hash,
         },

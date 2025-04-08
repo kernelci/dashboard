@@ -23,6 +23,7 @@ class TreeLatestQueryParameters(BaseModel):
 
 class TreeLatestResponse(BaseCheckouts):
     api_url: str
+    tree_name: str
 
 
 class TreeCommon(BaseModel):

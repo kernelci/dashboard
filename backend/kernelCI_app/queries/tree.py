@@ -206,7 +206,9 @@ def get_tree_listing_data(origin: str, interval_in_days: int) -> Optional[list[d
 
 # TODO: rename and reuse this query
 # It is being used virtually as "latest checkout from trees"
-def get_tree_listing_fast(*, origin: Optional[str] = None, interval: dict):
+def get_tree_listing_fast(
+    *, origin: Optional[str] = None, interval: dict
+) -> list[Checkouts]:
     origin_clause = f"origin = '{origin}' AND" if origin is not None else ""
     interval_timestamp = get_query_time_interval(**interval).timestamp()
 
@@ -249,7 +251,7 @@ def get_tree_listing_fast(*, origin: Optional[str] = None, interval: dict):
         """,
     )
 
-    return checkouts
+    return list(checkouts)
 
 
 def get_tree_listing_data_by_checkout_id(*, checkout_ids: list[str]):
