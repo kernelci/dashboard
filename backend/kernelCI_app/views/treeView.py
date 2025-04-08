@@ -2,6 +2,7 @@ import json
 from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.tree import get_tree_listing_data
 from kernelCI_app.typeModels.commonDetails import StatusCount
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
@@ -20,7 +21,9 @@ from kernelCI_cache.queries.tree import get_cached_tree_listing_data
 
 
 class TreeView(APIView):
-    def _sanitize_tree(self, checkout: dict) -> Checkout:
+    def _sanitize_tree(
+        self, checkout: dict, tree_url_to_name: dict[str, str]
+    ) -> Checkout:
         build_status = StatusCount(
             PASS=checkout["pass_builds"],
             FAIL=checkout["fail_builds"],
@@ -58,6 +61,10 @@ class TreeView(APIView):
                     checkout["git_commit_tags"] = []
             except json.JSONDecodeError:
                 checkout["git_commit_tags"] = []
+
+        checkout["tree_name"] = tree_url_to_name.get(
+            checkout["git_repository_url"], checkout["tree_name"]
+        )
 
         return Checkout(
             **checkout,
@@ -110,6 +117,7 @@ class TreeView(APIView):
         # checkout is present in both the cache and in kcidb in the last x days
         unique_trees = set()
         checkouts: list[Checkout] = []
+        tree_url_to_name = get_tree_url_to_name_map()
 
         for checkout in kcidb_checkouts + list(cached_checkouts):
             tree_identifier = (
@@ -119,7 +127,12 @@ class TreeView(APIView):
             )
             if tree_identifier not in unique_trees:
                 unique_trees.add(tree_identifier)
-                checkouts.append(self._sanitize_tree(checkout))
+                checkouts.append(
+                    self._sanitize_tree(
+                        checkout,
+                        tree_url_to_name,
+                    )
+                )
 
         try:
             valid_response = TreeListingResponse(checkouts)

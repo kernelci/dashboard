@@ -1,11 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
+from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.tree import get_tree_listing_fast
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 from http import HTTPStatus
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.treeListing import (
+    CheckoutFast,
     TreeListingFastResponse,
 )
 from pydantic import ValidationError
@@ -41,22 +43,28 @@ class TreeViewFast(APIView):
                 error_message="Trees not found", status_code=HTTPStatus.OK
             )
 
-        response_data = [
-            {
-                "id": checkout.id,
-                "tree_name": checkout.tree_name,
-                "git_repository_branch": checkout.git_repository_branch,
-                "git_repository_url": checkout.git_repository_url,
-                "git_commit_hash": checkout.git_commit_hash,
-                "git_commit_name": checkout.git_commit_name,
-                "git_commit_tags": checkout.git_commit_tags,
-                "patchset_hash": checkout.patchset_hash,
-                "start_time": checkout.start_time,
-                "origin_builds_finish_time": checkout.origin_builds_finish_time,
-                "origin_tests_finish_time": checkout.origin_tests_finish_time,
-            }
-            for checkout in checkouts
-        ]
+        response_data: list[CheckoutFast] = []
+
+        tree_url_to_name = get_tree_url_to_name_map()
+
+        for checkout in checkouts:
+            response_data.append(
+                CheckoutFast(
+                    id=checkout.id,
+                    tree_name=tree_url_to_name.get(
+                        checkout.git_repository_url, checkout.tree_name
+                    ),
+                    git_repository_branch=checkout.git_repository_branch,
+                    git_repository_url=checkout.git_repository_url,
+                    git_commit_hash=checkout.git_commit_hash,
+                    git_commit_name=checkout.git_commit_name,
+                    git_commit_tags=checkout.git_commit_tags,
+                    patchset_hash=checkout.patchset_hash,
+                    start_time=checkout.start_time,
+                    origin_builds_finish_time=checkout.origin_builds_finish_time,
+                    origin_tests_finish_time=checkout.origin_tests_finish_time,
+                )
+            )
 
         try:
             valid_response = TreeListingFastResponse(response_data)
