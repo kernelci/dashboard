@@ -347,37 +347,14 @@ class TreeCommitsHistory(APIView):
             self._process_tests(row)
             self._process_builds(row)
 
-    def _process_time_range(self, request) -> None:
+    def _process_time_range(self, *, start_timestamp: str, end_timestamp: str) -> None:
         try:
-            self.end_datetime = datetime.fromtimestamp(
-                int(request.GET.get("endTimestampInSeconds")), timezone.utc
-            )
+            self.end_datetime = datetime.fromtimestamp(int(end_timestamp), timezone.utc)
             self.start_datetime = datetime.fromtimestamp(
-                int(request.GET.get("startTimestampInSeconds")), timezone.utc
+                int(start_timestamp), timezone.utc
             )
         except Exception as ex:
             log_message(ex)
-
-    # TODO: use pydantic
-    def get_params(self, request) -> tuple[str, str, str, str, str, list[str]]:
-        origin_param = request.GET.get("origin")
-        git_url_param = request.GET.get("git_url")
-        git_branch_param = request.GET.get("git_branch")
-        start_timestamp = request.GET.get("start_timestamp_in_seconds")
-        end_timestamp = request.GET.get("end_timestamp_in_seconds")
-
-        missing_params = []
-        if not origin_param:
-            missing_params.append("origin")
-
-        return (
-            origin_param,
-            git_url_param,
-            git_branch_param,
-            start_timestamp,
-            end_timestamp,
-            missing_params,
-        )
 
     @extend_schema(
         responses=TreeCommitsResponse,
@@ -385,22 +362,29 @@ class TreeCommitsHistory(APIView):
         methods=["GET"],
     )
     def get(self, request, commit_hash: Optional[str]) -> Response:
-        (
-            origin_param,
-            git_url_param,
-            git_branch_param,
-            start_timestamp,
-            end_timestamp,
-            missing_params,
-        ) = self.get_params(request)
-
-        if missing_params:
+        try:
+            params = TreeCommitsQueryParameters(
+                origin=request.GET.get("origin"),
+                git_url=request.GET.get("git_url"),
+                git_branch=request.GET.get("git_branch"),
+                start_timestamp_in_seconds=request.GET.get(
+                    "start_timestamp_in_seconds"
+                ),
+                end_timestamp_in_seconds=request.GET.get("end_timestamp_in_seconds"),
+            )
+        except ValidationError as e:
             return create_api_error_response(
-                error_message=f"Missing parameters: {', '.join(missing_params)}",
+                error_message=e.json(),
+                status_code=HTTPStatus.BAD_REQUEST,
             )
 
+        start_timestamp = params.start_time_stamp_in_seconds
+        end_timestamp = params.end_time_stamp_in_seconds
+
         if None not in (start_timestamp, end_timestamp):
-            self._process_time_range(request)
+            self._process_time_range(
+                start_timestamp=start_timestamp, end_timestamp=end_timestamp
+            )
 
         try:
             self.filterParams = FilterParams(request)
@@ -410,9 +394,9 @@ class TreeCommitsHistory(APIView):
 
         rows = get_tree_commit_history(
             commit_hash=commit_hash,
-            origin=origin_param,
-            git_url=git_url_param,
-            git_branch=git_branch_param,
+            origin=params.origin,
+            git_url=params.git_url,
+            git_branch=params.git_branch,
         )
 
         if not rows:

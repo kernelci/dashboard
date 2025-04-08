@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, RootModel
 
 from kernelCI_app.typeModels.commonDetails import StatusCount
@@ -13,10 +13,10 @@ from kernelCI_app.typeModels.databases import (
 
 class TreeCommitsQueryParameters(BaseModel):
     origin: str
-    git_url: str
-    git_branch: str
-    start_time_stamp_in_seconds: str
-    end_time_stamp_in_seconds: str
+    git_url: Optional[str] = None
+    git_branch: Optional[str] = None
+    start_time_stamp_in_seconds: Optional[str] = None
+    end_time_stamp_in_seconds: Optional[str] = None
     # TODO: Add filters field in this model
 
 
