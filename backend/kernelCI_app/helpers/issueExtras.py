@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Dict, List, Set, Tuple
 
 from kernelCI_app.helpers.logger import log_message
+from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.typeModels.issues import (
     IssueWithExtraInfo,
     ProcessedExtraDetailedIssues,
@@ -88,6 +89,7 @@ def assign_issue_first_seen(
         issue_id_list,
     )
 
+    tree_url_to_name = get_tree_url_to_name_map()
     for record in incident_records:
         record_issue_id = record.issue_id
         first_seen = record.first_seen
@@ -95,7 +97,11 @@ def assign_issue_first_seen(
         first_git_repository_url = record.git_repository_url
         first_git_repository_branch = record.git_repository_branch
         first_git_commit_name = record.git_commit_name
-        first_tree_name = record.tree_name
+
+        defined_tree_name = tree_url_to_name.get(
+            record.git_repository_url, record.tree_name
+        )
+        first_tree_name = defined_tree_name
 
         processed_issue_from_id = processed_issues_table.get(record_issue_id)
         if processed_issue_from_id is None:
@@ -169,11 +175,15 @@ def assign_issue_trees(
         params,
     )
 
+    tree_url_to_name = get_tree_url_to_name_map()
     for record in trees_records:
         issue_id = record.issue_id
         issue_version = record.issue_version
         git_repository_url = record.git_repository_url
         git_repository_branch = record.git_repository_branch
+        defined_tree_name = tree_url_to_name.get(
+            record.git_repository_url, record.tree_name
+        )
 
         processed_issue_from_id = processed_issues_table.get(issue_id)
         if processed_issue_from_id is None:
@@ -187,7 +197,7 @@ def assign_issue_trees(
 
         current_detailed_issue.trees.append(
             TreeSetItem(
-                tree_name=record.tree_name,
+                tree_name=defined_tree_name,
                 git_repository_branch=git_repository_branch,
             )
         )

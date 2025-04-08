@@ -47,7 +47,8 @@ def get_issue_builds(*, issue_id: str, version: Optional[int]) -> list[dict]:
             B.COMPILER,
             B.LOG_URL,
             C.TREE_NAME,
-            C.GIT_REPOSITORY_BRANCH
+            C.GIT_REPOSITORY_BRANCH,
+            C.GIT_REPOSITORY_URL
         FROM
             INCIDENTS INC
             INNER JOIN BUILDS B ON (INC.BUILD_ID = B.ID)
@@ -90,7 +91,8 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
             T.ENVIRONMENT_COMPATIBLE,
             T.ENVIRONMENT_MISC,
             C.TREE_NAME,
-            C.GIT_REPOSITORY_BRANCH
+            C.GIT_REPOSITORY_BRANCH,
+            C.GIT_REPOSITORY_URL
         FROM
             INCIDENTS INC
             INNER JOIN TESTS T ON (INC.TEST_ID = T.ID)
