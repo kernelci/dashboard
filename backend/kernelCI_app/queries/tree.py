@@ -431,6 +431,39 @@ def get_tree_details_data(
     return rows
 
 
+def _create_selected_checkouts_clause(*, git_url: str, git_branch: str) -> str:
+    tuple_fields = ["ORIGIN", "GIT_COMMIT_HASH"]
+    none_fields = []
+    git_branch_field = "GIT_REPOSITORY_BRANCH"
+    git_url_field = "GIT_REPOSITORY_URL"
+
+    if not git_branch:
+        none_fields.append(git_branch_field)
+    else:
+        tuple_fields.append(git_branch_field)
+
+    if not git_url:
+        none_fields.append(git_url_field)
+    else:
+        tuple_fields.append(git_url_field)
+
+    none_clauses = ""
+    for field in none_fields:
+        none_clauses += "C." + field + " IS NULL AND "
+
+    selected_checkouts_clause = f"""
+                        {none_clauses}
+                        (
+                            {", ".join(["C." + field for field in tuple_fields])}
+                        ) IN (
+                            SELECT
+                                {", ".join(["EC." + field for field in tuple_fields])}
+                            FROM
+                                EARLIEST_COMMITS EC
+                        )"""
+    return selected_checkouts_clause
+
+
 def get_tree_commit_history(
     commit_hash: str, origin: str, git_url: str, git_branch: str
 ) -> Optional[list[tuple]]:
@@ -448,8 +481,22 @@ def get_tree_commit_history(
     git_url_clause = checkout_clauses.get("git_url_clause")
     git_branch_clause = checkout_clauses.get("git_branch_clause")
 
+    selected_checkouts_clause = _create_selected_checkouts_clause(
+        git_url=git_url, git_branch=git_branch
+    )
+
     query = f"""
-    WITH earliest_commits AS (
+    WITH HEAD_START_TIME AS (
+        SELECT
+            MAX(start_time) AS HEAD_START_TIME
+        FROM
+            checkouts
+        WHERE
+            git_commit_hash = %(commit_hash)s
+            AND origin = %(origin_param)s
+            AND {git_url_clause}
+    ),
+    EARLIEST_COMMITS AS (
         SELECT
             id,
             git_commit_hash,
@@ -471,23 +518,54 @@ def get_tree_commit_history(
                 origin,
                 start_time,
                 ROW_NUMBER() OVER (
-                    PARTITION BY git_repository_url, git_repository_branch, origin, git_commit_hash
-                    ORDER BY start_time DESC
+                    PARTITION BY
+                        git_repository_url,
+                        git_repository_branch,
+                        origin,
+                        git_commit_hash
+                    ORDER BY
+                        start_time DESC
                 ) AS time_order
-            FROM   checkouts
-            WHERE  {git_branch_clause}
+            FROM
+                checkouts
+            WHERE
+                {git_branch_clause}
                 AND {git_url_clause}
                 AND origin = %(origin_param)s
                 AND git_commit_hash IS NOT NULL
-                AND start_time <= (SELECT Max(start_time) AS head_start_time
-                                    FROM   checkouts
-                                    WHERE  git_commit_hash = %(commit_hash)s
-                                            AND origin = %(origin_param)s
-                                            AND {git_url_clause})
-            ORDER  BY start_time DESC) AS checkouts_time_order
+                AND start_time <= (
+                    SELECT
+                        *
+                    FROM
+                        HEAD_START_TIME
+                )
+            ORDER BY
+                start_time DESC
+        ) AS CHECKOUTS_TIME_ORDER
+    WHERE
+        TIME_ORDER = 1
+    LIMIT
+        6
+    ),
+    SELECTED_CHECKOUTS AS (
+        SELECT
+            c.id,
+            c.git_commit_hash,
+            c.git_commit_name,
+            c.git_commit_tags,
+            c.start_time
+        FROM
+            checkouts c
         WHERE
-            time_order = 1
-        LIMIT 6
+            {selected_checkouts_clause}
+            AND c.start_time <= (
+                SELECT
+                    *
+                FROM
+                    HEAD_START_TIME
+            )
+        ORDER BY
+            c.start_time DESC
     )
     SELECT
         c.git_commit_hash,
@@ -511,18 +589,13 @@ def get_tree_commit_history(
         ic.test_id AS incidents_test_id,
         i.id AS issues_id,
         i.version AS issues_version
-    FROM earliest_commits AS c
-    LEFT JOIN builds AS b
-    ON
-        c.id = b.checkout_id
-    LEFT JOIN tests AS t
-    ON
-        t.build_id = b.id
-    LEFT JOIN incidents AS ic
-        ON t.id = ic.test_id OR
-            b.id = ic.build_id
-    LEFT JOIN issues AS i
-        ON ic.issue_id = i.id
+    FROM
+        SELECTED_CHECKOUTS AS c
+        LEFT JOIN builds AS b ON c.id = b.checkout_id
+        LEFT JOIN tests AS t ON t.build_id = b.id
+        LEFT JOIN incidents AS ic ON t.id = ic.test_id
+        OR b.id = ic.build_id
+        LEFT JOIN issues AS i ON ic.issue_id = i.id
     """
 
     try:
