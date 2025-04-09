@@ -46,6 +46,8 @@ import { MemoizedIssueDetailsOGTags } from '@/components/OpenGraphTags/IssueDeta
 
 import { TooltipIcon } from '@/components/Icons/TooltipIcon';
 
+import { Badge } from '@/components/ui/badge';
+
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 
 import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
@@ -105,12 +107,38 @@ export const IssueDetails = ({
   }, [data?.extra, formatMessage, issueId]);
 
   const tagPills = useMemo(() => {
+    const branchTags: JSX.Element[] = [];
+    const categoryTags: JSX.Element[] = [];
+
     if (data?.extra?.[issueId]?.versions !== undefined) {
+      Object.values(data.extra[issueId].versions)[0].tags?.map(tag =>
+        branchTags.push(<BranchBadge key={tag} tag={tag} />),
+      );
+    }
+
+    if (data?.categories) {
+      data.categories.map(category =>
+        categoryTags.push(
+          <Badge key={category} variant={'blueTag'} className="my-0.5">
+            {category}
+          </Badge>,
+        ),
+      );
+    }
+
+    const hasBranchTags = branchTags.length > 0;
+    const hasCategoryTags = categoryTags.length > 0;
+
+    if (hasBranchTags || hasCategoryTags) {
       return (
         <div className="flex gap-3">
-          {Object.values(data.extra[issueId].versions)[0].tags?.map(tag => (
-            <BranchBadge key={tag} tag={tag} />
-          ))}
+          {hasBranchTags && <div className="flex gap-2">{...branchTags}</div>}
+          {hasBranchTags && hasCategoryTags && (
+            <span className="text-dark-gray2">|</span>
+          )}
+          {hasCategoryTags && (
+            <div className="flex gap-2">{...categoryTags}</div>
+          )}
         </div>
       );
     }
