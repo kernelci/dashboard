@@ -1,3 +1,4 @@
+from typing import Optional
 from django.db import connection
 from django.db.utils import ProgrammingError
 from kernelCI_app.helpers.database import dict_fetchall
@@ -12,7 +13,24 @@ from datetime import datetime
 from django.db.models import Q
 
 
-def get_issue_builds(*, issue_id: str, version: int) -> list[dict]:
+def _get_issue_version_clause(*, version: Optional[int]) -> str:
+    if version is None:
+        version_clause = """
+            INC.ISSUE_VERSION = (
+                SELECT MAX(ISSUE_VERSION)
+                FROM INCIDENTS
+                WHERE ISSUE_ID = %(issue_id)s
+            )"""
+    else:
+        version_clause = """
+            INC.ISSUE_VERSION = %(issue_version)s
+        """
+    return version_clause
+
+
+def get_issue_builds(*, issue_id: str, version: Optional[int]) -> list[dict]:
+    version_clause = _get_issue_version_clause(version=version)
+
     params = {
         "issue_id": issue_id,
         "issue_version": version,
@@ -35,10 +53,8 @@ def get_issue_builds(*, issue_id: str, version: int) -> list[dict]:
             INNER JOIN BUILDS B ON (INC.BUILD_ID = B.ID)
             LEFT JOIN CHECKOUTS C ON (B.CHECKOUT_ID = C.ID)
         WHERE
-            (
-                INC.ISSUE_ID = %(issue_id)s
-                AND INC.ISSUE_VERSION = %(issue_version)s
-            )
+            INC.ISSUE_ID = %(issue_id)s
+            AND {version_clause}
     """
 
     try:
@@ -56,13 +72,15 @@ def get_issue_builds(*, issue_id: str, version: int) -> list[dict]:
             raise
 
 
-def get_issue_tests(*, issue_id: str, version: int) -> list[dict]:
+def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
+    version_clause = _get_issue_version_clause(version=version)
+
     params = {
         "issue_id": issue_id,
         "issue_version": version,
     }
 
-    query = """
+    query = f"""
         SELECT
             T.ID,
             T.STATUS,
@@ -81,7 +99,7 @@ def get_issue_tests(*, issue_id: str, version: int) -> list[dict]:
         WHERE
             (
                 INC.ISSUE_ID = %(issue_id)s
-                AND INC.ISSUE_VERSION = %(issue_version)s
+                AND {version_clause}
             )
     """
 
@@ -121,3 +139,37 @@ def get_issue_listing_data(
         "culprit_tool",
     ).filter(filters)
     return issues_records
+
+
+# TODO: combine this query with the other queries for issues
+def get_latest_issue_version(*, issue_id: str) -> Optional[dict]:
+    version_row = (
+        Issues.objects.values("version")
+        .filter(id=issue_id)
+        .order_by("-version")
+        .first()
+    )
+    return version_row
+
+
+def get_issue_details(*, issue_id: str, version: int) -> Optional[dict]:
+    query = (
+        Issues.objects.values(
+            "field_timestamp",
+            "id",
+            "version",
+            "origin",
+            "report_url",
+            "report_subject",
+            "culprit_code",
+            "culprit_tool",
+            "culprit_harness",
+            "comment",
+            "misc",
+            "categories",
+        )
+        .filter(id=issue_id, version=version)
+        .first()
+    )
+
+    return query

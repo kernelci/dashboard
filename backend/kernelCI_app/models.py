@@ -16,6 +16,7 @@ class Issues(models.Model):
     culprit_harness = models.BooleanField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
+    categories = ArrayField(models.TextField(), blank=True, null=True)
 
     class Meta:
         managed = False

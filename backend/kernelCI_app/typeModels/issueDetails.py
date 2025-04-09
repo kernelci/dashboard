@@ -12,6 +12,7 @@ from kernelCI_app.typeModels.databases import (
     Build__Duration,
     Build__Compiler,
     Build__LogUrl,
+    Issue__Categories,
     Issue__Id,
     Issue__Version,
     Issue__ReportUrl,
@@ -96,6 +97,7 @@ class IssueDetailsResponse(BaseModel):
     culprit_harness: Issue__CulpritHarness
     comment: Issue__Comment
     misc: Issue__Misc
+    categories: Issue__Categories
     extra: Optional[ProcessedExtraDetailedIssues]
 
 
