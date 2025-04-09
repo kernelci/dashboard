@@ -1,6 +1,11 @@
 import type { JSX } from 'react';
 
-import { truncateBigText, shouldTruncate, valueOrEmpty } from '@/lib/string';
+import {
+  truncateBigText,
+  shouldTruncate,
+  valueOrEmpty,
+  EMPTY_VALUE,
+} from '@/lib/string';
 
 import type { FirstIncident } from '@/types/issueExtras';
 
@@ -65,8 +70,12 @@ export const getFirstIncidentSection = ({
     },
     {
       title: 'commonDetails.gitCommitHash',
-      linkComponent: <FirstIncidentLink firstIncident={firstIncident} />,
-      copyValue: valueOrEmpty(firstIncident.git_commit_hash),
+      linkComponent: firstIncident.git_commit_hash ? (
+        <FirstIncidentLink firstIncident={firstIncident} />
+      ) : (
+        <span>{EMPTY_VALUE}</span>
+      ),
+      copyValue: firstIncident.git_commit_hash,
     },
     {
       title: 'commonDetails.gitCommitName',

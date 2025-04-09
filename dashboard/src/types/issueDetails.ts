@@ -11,5 +11,6 @@ export type TIssueDetails = IssueKeys & {
   culprit_harness?: boolean;
   comment?: string;
   misc?: Record<string, unknown>;
+  categories?: string[];
   extra?: IssueExtraDetailsDict;
 };
