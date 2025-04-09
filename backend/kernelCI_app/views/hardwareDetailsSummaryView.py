@@ -30,6 +30,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     format_issue_summary_for_response,
     unstable_parse_post_body,
 )
+from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.hardware import (
     get_hardware_details_data,
     get_hardware_trees_data,
@@ -319,6 +320,16 @@ class HardwareDetailsSummary(APIView):
             set_trees_status_summary(
                 trees=trees, tree_status_summary=self.tree_status_summary
             )
+
+            # The change in tree_name happens here so that the filters works unchanged before.
+            # The selection of commits works based on a comparison between the record tree_name
+            # and the selected_trees tree_name, and is assigned to trees using the index
+            tree_url_to_name_map = get_tree_url_to_name_map()
+            for tree in trees:
+                defined_tree_name = tree_url_to_name_map.get(
+                    tree.git_repository_url, tree.tree_name
+                )
+                tree.tree_name = defined_tree_name
 
             valid_response = HardwareDetailsSummaryResponse(
                 summary=Summary(

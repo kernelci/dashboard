@@ -14,6 +14,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     is_test_processed,
     unstable_parse_post_body,
 )
+from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.hardware import (
     get_hardware_details_data,
     get_hardware_trees_data,
@@ -49,6 +50,8 @@ class HardwareDetailsTests(APIView):
 
         self.tests: List[HardwareTestHistoryItem] = []
 
+        self.tree_url_to_name_map = get_tree_url_to_name_map()
+
     def _process_test(self, record: Dict) -> None:
         is_record_boot = is_boot(record["path"])
         if is_record_boot:
@@ -71,6 +74,7 @@ class HardwareDetailsTests(APIView):
             handle_test_history(
                 record=record,
                 task=self.tests,
+                tree_url_to_name=self.tree_url_to_name_map,
             )
             self.processed_tests.add(record["id"])
 
