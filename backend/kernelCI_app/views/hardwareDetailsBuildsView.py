@@ -21,6 +21,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     handle_build_history,
     unstable_parse_post_body,
 )
+from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.hardware import (
     get_hardware_details_data,
     get_hardware_trees_data,
@@ -52,9 +53,10 @@ class HardwareDetailsBuilds(APIView):
         self.processed_builds: Set[str] = set()
         self.builds: List[HardwareBuildHistoryItem] = []
 
-    def _process_build(self, record: Dict, tree_index: int) -> None:
+        self.tree_url_to_name_map = get_tree_url_to_name_map()
+
+    def _process_build(self, *, record: dict, tree_index: int) -> None:
         build = get_build_typed(record, tree_index)
-        build_id = build.id
 
         should_process_build = decide_if_is_build_in_filter(
             instance=self,
@@ -63,9 +65,14 @@ class HardwareDetailsBuilds(APIView):
             incident_test_id=record["incidents__test_id"],
         )
 
-        self.processed_builds.add(build_id)
+        self.processed_builds.add(build.id)
         if should_process_build:
-            handle_build_history(record=record, tree_idx=tree_index, builds=self.builds)
+            handle_build_history(
+                record=record,
+                tree_idx=tree_index,
+                builds=self.builds,
+                tree_url_to_name=self.tree_url_to_name_map,
+            )
 
     def _sanitize_records(
         self, records, trees: List[Tree], is_all_selected: bool
@@ -91,7 +98,7 @@ class HardwareDetailsBuilds(APIView):
             if is_record_filtered_out:
                 continue
 
-            self._process_build(record, tree_index)
+            self._process_build(record=record, tree_index=tree_index)
 
     @extend_schema(
         request=HardwareDetailsPostBody,
