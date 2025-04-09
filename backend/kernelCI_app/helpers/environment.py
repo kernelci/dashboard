@@ -7,8 +7,7 @@ from kernelCI_app.constants.general import (
 )
 from kernelCI_app.helpers.logger import log_message
 
-# TODO: change to 5.3 when all features are supported
-DEFAULT_SCHEMA_VERSION = "5.1"
+DEFAULT_SCHEMA_VERSION = "5.3"
 
 
 def get_yaml_data(*, file: str):

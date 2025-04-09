@@ -2243,6 +2243,8 @@ components:
           $ref: '#/components/schemas/Issue__Comment'
         misc:
           $ref: '#/components/schemas/Issue__Misc'
+        categories:
+          $ref: '#/components/schemas/Issue__Categories'
         extra:
           anyOf:
           - $ref: '#/components/schemas/ProcessedExtraDetailedIssues'
@@ -2259,6 +2261,7 @@ components:
       - culprit_harness
       - comment
       - misc
+      - categories
       - extra
       title: IssueDetailsResponse
       type: object
@@ -2399,6 +2402,12 @@ components:
       - version
       title: IssueWithExtraInfo
       type: object
+    Issue__Categories:
+      anyOf:
+      - items:
+          type: string
+        type: array
+      - type: 'null'
     Issue__Comment:
       anyOf:
       - type: string

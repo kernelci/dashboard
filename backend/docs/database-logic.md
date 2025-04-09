@@ -5,9 +5,9 @@ that we should know
 
 
 There are some resources that can be used as reference:
-- [Grafana Dashboard](https://kcidb.kernelci.org/d/home/home?orgId=1&refresh=30m)
+- [Grafana Dashboard](https://kcidb.kernelci.org/d/home/)
 - [Submitter guide](https://docs.kernelci.org/kcidb/submitter_guide/)
-- [kcidb json schema](https://github.com/kernelci/kcidb-io/blob/main/kcidb_io/schema/v04_03.py)
+- [kcidb json schema](https://github.com/kernelci/kcidb-io/blob/main/kcidb_io/schema/v05_03.py)
 
 ## Tree
 
