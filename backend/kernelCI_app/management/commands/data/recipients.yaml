@@ -29,3 +29,5 @@ trees:
     - arnd@arndb.de
   robh:
     - robh@kernel.org
+  omap:
+    - khilman@baylibre.com
