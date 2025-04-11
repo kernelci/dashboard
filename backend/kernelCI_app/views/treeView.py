@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.tree import get_tree_listing_data
-from kernelCI_app.typeModels.commonDetails import StatusCount
+from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,

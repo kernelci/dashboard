@@ -3,7 +3,7 @@ from pydantic import BaseModel, BeforeValidator, Field
 from typing import Annotated
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
-from kernelCI_app.typeModels.commonDetails import StatusCount
+from kernelCI_app.typeModels.common import StatusCount
 
 
 class HardwareItem(BaseModel):

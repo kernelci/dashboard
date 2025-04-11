@@ -1,54 +1,51 @@
 import json
-from typing import Union, List, Optional, Dict
-import typing_extensions
+from typing import Union, List, Optional
 from django.utils import timezone
 from datetime import timedelta
 
 from kernelCI_app.constants.general import DEFAULT_INTERVAL_IN_DAYS
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.typeModels.issues import IncidentInfo, Issue, IssueDict
+from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.databases import DatabaseStatusValues
+from kernelCI_app.typeModels.issues import Issue, IssueDict
 
 DEFAULT_QUERY_TIME_INTERVAL = {"days": DEFAULT_INTERVAL_IN_DAYS}
 
 
-def create_issue(
+def create_issue_typed(
     *,
     issue_id: str,
     issue_version: int,
     issue_comment: Optional[str],
-    issue_report_url: Optional[str]
+    issue_report_url: Optional[str],
+    starting_count_status: Optional[DatabaseStatusValues],
 ) -> Issue:
-    return {
-        "id": issue_id,
-        "version": issue_version,
-        "comment": issue_comment,
-        "report_url": issue_report_url,
-        "incidents_info": {"incidentsCount": 1},
-    }
-
-
-@typing_extensions.deprecated(
-    "The `convert_issues_dict_to_list` method is deprecated; use `convert_issues_dict_to_list_typed` "
-    "and use type validation.",
-)
-def convert_issues_dict_to_list(issues_dict: Dict[str, Issue]) -> List[Issue]:
-    return list(issues_dict.values())
+    incident_count = StatusCount()
+    incident_count.increment(starting_count_status)
+    return Issue(
+        id=issue_id,
+        version=issue_version,
+        comment=issue_comment,
+        report_url=issue_report_url,
+        incidents_info=incident_count,
+    )
 
 
 def convert_issues_dict_to_list_typed(*, issues_dict: IssueDict) -> List[Issue]:
     issues: List[Issue] = []
     for issue in issues_dict.values():
-        issues.append(
-            Issue(
-                id=issue["id"],
-                version=issue["version"],
-                comment=issue["comment"],
-                report_url=issue["report_url"],
-                incidents_info=IncidentInfo(
-                    incidentsCount=issue["incidents_info"]["incidentsCount"],
-                ),
+        if isinstance(issue, dict):
+            issues.append(
+                Issue(
+                    id=issue["id"],
+                    version=issue["version"],
+                    comment=issue["comment"],
+                    report_url=issue["report_url"],
+                    incidents_info=StatusCount(**issue["incidents_info"]),
+                )
             )
-        )
+        else:
+            issues.append(issue)
     return issues
 
 

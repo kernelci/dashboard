@@ -1,4 +1,4 @@
-type IncidentsInfo = { incidentsCount: number };
+import type { RequiredStatusCount } from './general';
 
 export type IssueKeys = {
   id: string;
@@ -8,5 +8,5 @@ export type IssueKeys = {
 export type TIssue = IssueKeys & {
   comment?: string;
   report_url?: string;
-  incidents_info: IncidentsInfo;
+  incidents_info: RequiredStatusCount;
 };

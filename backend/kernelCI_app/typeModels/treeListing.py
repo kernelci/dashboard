@@ -1,5 +1,5 @@
 from typing import List
-from kernelCI_app.typeModels.commonDetails import StatusCount
+from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
     Checkout__GitCommitName,

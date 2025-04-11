@@ -98,7 +98,7 @@ const ListingItem = ({
     return (
       <Tooltip>
         <div className="flex w-full">
-          <TooltipTrigger className="max-w-[200px] overflow-hidden md:max-w-[100px] lg:max-w-[325px] xl:max-w-[475px] 2xl:max-w-[700px]">
+          <TooltipTrigger className="max-w-[200px] overflow-hidden md:max-w-[100px] lg:max-w-[280px] xl:max-w-[475px] 2xl:max-w-[700px]">
             {children}
           </TooltipTrigger>
 

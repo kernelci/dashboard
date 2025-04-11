@@ -5,7 +5,6 @@ import re
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.typeModels.databases import (
-    PASS_STATUS,
     StatusValues,
     failure_status_list,
     build_fail_status_list,
@@ -129,14 +128,10 @@ def should_filter_test_issue(
     issue_id: Optional[str],
     issue_version: Optional[int],
     incident_test_id: Optional[str],
-    test_status: Optional[str],
 ) -> bool:
     has_issue_filter = len(issue_filters) > 0
     if not has_issue_filter:
         return False
-
-    if test_status == PASS_STATUS:
-        return True
 
     has_uncategorized_filter = UNCATEGORIZED_STRING in issue_filters
 
@@ -660,7 +655,6 @@ class FilterParams:
                 issue_id=issue_id,
                 issue_version=issue_version,
                 incident_test_id=incident_test_id,
-                test_status=status,
             )
             or (
                 len(self.filterPlatforms["boot"]) > 0
@@ -707,7 +701,6 @@ class FilterParams:
                 issue_id=issue_id,
                 issue_version=issue_version,
                 incident_test_id=incident_test_id,
-                test_status=status,
             )
             or (
                 len(self.filterPlatforms["test"]) > 0

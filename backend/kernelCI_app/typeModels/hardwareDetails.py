@@ -173,4 +173,4 @@ class HardwareCommitHistoryResponse(BaseModel):
         }
 
 
-PossibleTestType = Literal["test", "boot"]
+type PossibleTestType = Literal["test", "boot"]

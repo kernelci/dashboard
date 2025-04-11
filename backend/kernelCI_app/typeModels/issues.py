@@ -1,6 +1,7 @@
 from typing import Dict, List, Literal, Optional, Set, Tuple, Annotated
 from pydantic import BaseModel, Field
 
+from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.databases import (
     Timestamp,
     Checkout__GitCommitHash,
@@ -23,7 +24,7 @@ class IssueKeys(BaseModel):
 class Issue(IssueKeys):
     comment: Optional[str]
     report_url: Optional[str]
-    incidents_info: IncidentInfo
+    incidents_info: StatusCount
 
 
 type IssueDict = Dict[Tuple[str, int], Issue]
