@@ -1,8 +1,6 @@
-from typing import Dict, Tuple
 from http import HTTPStatus
 
 from drf_spectacular.utils import extend_schema
-from kernelCI_app.typeModels.issues import Issue
 from pydantic import ValidationError
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
@@ -24,9 +22,6 @@ from kernelCI_app.typeModels.commonDetails import (
     CommonDetailsBootsResponse,
     TestHistoryItem,
 )
-
-
-type IssueDict = Dict[Tuple[str, str], Issue]
 
 
 class TreeDetailsBoots(APIView):
