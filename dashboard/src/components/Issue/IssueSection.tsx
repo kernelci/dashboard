@@ -14,6 +14,8 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { TIssue } from '@/types/issues';
 
+import { groupStatus } from '@/utils/status';
+
 import { IssueTooltip } from './IssueTooltip';
 
 const IssueSection = ({
@@ -30,6 +32,20 @@ const IssueSection = ({
   const issueList = useMemo(
     () =>
       data?.map(issue => {
+        const counts = issue.incidents_info;
+        const groupedCount = groupStatus({
+          passCount: counts.PASS,
+          failCount: counts.FAIL,
+          nullCount: counts.NULL,
+          errorCount: counts.ERROR,
+          missCount: counts.MISS,
+          doneCount: counts.DONE,
+          skipCount: counts.SKIP,
+        });
+        const totalCount =
+          groupedCount.successCount +
+          groupedCount.failedCount +
+          groupedCount.inconclusiveCount;
         return (
           <Link
             key={issue.id + issue.version}
@@ -43,7 +59,7 @@ const IssueSection = ({
             })}
           >
             <ListingItem
-              unknown={issue.incidents_info.incidentsCount}
+              unknown={totalCount}
               text={issue.comment ?? issue.id}
               tooltip={issue.id}
             />

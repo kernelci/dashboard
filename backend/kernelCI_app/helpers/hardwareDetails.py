@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import datetime, timezone
 import json
-from typing import Dict, List, Literal, Optional, Set
+from typing import Any, Dict, List, Literal, Optional, Set
 
 from kernelCI_app.constants.general import (
     UNCATEGORIZED_STRING,
@@ -42,9 +42,10 @@ from kernelCI_app.typeModels.hardwareDetails import (
     HardwareDetailsPostBody,
     Tree,
 )
+from kernelCI_app.typeModels.issues import Issue, IssueDict
 from kernelCI_app.utils import (
     convert_issues_dict_to_list_typed,
-    create_issue,
+    create_issue_typed,
     extract_error_message,
     is_boot,
 )
@@ -222,7 +223,7 @@ def get_current_record_tree_in_selection(
     return None
 
 
-def generate_test_dict() -> Dict[str, any]:
+def generate_test_dict() -> dict[str, Any]:
     return {
         "history": [],
         "archSummary": {},
@@ -319,6 +320,7 @@ def handle_test_or_boot(record: Dict, task: Dict) -> None:
         issue_version=record["incidents__issue__version"],
         incident_test_id=record["incidents__test_id"],
         build_status=record["build__status"],
+        test_status=status,
         issue_comment=record["incidents__issue__comment"],
         issue_report_url=record["incidents__issue__report_url"],
         task=task,
@@ -503,6 +505,7 @@ def process_issue(
         issue_version=record["incidents__issue__version"],
         incident_test_id=record["incidents__test_id"],
         build_status=record["build__status"],
+        test_status=record["status"],
         issue_comment=record["incidents__issue__comment"],
         issue_report_url=record["incidents__issue__report_url"],
         is_failed_task=is_failed_task,
@@ -518,14 +521,17 @@ def update_issues(
     issue_version: Optional[int],
     incident_test_id: Optional[str],
     build_status: StatusValues,
+    test_status: Optional[StatusValues] = None,
     issue_comment: Optional[str],
     issue_report_url: Optional[str],
-    task: Dict,
+    task: dict,
     is_failed_task: bool,
     issue_from: Literal["build", "test"],
 ) -> None:
+    record_status: StatusValues
     can_insert_issue = True
     if issue_from == "build":
+        record_status = build_status
         (issue_id, issue_version, can_insert_issue) = should_increment_build_issue(
             issue_id=issue_id,
             issue_version=issue_version,
@@ -533,6 +539,7 @@ def update_issues(
             build_status=build_status,
         )
     elif issue_from == "test":
+        record_status = test_status
         (issue_id, issue_version, can_insert_issue) = should_increment_test_issue(
             issue_id=issue_id,
             issue_version=issue_version,
@@ -540,15 +547,17 @@ def update_issues(
         )
 
     if issue_id and issue_version is not None and can_insert_issue:
-        existing_issue = task["issues"].get((issue_id, issue_version))
+        table: IssueDict = task["issues"]
+        existing_issue: Issue | None = table.get((issue_id, issue_version))
         if existing_issue:
-            existing_issue["incidents_info"]["incidentsCount"] += 1
+            existing_issue.incidents_info.increment(record_status)
         else:
-            new_issue = create_issue(
+            new_issue = create_issue_typed(
                 issue_id=issue_id,
                 issue_version=issue_version,
                 issue_comment=issue_comment,
                 issue_report_url=issue_report_url,
+                starting_count_status=record_status,
             )
             task["issues"][(issue_id, issue_version)] = new_issue
     elif is_failed_task:
@@ -601,7 +610,7 @@ def decide_if_is_build_in_filter(
     )
 
 
-def get_processed_issue_key(*, record: Dict) -> str:
+def get_processed_issue_key(*, record: dict) -> str:
     issue_id = record["incidents__issue__id"]
     issue_id_key = issue_id if issue_id is not None else UNKNOWN_STRING
 
@@ -612,7 +621,7 @@ def get_processed_issue_key(*, record: Dict) -> str:
     return processed_issue_key
 
 
-def is_issue_processed(*, record: Dict, processed_issues: Set[str]) -> bool:
+def is_issue_processed(*, record: dict, processed_issues: set[str]) -> bool:
     processed_issue_key = get_processed_issue_key(record=record)
     is_issue_processed_result = processed_issue_key in processed_issues
     return is_issue_processed_result

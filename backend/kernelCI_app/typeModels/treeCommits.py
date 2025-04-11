@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, RootModel
 
-from kernelCI_app.typeModels.commonDetails import StatusCount
+from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.treeListing import TestStatusCount
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,

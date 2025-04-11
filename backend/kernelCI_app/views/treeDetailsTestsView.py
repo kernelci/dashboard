@@ -1,6 +1,4 @@
-from typing import Dict, Tuple
 from drf_spectacular.utils import extend_schema
-from kernelCI_app.typeModels.issues import Issue
 from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,9 +21,6 @@ from kernelCI_app.typeModels.commonDetails import (
     CommonDetailsTestsResponse,
     TestHistoryItem,
 )
-
-
-type IssueDict = Dict[Tuple[str, str], Issue]
 
 
 class TreeDetailsTests(APIView):

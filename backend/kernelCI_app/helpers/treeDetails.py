@@ -11,10 +11,8 @@ from kernelCI_app.helpers.filters import (
 from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.typeModels.databases import FAIL_STATUS, build_fail_status_list
-from kernelCI_app.utils import (
-    extract_error_message,
-    create_issue,
-)
+from kernelCI_app.typeModels.issues import Issue, IssueDict
+from kernelCI_app.utils import create_issue_typed, extract_error_message
 from kernelCI_app.helpers.misc import (
     handle_build_misc,
     handle_environment_misc,
@@ -189,7 +187,7 @@ def get_build(row_data: dict) -> BuildHistoryItem:
     )
 
 
-def process_builds_issue(instance, row_data):
+def process_builds_issue(*, instance, row_data) -> None:
     build_id = row_data["build_id"]
     issue_id = row_data["issue_id"]
     issue_comment = row_data["issue_comment"]
@@ -206,22 +204,24 @@ def process_builds_issue(instance, row_data):
     )
 
     if issue_id and issue_version is not None and can_insert_issue:
-        current_issue = instance.processed_build_issues.get((issue_id, issue_version))
+        table: IssueDict = instance.build_issues_dict
+        current_issue: Issue = table.get((issue_id, issue_version))
         if current_issue:
-            current_issue["incidents_info"]["incidentsCount"] += 1
+            current_issue.incidents_info.increment(build_status)
         else:
-            instance.processed_build_issues[(issue_id, issue_version)] = create_issue(
+            table[(issue_id, issue_version)] = create_issue_typed(
                 issue_id=issue_id,
+                issue_version=issue_version,
                 issue_comment=issue_comment,
                 issue_report_url=issue_report_url,
-                issue_version=issue_version,
+                starting_count_status=build_status,
             )
 
     elif build_id not in instance.processed_builds and build_status == FAIL_STATUS:
         instance.failed_builds_with_unknown_issues += 1
 
 
-def process_tests_issue(instance, row_data):
+def process_tests_issue(*, instance, row_data, is_boot=False) -> None:
     test_status = row_data["test_status"]
     issue_id = row_data["issue_id"]
     issue_comment = row_data["issue_comment"]
@@ -236,47 +236,27 @@ def process_tests_issue(instance, row_data):
     )
 
     if issue_id and issue_version is not None and can_insert_issue:
-        current_issue = instance.testIssuesTable.get((issue_id, issue_version))
-        if current_issue:
-            current_issue["incidents_info"]["incidentsCount"] += 1
+        if is_boot:
+            table: IssueDict = instance.boot_issues_dict
         else:
-            instance.testIssuesTable[(issue_id, issue_version)] = create_issue(
+            table: IssueDict = instance.test_issues_dict
+
+        current_issue: Issue = table.get((issue_id, issue_version))
+        if current_issue:
+            current_issue.incidents_info.increment(test_status)
+        else:
+            table[(issue_id, issue_version)] = create_issue_typed(
                 issue_id=issue_id,
                 issue_version=issue_version,
                 issue_comment=issue_comment,
                 issue_report_url=issue_report_url,
+                starting_count_status=test_status,
             )
     elif test_status == FAIL_STATUS:
-        instance.failedTestsWithUnknownIssues += 1
-
-
-def process_boots_issue(instance, row_data):
-    test_status = row_data["test_status"]
-    issue_id = row_data["issue_id"]
-    issue_comment = row_data["issue_comment"]
-    issue_version = row_data["issue_version"]
-    issue_report_url = row_data["issue_report_url"]
-    incident_test_id = row_data["incident_test_id"]
-
-    (issue_id, issue_version, can_insert_issue) = should_increment_test_issue(
-        issue_id=issue_id,
-        issue_version=issue_version,
-        incident_test_id=incident_test_id,
-    )
-
-    if issue_id and issue_version is not None and can_insert_issue:
-        current_issue = instance.bootsIssuesTable.get((issue_id, issue_version))
-        if current_issue:
-            current_issue["incidents_info"]["incidentsCount"] += 1
+        if is_boot:
+            instance.failed_boots_with_unknown_issues += 1
         else:
-            instance.bootsIssuesTable[(issue_id, issue_version)] = create_issue(
-                issue_id=issue_id,
-                issue_version=issue_version,
-                issue_comment=issue_comment,
-                issue_report_url=issue_report_url,
-            )
-    elif test_status == FAIL_STATUS:
-        instance.failedBootsWithUnknownIssues += 1
+            instance.failed_tests_with_unknown_issues += 1
 
 
 def decide_if_is_build_filtered_out(instance, row_data):
@@ -329,12 +309,14 @@ def decide_if_is_test_filtered_out(instance, row_data):
     test_status = row_data["test_status"]
     test_duration = row_data["test_duration"]
     issue_id = row_data["issue_id"]
+    issue_version = row_data["issue_version"]
     test_path = row_data["test_path"]
     incident_test_id = row_data["incident_test_id"]
 
     return instance.filters.is_test_filtered_out(
         duration=test_duration,
         issue_id=issue_id,
+        issue_version=issue_version,
         path=test_path,
         status=test_status,
         incident_test_id=incident_test_id,

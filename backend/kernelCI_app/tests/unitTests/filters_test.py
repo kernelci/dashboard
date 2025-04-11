@@ -9,7 +9,6 @@ class TestShouldFilterTestIssue:
             issue_id=UNCATEGORIZED_STRING,
             issue_version=None,
             incident_test_id="incident_test_1",
-            test_status="FAIL",
         )
 
     def test_unknown_filter_with_exclusively_build_issue(self):
@@ -18,7 +17,6 @@ class TestShouldFilterTestIssue:
             issue_id="issue1",
             issue_version=1,
             incident_test_id="incident_test_1",
-            test_status="PASS",
         )
 
     def test_unknown_issue_but_not_from_test(self):
@@ -27,5 +25,4 @@ class TestShouldFilterTestIssue:
             issue_id="maestro:72697a4efbbd0eff7080781839b405bbf0902f79",
             issue_version=0,
             incident_test_id=None,
-            test_status="FAIL",
         )

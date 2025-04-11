@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Set, Union, Tuple, Any
 
 from pydantic import BaseModel, field_validator, Field
 from kernelCI_app.helpers.logger import log_message
+from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.issues import Issue
 from kernelCI_app.typeModels.databases import (
     EnvironmentMisc,
@@ -22,16 +23,6 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitRepositoryBranch,
 )
 from kernelCI_app.helpers.build import build_status_map
-
-
-class StatusCount(BaseModel):
-    PASS: Optional[int] = 0
-    ERROR: Optional[int] = 0
-    FAIL: Optional[int] = 0
-    SKIP: Optional[int] = 0
-    MISS: Optional[int] = 0
-    DONE: Optional[int] = 0
-    NULL: Optional[int] = 0
 
 
 class TestArchSummaryItem(BaseModel):

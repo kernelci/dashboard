@@ -38,6 +38,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { BranchBadge } from '@/components/Badge/BranchBadge';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
+import { GroupedTestStatus } from '@/components/Status/Status';
+
 interface IIssuesList {
   issues: TIssue[];
   failedWithUnknownIssues?: number;
@@ -159,6 +161,19 @@ const IssuesList = ({
 
         const first_seen = currentExtraDetailsId?.first_incident.first_seen;
 
+        const counts = issue.incidents_info;
+        const countElement = (
+          <GroupedTestStatus
+            pass={counts.PASS}
+            fail={counts.FAIL}
+            nullStatus={counts.NULL}
+            error={counts.ERROR}
+            done={counts.DONE}
+            miss={counts.MISS}
+            skip={counts.SKIP}
+          />
+        );
+
         return (
           <div
             key={`${issue.id}${issue.version}`}
@@ -172,15 +187,18 @@ const IssuesList = ({
                   diffFilter={diffFilter}
                 >
                   <span className="flex items-center text-sm">
-                    <ListingItem
-                      unknown={issue.incidents_info.incidentsCount}
-                      hasBottomBorder
-                      text={
-                        issue.comment ??
-                        formatMessage({ id: 'issue.uncategorized' })
-                      }
-                      tooltip={issue.comment}
-                    />
+                    <div className="flex gap-2">
+                      {countElement}
+                      <ListingItem
+                        showNumber={false}
+                        hasBottomBorder
+                        text={
+                          issue.comment ??
+                          formatMessage({ id: 'issue.uncategorized' })
+                        }
+                        tooltip={issue.comment}
+                      />
+                    </div>
                     {extraDetailsLoading ? (
                       <LoadingCircle className="mx-2" />
                     ) : (
@@ -225,7 +243,7 @@ const IssuesList = ({
           diffFilter={diffFilter}
         >
           <ListingItem
-            unknown={failedWithUnknownIssues}
+            errors={failedWithUnknownIssues}
             text={formatMessage({ id: 'issue.uncategorized' })}
           />
         </FilterLink>
