@@ -69,3 +69,6 @@ trees:
     giturl: https://gitlab.freedesktop.org/linux-media/media-committers.git
     branch: next
     path: fluster%
+  khilman-linux-omap:
+    giturl: https://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux-omap.git
+    branch: for-next
