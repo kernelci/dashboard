@@ -39,6 +39,8 @@ trees:
     url: https://gitlab.com/redhat/centos-stream/src/kernel/centos-stream-9.git
   chrome-platform:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/chrome-platform/linux.git
+  chromeos:
+    url: https://chromium.googlesource.com/chromiumos/third_party/kernel.git
   chromiumos:
     url: https://chromium.googlesource.com/chromiumos/third_party/kernel
   cip:
@@ -81,6 +83,8 @@ trees:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/rdma/rdma.git
   linusw:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-gpio.git
+  linux-pci:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
   mainline:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
   media:
@@ -93,6 +97,10 @@ trees:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git
   netdev-testing:
     url: https://github.com/linux-netdev/testing.git
+  netfilter:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/netfilter/nf.git
+  netfilter-next:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/netfilter/nf-next.git
   next:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
   omap:
@@ -111,6 +119,8 @@ trees:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git
   rppt:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/rppt/memblock.git
+  rt-devel:
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git
   sashal-next:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/sashal/linus-next.git
   scsi:
@@ -131,8 +141,6 @@ trees:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git
   thermal:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/thermal/linux.git
-  third_party-kernel:
-    url: https://chromium.googlesource.com/chromiumos/third_party/kernel.git
   tip:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git
   tnguy-net:
@@ -145,13 +153,7 @@ trees:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/ulfh/mmc.git
   upstream-arm-acpi:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git
-  upstream-nf:
-    url: https://git.kernel.org/pub/scm/linux/kernel/git/netfilter/nf.git
-  upstream-nf-next:
-    url: https://git.kernel.org/pub/scm/linux/kernel/git/netfilter/nf-next.git
-  upstream-rt-devel:
-    url: https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git
-  upstream-xfs:
-    url: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
   vireshk:
     url: https://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
+  xfs:
+    url: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
