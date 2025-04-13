@@ -14,7 +14,7 @@ from django.core.management.base import BaseCommand
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.helpers.system import is_production_instance
 
-from kernelCI_app.management.commands.libs.email import (
+from kernelCI_app.helpers.email import (
     gmail_setup_service,
     gmail_send_email,
 )
