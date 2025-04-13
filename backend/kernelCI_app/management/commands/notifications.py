@@ -355,6 +355,10 @@ def generate_issue_report(service, issue_id, email_args, ask_ignore=False):
             incident["last_pass_commit"] = last_test[0]["git_commit_hash"]
             incident["last_pass_id"] = last_test[0]["id"]
         report = generate_boot_issue_report(issue, incidents)
+    else:
+        print(f"unable to generate issue report for {issue["id"]}", file=sys.stderr)
+        sys.exit(-1)
+
     email_args.tree_name = issue["tree_name"]
     email_args.regression_report = True
     msg_id = send_email_report(service, report, email_args)
