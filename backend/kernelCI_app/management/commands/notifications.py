@@ -18,7 +18,7 @@ from kernelCI_app.helpers.email import (
     gmail_setup_service,
     gmail_send_email,
 )
-from kernelCI_app.management.commands.libs.kcidb import (
+from kernelCI_app.queries.notifications import (
     kcidb_new_issues,
     kcidb_issue_details,
     kcidb_build_incidents,
