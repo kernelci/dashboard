@@ -52,11 +52,22 @@ class Command(BaseCommand):
             tree_name = record["tree_name"]
             git_url = record["git_repository_url"]
 
-            if not tree_name:
+            if git_url in origin_trees.values():
+                continue
+
+            if not tree_name or tree_name in origin_trees:
                 tree_name = self._define_tree_name(git_url)
 
-            if tree_name not in origin_trees:
-                origin_trees[tree_name] = git_url
+            if tree_name in origin_trees:
+                suffix_match = re.search(r"-(\d+)$", tree_name)
+                if suffix_match:
+                    suffix_num = int(suffix_match.group(1))
+                    base_name = tree_name[: suffix_match.start()]
+                    tree_name = f"{base_name}-{suffix_num + 1}"
+                else:
+                    tree_name = f"{tree_name}-1"
+
+            origin_trees[tree_name] = git_url
 
     def _merge_trees(self, default_trees: dict = {}):
         merged_trees = default_trees
@@ -65,14 +76,14 @@ class Command(BaseCommand):
             tree_in_dict = tree in merged_trees
             git_url_in_dict = git_url in merged_trees.values()
 
-            if not (tree_in_dict or git_url_in_dict):
+            if not tree_in_dict and not git_url_in_dict:
                 merged_trees[tree] = git_url
 
         for tree, git_url in self.non_maestro_trees.items():
             tree_in_dict = tree in merged_trees
             git_url_in_dict = git_url in merged_trees.values()
 
-            if not (tree_in_dict or git_url_in_dict):
+            if not tree_in_dict and not git_url_in_dict:
                 merged_trees[tree] = git_url
 
         return merged_trees
