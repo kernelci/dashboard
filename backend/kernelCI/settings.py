@@ -133,7 +133,7 @@ SPECTACULAR_SETTINGS = {
 # where "arg" is add, remove or show
 CRONJOBS = [
     ("0 * * * *", "kernelCI_app.tasks.update_checkout_cache"),
-    ("0 0 * * 0", "django.core.management.call_command", ["treeproof"]),
+    ("0 0 * * *", "django.core.management.call_command", ["treeproof"]),
     (
         "59 * * * *",
         "django.core.management.call_command",
