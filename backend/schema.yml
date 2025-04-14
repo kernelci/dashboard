@@ -2142,15 +2142,6 @@ components:
       - platforms
       title: HardwareTestLocalFilters
       type: object
-    IncidentInfo:
-      properties:
-        incidentsCount:
-          title: Incidentscount
-          type: integer
-      required:
-      - incidentsCount
-      title: IncidentInfo
-      type: object
     Issue:
       properties:
         id:
@@ -2170,7 +2161,7 @@ components:
           - type: 'null'
           title: Report Url
         incidents_info:
-          $ref: '#/components/schemas/IncidentInfo'
+          $ref: '#/components/schemas/StatusCount'
       required:
       - id
       - version
@@ -3137,11 +3128,15 @@ components:
         api_url:
           title: Api Url
           type: string
+        tree_name:
+          title: Tree Name
+          type: string
       required:
       - git_repository_url
       - git_commit_hash
       - git_commit_name
       - api_url
+      - tree_name
       title: TreeLatestResponse
       type: object
     TreeListingFastResponse:
