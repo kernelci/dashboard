@@ -11,8 +11,7 @@ from django.db import connection, models
 from django.db.utils import ProgrammingError
 from django.db.models import Subquery
 
-from kernelCI_app.models import Tests
-from kernelCI_app.helpers.trees import get_tree_heads
+from kernelCI_app.models import Checkouts, Tests
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.build import (
     is_valid_does_not_exist_exception,
@@ -326,6 +325,30 @@ def query_records(
             raise
 
 
+def _get_tree_heads(origin: str, start_date: datetime, end_date: datetime):
+    tree_id_fields = [
+        "tree_name",
+        "git_repository_branch",
+        "git_repository_url",
+    ]
+
+    checkouts_subquery = (
+        Checkouts.objects.filter(
+            origin=origin,
+            start_time__gte=start_date,
+            start_time__lte=end_date,
+        )
+        .order_by(
+            *tree_id_fields,
+            "-start_time",
+        )
+        .distinct(*tree_id_fields)
+        .values_list("git_commit_hash", flat=True)
+    )
+
+    return checkouts_subquery
+
+
 def get_hardware_trees_data(
     *,
     hardware_id: str,
@@ -349,7 +372,7 @@ def get_hardware_trees_data(
     if not trees:
         # We need a subquery because if we filter by any hardware, it will get the
         # last head that has that hardware, but not the real head of the trees
-        trees_subquery = get_tree_heads(origin, start_datetime, end_datetime)
+        trees_subquery = _get_tree_heads(origin, start_datetime, end_datetime)
 
         tree_id_fields = [
             "build__checkout__tree_name",
