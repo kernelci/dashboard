@@ -64,8 +64,6 @@ from typing import Dict, List, Set
 # supported in this project
 @method_decorator(csrf_exempt, name="dispatch")
 class HardwareDetailsSummary(APIView):
-    required_params_get = ["origin"]
-
     def __init__(self):
         self.origin: str = None
         self.start_datetime: datetime = None

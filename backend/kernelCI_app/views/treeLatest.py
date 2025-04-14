@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from typing import Dict, Optional
 from urllib.parse import urlencode
 from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
@@ -12,7 +11,7 @@ from pydantic import ValidationError
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.trees import get_tree_url_to_name_map
-from kernelCI_app.models import Checkouts
+from kernelCI_app.queries.tree import get_latest_tree
 from kernelCI_app.typeModels.treeDetails import (
     TreeLatestPathParameters,
     TreeLatestResponse,
@@ -21,30 +20,6 @@ from kernelCI_app.typeModels.treeDetails import (
 
 
 class TreeLatest(APIView):
-    def _fetch_latest_tree(
-        self, tree_name: str, branch: str, origin: str
-    ) -> Optional[Dict]:
-        tree_fields = [
-            "git_commit_hash",
-            "git_commit_name",
-            "git_repository_url",
-            "tree_name",
-        ]
-
-        query = (
-            Checkouts.objects.values(*tree_fields)
-            .filter(
-                origin=origin,
-                tree_name=tree_name,
-                git_repository_branch=branch,
-                git_commit_hash__isnull=False,
-            )
-            .order_by("-field_timestamp")
-            .first()
-        )
-
-        return query
-
     @extend_schema(
         responses=TreeLatestResponse,
         parameters=[TreeLatestQueryParameters],
@@ -64,7 +39,7 @@ class TreeLatest(APIView):
                 f" No origin was provided so it was defaulted to {DEFAULT_ORIGIN}"
             )
 
-        tree_data = self._fetch_latest_tree(
+        tree_data = get_latest_tree(
             tree_name=parsed_params.tree_name,
             branch=parsed_params.branch,
             origin=origin,
@@ -79,7 +54,7 @@ class TreeLatest(APIView):
             # the tree exists, but the database doesn't see the tree_name.
             # If this happpens, we can give another try with an empty tree_name
             # and validate it with the file using its git_repository_url
-            tree_data = self._fetch_latest_tree(
+            tree_data = get_latest_tree(
                 tree_name=None, branch=parsed_params.branch, origin=origin
             )
 

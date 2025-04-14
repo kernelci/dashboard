@@ -40,8 +40,6 @@ from kernelCI_app.helpers.errorHandling import create_api_error_response
 # supported in this project
 @method_decorator(csrf_exempt, name="dispatch")
 class HardwareDetailsBoots(APIView):
-    required_params_get = ["origin"]
-
     def __init__(self):
         self.origin: str = None
         self.start_datetime: datetime = None

@@ -1,4 +1,5 @@
 import json
+from typing import TypedDict
 from kernelCI_app.helpers.environment import (
     DEFAULT_SCHEMA_VERSION,
     get_schema_version,
@@ -18,7 +19,7 @@ from kernelCI_app.helpers.build import (
     valid_status_field,
 )
 from kernelCI_app.cache import get_query_cache, set_query_cache
-from kernelCI_app.typeModels.hardwareDetails import Tree
+from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
 
 def get_hardware_listing_data(
@@ -403,3 +404,123 @@ def get_hardware_trees_data(
         set_query_cache(key=cache_key, params=trees_cache_params, rows=trees)
 
     return trees
+
+
+class CommitHeadsQueryParams(TypedDict):
+    query_params: dict[str, dict[str, str]]
+    tuple_str: str
+
+
+def _generate_query_params(
+    commit_heads: list[CommitHead],
+) -> CommitHeadsQueryParams:
+    tuple_list = []
+    params = {}
+
+    for index, commit_head in enumerate(commit_heads):
+        tree_name_key = f"tree_name{index}"
+        git_repository_url_key = f"git_repository_url{index}"
+        git_repository_branch_key = f"git_repository_branch{index}"
+        git_commit_hash_key = f"git_commit_hash{index}"
+
+        tuple_string = (
+            f"(%({tree_name_key})s,"
+            f"%({git_repository_url_key})s, %({git_repository_branch_key})s,"
+            f"%({git_commit_hash_key})s)"
+        )
+
+        tuple_list.append(tuple_string)
+        params[tree_name_key] = commit_head.treeName
+        params[git_repository_url_key] = commit_head.repositoryUrl
+        params[git_repository_branch_key] = commit_head.branch
+        params[git_commit_hash_key] = commit_head.commitHash
+
+    tuple_str = ", ".join(tuple_list)
+    return {"tuple_str": f"({tuple_str})", "query_params": params}
+
+
+def get_hardware_commit_history(
+    *,
+    origin: str,
+    start_date: datetime,
+    end_date: datetime,
+    commit_heads: list[CommitHead],
+):
+    """Retrieves the history of commits for the trees that
+    composes the hardware through a list of commit_heads.\n
+    The history is limited by the origin, start_date and end dates params."""
+
+    # We need a subquery because if we filter by any hardware, it will get the
+    # last head that has that hardware, but not the real head of the trees
+    relevant_commit = commit_heads[0] if commit_heads else None
+
+    if relevant_commit is None:
+        return
+
+    commit_heads_params = _generate_query_params(commit_heads)
+
+    params = {
+        **commit_heads_params["query_params"],
+        "origin": origin,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
+    raw_query = f"""
+        WITH filtered_checkouts AS (
+            SELECT
+                DISTINCT ON	(tree_name,
+                git_repository_url,
+                git_repository_branch)
+                tree_name,
+                git_repository_url,
+                git_repository_branch,
+                start_time
+            FROM
+                checkouts c
+            WHERE
+                (c.tree_name,
+                c.git_repository_url,
+                c.git_repository_branch,
+                c.git_commit_hash) IN {commit_heads_params['tuple_str']}
+                AND c.origin = %(origin)s
+            ORDER BY
+                tree_name,
+                git_repository_url,
+                git_repository_branch,
+                c.start_time)
+            SELECT
+                fc.tree_name AS tree_name,
+                fc.git_repository_url AS git_repository_url,
+                fc.git_repository_branch AS git_repository_branch,
+                lateralus.git_commit_tags AS git_commit_tags,
+                lateralus.git_commit_name AS git_commit_name,
+                lateralus.git_commit_hash AS git_commit_hash,
+                lateralus.start_time AS start_time
+            FROM
+                filtered_checkouts fc,
+                LATERAL (
+                SELECT
+                    DISTINCT ON (c.git_commit_hash)
+                    c.git_commit_tags,
+                    c.git_commit_name,
+                    c.git_commit_hash,
+                    c.start_time
+                FROM
+                    checkouts c
+                WHERE
+                    c.tree_name = fc.tree_name
+                    AND c.git_repository_branch = fc.git_repository_branch
+                    AND c.git_repository_url = fc.git_repository_url
+                    AND c.start_time <= fc.start_time
+                    AND c.start_time >= %(start_date)s
+                    AND c.start_time <= %(end_date)s
+                ORDER BY c.git_commit_hash, c.start_time
+            ) AS lateralus;
+        """
+
+    with connection.cursor() as cursor:
+        cursor.execute(raw_query, params)
+        rows = cursor.fetchall()
+
+    return rows

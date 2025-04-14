@@ -175,3 +175,55 @@ def get_issue_details(*, issue_id: str, version: int) -> Optional[dict]:
     )
 
     return query
+
+
+def get_build_issues(*, build_id: str) -> list[dict]:
+    """Retrieves the issues of a given build through a build_id"""
+
+    query = f"""
+        SELECT
+            incidents.id,
+            issues.id,
+            issues.version,
+            issues.comment,
+            issues.report_url,
+            builds.{valid_status_field()} AS status
+        FROM incidents
+        JOIN issues
+            ON incidents.issue_id = issues.id
+            AND incidents.issue_version = issues.version
+        JOIN builds
+            ON incidents.build_id = builds.id
+        WHERE incidents.build_id = %s
+        """
+    with connection.cursor() as cursor:
+        cursor.execute(query, [build_id])
+        rows = dict_fetchall(cursor=cursor)
+
+    return rows
+
+
+def get_test_issues(*, test_id: str) -> list[dict]:
+    """Retrieves the issues of a given test through a test_id"""
+
+    query = """
+        SELECT
+            incidents.id,
+            issues.id,
+            issues.version,
+            issues.comment,
+            issues.report_url,
+            tests.status AS status
+        FROM incidents
+        JOIN issues
+            ON incidents.issue_id = issues.id
+            AND incidents.issue_version = issues.version
+        JOIN tests
+            ON incidents.test_id = tests.id
+        WHERE incidents.test_id = %s
+        """
+    with connection.cursor() as cursor:
+        cursor.execute(query, [test_id])
+        rows = dict_fetchall(cursor=cursor)
+
+    return rows

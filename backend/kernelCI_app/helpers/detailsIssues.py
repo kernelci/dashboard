@@ -2,7 +2,7 @@ from kernelCI_app.typeModels.issues import Issue, IssueDict
 from kernelCI_app.utils import convert_issues_dict_to_list_typed, create_issue_typed
 
 
-def sanitize_details_issues_rows(*, rows) -> list[Issue]:
+def sanitize_details_issues_rows(*, rows: list[dict]) -> list[Issue]:
     result: IssueDict = {}
     for row in rows:
         issue_id = row["id"]
