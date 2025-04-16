@@ -22,3 +22,14 @@ class StatusCount(BaseModel):
             setattr(self, status.upper(), getattr(self, status.upper()) + 1)
         except AttributeError:
             log_message(f"Unknown status: {status}")
+
+    def __add__(self, other: "StatusCount") -> "StatusCount":
+        return StatusCount(
+            PASS=self.PASS + other.PASS,
+            ERROR=self.ERROR + other.ERROR,
+            FAIL=self.FAIL + other.FAIL,
+            SKIP=self.SKIP + other.SKIP,
+            MISS=self.MISS + other.MISS,
+            DONE=self.DONE + other.DONE,
+            NULL=self.NULL + other.NULL,
+        )
