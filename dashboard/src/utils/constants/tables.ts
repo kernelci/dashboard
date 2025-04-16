@@ -12,3 +12,10 @@ export type TableKeys =
   | 'issueDetailsTests'
   | 'issueDetailsBuilds'
   | 'issueListing';
+
+// Regexes to define pinned trees with "tree_name/git_repository_branch"
+export const PinnedTrees: RegExp[] = [
+  /^mainline\/master/,
+  /^next\/master/,
+  /^stable\/.*/,
+] as const;

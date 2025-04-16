@@ -63,6 +63,8 @@ import { statusCountToRequiredStatusCount } from '@/utils/status';
 import { MemoizedInputTime } from '@/components/InputTime';
 import { shouldShowRelativeDate } from '@/lib/date';
 import { valueOrEmpty } from '@/lib/string';
+import { PinnedTrees } from '@/utils/constants/tables';
+import { makeTreeIdentifierKey } from '@/utils/trees';
 
 const getLinkProps = (
   row: Row<TreeTableBody>,
@@ -354,10 +356,37 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
     listingSize,
   );
 
+  const orderedData = useMemo(() => {
+    return treeTableRows.sort((a, b) => {
+      const aKey = makeTreeIdentifierKey({
+        treeName: valueOrEmpty(a.tree_name),
+        gitRepositoryBranch: valueOrEmpty(a.git_repository_branch),
+        separator: '/',
+      });
+      const bKey = makeTreeIdentifierKey({
+        treeName: valueOrEmpty(b.tree_name),
+        gitRepositoryBranch: valueOrEmpty(b.git_repository_branch),
+        separator: '/',
+      });
+
+      const aIsPinned = PinnedTrees.some(regex => regex.test(aKey));
+      const bIsPinned = PinnedTrees.some(regex => regex.test(bKey));
+
+      if (aIsPinned && !bIsPinned) {
+        return -1;
+      }
+      if (!aIsPinned && bIsPinned) {
+        return 1;
+      }
+
+      return aKey.localeCompare(bKey);
+    });
+  }, [treeTableRows]);
+
   const columns = useMemo(() => getColumns(origin), [origin]);
 
   const table = useReactTable({
-    data: treeTableRows,
+    data: orderedData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
