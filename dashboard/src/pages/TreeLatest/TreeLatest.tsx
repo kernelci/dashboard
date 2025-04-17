@@ -13,19 +13,28 @@ import {
 
 import { DEFAULT_DIFF_FILTER } from '@/types/general';
 
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
-import { Skeleton } from '@/components/Skeleton';
 
-export const TreeLatest = (): JSX.Element | void => {
-  const searchParams = useSearch({ from: '/_main/tree/$treeName/$branch/' });
+type TreeLatestFrom =
+  | '/_main/(alternatives)/c/$treeName/$branch/'
+  | '/_main/tree/$treeName/$branch/';
+
+export const TreeLatest = ({
+  urlFrom = '/_main/tree/$treeName/$branch/',
+}: {
+  urlFrom: TreeLatestFrom;
+}): JSX.Element => {
+  const searchParams = useSearch({ from: urlFrom });
   const navigate = useNavigate();
   const { treeName, branch } = useParams({
-    from: '/_main/tree/$treeName/$branch/',
+    from: urlFrom,
   });
-  const { isLoading, data, error } = useTreeLatest(
+  const { isLoading, data, status, error } = useTreeLatest(
     treeName,
     branch,
     searchParams.origin,
+    searchParams.gitCommitHash,
   );
 
   if (data) {
@@ -33,7 +42,7 @@ export const TreeLatest = (): JSX.Element | void => {
       to: '/tree/$treeId',
       params: { treeId: data.git_commit_hash },
       search: {
-        ...searchParams,
+        origin: searchParams.origin,
         currentPageTab: defaultValidadorValues.tab,
         diffFilter: DEFAULT_DIFF_FILTER,
         tableFilter: zTableFilterInfoDefault,
@@ -46,18 +55,21 @@ export const TreeLatest = (): JSX.Element | void => {
         },
       },
     });
-  } else if (isLoading) {
-    return (
-      <Skeleton>
-        <FormattedMessage id="global.loading" />
-      </Skeleton>
-    );
-  } else {
-    return (
-      <MemoizedSectionError
-        isLoading={isLoading}
-        errorMessage={error?.message}
-      />
-    );
   }
+
+  return (
+    <QuerySwitcher
+      data={data}
+      status={status}
+      customError={
+        <MemoizedSectionError
+          isLoading={isLoading}
+          errorMessage={error?.message}
+          emptyLabel="treeDetails.notFound"
+        />
+      }
+    >
+      <FormattedMessage id="global.redirecting" />
+    </QuerySwitcher>
+  );
 };

@@ -154,6 +154,7 @@ const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   culpritCode: 'cc',
   culpritHarness: 'ch',
   culpritTool: 'ct',
+  gitCommitHash: 'gch',
 } as const;
 
 const treeInfoMinifiedParams: Record<keyof TTreeInformation, string> = {

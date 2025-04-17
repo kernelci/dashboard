@@ -64,11 +64,15 @@ const fetchTreeLatest = async (
   treeName: string,
   branch: string,
   origin?: string,
+  gitCommitHash?: string,
 ): Promise<TreeLatestResponse> => {
   const data = await RequestData.get<TreeLatestResponse>(
     `/api/tree/${treeName}/${branch}`,
     {
-      params: { origin: origin || DEFAULT_ORIGIN },
+      params: {
+        origin: origin || DEFAULT_ORIGIN,
+        git_commit_hash: gitCommitHash,
+      },
     },
   );
   return data;
@@ -78,10 +82,11 @@ export const useTreeLatest = (
   treeName: string,
   branch: string,
   origin?: string,
+  gitCommitHash?: string,
 ): UseQueryResult<TreeLatestResponse> => {
   return useQuery({
-    queryKey: ['treeLatest', treeName, branch, origin],
-    queryFn: () => fetchTreeLatest(treeName, branch, origin),
+    queryKey: ['treeLatest', treeName, branch, origin, gitCommitHash],
+    queryFn: () => fetchTreeLatest(treeName, branch, origin, gitCommitHash),
     refetchOnWindowFocus: false,
   });
 };

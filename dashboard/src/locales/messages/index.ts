@@ -140,6 +140,7 @@ export const messages = {
     'global.projectUnderDevelopment':
       'This is an ongoing project.{br}' +
       `Please report bugs and suggestions to ${FEEDBACK_EMAIL_TO}.`,
+    'global.redirecting': 'Redirecting...',
     'global.search': 'Search',
     'global.seconds': 'sec',
     'global.showMoreDetails': 'Show more details',
@@ -299,6 +300,7 @@ export const messages = {
     'treeDetails.inconclusiveBuilds': 'Inconclusive Builds',
     'treeDetails.inconclusiveTests': 'Inconclusive Tests',
     'treeDetails.invalidBuilds': 'Failed builds',
+    'treeDetails.notFound': 'Tree checkout not found',
     'treeDetails.successBoots': 'Success boots',
     'treeDetails.testsFailed': 'Failed tests',
     'treeDetails.testsHistory': 'Tests History',

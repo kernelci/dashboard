@@ -38,11 +38,13 @@ class TreeLatest(APIView):
             tree_not_found_error_message += (
                 f" No origin was provided so it was defaulted to {DEFAULT_ORIGIN}"
             )
+        git_commit_hash = request.GET.get("git_commit_hash")
 
         tree_data = get_latest_tree(
             tree_name=parsed_params.tree_name,
             branch=parsed_params.branch,
             origin=origin,
+            git_commit_hash=git_commit_hash,
         )
 
         tree_url_to_name = get_tree_url_to_name_map()
@@ -55,7 +57,10 @@ class TreeLatest(APIView):
             # If this happpens, we can give another try with an empty tree_name
             # and validate it with the file using its git_repository_url
             tree_data = get_latest_tree(
-                tree_name=None, branch=parsed_params.branch, origin=origin
+                tree_name=None,
+                branch=parsed_params.branch,
+                origin=origin,
+                git_commit_hash=git_commit_hash,
             )
 
             if tree_data is not None:
