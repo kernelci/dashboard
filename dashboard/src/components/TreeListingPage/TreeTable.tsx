@@ -203,7 +203,7 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
       },
     },
     {
-      accessorKey: 'buildStatus.valid',
+      accessorKey: 'build_status.PASS',
       header: ({ column }): JSX.Element => (
         <TableHeader
           column={column}
@@ -248,7 +248,7 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
       },
     },
     {
-      accessorKey: 'bootStatus.pass',
+      accessorKey: 'boot_status.pass',
       header: ({ column }): JSX.Element => (
         <TableHeader
           column={column}
@@ -293,7 +293,7 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
       },
     },
     {
-      accessorKey: 'testStatus.pass',
+      accessorKey: 'test_status.pass',
       header: ({ column }): JSX.Element => (
         <TableHeader
           column={column}

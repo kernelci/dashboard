@@ -65,6 +65,7 @@ const getLinkProps = (
       state: s => s,
       search: previousSearch => ({
         ...previousSearch,
+        origin: row.original.origin,
         treeInfo: {
           gitBranch: row.original.git_repository_branch,
           gitUrl: row.original.git_repository_url,
@@ -85,8 +86,8 @@ const getLinkProps = (
       id: row.original.id,
       from: RedirectFrom.Issues,
     }),
-    search: s => ({
-      origin: s.origin,
+    search: _ => ({
+      origin: row.original.origin,
       issueVersion: row.original.version,
     }),
   };
