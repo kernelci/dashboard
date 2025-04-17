@@ -19,6 +19,7 @@ class TreeLatestPathParameters(BaseModel):
 
 class TreeLatestQueryParameters(BaseModel):
     origin: str = DEFAULT_ORIGIN
+    git_commit_hash: Optional[str] = None
 
 
 class TreeLatestResponse(BaseCheckouts):

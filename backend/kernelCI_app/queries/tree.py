@@ -623,7 +623,13 @@ def get_tree_commit_history(
             raise
 
 
-def get_latest_tree(*, tree_name: str, branch: str, origin: str) -> Optional[dict]:
+def get_latest_tree(
+    *,
+    tree_name: Optional[str] = None,
+    branch: str,
+    origin: str,
+    git_commit_hash: Optional[str] = None,
+) -> Optional[dict]:
     """Retrieves the most recent occurrence of the checkout of a tree with the given params."""
 
     tree_fields = [
@@ -633,16 +639,17 @@ def get_latest_tree(*, tree_name: str, branch: str, origin: str) -> Optional[dic
         "tree_name",
     ]
 
-    query = (
-        Checkouts.objects.values(*tree_fields)
-        .filter(
-            origin=origin,
-            tree_name=tree_name,
-            git_repository_branch=branch,
-            git_commit_hash__isnull=False,
-        )
-        .order_by("-field_timestamp")
-        .first()
+    query = Checkouts.objects.values(*tree_fields).filter(
+        origin=origin,
+        tree_name=tree_name,
+        git_repository_branch=branch,
     )
+
+    if git_commit_hash is not None:
+        query = query.filter(git_commit_hash=git_commit_hash)
+    else:
+        query = query.filter(git_commit_hash__isnull=False)
+
+    query = query.order_by("-field_timestamp").first()
 
     return query

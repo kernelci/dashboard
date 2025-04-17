@@ -1084,6 +1084,14 @@ paths:
           type: string
         required: true
       - in: query
+        name: git_commit_hash
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Commit Hash
+      - in: query
         name: origin
         schema:
           default: maestro
