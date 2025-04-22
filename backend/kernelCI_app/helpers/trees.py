@@ -11,12 +11,25 @@ def make_tree_identifier_key(
     return f"{tree_name}-{git_repository_url}-{git_repository_branch}"
 
 
-def get_tree_url_to_name_map() -> dict[str, str]:
+def get_tree_file_data() -> dict[str, dict[str, str]]:
+    """Returns the data from the tree names file"""
     filepath = os.path.join(settings.BACKEND_DATA_DIR, "trees-name.yaml")
+
+    if os.path.exists(filepath):
+        with open(filepath, "r") as file:
+            trees_from_file = yaml.safe_load(file)
+
+    if trees_from_file is not None:
+        return trees_from_file
+    return {}
+
+
+def get_tree_url_to_name_map() -> dict[str, str]:
+    """Returns a dictionary mapping tree URLs to their tree names
+    from the tree names file."""
     url_to_name = {}
     try:
-        with open(filepath, "r") as file:
-            file_data = yaml.safe_load(file)
+        file_data = get_tree_file_data()
 
         # From: {"trees": {"tree1": {"url": "url1"}, "tree2": {"url": "url2"}}}
         # To: {"url1": "tree1", "url2": "tree2"}

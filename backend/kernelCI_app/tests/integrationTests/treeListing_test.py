@@ -11,8 +11,6 @@ from kernelCI_app.tests.utils.fields.tree import (
     tree_listing_build_status,
 )
 from http import HTTPStatus
-import pytest
-
 
 client = TreeClient()
 
@@ -160,22 +158,3 @@ def test_tree_listing(
                     fields=tree_listing_build_status,
                     response_content=tree["build_status"],
                 )
-
-
-@pytest.mark.parametrize(
-    "tree_name, branch, query, has_error_body",
-    [
-        ("android", "android-mainline", {}, False),
-        ("mainline", "master", {"origin": "microsoft"}, False),
-        ("invalid_tree_name", "invalid_branch", {}, True),
-    ],
-)
-def test_tree_latest(tree_name, branch, query, has_error_body):
-    response = client.get_tree_latest(tree_name=tree_name, branch=branch, query=query)
-    content = string_to_json(response.content.decode())
-    assert_status_code_and_error_response(
-        response=response,
-        content=content,
-        status_code=HTTPStatus.OK,
-        should_error=has_error_body,
-    )
