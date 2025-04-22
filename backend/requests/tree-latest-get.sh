@@ -1,5 +1,8 @@
 http 'http://localhost:8000/api/tree/android/android-mainline'
 
+# For more specific results, you can use origin and/or git_commit_hash parameters
+http 'http://localhost:8000/api/tree/mainline/master' origin==redhat git_commit_hash==9d7a0577c9db35c4cc52db90bc415ea248446472
+
 # HTTP/1.1 200 OK
 # Cache-Control: max-age=0
 # Content-Length: 377
