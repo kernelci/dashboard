@@ -18,7 +18,8 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 type TreeLatestFrom =
   | '/_main/(alternatives)/c/$treeName/$branch/'
-  | '/_main/tree/$treeName/$branch/';
+  | '/_main/tree/$treeName/$branch/'
+  | '/_main/checkout/$treeName/$branch/';
 
 export const TreeLatest = ({
   urlFrom = '/_main/tree/$treeName/$branch/',
@@ -30,6 +31,7 @@ export const TreeLatest = ({
   const { treeName, branch } = useParams({
     from: urlFrom,
   });
+
   const { isLoading, data, status, error } = useTreeLatest(
     treeName,
     branch,

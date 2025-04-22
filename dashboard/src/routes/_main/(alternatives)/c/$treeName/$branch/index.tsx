@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { ShortTreeLatest } from '@/pages/TreeLatest/ShortTreeLatest';
+import { TreeLatest } from '@/pages/TreeLatest';
 
 export const Route = createFileRoute(
   '/_main/(alternatives)/c/$treeName/$branch/',
 )({
-  component: ShortTreeLatest,
+  component: () => (
+    <TreeLatest urlFrom="/_main/(alternatives)/c/$treeName/$branch/" />
+  ),
 });
