@@ -3,7 +3,6 @@ from typing import Optional
 
 from django.http import HttpRequest
 from kernelCI_app.helpers.errorHandling import create_api_error_response
-from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.issues import get_issue_tests
 from kernelCI_app.typeModels.issueDetails import (
     IssueDetailsPathParameters,
@@ -39,13 +38,6 @@ class IssueDetailsTests(APIView):
             return create_api_error_response(
                 error_message="No tests found for this issue", status_code=HTTPStatus.OK
             )
-
-        tree_url_to_name = get_tree_url_to_name_map()
-        for test in tests_data:
-            defined_tree_name = tree_url_to_name.get(
-                test["git_repository_url"], test["tree_name"]
-            )
-            test["tree_name"] = defined_tree_name
 
         try:
             valid_response = IssueTestsResponse(tests_data)

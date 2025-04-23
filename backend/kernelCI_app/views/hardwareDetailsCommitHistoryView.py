@@ -5,10 +5,7 @@ from kernelCI_app.helpers.logger import log_message
 from django.utils.decorators import method_decorator
 from datetime import datetime, timezone
 from django.views.decorators.csrf import csrf_exempt
-from kernelCI_app.helpers.trees import (
-    get_tree_url_to_name_map,
-    make_tree_identifier_key,
-)
+from kernelCI_app.helpers.trees import make_tree_identifier_key
 from kernelCI_app.queries.hardware import get_hardware_commit_history
 from kernelCI_app.typeModels.hardwareDetails import (
     CommitHistoryPostBody,
@@ -31,11 +28,10 @@ from drf_spectacular.utils import extend_schema
 class HardwareDetailsCommitHistoryView(APIView):
     def _sanitize_checkouts(self, rows):
         formatted_checkouts = defaultdict(list)
-        tree_url_to_name = get_tree_url_to_name_map()
 
         for checkout in rows:
             dict_checkout = {
-                "tree_name": tree_url_to_name.get(checkout[1], checkout[0]),
+                "tree_name": checkout[0],
                 "git_repository_url": checkout[1],
                 "git_repository_branch": checkout[2],
                 "git_commit_tags": checkout[3],

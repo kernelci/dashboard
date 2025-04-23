@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
-from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.tree import get_tree_listing_fast
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 from http import HTTPStatus
@@ -45,15 +44,11 @@ class TreeViewFast(APIView):
 
         response_data: list[CheckoutFast] = []
 
-        tree_url_to_name = get_tree_url_to_name_map()
-
         for checkout in checkouts:
             response_data.append(
                 CheckoutFast(
                     id=checkout.id,
-                    tree_name=tree_url_to_name.get(
-                        checkout.git_repository_url, checkout.tree_name
-                    ),
+                    tree_name=checkout.tree_name,
                     git_repository_branch=checkout.git_repository_branch,
                     git_repository_url=checkout.git_repository_url,
                     git_commit_hash=checkout.git_commit_hash,

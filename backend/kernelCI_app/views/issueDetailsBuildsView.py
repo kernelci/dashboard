@@ -3,7 +3,6 @@ from typing import Optional
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
-from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.typeModels.issueDetails import (
     IssueBuildsResponse,
     IssueDetailsPathParameters,
@@ -34,13 +33,6 @@ class IssueDetailsBuilds(APIView):
         builds_data = get_issue_builds(
             issue_id=path_params.issue_id, version=query_params.version
         )
-
-        tree_url_to_name = get_tree_url_to_name_map()
-        for build in builds_data:
-            defined_tree_name = tree_url_to_name.get(
-                build["git_repository_url"], build["tree_name"]
-            )
-            build["tree_name"] = defined_tree_name
 
         if not builds_data:
             return create_api_error_response(

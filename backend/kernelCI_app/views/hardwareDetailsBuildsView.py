@@ -21,7 +21,6 @@ from kernelCI_app.helpers.hardwareDetails import (
     handle_build_history,
     unstable_parse_post_body,
 )
-from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.hardware import (
     get_hardware_details_data,
     get_hardware_trees_data,
@@ -53,8 +52,6 @@ class HardwareDetailsBuilds(APIView):
         self.processed_builds: Set[str] = set()
         self.builds: List[HardwareBuildHistoryItem] = []
 
-        self.tree_url_to_name_map = get_tree_url_to_name_map()
-
     def _process_build(self, *, record: dict, tree_index: int) -> None:
         build = get_build_typed(record, tree_index)
 
@@ -71,7 +68,6 @@ class HardwareDetailsBuilds(APIView):
                 record=record,
                 tree_idx=tree_index,
                 builds=self.builds,
-                tree_url_to_name=self.tree_url_to_name_map,
             )
 
     def _sanitize_records(

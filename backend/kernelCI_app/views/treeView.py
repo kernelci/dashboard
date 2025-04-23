@@ -2,7 +2,6 @@ import json
 from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.tree import get_tree_listing_data
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
@@ -22,7 +21,8 @@ from kernelCI_cache.queries.tree import get_cached_tree_listing_data
 
 class TreeView(APIView):
     def _sanitize_tree(
-        self, checkout: dict, tree_url_to_name: dict[str, str]
+        self,
+        checkout: dict,
     ) -> Checkout:
         build_status = StatusCount(
             PASS=checkout["pass_builds"],
@@ -61,10 +61,6 @@ class TreeView(APIView):
                     checkout["git_commit_tags"] = []
             except json.JSONDecodeError:
                 checkout["git_commit_tags"] = []
-
-        checkout["tree_name"] = tree_url_to_name.get(
-            checkout["git_repository_url"], checkout["tree_name"]
-        )
 
         return Checkout(
             **checkout,
@@ -117,10 +113,8 @@ class TreeView(APIView):
         # checkout is present in both the cache and in kcidb in the last x days.
         # It saves the kcidb tree_name as part of the key, such that it doesn't skip
         # trees with the same branch and git_url but different tree_name.
-        # Meanwhile the checkouts dict saves the new tree_name in order to easily combine them afterwards.
         unique_trees: set[tuple[str, str, str]] = set()
-        checkouts: dict[tuple[str, str], Checkout] = {}
-        tree_url_to_name = get_tree_url_to_name_map()
+        checkouts: list[Checkout] = []
 
         for checkout in kcidb_checkouts + list(cached_checkouts):
             tree_name = checkout["tree_name"]
@@ -134,32 +128,11 @@ class TreeView(APIView):
             )
             if kcidb_identifier not in unique_trees:
                 unique_trees.add(kcidb_identifier)
-                defined_tree_name = tree_url_to_name.get(git_url, tree_name)
-                new_identifier = (
-                    defined_tree_name,
-                    git_branch,
-                )
-
-                checkout_typed = self._sanitize_tree(
-                    checkout=checkout,
-                    tree_url_to_name=tree_url_to_name,
-                )
-                stored_checkout = checkouts.get(new_identifier)
-
-                if stored_checkout is None:
-                    checkouts[new_identifier] = checkout_typed
-                else:
-                    stored_checkout.add_counts(
-                        build_status=checkout_typed.build_status,
-                        boot_status=checkout_typed.boot_status,
-                        test_status=checkout_typed.test_status,
-                    )
-                    stored_checkout.combine_tags(
-                        tags=checkout_typed.git_commit_tags,
-                    )
+                typed_checkout = self._sanitize_tree(checkout=checkout)
+                checkouts.append(typed_checkout)
 
         try:
-            valid_response = TreeListingResponse(list(checkouts.values()))
+            valid_response = TreeListingResponse(checkouts)
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
