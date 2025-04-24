@@ -333,14 +333,8 @@ def handle_test_history(
     *,
     record: Dict,
     task: List[HardwareTestHistoryItem],
-    tree_url_to_name: dict[str, str],
 ) -> None:
     create_record_test_platform(record=record)
-
-    defined_tree_name = tree_url_to_name.get(
-        record["build__checkout__git_repository_url"],
-        record["build__checkout__tree_name"],
-    )
 
     test_history_item = HardwareTestHistoryItem(
         id=record["id"],
@@ -354,7 +348,7 @@ def handle_test_history(
         architecture=record["build__architecture"],
         compiler=record["build__compiler"],
         environment_misc=EnvironmentMisc(platform=record["test_platform"]),
-        tree_name=defined_tree_name,
+        tree_name=record["build__checkout__tree_name"],
         git_repository_branch=record["build__checkout__git_repository_branch"],
     )
 
@@ -415,11 +409,8 @@ def handle_build_history(
     record: Dict,
     tree_idx: int,
     builds: List[HardwareBuildHistoryItem],
-    tree_url_to_name: dict[str, str],
 ) -> None:
     build = get_build_typed(record=record, tree_idx=tree_idx)
-    defined_tree_name = tree_url_to_name.get(build.git_repository_url, build.tree_name)
-    build.tree_name = defined_tree_name
     builds.append(build)
 
 

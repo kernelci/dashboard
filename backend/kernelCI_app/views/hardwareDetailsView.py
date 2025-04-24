@@ -30,7 +30,6 @@ from kernelCI_app.helpers.hardwareDetails import (
     unstable_parse_post_body,
     handle_test_history,
 )
-from kernelCI_app.helpers.trees import get_tree_url_to_name_map
 from kernelCI_app.queries.hardware import (
     get_hardware_details_data,
     get_hardware_trees_data,
@@ -106,8 +105,6 @@ class HardwareDetails(APIView):
 
         self.tree_status_summary = defaultdict(generate_tree_status_summary_dict)
 
-        self.tree_url_to_name_map = get_tree_url_to_name_map()
-
     def _process_test(self, record: Dict) -> None:
         is_record_boot = is_boot(record["path"])
         test_type_key: PossibleTestType = "boot" if is_record_boot else "test"
@@ -147,15 +144,10 @@ class HardwareDetails(APIView):
             handle_test_history(
                 record=record,
                 task=test_or_boot_history,
-                tree_url_to_name=self.tree_url_to_name_map,
             )
 
     def _process_build(self, record: Dict, tree_index: int) -> None:
         build = get_build_typed(record, tree_index)
-        defined_tree_name = self.tree_url_to_name_map.get(
-            build.git_repository_url, build.tree_name
-        )
-        build.tree_name = defined_tree_name
         build_id = record["build_id"]
 
         should_process_build = decide_if_is_build_in_filter(
@@ -297,15 +289,6 @@ class HardwareDetails(APIView):
         set_trees_status_summary(
             trees=trees, tree_status_summary=self.tree_status_summary
         )
-
-        # The change in tree_name happens here so that the filters works unchanged before.
-        # The selection of commits works based on a comparison between the record tree_name
-        # and the selected_trees tree_name, and is assigned to trees using the index
-        for tree in trees:
-            defined_tree_name = self.tree_url_to_name_map.get(
-                tree.git_repository_url, tree.tree_name
-            )
-            tree.tree_name = defined_tree_name
 
         try:
             valid_response = HardwareDetailsFullResponse(

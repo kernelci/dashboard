@@ -1,4 +1,5 @@
 import os
+import typing_extensions
 
 from django.conf import settings
 import yaml
@@ -24,6 +25,10 @@ def get_tree_file_data() -> dict[str, dict[str, str]]:
     return {}
 
 
+@typing_extensions.deprecated(
+    "Only use this function when the trees-name.yaml file is solidified and ready to be used.",
+    category=None,
+)
 def get_tree_url_to_name_map() -> dict[str, str]:
     """Returns a dictionary mapping tree URLs to their tree names
     from the tree names file."""

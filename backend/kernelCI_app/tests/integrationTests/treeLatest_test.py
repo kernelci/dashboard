@@ -26,7 +26,7 @@ client = TreeClient()
             "agross",
             "for-next",
             {},
-            False,
+            True,
         ),  # No agross tree in kcidb, only in trees-name.yaml
         (
             "android",
