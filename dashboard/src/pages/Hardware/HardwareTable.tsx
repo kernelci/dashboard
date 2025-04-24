@@ -454,7 +454,7 @@ export function HardwareTable({
           />
           <PaginationInfo
             table={table}
-            intlLabel="global.hardwares"
+            intlLabel="global.hardware"
             onPaginationChange={navigateWithPageSize}
           />
         </div>
@@ -464,7 +464,7 @@ export function HardwareTable({
       </BaseTable>
       <PaginationInfo
         table={table}
-        intlLabel="global.hardwares"
+        intlLabel="global.hardware"
         onPaginationChange={navigateWithPageSize}
       />
     </div>
