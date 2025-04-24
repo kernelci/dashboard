@@ -1084,13 +1084,43 @@ paths:
           type: string
         required: true
       - in: query
-        name: git_commit_hash
+        name: origin
         schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Git Commit Hash
+          default: maestro
+          title: Origin
+          type: string
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeLatestResponse'
+          description: ''
+  /api/tree/{tree_name}/{branch}/{hash}:
+    get:
+      operationId: tree_retrieve_3
+      parameters:
+      - in: path
+        name: branch
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: hash
+        schema:
+          type: string
+        required: true
       - in: query
         name: origin
         schema:

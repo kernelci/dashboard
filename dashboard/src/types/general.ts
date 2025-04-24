@@ -236,8 +236,7 @@ export type SearchParamsKeys =
   | 'logOpen'
   | 'culpritCode'
   | 'culpritTool'
-  | 'culpritHarness'
-  | 'gitCommitHash';
+  | 'culpritHarness';
 export type SearchSchema = Partial<Record<SearchParamsKeys, ZodTypeAny>>;
 
 const requestFilters = {

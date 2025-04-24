@@ -60,6 +60,11 @@ urlpatterns = [
         view_cache(views.TreeLatest),
         name="treeLatest",
     ),
+    path(
+        "tree/<str:tree_name>/<str:branch>/<str:hash>",
+        view_cache(views.TreeLatest),
+        name="treeLatestHash",
+    ),
     path("build/<str:build_id>", view_cache(views.BuildDetails), name="buildDetails"),
     path("build/<str:build_id>/tests", view_cache(views.BuildTests), name="buildTests"),
     path(

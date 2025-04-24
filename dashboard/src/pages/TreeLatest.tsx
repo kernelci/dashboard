@@ -21,29 +21,38 @@ type TreeLatestFrom =
   | '/_main/tree/$treeName/$branch/'
   | '/_main/checkout/$treeName/$branch/';
 
+type TreeLatestWithHashFrom =
+  | '/_main/(alternatives)/c/$treeName/$branch/$hash/'
+  | '/_main/tree/$treeName/$branch/$hash/'
+  | '/_main/checkout/$treeName/$branch/$hash/';
+
 export const TreeLatest = ({
-  urlFrom = '/_main/tree/$treeName/$branch/',
+  urlFrom,
 }: {
-  urlFrom: TreeLatestFrom;
+  urlFrom: TreeLatestFrom | TreeLatestWithHashFrom;
 }): JSX.Element => {
   const searchParams = useSearch({ from: urlFrom });
   const navigate = useNavigate();
-  const { treeName, branch } = useParams({
+  const params = useParams({
     from: urlFrom,
   });
+
+  const { treeName, branch } = params;
+  const hash = 'hash' in params ? params.hash : undefined;
 
   const { isLoading, data, status, error } = useTreeLatest(
     treeName,
     branch,
     searchParams.origin,
-    searchParams.gitCommitHash,
+    hash,
   );
 
   if (data) {
     navigate({
       to: '/tree/$treeId',
       params: { treeId: data.git_commit_hash },
-      search: {
+      search: s => ({
+        ...s,
         origin: searchParams.origin,
         currentPageTab: defaultValidadorValues.tab,
         diffFilter: DEFAULT_DIFF_FILTER,
@@ -55,7 +64,7 @@ export const TreeLatest = ({
           commitName: data.git_commit_name || undefined,
           headCommitHash: data.git_commit_hash,
         },
-      },
+      }),
     });
   }
 
