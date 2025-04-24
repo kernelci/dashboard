@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback, useMemo, type JSX } from 'react';
+import { useCallback, type JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 
@@ -29,9 +29,6 @@ import {
 import { MemoizedStatusCard } from '@/components/Tabs/StatusCard';
 import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
-import { MemoizedPlatformsCard } from '@/components/Cards/PlatformsCard';
-
-import { sanitizePlatforms } from '@/utils/utils';
 
 import HardwareCommitNavigationGraph from '@/pages/hardwareDetails/Tabs/HardwareCommitNavigationGraph';
 import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
@@ -133,11 +130,6 @@ const BootsTab = ({
     [navigate],
   );
 
-  const platformItems = useMemo(
-    () => sanitizePlatforms(bootsSummary.platforms),
-    [bootsSummary.platforms],
-  );
-
   return (
     <div className="flex flex-col gap-8 pt-4">
       <DesktopGrid>
@@ -164,11 +156,6 @@ const BootsTab = ({
             configStatusCounts={bootsSummary.configs}
             diffFilter={diffFilter}
           />
-          <MemoizedPlatformsCard
-            platforms={platformItems}
-            issueFilterSection="bootPlatform"
-            diffFilter={diffFilter}
-          />
         </div>
         <MemoizedIssuesList
           title={<FormattedMessage id="global.issues" />}
@@ -193,11 +180,6 @@ const BootsTab = ({
             <MemoizedConfigList
               title={<FormattedMessage id="bootsTab.configs" />}
               configStatusCounts={bootsSummary.configs}
-              diffFilter={diffFilter}
-            />
-            <MemoizedPlatformsCard
-              platforms={platformItems}
-              issueFilterSection="bootPlatform"
               diffFilter={diffFilter}
             />
             <MemoizedErrorsSummary

@@ -7,7 +7,7 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 import { Toaster } from '@/components/ui/toaster';
 
-import type { HardwareTableItem } from '@/types/hardware';
+import type { HardwareItem } from '@/types/hardware';
 
 import { useHardwareListing } from '@/api/hardware';
 
@@ -74,7 +74,7 @@ const HardwareListingPage = ({
     endTimestampInSeconds,
   );
 
-  const listItems: HardwareTableItem[] = useMemo(() => {
+  const listItems: HardwareItem[] = useMemo(() => {
     if (!data || error) {
       return [];
     }
@@ -84,11 +84,11 @@ const HardwareListingPage = ({
     return currentData
       .filter(hardware => {
         return (
-          matchesRegexOrIncludes(hardware.hardware_name, inputFilter) ||
-          includesInAnStringOrStringArray(hardware.platform, inputFilter)
+          matchesRegexOrIncludes(hardware.platform, inputFilter) ||
+          includesInAnStringOrStringArray(hardware.hardware ?? '', inputFilter)
         );
       })
-      .map((hardware): HardwareTableItem => {
+      .map((hardware): HardwareItem => {
         const buildCount: RequiredStatusCount = {
           PASS: hardware.build_status_summary?.PASS,
           FAIL: hardware.build_status_summary?.FAIL,
@@ -120,14 +120,14 @@ const HardwareListingPage = ({
         };
 
         return {
-          hardware_name: hardware.hardware_name ?? '',
-          platform: hardware.platform ?? '',
+          hardware: hardware.hardware,
+          platform: hardware.platform,
           build_status_summary: buildCount,
           test_status_summary: testStatusCount,
           boot_status_summary: bootStatusCount,
         };
       })
-      .sort((a, b) => a.hardware_name.localeCompare(b.hardware_name));
+      .sort((a, b) => a.platform.localeCompare(b.platform));
   }, [data, error, inputFilter]);
 
   return (

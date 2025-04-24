@@ -1,5 +1,5 @@
 hardware_listing_fields = [
-    "hardware_name",
+    "hardware",
     "platform",
     "test_status_summary",
     "boot_status_summary",
