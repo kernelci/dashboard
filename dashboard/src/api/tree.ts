@@ -66,15 +66,26 @@ const fetchTreeLatest = async (
   origin?: string,
   gitCommitHash?: string,
 ): Promise<TreeLatestResponse> => {
-  const data = await RequestData.get<TreeLatestResponse>(
-    `/api/tree/${treeName}/${branch}`,
-    {
-      params: {
-        origin: origin || DEFAULT_ORIGIN,
-        git_commit_hash: gitCommitHash,
+  let data: TreeLatestResponse;
+  if (gitCommitHash === undefined || gitCommitHash === null) {
+    data = await RequestData.get<TreeLatestResponse>(
+      `/api/tree/${treeName}/${branch}`,
+      {
+        params: {
+          origin: origin || DEFAULT_ORIGIN,
+        },
       },
-    },
-  );
+    );
+  } else {
+    data = await RequestData.get<TreeLatestResponse>(
+      `/api/tree/${treeName}/${branch}/${gitCommitHash}`,
+      {
+        params: {
+          origin: origin || DEFAULT_ORIGIN,
+        },
+      },
+    );
+  }
   return data;
 };
 

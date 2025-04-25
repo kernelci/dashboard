@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Optional
 from urllib.parse import urlencode
 from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
@@ -24,7 +25,9 @@ class TreeLatest(APIView):
         parameters=[TreeLatestQueryParameters],
         methods=["GET"],
     )
-    def get(self, request, tree_name: str, branch: str) -> JsonResponse:
+    def get(
+        self, request, tree_name: str, branch: str, hash: Optional[str] = None
+    ) -> JsonResponse:
         try:
             parsed_params = TreeLatestPathParameters(tree_name=tree_name, branch=branch)
         except ValidationError as e:
@@ -37,13 +40,12 @@ class TreeLatest(APIView):
             tree_not_found_error_message += (
                 f" No origin was provided so it was defaulted to {DEFAULT_ORIGIN}"
             )
-        git_commit_hash = request.GET.get("git_commit_hash")
 
         tree_data = get_latest_tree(
             tree_name=parsed_params.tree_name,
             branch=parsed_params.branch,
             origin=origin,
-            git_commit_hash=git_commit_hash,
+            git_commit_hash=hash,
         )
 
         if tree_data is None:
