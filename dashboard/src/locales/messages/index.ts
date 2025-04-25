@@ -167,7 +167,6 @@ export const messages = {
     'globalTable.test': 'Test Status',
     'globalTable.tree': 'Tree',
     'hardware.details': 'Hardware Details',
-    'hardware.multiplePlatforms': 'Multiple Platforms',
     'hardware.path': 'Hardware',
     'hardware.searchPlaceholder':
       'Search by hardware name or platform with a regex',

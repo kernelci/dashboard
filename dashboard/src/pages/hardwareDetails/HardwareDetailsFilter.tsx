@@ -49,8 +49,6 @@ export const createFilter = (
   const buildIssue: TFilterValues = {};
   const bootIssue: TFilterValues = {};
   const testIssue: TFilterValues = {};
-  const bootPlatform: TFilterValues = {};
-  const testPlatform: TFilterValues = {};
 
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};
@@ -112,12 +110,6 @@ export const createFilter = (
       testIssue[UNCATEGORIZED_STRING] = false;
     }
 
-    (data.filters.boots.platforms ?? []).forEach(
-      p => (bootPlatform[p] = false),
-    );
-    (data.filters.tests.platforms ?? []).forEach(
-      p => (testPlatform[p] = false),
-    );
     data.common.compatibles.forEach(c => (compatibles[c] = false));
   }
 
@@ -133,8 +125,6 @@ export const createFilter = (
     buildIssue,
     bootIssue,
     testIssue,
-    bootPlatform,
-    testPlatform,
     hardware: compatibles,
   };
 };
@@ -169,16 +159,6 @@ const sectionHardware: ISectionItem[] = [
     title: 'filter.testIssue',
     subtitle: 'filter.issueSubtitle',
     sectionKey: 'testIssue',
-  },
-  {
-    title: 'filter.bootPlatform',
-    subtitle: 'filter.platformSubtitle',
-    sectionKey: 'bootPlatform',
-  },
-  {
-    title: 'filter.testPlatform',
-    subtitle: 'filter.platformSubtitle',
-    sectionKey: 'testPlatform',
   },
   {
     title: 'global.configs',

@@ -1,20 +1,20 @@
 from datetime import datetime
 from pydantic import BaseModel, BeforeValidator, Field
-from typing import Annotated
+from typing import Annotated, Optional, Union
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.typeModels.common import StatusCount
 
 
 class HardwareItem(BaseModel):
-    hardware_name: str
-    platform: str | set[str]
+    hardware: Optional[Union[str, set[str]]]
+    platform: str
     test_status_summary: StatusCount
     boot_status_summary: StatusCount
     build_status_summary: StatusCount
 
 
-class HardwareResponse(BaseModel):
+class HardwareListingResponse(BaseModel):
     hardware: list[HardwareItem]
 
 

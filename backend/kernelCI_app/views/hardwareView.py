@@ -9,42 +9,23 @@ from rest_framework.views import APIView
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
-from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.typeModels.hardwareListing import (
     HardwareItem,
     HardwareQueryParams,
     HardwareQueryParamsDocumentationOnly,
-    HardwareResponse,
+    HardwareListingResponse,
 )
 from kernelCI_app.queries.hardware import get_hardware_listing_data
 
 
 class HardwareView(APIView):
-    def _get_tests_from_database(
-        self, start_date: datetime, end_date: datetime, origin: str
-    ) -> list[HardwareItem]:
-        hardwares_raw = get_hardware_listing_data(
-            origin=origin,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-        # TODO Move this logic to the pydantic model
+    def _sanitize_records(self, hardwares_raw: list[dict]) -> list[HardwareItem]:
         hardwares = []
         for hardware in hardwares_raw:
-            platform = ""
-            match len(hardware["platform"]):
-                case 0:
-                    platform = UNKNOWN_STRING
-                case 1:
-                    platform = hardware["platform"][0]
-                case _:
-                    platform = hardware["platform"]
-
             hardwares.append(
                 HardwareItem(
-                    hardware_name=hardware["hardware"],
-                    platform=platform,
+                    hardware=hardware["hardware"],
+                    platform=hardware["platform"],
                     test_status_summary={
                         "FAIL": hardware["fail_tests"],
                         "ERROR": hardware["error_tests"],
@@ -77,15 +58,9 @@ class HardwareView(APIView):
 
         return hardwares
 
-    def _get_results(
-        self, start_date: datetime, end_date: datetime, origin: str
-    ) -> HardwareResponse:
-        hardware = self._get_tests_from_database(start_date, end_date, origin)
-
-        return HardwareResponse(hardware=hardware)
-
     @extend_schema(
-        parameters=[HardwareQueryParamsDocumentationOnly], responses=HardwareResponse
+        parameters=[HardwareQueryParamsDocumentationOnly],
+        responses=HardwareListingResponse,
     )
     def get(self, request: Request):
         try:
@@ -101,8 +76,15 @@ class HardwareView(APIView):
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
+        hardwares_raw = get_hardware_listing_data(
+            origin=origin,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
         try:
-            result = self._get_results(start_date, end_date, origin)
+            sanitized_records = self._sanitize_records(hardwares_raw=hardwares_raw)
+            result = HardwareListingResponse(hardware=sanitized_records)
 
             if len(result.hardware) < 1:
                 return create_api_error_response(

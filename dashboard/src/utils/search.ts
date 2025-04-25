@@ -187,8 +187,6 @@ const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   testDurationMin: 'tdf',
   hardware: 'h',
   trees: 't',
-  bootPlatform: 'btpf',
-  testPlatform: 'tpf',
   buildIssue: 'bi',
   bootIssue: 'bti',
   testIssue: 'ti',

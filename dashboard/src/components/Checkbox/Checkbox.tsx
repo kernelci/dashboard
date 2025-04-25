@@ -2,7 +2,14 @@ import cls from 'classnames';
 
 import type { JSX } from 'react';
 
-import { isUrl, truncateBigText, truncateUrl } from '@/lib/string';
+import {
+  isUrl,
+  shouldTruncate,
+  truncateBigText,
+  truncateUrl,
+} from '@/lib/string';
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 interface ICheckbox {
   onToggle: () => void;
@@ -14,7 +21,7 @@ interface ICheckbox {
 const containerClass =
   'min-w-[300px] p-4 border-[2px] border-dark-gray rounded-sm cursor-pointer text-dim-gray';
 
-const maxCheckboxLength = 30;
+const maxCheckboxLength = 29;
 
 const Checkbox = ({
   text,
@@ -23,10 +30,13 @@ const Checkbox = ({
   isChecked = false,
 }: ICheckbox): JSX.Element => {
   let truncatedText = text;
-  if (isUrl(text)) {
-    truncatedText = truncateUrl(text);
-  } else {
-    truncatedText = truncateBigText(text, maxCheckboxLength);
+  const shouldTruncateResult = shouldTruncate(text, maxCheckboxLength);
+  if (shouldTruncateResult) {
+    if (isUrl(text)) {
+      truncatedText = truncateUrl(text);
+    } else {
+      truncatedText = truncateBigText(text, maxCheckboxLength);
+    }
   }
 
   return (
@@ -36,7 +46,16 @@ const Checkbox = ({
       })}
     >
       <input type="checkbox" checked={isChecked} onChange={onToggle} />
-      <span className="ml-4">{truncatedText}</span>
+      {shouldTruncateResult ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="ml-4">{truncatedText}</span>
+          </TooltipTrigger>
+          <TooltipContent>{text}</TooltipContent>
+        </Tooltip>
+      ) : (
+        <span className="ml-4">{truncatedText}</span>
+      )}
     </label>
   );
 };

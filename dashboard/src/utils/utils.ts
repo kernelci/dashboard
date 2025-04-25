@@ -10,7 +10,6 @@ import type {
   BuildsTabBuild,
   BuildsTableBuild,
   RequiredStatusCount,
-  StatusCount,
 } from '@/types/general';
 import type { ISummaryItem } from '@/components/Tabs/Summary';
 import type { Status } from '@/types/database';
@@ -83,36 +82,6 @@ export const sanitizeConfigs = (
   }
 
   return Object.entries(configs).map(([key, value]) => {
-    const { successCount, failedCount, inconclusiveCount } = groupStatus({
-      doneCount: value.DONE,
-      errorCount: value.ERROR,
-      failCount: value.FAIL,
-      missCount: value.MISS,
-      passCount: value.PASS,
-      skipCount: value.SKIP,
-      nullCount: value.NULL,
-    });
-
-    return {
-      text: key,
-      errors: failedCount,
-      success: successCount,
-      unknown: inconclusiveCount,
-    };
-  });
-};
-
-export const sanitizePlatforms = (
-  platforms:
-    | Record<string, RequiredStatusCount>
-    | Record<string, StatusCount>
-    | undefined,
-): IListingItem[] => {
-  if (!platforms) {
-    return [];
-  }
-
-  return Object.entries(platforms).map(([key, value]) => {
     const { successCount, failedCount, inconclusiveCount } = groupStatus({
       doneCount: value.DONE,
       errorCount: value.ERROR,

@@ -21,39 +21,37 @@ from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
 
-def get_hardware_listing_data(
-    start_date: datetime, end_date: datetime, origin: str
-) -> list[dict]:
+def _get_hardware_listing_count_clauses() -> str:
     build_valid_count_clause = """
-        COUNT(DISTINCT CASE WHEN "build_status" = TRUE AND build_id
-            NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS pass_builds,
-        COUNT(DISTINCT CASE WHEN "build_status" = FALSE AND build_id
-            NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS fail_builds,
-        COUNT(DISTINCT CASE WHEN "build_status" IS NULL AND build_id IS
-            NOT NULL AND build_id NOT LIKE 'maestro:dummy_%%' THEN build_id END)
-            AS null_builds,
-        0 AS error_builds,
-        0 AS miss_builds,
-        0 AS done_builds,
-        0 AS skip_builds,
+    COUNT(DISTINCT CASE WHEN "build_status" = TRUE AND build_id
+        NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS pass_builds,
+    COUNT(DISTINCT CASE WHEN "build_status" = FALSE AND build_id
+        NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS fail_builds,
+    COUNT(DISTINCT CASE WHEN "build_status" IS NULL AND build_id IS
+        NOT NULL AND build_id NOT LIKE 'maestro:dummy_%%' THEN build_id END)
+        AS null_builds,
+    0 AS error_builds,
+    0 AS miss_builds,
+    0 AS done_builds,
+    0 AS skip_builds,
     """
 
     build_status_count_clause = """
-        COUNT(DISTINCT CASE WHEN "build_status" = 'PASS' AND build_id
-            NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS pass_builds,
-        COUNT(DISTINCT CASE WHEN "build_status" = 'FAIL' AND build_id
-            NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS fail_builds,
-        COUNT(DISTINCT CASE WHEN "build_status" IS NULL AND build_id IS
-            NOT NULL AND build_id NOT LIKE 'maestro:dummy_%%' THEN build_id END)
-            AS null_builds,
-        COUNT(DISTINCT CASE WHEN "build_status" = 'ERROR' AND build_id
-            NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS error_builds,
-        COUNT(DISTINCT CASE WHEN "build_status" = 'MISS' AND build_id
-            NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS miss_builds,
-        COUNT(DISTINCT CASE WHEN "build_status" = 'DONE' AND build_id
-            NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS done_builds,
-        COUNT(DISTINCT CASE WHEN "build_status" = 'SKIP' AND build_id
-            NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS skip_builds,
+    COUNT(DISTINCT CASE WHEN "build_status" = 'PASS' AND build_id
+        NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS pass_builds,
+    COUNT(DISTINCT CASE WHEN "build_status" = 'FAIL' AND build_id
+        NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS fail_builds,
+    COUNT(DISTINCT CASE WHEN "build_status" IS NULL AND build_id IS
+        NOT NULL AND build_id NOT LIKE 'maestro:dummy_%%' THEN build_id END)
+        AS null_builds,
+    COUNT(DISTINCT CASE WHEN "build_status" = 'ERROR' AND build_id
+        NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS error_builds,
+    COUNT(DISTINCT CASE WHEN "build_status" = 'MISS' AND build_id
+        NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS miss_builds,
+    COUNT(DISTINCT CASE WHEN "build_status" = 'DONE' AND build_id
+        NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS done_builds,
+    COUNT(DISTINCT CASE WHEN "build_status" = 'SKIP' AND build_id
+        NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS skip_builds,
     """
 
     build_count_clause = (
@@ -62,101 +60,113 @@ def get_hardware_listing_data(
         else build_status_count_clause
     )
 
+    boot_count_clause = """
+    COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
+                    AND "status" = 'FAIL' THEN 1 END) AS fail_boots,
+    COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
+                    AND "status" = 'ERROR' THEN 1 END) AS error_boots,
+    COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
+                    AND "status" = 'MISS' THEN 1 END) AS miss_boots,
+    COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
+                    AND "status" = 'PASS' THEN 1 END) AS pass_boots,
+    COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
+                    AND "status" = 'DONE' THEN 1 END) AS done_boots,
+    COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
+                    AND "status" = 'SKIP' THEN 1 END) AS skip_boots,
+    SUM(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
+                    AND "status" IS NULL AND id IS NOT NULL THEN 1 ELSE 0 END) AS null_boots,
+    """
+
+    test_count_clause = """
+    COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
+                    AND "status" = 'FAIL' THEN 1 END) AS fail_tests,
+    COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
+                    AND "status" = 'ERROR' THEN 1 END) AS error_tests,
+    COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
+                    AND "status" = 'MISS' THEN 1 END) AS miss_tests,
+    COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
+                    AND "status" = 'PASS' THEN 1 END) AS pass_tests,
+    COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
+                    AND "status" = 'DONE' THEN 1 END) AS done_tests,
+    COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
+                    AND "status" = 'SKIP' THEN 1 END) AS skip_tests,
+    SUM(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
+                    AND "status" IS NULL AND id IS NOT NULL THEN 1 ELSE 0 END) AS null_tests
+    """
+
+    return build_count_clause + boot_count_clause + test_count_clause
+
+
+def get_hardware_listing_data(
+    start_date: datetime, end_date: datetime, origin: str
+) -> list[dict]:
+
+    count_clauses = _get_hardware_listing_count_clauses()
+
     params = {
         "start_date": start_date,
         "end_date": end_date,
         "origin": origin,
     }
 
+    # The grouping by platform and compatibles is possible because a platform
+    # can dictate the array of compatibles, meaning that if the array of compatibles
+    # is different, then the platform should/must be different as well.
     query = f"""
-        WITH relevant_tests AS (
-            SELECT
-                "tests"."environment_compatible",
-                "tests"."environment_misc",
-                "tests"."status",
-                "builds".{valid_status_field()} AS build_status,
-                "tests"."path",
-                "tests"."build_id",
-                "tests"."id"
-            FROM
-                "tests"
-            INNER JOIN "builds" ON
-                ("tests"."build_id" = "builds"."id")
-            INNER JOIN "checkouts" ON
-                ("builds"."checkout_id" = "checkouts"."id")
-            WHERE
-                (("tests"."environment_compatible" IS NOT NULL
-                    OR ("tests"."environment_misc" -> 'platform') IS NOT NULL)
-                    AND "checkouts"."git_commit_hash" IN (
-                    SELECT
-                        DISTINCT ON
-                        (U0."tree_name",
-                        U0."git_repository_branch",
-                        U0."git_repository_url") U0."git_commit_hash"
-                    FROM
-                        "checkouts" U0
-                    WHERE
-                        (U0."origin" = %(origin)s
-                            AND U0."start_time" >= %(start_date)s
-                            AND U0."start_time" <= %(end_date)s)
-                    ORDER BY
-                        U0."tree_name" ASC,
-                        U0."git_repository_branch" ASC,
-                        U0."git_repository_url" ASC,
-                        U0."start_time" DESC)
-                    AND "checkouts"."origin" = %(origin)s
-                    AND "tests"."start_time" >= %(start_date)s
-                    AND "tests"."start_time" <= %(end_date)s)
-            )
-            SELECT
-                hardware,
-                ARRAY_AGG(DISTINCT platform) AS platform,
-                {build_count_clause}
-                COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
-                                AND "status" = 'FAIL' THEN 1 END) AS fail_tests,
-                COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
-                                AND "status" = 'ERROR' THEN 1 END) AS error_tests,
-                COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
-                                AND "status" = 'MISS' THEN 1 END) AS miss_tests,
-                COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
-                                AND "status" = 'PASS' THEN 1 END) AS pass_tests,
-                COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
-                                AND "status" = 'DONE' THEN 1 END) AS done_tests,
-                COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
-                                AND "status" = 'SKIP' THEN 1 END) AS skip_tests,
-                SUM(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
-                                AND "status" IS NULL AND id IS NOT NULL THEN 1 ELSE 0 END) AS null_tests,
-                COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
-                                AND "status" = 'FAIL' THEN 1 END) AS fail_boots,
-                COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
-                                AND "status" = 'ERROR' THEN 1 END) AS error_boots,
-                COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
-                                AND "status" = 'MISS' THEN 1 END) AS miss_boots,
-                COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
-                                AND "status" = 'PASS' THEN 1 END) AS pass_boots,
-                COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
-                                AND "status" = 'DONE' THEN 1 END) AS done_boots,
-                COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
-                                AND "status" = 'SKIP' THEN 1 END) AS skip_boots,
-                SUM(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
-                                AND "status" IS NULL AND id IS NOT NULL THEN 1 ELSE 0 END) AS null_boots
-            FROM
-                (
+        WITH
+            relevant_tests AS (
                 SELECT
-                    UNNEST("environment_compatible") AS hardware,
-                    "environment_misc" ->> 'platform' AS platform,
-                    build_id,
-                    "build_status",
-                    "path",
-                    status,
-                    id
+                    "tests"."environment_compatible",
+                    "tests"."environment_misc",
+                    "tests"."status",
+                    "builds".{valid_status_field()} AS build_status,
+                    "tests"."path",
+                    "tests"."build_id",
+                    "tests"."id"
                 FROM
-                    relevant_tests
+                    "tests"
+                    INNER JOIN "builds" ON ("tests"."build_id" = "builds"."id")
+                    INNER JOIN "checkouts" ON ("builds"."checkout_id" = "checkouts"."id")
                 WHERE
-                    "environment_compatible" IS NOT NULL
-            UNION
+                    (
+                        (
+                            "tests"."environment_compatible" IS NOT NULL
+                            OR ("tests"."environment_misc" -> 'platform') IS NOT NULL
+                        )
+                        AND "checkouts"."git_commit_hash" IN (
+                            SELECT DISTINCT
+                                ON (
+                                    U0."tree_name",
+                                    U0."git_repository_branch",
+                                    U0."git_repository_url"
+                                ) U0."git_commit_hash"
+                            FROM
+                                "checkouts" U0
+                            WHERE
+                                (
+                                    U0."origin" = %(origin)s
+                                    AND U0."start_time" >= %(start_date)s
+                                    AND U0."start_time" <= %(end_date)s
+                                )
+                            ORDER BY
+                                U0."tree_name" ASC,
+                                U0."git_repository_branch" ASC,
+                                U0."git_repository_url" ASC,
+                                U0."start_time" DESC
+                        )
+                        AND "checkouts"."origin" = %(origin)s
+                        AND "tests"."start_time" >= %(start_date)s
+                        AND "tests"."start_time" <= %(end_date)s
+                    )
+            )
+        SELECT
+            platform,
+            hardware,
+            {count_clauses}
+        FROM
+            (
                 SELECT
-                    "environment_misc" ->> 'platform' AS hardware,
+                    "environment_compatible" AS hardware,
                     "environment_misc" ->> 'platform' AS platform,
                     build_id,
                     "build_status",
@@ -167,10 +177,10 @@ def get_hardware_listing_data(
                     relevant_tests
                 WHERE
                     "environment_misc" ->> 'platform' IS NOT NULL
-                    AND environment_compatible IS NULL
             ) AS combined_data
         GROUP BY
-    hardware;
+            platform,
+            hardware
     """
 
     try:

@@ -35,7 +35,7 @@ import { GroupedTestStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 
-import type { HardwareTableItem } from '@/types/hardware';
+import type { HardwareItem } from '@/types/hardware';
 
 import { statusCountToRequiredStatusCount, sumStatus } from '@/utils/status';
 
@@ -47,19 +47,20 @@ import type { ListingTableColumnMeta } from '@/types/table';
 
 import { RedirectFrom, type TFilter } from '@/types/general';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { MemoizedInputTime } from '@/components/InputTime';
 import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
+import { EMPTY_VALUE } from '@/lib/string';
+import { Badge } from '@/components/ui/badge';
 
 // TODO Extract and reuse the table
-interface ITreeTable {
-  treeTableRows: HardwareTableItem[];
+interface IHardwareTable {
+  treeTableRows: HardwareItem[];
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
 }
 
 const getLinkProps = (
-  row: Row<HardwareTableItem>,
+  row: Row<HardwareItem>,
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
   tabTarget?: string,
@@ -68,7 +69,7 @@ const getLinkProps = (
   return {
     from: '/hardware',
     to: '/hardware/$hardwareId',
-    params: { hardwareId: row.original.hardware_name },
+    params: { hardwareId: row.original.platform },
     search: previousSearch => ({
       ...previousSearch,
       currentPageTab: zPossibleTabValidator.parse(tabTarget),
@@ -78,7 +79,7 @@ const getLinkProps = (
     }),
     state: s => ({
       ...s,
-      id: row.original.hardware_name,
+      id: row.original.platform,
       from: RedirectFrom.Hardware,
       hardwareStatusCount: {
         builds: row.original.build_status_summary,
@@ -96,35 +97,46 @@ const getLinkProps = (
 const getColumns = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
-): ColumnDef<HardwareTableItem>[] => {
+): ColumnDef<HardwareItem>[] => {
   return [
     {
-      accessorKey: 'hardware_name',
+      accessorKey: 'platform',
       header: ({ column }): JSX.Element => (
-        <TableHeader column={column} intlKey="global.name" />
+        <TableHeader column={column} intlKey="global.platform" />
       ),
       meta: {
         tabTarget: 'global.builds',
       },
     },
     {
-      accessorKey: 'platform',
+      accessorKey: 'hardware',
+      accessorFn: ({ hardware }): number => {
+        return hardware ? hardware.length : 0;
+      },
       header: ({ column }): JSX.Element => (
-        <TableHeader column={column} intlKey="global.platform" />
+        <TableHeader column={column} intlKey="global.compatibles" />
       ),
       cell: ({ row }): JSX.Element => {
-        const platforms = row.original.platform;
-        if (Array.isArray(platforms)) {
-          return (
-            <Tooltip>
-              <TooltipTrigger>
-                <FormattedMessage id="hardware.multiplePlatforms" />
-              </TooltipTrigger>
-              <TooltipContent>{platforms.join(', ')}</TooltipContent>
-            </Tooltip>
-          );
+        const hardwares = row.original.hardware;
+        if (hardwares === undefined || hardwares === null) {
+          return <>{EMPTY_VALUE}</>;
         }
-        return <>{platforms}</>;
+
+        return (
+          <div className="flex max-w-xl flex-wrap gap-2">
+            {hardwares.map(hardware => {
+              return (
+                <Badge
+                  key={hardware}
+                  variant="outline"
+                  className="text-sm font-normal text-nowrap"
+                >
+                  {hardware}
+                </Badge>
+              );
+            })}
+          </div>
+        );
       },
       meta: {
         tabTarget: 'global.builds',
@@ -332,7 +344,7 @@ export function HardwareTable({
   treeTableRows,
   startTimestampInSeconds,
   endTimestampInSeconds,
-}: ITreeTable): JSX.Element {
+}: IHardwareTable): JSX.Element {
   const { listingSize } = useSearch({ strict: false });
   const navigate = useNavigate({ from: '/hardware' });
 
