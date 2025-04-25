@@ -156,7 +156,7 @@ const HighlightCounts = ({
   );
 };
 
-const generateHighlightedCode = (code: string): IHighlightedCode => {
+export const generateHighlightedCode = (code: string): IHighlightedCode => {
   let highlights = 0;
   let fails = 0;
   let errors = 0;
@@ -176,7 +176,21 @@ const generateHighlightedCode = (code: string): IHighlightedCode => {
       if (
         // matches failed to/with, more than 0 fails/failed and no flags
         match.search(
-          /.*((\bfailed(\s*to|\s*with|([\b\s:]\s*\(*-*[1-9])))|fail(\b|:|\s*[1-9])(?![|/]))/i,
+          new RegExp(
+            [
+              '.*(',
+              '((\\bfailed\\s*(to|with|$|([\\b\\s:]*\\(*-*[1-9]))))', // failed to/with or failed: N
+              '|',
+              '(',
+              '(((([1-9][0]*\\s*)|[=:])fail[s]*(?!\\s*:\\s*0))', // N fail[s] (not N fail[s]:0)
+              '|',
+              '(fail[s]*(([:,][\\b\\s:]*[^0\\s])|$|\\s+-[1-9]))', // fail[s]: x (not fail[s]: 0)
+              ')',
+              '(?![|/]))', // Not match fail flags
+              ')',
+            ].join(''),
+            'i',
+          ),
         ) !== -1
       ) {
         fails++;
@@ -185,7 +199,17 @@ const generateHighlightedCode = (code: string): IHighlightedCode => {
       // matches error codes greater than 0 or more than 0 errors
       if (
         match.search(
-          /(error(:|,|[\b\s:]\s*\(*-*[1-9a-z]))|([1-9]\s*error)/i,
+          new RegExp(
+            [
+              '.*(',
+              '([1-9][0]*\\s*error[s]*(?!\\s*:\\s*0))', // N error[s] (not N error[s]:0)
+              '|',
+              '(?<!Ignore\\s*)', // Not match "Ignore errors"
+              '(error[s]*(([:,][\\b\\s:\\(-]*[^0\\s])|$|\\s+-[1-9]|\\s[a-z]))', // error[s]: x or error -N (not error[s]: 0)
+              ')',
+            ].join(''),
+            'i',
+          ),
         ) !== -1
       ) {
         errors++;
