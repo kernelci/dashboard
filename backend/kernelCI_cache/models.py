@@ -55,3 +55,14 @@ class CheckoutsCache(models.Model):
                 name="unique_checkout",
             )
         ]
+
+
+class NotificationsCheckout(models.Model):
+    notification_id = models.TextField()
+    notification_sent = models.DateTimeField()
+    checkout_id = (
+        models.TextField()
+    )  # Not necessarily unique, 1 checkout can have n notifications
+
+    class Meta:
+        db_table = "notifications_checkout"
