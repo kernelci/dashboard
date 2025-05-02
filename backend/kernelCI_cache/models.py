@@ -58,7 +58,7 @@ class CheckoutsCache(models.Model):
 
 
 class NotificationsCheckout(models.Model):
-    notification_id = models.TextField()
+    notification_message_id = models.TextField()
     notification_sent = models.DateTimeField()
     checkout_id = (
         models.TextField()
@@ -66,3 +66,30 @@ class NotificationsCheckout(models.Model):
 
     class Meta:
         db_table = "notifications_checkout"
+
+
+class NotificationsIssue(models.Model):
+    notification_message_id = models.TextField()
+    notification_sent = models.DateTimeField()
+
+    issue_id = models.TextField()
+    issue_version = models.IntegerField()
+
+    class Meta:
+        db_table = "notifications_issue"
+        unique_together = (("issue_id", "issue_version"),)
+
+
+class IssuesCustom(models.Model):
+    id = models.TextField(primary_key=True)
+    version = models.IntegerField()
+    kcidb_timestamp = models.DateTimeField()
+    comment = models.TextField(null=True, blank=True)
+
+    type = models.TextField(null=True)  # PossibleIssueType (build/boot/test | null)
+
+    notification_ignore = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "issues_custom"
+        unique_together = (("id", "version"),)

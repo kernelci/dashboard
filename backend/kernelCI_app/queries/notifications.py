@@ -159,6 +159,7 @@ def kcidb_new_issues():
     return kcidb_execute_query(query, params)
 
 
+# TODO: include issue version as an optional parameter
 def kcidb_issue_details(issue_id):
     """Fetches details of a given issue."""
 

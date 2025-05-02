@@ -27,7 +27,19 @@ from kernelCI_app.queries.notifications import (
     kcidb_latest_checkout_results,
     kcidb_tests_results,
 )
-from kernelCI_cache.queries.notifications import mark_checkout_notification_as_sent
+from kernelCI_cache.queries.notifications import (
+    mark_checkout_notification_as_sent,
+    mark_issue_notification_sent,
+)
+from kernelCI_app.utils import is_boot
+from kernelCI_cache.queries.issues import (
+    assure_custom_issue_exists,
+    get_all_issue_keys,
+    get_unsent_issues,
+    update_custom_issues_batch,
+)
+from kernelCI_cache.typeModels.databases import PossibleIssueType
+from kernelCI_cache.typeModels.issuesCustom import CustomIssue
 
 
 STORAGE_FILE = "found_issues.json"
@@ -107,98 +119,44 @@ def setup_jinja_template(file):
     return env.get_template(file)
 
 
-def found_issues_path():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_dir, STORAGE_FILE)
-
-
-def exclude_already_found_and_store(issues):
+def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
     """
-    Excludes issues that have already been found and store in the storage file.
+    Excludes issues that have already been found and stores the new ones in the database.
 
     Args:
         issues: A list of dictionaries, where each dictionary represents an issue.
 
     Returns:
-        A list of dictionaries containing only the new issues (those not in the storage file).
+        A list of dictionaries containing only the new issues (those that weren't in the database).
     """
-    found_issues = {}
-    path = found_issues_path()
 
-    # Load existing found issues from storage if the file exists
-    if os.path.exists(path):
-        try:
-            with open(path, "r") as f:
-                found_issues = json.load(f)
-        except json.JSONDecodeError:
-            print(
-                f"Warning: Could not decode JSON from {path}. Starting with empty issue list."
+    # Gets only the keys for all existing issues on the db,
+    # they are the only necessary data for the following operations
+    found_issues_keys = get_all_issue_keys()
+
+    issues_for_update: list[CustomIssue] = []
+    new_issues = []
+
+    for issue in issues:
+        issue_id = issue["id"]
+        issue_version = issue["version"]
+
+        if (issue_id, issue_version) not in found_issues_keys:
+            new_issues.append(issue)
+            issues_for_update.append(
+                CustomIssue(
+                    id=issue_id,
+                    version=issue_version,
+                    kcidb_timestamp=issue["_timestamp"],
+                    comment=issue["comment"],
+                    type=issue["type"],
+                    notification_ignore=False,
+                )
             )
 
-    new_issues = []
-    for issue in issues:
-        issue_id = issue["id"]  # Assuming 'id' is the unique identifier
-
-        if not found_issues.get(issue_id):
-            new_issues.append(issue)
-            issue["sent"] = False
-            issue["ignore"] = False
-            found_issues[issue_id] = {
-                "comment": issue["comment"],
-                "type": issue["type"],
-                "timestamp": issue["_timestamp"],
-                "dashboard": f"https://dashboard.kernelci.org/issue/{issue["id"]}",
-                "sent": issue["sent"],
-                "ignore": issue["ignore"],
-            }
-
-    # Save the updated found issues to storage (overwriting the file)
-    try:
-        with open(path, "w") as f:
-            json.dump(
-                found_issues, f, indent=4, default=str
-            )  # indent for readability, default=str to handle datetime
-    except Exception as e:
-        print(f"Error saving found issues to {path}: {e}")
+    update_custom_issues_batch(issues_for_update)
 
     return new_issues
-
-
-def get_unsent_issues():
-    """Collects all issues where 'sent' is False and 'ignore' is False."""
-    with open(found_issues_path(), "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    unsent_issues = {
-        issue_id: details
-        for issue_id, details in data.items()
-        if not details.get("sent", False) and not details.get("ignore", False)
-    }
-
-    return unsent_issues
-
-
-def mark_issue_as_sent(issue_id, msg_id):
-    with open(found_issues_path(), "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    if issue_id in data:
-        data[issue_id]["sent"] = True
-        data[issue_id]["message_id"] = msg_id
-
-        with open(found_issues_path(), "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-
-
-def mark_issue_as_ignore(issue_id):
-    with open(found_issues_path(), "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    if issue_id in data:
-        data[issue_id]["ignore"] = True
-
-        with open(found_issues_path(), "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
 
 
 def read_yaml_file(file):
@@ -330,26 +288,41 @@ def generate_issue_report(service, issue_id, email_args, ask_ignore=False):
         print("issue not found!")
         sys.exit(-1)
     issue = result[0]
+    issue_version = issue["version"]
+    timestamp = issue["_timestamp"]
+    comment = issue["comment"]
 
     print("=====================")
-    print(
-        f"# {issue["tree_name"]}/{issue["git_repository_branch"]} - {issue["_timestamp"]}"
-    )
-    print(f"  comment: {issue["comment"]}")
-    print(f"  dashboard: https://d.kernelci.org/issue/{issue["id"]}")
+    print(f"# {issue["tree_name"]}/{issue["git_repository_branch"]} - {timestamp}")
+    print(f"  comment: {comment}")
+    print(f"  dashboard: https://d.kernelci.org/issue/{issue_id}")
 
     if ask_ignore and ask_ignore_issue():
-        mark_issue_as_ignore(issue["id"])
+        update_custom_issues_batch(
+            [
+                CustomIssue(
+                    id=issue_id,
+                    version=issue_version,
+                    kcidb_timestamp=timestamp,
+                    comment=comment,
+                    type=None,
+                    notification_ignore=True,
+                )
+            ]
+        )
         return
 
     if isinstance(issue["misc"], str):
         issue["misc"] = json.loads(issue["misc"])
 
+    issue_type: PossibleIssueType
     if issue["build_id"]:
+        issue_type = "build"
         incidents = kcidb_build_incidents(issue_id)
         report = generate_build_issue_report(issue, incidents)
     elif issue["test_id"]:
         incidents = kcidb_test_incidents(issue_id)
+        issue_type = "boot" if is_boot(path=incidents[0]["path"]) else "test"
         for incident in incidents:
             last_test = kcidb_last_test_without_issue(issue, incident)
             incident["last_pass"] = last_test[0]["start_time"]
@@ -357,7 +330,7 @@ def generate_issue_report(service, issue_id, email_args, ask_ignore=False):
             incident["last_pass_id"] = last_test[0]["id"]
         report = generate_boot_issue_report(issue, incidents)
     else:
-        print(f"unable to generate issue report for {issue["id"]}", file=sys.stderr)
+        print(f"unable to generate issue report for {issue_id}", file=sys.stderr)
         sys.exit(-1)
 
     email_args.tree_name = issue["tree_name"]
@@ -365,9 +338,23 @@ def generate_issue_report(service, issue_id, email_args, ask_ignore=False):
     msg_id = send_email_report(service, report, email_args)
 
     if msg_id and email_args.update:
-        mark_issue_as_sent(issue_id, msg_id)
+        # Adds an entry for the notification sent and stores the issue data
+        # (if it hasn't been stored already when marking ignore)
+        mark_issue_notification_sent(
+            issue_id=issue_id,
+            issue_version=issue_version,
+            msg_id=msg_id,
+        )
+        assure_custom_issue_exists(
+            id=issue_id,
+            version=issue_version,
+            kcidb_timestamp=timestamp,
+            comment=comment,
+            issue_type=issue_type,
+        )
 
 
+# TODO: Unify with process_test_status_history
 def categorize_test_history(test_group):
     first_test_flag = True
     status_changed = False
@@ -492,11 +479,11 @@ def run_checkout_summary(service, signup_file, email_args):
 
 def create_and_send_issue_reports(service, email_args):
     unsent_issues = get_unsent_issues()
-    for issue_id, details in unsent_issues.items():
-        if details["type"] != "build":
+    for issue in unsent_issues:
+        if issue["type"] != "build":
             continue
 
-        generate_issue_report(service, issue_id, email_args, ask_ignore=True)
+        generate_issue_report(service, issue["id"], email_args, ask_ignore=True)
 
 
 def run_fake_report(service, email_args):
@@ -546,6 +533,7 @@ class Command(BaseCommand):
         )
 
         # Issue report specific arguments
+        # TODO: add argument for a specific issue version once the query allows it
         parser.add_argument(
             "--id",
             type=str,
