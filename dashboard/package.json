@@ -67,7 +67,7 @@
     "tailwind-merge": "^2.6.0",
     "ts-pattern": "^5.7.0",
     "vaul": "^1.1.2",
-    "vite": "^6.3.3",
+    "vite": "^6.3.4",
     "vite-tsconfig-paths": "^5.1.4",
     "zod": "^3.24.3",
     "zustand": "^5.0.3"

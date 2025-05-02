@@ -103,7 +103,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HardwareResponse'
+                $ref: '#/components/schemas/HardwareListingResponse'
           description: ''
   /api/hardware/{hardware_id}:
     post:
@@ -2036,17 +2036,18 @@ components:
       type: object
     HardwareItem:
       properties:
-        hardware_name:
-          title: Hardware Name
-          type: string
-        platform:
+        hardware:
           anyOf:
           - type: string
           - items:
               type: string
             type: array
             uniqueItems: true
+          - type: 'null'
+          title: Hardware
+        platform:
           title: Platform
+          type: string
         test_status_summary:
           $ref: '#/components/schemas/StatusCount'
         boot_status_summary:
@@ -2054,14 +2055,14 @@ components:
         build_status_summary:
           $ref: '#/components/schemas/StatusCount'
       required:
-      - hardware_name
+      - hardware
       - platform
       - test_status_summary
       - boot_status_summary
       - build_status_summary
       title: HardwareItem
       type: object
-    HardwareResponse:
+    HardwareListingResponse:
       properties:
         hardware:
           items:
@@ -2070,7 +2071,7 @@ components:
           type: array
       required:
       - hardware
-      title: HardwareResponse
+      title: HardwareListingResponse
       type: object
     HardwareTestHistoryItem:
       properties:
