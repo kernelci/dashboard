@@ -355,7 +355,7 @@ def kcidb_latest_checkout_results(origin, giturl, branch):
     """
     Fetches checkouts between in the past 5 to 29 hours.
     As KCIDB doesn't have an end of testing signal, we have
-    to wait sometime before we can send the report.
+    to wait some time before we can send the report.
     """
 
     params = {
@@ -369,6 +369,7 @@ def kcidb_latest_checkout_results(origin, giturl, branch):
     query = """
             SELECT
                 _timestamp,
+                id,
                 origin,
                 tree_name,
                 git_repository_url,

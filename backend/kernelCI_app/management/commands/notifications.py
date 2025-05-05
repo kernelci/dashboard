@@ -27,6 +27,7 @@ from kernelCI_app.queries.notifications import (
     kcidb_latest_checkout_results,
     kcidb_tests_results,
 )
+from kernelCI_cache.queries.notifications import mark_checkout_notification_as_sent
 
 
 STORAGE_FILE = "found_issues.json"
@@ -481,7 +482,12 @@ def run_checkout_summary(service, signup_file, email_args):
 
         print(report["content"])
         email_args.tree_name = checkout["tree_name"]
-        send_email_report(service, report, email_args)
+        msg_id = send_email_report(service, report, email_args)
+
+        if msg_id and email_args.update:
+            mark_checkout_notification_as_sent(
+                checkout_id=checkout["id"], msg_id=msg_id
+            )
 
 
 def create_and_send_issue_reports(service, email_args):
@@ -613,6 +619,7 @@ class Command(BaseCommand):
                 )
 
         elif action == "summary":
+            email_args.update = options.get("update_storage", False)
             signup_file = options.get("summary_signup_file")
             if not signup_file:
                 signup_file = SUMMARY_SIGNUP_FILE
