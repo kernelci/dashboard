@@ -11,6 +11,7 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitRepositoryUrl,
     Checkout__OriginBuildsFinishTime,
     Checkout__OriginTestsFinishTime,
+    Origin,
     Timestamp,
 )
 from pydantic import BaseModel, Field, RootModel
@@ -43,6 +44,7 @@ class BaseCheckouts(BaseModel):
     git_repository_url: Checkout__GitRepositoryUrl
     git_commit_hash: Checkout__GitCommitHash
     git_commit_name: Checkout__GitCommitName
+    origin: Origin
 
 
 class CommonCheckouts(BaseCheckouts):

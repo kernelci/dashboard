@@ -218,6 +218,7 @@ def get_tree_listing_fast(
             SELECT
                 id,
                 tree_name,
+                origin,
                 git_repository_branch,
                 git_repository_url,
                 git_commit_hash,
@@ -637,6 +638,7 @@ def get_latest_tree(
         "git_commit_name",
         "git_repository_url",
         "tree_name",
+        "origin",
     ]
 
     query = Checkouts.objects.values(*tree_fields).filter(

@@ -49,6 +49,7 @@ class TreeViewFast(APIView):
                 CheckoutFast(
                     id=checkout.id,
                     tree_name=checkout.tree_name,
+                    origin=checkout.origin,
                     git_repository_branch=checkout.git_repository_branch,
                     git_repository_url=checkout.git_repository_url,
                     git_commit_hash=checkout.git_commit_hash,
