@@ -29,17 +29,15 @@ from kernelCI_app.queries.notifications import (
 )
 from kernelCI_cache.queries.notifications import (
     mark_checkout_notification_as_sent,
+    mark_issue_notification_not_sent,
     mark_issue_notification_sent,
 )
 from kernelCI_app.utils import is_boot
 from kernelCI_cache.queries.issues import (
-    assure_custom_issue_exists,
     get_all_issue_keys,
     get_unsent_issues,
-    update_custom_issues_batch,
 )
 from kernelCI_cache.typeModels.databases import PossibleIssueType
-from kernelCI_cache.typeModels.issuesCustom import CustomIssue
 
 
 STORAGE_FILE = "found_issues.json"
@@ -134,7 +132,6 @@ def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
     # they are the only necessary data for the following operations
     found_issues_keys = get_all_issue_keys()
 
-    issues_for_update: list[CustomIssue] = []
     new_issues = []
 
     for issue in issues:
@@ -143,18 +140,11 @@ def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
 
         if (issue_id, issue_version) not in found_issues_keys:
             new_issues.append(issue)
-            issues_for_update.append(
-                CustomIssue(
-                    id=issue_id,
-                    version=issue_version,
-                    kcidb_timestamp=issue["_timestamp"],
-                    comment=issue["comment"],
-                    type=issue["type"],
-                    notification_ignore=False,
-                )
+            mark_issue_notification_not_sent(
+                issue_id=issue_id,
+                issue_version=issue_version,
+                issue_type=issue["type"],
             )
-
-    update_custom_issues_batch(issues_for_update)
 
     return new_issues
 
@@ -298,17 +288,10 @@ def generate_issue_report(service, issue_id, email_args, ask_ignore=False):
     print(f"  dashboard: https://d.kernelci.org/issue/{issue_id}")
 
     if ask_ignore and ask_ignore_issue():
-        update_custom_issues_batch(
-            [
-                CustomIssue(
-                    id=issue_id,
-                    version=issue_version,
-                    kcidb_timestamp=timestamp,
-                    comment=comment,
-                    type=None,
-                    notification_ignore=True,
-                )
-            ]
+        mark_issue_notification_not_sent(
+            issue_id=issue_id,
+            issue_version=issue_version,
+            issue_type=None,
         )
         return
 
@@ -338,18 +321,10 @@ def generate_issue_report(service, issue_id, email_args, ask_ignore=False):
     msg_id = send_email_report(service, report, email_args)
 
     if msg_id and email_args.update:
-        # Adds an entry for the notification sent and stores the issue data
-        # (if it hasn't been stored already when marking ignore)
         mark_issue_notification_sent(
+            msg_id=msg_id,
             issue_id=issue_id,
             issue_version=issue_version,
-            msg_id=msg_id,
-        )
-        assure_custom_issue_exists(
-            id=issue_id,
-            version=issue_version,
-            kcidb_timestamp=timestamp,
-            comment=comment,
             issue_type=issue_type,
         )
 
@@ -480,10 +455,10 @@ def run_checkout_summary(service, signup_file, email_args):
 def create_and_send_issue_reports(service, email_args):
     unsent_issues = get_unsent_issues()
     for issue in unsent_issues:
-        if issue["type"] != "build":
+        if issue.issue_type != "build":
             continue
 
-        generate_issue_report(service, issue["id"], email_args, ask_ignore=True)
+        generate_issue_report(service, issue.issue_id, email_args, ask_ignore=True)
 
 
 def run_fake_report(service, email_args):

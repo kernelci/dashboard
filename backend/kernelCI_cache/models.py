@@ -69,27 +69,19 @@ class NotificationsCheckout(models.Model):
 
 
 class NotificationsIssue(models.Model):
-    notification_message_id = models.TextField()
-    notification_sent = models.DateTimeField()
+    # It is possible to store only the basic info of an issue, if it has 0 notifications
+    notification_message_id = models.TextField(null=True)
+    notification_sent = models.DateTimeField(null=True)
 
+    # Unique together such that an issue can have at most 1 notification.
+    # If an issue shall have multiple notifications, then we should lift this constraint
+    # and store the data for if an issue has notifications in another table
     issue_id = models.TextField()
     issue_version = models.IntegerField()
+    issue_type = models.TextField(
+        null=True
+    )  # PossibleIssueType (build/boot/test) | None
 
     class Meta:
         db_table = "notifications_issue"
         unique_together = (("issue_id", "issue_version"),)
-
-
-class IssuesCustom(models.Model):
-    id = models.TextField(primary_key=True)
-    version = models.IntegerField()
-    kcidb_timestamp = models.DateTimeField()
-    comment = models.TextField(null=True, blank=True)
-
-    type = models.TextField(null=True)  # PossibleIssueType (build/boot/test | null)
-
-    notification_ignore = models.BooleanField(default=False)
-
-    class Meta:
-        db_table = "issues_custom"
-        unique_together = (("id", "version"),)

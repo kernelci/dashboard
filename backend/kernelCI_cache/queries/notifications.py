@@ -1,3 +1,4 @@
+from kernelCI_cache.typeModels.databases import PossibleIssueType
 from kernelCI_cache.utils import get_current_timestamp_kcidb_format
 from kernelCI_cache.models import NotificationsCheckout, NotificationsIssue
 from kernelCI_app.helpers.logger import log_message
@@ -26,17 +27,51 @@ def mark_issue_notification_sent(
     msg_id: str,
     issue_id: str,
     issue_version: int,
+    issue_type: PossibleIssueType,
 ) -> bool:
     """Creates an entry for an issue notification"""
     try:
         timestamp = get_current_timestamp_kcidb_format()
-        NotificationsIssue.objects.using("cache").create(
-            notification_message_id=msg_id,
-            notification_sent=timestamp,
+        NotificationsIssue.objects.using("cache").update_or_create(
             issue_id=issue_id,
             issue_version=issue_version,
+            issue_type=issue_type,
+            defaults={
+                "notification_message_id": msg_id,
+                "notification_sent": timestamp,
+            },
         )
         return True
     except Exception as e:
-        log_message(f"Error marking issue notification_sent:\n{e}")
+        log_message(f"Error marking issue notification sent:\n{e}")
+        return False
+
+
+def mark_issue_notification_not_sent(
+    *,
+    issue_id: str,
+    issue_version: int,
+    issue_type: PossibleIssueType,
+) -> bool:
+    """Creates an entry for an issue without notifications"""
+    try:
+        issue_exists = (
+            NotificationsIssue.objects.using("cache")
+            .filter(
+                issue_id=issue_id,
+                issue_version=issue_version,
+                issue_type=issue_type,
+            )
+            .exists()
+        )
+
+        if not issue_exists:
+            NotificationsIssue.objects.using("cache").create(
+                issue_id=issue_id,
+                issue_version=issue_version,
+                issue_type=issue_type,
+            )
+        return True
+    except Exception as e:
+        log_message(f"Error marking issue notification not sent:\n{e}")
         return False
