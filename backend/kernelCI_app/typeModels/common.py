@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, TypedDict
 
 from pydantic import BaseModel
 
@@ -33,3 +33,9 @@ class StatusCount(BaseModel):
             DONE=self.DONE + other.DONE,
             NULL=self.NULL + other.NULL,
         )
+
+
+class GroupedStatus(TypedDict):
+    success: int
+    failed: int
+    inconclusive: int

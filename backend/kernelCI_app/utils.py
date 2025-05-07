@@ -5,9 +5,10 @@ from datetime import timedelta
 
 from kernelCI_app.constants.general import DEFAULT_INTERVAL_IN_DAYS
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.common import GroupedStatus, StatusCount
 from kernelCI_app.typeModels.databases import DatabaseStatusValues
 from kernelCI_app.typeModels.issues import Issue, IssueDict
+from kernelCI_app.typeModels.treeListing import TestStatusCount
 
 DEFAULT_QUERY_TIME_INTERVAL = {"days": DEFAULT_INTERVAL_IN_DAYS}
 
@@ -91,3 +92,26 @@ def validate_str_to_dict(value):
     if isinstance(value, str):
         return json.loads(value)
     return value
+
+
+def group_status(count: Union[StatusCount, TestStatusCount]) -> GroupedStatus:
+    result: GroupedStatus = {"success": 0, "failed": 0, "inconclusive": 0}
+    if isinstance(count, StatusCount):
+        result["success"] = count.PASS
+        result["failed"] = count.FAIL
+        result["inconclusive"] = (
+            count.ERROR + count.SKIP + count.MISS + count.DONE + count.NULL
+        )
+    elif isinstance(count, TestStatusCount):
+        result["success"] = count.pass_count
+        result["failed"] = count.fail_count
+        result["inconclusive"] = (
+            count.error_count
+            + count.skip_count
+            + count.miss_count
+            + count.done_count
+            + count.null_count
+        )
+    else:
+        log_message("group_status only accepts StatusCount or TestStatusCount types")
+    return result
