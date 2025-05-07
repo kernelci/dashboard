@@ -29,13 +29,17 @@ Hello,
 Status summary for {{ checkout["tree_name"] }}/{{ checkout["git_repository_branch"] }}
 
 Dashboard:
-https://d.kernelci.org/tree/{{ checkout["git_commit_hash"] }}?ti%7Cc={{ checkout["git_commit_name"] }}&ti%7Cch={{ checkout["git_commit_hash"] }}&ti%7Cgb={{ checkout["git_repository_branch"] }}&ti%7Cgu={{ checkout["giturl_safe"] }}&ti%7Ct={{ checkout["tree_name"] }}
+https://d.kernelci.org/tree/{{ checkout["git_commit_hash"] }}?ti%7Cc={{ checkout["git_commit_name"] }}&ti%7Cch={{ checkout["git_commit_hash"] }}&ti%7Cgb={{ checkout["git_repository_branch"] }}&ti%7Cgu={{ git_url_safe }}&ti%7Ct={{ checkout["tree_name"] }}
 
 giturl: {{ checkout["git_repository_url"] }}
 branch: {{ checkout["git_repository_branch"] }}
 commit hash: {{ checkout["git_commit_hash"] }}
 origin: {{ checkout["origin"] }}
 test start time: {{ checkout["_timestamp"] }}
+
+Builds: {{ build_status_group["success"]}} Pass, {{ build_status_group["failed"] }} Fail, {{ build_status_group["inconclusive"] }} Other status
+Boots: {{ boot_status_group["success"]}} Pass, {{ boot_status_group["failed"] }} Fail, {{ boot_status_group["inconclusive"] }} Other status
+Tests: {{ test_status_group["success"]}} Pass, {{ test_status_group["failed"] }} Fail, {{ test_status_group["inconclusive"] }} Other status
 
 ### POSSIBLE REGRESSIONS
 {%- if new_issues %}

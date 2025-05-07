@@ -12,19 +12,21 @@ from urllib.parse import quote_plus
 from django.core.management.base import BaseCommand
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.system import is_production_instance
 
 from kernelCI_app.helpers.email import (
     gmail_setup_service,
     gmail_send_email,
 )
+from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.queries.notifications import (
+    get_checkout_summary_data,
     kcidb_new_issues,
     kcidb_issue_details,
     kcidb_build_incidents,
     kcidb_test_incidents,
     kcidb_last_test_without_issue,
-    kcidb_latest_checkout_results,
     kcidb_tests_results,
 )
 from kernelCI_cache.queries.notifications import (
@@ -39,6 +41,7 @@ from kernelCI_cache.queries.issues import (
 )
 from kernelCI_cache.typeModels.databases import PossibleIssueType
 
+from kernelCI_app.utils import group_status
 
 STORAGE_FILE = "found_issues.json"
 SUMMARY_SIGNUP_FILE = "data/summary-signup.yaml"
@@ -364,11 +367,14 @@ def categorize_test_history(test_group):
     return history_task
 
 
-def evaluate_test_results(checkout, path):
-    origin = checkout["origin"]
-    giturl = checkout["git_repository_url"]
-    branch = checkout["git_repository_branch"]
-    commit_hash = checkout["git_commit_hash"]
+def evaluate_test_results(
+    *,
+    origin: str,
+    giturl: str,
+    branch: str,
+    commit_hash: str,
+    path: str,
+):
     tests = kcidb_tests_results(origin, giturl, branch, commit_hash, path)
 
     # Group by platform, then by config_name, then by path
@@ -405,20 +411,50 @@ def run_checkout_summary(service, signup_file, email_args):
     if is_production_instance():
         return
 
-    data = read_yaml_file(signup_file)
-    for tree in data["trees"].values():
-        if "origin" in tree.keys():
-            origin = tree["origin"]
+    tree_data = read_yaml_file(signup_file)
+
+    tree_key_list: list[tuple[str, str, str]] = []
+    tree_prop_map: dict[tuple[str, str, str], dict] = {}
+    for tree_name, tree_values in tree_data["trees"].items():
+        if "origin" in tree_values:
+            origin = tree_values["origin"]
         else:
             origin = DEFAULT_ORIGIN
-        checkout = kcidb_latest_checkout_results(origin, tree["giturl"], tree["branch"])
-        if not checkout:
+        branch = tree_values.get("branch")
+        giturl = tree_values.get("giturl")
+        tree_key = (branch, giturl, origin)
+
+        tree_prop_map[tree_key] = tree_values
+        tree_prop_map[tree_key]["name"] = tree_name
+
+        tree_key_list.append(tree_key)
+
+    records = get_checkout_summary_data(tuple_params=tree_key_list)
+
+    for record in records:
+        checkout = sanitize_tree(record)
+        origin = checkout.origin
+        giturl = checkout.git_repository_url
+        branch = checkout.git_repository_branch
+        tree_name = checkout.tree_name
+        commit_hash = checkout.git_commit_hash
+        git_url_safe = quote_plus(record["git_repository_url"])
+
+        tree_key = (branch, giturl, origin)
+        tree = tree_prop_map.get(tree_key)
+        if tree is None:
+            log_message("Found tree not in map")
             continue
 
-        checkout["giturl_safe"] = quote_plus(checkout["git_repository_url"])
         path = tree["path"] if "path" in tree else "%"
 
-        new_issues, fixed_issues, unstable_tests = evaluate_test_results(checkout, path)
+        new_issues, fixed_issues, unstable_tests = evaluate_test_results(
+            origin=origin,
+            giturl=giturl,
+            branch=branch,
+            commit_hash=commit_hash,
+            path=path,
+        )
 
         always = True if "always" in tree.keys() and tree["always"] else False
 
@@ -429,26 +465,31 @@ def run_checkout_summary(service, signup_file, email_args):
                 )
                 continue
 
+        build_status_group = group_status(checkout.build_status)
+        boot_status_group = group_status(checkout.boot_status)
+        test_status_group = group_status(checkout.test_status)
+
         report = {}
         template = setup_jinja_template("summary.txt.j2")
         report["content"] = template.render(
-            checkout=checkout,
+            checkout=record,
             new_issues=new_issues,
             fixed_issues=fixed_issues,
             unstable_tests=unstable_tests,
+            git_url_safe=git_url_safe,
+            build_status_group=build_status_group,
+            boot_status_group=boot_status_group,
+            test_status_group=test_status_group,
         )
-        report["title"] = (
-            f"[STATUS] {checkout["tree_name"]}/{checkout["git_repository_branch"]}"
-            f" - {checkout["git_commit_hash"]}"
-        )
+        report["title"] = f"[STATUS] {tree_name}/{branch} - {record["git_commit_hash"]}"
 
         print(report["content"])
-        email_args.tree_name = checkout["tree_name"]
+        email_args.tree_name = tree_name
         msg_id = send_email_report(service, report, email_args)
 
         if msg_id and email_args.update:
             mark_checkout_notification_as_sent(
-                checkout_id=checkout["id"], msg_id=msg_id
+                checkout_id=record["checkout_id"], msg_id=msg_id
             )
 
 

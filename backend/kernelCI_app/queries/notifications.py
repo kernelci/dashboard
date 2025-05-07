@@ -5,6 +5,9 @@
 import sys
 from django.db import connection
 
+from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.queries.tree import get_tree_listing_query
+
 
 def kcidb_execute_query(query, params=None):
     try:
@@ -352,45 +355,97 @@ def kcidb_last_test_without_issue(issue, incident):
     return kcidb_execute_query(query, params)
 
 
-def kcidb_latest_checkout_results(origin, giturl, branch):
+# Similar to get_tree_listing_data, but at the same time it has to be different.
+# Only the "with", "join" and "where" clauses change
+def get_checkout_summary_data(
+    tuple_params: list[tuple[str, str, str]],
+) -> list[dict]:
+    """Queries for the checkout and status count data similarly to tree_listing but
+    using a list of parameters for the filtering
+
+    Parameters:
+        tuple_params: a list of tuples (str, str, str)
+        representing (git_repository_branch, git_repository_url, origin)
+
+    Returns:
+        out: a list of dicts with the records found.
+        If no tuple parameters are provided, returns an empty list
     """
-    Fetches checkouts between in the past 5 to 29 hours.
-    As KCIDB doesn't have an end of testing signal, we have
-    to wait some time before we can send the report.
+    if not tuple_params:
+        return []
+
+    interval_min = "5 hours"
+    interval_max = "29 hours"
+
+    with_clause = f"""
+            WITH
+                ORDERED_CHECKOUTS_BY_TREE AS (
+                    SELECT
+                        C.GIT_REPOSITORY_BRANCH,
+                        C.GIT_REPOSITORY_URL,
+                        C.GIT_COMMIT_HASH,
+                        C.ORIGIN,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY
+                                C.GIT_REPOSITORY_BRANCH,
+                                C.GIT_REPOSITORY_URL
+                            ORDER BY
+                                C.START_TIME DESC
+                        ) AS TIME_ORDER
+                    FROM
+                        CHECKOUTS C
+                    JOIN (
+                        VALUES
+                            {",".join(["(%s, %s, %s)"] * len(tuple_params))}
+                        ) AS v(branch, giturl, origin)
+                        ON (
+                            c.git_repository_branch = v.branch
+                            AND c.git_repository_url = v.giturl
+                            AND c.origin = v.origin
+                        )
+                    WHERE
+                        C.START_TIME >= NOW() - INTERVAL '{interval_max}'
+                        AND C.START_TIME <= NOW() - INTERVAL '{interval_min}'
+                ),
+                FIRST_TREE_CHECKOUT AS (
+                    SELECT
+                        GIT_REPOSITORY_BRANCH,
+                        GIT_REPOSITORY_URL,
+                        GIT_COMMIT_HASH,
+                        ORIGIN
+                    FROM
+                        ORDERED_CHECKOUTS_BY_TREE
+                    WHERE
+                        TIME_ORDER = 1
+                )
     """
 
-    params = {
-        "origin": origin,
-        "giturl": giturl,
-        "branch": branch,
-        "interval_min": "5 hours",
-        "interval_max": "29 hours",
-    }
+    join_clause = """
+                JOIN FIRST_TREE_CHECKOUT FTC ON (
+                    checkouts.git_repository_branch IS NOT DISTINCT FROM FTC.GIT_REPOSITORY_BRANCH
+                    AND checkouts.git_repository_url IS NOT DISTINCT FROM FTC.GIT_REPOSITORY_URL
+                    AND checkouts.git_commit_hash = FTC.GIT_COMMIT_HASH
+                    AND checkouts.origin = FTC.ORIGIN
+                )
+    """
 
-    query = """
-            SELECT
-                _timestamp,
-                id,
-                origin,
-                tree_name,
-                git_repository_url,
-                git_repository_branch,
-                git_commit_hash
-            FROM checkouts c
-                WHERE c.origin = %(origin)s
-                AND c.git_repository_url = %(giturl)s
-                AND c.git_repository_branch = %(branch)s
-                AND c._timestamp >= NOW() - INTERVAL %(interval_max)s
-                AND c._timestamp <= NOW() - INTERVAL %(interval_min)s
-                ORDER BY c._timestamp DESC
-                LIMIT 1
-        """
-    result = kcidb_execute_query(query, params)
-    return result[0] if result else None
+    query = get_tree_listing_query(
+        with_clause=with_clause,
+        join_clause=join_clause,
+        where_clause="",
+    )
+
+    flattened_list = []
+    for tuple in tuple_params:
+        flattened_list += list(tuple)
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, flattened_list)
+        return dict_fetchall(cursor=cursor)
 
 
 def kcidb_tests_results(origin, giturl, branch, hash, path):
-    """Fetches build incidents of a given issue."""
+    """Fetches the history of tests in a specific checkout and with a specific path."""
 
     params = {
         "origin": origin,
