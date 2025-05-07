@@ -93,24 +93,65 @@ def _get_tree_listing_count_clause() -> str:
     return build_count_clause + test_count_clause + boot_count_clause
 
 
-def get_tree_listing_data(origin: str, interval_in_days: int) -> Optional[list[dict]]:
+def get_tree_listing_query(with_clause, join_clause, where_clause):
     count_clauses = _get_tree_listing_count_clause()
 
+    # 'MAX(checkouts.id) as id' is necessary in this case because
+    # if we just added the id in the query it would alter the GROUP BY clause,
+    # potentially causing the tree listing page show the same tree multiple times
+    main_query = f"""
+            {with_clause}
+            SELECT
+                MAX(checkouts.id) AS checkout_id,
+                checkouts.tree_name,
+                checkouts.git_repository_branch,
+                checkouts.git_repository_url,
+                checkouts.git_commit_hash,
+                checkouts.origin_builds_finish_time,
+                checkouts.origin_tests_finish_time,
+                CASE
+                    WHEN COUNT(DISTINCT checkouts.git_commit_tags) > 0 THEN COALESCE(
+                        ARRAY_AGG(DISTINCT checkouts.git_commit_tags) FILTER (
+                            WHERE
+                                checkouts.git_commit_tags IS NOT NULL
+                                AND checkouts.git_commit_tags::TEXT <> '{"{}"}'
+                        ),
+                        ARRAY[]::TEXT[]
+                    )
+                    ELSE ARRAY[]::TEXT[]
+                END AS git_commit_tags,
+                MAX(checkouts.git_commit_name) AS git_commit_name,
+                MAX(checkouts.start_time) AS start_time,
+                {count_clauses}
+                checkouts.origin
+            FROM
+                checkouts
+                LEFT JOIN builds ON builds.checkout_id = checkouts.id
+                LEFT JOIN tests ON tests.build_id = builds.id
+                {join_clause}
+            {where_clause}
+            GROUP BY
+                checkouts.git_commit_hash,
+                checkouts.git_repository_branch,
+                checkouts.git_repository_url,
+                checkouts.tree_name,
+                checkouts.origin_builds_finish_time,
+                checkouts.origin_tests_finish_time,
+                checkouts.origin
+            ORDER BY
+                checkouts.git_commit_hash
+            """
+    return main_query
+
+
+def get_tree_listing_data(origin: str, interval_in_days: int) -> Optional[list[dict]]:
     params = {
         "origin_param": origin,
         "interval_param": interval_in_days,
     }
 
-    # 'MAX(checkouts.id) as id' is necessary in this case because
-    # if we just added the id in the query it would alter the GROUP BY clause,
-    # potentially causing the tree listing page show the same tree multiple times
-    #
-    # The JOIN FTC with IS NOT DISTINCT FROM is necessary because the fields can be NULL,
-    # in which case a simple `WHERE (git_branch, git_url, git_hash) IN FTC` wouldn't work
-    # since the NULL comparison would return UNKNOWN
-    #
     # TODO: reuse the FIRST_TREE_CHECKOUT query
-    query = f"""
+    with_clause = f"""
             WITH
                 ORDERED_CHECKOUTS_BY_TREE AS (
                     SELECT
@@ -140,51 +181,29 @@ def get_tree_listing_data(origin: str, interval_in_days: int) -> Optional[list[d
                     WHERE
                         TIME_ORDER = 1
                 )
-            SELECT
-                MAX(checkouts.id) AS checkout_id,
-                checkouts.tree_name,
-                checkouts.git_repository_branch,
-                checkouts.git_repository_url,
-                checkouts.git_commit_hash,
-                checkouts.origin_builds_finish_time,
-                checkouts.origin_tests_finish_time,
-                CASE
-                    WHEN COUNT(DISTINCT checkouts.git_commit_tags) > 0 THEN COALESCE(
-                        ARRAY_AGG(DISTINCT checkouts.git_commit_tags) FILTER (
-                            WHERE
-                                checkouts.git_commit_tags IS NOT NULL
-                                AND checkouts.git_commit_tags::TEXT <> '{"{}"}'
-                        ),
-                        ARRAY[]::TEXT[]
-                    )
-                    ELSE ARRAY[]::TEXT[]
-                END AS git_commit_tags,
-                MAX(checkouts.git_commit_name) AS git_commit_name,
-                MAX(checkouts.start_time) AS start_time,
-                {count_clauses}
-                checkouts.origin
-            FROM
-                checkouts
-                LEFT JOIN builds ON builds.checkout_id = checkouts.id
-                LEFT JOIN tests ON tests.build_id = builds.id
+    """
+
+    # The JOIN FTC with IS NOT DISTINCT FROM is necessary because the fields can be NULL,
+    # in which case a simple `WHERE (git_branch, git_url, git_hash) IN FTC` wouldn't work
+    # since the NULL comparison would return UNKNOWN
+    join_clause = """
                 JOIN FIRST_TREE_CHECKOUT FTC ON (
                     checkouts.git_repository_branch IS NOT DISTINCT FROM FTC.GIT_REPOSITORY_BRANCH
                     AND checkouts.git_repository_url IS NOT DISTINCT FROM FTC.GIT_REPOSITORY_URL
                     AND checkouts.git_commit_hash = FTC.GIT_COMMIT_HASH
                 )
+    """
+
+    where_clause = """
             WHERE
                 checkouts.origin = %(origin_param)s
-            GROUP BY
-                checkouts.git_commit_hash,
-                checkouts.git_repository_branch,
-                checkouts.git_repository_url,
-                checkouts.tree_name,
-                checkouts.origin_builds_finish_time,
-                checkouts.origin_tests_finish_time,
-                checkouts.origin
-            ORDER BY
-                checkouts.git_commit_hash
-            """
+    """
+
+    query = get_tree_listing_query(
+        with_clause=with_clause,
+        join_clause=join_clause,
+        where_clause=where_clause,
+    )
 
     try:
         with connection.cursor() as cursor:
