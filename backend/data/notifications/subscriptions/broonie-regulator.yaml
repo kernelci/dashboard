@@ -1,0 +1,11 @@
+broonie-regulator:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/regulator.git
+  default_recipients:
+    - broonie@kernel.org
+
+  reports:
+    - for-linus:
+      branch: for-linus
+
+    - for-next:
+      branch: for-next

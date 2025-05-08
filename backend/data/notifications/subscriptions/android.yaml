@@ -1,0 +1,15 @@
+android:
+  url: https://android.googlesource.com/kernel/common
+  default_recipients:
+    - tkjos@google.com
+    - joneslee@google.com
+
+  reports:
+    - mainline:
+      branch: android-mainline
+
+    - 15-6.6:
+      branch: android15-6.6
+
+    - 16-6.12:
+      branch: android16-6.12

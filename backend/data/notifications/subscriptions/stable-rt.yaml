@@ -1,0 +1,36 @@
+# Note: do not confuse with stable-rc
+stable-rt:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-stable-rt.git
+  
+  reports:
+    - v5.4-rt:
+      branch: v5.4-rt
+      path: rt-tests%
+  
+    - v5.10-rt:
+      branch: v5.10-rt
+      path: rt-tests%
+  
+    - v5.10-rt-next:
+      branch: v5.10-rt-next
+      path: rt-tests%
+  
+    - v5.15-rt:
+      branch: v5.15-rt
+      path: rt-tests%
+  
+    - v5.15-rt-next:
+      branch: v5.15-rt-next
+      path: rt-tests%
+  
+    - v6.1-rt:
+      branch: v6.1-rt
+      path: rt-tests%
+  
+    - v6.6-rt:
+      branch: v6.6-rt
+      path: rt-tests%
+  
+    - v6.6-rt-next:
+      branch: v6.6-rt-next
+      path: rt-tests%

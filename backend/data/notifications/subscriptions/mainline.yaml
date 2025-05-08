@@ -1,0 +1,16 @@
+mainline:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+  default_recipients:
+    - laura.nao@collabora.com
+    - shreeya.patel@collabora.com
+    - broonie@kernel.org
+
+  reports:
+    - default:
+      branch: master
+      always: True
+    
+    - microsoft:
+      branch: master
+      origin: microsoft
+      always: True
