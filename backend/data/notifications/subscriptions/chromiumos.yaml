@@ -1,0 +1,24 @@
+chromiumos:
+  url: https://chromium.googlesource.com/chromiumos/third_party/kernel.git
+  default_recipients:
+    - laura.nao@collabora.com
+    - shreeya.patel@collabora.com
+
+  reports:
+    - chromeos-5.10:
+      branch: chromeos-5.10
+
+    - chromeos-5.15:
+      branch: chromeos-5.15
+
+    - chromeos-5.4:
+      branch: chromeos-5.4
+
+    - chromeos-6.1:
+      branch: chromeos-6.1
+
+    - chromeos-6.6:
+      branch: chromeos-6.6
+
+    - chromeos-6.12:
+      branch: chromeos-6.12

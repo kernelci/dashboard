@@ -1,0 +1,8 @@
+omap:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux-omap.git
+  default_recipients:
+    - khilman@baylibre.com
+
+  reports:
+    - default:
+      branch: for-next

@@ -1,0 +1,6 @@
+arm64:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git
+  
+  reports:
+    - default:
+      branch: for-kernelci
