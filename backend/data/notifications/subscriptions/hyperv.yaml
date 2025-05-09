@@ -1,0 +1,11 @@
+hyperv:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/hyperv/linux.git
+  
+  reports:
+    - next:
+      branch: hyperv-next
+      origin: microsoft
+
+    - fixes:
+      branch: hyperv-fixes
+      origin: microsoft
