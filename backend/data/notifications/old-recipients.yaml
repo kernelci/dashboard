@@ -1,0 +1,13 @@
+trees:
+  arnd:
+    - arnd@arndb.de
+    # branch: to-build
+  cip:
+    - cip-dev@lists.cip-project.org
+    # branch: many
+  robh:
+    - robh@kernel.org
+    # branch: for-kernelci
+  stable-rc:
+    - stable@vger.kernel.org
+    # branch: many
