@@ -60,4 +60,5 @@ def get_all_issue_keys() -> list[IssueKeyTuple]:
     except ValueError as e:
         log_message(f"Validation error when getting all issue keys: {e}")
         return []
-    return valid_results
+
+    return results
