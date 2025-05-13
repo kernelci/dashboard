@@ -173,7 +173,7 @@ CRONJOBS = [
     ),
 ]
 
-GMAIL_API_TOKEN = get_json_env_var("GMAIL_API_TOKEN", "")
+GMAIL_API_TOKEN = get_json_env_var("GMAIL_API_TOKEN", "gmail_api_token.json")
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

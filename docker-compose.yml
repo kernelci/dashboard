@@ -59,6 +59,7 @@ services:
             - DEBUG=False
             - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
             - REDIS_HOST=redis
+            - GMAIL_API_TOKEN=gmail_api_token.json
         volumes:
             - db-data:/backend/data
 
