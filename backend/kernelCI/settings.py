@@ -185,7 +185,7 @@ DATABASES = {
         "DB_DEFAULT",
         {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": "kernelci",
+            "NAME": "kcidb",
             "USER": "kernelci",
             "PASSWORD": "kernelci-db-password",
             "HOST": "127.0.0.1",

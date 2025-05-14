@@ -1,5 +1,5 @@
 volumes:
-    db-data:
+    backend-data:
     runtime-data:
     static-data:
 
@@ -61,7 +61,7 @@ services:
             - REDIS_HOST=redis
             - GMAIL_API_TOKEN=gmail_api_token.json
         volumes:
-            - db-data:/backend/data
+            - backend-data:/backend/data
 
     dashboard:
         build: ./dashboard

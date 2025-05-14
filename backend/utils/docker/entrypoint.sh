@@ -46,6 +46,11 @@ if [ "$SETUP_DJANGO" = 1 ]; then
     exit 0
 fi
 
+# Bring back new local files from backend to the docker volume
+echo "Copying backend data backup to volume"
+rsync -av --ignore-existing /tmp/backend_data_backup/. /backend/data/
+rm -rf /tmp/backend_data_backup
+
 # Add and start cronjobs
 poetry run ./manage.py crontab add
 crond start
@@ -55,4 +60,4 @@ chmod +x ./migrate-cache-db.sh
 ./migrate-cache-db.sh
 
 
-exec gunicorn kernelCI.wsgi:application "$@"
+exec "$@"
