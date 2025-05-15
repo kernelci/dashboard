@@ -32,6 +32,7 @@ After connecting to Google Cloud, execute the server with:
 poetry run python3 manage.py runserver
 ```
 
+
 ## Running unit tests
 The backend includes unit tests covering some parts of the source code. To run the tests, use the following command:
 
@@ -64,6 +65,7 @@ poetry run pytest --run-all
 The command above is also executed in our CI system, and every pull request must pass the tests before
 it can be merged.
 
+
 ## Cron jobs
 
 We have support for cron jobs using django-crontab. To set up cron jobs, edit the `CRONJOBS` variable in /backend/kernelCI/settings.py
@@ -80,7 +82,7 @@ or
 ```docker exec -it dashboard-backend-1 poetry run ./manage.py crontab show```
 
 
-# Deploy instructions
+## Deploy instructions
 
 To check if it is ready for a deploy you can run 
 ```sh
@@ -100,18 +102,23 @@ export DJANGO_SECRET_KEY=$(openssl rand -base64 22)
 We are not using sessions or anything like that right now, so changing the secret key won't be a big deal.
 
 
-# Requests
-In the `/requests` directory we have scripts that execute requests to endpoints using [httpie](https://httpie.io/)
+## Requests
+In the `/requests` directory we have scripts that execute requests to endpoints using [httpie](https://httpie.io/). They serve as examples of how you could use the API, and what responses you can expect. If you are contributing to some endpoint and change any of the responses, please remember to update those files.
 
-
-# Debug
+## Debug
 
 For debugging we have two env variables
 
 `DEBUG` and `DEBUG_SQL_QUERY` that can be set to `True` to enable debugging. The reason `DEBUG_SQL_QUERY` is separated is that it can be very verbose.
 
+
 ## Open API generate
 You can update the OpenAPI schema by running the `generate-schema.sh` script
+
+
+## SQLite migrations
+
+Besides KCIDB, we also have sqlite databases that store cached data and other custom data. You can update it by running the `migrate-cache-db.sh` script
 
 
 ## Discord Webhook Integration
@@ -123,6 +130,12 @@ The webdashboard backend can send notifications to discord via a webhook. In ord
 For an introduction on discord webhooks, visit https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks.
 
 For more detailed developer resources, visit https://discord.com/developers/docs/resources/webhook.
+
+
+## Email notifications
+
+The email notification system is used with cron jobs to be able to send regular updates about specific actions to the relevant recipients. You can check more information about it on ~/docs/notifications.md
+
 
 ## IDE Specific:
 You are free to use whichever tool you would like, but here are tips for specific IDEs
