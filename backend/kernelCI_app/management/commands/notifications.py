@@ -1,8 +1,8 @@
+from typing import Optional
 import jinja2
 import json
 import os
 import sys
-import yaml
 
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -11,7 +11,6 @@ from urllib.parse import quote_plus
 
 from django.core.management.base import BaseCommand
 
-from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.system import is_production_instance
 
@@ -20,6 +19,14 @@ from kernelCI_app.helpers.email import (
     gmail_send_email,
 )
 from kernelCI_app.helpers.trees import sanitize_tree
+from kernelCI_app.management.commands.helpers.common import (
+    get_default_tree_recipients,
+)
+from kernelCI_app.management.commands.helpers.summary import (
+    SUMMARY_SIGNUP_FOLDER,
+    PossibleReportOptions,
+    process_submissions_files,
+)
 from kernelCI_app.queries.notifications import (
     get_checkout_summary_data,
     kcidb_new_issues,
@@ -43,8 +50,6 @@ from kernelCI_cache.typeModels.databases import PossibleIssueType
 
 from kernelCI_app.utils import group_status
 
-STORAGE_FILE = "found_issues.json"
-SUMMARY_SIGNUP_FILE = "data/summary-signup.yaml"
 
 KERNELCI_RESULTS = "kernelci-results@groups.io"
 KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
@@ -62,7 +67,29 @@ def ask_confirmation():
             print("Please enter 'y' or 'n'.")
 
 
-def send_email_report(service, report, email_args, tree_name=None):
+def send_email_report(
+    *,
+    service,
+    report,
+    email_args,
+    git_url: Optional[str] = None,
+    signup_folder: Optional[str] = None,
+    recipients: Optional[list[str]] = None,
+):
+    """Sets up the email arguments and sends the report.
+
+    Params:
+        service: the email service used to send the email itself
+        report: the dict with information about the report, usually set up with jinja
+        email_args: the SimpleNamespace with options for the email sending
+        git_url: the git_repository_url of a tree that is used to retrieve the recipients for the email.\n
+          Requires signup_folder to be set in order to take effect.
+        signup_folder: the folder with the tree submissions files that is used
+          to retrieve the recipients for the email.\n
+          Is only used if git_url is set and default recipients are not ignored.
+        recipients: a direct list of email recipients to use,
+          this parameter overrides the use of git_url + signup_folder.
+    """
     sender_email = "KernelCI bot <bot@kernelci.org>"
     subject = report["title"]
     message_text = report["content"]
@@ -71,6 +98,7 @@ def send_email_report(service, report, email_args, tree_name=None):
         print("\n==============================================")
         print(f"new report:\n> {subject}")
         print(message_text)
+        print("Email not sent since flag --send is False")
         return None
 
     cc = ""
@@ -81,9 +109,14 @@ def send_email_report(service, report, email_args, tree_name=None):
     else:
         to = email_args.to
 
-    if email_args.tree_name and not email_args.ignore_recipients:
-        recipients = get_recipient_list(email_args.tree_name)
-        cc = ", ".join([recipients, cc]) if cc else recipients
+    if not email_args.ignore_recipients:
+        if not recipients:
+            recipients = get_default_tree_recipients(
+                signup_folder=signup_folder,
+                search_url=git_url,
+            )
+        formatted_recipients = ", ".join(recipients) if recipients else ""
+        cc = ", ".join([formatted_recipients, cc]) if cc else formatted_recipients
 
     if email_args.cc:
         cc = ", ".join([email_args.cc, cc]) if cc else email_args.cc
@@ -152,50 +185,7 @@ def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
     return new_issues
 
 
-def read_yaml_file(file):
-    """Reads a YAML file and returns the data as a dictionary."""
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    filepath = os.path.join(base_dir, file)
-    try:
-        with open(filepath, "r") as file:
-            data = yaml.safe_load(
-                file
-            )  # Use safe_load to avoid potential security issues
-            return data
-    except FileNotFoundError:
-        print(f"Error: File not found at {filepath}")
-        return None
-    except yaml.YAMLError as exc:
-        print(f"Error parsing YAML: {exc}")
-        return None
-
-
-def get_recipient_list(tree_name):
-    """
-    Read recipients from a YAML file for a given tree name.
-
-    Args:
-        tree_name (str): Name of the tree (e.g., 'android', 'stable', 'next')
-
-    Returns:
-        str: Comma-separated list of email addresses for the specified tree
-             Returns None if tree is not found
-    """
-    try:
-        data = read_yaml_file("data/recipients.yaml")
-
-        if tree_name in data["trees"]:
-            recipients = data["trees"][tree_name]
-            return ", ".join(recipients)
-
-        return None
-
-    except (KeyError, TypeError) as e:
-        print(f"Error accessing tree data: {e}")
-        return None
-
-
-def look_for_new_issues(service, email_args):
+def look_for_new_issues(*, service, signup_folder, email_args):
     if is_production_instance():
         return
 
@@ -224,14 +214,23 @@ def look_for_new_issues(service, email_args):
     )
     report["title"] = f"new issues summary - {now.strftime("%Y-%m-%d %H:%M %Z")}"
 
-    send_email_report(service, report, email_args)
+    send_email_report(
+        service=service,
+        report=report,
+        email_args=email_args,
+        signup_folder=signup_folder,
+    )
 
     email_args.add_mailing_lists = True
     email_args.update = True
     for issue in new_build_issues:
         if issue["origin"] == "maestro":
-            email_args.tree_name = issue["tree_name"]
-            generate_issue_report(service, issue["id"], email_args)
+            generate_issue_report(
+                service=service,
+                issue_id=issue["id"],
+                email_args=email_args,
+                signup_folder=signup_folder,
+            )
 
 
 def ask_ignore_issue():
@@ -275,18 +274,27 @@ def generate_boot_issue_report(issue, incidents):
     return report
 
 
-def generate_issue_report(service, issue_id, email_args, ask_ignore=False):
+def generate_issue_report(
+    *,
+    service,
+    issue_id,
+    email_args,
+    ask_ignore=False,
+    signup_folder,
+):
     result = kcidb_issue_details(issue_id)
     if not result:
         print("issue not found!")
         sys.exit(-1)
+
     issue = result[0]
     issue_version = issue["version"]
     timestamp = issue["_timestamp"]
     comment = issue["comment"]
+    issue_tree_name = issue["tree_name"]
 
     print("=====================")
-    print(f"# {issue["tree_name"]}/{issue["git_repository_branch"]} - {timestamp}")
+    print(f"# {issue_tree_name}/{issue["git_repository_branch"]} - {timestamp}")
     print(f"  comment: {comment}")
     print(f"  dashboard: https://d.kernelci.org/issue/{issue_id}")
 
@@ -319,9 +327,15 @@ def generate_issue_report(service, issue_id, email_args, ask_ignore=False):
         print(f"unable to generate issue report for {issue_id}", file=sys.stderr)
         sys.exit(-1)
 
-    email_args.tree_name = issue["tree_name"]
+    email_args.tree_name = issue_tree_name
     email_args.regression_report = True
-    msg_id = send_email_report(service, report, email_args)
+    msg_id = send_email_report(
+        service=service,
+        report=report,
+        email_args=email_args,
+        signup_folder=signup_folder,
+        git_url=issue["git_repository_url"],
+    )
 
     if msg_id and email_args.update:
         mark_issue_notification_sent(
@@ -407,29 +421,26 @@ def evaluate_test_results(
     return new_issues, fixed_issues, unstable_tests
 
 
-def run_checkout_summary(service, signup_file, email_args):
+def run_checkout_summary(
+    *,
+    service,
+    signup_folder: Optional[str] = None,
+    summary_origins: Optional[list[str]],
+    email_args,
+):
     if is_production_instance():
         return
 
-    tree_data = read_yaml_file(signup_file)
+    tree_key_set, tree_prop_map = process_submissions_files(
+        signup_folder=signup_folder,
+        summary_origins=summary_origins,
+    )
 
-    tree_key_list: list[tuple[str, str, str]] = []
-    tree_prop_map: dict[tuple[str, str, str], dict] = {}
-    for tree_name, tree_values in tree_data["trees"].items():
-        if "origin" in tree_values:
-            origin = tree_values["origin"]
-        else:
-            origin = DEFAULT_ORIGIN
-        branch = tree_values.get("branch")
-        giturl = tree_values.get("giturl")
-        tree_key = (branch, giturl, origin)
+    records = get_checkout_summary_data(tuple_params=list(tree_key_set))
 
-        tree_prop_map[tree_key] = tree_values
-        tree_prop_map[tree_key]["name"] = tree_name
-
-        tree_key_list.append(tree_key)
-
-    records = get_checkout_summary_data(tuple_params=tree_key_list)
+    if not records:
+        print("No data retrived for summary")
+        return
 
     for record in records:
         checkout = sanitize_tree(record)
@@ -441,73 +452,102 @@ def run_checkout_summary(service, signup_file, email_args):
         git_url_safe = quote_plus(record["git_repository_url"])
 
         tree_key = (branch, giturl, origin)
-        tree = tree_prop_map.get(tree_key)
-        if tree is None:
+        tree_report_list = tree_prop_map.get(tree_key)
+        if not tree_report_list:
             log_message("Found tree not in map")
             continue
 
-        path = tree["path"] if "path" in tree else "%"
+        for tree_report in tree_report_list:
+            path = tree_report["path"] if "path" in tree_report else "%"
 
-        new_issues, fixed_issues, unstable_tests = evaluate_test_results(
-            origin=origin,
-            giturl=giturl,
-            branch=branch,
-            commit_hash=commit_hash,
-            path=path,
-        )
-
-        always = True if "always" in tree.keys() and tree["always"] else False
-
-        if not always:
-            if not new_issues and not fixed_issues and not unstable_tests:
-                print(
-                    f"No changes for {tree["giturl"]} branch: {tree["branch"]} (origin: {origin})"
-                )
-                continue
-
-        build_status_group = group_status(checkout.build_status)
-        boot_status_group = group_status(checkout.boot_status)
-        test_status_group = group_status(checkout.test_status)
-
-        report = {}
-        template = setup_jinja_template("summary.txt.j2")
-        report["content"] = template.render(
-            checkout=record,
-            new_issues=new_issues,
-            fixed_issues=fixed_issues,
-            unstable_tests=unstable_tests,
-            git_url_safe=git_url_safe,
-            build_status_group=build_status_group,
-            boot_status_group=boot_status_group,
-            test_status_group=test_status_group,
-        )
-        report["title"] = f"[STATUS] {tree_name}/{branch} - {record["git_commit_hash"]}"
-
-        print(report["content"])
-        email_args.tree_name = tree_name
-        msg_id = send_email_report(service, report, email_args)
-
-        if msg_id and email_args.update:
-            mark_checkout_notification_as_sent(
-                checkout_id=record["checkout_id"], msg_id=msg_id
+            new_issues, fixed_issues, unstable_tests = evaluate_test_results(
+                origin=origin,
+                giturl=giturl,
+                branch=branch,
+                commit_hash=commit_hash,
+                path=path,
             )
 
+            always = (
+                True
+                if "always" in tree_report.keys() and tree_report["always"]
+                else False
+            )
 
-def create_and_send_issue_reports(service, email_args):
+            if not always:
+                if not new_issues and not fixed_issues and not unstable_tests:
+                    print(
+                        f"No changes for {giturl} branch: {branch} (origin: {origin})"
+                    )
+                    continue
+
+            build_status_group = group_status(checkout.build_status)
+            boot_status_group = group_status(checkout.boot_status)
+            test_status_group = group_status(checkout.test_status)
+
+            report = {}
+            template = setup_jinja_template("summary.txt.j2")
+            report["content"] = template.render(
+                checkout=record,
+                new_issues=new_issues,
+                fixed_issues=fixed_issues,
+                unstable_tests=unstable_tests,
+                git_url_safe=git_url_safe,
+                build_status_group=build_status_group,
+                boot_status_group=boot_status_group,
+                test_status_group=test_status_group,
+            )
+            report["title"] = (
+                f"[STATUS] {tree_name}/{branch} - {record["git_commit_hash"]}"
+            )
+
+            default_recipients = tree_report.get("default_recipients", [])
+            specific_recipients = tree_report.get("recipients", [])
+            recipients = default_recipients + specific_recipients
+            report_options: list[PossibleReportOptions] = tree_report.get("options", [])
+            for option in report_options:
+                match option:
+                    case "ignore_default_recipients":
+                        recipients = specific_recipients
+            email_args.tree_name = tree_name
+            msg_id = send_email_report(
+                service=service,
+                report=report,
+                email_args=email_args,
+                recipients=recipients,
+            )
+
+            if msg_id and email_args.update:
+                mark_checkout_notification_as_sent(
+                    checkout_id=record["checkout_id"], msg_id=msg_id
+                )
+
+
+def create_and_send_issue_reports(*, service, email_args, signup_folder):
     unsent_issues = get_unsent_issues()
     for issue in unsent_issues:
         if issue.issue_type != "build":
             continue
 
-        generate_issue_report(service, issue.issue_id, email_args, ask_ignore=True)
+        generate_issue_report(
+            service=service,
+            issue_id=issue.issue_id,
+            email_args=email_args,
+            ask_ignore=True,
+            signup_folder=signup_folder,
+        )
 
 
-def run_fake_report(service, email_args):
+def run_fake_report(*, service, email_args):
     report = {}
     report["content"] = "Testing the email sending path..."
     report["title"] = "[IGNORE] Test report"
 
-    send_email_report(service, report, email_args)
+    send_email_report(
+        service=service,
+        report=report,
+        email_args=email_args,
+    )
 
 
 class Command(BaseCommand):
@@ -568,10 +608,17 @@ class Command(BaseCommand):
         )
 
         # Summary specific arguments
+        # TODO: add argument to pass custom base dir as well
         parser.add_argument(
-            "--summary-signup-file",
+            "--summary-signup-folder",
             type=str,
-            help="Pass alternative summary signup file",
+            help="Pass alternative summary signup folder. Must be in /backend/data.",
+        )
+        parser.add_argument(
+            "--summary-origins",
+            type=lambda s: [origin.strip() for origin in s.split(",")],
+            help="Limit checkout summary to specific origins (comma-separated list)."
+            + " If not provided, any origin will be considered",
         )
 
         # Fake report specific arguments
@@ -601,15 +648,28 @@ class Command(BaseCommand):
         # Get the tree name if in fake_report action
         email_args.tree_name = options.get("tree") if action == "fake_report" else None
 
+        # A custom signup_folder used to get the submission files
+        signup_folder = options.get("summary_signup_folder")
+        if signup_folder is None:
+            signup_folder = SUMMARY_SIGNUP_FOLDER
+
         self.stdout.write(f"Running action: {action}")
 
         if action == "new_issues":
-            look_for_new_issues(service, email_args)
+            look_for_new_issues(
+                service=service,
+                email_args=email_args,
+                signup_folder=signup_folder,
+            )
 
         elif action == "issue_report":
             email_args.update = options.get("update_storage", False)
             if options.get("all", False):
-                create_and_send_issue_reports(service, email_args)
+                create_and_send_issue_reports(
+                    service=service,
+                    email_args=email_args,
+                    signup_folder=signup_folder,
+                )
             else:
                 issue_id = options.get("id")
                 if not issue_id:
@@ -617,17 +677,25 @@ class Command(BaseCommand):
                         self.style.ERROR("You must provide an issue ID or use --all")
                     )
                     return
-                generate_issue_report(service, issue_id, email_args)
+                generate_issue_report(
+                    service=service,
+                    issue_id=issue_id,
+                    email_args=email_args,
+                    signup_folder=signup_folder,
+                )
                 self.stdout.write(
                     self.style.SUCCESS(f"Issue report generated for issue {issue_id}")
                 )
 
         elif action == "summary":
             email_args.update = options.get("update_storage", False)
-            signup_file = options.get("summary_signup_file")
-            if not signup_file:
-                signup_file = SUMMARY_SIGNUP_FILE
-            run_checkout_summary(service, signup_file, email_args)
+            summary_origins = options.get("summary_origins")
+            run_checkout_summary(
+                service=service,
+                signup_folder=signup_folder,
+                email_args=email_args,
+                summary_origins=summary_origins,
+            )
 
         elif action == "fake_report":
-            run_fake_report(service, email_args)
+            run_fake_report(service=service, email_args=email_args)

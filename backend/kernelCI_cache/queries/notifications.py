@@ -53,14 +53,19 @@ def mark_issue_notification_not_sent(
     issue_version: int,
     issue_type: PossibleIssueType,
 ) -> bool:
-    """Creates an entry for an issue without notifications"""
+    """Creates an entry for an issue without notifications
+
+    Returns:
+      True if an issue already exists in the database, or was created.
+
+      False if any exception occurs
+    """
     try:
         issue_exists = (
             NotificationsIssue.objects.using("cache")
             .filter(
                 issue_id=issue_id,
                 issue_version=issue_version,
-                issue_type=issue_type,
             )
             .exists()
         )
