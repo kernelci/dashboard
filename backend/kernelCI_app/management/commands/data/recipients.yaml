@@ -1,9 +1,0 @@
-trees:
-  arnd:
-    - arnd@arndb.de
-  cip:
-    - cip-dev@lists.cip-project.org
-  robh:
-    - robh@kernel.org
-  stable-rc:
-    - stable@vger.kernel.org
