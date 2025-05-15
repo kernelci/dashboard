@@ -46,5 +46,8 @@ ENV BACKEND_VOLUME_DIR=${BACKEND_VOLUME_DIR}
 RUN echo "Building with volume on: $BACKEND_VOLUME_DIR"
 VOLUME ${BACKEND_VOLUME_DIR}
 
-CMD ["--workers=5", "--forwarded-allow-ips=*", "--bind=0.0.0.0:8000", "--timeout=240"]
+# gunicorn is added here but is run at the end of the entrypoint.
+# This was done here such that we can run a custom command
+# in the backend container without using gunicorn
+CMD ["gunicorn", "kernelCI.wsgi:application", "--workers=5", "--forwarded-allow-ips=*", "--bind=0.0.0.0:8000", "--timeout=240"]
 ENTRYPOINT ["/entrypoint.sh"]

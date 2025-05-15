@@ -55,4 +55,4 @@ chmod +x ./migrate-cache-db.sh
 ./migrate-cache-db.sh
 
 
-exec gunicorn kernelCI.wsgi:application "$@"
+exec "$@"
