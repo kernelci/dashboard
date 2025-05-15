@@ -1,33 +1,9 @@
 trees:
-  android:
-    - tkjos@google.com
-    - joneslee@google.com
   arnd:
     - arnd@arndb.de
   cip:
     - cip-dev@lists.cip-project.org
-  chromiumos:
-    - laura.nao@collabora.com
-    - shreeya.patel@collabora.com
-  broonie-regulator:
-    - broonie@kernel.org
-  broonie-sound:
-    - broonie@kernel.org
-  broonie-spi:
-    - broonie@kernel.org
-  sashal-next:
-    - sashal@kernel.org
-  mainline:
-    - laura.nao@collabora.com
-    - shreeya.patel@collabora.com
-    - broonie@kernel.org
-  mediatek:
-    - angelogioacchino.delregno@collabora.com
-  omap:
-    - khilman@baylibre.com
   robh:
     - robh@kernel.org
-  stable:
-    - stable@vger.kernel.org
   stable-rc:
     - stable@vger.kernel.org

@@ -156,7 +156,7 @@ CRONJOBS = [
             "--ignore-recipients",
             "--send",
             "--yes",
-            "--summary-signup-file=data/summary-signup-microsoft.yaml",
+            "--summary-origins=microsoft",
         ],
     ),
     (
@@ -169,6 +169,7 @@ CRONJOBS = [
             "--cc=gus@collabora.com",
             "--send",
             "--yes",
+            "--summary-origins=maestro",
         ],
     ),
 ]
