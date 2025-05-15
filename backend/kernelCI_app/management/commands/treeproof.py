@@ -97,7 +97,7 @@ class Command(BaseCommand):
         return trees_yml
 
     def handle(self, *args, **options):
-        filepath = os.path.join(settings.BACKEND_DATA_DIR, "trees-name.yaml")
+        filepath = os.path.join(settings.BACKEND_VOLUME_DIR, "trees-name.yaml")
 
         if os.path.exists(filepath):
             with open(filepath, "r") as file:
@@ -117,7 +117,7 @@ class Command(BaseCommand):
         merged_dict = self._merge_trees(default_trees=trees_from_file)
         formatted_dict = self._format_trees_to_yml_format(merged_dict)
 
-        filepath = os.path.join(settings.BACKEND_DATA_DIR, "trees-name.yaml")
+        filepath = os.path.join(settings.BACKEND_VOLUME_DIR, "trees-name.yaml")
         with open(filepath, "w") as file:
             yaml.dump(
                 formatted_dict, file, default_flow_style=False, allow_unicode=True

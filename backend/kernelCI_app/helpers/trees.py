@@ -17,7 +17,7 @@ def make_tree_identifier_key(
 
 def get_tree_file_data() -> dict[str, dict[str, str]]:
     """Returns the data from the tree names file"""
-    filepath = os.path.join(settings.BACKEND_DATA_DIR, "trees-name.yaml")
+    filepath = os.path.join(settings.BACKEND_VOLUME_DIR, "trees-name.yaml")
 
     if os.path.exists(filepath):
         with open(filepath, "r") as file:

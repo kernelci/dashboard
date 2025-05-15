@@ -4,5 +4,5 @@ application_default_credentials.json
 .env
 .idea
 
-# Binary SQLite database
-backend/data/cache.sqlite3
+# Data from docker volume that should only be automatically generated
+volume_data

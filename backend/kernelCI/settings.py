@@ -178,6 +178,9 @@ GMAIL_API_TOKEN = get_json_env_var("GMAIL_API_TOKEN", "gmail_api_token.json")
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# If running on docker it won't build without this variable, so we don't need to pass a default value here
+BACKEND_VOLUME_DIR = get_json_env_var("BACKEND_VOLUME_DIR", "")
+
 DATABASE_ROUTERS = ["kernelCI_app.routers.disableMigrateRouter.DisableMigrateRouter"]
 
 DATABASES = {
@@ -196,7 +199,7 @@ DATABASES = {
     ),
     "cache": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BACKEND_DATA_DIR, "cache.sqlite3"),
+        "NAME": os.path.join(BACKEND_VOLUME_DIR, "cache.sqlite3"),
     },
 }
 
