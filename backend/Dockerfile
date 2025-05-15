@@ -41,7 +41,10 @@ RUN O='0 1 2' \
 
 EXPOSE 8000
 
-VOLUME ["/backend/data"]
+ARG BACKEND_VOLUME_DIR
+ENV BACKEND_VOLUME_DIR=${BACKEND_VOLUME_DIR}
+RUN echo "Building with volume on: $BACKEND_VOLUME_DIR"
+VOLUME ${BACKEND_VOLUME_DIR}
 
 CMD ["--workers=5", "--forwarded-allow-ips=*", "--bind=0.0.0.0:8000", "--timeout=240"]
 ENTRYPOINT ["/entrypoint.sh"]

@@ -1,5 +1,5 @@
 volumes:
-    db-data:
+    backend-data:
     runtime-data:
     static-data:
 
@@ -33,7 +33,12 @@ services:
             - 6379:6379
 
     backend:
-        build: ./backend
+        build:
+            context: ./backend
+            args:
+                BACKEND_VOLUME_DIR: ${BACKEND_VOLUME_DIR:-/volume_data}
+        volumes:
+            - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
         restart: always
         container_name: dashboard_backend_service
         networks:
@@ -60,8 +65,6 @@ services:
             - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
             - REDIS_HOST=redis
             - GMAIL_API_TOKEN=gmail_api_token.json
-        volumes:
-            - db-data:/backend/data
 
     dashboard:
         build: ./dashboard
