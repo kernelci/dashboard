@@ -1,0 +1,8 @@
+sashal-next:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/sashal/linus-next.git
+  default_recipients:
+    - sashal@kernel.org
+
+  reports:
+    - default:
+      branch: linus-next

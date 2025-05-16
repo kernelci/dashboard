@@ -1,0 +1,11 @@
+media-committers:
+  url: https://gitlab.freedesktop.org/linux-media/media-committers.git
+  
+  reports:
+    - fixes:
+      branch: fixes
+      path: fluster%
+
+    - next:
+      branch: next
+      path: fluster%

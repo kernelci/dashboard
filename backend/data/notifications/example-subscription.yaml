@@ -1,0 +1,26 @@
+tree: # The filename and the name of the tree may follow the trees-name.yaml file, but does not matter in the code
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git # the git_repository_url of the tree
+  default_recipients:
+    - laura.nao@collabora.com
+    - shreeya.patel@collabora.com
+    - broonie@kernel.org
+ 
+  reports:
+    - default:
+      # origin is optional. If not provided, will be defaulted to maestro (DEFAULT_ORIGIN constant)
+      branch: master
+      always: True
+    
+    - microsoft:
+      origin: microsoft
+      branch: master
+      always: True
+
+    - rt_tests:
+      branch: master
+      path: rt-tests*
+      recipients:
+        - linux-rt-devel@lists.linux.dev
+      # The possible options for a report should be documented in the `PossibleReportOptions` type
+      options:
+        - ignore_default_recipients

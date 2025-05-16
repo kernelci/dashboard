@@ -1,7 +1,10 @@
 import json
+import os
 from typing import Union, List, Optional
 from django.utils import timezone
 from datetime import timedelta
+
+import yaml
 
 from kernelCI_app.constants.general import DEFAULT_INTERVAL_IN_DAYS
 from kernelCI_app.helpers.logger import log_message
@@ -115,3 +118,20 @@ def group_status(count: Union[StatusCount, TestStatusCount]) -> GroupedStatus:
     else:
         log_message("group_status only accepts StatusCount or TestStatusCount types")
     return result
+
+
+def read_yaml_file(*, base_dir, file):
+    """Reads a YAML file and returns the data as a dictionary."""
+    filepath = os.path.join(base_dir, file)
+    try:
+        with open(filepath, "r") as file:
+            data = yaml.safe_load(
+                file
+            )  # Use safe_load to avoid potential security issues
+            return data
+    except FileNotFoundError:
+        print(f"Error: File not found at {filepath}")
+        return None
+    except yaml.YAMLError as exc:
+        print(f"Error parsing YAML: {exc}")
+        return None
