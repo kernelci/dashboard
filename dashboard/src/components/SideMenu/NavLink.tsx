@@ -7,21 +7,37 @@ import type { JSX } from 'react';
 
 import type { MessagesKey } from '@/locales/messages';
 
+import { cn } from '@/lib/utils';
+
 import { NavigationMenuLink } from '../ui/navigation-menu';
 
-type INavLink = LinkProps & {
-  idIntl: MessagesKey;
-  icon: JSX.Element;
+type INavLinkBase = LinkProps & {
+  icon?: JSX.Element;
   href?: string;
   asTag?: string;
   selected?: boolean;
+  linkClassName?: string;
 };
+
+type INavLinkWithIntl = INavLinkBase & {
+  idIntl: MessagesKey;
+  label?: never;
+};
+
+type INavLinkWithLabel = INavLinkBase & {
+  idIntl?: never;
+  label: string;
+};
+
+type INavLink = INavLinkWithIntl | INavLinkWithLabel;
 
 const NavLink = ({
   selected = false,
   icon,
   idIntl,
+  label,
   asTag,
+  linkClassName,
   ...props
 }: INavLink): JSX.Element => {
   const LinkElement = asTag ?? Link;
@@ -37,12 +53,16 @@ const NavLink = ({
   return (
     <NavigationMenuLink asChild>
       <LinkElement
-        className={`${baseClassName} ${selected ? selectedItemClassName : notSelectedItemClassName}`}
+        className={cn(
+          baseClassName,
+          selected ? selectedItemClassName : notSelectedItemClassName,
+          linkClassName,
+        )}
         {...props}
       >
-        <span className="mr-3">{icon}</span>
+        {icon && <span className="mr-3">{icon}</span>}
         <span className="text-center text-sm">
-          <FormattedMessage id={idIntl} />
+          {label ?? <FormattedMessage id={idIntl} />}
         </span>
       </LinkElement>
     </NavigationMenuLink>

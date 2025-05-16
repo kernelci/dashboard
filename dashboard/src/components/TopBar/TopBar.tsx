@@ -104,7 +104,7 @@ const TopBar = (): JSX.Element => {
   const basePath = redirectFrom ?? splitPath;
 
   return (
-    <div className="fixed top-0 z-10 mx-52 flex h-20 w-full bg-white px-16">
+    <div className="fixed top-0 z-10 ml-56 flex h-20 w-full bg-white px-16">
       <div className="flex flex-row items-center justify-between">
         <span className="mr-14 text-2xl">
           <TitleName basePath={basePath} />
