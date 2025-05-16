@@ -9,6 +9,8 @@ import { HiOutlineDocumentSearch } from 'react-icons/hi';
 
 import { useLocation } from '@tanstack/react-router';
 
+import { FormattedMessage } from 'react-intl';
+
 import type { MessagesKey } from '@/locales/messages';
 
 import { DOCUMENTATION_URL } from '@/utils/constants/general';
@@ -22,6 +24,10 @@ import {
 import { Separator } from '@/components/ui/separator';
 
 import type { PossibleMonitorPath } from '@/types/general';
+
+import { ExternalLinkIcon } from '@/components/Icons/ExternalLink';
+
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import SendFeedback from './SendFeedback';
 
@@ -40,11 +46,31 @@ type LinkMenuItems = {
   icon: JSX.Element;
 };
 
+type LinkStringItems = {
+  url: string;
+  label: string;
+};
+
 const linkItems: LinkMenuItems[] = [
   {
     url: DOCUMENTATION_URL,
     idIntl: 'global.documentation',
     icon: <HiOutlineDocumentSearch />,
+  },
+];
+
+const dashboardItems: LinkStringItems[] = [
+  {
+    url: 'https://kdevops.org/',
+    label: 'kdevops',
+  },
+  {
+    url: 'https://netdev.bots.linux.dev/contest.html',
+    label: 'netdev-CI',
+  },
+  {
+    url: 'https://grafana.kernelci.org/d/home',
+    label: 'Grafana',
   },
 ];
 
@@ -110,6 +136,22 @@ const SideMenu = (): JSX.Element => {
     [],
   );
 
+  const dashboardElements = useMemo(
+    () =>
+      dashboardItems.map(item => (
+        <NavigationMenuItem key={item.label} className="w-full">
+          <NavLink
+            asTag="a"
+            icon={<ExternalLinkIcon />}
+            label={item.label}
+            href={item.url}
+            target="_blank"
+          />
+        </NavigationMenuItem>
+      )),
+    [],
+  );
+
   return (
     <NavigationMenu
       className="bg-bg-secondary min-h-screen flex-col justify-start pt-6"
@@ -121,13 +163,27 @@ const SideMenu = (): JSX.Element => {
 
       <Separator className="bg-on-secondary-10 my-4" />
 
-      <NavigationMenuList className="w-52 flex-col space-y-4 space-x-0">
+      <NavigationMenuList className="w-56 flex-col space-y-4 space-x-0">
         {routeItems.map(item => (
-          <SideMenuItem item={item} key={item.idIntl}></SideMenuItem>
+          <SideMenuItem item={item} key={item.idIntl} />
         ))}
         <Separator className="bg-on-secondary-10 my-4" />
         {linksItemElements}
         <SendFeedback className="w-full" />
+        <Separator className="bg-on-secondary-10 my-4" />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-2 text-white">
+              <FormattedMessage id={'sidemenu.communityDashboards'} />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-[450px]">
+            <FormattedMessage id={'sidemenu.communityDashboardsMsg'} />
+          </TooltipContent>
+        </Tooltip>
+        <div className="flex w-full flex-col space-y-0">
+          {dashboardElements}
+        </div>
       </NavigationMenuList>
     </NavigationMenu>
   );

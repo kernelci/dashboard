@@ -231,6 +231,9 @@ export const messages = {
     'routes.testDetails': 'Test',
     'routes.treeMonitor': 'Trees',
     'routes.unknown': 'Unknown',
+    'sidemenu.communityDashboards': 'Community Dashboards',
+    'sidemenu.communityDashboardsMsg':
+      'Across the Linux kernel community, there are other dashboards available that you might find useful for exploring different kernel testing data and perspectives.',
     'sidemenu.sendFeedback': 'Send us Feedback',
     'sidemenu.sendFeedbackMsg':
       'Thank you for your feedback!\nWe greatly appreciate your input. You are welcome to send us the feedback via email or by creating an issue on our GitHub repository.',
