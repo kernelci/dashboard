@@ -2,7 +2,7 @@ import React from 'react';
 
 import { FEEDBACK_EMAIL_TO } from '@/utils/constants/general';
 
-import { LOCALES } from '../constants';
+import { LOCALES } from '@/locales/constants';
 /*eslint sort-keys: "error"*/
 
 export const formattedBreakLineValue = { br: React.createElement('br') };
@@ -113,7 +113,6 @@ export const messages = {
     'global.fails': 'Fails',
     'global.filters': 'Filters',
     'global.fullLogs': 'Full logs',
-    'global.github': 'GitHub',
     'global.hardware': 'Hardware',
     'global.id': 'Id',
     'global.inconclusive': 'Inconclusive',
@@ -229,12 +228,12 @@ export const messages = {
     'routes.hardwareMonitor': 'Hardware',
     'routes.issueDetails': 'Issue',
     'routes.issueMonitor': 'Issues',
-    'routes.sendFeedback': 'Send us Feedback',
-    'routes.sendFeedbackMsg':
-      'Thank you for your feedback!\nWe greatly appreciate your input. You are welcome to send us the feedback via email or by creating an issue on our GitHub repository.',
     'routes.testDetails': 'Test',
     'routes.treeMonitor': 'Trees',
     'routes.unknown': 'Unknown',
+    'sidemenu.sendFeedback': 'Send us Feedback',
+    'sidemenu.sendFeedbackMsg':
+      'Thank you for your feedback!\nWe greatly appreciate your input. You are welcome to send us the feedback via email or by creating an issue on our GitHub repository.',
     'tab.findOnPreviousCheckoutsTooltip':
       'You may still find {tab} on previous checkouts',
     'tab.name': 'Name',
