@@ -1,21 +1,12 @@
 import { MdOutlineFeedback } from 'react-icons/md';
-import { FormattedMessage } from 'react-intl';
 
 import { useEffect, useMemo, useState, type JSX } from 'react';
 
 import { useLocation } from '@tanstack/react-router';
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { LiaGithub } from 'react-icons/lia';
+
+import { HiOutlineMail } from 'react-icons/hi';
 
 import {
   FEEDBACK_ISSUE_URL,
@@ -23,6 +14,9 @@ import {
 } from '@/utils/constants/general';
 
 import { NavigationMenuItem } from '@/components/ui/navigation-menu';
+
+import type { ActionLink } from '@/components/Dialog/CustomDialog';
+import { CustomDialog } from '@/components/Dialog/CustomDialog';
 
 import NavLink from './NavLink';
 
@@ -40,63 +34,50 @@ const SendFeedback = (
     setFullLocation(newUrl);
   }, [location]);
 
-  const github_href = useMemo(() => {
-    const github_body = encodeURIComponent(`# Feedback Description:
+  const actionLinks: ActionLink[] = useMemo(() => {
+    const github_body = encodeURIComponent(
+      `# Feedback Description:
   
 ## URL used to send feedback:
-${fullLocation}
-    `);
+${fullLocation}`,
+    );
 
-    return `${FEEDBACK_ISSUE_URL}&body=${github_body}`;
-  }, [fullLocation]);
-
-  const email_href = useMemo(() => {
-    const subject = 'Dashboard Feedback';
-    const email_body = encodeURIComponent(`Feedback Description:
+    const email_subject = 'Dashboard Feedback';
+    const email_body = encodeURIComponent(
+      `Feedback Description:
   
 URL used to send feedback:
-${fullLocation}
-      `);
+${fullLocation}`,
+    );
 
-    return `mailto:${FEEDBACK_EMAIL_TO}?body=${email_body}&subject=${subject}`;
+    return [
+      {
+        href: `${FEEDBACK_ISSUE_URL}&body=${github_body}`,
+        label: 'Github',
+        icon: <LiaGithub className="ml-2 size-5" />,
+      },
+      {
+        href: `mailto:${FEEDBACK_EMAIL_TO}?body=${email_body}&subject=${email_subject}`,
+        intlId: 'global.email',
+        icon: <HiOutlineMail className="ml-2 size-5" />,
+      },
+    ];
   }, [fullLocation]);
 
   return (
     <NavigationMenuItem {...props}>
-      <AlertDialog>
-        <AlertDialogTrigger>
+      <CustomDialog
+        trigger={
           <NavLink
             asTag="a"
             icon={<MdOutlineFeedback />}
-            idIntl="routes.sendFeedback"
+            idIntl="sidemenu.sendFeedback"
           />
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              <FormattedMessage id="routes.sendFeedback" />
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              <FormattedMessage id="routes.sendFeedbackMsg" />
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction asChild>
-              <a href={github_href} target="_blank" rel="noreferrer">
-                <FormattedMessage id="global.github" />
-              </a>
-            </AlertDialogAction>
-            <AlertDialogAction asChild>
-              <a href={email_href} target="_blank" rel="noreferrer">
-                <FormattedMessage id="global.email" />
-              </a>
-            </AlertDialogAction>
-            <AlertDialogCancel>
-              <FormattedMessage id="global.cancel" />
-            </AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        }
+        titleIntlId="sidemenu.sendFeedback"
+        descriptionIntlId="sidemenu.sendFeedbackMsg"
+        actionLinks={actionLinks}
+      />
     </NavigationMenuItem>
   );
 };
