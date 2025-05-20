@@ -151,7 +151,7 @@ def get_tree_listing_data(origin: str, interval_in_days: int) -> Optional[list[d
     }
 
     # TODO: reuse the FIRST_TREE_CHECKOUT query
-    with_clause = f"""
+    with_clause = """
             WITH
                 ORDERED_CHECKOUTS_BY_TREE AS (
                     SELECT
@@ -169,7 +169,7 @@ def get_tree_listing_data(origin: str, interval_in_days: int) -> Optional[list[d
                         CHECKOUTS
                     WHERE
                         ORIGIN = %(origin_param)s
-                        AND START_TIME >= NOW() - INTERVAL '{interval_in_days} days'
+                        AND START_TIME >= NOW() - INTERVAL '%(interval_param)s days'
                 ),
                 FIRST_TREE_CHECKOUT AS (
                     SELECT
@@ -228,8 +228,14 @@ def get_tree_listing_data(origin: str, interval_in_days: int) -> Optional[list[d
 def get_tree_listing_fast(
     *, origin: Optional[str] = None, interval: dict
 ) -> list[Checkouts]:
-    origin_clause = f"origin = '{origin}' AND" if origin is not None else ""
     interval_timestamp = get_query_time_interval(**interval).timestamp()
+    params = {"interval": interval_timestamp}
+
+    if origin:
+        origin_clause = "origin = %(origin)s AND"
+        params["origin"] = origin
+    else:
+        origin_clause = ""
 
     checkouts = Checkouts.objects.raw(
         f"""
@@ -258,7 +264,7 @@ def get_tree_listing_fast(
                 checkouts
             WHERE
                 {origin_clause}
-                start_time >= TO_TIMESTAMP({interval_timestamp})
+                start_time >= TO_TIMESTAMP(%(interval)s)
         )
         SELECT
             *
@@ -269,6 +275,7 @@ def get_tree_listing_fast(
         ORDER BY
             tree_name ASC;
         """,
+        params,
     )
 
     return list(checkouts)
@@ -453,21 +460,23 @@ def get_tree_details_data(
     return rows
 
 
+GIT_BRANCH_FIELD = "git_repository_branch"
+GIT_URL_FIELD = "git_repository_url"
+
+
 def _create_selected_checkouts_clause(*, git_url: str, git_branch: str) -> str:
-    tuple_fields = ["ORIGIN", "GIT_COMMIT_HASH"]
+    tuple_fields = ["origin", "git_commit_hash"]
     none_fields = []
-    git_branch_field = "GIT_REPOSITORY_BRANCH"
-    git_url_field = "GIT_REPOSITORY_URL"
 
     if not git_branch:
-        none_fields.append(git_branch_field)
+        none_fields.append(GIT_BRANCH_FIELD)
     else:
-        tuple_fields.append(git_branch_field)
+        tuple_fields.append(GIT_BRANCH_FIELD)
 
     if not git_url:
-        none_fields.append(git_url_field)
+        none_fields.append(GIT_URL_FIELD)
     else:
-        tuple_fields.append(git_url_field)
+        tuple_fields.append(GIT_URL_FIELD)
 
     none_clauses = ""
     for field in none_fields:
