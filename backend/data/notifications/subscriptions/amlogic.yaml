@@ -1,0 +1,5 @@
+amlogic:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/amlogic/linux.git
+  default_recipients:
+    - linux-amlogic@lists.infradead.org
+

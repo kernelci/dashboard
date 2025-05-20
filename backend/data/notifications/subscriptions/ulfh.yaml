@@ -1,0 +1,4 @@
+ulfh:
+  url: "https://git.kernel.org/pub/scm/linux/kernel/git/ulfh/mmc.git"
+  default_recipients:
+    - linux-mmc@vger.kernel.org

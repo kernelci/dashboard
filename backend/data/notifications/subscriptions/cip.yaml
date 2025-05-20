@@ -1,0 +1,4 @@
+cip:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git
+  default_recipients:
+    - cip-dev@lists.cip-project.org
