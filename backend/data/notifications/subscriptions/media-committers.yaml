@@ -1,6 +1,8 @@
 media-committers:
   url: https://gitlab.freedesktop.org/linux-media/media-committers.git
-  
+  default_recipients:
+    - linux-media@vger.kernel.org
+
   reports:
     - fixes:
       branch: fixes

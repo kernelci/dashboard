@@ -15,18 +15,29 @@ type TreeKey = tuple[str, str, str]
 SUMMARY_SIGNUP_FOLDER = "notifications/subscriptions/"
 
 
+def _assign_default_folders(*, base_dir: str, signup_folder: str) -> tuple[str, str]:
+    base_dir_return = base_dir
+    signup_folder_return = signup_folder
+
+    if not base_dir:
+        base_dir_return = settings.BACKEND_DATA_DIR
+    if not signup_folder:
+        signup_folder_return = SUMMARY_SIGNUP_FOLDER
+
+    return (base_dir_return, signup_folder_return)
+
+
 def process_submissions_files(
     *,
     base_dir: Optional[str] = None,
     signup_folder: Optional[str] = None,
-    summary_origins: Optional[list[str]],
+    summary_origins: Optional[list[str]] = None,
 ) -> tuple[set[TreeKey], dict[TreeKey, list[dict]]]:
     """Processes all submission files and returns the set of TreeKey and
     the dict linking each tree to its report props"""
-    if not base_dir:
-        base_dir = settings.BACKEND_DATA_DIR
-    if not signup_folder:
-        signup_folder = SUMMARY_SIGNUP_FOLDER
+    (base_dir, signup_folder) = _assign_default_folders(
+        base_dir=base_dir, signup_folder=signup_folder
+    )
 
     tree_key_set: set[TreeKey] = set()
     tree_prop_map: dict[TreeKey, list[dict]] = {}
@@ -54,6 +65,10 @@ def process_submissions_files(
             for tree_name, tree_values in file_data.items():
                 giturl = tree_values.get("url")
                 default_recipients = tree_values.get("default_recipients")
+
+                if tree_values.get("reports") is None:
+                    continue
+
                 for report in tree_values["reports"]:
                     branch = report["branch"]
                     origin = report.get("origin", DEFAULT_ORIGIN)

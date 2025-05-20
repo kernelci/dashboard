@@ -1,0 +1,4 @@
+tegra:
+  url: "https://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git"
+  default_recipients:
+    - linux-tegra@vger.kernel.org
