@@ -1,0 +1,5 @@
+rppt:
+  url: "https://git.kernel.org/pub/scm/linux/kernel/git/rppt/memblock.git"
+  default_recipients:
+    - rppt@kernel.org
+    - linux-mm@kvack.org

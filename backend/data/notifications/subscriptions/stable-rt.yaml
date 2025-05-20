@@ -1,7 +1,9 @@
 # Note: do not confuse with stable-rc
 stable-rt:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-stable-rt.git
-  
+  default_recipients:
+    - linux-rt-devel@lists.linux.dev
+
   reports:
     - v5.4-rt:
       branch: v5.4-rt

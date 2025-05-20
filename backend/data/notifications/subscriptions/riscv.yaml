@@ -1,0 +1,4 @@
+riscv:
+  url: "https://git.kernel.org/pub/scm/linux/kernel/git/riscv/linux.git"
+  default_recipients:
+    - linux-riscv@lists.infradead.org

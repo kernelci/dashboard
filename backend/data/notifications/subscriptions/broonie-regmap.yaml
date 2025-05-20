@@ -1,0 +1,4 @@
+broonie-regmap:
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/regmap.git
+  default_recipients:
+    - broonie@kernel.org

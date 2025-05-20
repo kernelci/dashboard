@@ -54,6 +54,10 @@ def process_submissions_files(
             for tree_name, tree_values in file_data.items():
                 giturl = tree_values.get("url")
                 default_recipients = tree_values.get("default_recipients")
+
+                if tree_values.get("reports") is None:
+                    continue
+
                 for report in tree_values["reports"]:
                     branch = report["branch"]
                     origin = report.get("origin", DEFAULT_ORIGIN)

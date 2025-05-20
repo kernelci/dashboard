@@ -1,6 +1,8 @@
 arm64:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git
-  
+  default_recipients:
+    - will@kernel.org
+    - linux-arm-kernel@lists.infradead.org
   reports:
     - default:
       branch: for-kernelci

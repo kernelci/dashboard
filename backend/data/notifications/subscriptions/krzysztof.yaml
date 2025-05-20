@@ -1,0 +1,4 @@
+krzysztof:
+  url: "https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux.git"
+  default_recipients:
+    - krzk@kernel.org

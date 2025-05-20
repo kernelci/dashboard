@@ -1,11 +1,4 @@
 next:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-  
-  reports:
-    - default:
-      branch: master
-      always: True
-    
-    - microsoft:
-      branch: master
-      origin: microsoft
+  default_recipients:
+    - linux-next@vger.kernel.org
