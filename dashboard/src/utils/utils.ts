@@ -1,10 +1,7 @@
 import { format } from 'date-fns';
 
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
-import type {
-  AccordionItemBuilds,
-  TTreeDetailsFilter,
-} from '@/types/tree/TreeDetails';
+import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 import type {
   Architecture,
   BuildsTabBuild,
@@ -158,22 +155,32 @@ export const sanitizeBuildsSummary = (
     ? buildsSummary
     : { FAIL: 0, NULL: 0, PASS: 0, ERROR: 0, MISS: 0, DONE: 0, SKIP: 0 };
 
-// TODO, remove this function, is just a step further towards the final implementation
-export const mapFiltersKeysToBackendCompatible = (
-  filter: TTreeDetailsFilter | Record<string, never>,
+/**
+ * Maps an object (Record or another class) from {"key": "value"} or {"key": ["value"]} to {"filter_key": ["value"]}
+ *
+ * @param instance - the object to make compatible with backend filters
+ *
+ * @returns a formatted Record<string, string[]> where the keys start with "filter_" and the values are an array of strings
+ */
+export const mapFiltersKeysToBackendCompatible = <T extends object>(
+  instance: T,
 ): Record<string, string[]> => {
-  const filterParam: { [key: string]: string[] } = {};
+  const filterParam: Record<string, string[]> = {};
 
-  Object.keys(filter).forEach(key => {
-    const filterList = filter[key as keyof TTreeDetailsFilter];
-    filterList?.forEach(value => {
-      if (!filterParam[`filter_${key}`]) {
-        filterParam[`filter_${key}`] = [value.toString()];
-      } else {
-        filterParam[`filter_${key}`].push(value.toString());
-      }
-    });
-  });
+  for (const [key, value] of Object.entries(instance)) {
+    const filterKey = `filter_${key}`;
+    if (!filterParam[filterKey]) {
+      filterParam[filterKey] = [];
+    }
+
+    if (!Array.isArray(value)) {
+      filterParam[filterKey] = [String(value)];
+    } else {
+      value.forEach(entry => {
+        filterParam[filterKey].push(String(entry));
+      });
+    }
+  }
 
   return filterParam;
 };
