@@ -1453,6 +1453,8 @@ components:
           $ref: '#/components/schemas/Checkout__GitCommitHash'
         git_commit_name:
           $ref: '#/components/schemas/Checkout__GitCommitName'
+        origin:
+          $ref: '#/components/schemas/Origin'
         git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
         start_time:
@@ -1480,6 +1482,7 @@ components:
       - git_repository_url
       - git_commit_hash
       - git_commit_name
+      - origin
       - git_repository_branch
       - start_time
       - origin_builds_finish_time
@@ -1500,6 +1503,8 @@ components:
           $ref: '#/components/schemas/Checkout__GitCommitHash'
         git_commit_name:
           $ref: '#/components/schemas/Checkout__GitCommitName'
+        origin:
+          $ref: '#/components/schemas/Origin'
         git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
         start_time:
@@ -1520,6 +1525,7 @@ components:
       - git_repository_url
       - git_commit_hash
       - git_commit_name
+      - origin
       - git_repository_branch
       - start_time
       - origin_builds_finish_time
@@ -3164,6 +3170,8 @@ components:
           $ref: '#/components/schemas/Checkout__GitCommitHash'
         git_commit_name:
           $ref: '#/components/schemas/Checkout__GitCommitName'
+        origin:
+          $ref: '#/components/schemas/Origin'
         api_url:
           title: Api Url
           type: string
@@ -3174,6 +3182,7 @@ components:
       - git_repository_url
       - git_commit_hash
       - git_commit_name
+      - origin
       - api_url
       - tree_name
       title: TreeLatestResponse

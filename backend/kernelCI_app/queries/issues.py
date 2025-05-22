@@ -9,8 +9,6 @@ from kernelCI_app.helpers.build import (
     is_valid_does_not_exist_exception,
     valid_status_field,
 )
-from datetime import datetime
-from django.db.models import Q
 
 
 def _get_issue_version_clause(*, version: Optional[int]) -> str:
@@ -112,35 +110,33 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
 
 def get_issue_listing_data(
     *,
-    interval_date: datetime,
-    culprit_code: bool | None,
-    culprit_harness: bool | None,
-    culprit_tool: bool | None,
+    interval: str,
 ) -> list[dict]:
-    filters = Q(field_timestamp__gte=interval_date)
+    """Queries the list of all issues from `interval_date` parameter to now.
 
-    culprit_query = Q()
+    Returns the list of issue records (dict) with no other filter."""
 
-    if culprit_code:
-        culprit_query |= Q(culprit_code=True)
-    if culprit_harness:
-        culprit_query |= Q(culprit_harness=True)
-    if culprit_tool:
-        culprit_query |= Q(culprit_tool=True)
+    params = {"interval": interval}
 
-    filters = filters & culprit_query
+    query = """
+    SELECT
+        id,
+        _timestamp AS field_timestamp,
+        comment,
+        version,
+        origin,
+        culprit_code,
+        culprit_harness,
+        culprit_tool
+    FROM
+        issues
+    WHERE
+        _timestamp >= NOW() - INTERVAL %(interval)s
+    """
 
-    issues_records = Issues.objects.values(
-        "id",
-        "field_timestamp",
-        "comment",
-        "version",
-        "origin",
-        "culprit_code",
-        "culprit_harness",
-        "culprit_tool",
-    ).filter(filters)
-    return issues_records
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return dict_fetchall(cursor)
 
 
 # TODO: combine this query with the other queries for issues

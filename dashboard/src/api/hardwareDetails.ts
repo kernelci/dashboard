@@ -7,13 +7,15 @@ import type {
   CommitHistoryTable,
   HardwareDetailsSummary,
   THardwareDetails,
-  THardwareDetailsFilter,
   TTreeCommits,
 } from '@/types/hardware/hardwareDetails';
 import type { BuildsTabBuild, TestHistory, TFilter } from '@/types/general';
 import { getTargetFilter } from '@/types/general';
 
-import { isEmptyObject } from '@/utils/utils';
+import {
+  isEmptyObject,
+  mapFiltersKeysToBackendCompatible,
+} from '@/utils/utils';
 
 import { RequestData } from './commonRequest';
 
@@ -42,26 +44,6 @@ const mapIndexesToSelectedTrees = (
   });
 
   return selectedTrees;
-};
-
-// TODO: remove this function to combine with the solution for the same function in utils.ts
-const mapFiltersKeysToBackendCompatible = (
-  filter: THardwareDetailsFilter | Record<string, never>,
-): Record<string, string[]> => {
-  const filterParam: { [key: string]: string[] } = {};
-
-  Object.keys(filter).forEach(key => {
-    const filterList = filter[key as keyof THardwareDetailsFilter];
-    filterList?.forEach(value => {
-      if (!filterParam[`filter_${key}`]) {
-        filterParam[`filter_${key}`] = [value.toString()];
-      } else {
-        filterParam[`filter_${key}`].push(value.toString());
-      }
-    });
-  });
-
-  return filterParam;
 };
 
 type HardwareDetailsVariants =

@@ -151,9 +151,6 @@ const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   endTimestampInSeconds: 'et',
   issueVersion: 'iv',
   logOpen: 'l',
-  culpritCode: 'cc',
-  culpritHarness: 'ch',
-  culpritTool: 'ct',
 } as const;
 
 const treeInfoMinifiedParams: Record<keyof TTreeInformation, string> = {
@@ -190,6 +187,7 @@ const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   buildIssue: 'bi',
   bootIssue: 'bti',
   testIssue: 'ti',
+  issueCulprits: 'icu',
 };
 
 type MinifiedParams = Record<
