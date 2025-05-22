@@ -252,7 +252,7 @@ const HardwareDetailsFilter = ({
     [treeIndexes],
   );
 
-  const drawerLink: IDrawerLink['link'] = useMemo(
+  const drawerLink: IDrawerLink = useMemo(
     () => ({
       title: 'filter.hardware',
       value: hardwareName,

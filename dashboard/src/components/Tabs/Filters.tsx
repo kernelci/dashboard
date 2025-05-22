@@ -133,12 +133,14 @@ interface ICheckboxSectionProps extends SectionsProps {
   filter: TFilter;
   isTFilterObjectKeys: (key: string) => boolean;
   sections: ISectionItem[];
+  showAllIcons?: boolean;
 }
 
 interface ITreeSectionProps {
   items?: Record<string, boolean>;
   selectedTrees?: number[];
   handleSelectTree: (index: string) => void;
+  showIcon?: boolean;
 }
 
 // TODO: Remove useState for this forms, use something like react hook forms or tanstack forms (when it gets released)
@@ -148,6 +150,7 @@ const CheckboxSection = ({
   filter,
   isTFilterObjectKeys,
   sections,
+  showAllIcons = true,
 }: ICheckboxSectionProps): JSX.Element => {
   const intl = useIntl();
 
@@ -163,13 +166,14 @@ const CheckboxSection = ({
         subtitle: intl.formatMessage({ id: section.subtitle }),
         items: parsedFilter[section.sectionKey],
         isGlobal: section.isGlobal,
+        showIcon: showAllIcons,
         onClickItem: (value: string): void => {
           setDiffFilter(old =>
             changeCheckboxFilterValue(old, section.sectionKey, value),
           );
         },
       })),
-    [intl, parsedFilter, sections, setDiffFilter],
+    [intl, parsedFilter, sections, setDiffFilter, showAllIcons],
   );
 
   return (
@@ -260,6 +264,7 @@ const TreeSelectSection = ({
   items,
   handleSelectTree,
   selectedTrees,
+  showIcon = true,
 }: ITreeSectionProps): JSX.Element => {
   const intl = useIntl();
 
@@ -287,6 +292,7 @@ const TreeSelectSection = ({
         isGlobal
         subtitle={intl.formatMessage({ id: 'filter.treeSubtitle' })}
         onClickItem={handleSelectTree}
+        showIcon={showIcon}
       />
     </DrawerSection>
   );
