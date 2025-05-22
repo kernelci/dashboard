@@ -1,4 +1,4 @@
 efi:
-  url: "https://git.kernel.org/pub/scm/linux/kernel/git/efi/efi.git"
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/efi/efi.git
   default_recipients:
     - ardb@kernel.org

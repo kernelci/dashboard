@@ -1,4 +1,4 @@
 linux-pci:
-  url: "https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git"
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
   default_recipients:
     - linux-pci@vger.kernel.org

@@ -1,4 +1,4 @@
 vireshk:
-  url: "https://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git"
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git
   default_recipients:
     - vireshk@kernel.org

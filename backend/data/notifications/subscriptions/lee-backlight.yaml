@@ -1,4 +1,4 @@
 lee-backlight:
-  url: "https://git.kernel.org/pub/scm/linux/kernel/git/lee/backlight.git"
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/lee/backlight.git
   default_recipients:
     - lee@kernel.org
