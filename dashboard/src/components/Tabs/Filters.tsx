@@ -54,7 +54,8 @@ export const mapFilterToReq = (filter: TFilter): TFilter => {
             filterMapped[reqField] = [];
           }
 
-          if (reqField.includes('issue')) {
+          if (reqField.endsWith('issue')) {
+            // combines the issue filter itself as "<issue_id>,<issue_version>"
             let issue_id = UNCATEGORIZED_STRING;
             let issue_version = null;
 

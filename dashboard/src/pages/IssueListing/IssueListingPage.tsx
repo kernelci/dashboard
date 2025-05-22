@@ -14,6 +14,8 @@ import { matchesRegexOrIncludes } from '@/lib/string';
 import type { IssueListingResponse } from '@/types/issueListing';
 import { useSearchStore } from '@/hooks/store/useSearchStore';
 
+import { mapFilterToReq } from '@/components/Tabs/Filters';
+
 interface IIssueListingPage {
   inputFilter: string;
 }
@@ -21,8 +23,12 @@ interface IIssueListingPage {
 export const IssueListingPage = ({
   inputFilter,
 }: IIssueListingPage): JSX.Element => {
-  const { data, status, error, isLoading } = useIssueListing();
   const searchParams = useSearch({ from: '/_main/issues' });
+  const { diffFilter } = searchParams;
+  const requestFilters = mapFilterToReq(diffFilter);
+
+  const { data, status, error, isLoading } = useIssueListing(requestFilters);
+
   const updatePreviousSearch = useSearchStore(s => s.updatePreviousSearch);
 
   useEffect(

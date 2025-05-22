@@ -14,7 +14,7 @@ export const cleanFalseFilters = (diffFilter: TFilter): TFilter => {
         const currentSection = cleanedFilter[filterSectionKey];
         Object.entries(filterSectionValue).forEach(
           ([filterKey, filterValue]) => {
-            if (currentSection) {
+            if (currentSection && filterValue) {
               currentSection[filterKey] = filterValue;
             }
           },

@@ -78,3 +78,12 @@ type ProcessedExtraDetailedIssues = Annotated[
 
 class IssueExtraDetailsResponse(BaseModel):
     issues: ProcessedExtraDetailedIssues
+
+
+CULPRIT_CODE = "code"
+CULPRIT_HARNESS = "harness"
+CULPRIT_TOOL = "tool"
+
+POSSIBLE_CULPRITS = [CULPRIT_CODE, CULPRIT_HARNESS, CULPRIT_TOOL]
+
+type PossibleIssueCulprits = Literal["code", "harness", "tool"]

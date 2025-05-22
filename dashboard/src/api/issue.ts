@@ -5,32 +5,24 @@ import { useSearch } from '@tanstack/react-router';
 
 import type { IssueListingResponse } from '@/types/issueListing';
 
+import { mapFiltersKeysToBackendCompatible } from '@/utils/utils';
+
+import type { TFilter } from '@/types/general';
+import { getTargetFilter } from '@/types/general';
+
 import { RequestData } from './commonRequest';
 
 type IssueListingParams = {
   intervalInDays?: number;
-  culpritCode?: boolean;
-  culpritHarness?: boolean;
-  culpritTool?: boolean;
+  filters: object;
 };
 
-const fetchIssueListing = async (
-  intervalInDays?: number,
-  culpritCode?: boolean,
-  culpritHarness?: boolean,
-  culpritTool?: boolean,
-): Promise<IssueListingResponse> => {
-  const params: IssueListingParams = { intervalInDays };
-
-  if (culpritCode) {
-    params['culpritCode'] = true;
-  }
-  if (culpritHarness) {
-    params['culpritHarness'] = true;
-  }
-  if (culpritTool) {
-    params['culpritTool'] = true;
-  }
+const fetchIssueListing = async ({
+  intervalInDays,
+  filters,
+}: IssueListingParams): Promise<IssueListingResponse> => {
+  const backendCompatibleFilters = mapFiltersKeysToBackendCompatible(filters);
+  const params = { intervalInDays, ...backendCompatibleFilters };
 
   const data = await RequestData.get<IssueListingResponse>('/api/issue/', {
     params,
@@ -38,26 +30,17 @@ const fetchIssueListing = async (
   return data;
 };
 
-export const useIssueListing = (): UseQueryResult<IssueListingResponse> => {
-  const { intervalInDays, culpritCode, culpritHarness, culpritTool } =
-    useSearch({ from: '/_main/issues' });
+export const useIssueListing = (
+  reqFilters: TFilter,
+): UseQueryResult<IssueListingResponse> => {
+  const { intervalInDays } = useSearch({ from: '/_main/issues' });
+  const filtersAsRecord = getTargetFilter(reqFilters, 'issueListing');
 
-  const queryKey = [
-    'issueTable',
-    intervalInDays,
-    culpritCode,
-    culpritHarness,
-    culpritTool,
-  ];
+  const queryKey = ['issueTable', intervalInDays, reqFilters, filtersAsRecord];
 
   return useQuery({
     queryKey,
     queryFn: () =>
-      fetchIssueListing(
-        intervalInDays,
-        culpritCode,
-        culpritHarness,
-        culpritTool,
-      ),
+      fetchIssueListing({ intervalInDays, filters: { ...filtersAsRecord } }),
   });
 };

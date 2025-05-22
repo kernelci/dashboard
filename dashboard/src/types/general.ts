@@ -157,6 +157,7 @@ export const zFilterObjectsKeys = z.enum([
   'buildIssue',
   'bootIssue',
   'testIssue',
+  'issueCulprits',
 ]);
 
 export const zFilterNumberKeys = z.enum([
@@ -195,14 +196,15 @@ export const zDiffFilter = z
       buildIssue: zFilterBoolValue,
       bootIssue: zFilterBoolValue,
       testIssue: zFilterBoolValue,
+      issueCulprits: zFilterBoolValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])
   .default(DEFAULT_DIFF_FILTER)
   .catch(DEFAULT_DIFF_FILTER);
 
-export type TFilterObjectsKeys = z.infer<typeof zFilterObjectsKeys>;
 export type TFilter = z.infer<typeof zDiffFilter>;
+export type TFilterObjectsKeys = z.infer<typeof zFilterObjectsKeys>;
 export type TFilterNumberKeys = z.infer<typeof zFilterNumberKeys>;
 
 export const isTFilterObjectKeys = (key: string): key is TFilterObjectsKeys => {
@@ -229,10 +231,7 @@ export type SearchParamsKeys =
   | 'startTimestampInSeconds'
   | 'endTimestampInSeconds'
   | 'issueVersion'
-  | 'logOpen'
-  | 'culpritCode'
-  | 'culpritTool'
-  | 'culpritHarness';
+  | 'logOpen';
 export type SearchSchema = Partial<Record<SearchParamsKeys, ZodTypeAny>>;
 
 const requestFilters = {
@@ -266,12 +265,15 @@ const requestFilters = {
     'boot.issue',
     'build.status',
   ],
+  issueListing: ['issue.culprit'],
 } as const;
 
 type TRequestFiltersKey = keyof typeof requestFilters;
 export type TRequestFiltersValues =
   (typeof requestFilters)[TRequestFiltersKey][number];
 
+// Maps from fields that must be send to the request
+// to field names used in the filter components
 export const filterFieldMap = {
   'hardwareDetails.config_name': 'configs',
   'hardwareDetails.architecture': 'archs',
@@ -297,10 +299,25 @@ export const filterFieldMap = {
   'boot.issue': 'bootIssue',
   'test.issue': 'testIssue',
   'build.status': 'buildStatus',
+  'issue.culprit': 'issueCulprits',
 } as const satisfies Record<TRequestFiltersValues, TFilterKeys>;
 
+/**
+ * Maps a requestFilter
+ *
+ * as THardwareDetailsFilter | TTreeDetailsFilter
+ * from {'treeDetails.config_name': ["value"]}
+ * to {'config_name': ["value"]}
+ *
+ * or as a TFilter
+ * from {'treeDetails.config_name': {'value1': true, 'value2': true}}
+ * to {'config_name': ['value1', 'value2']}
+ *
+ * If the target filter is test or issueListing, the prefix won't be removed
+ * (such as *test* in "test.hardware" or *boot* in "boot.path")
+ */
 export const getTargetFilter = (
-  filter: THardwareDetailsFilter | TTreeDetailsFilter | TFilter,
+  requestFilter: THardwareDetailsFilter | TTreeDetailsFilter | TFilter,
   target: TRequestFiltersKey,
 ): THardwareDetailsFilter | TTreeDetailsFilter => {
   const targetFilter: readonly string[] = requestFilters[target];
@@ -309,14 +326,20 @@ export const getTargetFilter = (
     THardwareDetailsFilter | TTreeDetailsFilter
   > = {};
 
-  Object.entries(filter).forEach(([k, v]) => {
+  Object.entries(requestFilter).forEach(([k, v]) => {
     if (!targetFilter.includes(k)) {
       return;
     }
 
+    // TFilter has its values as Record<string, boolean>, while the other types are a direct array.
+    // So in the case that v is a Record, the values that we want are the keys of that record.
+    if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
+      v = Object.keys(v);
+    }
+
     const splitted = k.split('.');
     const field = splitted[splitted.length - 1];
-    if (target === 'test') {
+    if (target === 'test' || target === 'issueListing') {
       accumulator[k] = v;
     } else {
       accumulator[field] = v;
