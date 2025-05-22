@@ -39,6 +39,7 @@ export interface ICheckboxSection {
   subsections?: ICheckboxSubsection[];
   onClickItem: TOnClickItem;
   className?: string;
+  showIcon: boolean;
 }
 
 export interface ISectionItem {
@@ -119,6 +120,7 @@ const CheckboxSection = ({
   subsections,
   isGlobal = false,
   className,
+  showIcon,
 }: ICheckboxSection): JSX.Element => {
   const subsectionComponents = useMemo(
     () =>
@@ -136,7 +138,7 @@ const CheckboxSection = ({
   return (
     <div className={cls(className)}>
       <h3 className="text-dim-gray mb-2 flex items-center gap-[0.4rem] text-xl font-semibold">
-        <FilterTypeIcon type={isGlobal ? 'global' : 'tab'} />
+        {showIcon && <FilterTypeIcon type={isGlobal ? 'global' : 'tab'} />}
         <span>{title}</span>
       </h3>
       <h4 className="text-dim-gray mb-6 text-sm">{subtitle}</h4>
