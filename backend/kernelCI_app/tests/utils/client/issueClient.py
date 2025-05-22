@@ -1,18 +1,21 @@
+from typing import Any
 import requests
 from django.urls import reverse
 import json
+from kernelCI_app.helpers.filters import FilterFields
 from kernelCI_app.tests.utils.client.baseClient import BaseClient
 
 
 class IssueClient(BaseClient):
     def get_issues_list(
-        self, *, interval_in_days: int | None, culprit_data: dict | None
+        self,
+        *,
+        interval_in_days: int | None,
+        filters: dict[FilterFields, Any] | None = None,
     ) -> requests.Response:
         path = reverse("issue")
-        if culprit_data is None:
-            culprit_data = {}
-        query = {"intervalInDays": interval_in_days, **culprit_data}
-        url = self.get_endpoint(path=path, query=query)
+        query = {"intervalInDays": interval_in_days}
+        url = self.get_endpoint(path=path, query=query, filters=filters)
         return requests.get(url)
 
     def get_issues_details(

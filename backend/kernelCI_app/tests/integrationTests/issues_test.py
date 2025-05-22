@@ -17,23 +17,24 @@ from http import HTTPStatus
 client = IssueClient()
 
 CULPRIT_CODE = {
-    "culpritCode": True,
+    "filters": {"issue.culprit": "code"},
     "excludes_fields": ["culprit_tool", "culprit_harness"],
 }
 
 CULPRIT_TOOL = {
-    "culpritTool": True,
+    "filters": {"issue.culprit": "tool"},
     "excludes_fields": ["culprit_code", "culprit_harness"],
 }
 
 CULPRIT_HARNESS = {
-    "culpritHarness": True,
+    "filters": {"issue.culprit": "harness"},
     "excludes_fields": ["culprit_code", "culprit_tool"],
 }
 
 CULPRIT_CODE_AND_TOOL = {
-    "culpritCode": True,
-    "culpritTool": True,
+    "filters": {
+        "issue.culprit": ["code", "tool"],
+    },
     "excludes_fields": ["culprit_harness"],
 }
 
@@ -58,9 +59,8 @@ def pytest_generate_tests(metafunc):
 
 def test_list(pytestconfig, issue_listing_input):
     interval_in_day, culprit_data, status_code, has_error_body = issue_listing_input
-    response = client.get_issues_list(
-        interval_in_days=interval_in_day, culprit_data=culprit_data
-    )
+    filters = culprit_data.get("filters") if culprit_data else None
+    response = client.get_issues_list(interval_in_days=interval_in_day, filters=filters)
     content = string_to_json(response.content.decode())
     assert_status_code_and_error_response(
         response=response,

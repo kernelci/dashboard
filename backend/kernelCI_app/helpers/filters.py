@@ -1,14 +1,16 @@
 from collections.abc import Callable
 from typing import Optional, Dict, List, Tuple, TypedDict, Literal, Any, Union
-from django.http import HttpResponseBadRequest
+from django.http import HttpRequest, HttpResponseBadRequest
 import re
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs
+from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.databases import (
     StatusValues,
     failure_status_list,
     build_fail_status_list,
 )
+from kernelCI_app.typeModels.issues import POSSIBLE_CULPRITS, PossibleIssueCulprits
 from kernelCI_app.utils import get_error_body_response
 from kernelCI_app.constants.general import UNKNOWN_STRING
 
@@ -268,6 +270,7 @@ type FilterFields = Literal[
     "test.issue",
     "boot.platform",
     "test.platform",
+    "issue.culprit",
 ]
 type FilterHandlers = dict[FilterFields, Callable]
 
@@ -331,6 +334,7 @@ class FilterParams:
             "boot": set(),
             "test": set(),
         }
+        self.filter_issue_culprits: set[PossibleIssueCulprits] = set()
 
         self.filter_handlers: FilterHandlers = {
             "boot.status": self._handle_boot_status,
@@ -350,6 +354,7 @@ class FilterParams:
             "test.issue": self._handle_issues,
             "boot.platform": self._handle_platforms,
             "test.platform": self._handle_platforms,
+            "issue.culprit": self._handle_issue_culprits,
         }
 
         self.filters: List[FilterParams.ParsedFilter] = []
@@ -427,6 +432,15 @@ class FilterParams:
         tab = current_filter["field"].split(".")[0]
         self.filterPlatforms[tab].add(current_filter["value"])
 
+    def _handle_issue_culprits(self, current_filter: ParsedFilter) -> None:
+        filter_value = current_filter["value"]
+        if filter_value not in POSSIBLE_CULPRITS:
+            log_message(
+                f"Ignoring issue_culprit value not allowed for filters: {filter_value}"
+            )
+            return
+        self.filter_issue_culprits.add(current_filter["value"])
+
     def _process_filters(self):
         try:
             for current_filter in self.filters:
@@ -471,7 +485,7 @@ class FilterParams:
 
             self.add_filter(filter_term, filter_data, "exact")
 
-    def create_filters_from_req(self, request):
+    def create_filters_from_req(self, request: HttpRequest) -> None:
         for k in request.GET.keys():
             if not k.startswith(self.filter_param_prefix):
                 continue
