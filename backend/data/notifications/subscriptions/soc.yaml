@@ -1,4 +1,4 @@
 soc:
-  url: "https://git.kernel.org/pub/scm/linux/kernel/git/soc/soc.git"
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/soc/soc.git
   default_recipients:
     - soc@lists.linux.dev

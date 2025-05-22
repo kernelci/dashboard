@@ -1,4 +1,4 @@
 thermal:
-  url: "https://git.kernel.org/pub/scm/linux/kernel/git/thermal/linux.git"
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/thermal/linux.git
   default_recipients:
     - linux-pm@vger.kernel.org

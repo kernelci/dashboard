@@ -1,4 +1,4 @@
 pm:
-  url: "https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git"
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
   default_recipients:
     - rafael@kernel.org

@@ -1,4 +1,4 @@
 renesas:
-  url: "https://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-devel.git"
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-devel.git
   default_recipients:
     - linux-renesas-soc@vger.kernel.org

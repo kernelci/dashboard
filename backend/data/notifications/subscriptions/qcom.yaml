@@ -1,5 +1,5 @@
 qcom:
-  url: "https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git"
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git
   default_recipients:
     - linux-arm-msm@vger.kernel.org
     - Bjorn Andersson <andersson@kernel.org>

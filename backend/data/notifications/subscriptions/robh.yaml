@@ -1,5 +1,5 @@
 robh:
-  url: "https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git"
+  url: https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git
   default_recipients:
     - robh@kernel.org
     - devicetree@vger.kernel.org

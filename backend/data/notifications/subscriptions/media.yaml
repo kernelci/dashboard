@@ -1,4 +1,4 @@
 media:
-  url: "https://git.linuxtv.org/media.git"
+  url: https://git.linuxtv.org/media.git
   default_recipients:
     - media@linuxtv.org
