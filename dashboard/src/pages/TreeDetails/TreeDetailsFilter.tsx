@@ -192,7 +192,7 @@ const TreeDetailsFilter = ({
     [paramFilter],
   );
 
-  const drawerLink: IDrawerLink['link'] = useMemo(
+  const drawerLink: IDrawerLink = useMemo(
     () => ({
       title: 'filter.treeURL',
       value: treeUrl,

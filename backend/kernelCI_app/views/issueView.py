@@ -20,7 +20,9 @@ from kernelCI_app.typeModels.issues import (
     CULPRIT_CODE,
     CULPRIT_HARNESS,
     CULPRIT_TOOL,
+    HAS_INCIDENT_OPTION,
     FirstIncident,
+    IssueFilterOptions,
     PossibleIssueCulprits,
     ProcessedExtraDetailedIssues,
 )
@@ -50,15 +52,61 @@ class IssueView(APIView):
 
         return True  # Discards if has filter but all the culprits are None
 
+    def _should_discard_issue_by_origin(
+        self, *, origin_filters: set[str], record: dict
+    ) -> bool:
+        if record["origin"] == "_":
+            return True
+
+        if len(origin_filters) == 0:
+            return False
+
+        if record["origin"] not in origin_filters:
+            return True
+
+    def _should_discard_issue_by_options(
+        self, *, options: set[IssueFilterOptions], record: dict
+    ) -> bool:
+        if not options:
+            return False
+
+        if HAS_INCIDENT_OPTION in options and record["has_incident"] is True:
+            return False
+
+        return True
+
+    def _should_discard_issue_record(
+        self, *, filters: Optional[FilterParams] = None, issue: dict
+    ) -> bool:
+        if not filters:
+            return False
+
+        origin_filters = filters.filter_origins
+        culprit_filters = filters.filter_issue_culprits
+        filter_options = filters.filter_issue_options
+
+        if (
+            self._should_discard_issue_by_culprit(
+                culprit_filters=culprit_filters, record=issue
+            )
+            or self._should_discard_issue_by_origin(
+                origin_filters=origin_filters, record=issue
+            )
+            or self._should_discard_issue_by_options(
+                options=filter_options, record=issue
+            )
+        ):
+            return True
+
+        return False
+
     def _filter_base_records(self, *, issue_records: list[dict]) -> list[dict]:
         """Filters the base list of issue records using self.filters"""
-        culprit_filters = self.filters.filter_issue_culprits
 
         result: list[dict] = []
+
         for issue in issue_records:
-            if self._should_discard_issue_by_culprit(
-                culprit_filters=culprit_filters, record=issue
-            ):
+            if self._should_discard_issue_record(filters=self.filters, issue=issue):
                 continue
 
             result.append(issue)

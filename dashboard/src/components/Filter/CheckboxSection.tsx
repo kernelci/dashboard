@@ -2,11 +2,13 @@ import cls from 'classnames';
 
 import { useCallback, useMemo, type JSX } from 'react';
 
-import type { MessageDescriptor } from 'react-intl';
+import { useIntl, type MessageDescriptor } from 'react-intl';
 
 import type { TFilterObjectsKeys } from '@/types/general';
 
 import Checkbox from '@/components/Checkbox/Checkbox';
+
+import { OptionFilters } from '@/types/filters';
 
 import { FilterTypeIcon } from './Drawer';
 
@@ -39,6 +41,7 @@ export interface ICheckboxSection {
   subsections?: ICheckboxSubsection[];
   onClickItem: TOnClickItem;
   className?: string;
+  showIcon: boolean;
 }
 
 export interface ISectionItem {
@@ -68,10 +71,26 @@ const CheckboxSectionItem = ({
     () => onClickItem(value),
     [value, onClickItem],
   );
+
+  const { formatMessage } = useIntl();
+
+  // Checks if the value to be shown is different than the key used in diffFilter
+  // This happens for filters that are manual options instead of values from received data
+  const shownValue = useMemo(() => {
+    for (const page of Object.values(OptionFilters)) {
+      if (value in page) {
+        const valueId = page[value].displayTextId;
+        return formatMessage({ id: valueId });
+      }
+    }
+
+    return value;
+  }, [formatMessage, value]);
+
   return (
     <Checkbox
       onToggle={handleOnToggle}
-      text={extractCheckboxValue(value as SplitFilterString)}
+      text={extractCheckboxValue(shownValue as SplitFilterString)}
       isChecked={isSelected}
     />
   );
@@ -119,6 +138,7 @@ const CheckboxSection = ({
   subsections,
   isGlobal = false,
   className,
+  showIcon,
 }: ICheckboxSection): JSX.Element => {
   const subsectionComponents = useMemo(
     () =>
@@ -136,7 +156,7 @@ const CheckboxSection = ({
   return (
     <div className={cls(className)}>
       <h3 className="text-dim-gray mb-2 flex items-center gap-[0.4rem] text-xl font-semibold">
-        <FilterTypeIcon type={isGlobal ? 'global' : 'tab'} />
+        {showIcon && <FilterTypeIcon type={isGlobal ? 'global' : 'tab'} />}
         <span>{title}</span>
       </h3>
       <h4 className="text-dim-gray mb-6 text-sm">{subtitle}</h4>

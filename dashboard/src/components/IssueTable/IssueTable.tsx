@@ -8,13 +8,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import type {
-  Row,
-  SortingState,
-  ColumnDef,
-  Cell,
-  VisibilityState,
-} from '@tanstack/react-table';
+import type { Row, SortingState, ColumnDef, Cell } from '@tanstack/react-table';
 
 import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -29,7 +23,6 @@ import type {
 } from '@/types/issueListing';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { usePaginationState } from '@/hooks/usePaginationState';
-import { formattedBreakLineValue } from '@/locales/messages';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import {
   TableBody,
@@ -39,8 +32,6 @@ import {
 } from '@/components/ui/table';
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
-import { MemoizedInputTime } from '@/components/InputTime';
-
 import { IssueCulprit } from '@/components/Issue/IssueCulprit';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/Tooltip';
 import { valueOrEmpty } from '@/lib/string';
@@ -48,7 +39,6 @@ import { valueOrEmpty } from '@/lib/string';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { shouldShowRelativeDate } from '@/lib/date';
 import { RedirectFrom } from '@/types/general';
-import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 const getLinkProps = (
   row: Row<IssueListingTableItem>,
@@ -189,9 +179,6 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
   const navigate = useNavigate({ from: '/issues' });
 
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    culprit: false,
-  });
 
   const { pagination, paginationUpdater } = usePaginationState(
     'issueListing',
@@ -217,11 +204,9 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
     state: {
       sorting,
       pagination,
-      columnVisibility,
     },
   });
 
@@ -282,26 +267,7 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
   );
 
   return (
-    <div className="flex flex-col gap-6 pb-4">
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-dim-gray text-left text-sm">
-          <FormattedMessage
-            id="global.projectUnderDevelopment"
-            values={formattedBreakLineValue}
-          />
-        </span>
-        <div className="flex items-center justify-between gap-10">
-          <MemoizedInputTime
-            navigateFrom="/issues"
-            defaultInterval={REDUCED_TIME_SEARCH}
-          />
-          <PaginationInfo
-            table={table}
-            intlLabel="global.issues"
-            onPaginationChange={navigateWithPageSize}
-          />
-        </div>
-      </div>
+    <>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
       </BaseTable>
@@ -310,6 +276,6 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
         intlLabel="global.issues"
         onPaginationChange={navigateWithPageSize}
       />
-    </div>
+    </>
   );
 };
