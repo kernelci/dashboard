@@ -87,3 +87,9 @@ CULPRIT_TOOL = "tool"
 POSSIBLE_CULPRITS = [CULPRIT_CODE, CULPRIT_HARNESS, CULPRIT_TOOL]
 
 type PossibleIssueCulprits = Literal["code", "harness", "tool"]
+
+
+HAS_INCIDENT_OPTION = "hasIncident"
+
+ISSUE_FILTER_OPTIONS = [HAS_INCIDENT_OPTION]
+type IssueFilterOptions = Literal["hasIncident"]

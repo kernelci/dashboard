@@ -120,18 +120,23 @@ def get_issue_listing_data(
 
     query = """
     SELECT
-        id,
-        _timestamp AS field_timestamp,
-        comment,
-        version,
-        origin,
-        culprit_code,
-        culprit_harness,
-        culprit_tool
+        i.id,
+        i._timestamp AS field_timestamp,
+        i.comment,
+        i.version,
+        i.origin,
+        i.culprit_code,
+        i.culprit_harness,
+        i.culprit_tool,
+        EXISTS (
+            SELECT 1
+            FROM incidents inc
+            WHERE i.id = inc.issue_id
+        ) AS has_incident
     FROM
-        issues
+        issues i
     WHERE
-        _timestamp >= NOW() - INTERVAL %(interval)s
+        i._timestamp >= NOW() - INTERVAL %(interval)s
     """
 
     with connection.cursor() as cursor:

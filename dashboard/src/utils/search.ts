@@ -187,7 +187,10 @@ const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   buildIssue: 'bi',
   bootIssue: 'bti',
   testIssue: 'ti',
+  origins: 'o',
+  issueCategories: 'ica',
   issueCulprits: 'icu',
+  issueOptions: 'io',
 };
 
 type MinifiedParams = Record<
