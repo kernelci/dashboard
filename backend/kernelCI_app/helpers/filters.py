@@ -10,7 +10,12 @@ from kernelCI_app.typeModels.databases import (
     failure_status_list,
     build_fail_status_list,
 )
-from kernelCI_app.typeModels.issues import POSSIBLE_CULPRITS, PossibleIssueCulprits
+from kernelCI_app.typeModels.issues import (
+    ISSUE_FILTER_OPTIONS,
+    POSSIBLE_CULPRITS,
+    IssueFilterOptions,
+    PossibleIssueCulprits,
+)
 from kernelCI_app.utils import get_error_body_response
 from kernelCI_app.constants.general import UNKNOWN_STRING
 
@@ -259,6 +264,7 @@ type FilterFields = Literal[
     "test.duration",
     "build.status",
     "duration",
+    "origins",
     "config_name",
     "compiler",
     "architecture",
@@ -271,6 +277,8 @@ type FilterFields = Literal[
     "boot.platform",
     "test.platform",
     "issue.culprit",
+    "issue.categories",
+    "issue.options",
 ]
 type FilterHandlers = dict[FilterFields, Callable]
 
@@ -335,6 +343,9 @@ class FilterParams:
             "test": set(),
         }
         self.filter_issue_culprits: set[PossibleIssueCulprits] = set()
+        self.filter_origins: set[str] = set()
+        self.filter_issue_categories: set[str] = set()
+        self.filter_issue_options: set[IssueFilterOptions] = set()
 
         self.filter_handlers: FilterHandlers = {
             "boot.status": self._handle_boot_status,
@@ -343,6 +354,7 @@ class FilterParams:
             "test.duration": self._handle_test_duration,
             "build.status": self._handle_build_status,
             "build.duration": self._handle_build_duration,
+            "origin": self._handle_origins,
             "config_name": self._handle_config_name,
             "compiler": self._handle_compiler,
             "architecture": self._handle_architecture,
@@ -355,6 +367,8 @@ class FilterParams:
             "boot.platform": self._handle_platforms,
             "test.platform": self._handle_platforms,
             "issue.culprit": self._handle_issue_culprits,
+            "issue.categories": self._handle_issue_categories,
+            "issue.options": self._handle_issue_options,
         }
 
         self.filters: List[FilterParams.ParsedFilter] = []
@@ -440,6 +454,19 @@ class FilterParams:
             )
             return
         self.filter_issue_culprits.add(current_filter["value"])
+
+    def _handle_origins(self, current_filter: ParsedFilter) -> None:
+        self.filter_origins.add(current_filter["value"])
+
+    def _handle_issue_categories(self, current_filter: ParsedFilter) -> None:
+        self.filter_issue_categories.add(current_filter["value"])
+
+    def _handle_issue_options(self, current_filter: ParsedFilter) -> None:
+        filter_value = current_filter["value"]
+        if filter_value not in ISSUE_FILTER_OPTIONS:
+            log_message(f"Ignoring issue filter option not allowed: {filter_value}")
+            return
+        self.filter_issue_options.add(filter_value)
 
     def _process_filters(self):
         try:

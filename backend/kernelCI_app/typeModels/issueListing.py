@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 
 from kernelCI_app.typeModels.databases import (
+    Issue__Categories,
     Issue__Comment,
     Issue__CulpritCode,
     Issue__CulpritHarness,
@@ -29,6 +30,7 @@ class IssueListingItem(BaseModel):
     culprit_code: Issue__CulpritCode
     culprit_tool: Issue__CulpritTool
     culprit_harness: Issue__CulpritHarness
+    categories: Issue__Categories
 
 
 class IssueListingResponse(BaseModel):

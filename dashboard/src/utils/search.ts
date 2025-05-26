@@ -168,6 +168,7 @@ const tableFilterMinifiedParams: Record<keyof TableFilter, string> = {
 } as const;
 
 const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
+  origins: 'o',
   configs: 'c',
   archs: 'a',
   buildStatus: 'bs',
@@ -188,7 +189,9 @@ const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   bootIssue: 'bti',
   testIssue: 'ti',
   issueCulprits: 'icu',
-};
+  issueCategories: 'ica',
+  issueOptions: 'io',
+} as const satisfies Record<TFilterKeys, string>;
 
 type MinifiedParams = Record<
   SearchParamsKeys | TFilterKeys | keyof TableFilter | keyof TTreeInformation,

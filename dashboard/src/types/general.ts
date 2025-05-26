@@ -144,6 +144,7 @@ const zFilterBoolValue = z.record(z.boolean()).optional();
 const zFilterNumberValue = z.number().optional();
 
 export const zFilterObjectsKeys = z.enum([
+  'origins',
   'configs',
   'archs',
   'compilers',
@@ -157,6 +158,8 @@ export const zFilterObjectsKeys = z.enum([
   'buildIssue',
   'bootIssue',
   'testIssue',
+  'issueCategories',
+  'issueOptions',
   'issueCulprits',
 ]);
 
@@ -177,6 +180,7 @@ export const DEFAULT_DIFF_FILTER = {};
 export const zDiffFilter = z
   .union([
     z.object({
+      origins: zFilterBoolValue,
       configs: zFilterBoolValue,
       archs: zFilterBoolValue,
       buildStatus: zFilterBoolValue,
@@ -196,6 +200,8 @@ export const zDiffFilter = z
       buildIssue: zFilterBoolValue,
       bootIssue: zFilterBoolValue,
       testIssue: zFilterBoolValue,
+      issueCategories: zFilterBoolValue,
+      issueOptions: zFilterBoolValue,
       issueCulprits: zFilterBoolValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
@@ -265,7 +271,12 @@ const requestFilters = {
     'boot.issue',
     'build.status',
   ],
-  issueListing: ['issue.culprit'],
+  issueListing: [
+    'origin',
+    'issue.culprit',
+    'issue.categories',
+    'issue.options',
+  ],
 } as const;
 
 type TRequestFiltersKey = keyof typeof requestFilters;
@@ -299,7 +310,10 @@ export const filterFieldMap = {
   'boot.issue': 'bootIssue',
   'test.issue': 'testIssue',
   'build.status': 'buildStatus',
+  origin: 'origins',
   'issue.culprit': 'issueCulprits',
+  'issue.categories': 'issueCategories',
+  'issue.options': 'issueOptions',
 } as const satisfies Record<TRequestFiltersValues, TFilterKeys>;
 
 /**

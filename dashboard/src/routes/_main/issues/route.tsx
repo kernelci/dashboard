@@ -12,10 +12,14 @@ import {
   DEFAULT_LISTING_ITEMS,
   REDUCED_TIME_SEARCH,
 } from '@/utils/constants/general';
+import { CULPRIT_CODE, HAS_INCIDENT_OPTION } from '@/utils/constants/issues';
 
 const DEFAULT_ISSUE_LISTING_DIFFFILTER = {
   issueCulprits: {
-    code: true,
+    [CULPRIT_CODE]: true,
+  },
+  issueOptions: {
+    [HAS_INCIDENT_OPTION]: true,
   },
 };
 

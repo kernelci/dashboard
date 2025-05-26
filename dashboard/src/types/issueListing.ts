@@ -8,6 +8,7 @@ export type IssueListingItem = IssueKeys & {
   origin: string;
   culprit_tool?: boolean;
   culprit_harness?: boolean;
+  categories?: string[];
 };
 
 export type IssueListingResponse = {

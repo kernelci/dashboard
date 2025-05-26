@@ -11,17 +11,14 @@ from kernelCI_app.helpers.errorHandling import (
 )
 from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.issueExtras import assign_issue_first_seen
+from kernelCI_app.helpers.issueListing import should_discard_issue_record
 from kernelCI_app.queries.issues import get_issue_listing_data
 from kernelCI_app.typeModels.issueListing import (
     IssueListingResponse,
     IssueListingQueryParameters,
 )
 from kernelCI_app.typeModels.issues import (
-    CULPRIT_CODE,
-    CULPRIT_HARNESS,
-    CULPRIT_TOOL,
     FirstIncident,
-    PossibleIssueCulprits,
     ProcessedExtraDetailedIssues,
 )
 
@@ -33,32 +30,13 @@ class IssueView(APIView):
 
         self.filters: Optional[FilterParams] = None
 
-    def _should_discard_issue_by_culprit(
-        self, *, culprit_filters: set[PossibleIssueCulprits], record: dict
-    ) -> bool:
-        """Returns true if the record should be discarted from the resulting set of records"""
-
-        if not culprit_filters:
-            return False
-
-        if record["culprit_code"] is True and CULPRIT_CODE in culprit_filters:
-            return False
-        if record["culprit_harness"] is True and CULPRIT_HARNESS in culprit_filters:
-            return False
-        if record["culprit_tool"] is True and CULPRIT_TOOL in culprit_filters:
-            return False
-
-        return True  # Discards if has filter but all the culprits are None
-
-    def _filter_base_records(self, *, issue_records: list[dict]) -> list[dict]:
+    def _filter_records(self, *, issue_records: list[dict]) -> list[dict]:
         """Filters the base list of issue records using self.filters"""
-        culprit_filters = self.filters.filter_issue_culprits
 
         result: list[dict] = []
+
         for issue in issue_records:
-            if self._should_discard_issue_by_culprit(
-                culprit_filters=culprit_filters, record=issue
-            ):
+            if should_discard_issue_record(filters=self.filters, issue=issue):
                 continue
 
             result.append(issue)
@@ -97,7 +75,7 @@ class IssueView(APIView):
             )
 
         self.filters = FilterParams(_request)
-        filtered_records = self._filter_base_records(issue_records=issue_records)
+        filtered_records = self._filter_records(issue_records=issue_records)
 
         issue_key_list = [(issue["id"], issue["version"]) for issue in filtered_records]
         assign_issue_first_seen(

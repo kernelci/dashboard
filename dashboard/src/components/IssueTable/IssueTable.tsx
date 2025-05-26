@@ -29,7 +29,6 @@ import type {
 } from '@/types/issueListing';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { usePaginationState } from '@/hooks/usePaginationState';
-import { formattedBreakLineValue } from '@/locales/messages';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import {
   TableBody,
@@ -39,8 +38,6 @@ import {
 } from '@/components/ui/table';
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
-import { MemoizedInputTime } from '@/components/InputTime';
-
 import { IssueCulprit } from '@/components/Issue/IssueCulprit';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/Tooltip';
 import { valueOrEmpty } from '@/lib/string';
@@ -48,7 +45,6 @@ import { valueOrEmpty } from '@/lib/string';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { shouldShowRelativeDate } from '@/lib/date';
 import { RedirectFrom } from '@/types/general';
-import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 const getLinkProps = (
   row: Row<IssueListingTableItem>,
@@ -282,26 +278,7 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
   );
 
   return (
-    <div className="flex flex-col gap-6 pb-4">
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-dim-gray text-left text-sm">
-          <FormattedMessage
-            id="global.projectUnderDevelopment"
-            values={formattedBreakLineValue}
-          />
-        </span>
-        <div className="flex items-center justify-between gap-10">
-          <MemoizedInputTime
-            navigateFrom="/issues"
-            defaultInterval={REDUCED_TIME_SEARCH}
-          />
-          <PaginationInfo
-            table={table}
-            intlLabel="global.issues"
-            onPaginationChange={navigateWithPageSize}
-          />
-        </div>
-      </div>
+    <>
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
       </BaseTable>
@@ -310,6 +287,6 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
         intlLabel="global.issues"
         onPaginationChange={navigateWithPageSize}
       />
-    </div>
+    </>
   );
 };
