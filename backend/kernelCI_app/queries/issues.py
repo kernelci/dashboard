@@ -233,25 +233,28 @@ def get_test_issues(*, test_id: str) -> list[dict]:
     return rows
 
 
-def get_issue_first_seen_data(*, issue_id_list: list[str]):
+def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[Incidents]:
     """Retrieves the incident and checkout data
     of the first incident of a list of issues
     through a list of `issue_id`s."""
+
+    if not issue_id_list:
+        return []
 
     # TODO: use '=' instead of 'IN' when the list has a single element
     records = Incidents.objects.raw(
         """
         WITH first_incident AS (
-            SELECT
-                IC.issue_id,
-                MIN(IC.issue_version) AS min_issue_version,
-                MIN(IC._timestamp) AS first_seen
+            SELECT DISTINCT
+                ON (IC.issue_id) IC.id
             FROM
                 incidents IC
             WHERE
                 IC.issue_id IN ({0})
-            GROUP BY
-                IC.issue_id
+            ORDER BY
+                IC.issue_id,
+                IC.issue_version ASC,
+                IC._timestamp ASC
         )
         SELECT
             IC.id,
@@ -266,13 +269,12 @@ def get_issue_first_seen_data(*, issue_id_list: list[str]):
         FROM
             incidents IC
         LEFT JOIN tests T ON IC.test_id = T.id
-        LEFT JOIN builds B ON (IC.build_id = B.id OR T.build_id = B.id)
-        LEFT JOIN checkouts C ON B.checkout_id = C.id
-        JOIN first_incident FI ON (
-            IC.issue_id = FI.issue_id
-            AND IC.issue_version = FI.min_issue_version
-            AND IC."_timestamp" = FI.first_seen
+        LEFT JOIN builds B ON (
+            IC.build_id = B.id
+            OR T.build_id = B.id
         )
+        LEFT JOIN checkouts C ON B.checkout_id = C.id
+        JOIN first_incident FI ON IC.id = FI.id
         """.format(
             ", ".join(["%s"] * len(issue_id_list))
         ),
