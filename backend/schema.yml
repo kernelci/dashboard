@@ -2343,6 +2343,8 @@ components:
           $ref: '#/components/schemas/Issue__CulpritTool'
         culprit_harness:
           $ref: '#/components/schemas/Issue__CulpritHarness'
+        categories:
+          $ref: '#/components/schemas/Issue__Categories'
       required:
       - field_timestamp
       - id
@@ -2352,6 +2354,7 @@ components:
       - culprit_code
       - culprit_tool
       - culprit_harness
+      - categories
       title: IssueListingItem
       type: object
     IssueListingResponse:
