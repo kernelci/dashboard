@@ -9,13 +9,8 @@ import { MemoizedCheckboxSection } from '@/components/Tabs/Filters';
 
 import { isTFilterObjectKeys, type TFilter } from '@/types/general';
 import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
-import type { IssueListingItem } from '@/types/issueListing';
+import type { IssueListingFilters } from '@/types/issueListing';
 import { OptionFilters } from '@/types/filters';
-import {
-  CULPRIT_CODE,
-  CULPRIT_HARNESS,
-  CULPRIT_TOOL,
-} from '@/utils/constants/issues';
 
 type PossibleIssueListingFilters = Partial<
   Pick<
@@ -25,44 +20,39 @@ type PossibleIssueListingFilters = Partial<
 >;
 
 export const createFilter = (
-  data: IssueListingItem[] | undefined,
+  data: IssueListingFilters,
 ): PossibleIssueListingFilters => {
   const filters: PossibleIssueListingFilters = {};
 
+  filters.origins = {};
+  filters.issueCulprits = {};
+  filters.issueOptions = {};
+  filters.issueCategories = {};
+
   const IssueListingOptionFilters = Object.keys(OptionFilters['issueListing']);
+  for (let i = 0; i < IssueListingOptionFilters.length; i += 1) {
+    const option = IssueListingOptionFilters[i];
+    filters.issueOptions[option] = false;
+  }
 
-  if (data) {
-    filters.origins = {};
-    filters.issueCulprits = {};
-    filters.issueOptions = {};
-    filters.issueCategories = {};
-
-    for (let i = 0; i < IssueListingOptionFilters.length; i += 1) {
-      const option = IssueListingOptionFilters[i];
-      filters.issueOptions[option] = false;
+  for (const origin of data.origins) {
+    // TODO: remove this origin exception once the culprit filter is available.
+    // This origin is from a single unique issue where the culprit is not code;
+    // while the culprit filter is hardcoded as "code" in the frontend,
+    // this origin will also be ignored.
+    // Trying to filter by this origin with culprit code will return 0 results, so while
+    // the culprit filter is always 'code' the user doesn't need to see this origin option.
+    if (origin !== '_') {
+      filters.origins[origin] = false;
     }
+  }
 
-    for (let i = 0; i < data.length; i += 1) {
-      const issue = data[i];
-      filters.origins[issue.origin] = false;
+  for (const culprit of data.culprits) {
+    filters.issueCulprits[culprit] = false;
+  }
 
-      if (issue.culprit_code) {
-        filters.issueCulprits[CULPRIT_CODE] = false;
-      }
-      if (issue.culprit_harness) {
-        filters.issueCulprits[CULPRIT_HARNESS] = false;
-      }
-      if (issue.culprit_tool) {
-        filters.issueCulprits[CULPRIT_TOOL] = false;
-      }
-
-      if (issue.categories) {
-        for (let j = 0; j < issue.categories.length; j += 1) {
-          const category = issue.categories[j];
-          filters.issueCategories[category] = false;
-        }
-      }
-    }
+  for (const category of data.categories) {
+    filters.issueCategories[category] = false;
   }
 
   return filters;
@@ -97,13 +87,17 @@ const IssueListingFilter = ({
   data,
 }: {
   paramFilter: TFilter;
-  data?: IssueListingItem[];
+  data?: IssueListingFilters;
 }): JSX.Element => {
   const navigate = useNavigate({
     from: '/issues',
   });
 
   const filter: TFilter = useMemo(() => {
+    if (!data) {
+      return {};
+    }
+
     return createFilter(data);
   }, [data]);
 

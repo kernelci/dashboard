@@ -14,11 +14,16 @@ from kernelCI_app.helpers.issueExtras import assign_issue_first_seen
 from kernelCI_app.helpers.issueListing import should_discard_issue_record
 from kernelCI_app.queries.issues import get_issue_listing_data
 from kernelCI_app.typeModels.issueListing import (
+    IssueListingFilters,
     IssueListingResponse,
     IssueListingQueryParameters,
 )
 from kernelCI_app.typeModels.issues import (
+    CULPRIT_CODE,
+    CULPRIT_HARNESS,
+    CULPRIT_TOOL,
     FirstIncident,
+    PossibleIssueCulprits,
     ProcessedExtraDetailedIssues,
 )
 
@@ -28,7 +33,26 @@ class IssueView(APIView):
         self.processed_extra_issue_details: ProcessedExtraDetailedIssues = {}
         self.first_incidents: dict[str, FirstIncident] = {}
 
+        self.unprocessed_origins: set[str] = set()
+        self.unprocessed_culprits: set[PossibleIssueCulprits] = set()
+        self.unprocessed_categories: set[str] = set()
+
         self.filters: Optional[FilterParams] = None
+
+    def _add_unprocessed_culprits(self, *, issue: dict) -> None:
+        if issue["culprit_code"]:
+            self.unprocessed_culprits.add(CULPRIT_CODE)
+        if issue["culprit_harness"]:
+            self.unprocessed_culprits.add(CULPRIT_HARNESS)
+        if issue["culprit_tool"]:
+            self.unprocessed_culprits.add(CULPRIT_TOOL)
+
+    def _add_unprocessed_categories(self, *, categories: Optional[list[str]]) -> None:
+        if not categories:
+            return
+
+        for category in categories:
+            self.unprocessed_categories.add(category)
 
     def _filter_records(self, *, issue_records: list[dict]) -> list[dict]:
         """Filters the base list of issue records using self.filters"""
@@ -36,6 +60,10 @@ class IssueView(APIView):
         result: list[dict] = []
 
         for issue in issue_records:
+            self.unprocessed_origins.add(issue["origin"])
+            self._add_unprocessed_culprits(issue=issue)
+            self._add_unprocessed_categories(categories=issue["categories"])
+
             if should_discard_issue_record(filters=self.filters, issue=issue):
                 continue
 
@@ -86,7 +114,13 @@ class IssueView(APIView):
         try:
             self._format_processing_for_response()
             valid_data = IssueListingResponse(
-                issues=filtered_records, extras=self.first_incidents
+                issues=filtered_records,
+                extras=self.first_incidents,
+                filters=IssueListingFilters(
+                    origins=sorted(self.unprocessed_origins),
+                    culprits=sorted(self.unprocessed_culprits),
+                    categories=sorted(self.unprocessed_categories),
+                ),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)

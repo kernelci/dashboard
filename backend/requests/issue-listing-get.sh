@@ -42,6 +42,19 @@ http 'localhost:8000/api/issue/?intervalInDays=1&filter_issue.culprit=code'
 #         },
 #         ...
 #     },
+#     "filters": {
+#         "categories": [],
+#         "culprits": [
+#             "code",
+#             "tool",
+#             "harness"
+#         ],
+#         "origins": [
+#             "redhat",
+#             "maestro",
+#             "_"
+#         ]
+#     },
 #     "issues": [
 #         {
 #             "categories": null,

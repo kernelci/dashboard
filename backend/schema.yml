@@ -2325,6 +2325,29 @@ components:
       - issues
       title: IssueExtraDetailsResponse
       type: object
+    IssueListingFilters:
+      properties:
+        origins:
+          items:
+            type: string
+          title: Origins
+          type: array
+        culprits:
+          items:
+            type: string
+          title: Culprits
+          type: array
+        categories:
+          items:
+            type: string
+          title: Categories
+          type: array
+      required:
+      - origins
+      - culprits
+      - categories
+      title: IssueListingFilters
+      type: object
     IssueListingItem:
       properties:
         field_timestamp:
@@ -2369,9 +2392,12 @@ components:
             $ref: '#/components/schemas/FirstIncident'
           title: Extras
           type: object
+        filters:
+          $ref: '#/components/schemas/IssueListingFilters'
       required:
       - issues
       - extras
+      - filters
       title: IssueListingResponse
       type: object
     IssueTestItem:

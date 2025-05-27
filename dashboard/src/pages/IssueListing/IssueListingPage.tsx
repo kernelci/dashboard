@@ -49,6 +49,11 @@ export const IssueListingPage = ({
       return {
         issues: [],
         extras: {},
+        filters: {
+          origins: [],
+          culprits: [],
+          categories: [],
+        },
       };
     }
 
@@ -57,6 +62,7 @@ export const IssueListingPage = ({
         matchesRegexOrIncludes(issue.comment, inputFilter),
       ),
       extras: data.extras,
+      filters: data.filters,
     };
   }, [data, inputFilter]);
 
@@ -86,7 +92,7 @@ export const IssueListingPage = ({
               navigateFrom="/issues"
               defaultInterval={REDUCED_TIME_SEARCH}
             />
-            <IssueListingFilter paramFilter={diffFilter} data={data?.issues} />
+            <IssueListingFilter paramFilter={diffFilter} data={data?.filters} />
           </div>
         </div>
         <IssueTable issueListing={filteredData} />

@@ -11,9 +11,16 @@ export type IssueListingItem = IssueKeys & {
   categories?: string[];
 };
 
+export type IssueListingFilters = {
+  categories: string[];
+  origins: string[];
+  culprits: string[];
+};
+
 export type IssueListingResponse = {
   issues: IssueListingItem[];
   extras: Record<string, FirstIncident>;
+  filters: IssueListingFilters;
 };
 
 export type IssueListingTableItem = IssueListingItem & FirstIncident;

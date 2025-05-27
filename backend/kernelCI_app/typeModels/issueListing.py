@@ -33,6 +33,13 @@ class IssueListingItem(BaseModel):
     categories: Issue__Categories
 
 
+class IssueListingFilters(BaseModel):
+    origins: list[str]
+    culprits: list[str]
+    categories: list[str]
+
+
 class IssueListingResponse(BaseModel):
     issues: list[IssueListingItem]
     extras: dict[str, FirstIncident]
+    filters: IssueListingFilters
