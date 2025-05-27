@@ -263,12 +263,6 @@ const BuildDetails = ({
     treeDetailsLink,
   ]);
 
-  const sectionsData: ISection[] = useMemo(() => {
-    return [...generalSections, filesSection, miscSection].filter(
-      section => section !== undefined,
-    );
-  }, [generalSections, miscSection, filesSection]);
-
   const buildDetailsTabTitle: string = useMemo(() => {
     const buildTitle = `${data?.tree_name} ${data?.git_commit_name}`;
     return formatMessage(
@@ -297,20 +291,25 @@ const BuildDetails = ({
       >
         <ErrorBoundary FallbackComponent={UnexpectedError}>
           <Sheet open={logOpen} onOpenChange={logOpenChange}>
-            {breadcrumb}
-
-            <SectionGroup sections={sectionsData} />
-            <BuildDetailsTestSection
-              buildId={buildId ?? ''}
-              onClickFilter={onClickFilter}
-              tableFilter={tableFilter}
-              getRowLink={getTestTableRowLink}
-            />
-            <IssueSection
-              data={issueData}
-              status={issueStatus}
-              error={issueError?.message}
-            />
+            <div className="flex flex-col gap-4 pb-8">
+              {breadcrumb}
+              <SectionGroup sections={generalSections} />
+              <BuildDetailsTestSection
+                buildId={buildId ?? ''}
+                onClickFilter={onClickFilter}
+                tableFilter={tableFilter}
+                getRowLink={getTestTableRowLink}
+              />
+              {miscSection && <SectionGroup sections={[miscSection]} />}
+              {issueData && (
+                <IssueSection
+                  data={issueData}
+                  status={issueStatus}
+                  error={issueError?.message}
+                />
+              )}
+              {filesSection && <SectionGroup sections={[filesSection]} />}
+            </div>
             <LogOrJsonSheetContent
               type={sheetType}
               jsonContent={jsonContent}

@@ -35,11 +35,11 @@ const BuildDetailsTestSection = ({
   const { data, error, status, isLoading } = useBuildTests(buildId);
 
   return (
-    <>
+    <div>
       <span className="text-2xl font-bold">
         {intl.formatMessage({ id: 'buildDetails.testResults' })}
       </span>
-      <Separator className="bg-dark-gray my-6" />
+      <Separator className="bg-dark-gray my-4" />
       <QuerySwitcher
         skeletonClassname="h-[100px]"
         status={status}
@@ -62,7 +62,7 @@ const BuildDetailsTestSection = ({
           />
         </div>
       </QuerySwitcher>
-    </>
+    </div>
   );
 };
 

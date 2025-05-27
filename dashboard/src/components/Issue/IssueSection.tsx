@@ -49,7 +49,7 @@ const IssueSection = ({
         return (
           <Link
             key={issue.id + issue.version}
-            className="mb-16 flex not-last:mb-2 not-last:border-b not-last:pb-2"
+            className="mb-12 flex not-last:mb-2 not-last:border-b not-last:pb-2"
             to="/issue/$issueId"
             params={{ issueId: issue.id }}
             state={s => s}
@@ -71,7 +71,7 @@ const IssueSection = ({
 
   return (
     <div>
-      <div className="mb-3 flex items-center gap-4 border-b border-gray-300 pb-3">
+      <div className="mb-3 flex items-center gap-4 border-b border-gray-300 pb-4">
         <h2 className="text-2xl font-semibold">
           <FormattedMessage id="global.issues" />
         </h2>
