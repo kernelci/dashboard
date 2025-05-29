@@ -2,6 +2,7 @@ from collections.abc import Callable
 from typing import Any, Optional, TypedDict
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
+from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
 from kernelCI_app.helpers.filters import (
     is_status_failure,
@@ -59,29 +60,30 @@ def get_current_row_data(current_row: dict) -> dict:
         "test_misc": current_row[11],
         "test_environment_compatible": current_row[tmp_test_env_comp_key],
         "build_id": current_row[13],
-        "build_comment": current_row[14],
-        "build_start_time": current_row[15],
-        "build_duration": current_row[16],
-        "build_architecture": current_row[17],
-        "build_command": current_row[18],
-        "build_compiler": current_row[19],
-        "build_config_name": current_row[20],
-        "build_config_url": current_row[21],
-        "build_log_url": current_row[22],
-        "build_status": current_row[23],
-        "build_misc": current_row[24],
-        "checkout_id": current_row[25],
-        "checkout_git_repository_url": current_row[26],
-        "checkout_git_repository_branch": current_row[27],
-        "checkout_git_commit_tags": current_row[28],
-        "checkout_origin": current_row[29],
-        "incident_id": current_row[30],
-        "incident_test_id": current_row[31],
-        "incident_present": current_row[32],
-        "issue_id": current_row[33],
-        "issue_version": current_row[34],
-        "issue_comment": current_row[35],
-        "issue_report_url": current_row[36],
+        "build_origin": current_row[14],
+        "build_comment": current_row[15],
+        "build_start_time": current_row[16],
+        "build_duration": current_row[17],
+        "build_architecture": current_row[18],
+        "build_command": current_row[19],
+        "build_compiler": current_row[20],
+        "build_config_name": current_row[21],
+        "build_config_url": current_row[22],
+        "build_log_url": current_row[23],
+        "build_status": current_row[24],
+        "build_misc": current_row[25],
+        "checkout_id": current_row[26],
+        "checkout_git_repository_url": current_row[27],
+        "checkout_git_repository_branch": current_row[28],
+        "checkout_git_commit_tags": current_row[29],
+        "checkout_origin": current_row[30],
+        "incident_id": current_row[31],
+        "incident_test_id": current_row[32],
+        "incident_present": current_row[33],
+        "issue_id": current_row[34],
+        "issue_version": current_row[35],
+        "issue_comment": current_row[36],
+        "issue_report_url": current_row[37],
     }
 
     environment_misc = handle_environment_misc(
@@ -121,6 +123,7 @@ def get_current_row_data(current_row: dict) -> dict:
 
     current_row_data["history_item"] = {
         "id": current_row_data["test_id"],
+        "origin": current_row_data["test_origin"],
         "status": current_row_data["test_status"],
         "duration": current_row_data["test_duration"],
         "path": current_row_data["test_path"],
@@ -168,6 +171,7 @@ def get_hardware_filter(row_data: dict) -> Any:
 def get_build(row_data: dict) -> BuildHistoryItem:
     return BuildHistoryItem(
         id=row_data["build_id"],
+        origin=row_data["build_origin"],
         architecture=row_data["build_architecture"],
         config_name=row_data["build_config_name"],
         misc=row_data["build_misc"],
@@ -318,6 +322,20 @@ def decide_if_is_test_filtered_out(instance, row_data):
     )
 
 
+def increment_test_origin_summary(
+    test_origin: str,
+    test_status: str,
+    origin_summary: dict[str, StatusCount],
+):
+    if origin_summary.get(test_origin) is None:
+        origin_summary[test_origin] = StatusCount()
+    setattr(
+        origin_summary[test_origin],
+        test_status,
+        getattr(origin_summary[test_origin], test_status) + 1,
+    )
+
+
 def process_test_summary(instance, row_data):
     test_status = row_data["test_status"]
     build_config = row_data["build_config_name"]
@@ -355,6 +373,12 @@ def process_test_summary(instance, row_data):
         ] += 1
     else:
         instance.testEnvironmentMisc[test_platform][test_status] += 1
+
+    increment_test_origin_summary(
+        test_origin=row_data["test_origin"],
+        test_status=test_status,
+        origin_summary=instance.test_summary["origins"],
+    )
 
 
 def process_boots_summary(instance, row_data):
@@ -395,6 +419,12 @@ def process_boots_summary(instance, row_data):
     else:
         instance.bootEnvironmentMisc[test_platform][test_status] += 1
 
+    increment_test_origin_summary(
+        test_origin=row_data["test_origin"],
+        test_status=test_status,
+        origin_summary=instance.boot_summary["origins"],
+    )
+
 
 def process_filters(instance, row_data: dict) -> None:
     issue_id = row_data["issue_id"]
@@ -406,6 +436,7 @@ def process_filters(instance, row_data: dict) -> None:
         instance.global_configs.add(row_data["build_config_name"])
         instance.global_architectures.add(row_data["build_architecture"])
         instance.global_compilers.add(row_data["build_compiler"])
+        instance.unfiltered_origins["build"].add(row_data["build_origin"])
 
         build_issue_id, build_issue_version, is_build_issue = (
             should_increment_build_issue(
@@ -436,9 +467,11 @@ def process_filters(instance, row_data: dict) -> None:
 
         if is_boot(row_data["test_path"]):
             issue_set = instance.unfiltered_boot_issues
+            origin_set = instance.unfiltered_origins["boot"]
             flag_tab: PossibleTabs = "boot"
         else:
             issue_set = instance.unfiltered_test_issues
+            origin_set = instance.unfiltered_origins["test"]
             flag_tab: PossibleTabs = "test"
 
         is_failed_test = row_data["test_status"] == FAIL_STATUS
@@ -451,3 +484,5 @@ def process_filters(instance, row_data: dict) -> None:
             unknown_issue_flag_dict=instance.unfiltered_uncategorized_issue_flags,
             unknown_issue_flag_tab=flag_tab,
         )
+
+        origin_set.add(row_data["test_origin"])

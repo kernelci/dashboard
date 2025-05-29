@@ -21,6 +21,7 @@ from kernelCI_app.typeModels.databases import (
     Build__Duration,
     Checkout__GitRepositoryUrl,
     Checkout__GitRepositoryBranch,
+    Origin,
 )
 from kernelCI_app.helpers.build import build_status_map
 
@@ -37,6 +38,7 @@ class BuildArchitectures(StatusCount):
 
 class TestHistoryItem(BaseModel):
     id: str
+    origin: Origin
     status: Optional[str]
     duration: Optional[Union[int, float]]
     path: Optional[str]
@@ -51,6 +53,7 @@ class TestHistoryItem(BaseModel):
 
 class BuildHistoryItem(BaseModel):
     id: Build__Id
+    origin: Origin
     architecture: Build__Architecture
     config_name: Build__ConfigName
     misc: Build__Misc
@@ -85,6 +88,7 @@ class BuildHistoryItem(BaseModel):
 
 class TestSummary(BaseModel):
     status: StatusCount
+    origins: dict[str, StatusCount]
     architectures: List[TestArchSummaryItem]
     configs: Dict[str, StatusCount]
     issues: List[Issue]
@@ -98,6 +102,7 @@ class TestSummary(BaseModel):
 
 class BuildSummary(BaseModel):
     status: StatusCount
+    origins: dict[str, StatusCount]
     architectures: Dict[str, BuildArchitectures]
     configs: Dict[str, StatusCount]
     issues: List[Issue]
@@ -118,6 +123,7 @@ class GlobalFilters(BaseModel):
 
 class LocalFilters(BaseModel):
     issues: List[Tuple[str, Optional[int]]]
+    origins: list[str]
     has_unknown_issue: bool
 
 
