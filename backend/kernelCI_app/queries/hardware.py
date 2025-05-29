@@ -247,6 +247,7 @@ def query_records(
                 """
                 SELECT
                     tests.id,
+                    tests.origin AS test__origin,
                     tests.environment_misc,
                     tests.path,
                     tests.comment,
@@ -266,6 +267,7 @@ def query_records(
                     builds.duration AS build__duration,
                     builds.log_url AS build__log_url,
                     builds.start_time AS build__start_time,
+                    builds.origin AS build__origin,
                     checkouts.git_repository_url AS build__checkout__git_repository_url,
                     checkouts.git_repository_branch AS build__checkout__git_repository_branch,
                     checkouts.git_commit_name AS build__checkout__git_commit_name,

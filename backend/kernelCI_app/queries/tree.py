@@ -366,7 +366,7 @@ def get_tree_details_data(
         query = f"""
         SELECT
                 tests.id AS tests_id,
-                tests.origin AS tests_origin,
+                tests.origin,
                 tests.environment_comment AS tests_environment_comment,
                 tests.environment_misc AS tests_environment_misc,
                 tests.path AS tests_path,
@@ -390,6 +390,7 @@ def get_tree_details_data(
             (
                 SELECT
                     builds.id AS builds_id,
+                    builds.origin,
                     builds.comment AS builds_comment,
                     builds.start_time AS builds_start_time,
                     builds.duration AS builds_duration,
@@ -420,8 +421,6 @@ def get_tree_details_data(
                     ) AS tree_head
                 LEFT JOIN builds
                     ON tree_head.checkout_id = builds.checkout_id
-                WHERE
-                    tree_head.checkouts_origin = %(origin_param)s
             ) AS builds_filter
         LEFT JOIN tests
             ON builds_filter.builds_id = tests.build_id
@@ -431,9 +430,6 @@ def get_tree_details_data(
         LEFT JOIN issues
             ON incidents.issue_id = issues.id
             AND incidents.issue_version = issues.version
-        WHERE
-            tests.origin = %(origin_param)s OR
-            tests.origin IS NULL
         ORDER BY
             issues."_timestamp" DESC
         """
