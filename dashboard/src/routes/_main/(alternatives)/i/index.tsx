@@ -1,4 +1,13 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  redirect,
+  stripSearchParams,
+} from '@tanstack/react-router';
+
+import {
+  issueListingDefaultValues,
+  issueListingSearchSchema,
+} from '@/routes/_main/issues/route';
 
 export const Route = createFileRoute('/_main/(alternatives)/i/')({
   loaderDeps: ({ search }) => ({ search }),
@@ -9,4 +18,6 @@ export const Route = createFileRoute('/_main/(alternatives)/i/')({
       params,
     });
   },
+  validateSearch: issueListingSearchSchema,
+  search: { middlewares: [stripSearchParams(issueListingDefaultValues)] },
 });
