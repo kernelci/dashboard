@@ -14,7 +14,6 @@ from kernelCI_app.helpers.treeDetails import (
     get_build,
     get_current_row_data,
     process_tree_url,
-    is_test_boots_test,
     process_boots_summary,
     process_builds_issue,
     process_test_summary,
@@ -36,7 +35,7 @@ from kernelCI_app.typeModels.treeDetails import (
     TreeCommon,
     TreeQueryParameters,
 )
-from kernelCI_app.utils import convert_issues_dict_to_list_typed
+from kernelCI_app.utils import convert_issues_dict_to_list_typed, is_boot
 
 from collections import defaultdict
 
@@ -166,7 +165,7 @@ class TreeDetailsSummary(APIView):
             if row_data["test_id"] is None:
                 continue
 
-            if is_test_boots_test(row_data):
+            if is_boot(row_data["test_path"]):
                 self._process_boots_test(row_data)
             else:
                 self._process_non_boots_test(row_data)

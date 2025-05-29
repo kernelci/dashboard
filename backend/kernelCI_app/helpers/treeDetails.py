@@ -165,11 +165,6 @@ def get_hardware_filter(row_data: dict) -> Any:
     return hardware_filter
 
 
-def is_test_boots_test(row_data: dict) -> bool:
-    test_path = row_data["test_path"]
-    return is_boot(test_path)
-
-
 def get_build(row_data: dict) -> BuildHistoryItem:
     return BuildHistoryItem(
         id=row_data["build_id"],
