@@ -386,6 +386,7 @@ def test_filter_issues(issues_input):
 def test_invalid_filters(invalid_filters_input):
     empty_test = {
         "architectures": [],
+        "origins": {},
         "configs": {},
         "environment_compatible": {},
         "environment_misc": {},
@@ -407,6 +408,7 @@ def test_invalid_filters(invalid_filters_input):
 
     empty_build = {
         "architectures": {},
+        "origins": {},
         "configs": {},
         "issues": [],
         "status": {

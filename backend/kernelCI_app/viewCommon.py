@@ -10,6 +10,7 @@ def create_details_build_summary(builds: BuildHistoryItem) -> dict:
     build_summ = create_default_build_status()
     config_summ = {}
     arch_summ = {}
+    origin_summ = {}
 
     for build in builds:
         status_key = build.status
@@ -29,8 +30,13 @@ def create_details_build_summary(builds: BuildHistoryItem) -> dict:
             if compiler and compiler not in status.setdefault("compilers", []):
                 status["compilers"].append(compiler)
 
+        if origin := build.origin:
+            status = origin_summ.setdefault(origin, create_default_build_status())
+            status[status_key] += 1
+
     return {
         "builds": build_summ,
         "configs": config_summ,
         "architectures": arch_summ,
+        "origins": origin_summ,
     }

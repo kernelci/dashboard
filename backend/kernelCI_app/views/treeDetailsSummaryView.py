@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict
 from pydantic import ValidationError
 from rest_framework.response import Response
 from kernelCI_app.helpers.commonDetails import PossibleTabs
@@ -75,7 +75,6 @@ class TreeDetailsSummary(APIView):
         self.failed_boots_with_unknown_issues = 0
         self.builds = []
         self.processed_builds = set()
-        self.build_summary = {}
         self.build_issues = []
         self.failed_builds_with_unknown_issues = 0
         self.tree_url = ""
@@ -96,6 +95,20 @@ class TreeDetailsSummary(APIView):
             "boot": False,
             "test": False,
         }
+
+        self.unfiltered_origins: dict[PossibleTabs, set[str]] = {
+            "build": set(),
+            "boot": set(),
+            "test": set(),
+        }
+
+        # TODO: move to a BuildSummary model and combine with the other fields above
+        self.build_summary: dict[str, Any] = {"origins": {}}
+
+        # TODO: move to a TestSummary model and combine with the other fields above
+        self.test_summary: dict[str, Any] = {"origins": {}}
+
+        self.boot_summary: dict[str, Any] = {"origins": {}}
 
     def _process_boots_test(self, row_data):
         test_id = row_data["test_id"]
@@ -228,6 +241,7 @@ class TreeDetailsSummary(APIView):
                 summary=Summary(
                     builds=BuildSummary(
                         status=self.build_summary["builds"],
+                        origins=self.build_summary["origins"],
                         architectures=self.build_summary["architectures"],
                         configs=self.build_summary["configs"],
                         issues=self.build_issues,
@@ -235,6 +249,7 @@ class TreeDetailsSummary(APIView):
                     ),
                     boots=TestSummary(
                         status=self.bootStatusSummary,
+                        origins=self.boot_summary["origins"],
                         architectures=list(self.bootArchSummary.values()),
                         configs=self.bootConfigs,
                         issues=self.bootIssues,
@@ -246,6 +261,7 @@ class TreeDetailsSummary(APIView):
                     ),
                     tests=TestSummary(
                         status=self.testStatusSummary,
+                        origins=self.test_summary["origins"],
                         architectures=list(self.test_arch_summary.values()),
                         configs=self.test_configs,
                         issues=self.testIssues,
@@ -267,18 +283,21 @@ class TreeDetailsSummary(APIView):
                         has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
                             "build"
                         ],
+                        origins=sorted(self.unfiltered_origins["build"]),
                     ),
                     boots=LocalFilters(
                         issues=list(self.unfiltered_boot_issues),
                         has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
                             "boot"
                         ],
+                        origins=sorted(self.unfiltered_origins["boot"]),
                     ),
                     tests=LocalFilters(
                         issues=list(self.unfiltered_test_issues),
                         has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
                             "test"
                         ],
+                        origins=sorted(self.unfiltered_origins["test"]),
                     ),
                 ),
             )

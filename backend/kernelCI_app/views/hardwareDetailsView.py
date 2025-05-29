@@ -105,6 +105,12 @@ class HardwareDetails(APIView):
 
         self.tree_status_summary = defaultdict(generate_tree_status_summary_dict)
 
+        self.unfiltered_origins: dict[str, set[str]] = {
+            "build": set(),
+            "boot": set(),
+            "test": set(),
+        }
+
     def _process_test(self, record: Dict) -> None:
         is_record_boot = is_boot(record["path"])
         test_type_key: PossibleTestType = "boot" if is_record_boot else "test"
@@ -298,6 +304,7 @@ class HardwareDetails(APIView):
                 summary=Summary(
                     builds=BuildSummary(
                         status=self.builds["summary"]["builds"],
+                        origins=self.builds["summary"]["origins"],
                         architectures=self.builds["summary"]["architectures"],
                         configs=self.builds["summary"]["configs"],
                         issues=self.builds["issues"],
@@ -305,6 +312,7 @@ class HardwareDetails(APIView):
                     ),
                     boots=TestSummary(
                         status=self.boots["statusSummary"],
+                        origins=self.boots["origins"],
                         architectures=self.boots["archSummary"],
                         configs=self.boots["configs"],
                         issues=self.boots["issues"],
@@ -315,6 +323,7 @@ class HardwareDetails(APIView):
                     ),
                     tests=TestSummary(
                         status=self.tests["statusSummary"],
+                        origins=self.tests["origins"],
                         architectures=self.tests["archSummary"],
                         configs=self.tests["configs"],
                         issues=self.tests["issues"],
@@ -335,6 +344,7 @@ class HardwareDetails(APIView):
                         has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
                             "build"
                         ],
+                        origins=sorted(self.unfiltered_origins["build"]),
                     ),
                     boots=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_boot_issues),
@@ -342,6 +352,7 @@ class HardwareDetails(APIView):
                         has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
                             "boot"
                         ],
+                        origins=sorted(self.unfiltered_origins["boot"]),
                     ),
                     tests=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_test_issues),
@@ -349,6 +360,7 @@ class HardwareDetails(APIView):
                         has_unknown_issue=self.unfiltered_uncategorized_issue_flags[
                             "test"
                         ],
+                        origins=sorted(self.unfiltered_origins["test"]),
                     ),
                 ),
                 common=HardwareCommon(
