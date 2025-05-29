@@ -121,15 +121,6 @@ def get_trees_with_selected_commit(
     return selected
 
 
-# deprecated, use get_arch_summary_typed
-def get_arch_summary(record: Dict) -> Dict:
-    return {
-        "arch": record["build__architecture"],
-        "compiler": record["build__compiler"],
-        "status": defaultdict(int),
-    }
-
-
 def get_arch_summary_typed(record: Dict) -> TestArchSummaryItem:
     return TestArchSummaryItem(
         arch=record["build__architecture"],
@@ -165,22 +156,6 @@ def get_tree_key(record: Dict) -> str:
         + record["build__checkout__git_repository_branch"]
         + record["build__checkout__git_repository_url"]
     )
-
-
-def get_history(record: Dict):
-    return {
-        "id": record["id"],
-        "status": record["status"],
-        "path": record["path"],
-        "duration": record["duration"],
-        "start_time": record["start_time"],
-        "environment_compatible": record["environment_compatible"],
-        "config": record["build__config_name"],
-        "log_url": record["log_url"],
-        "architecture": record["build__architecture"],
-        "compiler": record["build__compiler"],
-        "misc": {"platform": record["test_platform"]},
-    }
 
 
 def get_validated_current_tree(
@@ -290,43 +265,6 @@ def create_record_test_platform(*, record: Dict) -> str:
     record["test_platform"] = test_platform
 
     return test_platform
-
-
-# deprecated, use handle_test_history and handle_test_summary separately instead, with typing
-def handle_test_or_boot(record: Dict, task: Dict) -> None:
-    status = record["status"]
-
-    test_platform = create_record_test_platform(record=record)
-
-    task["history"].append(get_history(record))
-    task["statusSummary"][status] += 1
-    task["configs"][record["build__config_name"]][status] += 1
-
-    task["platforms"][test_platform][status] += 1
-
-    if is_status_failure(status):
-        task["platformsFailing"].add(test_platform)
-        task["failReasons"][extract_error_message(record["misc"])] += 1
-
-    arch_key = f'{record["build__architecture"]}{record["build__compiler"]}'
-    arch_summary = task["archSummary"].get(arch_key)
-    if not arch_summary:
-        arch_summary = get_arch_summary(record)
-        task["archSummary"][arch_key] = arch_summary
-    arch_summary["status"][status] += 1
-
-    update_issues(
-        issue_id=record["incidents__issue__id"],
-        issue_version=record["incidents__issue__version"],
-        incident_test_id=record["incidents__test_id"],
-        build_status=record["build__status"],
-        test_status=status,
-        issue_comment=record["incidents__issue__comment"],
-        issue_report_url=record["incidents__issue__report_url"],
-        task=task,
-        is_failed_task=status == FAIL_STATUS,
-        issue_from="test",
-    )
 
 
 def handle_test_history(
