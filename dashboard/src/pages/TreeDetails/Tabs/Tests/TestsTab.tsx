@@ -11,7 +11,7 @@ import {
 } from '@/types/tree/TreeDetails';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
-import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
+import { MemoizedHardwareTested } from '@/components/Cards/HardwareTested';
 
 import { TestsTable } from '@/components/TestsTable/TestsTable';
 import {

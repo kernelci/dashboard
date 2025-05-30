@@ -7,7 +7,7 @@ import { useCallback, useMemo, type JSX } from 'react';
 
 import { BootsTable } from '@/components/BootsTable/BootsTable';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
-import MemoizedHardwareTested from '@/components/Cards/HardwareTested';
+import { MemoizedHardwareTested } from '@/components/Cards/HardwareTested';
 import {
   zTableFilterInfoDefault,
   type PossibleTableFilters,

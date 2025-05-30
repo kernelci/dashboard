@@ -1,5 +1,5 @@
 import { FormattedMessage } from 'react-intl';
-import { memo, useMemo, type JSX } from 'react';
+import { memo, type JSX } from 'react';
 
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
 import type { IBaseCard } from '@/components/Cards/BaseCard';
@@ -16,7 +16,6 @@ import { groupStatus } from '@/utils/status';
 import type { ArchCompilerStatus } from '@/types/general';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { Badge } from '@/components/ui/badge';
 import FilterLink from '@/components/Tabs/FilterLink';
 import { DumbSummary, MemoizedSummaryItem } from '@/components/Tabs/Summary';
 

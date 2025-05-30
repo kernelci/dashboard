@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 import type { TFilter } from '@/types/general';
 
-import FilterLink from '../Tabs/FilterLink';
+import FilterLink from '@/components/Tabs/FilterLink';
 
 interface IHardwareTested
   extends Pick<TTreeTestsData, 'environmentCompatible'> {
@@ -67,4 +67,4 @@ const HardwareTested = ({
   );
 };
 
-export default memo(HardwareTested);
+export const MemoizedHardwareTested = memo(HardwareTested);
