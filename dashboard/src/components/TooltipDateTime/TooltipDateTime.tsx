@@ -45,7 +45,7 @@ const TooltipDateTime = ({
 
   return (
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger asChild>
         {showRelative ? (
           <div className="text-start">
             {message && <span className="pl-2">{message}</span>}
@@ -55,7 +55,7 @@ const TooltipDateTime = ({
             />
           </div>
         ) : (
-          <span>
+          <span className="text-center">
             {date} {showLabelTime ? time : ''} {showLabelTZ ? tz : ''}
           </span>
         )}

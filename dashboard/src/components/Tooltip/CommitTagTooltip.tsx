@@ -47,12 +47,14 @@ export const CommitTagTooltip = ({
   });
 
   return (
-    <>
+    <div>
       <Tooltip>
-        <TooltipTrigger>{content}</TooltipTrigger>
+        <TooltipTrigger asChild>
+          <span>{content}</span>
+        </TooltipTrigger>
         <TooltipContent>{hover}</TooltipContent>
       </Tooltip>
       {copyButton && <CopyButton value={content} />}
-    </>
+    </div>
   );
 };

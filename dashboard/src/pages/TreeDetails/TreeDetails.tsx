@@ -134,13 +134,15 @@ const TreeHeader = ({
           <TableCell>{gitBranch ?? '-'}</TableCell>
           <TableCell>{commitTagTooltip}</TableCell>
           <TableCell>
-            <Tooltip>
-              <TooltipTrigger>
-                {truncateUrl(gitUrl, defaultUrlLength)}
-              </TooltipTrigger>
-              <TooltipContent>{gitUrl}</TooltipContent>
-            </Tooltip>
-            {gitUrl && <CopyButton value={gitUrl} />}
+            <div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>{truncateUrl(gitUrl, defaultUrlLength)}</span>
+                </TooltipTrigger>
+                <TooltipContent>{gitUrl}</TooltipContent>
+              </Tooltip>
+              {gitUrl && <CopyButton value={gitUrl} />}
+            </div>
           </TableCell>
         </TableRow>
       </TableBody>
