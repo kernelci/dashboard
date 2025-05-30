@@ -311,7 +311,7 @@ export const messages = {
     'treeDetails.inconclusiveBuilds': 'Inconclusive Builds',
     'treeDetails.inconclusiveTests': 'Inconclusive Tests',
     'treeDetails.invalidBuilds': 'Failed builds',
-    'treeDetails.notFound': 'Tree checkout not found',
+    'treeDetails.notFound': 'No results available for this tree/branch/commit',
     'treeDetails.successBoots': 'Success boots',
     'treeDetails.testsFailed': 'Failed tests',
     'treeDetails.testsHistory': 'Tests History',
