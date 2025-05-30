@@ -34,8 +34,6 @@ import { GroupedTestStatus } from '@/components/Status/Status';
 
 import type { TFilter } from '@/types/general';
 
-import MemoizedHardwareUsed from '@/components/Cards/HardwareUsed';
-
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 
 import DetailsFilterList from '@/components/Tabs/FilterList';
@@ -171,11 +169,7 @@ function TreeDetails(): JSX.Element {
     filter: reqFilter,
   });
 
-  const {
-    data,
-    isLoading,
-    status: summaryQueryStatus,
-  } = treeDetailsLazyLoaded.summary;
+  const { data, isLoading } = treeDetailsLazyLoaded.summary;
 
   const treeRouterStatus = useRouterState({
     select: s => s.location.state.treeStatusCount,
@@ -361,16 +355,6 @@ function TreeDetails(): JSX.Element {
             commitName={treeInfo?.commitName}
             commitTags={data?.common.git_commit_tags}
           />
-        </div>
-        <div className="mt-5">
-          {data && (
-            <MemoizedHardwareUsed
-              title={<FormattedMessage id="treeDetails.hardwareUsed" />}
-              hardwareUsed={data?.common.hardware}
-              diffFilter={diffFilter}
-              queryStatus={summaryQueryStatus}
-            />
-          )}
         </div>
         <div className="flex flex-col pb-2">
           <div className="sticky top-[4.5rem] z-10">

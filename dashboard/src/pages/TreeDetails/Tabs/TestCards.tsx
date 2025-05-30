@@ -269,32 +269,3 @@ const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
 };
 
 export const MemoizedStatusChart = memo(StatusChart);
-
-interface IHardwareUsed {
-  title: IBaseCard['title'];
-  hardwareUsed?: string[];
-}
-
-const HardwareUsed = ({ hardwareUsed, title }: IHardwareUsed): JSX.Element => {
-  const hardwareSorted = useMemo(() => {
-    return hardwareUsed?.sort().map(hardware => {
-      return (
-        <Badge key={hardware} variant="outline" className="text-sm font-normal">
-          {hardware}
-        </Badge>
-      );
-    });
-  }, [hardwareUsed]);
-
-  return (
-    <BaseCard
-      title={title}
-      content={
-        <div className="flex flex-row flex-wrap gap-4 p-4">
-          {hardwareSorted}
-        </div>
-      }
-    />
-  );
-};
-export const MemoizedHardwareUsed = memo(HardwareUsed);
