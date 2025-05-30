@@ -121,15 +121,6 @@ def get_trees_with_selected_commit(
     return selected
 
 
-# deprecated, use get_arch_summary_typed
-def get_arch_summary(record: Dict) -> Dict:
-    return {
-        "arch": record["build__architecture"],
-        "compiler": record["build__compiler"],
-        "status": defaultdict(int),
-    }
-
-
 def get_arch_summary_typed(record: Dict) -> TestArchSummaryItem:
     return TestArchSummaryItem(
         arch=record["build__architecture"],
@@ -141,6 +132,7 @@ def get_arch_summary_typed(record: Dict) -> TestArchSummaryItem:
 def get_build_typed(record: Dict, tree_idx: int) -> HardwareBuildHistoryItem:
     return HardwareBuildHistoryItem(
         id=record["build_id"],
+        origin=record["build__origin"],
         architecture=record["build__architecture"],
         config_name=record["build__config_name"],
         misc=record["build__misc"],
@@ -165,22 +157,6 @@ def get_tree_key(record: Dict) -> str:
         + record["build__checkout__git_repository_branch"]
         + record["build__checkout__git_repository_url"]
     )
-
-
-def get_history(record: Dict):
-    return {
-        "id": record["id"],
-        "status": record["status"],
-        "path": record["path"],
-        "duration": record["duration"],
-        "start_time": record["start_time"],
-        "environment_compatible": record["environment_compatible"],
-        "config": record["build__config_name"],
-        "log_url": record["log_url"],
-        "architecture": record["build__architecture"],
-        "compiler": record["build__compiler"],
-        "misc": {"platform": record["test_platform"]},
-    }
 
 
 def get_validated_current_tree(
@@ -226,6 +202,7 @@ def get_current_record_tree_in_selection(
 def generate_test_dict() -> dict[str, Any]:
     return {
         "history": [],
+        "origins": {},
         "archSummary": {},
         "platforms": defaultdict(lambda: defaultdict(int)),
         "platformsFailing": set(),
@@ -240,6 +217,7 @@ def generate_test_dict() -> dict[str, Any]:
 def generate_build_summary_typed() -> BuildSummary:
     return BuildSummary(
         status=StatusCount(),
+        origins={},
         architectures={},
         configs={},
         issues=[],
@@ -250,6 +228,7 @@ def generate_build_summary_typed() -> BuildSummary:
 def generate_test_summary_typed() -> TestSummary:
     return TestSummary(
         status=StatusCount(),
+        origins={},
         architectures=[],
         configs={},
         issues=[],
@@ -292,43 +271,6 @@ def create_record_test_platform(*, record: Dict) -> str:
     return test_platform
 
 
-# deprecated, use handle_test_history and handle_test_summary separately instead, with typing
-def handle_test_or_boot(record: Dict, task: Dict) -> None:
-    status = record["status"]
-
-    test_platform = create_record_test_platform(record=record)
-
-    task["history"].append(get_history(record))
-    task["statusSummary"][status] += 1
-    task["configs"][record["build__config_name"]][status] += 1
-
-    task["platforms"][test_platform][status] += 1
-
-    if is_status_failure(status):
-        task["platformsFailing"].add(test_platform)
-        task["failReasons"][extract_error_message(record["misc"])] += 1
-
-    arch_key = f'{record["build__architecture"]}{record["build__compiler"]}'
-    arch_summary = task["archSummary"].get(arch_key)
-    if not arch_summary:
-        arch_summary = get_arch_summary(record)
-        task["archSummary"][arch_key] = arch_summary
-    arch_summary["status"][status] += 1
-
-    update_issues(
-        issue_id=record["incidents__issue__id"],
-        issue_version=record["incidents__issue__version"],
-        incident_test_id=record["incidents__test_id"],
-        build_status=record["build__status"],
-        test_status=status,
-        issue_comment=record["incidents__issue__comment"],
-        issue_report_url=record["incidents__issue__report_url"],
-        task=task,
-        is_failed_task=status == FAIL_STATUS,
-        issue_from="test",
-    )
-
-
 def handle_test_history(
     *,
     record: Dict,
@@ -338,6 +280,7 @@ def handle_test_history(
 
     test_history_item = HardwareTestHistoryItem(
         id=record["id"],
+        origin=record["test__origin"],
         status=record["status"],
         duration=record["duration"],
         path=record["path"],
@@ -403,6 +346,15 @@ def handle_test_summary(
 
     process_issue(record=record, task_issues_dict=issue_dict, issue_from="test")
 
+    origin = record["test__origin"]
+    if task.origins.get(origin) is None:
+        task.origins[origin] = StatusCount()
+    setattr(
+        task.origins[origin],
+        status,
+        getattr(task.origins[origin], status) + 1,
+    )
+
 
 def handle_build_history(
     *,
@@ -459,6 +411,17 @@ def handle_build_summary(
             and compiler not in builds_summary.architectures.get(arch).compilers
         ):
             builds_summary.architectures[arch].compilers.append(compiler)
+
+    if origin := build.origin:
+        build_origin_summary = builds_summary.origins.get(origin)
+        if not build_origin_summary:
+            build_origin_summary = StatusCount()
+            builds_summary.origins[origin] = build_origin_summary
+        setattr(
+            builds_summary.origins[origin],
+            status_key,
+            getattr(builds_summary.origins[origin], status_key) + 1,
+        )
 
     process_issue(record=record, task_issues_dict=issue_dict, issue_from="build")
 
@@ -709,14 +672,18 @@ def process_filters(*, instance, record: Dict) -> None:
             unknown_issue_flag_tab="build",
         )
 
+        instance.unfiltered_origins["build"].add(record["build__origin"])
+
     if record["id"] is not None:
         if is_boot(record["path"]):
             issue_set = instance.unfiltered_boot_issues
             platform_set = instance.unfiltered_boot_platforms
+            origin_set = instance.unfiltered_origins["boot"]
             flag_tab: PossibleTabs = "boot"
         else:
             issue_set = instance.unfiltered_test_issues
             platform_set = instance.unfiltered_test_platforms
+            origin_set = instance.unfiltered_origins["test"]
             flag_tab: PossibleTabs = "test"
 
         test_issue_id = record["incidents__issue__id"]
@@ -741,6 +708,7 @@ def process_filters(*, instance, record: Dict) -> None:
         environment_misc = handle_environment_misc(record["environment_misc"])
         test_platform = env_misc_value_or_default(environment_misc).get("platform")
         platform_set.add(test_platform)
+        origin_set.add(record["test__origin"])
 
 
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:

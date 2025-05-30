@@ -1205,6 +1205,8 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/Build__Id'
+        origin:
+          $ref: '#/components/schemas/Origin'
         architecture:
           $ref: '#/components/schemas/Build__Architecture'
         config_name:
@@ -1241,8 +1243,6 @@ components:
           $ref: '#/components/schemas/Checkout__GitCommitName'
         git_commit_tags:
           $ref: '#/components/schemas/Checkout__GitCommitTags'
-        origin:
-          $ref: '#/components/schemas/Origin'
         log_excerpt:
           $ref: '#/components/schemas/Build__LogExcerpt'
         input_files:
@@ -1251,6 +1251,7 @@ components:
           $ref: '#/components/schemas/Build__OutputFiles'
       required:
       - id
+      - origin
       - architecture
       - config_name
       - misc
@@ -1269,7 +1270,6 @@ components:
       - git_commit_hash
       - git_commit_name
       - git_commit_tags
-      - origin
       - log_excerpt
       - input_files
       - output_files
@@ -1279,6 +1279,8 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/Build__Id'
+        origin:
+          $ref: '#/components/schemas/Origin'
         architecture:
           $ref: '#/components/schemas/Build__Architecture'
         config_name:
@@ -1303,6 +1305,7 @@ components:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
       required:
       - id
+      - origin
       - architecture
       - config_name
       - misc
@@ -1320,6 +1323,11 @@ components:
       properties:
         status:
           $ref: '#/components/schemas/StatusCount'
+        origins:
+          additionalProperties:
+            $ref: '#/components/schemas/StatusCount'
+          title: Origins
+          type: object
         architectures:
           additionalProperties:
             $ref: '#/components/schemas/BuildArchitectures'
@@ -1340,6 +1348,7 @@ components:
           type: integer
       required:
       - status
+      - origins
       - architectures
       - configs
       - issues
@@ -1802,6 +1811,8 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/Build__Id'
+        origin:
+          $ref: '#/components/schemas/Origin'
         architecture:
           $ref: '#/components/schemas/Build__Architecture'
         config_name:
@@ -1836,6 +1847,7 @@ components:
           - type: 'null'
       required:
       - id
+      - origin
       - architecture
       - config_name
       - misc
@@ -2084,6 +2096,8 @@ components:
         id:
           title: Id
           type: string
+        origin:
+          $ref: '#/components/schemas/Origin'
         status:
           anyOf:
           - type: string
@@ -2145,6 +2159,7 @@ components:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
       required:
       - id
+      - origin
       - status
       - duration
       - path
@@ -2173,6 +2188,11 @@ components:
             type: array
           title: Issues
           type: array
+        origins:
+          items:
+            type: string
+          title: Origins
+          type: array
         has_unknown_issue:
           title: Has Unknown Issue
           type: boolean
@@ -2183,6 +2203,7 @@ components:
           type: array
       required:
       - issues
+      - origins
       - has_unknown_issue
       - platforms
       title: HardwareTestLocalFilters
@@ -2522,11 +2543,17 @@ components:
             type: array
           title: Issues
           type: array
+        origins:
+          items:
+            type: string
+          title: Origins
+          type: array
         has_unknown_issue:
           title: Has Unknown Issue
           type: boolean
       required:
       - issues
+      - origins
       - has_unknown_issue
       title: LocalFilters
       type: object
@@ -2768,6 +2795,8 @@ components:
         id:
           title: Id
           type: string
+        origin:
+          $ref: '#/components/schemas/Origin'
         status:
           anyOf:
           - type: string
@@ -2825,6 +2854,7 @@ components:
           - type: 'null'
       required:
       - id
+      - origin
       - status
       - duration
       - path
@@ -2905,6 +2935,11 @@ components:
       properties:
         status:
           $ref: '#/components/schemas/StatusCount'
+        origins:
+          additionalProperties:
+            $ref: '#/components/schemas/StatusCount'
+          title: Origins
+          type: object
         architectures:
           items:
             $ref: '#/components/schemas/TestArchSummaryItem'
@@ -2955,6 +2990,7 @@ components:
           title: Platforms
       required:
       - status
+      - origins
       - architectures
       - configs
       - issues

@@ -12,7 +12,6 @@ from kernelCI_app.helpers.treeDetails import (
     decide_if_is_boot_filtered_out,
     decide_if_is_full_row_filtered_out,
     get_current_row_data,
-    is_test_boots_test,
 )
 from kernelCI_app.queries.tree import get_tree_details_data
 from kernelCI_app.typeModels.treeDetails import (
@@ -22,6 +21,7 @@ from kernelCI_app.typeModels.commonDetails import (
     CommonDetailsBootsResponse,
     TestHistoryItem,
 )
+from kernelCI_app.utils import is_boot
 
 
 class TreeDetailsBoots(APIView):
@@ -55,7 +55,7 @@ class TreeDetailsBoots(APIView):
             if row_data["test_id"] is None:
                 continue
 
-            if is_test_boots_test(row_data):
+            if is_boot(row_data["test_path"]):
                 self._process_boots_test(row_data)
 
     @extend_schema(
