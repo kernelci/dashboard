@@ -24,6 +24,7 @@ import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithL
 import { TableRowMemoized } from '@/components/Table/TableComponents';
 
 const ESTIMATED_ROW_HEIGHT = 60;
+const VIRTUALIZER_OVERSCAN = 5;
 
 interface IIndividualTestsTable {
   columns: ColumnDef<TIndividualTest>[];
@@ -46,6 +47,7 @@ export function IndividualTestsTable({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     manualPagination: true,
+    getRowId: row => row.id,
     state: {
       sorting,
     },
@@ -76,7 +78,7 @@ export function IndividualTestsTable({
     count: modelRows.length,
     estimateSize: () => ESTIMATED_ROW_HEIGHT,
     getScrollElement: () => parentRef.current,
-    overscan: 5,
+    overscan: VIRTUALIZER_OVERSCAN,
   });
   const virtualItems = virtualizer.getVirtualItems();
 
@@ -91,12 +93,12 @@ export function IndividualTestsTable({
   const openLogSheet = useCallback((index: number) => setLog(index), [setLog]);
 
   const tableRows = useMemo((): JSX.Element[] => {
-    return virtualItems.map((virtualRow, idx) => {
+    return virtualItems.map(virtualRow => {
       const row = modelRows[virtualRow.index] as Row<TIndividualTest>;
       return (
         <TableRowMemoized<TIndividualTest>
           key={row.id}
-          index={idx}
+          index={virtualRow.index}
           row={row}
           openLogSheet={openLogSheet}
           currentLog={currentLog}
