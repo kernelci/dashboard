@@ -190,7 +190,7 @@ export const messages = {
     'issue.alsoPresentTooltip': 'Issue also present in {tree}',
     'issue.firstSeen': 'First seen',
     'issue.newIssue': 'New issue: This is the first time this issue was seen',
-    'issue.noIssueFound': 'No issues found for this tree checkout',
+    'issue.noIssueFound': 'No issues found for this tree/branch/commit',
     'issue.path': 'Issues',
     'issue.searchPlaceholder': 'Search by issue comment with a regex',
     'issue.tooltip':
@@ -311,7 +311,7 @@ export const messages = {
     'treeDetails.inconclusiveBuilds': 'Inconclusive Builds',
     'treeDetails.inconclusiveTests': 'Inconclusive Tests',
     'treeDetails.invalidBuilds': 'Failed builds',
-    'treeDetails.notFound': 'Tree checkout not found',
+    'treeDetails.notFound': 'No results available for this tree/branch/commit',
     'treeDetails.successBoots': 'Success boots',
     'treeDetails.testsFailed': 'Failed tests',
     'treeDetails.testsHistory': 'Tests History',

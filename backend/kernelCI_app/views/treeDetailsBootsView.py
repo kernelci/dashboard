@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
     FilterParams,
@@ -76,7 +77,7 @@ class TreeDetailsBoots(APIView):
 
         if len(rows) == 0:
             return create_api_error_response(
-                error_message="Tree checkout not found",
+                error_message=ClientStrings.TREE_NOT_FOUND,
                 status_code=HTTPStatus.OK,
             )
 
@@ -84,7 +85,7 @@ class TreeDetailsBoots(APIView):
             row_data = get_current_row_data(current_row=rows[0])
             if row_data["test_id"] is None:
                 return create_api_error_response(
-                    error_message="No boots found for this tree checkout",
+                    error_message=ClientStrings.TREE_BOOTS_NOT_FOUND,
                     status_code=HTTPStatus.OK,
                 )
 

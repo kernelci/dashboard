@@ -2,6 +2,7 @@ from typing import Any, Dict, List
 from http import HTTPStatus
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.helpers.discordWebhook import send_discord_notification
 from kernelCI_app.helpers.filters import FilterParams
@@ -217,7 +218,7 @@ class TreeDetails(APIView):
 
         if len(rows) == 0:
             return create_api_error_response(
-                error_message="Tree checkout not found",
+                error_message=ClientStrings.TREE_NOT_FOUND,
                 status_code=HTTPStatus.OK,
             )
 
@@ -230,7 +231,7 @@ class TreeDetails(APIView):
                 )
                 send_discord_notification(content=notification)
                 return create_api_error_response(
-                    error_message="No builds found for this tree checkout",
+                    error_message=ClientStrings.TREE_BUILDS_NOT_FOUND,
                     status_code=HTTPStatus.OK,
                 )
 
