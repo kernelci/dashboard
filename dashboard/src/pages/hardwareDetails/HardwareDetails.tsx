@@ -366,6 +366,8 @@ function HardwareDetails(): JSX.Element {
             isLoading={summaryResponse.isLoading}
             errorMessage={summaryResponse.error?.message}
             emptyLabel="hardwareDetails.notFound"
+            forceErrorMessageUse
+            variant="warning"
           />
         }
       >

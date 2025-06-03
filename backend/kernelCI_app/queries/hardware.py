@@ -396,7 +396,6 @@ def get_hardware_trees_data(
             Tests.objects.filter(
                 models.Q(environment_compatible__contains=[hardware_id])
                 | models.Q(environment_misc__platform=hardware_id),
-                origin=origin,
                 build__checkout__start_time__lte=end_datetime,
                 build__checkout__start_time__gte=start_datetime,
                 build__checkout__git_commit_hash__in=Subquery(trees_subquery),
