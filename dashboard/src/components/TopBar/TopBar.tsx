@@ -26,7 +26,7 @@ const getTargetPath = (basePath: string): PossibleMonitorPath => {
 
 const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
   const { origin } = useSearch({ strict: false });
-  const validOrigins = useOrigins();
+  const { data: originData, status: originStatus } = useOrigins();
 
   const targetPath = getTargetPath(basePath);
   const navigate = useNavigate({ from: targetPath });
@@ -41,15 +41,17 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
     [navigate, targetPath],
   );
 
-  const selectItems = useMemo(
-    () =>
-      validOrigins.data?.map(option => (
-        <SelectItem key={option} value={option}>
-          {option}
-        </SelectItem>
-      )),
-    [validOrigins.data],
-  );
+  const selectItems = useMemo(() => {
+    if (originData === undefined) {
+      return <></>;
+    }
+
+    return originData?.checkout_origins.map(option => (
+      <SelectItem key={option} value={option}>
+        {option}
+      </SelectItem>
+    ));
+  }, [originData]);
 
   useEffect(() => {
     if (origin === undefined) {
@@ -62,7 +64,7 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
     }
   });
 
-  if (validOrigins.status === 'pending') {
+  if (originStatus === 'pending') {
     return <FormattedMessage id="global.loading" />;
   }
 

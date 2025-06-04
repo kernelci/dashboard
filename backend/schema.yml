@@ -518,9 +518,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
+                $ref: '#/components/schemas/OriginsResponse'
           description: ''
         '400':
           content:
@@ -2599,6 +2597,17 @@ components:
       type: object
     Origin:
       type: string
+    OriginsResponse:
+      properties:
+        checkout_origins:
+          items:
+            $ref: '#/components/schemas/Origin'
+          title: Checkout Origins
+          type: array
+      required:
+      - checkout_origins
+      title: OriginsResponse
+      type: object
     PossibleIssueTags:
       enum:
       - mainline
