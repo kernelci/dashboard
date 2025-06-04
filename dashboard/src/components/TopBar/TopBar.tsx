@@ -3,8 +3,8 @@ import { FormattedMessage } from 'react-intl';
 import {
   useSearch,
   useNavigate,
-  useLocation,
   useRouterState,
+  useMatches,
 } from '@tanstack/react-router';
 
 import { useCallback, useEffect, useMemo, type JSX } from 'react';
@@ -98,18 +98,32 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
 };
 
 const TopBar = (): JSX.Element => {
-  const { pathname } = useLocation();
-  const redirectFrom = useRouterState({ select: s => s.location.state.from });
-  const splitPath = pathname.split('/')[1] ?? '';
-  const basePath = redirectFrom ?? splitPath;
+  const matches = useMatches();
+  const redirectStateFrom = useRouterState({
+    select: s => s.location.state.from,
+  });
+
+  const routeInfo = useMemo(() => {
+    const lastMatch = matches[matches.length - 1];
+    const firstUrlLocation = lastMatch?.pathname.split('/')[1] ?? '';
+    const cleanFullPath = lastMatch?.fullPath.replace(/\//g, '') ?? '';
+
+    return {
+      firstUrlLocation,
+      isTreeListing: cleanFullPath === 'tree',
+      isHardwarePage: cleanFullPath.includes('hardware'),
+    };
+  }, [matches]);
+
+  const basePath = redirectStateFrom ?? routeInfo.firstUrlLocation;
 
   return (
-    <div className="fixed top-0 z-10 ml-56 flex h-20 w-full bg-white px-16">
+    <div className="fixed top-0 z-10 flex h-20 w-full bg-white px-16">
       <div className="flex flex-row items-center justify-between">
         <span className="mr-14 text-2xl">
           <TitleName basePath={basePath} />
         </span>
-        {(basePath === 'tree' || basePath === 'hardware') && (
+        {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
           <OriginSelect basePath={basePath} />
         )}
       </div>

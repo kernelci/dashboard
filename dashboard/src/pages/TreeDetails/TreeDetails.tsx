@@ -70,6 +70,7 @@ interface ITreeHeader {
   commitName?: string;
   commitHash?: string;
   commitTags?: string[];
+  origin?: string;
 }
 
 const defaultUrlLength = 12;
@@ -98,6 +99,7 @@ const TreeHeader = ({
   commitName,
   commitHash,
   commitTags,
+  origin,
 }: ITreeHeader): JSX.Element => {
   const commitTagTooltip = useMemo(
     () => (
@@ -121,6 +123,9 @@ const TreeHeader = ({
           <FormattedMessage id="treeDetails.branch" />
         </TableHead>
         <TableHead>
+          <FormattedMessage id="global.origin" />
+        </TableHead>
+        <TableHead>
           <FormattedMessage id="treeDetails.commitOrTag" />
         </TableHead>
         <TableHead>
@@ -129,9 +134,9 @@ const TreeHeader = ({
       </DumbTableHeader>
       <TableBody>
         <TableRow>
-          {/** TODO: Replace with real data */}
           <TableCell>{treeNames ?? '-'}</TableCell>
           <TableCell>{gitBranch ?? '-'}</TableCell>
+          <TableCell>{origin ?? '-'}</TableCell>
           <TableCell>{commitTagTooltip}</TableCell>
           <TableCell>
             <div>
@@ -356,6 +361,7 @@ function TreeDetails(): JSX.Element {
             commitHash={treeId}
             commitName={treeInfo?.commitName}
             commitTags={data?.common.git_commit_tags}
+            origin={searchParams.origin}
           />
         </div>
         <div className="flex flex-col pb-2">

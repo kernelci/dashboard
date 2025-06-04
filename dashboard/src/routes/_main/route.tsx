@@ -18,12 +18,14 @@ const RouteComponent = (): JSX.Element => {
     <>
       <title>{formatMessage({ id: 'title.default' })}</title>
       <div className="h-full w-full">
-        <div className="flex w-full flex-row justify-between">
+        <div className="flex w-full flex-row">
           <SideMenu />
-          <TopBar />
-          <div className="bg-light-gray w-full px-16 pt-24">
-            <Outlet />
-          </div>
+          <main className="flex w-full flex-col">
+            <TopBar />
+            <div className="bg-light-gray h-full w-full px-16 pt-24">
+              <Outlet />
+            </div>
+          </main>
         </div>
       </div>
       {/*     <TanStackRouterDevtools /> */}
