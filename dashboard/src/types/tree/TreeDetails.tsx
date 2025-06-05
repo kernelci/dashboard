@@ -8,6 +8,7 @@ import type {
   StatusCounts,
   PropertyStatusCounts,
   RequiredStatusCount,
+  TestHistoryWithOrigin,
 } from '@/types/general';
 
 import type { Status } from '@/types/database';
@@ -70,8 +71,8 @@ type TreeCommon = {
 
 export type TreeDetailsFullData = {
   builds: BuildsTabBuild[];
-  boots: TestHistory[];
-  tests: TestHistory[];
+  boots: TestHistoryWithOrigin[];
+  tests: TestHistoryWithOrigin[];
   summary: Summary;
   common: TreeCommon;
   filters: DetailsFilters;

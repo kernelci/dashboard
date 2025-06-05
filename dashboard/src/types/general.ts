@@ -48,6 +48,11 @@ export type TestHistory = TreeBranchItem & {
   environment_misc?: IEnvironmentMisc;
 };
 
+// TODO: make other endpoints also return the test origin and combine this type with TestHistory
+export type TestHistoryWithOrigin = TestHistory & {
+  origin: string;
+};
+
 /**
  * @deprecated Use a more generic approach to the misc field.
  */
@@ -60,6 +65,7 @@ interface ITreeDetailsMisc {
 
 export type BuildsTabBuild = {
   id: string;
+  origin: string;
   architecture: string;
   config_name: string;
   status: Status;
@@ -255,6 +261,7 @@ const requestFilters = {
     'treeDetails.compiler',
     'treeDetails.duration_[gte]',
     'treeDetails.duration_[lte]',
+    'origin',
   ],
   test: [
     'test.status',
