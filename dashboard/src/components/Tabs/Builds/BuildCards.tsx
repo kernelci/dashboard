@@ -32,7 +32,7 @@ const ErrorsSummaryBuild = ({
 
   return (
     <BaseCard
-      title="Summary"
+      title={<FormattedMessage id="global.summary" />}
       content={
         <DumbSummary summaryHeaders={summaryHeaders}>
           {summaryBody?.map(row => {

@@ -31,6 +31,7 @@ import type { TreeDetailsLazyLoaded } from '@/hooks/useTreeDetailsLazyLoadQuery'
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
 
 interface BootsTabProps {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
@@ -165,6 +166,11 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
     }
   }, [isEmptySummary, summaryBootsData]);
 
+  const showOriginCard = useMemo(
+    () => summaryBootsData && Object.keys(summaryBootsData.origins).length > 1,
+    [summaryBootsData],
+  );
+
   const { formatMessage } = useIntl();
 
   return (
@@ -209,6 +215,12 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
                 environmentCompatible={hardwareData}
                 diffFilter={diffFilter}
               />
+              {showOriginCard && summaryBootsData && (
+                <MemoizedOriginsCard
+                  diffFilter={diffFilter}
+                  origins={summaryBootsData.origins}
+                />
+              )}
             </div>
             <MemoizedIssuesList
               title={<FormattedMessage id="global.issues" />}
@@ -251,6 +263,12 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
                   environmentCompatible={hardwareData}
                   diffFilter={diffFilter}
                 />
+                {showOriginCard && summaryBootsData && (
+                  <MemoizedOriginsCard
+                    diffFilter={diffFilter}
+                    origins={summaryBootsData.origins}
+                  />
+                )}
               </div>
               <MemoizedIssuesList
                 title={<FormattedMessage id="global.issues" />}
