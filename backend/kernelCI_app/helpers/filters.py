@@ -347,6 +347,10 @@ class FilterParams:
         self.filter_issue_categories: set[str] = set()
         self.filter_issue_options: set[IssueFilterOptions] = set()
 
+        self.filter_build_origin: set[str] = set()
+        self.filter_boot_origin: set[str] = set()
+        self.filter_test_origin: set[str] = set()
+
         self.filter_handlers: FilterHandlers = {
             "boot.status": self._handle_boot_status,
             "boot.duration": self._handle_boot_duration,
@@ -369,6 +373,9 @@ class FilterParams:
             "issue.culprit": self._handle_issue_culprits,
             "issue.categories": self._handle_issue_categories,
             "issue.options": self._handle_issue_options,
+            "build.origin": self._handle_build_origin,
+            "boot.origin": self._handle_boot_origin,
+            "test.origin": self._handle_test_origin,
         }
 
         self.filters: List[FilterParams.ParsedFilter] = []
@@ -467,6 +474,15 @@ class FilterParams:
             log_message(f"Ignoring issue filter option not allowed: {filter_value}")
             return
         self.filter_issue_options.add(filter_value)
+
+    def _handle_build_origin(self, current_filter: ParsedFilter) -> None:
+        self.filter_build_origin.add(current_filter["value"])
+
+    def _handle_boot_origin(self, current_filter: ParsedFilter) -> None:
+        self.filter_boot_origin.add(current_filter["value"])
+
+    def _handle_test_origin(self, current_filter: ParsedFilter) -> None:
+        self.filter_test_origin.add(current_filter["value"])
 
     def _process_filters(self):
         try:
@@ -584,6 +600,7 @@ class FilterParams:
         issue_id: Optional[str],
         issue_version: Optional[int],
         incident_test_id: Optional[str],
+        build_origin: Optional[str] = None,
     ) -> bool:
         return (
             (
@@ -604,6 +621,10 @@ class FilterParams:
             or (
                 self.filterBuildDurationMin is not None
                 and (to_int_or_default(duration, 0) < self.filterBuildDurationMin)
+            )
+            or (
+                len(self.filter_build_origin) > 0
+                and (build_origin not in self.filter_build_origin)
             )
             or (
                 should_filter_build_issue(
@@ -670,6 +691,7 @@ class FilterParams:
         issue_version: Optional[int] = None,
         incident_test_id: Optional[str] = "incident_test_id",
         platform: Optional[str] = None,
+        origin: Optional[str] = None,
     ) -> bool:
         if (
             (self.filterBootPath != "" and (self.filterBootPath not in path))
@@ -701,6 +723,10 @@ class FilterParams:
                 len(self.filterPlatforms["boot"]) > 0
                 and (platform not in self.filterPlatforms["boot"])
             )
+            or (
+                len(self.filter_boot_origin) > 0
+                and (origin not in self.filter_boot_origin)
+            )
         ):
             return True
 
@@ -716,6 +742,7 @@ class FilterParams:
         issue_version: Optional[int] = None,
         incident_test_id: Optional[str] = "incident_test_id",
         platform: Optional[str] = None,
+        origin: Optional[str] = None,
     ) -> bool:
         if (
             (self.filterTestPath != "" and (self.filterTestPath not in path))
@@ -746,6 +773,10 @@ class FilterParams:
             or (
                 len(self.filterPlatforms["test"]) > 0
                 and (platform not in self.filterPlatforms["test"])
+            )
+            or (
+                len(self.filter_test_origin) > 0
+                and (origin not in self.filter_test_origin)
             )
         ):
             return True
