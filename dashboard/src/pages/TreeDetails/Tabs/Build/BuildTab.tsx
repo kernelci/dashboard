@@ -186,6 +186,7 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
                 <MemoizedOriginsCard
                   diffFilter={diffFilter}
                   origins={summaryBuildsData.origins}
+                  filterSection="buildOrigin"
                 />
               )}
             </div>
@@ -232,6 +233,7 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
                   <MemoizedOriginsCard
                     diffFilter={diffFilter}
                     origins={summaryBuildsData.origins}
+                    filterSection="buildOrigin"
                   />
                 )}
               </div>

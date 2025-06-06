@@ -219,6 +219,7 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
                 <MemoizedOriginsCard
                   diffFilter={diffFilter}
                   origins={summaryBootsData.origins}
+                  filterSection="bootOrigin"
                 />
               )}
             </div>
@@ -267,6 +268,7 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
                   <MemoizedOriginsCard
                     diffFilter={diffFilter}
                     origins={summaryBootsData.origins}
+                    filterSection="bootOrigin"
                   />
                 )}
               </div>

@@ -8,15 +8,20 @@ import { GroupedTestStatus } from '@/components/Status/Status';
 import BaseCard from '@/components/Cards/BaseCard';
 
 import FilterLink from '@/components/Tabs/FilterLink';
-import type { TFilter } from '@/types/general';
+import type { TFilter, TFilterObjectsKeys } from '@/types/general';
 import type { Summary } from '@/types/commonDetails';
 
 interface IOriginsCard {
   origins: Summary['builds']['origins'];
   diffFilter: TFilter;
+  filterSection: TFilterObjectsKeys;
 }
 
-const OriginsCard = ({ origins, diffFilter }: IOriginsCard): JSX.Element => {
+const OriginsCard = ({
+  origins,
+  diffFilter,
+  filterSection,
+}: IOriginsCard): JSX.Element => {
   const content = useMemo(() => {
     return (
       <DumbListingContent>
@@ -28,7 +33,7 @@ const OriginsCard = ({ origins, diffFilter }: IOriginsCard): JSX.Element => {
             <FilterLink
               key={originItem}
               filterValue={originItem}
-              filterSection="origins"
+              filterSection={filterSection}
               diffFilter={diffFilter}
             >
               <ListingItem
@@ -52,7 +57,7 @@ const OriginsCard = ({ origins, diffFilter }: IOriginsCard): JSX.Element => {
         })}
       </DumbListingContent>
     );
-  }, [origins, diffFilter]);
+  }, [origins, filterSection, diffFilter]);
 
   return (
     <BaseCard

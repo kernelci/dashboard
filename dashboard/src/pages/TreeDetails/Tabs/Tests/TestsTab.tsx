@@ -221,6 +221,7 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
                 <MemoizedOriginsCard
                   diffFilter={diffFilter}
                   origins={summaryTestsData.origins}
+                  filterSection="testOrigin"
                 />
               )}
             </div>
@@ -269,6 +270,7 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
                   <MemoizedOriginsCard
                     diffFilter={diffFilter}
                     origins={summaryTestsData.origins}
+                    filterSection="testOrigin"
                   />
                 )}
               </div>

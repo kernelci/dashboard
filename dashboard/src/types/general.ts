@@ -167,6 +167,9 @@ export const zFilterObjectsKeys = z.enum([
   'issueCategories',
   'issueOptions',
   'issueCulprits',
+  'buildOrigin',
+  'bootOrigin',
+  'testOrigin',
 ]);
 
 export const zFilterNumberKeys = z.enum([
@@ -209,6 +212,9 @@ export const zDiffFilter = z
       issueCategories: zFilterBoolValue,
       issueOptions: zFilterBoolValue,
       issueCulprits: zFilterBoolValue,
+      buildOrigin: zFilterBoolValue,
+      bootOrigin: zFilterBoolValue,
+      testOrigin: zFilterBoolValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])
@@ -261,7 +267,6 @@ const requestFilters = {
     'treeDetails.compiler',
     'treeDetails.duration_[gte]',
     'treeDetails.duration_[lte]',
-    'origin',
   ],
   test: [
     'test.status',
@@ -277,6 +282,9 @@ const requestFilters = {
     'test.issue',
     'boot.issue',
     'build.status',
+    'build.origin',
+    'boot.origin',
+    'test.origin',
   ],
   issueListing: [
     'origin',
@@ -305,9 +313,11 @@ export const filterFieldMap = {
   'treeDetails.duration_[gte]': 'buildDurationMin',
   'treeDetails.duration_[lte]': 'buildDurationMax',
   'boot.status': 'bootStatus',
+  'boot.origin': 'bootOrigin',
   'boot.duration_[gte]': 'bootDurationMin',
   'boot.duration_[lte]': 'bootDurationMax',
   'test.status': 'testStatus',
+  'test.origin': 'testOrigin',
   'test.duration_[gte]': 'testDurationMin',
   'test.duration_[lte]': 'testDurationMax',
   'test.hardware': 'hardware',
@@ -317,6 +327,7 @@ export const filterFieldMap = {
   'boot.issue': 'bootIssue',
   'test.issue': 'testIssue',
   'build.status': 'buildStatus',
+  'build.origin': 'buildOrigin',
   origin: 'origins',
   'issue.culprit': 'issueCulprits',
   'issue.categories': 'issueCategories',
