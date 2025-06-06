@@ -5,7 +5,7 @@ from kernelCI_app.helpers.environment import get_schema_version
 from kernelCI_app.typeModels.databases import PASS_STATUS, FAIL_STATUS, NULL_STATUS
 
 
-def build_status_map(status: Optional[bool | str]) -> str:
+def build_status_map(status: Optional[bool | str | None]) -> str:
     if isinstance(status, str):
         return status
     status_map = {True: PASS_STATUS, False: FAIL_STATUS, None: NULL_STATUS}
