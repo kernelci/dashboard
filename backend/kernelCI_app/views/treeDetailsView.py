@@ -27,6 +27,7 @@ from kernelCI_app.helpers.treeDetails import (
 )
 from kernelCI_app.queries.tree import get_tree_details_data
 from kernelCI_app.typeModels.commonDetails import (
+    BaseBuildSummary,
     BuildSummary,
     DetailsFilters,
     GlobalFilters,
@@ -105,7 +106,7 @@ class TreeDetails(APIView):
         }
 
         # TODO: move to a BuildSummary model and combine with the other fields above
-        self.build_summary: dict[str, Any] = {"origins": {}}
+        self.base_build_summary = BaseBuildSummary()
 
         # TODO: move to a TestSummary model and combine with the other fields above
         self.test_summary: dict[str, Any] = {"origins": {}}
@@ -189,7 +190,7 @@ class TreeDetails(APIView):
             else:
                 self._process_non_boots_test(row_data)
 
-        self.build_summary = create_details_build_summary(self.builds)
+        self.base_build_summary = create_details_build_summary(self.builds)
         self.build_issues = convert_issues_dict_to_list_typed(
             issues_dict=self.build_issues_dict
         )
@@ -244,10 +245,10 @@ class TreeDetails(APIView):
                 tests=self.testHistory,
                 summary=Summary(
                     builds=BuildSummary(
-                        status=self.build_summary["builds"],
-                        origins=self.build_summary["origins"],
-                        architectures=self.build_summary["architectures"],
-                        configs=self.build_summary["configs"],
+                        status=self.base_build_summary.status,
+                        origins=self.base_build_summary.origins,
+                        architectures=self.base_build_summary.architectures,
+                        configs=self.base_build_summary.configs,
                         issues=self.build_issues,
                         unknown_issues=self.failed_builds_with_unknown_issues,
                     ),

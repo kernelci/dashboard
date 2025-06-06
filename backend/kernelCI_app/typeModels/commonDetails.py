@@ -100,11 +100,14 @@ class TestSummary(BaseModel):
     platforms: Optional[Dict[str, StatusCount]] = None
 
 
-class BuildSummary(BaseModel):
-    status: StatusCount
-    origins: dict[str, StatusCount]
-    architectures: Dict[str, BuildArchitectures]
-    configs: Dict[str, StatusCount]
+class BaseBuildSummary(BaseModel):
+    status: StatusCount = Field(default_factory=StatusCount)
+    origins: dict[str, StatusCount] = Field(default_factory=dict)
+    architectures: dict[str, BuildArchitectures] = Field(default_factory=dict)
+    configs: dict[str, StatusCount] = Field(default_factory=dict)
+
+
+class BuildSummary(BaseBuildSummary):
     issues: List[Issue]
     unknown_issues: int
 

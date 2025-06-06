@@ -1345,10 +1345,6 @@ components:
           title: Unknown Issues
           type: integer
       required:
-      - status
-      - origins
-      - architectures
-      - configs
       - issues
       - unknown_issues
       title: BuildSummary

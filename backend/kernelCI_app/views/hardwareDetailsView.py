@@ -35,6 +35,7 @@ from kernelCI_app.queries.hardware import (
     get_hardware_trees_data,
 )
 from kernelCI_app.typeModels.commonDetails import (
+    BaseBuildSummary,
     BuildSummary,
     GlobalFilters,
     LocalFilters,
@@ -110,6 +111,9 @@ class HardwareDetails(APIView):
             "boot": set(),
             "test": set(),
         }
+
+        # TODO: move to a BuildSummary model and combine with self.builds above
+        self.base_build_summary = BaseBuildSummary()
 
     def _process_test(self, record: Dict) -> None:
         is_record_boot = is_boot(record["path"])
@@ -276,7 +280,7 @@ class HardwareDetails(APIView):
 
         self._sanitize_records(records, trees_with_selected_commits, is_all_selected)
 
-        self.builds["summary"] = create_details_build_summary(self.builds["items"])
+        self.base_build_summary = create_details_build_summary(self.builds["items"])
         self._format_processing_for_response()
 
         self.unfiltered_uncategorized_issue_flags: Dict[PossibleTabs, bool] = {
@@ -303,10 +307,10 @@ class HardwareDetails(APIView):
                 tests=self.tests["history"],
                 summary=Summary(
                     builds=BuildSummary(
-                        status=self.builds["summary"]["builds"],
-                        origins=self.builds["summary"]["origins"],
-                        architectures=self.builds["summary"]["architectures"],
-                        configs=self.builds["summary"]["configs"],
+                        status=self.base_build_summary.status,
+                        origins=self.base_build_summary.origins,
+                        architectures=self.base_build_summary.architectures,
+                        configs=self.base_build_summary.configs,
                         issues=self.builds["issues"],
                         unknown_issues=self.builds["failedWithUnknownIssues"],
                     ),
