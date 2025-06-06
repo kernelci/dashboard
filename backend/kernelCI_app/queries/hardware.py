@@ -247,7 +247,7 @@ def query_records(
                 """
                 SELECT
                     tests.id,
-                    tests.origin AS test__origin,
+                    tests.origin AS test_origin,
                     tests.environment_misc,
                     tests.path,
                     tests.comment,

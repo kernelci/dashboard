@@ -280,7 +280,7 @@ def handle_test_history(
 
     test_history_item = HardwareTestHistoryItem(
         id=record["id"],
-        origin=record["test__origin"],
+        origin=record["test_origin"],
         status=record["status"],
         duration=record["duration"],
         path=record["path"],
@@ -346,7 +346,7 @@ def handle_test_summary(
 
     process_issue(record=record, task_issues_dict=issue_dict, issue_from="test")
 
-    origin = record["test__origin"]
+    origin = record["test_origin"]
     if task.origins.get(origin) is None:
         task.origins[origin] = StatusCount()
     setattr(
@@ -708,7 +708,7 @@ def process_filters(*, instance, record: Dict) -> None:
         environment_misc = handle_environment_misc(record["environment_misc"])
         test_platform = env_misc_value_or_default(environment_misc).get("platform")
         platform_set.add(test_platform)
-        origin_set.add(record["test__origin"])
+        origin_set.add(record["test_origin"])
 
 
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:
