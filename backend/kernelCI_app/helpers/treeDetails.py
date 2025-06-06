@@ -264,6 +264,7 @@ def decide_if_is_build_filtered_out(instance, row_data):
     build_status = row_data["build_status"]
     build_duration = row_data["build_duration"]
     incident_test_id = row_data["incident_test_id"]
+    build_origin = row_data["build_origin"]
 
     is_build_filtered_out = instance.filters.is_build_filtered_out(
         build_status=build_status,
@@ -271,6 +272,7 @@ def decide_if_is_build_filtered_out(instance, row_data):
         issue_id=issue_id,
         issue_version=issue_version,
         incident_test_id=incident_test_id,
+        build_origin=build_origin,
     )
     return is_build_filtered_out
 
@@ -282,6 +284,7 @@ def decide_if_is_boot_filtered_out(instance, row_data):
     issue_version = row_data["issue_version"]
     test_path = row_data["test_path"]
     incident_test_id = row_data["incident_test_id"]
+    origin = row_data["test_origin"]
 
     return instance.filters.is_boot_filtered_out(
         duration=test_duration,
@@ -290,6 +293,7 @@ def decide_if_is_boot_filtered_out(instance, row_data):
         path=test_path,
         status=test_status,
         incident_test_id=incident_test_id,
+        origin=origin,
     )
 
 
@@ -311,6 +315,7 @@ def decide_if_is_test_filtered_out(instance, row_data):
     issue_version = row_data["issue_version"]
     test_path = row_data["test_path"]
     incident_test_id = row_data["incident_test_id"]
+    origin = row_data["test_origin"]
 
     return instance.filters.is_test_filtered_out(
         duration=test_duration,
@@ -319,6 +324,7 @@ def decide_if_is_test_filtered_out(instance, row_data):
         path=test_path,
         status=test_status,
         incident_test_id=incident_test_id,
+        origin=origin,
     )
 
 

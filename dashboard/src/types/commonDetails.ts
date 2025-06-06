@@ -11,6 +11,7 @@ import type { TIssue } from './issues';
 
 type TestSummary = {
   status: StatusCounts;
+  origins: Record<string, RequiredStatusCount>;
   architectures: ArchCompilerStatus[];
   configs: PropertyStatusCounts;
   issues: TIssue[];
@@ -24,6 +25,7 @@ type TestSummary = {
 
 type BuildSummary = {
   status: RequiredStatusCount;
+  origins: Record<string, RequiredStatusCount>;
   architectures: Architecture;
   configs: Record<string, RequiredStatusCount>;
   issues: TIssue[];
@@ -47,6 +49,7 @@ export type IssueFilterItem = [string, number?];
 export type LocalFilters = {
   issues: IssueFilterItem[];
   has_unknown_issue: boolean;
+  origins: string[];
 };
 
 export type DetailsFilters = {

@@ -280,7 +280,7 @@ def handle_test_history(
 
     test_history_item = HardwareTestHistoryItem(
         id=record["id"],
-        origin=record["test__origin"],
+        origin=record["test_origin"],
         status=record["status"],
         duration=record["duration"],
         path=record["path"],
@@ -346,7 +346,7 @@ def handle_test_summary(
 
     process_issue(record=record, task_issues_dict=issue_dict, issue_from="test")
 
-    origin = record["test__origin"]
+    origin = record["test_origin"]
     if task.origins.get(origin) is None:
         task.origins[origin] = StatusCount()
     setattr(
@@ -556,6 +556,7 @@ def decide_if_is_build_in_filter(
         issue_id=build.issue_id,
         issue_version=build.issue_version,
         incident_test_id=incident_test_id,
+        build_origin=build.origin,
     )
     return (
         is_build_not_processed
@@ -597,6 +598,7 @@ def decide_if_is_test_in_filter(
     issue_id = record["incidents__issue__id"]
     issue_version = record["incidents__issue__version"]
     incidents_test_id = record["incidents__test_id"]
+    origin = record["test_origin"]
     platform = env_misc_value_or_default(
         handle_environment_misc(record["environment_misc"])
     ).get("platform")
@@ -610,6 +612,7 @@ def decide_if_is_test_in_filter(
             issue_version=issue_version,
             incident_test_id=incidents_test_id,
             platform=platform,
+            origin=origin,
         )
     else:
         test_filter_pass = not instance.filters.is_test_filtered_out(
@@ -620,6 +623,7 @@ def decide_if_is_test_in_filter(
             issue_version=issue_version,
             incident_test_id=incidents_test_id,
             platform=platform,
+            origin=origin,
         )
 
     return test_filter_pass
@@ -708,7 +712,7 @@ def process_filters(*, instance, record: Dict) -> None:
         environment_misc = handle_environment_misc(record["environment_misc"])
         test_platform = env_misc_value_or_default(environment_misc).get("platform")
         platform_set.add(test_platform)
-        origin_set.add(record["test__origin"])
+        origin_set.add(record["test_origin"])
 
 
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:
