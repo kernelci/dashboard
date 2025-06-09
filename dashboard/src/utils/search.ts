@@ -191,6 +191,9 @@ const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   issueCulprits: 'icu',
   issueCategories: 'ica',
   issueOptions: 'io',
+  buildOrigin: 'buo',
+  bootOrigin: 'boo',
+  testOrigin: 'to',
 } as const satisfies Record<TFilterKeys, string>;
 
 type MinifiedParams = Record<
