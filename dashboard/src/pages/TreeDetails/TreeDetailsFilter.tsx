@@ -18,7 +18,22 @@ import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
 import { getIssueFilterLabel } from '@/utils/utils';
 import { UNCATEGORIZED_STRING } from '@/utils/constants/backend';
 
-type TFilterValues = Record<string, boolean>;
+type PossibleTreeDetailsFilters = Pick<
+  TFilter,
+  | 'buildStatus'
+  | 'bootStatus'
+  | 'testStatus'
+  | 'buildIssue'
+  | 'bootIssue'
+  | 'testIssue'
+  | 'configs'
+  | 'archs'
+  | 'compilers'
+  | 'hardware'
+  | 'buildOrigin'
+  | 'bootOrigin'
+  | 'testOrigin'
+>;
 
 interface ITreeDetailsFilter {
   paramFilter: TFilter;
@@ -26,75 +41,86 @@ interface ITreeDetailsFilter {
   data: TreeDetailsSummary;
 }
 
-export const createFilter = (data: TreeDetailsSummary | undefined): TFilter => {
-  const buildStatus: TFilterValues = {};
-  const bootStatus: TFilterValues = {};
-  const testStatus: TFilterValues = {};
-  testStatuses.forEach(s => {
-    buildStatus[s] = false;
-    bootStatus[s] = false;
-    testStatus[s] = false;
-  });
+export const createFilter = (data: TreeDetailsSummary): TFilter => {
+  const filters: PossibleTreeDetailsFilters = {};
+  filters.buildStatus = {};
+  filters.bootStatus = {};
+  filters.testStatus = {};
 
-  const buildIssue: TFilterValues = {};
-  const bootIssue: TFilterValues = {};
-  const testIssue: TFilterValues = {};
-
-  const configs: TFilterValues = {};
-  const archs: TFilterValues = {};
-  const compilers: TFilterValues = {};
-
-  const hardware: TFilterValues = {};
-
-  if (data) {
-    data.filters.all.configs.forEach(config => (configs[config] = false));
-    data.filters.all.architectures.forEach(arch => (archs[arch] = false));
-    data.filters.all.compilers.forEach(
-      compiler => (compilers[compiler] = false),
-    );
-
-    data.common.hardware.forEach(h => (hardware[h] = false));
-
-    const buildFilters = data.filters.builds;
-    buildFilters.issues.forEach(
-      i =>
-        (buildIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false),
-    );
-    if (buildFilters.has_unknown_issue) {
-      buildIssue[UNCATEGORIZED_STRING] = false;
-    }
-
-    const bootFilters = data.filters.boots;
-    bootFilters.issues.forEach(
-      i =>
-        (bootIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false),
-    );
-    if (bootFilters.has_unknown_issue) {
-      bootIssue[UNCATEGORIZED_STRING] = false;
-    }
-
-    const testFilters = data.filters.tests;
-    testFilters.issues.forEach(
-      i =>
-        (testIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false),
-    );
-    if (testFilters.has_unknown_issue) {
-      testIssue[UNCATEGORIZED_STRING] = false;
-    }
+  for (const s of testStatuses) {
+    filters.buildStatus[s] = false;
+    filters.bootStatus[s] = false;
+    filters.testStatus[s] = false;
   }
 
-  return {
-    buildStatus,
-    configs,
-    archs,
-    compilers,
-    bootStatus,
-    testStatus,
-    hardware,
-    buildIssue,
-    bootIssue,
-    testIssue,
-  };
+  filters.buildIssue = {};
+  filters.bootIssue = {};
+  filters.testIssue = {};
+
+  filters.configs = {};
+  filters.archs = {};
+  filters.compilers = {};
+
+  filters.hardware = {};
+
+  filters.buildOrigin = {};
+  filters.bootOrigin = {};
+  filters.testOrigin = {};
+
+  // Filters affecting all tabs
+  const allFilters = data.filters.all;
+  for (const config of allFilters.configs) {
+    filters.configs[config] = false;
+  }
+  for (const arch of allFilters.architectures) {
+    filters.archs[arch] = false;
+  }
+  for (const compiler of allFilters.compilers) {
+    filters.compilers[compiler] = false;
+  }
+
+  for (const h of data.common.hardware) {
+    filters.hardware[h] = false;
+  }
+
+  // Build tab filters
+  const buildFilters = data.filters.builds;
+  for (const i of buildFilters.issues) {
+    filters.buildIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] =
+      false;
+  }
+  if (buildFilters.has_unknown_issue) {
+    filters.buildIssue[UNCATEGORIZED_STRING] = false;
+  }
+  for (const o of buildFilters.origins) {
+    filters.buildOrigin[o] = false;
+  }
+
+  // Boot tab filters
+  const bootFilters = data.filters.boots;
+  for (const i of bootFilters.issues) {
+    filters.bootIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false;
+  }
+  if (bootFilters.has_unknown_issue) {
+    filters.bootIssue[UNCATEGORIZED_STRING] = false;
+  }
+  for (const o of bootFilters.origins) {
+    filters.bootOrigin[o] = false;
+  }
+
+  // Test tab filters
+  const testFilters = data.filters.tests;
+  for (const i of testFilters.issues) {
+    filters.testIssue[getIssueFilterLabel({ id: i[0], version: i[1] })] = false;
+  }
+  if (testFilters.has_unknown_issue) {
+    filters.testIssue[UNCATEGORIZED_STRING] = false;
+  }
+  for (const o of testFilters.origins) {
+    filters.testOrigin[o] = false;
+  }
+
+  return filters;
 };
 
 const sectionTrees: ISectionItem[] = [
@@ -152,6 +178,24 @@ const sectionTrees: ISectionItem[] = [
     sectionKey: 'compilers',
     isGlobal: true,
   },
+  {
+    title: 'filter.buildOrigin',
+    subtitle: 'filter.originsSubtitle',
+    sectionKey: 'buildOrigin',
+    isGlobal: false,
+  },
+  {
+    title: 'filter.bootOrigin',
+    subtitle: 'filter.originsSubtitle',
+    sectionKey: 'bootOrigin',
+    isGlobal: false,
+  },
+  {
+    title: 'filter.testOrigin',
+    subtitle: 'filter.originsSubtitle',
+    sectionKey: 'testOrigin',
+    isGlobal: false,
+  },
 ];
 const TreeDetailsFilter = ({
   paramFilter,
@@ -163,6 +207,10 @@ const TreeDetailsFilter = ({
   });
 
   const filter: TFilter = useMemo(() => {
+    if (!data) {
+      return {};
+    }
+
     return createFilter(data);
   }, [data]);
 

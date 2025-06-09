@@ -8,7 +8,7 @@ export const MobileGrid = ({ children }: GridProps): JSX.Element => (
 );
 
 export const InnerMobileGrid = ({ children }: GridProps): JSX.Element => (
-  <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">{children}</div>
+  <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-8">{children}</div>
 );
 
 export const DesktopGrid = ({ children }: GridProps): JSX.Element => (

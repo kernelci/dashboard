@@ -45,19 +45,22 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
+import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
+
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
 interface BuildTab {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
 }
 
-export interface IBuildsTab {
+interface IBuildsTab {
   architectures: ISummaryItem[];
   configs: IListingItem[];
   buildsSummary: RequiredStatusCount;
   buildsIssues: TIssue[];
   failedBuildsWithUnknownIssues?: number;
   builds: AccordionItemBuilds[];
+  origins: Record<string, RequiredStatusCount>;
 }
 
 const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
@@ -125,12 +128,14 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
       buildsIssues: summaryBuildsData?.issues || [],
       failedBuildsWithUnknownIssues: summaryBuildsData?.unknown_issues,
       builds: sanitizeBuilds(fullBuildsData),
+      origins: summaryBuildsData?.origins || {},
     }),
     [
       fullBuildsData,
       summaryBuildsData?.architectures,
       summaryBuildsData?.configs,
       summaryBuildsData?.issues,
+      summaryBuildsData?.origins,
       summaryBuildsData?.status,
       summaryBuildsData?.unknown_issues,
     ],
@@ -174,6 +179,11 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
                 toggleFilterBySection={toggleFilterBySection}
                 diffFilter={diffFilter}
               />
+              <MemoizedOriginsCard
+                diffFilter={diffFilter}
+                origins={treeDetailsData.origins}
+                filterSection="buildOrigin"
+              />
             </div>
             <div>
               <TreeCommitNavigationGraph />
@@ -208,11 +218,18 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
               filterStatusKey="buildStatus"
             />
             <InnerMobileGrid>
-              <MemoizedErrorsSummaryBuild
-                summaryBody={treeDetailsData.architectures}
-                toggleFilterBySection={toggleFilterBySection}
-                diffFilter={diffFilter}
-              />
+              <div>
+                <MemoizedErrorsSummaryBuild
+                  summaryBody={treeDetailsData.architectures}
+                  toggleFilterBySection={toggleFilterBySection}
+                  diffFilter={diffFilter}
+                />
+                <MemoizedOriginsCard
+                  diffFilter={diffFilter}
+                  origins={treeDetailsData.origins}
+                  filterSection="buildOrigin"
+                />
+              </div>
               <MemoizedConfigsCard
                 configs={treeDetailsData.configs}
                 toggleFilterBySection={toggleFilterBySection}

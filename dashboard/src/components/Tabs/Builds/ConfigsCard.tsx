@@ -3,16 +3,16 @@ import { memo, useMemo, type JSX } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
+import type { IListingItem } from '@/components/ListingItem/ListingItem';
 import ListingItem from '@/components/ListingItem/ListingItem';
 import { BuildStatus } from '@/components/Status/Status';
 import BaseCard from '@/components/Cards/BaseCard';
 
 import FilterLink from '@/components/Tabs/FilterLink';
 import type { TFilter, TFilterObjectsKeys } from '@/types/general';
-import type { IBuildsTab } from '@/pages/TreeDetails/Tabs/Build/BuildTab';
 
 interface IConfigsCard {
-  configs: IBuildsTab['configs'];
+  configs: IListingItem[];
   toggleFilterBySection: (
     value: string,
     filterSection: TFilterObjectsKeys,
