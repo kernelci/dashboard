@@ -21,6 +21,34 @@ from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
 
+def _get_hardware_tree_heads_clause() -> str:
+    """Returns the tree_heads for the hardware queries,
+    where the checkout is not filtered by origin.
+
+    This is done because tests from a origin can be
+    related to checkouts from another origin."""
+
+    return """SELECT DISTINCT
+                    ON (
+                        C.tree_name,
+                        C.git_repository_branch,
+                        C.git_repository_url,
+                        C.origin
+                    )
+                    C.id
+                FROM
+                    checkouts C
+                WHERE
+                    C.start_time >= %(start_date)s
+                    AND C.start_time <= %(end_date)s
+                ORDER BY
+                    C.tree_name ASC,
+                    C.git_repository_branch ASC,
+                    C.git_repository_url ASC,
+                    C.origin ASC,
+                    C.start_time DESC"""
+
+
 def _get_hardware_listing_count_clauses() -> str:
     build_valid_count_clause = """
     COUNT(DISTINCT CASE WHEN "build_status" = TRUE AND build_id
@@ -102,6 +130,7 @@ def get_hardware_listing_data(
 ) -> list[dict]:
 
     count_clauses = _get_hardware_listing_count_clauses()
+    tree_head_clause = _get_hardware_tree_heads_clause()
 
     params = {
         "start_date": start_date,
@@ -112,72 +141,42 @@ def get_hardware_listing_data(
     # The grouping by platform and compatibles is possible because a platform
     # can dictate the array of compatibles, meaning that if the array of compatibles
     # is different, then the platform should/must be different as well.
+    #
+    # It is possible that a platform appears for tests from origin A which are related
+    # to checkouts from origin B. It's for those cases that the origin filter is applied
+    # to the tests, not checkouts. There are no platforms being tested by multiple origins yet.
     query = f"""
         WITH
+            -- Selects the id of the latest checkout of all trees in the given period
+            tree_heads AS (
+                {tree_head_clause}
+            ),
             relevant_tests AS (
                 SELECT
-                    "tests"."environment_compatible",
-                    "tests"."environment_misc",
+                    "tests"."environment_compatible" AS hardware,
+                    "tests"."environment_misc" ->> 'platform' AS platform,
                     "tests"."status",
-                    "builds".{valid_status_field()} AS build_status,
                     "tests"."path",
-                    "tests"."build_id",
-                    "tests"."id"
+                    "tests"."origin",
+                    "tests"."id",
+                    b.id AS build_id,
+                    b.{valid_status_field()} AS build_status
                 FROM
-                    "tests"
-                    INNER JOIN "builds" ON ("tests"."build_id" = "builds"."id")
-                    INNER JOIN "checkouts" ON ("builds"."checkout_id" = "checkouts"."id")
+                    tests
+                    INNER JOIN builds b ON tests.build_id = b.id
+                    JOIN tree_heads TH ON b.checkout_id = TH.id
                 WHERE
-                    (
-                        (
-                            "tests"."environment_compatible" IS NOT NULL
-                            OR ("tests"."environment_misc" -> 'platform') IS NOT NULL
-                        )
-                        AND "checkouts"."git_commit_hash" IN (
-                            SELECT DISTINCT
-                                ON (
-                                    U0."tree_name",
-                                    U0."git_repository_branch",
-                                    U0."git_repository_url"
-                                ) U0."git_commit_hash"
-                            FROM
-                                "checkouts" U0
-                            WHERE
-                                (
-                                    U0."origin" = %(origin)s
-                                    AND U0."start_time" >= %(start_date)s
-                                    AND U0."start_time" <= %(end_date)s
-                                )
-                            ORDER BY
-                                U0."tree_name" ASC,
-                                U0."git_repository_branch" ASC,
-                                U0."git_repository_url" ASC,
-                                U0."start_time" DESC
-                        )
-                        AND "checkouts"."origin" = %(origin)s
-                        AND "tests"."start_time" >= %(start_date)s
-                        AND "tests"."start_time" <= %(end_date)s
-                    )
+                    "tests"."environment_misc" ->> 'platform' IS NOT NULL
+                    AND "tests"."origin" = %(origin)s
+                    AND "tests"."start_time" >= %(start_date)s
+                    AND "tests"."start_time" <= %(end_date)s
             )
         SELECT
             platform,
             hardware,
             {count_clauses}
         FROM
-            (
-                SELECT
-                    "environment_compatible" AS hardware,
-                    "environment_misc" ->> 'platform' AS platform,
-                    build_id,
-                    "build_status",
-                    "path",
-                    status,
-                    id
-                FROM
-                    relevant_tests
-                WHERE
-                    "environment_misc" ->> 'platform' IS NOT NULL
-            ) AS combined_data
+            relevant_tests
         GROUP BY
             platform,
             hardware
