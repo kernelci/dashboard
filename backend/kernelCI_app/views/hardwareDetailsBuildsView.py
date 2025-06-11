@@ -124,7 +124,6 @@ class HardwareDetailsBuilds(APIView):
         trees = get_hardware_trees_data(
             hardware_id=hardware_id,
             origin=self.origin,
-            selected_commits=self.selected_commits,
             start_datetime=self.start_datetime,
             end_datetime=self.end_datetime,
         )

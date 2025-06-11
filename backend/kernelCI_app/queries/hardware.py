@@ -1,4 +1,3 @@
-import json
 from typing import TypedDict
 from kernelCI_app.helpers.environment import (
     DEFAULT_SCHEMA_VERSION,
@@ -7,11 +6,9 @@ from kernelCI_app.helpers.environment import (
 )
 from kernelCI_app.helpers.logger import log_message
 from datetime import datetime
-from django.db import connection, models
+from django.db import connection
 from django.db.utils import ProgrammingError
-from django.db.models import Subquery
 
-from kernelCI_app.models import Checkouts, Tests
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.build import (
     is_valid_does_not_exist_exception,
@@ -21,21 +18,32 @@ from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
 
-def _get_hardware_tree_heads_clause() -> str:
+def _get_hardware_tree_heads_clause(*, id_only: bool) -> str:
     """Returns the tree_heads for the hardware queries,
     where the checkout is not filtered by origin.
 
     This is done because tests from a origin can be
     related to checkouts from another origin."""
+    if id_only is True:
+        fields = "C.id"
+    else:
+        fields = """C.id,
+                    C.tree_name,
+                    C.start_time,
+                    C.git_repository_branch,
+                    C.git_repository_url,
+                    C.git_commit_name,
+                    C.git_commit_hash,
+                    C.git_commit_tags"""
 
-    return """SELECT DISTINCT
+    return f"""SELECT DISTINCT
                     ON (
                         C.tree_name,
                         C.git_repository_branch,
                         C.git_repository_url,
                         C.origin
                     )
-                    C.id
+                    {fields}
                 FROM
                     checkouts C
                 WHERE
@@ -130,7 +138,7 @@ def get_hardware_listing_data(
 ) -> list[dict]:
 
     count_clauses = _get_hardware_listing_count_clauses()
-    tree_head_clause = _get_hardware_tree_heads_clause()
+    tree_head_clause = _get_hardware_tree_heads_clause(id_only=True)
 
     params = {
         "start_date": start_date,
@@ -299,7 +307,7 @@ def query_records(
                         tests.environment_compatible @> ARRAY[%s]::TEXT[]
                         OR tests.environment_misc ->> 'platform' = %s
                     )
-                    AND checkouts.origin = %s
+                    AND tests.origin = %s
                     AND tests.start_time >= %s
                     AND tests.start_time <= %s
                     AND checkouts.git_commit_hash IN ({1})
@@ -336,105 +344,89 @@ def query_records(
             raise
 
 
-def _get_tree_heads(origin: str, start_date: datetime, end_date: datetime):
-    tree_id_fields = [
-        "tree_name",
-        "git_repository_branch",
-        "git_repository_url",
-    ]
-
-    checkouts_subquery = (
-        Checkouts.objects.filter(
-            origin=origin,
-            start_time__gte=start_date,
-            start_time__lte=end_date,
-        )
-        .order_by(
-            *tree_id_fields,
-            "-start_time",
-        )
-        .distinct(*tree_id_fields)
-        .values_list("git_commit_hash", flat=True)
-    )
-
-    return checkouts_subquery
-
-
 def get_hardware_trees_data(
     *,
     hardware_id: str,
     origin: str,
-    selected_commits: dict[str, str],
     start_datetime: datetime,
     end_datetime: datetime,
 ) -> list[Tree]:
     cache_key = "hardwareDetailsTreeData"
 
-    trees_cache_params = {
-        "hardware_id": hardware_id,
+    params = {
+        "hardware": hardware_id,
         "origin": origin,
-        "selected_commits": json.dumps(selected_commits),
-        "start_datetime": start_datetime,
-        "end_datetime": end_datetime,
+        "start_date": start_datetime,
+        "end_date": end_datetime,
     }
 
-    trees: list[Tree] = get_query_cache(cache_key, trees_cache_params)
+    trees: list[Tree] = get_query_cache(cache_key, params)
+
+    tree_head_clause = _get_hardware_tree_heads_clause(id_only=False)
 
     if not trees:
         # We need a subquery because if we filter by any hardware, it will get the
         # last head that has that hardware, but not the real head of the trees
-        trees_subquery = _get_tree_heads(origin, start_datetime, end_datetime)
-
-        tree_id_fields = [
-            "build__checkout__tree_name",
-            "build__checkout__git_repository_branch",
-            "build__checkout__git_repository_url",
-        ]
-
-        trees_query_set = (
-            Tests.objects.filter(
-                models.Q(environment_compatible__contains=[hardware_id])
-                | models.Q(environment_misc__platform=hardware_id),
-                build__checkout__start_time__lte=end_datetime,
-                build__checkout__start_time__gte=start_datetime,
-                build__checkout__git_commit_hash__in=Subquery(trees_subquery),
+        query = f"""
+        WITH
+            -- Selects the data of the latest checkout of all trees in the given period
+            tree_heads AS (
+                {tree_head_clause}
             )
-            .values(
-                *tree_id_fields,
-                "build__checkout__git_commit_name",
-                "build__checkout__git_commit_hash",
-                "build__checkout__git_commit_tags",
+        SELECT DISTINCT
+            ON (
+                TH.tree_name,
+                TH.git_repository_branch,
+                TH.git_repository_url,
+                TH.git_commit_hash
+            ) TH.tree_name,
+            TH.git_repository_branch,
+            TH.git_repository_url,
+            TH.git_commit_name,
+            TH.git_commit_hash,
+            TH.git_commit_tags
+        FROM
+            tests
+            INNER JOIN builds ON tests.build_id = builds.id
+            INNER JOIN tree_heads TH ON builds.checkout_id = TH.id
+        WHERE
+            (
+                (
+                    tests.environment_compatible @> ARRAY[%(hardware)s]::TEXT[]
+                    OR tests.environment_misc ->> 'platform' = %(hardware)s
+                )
+                AND tests.origin = %(origin)s
+                AND TH.start_time >= %(start_date)s
+                AND TH.start_time <= %(end_date)s
             )
-            .distinct(
-                *tree_id_fields,
-                "build__checkout__git_commit_hash",
-            )
-            .order_by(
-                *tree_id_fields,
-                "build__checkout__git_commit_hash",
-                "-build__checkout__start_time",
-            )
-        )
+        ORDER BY
+            TH.tree_name ASC,
+            TH.git_repository_branch ASC,
+            TH.git_repository_url ASC,
+            TH.git_commit_hash ASC,
+            TH.start_time DESC
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            tree_records = dict_fetchall(cursor)
 
         trees = []
-        for idx, tree in enumerate(trees_query_set):
+        for idx, tree in enumerate(tree_records):
             trees.append(
                 Tree(
                     index=str(idx),
-                    tree_name=tree["build__checkout__tree_name"],
-                    git_repository_branch=tree[
-                        "build__checkout__git_repository_branch"
-                    ],
-                    git_repository_url=tree["build__checkout__git_repository_url"],
-                    head_git_commit_name=tree["build__checkout__git_commit_name"],
-                    head_git_commit_hash=tree["build__checkout__git_commit_hash"],
-                    head_git_commit_tag=tree["build__checkout__git_commit_tags"],
+                    tree_name=tree["tree_name"],
+                    git_repository_branch=tree["git_repository_branch"],
+                    git_repository_url=tree["git_repository_url"],
+                    head_git_commit_name=tree["git_commit_name"],
+                    head_git_commit_hash=tree["git_commit_hash"],
+                    head_git_commit_tag=tree["git_commit_tags"],
                     selected_commit_status=None,
                     is_selected=None,
                 )
             )
 
-        set_query_cache(key=cache_key, params=trees_cache_params, rows=trees)
+        set_query_cache(key=cache_key, params=params, rows=trees)
 
     return trees
 
