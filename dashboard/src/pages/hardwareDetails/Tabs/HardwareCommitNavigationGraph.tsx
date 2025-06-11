@@ -13,10 +13,9 @@ const HardwareCommitNavigationGraph = ({
   trees,
   hardwareId,
 }: ICommitNavigationGraph): React.ReactNode => {
-  const { diffFilter, treeIndexes, origin, currentPageTab, treeCommits } =
-    useSearch({
-      from: '/_main/hardware/$hardwareId',
-    });
+  const { diffFilter, treeIndexes, currentPageTab, treeCommits } = useSearch({
+    from: '/_main/hardware/$hardwareId',
+  });
   const { startTimestampInSeconds, endTimestampInSeconds } = useSearch({
     from: '/_main/hardware/$hardwareId/',
   });
@@ -57,7 +56,7 @@ const HardwareCommitNavigationGraph = ({
 
   return (
     <CommitNavigationGraph
-      origin={origin}
+      origin={tree.origin}
       gitBranch={tree.git_repository_branch}
       gitUrl={tree.git_repository_url}
       treeId={treeId}

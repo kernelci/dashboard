@@ -14,8 +14,9 @@ type TTreesStatusSummary = {
   tests: StatusCount;
 };
 
-export type Trees = {
+export type HardwareTrees = {
   tree_name?: string;
+  origin: string;
   git_repository_branch?: string;
   git_repository_url?: string;
   head_git_commit_name?: string;
@@ -25,14 +26,14 @@ export type Trees = {
   index: string;
 };
 
-export type PreparedTrees = Trees & {
+export type PreparedTrees = HardwareTrees & {
   selectableCommits: CommitHistory[];
   isCommitHistoryDataLoading: boolean;
   isMainPageLoading: boolean;
 };
 
 type HardwareCommon = {
-  trees: Trees[];
+  trees: HardwareTrees[];
   compatibles: string[];
 };
 

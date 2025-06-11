@@ -26,7 +26,7 @@ import type {
   CommitHead,
   CommitHistoryTable,
   PreparedTrees,
-  Trees,
+  HardwareTrees,
 } from '@/types/hardware/hardwareDetails';
 
 import MemoizedCompatibleHardware from '@/components/Cards/CompatibleHardware';
@@ -67,14 +67,14 @@ import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsFilter from './HardwareDetailsFilter';
 
 const prepareTreeItems = ({
-  isCommitHistoryDataLoading,
   treeItems,
   commitHistoryData,
+  isCommitHistoryDataLoading,
   isMainPageLoading,
 }: {
-  isCommitHistoryDataLoading: boolean;
-  treeItems?: Trees[];
+  treeItems?: HardwareTrees[];
   commitHistoryData?: CommitHistoryTable;
+  isCommitHistoryDataLoading: boolean;
   isMainPageLoading: boolean;
 }): PreparedTrees[] | void =>
   treeItems?.map(tree => {
@@ -86,6 +86,7 @@ const prepareTreeItems = ({
 
     const result: PreparedTrees = {
       tree_name: tree['tree_name'] ?? '-',
+      origin: tree['origin'],
       git_repository_branch: tree['git_repository_branch'] ?? '-',
       head_git_commit_name: tree['head_git_commit_name'] ?? '-',
       head_git_commit_hash: tree['head_git_commit_hash'] ?? '-',
@@ -328,9 +329,9 @@ function HardwareDetails(): JSX.Element {
   const treeData = useMemo(
     () =>
       prepareTreeItems({
-        isCommitHistoryDataLoading: commitHistoryIsLoading,
         treeItems: summaryResponse.data?.common.trees,
         commitHistoryData: commitHistoryData?.commit_history_table,
+        isCommitHistoryDataLoading: commitHistoryIsLoading,
         isMainPageLoading:
           fullResponse.isLoading || fullResponse.isPlaceholderData,
       }),

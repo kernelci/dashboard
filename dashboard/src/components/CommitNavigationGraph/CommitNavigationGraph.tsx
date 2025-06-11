@@ -226,6 +226,7 @@ const CommitNavigationGraph = ({
           isLoading={isLoading}
           errorMessage={error?.message}
           emptyLabel={'global.error'}
+          forceErrorMessageUse
         />
       }
     >

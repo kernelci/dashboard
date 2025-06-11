@@ -11,6 +11,7 @@ from kernelCI_app.typeModels.commonDetails import (
 
 from kernelCI_app.typeModels.databases import (
     Issue__Id,
+    Origin,
     StatusValues,
     Checkout__TreeName,
     Checkout__GitRepositoryBranch,
@@ -63,6 +64,7 @@ class CommitHistoryValidCheckout(BaseModel):
 
 class Tree(BaseModel):
     index: str
+    origin: Origin
     tree_name: Optional[str]
     git_repository_branch: Optional[str]
     git_repository_url: Optional[str]

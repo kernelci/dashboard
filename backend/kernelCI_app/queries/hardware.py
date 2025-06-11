@@ -28,6 +28,7 @@ def _get_hardware_tree_heads_clause(*, id_only: bool) -> str:
         fields = "C.id"
     else:
         fields = """C.id,
+                    C.origin,
                     C.tree_name,
                     C.start_time,
                     C.git_repository_branch,
@@ -280,6 +281,7 @@ def query_records(
                     checkouts.git_commit_name AS build__checkout__git_commit_name,
                     checkouts.git_commit_hash AS build__checkout__git_commit_hash,
                     checkouts.tree_name AS build__checkout__tree_name,
+                    checkouts.origin AS build__checkout__origin,
                     incidents.id AS incidents__id,
                     incidents.issue_id AS incidents__issue__id,
                     issues.version AS incidents__issue__version,
@@ -380,6 +382,7 @@ def get_hardware_trees_data(
                 TH.git_repository_url,
                 TH.git_commit_hash
             ) TH.tree_name,
+            TH.origin,
             TH.git_repository_branch,
             TH.git_repository_url,
             TH.git_commit_name,
@@ -416,6 +419,7 @@ def get_hardware_trees_data(
                 Tree(
                     index=str(idx),
                     tree_name=tree["tree_name"],
+                    origin=tree["origin"],
                     git_repository_branch=tree["git_repository_branch"],
                     git_repository_url=tree["git_repository_url"],
                     head_git_commit_name=tree["git_commit_name"],
@@ -475,8 +479,6 @@ def get_hardware_commit_history(
     composes the hardware through a list of commit_heads.\n
     The history is limited by the origin, start_date and end dates params."""
 
-    # We need a subquery because if we filter by any hardware, it will get the
-    # last head that has that hardware, but not the real head of the trees
     relevant_commit = commit_heads[0] if commit_heads else None
 
     if relevant_commit is None:
@@ -493,10 +495,13 @@ def get_hardware_commit_history(
 
     raw_query = f"""
         WITH filtered_checkouts AS (
-            SELECT
-                DISTINCT ON	(tree_name,
-                git_repository_url,
-                git_repository_branch)
+            SELECT DISTINCT
+                ON (
+                    tree_name,
+                    git_repository_url,
+                    git_repository_branch,
+                    origin
+                )
                 tree_name,
                 git_repository_url,
                 git_repository_branch,
@@ -504,27 +509,30 @@ def get_hardware_commit_history(
             FROM
                 checkouts c
             WHERE
-                (c.tree_name,
-                c.git_repository_url,
-                c.git_repository_branch,
-                c.git_commit_hash) IN {commit_heads_params['tuple_str']}
-                AND c.origin = %(origin)s
+                (
+                    c.tree_name,
+                    c.git_repository_url,
+                    c.git_repository_branch,
+                    c.git_commit_hash
+                ) IN {commit_heads_params['tuple_str']}
             ORDER BY
                 tree_name,
                 git_repository_url,
                 git_repository_branch,
-                c.start_time)
-            SELECT
-                fc.tree_name AS tree_name,
-                fc.git_repository_url AS git_repository_url,
-                fc.git_repository_branch AS git_repository_branch,
-                lateralus.git_commit_tags AS git_commit_tags,
-                lateralus.git_commit_name AS git_commit_name,
-                lateralus.git_commit_hash AS git_commit_hash,
-                lateralus.start_time AS start_time
-            FROM
-                filtered_checkouts fc,
-                LATERAL (
+                origin,
+                c.start_time
+        )
+        SELECT
+            fc.tree_name AS tree_name,
+            fc.git_repository_url AS git_repository_url,
+            fc.git_repository_branch AS git_repository_branch,
+            lateralus.git_commit_tags AS git_commit_tags,
+            lateralus.git_commit_name AS git_commit_name,
+            lateralus.git_commit_hash AS git_commit_hash,
+            lateralus.start_time AS start_time
+        FROM
+            filtered_checkouts fc,
+            LATERAL (
                 SELECT
                     DISTINCT ON (c.git_commit_hash)
                     c.git_commit_tags,

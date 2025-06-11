@@ -107,6 +107,7 @@ def get_trees_with_selected_commit(
         selected.append(
             Tree(
                 index=tree.index,
+                origin=tree.origin,
                 tree_name=tree.tree_name,
                 git_repository_branch=tree.git_repository_branch,
                 git_repository_url=tree.git_repository_url,
@@ -187,12 +188,14 @@ def get_current_record_tree_in_selection(
     current_tree_name = record["build__checkout__tree_name"]
     current_tree_branch = record["build__checkout__git_repository_branch"]
     current_tree_url = record["build__checkout__git_repository_url"]
+    current_tree_origin = record["build__checkout__origin"]
 
     for tree in selected_trees:
         if (
             current_tree_name == tree.tree_name
             and current_tree_branch == tree.git_repository_branch
             and current_tree_url == tree.git_repository_url
+            and current_tree_origin == tree.origin
         ):
             return tree
 
