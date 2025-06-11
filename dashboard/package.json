@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "rm -rf ./node_modules/.vite && vite",
+    "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest",
     "coverage": "vitest run --coverage",

@@ -102,14 +102,16 @@ export const LogViewerCard = ({
                   logData?.git_commit_hash,
                 )}
               </span>
-              <div className="mb-3 text-sm">
-                <FormattedMessage
-                  id="title.hardwareDetails"
-                  values={{
-                    hardwareName: `${hardware} (${logData?.architecture})`,
-                  }}
-                />
-              </div>
+              {logData?.type !== 'build' && (
+                <div className="mb-3 text-sm">
+                  <FormattedMessage
+                    id="title.hardwareDetails"
+                    values={{
+                      hardwareName: `${hardware} (${logData?.architecture})`,
+                    }}
+                  />
+                </div>
+              )}
               {variant === 'modal' && linkComponent}
             </div>
             <Tooltip>
