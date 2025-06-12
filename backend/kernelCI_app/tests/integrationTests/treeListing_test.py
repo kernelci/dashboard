@@ -18,17 +18,17 @@ client = TreeClient()
 def pytest_generate_tests(metafunc):
     tree_listing_base_cases = [
         (
-            {"origin": "maestro", "intervalInDays": "7"},
+            {"origin": "maestro", "interval_in_days": "7"},
             HTTPStatus.OK,
             False,
         ),
         (
-            {"origin": "invalid", "intervalInDays": "7"},
+            {"origin": "invalid", "interval_in_days": "7"},
             HTTPStatus.OK,
             True,
         ),
         (
-            {"origin": "maestro", "intervalInDays": "-3"},
+            {"origin": "maestro", "interval_in_days": "-3"},
             HTTPStatus.BAD_REQUEST,
             True,
         ),
@@ -38,37 +38,37 @@ def pytest_generate_tests(metafunc):
     if metafunc.config.getoption("--run-all"):
         tree_listing_extra_cases += [
             (
-                {"origin": "maestro", "intervalInDays": "0"},
+                {"origin": "maestro", "interval_in_days": "0"},
                 HTTPStatus.BAD_REQUEST,
                 True,
             ),
             (
-                {"origin": "redhat", "intervalInDays": "6"},
+                {"origin": "redhat", "interval_in_days": "6"},
                 HTTPStatus.OK,
                 False,
             ),
             (
-                {"origin": "microsoft", "intervalInDays": "5"},
+                {"origin": "microsoft", "interval_in_days": "5"},
                 HTTPStatus.OK,
                 False,
             ),
             (
-                {"origin": "broonie", "intervalInDays": "4"},
+                {"origin": "broonie", "interval_in_days": "4"},
                 HTTPStatus.OK,
                 False,
             ),
             (
-                {"origin": "tuxsuite", "intervalInDays": "7"},
+                {"origin": "tuxsuite", "interval_in_days": "7"},
                 HTTPStatus.OK,
                 False,
             ),
             (
-                {"origin": "0dayci", "intervalInDays": "7"},
+                {"origin": "0dayci", "interval_in_days": "7"},
                 HTTPStatus.OK,
                 False,
             ),
             (
-                {"origin": "syzbot", "intervalInDays": "7"},
+                {"origin": "syzbot", "interval_in_days": "7"},
                 HTTPStatus.OK,
                 False,
             ),

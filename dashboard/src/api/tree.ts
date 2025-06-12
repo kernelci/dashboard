@@ -16,8 +16,13 @@ const fetchTreeCheckoutData = async (
   origin: string,
   intervalInDays?: number,
 ): Promise<Tree[]> => {
+  const params = {
+    origin: origin,
+    interval_in_days: intervalInDays,
+  };
+
   const data = await RequestData.get<Tree[]>('/api/tree/', {
-    params: { origin, intervalInDays },
+    params,
   });
   return data;
 };
@@ -43,8 +48,13 @@ const fetchTreeFastCheckoutData = async (
   origin: string,
   intervalInDays?: number,
 ): Promise<TreeFastPathResponse> => {
+  const params = {
+    origin: origin,
+    interval_in_days: intervalInDays,
+  };
+
   const data = await RequestData.get<TreeFastPathResponse>('/api/tree-fast/', {
-    params: { origin, intervalInDays },
+    params,
   });
   return data;
 };

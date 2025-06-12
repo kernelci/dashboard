@@ -1,3 +1,4 @@
+from django.http import HttpRequest
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
@@ -18,11 +19,11 @@ class TreeViewFast(APIView):
         parameters=[ListingQueryParameters],
         methods=["GET"],
     )
-    def get(self, request) -> Response:
+    def get(self, request: HttpRequest) -> Response:
         try:
             request_params = ListingQueryParameters(
                 origin=(request.GET.get("origin")),
-                interval_in_days=request.GET.get("intervalInDays"),
+                interval_in_days=request.GET.get("interval_in_days"),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)

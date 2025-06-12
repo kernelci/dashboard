@@ -2,7 +2,7 @@
 # http -p H 'http://localhost:8000/api/tree/' origin==maestro
 
 # If you want to provide another limit to query:
-http 'http://localhost:8000/api/tree-fast/' origin==maestro intervalInDays==4
+http 'http://localhost:8000/api/tree-fast/' origin==maestro interval_in_days==4
 
 # HTTP/1.1 200 OK
 # Allow: GET, HEAD, OPTIONS
