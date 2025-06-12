@@ -14,7 +14,9 @@ class IssueClient(BaseClient):
         filters: dict[FilterFields, Any] | None = None,
     ) -> requests.Response:
         path = reverse("issue")
-        query = {"intervalInDays": interval_in_days}
+        query = {
+            "interval_in_days": interval_in_days,
+        }
         url = self.get_endpoint(path=path, query=query, filters=filters)
         return requests.get(url)
 

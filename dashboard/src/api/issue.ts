@@ -12,17 +12,18 @@ import { getTargetFilter } from '@/types/general';
 
 import { RequestData } from './commonRequest';
 
-type IssueListingParams = {
-  intervalInDays?: number;
-  filters: object;
-};
-
 const fetchIssueListing = async ({
   intervalInDays,
   filters,
-}: IssueListingParams): Promise<IssueListingResponse> => {
+}: {
+  intervalInDays?: number;
+  filters: object;
+}): Promise<IssueListingResponse> => {
   const backendCompatibleFilters = mapFiltersKeysToBackendCompatible(filters);
-  const params = { intervalInDays, ...backendCompatibleFilters };
+  const params = {
+    interval_in_days: intervalInDays,
+    ...backendCompatibleFilters,
+  };
 
   const data = await RequestData.get<IssueListingResponse>('/api/issue/', {
     params,

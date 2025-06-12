@@ -86,7 +86,7 @@ class IssueView(APIView):
     def get(self, _request: HttpRequest) -> Response:
         try:
             request_params = IssueListingQueryParameters(
-                interval_in_days=_request.GET.get("intervalInDays"),
+                interval_in_days=_request.GET.get("interval_in_days"),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)

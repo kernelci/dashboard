@@ -1,4 +1,4 @@
-http 'localhost:8000/api/issue/?intervalInDays=1&filter_issue.culprit=code'
+http 'http://localhost:8000/api/issue/' interval_in_days==1 filter_issue.culprit==code filter_issue.options==hasIncident
 
 # HTTP/1.1 200 OK
 # Allow: GET, HEAD, OPTIONS
@@ -88,6 +88,7 @@ http 'localhost:8000/api/issue/?intervalInDays=1&filter_issue.culprit=code'
 #             "id": "maestro:bd048bdc8156ad24e3a5903c41c0424edc532371",
 #             "origin": "maestro",
 #             "version": 1
-#         }
+#         },
+#         ...
 #     ]
 # }
