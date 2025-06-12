@@ -46,12 +46,19 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
       return <></>;
     }
 
-    return originData?.checkout_origins.map(option => (
+    let pageOrigins: string[];
+    if (targetPath === '/hardware') {
+      pageOrigins = originData.test_origins;
+    } else {
+      pageOrigins = originData.checkout_origins;
+    }
+
+    return pageOrigins.map(option => (
       <SelectItem key={option} value={option}>
         {option}
       </SelectItem>
     ));
-  }, [originData]);
+  }, [originData, targetPath]);
 
   useEffect(() => {
     if (origin === undefined) {

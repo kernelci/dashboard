@@ -2600,8 +2600,14 @@ components:
             $ref: '#/components/schemas/Origin'
           title: Checkout Origins
           type: array
+        test_origins:
+          items:
+            $ref: '#/components/schemas/Origin'
+          title: Test Origins
+          type: array
       required:
       - checkout_origins
+      - test_origins
       title: OriginsResponse
       type: object
     PossibleIssueTags:

@@ -5,3 +5,4 @@ from kernelCI_app.typeModels.databases import Origin
 
 class OriginsResponse(BaseModel):
     checkout_origins: list[Origin]
+    test_origins: list[Origin]

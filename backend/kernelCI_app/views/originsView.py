@@ -12,6 +12,25 @@ from kernelCI_app.typeModels.origins import OriginsResponse
 
 EXCLUDED_ORIGINS = ["kernelci"]
 
+# For now we are hardcoding test origins since fetching them dynamically in a query is taking
+# around 8 minutes to finish. That time will result in a timeout every request, so this is a
+# temporary solution. Another option would be to create a cron job that feeds a TestOriginsCache
+# sqlite table, from which this endpoint would fetch.
+#
+# TODO: replace with a dynamic approach
+TEST_ORIGINS = [
+    "0dayci",
+    "arm",
+    "broonie",
+    "maestro",
+    "microsoft",
+    "redhat",
+    "riscv",
+    "syzbot",
+    "ti",
+    "tuxsuite",
+]
+
 
 def separate_origin_records(*, records: list[dict[str, str]]) -> set[str]:
     """Iterates over the records for origins and returns a set for each table defined by those records
@@ -62,7 +81,8 @@ class OriginsView(APIView):
 
         try:
             valid_response = OriginsResponse(
-                checkout_origins=sorted(self.checkout_origins)
+                checkout_origins=sorted(self.checkout_origins),
+                test_origins=TEST_ORIGINS,
             )
         except ValidationError as e:
             return Response(e.json(), HTTPStatus.INTERNAL_SERVER_ERROR)
