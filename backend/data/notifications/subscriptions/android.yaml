@@ -3,6 +3,7 @@ android:
   default_recipients:
     - tkjos@google.com
     - joneslee@google.com
+    - ynaffit@google.com
 
   reports:
     - mainline:
