@@ -40,6 +40,9 @@ def assign_issue_first_seen(
     issue_key_list: List[Tuple[str, int]],
     processed_issues_table: ProcessedExtraDetailedIssues,
 ) -> None:
+    """
+    Assigns the first seen data to the processed_issues_table by querying with the issue_key_list.
+    """
     issue_id_list: List[str] = []
     versions_per_issue: Dict[str, Set[int]] = defaultdict(set)
     for issue_key in issue_key_list:
@@ -50,13 +53,13 @@ def assign_issue_first_seen(
     incident_records = get_issue_first_seen_data(issue_id_list=issue_id_list)
 
     for record in incident_records:
-        record_issue_id = record.issue_id
-        first_seen = record.first_seen
-        first_git_commit_hash = record.git_commit_hash
-        first_git_repository_url = record.git_repository_url
-        first_git_repository_branch = record.git_repository_branch
-        first_git_commit_name = record.git_commit_name
-        first_tree_name = record.tree_name
+        record_issue_id = record["issue_id"]
+        first_seen = record["first_seen"]
+        first_git_commit_hash = record["git_commit_hash"]
+        first_git_repository_url = record["git_repository_url"]
+        first_git_repository_branch = record["git_repository_branch"]
+        first_git_commit_name = record["git_commit_name"]
+        first_tree_name = record["tree_name"]
 
         processed_issue_from_id = processed_issues_table.get(record_issue_id)
         if processed_issue_from_id is None:

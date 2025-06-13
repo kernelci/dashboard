@@ -1,10 +1,11 @@
 from typing import Optional
 from django.db import connection
 from django.db.utils import ProgrammingError
+from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.environment import DEFAULT_SCHEMA_VERSION, set_schema_version
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.models import Checkouts, Incidents, Issues
+from kernelCI_app.models import Checkouts, Issues
 from kernelCI_app.helpers.build import (
     is_valid_does_not_exist_exception,
     valid_status_field,
@@ -233,7 +234,7 @@ def get_test_issues(*, test_id: str) -> list[dict]:
     return rows
 
 
-def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[Incidents]:
+def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
     """Retrieves the incident and checkout data
     of the first incident of a list of issues
     through a list of `issue_id`s."""
@@ -241,45 +242,53 @@ def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[Incidents]:
     if not issue_id_list:
         return []
 
-    # TODO: use '=' instead of 'IN' when the list has a single element
-    records = Incidents.objects.raw(
-        """
-        WITH first_incident AS (
-            SELECT DISTINCT
-                ON (IC.issue_id) IC.id
+    cache_key = "issue_first_seen"
+    params = {"issue_id_list": issue_id_list}
+    records = get_query_cache(key=cache_key, params=params)
+
+    if not records:
+        placeholders = ", ".join(["%s"] * len(issue_id_list))
+
+        # TODO: use '=' instead of 'IN' when the list has a single element
+        query = f"""
+            WITH first_incident AS (
+                SELECT DISTINCT
+                    ON (IC.issue_id) IC.id
+                FROM
+                    incidents IC
+                WHERE
+                    IC.issue_id IN ({placeholders})
+                ORDER BY
+                    IC.issue_id,
+                    IC.issue_version ASC,
+                    IC._timestamp ASC
+            )
+            SELECT
+                IC.id,
+                IC.issue_id,
+                IC._timestamp AS first_seen,
+                IC.issue_version,
+                C.git_commit_hash,
+                C.git_repository_url,
+                C.git_repository_branch,
+                C.git_commit_name,
+                C.tree_name
             FROM
                 incidents IC
-            WHERE
-                IC.issue_id IN ({0})
-            ORDER BY
-                IC.issue_id,
-                IC.issue_version ASC,
-                IC._timestamp ASC
-        )
-        SELECT
-            IC.id,
-            IC.issue_id,
-            IC._timestamp AS first_seen,
-            IC.issue_version,
-            C.git_commit_hash,
-            C.git_repository_url,
-            C.git_repository_branch,
-            C.git_commit_name,
-            C.tree_name
-        FROM
-            incidents IC
-        LEFT JOIN tests T ON IC.test_id = T.id
-        LEFT JOIN builds B ON (
-            IC.build_id = B.id
-            OR T.build_id = B.id
-        )
-        LEFT JOIN checkouts C ON B.checkout_id = C.id
-        JOIN first_incident FI ON IC.id = FI.id
-        """.format(
-            ", ".join(["%s"] * len(issue_id_list))
-        ),
-        issue_id_list,
-    )
+            LEFT JOIN tests T ON IC.test_id = T.id
+            LEFT JOIN builds B ON (
+                IC.build_id = B.id
+                OR T.build_id = B.id
+            )
+            LEFT JOIN checkouts C ON B.checkout_id = C.id
+            JOIN first_incident FI ON IC.id = FI.id
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute(query, issue_id_list)
+            records = dict_fetchall(cursor)
+
+        set_query_cache(key=cache_key, params=params, rows=records)
 
     return records
 
