@@ -10,7 +10,7 @@ from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
 from kernelCI_app.helpers.filters import FilterParams
-from kernelCI_app.helpers.issueExtras import assign_issue_first_seen
+from kernelCI_app.helpers.issueExtras import process_issues_extra_details
 from kernelCI_app.helpers.issueListing import should_discard_issue_record
 from kernelCI_app.queries.issues import get_issue_listing_data
 from kernelCI_app.typeModels.issueListing import (
@@ -71,6 +71,30 @@ class IssueView(APIView):
 
         return result
 
+    def _filter_records_by_extras(self, *, records: list[dict]):
+        """Filters out the extra details and the records with it.
+
+        Receives the list of records to be filtered based on the extra details
+
+        Returns the filtered extra_issue_details and filtered records"""
+        # Checks if there are issues with no checkouts and filters them out
+        issues_without_trees = set()
+        processed_extras_with_trees = {}
+        for issue_id, issue_extras_data in self.processed_extra_issue_details.items():
+            for info in issue_extras_data["versions"].values():
+                if not info.trees:
+                    issues_without_trees.add(issue_id)
+                else:
+                    processed_extras_with_trees[issue_id] = issue_extras_data
+
+        refiltered_records = []
+        for issue in records:
+            if issue["id"] in issues_without_trees:
+                continue
+            refiltered_records.append(issue)
+
+        return (processed_extras_with_trees, refiltered_records)
+
     def _format_processing_for_response(self) -> None:
         for (
             issue_extras_id,
@@ -106,15 +130,22 @@ class IssueView(APIView):
         filtered_records = self._filter_records(issue_records=issue_records)
 
         issue_key_list = [(issue["id"], issue["version"]) for issue in filtered_records]
-        assign_issue_first_seen(
+        # The endpoint only returns the first_seen data, but getting the trees data is useful
+        # to filter out issues with incidents that are related to unexistent builds/checkouts
+        process_issues_extra_details(
             issue_key_list=issue_key_list,
             processed_issues_table=self.processed_extra_issue_details,
         )
 
+        (self.processed_extra_issue_details, refiltered_records) = (
+            self._filter_records_by_extras(records=filtered_records)
+        )
+
+        self._format_processing_for_response()
+
         try:
-            self._format_processing_for_response()
             valid_data = IssueListingResponse(
-                issues=filtered_records,
+                issues=refiltered_records,
                 extras=self.first_incidents,
                 filters=IssueListingFilters(
                     origins=sorted(self.unprocessed_origins),

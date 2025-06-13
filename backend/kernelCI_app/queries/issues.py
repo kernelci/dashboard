@@ -246,7 +246,7 @@ def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
     params = {"issue_id_list": issue_id_list}
     records = get_query_cache(key=cache_key, params=params)
 
-    if not records:
+    if records is None:
         placeholders = ", ".join(["%s"] * len(issue_id_list))
 
         # TODO: use '=' instead of 'IN' when the list has a single element
