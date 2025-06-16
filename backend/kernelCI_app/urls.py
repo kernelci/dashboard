@@ -61,9 +61,9 @@ urlpatterns = [
         name="treeLatest",
     ),
     path(
-        "tree/<str:tree_name>/<str:branch>/<str:hash>",
-        view_cache(views.TreeLatest),
-        name="treeLatestHash",
+        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/full",
+        views.TreeDetails.as_view(),
+        name="treeDetailsDirectView",
     ),
     path("build/<str:build_id>", view_cache(views.BuildDetails), name="buildDetails"),
     path("build/<str:build_id>/tests", view_cache(views.BuildTests), name="buildTests"),

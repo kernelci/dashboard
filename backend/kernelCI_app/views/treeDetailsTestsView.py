@@ -74,7 +74,10 @@ class TreeDetailsTests(APIView):
         git_branch_param = request.GET.get("git_branch")
 
         rows = get_tree_details_data(
-            origin_param, git_url_param, git_branch_param, commit_hash
+            origin_param=origin_param,
+            git_url_param=git_url_param,
+            git_branch_param=git_branch_param,
+            commit_hash=commit_hash,
         )
 
         self.filters = FilterParams(request)

@@ -24,15 +24,28 @@ from kernelCI_app.utils import is_boot
 
 
 class CheckoutWhereClauses(TypedDict):
-    git_url_clause: str
+    git_url_clause: Optional[str]
     git_branch_clause: str
+    tree_name_clause: Optional[str]
 
 
 def create_checkouts_where_clauses(
-    git_url: Optional[str], git_branch: Optional[str]
+    git_url: Optional[str],
+    git_branch: Optional[str],
+    tree_name: Optional[str] = None,
 ) -> CheckoutWhereClauses:
+    """Creates the SQL clauses for querying with url, branch and tree_name.
+
+    If `tree_name` is not None, then that means that the endpoint where this is used
+    could have been called without the url parameter (such as treeDetailsDirectView).
+    In that case, the `git_url` parameter shouldn't compare it to NULL, because we can't
+    tell if it is empty or was just not passed to the function.
+
+    So if `tree_name` is not None, then `git_url_clause` will be None.
+    """
     git_url_clause = """git_repository_url = %(git_url_param)s"""
     git_branch_clause = """git_repository_branch = %(git_branch_param)s"""
+    tree_name_clause = "tree_name = %(tree_name)s" if tree_name else None
 
     if not git_url:
         git_url_clause = "git_repository_url IS NULL"
@@ -40,7 +53,14 @@ def create_checkouts_where_clauses(
     if not git_branch:
         git_branch_clause = "git_repository_branch IS NULL"
 
-    return {"git_url_clause": git_url_clause, "git_branch_clause": git_branch_clause}
+    if tree_name and git_branch:
+        git_url_clause = None
+
+    return {
+        "git_url_clause": git_url_clause,
+        "git_branch_clause": git_branch_clause,
+        "tree_name_clause": tree_name_clause,
+    }
 
 
 def get_current_row_data(current_row: dict) -> dict:
