@@ -1,4 +1,5 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+from django.http import HttpRequest
 from pydantic import ValidationError
 from rest_framework.response import Response
 from kernelCI_app.constants.localization import ClientStrings
@@ -46,7 +47,7 @@ from rest_framework.views import APIView
 from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from http import HTTPStatus
-from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
+from kernelCI_app.constants.general import DEFAULT_ORIGIN, MAESTRO_DUMMY_BUILD_PREFIX
 
 
 class TreeDetailsSummary(APIView):
@@ -201,13 +202,23 @@ class TreeDetailsSummary(APIView):
         parameters=[TreeQueryParameters],
         methods=["GET"],
     )
-    def get(self, request, commit_hash: str | None) -> Response:
-        origin_param = request.GET.get("origin")
+    def get(
+        self,
+        request: HttpRequest,
+        commit_hash: Optional[str],
+        tree_name: Optional[str] = None,
+        git_branch: Optional[str] = None,
+    ) -> Response:
+        origin_param = request.GET.get("origin", DEFAULT_ORIGIN)
         git_url_param = request.GET.get("git_url")
-        git_branch_param = request.GET.get("git_branch")
+        git_branch_param = request.GET.get("git_branch", git_branch)
 
         rows = get_tree_details_data(
-            origin_param, git_url_param, git_branch_param, commit_hash
+            origin_param=origin_param,
+            git_url_param=git_url_param,
+            tree_name=tree_name,
+            git_branch_param=git_branch_param,
+            commit_hash=commit_hash,
         )
 
         if len(rows) == 0:

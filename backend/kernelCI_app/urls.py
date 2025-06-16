@@ -65,6 +65,11 @@ urlpatterns = [
         views.TreeDetails.as_view(),
         name="treeDetailsDirectView",
     ),
+    path(
+        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/summary",
+        views.TreeDetailsSummary.as_view(),
+        name="treeDetailsDirectSummaryView",
+    ),
     path("build/<str:build_id>", view_cache(views.BuildDetails), name="buildDetails"),
     path("build/<str:build_id>/tests", view_cache(views.BuildTests), name="buildTests"),
     path(
