@@ -18,7 +18,7 @@ from kernelCI_app.utils import is_boot
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
-from typing import Dict, List, Optional
+from typing import Optional
 from kernelCI_app.typeModels.treeCommits import (
     TreeCommitsQueryParameters,
     TreeCommitsResponse,
@@ -57,7 +57,7 @@ class TreeCommitsHistory(APIView):
         self.filterBootPath = self.filterParams.filterBootPath
         self.filterBuildStatus = self.filterParams.filterBuildStatus
 
-    def sanitize_rows(self, rows: Dict) -> List:
+    def sanitize_rows(self, rows: dict) -> list:
         return [
             {
                 "git_commit_hash": row[0],
@@ -85,7 +85,7 @@ class TreeCommitsHistory(APIView):
             for row in rows
         ]
 
-    def _create_commit_entry(self) -> Dict:
+    def _create_commit_entry(self) -> dict:
         empty_status_dict = {
             "fail": 0,
             "error": 0,
@@ -189,7 +189,7 @@ class TreeCommitsHistory(APIView):
         label = test_status.lower()
         self.commit_hashes[commit_hash]["tests_count"][label] += 1
 
-    def _pass_in_global_filters(self, row: Dict) -> bool:
+    def _pass_in_global_filters(self, row: dict) -> bool:
         hardware_compatibles = [UNKNOWN_STRING]
         architecture = UNKNOWN_STRING
         compiler = UNKNOWN_STRING
@@ -226,7 +226,7 @@ class TreeCommitsHistory(APIView):
 
         return True
 
-    def _process_tests(self, row: Dict) -> None:
+    def _process_tests(self, row: dict) -> None:
         test_id = row["test_id"]
         issue_id = row["issue_id"]
         test_status = row["test_status"] or "NULL"
@@ -269,7 +269,7 @@ class TreeCommitsHistory(APIView):
                 incident_test_id=incident_test_id,
             )
 
-    def _process_builds(self, row: Dict) -> None:
+    def _process_builds(self, row: dict) -> None:
         build_id = row["build_id"]
         commit_hash = row["git_commit_hash"]
 
@@ -295,7 +295,7 @@ class TreeCommitsHistory(APIView):
             return start_time >= self.start_datetime and start_time <= self.end_datetime
         return True
 
-    def _process_rows(self, rows: Dict) -> None:
+    def _process_rows(self, rows: dict) -> None:
         sanitized_rows = self.sanitize_rows(rows)
 
         for row in sanitized_rows:
