@@ -144,7 +144,7 @@ const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   listingSize: 'ls',
   hardwareSearch: 'hs',
   issueSearch: 'is',
-  treeInfo: 'ti',
+  treeInfo: 'tri',
   treeIndexes: 'x',
   treeCommits: 'c',
   startTimestampInSeconds: 'st',
@@ -187,7 +187,7 @@ const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   trees: 't',
   buildIssue: 'bi',
   bootIssue: 'bti',
-  testIssue: 'ti',
+  testIssue: 'tei',
   issueCulprits: 'icu',
   issueCategories: 'ica',
   issueOptions: 'io',
@@ -267,7 +267,7 @@ const minifiedValuesArray = Object.entries(minifiedValues).map(
 
 const groupedMinifiedParams = {
   general: Object.fromEntries(generalMinifiedParamsArray),
-  ti: Object.fromEntries(treeInfoMinifiedParamsArray),
+  tri: Object.fromEntries(treeInfoMinifiedParamsArray),
   tf: Object.fromEntries(tableFilterMinifiedParamsArray),
   df: Object.fromEntries(diffFilterMinifiedParamsArray),
   value: Object.fromEntries(minifiedValuesArray),

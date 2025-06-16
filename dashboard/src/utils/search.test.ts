@@ -58,7 +58,7 @@ const nestedObjectMinify = {
     b: 'f',
     t: 'a',
   },
-  ti: {
+  tri: {
     t: 'android',
     ch: 'hash',
   },
@@ -73,7 +73,7 @@ const nestedObjectMinify = {
 const nestedObjectStringify =
   '?o=maestro&i=7' +
   '&tf|bt=a&tf|b=f&tf|t=a' +
-  '&ti|t=android&ti|ch=hash' +
+  '&tri|t=android&tri|ch=hash' +
   '&df|c|defconfig=true&df|a|arm=true&df|tp=amlogic' +
   '&x[]=0,1,2';
 
@@ -97,8 +97,8 @@ const flatObjectMinify = {
   'tf|bt': 'a',
   'tf|b': 'f',
   'tf|t': 'a',
-  'ti|t': 'android',
-  'ti|ch': 'hash',
+  'tri|t': 'android',
+  'tri|ch': 'hash',
   'df|c|defconfig': true,
   'df|a|arm': true,
   'df|tp': 'amlogic',
