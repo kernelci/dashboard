@@ -28,10 +28,7 @@ import type { TFilter } from '@/types/general';
 
 import { formattedBreakLineValue } from '@/locales/messages';
 
-import {
-  possibleTableFilters,
-  zPossibleTabValidator,
-} from '@/types/tree/TreeDetails';
+import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
 
@@ -72,30 +69,50 @@ const getLinkProps = (
   tabTarget?: string,
   diffFilter?: TFilter,
 ): LinkProps => {
+  const tree_name = row.original.tree_name;
+  const branch = row.original.git_repository_branch;
+  const hash = row.original.git_commit_hash;
+
+  const canGoDirect = tree_name && branch && hash;
+
+  const urlDirection: LinkProps = canGoDirect
+    ? {
+        to: '/tree/$treeName/$branch/$hash',
+        params: {
+          treeName: tree_name,
+          branch: branch,
+          hash: hash,
+        },
+        search: previousSearch => ({
+          origin: origin,
+          currentPageTab: zPossibleTabValidator.parse(tabTarget),
+          diffFilter: diffFilter ?? {},
+          intervalInDays: previousSearch.intervalInDays,
+        }),
+      }
+    : {
+        to: '/tree/$treeId',
+        params: { treeId: hash },
+        search: previousSearch => ({
+          origin: origin,
+          currentPageTab: zPossibleTabValidator.parse(tabTarget),
+          diffFilter: diffFilter ?? {},
+          treeInfo: {
+            gitUrl: row.original.git_repository_url,
+            gitBranch: branch,
+            treeName: tree_name,
+            commitName: row.original.git_commit_name,
+            headCommitHash: hash,
+          },
+          intervalInDays: previousSearch.intervalInDays,
+        }),
+      };
+
   return {
-    to: '/tree/$treeId',
-    params: { treeId: row.original.git_commit_hash },
-    search: previousSearch => ({
-      tableFilter: {
-        bootsTable: possibleTableFilters[0],
-        buildsTable: possibleTableFilters[0],
-        testsTable: possibleTableFilters[0],
-      },
-      origin: origin,
-      currentPageTab: zPossibleTabValidator.parse(tabTarget),
-      diffFilter: diffFilter ?? {},
-      treeInfo: {
-        gitUrl: row.original.git_repository_url,
-        gitBranch: row.original.git_repository_branch,
-        treeName: row.original.tree_name ?? undefined,
-        commitName: row.original.git_commit_name,
-        headCommitHash: row.original.git_commit_hash,
-      },
-      intervalInDays: previousSearch.intervalInDays,
-    }),
+    ...urlDirection,
     state: s => ({
       ...s,
-      id: row.original.git_commit_hash,
+      id: hash,
       from: RedirectFrom.Tree,
       treeStatusCount: {
         builds: statusCountToRequiredStatusCount({
