@@ -19,7 +19,7 @@ import {
   zTreeInformation,
 } from '@/types/tree/TreeDetails';
 
-const defaultValues = {
+export const treeDetailsDefaultValues = {
   diffFilter: DEFAULT_DIFF_FILTER,
   origin: DEFAULT_ORIGIN,
   treeInfo: DEFAULT_TREE_INFO,
@@ -27,7 +27,7 @@ const defaultValues = {
   tableFilter: zTableFilterInfoDefault,
 };
 
-const treeDetailsSearchSchema = z.object({
+export const treeDetailsSearchSchema = z.object({
   diffFilter: zDiffFilter,
   origin: zOrigin,
   treeInfo: zTreeInformation,
@@ -37,5 +37,5 @@ const treeDetailsSearchSchema = z.object({
 
 export const Route = createFileRoute('/_main/tree/$treeId')({
   validateSearch: treeDetailsSearchSchema,
-  search: { middlewares: [stripSearchParams(defaultValues)] },
+  search: { middlewares: [stripSearchParams(treeDetailsDefaultValues)] },
 });

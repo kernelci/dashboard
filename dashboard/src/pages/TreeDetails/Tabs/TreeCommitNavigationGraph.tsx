@@ -1,23 +1,45 @@
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import CommitNavigationGraph from '@/components/CommitNavigationGraph/CommitNavigationGraph';
+import type {
+  TTreeInformation,
+  TreeDetailsRouteFrom,
+} from '@/types/tree/TreeDetails';
 
-const TreeCommitNavigationGraph = (): React.ReactNode => {
-  const {
-    origin,
-    currentPageTab,
-    diffFilter,
-    treeInfo: { gitUrl, gitBranch, headCommitHash },
-  } = useSearch({ from: '/_main/tree/$treeId' });
+import { treeDetailsFromMap } from '@/types/tree/TreeDetails';
+import { getStringParam } from '@/utils/treeDetails';
 
-  const { treeId } = useParams({
-    from: '/_main/tree/$treeId',
+const TreeCommitNavigationGraph = ({
+  urlFrom,
+  treeUrl,
+}: {
+  urlFrom: TreeDetailsRouteFrom;
+  treeUrl?: string;
+}): React.ReactNode => {
+  const { origin, currentPageTab, diffFilter, treeInfo } = useSearch({
+    from: urlFrom,
   });
 
+  const params = useParams({
+    from: urlFrom,
+  });
+
+  const sanitizedTreeInfo = useMemo((): TTreeInformation & {
+    hash: string;
+  } => {
+    return {
+      treeName: treeInfo.treeName || getStringParam(params, 'treeName'),
+      gitBranch: treeInfo.gitBranch || getStringParam(params, 'branch'),
+      headCommitHash: treeInfo.headCommitHash || getStringParam(params, 'hash'),
+      gitUrl: treeInfo.gitUrl || treeUrl,
+      hash: getStringParam(params, 'treeId') || getStringParam(params, 'hash'),
+    };
+  }, [params, treeInfo, treeUrl]);
+
   const navigate = useNavigate({
-    from: '/tree/$treeId',
+    from: treeDetailsFromMap[urlFrom],
   });
 
   const markClickHandle = useCallback(
@@ -47,10 +69,10 @@ const TreeCommitNavigationGraph = (): React.ReactNode => {
   return (
     <CommitNavigationGraph
       origin={origin}
-      gitBranch={gitBranch}
-      gitUrl={gitUrl}
-      treeId={treeId}
-      headCommitHash={headCommitHash}
+      gitBranch={sanitizedTreeInfo.gitBranch}
+      gitUrl={sanitizedTreeInfo.gitUrl}
+      treeId={sanitizedTreeInfo.hash}
+      headCommitHash={sanitizedTreeInfo.headCommitHash}
       onMarkClick={markClickHandle}
       diffFilter={diffFilter}
       currentPageTab={currentPageTab}

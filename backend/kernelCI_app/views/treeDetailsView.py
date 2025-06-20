@@ -1,5 +1,6 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from http import HTTPStatus
+from django.http import HttpRequest
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from kernelCI_app.constants.localization import ClientStrings
@@ -47,7 +48,7 @@ from kernelCI_app.typeModels.treeDetails import (
     TreeDetailsFullResponse,
     TreeQueryParameters,
 )
-from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
+from kernelCI_app.constants.general import DEFAULT_ORIGIN, MAESTRO_DUMMY_BUILD_PREFIX
 
 
 class TreeDetails(APIView):
@@ -206,16 +207,30 @@ class TreeDetails(APIView):
         parameters=[TreeQueryParameters],
         methods=["GET"],
     )
-    def get(self, request, commit_hash: str | None):
-        origin_param = request.GET.get("origin")
+    def get(
+        self,
+        request: HttpRequest,
+        commit_hash: Optional[str],
+        tree_name: Optional[str] = None,
+        git_branch: Optional[str] = None,
+    ):
+        origin_param = request.GET.get("origin", DEFAULT_ORIGIN)
         git_url_param = request.GET.get("git_url")
-        git_branch_param = request.GET.get("git_branch")
+        git_branch_param = request.GET.get("git_branch", git_branch)
+        # It is possible to arrive here from the shortcut endpoints.
+        # In that case, both tree_name and branch won't be null;
+        # besides, it won't be possible to differentiate the reason why the git_url might be None:
+        # if it is because the tree has it as null, or if it is because we came from the short url.
+        # However, since the tree_name should be tied to the git_url,
+        # filtering just by tree_name and branch in those cases should be enough.
 
         rows = get_tree_details_data(
-            origin_param, git_url_param, git_branch_param, commit_hash
+            origin_param=origin_param,
+            git_url_param=git_url_param,
+            tree_name=tree_name,
+            git_branch_param=git_branch_param,
+            commit_hash=commit_hash,
         )
-
-        self.filters = FilterParams(request)
 
         if len(rows) == 0:
             return create_api_error_response(
@@ -235,6 +250,8 @@ class TreeDetails(APIView):
                     error_message=ClientStrings.TREE_BUILDS_NOT_FOUND,
                     status_code=HTTPStatus.OK,
                 )
+
+        self.filters = FilterParams(request)
 
         self._sanitize_rows(rows)
 

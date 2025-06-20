@@ -343,12 +343,18 @@ def get_tree_listing_data_by_checkout_id(*, checkout_ids: list[str]):
 
 
 def get_tree_details_data(
-    origin_param: str, git_url_param: str, git_branch_param: str, commit_hash: str
+    *,
+    origin_param: str,
+    git_url_param: Optional[str],
+    git_branch_param: Optional[str],
+    commit_hash: Optional[str],
+    tree_name: Optional[str],
 ) -> Optional[list[tuple]]:
     cache_key = "treeDetails"
 
     params = {
         "commit_hash": commit_hash,
+        "tree_name": tree_name,
         "origin_param": origin_param,
         "git_url_param": git_url_param,
         "git_branch_param": git_branch_param,
@@ -357,11 +363,22 @@ def get_tree_details_data(
     rows = get_query_cache(cache_key, params)
     if rows is None:
         checkout_clauses = create_checkouts_where_clauses(
-            git_url=git_url_param, git_branch=git_branch_param
+            git_url=git_url_param,
+            git_branch=git_branch_param,
+            tree_name=tree_name,
         )
 
-        git_url_clause = checkout_clauses.get("git_url_clause")
         git_branch_clause = checkout_clauses.get("git_branch_clause")
+        tree_name_full_clause = (
+            "AND " + checkout_clauses.get("tree_name_clause")
+            if checkout_clauses.get("tree_name_clause")
+            else ""
+        )
+        git_url_full_clause = (
+            "AND " + checkout_clauses.get("git_url_clause")
+            if checkout_clauses.get("git_url_clause")
+            else ""
+        )
 
         query = f"""
         SELECT
@@ -414,10 +431,11 @@ def get_tree_details_data(
                         FROM
                             checkouts
                         WHERE
-                            checkouts.git_commit_hash = %(commit_hash)s AND
-                            {git_url_clause} AND
-                            {git_branch_clause} AND
-                            checkouts.origin = %(origin_param)s
+                            checkouts.git_commit_hash = %(commit_hash)s
+                            {git_url_full_clause}
+                            {tree_name_full_clause}
+                            AND {git_branch_clause}
+                            AND checkouts.origin = %(origin_param)s
                     ) AS tree_head
                 LEFT JOIN builds
                     ON tree_head.checkout_id = builds.checkout_id
@@ -492,7 +510,12 @@ def _create_selected_checkouts_clause(*, git_url: str, git_branch: str) -> str:
 
 
 def get_tree_commit_history(
-    commit_hash: str, origin: str, git_url: str, git_branch: str
+    *,
+    commit_hash: str,
+    origin: str,
+    git_url: Optional[str],
+    git_branch: Optional[str],
+    tree_name: Optional[str],
 ) -> Optional[list[tuple]]:
     field_values = {
         "commit_hash": commit_hash,
@@ -502,7 +525,7 @@ def get_tree_commit_history(
     }
 
     checkout_clauses = create_checkouts_where_clauses(
-        git_url=git_url, git_branch=git_branch
+        git_url=git_url, git_branch=git_branch, tree_name=tree_name
     )
 
     git_url_clause = checkout_clauses.get("git_url_clause")
@@ -645,6 +668,7 @@ def get_tree_commit_history(
                 origin=origin,
                 git_url=git_url,
                 git_branch=git_branch,
+                tree_name=tree_name,
             )
         else:
             raise

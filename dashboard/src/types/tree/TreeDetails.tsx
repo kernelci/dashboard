@@ -213,3 +213,15 @@ export type LogFilesResponse = {
 };
 
 export type TTreeCommitHistoryResponse = PaginatedCommitHistoryByTree[];
+
+// This map is necessary since the "from" parameter in `useSearch` and `useParameters`
+// requires the "/_main" prefix, while the "from" in `navigate` doesn't
+export const treeDetailsFromMap = {
+  '/_main/tree/$treeName/$branch/$hash': '/tree/$treeName/$branch/$hash',
+  '/_main/tree/$treeId': '/tree/$treeId',
+} as const;
+
+export type TreeDetailsRouteFrom = keyof typeof treeDetailsFromMap;
+
+export type TreeDetailsNavigateFrom =
+  (typeof treeDetailsFromMap)[TreeDetailsRouteFrom];
