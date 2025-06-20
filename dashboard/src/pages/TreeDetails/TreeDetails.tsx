@@ -58,6 +58,15 @@ import PageWithTitle from '@/components/PageWithTitle';
 import { MemoizedTreeHardwareDetailsOGTags } from '@/components/OpenGraphTags/TreeHardwareDetailsOGTags';
 
 import type { TabRightElementRecord } from '@/components/Tabs/Tabs';
+
+import type {
+  TreeDetailsRouteFrom,
+  TTreeInformation,
+} from '@/types/tree/TreeDetails';
+import { treeDetailsFromMap } from '@/types/tree/TreeDetails';
+
+import { getStringParam } from '@/utils/treeDetails';
+
 import { isEmptyObject } from '@/utils/utils';
 
 import TreeDetailsFilter from './TreeDetailsFilter';
@@ -155,13 +164,22 @@ const TreeHeader = ({
   );
 };
 
-function TreeDetails(): JSX.Element {
+const TreeDetails = ({
+  urlFrom,
+}: {
+  urlFrom: TreeDetailsRouteFrom;
+}): JSX.Element => {
   const { formatMessage } = useIntl();
 
-  const { treeId } = useParams({ from: '/_main/tree/$treeId' });
-  const searchParams = useSearch({ from: '/_main/tree/$treeId' });
+  const params = useParams({
+    from: urlFrom,
+  });
+  const searchParams = useSearch({
+    from: urlFrom,
+  });
+
   const { diffFilter, treeInfo } = searchParams;
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
   const updatePreviousSearch = useSearchStore(s => s.updatePreviousSearch);
 
   useEffect(
@@ -171,9 +189,24 @@ function TreeDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
+  const sanitizedTreeInfo = useMemo((): TTreeInformation & {
+    hash: string;
+  } => {
+    return {
+      treeName: treeInfo.treeName || getStringParam(params, 'treeName'),
+      gitBranch: treeInfo.gitBranch || getStringParam(params, 'branch'),
+      hash: getStringParam(params, 'treeId') || getStringParam(params, 'hash'),
+      gitUrl: treeInfo.gitUrl,
+      commitName: treeInfo.commitName,
+    };
+  }, [params, treeInfo]);
+
   const treeDetailsLazyLoaded = useTreeDetailsLazyLoadQuery({
-    treeId: treeId ?? '',
+    treeId: sanitizedTreeInfo.hash,
+    treeName: sanitizedTreeInfo.treeName ?? '',
+    gitBranch: sanitizedTreeInfo.gitBranch ?? '',
     filter: reqFilter,
+    urlFrom: urlFrom,
   });
 
   const { data, isLoading } = treeDetailsLazyLoaded.summary;
@@ -204,6 +237,7 @@ function TreeDetails(): JSX.Element {
     navigate: navigate,
     enabled: isEmptyObject(reqFilter),
   });
+
   const onFilterChange = useCallback(
     (newFilter: TFilter) => {
       navigate({
@@ -316,7 +350,11 @@ function TreeDetails(): JSX.Element {
   const treeDetailsTitle = formatMessage(
     { id: 'title.treeDetails' },
     {
-      treeName: getTreeName(treeId, treeInfo.treeName, treeInfo.gitBranch),
+      treeName: getTreeName(
+        sanitizedTreeInfo.hash,
+        sanitizedTreeInfo.treeName,
+        sanitizedTreeInfo.gitBranch,
+      ),
     },
   );
 
@@ -355,11 +393,11 @@ function TreeDetails(): JSX.Element {
         </Breadcrumb>
         <div className="mt-5">
           <TreeHeader
-            gitBranch={treeInfo?.gitBranch}
-            treeNames={treeInfo?.treeName}
-            gitUrl={treeInfo?.gitUrl}
-            commitHash={treeId}
-            commitName={treeInfo?.commitName}
+            gitBranch={sanitizedTreeInfo.gitBranch}
+            treeNames={sanitizedTreeInfo.treeName}
+            gitUrl={sanitizedTreeInfo.gitUrl ?? data?.common.tree_url}
+            commitHash={sanitizedTreeInfo.hash}
+            commitName={sanitizedTreeInfo.commitName}
             commitTags={data?.common.git_commit_tags}
             origin={searchParams.origin}
           />
@@ -382,11 +420,12 @@ function TreeDetails(): JSX.Element {
             treeDetailsLazyLoaded={treeDetailsLazyLoaded}
             filterListElement={filterListElement}
             countElements={tabsCounts}
+            urlFrom={urlFrom}
           />
         </div>
       </div>
     </PageWithTitle>
   );
-}
+};
 
 export default TreeDetails;

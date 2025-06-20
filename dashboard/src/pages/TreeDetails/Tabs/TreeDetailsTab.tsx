@@ -6,7 +6,11 @@ import { useCallback, useMemo } from 'react';
 import type { ITabItem, TabRightElementRecord } from '@/components/Tabs/Tabs';
 import Tabs from '@/components/Tabs/Tabs';
 
-import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
+import type { TreeDetailsRouteFrom } from '@/types/tree/TreeDetails';
+import {
+  treeDetailsFromMap,
+  zPossibleTabValidator,
+} from '@/types/tree/TreeDetails';
 
 import type { TreeDetailsLazyLoaded } from '@/hooks/useTreeDetailsLazyLoadQuery';
 
@@ -18,39 +22,57 @@ export interface ITreeDetailsTab {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
   filterListElement?: JSX.Element;
   countElements: TabRightElementRecord;
+  urlFrom: TreeDetailsRouteFrom;
 }
 
 const TreeDetailsTab = ({
   filterListElement,
   countElements,
   treeDetailsLazyLoaded,
+  urlFrom,
 }: ITreeDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
-    from: '/_main/tree/$treeId',
+    from: urlFrom,
   });
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
+
   const treeDetailsTab: ITabItem[] = useMemo(
     () => [
       {
         name: 'global.builds',
-        content: <BuildTab treeDetailsLazyLoaded={treeDetailsLazyLoaded} />,
+        content: (
+          <BuildTab
+            treeDetailsLazyLoaded={treeDetailsLazyLoaded}
+            urlFrom={urlFrom}
+          />
+        ),
         disabled: false,
         rightElement: countElements['buildTab'],
       },
       {
         name: 'global.boots',
-        content: <BootsTab treeDetailsLazyLoaded={treeDetailsLazyLoaded} />,
+        content: (
+          <BootsTab
+            treeDetailsLazyLoaded={treeDetailsLazyLoaded}
+            urlFrom={urlFrom}
+          />
+        ),
         disabled: false,
         rightElement: countElements['bootTab'],
       },
       {
         name: 'global.tests',
-        content: <TestsTab treeDetailsLazyLoaded={treeDetailsLazyLoaded} />,
+        content: (
+          <TestsTab
+            treeDetailsLazyLoaded={treeDetailsLazyLoaded}
+            urlFrom={urlFrom}
+          />
+        ),
         disabled: false,
         rightElement: countElements['testTab'],
       },
     ],
-    [countElements, treeDetailsLazyLoaded],
+    [countElements, treeDetailsLazyLoaded, urlFrom],
   );
 
   const onValueChange: (value: string) => void = useCallback(
