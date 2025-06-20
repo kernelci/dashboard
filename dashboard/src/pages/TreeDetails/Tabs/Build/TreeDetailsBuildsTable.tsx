@@ -8,18 +8,26 @@ import {
   zTableFilterInfoDefault,
   type AccordionItemBuilds,
   type PossibleTableFilters,
+  type TreeDetailsRouteFrom,
+  treeDetailsFromMap,
 } from '@/types/tree/TreeDetails';
+import { getStringParam } from '@/utils/utils';
 
 export interface TTreeDetailsBuildsTable {
   buildItems: AccordionItemBuilds[];
+  urlFrom: TreeDetailsRouteFrom;
 }
 
 export function TreeDetailsBuildsTable({
   buildItems,
+  urlFrom,
 }: TTreeDetailsBuildsTable): JSX.Element {
-  const { treeId } = useParams({ from: '/_main/tree/$treeId' });
-  const { tableFilter } = useSearch({ from: '/_main/tree/$treeId' });
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const params = useParams({ from: urlFrom });
+  const { tableFilter } = useSearch({ from: urlFrom });
+  const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
+
+  const treeId =
+    getStringParam(params, 'treeId') || getStringParam(params, 'hash');
 
   const getRowLink = useCallback(
     (buildId: string): LinkProps => ({

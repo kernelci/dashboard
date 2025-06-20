@@ -213,3 +213,20 @@ export type LogFilesResponse = {
 };
 
 export type TTreeCommitHistoryResponse = PaginatedCommitHistoryByTree[];
+
+// TODO: These variables could be defined in the route files but it would cause
+// a circular dependency, requiring rewiring of the imports.
+export const treeDetailsDirectRouteName = '/_main/tree/$treeName/$branch/$hash';
+export const treeDetailsRouteName = '/_main/tree/$treeId';
+
+// This map is necessary since the "from" parameter in `useSearch` and `useParameters`
+// requires the "/_main" prefix, while the "from" in `navigate` doesn't
+export const treeDetailsFromMap = {
+  [treeDetailsDirectRouteName]: '/tree/$treeName/$branch/$hash',
+  [treeDetailsRouteName]: '/tree/$treeId',
+} as const;
+
+export type TreeDetailsRouteFrom = keyof typeof treeDetailsFromMap;
+
+export type TreeDetailsNavigateFrom =
+  (typeof treeDetailsFromMap)[TreeDetailsRouteFrom];

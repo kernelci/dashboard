@@ -27,6 +27,7 @@ import {
   sanitizeConfigs,
   sanitizeBuildsSummary,
   sanitizeBuilds,
+  getStringParam,
 } from '@/utils/utils';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
@@ -37,7 +38,11 @@ import type { IListingItem } from '@/components/ListingItem/ListingItem';
 import { RedirectFrom } from '@/types/general';
 import type { RequiredStatusCount, TFilterObjectsKeys } from '@/types/general';
 
-import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
+import {
+  treeDetailsFromMap,
+  type AccordionItemBuilds,
+  type TreeDetailsRouteFrom,
+} from '@/types/tree/TreeDetails';
 
 import type { TIssue } from '@/types/issues';
 
@@ -51,6 +56,7 @@ import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
 interface BuildTab {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
+  urlFrom: TreeDetailsRouteFrom;
 }
 
 interface IBuildsTab {
@@ -63,16 +69,21 @@ interface IBuildsTab {
   origins: Record<string, RequiredStatusCount>;
 }
 
-const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
+const BuildTab = ({
+  treeDetailsLazyLoaded,
+  urlFrom,
+}: BuildTab): JSX.Element => {
   const navigate = useNavigate({
-    from: '/tree/$treeId',
+    from: treeDetailsFromMap[urlFrom],
   });
 
   const { diffFilter } = useSearch({
-    from: '/_main/tree/$treeId',
+    from: urlFrom,
   });
 
-  const { treeId } = useParams({ from: '/_main/tree/$treeId' });
+  const params = useParams({ from: urlFrom });
+  const treeId =
+    getStringParam(params, 'treeId') || getStringParam(params, 'hash');
 
   const {
     data: summaryData,
@@ -186,7 +197,7 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
               />
             </div>
             <div>
-              <TreeCommitNavigationGraph />
+              <TreeCommitNavigationGraph urlFrom={urlFrom} />
               <MemoizedConfigsCard
                 configs={treeDetailsData.configs}
                 toggleFilterBySection={toggleFilterBySection}
@@ -210,7 +221,7 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
             />
           </DesktopGrid>
           <MobileGrid>
-            <TreeCommitNavigationGraph />
+            <TreeCommitNavigationGraph urlFrom={urlFrom} />
             <MemoizedStatusCard
               title={<FormattedMessage id="buildTab.buildStatus" />}
               toggleFilterBySection={toggleFilterBySection}
@@ -268,7 +279,10 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
               <div className="text-lg">
                 <FormattedMessage id="global.builds" />
               </div>
-              <TreeDetailsBuildsTable buildItems={treeDetailsData.builds} />
+              <TreeDetailsBuildsTable
+                buildItems={treeDetailsData.builds}
+                urlFrom={urlFrom}
+              />
             </div>
           </QuerySwitcher>
         </div>
@@ -285,7 +299,7 @@ const BuildTab = ({ treeDetailsLazyLoaded }: BuildTab): JSX.Element => {
               />
             </div>
           )}
-          <TreeCommitNavigationGraph />
+          <TreeCommitNavigationGraph urlFrom={urlFrom} />
         </div>
       )}
     </div>

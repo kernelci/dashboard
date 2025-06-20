@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useSearch } from '@tanstack/react-router';
 
+import { treeDetailsDirectRouteName } from '@/types/tree/TreeDetails';
 import type {
   TTreeDetailsFilter,
   BuildCountsResponse,
@@ -12,6 +13,7 @@ import type {
   TreeDetailsBoots,
   TreeDetailsBuilds,
   TreeDetailsTests,
+  TreeDetailsRouteFrom,
 } from '@/types/tree/TreeDetails';
 
 import { getTargetFilter, type TFilter } from '@/types/general';
@@ -28,11 +30,13 @@ type TreeSearchParameters = {
   gitBranch?: string;
 };
 
-const useTreeSearchParameters = (): TreeSearchParameters => {
+const useTreeInfoSearchParameters = (
+  urlFrom: TreeDetailsRouteFrom,
+): TreeSearchParameters => {
   const {
     origin,
     treeInfo: { gitUrl, gitBranch },
-  } = useSearch({ from: '/_main/tree/$treeId' });
+  } = useSearch({ from: urlFrom });
 
   return { origin, gitUrl, gitBranch };
 };
@@ -48,15 +52,21 @@ type TreeDetailsResponseTable = {
 };
 
 const fetchTreeDetails = async ({
+  treeName,
+  gitBranch,
   treeId,
   treeSearchParameters,
   filter = {},
   variant,
+  urlFrom,
 }: {
+  treeName: string;
+  gitBranch: string;
   treeId: string;
   treeSearchParameters: TreeSearchParameters;
   filter: TTreeDetailsFilter;
   variant: TreeDetailsVariants;
+  urlFrom: TreeDetailsRouteFrom;
 }): Promise<TreeDetailsFullData> => {
   const backendCompatibleFilters = mapFiltersKeysToBackendCompatible(filter);
 
@@ -67,12 +77,17 @@ const fetchTreeDetails = async ({
     ...backendCompatibleFilters,
   };
 
+  const baseUrl =
+    urlFrom === treeDetailsDirectRouteName
+      ? `/api/tree/${treeName}/${gitBranch}/${treeId}`
+      : `/api/tree/${treeId}`;
+
   const urlTable: Record<TreeDetailsVariants, string> = {
-    full: `/api/tree/${treeId}/full`,
-    builds: `/api/tree/${treeId}/builds`,
-    boots: `/api/tree/${treeId}/boots`,
-    tests: `/api/tree/${treeId}/tests`,
-    summary: `/api/tree/${treeId}/summary`,
+    full: `${baseUrl}/full`,
+    builds: `${baseUrl}/builds`,
+    boots: `${baseUrl}/boots`,
+    tests: `${baseUrl}/tests`,
+    summary: `${baseUrl}/summary`,
   };
 
   const data = await RequestData.get<TreeDetailsFullData>(urlTable[variant], {
@@ -86,7 +101,10 @@ type TreeDetailsResponse<T extends keyof TreeDetailsResponseTable> =
   TreeDetailsResponseTable[T];
 
 export type UseTreeDetailsWithoutVariant = {
+  treeName: string;
+  gitBranch: string;
   treeId: string;
+  urlFrom: TreeDetailsRouteFrom;
   filter?: TFilter;
   enabled?: boolean;
 };
@@ -97,28 +115,37 @@ type UseTreeDetailsParameters<T extends TreeDetailsVariants> = {
 
 export const useTreeDetails = <T extends TreeDetailsVariants>({
   treeId,
+  treeName,
+  gitBranch,
   filter = {},
   enabled = true,
   variant,
+  urlFrom,
 }: UseTreeDetailsParameters<T>): UseQueryResult<TreeDetailsResponse<T>> => {
   const testFilter = getTargetFilter(filter, 'test');
   const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
-  const treeSearchParameters = useTreeSearchParameters();
+  const treeSearchParameters = useTreeInfoSearchParameters(urlFrom);
 
   return useQuery({
     queryKey: [
       'treeTests',
+      treeName,
+      gitBranch,
       treeId,
       treeSearchParameters,
       testFilter,
       treeDetailsFilter,
       variant,
+      urlFrom,
     ],
     queryFn: () =>
       fetchTreeDetails({
+        treeName,
+        gitBranch,
         treeId,
         treeSearchParameters,
         variant,
+        urlFrom,
         filter: {
           ...testFilter,
           ...treeDetailsFilter,

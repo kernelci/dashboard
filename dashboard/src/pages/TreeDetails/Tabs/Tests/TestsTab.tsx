@@ -6,6 +6,8 @@ import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
 import { useCallback, useMemo, type JSX } from 'react';
 
 import {
+  treeDetailsFromMap,
+  type TreeDetailsRouteFrom,
   zTableFilterInfoDefault,
   type PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
@@ -32,13 +34,20 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
+import { getStringParam } from '@/utils/utils';
 
 interface TestsTabProps {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
+  urlFrom: TreeDetailsRouteFrom;
 }
 
-const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
-  const { treeId } = useParams({ from: '/_main/tree/$treeId' });
+const TestsTab = ({
+  treeDetailsLazyLoaded,
+  urlFrom,
+}: TestsTabProps): JSX.Element => {
+  const params = useParams({ from: urlFrom });
+  const treeId =
+    getStringParam(params, 'treeId') || getStringParam(params, 'hash');
 
   const {
     data: summaryData,
@@ -63,14 +72,14 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
   const fullTestsData = useMemo(() => fullData?.tests, [fullData?.tests]);
 
   const { tableFilter, diffFilter } = useSearch({
-    from: '/_main/tree/$treeId',
+    from: urlFrom,
   });
 
   const currentPathFilter = diffFilter.testPath
     ? Object.keys(diffFilter.testPath)[0]
     : undefined;
 
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
 
   const updatePathFilter = useCallback(
     (pathFilter: string) => {
@@ -206,7 +215,7 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
               />
             </div>
             <div>
-              <TreeCommitNavigationGraph />
+              <TreeCommitNavigationGraph urlFrom={urlFrom} />
               <MemoizedHardwareTested
                 title={<FormattedMessage id="testsTab.hardwareTested" />}
                 environmentCompatible={hardwareData}
@@ -239,7 +248,7 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
               toggleFilterBySection={toggleFilterBySection}
               filterStatusKey="testStatus"
             />
-            <TreeCommitNavigationGraph />
+            <TreeCommitNavigationGraph urlFrom={urlFrom} />
             <InnerMobileGrid>
               <div>
                 <MemoizedConfigList
@@ -308,7 +317,7 @@ const TestsTab = ({ treeDetailsLazyLoaded }: TestsTabProps): JSX.Element => {
               />
             </div>
           )}
-          <TreeCommitNavigationGraph />
+          <TreeCommitNavigationGraph urlFrom={urlFrom} />
         </div>
       )}
     </div>

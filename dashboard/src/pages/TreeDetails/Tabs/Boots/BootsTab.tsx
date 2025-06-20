@@ -9,8 +9,10 @@ import { BootsTable } from '@/components/BootsTable/BootsTable';
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import { MemoizedHardwareTested } from '@/components/Cards/HardwareTested';
 import {
-  zTableFilterInfoDefault,
+  type TreeDetailsRouteFrom,
   type PossibleTableFilters,
+  treeDetailsFromMap,
+  zTableFilterInfoDefault,
 } from '@/types/tree/TreeDetails';
 import {
   DesktopGrid,
@@ -32,25 +34,32 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
+import { getStringParam } from '@/utils/utils';
 
 interface BootsTabProps {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
+  urlFrom: TreeDetailsRouteFrom;
 }
 
-const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
-  const { treeId } = useParams({
-    from: '/_main/tree/$treeId',
+const BootsTab = ({
+  treeDetailsLazyLoaded,
+  urlFrom,
+}: BootsTabProps): JSX.Element => {
+  const params = useParams({
+    from: urlFrom,
   });
+  const treeId =
+    getStringParam(params, 'treeId') || getStringParam(params, 'hash');
 
   const { tableFilter, diffFilter } = useSearch({
-    from: '/_main/tree/$treeId',
+    from: urlFrom,
   });
 
   const currentPathFilter = diffFilter.bootPath
     ? Object.keys(diffFilter.bootPath)[0]
     : undefined;
 
-  const navigate = useNavigate({ from: '/tree/$treeId' });
+  const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
 
   const updatePathFilter = useCallback(
     (pathFilter: string) => {
@@ -204,7 +213,7 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
               />
             </div>
             <div>
-              <TreeCommitNavigationGraph />
+              <TreeCommitNavigationGraph urlFrom={urlFrom} />
               <MemoizedHardwareTested
                 title={<FormattedMessage id="bootsTab.hardwareTested" />}
                 environmentCompatible={hardwareData}
@@ -237,7 +246,7 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
               toggleFilterBySection={toggleFilterBySection}
               filterStatusKey="bootStatus"
             />
-            <TreeCommitNavigationGraph />
+            <TreeCommitNavigationGraph urlFrom={urlFrom} />
             <InnerMobileGrid>
               <div>
                 <MemoizedConfigList
@@ -305,7 +314,7 @@ const BootsTab = ({ treeDetailsLazyLoaded }: BootsTabProps): JSX.Element => {
               />
             </div>
           )}
-          <TreeCommitNavigationGraph />
+          <TreeCommitNavigationGraph urlFrom={urlFrom} />
         </div>
       )}
     </div>
