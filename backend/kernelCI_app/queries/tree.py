@@ -510,7 +510,12 @@ def _create_selected_checkouts_clause(*, git_url: str, git_branch: str) -> str:
 
 
 def get_tree_commit_history(
-    commit_hash: str, origin: str, git_url: str, git_branch: str
+    *,
+    commit_hash: str,
+    origin: str,
+    git_url: Optional[str],
+    git_branch: Optional[str],
+    tree_name: Optional[str],
 ) -> Optional[list[tuple]]:
     field_values = {
         "commit_hash": commit_hash,
@@ -520,7 +525,7 @@ def get_tree_commit_history(
     }
 
     checkout_clauses = create_checkouts_where_clauses(
-        git_url=git_url, git_branch=git_branch
+        git_url=git_url, git_branch=git_branch, tree_name=tree_name
     )
 
     git_url_clause = checkout_clauses.get("git_url_clause")
@@ -661,6 +666,7 @@ def get_tree_commit_history(
                 origin=origin,
                 git_url=git_url,
                 git_branch=git_branch,
+                tree_name=tree_name,
             )
         else:
             raise
