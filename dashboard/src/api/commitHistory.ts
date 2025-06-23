@@ -1,7 +1,9 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 
+import { treeDetailsDirectRouteName } from '@/types/tree/TreeDetails';
 import type {
+  TreeDetailsRouteFrom,
   TTreeCommitHistoryResponse,
   TTreeDetailsFilter,
 } from '@/types/tree/TreeDetails';
@@ -21,6 +23,8 @@ const fetchCommitHistory = async (
   filters: TTreeDetailsFilter,
   startTimestampInSeconds: number | undefined,
   endTimestampInSeconds: number | undefined,
+  treeName?: string,
+  treeUrlFrom?: TreeDetailsRouteFrom,
 ): Promise<TTreeCommitHistoryResponse> => {
   const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
 
@@ -33,8 +37,13 @@ const fetchCommitHistory = async (
     ...filtersFormatted,
   };
 
+  const baseUrl =
+    treeUrlFrom === treeDetailsDirectRouteName
+      ? `/api/tree/${treeName}/${gitBranch}/${commitHash}`
+      : `/api/tree/${commitHash}`;
+
   const data = await RequestData.get<TTreeCommitHistoryResponse>(
-    `/api/tree/${commitHash}/commits`,
+    `${baseUrl}/commits`,
     {
       params,
     },
@@ -51,6 +60,8 @@ export const useCommitHistory = ({
   filter,
   endTimestampInSeconds,
   startTimestampInSeconds,
+  treeName,
+  treeUrlFrom,
 }: {
   commitHash: string;
   origin: string;
@@ -59,6 +70,8 @@ export const useCommitHistory = ({
   filter: TTreeDetailsFilter | TFilter;
   startTimestampInSeconds?: number;
   endTimestampInSeconds?: number;
+  treeName?: string;
+  treeUrlFrom?: TreeDetailsRouteFrom;
 }): UseQueryResult<TTreeCommitHistoryResponse> => {
   const testFilter = getTargetFilter(filter, 'test');
   const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
@@ -78,6 +91,8 @@ export const useCommitHistory = ({
       filters,
       startTimestampInSeconds,
       endTimestampInSeconds,
+      treeName,
+      treeUrlFrom,
     ],
     queryFn: () =>
       fetchCommitHistory(
@@ -88,6 +103,8 @@ export const useCommitHistory = ({
         filters,
         startTimestampInSeconds,
         endTimestampInSeconds,
+        treeName,
+        treeUrlFrom,
       ),
   });
 };

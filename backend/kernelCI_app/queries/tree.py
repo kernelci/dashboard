@@ -472,7 +472,12 @@ GIT_BRANCH_FIELD = "git_repository_branch"
 GIT_URL_FIELD = "git_repository_url"
 
 
-def _create_selected_checkouts_clause(*, git_url: str, git_branch: str) -> str:
+def _create_selected_checkouts_clause(
+    *,
+    git_url: str,
+    git_branch: str,
+    tree_name: Optional[str],
+) -> str:
     tuple_fields = ["origin", "git_commit_hash"]
     none_fields = []
 
@@ -481,8 +486,14 @@ def _create_selected_checkouts_clause(*, git_url: str, git_branch: str) -> str:
     else:
         tuple_fields.append(GIT_BRANCH_FIELD)
 
+    if tree_name:
+        tuple_fields.append("tree_name")
+
     if not git_url:
-        none_fields.append(GIT_URL_FIELD)
+        if not tree_name:
+            # Only query for git_url NULL if we know that its value is NULL, not just if it wasn't passed
+            # This means to only query if I know it didn't come from treeDetailsDirect
+            none_fields.append(GIT_URL_FIELD)
     else:
         tuple_fields.append(GIT_URL_FIELD)
 
@@ -504,24 +515,33 @@ def _create_selected_checkouts_clause(*, git_url: str, git_branch: str) -> str:
 
 
 def get_tree_commit_history(
-    commit_hash: str, origin: str, git_url: str, git_branch: str
+    *,
+    commit_hash: str,
+    origin: str,
+    git_url: Optional[str],
+    git_branch: Optional[str],
+    tree_name: Optional[str],
 ) -> Optional[list[tuple]]:
     field_values = {
         "commit_hash": commit_hash,
         "origin_param": origin,
         "git_url_param": git_url,
         "git_branch_param": git_branch,
+        "tree_name": tree_name,
     }
 
     checkout_clauses = create_checkouts_where_clauses(
-        git_url=git_url, git_branch=git_branch
+        git_url=git_url, git_branch=git_branch, tree_name=tree_name
     )
 
-    git_url_clause = checkout_clauses.get("git_url_clause")
     git_branch_clause = checkout_clauses.get("git_branch_clause")
+    tree_name_clause = checkout_clauses.get("tree_name_clause")
+    git_url_clause = checkout_clauses.get("git_url_clause")
+    tree_name_full_clause = "AND " + tree_name_clause if tree_name_clause else ""
+    git_url_full_clause = "AND " + git_url_clause if git_url_clause else ""
 
     selected_checkouts_clause = _create_selected_checkouts_clause(
-        git_url=git_url, git_branch=git_branch
+        git_url=git_url, git_branch=git_branch, tree_name=tree_name
     )
 
     query = f"""
@@ -533,7 +553,9 @@ def get_tree_commit_history(
         WHERE
             git_commit_hash = %(commit_hash)s
             AND origin = %(origin_param)s
-            AND {git_url_clause}
+            AND {git_branch_clause}
+            {git_url_full_clause}
+            {tree_name_full_clause}
     ),
     EARLIEST_COMMITS AS (
         SELECT
@@ -544,6 +566,7 @@ def get_tree_commit_history(
             git_repository_url,
             git_commit_tags,
             origin,
+            tree_name,
             start_time,
             time_order
         FROM (
@@ -555,6 +578,7 @@ def get_tree_commit_history(
                 git_repository_url,
                 git_commit_tags,
                 origin,
+                tree_name,
                 start_time,
                 ROW_NUMBER() OVER (
                     PARTITION BY
@@ -569,7 +593,8 @@ def get_tree_commit_history(
                 checkouts
             WHERE
                 {git_branch_clause}
-                AND {git_url_clause}
+                {git_url_full_clause}
+                {tree_name_full_clause}
                 AND origin = %(origin_param)s
                 AND git_commit_hash IS NOT NULL
                 AND start_time <= (
@@ -657,6 +682,7 @@ def get_tree_commit_history(
                 origin=origin,
                 git_url=git_url,
                 git_branch=git_branch,
+                tree_name=tree_name,
             )
         else:
             raise

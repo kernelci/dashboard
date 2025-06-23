@@ -18,6 +18,7 @@ import type { TFilter } from '@/types/general';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { gitValues } from '@/components/Tooltip/CommitTagTooltip';
+import type { TreeDetailsRouteFrom } from '@/types/tree/TreeDetails';
 
 const graphDisplaySize = 8;
 
@@ -51,7 +52,10 @@ interface ICommitNavigationGraph {
   startTimestampInSeconds?: number;
   endTimestampInSeconds?: number;
   onMarkClick: (commitHash: string, commitName?: string) => void;
+  treeName?: string;
+  treeUrlFrom?: TreeDetailsRouteFrom;
 }
+
 const CommitNavigationGraph = ({
   origin,
   currentPageTab,
@@ -63,6 +67,8 @@ const CommitNavigationGraph = ({
   onMarkClick,
   endTimestampInSeconds,
   startTimestampInSeconds,
+  treeName,
+  treeUrlFrom,
 }: ICommitNavigationGraph): JSX.Element => {
   const { formatMessage } = useIntl();
 
@@ -76,6 +82,8 @@ const CommitNavigationGraph = ({
     filter: reqFilter,
     endTimestampInSeconds,
     startTimestampInSeconds,
+    treeName,
+    treeUrlFrom,
   });
 
   const displayableData = data ? data : null;

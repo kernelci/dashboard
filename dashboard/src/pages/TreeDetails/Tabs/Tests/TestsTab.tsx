@@ -48,6 +48,7 @@ const TestsTab = ({
   const params = useParams({ from: urlFrom });
   const treeId =
     getStringParam(params, 'treeId') || getStringParam(params, 'hash');
+  const treeName = getStringParam(params, 'treeName');
 
   const {
     data: summaryData,
@@ -215,7 +216,10 @@ const TestsTab = ({
               />
             </div>
             <div>
-              <TreeCommitNavigationGraph urlFrom={urlFrom} />
+              <TreeCommitNavigationGraph
+                urlFrom={urlFrom}
+                treeName={treeName}
+              />
               <MemoizedHardwareTested
                 title={<FormattedMessage id="testsTab.hardwareTested" />}
                 environmentCompatible={hardwareData}
@@ -248,7 +252,7 @@ const TestsTab = ({
               toggleFilterBySection={toggleFilterBySection}
               filterStatusKey="testStatus"
             />
-            <TreeCommitNavigationGraph urlFrom={urlFrom} />
+            <TreeCommitNavigationGraph urlFrom={urlFrom} treeName={treeName} />
             <InnerMobileGrid>
               <div>
                 <MemoizedConfigList
@@ -317,7 +321,7 @@ const TestsTab = ({
               />
             </div>
           )}
-          <TreeCommitNavigationGraph urlFrom={urlFrom} />
+          <TreeCommitNavigationGraph urlFrom={urlFrom} treeName={treeName} />
         </div>
       )}
     </div>

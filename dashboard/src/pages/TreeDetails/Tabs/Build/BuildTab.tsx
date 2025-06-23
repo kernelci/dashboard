@@ -84,6 +84,7 @@ const BuildTab = ({
   const params = useParams({ from: urlFrom });
   const treeId =
     getStringParam(params, 'treeId') || getStringParam(params, 'hash');
+  const treeName = getStringParam(params, 'treeName');
 
   const {
     data: summaryData,
@@ -197,7 +198,10 @@ const BuildTab = ({
               />
             </div>
             <div>
-              <TreeCommitNavigationGraph urlFrom={urlFrom} />
+              <TreeCommitNavigationGraph
+                urlFrom={urlFrom}
+                treeName={treeName}
+              />
               <MemoizedConfigsCard
                 configs={treeDetailsData.configs}
                 toggleFilterBySection={toggleFilterBySection}
@@ -221,7 +225,7 @@ const BuildTab = ({
             />
           </DesktopGrid>
           <MobileGrid>
-            <TreeCommitNavigationGraph urlFrom={urlFrom} />
+            <TreeCommitNavigationGraph urlFrom={urlFrom} treeName={treeName} />
             <MemoizedStatusCard
               title={<FormattedMessage id="buildTab.buildStatus" />}
               toggleFilterBySection={toggleFilterBySection}
@@ -299,7 +303,7 @@ const BuildTab = ({
               />
             </div>
           )}
-          <TreeCommitNavigationGraph urlFrom={urlFrom} />
+          <TreeCommitNavigationGraph urlFrom={urlFrom} treeName={treeName} />
         </div>
       )}
     </div>

@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 from http import HTTPStatus
+
+from django.http import HttpRequest
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
     FilterParams,
@@ -374,7 +376,13 @@ class TreeCommitsHistory(APIView):
         parameters=[TreeCommitsQueryParameters],
         methods=["GET"],
     )
-    def get(self, request, commit_hash: Optional[str]) -> Response:
+    def get(
+        self,
+        request: HttpRequest,
+        commit_hash: str,
+        tree_name: Optional[str] = None,
+        git_branch: Optional[str] = None,
+    ) -> Response:
         try:
             params = TreeCommitsQueryParameters(
                 origin=request.GET.get("origin"),
@@ -409,7 +417,8 @@ class TreeCommitsHistory(APIView):
             commit_hash=commit_hash,
             origin=params.origin,
             git_url=params.git_url,
-            git_branch=params.git_branch,
+            git_branch=params.git_branch or git_branch,
+            tree_name=tree_name,
         )
 
         if not rows:

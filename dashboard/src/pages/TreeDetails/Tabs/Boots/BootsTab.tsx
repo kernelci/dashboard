@@ -50,6 +50,7 @@ const BootsTab = ({
   });
   const treeId =
     getStringParam(params, 'treeId') || getStringParam(params, 'hash');
+  const treeName = getStringParam(params, 'treeName');
 
   const { tableFilter, diffFilter } = useSearch({
     from: urlFrom,
@@ -213,7 +214,10 @@ const BootsTab = ({
               />
             </div>
             <div>
-              <TreeCommitNavigationGraph urlFrom={urlFrom} />
+              <TreeCommitNavigationGraph
+                urlFrom={urlFrom}
+                treeName={treeName}
+              />
               <MemoizedHardwareTested
                 title={<FormattedMessage id="bootsTab.hardwareTested" />}
                 environmentCompatible={hardwareData}
@@ -246,7 +250,7 @@ const BootsTab = ({
               toggleFilterBySection={toggleFilterBySection}
               filterStatusKey="bootStatus"
             />
-            <TreeCommitNavigationGraph urlFrom={urlFrom} />
+            <TreeCommitNavigationGraph urlFrom={urlFrom} treeName={treeName} />
             <InnerMobileGrid>
               <div>
                 <MemoizedConfigList
@@ -314,7 +318,7 @@ const BootsTab = ({
               />
             </div>
           )}
-          <TreeCommitNavigationGraph urlFrom={urlFrom} />
+          <TreeCommitNavigationGraph urlFrom={urlFrom} treeName={treeName} />
         </div>
       )}
     </div>

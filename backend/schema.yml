@@ -1105,6 +1105,76 @@ paths:
               schema:
                 $ref: '#/components/schemas/TreeLatestResponse'
           description: ''
+  /api/tree/{tree_name}/{git_branch}/{commit_hash}/commits:
+    get:
+      operationId: tree_commits_retrieve_2
+      parameters:
+      - in: path
+        name: commit_hash
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: end_time_stamp_in_seconds
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: End Time Stamp In Seconds
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: git_branch
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Branch
+      - in: query
+        name: git_url
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Url
+      - in: query
+        name: origin
+        schema:
+          title: Origin
+          type: string
+        required: true
+      - in: query
+        name: start_time_stamp_in_seconds
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Start Time Stamp In Seconds
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCommitsResponse'
+          description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/full:
     get:
       operationId: tree_full_retrieve_2

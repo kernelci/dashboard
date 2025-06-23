@@ -8,13 +8,18 @@ import type {
   TreeDetailsRouteFrom,
 } from '@/types/tree/TreeDetails';
 
-import { treeDetailsFromMap } from '@/types/tree/TreeDetails';
+import {
+  treeDetailsDirectRouteName,
+  treeDetailsFromMap,
+} from '@/types/tree/TreeDetails';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 
 const TreeCommitNavigationGraph = ({
   urlFrom,
+  treeName,
 }: {
   urlFrom: TreeDetailsRouteFrom;
+  treeName: string;
 }): React.ReactNode => {
   const { origin, currentPageTab, diffFilter, treeInfo } = useSearch({
     from: urlFrom,
@@ -36,26 +41,54 @@ const TreeCommitNavigationGraph = ({
 
   const markClickHandle = useCallback(
     (commitHash: string, commitName?: string) => {
-      navigate({
-        to: '/tree/$treeId',
-        params: {
-          treeId: commitHash,
-        },
-        state: s => ({
-          ...s,
-          id: commitHash,
-        }),
-        search: previousParams => ({
-          ...previousParams,
-          treeInfo: {
-            ...previousParams.treeInfo,
-            commitName: commitName,
-            commitHash: commitHash,
+      if (urlFrom === treeDetailsDirectRouteName) {
+        navigate({
+          to: treeDetailsFromMap[urlFrom],
+          params: {
+            treeName: sanitizedTreeInfo.treeName!,
+            branch: sanitizedTreeInfo.gitBranch!,
+            hash: commitHash,
           },
-        }),
-      });
+          state: s => ({
+            ...s,
+            id: commitHash,
+          }),
+          search: previousParams => ({
+            ...previousParams,
+            treeInfo: {
+              ...previousParams.treeInfo,
+              headCommitHash: sanitizedTreeInfo.headCommitHash,
+            },
+          }),
+        });
+      } else {
+        navigate({
+          to: treeDetailsFromMap[urlFrom],
+          params: {
+            treeId: commitHash,
+          },
+          state: s => ({
+            ...s,
+            id: commitHash,
+          }),
+          search: previousParams => ({
+            ...previousParams,
+            treeInfo: {
+              ...previousParams.treeInfo,
+              commitName: commitName,
+              commitHash: commitHash,
+            },
+          }),
+        });
+      }
     },
-    [navigate],
+    [
+      navigate,
+      sanitizedTreeInfo.gitBranch,
+      sanitizedTreeInfo.headCommitHash,
+      sanitizedTreeInfo.treeName,
+      urlFrom,
+    ],
   );
 
   return (
@@ -68,6 +101,8 @@ const TreeCommitNavigationGraph = ({
       onMarkClick={markClickHandle}
       diffFilter={diffFilter}
       currentPageTab={currentPageTab}
+      treeName={treeName}
+      treeUrlFrom={urlFrom}
     />
   );
 };

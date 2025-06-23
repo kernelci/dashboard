@@ -56,6 +56,11 @@ urlpatterns = [
         name="treeCommits",
     ),
     path(
+        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/commits",
+        view_cache(views.TreeCommitsHistory),
+        name="treeCommitsDirectView",
+    ),
+    path(
         "tree/<str:tree_name>/<str:branch>",
         view_cache(views.TreeLatest),
         name="treeLatest",
