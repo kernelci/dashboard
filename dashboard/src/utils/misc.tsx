@@ -47,7 +47,9 @@ export const miscContentHandler = ({
   const showContent = match({ [fieldKey]: fieldValue })
     .with({ log_excerpt: '' }, _ => false)
     .with({ log_excerpt: P.string }, field => {
-      children = <CodeBlock code={field.log_excerpt} />;
+      children = (
+        <CodeBlock code={field.log_excerpt} className="max-h-[80vh]" />
+      );
       return true;
     })
     .otherwise(_ => {

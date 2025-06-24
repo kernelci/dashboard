@@ -232,6 +232,7 @@ const CodeBlock = ({
   code,
   highlightsClassnames,
   variant = 'default',
+  className,
 }: TCodeBlockProps): JSX.Element => {
   const disableHighlight = code.length >= MAX_HIGHLIGHT_CODE_LENGTH;
 
@@ -303,6 +304,7 @@ const CodeBlock = ({
               : parsedCode.highlightedCode
           }
           statsElement={statsElement}
+          className={className}
         />
       </div>
     </>
