@@ -6,6 +6,7 @@ import { FormattedMessage } from 'react-intl';
 import { formattedBreakLineValue, type MessagesKey } from '@/locales/messages';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
+import { cn } from '@/lib/utils';
 
 export const TooltipIcon = ({
   triggerClassName,
@@ -13,19 +14,21 @@ export const TooltipIcon = ({
   contentClassName,
   tooltipId,
   tooltipValues,
+  icon,
 }: {
   triggerClassName?: string;
   iconClassName?: string;
   contentClassName?: string;
   tooltipId: MessagesKey;
   tooltipValues?: Record<string, unknown>;
+  icon?: JSX.Element;
 }): JSX.Element => {
   return (
     <Tooltip>
       <TooltipTrigger className={triggerClassName}>
-        <LiaQuestionCircle className={iconClassName} />
+        {icon ?? <LiaQuestionCircle className={iconClassName} />}
       </TooltipTrigger>
-      <TooltipContent className={contentClassName}>
+      <TooltipContent className={cn('whitespace-pre-line', contentClassName)}>
         <FormattedMessage
           id={tooltipId}
           values={{ ...formattedBreakLineValue, ...tooltipValues }}

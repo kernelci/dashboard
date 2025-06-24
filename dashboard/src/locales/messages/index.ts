@@ -92,6 +92,10 @@ export const messages = {
     'filter.testStatus': 'Test Status',
     'filter.treeSubtitle': 'Please select one or more Trees:',
     'filter.treeURL': 'Tree URL',
+    'footer.command': 'Command for this page:\n{command}',
+    'footer.kcidev':
+      'You can use {link} to retrieve KernelCI data from the command line',
+    'footer.question': 'Did you know?',
     'global.allCount': 'All: {count}',
     'global.arch': 'Arch',
     'global.architecture': 'Architecture',
@@ -133,6 +137,7 @@ export const messages = {
     'global.inconclusiveCount': 'Inconclusive: {count}',
     'global.info': 'Info',
     'global.issues': 'Issues',
+    'global.kcidev': 'kci-dev',
     'global.last': 'Last',
     'global.legend': 'Legend',
     'global.loading': 'Loading...',
