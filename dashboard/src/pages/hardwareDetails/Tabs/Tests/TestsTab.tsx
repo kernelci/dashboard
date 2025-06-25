@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback, type JSX } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
@@ -34,6 +34,8 @@ import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 
 import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
 
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+
 import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
 interface ITestsTab {
@@ -49,7 +51,7 @@ const TestsTab = ({
   testsSummary,
   fullDataResult,
 }: ITestsTab): JSX.Element => {
-  const { tableFilter, diffFilter } = useSearch({
+  const { tableFilter, diffFilter, origin } = useSearch({
     from: '/_main/hardware/$hardwareId',
   });
 
@@ -115,8 +117,23 @@ const TestsTab = ({
     [navigate],
   );
 
+  const kcidevComponent = useMemo(
+    () => (
+      <MemoizedKcidevFooter
+        commandGroup="hardwareDetails"
+        args={{
+          cmdName: 'hardware tests',
+          name: hardwareId,
+          origin: origin,
+          json: true,
+        }}
+      />
+    ),
+    [hardwareId, origin],
+  );
+
   return (
-    <div className="flex flex-col gap-8 pt-4">
+    <div className="flex flex-col gap-8 pt-4 pb-10">
       <DesktopGrid>
         <div>
           <MemoizedStatusCard
@@ -198,6 +215,7 @@ const TestsTab = ({
           currentPathFilter={currentPathFilter}
         />
       </HardwareDetailsTabsQuerySwitcher>
+      {kcidevComponent}
     </div>
   );
 };

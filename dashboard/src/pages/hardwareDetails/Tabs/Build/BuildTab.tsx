@@ -32,6 +32,8 @@ import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/H
 
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
 interface IBuildTab {
@@ -51,7 +53,7 @@ const BuildTab = ({
     from: '/hardware/$hardwareId',
   });
 
-  const { diffFilter } = useSearch({
+  const { diffFilter, origin } = useSearch({
     from: '/_main/hardware/$hardwareId',
   });
 
@@ -87,8 +89,23 @@ const BuildTab = ({
     [buildsSummary.configs],
   );
 
+  const kcidevComponent = useMemo(
+    () => (
+      <MemoizedKcidevFooter
+        commandGroup="hardwareDetails"
+        args={{
+          cmdName: 'hardware builds',
+          name: hardwareId,
+          origin: origin,
+          json: true,
+        }}
+      />
+    ),
+    [hardwareId, origin],
+  );
+
   return (
-    <div className="flex flex-col gap-8 pt-4">
+    <div className="flex flex-col gap-8 pt-4 pb-10">
       <DesktopGrid>
         <div>
           <MemoizedStatusCard
@@ -168,6 +185,7 @@ const BuildTab = ({
             hardwareId={hardwareId}
           />
         </HardwareDetailsTabsQuerySwitcher>
+        {kcidevComponent}
       </div>
     </div>
   );

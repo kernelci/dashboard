@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useCallback, type JSX } from 'react';
+import { useCallback, useMemo, type JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 
@@ -35,6 +35,8 @@ import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+
 import { HardwareDetailsBootsTable } from './HardwareDetailsBootsTable';
 
 interface IBootsTab {
@@ -50,7 +52,7 @@ const BootsTab = ({
   bootsSummary,
   fullDataResult,
 }: IBootsTab): JSX.Element => {
-  const { tableFilter, diffFilter } = useSearch({
+  const { tableFilter, diffFilter, origin } = useSearch({
     from: '/_main/hardware/$hardwareId',
   });
 
@@ -130,8 +132,23 @@ const BootsTab = ({
     [navigate],
   );
 
+  const kcidevComponent = useMemo(
+    () => (
+      <MemoizedKcidevFooter
+        commandGroup="hardwareDetails"
+        args={{
+          cmdName: 'hardware boots',
+          name: hardwareId,
+          origin: origin,
+          json: true,
+        }}
+      />
+    ),
+    [hardwareId, origin],
+  );
+
   return (
-    <div className="flex flex-col gap-8 pt-4">
+    <div className="flex flex-col gap-8 pt-4 pb-10">
       <DesktopGrid>
         <div>
           <MemoizedStatusCard
@@ -213,6 +230,7 @@ const BootsTab = ({
           currentPathFilter={currentPathFilter}
         />
       </HardwareDetailsTabsQuerySwitcher>
+      {kcidevComponent}
     </div>
   );
 };

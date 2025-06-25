@@ -22,6 +22,8 @@ import {
   includesInAnStringOrStringArray,
 } from '@/lib/string';
 
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+
 import { HardwareTable } from './HardwareTable';
 
 interface HardwareListingPageProps {
@@ -68,6 +70,7 @@ const HardwareListingPage = ({
 }: HardwareListingPageProps): JSX.Element => {
   const { startTimestampInSeconds, endTimestampInSeconds } =
     useHardwareListingTime();
+  const { origin } = useSearch({ from: '/_main/hardware' });
 
   const { data, error, status, isLoading } = useHardwareListing(
     startTimestampInSeconds,
@@ -130,6 +133,16 @@ const HardwareListingPage = ({
       .sort((a, b) => a.platform.localeCompare(b.platform));
   }, [data, error, inputFilter]);
 
+  const kcidevComponent = useMemo(
+    () => (
+      <MemoizedKcidevFooter
+        commandGroup="hardwareListing"
+        args={{ cmdName: 'hardware list', origin: origin, json: true }}
+      />
+    ),
+    [origin],
+  );
+
   return (
     <QuerySwitcher
       status={status}
@@ -150,6 +163,7 @@ const HardwareListingPage = ({
           startTimestampInSeconds={startTimestampInSeconds}
         />
       </div>
+      {kcidevComponent}
     </QuerySwitcher>
   );
 };
