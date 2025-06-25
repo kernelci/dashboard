@@ -22,6 +22,8 @@ import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+
 import IssueListingFilter from './IssueListingFilter';
 
 interface IIssueListingPage {
@@ -96,6 +98,7 @@ export const IssueListingPage = ({
           </div>
         </div>
         <IssueTable issueListing={filteredData} />
+        <MemoizedKcidevFooter commandGroup="issue" />
       </div>
     </QuerySwitcher>
   );

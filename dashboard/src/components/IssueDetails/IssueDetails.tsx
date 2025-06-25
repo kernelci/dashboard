@@ -48,6 +48,8 @@ import { TooltipIcon } from '@/components/Icons/TooltipIcon';
 
 import { Badge } from '@/components/ui/badge';
 
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 
 import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
@@ -252,25 +254,26 @@ export const IssueDetails = ({
       >
         <ErrorBoundary FallbackComponent={UnexpectedError}>
           <Sheet>
-            {breadcrumb}
-            <SectionGroup sections={sectionsData} />
-
-            <IssueDetailsTestSection
-              issueId={issueId}
-              versionNumber={versionNumber}
-              testTableFilter={tableFilter.testsTable}
-              getTableRowLink={getTestTableRowLink}
-              onClickFilter={onClickTestFilter}
-            />
-
-            <IssueDetailsBuildSection
-              issueId={issueId}
-              versionNumber={versionNumber}
-              buildTableFilter={tableFilter.buildsTable}
-              getTableRowLink={getBuildTableRowLink}
-              onClickFilter={onClickBuildFilter}
-            />
-            <LogOrJsonSheetContent type="json" jsonContent={jsonContent} />
+            <div className="pb-10">
+              {breadcrumb}
+              <SectionGroup sections={sectionsData} />
+              <IssueDetailsTestSection
+                issueId={issueId}
+                versionNumber={versionNumber}
+                testTableFilter={tableFilter.testsTable}
+                getTableRowLink={getTestTableRowLink}
+                onClickFilter={onClickTestFilter}
+              />
+              <IssueDetailsBuildSection
+                issueId={issueId}
+                versionNumber={versionNumber}
+                buildTableFilter={tableFilter.buildsTable}
+                getTableRowLink={getBuildTableRowLink}
+                onClickFilter={onClickBuildFilter}
+              />
+              <LogOrJsonSheetContent type="json" jsonContent={jsonContent} />
+              <MemoizedKcidevFooter commandGroup="issue" />
+            </div>
           </Sheet>
         </ErrorBoundary>
       </QuerySwitcher>
