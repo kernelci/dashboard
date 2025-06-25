@@ -35,6 +35,7 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
 interface TestsTabProps {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
@@ -189,8 +190,27 @@ const TestsTab = ({
 
   const { formatMessage } = useIntl();
 
+  const kcidevComponent = useMemo(
+    () => (
+      <MemoizedKcidevFooter
+        commandGroup="treeDetails"
+        args={{
+          cmdName: 'tests',
+          'git-url': sanitizedTreeInfo.gitUrl,
+          branch: sanitizedTreeInfo.gitBranch,
+          commit: sanitizedTreeInfo.hash,
+        }}
+      />
+    ),
+    [
+      sanitizedTreeInfo.gitBranch,
+      sanitizedTreeInfo.gitUrl,
+      sanitizedTreeInfo.hash,
+    ],
+  );
+
   return (
-    <div>
+    <div className="pb-10">
       <QuerySwitcher
         data={nonEmptyData}
         status={summaryStatus}
@@ -319,6 +339,7 @@ const TestsTab = ({
               currentPathFilter={currentPathFilter}
             />
           </QuerySwitcher>
+          {kcidevComponent}
         </div>
       </QuerySwitcher>
       {isEmptySummary && (

@@ -16,6 +16,8 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { matchesRegexOrIncludes } from '@/lib/string';
 
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+
 import { TreeTable } from './TreeTable';
 
 interface ITreeListingPage {
@@ -99,6 +101,13 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
       });
   }, [data, fastData, inputFilter, isLoading, fastStatus]);
 
+  const kcidevComponent = useMemo(
+    () => (
+      <MemoizedKcidevFooter commandGroup="trees" args={{ cmdName: 'trees' }} />
+    ),
+    [],
+  );
+
   if (error) {
     return <div>Error: {error.message}</div>;
   }
@@ -119,6 +128,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
       <div className="flex flex-col gap-6">
         <TreeTable treeTableRows={listItems} />
       </div>
+      {kcidevComponent}
     </QuerySwitcher>
   );
 };

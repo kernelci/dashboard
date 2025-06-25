@@ -51,6 +51,7 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
@@ -169,8 +170,27 @@ const BuildTab = ({
 
   const { formatMessage } = useIntl();
 
+  const kcidevComponent = useMemo(
+    () => (
+      <MemoizedKcidevFooter
+        commandGroup="treeDetails"
+        args={{
+          cmdName: 'builds',
+          'git-url': sanitizedTreeInfo.gitUrl,
+          branch: sanitizedTreeInfo.gitBranch,
+          commit: sanitizedTreeInfo.hash,
+        }}
+      />
+    ),
+    [
+      sanitizedTreeInfo.gitBranch,
+      sanitizedTreeInfo.gitUrl,
+      sanitizedTreeInfo.hash,
+    ],
+  );
+
   return (
-    <div>
+    <div className="pb-10">
       <QuerySwitcher
         data={summaryData}
         status={summaryStatus}
@@ -299,6 +319,7 @@ const BuildTab = ({
               />
             </div>
           </QuerySwitcher>
+          {kcidevComponent}
         </div>
       </QuerySwitcher>
       {isEmptySummary && (
