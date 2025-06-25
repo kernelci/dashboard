@@ -27,7 +27,6 @@ import {
   sanitizeConfigs,
   sanitizeBuildsSummary,
   sanitizeBuilds,
-  getStringParam,
 } from '@/utils/utils';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
@@ -51,6 +50,7 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
+import { sanitizeTreeinfo } from '@/utils/treeDetails';
 
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
@@ -73,18 +73,25 @@ const BuildTab = ({
   treeDetailsLazyLoaded,
   urlFrom,
 }: BuildTab): JSX.Element => {
-  const navigate = useNavigate({
-    from: treeDetailsFromMap[urlFrom],
-  });
-
-  const { diffFilter } = useSearch({
+  const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
+  const params = useParams({ from: urlFrom });
+  const { diffFilter, treeInfo } = useSearch({
     from: urlFrom,
   });
 
-  const params = useParams({ from: urlFrom });
-  const treeId =
-    getStringParam(params, 'treeId') || getStringParam(params, 'hash');
-  const treeName = getStringParam(params, 'treeName');
+  const sanitizedTreeInfo = useMemo(() => {
+    return sanitizeTreeinfo({
+      params,
+      treeInfo,
+      urlFrom,
+      summaryUrl: treeDetailsLazyLoaded.summary.data?.common.tree_url,
+    });
+  }, [
+    params,
+    treeDetailsLazyLoaded.summary.data?.common.tree_url,
+    treeInfo,
+    urlFrom,
+  ]);
 
   const {
     data: summaryData,
@@ -200,7 +207,7 @@ const BuildTab = ({
             <div>
               <TreeCommitNavigationGraph
                 urlFrom={urlFrom}
-                treeName={treeName}
+                treeName={sanitizedTreeInfo.treeName}
               />
               <MemoizedConfigsCard
                 configs={treeDetailsData.configs}
@@ -216,7 +223,7 @@ const BuildTab = ({
               }
               diffFilter={diffFilter}
               issueFilterSection="buildIssue"
-              detailsId={treeId}
+              detailsId={sanitizedTreeInfo.hash}
               pageFrom={RedirectFrom.Tree}
               issueExtraDetails={
                 treeDetailsLazyLoaded.issuesExtras.data?.issues
@@ -225,7 +232,10 @@ const BuildTab = ({
             />
           </DesktopGrid>
           <MobileGrid>
-            <TreeCommitNavigationGraph urlFrom={urlFrom} treeName={treeName} />
+            <TreeCommitNavigationGraph
+              urlFrom={urlFrom}
+              treeName={sanitizedTreeInfo.treeName}
+            />
             <MemoizedStatusCard
               title={<FormattedMessage id="buildTab.buildStatus" />}
               toggleFilterBySection={toggleFilterBySection}
@@ -259,7 +269,7 @@ const BuildTab = ({
               }
               diffFilter={diffFilter}
               issueFilterSection="buildIssue"
-              detailsId={treeId}
+              detailsId={sanitizedTreeInfo.hash}
               pageFrom={RedirectFrom.Tree}
               issueExtraDetails={
                 treeDetailsLazyLoaded.issuesExtras.data?.issues
@@ -303,7 +313,10 @@ const BuildTab = ({
               />
             </div>
           )}
-          <TreeCommitNavigationGraph urlFrom={urlFrom} treeName={treeName} />
+          <TreeCommitNavigationGraph
+            urlFrom={urlFrom}
+            treeName={sanitizedTreeInfo.treeName}
+          />
         </div>
       )}
     </div>

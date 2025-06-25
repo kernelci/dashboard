@@ -34,7 +34,7 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
-import { getStringParam } from '@/utils/utils';
+import { sanitizeTreeinfo } from '@/utils/treeDetails';
 
 interface TestsTabProps {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
@@ -45,10 +45,25 @@ const TestsTab = ({
   treeDetailsLazyLoaded,
   urlFrom,
 }: TestsTabProps): JSX.Element => {
+  const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
   const params = useParams({ from: urlFrom });
-  const treeId =
-    getStringParam(params, 'treeId') || getStringParam(params, 'hash');
-  const treeName = getStringParam(params, 'treeName');
+  const { tableFilter, diffFilter, treeInfo } = useSearch({
+    from: urlFrom,
+  });
+
+  const sanitizedTreeInfo = useMemo(() => {
+    return sanitizeTreeinfo({
+      params,
+      treeInfo,
+      urlFrom,
+      summaryUrl: treeDetailsLazyLoaded.summary.data?.common.tree_url,
+    });
+  }, [
+    params,
+    treeDetailsLazyLoaded.summary.data?.common.tree_url,
+    treeInfo,
+    urlFrom,
+  ]);
 
   const {
     data: summaryData,
@@ -72,15 +87,9 @@ const TestsTab = ({
 
   const fullTestsData = useMemo(() => fullData?.tests, [fullData?.tests]);
 
-  const { tableFilter, diffFilter } = useSearch({
-    from: urlFrom,
-  });
-
   const currentPathFilter = diffFilter.testPath
     ? Object.keys(diffFilter.testPath)[0]
     : undefined;
-
-  const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
 
   const updatePathFilter = useCallback(
     (pathFilter: string) => {
@@ -103,14 +112,14 @@ const TestsTab = ({
         to: '/tree/$treeId/test/$testId',
         params: {
           testId: bootId,
-          treeId: treeId,
+          treeId: sanitizedTreeInfo.hash,
         },
         search: s => ({
           origin: s.origin,
         }),
       };
     },
-    [treeId],
+    [sanitizedTreeInfo.hash],
   );
 
   const onClickFilter = useCallback(
@@ -218,7 +227,7 @@ const TestsTab = ({
             <div>
               <TreeCommitNavigationGraph
                 urlFrom={urlFrom}
-                treeName={treeName}
+                treeName={sanitizedTreeInfo.treeName}
               />
               <MemoizedHardwareTested
                 title={<FormattedMessage id="testsTab.hardwareTested" />}
@@ -237,7 +246,7 @@ const TestsTab = ({
               failedWithUnknownIssues={summaryTestsData?.unknown_issues}
               diffFilter={diffFilter}
               issueFilterSection="testIssue"
-              detailsId={treeId}
+              detailsId={sanitizedTreeInfo.hash}
               pageFrom={RedirectFrom.Tree}
               issueExtraDetails={
                 treeDetailsLazyLoaded.issuesExtras.data?.issues
@@ -252,7 +261,10 @@ const TestsTab = ({
               toggleFilterBySection={toggleFilterBySection}
               filterStatusKey="testStatus"
             />
-            <TreeCommitNavigationGraph urlFrom={urlFrom} treeName={treeName} />
+            <TreeCommitNavigationGraph
+              urlFrom={urlFrom}
+              treeName={sanitizedTreeInfo.treeName}
+            />
             <InnerMobileGrid>
               <div>
                 <MemoizedConfigList
@@ -284,7 +296,7 @@ const TestsTab = ({
                 failedWithUnknownIssues={summaryTestsData?.unknown_issues}
                 diffFilter={diffFilter}
                 issueFilterSection="testIssue"
-                detailsId={treeId}
+                detailsId={sanitizedTreeInfo.hash}
                 pageFrom={RedirectFrom.Tree}
                 issueExtraDetails={
                   treeDetailsLazyLoaded.issuesExtras.data?.issues
@@ -321,7 +333,10 @@ const TestsTab = ({
               />
             </div>
           )}
-          <TreeCommitNavigationGraph urlFrom={urlFrom} treeName={treeName} />
+          <TreeCommitNavigationGraph
+            urlFrom={urlFrom}
+            treeName={sanitizedTreeInfo.treeName}
+          />
         </div>
       )}
     </div>

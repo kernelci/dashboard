@@ -19,7 +19,7 @@ const TreeCommitNavigationGraph = ({
   treeName,
 }: {
   urlFrom: TreeDetailsRouteFrom;
-  treeName: string;
+  treeName?: string;
 }): React.ReactNode => {
   const { origin, currentPageTab, diffFilter, treeInfo } = useSearch({
     from: urlFrom,
