@@ -169,6 +169,7 @@ export const messages = {
     'global.trees': 'Trees',
     'global.underDevelopment': 'Under Development',
     'global.unknown': 'Unknown',
+    'global.unknownArchitecture': 'Unknown architecture',
     'global.url': 'URL',
     'global.viewJson': 'View Json',
     'global.viewLog': 'View Log Excerpt',

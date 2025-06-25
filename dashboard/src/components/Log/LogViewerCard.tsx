@@ -47,6 +47,10 @@ export const LogViewerCard = ({
     logData?.hardware,
     formatMessage({ id: 'global.unknown' }),
   );
+  const architecture = valueOrEmpty(
+    logData?.architecture,
+    formatMessage({ id: 'global.unknownArchitecture' }),
+  );
 
   const fileName = useMemo(() => {
     try {
@@ -60,7 +64,7 @@ export const LogViewerCard = ({
   const linkComponent = useMemo(() => {
     if (logUrl) {
       return (
-        <>
+        <div className="mt-3">
           <Link
             to="/log-viewer"
             className="text-blue flex items-center gap-1 underline transition hover:brightness-125"
@@ -80,12 +84,20 @@ export const LogViewerCard = ({
               <SearchIcon className="text-blue w-full" />
             </div>
           </Link>
-        </>
+        </div>
       );
     } else {
-      return <FormattedMessage id="logSheet.noLogFound" />;
+      return (
+        <div className="mt-3">
+          <FormattedMessage id="logSheet.noLogFound" />
+        </div>
+      );
     }
   }, [logUrl, itemId, itemType, fileName]);
+
+  const hardwareLabel = useMemo(() => {
+    return `${hardware} (${architecture})`;
+  }, [hardware, architecture]);
 
   return (
     <div className="gap-0">
@@ -95,21 +107,23 @@ export const LogViewerCard = ({
         ) : (
           <>
             <div>
-              <span className="font-medium">
+              <div className="font-medium">
                 {getTreeBranchHash(
                   logData?.tree_name,
                   logData?.git_repository_branch,
                   logData?.git_commit_hash,
                 )}
-              </span>
-              <div className="mb-3 text-sm">
-                <FormattedMessage
-                  id="title.hardwareDetails"
-                  values={{
-                    hardwareName: `${hardware} (${logData?.architecture})`,
-                  }}
-                />
               </div>
+              {logData?.type !== 'build' && (
+                <div className="mb-3 text-sm">
+                  <FormattedMessage
+                    id="title.hardwareDetails"
+                    values={{
+                      hardwareName: hardwareLabel,
+                    }}
+                  />
+                </div>
+              )}
               {variant === 'modal' && linkComponent}
             </div>
             <Tooltip>
