@@ -69,6 +69,10 @@ import { processLogData } from '@/hooks/useLogData';
 import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
 import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+
+import { isBoot } from '@/utils/test';
+
 import { StatusHistoryItem } from './StatusHistoryItem';
 
 const TestDetailsSections = ({
@@ -572,6 +576,22 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
     );
   }, [data?.path, formatMessage, isLoading]);
 
+  const kcidevComponent = useMemo(() => {
+    const command = isBoot(data?.path) ? 'boot' : 'test';
+
+    return (
+      <MemoizedKcidevFooter
+        commandGroup={'details'}
+        args={{
+          cmdName: command,
+          id: testId,
+          'download-logs': true,
+          json: true,
+        }}
+      />
+    );
+  }, [data?.path, testId]);
+
   return (
     <PageWithTitle title={testDetailsTabTitle}>
       <MemoizedTestDetailsOGTags title={testDetailsTabTitle} data={data} />
@@ -605,6 +625,7 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
               status={issueStatus}
               error={issueError?.message}
             />
+            {kcidevComponent}
           </div>
           <LogOrJsonSheetContent
             type={sheetType}

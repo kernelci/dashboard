@@ -51,6 +51,8 @@ import MemoizedLinkItem from '@/components/DetailsLink';
 import { LinkIcon } from '@/components/Icons/Link';
 import { processLogData } from '@/hooks/useLogData';
 
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
 interface BuildDetailsProps {
@@ -271,6 +273,21 @@ const BuildDetails = ({
     );
   }, [data?.git_commit_name, data?.tree_name, formatMessage, isLoading]);
 
+  const kcidevComponent = useMemo(
+    () => (
+      <MemoizedKcidevFooter
+        commandGroup="details"
+        args={{
+          cmdName: 'build',
+          id: buildId,
+          'download-logs': true,
+          json: true,
+        }}
+      />
+    ),
+    [buildId],
+  );
+
   return (
     <PageWithTitle title={buildDetailsTabTitle}>
       <MemoizedBuildDetailsOGTags
@@ -309,6 +326,7 @@ const BuildDetails = ({
                 />
               )}
               {filesSection && <SectionGroup sections={[filesSection]} />}
+              {kcidevComponent}
             </div>
             <LogOrJsonSheetContent
               type={sheetType}
