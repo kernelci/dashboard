@@ -4,6 +4,7 @@ from typing import Annotated, Optional, Union
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.constants.localization import DocStrings
 
 
 class HardwareItem(BaseModel):
@@ -24,10 +25,17 @@ class HardwareListingResponse(BaseModel):
 class HardwareQueryParamsDocumentationOnly(BaseModel):
     origin: Annotated[
         str,
-        Field(default=DEFAULT_ORIGIN),
+        Field(
+            default=DEFAULT_ORIGIN,
+            description=DocStrings.HARDWARE_LISTING_ORIGIN_DESCRIPTION,
+        ),
     ]
-    startTimestampInSeconds: str  # noqa: N815
-    endTimestampInSeconds: str  # noqa: N815
+    startTimestampInSeconds: str = Field(  # noqa: N815
+        description=DocStrings.DEFAULT_START_TS_DESCRIPTION
+    )
+    endTimestampInSeconds: str = Field(  # noqa: N815
+        description=DocStrings.DEFAULT_END_TS_DESCRIPTION
+    )
 
 
 class HardwareQueryParams(BaseModel):

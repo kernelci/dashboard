@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import Optional
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.issues import get_issue_details, get_latest_issue_version
+from kernelCI_app.typeModels.commonOpenApiParameters import ISSUE_ID_PATH_PARAM
 from kernelCI_app.typeModels.issueDetails import (
     IssueDetailsPathParameters,
     IssueDetailsQueryParameters,
@@ -19,7 +20,10 @@ class IssueDetails(APIView):
         self.processed_issue_extras = {}
 
     @extend_schema(
-        parameters=[IssueDetailsQueryParameters],
+        parameters=[
+            ISSUE_ID_PATH_PARAM,
+            IssueDetailsQueryParameters,
+        ],
         responses=IssueDetailsResponse,
         methods=["GET"],
     )

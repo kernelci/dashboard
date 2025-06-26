@@ -2,8 +2,10 @@ from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, RootModel
 
+from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.treeListing import TestStatusCount
+from pydantic import Field
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
     Checkout__GitCommitName,
@@ -12,11 +14,19 @@ from kernelCI_app.typeModels.databases import (
 
 
 class TreeCommitsQueryParameters(BaseModel):
-    origin: str
-    git_url: Optional[str] = None
-    git_branch: Optional[str] = None
-    start_time_stamp_in_seconds: Optional[str] = None
-    end_time_stamp_in_seconds: Optional[str] = None
+    origin: str = Field(description=DocStrings.TREE_COMMIT_ORIGIN_DESCRIPTION)
+    git_url: Optional[str] = Field(
+        None, description=DocStrings.TREE_COMMIT_GIT_URL_DESCRIPTION
+    )
+    git_branch: Optional[str] = Field(
+        None, description=DocStrings.TREE_COMMIT_GIT_BRANCH_DESCRIPTION
+    )
+    start_time_stamp_in_seconds: Optional[str] = Field(
+        None, description=DocStrings.TREE_COMMIT_START_TS_DESCRIPTION
+    )
+    end_time_stamp_in_seconds: Optional[str] = Field(
+        None, description=DocStrings.TREE_COMMIT_END_TS_DESCRIPTION
+    )
     # TODO: Add filters field in this model
 
 

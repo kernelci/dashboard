@@ -1,5 +1,7 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from kernelCI_app.constants.localization import DocStrings
 
 
 class LogData(BaseModel):
@@ -10,7 +12,7 @@ class LogData(BaseModel):
 
 
 class LogDownloaderQueryParameters(BaseModel):
-    log_download_url: str
+    log_download_url: str = Field(description=DocStrings.LOG_DOWNLOADER_URL_DESCRIPTION)
 
 
 class LogDownloaderResponse(BaseModel):

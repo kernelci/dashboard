@@ -8,10 +8,14 @@ from kernelCI_app.helpers.errorHandling import create_api_error_response
 from http import HTTPStatus
 from kernelCI_app.queries.issues import get_build_issues
 from kernelCI_app.typeModels.detailsIssuesView import DetailsIssuesResponse
+from kernelCI_app.typeModels.commonOpenApiParameters import BUILD_ID_PATH_PARAM
 
 
 class BuildIssuesView(APIView):
-    @extend_schema(responses=DetailsIssuesResponse)
+    @extend_schema(
+        parameters=[BUILD_ID_PATH_PARAM],
+        responses=DetailsIssuesResponse,
+    )
     def get(
         self,
         _request,

@@ -18,6 +18,9 @@ from kernelCI_app.queries.hardware import (
     get_hardware_details_data,
     get_hardware_trees_data,
 )
+from kernelCI_app.typeModels.commonOpenApiParameters import (
+    HARDWARE_ID_PATH_PARAM,
+)
 from kernelCI_app.typeModels.hardwareDetails import (
     HardwareDetailsPostBody,
     HardwareTestHistoryItem,
@@ -99,6 +102,7 @@ class HardwareDetailsTests(APIView):
 
     # Using post to receive a body request
     @extend_schema(
+        parameters=[HARDWARE_ID_PATH_PARAM],
         responses=HardwareDetailsTestsResponse,
         request=HardwareDetailsPostBody,
         methods=["POST"],

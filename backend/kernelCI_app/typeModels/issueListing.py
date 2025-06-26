@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from kernelCI_app.typeModels.commonListing import ListingQueryParameters
+from pydantic import BaseModel, Field
+from kernelCI_app.constants.localization import DocStrings
 
+from kernelCI_app.typeModels.commonListing import ListingInterval
 from kernelCI_app.typeModels.databases import (
     Issue__Categories,
     Issue__Comment,
@@ -15,10 +16,11 @@ from kernelCI_app.typeModels.databases import (
 from kernelCI_app.typeModels.issues import FirstIncident
 
 
-class IssueListingQueryParameters(ListingQueryParameters):
-    culprit_code: bool | None = False
-    culprit_harness: bool | None = False
-    culprit_tool: bool | None = False
+class IssueListingQueryParameters(ListingInterval):
+    filter: dict[str, str] = Field(
+        None,
+        description=DocStrings.DEFAULT_FILTER_DESCRIPTION,
+    )
 
 
 class IssueListingItem(BaseModel):

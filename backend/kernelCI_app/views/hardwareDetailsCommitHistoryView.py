@@ -7,6 +7,9 @@ from datetime import datetime, timezone
 from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import make_tree_identifier_key
 from kernelCI_app.queries.hardware import get_hardware_commit_history
+from kernelCI_app.typeModels.commonOpenApiParameters import (
+    HARDWARE_ID_PATH_PARAM,
+)
 from kernelCI_app.typeModels.hardwareDetails import (
     CommitHistoryPostBody,
     CommitHistoryValidCheckout,
@@ -58,6 +61,7 @@ class HardwareDetailsCommitHistoryView(APIView):
 
     # Using post to receive a body request
     @extend_schema(
+        parameters=[HARDWARE_ID_PATH_PARAM],
         responses=HardwareCommitHistoryResponse,
         request=CommitHistoryPostBody,
         methods=["POST"],

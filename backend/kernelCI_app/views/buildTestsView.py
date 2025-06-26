@@ -7,13 +7,17 @@ from kernelCI_app.queries.build import get_build_tests
 from kernelCI_app.typeModels.buildDetails import BuildTestsResponse
 from drf_spectacular.utils import extend_schema
 from kernelCI_app.typeModels.databases import FAIL_STATUS
+from kernelCI_app.typeModels.commonOpenApiParameters import BUILD_ID_PATH_PARAM
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
 
 
 class BuildTests(APIView):
-    @extend_schema(responses=BuildTestsResponse)
+    @extend_schema(
+        parameters=[BUILD_ID_PATH_PARAM],
+        responses=BuildTestsResponse,
+    )
     def get(self, request, build_id: str) -> Response:
         result = get_build_tests(build_id)
 

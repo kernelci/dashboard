@@ -6,10 +6,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
 from kernelCI_app.queries.build import get_build_details
+from kernelCI_app.typeModels.commonOpenApiParameters import BUILD_ID_PATH_PARAM
 
 
 class BuildDetails(APIView):
-    @extend_schema(responses=BuildDetailsResponse)
+    @extend_schema(
+        parameters=[BUILD_ID_PATH_PARAM],
+        responses=BuildDetailsResponse,
+    )
     def get(self, request, build_id: str) -> Response:
         records = get_build_details(build_id)
 

@@ -12,6 +12,7 @@ paths:
         name: build_id
         schema:
           type: string
+        description: ID of the build
         required: true
       tags:
       - build
@@ -34,6 +35,7 @@ paths:
         name: build_id
         schema:
           type: string
+        description: ID of the build
         required: true
       tags:
       - build
@@ -56,6 +58,7 @@ paths:
         name: build_id
         schema:
           type: string
+        description: ID of the build
         required: true
       tags:
       - build
@@ -79,6 +82,7 @@ paths:
         schema:
           title: Endtimestampinseconds
           type: string
+        description: Interval end timestamp in seconds for the results
         required: true
       - in: query
         name: origin
@@ -86,11 +90,13 @@ paths:
           default: maestro
           title: Origin
           type: string
+        description: Origin of the hardware
       - in: query
         name: startTimestampInSeconds
         schema:
           title: Starttimestampinseconds
           type: string
+        description: Interval start timestamp in seconds for the results
         required: true
       tags:
       - hardware
@@ -113,6 +119,7 @@ paths:
         name: hardware_id
         schema:
           type: string
+        description: ID of the hardware, as the name of the platform/compatible
         required: true
       tags:
       - hardware
@@ -147,6 +154,7 @@ paths:
         name: hardware_id
         schema:
           type: string
+        description: ID of the hardware, as the name of the platform/compatible
         required: true
       tags:
       - hardware
@@ -181,6 +189,7 @@ paths:
         name: hardware_id
         schema:
           type: string
+        description: ID of the hardware, as the name of the platform/compatible
         required: true
       tags:
       - hardware
@@ -215,6 +224,7 @@ paths:
         name: hardware_id
         schema:
           type: string
+        description: ID of the hardware, as the name of the platform/compatible
         required: true
       tags:
       - hardware
@@ -249,6 +259,7 @@ paths:
         name: hardware_id
         schema:
           type: string
+        description: ID of the hardware, as the name of the platform/compatible
         required: true
       tags:
       - hardware
@@ -283,6 +294,7 @@ paths:
         name: hardware_id
         schema:
           type: string
+        description: ID of the hardware, as the name of the platform/compatible
         required: true
       tags:
       - hardware
@@ -314,29 +326,14 @@ paths:
       operationId: issue_retrieve
       parameters:
       - in: query
-        name: culprit_code
+        name: filter
         schema:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          default: false
-          title: Culprit Code
-      - in: query
-        name: culprit_harness
-        schema:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          default: false
-          title: Culprit Harness
-      - in: query
-        name: culprit_tool
-        schema:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          default: false
-          title: Culprit Tool
+          additionalProperties:
+            type: string
+          default: null
+          title: Filter
+          type: object
+        description: Optional filter dictionary for additional query parameters
       - in: query
         name: interval_in_days
         schema:
@@ -344,12 +341,7 @@ paths:
           exclusiveMinimum: 0
           title: Interval In Days
           type: integer
-      - in: query
-        name: origin
-        schema:
-          default: maestro
-          title: Origin
-          type: string
+        description: Interval in days for the listing
       tags:
       - issue
       security:
@@ -371,6 +363,7 @@ paths:
         name: issue_id
         schema:
           type: string
+        description: ID of the issue
         required: true
       - in: query
         name: version
@@ -380,6 +373,7 @@ paths:
           - type: 'null'
           default: null
           title: Version
+        description: Issue version
       tags:
       - issue
       security:
@@ -401,6 +395,7 @@ paths:
         name: issue_id
         schema:
           type: string
+        description: ID of the issue
         required: true
       - in: query
         name: version
@@ -410,6 +405,7 @@ paths:
           - type: 'null'
           default: null
           title: Version
+        description: Issue version
       tags:
       - issue
       security:
@@ -431,6 +427,7 @@ paths:
         name: issue_id
         schema:
           type: string
+        description: ID of the issue
         required: true
       - in: query
         name: version
@@ -440,6 +437,7 @@ paths:
           - type: 'null'
           default: null
           title: Version
+        description: Issue version
       tags:
       - issue
       security:
@@ -490,6 +488,7 @@ paths:
         schema:
           title: Log Download Url
           type: string
+        description: URL of the log to be downloaded
         required: true
       tags:
       - log-downloader
@@ -532,6 +531,13 @@ paths:
     get:
       operationId: proxy_retrieve
       description: Proxy endpoint to fetch from external sources and handle CORS issues
+      parameters:
+      - in: query
+        name: url
+        schema:
+          type: string
+        description: URL to the proxy
+        required: true
       tags:
       - proxy
       security:
@@ -700,6 +706,7 @@ paths:
         name: test_id
         schema:
           type: string
+        description: ID of the test
         required: true
       tags:
       - test
@@ -722,6 +729,7 @@ paths:
         name: test_id
         schema:
           type: string
+        description: ID of the test
         required: true
       tags:
       - test
@@ -739,6 +747,58 @@ paths:
   /api/test/status-history:
     get:
       operationId: test_status_history_retrieve
+      parameters:
+      - in: query
+        name: config_name
+        schema:
+          $ref: '#/components/schemas/Build__ConfigName'
+          default: null
+        description: Config name filter to retrieve tests
+      - in: query
+        name: current_test_start_time
+        schema:
+          $ref: '#/components/schemas/Test__StartTime'
+          default: null
+        description: Test start time filter to retrieve tests prior to it
+      - in: query
+        name: field_timestamp
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+          default: null
+        description: Test timestamp filter to retrieve tests prior to it
+      - in: query
+        name: git_repository_branch
+        schema:
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+          default: null
+        description: Git branch name to retrieve tests
+      - in: query
+        name: git_repository_url
+        schema:
+          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+          default: null
+        description: Git repository URL to retrieve tests
+      - in: query
+        name: origin
+        schema:
+          $ref: '#/components/schemas/Origin'
+        description: Origin filter to retrieve tests
+        required: true
+      - in: query
+        name: path
+        schema:
+          $ref: '#/components/schemas/Test__Path'
+          default: null
+        description: Test path filter
+      - in: query
+        name: platform
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platform
+        description: Platform filter to retrieve tests
       tags:
       - test
       security:
@@ -763,12 +823,14 @@ paths:
           exclusiveMinimum: 0
           title: Interval In Days
           type: integer
+        description: Interval in days for the listing
       - in: query
         name: origin
         schema:
           default: maestro
           title: Origin
           type: string
+        description: Origin filter
       tags:
       - tree
       security:
@@ -793,12 +855,14 @@ paths:
           exclusiveMinimum: 0
           title: Interval In Days
           type: integer
+        description: Interval in days for the listing
       - in: query
         name: origin
         schema:
           default: maestro
           title: Origin
           type: string
+        description: Origin filter
       tags:
       - tree-fast
       security:
@@ -820,24 +884,28 @@ paths:
         name: commit_hash
         schema:
           type: string
+        description: Commit hash of the tree
         required: true
       - in: query
         name: git_branch
         schema:
           title: Git Branch
           type: string
+        description: Git branch name of the tree
         required: true
       - in: query
         name: git_url
         schema:
           title: Git Url
           type: string
+        description: Git repository URL of the tree
         required: true
       - in: query
         name: origin
         schema:
           title: Origin
           type: string
+        description: Origin of the tree
         required: true
       tags:
       - tree
@@ -860,24 +928,28 @@ paths:
         name: commit_hash
         schema:
           type: string
+        description: Commit hash of the tree
         required: true
       - in: query
         name: git_branch
         schema:
           title: Git Branch
           type: string
+        description: Git branch name of the tree
         required: true
       - in: query
         name: git_url
         schema:
           title: Git Url
           type: string
+        description: Git repository URL of the tree
         required: true
       - in: query
         name: origin
         schema:
           title: Origin
           type: string
+        description: Origin of the tree
         required: true
       tags:
       - tree
@@ -909,6 +981,7 @@ paths:
           - type: 'null'
           default: null
           title: End Time Stamp In Seconds
+        description: End time filter in seconds for tree commits
       - in: query
         name: git_branch
         schema:
@@ -917,6 +990,7 @@ paths:
           - type: 'null'
           default: null
           title: Git Branch
+        description: Git branch name to retrieve the tree commits
       - in: query
         name: git_url
         schema:
@@ -925,11 +999,13 @@ paths:
           - type: 'null'
           default: null
           title: Git Url
+        description: Git repository URL to retrieve the tree commits
       - in: query
         name: origin
         schema:
           title: Origin
           type: string
+        description: Origin to retrieve the tree commits
         required: true
       - in: query
         name: start_time_stamp_in_seconds
@@ -939,6 +1015,7 @@ paths:
           - type: 'null'
           default: null
           title: Start Time Stamp In Seconds
+        description: Start time filter in seconds for tree commits
       tags:
       - tree
       security:
@@ -966,18 +1043,21 @@ paths:
         schema:
           title: Git Branch
           type: string
+        description: Git branch name of the tree
         required: true
       - in: query
         name: git_url
         schema:
           title: Git Url
           type: string
+        description: Git repository URL of the tree
         required: true
       - in: query
         name: origin
         schema:
           title: Origin
           type: string
+        description: Origin of the tree
         required: true
       tags:
       - tree
@@ -1006,18 +1086,21 @@ paths:
         schema:
           title: Git Branch
           type: string
+        description: Git branch name of the tree
         required: true
       - in: query
         name: git_url
         schema:
           title: Git Url
           type: string
+        description: Git repository URL of the tree
         required: true
       - in: query
         name: origin
         schema:
           title: Origin
           type: string
+        description: Origin of the tree
         required: true
       tags:
       - tree
@@ -1040,24 +1123,28 @@ paths:
         name: commit_hash
         schema:
           type: string
+        description: Commit hash of the tree
         required: true
       - in: query
         name: git_branch
         schema:
           title: Git Branch
           type: string
+        description: Git branch name of the tree
         required: true
       - in: query
         name: git_url
         schema:
           title: Git Url
           type: string
+        description: Git repository URL of the tree
         required: true
       - in: query
         name: origin
         schema:
           title: Origin
           type: string
+        description: Origin of the tree
         required: true
       tags:
       - tree
@@ -1087,6 +1174,7 @@ paths:
           default: maestro
           title: Origin
           type: string
+        description: Origin filter to retrieve tree information
       - in: path
         name: tree_name
         schema:
@@ -1125,6 +1213,7 @@ paths:
           default: maestro
           title: Origin
           type: string
+        description: Origin filter to retrieve tree information
       - in: path
         name: tree_name
         schema:
@@ -1160,6 +1249,7 @@ paths:
           - type: 'null'
           default: null
           title: End Time Stamp In Seconds
+        description: End time filter in seconds for tree commits
       - in: path
         name: git_branch
         schema:
@@ -1173,6 +1263,7 @@ paths:
           - type: 'null'
           default: null
           title: Git Branch
+        description: Git branch name to retrieve the tree commits
       - in: query
         name: git_url
         schema:
@@ -1181,11 +1272,13 @@ paths:
           - type: 'null'
           default: null
           title: Git Url
+        description: Git repository URL to retrieve the tree commits
       - in: query
         name: origin
         schema:
           title: Origin
           type: string
+        description: Origin to retrieve the tree commits
         required: true
       - in: query
         name: start_time_stamp_in_seconds
@@ -1195,6 +1288,7 @@ paths:
           - type: 'null'
           default: null
           title: Start Time Stamp In Seconds
+        description: Start time filter in seconds for tree commits
       - in: path
         name: tree_name
         schema:
@@ -1232,18 +1326,21 @@ paths:
         schema:
           title: Git Branch
           type: string
+        description: Git branch name of the tree
         required: true
       - in: query
         name: git_url
         schema:
           title: Git Url
           type: string
+        description: Git repository URL of the tree
         required: true
       - in: query
         name: origin
         schema:
           title: Origin
           type: string
+        description: Origin of the tree
         required: true
       - in: path
         name: tree_name
@@ -1282,18 +1379,21 @@ paths:
         schema:
           title: Git Branch
           type: string
+        description: Git branch name of the tree
         required: true
       - in: query
         name: git_url
         schema:
           title: Git Url
           type: string
+        description: Git repository URL of the tree
         required: true
       - in: query
         name: origin
         schema:
           title: Origin
           type: string
+        description: Origin of the tree
         required: true
       - in: path
         name: tree_name
@@ -2162,33 +2262,38 @@ components:
       properties:
         origin:
           default: maestro
+          description: Origin of the tests of the hardware
           title: Origin
           type: string
         startTimestampInSeconds:
           anyOf:
           - type: string
           - type: integer
+          description: Interval start timestamp in seconds for the results
           title: Starttimestampinseconds
         endTimestampInSeconds:
           anyOf:
           - type: string
           - type: integer
+          description: Interval end timestamp in seconds for the results
           title: Endtimestampinseconds
         selectedCommits:
           additionalProperties:
             type: string
+          description: Dictionary mapping tree names to selected commit hashes
           title: Selectedcommits
           type: object
         filter:
           anyOf:
           - type: object
           - type: 'null'
+          default: null
+          description: Optional filter dictionary for additional query parameters
           title: Filter
       required:
       - startTimestampInSeconds
       - endTimestampInSeconds
       - selectedCommits
-      - filter
       title: HardwareDetailsPostBody
       type: object
     HardwareDetailsSummaryResponse:
@@ -2489,6 +2594,7 @@ components:
     IssueExtraDetailsRequest:
       properties:
         issues:
+          description: List of issue ids
           items:
             maxItems: 2
             minItems: 2

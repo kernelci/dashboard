@@ -54,6 +54,7 @@ class TestStatusHistory(APIView):
         return history_task
 
     @extend_schema(
+        parameters=[TestStatusHistoryRequest],
         request=TestStatusHistoryRequest,
         responses=TestStatusHistoryResponse,
     )

@@ -4,6 +4,7 @@ from typing import Optional
 from django.http import HttpRequest
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.issues import get_issue_tests
+from kernelCI_app.typeModels.commonOpenApiParameters import ISSUE_ID_PATH_PARAM
 from kernelCI_app.typeModels.issueDetails import (
     IssueDetailsPathParameters,
     IssueDetailsQueryParameters,
@@ -17,7 +18,10 @@ from pydantic import ValidationError
 
 class IssueDetailsTests(APIView):
     @extend_schema(
-        parameters=[IssueDetailsQueryParameters],
+        parameters=[
+            ISSUE_ID_PATH_PARAM,
+            IssueDetailsQueryParameters,
+        ],
         responses=IssueTestsResponse,
         methods=["GET"],
     )

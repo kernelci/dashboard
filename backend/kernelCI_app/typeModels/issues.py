@@ -1,6 +1,7 @@
 from typing import Dict, List, Literal, Optional, Set, Tuple, Annotated
 from pydantic import BaseModel, Field
 
+from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.databases import (
     Timestamp,
@@ -44,7 +45,9 @@ class IssueWithExtraInfo(IssueKeys):
 
 
 class IssueExtraDetailsRequest(BaseModel):
-    issues: List[Tuple[str, int]]
+    issues: List[Tuple[str, int]] = Field(
+        description=DocStrings.ISSUE_EXTRA_ID_LIST_DESCRIPTION
+    )
 
 
 class FirstIncident(BaseModel):

@@ -3,6 +3,7 @@ from typing import Optional
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
+from kernelCI_app.typeModels.commonOpenApiParameters import ISSUE_ID_PATH_PARAM
 from kernelCI_app.typeModels.issueDetails import (
     IssueBuildsResponse,
     IssueDetailsPathParameters,
@@ -17,7 +18,10 @@ from pydantic import ValidationError
 
 class IssueDetailsBuilds(APIView):
     @extend_schema(
-        parameters=[IssueDetailsQueryParameters],
+        parameters=[
+            ISSUE_ID_PATH_PARAM,
+            IssueDetailsQueryParameters,
+        ],
         responses=IssueBuildsResponse,
         methods=["GET"],
     )

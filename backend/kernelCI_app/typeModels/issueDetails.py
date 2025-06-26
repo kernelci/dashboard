@@ -2,6 +2,7 @@ from typing import List, Optional
 from typing_extensions import Annotated
 from pydantic import BaseModel, BeforeValidator, RootModel, Field, field_validator
 from kernelCI_app.helpers.build import build_status_map
+from kernelCI_app.constants.localization import DocStrings
 
 from kernelCI_app.typeModels.databases import (
     Build__Id,
@@ -102,4 +103,6 @@ class IssueDetailsResponse(BaseModel):
 
 
 class IssueDetailsQueryParameters(BaseModel):
-    version: Optional[int] = None
+    version: Optional[int] = Field(
+        None, description=DocStrings.ISSUE_DETAILS_VERSION_DESCRIPTION
+    )

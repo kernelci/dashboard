@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from http import HTTPStatus
 from drf_spectacular.utils import extend_schema
 from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.typeModels.commonOpenApiParameters import URL_QUERY_PARAM
 
 # TIMEOUT to avoid people sending very large files through the proxy
 TIMEOUT_TIME_IN_SECONDS = 45
@@ -12,6 +13,7 @@ TIMEOUT_TIME_IN_SECONDS = 45
 
 class ProxyView(APIView):
     @extend_schema(
+        parameters=[URL_QUERY_PARAM],
         description="Proxy endpoint to fetch from external sources and handle CORS issues",
         responses={HTTPStatus.OK: bytes},
     )

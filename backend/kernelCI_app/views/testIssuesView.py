@@ -7,11 +7,15 @@ from kernelCI_app.helpers.detailsIssues import sanitize_details_issues_rows
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from http import HTTPStatus
 from kernelCI_app.queries.issues import get_test_issues
+from kernelCI_app.typeModels.commonOpenApiParameters import TEST_ID_PATH_PARAM
 from kernelCI_app.typeModels.detailsIssuesView import DetailsIssuesResponse
 
 
 class TestIssuesView(APIView):
-    @extend_schema(responses=DetailsIssuesResponse)
+    @extend_schema(
+        parameters=[TEST_ID_PATH_PARAM],
+        responses=DetailsIssuesResponse,
+    )
     def get(
         self,
         _request,

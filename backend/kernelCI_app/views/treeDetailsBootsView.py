@@ -15,6 +15,9 @@ from kernelCI_app.helpers.treeDetails import (
     get_current_row_data,
 )
 from kernelCI_app.queries.tree import get_tree_details_data
+from kernelCI_app.typeModels.commonOpenApiParameters import (
+    COMMIT_HASH_PATH_PARAM,
+)
 from kernelCI_app.typeModels.treeDetails import (
     TreeQueryParameters,
 )
@@ -60,7 +63,10 @@ class TreeDetailsBoots(APIView):
                 self._process_boots_test(row_data)
 
     @extend_schema(
-        parameters=[TreeQueryParameters],
+        parameters=[
+            COMMIT_HASH_PATH_PARAM,
+            TreeQueryParameters,
+        ],
         methods=["GET"],
         responses=CommonDetailsBootsResponse,
     )

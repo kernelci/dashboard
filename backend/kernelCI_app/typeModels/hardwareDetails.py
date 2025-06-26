@@ -1,5 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Any, Dict, List, Literal, Optional, Union
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from kernelCI_app.constants.localization import DocStrings
 
 from kernelCI_app.typeModels.commonDetails import (
     BuildHistoryItem,
@@ -31,11 +33,23 @@ class DefaultRecordValues(BaseModel):
 
 
 class HardwareDetailsPostBody(BaseModel):
-    origin: str = Field(default="maestro")
-    startTimestampInSeconds: Union[str, int]  # noqa: N815
-    endTimestampInSeconds: Union[str, int]  # noqa: N815
-    selectedCommits: Dict[str, str]  # noqa: N815
-    filter: Optional[Dict]
+    origin: str = Field(
+        default=DEFAULT_ORIGIN,
+        description=DocStrings.HARDWARE_DETAILS_ORIGIN_DESCRIPTION,
+    )
+    startTimestampInSeconds: Union[str, int] = Field(  # noqa: N815
+        description=DocStrings.DEFAULT_START_TS_DESCRIPTION
+    )
+    endTimestampInSeconds: Union[str, int] = Field(  # noqa: N815
+        description=DocStrings.DEFAULT_END_TS_DESCRIPTION
+    )
+    selectedCommits: Dict[str, str] = Field(  # noqa: N815
+        description=DocStrings.HARDWARE_DETAILS_SEL_COMMITS_DESCRIPTION
+    )
+    filter: Optional[Dict] = Field(
+        None,
+        description=DocStrings.DEFAULT_FILTER_DESCRIPTION,
+    )
 
 
 class CommitHead(BaseModel):

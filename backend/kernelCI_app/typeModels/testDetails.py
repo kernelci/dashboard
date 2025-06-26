@@ -1,6 +1,7 @@
 from typing import Literal, Optional
 from typing_extensions import Annotated
 from pydantic import BaseModel, BeforeValidator, Field
+from kernelCI_app.constants.localization import DocStrings
 
 from kernelCI_app.typeModels.databases import (
     Origin,
@@ -74,11 +75,25 @@ class TestStatusHistoryResponse(BaseModel):
 
 
 class TestStatusHistoryRequest(BaseModel):
-    path: Test__Path = None
-    origin: Origin
-    git_repository_url: Checkout__GitRepositoryUrl = None
-    git_repository_branch: Checkout__GitRepositoryBranch = None
-    platform: Optional[str] = None
-    current_test_start_time: Test__StartTime = None
-    config_name: Build__ConfigName = None
-    field_timestamp: Timestamp = None
+    path: Test__Path = Field(
+        None, description=DocStrings.STATUS_HISTORY_PATH_DESCRIPTION
+    )
+    origin: Origin = Field(description=DocStrings.STATUS_HISTORY_ORIGIN_DESCRIPTION)
+    git_repository_url: Checkout__GitRepositoryUrl = Field(
+        None, description=DocStrings.STATUS_HISTORY_GIT_URL_DESCRIPTION
+    )
+    git_repository_branch: Checkout__GitRepositoryBranch = Field(
+        None, description=DocStrings.STATUS_HISTORY_GIT_BRANCH_DESCRIPTION
+    )
+    platform: Optional[str] = Field(
+        None, description=DocStrings.STATUS_HISTORY_PLATFORM_DESCRIPTION
+    )
+    current_test_start_time: Test__StartTime = Field(
+        None, description=DocStrings.STATUS_HISTORY_CURRENT_TEST_START_DESCRIPTION
+    )
+    config_name: Build__ConfigName = Field(
+        None, description=DocStrings.STATUS_HISTORY_CONFIG_NAME_DESCRIPTION
+    )
+    field_timestamp: Timestamp = Field(
+        None, description=DocStrings.STATUS_HISTORY_FIELD_TS_DESCRIPTION
+    )

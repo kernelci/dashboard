@@ -40,6 +40,9 @@ from kernelCI_app.typeModels.commonDetails import (
     Summary,
     TestArchSummaryItem,
 )
+from kernelCI_app.typeModels.commonOpenApiParameters import (
+    HARDWARE_ID_PATH_PARAM,
+)
 from kernelCI_app.typeModels.hardwareDetails import (
     HardwareCommon,
     HardwareDetailsFilters,
@@ -247,6 +250,7 @@ class HardwareDetailsSummary(APIView):
 
     # Using post to receive a body request
     @extend_schema(
+        parameters=[HARDWARE_ID_PATH_PARAM],
         responses=HardwareDetailsSummaryResponse,
         request=HardwareDetailsPostBody,
         methods=["POST"],
