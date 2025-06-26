@@ -26,10 +26,16 @@ class TreeLatest(APIView):
         methods=["GET"],
     )
     def get(
-        self, request, tree_name: str, branch: str, hash: Optional[str] = None
+        self,
+        request,
+        tree_name: str,
+        git_branch: str,
+        commit_hash: Optional[str] = None,
     ) -> JsonResponse:
         try:
-            parsed_params = TreeLatestPathParameters(tree_name=tree_name, branch=branch)
+            parsed_params = TreeLatestPathParameters(
+                tree_name=tree_name, git_branch=git_branch, commit_hash=commit_hash
+            )
         except ValidationError as e:
             return Response(data=e.json, status=HTTPStatus.BAD_REQUEST)
 
@@ -43,9 +49,9 @@ class TreeLatest(APIView):
 
         tree_data = get_latest_tree(
             tree_name=parsed_params.tree_name,
-            branch=parsed_params.branch,
+            git_branch=parsed_params.git_branch,
             origin=origin,
-            git_commit_hash=hash,
+            git_commit_hash=parsed_params.commit_hash,
         )
 
         if tree_data is None:
@@ -66,7 +72,7 @@ class TreeLatest(APIView):
         query_params = {
             "origin": origin,
             "git_url": tree_data["git_repository_url"],
-            "git_branch": branch,
+            "git_branch": git_branch,
         }
         query_string = f"?{urlencode(query_params)}"
 

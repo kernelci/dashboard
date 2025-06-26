@@ -18,9 +18,15 @@ class TreeClient(BaseClient):
         return requests.get(url)
 
     def get_tree_latest(
-        self, *, tree_name: str, branch: str, query: dict
+        self, *, tree_name: str, git_branch: str, query: dict
     ) -> requests.Response:
-        path = reverse("treeLatest", kwargs={"tree_name": tree_name, "branch": branch})
+        path = reverse(
+            "treeLatest",
+            kwargs={
+                "tree_name": tree_name,
+                "git_branch": git_branch,
+            },
+        )
         url = self.get_endpoint(path=path, query=query)
         return requests.get(url)
 

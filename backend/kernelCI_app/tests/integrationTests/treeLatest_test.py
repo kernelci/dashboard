@@ -11,7 +11,7 @@ client = TreeClient()
 
 
 @pytest.mark.parametrize(
-    "tree_name, branch, query, has_error_body",
+    "tree_name, git_branch, query, has_error_body",
     [
         ("android", "android-mainline", {}, False),
         ("mainline", "master", {"origin": "microsoft"}, False),
@@ -39,8 +39,10 @@ client = TreeClient()
         ),
     ],
 )
-def test_tree_latest(tree_name, branch, query, has_error_body):
-    response = client.get_tree_latest(tree_name=tree_name, branch=branch, query=query)
+def test_tree_latest(tree_name, git_branch, query, has_error_body):
+    response = client.get_tree_latest(
+        tree_name=tree_name, git_branch=git_branch, query=query
+    )
     content = string_to_json(response.content.decode())
     assert_status_code_and_error_response(
         response=response,

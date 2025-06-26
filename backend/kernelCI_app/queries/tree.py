@@ -691,7 +691,7 @@ def get_tree_commit_history(
 def get_latest_tree(
     *,
     tree_name: str,
-    branch: str,
+    git_branch: str,
     origin: str,
     git_commit_hash: Optional[str] = None,
 ) -> Optional[dict]:
@@ -707,7 +707,7 @@ def get_latest_tree(
 
     query = Checkouts.objects.values(*tree_fields).filter(
         origin=origin,
-        git_repository_branch=branch,
+        git_repository_branch=git_branch,
         tree_name=tree_name,
     )
 

@@ -14,7 +14,8 @@ from kernelCI_app.constants.general import DEFAULT_ORIGIN
 
 class TreeLatestPathParameters(BaseModel):
     tree_name: str
-    branch: str
+    git_branch: str
+    commit_hash: Optional[str]
 
 
 class TreeLatestQueryParameters(BaseModel):

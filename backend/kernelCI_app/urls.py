@@ -61,7 +61,7 @@ urlpatterns = [
         name="treeCommitsDirectView",
     ),
     path(
-        "tree/<str:tree_name>/<str:branch>",
+        "tree/<str:tree_name>/<str:git_branch>",
         view_cache(views.TreeLatest),
         name="treeLatest",
     ),

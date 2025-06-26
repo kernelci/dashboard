@@ -1072,12 +1072,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/CommonDetailsTestsResponse'
           description: ''
-  /api/tree/{tree_name}/{branch}:
+  /api/tree/{tree_name}/{git_branch}:
     get:
       operationId: tree_retrieve_2
       parameters:
       - in: path
-        name: branch
+        name: git_branch
         schema:
           type: string
         required: true
