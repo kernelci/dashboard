@@ -31,11 +31,22 @@ class DefaultRecordValues(BaseModel):
 
 
 class HardwareDetailsPostBody(BaseModel):
-    origin: str = Field(default="maestro")
-    startTimestampInSeconds: Union[str, int]  # noqa: N815
-    endTimestampInSeconds: Union[str, int]  # noqa: N815
-    selectedCommits: Dict[str, str]  # noqa: N815
-    filter: Optional[Dict]
+    origin: str = Field(
+        default="maestro", description="Origin of the tests of the hardware"
+    )
+    startTimestampInSeconds: Union[str, int] = Field(  # noqa: N815
+        description="Interval start timestamp for the results"  # noqa: N815
+    )  # noqa: N815
+    endTimestampInSeconds: Union[str, int] = Field(  # noqa: N815
+        description="Interval end timestamp for the results"  # noqa: N815
+    )  # noqa: N815
+    selectedCommits: Dict[str, str] = Field(  # noqa: N815
+        description="Dictionary mapping tree names to selected commit hashes"  # noqa: N815
+    )  # noqa: N815
+    filter: Optional[Dict] = Field(
+        None,
+        description="Optional filter dictionary for additional query parameters",
+    )
 
 
 class CommitHead(BaseModel):

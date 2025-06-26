@@ -24,10 +24,12 @@ class HardwareListingResponse(BaseModel):
 class HardwareQueryParamsDocumentationOnly(BaseModel):
     origin: Annotated[
         str,
-        Field(default=DEFAULT_ORIGIN),
+        Field(default=DEFAULT_ORIGIN, description="Origin of the hardware"),
     ]
-    startTimestampInSeconds: str  # noqa: N815
-    endTimestampInSeconds: str  # noqa: N815
+    startTimestampInSeconds: str = Field(  # noqa: N815
+        description="Start timestamp filter"  # noqa: N815
+    )  # noqa: N815
+    endTimestampInSeconds: str = Field(description="End timestamp filter")  # noqa: N815
 
 
 class HardwareQueryParams(BaseModel):

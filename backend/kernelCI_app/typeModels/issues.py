@@ -44,7 +44,7 @@ class IssueWithExtraInfo(IssueKeys):
 
 
 class IssueExtraDetailsRequest(BaseModel):
-    issues: List[Tuple[str, int]]
+    issues: List[Tuple[str, int]] = Field(description="List of issue ids")
 
 
 class FirstIncident(BaseModel):

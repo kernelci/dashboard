@@ -8,18 +8,18 @@ from kernelCI_app.typeModels.commonDetails import (
     CommonDetailsTestsResponse,
 )
 from kernelCI_app.typeModels.treeListing import BaseCheckouts
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 
 
 class TreeLatestPathParameters(BaseModel):
-    tree_name: str
-    git_branch: str
-    commit_hash: Optional[str]
+    tree_name: str = Field(description="Name of the tree")
+    git_branch: str = Field(description="Git branch name of the tree")
+    commit_hash: Optional[str] = Field(description="Commit of the tree")
 
 
 class TreeLatestQueryParameters(BaseModel):
-    origin: str = DEFAULT_ORIGIN
+    origin: str = Field(DEFAULT_ORIGIN, description="Origin filter for the tree")
 
 
 class TreeLatestResponse(BaseCheckouts):
@@ -46,9 +46,9 @@ class TreeDetailsBuildsResponse(BaseModel):
 
 
 class TreeQueryParameters(BaseModel):
-    origin: str
-    git_url: str
-    git_branch: str
+    origin: str = Field(description="Origin of the tree")
+    git_url: str = Field(description="Git repository URL of the tree")
+    git_branch: str = Field(description="Git branch name of the tree")
 
 
 class TreeDetailsFullResponse(

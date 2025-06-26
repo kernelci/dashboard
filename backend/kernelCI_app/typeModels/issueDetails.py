@@ -102,4 +102,4 @@ class IssueDetailsResponse(BaseModel):
 
 
 class IssueDetailsQueryParameters(BaseModel):
-    version: Optional[int] = None
+    version: Optional[int] = Field(None, description="Issue version")
