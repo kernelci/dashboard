@@ -4,21 +4,25 @@ http 'http://localhost:8000/api/tree/android/android-mainline'
 http 'http://localhost:8000/api/tree/mainline/master/a33b5a08cbbdd7aadff95f40cbb45ab86841679e' origin==microsoft
 
 # HTTP/1.1 200 OK
+# Allow: GET, HEAD, OPTIONS
 # Cache-Control: max-age=0
-# Content-Length: 377
+# Content-Length: 489
 # Content-Type: application/json
 # Cross-Origin-Opener-Policy: same-origin
-# Date: Tue, 07 Jan 2025 16:42:56 GMT
-# Expires: Tue, 07 Jan 2025 16:42:56 GMT
+# Date: Thu, 26 Jun 2025 11:51:01 GMT
+# Expires: Thu, 26 Jun 2025 11:51:01 GMT
 # Referrer-Policy: same-origin
 # Server: WSGIServer/0.2 CPython/3.12.7
-# Vary: origin
+# Vary: Accept, Cookie, origin
 # X-Content-Type-Options: nosniff
 # X-Frame-Options: DENY
 
 # {
-#     "api_url": "/api/tree/544ae1decdc3aede3d021ef1310d586f6383c30b/full?origin=maestro&git_url=https%3A%2F%2Fandroid.googlesource.com%2Fkernel%2Fcommon&git_branch=android-mainline",
-#     "git_commit_hash": "544ae1decdc3aede3d021ef1310d586f6383c30b",
-#     "git_commit_name": "ASB-2024-12-05_mainline-227-g544ae1decdc3",
-#     "git_repository_url": "https://android.googlesource.com/kernel/common"
+#     "api_url": "/api/tree/mainline/master/a33b5a08cbbdd7aadff95f40cbb45ab86841679e/full?origin=microsoft&git_url=https%3A%2F%2Fgit.kernel.org%2Fpub%2Fscm%2Flinux%2Fkernel%2Fgit%2Ftorvalds%2Flinux.git&git_branch=master",
+#     "git_commit_hash": "a33b5a08cbbdd7aadff95f40cbb45ab86841679e",
+#     "git_commit_name": "v6.15-rc3-8-ga33b5a08cbbd",
+#     "git_repository_branch": "master",
+#     "git_repository_url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+#     "origin": "microsoft",
+#     "tree_name": "mainline"
 # }

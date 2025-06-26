@@ -24,7 +24,9 @@ class TreeLatestQueryParameters(BaseModel):
 
 class TreeLatestResponse(BaseCheckouts):
     api_url: str
+    old_api_url: str
     tree_name: str
+    git_repository_branch: str
 
 
 class TreeCommon(BaseModel):

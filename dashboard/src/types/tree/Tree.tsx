@@ -45,6 +45,7 @@ export type Tree = BaseTree & Required<AllTabCounts>;
 
 export type TreeLatestResponse = {
   tree_name: string;
+  git_repository_branch: string;
   api_url: string;
   git_commit_hash: string;
   git_repository_url: string | null;

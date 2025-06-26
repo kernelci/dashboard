@@ -6,13 +6,6 @@ import type { JSX } from 'react';
 
 import { useTreeLatest } from '@/api/tree';
 
-import {
-  defaultValidadorValues,
-  zTableFilterInfoDefault,
-} from '@/types/tree/TreeDetails';
-
-import { DEFAULT_DIFF_FILTER } from '@/types/general';
-
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
@@ -31,7 +24,7 @@ export const TreeLatest = ({
 }: {
   urlFrom: TreeLatestFrom | TreeLatestWithHashFrom;
 }): JSX.Element => {
-  const searchParams = useSearch({ from: urlFrom });
+  const { origin } = useSearch({ from: urlFrom });
   const navigate = useNavigate();
   const params = useParams({
     from: urlFrom,
@@ -43,27 +36,21 @@ export const TreeLatest = ({
   const { isLoading, data, status, error } = useTreeLatest(
     treeName,
     branch,
-    searchParams.origin,
+    origin,
     hash,
   );
 
   if (data) {
     navigate({
-      to: '/tree/$treeId',
-      params: { treeId: data.git_commit_hash },
+      to: '/tree/$treeName/$branch/$hash',
+      params: {
+        treeName: data.tree_name,
+        branch: data.git_repository_branch,
+        hash: data.git_commit_hash,
+      },
       search: s => ({
         ...s,
-        origin: searchParams.origin,
-        currentPageTab: defaultValidadorValues.tab,
-        diffFilter: DEFAULT_DIFF_FILTER,
-        tableFilter: zTableFilterInfoDefault,
-        treeInfo: {
-          gitBranch: branch,
-          gitUrl: data.git_repository_url || undefined,
-          treeName: data.tree_name,
-          commitName: data.git_commit_name || undefined,
-          headCommitHash: data.git_commit_hash,
-        },
+        origin: origin,
       }),
     });
   }

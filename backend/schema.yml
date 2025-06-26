@@ -1105,6 +1105,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/TreeLatestResponse'
           description: ''
+  /api/tree/{tree_name}/{git_branch}/{commit_hash}:
+    get:
+      operationId: tree_retrieve_3
+      parameters:
+      - in: path
+        name: commit_hash
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeLatestResponse'
+          description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/commits:
     get:
       operationId: tree_commits_retrieve_2
@@ -3386,8 +3424,14 @@ components:
         api_url:
           title: Api Url
           type: string
+        old_api_url:
+          title: Old Api Url
+          type: string
         tree_name:
           title: Tree Name
+          type: string
+        git_repository_branch:
+          title: Git Repository Branch
           type: string
       required:
       - git_repository_url
@@ -3395,7 +3439,9 @@ components:
       - git_commit_name
       - origin
       - api_url
+      - old_api_url
       - tree_name
+      - git_repository_branch
       title: TreeLatestResponse
       type: object
     TreeListingFastResponse:

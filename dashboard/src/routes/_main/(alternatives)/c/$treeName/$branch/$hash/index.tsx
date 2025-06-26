@@ -1,11 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router';
-
-import { TreeLatest } from '@/pages/TreeLatest';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute(
   '/_main/(alternatives)/c/$treeName/$branch/$hash/',
 )({
-  component: () => (
-    <TreeLatest urlFrom="/_main/(alternatives)/c/$treeName/$branch/$hash/" />
-  ),
+  loaderDeps: ({ search }) => ({ search }),
+  loader: ({ deps, params }) => {
+    throw redirect({
+      to: '/tree/$treeName/$branch/$hash',
+      search: deps.search,
+      params,
+    });
+  },
 });

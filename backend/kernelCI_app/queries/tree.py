@@ -701,6 +701,7 @@ def get_latest_tree(
         "git_commit_hash",
         "git_commit_name",
         "git_repository_url",
+        "git_repository_branch",
         "tree_name",
         "origin",
     ]

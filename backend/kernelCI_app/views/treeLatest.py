@@ -60,26 +60,46 @@ class TreeLatest(APIView):
                 status_code=HTTPStatus.OK,
             )
 
-        base_url = reverse(
+        # The `old_api_url` is only used in the backend response in order to
+        # keep compatibility with the full treeDetails endpoint in case someone
+        # expects this format. It should be removed soon.
+        # TODO: remove this field from the response.
+        old_base_url = reverse(
             "treeDetailsView",
             kwargs={"commit_hash": tree_data["git_commit_hash"]},
         )
-
-        # TODO: Newer versions of django added (or will add) a parameter to `reverse`
-        # to pass the query parameters directly to it.
-        # You can see more here: https://github.com/django/django/pull/18848
-        # and here: https://code.djangoproject.com/ticket/25582#no1
-        query_params = {
+        old_query_params = {
             "origin": origin,
             "git_url": tree_data["git_repository_url"],
             "git_branch": git_branch,
         }
-        query_string = f"?{urlencode(query_params)}"
+        old_query_string = f"?{urlencode(old_query_params)}"
+        old_api_url = f"{old_base_url}{old_query_string}"
 
-        response_data = {**tree_data, "api_url": f"{base_url}{query_string}"}
+        # TODO: Newer versions of django (>5.2) added a parameter to `reverse`
+        # to pass the query parameters directly to it.
+        # You can see more here: https://github.com/django/django/pull/18848
+        # and here: https://code.djangoproject.com/ticket/25582#no1
+        base_url = reverse(
+            "treeDetailsDirectView",
+            kwargs={
+                "tree_name": tree_data["tree_name"],
+                "git_branch": tree_data["git_repository_branch"],
+                "commit_hash": tree_data["git_commit_hash"],
+            },
+        )
+        query_params = {
+            "origin": origin,
+        }
+        query_string = f"?{urlencode(query_params)}"
+        api_url = f"{base_url}{query_string}"
 
         try:
-            valid_response = TreeLatestResponse(**response_data)
+            valid_response = TreeLatestResponse(
+                **tree_data,
+                api_url=api_url,
+                old_api_url=old_api_url,
+            )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
