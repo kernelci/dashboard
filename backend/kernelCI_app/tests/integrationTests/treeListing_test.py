@@ -58,7 +58,7 @@ def pytest_generate_tests(metafunc):
                 False,
             ),
             (
-                {"origin": "tuxsuite", "interval_in_days": "7"},
+                {"origin": "linaro", "interval_in_days": "7"},
                 HTTPStatus.OK,
                 False,
             ),
