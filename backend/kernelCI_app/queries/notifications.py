@@ -445,7 +445,14 @@ def get_checkout_summary_data(
 
 
 def kcidb_tests_results(origin, giturl, branch, hash, path):
-    """Fetches the history of tests in a specific checkout and with a specific path."""
+    """Fetches the 5-test history of searched tests in a specific tree.
+
+    This query:
+        - Gathers data for the tree (origin, url, branch) at every checkout prior to the searched hash;
+        - Adds a row number to the data grouping by test path, test platform and build config_name,
+          ordering by the test start_time;
+        - Limits to 5 tests on that history grouping;
+        - Limits only to tests that had the latest occurence in the searched hash."""
 
     params = {
         "origin": origin,
@@ -453,11 +460,12 @@ def kcidb_tests_results(origin, giturl, branch, hash, path):
         "branch": branch,
         "hash": hash,
         "path": path,
-        "interval": "30 days",
+        "interval": "7 days",
     }
 
     query = """
-            WITH prefiltered_tests AS (
+        WITH
+            prefiltered_data AS (
                 SELECT
                     t.id,
                     t.path,
@@ -469,57 +477,70 @@ def kcidb_tests_results(origin, giturl, branch, hash, path):
                     b.config_name,
                     c.git_commit_hash
                 FROM tests t
-                JOIN builds b ON t.build_id = b.id
-                JOIN checkouts c ON b.checkout_id = c.id
+                    JOIN builds b ON t.build_id = b.id
+                    JOIN checkouts c ON b.checkout_id = c.id
                 WHERE t.origin = %(origin)s
                     AND c.git_repository_url = %(giturl)s
                     AND c.git_repository_branch = %(branch)s
                     AND t.path LIKE %(path)s
                     AND t.environment_misc->>'platform' != 'kubernetes'
                     AND C.start_time < (
-                        SELECT MAX(start_time) FROM checkouts
-                          WHERE git_commit_hash = %(hash)s
-                        )
+                        SELECT
+                            MAX(start_time)
+                        FROM
+                            checkouts
+                        WHERE
+                            git_commit_hash = %(hash)s
+                    )
                     AND c.start_time >= NOW() - INTERVAL %(interval)s
                     AND b.start_time >= NOW() - INTERVAL %(interval)s
                     AND t.start_time >= NOW() - INTERVAL %(interval)s
             ),
-            top1_filter AS (
-                SELECT path, platform, config_name
-                FROM (
-                    SELECT
-                        path,
-                        platform,
-                        config_name,
-                        ROW_NUMBER() OVER (
-                            PARTITION BY path, platform, config_name
-                            ORDER BY start_time DESC NULLS LAST
-                        ) AS rn,
-                        git_commit_hash
-                    FROM prefiltered_tests
-                ) ranked
-                WHERE rn = 1 AND git_commit_hash = %(hash)s
-            ),
-            final_prefilter AS (
-                SELECT p.*
-                FROM prefiltered_tests p
-                JOIN top1_filter t1
-                ON p.path = t1.path
-                AND p.platform = t1.platform
-                AND p.config_name = t1.config_name
-            ),
-            ranked_tests AS (
-                SELECT *,
+            ranked_data AS (
+                SELECT
+                    *,
+                    -- Using the same PARTITION BY in both window functions
+                    -- may allow the query optimizer to reuse partitioning
                     ROW_NUMBER() OVER (
-                        PARTITION BY path, platform, config_name
-                        ORDER BY start_time DESC NULLS LAST
-                    ) as rn
-                FROM final_prefilter
+                        PARTITION BY
+                            path,
+                            platform,
+                            config_name
+                        ORDER BY
+                            start_time DESC NULLS LAST
+                    ) AS rn,
+                    FIRST_VALUE(git_commit_hash) OVER (
+                        PARTITION BY
+                            path,
+                            platform,
+                            config_name
+                        ORDER BY
+                            start_time DESC NULLS LAST
+                    ) AS first_hash_by_group
+                FROM
+                    prefiltered_data
             )
-            SELECT *
-            FROM ranked_tests
-            WHERE rn <= 5
-            ORDER BY path, platform, config_name, start_time DESC NULLS LAST;
+        SELECT
+            id,
+            path,
+            status,
+            start_time,
+            platform,
+            architecture,
+            compiler,
+            config_name,
+            git_commit_hash,
+            rn
+        FROM
+            ranked_data
+        WHERE
+            rn <= 5
+            AND first_hash_by_group = %(hash)s
+        ORDER BY
+            path,
+            platform,
+            config_name,
+            start_time DESC NULLS LAST;
         """
 
     return kcidb_execute_query(query, params)
