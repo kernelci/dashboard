@@ -11,7 +11,7 @@ def mark_checkout_notification_as_sent(
 ) -> bool:
     try:
         timestamp = get_current_timestamp_kcidb_format()
-        NotificationsCheckout.objects.using("cache").create(
+        NotificationsCheckout.objects.using("notifications").create(
             checkout_id=checkout_id,
             notification_message_id=msg_id,
             notification_sent=timestamp,
@@ -32,7 +32,7 @@ def mark_issue_notification_sent(
     """Creates an entry for an issue notification"""
     try:
         timestamp = get_current_timestamp_kcidb_format()
-        NotificationsIssue.objects.using("cache").update_or_create(
+        NotificationsIssue.objects.using("notifications").update_or_create(
             issue_id=issue_id,
             issue_version=issue_version,
             issue_type=issue_type,
@@ -62,7 +62,7 @@ def mark_issue_notification_not_sent(
     """
     try:
         issue_exists = (
-            NotificationsIssue.objects.using("cache")
+            NotificationsIssue.objects.using("notifications")
             .filter(
                 issue_id=issue_id,
                 issue_version=issue_version,
@@ -71,7 +71,7 @@ def mark_issue_notification_not_sent(
         )
 
         if not issue_exists:
-            NotificationsIssue.objects.using("cache").create(
+            NotificationsIssue.objects.using("notifications").create(
                 issue_id=issue_id,
                 issue_version=issue_version,
                 issue_type=issue_type,

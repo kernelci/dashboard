@@ -203,6 +203,10 @@ DATABASES = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BACKEND_VOLUME_DIR, "cache.sqlite3"),
     },
+    "notifications": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BACKEND_VOLUME_DIR, "notifications.sqlite3"),
+    },
 }
 
 if DEBUG:

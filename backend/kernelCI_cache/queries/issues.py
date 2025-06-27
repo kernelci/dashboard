@@ -19,7 +19,7 @@ def get_unsent_issues() -> list[UnsentIssueKeys]:
             N.notification_sent IS NULL
         """
 
-    with connections["cache"].cursor() as cursor:
+    with connections["notifications"].cursor() as cursor:
         cursor.execute(query)
         results = dict_fetchall(cursor)
 
@@ -49,7 +49,7 @@ def get_all_issue_keys() -> list[IssueKeyTuple]:
             notifications_issue
     """
 
-    with connections["cache"].cursor() as cursor:
+    with connections["notifications"].cursor() as cursor:
         cursor.execute(query)
         results = cursor.fetchall()
 
