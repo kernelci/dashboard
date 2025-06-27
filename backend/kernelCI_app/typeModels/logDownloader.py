@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class LogData(BaseModel):
@@ -10,7 +10,7 @@ class LogData(BaseModel):
 
 
 class LogDownloaderQueryParameters(BaseModel):
-    log_download_url: str
+    log_download_url: str = Field(description="URL of the log to be downloaded")
 
 
 class LogDownloaderResponse(BaseModel):

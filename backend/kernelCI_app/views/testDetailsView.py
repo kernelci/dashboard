@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.test import get_test_details_data
+from kernelCI_app.typeModels.commonOpenApiParameters import TEST_ID_PATH_PARAM_REQUIRED
 from kernelCI_app.typeModels.testDetails import (
     TestDetailsResponse,
 )
@@ -12,6 +13,7 @@ from pydantic import ValidationError
 
 class TestDetails(APIView):
     @extend_schema(
+        parameters=[TEST_ID_PATH_PARAM_REQUIRED],
         responses=TestDetailsResponse,
     )
     def get(self, _request, test_id: str) -> Response:

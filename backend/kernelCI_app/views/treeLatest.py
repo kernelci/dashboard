@@ -12,6 +12,11 @@ from pydantic import ValidationError
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.tree import get_latest_tree
+from kernelCI_app.typeModels.commonOpenApiParameters import (
+    GIT_BRANCH_PATH_PARAM_REQUIRED,
+    COMMIT_HASH_PATH_PARAM_REQUIRED,
+    TREE_NAME_PATH_PARAM_REQUIRED,
+)
 from kernelCI_app.typeModels.treeDetails import (
     TreeLatestPathParameters,
     TreeLatestResponse,
@@ -22,7 +27,12 @@ from kernelCI_app.typeModels.treeDetails import (
 class TreeLatest(APIView):
     @extend_schema(
         responses=TreeLatestResponse,
-        parameters=[TreeLatestQueryParameters],
+        parameters=[
+            GIT_BRANCH_PATH_PARAM_REQUIRED,
+            TREE_NAME_PATH_PARAM_REQUIRED,
+            COMMIT_HASH_PATH_PARAM_REQUIRED,
+            TreeLatestQueryParameters,
+        ],
         methods=["GET"],
     )
     def get(

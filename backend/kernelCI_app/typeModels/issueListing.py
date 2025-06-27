@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 
 from kernelCI_app.typeModels.databases import (
@@ -16,9 +16,9 @@ from kernelCI_app.typeModels.issues import FirstIncident
 
 
 class IssueListingQueryParameters(ListingQueryParameters):
-    culprit_code: bool | None = False
-    culprit_harness: bool | None = False
-    culprit_tool: bool | None = False
+    interval_in_days: dict[str, str] = Field(
+        description="Interval period of the listing"
+    )
 
 
 class IssueListingItem(BaseModel):
