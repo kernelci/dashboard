@@ -183,7 +183,7 @@ GMAIL_API_TOKEN = get_json_env_var("GMAIL_API_TOKEN", "gmail_api_token.json")
 # the default value here is for when running locally
 BACKEND_VOLUME_DIR = get_json_env_var("BACKEND_VOLUME_DIR", "volume_data")
 
-DATABASE_ROUTERS = ["kernelCI_app.routers.disableMigrateRouter.DisableMigrateRouter"]
+DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
 DATABASES = {
     "default": get_json_env_var(
@@ -202,6 +202,10 @@ DATABASES = {
     "cache": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BACKEND_VOLUME_DIR, "cache.sqlite3"),
+    },
+    "notifications": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BACKEND_VOLUME_DIR, "notifications.sqlite3"),
     },
 }
 
