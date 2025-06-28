@@ -12,7 +12,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from pydantic import ValidationError
-
+from kernelCI_app.constants.localization import ClientStrings
 
 class IssueDetails(APIView):
     def __init__(self):
@@ -36,7 +36,7 @@ class IssueDetails(APIView):
             version_row = get_latest_issue_version(issue_id=path_params.issue_id)
             if version_row is None:
                 return create_api_error_response(
-                    error_message="Issue not found", status_code=HTTPStatus.OK
+                    error_message=ClientStrings.ISSUE_NOT_FOUND, status_code=HTTPStatus.OK
                 )
             query_params.version = version_row["version"]
 
@@ -46,7 +46,7 @@ class IssueDetails(APIView):
 
         if not issue_data:
             return create_api_error_response(
-                error_message="Issue not found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.ISSUE_NOT_FOUND, status_code=HTTPStatus.OK
             )
 
         process_issues_extra_details(
