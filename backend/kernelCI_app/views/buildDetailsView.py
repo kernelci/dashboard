@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from pydantic import ValidationError
 from kernelCI_app.queries.build import get_build_details
 
-
+from kernelCI_app.constants.localization import ClientStrings
 class BuildDetails(APIView):
     @extend_schema(responses=BuildDetailsResponse)
     def get(self, request, build_id: str) -> Response:
@@ -15,7 +15,7 @@ class BuildDetails(APIView):
 
         if not records:
             return create_api_error_response(
-                error_message="Build not found",
+                error_message= ClientStrings.BUILD_DETAILS_NOT_FOUND,
                 status_code=HTTPStatus.OK,
             )
 

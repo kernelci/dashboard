@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 
-
+from kernelCI_app.constants.localization import ClientStrings
 def scrape_log_data(url):
     try:
         response = requests.get(url)
@@ -21,11 +21,11 @@ def scrape_log_data(url):
 
         table = soup.find("table", id="list")
         if not table:
-            return {"error": "Table with id 'list' not found"}
+            return {"error": ClientStrings.LOG_TABLE_NOT_FOUND}
 
         tbody = table.find("tbody")
         if not isinstance(tbody, Tag):
-            return {"error": "Table body not found"}
+            return {"error": ClientStrings.LOG_TABLE_BODY_NOT_FOUND}
 
         log_data = []
         for row in tbody.find_all("tr"):
@@ -51,7 +51,7 @@ def scrape_log_data(url):
                 )
             else:
                 return {
-                    "error": "Invalid number of columns in table row (probably not a log website)"
+                    "error": ClientStrings.LOG_INVALID_TABLE_FORMAT
                 }
 
         return {"log_files": log_data}
@@ -75,7 +75,7 @@ class LogDownloaderView(APIView):
 
         if not parsed_data["log_files"]:
             return create_api_error_response(
-                error_message="No log files found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.LOG_NO_FILES_FOUND, status_code=HTTPStatus.OK
             )
 
         try:
