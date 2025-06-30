@@ -25,7 +25,7 @@ The command supports four primary actions:
         * Report for a specific issue
         * Report for all pending issues
 1. `summary`
-    * Runs a checkout summary report for trees listed in [summary-signup.yaml](../backend/kernelCI_app/management/commands/data/summary-signup.yaml).
+    * Runs a checkout summary report for trees listed in the [subscriptions folder](../backend/data/notifications/subscriptions/).
 1.  `fake_report`
     * Generates a fake report (for  testing email send).
 
@@ -35,7 +35,7 @@ The command supports four primary actions:
 | Option | Description | Type | Default |
 |--------|-------------|------|---------|
 | `--add-mailing-lists` | Include community mailing lists in recipients | Flag | False |
-| `--ignore-recipients` | Bypass [recipients.yaml](../backend/kernelCI_app/management/commands/data/recipients.yaml) file | Flag | False |
+| `--ignore-recipients` | Bypass the recipients in the subscription file | Flag | False |
 | `--send` | Send email after generating report | Flag | False |
 | `--to` | Specify direct recipient email | String | None |
 | `--cc` | Specify CC recipient emails a "email1, email2" list  | String | None |
@@ -45,7 +45,7 @@ The command supports four primary actions:
 
 ## Adding yourself to recipients
 
-Edit the [recipients.yaml](../backend/kernelCI_app/management/commands/data/recipients.yaml) and send a PR to the dashboard.
+Edit the corresponding tree file in the [subscriptions folder](../backend/data/notifications/subscriptions) and send a PR to the dashboard.
 
 Use the git tree name reported by the
 Web Dashboard.
@@ -53,7 +53,7 @@ Web Dashboard.
 
 ## Signup tree for checkout summary
 
-Edit the [summary-signup.yaml](../backend/kernelCI_app/management/commands/data/summary-signup.yaml) and send a PR to the dashboard.
+Add a new file in the [subscriptions folder](../backend/data/notifications/subscriptions/) and send a PR to the dashboard.
 
 Use the git tree name reported by the
-Web Dashboard
+Web Dashboard.
