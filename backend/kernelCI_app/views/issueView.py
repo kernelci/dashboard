@@ -27,7 +27,7 @@ from kernelCI_app.typeModels.issues import (
     ProcessedExtraDetailedIssues,
 )
 
-
+from kernelCI_app.constants.localization import ClientStrings
 class IssueView(APIView):
     def __init__(self):
         self.processed_extra_issue_details: ProcessedExtraDetailedIssues = {}
@@ -123,7 +123,7 @@ class IssueView(APIView):
 
         if len(issue_records) == 0:
             return create_api_error_response(
-                error_message="No issues found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.ISSUE_NOT_FOUND, status_code=HTTPStatus.OK
             )
 
         self.filters = FilterParams(_request)

@@ -9,6 +9,8 @@ from kernelCI_app.queries.checkout import get_origins
 from drf_spectacular.utils import extend_schema
 
 from kernelCI_app.typeModels.origins import OriginsResponse
+from kernelCI_app.constants.localization import ClientStrings
+
 
 EXCLUDED_ORIGINS = ["kernelci"]
 
@@ -75,7 +77,7 @@ class OriginsView(APIView):
         origin_records = get_origins()
 
         if len(origin_records) == 0:
-            return create_api_error_response(error_message="No origins found")
+            return create_api_error_response(error_message=ClientStrings.ORIGIN_NOT_FOUND)
 
         self.checkout_origins = separate_origin_records(records=origin_records)
 
