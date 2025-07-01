@@ -1,0 +1,27 @@
+name: Deploy on staging-db(staging-dashboard.kernelci.org)
+on:
+  workflow_dispatch:
+    inputs:
+      GIT_BRANCH:
+        description: 'Branch to deploy'
+        required: true
+        default: 'main'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Deploy over SSH
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.DB_SSH_HOST }}
+        username: ${{ secrets.DB_SSH_USER }}
+        key: ${{ secrets.DB_SSH_KEY }}
+        script: |
+          cd /srv/dashboard
+          git fetch
+          git checkout ${{ github.event.inputs.GIT_BRANCH }}
+          docker compose build
+          docker compose up -d --remove-orphans
