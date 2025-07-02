@@ -151,4 +151,5 @@ urlpatterns = [
     ),
     path("proxy/", views.ProxyView.as_view(), name="proxyView"),
     path("origins/", views.OriginsView.as_view(), name="originsView"),
+    path("kci-summary/", views.KciSummary.as_view(), name="kciSummary"),
 ]

@@ -27,6 +27,7 @@ class DocStrings:
 
     PROXY_URL_DESCRIPTION = "URL to the proxy"
 
+    CHECKOUT_START_TIME_DESCRIPTION = "Start time of the checkout"
     COMMIT_HASH_PATH_DESCRIPTION = "Commit hash of the tree"
     TREE_NAME_PATH_DESCRIPTION = "Name of the tree"
     BUILD_ID_PATH_DESCRIPTION = "ID of the build"
@@ -76,4 +77,26 @@ class DocStrings:
     STATUS_HISTORY_CONFIG_NAME_DESCRIPTION = "Config name filter to retrieve tests"
     STATUS_HISTORY_FIELD_TS_DESCRIPTION = (
         "Test timestamp filter to retrieve tests prior to it"
+    )
+
+    BUILD_STATUS_SUMMARY_DESCRIPTION = "Summary of build statuses"
+    BOOT_STATUS_SUMMARY_DESCRIPTION = "Summary of boot test statuses"
+    TEST_STATUS_SUMMARY_DESCRIPTION = "Summary of test statuses"
+
+    # KCI Summary related descriptions
+    REGRESSIONS_GROUP = "Regressions are grouped by hardware, config, and path."
+    KCI_SUMMARY_PATH_DESCRIPTION = (
+        "The test path to query for. SQL Wildcard can be used."
+    )
+    KCI_SUMMARY_DASHBOARD_URL_DESCRIPTION = (
+        "The dashboard url of this tree/branch/commit"
+    )
+    KCI_SUMMARY_POSSIBLE_REGRESSIONS_DESCRIPTION = (
+        "History of tests that are possible regressions." + REGRESSIONS_GROUP
+    )
+    KCI_SUMMARY_FIXED_REGRESSIONS_DESCRIPTION = (
+        "History of tests that are fixed regressions." + REGRESSIONS_GROUP
+    )
+    KCI_SUMMARY_UNSTABLE_TESTS_DESCRIPTION = (
+        "History of tests that are unstable. " + REGRESSIONS_GROUP
     )
