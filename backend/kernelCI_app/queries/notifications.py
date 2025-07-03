@@ -492,7 +492,7 @@ def kcidb_tests_results(origin, giturl, branch, hash, path, interval, group_size
                     AND c.git_repository_branch = %(branch)s
                     AND t.path LIKE %(path)s
                     AND t.environment_misc->>'platform' != 'kubernetes'
-                    AND C.start_time < (
+                    AND C.start_time <= (
                         SELECT
                             MAX(start_time)
                         FROM
