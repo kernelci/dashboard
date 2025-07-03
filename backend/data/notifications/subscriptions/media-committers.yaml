@@ -6,8 +6,8 @@ media-committers:
   reports:
     - fixes:
       branch: fixes
-      path: fluster%
+      path: [fluster%]
 
     - next:
       branch: next
-      path: fluster%
+      path: [fluster%]

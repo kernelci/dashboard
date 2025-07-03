@@ -7,32 +7,32 @@ stable-rt:
   reports:
     - v5.4-rt:
       branch: v5.4-rt
-      path: rt-tests%
+      path: [rt-tests%]
   
     - v5.10-rt:
       branch: v5.10-rt
-      path: rt-tests%
+      path: [rt-tests%]
   
     - v5.10-rt-next:
       branch: v5.10-rt-next
-      path: rt-tests%
+      path: [rt-tests%]
   
     - v5.15-rt:
       branch: v5.15-rt
-      path: rt-tests%
+      path: [rt-tests%]
   
     - v5.15-rt-next:
       branch: v5.15-rt-next
-      path: rt-tests%
+      path: [rt-tests%]
   
     - v6.1-rt:
       branch: v6.1-rt
-      path: rt-tests%
+      path: [rt-tests%]
   
     - v6.6-rt:
       branch: v6.6-rt
-      path: rt-tests%
+      path: [rt-tests%]
   
     - v6.6-rt-next:
       branch: v6.6-rt-next
-      path: rt-tests%
+      path: [rt-tests%]

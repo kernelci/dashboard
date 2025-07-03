@@ -451,27 +451,62 @@ def get_checkout_summary_data(
         return dict_fetchall(cursor=cursor)
 
 
-def kcidb_tests_results(origin, giturl, branch, hash, path, interval, group_size):
-    """Fetches the 5-test history of searched tests in a specific tree.
+def kcidb_tests_results(
+    *,
+    origin: str,
+    giturl: str,
+    branch: str,
+    hash: str,
+    paths: list[str],
+    interval: str,
+    group_size: int,
+):
+    """Fetches the n-test history of searched tests in a specific tree.
 
     This query:
         - Gathers data for the tree (origin, url, branch) at every checkout prior to the searched hash;
         - Adds a row number to the data grouping by test path, test platform and build config_name,
           ordering by the test start_time;
-        - Limits to 5 tests on that history grouping;
-        - Limits only to tests that had the latest occurence in the searched hash."""
+        - Limits to n tests on that history grouping;
+        - Limits only to tests that had the latest occurence in the searched hash.
+
+    Args:
+        origin: The origin to filter by
+        giturl: The git repository URL
+        branch: The git repository branch
+        hash: The git commit hash
+        path: An array of strings representing test paths to match (using LIKE)
+        interval: Time interval for filtering (such as '7 days' or '12 hours')
+        group_size: Maximum number of tests to return per group
+    """
+
+    path_params = {}
+    if not paths:
+        path_clause = ""
+    elif len(paths) == 1:
+        path_clause = "AND t.path LIKE %(path)s"
+        path_params["path"] = paths[0]
+    else:
+        path_clause_keys = []
+        for idx, path in enumerate(paths):
+            query_key = f"path_{idx}"
+            path_params[query_key] = path
+            path_clause_keys.append(f"%({query_key})s")
+        path_clause_keys_full = " OR t.path LIKE ".join(path_clause_keys)
+
+        path_clause = "AND (t.path LIKE " + path_clause_keys_full + ")"
 
     params = {
         "origin": origin,
         "giturl": giturl,
         "branch": branch,
         "hash": hash,
-        "path": path,
         "interval": interval,
         "group_size": group_size,
+        **path_params,
     }
 
-    query = """
+    query = f"""
         WITH
             prefiltered_data AS (
                 SELECT
@@ -490,7 +525,7 @@ def kcidb_tests_results(origin, giturl, branch, hash, path, interval, group_size
                 WHERE t.origin = %(origin)s
                     AND c.git_repository_url = %(giturl)s
                     AND c.git_repository_branch = %(branch)s
-                    AND t.path LIKE %(path)s
+                    {path_clause}
                     AND t.environment_misc->>'platform' != 'kubernetes'
                     AND C.start_time <= (
                         SELECT

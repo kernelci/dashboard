@@ -515,10 +515,13 @@ paths:
       - in: query
         name: path
         schema:
-          default: '%'
+          default:
+          - '%'
+          items:
+            type: string
           title: Path
-          type: string
-        description: The test path to query for. SQL Wildcard can be used.
+          type: array
+        description: A list of test paths to query for. SQL Wildcard can be used.
       tags:
       - kci-summary
       security:

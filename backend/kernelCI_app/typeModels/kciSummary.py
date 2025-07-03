@@ -8,7 +8,7 @@ from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.databases import Test__Id, Test__StartTime, Test__Status
 from kernelCI_app.typeModels.treeListing import TestStatusCount
 
-DEFAULT_PATH_SEARCH = "%"
+DEFAULT_PATH_SEARCH = ["%"]
 DEFAULT_GROUP_SIZE = 3
 
 
@@ -18,7 +18,7 @@ class KciSummaryQueryParameters(BaseModel):
     )
     git_branch: str = Field(description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION)
     git_url: str = Field(description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION)
-    path: str = Field(
+    path: list[str] = Field(
         default=DEFAULT_PATH_SEARCH, description=DocStrings.KCI_SUMMARY_PATH_DESCRIPTION
     )
     group_size: int = Field(

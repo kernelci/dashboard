@@ -11,14 +11,14 @@ tree: # The filename and the name of the tree may follow the trees-name.yaml fil
       branch: master
       always: True
     
-    - microsoft:
+    - microsoft: # The name of the report does not matter, as long as they are unique
       origin: microsoft
       branch: master
       always: True
 
     - rt_tests:
       branch: master
-      path: rt-tests*
+      path: [rt-tests%] # An array of paths to be looked at in the query
       recipients:
         - linux-rt-devel@lists.linux.dev
       # The possible options for a report should be documented in the `PossibleReportOptions` type

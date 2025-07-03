@@ -387,18 +387,18 @@ def evaluate_test_results(
     giturl: str,
     branch: str,
     commit_hash: str,
-    path: str,
+    path: list[str],
     interval: str,
     group_size: int,
 ):
     tests = kcidb_tests_results(
-        origin,
-        giturl,
-        branch,
-        commit_hash,
-        path,
-        interval,
-        group_size,
+        origin=origin,
+        giturl=giturl,
+        branch=branch,
+        hash=commit_hash,
+        paths=path,
+        interval=interval,
+        group_size=group_size,
     )
 
     # Group by platform, then by config_name, then by path

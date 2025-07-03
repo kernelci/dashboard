@@ -86,7 +86,7 @@ class DocStrings:
     # KCI Summary related descriptions
     REGRESSIONS_GROUP = "Regressions are grouped by hardware, config, and path."
     KCI_SUMMARY_PATH_DESCRIPTION = (
-        "The test path to query for. SQL Wildcard can be used."
+        "A list of test paths to query for. SQL Wildcard can be used."
     )
     KCI_SUMMARY_DASHBOARD_URL_DESCRIPTION = (
         "The dashboard url of this tree/branch/commit"
