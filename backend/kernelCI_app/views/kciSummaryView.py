@@ -14,6 +14,7 @@ from kernelCI_app.management.commands.helpers.summary import TreeKey
 from kernelCI_app.management.commands.notifications import evaluate_test_results
 from kernelCI_app.queries.notifications import get_checkout_summary_data
 from kernelCI_app.typeModels.kciSummary import (
+    DEFAULT_GROUP_SIZE,
     DEFAULT_PATH_SEARCH,
     KciSummaryQueryParameters,
     KciSummaryResponse,
@@ -33,6 +34,7 @@ class KciSummary(APIView):
                 git_branch=request.GET.get("git_branch"),
                 git_url=request.GET.get("git_url"),
                 path=request.GET.get("path", DEFAULT_PATH_SEARCH),
+                group_size=request.GET.get("group_size", DEFAULT_GROUP_SIZE),
             )
             origin = params.origin
             git_url = params.git_url
@@ -43,7 +45,11 @@ class KciSummary(APIView):
         # Even though this is using a single key and could be swapped for the treeListing query directly,
         # it is better to keep the same query as the notification command
         tree_key: TreeKey = (git_branch, git_url, origin)
-        records = get_checkout_summary_data([tree_key])
+        records = get_checkout_summary_data(
+            tuple_params=[tree_key],
+            interval_min="0 hours",
+            interval_max="24 hours",
+        )
         if not records:
             return create_api_error_response(
                 error_message="Tree not found", status_code=HTTPStatus.OK
@@ -73,6 +79,8 @@ class KciSummary(APIView):
             branch=git_branch,
             commit_hash=commit_hash,
             path=params.path,
+            interval="1 day",
+            group_size=params.group_size,
         )
 
         try:

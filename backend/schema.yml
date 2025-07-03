@@ -498,6 +498,14 @@ paths:
         description: Git repository URL of the tree
         required: true
       - in: query
+        name: group_size
+        schema:
+          default: 3
+          exclusiveMinimum: 0
+          title: Group Size
+          type: integer
+        description: Maximum number of entries to be retrieved in a test history.
+      - in: query
         name: origin
         schema:
           default: maestro

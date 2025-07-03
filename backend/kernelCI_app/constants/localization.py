@@ -100,3 +100,6 @@ class DocStrings:
     KCI_SUMMARY_UNSTABLE_TESTS_DESCRIPTION = (
         "History of tests that are unstable. " + REGRESSIONS_GROUP
     )
+    KCI_SUMMARY_GROUP_SIZE_DESCRIPTION = (
+        "Maximum number of entries to be retrieved in a test history."
+    )

@@ -388,8 +388,18 @@ def evaluate_test_results(
     branch: str,
     commit_hash: str,
     path: str,
+    interval: str,
+    group_size: int,
 ):
-    tests = kcidb_tests_results(origin, giturl, branch, commit_hash, path)
+    tests = kcidb_tests_results(
+        origin,
+        giturl,
+        branch,
+        commit_hash,
+        path,
+        interval,
+        group_size,
+    )
 
     # Group by platform, then by config_name, then by path
     grouped = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
@@ -466,6 +476,8 @@ def run_checkout_summary(
                 branch=branch,
                 commit_hash=commit_hash,
                 path=path,
+                interval="7 days",
+                group_size=5,
             )
 
             always = (

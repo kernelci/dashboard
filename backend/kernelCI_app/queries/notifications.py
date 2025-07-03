@@ -358,7 +358,10 @@ def kcidb_last_test_without_issue(issue, incident):
 # Similar to get_tree_listing_data, but at the same time it has to be different.
 # Only the "with", "join" and "where" clauses change
 def get_checkout_summary_data(
+    *,
     tuple_params: list[tuple[str, str, str]],
+    interval_min="5 hours",
+    interval_max="29 hours",
 ) -> list[dict]:
     """Queries for the checkout and status count data similarly to tree_listing but
     using a list of parameters for the filtering
@@ -373,9 +376,6 @@ def get_checkout_summary_data(
     """
     if not tuple_params:
         return []
-
-    interval_min = "5 hours"
-    interval_max = "29 hours"
 
     with_clause = f"""
             WITH
@@ -404,8 +404,8 @@ def get_checkout_summary_data(
                             AND c.origin = v.origin
                         )
                     WHERE
-                        C.START_TIME >= NOW() - INTERVAL '{interval_max}'
-                        AND C.START_TIME <= NOW() - INTERVAL '{interval_min}'
+                        C.START_TIME >= NOW() - INTERVAL %s
+                        AND C.START_TIME <= NOW() - INTERVAL %s
                 ),
                 FIRST_TREE_CHECKOUT AS (
                     SELECT
@@ -440,11 +440,18 @@ def get_checkout_summary_data(
         flattened_list += list(tuple)
 
     with connection.cursor() as cursor:
-        cursor.execute(query, flattened_list)
+        cursor.execute(
+            query,
+            flattened_list
+            + [
+                interval_max,
+                interval_min,
+            ],
+        )
         return dict_fetchall(cursor=cursor)
 
 
-def kcidb_tests_results(origin, giturl, branch, hash, path):
+def kcidb_tests_results(origin, giturl, branch, hash, path, interval, group_size):
     """Fetches the 5-test history of searched tests in a specific tree.
 
     This query:
@@ -460,7 +467,8 @@ def kcidb_tests_results(origin, giturl, branch, hash, path):
         "branch": branch,
         "hash": hash,
         "path": path,
-        "interval": "7 days",
+        "interval": interval,
+        "group_size": group_size,
     }
 
     query = """
@@ -534,7 +542,7 @@ def kcidb_tests_results(origin, giturl, branch, hash, path):
         FROM
             ranked_data
         WHERE
-            rn <= 5
+            rn <= %(group_size)s
             AND first_hash_by_group = %(hash)s
         ORDER BY
             path,
