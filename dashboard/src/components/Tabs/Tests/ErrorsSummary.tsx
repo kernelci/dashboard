@@ -35,7 +35,7 @@ const ErrorsSummary = ({
             const currentCompilers = [e.compiler];
             return (
               <MemoizedSummaryItem
-                key={e.arch}
+                key={e.arch + e.compiler}
                 diffFilter={diffFilter}
                 arch={{
                   text: e.arch,
