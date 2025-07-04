@@ -586,4 +586,9 @@ def kcidb_tests_results(
             start_time DESC NULLS LAST;
         """
 
-    return kcidb_execute_query(query, params)
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        # TODO: check if it is possible to remove dict_fetchall.
+        # dict_fetchall has a performance impact and this query returns many rows,
+        # so they shouldn't be together
+        return dict_fetchall(cursor=cursor)
