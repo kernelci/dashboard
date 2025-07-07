@@ -431,6 +431,20 @@ def evaluate_test_results(
     return new_issues, fixed_issues, unstable_tests
 
 
+def process_submission_options(
+    *,
+    default_recipients: list[str],
+    specific_recipients: list[str],
+    options: list[PossibleReportOptions],
+) -> list[str]:
+    recipients = default_recipients + specific_recipients
+
+    if "ignore_default_recipients" in options:
+        recipients = specific_recipients
+
+    return recipients
+
+
 def run_checkout_summary(
     *,
     service,
@@ -486,12 +500,11 @@ def run_checkout_summary(
                 else False
             )
 
-            if not always:
-                if not new_issues and not fixed_issues and not unstable_tests:
-                    print(
-                        f"No changes for {giturl} branch: {branch} (origin: {origin})"
-                    )
-                    continue
+            if not always and (
+                not new_issues and not fixed_issues and not unstable_tests
+            ):
+                print(f"No changes for {giturl} branch: {branch} (origin: {origin})")
+                continue
 
             build_status_group = group_status(checkout.build_status)
             boot_status_group = group_status(checkout.boot_status)
@@ -513,14 +526,12 @@ def run_checkout_summary(
                 f"[STATUS] {tree_name}/{branch} - {record["git_commit_hash"]}"
             )
 
-            default_recipients = tree_report.get("default_recipients", [])
-            specific_recipients = tree_report.get("recipients", [])
-            recipients = default_recipients + specific_recipients
-            report_options: list[PossibleReportOptions] = tree_report.get("options", [])
-            for option in report_options:
-                match option:
-                    case "ignore_default_recipients":
-                        recipients = specific_recipients
+            recipients = process_submission_options(
+                default_recipients=tree_report.get("default_recipients", []),
+                specific_recipients=tree_report.get("recipients", []),
+                options=tree_report.get("options", []),
+            )
+
             email_args.tree_name = tree_name
             msg_id = send_email_report(
                 service=service,
