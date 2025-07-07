@@ -187,6 +187,7 @@ def kcidb_issue_details(issue_id):
                c.git_repository_branch,
                c.git_commit_hash,
                c.git_commit_name,
+               c.git_commit_tags,
                ROW_NUMBER() OVER (PARTITION BY inc.issue_id ORDER BY inc._timestamp ASC) as incident_rn
            FROM incidents inc
            JOIN builds b ON inc.build_id = b.id
@@ -205,6 +206,7 @@ def kcidb_issue_details(issue_id):
                c.git_repository_branch,
                c.git_commit_hash,
                c.git_commit_name,
+               c.git_commit_tags,
                ROW_NUMBER() OVER (PARTITION BY inc.issue_id ORDER BY inc._timestamp ASC) as incident_rn
            FROM incidents inc
            JOIN tests t ON inc.test_id = t.id
@@ -226,6 +228,7 @@ def kcidb_issue_details(issue_id):
             fi.git_repository_branch,
             fi.git_commit_hash,
             fi.git_commit_name,
+            fi.git_commit_tags,
             COUNT(inc.id) AS incident_count
         FROM our_issue n
         LEFT JOIN first_incidents fi ON n.id = fi.issue_id AND fi.incident_rn = 1
@@ -242,7 +245,8 @@ def kcidb_issue_details(issue_id):
             fi.tree_name,
             fi.git_repository_branch,
             fi.git_commit_hash,
-            fi.git_commit_name
+            fi.git_commit_name,
+            fi.git_commit_tags
     """
 
     return kcidb_execute_query(query, params)
