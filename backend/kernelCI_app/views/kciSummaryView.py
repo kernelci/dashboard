@@ -33,7 +33,7 @@ class KciSummary(APIView):
                 origin=request.GET.get("origin", DEFAULT_ORIGIN),
                 git_branch=request.GET.get("git_branch"),
                 git_url=request.GET.get("git_url"),
-                path=request.GET.get("path", DEFAULT_PATH_SEARCH),
+                path=request.GET.getlist("path", DEFAULT_PATH_SEARCH),
                 group_size=request.GET.get("group_size", DEFAULT_GROUP_SIZE),
             )
             origin = params.origin
