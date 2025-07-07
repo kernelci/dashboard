@@ -13,6 +13,9 @@ New build issue found on {{ issue["tree_name"] }}/{{ issue["git_repository_branc
 - dashboard: https://d.kernelci.org/i/{{ issue["id"] }}
 - giturl: {{ issue["git_repository_url"]}}
 - commit HEAD:  {{ issue["git_commit_hash"] }}
+{% if issue["git_commit_tags"] -%}
+- tags: {% for tag in issue["git_commit_tags"] %}{{tag}}{% if not loop.last %},{% endif %}{% endfor %}
+{%- endif %}
 
 {% if "misc" in issue.keys() and "logspec" in issue["misc"].keys() %}
 Log excerpt:
