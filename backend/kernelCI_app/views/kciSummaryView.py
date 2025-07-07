@@ -73,17 +73,17 @@ class KciSummary(APIView):
                 &ti%7Ct={tree_name}
                 &o={origin}"""
 
-        new_issues, fixed_issues, unstable_tests = evaluate_test_results(
-            origin=origin,
-            giturl=git_url,
-            branch=git_branch,
-            commit_hash=commit_hash,
-            path=params.path,
-            interval="1 day",
-            group_size=params.group_size,
-        )
-
         try:
+            new_issues, fixed_issues, unstable_tests = evaluate_test_results(
+                origin=origin,
+                giturl=git_url,
+                branch=git_branch,
+                commit_hash=commit_hash,
+                path=params.path,
+                interval="1 day",
+                group_size=params.group_size,
+            )
+
             valid_response = KciSummaryResponse(
                 dashboard_url=dashboard_url,
                 git_url=git_url,
@@ -100,5 +100,10 @@ class KciSummary(APIView):
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return create_api_error_response(
+                error_message=str(e),
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
         return Response(valid_response.model_dump())

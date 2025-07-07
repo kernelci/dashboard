@@ -484,15 +484,21 @@ def run_checkout_summary(
         for tree_report in tree_report_list:
             path = tree_report["path"] if "path" in tree_report else "%"
 
-            new_issues, fixed_issues, unstable_tests = evaluate_test_results(
-                origin=origin,
-                giturl=giturl,
-                branch=branch,
-                commit_hash=commit_hash,
-                path=path,
-                interval="7 days",
-                group_size=5,
-            )
+            # In case an error happens in the query, we don't want to send an empty report
+            try:
+                new_issues, fixed_issues, unstable_tests = evaluate_test_results(
+                    origin=origin,
+                    giturl=giturl,
+                    branch=branch,
+                    commit_hash=commit_hash,
+                    path=path,
+                    interval="7 days",
+                    group_size=5,
+                )
+            except Exception as e:
+                log_message("Error while evaluating test results")
+                log_message(f"Query execution failed: {e}")
+                sys.exit()
 
             always = (
                 True
