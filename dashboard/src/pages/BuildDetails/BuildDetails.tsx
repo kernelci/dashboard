@@ -26,6 +26,7 @@ const BuildDetailsPage = (): JSX.Element => {
         testId: testId,
       },
       search: s => s,
+      state: s => s,
     }),
     [],
   );

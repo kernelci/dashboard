@@ -27,6 +27,7 @@ const TreeBuildDetails = (): JSX.Element => {
         treeId: treeId,
       },
       search: s => s,
+      state: s => s,
     }),
     [treeId],
   );

@@ -1,7 +1,7 @@
 import type { MessageDescriptor } from 'react-intl';
 import { FormattedMessage } from 'react-intl';
 
-import { memo, type JSX } from 'react';
+import { memo, useMemo, type JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 import { useRouterState } from '@tanstack/react-router';
@@ -22,7 +22,40 @@ const TreeBreadcrumb = ({
   searchParams: LinkProps['search'];
   locationMessage: MessageDescriptor['id'];
 }): JSX.Element => {
-  const treeId = useRouterState({ select: s => s.location.state.id });
+  const {
+    treeName,
+    branch,
+    id: treeId,
+  } = useRouterState({
+    select: s => s.location.state,
+  });
+  const canGoDirect = treeName && branch && treeId;
+
+  const treeParams = useMemo(
+    () =>
+      canGoDirect
+        ? ({
+            to: '/tree/$treeName/$branch/$hash',
+            params: { treeName: treeName, branch: branch, hash: treeId },
+          } as const)
+        : ({ to: '/tree/$treeId', params: { treeId: treeId } } as const),
+    [canGoDirect, treeName, branch, treeId],
+  );
+
+  const breadcrumbLink = useMemo(
+    () => (
+      <BreadcrumbLink
+        to={treeParams.to}
+        params={treeParams.params}
+        search={searchParams}
+        state={s => s}
+      >
+        <FormattedMessage id="tree.details" />
+      </BreadcrumbLink>
+    ),
+    [treeParams, searchParams],
+  );
+
   return (
     <Breadcrumb className="pt-6 pb-6">
       <BreadcrumbList>
@@ -32,14 +65,7 @@ const TreeBreadcrumb = ({
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
-        <BreadcrumbLink
-          to={`/tree/$treeId`}
-          params={{ treeId: treeId }}
-          search={searchParams}
-          state={s => s}
-        >
-          <FormattedMessage id="tree.details" />
-        </BreadcrumbLink>
+        {breadcrumbLink}
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbPage>

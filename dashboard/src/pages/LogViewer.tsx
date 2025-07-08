@@ -61,6 +61,9 @@ export function LogViewer(): JSX.Element {
   const { data, status } = useLogViewer(url);
   const { data: logData, isLoading } = useLogData(itemId ?? '', type);
 
+  const { treeName, branch, id } = historyState;
+  const canGoDirect = treeName && branch && id;
+
   const breadcrumbComponent = useMemo(() => {
     if (!type || !itemId) {
       return undefined;
@@ -73,7 +76,7 @@ export function LogViewer(): JSX.Element {
     const components: IBreadcrumbComponent[] = [];
 
     const historyFrom = historyState.from as keyof typeof routes;
-    if (historyState.id !== undefined && routes[historyFrom]) {
+    if (id !== undefined && routes[historyFrom]) {
       const { base, details, build, test } = routes[historyFrom];
 
       components.push({
@@ -81,21 +84,34 @@ export function LogViewer(): JSX.Element {
         messageId: base.messageId,
       });
 
-      components.push({
-        linkProps: {
-          to: details.path,
-          params: { [details.paramKey]: historyState.id },
-          state: s => s,
-          search: previousSearch,
-        },
-        messageId: details.messageId,
-      });
+      if (canGoDirect) {
+        components.push({
+          linkProps: {
+            to: '/tree/$treeName/$branch/$hash',
+            params: { treeName: treeName, branch: branch, hash: id },
+            state: s => s,
+            search: previousSearch,
+          },
+          messageId: details.messageId,
+        });
+      } else {
+        components.push({
+          linkProps: {
+            to: details.path,
+            params: { [details.paramKey]: id },
+            state: s => s,
+            search: previousSearch,
+          },
+          messageId: details.messageId,
+        });
+      }
 
       if (type === 'build') {
         components.push({
           linkProps: {
             to: build.path,
-            params: { [details.paramKey]: historyState.id, buildId: itemId },
+            params: { [details.paramKey]: id, buildId: itemId },
+            state: s => s,
           },
           messageId: build.messageId,
         });
@@ -103,7 +119,8 @@ export function LogViewer(): JSX.Element {
         components.push({
           linkProps: {
             to: test.path,
-            params: { [details.paramKey]: historyState.id, buildId: itemId },
+            params: { [details.paramKey]: id, buildId: itemId },
+            state: s => s,
           },
           messageId: test.messageId,
         });
@@ -131,7 +148,16 @@ export function LogViewer(): JSX.Element {
     components.push({ linkProps: {}, messageId: 'logSheet.title' });
 
     return <MemoizedBreadcrumbGenerator components={components} />;
-  }, [type, itemId, historyState, previousSearch]);
+  }, [
+    type,
+    itemId,
+    historyState,
+    previousSearch,
+    branch,
+    treeName,
+    id,
+    canGoDirect,
+  ]);
 
   return (
     <main className="bg-light-gray min-h-[100vh] border-2 px-8 pt-14 pb-3">

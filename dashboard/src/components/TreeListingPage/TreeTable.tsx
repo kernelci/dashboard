@@ -108,11 +108,19 @@ const getLinkProps = (
         }),
       };
 
+  const stateParams = canGoDirect
+    ? {
+        treeName: tree_name,
+        branch: branch,
+        id: hash,
+      }
+    : { id: hash };
+
   return {
     ...urlDirection,
     state: s => ({
       ...s,
-      id: hash,
+      ...stateParams,
       from: RedirectFrom.Tree,
       treeStatusCount: {
         builds: statusCountToRequiredStatusCount({

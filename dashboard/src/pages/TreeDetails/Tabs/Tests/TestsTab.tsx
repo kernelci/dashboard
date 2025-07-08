@@ -1,7 +1,12 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
-import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
+import {
+  useParams,
+  useNavigate,
+  useSearch,
+  useRouterState,
+} from '@tanstack/react-router';
 
 import { useCallback, useMemo, type JSX } from 'react';
 
@@ -36,6 +41,7 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { getStringParam } from '@/utils/utils';
 
 interface TestsTabProps {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
@@ -107,20 +113,49 @@ const TestsTab = ({
     [navigate],
   );
 
+  const { treeName, branch, id } = useRouterState({
+    select: s => s.location.state,
+  });
+  const paramsTreeName = getStringParam(params, 'treeName');
+  const paramsBranch = getStringParam(params, 'branch');
+  const paramsHash = getStringParam(params, 'hash');
+
+  const stateIsSetted = treeName && branch && id;
+  const stateParams = useMemo(
+    () =>
+      !stateIsSetted
+        ? { treeName: paramsTreeName, branch: paramsBranch, id: paramsHash }
+        : {},
+    [stateIsSetted, paramsTreeName, paramsBranch, paramsHash],
+  );
+
+  const canGoDirect = paramsTreeName && paramsBranch && paramsHash;
+
   const getRowLink = useCallback(
     (bootId: string): LinkProps => {
-      return {
-        to: '/tree/$treeId/test/$testId',
-        params: {
-          testId: bootId,
-          treeId: sanitizedTreeInfo.hash,
-        },
-        search: s => ({
-          origin: s.origin,
-        }),
-      };
+      return canGoDirect
+        ? {
+            to: '/test/$testId',
+            params: {
+              testId: bootId,
+            },
+            search: s => ({
+              origin: s.origin,
+            }),
+            state: s => ({ ...s, ...stateParams, from: RedirectFrom.Tree }),
+          }
+        : {
+            to: '/tree/$treeId/test/$testId',
+            params: {
+              testId: bootId,
+              treeId: sanitizedTreeInfo.hash,
+            },
+            search: s => ({
+              origin: s.origin,
+            }),
+          };
     },
-    [sanitizedTreeInfo.hash],
+    [stateParams, canGoDirect, sanitizedTreeInfo],
   );
 
   const onClickFilter = useCallback(

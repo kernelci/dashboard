@@ -42,6 +42,8 @@ declare module '@tanstack/react-router' {
   interface HistoryState {
     id?: string;
     from?: RedirectFrom;
+    treeName?: string;
+    branch?: string;
     treeStatusCount?: {
       builds?: RequiredStatusCount;
       boots?: RequiredStatusCount;

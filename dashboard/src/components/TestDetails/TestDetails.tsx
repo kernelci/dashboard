@@ -109,8 +109,8 @@ const TestDetailsSections = ({
       linkTo = '/hardware/$hardwareId/build/$buildId';
       linkParams = { hardwareId: historyState.id, buildId: test.build_id };
     } else if (historyState.from === RedirectFrom.Tree && historyState.id) {
-      linkTo = '/tree/$treeId/build/$buildId';
-      linkParams = { treeId: historyState.id, buildId: test.build_id };
+      linkTo = '/build/$buildId';
+      linkParams = { buildId: test.build_id };
     } else {
       linkParams = { buildId: test.build_id };
     }

@@ -2,7 +2,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useMemo, type JSX } from 'react';
 
-import { Link } from '@tanstack/react-router';
+import { Link, useRouterState } from '@tanstack/react-router';
 
 import { SearchIcon } from '@/components/Icons/SearchIcon';
 import { StatusIcon } from '@/components/Icons/StatusIcons';
@@ -61,6 +61,23 @@ export const LogViewerCard = ({
     }
   }, [logUrl]);
 
+  const { treeName, branch, id } = useRouterState({
+    select: s => s.location.state,
+  });
+
+  const logDataTreeName = logData?.tree_name;
+  const logDataBranch = logData?.git_repository_branch;
+  const logDataHash = logData?.git_commit_hash;
+
+  const stateIsSetted = treeName && branch && id;
+  const stateParams = useMemo(
+    () =>
+      !stateIsSetted
+        ? { treeName: logDataTreeName, branch: logDataBranch, id: logDataHash }
+        : {},
+    [stateIsSetted, logDataTreeName, logDataBranch, logDataHash],
+  );
+
   const linkComponent = useMemo(() => {
     if (logUrl) {
       return (
@@ -74,7 +91,7 @@ export const LogViewerCard = ({
               type: itemType,
               origin: s.origin,
             })}
-            state={s => s}
+            state={s => ({ ...s, ...stateParams })}
           >
             <FormattedMessage
               id="logViewer.viewFullLog"
@@ -93,7 +110,7 @@ export const LogViewerCard = ({
         </div>
       );
     }
-  }, [logUrl, itemId, itemType, fileName]);
+  }, [logUrl, itemId, itemType, fileName, stateParams]);
 
   const hardwareLabel = useMemo(() => {
     return `${hardware} (${architecture})`;

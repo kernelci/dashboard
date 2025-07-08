@@ -1,7 +1,12 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import {
+  useNavigate,
+  useParams,
+  useRouterState,
+  useSearch,
+} from '@tanstack/react-router';
 
 import { useCallback, useMemo, type JSX } from 'react';
 
@@ -36,6 +41,7 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { getStringParam } from '@/utils/utils';
 
 interface BootsTabProps {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
@@ -150,18 +156,48 @@ const BootsTab = ({
 
   const bootsData = useMemo(() => fullData?.boots, [fullData?.boots]);
 
+  const { treeName, branch, id } = useRouterState({
+    select: s => s.location.state,
+  });
+  const paramsTreeName = getStringParam(params, 'treeName');
+  const paramsBranch = getStringParam(params, 'branch');
+  const paramsHash = getStringParam(params, 'hash');
+
+  const stateIsSetted = treeName && branch && id;
+  const stateParams = useMemo(
+    () =>
+      !stateIsSetted
+        ? { treeName: paramsTreeName, branch: paramsBranch, id: paramsHash }
+        : {},
+    [stateIsSetted, paramsTreeName, paramsBranch, paramsHash],
+  );
+
+  const canGoDirect = paramsTreeName && paramsBranch && paramsHash;
+
   const getRowLink = useCallback(
-    (bootId: string): LinkProps => ({
-      to: '/tree/$treeId/test/$testId',
-      params: {
-        testId: bootId,
-        treeId: sanitizedTreeInfo.hash,
-      },
-      search: s => ({
-        origin: s.origin,
-      }),
-    }),
-    [sanitizedTreeInfo.hash],
+    (bootId: string): LinkProps =>
+      canGoDirect
+        ? {
+            to: '/test/$testId',
+            params: {
+              testId: bootId,
+            },
+            search: s => ({
+              origin: s.origin,
+            }),
+            state: s => ({ ...s, ...stateParams, from: RedirectFrom.Tree }),
+          }
+        : {
+            to: '/tree/$treeId/test/$testId',
+            params: {
+              testId: bootId,
+              treeId: sanitizedTreeInfo.hash,
+            },
+            search: s => ({
+              origin: s.origin,
+            }),
+          },
+    [stateParams, sanitizedTreeInfo, canGoDirect],
   );
 
   const hardwareData = useMemo((): PropertyStatusCounts => {
