@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import TypedDict
+from typing_extensions import Annotated
 from pydantic import BaseModel, Field
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
-from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.common import StatusCount, make_default_validator
 from kernelCI_app.typeModels.databases import Test__Id, Test__StartTime, Test__Status
 from kernelCI_app.typeModels.treeListing import TestStatusCount
 
@@ -13,19 +14,39 @@ DEFAULT_GROUP_SIZE = 3
 
 
 class KciSummaryQueryParameters(BaseModel):
-    origin: str = Field(
-        default=DEFAULT_ORIGIN, description=DocStrings.TREE_QUERY_ORIGIN_DESCRIPTION
-    )
-    git_branch: str = Field(description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION)
-    git_url: str = Field(description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION)
-    path: list[str] = Field(
-        default=DEFAULT_PATH_SEARCH, description=DocStrings.KCI_SUMMARY_PATH_DESCRIPTION
-    )
-    group_size: int = Field(
-        gt=0,
-        default=DEFAULT_GROUP_SIZE,
-        description=DocStrings.KCI_SUMMARY_GROUP_SIZE_DESCRIPTION,
-    )
+    origin: Annotated[
+        str,
+        Field(
+            default=DEFAULT_ORIGIN,
+            description=DocStrings.TREE_QUERY_ORIGIN_DESCRIPTION,
+        ),
+        make_default_validator(DEFAULT_ORIGIN),
+    ]
+    git_branch: Annotated[
+        str,
+        Field(description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION),
+    ]
+    git_url: Annotated[
+        str,
+        Field(description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION),
+    ]
+    path: Annotated[
+        list[str],
+        Field(
+            default=DEFAULT_PATH_SEARCH,
+            description=DocStrings.KCI_SUMMARY_PATH_DESCRIPTION,
+        ),
+        make_default_validator(DEFAULT_PATH_SEARCH),
+    ]
+    group_size: Annotated[
+        int,
+        Field(
+            gt=0,
+            default=DEFAULT_GROUP_SIZE,
+            description=DocStrings.KCI_SUMMARY_GROUP_SIZE_DESCRIPTION,
+        ),
+        make_default_validator(DEFAULT_GROUP_SIZE),
+    ]
 
 
 class RegressionHistoryItem(TypedDict):

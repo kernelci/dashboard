@@ -1,6 +1,6 @@
 from typing import Optional, TypedDict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, BeforeValidator
 
 from kernelCI_app.helpers.logger import log_message
 
@@ -39,3 +39,7 @@ class GroupedStatus(TypedDict):
     success: int
     failed: int
     inconclusive: int
+
+
+def make_default_validator(default) -> BeforeValidator:
+    return BeforeValidator(lambda var: default if var is None else var)

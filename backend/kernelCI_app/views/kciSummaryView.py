@@ -7,15 +7,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
 
-from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.summary import TreeKey
 from kernelCI_app.management.commands.notifications import evaluate_test_results
 from kernelCI_app.queries.notifications import get_checkout_summary_data
 from kernelCI_app.typeModels.kciSummary import (
-    DEFAULT_GROUP_SIZE,
-    DEFAULT_PATH_SEARCH,
     KciSummaryQueryParameters,
     KciSummaryResponse,
 )
@@ -30,11 +27,11 @@ class KciSummary(APIView):
     def get(self, request: HttpRequest):
         try:
             params = KciSummaryQueryParameters(
-                origin=request.GET.get("origin", DEFAULT_ORIGIN),
+                origin=request.GET.get("origin"),
                 git_branch=request.GET.get("git_branch"),
                 git_url=request.GET.get("git_url"),
-                path=request.GET.getlist("path", DEFAULT_PATH_SEARCH),
-                group_size=request.GET.get("group_size", DEFAULT_GROUP_SIZE),
+                path=request.GET.getlist("path"),
+                group_size=request.GET.get("group_size"),
             )
             origin = params.origin
             git_url = params.git_url
