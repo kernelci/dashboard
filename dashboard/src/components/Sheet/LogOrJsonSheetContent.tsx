@@ -13,9 +13,11 @@ import { MemoizedMoreDetailsButton } from '@/components/Button/MoreDetailsButton
 
 import { LogViewerCard } from '@/components/Log/LogViewerCard';
 import { LogExcerpt } from '@/components/Log/LogExcerpt';
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import IssueSection from '@/components/Issue/IssueSection';
 import type { TIssue } from '@/types/issues';
 import type { LogData } from '@/hooks/useLogData';
+import { useLogExcerpt } from '@/api/logViewer';
 
 export type SheetType = 'log' | 'json';
 
@@ -47,6 +49,10 @@ export const LogOrJsonSheetContent = ({
   status,
   error,
 }: ILogSheet): JSX.Element => {
+  const logExcerpt = logData?.log_excerpt;
+  const { data: logExcerptData, status: logExcerptStatus } =
+    useLogExcerpt(logExcerpt);
+
   return (
     <WrapperSheetContent
       sheetTitle={type === 'log' ? 'logSheet.title' : 'jsonSheet.title'}
@@ -63,11 +69,13 @@ export const LogOrJsonSheetContent = ({
             logData={logData}
             isLoading={navigationLogsActions?.isLoading}
           />
-          <LogExcerpt
-            logExcerpt={logData?.log_excerpt}
-            isLoading={navigationLogsActions?.isLoading}
-            variant="default"
-          />
+          <QuerySwitcher data={logExcerptData} status={logExcerptStatus}>
+            <LogExcerpt
+              logExcerpt={logExcerptData?.content}
+              isLoading={navigationLogsActions?.isLoading}
+              variant="default"
+            />
+          </QuerySwitcher>
 
           {!hideIssueSection && (
             <IssueSection

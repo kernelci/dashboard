@@ -241,6 +241,8 @@ export const messages = {
     'logViewer.disabledHighlight':
       'The text highlight was disabled in this log due to the log size',
     'logViewer.download': 'Download full log',
+    'logViewer.errorFetchingLogExcerpt':
+      'Error fetching logExcerpt at: {logExcerpt}',
     'logViewer.viewFullLog': 'View full log for {fileName}',
     'logspec.info':
       "This is the same logspec data that's in the misc data section",
