@@ -1,15 +1,8 @@
 from typing import Optional
 from django.db import connection
-from django.db.utils import ProgrammingError
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.database import dict_fetchall
-from kernelCI_app.helpers.environment import DEFAULT_SCHEMA_VERSION, set_schema_version
-from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.models import Checkouts, Issues
-from kernelCI_app.helpers.build import (
-    is_valid_does_not_exist_exception,
-    valid_status_field,
-)
 
 
 def _get_issue_version_clause(*, version: Optional[int]) -> str:
@@ -40,7 +33,7 @@ def get_issue_builds(*, issue_id: str, version: Optional[int]) -> list[dict]:
             B.ID,
             B.ARCHITECTURE,
             B.CONFIG_NAME,
-            B.{valid_status_field()} AS build_status,
+            B.STATUS AS build_status,
             B.START_TIME,
             B.DURATION,
             B.COMPILER,
@@ -57,19 +50,9 @@ def get_issue_builds(*, issue_id: str, version: Optional[int]) -> list[dict]:
             AND {version_clause}
     """
 
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            return dict_fetchall(cursor)
-    except ProgrammingError as e:
-        if is_valid_does_not_exist_exception(e):
-            set_schema_version()
-            log_message(
-                f"Issue Builds -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
-            )
-            return get_issue_builds(issue_id=issue_id, version=version)
-        else:
-            raise
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return dict_fetchall(cursor)
 
 
 def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
@@ -185,14 +168,14 @@ def get_issue_details(*, issue_id: str, version: int) -> Optional[dict]:
 def get_build_issues(*, build_id: str) -> list[dict]:
     """Retrieves the issues of a given build through a build_id"""
 
-    query = f"""
+    query = """
         SELECT
             incidents.id,
             issues.id,
             issues.version,
             issues.comment,
             issues.report_url,
-            builds.{valid_status_field()} AS status
+            builds.status AS status
         FROM incidents
         JOIN issues
             ON incidents.issue_id = issues.id

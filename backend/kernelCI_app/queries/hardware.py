@@ -1,19 +1,8 @@
 from typing import TypedDict
-from kernelCI_app.helpers.environment import (
-    DEFAULT_SCHEMA_VERSION,
-    get_schema_version,
-    set_schema_version,
-)
-from kernelCI_app.helpers.logger import log_message
 from datetime import datetime
 from django.db import connection
-from django.db.utils import ProgrammingError
 
 from kernelCI_app.helpers.database import dict_fetchall
-from kernelCI_app.helpers.build import (
-    is_valid_does_not_exist_exception,
-    valid_status_field,
-)
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
@@ -59,21 +48,7 @@ def _get_hardware_tree_heads_clause(*, id_only: bool) -> str:
 
 
 def _get_hardware_listing_count_clauses() -> str:
-    build_valid_count_clause = """
-    COUNT(DISTINCT CASE WHEN "build_status" = TRUE AND build_id
-        NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS pass_builds,
-    COUNT(DISTINCT CASE WHEN "build_status" = FALSE AND build_id
-        NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS fail_builds,
-    COUNT(DISTINCT CASE WHEN "build_status" IS NULL AND build_id IS
-        NOT NULL AND build_id NOT LIKE 'maestro:dummy_%%' THEN build_id END)
-        AS null_builds,
-    0 AS error_builds,
-    0 AS miss_builds,
-    0 AS done_builds,
-    0 AS skip_builds,
-    """
-
-    build_status_count_clause = """
+    build_count_clause = """
     COUNT(DISTINCT CASE WHEN "build_status" = 'PASS' AND build_id
         NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS pass_builds,
     COUNT(DISTINCT CASE WHEN "build_status" = 'FAIL' AND build_id
@@ -90,12 +65,6 @@ def _get_hardware_listing_count_clauses() -> str:
     COUNT(DISTINCT CASE WHEN "build_status" = 'SKIP' AND build_id
         NOT LIKE 'maestro:dummy_%%' THEN build_id END) AS skip_builds,
     """
-
-    build_count_clause = (
-        build_valid_count_clause
-        if get_schema_version() == "4"
-        else build_status_count_clause
-    )
 
     boot_count_clause = """
     COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
@@ -169,7 +138,7 @@ def get_hardware_listing_data(
                     "tests"."origin",
                     "tests"."id",
                     b.id AS build_id,
-                    b.{valid_status_field()} AS build_status
+                    b.status AS build_status
                 FROM
                     tests
                     INNER JOIN builds b ON tests.build_id = b.id
@@ -191,23 +160,9 @@ def get_hardware_listing_data(
             hardware
     """
 
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            return dict_fetchall(cursor)
-    except ProgrammingError as e:
-        if is_valid_does_not_exist_exception(e):
-            set_schema_version()
-            log_message(
-                f"Hardware Listing -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
-            )
-            return get_hardware_listing_data(
-                start_date=start_date,
-                end_date=end_date,
-                origin=origin,
-            )
-        else:
-            raise
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return dict_fetchall(cursor)
 
 
 def get_hardware_details_data(
@@ -249,101 +204,85 @@ def query_records(
     commit_hashes = [tree.head_git_commit_hash for tree in trees]
 
     # TODO Treat commit_hash collision (it can happen between repos)
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT
-                    tests.id,
-                    tests.origin AS test_origin,
-                    tests.environment_misc,
-                    tests.path,
-                    tests.comment,
-                    tests.log_url,
-                    tests.status,
-                    tests.start_time,
-                    tests.duration,
-                    tests.misc,
-                    tests.build_id,
-                    tests.environment_compatible,
-                    builds.architecture AS build__architecture,
-                    builds.config_name AS build__config_name,
-                    builds.misc AS build__misc,
-                    builds.config_url AS build__config_url,
-                    builds.compiler AS build__compiler,
-                    builds.{0} AS build__status,
-                    builds.duration AS build__duration,
-                    builds.log_url AS build__log_url,
-                    builds.start_time AS build__start_time,
-                    builds.origin AS build__origin,
-                    checkouts.git_repository_url AS build__checkout__git_repository_url,
-                    checkouts.git_repository_branch AS build__checkout__git_repository_branch,
-                    checkouts.git_commit_name AS build__checkout__git_commit_name,
-                    checkouts.git_commit_hash AS build__checkout__git_commit_hash,
-                    checkouts.tree_name AS build__checkout__tree_name,
-                    checkouts.origin AS build__checkout__origin,
-                    incidents.id AS incidents__id,
-                    incidents.issue_id AS incidents__issue__id,
-                    issues.version AS incidents__issue__version,
-                    issues.comment AS incidents__issue__comment,
-                    issues.report_url AS incidents__issue__report_url,
-                    incidents.test_id AS incidents__test_id,
-                    T7.issue_id AS build__incidents__issue__id,
-                    T8.version AS build__incidents__issue__version
-                FROM
-                    tests
-                INNER JOIN builds ON
-                    tests.build_id = builds.id
-                INNER JOIN checkouts ON
-                    builds.checkout_id = checkouts.id
-                LEFT OUTER JOIN incidents ON
-                    tests.id = incidents.test_id
-                LEFT OUTER JOIN issues ON
-                    incidents.issue_id = issues.id AND incidents.issue_version = issues.version
-                LEFT OUTER JOIN incidents T7 ON
-                    builds.id = T7.build_id
-                LEFT OUTER JOIN issues T8 ON
-                    T7.issue_id = T8.id AND T7.issue_version = T8.version
-                WHERE
-                    (
-                        tests.environment_compatible @> ARRAY[%s]::TEXT[]
-                        OR tests.environment_misc ->> 'platform' = %s
-                    )
-                    AND tests.origin = %s
-                    AND tests.start_time >= %s
-                    AND tests.start_time <= %s
-                    AND checkouts.git_commit_hash IN ({1})
-                ORDER BY
-                    issues."_timestamp" DESC
-                """.format(
-                    valid_status_field(), ",".join(["%s"] * len(commit_hashes))
-                ),
-                [
-                    hardware_id,
-                    hardware_id,
-                    origin,
-                    start_date,
-                    end_date,
-                ]
-                + commit_hashes,
-            )
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                tests.id,
+                tests.origin AS test_origin,
+                tests.environment_misc,
+                tests.path,
+                tests.comment,
+                tests.log_url,
+                tests.status,
+                tests.start_time,
+                tests.duration,
+                tests.misc,
+                tests.build_id,
+                tests.environment_compatible,
+                builds.architecture AS build__architecture,
+                builds.config_name AS build__config_name,
+                builds.misc AS build__misc,
+                builds.config_url AS build__config_url,
+                builds.compiler AS build__compiler,
+                builds.status AS build__status,
+                builds.duration AS build__duration,
+                builds.log_url AS build__log_url,
+                builds.start_time AS build__start_time,
+                builds.origin AS build__origin,
+                checkouts.git_repository_url AS build__checkout__git_repository_url,
+                checkouts.git_repository_branch AS build__checkout__git_repository_branch,
+                checkouts.git_commit_name AS build__checkout__git_commit_name,
+                checkouts.git_commit_hash AS build__checkout__git_commit_hash,
+                checkouts.tree_name AS build__checkout__tree_name,
+                checkouts.origin AS build__checkout__origin,
+                incidents.id AS incidents__id,
+                incidents.issue_id AS incidents__issue__id,
+                issues.version AS incidents__issue__version,
+                issues.comment AS incidents__issue__comment,
+                issues.report_url AS incidents__issue__report_url,
+                incidents.test_id AS incidents__test_id,
+                T7.issue_id AS build__incidents__issue__id,
+                T8.version AS build__incidents__issue__version
+            FROM
+                tests
+            INNER JOIN builds ON
+                tests.build_id = builds.id
+            INNER JOIN checkouts ON
+                builds.checkout_id = checkouts.id
+            LEFT OUTER JOIN incidents ON
+                tests.id = incidents.test_id
+            LEFT OUTER JOIN issues ON
+                incidents.issue_id = issues.id AND incidents.issue_version = issues.version
+            LEFT OUTER JOIN incidents T7 ON
+                builds.id = T7.build_id
+            LEFT OUTER JOIN issues T8 ON
+                T7.issue_id = T8.id AND T7.issue_version = T8.version
+            WHERE
+                (
+                    tests.environment_compatible @> ARRAY[%s]::TEXT[]
+                    OR tests.environment_misc ->> 'platform' = %s
+                )
+                AND tests.origin = %s
+                AND tests.start_time >= %s
+                AND tests.start_time <= %s
+                AND checkouts.git_commit_hash IN ({0})
+            ORDER BY
+                issues."_timestamp" DESC
+            """.format(
+                ",".join(["%s"] * len(commit_hashes))
+            ),
+            [
+                hardware_id,
+                hardware_id,
+                origin,
+                start_date,
+                end_date,
+            ]
+            + commit_hashes,
+        )
 
-            return dict_fetchall(cursor)
-    except ProgrammingError as e:
-        if is_valid_does_not_exist_exception(e):
-            set_schema_version()
-            log_message(
-                f"Hardware Details -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
-            )
-            return query_records(
-                hardware_id=hardware_id,
-                origin=origin,
-                trees=trees,
-                start_date=start_date,
-                end_date=end_date,
-            )
-        else:
-            raise
+        return dict_fetchall(cursor)
 
 
 def get_hardware_trees_data(

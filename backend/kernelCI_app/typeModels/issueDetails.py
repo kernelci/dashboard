@@ -1,10 +1,11 @@
 from typing import List, Optional
 from typing_extensions import Annotated
-from pydantic import BaseModel, BeforeValidator, RootModel, Field, field_validator
-from kernelCI_app.helpers.build import build_status_map
+from pydantic import BaseModel, BeforeValidator, RootModel, Field
 from kernelCI_app.constants.localization import DocStrings
 
+from kernelCI_app.typeModels.common import make_default_validator
 from kernelCI_app.typeModels.databases import (
+    NULL_STATUS,
     Build__Id,
     Build__Architecture,
     Build__ConfigName,
@@ -24,8 +25,8 @@ from kernelCI_app.typeModels.databases import (
     Issue__Comment,
     Issue__Misc,
     Origin,
+    StatusValues,
     Test__Id,
-    Test__Status,
     Test__Duration,
     Test__Path,
     Test__StartTime,
@@ -48,7 +49,11 @@ class IssueBuildItem(BaseModel):
     id: Build__Id
     architecture: Build__Architecture
     config_name: Build__ConfigName
-    status: Build__Status = Field(validation_alias="build_status")
+    status: Annotated[
+        Build__Status,
+        Field(validation_alias="build_status"),
+        make_default_validator(NULL_STATUS),
+    ]
     start_time: Build__StartTime
     duration: Build__Duration
     compiler: Build__Compiler
@@ -56,17 +61,13 @@ class IssueBuildItem(BaseModel):
     tree_name: Checkout__TreeName
     git_repository_branch: Checkout__GitRepositoryBranch
 
-    @field_validator("status", mode="before")
-    @classmethod
-    def valid_to_status(cls, value) -> str:
-        if isinstance(value, bool) or value is None:
-            return build_status_map(value)
-        return value
-
 
 class IssueTestItem(BaseModel):
     id: Test__Id
-    status: Test__Status
+    status: Annotated[
+        StatusValues,
+        make_default_validator(NULL_STATUS),
+    ]
     duration: Test__Duration
     path: Test__Path
     start_time: Test__StartTime

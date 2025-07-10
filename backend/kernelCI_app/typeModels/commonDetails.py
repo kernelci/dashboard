@@ -2,12 +2,14 @@ import json
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Union, Tuple, Any
+from typing_extensions import Annotated
 
 from pydantic import BaseModel, field_validator, Field
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.common import StatusCount, make_default_validator
 from kernelCI_app.typeModels.issues import Issue
 from kernelCI_app.typeModels.databases import (
+    NULL_STATUS,
     EnvironmentMisc,
     Build__Id,
     Build__Architecture,
@@ -23,7 +25,6 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitRepositoryBranch,
     Origin,
 )
-from kernelCI_app.helpers.build import build_status_map
 
 
 class TestArchSummaryItem(BaseModel):
@@ -59,7 +60,11 @@ class BuildHistoryItem(BaseModel):
     misc: Build__Misc
     config_url: Build__ConfigUrl
     compiler: Build__Compiler
-    status: Build__Status = Field(validation_alias="valid")
+    status: Annotated[
+        Build__Status,
+        Field(validation_alias="valid"),
+        make_default_validator(NULL_STATUS),
+    ]
     duration: Build__Duration
     log_url: Build__LogUrl
     start_time: Build__StartTime
@@ -77,13 +82,6 @@ class BuildHistoryItem(BaseModel):
             return None
         else:
             log_message(f"Invalid misc for BuildHistoryItem;\nType: {type(value)}")
-
-    @field_validator("status", mode="before")
-    @classmethod
-    def valid_to_status(cls, value: Any) -> str:
-        if isinstance(value, bool) or value is None:
-            return build_status_map(value)
-        return value
 
 
 class TestSummary(BaseModel):

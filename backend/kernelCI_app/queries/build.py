@@ -1,13 +1,6 @@
-from django.db.utils import ProgrammingError
 from typing import Optional
 from querybuilder.query import Query
-from kernelCI_app.helpers.environment import DEFAULT_SCHEMA_VERSION, set_schema_version
 from kernelCI_app.models import Builds, Tests
-from kernelCI_app.helpers.build import (
-    is_valid_does_not_exist_exception,
-    valid_status_field,
-)
-from kernelCI_app.helpers.logger import log_message
 
 
 def get_build_details(build_id: str) -> Optional[list[dict]]:
@@ -26,7 +19,7 @@ def get_build_details(build_id: str) -> Optional[list[dict]]:
         "config_name",
         "config_url",
         "log_url",
-        {"valid": valid_status_field()},
+        {"valid": "status"},
         "misc",
         "input_files",
         "output_files",
@@ -48,38 +41,18 @@ def get_build_details(build_id: str) -> Optional[list[dict]]:
     )
     query.where(**{"builds.id__eq": build_id})
 
-    try:
-        return query.select()
-    except ProgrammingError as e:
-        if is_valid_does_not_exist_exception(e):
-            set_schema_version()
-            log_message(
-                f"Build Details -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
-            )
-            return get_build_details(build_id=build_id)
-        else:
-            raise
+    return query.select()
 
 
 def get_build_tests(build_id: str) -> Optional[list[dict]]:
-    try:
-        result = Tests.objects.filter(build_id=build_id).values(
-            "id",
-            "duration",
-            "status",
-            "path",
-            "start_time",
-            "environment_compatible",
-            "environment_misc",
-            f"build__{valid_status_field()}",
-        )
-        return list(result)
-    except ProgrammingError as e:
-        if is_valid_does_not_exist_exception(e):
-            set_schema_version()
-            log_message(
-                f"Build Details Tests -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
-            )
-            return get_build_tests(build_id=build_id)
-        else:
-            raise
+    result = Tests.objects.filter(build_id=build_id).values(
+        "id",
+        "duration",
+        "status",
+        "path",
+        "start_time",
+        "environment_compatible",
+        "environment_misc",
+        "build__status",
+    )
+    return list(result)

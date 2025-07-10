@@ -9,9 +9,12 @@ from kernelCI_app.helpers.filters import (
     should_increment_build_issue,
     should_increment_test_issue,
 )
-from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.constants.general import UNKNOWN_STRING
-from kernelCI_app.typeModels.databases import FAIL_STATUS, build_fail_status_list
+from kernelCI_app.typeModels.databases import (
+    FAIL_STATUS,
+    NULL_STATUS,
+    build_fail_status_list,
+)
 from kernelCI_app.typeModels.issues import Issue, IssueDict
 from kernelCI_app.utils import create_issue_typed, extract_error_message
 from kernelCI_app.helpers.misc import (
@@ -117,9 +120,8 @@ def get_current_row_data(current_row: dict) -> dict:
     current_row_data["test_error"] = extract_error_message(
         current_row_data["test_misc"]
     )
-    current_row_data["build_status"] = build_status_map(
-        current_row_data["build_status"]
-    ).upper()
+    if current_row_data["build_status"] is None:
+        current_row_data["build_status"] = NULL_STATUS
     if current_row_data["test_environment_compatible"] is None:
         current_row_data["test_environment_compatible"] = UNKNOWN_STRING
     else:

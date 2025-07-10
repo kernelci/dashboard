@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from kernelCI_app.helpers.build import build_status_map, valid_status_field
 from kernelCI_app.helpers.discordWebhook import send_discord_notification
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.logger import create_endpoint_notification
@@ -27,10 +26,7 @@ class BuildTests(APIView):
                 status_code=HTTPStatus.OK,
             )
 
-        if (
-            build_status_map(result[0].get(f"build__{valid_status_field()}"))
-            == FAIL_STATUS
-        ):
+        if result[0].get("build__status") == FAIL_STATUS:
             notification = create_endpoint_notification(
                 message="Found tests for a failed build.",
                 request=request,

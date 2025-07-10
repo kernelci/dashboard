@@ -11,7 +11,6 @@ from kernelCI_app.constants.hardwareDetails import (
     SELECTED_HEAD_TREE_VALUE,
 )
 from kernelCI_app.constants.general import UNKNOWN_STRING
-from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
     FilterParams,
@@ -262,7 +261,7 @@ def handle_tree_status_summary(
     tree_status_summary[tree_index][test_type_key][record["status"]] += 1
 
     if record["build_id"] not in processed_builds:
-        build_status = build_status_map(record["build__status"])
+        build_status = record.get("build__status", NULL_STATUS)
         tree_status_summary[tree_index]["builds"][build_status] += 1
 
 
@@ -378,8 +377,7 @@ def handle_build_summary(
 ) -> None:
     build: HardwareBuildHistoryItem = get_build_typed(record, tree_idx=tree_index)
 
-    # TODO: use build_status_map values or BuildStatusCount keys
-    status_key = build_status_map(build.status)
+    status_key = build.status
     setattr(
         builds_summary.status,
         status_key,

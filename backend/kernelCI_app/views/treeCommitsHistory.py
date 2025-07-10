@@ -27,7 +27,6 @@ from kernelCI_app.typeModels.treeCommits import (
 )
 from pydantic import ValidationError
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
-from kernelCI_app.helpers.build import build_status_map
 from kernelCI_app.queries.tree import get_tree_commit_history
 
 
@@ -59,6 +58,7 @@ class TreeCommitsHistory(APIView):
         self.filterBootPath = self.filterParams.filterBootPath
         self.filterBuildStatus = self.filterParams.filterBuildStatus
 
+    # TODO: use a pydantic model instead of a dict
     def sanitize_rows(self, rows: dict) -> list:
         return [
             {
@@ -70,7 +70,7 @@ class TreeCommitsHistory(APIView):
                 "architecture": row[5],
                 "compiler": row[6],
                 "config_name": row[7],
-                "build_status": build_status_map(row[8]),
+                "build_status": NULL_STATUS if row[8] is None else row[8],
                 "build_origin": row[9],
                 "test_path": row[10],
                 "test_status": row[11],

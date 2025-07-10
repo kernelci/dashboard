@@ -1,8 +1,9 @@
 from datetime import datetime
-from typing import Annotated, Any, Dict, List, Literal, Optional, Union
+from typing import Annotated, Dict, List, Literal, Optional, Union
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 
+from kernelCI_app.typeModels.common import make_default_validator
 from kernelCI_app.typeModels.commonDetails import (
     BuildHistoryItem,
     GlobalFilters,
@@ -12,6 +13,7 @@ from kernelCI_app.typeModels.commonDetails import (
 )
 
 from kernelCI_app.typeModels.databases import (
+    NULL_STATUS,
     Issue__Id,
     Origin,
     StatusValues,
@@ -19,17 +21,11 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitRepositoryBranch,
     Issue__Version,
 )
-from pydantic import BaseModel, BeforeValidator, Field
-
-
-def process_status(value: Any) -> Any:
-    if value is None:
-        return "NULL"
-    return value
+from pydantic import BaseModel, Field
 
 
 class DefaultRecordValues(BaseModel):
-    status: Annotated[StatusValues, BeforeValidator(process_status)]
+    status: Annotated[StatusValues, make_default_validator(NULL_STATUS)]
 
 
 class HardwareDetailsPostBody(BaseModel):

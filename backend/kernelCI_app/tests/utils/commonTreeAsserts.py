@@ -19,13 +19,11 @@ def assert_summary_issues(
     assert "unknown_issues" in task_summary
 
     known_issues = len(task_summary["issues"])
-    failed_tests = task_summary["status"].get(
-        "FAIL", task_summary["status"].get("invalid")
-    )
+    failed_tests = task_summary["status"].get("FAIL")
 
-    if value in {"PASS", "valid"}:
+    if value == "PASS":
         assert known_issues == 0
-    elif value in {"FAIL", "invalid"}:
+    elif value == "FAIL":
         if known_issues == 0 and failed_tests > 0:
             assert content["summary"][task]["unknown_issues"] == failed_tests
         else:

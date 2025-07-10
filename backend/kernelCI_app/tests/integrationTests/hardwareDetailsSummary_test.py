@@ -406,7 +406,7 @@ def test_filter_issues(issues_input):
             assert issue["version"] == int(version)
 
     assert "status" in task_summary
-    pass_count = task_summary["status"].get("PASS", task_summary["status"].get("valid"))
+    pass_count = task_summary["status"].get("PASS")
     assert pass_count == 0
 
 

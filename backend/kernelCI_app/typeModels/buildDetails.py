@@ -1,9 +1,13 @@
 from typing import List
+from typing_extensions import Annotated
 from pydantic import BaseModel, RootModel
 
+from kernelCI_app.typeModels.common import make_default_validator
 from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
 from kernelCI_app.typeModels.databases import (
+    NULL_STATUS,
     Origin,
+    StatusValues,
     Timestamp,
     Checkout__Id,
     Checkout__TreeName,
@@ -18,7 +22,6 @@ from kernelCI_app.typeModels.databases import (
     Test__Id,
     Test__Duration,
     Test__Path,
-    Test__Status,
     Test__StartTime,
     Test__EnvironmentCompatible,
     Test__EnvironmentMisc,
@@ -42,7 +45,7 @@ class BuildDetailsResponse(BuildHistoryItem):
 
 class BuildTestItem(BaseModel):
     id: Test__Id
-    status: Test__Status
+    status: Annotated[StatusValues, make_default_validator(NULL_STATUS)]
     duration: Test__Duration
     path: Test__Path
     start_time: Test__StartTime

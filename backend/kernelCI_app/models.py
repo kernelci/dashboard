@@ -83,9 +83,10 @@ class Builds(models.Model):
     config_url = models.TextField(blank=True, null=True)
     log_url = models.TextField(blank=True, null=True)
     log_excerpt = models.CharField(max_length=16384, blank=True, null=True)
-    valid = models.BooleanField(blank=True, null=True)
-    status = models.TextField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
+    status = models.CharField(
+        max_length=10, choices=StatusChoices.choices, blank=True, null=True
+    )
 
     class Meta:
         managed = False

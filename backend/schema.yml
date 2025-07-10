@@ -1680,7 +1680,7 @@ components:
         id:
           $ref: '#/components/schemas/Test__Id'
         status:
-          $ref: '#/components/schemas/Test__Status'
+          $ref: '#/components/schemas/StatusValues'
         duration:
           $ref: '#/components/schemas/Test__Duration'
         path:
@@ -2752,7 +2752,7 @@ components:
         id:
           $ref: '#/components/schemas/Test__Id'
         status:
-          $ref: '#/components/schemas/Test__Status'
+          $ref: '#/components/schemas/StatusValues'
         duration:
           $ref: '#/components/schemas/Test__Duration'
         path:

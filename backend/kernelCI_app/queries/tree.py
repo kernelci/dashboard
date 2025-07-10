@@ -1,39 +1,15 @@
 from typing import Optional
 from django.db import connection
-from django.db.utils import ProgrammingError
 
-from kernelCI_app.helpers.environment import (
-    DEFAULT_SCHEMA_VERSION,
-    get_schema_version,
-    set_schema_version,
-)
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.models import Checkouts
 from kernelCI_app.utils import get_query_time_interval
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
-from kernelCI_app.helpers.build import (
-    is_valid_does_not_exist_exception,
-    valid_status_field,
-)
-from kernelCI_app.helpers.logger import log_message
 
 
 def _get_tree_listing_count_clause() -> str:
-    build_valid_count_clause = """
-        COUNT(DISTINCT CASE WHEN (builds.valid = true AND builds.id NOT LIKE 'maestro:dummy_%%')
-            THEN builds.id END) AS pass_builds,
-        COUNT(DISTINCT CASE WHEN (builds.valid = false AND builds.id NOT LIKE 'maestro:dummy_%%')
-            THEN builds.id END) AS fail_builds,
-        COUNT(DISTINCT CASE WHEN (builds.valid IS NULL AND builds.id IS NOT NULL
-            AND builds.id NOT LIKE 'maestro:dummy_%%') THEN builds.id END) AS null_builds,
-        0 AS error_builds,
-        0 AS miss_builds,
-        0 AS done_builds,
-        0 AS skip_builds,
-    """
-
-    build_status_count_clause = """
+    build_count_clause = """
         COUNT(DISTINCT CASE WHEN (builds.status = 'PASS' AND builds.id NOT LIKE 'maestro:dummy_%%')
             THEN builds.id END) AS pass_builds,
         COUNT(DISTINCT CASE WHEN (builds.status = 'FAIL' AND builds.id NOT LIKE 'maestro:dummy_%%')
@@ -49,12 +25,6 @@ def _get_tree_listing_count_clause() -> str:
         COUNT(DISTINCT CASE WHEN (builds.status = 'SKIP' AND builds.id NOT LIKE 'maestro:dummy_%%')
             THEN builds.id END) AS skip_builds,
     """
-
-    build_count_clause = (
-        build_valid_count_clause
-        if get_schema_version() == "4"
-        else build_status_count_clause
-    )
 
     test_count_clause = """
         COUNT(CASE WHEN (tests.path <> 'boot' AND tests.path NOT LIKE 'boot.%%')
@@ -205,22 +175,9 @@ def get_tree_listing_data(origin: str, interval_in_days: int) -> Optional[list[d
         where_clause=where_clause,
     )
 
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            return dict_fetchall(cursor=cursor)
-    except ProgrammingError as e:
-        if is_valid_does_not_exist_exception(e):
-            set_schema_version()
-            log_message(
-                f"Tree Listing Status -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
-            )
-            return get_tree_listing_data(
-                origin=origin,
-                interval_in_days=interval_in_days,
-            )
-        else:
-            raise
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return dict_fetchall(cursor=cursor)
 
 
 # TODO: rename and reuse this query
@@ -327,19 +284,9 @@ def get_tree_listing_data_by_checkout_id(*, checkout_ids: list[str]):
                 checkouts.origin_tests_finish_time
             """
 
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(query, checkout_ids)
-            return dict_fetchall(cursor=cursor)
-    except ProgrammingError as e:
-        if is_valid_does_not_exist_exception(e):
-            set_schema_version()
-            log_message(
-                f"Tree Listing By Checkout Id -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
-            )
-            return get_tree_listing_data_by_checkout_id(checkout_ids=checkout_ids)
-        else:
-            raise
+    with connection.cursor() as cursor:
+        cursor.execute(query, checkout_ids)
+        return dict_fetchall(cursor=cursor)
 
 
 def get_tree_details_data(
@@ -411,7 +358,7 @@ def get_tree_details_data(
                     builds.config_name AS builds_config_name,
                     builds.config_url AS builds_config_url,
                     builds.log_url AS builds_log_url,
-                    builds.{valid_status_field()} AS builds_valid,
+                    builds.status AS builds_valid,
                     builds.misc AS builds_misc,
                     tree_head.*
                 FROM
@@ -445,25 +392,11 @@ def get_tree_details_data(
         ORDER BY
             issues."_timestamp" DESC
         """
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute(query, params)
-                rows = cursor.fetchall()
-                set_query_cache(key=cache_key, params=params, rows=rows)
-        except ProgrammingError as e:
-            if is_valid_does_not_exist_exception(e):
-                set_schema_version()
-                log_message(
-                    f"Tree Details -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
-                )
-                return get_tree_details_data(
-                    origin_param=origin_param,
-                    git_url_param=git_url_param,
-                    commit_hash=commit_hash,
-                    git_branch_param=git_branch_param,
-                )
-            else:
-                raise
+
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            set_query_cache(key=cache_key, params=params, rows=rows)
 
     return rows
 
@@ -640,7 +573,7 @@ def get_tree_commit_history(
         b.architecture,
         b.compiler,
         b.config_name,
-        b.{valid_status_field()},
+        b.status,
         b.origin,
         t.path,
         t.status,
@@ -664,28 +597,12 @@ def get_tree_commit_history(
         LEFT JOIN issues AS i ON ic.issue_id = i.id
     """
 
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(
-                query,
-                field_values,
-            )
-            return cursor.fetchall()
-    except ProgrammingError as e:
-        if is_valid_does_not_exist_exception(e):
-            set_schema_version()
-            log_message(
-                f"Tree Commit History -- Schema version updated to {DEFAULT_SCHEMA_VERSION}"
-            )
-            return get_tree_commit_history(
-                commit_hash=commit_hash,
-                origin=origin,
-                git_url=git_url,
-                git_branch=git_branch,
-                tree_name=tree_name,
-            )
-        else:
-            raise
+    with connection.cursor() as cursor:
+        cursor.execute(
+            query,
+            field_values,
+        )
+        return cursor.fetchall()
 
 
 def get_latest_tree(

@@ -2,6 +2,7 @@ from typing import List, Optional, Dict, Literal, Any, Union, Annotated
 from datetime import datetime
 from pydantic import BaseModel
 
+# TODO: remove these status types in favor of the StatusChoices enum class
 FAIL_STATUS = "FAIL"
 ERROR_STATUS = "ERROR"
 MISS_STATUS = "MISS"
@@ -15,6 +16,7 @@ build_fail_status_list = [FAIL_STATUS, NULL_STATUS]
 type StatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "NULL", "DONE"]
 
 type DatabaseStatusValues = Literal["FAIL", "PASS", "SKIP", "ERROR", "MISS", "DONE"]
+
 
 Jsonb = Annotated[Union[Dict[str, Any], List[Dict[str, Any]]], "Jsonb"]
 
