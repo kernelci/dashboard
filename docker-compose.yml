@@ -2,6 +2,7 @@ volumes:
     backend-data:
     runtime-data:
     static-data:
+    dashboard-db-data:
 
 networks:
     public:
@@ -12,6 +13,19 @@ secrets:
         file: ./backend/runtime/secrets/postgres_password_secret
 
 services:
+    dashboard_db:
+        image: postgres:17
+        environment:
+            - POSTGRES_USER=${DASH_DB_USER:-admin}
+            - POSTGRES_PASSWORD=${DASH_DB_PASSWORD:-admin}
+            - POSTGRES_DB=${DASH_DB_NAME:-dashboard}
+        volumes:
+            - dashboard-db-data:/var/lib/postgresql/data
+        networks:
+            - private
+        ports:
+            - "5434:5432"
+
     cloudsql-proxy:
         image: gcr.io/cloudsql-docker/gce-proxy:latest
         container_name: cloudsql-proxy
