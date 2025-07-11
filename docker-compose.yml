@@ -75,7 +75,7 @@ services:
             - DB_DEFAULT_USER=${DB_DEFAULT_USER:-kernelci}
             - DB_DEFAULT_NAME=${DB_DEFAULT_NAME:-kcidb}
             - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-            - DEBUG=False
+            - DEBUG=${DEBUG:-False}
             - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
             - REDIS_HOST=redis
             - GMAIL_API_TOKEN=gmail_api_token.json
