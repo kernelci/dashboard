@@ -17,8 +17,7 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import IssueSection from '@/components/Issue/IssueSection';
 import type { TIssue } from '@/types/issues';
 import type { LogData } from '@/hooks/useLogData';
-import { LOG_EXCERPT_ALLOWED_DOMAINS } from '@/utils/constants/log_excerpt_allowed_domain';
-import { useLogViewer } from '@/api/logViewer';
+import { useLogExcerptUrl } from '@/api/logViewer';
 
 export type SheetType = 'log' | 'json';
 
@@ -50,17 +49,12 @@ export const LogOrJsonSheetContent = ({
   status,
   error,
 }: ILogSheet): JSX.Element => {
-  const mocked_link =
-    'https://files-staging.kernelci.org/logexcerpt/f0cec57a87733305dacda1348784379f5f7980a3fd2906f47eaf34d2fb918ebf/logexcerpt.txt.gz';
+  // const logExcerpt =
+  //   'https://files-staging.kernelci.org/logexcerpt/f0cec57a87733305dacda1348784379f5f7980a3fd2906f47eaf34d2fb918ebf/logexcerpt.txt.gz';
 
-  const url = new URL(mocked_link);
-  const isAllowedDomain = LOG_EXCERPT_ALLOWED_DOMAINS.includes(url.hostname);
-
-  const { data: logExcerptData, status: logExcerptStatus } = isAllowedDomain
-    ? useLogViewer(mocked_link)
-    : { data: { content: mocked_link }, status: 'success' as 'success' };
-
-  console.log('parsed_info', { logExcerptData, logExcerptStatus });
+  const logExcerpt = logData?.log_excerpt ?? '';
+  const { data: logExcerptData, status: logExcerptStatus } =
+    useLogExcerptUrl(logExcerpt);
 
   return (
     <WrapperSheetContent
