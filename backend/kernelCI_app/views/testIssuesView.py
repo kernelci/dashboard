@@ -9,6 +9,7 @@ from http import HTTPStatus
 from kernelCI_app.queries.issues import get_test_issues
 from kernelCI_app.typeModels.commonOpenApiParameters import TEST_ID_PATH_PARAM
 from kernelCI_app.typeModels.detailsIssuesView import DetailsIssuesResponse
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class TestIssuesView(APIView):
@@ -26,13 +27,15 @@ class TestIssuesView(APIView):
 
         if len(test_issues) == 0:
             return create_api_error_response(
-                error_message="No issues were found for this test",
+                error_message=ClientStrings.TEST_ISSUES_NOT_FOUND,
                 status_code=HTTPStatus.OK,
             )
 
         try:
             valid_test_response = DetailsIssuesResponse(test_issues)
         except ValidationError as e:
-            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return Response(data=e.json(),
+                            status=HTTPStatus.INTERNAL_SERVER_ERROR
+                            )
 
         return Response(valid_test_response.model_dump())

@@ -11,14 +11,60 @@ class ClientStrings:
 
     TREE_BUILDS_NOT_FOUND = "No builds available for this tree/branch/commit"
     TREE_BOOTS_NOT_FOUND = "No boots available for this tree/branch/commit"
-    TREE_NOT_FOUND = "No results available for this tree/branch/commit"
+    TREE_NO_RESULTS = "No results available for this tree/branch/commit"
     TREE_TESTS_NOT_FOUND = "No tests available for this tree/branch/commit"
+    TREE_COMMITS_HISTORY_NOT_FOUND = "History of tree commits not found"
+    TEST_STATUS_HISTORY_NOT_FOUND = "Test status history not found"
+    TEST_ISSUES_NOT_FOUND = "No issues were found for this test"
+    TEST_NOT_FOUND = "Test not found"
+    NO_TREES_FOUND = "No trees were found"
+    PROXY_FETCH_FAILED = "Failed to fetch resource:"
+    PROXY_INVALID_URL = "Invalid URL"
+    PROXY_ERROR_FETCH = "Error fetching the resource"
+    NO_ORIGIN_FOUND = "No origins found"
+    LOG_TABLE_NOT_FOUND = "Table with id 'list' not found"
+    LOG_TABLE_BODY_NOT_FOUND = "Table body not found"
+    LOG_INVALID_TABLE_FORMAT = (
+        "Invalid number of columns in table row (probably not a log website)"
+    )
+    LOG_NO_FILES_FOUND = "No log files found"
+    ISSUE_NOT_FOUND = "Issue not found"
+    NO_ISSUE_FOUND = "No issues found"
+    INVALID_JSON_BODY = (
+        "Invalid body, request body must be a valid json string"
+    )
+    ISSUE_EMPTY_LIST = "Invalid body, the issue list must not be empty"
+    ISSUE_NO_EXTRA_DETAILS = "No extra details found"
+    ISSUE_TESTS_NOT_FOUND = "No tests found for this issue"
+    ISSUE_BUILDS_NOT_FOUND = "No builds found for this issue"
+    NO_HARDWARE_FOUND = "No hardware found"
+    HARDWARE_NOT_FOUND = "Hardware not found"
+    HARDWARE_NO_COMMITS = "This hardware isn't associated with any commit"
+    HARDWARE_TEST_NOT_FOUND = "No tests found for this hardware"
+    HARDWARE_COMMMIT_HISTORY_INVALID_TIMESTAMP = (
+        "startTimestampInSeconds and endTimestampInSeconds must be a Unix "
+        "Timestamp"
+    )
+    HARDWARE_COMMIT_HISTORY_NOT_FOUND = "Commit history not found"
+    HARDWARE_BUILDS_NOT_FOUND = "No builds found for this hardware"
+    HARDWARE_BOOTS_NOT_FOUND = "No boots found for this hardware"
+    BUILDS_TEST_NOT_FOUND = "No tests found for this build"
+    BUILD_ISSUES_NOT_FOUND = "No issues found for this build"
+    BUILD_DETAILS_NOT_FOUND = "Build not found"
+    TREE_NOT_FOUND = "Tree not found."
+    TREE_LATEST_DEFAULT_ORIGIN = (
+        "No origin was provided so it was defaulted to"
+    )
 
 
 @_simple_enum(StrEnum)
 class DocStrings:
-    DEFAULT_START_TS_DESCRIPTION = "Interval start timestamp in seconds for the results"
-    DEFAULT_END_TS_DESCRIPTION = "Interval end timestamp in seconds for the results"
+    DEFAULT_START_TS_DESCRIPTION = (
+        "Interval start timestamp in seconds for the results"
+    )
+    DEFAULT_END_TS_DESCRIPTION = (
+        "Interval end timestamp in seconds for the results"
+    )
     DEFAULT_GIT_BRANCH_DESCRIPTION = "Git branch name of the tree"
     DEFAULT_FILTER_DESCRIPTION = (
         "Optional filter dictionary for additional query parameters"
@@ -53,16 +99,30 @@ class DocStrings:
     LOG_DOWNLOADER_URL_DESCRIPTION = "URL of the log to be downloaded"
 
     TREE_COMMIT_ORIGIN_DESCRIPTION = "Origin to retrieve the tree commits"
-    TREE_COMMIT_GIT_URL_DESCRIPTION = "Git repository URL to retrieve the tree commits"
-    TREE_COMMIT_GIT_BRANCH_DESCRIPTION = "Git branch name to retrieve the tree commits"
-    TREE_COMMIT_START_TS_DESCRIPTION = "Start time filter in seconds for tree commits"
-    TREE_COMMIT_END_TS_DESCRIPTION = "End time filter in seconds for tree commits"
-
-    TREE_LATEST_TREE_NAME_DESCRIPTION = "Name of the tree to retrieve tree information"
-    TREE_LATEST_GIT_BRANCH_DESCRIPTION = "Git branch name to retrieve tree information"
-    TREE_LATEST_COMMIT_HASH_DESCRIPTION = "Commit hash to retrieve tree information"
-    TREE_LATEST_ORIGIN_DESCRIPTION = "Origin filter to retrieve tree information"
-
+    TREE_COMMIT_GIT_URL_DESCRIPTION = (
+        "Git repository URL to retrieve the tree commits"
+    )
+    TREE_COMMIT_GIT_BRANCH_DESCRIPTION = (
+        "Git branch name to retrieve the tree commits"
+    )
+    TREE_COMMIT_START_TS_DESCRIPTION = (
+        "Start time filter in seconds for tree commits"
+    )
+    TREE_COMMIT_END_TS_DESCRIPTION = (
+        "End time filter in seconds for tree commits"
+    )
+    TREE_LATEST_TREE_NAME_DESCRIPTION = (
+        "Name of the tree to retrieve tree information"
+    )
+    TREE_LATEST_GIT_BRANCH_DESCRIPTION = (
+        "Git branch name to retrieve tree information"
+    )
+    TREE_LATEST_COMMIT_HASH_DESCRIPTION = (
+        "Commit hash to retrieve tree information"
+    )
+    TREE_LATEST_ORIGIN_DESCRIPTION = (
+        "Origin filter to retrieve tree information"
+    )
     TREE_QUERY_ORIGIN_DESCRIPTION = "Origin of the tree"
     TREE_QUERY_GIT_URL_DESCRIPTION = "Git repository URL of the tree"
 
@@ -74,7 +134,9 @@ class DocStrings:
     STATUS_HISTORY_CURRENT_TEST_START_DESCRIPTION = (
         "Test start time filter to retrieve tests prior to it"
     )
-    STATUS_HISTORY_CONFIG_NAME_DESCRIPTION = "Config name filter to retrieve tests"
+    STATUS_HISTORY_CONFIG_NAME_DESCRIPTION = (
+        "Config name filter to retrieve tests"
+    )
     STATUS_HISTORY_FIELD_TS_DESCRIPTION = (
         "Test timestamp filter to retrieve tests prior to it"
     )
@@ -84,7 +146,9 @@ class DocStrings:
     TEST_STATUS_SUMMARY_DESCRIPTION = "Summary of test statuses"
 
     # KCI Summary related descriptions
-    REGRESSIONS_GROUP = "Regressions are grouped by hardware, config, and path."
+    REGRESSIONS_GROUP = (
+        "Regressions are grouped by hardware, config, and path."
+    )
     KCI_SUMMARY_PATH_DESCRIPTION = (
         "A list of test paths to query for. SQL Wildcard can be used."
     )

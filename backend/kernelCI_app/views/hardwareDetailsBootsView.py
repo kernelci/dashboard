@@ -33,6 +33,7 @@ from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     HARDWARE_ID_PATH_PARAM,
 )
+from kernelCI_app.constants.localization import ClientStrings
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -115,14 +116,14 @@ class HardwareDetailsBoots(APIView):
         except json.JSONDecodeError:
             return Response(
                 data={
-                    "error": "Invalid body, request body must be a valid json string"
+                    "error": ClientStrings.INVALID_JSON_BODY
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
         except (ValueError, TypeError):
             return Response(
                 data={
-                    "error": "startTimeStamp and endTimeStamp must be a Unix Timestamp"
+                    "error": ClientStrings.HARDWARE_INVALID_TIMESTAMP
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
@@ -136,7 +137,7 @@ class HardwareDetailsBoots(APIView):
 
         if len(trees) == 0:
             return create_api_error_response(
-                error_message="This hardware isn't associated with any commit",
+                error_message=ClientStrings.HARDWARE_NO_COMMITS,
                 status_code=HTTPStatus.OK,
             )
 
@@ -154,7 +155,7 @@ class HardwareDetailsBoots(APIView):
 
         if len(records) == 0:
             return create_api_error_response(
-                error_message="No boots found for this hardware",
+                error_message=ClientStrings.HARDWARE_BOOTS_NOT_FOUND,
                 status_code=HTTPStatus.OK,
             )
 

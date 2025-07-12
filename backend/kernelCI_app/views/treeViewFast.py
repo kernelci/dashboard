@@ -11,6 +11,7 @@ from kernelCI_app.typeModels.treeListing import (
     TreeListingFastResponse,
 )
 from pydantic import ValidationError
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class TreeViewFast(APIView):
@@ -40,7 +41,8 @@ class TreeViewFast(APIView):
 
         if not checkouts:
             return create_api_error_response(
-                error_message="Trees not found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.NO_TREES_FOUND,
+                status_code=HTTPStatus.OK
             )
 
         response_data: list[CheckoutFast] = []
@@ -66,6 +68,8 @@ class TreeViewFast(APIView):
         try:
             valid_response = TreeListingFastResponse(response_data)
         except ValidationError as e:
-            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return Response(data=e.json(),
+                            status=HTTPStatus.INTERNAL_SERVER_ERROR
+                            )
 
         return Response(valid_response.model_dump())

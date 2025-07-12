@@ -90,7 +90,7 @@ class TreeDetailsTests(APIView):
 
         if len(rows) == 0:
             return create_api_error_response(
-                error_message=ClientStrings.TREE_NOT_FOUND,
+                error_message=TREE_NO_RESULTS,
                 status_code=HTTPStatus.OK,
             )
 

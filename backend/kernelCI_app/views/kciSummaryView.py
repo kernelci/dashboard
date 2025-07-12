@@ -19,6 +19,7 @@ from kernelCI_app.typeModels.kciSummary import (
     KciSummaryQueryParameters,
     KciSummaryResponse,
 )
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class KciSummary(APIView):
@@ -52,7 +53,8 @@ class KciSummary(APIView):
         )
         if not records:
             return create_api_error_response(
-                error_message="Tree not found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.TREE_NOT_FOUND,
+                status_code=HTTPStatus.OK
             )
         record = records[0]
 
