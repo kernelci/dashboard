@@ -9,6 +9,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class TestDetails(APIView):
@@ -21,12 +22,16 @@ class TestDetails(APIView):
 
         if not response:
             return create_api_error_response(
-                error_message="Test not found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.TEST_NOT_FOUND,
+                status_code=HTTPStatus.OK
             )
 
         try:
             valid_response = TestDetailsResponse(**response[0])
         except ValidationError as e:
-            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return Response(
+                data=e.json(),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR
+            )
 
         return Response(valid_response.model_dump())

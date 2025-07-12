@@ -28,6 +28,7 @@ from kernelCI_app.typeModels.treeCommits import (
 from pydantic import ValidationError
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.queries.tree import get_tree_commit_history
+from kernelCI_app.constants.localization import ClientStrings
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -423,7 +424,7 @@ class TreeCommitsHistory(APIView):
 
         if not rows:
             return create_api_error_response(
-                error_message="History of tree commits not found",
+                error_message=ClientStrings.TREE_COMMITS_HISTORY_NOT_FOUND,
                 status_code=HTTPStatus.OK,
             )
 
@@ -471,6 +472,8 @@ class TreeCommitsHistory(APIView):
         try:
             valid_response = TreeCommitsResponse(results)
         except ValidationError as e:
-            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return Response(data=e.json(),
+                            status=HTTPStatus.INTERNAL_SERVER_ERROR
+                            )
 
         return Response(valid_response.model_dump(by_alias=True))
