@@ -35,7 +35,7 @@ giturl: {{ checkout["git_repository_url"] }}
 branch: {{ checkout["git_repository_branch"] }}
 commit hash: {{ checkout["git_commit_hash"] }}
 origin: {{ checkout["origin"] }}
-test start time: {{ checkout["_timestamp"] }}
+test start time: {{ checkout["start_time"] }}
 
 Builds:{{ "\t" }}{{ "{:>5}".format(build_status_group["success"]) }} ✅
 {{- "{:>5}".format(build_status_group["failed"]) }} ❌
