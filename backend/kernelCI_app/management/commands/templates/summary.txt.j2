@@ -37,9 +37,15 @@ commit hash: {{ checkout["git_commit_hash"] }}
 origin: {{ checkout["origin"] }}
 test start time: {{ checkout["_timestamp"] }}
 
-Builds: {{ build_status_group["success"]}} Pass, {{ build_status_group["failed"] }} Fail, {{ build_status_group["inconclusive"] }} Other status
-Boots: {{ boot_status_group["success"]}} Pass, {{ boot_status_group["failed"] }} Fail, {{ boot_status_group["inconclusive"] }} Other status
-Tests: {{ test_status_group["success"]}} Pass, {{ test_status_group["failed"] }} Fail, {{ test_status_group["inconclusive"] }} Other status
+Builds:{{ "\t" }}{{ "{:>5}".format(build_status_group["success"]) }} ✅
+{{- "{:>5}".format(build_status_group["failed"]) }} ❌
+{{- "{:>5}".format(build_status_group["inconclusive"]) }} ⚠️
+Boots: {{ "\t" }}{{ "{:>5}".format(boot_status_group["success"]) }} ✅
+{{- "{:>5}".format(boot_status_group["failed"]) }} ❌
+{{- "{:>5}".format(boot_status_group["inconclusive"]) }} ⚠️
+Tests: {{ "\t" }}{{ "{:>5}".format(test_status_group["success"]) }} ✅
+{{- "{:>5}".format(test_status_group["failed"]) }} ❌
+{{- "{:>5}".format(test_status_group["inconclusive"]) }} ⚠️
 
 ### POSSIBLE REGRESSIONS
 {%- if new_issues %}
