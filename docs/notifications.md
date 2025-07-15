@@ -40,7 +40,46 @@ The command supports four primary actions:
 | `--to` | Specify direct recipient email | String | None |
 | `--cc` | Specify CC recipient emails a "email1, email2" list  | String | None |
 | `--yes` | Send email without confirmation | Flag | False |
-| `--credentials-file` | Path to Gmail API credentials file. You only need it to generate the gmail_api_token.json file | String | None |
+
+
+## Email Configuration
+
+The notification system uses Django's SMTP backend to send emails. Configure the following environment variables:
+
+### SMTP Settings
+
+```bash
+# Email backend configuration
+export EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend"
+export EMAIL_HOST="smtp.gmail.com"
+export EMAIL_PORT=587
+export EMAIL_USE_TLS=True
+export EMAIL_HOST_USER="bot@kernelci.org"
+export EMAIL_HOST_PASSWORD="your-app-password"
+```
+
+Only `EMAIL_HOST_PASSWORD` is a required parameter. All the others
+are optional and already set in settings.py.
+
+### Gmail Configuration
+
+For Gmail SMTP:
+1. Use an app-specific password (not your regular Gmail password)
+2. Enable 2-factor authentication on your Google account
+3. Generate an app password at https://myaccount.google.com/apppasswords
+4. Use the generated password in `EMAIL_HOST_PASSWORD`
+
+### Testing Configuration
+
+Test your email configuration with:
+
+```bash
+poetry run python manage.py notifications \
+  --action fake_report \
+  --to your-email@example.com \
+  --send \
+  --yes
+```
 
 
 ## Adding yourself to recipients

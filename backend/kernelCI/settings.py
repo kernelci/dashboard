@@ -174,7 +174,15 @@ CRONJOBS = [
     ),
 ]
 
-GMAIL_API_TOKEN = get_json_env_var("GMAIL_API_TOKEN", "gmail_api_token.json")
+# Email settings for SMTP backend
+EMAIL_BACKEND = get_json_env_var(
+    "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = get_json_env_var("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = get_json_env_var("EMAIL_PORT", 587)
+EMAIL_USE_TLS = get_json_env_var("EMAIL_USE_TLS", True)
+EMAIL_HOST_USER = get_json_env_var("EMAIL_HOST_USER", "bot@kernelci.org")
+EMAIL_HOST_PASSWORD = get_json_env_var("EMAIL_HOST_PASSWORD", "")
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

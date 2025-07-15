@@ -15,8 +15,8 @@ from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.system import is_production_instance
 
 from kernelCI_app.helpers.email import (
-    gmail_setup_service,
-    gmail_send_email,
+    smtp_setup_connection,
+    smtp_send_email,
 )
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
@@ -141,7 +141,7 @@ def send_email_report(
 
     print(f"sending {subject}.")
 
-    return gmail_send_email(
+    return smtp_send_email(
         service, sender_email, to, subject, message_text, cc, reply_to
     )
 
@@ -150,6 +150,7 @@ def setup_jinja_template(file):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     templates = os.path.join(base_dir, "templates")
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(templates))
+
     return env.get_template(file)
 
 
@@ -604,9 +605,6 @@ class Command(BaseCommand):
             action="store_true",
             help="Ignore recipients.yaml file",
         )
-        parser.add_argument(
-            "--credentials-file", type=str, help="Credentials file for the Gmail API"
-        )
 
         # Action argument (replaces subparsers)
         parser.add_argument(
@@ -659,7 +657,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Setup connections
-        service = gmail_setup_service(options.get("credentials_file"))
+        service = smtp_setup_connection()
 
         # Create the email_args namespace
         email_args = SimpleNamespace()
