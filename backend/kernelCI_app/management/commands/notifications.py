@@ -96,9 +96,10 @@ def send_email_report(
 
     if not email_args.send:
         print("\n==============================================")
+        print("DRY RUN (--send is False)")
         print(f"new report:\n> {subject}")
         print(message_text)
-        print("Email not sent since flag --send is False")
+        print("==============================================")
         return None
 
     cc = ""
