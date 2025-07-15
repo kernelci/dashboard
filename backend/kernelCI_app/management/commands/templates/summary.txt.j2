@@ -29,7 +29,8 @@ Hello,
 Status summary for {{ checkout["tree_name"] }}/{{ checkout["git_repository_branch"] }}
 
 Dashboard:
-https://d.kernelci.org/tree/{{ checkout["git_commit_hash"] }}?ti%7Cc={{ checkout["git_commit_name"] }}&ti%7Cch={{ checkout["git_commit_hash"] }}&ti%7Cgb={{ checkout["git_repository_branch"] }}&ti%7Cgu={{ git_url_safe }}&ti%7Ct={{ checkout["tree_name"] }}
+https://d.kernelci.org/c/{{ checkout["tree_name"] }}/{{ checkout["git_repository_branch"] }}/{{ checkout["git_commit_hash"] -}}/
+{%- if checkout["origin"] != "maestro" %}?o={{ checkout["origin"] }}{% endif %}
 
 giturl: {{ checkout["git_repository_url"] }}
 branch: {{ checkout["git_repository_branch"] }}
