@@ -479,62 +479,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/IssueExtraDetailsResponse'
           description: ''
-  /api/kci-summary/:
-    get:
-      operationId: kci_summary_retrieve
-      parameters:
-      - in: query
-        name: git_branch
-        schema:
-          title: Git Branch
-          type: string
-        description: Git branch name of the tree
-        required: true
-      - in: query
-        name: git_url
-        schema:
-          title: Git Url
-          type: string
-        description: Git repository URL of the tree
-        required: true
-      - in: query
-        name: group_size
-        schema:
-          default: 3
-          exclusiveMinimum: 0
-          title: Group Size
-          type: integer
-        description: Maximum number of entries to be retrieved in a test history.
-      - in: query
-        name: origin
-        schema:
-          default: maestro
-          title: Origin
-          type: string
-        description: Origin of the tree
-      - in: query
-        name: path
-        schema:
-          default:
-          - '%'
-          items:
-            type: string
-          title: Path
-          type: array
-        description: A list of test paths to query for. SQL Wildcard can be used.
-      tags:
-      - kci-summary
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/KciSummaryResponse'
-          description: ''
   /api/log-downloader/:
     get:
       operationId: log_downloader_retrieve
@@ -931,6 +875,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TreeListingFastResponse'
+          description: ''
+  /api/tree-report/:
+    get:
+      operationId: tree_report_retrieve
+      parameters:
+      - in: query
+        name: git_branch
+        schema:
+          title: Git Branch
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: git_url
+        schema:
+          title: Git Url
+          type: string
+        description: Git repository URL of the tree
+        required: true
+      - in: query
+        name: group_size
+        schema:
+          default: 3
+          exclusiveMinimum: 0
+          title: Group Size
+          type: integer
+        description: Maximum number of entries to be retrieved in a test history.
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: query
+        name: path
+        schema:
+          default:
+          - '%'
+          items:
+            type: string
+          title: Path
+          type: array
+        description: A list of test paths to query for. SQL Wildcard can be used.
+      tags:
+      - tree-report
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeReportResponse'
           description: ''
   /api/tree/{commit_hash}/boots:
     get:
@@ -2855,69 +2855,6 @@ components:
       - type: 'null'
     Issue__Version:
       type: integer
-    KciSummaryResponse:
-      properties:
-        dashboard_url:
-          description: The dashboard url of this tree/branch/commit
-          title: Dashboard Url
-          type: string
-        git_url:
-          description: Git repository URL of the tree
-          title: Git Url
-          type: string
-        git_branch:
-          description: Git branch name of the tree
-          title: Git Branch
-          type: string
-        commit_hash:
-          description: Commit hash of the tree
-          title: Commit Hash
-          type: string
-        origin:
-          description: Origin of the tree
-          title: Origin
-          type: string
-        checkout_start_time:
-          description: Start time of the checkout
-          format: date-time
-          title: Checkout Start Time
-          type: string
-        build_status_summary:
-          $ref: '#/components/schemas/StatusCount'
-          description: Summary of build statuses
-        boot_status_summary:
-          $ref: '#/components/schemas/TestStatusCount'
-          description: Summary of boot test statuses
-        test_status_summary:
-          $ref: '#/components/schemas/TestStatusCount'
-          description: Summary of test statuses
-        possible_regressions:
-          $ref: '#/components/schemas/RegressionData'
-          description: History of tests that are possible regressions.Regressions
-            are grouped by hardware, config, and path.
-        fixed_regressions:
-          $ref: '#/components/schemas/RegressionData'
-          description: History of tests that are fixed regressions.Regressions are
-            grouped by hardware, config, and path.
-        unstable_tests:
-          $ref: '#/components/schemas/RegressionData'
-          description: History of tests that are unstable. Regressions are grouped
-            by hardware, config, and path.
-      required:
-      - dashboard_url
-      - git_url
-      - git_branch
-      - commit_hash
-      - origin
-      - checkout_start_time
-      - build_status_summary
-      - boot_status_summary
-      - test_status_summary
-      - possible_regressions
-      - fixed_regressions
-      - unstable_tests
-      title: KciSummaryResponse
-      type: object
     LocalFilters:
       properties:
         issues:
@@ -3703,6 +3640,69 @@ components:
         $ref: '#/components/schemas/Checkout'
       title: TreeListingResponse
       type: array
+    TreeReportResponse:
+      properties:
+        dashboard_url:
+          description: The dashboard url of this tree/branch/commit
+          title: Dashboard Url
+          type: string
+        git_url:
+          description: Git repository URL of the tree
+          title: Git Url
+          type: string
+        git_branch:
+          description: Git branch name of the tree
+          title: Git Branch
+          type: string
+        commit_hash:
+          description: Commit hash of the tree
+          title: Commit Hash
+          type: string
+        origin:
+          description: Origin of the tree
+          title: Origin
+          type: string
+        checkout_start_time:
+          description: Start time of the checkout
+          format: date-time
+          title: Checkout Start Time
+          type: string
+        build_status_summary:
+          $ref: '#/components/schemas/StatusCount'
+          description: Summary of build statuses
+        boot_status_summary:
+          $ref: '#/components/schemas/TestStatusCount'
+          description: Summary of boot test statuses
+        test_status_summary:
+          $ref: '#/components/schemas/TestStatusCount'
+          description: Summary of test statuses
+        possible_regressions:
+          $ref: '#/components/schemas/RegressionData'
+          description: History of tests that are possible regressions.Regressions
+            are grouped by hardware, config, and path.
+        fixed_regressions:
+          $ref: '#/components/schemas/RegressionData'
+          description: History of tests that are fixed regressions.Regressions are
+            grouped by hardware, config, and path.
+        unstable_tests:
+          $ref: '#/components/schemas/RegressionData'
+          description: History of tests that are unstable. Regressions are grouped
+            by hardware, config, and path.
+      required:
+      - dashboard_url
+      - git_url
+      - git_branch
+      - commit_hash
+      - origin
+      - checkout_start_time
+      - build_status_summary
+      - boot_status_summary
+      - test_status_summary
+      - possible_regressions
+      - fixed_regressions
+      - unstable_tests
+      title: TreeReportResponse
+      type: object
     TreeSetItem:
       properties:
         tree_name:

@@ -13,7 +13,7 @@ DEFAULT_PATH_SEARCH = ["%"]
 DEFAULT_GROUP_SIZE = 3
 
 
-class KciSummaryQueryParameters(BaseModel):
+class TreeReportQueryParameters(BaseModel):
     origin: Annotated[
         str,
         Field(
@@ -34,7 +34,7 @@ class KciSummaryQueryParameters(BaseModel):
         list[str],
         Field(
             default=DEFAULT_PATH_SEARCH,
-            description=DocStrings.KCI_SUMMARY_PATH_DESCRIPTION,
+            description=DocStrings.TREE_REPORT_PATH_DESCRIPTION,
         ),
         make_default_validator(DEFAULT_PATH_SEARCH),
     ]
@@ -43,7 +43,7 @@ class KciSummaryQueryParameters(BaseModel):
         Field(
             gt=0,
             default=DEFAULT_GROUP_SIZE,
-            description=DocStrings.KCI_SUMMARY_GROUP_SIZE_DESCRIPTION,
+            description=DocStrings.TREE_REPORT_GROUP_SIZE_DESCRIPTION,
         ),
         make_default_validator(DEFAULT_GROUP_SIZE),
     ]
@@ -59,9 +59,9 @@ type RegressionData = dict[str, dict[str, dict[str, list[RegressionHistoryItem]]
 """The history of tests is grouped by hardware, then config, then path."""
 
 
-class KciSummaryResponse(BaseModel):
+class TreeReportResponse(BaseModel):
     dashboard_url: str = Field(
-        description=DocStrings.KCI_SUMMARY_DASHBOARD_URL_DESCRIPTION
+        description=DocStrings.TREE_REPORT_DASHBOARD_URL_DESCRIPTION
     )
     git_url: str = Field(description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION)
     git_branch: str = Field(description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION)
@@ -80,11 +80,11 @@ class KciSummaryResponse(BaseModel):
         description=DocStrings.TEST_STATUS_SUMMARY_DESCRIPTION
     )
     possible_regressions: RegressionData = Field(
-        description=DocStrings.KCI_SUMMARY_POSSIBLE_REGRESSIONS_DESCRIPTION,
+        description=DocStrings.TREE_REPORT_POSSIBLE_REGRESSIONS_DESCRIPTION,
     )
     fixed_regressions: RegressionData = Field(
-        description=DocStrings.KCI_SUMMARY_FIXED_REGRESSIONS_DESCRIPTION
+        description=DocStrings.TREE_REPORT_FIXED_REGRESSIONS_DESCRIPTION
     )
     unstable_tests: RegressionData = Field(
-        description=DocStrings.KCI_SUMMARY_UNSTABLE_TESTS_DESCRIPTION,
+        description=DocStrings.TREE_REPORT_UNSTABLE_TESTS_DESCRIPTION,
     )

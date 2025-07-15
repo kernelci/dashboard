@@ -1,4 +1,4 @@
-http "http://localhost:8000/api/kci-summary/" git_branch==for-kernelci git_url==https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git origin==maestro
+http "http://localhost:8000/api/tree-report/" git_branch==for-kernelci git_url==https://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git origin==maestro
 
 # HTTP/1.1 200 OK
 # Allow: GET, HEAD, OPTIONS

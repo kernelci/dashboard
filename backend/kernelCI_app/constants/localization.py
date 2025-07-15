@@ -83,23 +83,22 @@ class DocStrings:
     BOOT_STATUS_SUMMARY_DESCRIPTION = "Summary of boot test statuses"
     TEST_STATUS_SUMMARY_DESCRIPTION = "Summary of test statuses"
 
-    # KCI Summary related descriptions
     REGRESSIONS_GROUP = "Regressions are grouped by hardware, config, and path."
-    KCI_SUMMARY_PATH_DESCRIPTION = (
+    TREE_REPORT_PATH_DESCRIPTION = (
         "A list of test paths to query for. SQL Wildcard can be used."
     )
-    KCI_SUMMARY_DASHBOARD_URL_DESCRIPTION = (
+    TREE_REPORT_DASHBOARD_URL_DESCRIPTION = (
         "The dashboard url of this tree/branch/commit"
     )
-    KCI_SUMMARY_POSSIBLE_REGRESSIONS_DESCRIPTION = (
+    TREE_REPORT_POSSIBLE_REGRESSIONS_DESCRIPTION = (
         "History of tests that are possible regressions." + REGRESSIONS_GROUP
     )
-    KCI_SUMMARY_FIXED_REGRESSIONS_DESCRIPTION = (
+    TREE_REPORT_FIXED_REGRESSIONS_DESCRIPTION = (
         "History of tests that are fixed regressions." + REGRESSIONS_GROUP
     )
-    KCI_SUMMARY_UNSTABLE_TESTS_DESCRIPTION = (
+    TREE_REPORT_UNSTABLE_TESTS_DESCRIPTION = (
         "History of tests that are unstable. " + REGRESSIONS_GROUP
     )
-    KCI_SUMMARY_GROUP_SIZE_DESCRIPTION = (
+    TREE_REPORT_GROUP_SIZE_DESCRIPTION = (
         "Maximum number of entries to be retrieved in a test history."
     )

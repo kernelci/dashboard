@@ -12,21 +12,21 @@ from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.summary import TreeKey
 from kernelCI_app.management.commands.notifications import evaluate_test_results
 from kernelCI_app.queries.notifications import get_checkout_summary_data
-from kernelCI_app.typeModels.kciSummary import (
-    KciSummaryQueryParameters,
-    KciSummaryResponse,
+from kernelCI_app.typeModels.treeReport import (
+    TreeReportQueryParameters,
+    TreeReportResponse,
 )
 
 
-class KciSummary(APIView):
+class TreeReport(APIView):
     @extend_schema(
-        responses=KciSummaryResponse,
-        parameters=[KciSummaryQueryParameters],
+        responses=TreeReportResponse,
+        parameters=[TreeReportQueryParameters],
         methods=["GET"],
     )
     def get(self, request: HttpRequest):
         try:
-            params = KciSummaryQueryParameters(
+            params = TreeReportQueryParameters(
                 origin=request.GET.get("origin"),
                 git_branch=request.GET.get("git_branch"),
                 git_url=request.GET.get("git_url"),
@@ -81,7 +81,7 @@ class KciSummary(APIView):
                 group_size=params.group_size,
             )
 
-            valid_response = KciSummaryResponse(
+            valid_response = TreeReportResponse(
                 dashboard_url=dashboard_url,
                 git_url=git_url,
                 git_branch=branch,
