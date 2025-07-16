@@ -8,9 +8,8 @@ from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.queries.checkout import get_origins
 from drf_spectacular.utils import extend_schema
 
-from kernelCI_app.typeModels.origins import OriginsResponse
+from kernelCI_app.typeModels.origins import OriginsQueryParameters, OriginsResponse
 
-EXCLUDED_ORIGINS = ["kernelci"]
 
 # For now we are hardcoding test origins since fetching them dynamically in a query is taking
 # around 8 minutes to finish. That time will result in a timeout every request, so this is a
@@ -22,13 +21,13 @@ TEST_ORIGINS = [
     "0dayci",
     "arm",
     "broonie",
+    "linaro",
     "maestro",
     "microsoft",
     "redhat",
     "riscv",
     "syzbot",
     "ti",
-    "tuxsuite",
 ]
 
 
@@ -47,7 +46,7 @@ def separate_origin_records(*, records: list[dict[str, str]]) -> set[str]:
     checkout_origins: set[str] = set()
     for record in records:
         origin = record.get("origin")
-        if not origin or origin in EXCLUDED_ORIGINS:
+        if not origin:
             continue
 
         table = record.get("table")
@@ -65,14 +64,20 @@ class OriginsView(APIView):
         self.checkout_origins: set[str] = set()
 
     @extend_schema(
+        parameters=[OriginsQueryParameters],
         responses={
             HTTPStatus.OK: OriginsResponse,
             HTTPStatus.BAD_REQUEST: dict[str, str],
         },
         methods=["GET"],
     )
-    def get(self, _request) -> Response:
-        origin_records = get_origins()
+    def get(self, request) -> Response:
+        try:
+            query_parameters = OriginsQueryParameters.model_validate(request.GET.dict())
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        origin_records = get_origins(interval_in_days=query_parameters.interval_in_days)
 
         if len(origin_records) == 0:
             return create_api_error_response(error_message="No origins found")

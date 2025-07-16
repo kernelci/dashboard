@@ -317,3 +317,7 @@ if DEBUG_SQL_QUERY:
             },
         },
     }
+
+DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS = get_json_env_var(
+    "DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS", 30
+)
