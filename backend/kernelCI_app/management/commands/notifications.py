@@ -36,6 +36,7 @@ from kernelCI_app.queries.notifications import (
     kcidb_last_test_without_issue,
     kcidb_tests_results,
 )
+from kernelCI_app.queries.test import get_test_details_data
 from kernelCI_cache.queries.notifications import (
     mark_checkout_notification_as_sent,
     mark_issue_notification_not_sent,
@@ -569,6 +570,62 @@ def create_and_send_issue_reports(*, service, email_args, signup_folder):
         )
 
 
+def generate_test_report(*, service, test_id, email_args, signup_folder):
+    """Generate a test regression report for a specific test ID."""
+
+    test_data = get_test_details_data(test_id=test_id)
+    if not test_data:
+        print(f"Test {test_id} not found in database")
+        return
+
+    test = test_data[0]
+
+    if isinstance(test.get("environment_misc"), str):
+        test["environment_misc"] = json.loads(test["environment_misc"])
+    if isinstance(test.get("misc"), str):
+        test["misc"] = json.loads(test["misc"])
+
+    test["platform"] = test.get("environment_misc", {}).get(
+        "platform", "unknown platform"
+    )
+
+    template = setup_jinja_template("test_report.txt.j2")
+    report_content = template.render(test=test)
+
+    if is_boot(path=test["path"]):
+        subject_prefix = "[BOOT REGRESSION]"
+    else:
+        subject_prefix = "[TEST REGRESSION]"
+
+    tree_name = test.get("tree_name", "unknown")
+    branch = test["git_repository_branch"]
+    title = (
+        f"{subject_prefix} {tree_name}/{branch}: {test['path']} on {test['platform']}"
+    )
+
+    report = {
+        "title": title,
+        "content": report_content,
+    }
+
+    print("=====================")
+    print(f"# {tree_name}/{branch}")
+    print(f"  test: {test['path']} on {test['platform']}")
+    print(f"  status: {test['status']}")
+    print(f"  dashboard: https://d.kernelci.org/test/{test['id']}")
+
+    email_args.regression_report = True
+    email_args.tree_name = tree_name
+
+    send_email_report(
+        service=service,
+        report=report,
+        email_args=email_args,
+        git_url=test["git_repository_url"],
+        signup_folder=signup_folder,
+    )
+
+
 def run_fake_report(*, service, email_args):
     report = {}
     report["content"] = "Testing the email sending path..."
@@ -612,8 +669,14 @@ class Command(BaseCommand):
             "--action",
             type=str,
             required=True,
-            choices=["new_issues", "issue_report", "summary", "fake_report"],
-            help="Action to perform: new_issues, issue_report, summary, or fake_report",
+            choices=[
+                "new_issues",
+                "issue_report",
+                "summary",
+                "fake_report",
+                "test_report",
+            ],
+            help="Action to perform: new_issues, issue_report, summary, fake_report, or test_report",
         )
 
         # Issue report specific arguments
@@ -621,7 +684,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--id",
             type=str,
-            help="Id of the issue in the Dashboard/KCIDB (for issue_report action)",
+            help="ID of the issue (for issue_report) or test (for test_report) in the Dashboard/KCIDB",
         )
         parser.add_argument(
             "--all",
@@ -727,3 +790,22 @@ class Command(BaseCommand):
 
         elif action == "fake_report":
             run_fake_report(service=service, email_args=email_args)
+
+        elif action == "test_report":
+            test_id = options.get("id")
+            if not test_id:
+                self.stdout.write(
+                    self.style.ERROR(
+                        "You must provide a test ID with --id for test_report action"
+                    )
+                )
+                return
+            generate_test_report(
+                service=service,
+                test_id=test_id,
+                email_args=email_args,
+                signup_folder=signup_folder,
+            )
+            self.stdout.write(
+                self.style.SUCCESS(f"Test report generated for test {test_id}")
+            )
