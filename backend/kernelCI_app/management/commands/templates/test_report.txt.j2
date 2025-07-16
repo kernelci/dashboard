@@ -1,0 +1,53 @@
+{% extends "base.txt" %}
+{% block header %}{% endblock %}
+{% block content %}
+Hello,
+
+New test failure found on {{ test["tree_name"] }}/{{ test["git_repository_branch"] }}:
+
+{{ test["path"] }} running on {{ test["platform"] }}
+
+giturl: {{ test["git_repository_url"] }}
+branch: {{ test["git_repository_branch"] }}
+commit HEAD: {{ test["git_commit_hash"] }}
+{% if test["git_commit_tags"] -%}
+tags: {% for tag in test["git_commit_tags"] %}{{tag}}{% if not loop.last %}, {% endif %}{% endfor %}
+{%- endif %}
+
+test id: {{ test["id"] }}
+status: {{ test["status"] }}
+start time: {{ test["start_time"] }}
+{% if test["log_url"] -%}
+log: {{ test["log_url"] }}
+{%- endif %}
+
+# Test details:
+- test path: {{ test["path"] }}
+- platform: {{ test["platform"] }}
+{% if test["environment_compatible"] -%}
+- compatibles: {% for c in test["environment_compatible"] %}{{c}}{% if not loop.last %} | {% endif %}{% endfor %}
+{%- endif %}
+{% if test["config_name"] -%}
+- config: {{ test["config_name"] }}
+{%- endif %}
+{% if test["architecture"] -%}
+- architecture: {{ test["architecture"] }}
+{%- endif %}
+{% if test["compiler"] -%}
+- compiler: {{ test["compiler"] }}
+{%- endif %}
+
+Dashboard: https://d.kernelci.org/t/{{ test["id"] }}
+
+{% if test["log_excerpt"] %}
+Log excerpt:
+=====================================================
+{{ test["log_excerpt"] }}
+=====================================================
+{% endif %}
+
+#kernelci test {{ test["id"] }}
+
+Reported-by: kernelci.org bot <bot@kernelci.org>
+
+{%- endblock -%}
