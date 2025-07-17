@@ -1,5 +1,6 @@
 from typing import Optional
 from django.db import connection
+from django.db.models import Q
 
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.models import Checkouts
@@ -372,11 +373,19 @@ def get_tree_details_data(
                         FROM
                             checkouts
                         WHERE
-                            checkouts.git_commit_hash = %(commit_hash)s
+                            (checkouts.git_commit_hash = %(commit_hash)s
+                            OR %(commit_hash)s = ANY(checkouts.git_commit_tags))
                             {git_url_full_clause}
                             {tree_name_full_clause}
                             AND {git_branch_clause}
                             AND checkouts.origin = %(origin_param)s
+-- TODO: Remove the ORDER BY + LIMIT 1 once the database is properly sanitized.
+-- This was added because there are currently cases where:
+-- 1) A single tag references multiple checkouts;
+-- 2) Multiple checkouts match the constraints above.
+-- The temporary criteria is to always select the most recent checkout.
+                        ORDER BY checkouts._timestamp DESC
+                        LIMIT 1
                     ) AS tree_head
                 LEFT JOIN builds
                     ON tree_head.checkout_id = builds.checkout_id
@@ -484,7 +493,8 @@ def get_tree_commit_history(
         FROM
             checkouts
         WHERE
-            git_commit_hash = %(commit_hash)s
+            (git_commit_hash = %(commit_hash)s
+            OR %(commit_hash)s = ANY(checkouts.git_commit_tags))
             AND origin = %(origin_param)s
             AND {git_branch_clause}
             {git_url_full_clause}
@@ -630,7 +640,10 @@ def get_latest_tree(
     )
 
     if git_commit_hash is not None:
-        query = query.filter(git_commit_hash=git_commit_hash)
+        query = query.filter(
+            Q(git_commit_hash=git_commit_hash)
+            | Q(git_commit_tags__contains=[git_commit_hash])
+        )
     else:
         query = query.filter(git_commit_hash__isnull=False)
 
