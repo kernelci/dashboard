@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
+from kernelCI_app.constants.localization import ClientStrings
 
 
 def scrape_log_data(url):
@@ -50,9 +51,7 @@ def scrape_log_data(url):
                     }
                 )
             else:
-                return {
-                    "error": "Invalid number of columns in table row (probably not a log website)"
-                }
+                return {"error": ClientStrings.LOG_INVALID_TABLE_FORMAT}
 
         return {"log_files": log_data}
     except Exception as e:
@@ -75,7 +74,8 @@ class LogDownloaderView(APIView):
 
         if not parsed_data["log_files"]:
             return create_api_error_response(
-                error_message="No log files found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.LOG_NO_FILES_FOUND,
+                status_code=HTTPStatus.OK,
             )
 
         try:

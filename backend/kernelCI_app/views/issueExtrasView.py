@@ -16,6 +16,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
+from kernelCI_app.constants.localization import ClientStrings
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -39,7 +40,7 @@ class IssueExtraDetails(APIView):
             valid_body = IssueExtraDetailsRequest(**body)
         except json.JSONDecodeError:
             return create_api_error_response(
-                error_message="Invalid body, request body must be a valid json string",
+                error_message=ClientStrings.INVALID_JSON_BODY,
             )
         except ValidationError as e:
             return Response(e.json(), status=HTTPStatus.BAD_REQUEST)
@@ -48,7 +49,7 @@ class IssueExtraDetails(APIView):
 
         if len(issue_list) == 0:
             return create_api_error_response(
-                error_message="Invalid body, the issue list must not be empty"
+                error_message=ClientStrings.ISSUE_EMPTY_LIST
             )
 
         process_issues_extra_details(
@@ -58,7 +59,8 @@ class IssueExtraDetails(APIView):
 
         if not self.processed_detailed_issues:
             return create_api_error_response(
-                error_message="No extra details found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.ISSUE_NO_EXTRA_DETAILS,
+                status_code=HTTPStatus.OK,
             )
 
         try:

@@ -9,6 +9,7 @@ from kernelCI_app.queries.checkout import get_origins
 from drf_spectacular.utils import extend_schema
 
 from kernelCI_app.typeModels.origins import OriginsQueryParameters, OriginsResponse
+from kernelCI_app.constants.localization import ClientStrings
 
 
 # For now we are hardcoding test origins since fetching them dynamically in a query is taking
@@ -80,7 +81,9 @@ class OriginsView(APIView):
         origin_records = get_origins(interval_in_days=query_parameters.interval_in_days)
 
         if len(origin_records) == 0:
-            return create_api_error_response(error_message="No origins found")
+            return create_api_error_response(
+                error_message=ClientStrings.NO_ORIGIN_FOUND
+            )
 
         self.checkout_origins = separate_origin_records(records=origin_records)
 

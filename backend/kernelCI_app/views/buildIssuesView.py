@@ -9,6 +9,7 @@ from http import HTTPStatus
 from kernelCI_app.queries.issues import get_build_issues
 from kernelCI_app.typeModels.detailsIssuesView import DetailsIssuesResponse
 from kernelCI_app.typeModels.commonOpenApiParameters import BUILD_ID_PATH_PARAM
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class BuildIssuesView(APIView):
@@ -26,7 +27,7 @@ class BuildIssuesView(APIView):
 
         if len(build_issues) == 0:
             return create_api_error_response(
-                error_message="No issues were found for this build",
+                error_message=ClientStrings.BUILD_ISSUES_NOT_FOUND,
                 status_code=HTTPStatus.OK,
             )
 

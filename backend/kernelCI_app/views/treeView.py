@@ -17,6 +17,7 @@ from pydantic import ValidationError
 
 from kernelCI_cache.constants import UNSTABLE_CHECKOUT_THRESHOLD
 from kernelCI_cache.queries.tree import get_cached_tree_listing_data
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class TreeView(APIView):
@@ -57,7 +58,7 @@ class TreeView(APIView):
 
         if not cached_checkouts and not kcidb_checkouts:
             return create_api_error_response(
-                error_message="Trees not found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.NO_TREES_FOUND, status_code=HTTPStatus.OK
             )
 
         # This set is only meant to remove the duplicate cases when the

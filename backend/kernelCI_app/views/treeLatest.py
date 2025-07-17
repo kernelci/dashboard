@@ -17,6 +17,7 @@ from kernelCI_app.typeModels.treeDetails import (
     TreeLatestResponse,
     TreeLatestQueryParameters,
 )
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class TreeLatest(APIView):
@@ -39,12 +40,12 @@ class TreeLatest(APIView):
         except ValidationError as e:
             return Response(data=e.json, status=HTTPStatus.BAD_REQUEST)
 
-        tree_not_found_error_message = "Tree not found."
+        tree_not_found_error_message = ClientStrings.TREE_NOT_FOUND
         origin = request.GET.get("origin")
         if origin is None:
             origin = DEFAULT_ORIGIN
             tree_not_found_error_message += (
-                f" No origin was provided so it was defaulted to {DEFAULT_ORIGIN}"
+                f"{ClientStrings.TREE_LATEST_DEFAULT_ORIGIN} {DEFAULT_ORIGIN}"
             )
 
         tree_data = get_latest_tree(

@@ -14,6 +14,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from pydantic import ValidationError
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class IssueDetailsBuilds(APIView):
@@ -40,7 +41,7 @@ class IssueDetailsBuilds(APIView):
 
         if not builds_data:
             return create_api_error_response(
-                error_message="No builds found for this issue",
+                error_message=ClientStrings.ISSUE_BUILDS_NOT_FOUND,
                 status_code=HTTPStatus.OK,
             )
 

@@ -6,6 +6,7 @@ from http import HTTPStatus
 from drf_spectacular.utils import extend_schema
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.commonOpenApiParameters import URL_QUERY_PARAM
+from kernelCI_app.constants.localization import ClientStrings
 
 # TIMEOUT to avoid people sending very large files through the proxy
 TIMEOUT_TIME_IN_SECONDS = 45
@@ -21,13 +22,17 @@ class ProxyView(APIView):
         url = request.GET.get("url")
         parsed_url = urlparse(url)
         if not parsed_url.scheme or not parsed_url.netloc:
-            return create_api_error_response(error_message="Invalid URL")
+            return create_api_error_response(
+                error_message=ClientStrings.PROXY_INVALID_URL
+            )
         try:
             response = requests.get(url, stream=True, timeout=TIMEOUT_TIME_IN_SECONDS)
 
             if response.status_code != HTTPStatus.OK:
                 return create_api_error_response(
-                    error_message=f"Failed to fetch resource: {response.reason}",
+                    error_message=(
+                        f"{ClientStrings.PROXY_FETCH_FAILED} {response.reason}"
+                    ),
                     status_code=HTTPStatus(response.status_code),
                 )
 
@@ -49,6 +54,6 @@ class ProxyView(APIView):
 
         except requests.RequestException:
             return create_api_error_response(
-                error_message="Error fetching the resource",
+                error_message=ClientStrings.PROXY_ERROR_FETCH,
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

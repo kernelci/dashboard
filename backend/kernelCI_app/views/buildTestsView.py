@@ -10,6 +10,7 @@ from kernelCI_app.typeModels.commonOpenApiParameters import BUILD_ID_PATH_PARAM
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class BuildTests(APIView):
@@ -22,7 +23,7 @@ class BuildTests(APIView):
 
         if not result:
             return create_api_error_response(
-                error_message="No tests found for this build",
+                error_message=ClientStrings.BUILDS_TEST_NOT_FOUND,
                 status_code=HTTPStatus.OK,
             )
 
