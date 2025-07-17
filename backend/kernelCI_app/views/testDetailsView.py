@@ -9,6 +9,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class TestDetails(APIView):
@@ -21,7 +22,7 @@ class TestDetails(APIView):
 
         if not response:
             return create_api_error_response(
-                error_message="Test not found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.TEST_NOT_FOUND, status_code=HTTPStatus.OK
             )
 
         try:

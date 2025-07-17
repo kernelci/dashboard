@@ -20,6 +20,7 @@ from http import HTTPStatus
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
+from kernelCI_app.constants.localization import ClientStrings
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -84,11 +85,11 @@ class HardwareDetailsCommitHistoryView(APIView):
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
         except json.JSONDecodeError:
             return create_api_error_response(
-                error_message="Invalid body, request body must be a valid json string"
+                error_message=ClientStrings.INVALID_JSON_BODY
             )
         except (ValueError, TypeError):
             return create_api_error_response(
-                error_message="startTimestampInSeconds and endTimestampInSeconds must be a Unix Timestamp"
+                error_message=ClientStrings.INVALID_TIMESTAMP
             )
 
         commit_history_data = get_hardware_commit_history(
@@ -100,7 +101,8 @@ class HardwareDetailsCommitHistoryView(APIView):
 
         if not commit_history_data:
             return create_api_error_response(
-                error_message="Commit history not found", status_code=HTTPStatus.OK
+                error_message=ClientStrings.HARDWARE_COMMIT_HISTORY_NOT_FOUND,
+                status_code=HTTPStatus.OK,
             )
 
         commit_history = self._sanitize_checkouts(commit_history_data)

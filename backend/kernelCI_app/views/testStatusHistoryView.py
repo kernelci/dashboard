@@ -13,6 +13,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class TestStatusHistory(APIView):
@@ -88,7 +89,7 @@ class TestStatusHistory(APIView):
             # This endpoint should always return at least 1 item (the current test),
             # if the result has no items it means that the request was wrong
             return create_api_error_response(
-                error_message="Test status history not found"
+                error_message=ClientStrings.TEST_STATUS_HISTORY_NOT_FOUND
             )
 
         regression_type = self.process_test_status_history(

@@ -16,6 +16,7 @@ from kernelCI_app.typeModels.hardwareListing import (
     HardwareListingResponse,
 )
 from kernelCI_app.queries.hardware import get_hardware_listing_data
+from kernelCI_app.constants.localization import ClientStrings
 
 
 class HardwareView(APIView):
@@ -88,7 +89,8 @@ class HardwareView(APIView):
 
             if len(result.hardware) < 1:
                 return create_api_error_response(
-                    error_message="No hardwares found", status_code=HTTPStatus.OK
+                    error_message=ClientStrings.NO_HARDWARE_FOUND,
+                    status_code=HTTPStatus.OK,
                 )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
