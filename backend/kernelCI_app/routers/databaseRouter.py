@@ -12,7 +12,7 @@ class DatabaseRouter:
         if model_name in ["checkoutscache"]:
             return db == "cache"
         if hints.get("run_always", False):
-            return True
+            return app_label == "kernelci_cache"
         if app_label == "kernelci_app":
             return db == "dashboard_db"
 
