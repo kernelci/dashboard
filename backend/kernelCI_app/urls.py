@@ -27,12 +27,12 @@ urlpatterns = [
     path("tree-fast/", view_cache(views.TreeViewFast), name="tree-fast"),
     path(
         "tree/<str:commit_hash>/full",
-        views.TreeDetails.as_view(),
+        views.ShortTreeDetails.as_view(),
         name="treeDetailsView",
     ),
     path(
         "tree/<str:commit_hash>/summary",
-        views.TreeDetailsSummary.as_view(),
+        views.ShortTreeDetailsSummary.as_view(),
         name="treeDetailsSummaryView",
     ),
     path(
@@ -52,7 +52,7 @@ urlpatterns = [
     ),
     path(
         "tree/<str:commit_hash>/commits",
-        view_cache(views.TreeCommitsHistory),
+        view_cache(views.ShortTreeCommitsHistory),
         name="treeCommits",
     ),
     path(
@@ -62,7 +62,7 @@ urlpatterns = [
     ),
     path(
         "tree/<str:tree_name>/<str:git_branch>",
-        view_cache(views.TreeLatest),
+        view_cache(views.ShortTreeLatest),
         name="treeLatest",
     ),
     path(

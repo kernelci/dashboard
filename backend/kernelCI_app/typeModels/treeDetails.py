@@ -50,9 +50,12 @@ class TreeDetailsBuildsResponse(BaseModel):
     builds: List[BuildHistoryItem]
 
 
-class TreeQueryParameters(BaseModel):
+class LongTreeQueryParameters(BaseModel):
     origin: str = Field(description=DocStrings.TREE_QUERY_ORIGIN_DESCRIPTION)
     git_url: str = Field(description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION)
+
+
+class TreeQueryParameters(LongTreeQueryParameters):
     git_branch: str = Field(description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION)
 
 

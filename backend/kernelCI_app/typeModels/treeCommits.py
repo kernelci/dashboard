@@ -13,13 +13,10 @@ from kernelCI_app.typeModels.databases import (
 )
 
 
-class TreeCommitsQueryParameters(BaseModel):
+class LongTreeCommitsQueryParameters(BaseModel):
     origin: str = Field(description=DocStrings.TREE_COMMIT_ORIGIN_DESCRIPTION)
     git_url: Optional[str] = Field(
         None, description=DocStrings.TREE_COMMIT_GIT_URL_DESCRIPTION
-    )
-    git_branch: Optional[str] = Field(
-        None, description=DocStrings.TREE_COMMIT_GIT_BRANCH_DESCRIPTION
     )
     start_time_stamp_in_seconds: Optional[str] = Field(
         None, description=DocStrings.TREE_COMMIT_START_TS_DESCRIPTION
@@ -28,6 +25,12 @@ class TreeCommitsQueryParameters(BaseModel):
         None, description=DocStrings.TREE_COMMIT_END_TS_DESCRIPTION
     )
     # TODO: Add filters field in this model
+
+
+class TreeCommitsQueryParameters(LongTreeCommitsQueryParameters):
+    git_branch: Optional[str] = Field(
+        description=DocStrings.TREE_COMMIT_GIT_BRANCH_DESCRIPTION
+    )
 
 
 class TreeCommitsData(BaseModel):
