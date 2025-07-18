@@ -85,9 +85,10 @@ Definition of Done: You have run some requests to the KernelCI Dashboard API and
 
 ### Task 4: Get acquainted with the database
 1. Install a Database management software like [DBeaver](https://dbeaver.io/) or [pgAdmin](https://www.pgadmin.org/) 
-1. Connect to the KernelCI Database and try to see the tables and the data that is stored there.
-1. Read this docs to understand the database: [Database Knowledge](../backend/docs/database-logic.md)
-1. Try to make some SQL queries to see what you can do, feel free to look at the Backend code.
+2. Connect to the KernelCI Database and try to see the tables and the data that is stored there.
+3. Read this docs to understand the database: [Database Knowledge](../backend/docs/database-logic.md)
+4. Try to make some SQL queries to see what you can do, feel free to look at the Backend code.
+5. Move some data from kcidb to the dashboard_db by running the `update_db` command with `poetry run python3 manage.py update_db`. You don't need a lot of data, specially considering that the database is heavy. For now, just a couple of hours should suffice.
 
 Definition of Done: Run a SQL query that gets all the tests from a specific Tree. (Feel free to choose any), you can post the query Result in the Github Issue.
 
