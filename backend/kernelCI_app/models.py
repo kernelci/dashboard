@@ -28,7 +28,6 @@ class Issues(models.Model):
     categories = ArrayField(models.TextField(), blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "issues"
         unique_together = (("id", "version"),)
 
@@ -60,7 +59,6 @@ class Checkouts(models.Model):
     origin_tests_finish_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "checkouts"
 
 
@@ -89,7 +87,6 @@ class Builds(models.Model):
     )
 
     class Meta:
-        managed = False
         db_table = "builds"
 
 
@@ -126,7 +123,6 @@ class Tests(models.Model):
     input_files = models.JSONField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "tests"
 
 
@@ -147,5 +143,4 @@ class Incidents(models.Model):
     misc = models.JSONField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "incidents"

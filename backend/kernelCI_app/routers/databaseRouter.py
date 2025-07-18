@@ -13,6 +13,9 @@ class DatabaseRouter:
             return db == "cache"
         if hints.get("run_always", False):
             return True
+        if app_label == "kernelci_app":
+            return db == "dashboard_db"
+
         # Default None return to prevent duplication of schema.
         # If new model is added, it will not be migrated to any database.
         # To create new model schema, add it to the logic as above.
