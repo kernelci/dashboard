@@ -207,6 +207,17 @@ DATABASES = {
             },
         },
     ),
+    "dashboard_db": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "dashboard",
+        "USER": get_json_env_var("DASH_DB_USER", "dev"),
+        "PASSWORD": get_json_env_var("DASH_DB_PASSWORD", "dev"),
+        "HOST": get_json_env_var("DASH_DB_HOST", "127.0.0.1"),
+        "PORT": get_json_env_var("DASH_DB_PORT", 5434),
+        "OPTIONS": {
+            "connect_timeout": 5,
+        },
+    },
     "cache": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BACKEND_VOLUME_DIR, "cache.sqlite3"),
@@ -272,7 +283,7 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 MIGRATION_MODULES = {
-    "kernelCI_app": None,
+    "kernelCI_app": "kernelCI_app.migrations",
     "kernelCI_cache": "kernelCI_cache.migrations",
 }
 

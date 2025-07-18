@@ -27,11 +27,12 @@ This frontend is written in TypeScript and uses the React library.
 > Remember:
 > Always try to look to the production dashboard between tasks to see if you can assimilate the code to the project
 
-### Task 0: Check you proxy and Database access
-1. Check for the Proxy access in your e-mail, follow the instructions there to run proxy.
-2. Check for database access in your e-mail, follow the instructions, try to connect to the database via CLI and see if it is working.
+### Task 0: Check your proxy and database access
+1. Check for the Cloud SQL proxy access in your e-mail, follow the instructions there to run proxy.
+2. Check for database access in your e-mail, follow the instructions, try to connect to the kcidb database via CLI and see if it is working.
+3. Spin up the local dashboard-db by starting its docker container and running the [migration script](../backend/migrate-app-db.sh)
 
-Definition of Done: You have access to the KernelCI Dashboard backend and database.
+Definition of Done: You have access to kcidb and created the local database.
 
 ### Task 1: Install and run redis locally
 Redis is needed for the use of query cache in the backend, so it must be running before you start the backend. There are a couple of ways to install Redis ([see official docs](https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/)), and any method is fine as long as you don't encounter any Redis-related errors when running Task 2 (starting the backend).
@@ -129,15 +130,27 @@ echo <password> > backend/runtime/secrets/postgres_password_secret
 
 1. Set up a `.env` file in the root of the project with the following credentials:
 ```
-GMAIL_API_TOKEN=gmail_api_token.json
 DEBUG_SQL_QUERY=False
 DEBUG=True
+
 DB_DEFAULT_NAME=kcidb
 DB_DEFAULT_USER=<your user>
 DB_DEFAULT_PASSWORD=<your password>
 DB_DEFAULT_HOST=cloudsql-proxy
 DJANGO_SECRET_KEY=$(openssl rand -base64 22)
+
+DASH_DB_NAME=dashboard
+DASH_DB_USER=<user>
+DASH_DB_PASSWORD=<password>
+DASH_DB_HOST=dashboard_db
 ```
+
+When running the notification commands, you should add to your .env the following variables:
+```
+EMAIL_HOST_USER=<your email>
+EMAIL_HOST_PASSWORD=<your app password>
+```
+For the onboarding you can skip those, but do check out the [notifications](./notifications.md) part of the dashboard.
 
 1. In the `docker-compose.yml` file at the root of the project, set `DEBUG=True` to avoid CORS issues.
 

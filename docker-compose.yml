@@ -2,6 +2,7 @@ volumes:
     backend-data:
     runtime-data:
     static-data:
+    dashboard-db-data:
 
 networks:
     public:
@@ -12,6 +13,19 @@ secrets:
         file: ./backend/runtime/secrets/postgres_password_secret
 
 services:
+    dashboard_db:
+        image: postgres:17
+        environment:
+            - POSTGRES_USER=${DASH_DB_USER:-admin}
+            - POSTGRES_PASSWORD=${DASH_DB_PASSWORD:-admin}
+            - POSTGRES_DB=${DASH_DB_NAME:-dashboard}
+        volumes:
+            - dashboard-db-data:/var/lib/postgresql/data
+        networks:
+            - private
+        ports:
+            - "5434:5432"
+
     cloudsql-proxy:
         image: gcr.io/cloudsql-docker/gce-proxy:latest
         container_name: cloudsql-proxy
@@ -52,6 +66,7 @@ services:
         depends_on:
             - cloudsql-proxy
             - redis
+            - dashboard_db
         secrets:
             - postgres_password_secret
         environment:
@@ -61,10 +76,15 @@ services:
             - DB_DEFAULT_USER=${DB_DEFAULT_USER:-kernelci}
             - DB_DEFAULT_NAME=${DB_DEFAULT_NAME:-kcidb}
             - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-            - DEBUG=False
+            - DEBUG=${DEBUG:-False}
             - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
             - REDIS_HOST=redis
             - GMAIL_API_TOKEN=gmail_api_token.json
+            - DASH_DB_NAME=${DASH_DB_NAME:-dashboard}
+            - DASH_DB_USER=${DASH_DB_USER:-admin}
+            - DASH_DB_PASSWORD=${DASH_DB_PASSWORD:-admin}
+            - DASH_DB_HOST=dashboard_db
+            - DASH_DB_PORT=${DASH_DB_PORT:-5432}
 
     dashboard:
         build: ./dashboard
