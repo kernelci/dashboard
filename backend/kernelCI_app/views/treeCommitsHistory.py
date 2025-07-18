@@ -15,6 +15,11 @@ from kernelCI_app.helpers.misc import (
     build_misc_value_or_default,
     env_misc_value_or_default,
 )
+from kernelCI_app.typeModels.commonOpenApiParameters import (
+    COMMIT_HASH_PATH_PARAM,
+    GIT_BRANCH_PATH_PARAM,
+    TREE_NAME_PATH_PARAM,
+)
 from kernelCI_app.typeModels.databases import FAIL_STATUS, NULL_STATUS, StatusValues
 from kernelCI_app.utils import is_boot
 from rest_framework.views import APIView
@@ -22,6 +27,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from typing import Optional
 from kernelCI_app.typeModels.treeCommits import (
+    DirectTreeCommitsQueryParameters,
     TreeCommitsQueryParameters,
     TreeCommitsResponse,
 )
@@ -33,7 +39,7 @@ from kernelCI_app.constants.localization import ClientStrings
 
 # TODO Move this endpoint to a function so it doesn't
 # have to be another request, it can be called from the tree details endpoint
-class TreeCommitsHistory(APIView):
+class BaseTreeCommitsHistory(APIView):
     def __init__(self):
         self.commit_hashes = {}
         self.filterParams = None
@@ -372,11 +378,6 @@ class TreeCommitsHistory(APIView):
         except Exception as ex:
             log_message(ex)
 
-    @extend_schema(
-        responses=TreeCommitsResponse,
-        parameters=[TreeCommitsQueryParameters],
-        methods=["GET"],
-    )
     def get(
         self,
         request: HttpRequest,
@@ -475,3 +476,39 @@ class TreeCommitsHistory(APIView):
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(valid_response.model_dump(by_alias=True))
+
+
+class TreeCommitsHistoryDirect(BaseTreeCommitsHistory):
+    @extend_schema(
+        responses=TreeCommitsResponse,
+        parameters=[
+            COMMIT_HASH_PATH_PARAM,
+            TREE_NAME_PATH_PARAM,
+            GIT_BRANCH_PATH_PARAM,
+            DirectTreeCommitsQueryParameters,
+        ],
+        methods=["GET"],
+    )
+    def get(
+        self,
+        request: HttpRequest,
+        commit_hash: str,
+        tree_name: str,
+        git_branch: str,
+    ) -> Response:
+        return super().get(
+            request=request,
+            commit_hash=commit_hash,
+            tree_name=tree_name,
+            git_branch=git_branch,
+        )
+
+
+class TreeCommitsHistory(BaseTreeCommitsHistory):
+    @extend_schema(
+        responses=TreeCommitsResponse,
+        parameters=[COMMIT_HASH_PATH_PARAM, TreeCommitsQueryParameters],
+        methods=["GET"],
+    )
+    def get(self, request, commit_hash: str) -> Response:
+        return super().get(request=request, commit_hash=commit_hash)

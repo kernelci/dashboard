@@ -57,27 +57,27 @@ urlpatterns = [
     ),
     path(
         "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/commits",
-        view_cache(views.TreeCommitsHistory),
+        view_cache(views.TreeCommitsHistoryDirect),
         name="treeCommitsDirectView",
     ),
     path(
         "tree/<str:tree_name>/<str:git_branch>",
-        view_cache(views.TreeLatest),
+        view_cache(views.TreeLatestCheckout),
         name="treeLatest",
     ),
     path(
         "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>",
-        view_cache(views.TreeLatest),
+        view_cache(views.TreeCheckoutInfo),
         name="treeLatestHash",
     ),
     path(
         "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/full",
-        views.TreeDetails.as_view(),
+        views.TreeDetailsDirect.as_view(),
         name="treeDetailsDirectView",
     ),
     path(
         "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/summary",
-        views.TreeDetailsSummary.as_view(),
+        views.TreeDetailsSummaryDirect.as_view(),
         name="treeDetailsDirectSummaryView",
     ),
     path("build/<str:build_id>", view_cache(views.BuildDetails), name="buildDetails"),

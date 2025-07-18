@@ -32,8 +32,14 @@ from kernelCI_app.typeModels.commonDetails import (
     Summary,
     TestSummary,
 )
+from kernelCI_app.typeModels.commonOpenApiParameters import (
+    COMMIT_HASH_PATH_PARAM,
+    GIT_BRANCH_PATH_PARAM,
+    TREE_NAME_PATH_PARAM,
+)
 from kernelCI_app.typeModels.issues import IssueDict
 from kernelCI_app.typeModels.treeDetails import (
+    DirectTreeQueryParameters,
     SummaryResponse,
     TreeCommon,
     TreeQueryParameters,
@@ -50,7 +56,7 @@ from http import HTTPStatus
 from kernelCI_app.constants.general import DEFAULT_ORIGIN, MAESTRO_DUMMY_BUILD_PREFIX
 
 
-class TreeDetailsSummary(APIView):
+class BaseTreeDetailsSummary(APIView):
     def __init__(self):
         self.processedTests = set()
         self.filters = None
@@ -197,11 +203,6 @@ class TreeDetailsSummary(APIView):
             issues_dict=self.test_issues_dict
         )
 
-    @extend_schema(
-        responses=SummaryResponse,
-        parameters=[TreeQueryParameters],
-        methods=["GET"],
-    )
     def get(
         self,
         request: HttpRequest,
@@ -318,3 +319,39 @@ class TreeDetailsSummary(APIView):
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(valid_response.model_dump())
+
+
+class TreeDetailsSummaryDirect(BaseTreeDetailsSummary):
+    @extend_schema(
+        responses=SummaryResponse,
+        parameters=[
+            COMMIT_HASH_PATH_PARAM,
+            TREE_NAME_PATH_PARAM,
+            GIT_BRANCH_PATH_PARAM,
+            DirectTreeQueryParameters,
+        ],
+        methods=["GET"],
+    )
+    def get(
+        self,
+        request: HttpRequest,
+        commit_hash: str,
+        tree_name: str,
+        git_branch: str,
+    ) -> Response:
+        return super().get(
+            request=request,
+            commit_hash=commit_hash,
+            tree_name=tree_name,
+            git_branch=git_branch,
+        )
+
+
+class TreeDetailsSummary(BaseTreeDetailsSummary):
+    @extend_schema(
+        responses=SummaryResponse,
+        parameters=[COMMIT_HASH_PATH_PARAM, TreeQueryParameters],
+        methods=["GET"],
+    )
+    def get(self, request, commit_hash: str) -> Response:
+        return super().get(request=request, commit_hash=commit_hash)

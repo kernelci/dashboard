@@ -506,6 +506,15 @@ paths:
   /api/origins/:
     get:
       operationId: origins_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 30
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
       tags:
       - origins
       security:
@@ -959,10 +968,10 @@ paths:
       - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
         description: Origin of the tree
-        required: true
       tags:
       - tree
       security:
@@ -1003,10 +1012,10 @@ paths:
       - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
         description: Origin of the tree
-        required: true
       tags:
       - tree
       security:
@@ -1028,6 +1037,7 @@ paths:
         name: commit_hash
         schema:
           type: string
+        description: Commit hash of the tree
         required: true
       - in: query
         name: end_time_stamp_in_seconds
@@ -1044,25 +1054,25 @@ paths:
           anyOf:
           - type: string
           - type: 'null'
-          default: null
           title: Git Branch
         description: Git branch name to retrieve the tree commits
+        required: true
       - in: query
         name: git_url
         schema:
           anyOf:
           - type: string
           - type: 'null'
-          default: null
           title: Git Url
         description: Git repository URL to retrieve the tree commits
+        required: true
       - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
         description: Origin to retrieve the tree commits
-        required: true
       - in: query
         name: start_time_stamp_in_seconds
         schema:
@@ -1093,6 +1103,7 @@ paths:
         name: commit_hash
         schema:
           type: string
+        description: Commit hash of the tree
         required: true
       - in: query
         name: git_branch
@@ -1111,10 +1122,10 @@ paths:
       - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
         description: Origin of the tree
-        required: true
       tags:
       - tree
       security:
@@ -1136,6 +1147,7 @@ paths:
         name: commit_hash
         schema:
           type: string
+        description: Commit hash of the tree
         required: true
       - in: query
         name: git_branch
@@ -1154,10 +1166,10 @@ paths:
       - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
         description: Origin of the tree
-        required: true
       tags:
       - tree
       security:
@@ -1198,10 +1210,10 @@ paths:
       - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
         description: Origin of the tree
-        required: true
       tags:
       - tree
       security:
@@ -1223,6 +1235,7 @@ paths:
         name: git_branch
         schema:
           type: string
+        description: Git branch name of the tree
         required: true
       - in: query
         name: origin
@@ -1235,6 +1248,7 @@ paths:
         name: tree_name
         schema:
           type: string
+        description: Name of the tree
         required: true
       tags:
       - tree
@@ -1257,11 +1271,13 @@ paths:
         name: commit_hash
         schema:
           type: string
+        description: Commit hash of the tree
         required: true
       - in: path
         name: git_branch
         schema:
           type: string
+        description: Git branch name of the tree
         required: true
       - in: query
         name: origin
@@ -1274,6 +1290,7 @@ paths:
         name: tree_name
         schema:
           type: string
+        description: Name of the tree
         required: true
       tags:
       - tree
@@ -1296,6 +1313,7 @@ paths:
         name: commit_hash
         schema:
           type: string
+        description: Commit hash of the tree
         required: true
       - in: query
         name: end_time_stamp_in_seconds
@@ -1310,32 +1328,15 @@ paths:
         name: git_branch
         schema:
           type: string
+        description: Git branch name of the tree
         required: true
-      - in: query
-        name: git_branch
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Git Branch
-        description: Git branch name to retrieve the tree commits
-      - in: query
-        name: git_url
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Git Url
-        description: Git repository URL to retrieve the tree commits
       - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
         description: Origin to retrieve the tree commits
-        required: true
       - in: query
         name: start_time_stamp_in_seconds
         schema:
@@ -1349,6 +1350,7 @@ paths:
         name: tree_name
         schema:
           type: string
+        description: Name of the tree
         required: true
       tags:
       - tree
@@ -1371,37 +1373,26 @@ paths:
         name: commit_hash
         schema:
           type: string
+        description: Commit hash of the tree
         required: true
       - in: path
         name: git_branch
         schema:
-          type: string
-        required: true
-      - in: query
-        name: git_branch
-        schema:
-          title: Git Branch
           type: string
         description: Git branch name of the tree
         required: true
       - in: query
-        name: git_url
-        schema:
-          title: Git Url
-          type: string
-        description: Git repository URL of the tree
-        required: true
-      - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
         description: Origin of the tree
-        required: true
       - in: path
         name: tree_name
         schema:
           type: string
+        description: Name of the tree
         required: true
       tags:
       - tree
@@ -1424,37 +1415,26 @@ paths:
         name: commit_hash
         schema:
           type: string
+        description: Commit hash of the tree
         required: true
       - in: path
         name: git_branch
         schema:
-          type: string
-        required: true
-      - in: query
-        name: git_branch
-        schema:
-          title: Git Branch
           type: string
         description: Git branch name of the tree
         required: true
       - in: query
-        name: git_url
-        schema:
-          title: Git Url
-          type: string
-        description: Git repository URL of the tree
-        required: true
-      - in: query
         name: origin
         schema:
+          default: maestro
           title: Origin
           type: string
         description: Origin of the tree
-        required: true
       - in: path
         name: tree_name
         schema:
           type: string
+        description: Name of the tree
         required: true
       tags:
       - tree
