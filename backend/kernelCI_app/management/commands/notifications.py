@@ -36,7 +36,7 @@ from kernelCI_app.queries.notifications import (
     kcidb_last_test_without_issue,
     kcidb_tests_results,
 )
-from kernelCI_app.queries.test import get_test_details_data
+from kernelCI_app.queries.test import get_test_details_data, get_test_status_history
 from kernelCI_cache.queries.notifications import (
     mark_checkout_notification_as_sent,
     mark_issue_notification_not_sent,
@@ -595,6 +595,31 @@ def generate_test_report(*, service, test_id, email_args, signup_folder):
     test["platform"] = test.get("environment_misc", {}).get(
         "platform", "unknown platform"
     )
+
+    platform = test.get("environment_misc", {}).get("platform")
+    history = get_test_status_history(
+        path=test["path"],
+        origin=test["origin"],
+        git_repository_url=test["git_repository_url"],
+        git_repository_branch=test["git_repository_branch"],
+        platform=platform,
+        test_start_time=test["start_time"],
+        config_name=test["config_name"],
+        field_timestamp=test["_timestamp"],
+    )
+
+    status_symbols = []
+    for entry in history:
+        if entry["status"] == "PASS":
+            status_symbols.append("✅")
+        elif entry["status"] == "FAIL":
+            status_symbols.append("❌")
+        else:
+            status_symbols.append("⚠️")
+
+    # Reverse to show oldest first
+    status_symbols.reverse()
+    test["status_history"] = " → ".join(status_symbols)
 
     template = setup_jinja_template("test_report.txt.j2")
     report_content = template.render(test=test)
