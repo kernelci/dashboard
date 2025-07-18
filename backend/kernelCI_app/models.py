@@ -28,7 +28,6 @@ class Issues(models.Model):
     categories = ArrayField(models.TextField(), blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "issues"
         unique_together = (("id", "version"),)
 
@@ -60,7 +59,6 @@ class Checkouts(models.Model):
     origin_tests_finish_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "checkouts"
 
 
@@ -89,7 +87,6 @@ class Builds(models.Model):
     )
 
     class Meta:
-        managed = False
         db_table = "builds"
 
 
@@ -126,7 +123,6 @@ class Tests(models.Model):
     input_files = models.JSONField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "tests"
 
 
@@ -136,18 +132,15 @@ class Incidents(models.Model):
     )
     id = models.TextField(primary_key=True)
     origin = models.TextField()
-    issue_id = models.ForeignKey(Issues, on_delete=models.DO_NOTHING)
+    issue = models.ForeignKey(Issues, on_delete=models.DO_NOTHING)
     issue_version = models.IntegerField()
-    build_id = models.ForeignKey(
+    build = models.ForeignKey(
         Builds, on_delete=models.DO_NOTHING, null=True, blank=True
     )
-    test_id = models.ForeignKey(
-        Tests, on_delete=models.DO_NOTHING, null=True, blank=True
-    )
+    test = models.ForeignKey(Tests, on_delete=models.DO_NOTHING, null=True, blank=True)
     present = models.BooleanField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "incidents"
