@@ -12,7 +12,13 @@ from pydantic import ValidationError
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.tree import get_latest_tree
+from kernelCI_app.typeModels.commonOpenApiParameters import (
+    COMMIT_HASH_PATH_PARAM,
+    GIT_BRANCH_PATH_PARAM,
+    TREE_NAME_PATH_PARAM,
+)
 from kernelCI_app.typeModels.treeDetails import (
+    LongTreeQueryParameters,
     TreeLatestPathParameters,
     TreeLatestResponse,
     TreeLatestQueryParameters,
@@ -20,12 +26,8 @@ from kernelCI_app.typeModels.treeDetails import (
 from kernelCI_app.constants.localization import ClientStrings
 
 
-class TreeLatest(APIView):
-    @extend_schema(
-        responses=TreeLatestResponse,
-        parameters=[TreeLatestQueryParameters],
-        methods=["GET"],
-    )
+class BaseTreeLatest(APIView):
+
     def get(
         self,
         request,
@@ -105,3 +107,48 @@ class TreeLatest(APIView):
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(valid_response.model_dump())
+
+
+class TreeLatest(BaseTreeLatest):
+    @extend_schema(
+        responses=TreeLatestResponse,
+        parameters=[
+            COMMIT_HASH_PATH_PARAM,
+            TREE_NAME_PATH_PARAM,
+            GIT_BRANCH_PATH_PARAM,
+            LongTreeQueryParameters,
+        ],
+        methods=["GET"],
+    )
+    def get(
+        self,
+        request,
+        tree_name: str,
+        git_branch: str,
+        commit_hash: str,
+    ) -> JsonResponse:
+        return super().get(
+            request=request,
+            commit_hash=commit_hash,
+            tree_name=tree_name,
+            git_branch=git_branch,
+        )
+
+
+class ShortTreeLatest(BaseTreeLatest):
+    @extend_schema(
+        responses=TreeLatestResponse,
+        parameters=[
+            TREE_NAME_PATH_PARAM,
+            GIT_BRANCH_PATH_PARAM,
+            TreeLatestQueryParameters,
+        ],
+        methods=["GET"],
+    )
+    def get(
+        self,
+        request,
+        tree_name: str,
+        git_branch: str,
+    ) -> JsonResponse:
+        return super().get(request=request, tree_name=tree_name, git_branch=git_branch)
