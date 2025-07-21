@@ -323,6 +323,18 @@ def get_tree_details_data(
         git_url_full_clause = "AND " + git_url_clause if git_url_clause else ""
 
         query = f"""
+        WITH RELEVANT_HASH AS (
+            SELECT
+                c.git_commit_hash
+            FROM
+                checkouts c
+            WHERE
+                c.git_commit_hash = %(commit_hash)s
+                OR %(commit_hash)s = ANY (c.git_commit_tags)
+            ORDER BY
+                c._timestamp DESC
+            LIMIT 1
+        )
         SELECT
                 tests.id AS tests_id,
                 tests.origin,
@@ -373,19 +385,13 @@ def get_tree_details_data(
                         FROM
                             checkouts
                         WHERE
-                            (checkouts.git_commit_hash = %(commit_hash)s
-                            OR %(commit_hash)s = ANY(checkouts.git_commit_tags))
+                            checkouts.git_commit_hash = (
+                                SELECT git_commit_hash FROM RELEVANT_HASH
+                            )
                             {git_url_full_clause}
                             {tree_name_full_clause}
                             AND {git_branch_clause}
                             AND checkouts.origin = %(origin_param)s
--- TODO: Remove the ORDER BY + LIMIT 1 once the database is properly sanitized.
--- This was added because there are currently cases where:
--- 1) A single tag references multiple checkouts;
--- 2) Multiple checkouts match the constraints above.
--- The temporary criteria is to always select the most recent checkout.
-                        ORDER BY checkouts._timestamp DESC
-                        LIMIT 1
                     ) AS tree_head
                 LEFT JOIN builds
                     ON tree_head.checkout_id = builds.checkout_id
