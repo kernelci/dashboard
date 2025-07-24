@@ -2,6 +2,8 @@ chromiumos:
   url: https://chromium.googlesource.com/chromiumos/third_party/kernel.git
   default_recipients:
     - laura.nao@collabora.com
+    - vignesh.raman@collabora.com
+    - arnaud.ferraris@collabora.com
     - mhiramat@google.com
 
   reports:
