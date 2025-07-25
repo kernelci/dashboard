@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "kernelCI_app",
     "kernelCI_cache",
+    "kernelCI_ingester",
     "rest_framework",
     "drf_spectacular",
     "django_crontab",
