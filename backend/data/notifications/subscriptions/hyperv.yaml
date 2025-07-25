@@ -1,5 +1,8 @@
 hyperv:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/hyperv/linux.git
+  default_recipients:
+    - kernelcialerts@microsoft.com
+
   
   reports:
     - next:
