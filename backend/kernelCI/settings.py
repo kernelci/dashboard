@@ -193,43 +193,62 @@ BACKEND_VOLUME_DIR = get_json_env_var("BACKEND_VOLUME_DIR", "volume_data")
 
 DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
-DATABASES = {
-    "default": get_json_env_var(
-        "DB_DEFAULT",
-        {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": "kernelci",
-            "USER": "kernelci",
-            "PASSWORD": "kernelci-db-password",
-            "HOST": "127.0.0.1",
-            "OPTIONS": {
-                "connect_timeout": 5,
-            },
-        },
-    ),
-    "dashboard_db": {
+# Database definition configurations
+kcidb_config = get_json_env_var(
+    "DB_DEFAULT",
+    {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "dashboard",
-        "USER": get_json_env_var("DASH_DB_USER", "dev"),
-        "PASSWORD": get_json_env_var("DASH_DB_PASSWORD", "dev"),
-        "HOST": get_json_env_var("DASH_DB_HOST", "127.0.0.1"),
-        "PORT": get_json_env_var("DASH_DB_PORT", 5434),
+        "NAME": "kernelci",
+        "USER": "kernelci",
+        "PASSWORD": "kernelci-db-password",
+        "HOST": "127.0.0.1",
         "OPTIONS": {
             "connect_timeout": 5,
         },
     },
-    "cache": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BACKEND_VOLUME_DIR, "cache.sqlite3"),
-    },
-    "notifications": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BACKEND_VOLUME_DIR, "notifications.sqlite3"),
+)
+
+dashboard_db_config = {
+    "ENGINE": "django.db.backends.postgresql",
+    "NAME": "dashboard",
+    "USER": get_json_env_var("DASH_DB_USER", "dev"),
+    "PASSWORD": get_json_env_var("DASH_DB_PASSWORD", "dev"),
+    "HOST": get_json_env_var("DASH_DB_HOST", "127.0.0.1"),
+    "PORT": get_json_env_var("DASH_DB_PORT", 5434),
+    "OPTIONS": {
+        "connect_timeout": 5,
     },
 }
 
+# Common databases
+cache_db_config = {
+    "ENGINE": "django.db.backends.sqlite3",
+    "NAME": os.path.join(BACKEND_VOLUME_DIR, "cache.sqlite3"),
+}
+
+notifications_db_config = {
+    "ENGINE": "django.db.backends.sqlite3",
+    "NAME": os.path.join(BACKEND_VOLUME_DIR, "notifications.sqlite3"),
+}
+
+USE_DASHBOARD_DB = os.environ.get("USE_DASHBOARD_DB", False)
+if is_boolean_or_string_true(USE_DASHBOARD_DB):
+    DATABASES = {
+        "default": dashboard_db_config,
+        "kcidb": kcidb_config,
+        "cache": cache_db_config,
+        "notifications": notifications_db_config,
+    }
+else:
+    DATABASES = {
+        "default": kcidb_config,
+        "dashboard_db": dashboard_db_config,
+        "cache": cache_db_config,
+        "notifications": notifications_db_config,
+    }
+
 if DEBUG:
-    print("DEBUG: DEFAULT DATABASE:", DATABASES)
+    print("DEBUG: DATABASES:", DATABASES)
 
 
 REDIS_HOST = get_json_env_var("REDIS_HOST", "127.0.0.1")

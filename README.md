@@ -87,7 +87,9 @@ export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
 docker compose up --build
 ```
 
-> Last Tip: You can set the env Debug=True in the docker-compose.yml file if you want to get a better understanding of what is happening.
+> [Note] If you are going to run using only a dump of the database, the DB_DEFAULT_NAME should be `dashboard` and the `DB_DEFAULT_USER` and `DB_DEFAULT_PASSWORD` should be `admin` (for now).
+> After you define those values, also set the env var `USE_DASHBOARD_DB` to True, setting the local database as the default one.
+> You can also skip the cloud-proxy on such case.
 
 
 ## Deploying to production

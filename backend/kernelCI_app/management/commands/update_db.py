@@ -2,9 +2,12 @@ import json
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connections
 import logging
+from kernelCI.settings import USE_DASHBOARD_DB
 from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
 from datetime import timedelta
 from django.utils import timezone
+
+from utils.validation import is_boolean_or_string_true
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +46,12 @@ class Command(BaseCommand):
         self.end_interval = None
         self.start_timestamp = None
         self.end_timestamp = None
+        if is_boolean_or_string_true(USE_DASHBOARD_DB):
+            self.kcidb_connection = connections["kcidb"]
+            self.dashboard_conn_name = "default"
+        else:
+            self.kcidb_connection = connections["default"]
+            self.dashboard_conn_name = "dashboard_db"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -142,9 +151,9 @@ class Command(BaseCommand):
             "end_interval": self.end_interval,
         }
 
-        with connections["default"].cursor() as default_cursor:
-            default_cursor.execute(query, params)
-            return default_cursor.fetchall()
+        with self.kcidb_connection.cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, params)
+            return kcidb_cursor.fetchall()
 
     def insert_issues_data(self, records: list[tuple]) -> int:
         total_inserted = 0
@@ -168,7 +177,7 @@ class Command(BaseCommand):
                 )
             )
 
-        migrated_issues = Issues.objects.using("dashboard_db").bulk_create(
+        migrated_issues = Issues.objects.using(self.dashboard_conn_name).bulk_create(
             original_issues,
             ignore_conflicts=True,
             batch_size=DEFAULT_BATCH_SIZE,
@@ -205,9 +214,9 @@ class Command(BaseCommand):
             "end_interval": self.end_interval,
         }
 
-        with connections["default"].cursor() as default_cursor:
-            default_cursor.execute(query, params)
-            return default_cursor.fetchall()
+        with self.kcidb_connection.cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, params)
+            return kcidb_cursor.fetchall()
 
     def insert_checkouts_data(self, records: list[tuple]) -> int:
         original_checkouts = []
@@ -240,7 +249,9 @@ class Command(BaseCommand):
                 )
             )
 
-        migrated_checkouts = Checkouts.objects.using("dashboard_db").bulk_create(
+        migrated_checkouts = Checkouts.objects.using(
+            self.dashboard_conn_name
+        ).bulk_create(
             original_checkouts,
             ignore_conflicts=True,
             batch_size=DEFAULT_BATCH_SIZE,
@@ -264,7 +275,7 @@ class Command(BaseCommand):
     def select_builds_data(self) -> list[tuple]:
         checkout_ids = set(
             (
-                Checkouts.objects.using("dashboard_db")
+                Checkouts.objects.using(self.dashboard_conn_name)
                 .filter(
                     field_timestamp__gte=self.start_timestamp,
                     field_timestamp__lte=self.end_timestamp,
@@ -289,11 +300,11 @@ class Command(BaseCommand):
             ORDER BY _timestamp, id
         """
 
-        with connections["default"].cursor() as default_cursor:
-            default_cursor.execute(
+        with self.kcidb_connection.cursor() as kcidb_cursor:
+            kcidb_cursor.execute(
                 query, list(checkout_ids) + [self.start_interval, self.end_interval]
             )
-            return default_cursor.fetchall()
+            return kcidb_cursor.fetchall()
 
     def insert_builds_data(self, records: list[tuple]) -> int:
         original_builds: list[Builds] = [
@@ -320,7 +331,7 @@ class Command(BaseCommand):
             for record in records
         ]
 
-        migrated_builds = Builds.objects.using("dashboard_db").bulk_create(
+        migrated_builds = Builds.objects.using(self.dashboard_conn_name).bulk_create(
             original_builds,
             ignore_conflicts=True,
             batch_size=BUILD_BATCH_SIZE,
@@ -343,7 +354,7 @@ class Command(BaseCommand):
     # TESTS ########################################
     def select_tests_data(self):
         existing_build_ids = set(
-            Builds.objects.using("dashboard_db")
+            Builds.objects.using(self.dashboard_conn_name)
             .filter(
                 field_timestamp__gte=self.start_timestamp,
                 field_timestamp__lte=self.end_timestamp,
@@ -372,10 +383,10 @@ class Command(BaseCommand):
             self.end_interval,
         ]
 
-        with connections["default"].cursor() as default_cursor:
-            default_cursor.execute(tests_query, query_params)
+        with self.kcidb_connection.cursor() as kcidb_cursor:
+            kcidb_cursor.execute(tests_query, query_params)
             self.stdout.write("Finished fetching tests")
-            while batch := default_cursor.fetchmany(SELECT_BATCH_SIZE):
+            while batch := kcidb_cursor.fetchmany(SELECT_BATCH_SIZE):
                 yield batch
 
     def insert_tests_data(self, records: list[tuple]) -> int:
@@ -406,7 +417,7 @@ class Command(BaseCommand):
             for record in records
         ]
 
-        migrated_tests = Tests.objects.using("dashboard_db").bulk_create(
+        migrated_tests = Tests.objects.using(self.dashboard_conn_name).bulk_create(
             original_tests,
             ignore_conflicts=True,
             batch_size=TEST_BATCH_SIZE,
@@ -433,7 +444,7 @@ class Command(BaseCommand):
     # INCIDENTS ########################################
     def select_incidents_data(self) -> list[tuple]:
         existing_issues_ids = set(
-            Issues.objects.using("dashboard_db").values_list("id", flat=True)
+            Issues.objects.using(self.dashboard_conn_name).values_list("id", flat=True)
         )
 
         if len(existing_issues_ids) == 0:
@@ -458,9 +469,9 @@ class Command(BaseCommand):
             self.end_interval,
         ]
 
-        with connections["default"].cursor() as default_cursor:
-            default_cursor.execute(query, query_params)
-            records = default_cursor.fetchall()
+        with self.kcidb_connection.cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, query_params)
+            records = kcidb_cursor.fetchall()
             print(f"Retrieved {len(records)} Incidents")
             return records
 
@@ -483,19 +494,19 @@ class Command(BaseCommand):
                 proposed_test_ids.add(test_id)
 
         existing_issue_ids = set(
-            Issues.objects.using("dashboard_db")
+            Issues.objects.using(self.dashboard_conn_name)
             .filter(id__in=[issue[0] for issue in proposed_issue_ids])
             .values_list("id", flat=True)
         )
 
         existing_build_ids = set(
-            Builds.objects.using("dashboard_db")
+            Builds.objects.using(self.dashboard_conn_name)
             .filter(id__in=proposed_build_ids)
             .values_list("id", flat=True)
         )
 
         existing_test_ids = set(
-            Tests.objects.using("dashboard_db")
+            Tests.objects.using(self.dashboard_conn_name)
             .filter(id__in=proposed_test_ids)
             .values_list("id", flat=True)
         )
@@ -532,7 +543,9 @@ class Command(BaseCommand):
             else:
                 skipped_incidents += 1
 
-        migrated_incidents = Incidents.objects.using("dashboard_db").bulk_create(
+        migrated_incidents = Incidents.objects.using(
+            self.dashboard_conn_name
+        ).bulk_create(
             original_incidents,
             ignore_conflicts=True,
             batch_size=DEFAULT_BATCH_SIZE,
