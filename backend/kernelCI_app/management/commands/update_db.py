@@ -127,7 +127,7 @@ class Command(BaseCommand):
             raise CommandError("Command failed") from e
 
     # ISSUES ########################################
-    def select_issues_data(self) -> tuple:
+    def select_issues_data(self) -> list[tuple]:
         query = """
             SELECT _timestamp, id, version, origin, report_url, report_subject,
                    culprit_code, culprit_tool, culprit_harness, comment, misc,
@@ -146,7 +146,7 @@ class Command(BaseCommand):
             default_cursor.execute(query, params)
             return default_cursor.fetchall()
 
-    def insert_issues_data(self, records: tuple) -> int:
+    def insert_issues_data(self, records: list[tuple]) -> int:
         total_inserted = 0
 
         original_issues = []
@@ -187,7 +187,7 @@ class Command(BaseCommand):
         self.stdout.write("Issues migration completed")
 
     # CHECKOUTS ########################################
-    def select_checkouts_data(self) -> tuple:
+    def select_checkouts_data(self) -> list[tuple]:
         query = """
             SELECT _timestamp, id, origin, tree_name, git_repository_url,
                    git_commit_hash, git_commit_name, git_repository_branch,
@@ -209,7 +209,7 @@ class Command(BaseCommand):
             default_cursor.execute(query, params)
             return default_cursor.fetchall()
 
-    def insert_checkouts_data(self, records: tuple) -> int:
+    def insert_checkouts_data(self, records: list[tuple]) -> int:
         original_checkouts = []
 
         for record in records:
@@ -261,7 +261,7 @@ class Command(BaseCommand):
         return
 
     # BUILDS ########################################
-    def select_builds_data(self) -> tuple:
+    def select_builds_data(self) -> list[tuple]:
         checkout_ids = set(
             (
                 Checkouts.objects.using("dashboard_db")
@@ -272,6 +272,9 @@ class Command(BaseCommand):
                 .values_list("id", flat=True)
             )
         )
+
+        if len(checkout_ids) == 0:
+            return []
         checkout_id_placeholders = ",".join(["%s"] * len(checkout_ids))
 
         query = f"""
@@ -292,7 +295,7 @@ class Command(BaseCommand):
             )
             return default_cursor.fetchall()
 
-    def insert_builds_data(self, records: tuple) -> int:
+    def insert_builds_data(self, records: list[tuple]) -> int:
         original_builds: list[Builds] = [
             Builds(
                 field_timestamp=record[0],
@@ -347,6 +350,9 @@ class Command(BaseCommand):
             )
             .values_list("id", flat=True)
         )
+
+        if len(existing_build_ids) == 0:
+            return []
         build_id_placeholders = ",".join(["%s"] * len(existing_build_ids))
 
         tests_query = f"""
@@ -372,7 +378,7 @@ class Command(BaseCommand):
             while batch := default_cursor.fetchmany(SELECT_BATCH_SIZE):
                 yield batch
 
-    def insert_tests_data(self, records) -> int:
+    def insert_tests_data(self, records: list[tuple]) -> int:
         print(f"Processing {len(records)} tests")
         original_tests: list[Tests] = [
             Tests(
@@ -425,10 +431,13 @@ class Command(BaseCommand):
         )
 
     # INCIDENTS ########################################
-    def select_incidents_data(self) -> tuple:
+    def select_incidents_data(self) -> list[tuple]:
         existing_issues_ids = set(
             Issues.objects.using("dashboard_db").values_list("id", flat=True)
         )
+
+        if len(existing_issues_ids) == 0:
+            return []
         issue_id_placeholders = ",".join(["%s"] * len(existing_issues_ids))
 
         # Though we can filter with the build and test ID, filtering by
@@ -455,7 +464,7 @@ class Command(BaseCommand):
             print(f"Retrieved {len(records)} Incidents")
             return records
 
-    def insert_incidents_data(self, records: tuple) -> int:
+    def insert_incidents_data(self, records: list[tuple]) -> int:
         original_incidents: list[Incidents] = []
         proposed_issue_ids: set[tuple[str, int]] = set()
         proposed_build_ids: set[str] = set()
