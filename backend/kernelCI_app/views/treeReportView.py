@@ -33,6 +33,8 @@ class TreeReport(APIView):
                 git_url=request.GET.get("git_url"),
                 path=request.GET.getlist("path"),
                 group_size=request.GET.get("group_size"),
+                min_age_in_hours=request.GET.get("min_age_in_hours"),
+                max_age_in_hours=request.GET.get("max_age_in_hours"),
             )
             origin = params.origin
             git_url = params.git_url
@@ -40,17 +42,26 @@ class TreeReport(APIView):
         except ValidationError as e:
             return create_api_error_response(error_message=e.json())
 
+        if params.min_age_in_hours >= params.max_age_in_hours:
+            return create_api_error_response(
+                error_message=ClientStrings.TREE_REPORT_MIN_MAX_AGE
+            )
+
+        min_query_interval = f"{params.min_age_in_hours} hours"
+        max_query_interval = f"{params.max_age_in_hours} hours"
+
         # Even though this is using a single key and could be swapped for the treeListing query directly,
         # it is better to keep the same query as the notification command
         tree_key: TreeKey = (git_branch, git_url, origin)
         records = get_checkout_summary_data(
             tuple_params=[tree_key],
-            interval_min="0 hours",
-            interval_max="24 hours",
+            interval_min=min_query_interval,
+            interval_max=max_query_interval,
         )
         if not records:
             return create_api_error_response(
-                error_message=ClientStrings.TREE_NOT_FOUND, status_code=HTTPStatus.OK
+                error_message=ClientStrings.TREE_NOT_FOUND_IN_INTERVAL,
+                status_code=HTTPStatus.OK,
             )
         record = records[0]
 
@@ -78,7 +89,7 @@ class TreeReport(APIView):
                 branch=git_branch,
                 commit_hash=commit_hash,
                 path=params.path,
-                interval="1 day",
+                interval=max_query_interval,
                 group_size=params.group_size,
             )
 

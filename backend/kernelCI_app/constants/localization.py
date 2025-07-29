@@ -14,6 +14,10 @@ class ClientStrings:
     TREE_NO_RESULTS = "No results available for this tree/branch/commit"
     TREE_TESTS_NO_RESULTS = "No tests available for this tree/branch/commit"
     TREE_COMMITS_HISTORY_NOT_FOUND = "History of tree commits not found"
+    TREE_NOT_FOUND_IN_INTERVAL = "Tree not found in the given interval"
+    TREE_REPORT_MIN_MAX_AGE = (
+        "Minimum age can't be greater than or equal to the maximum age"
+    )
     TEST_STATUS_HISTORY_NOT_FOUND = "Test status history not found"
     TEST_ISSUES_NOT_FOUND = "No issues were found for this test"
     TEST_NOT_FOUND = "Test not found"
@@ -139,3 +143,7 @@ class DocStrings:
     TREE_REPORT_GROUP_SIZE_DESCRIPTION = (
         "Maximum number of entries to be retrieved in a test history."
     )
+    TREE_REPORT_MAX_AGE = (
+        "Maximum age for the queried checkout and related tests in hours"
+    )
+    TREE_REPORT_MIN_AGE = "Minimum age of the queried checkout in hours"

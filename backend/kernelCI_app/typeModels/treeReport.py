@@ -11,6 +11,9 @@ from kernelCI_app.typeModels.treeListing import TestStatusCount
 
 DEFAULT_PATH_SEARCH = ["%"]
 DEFAULT_GROUP_SIZE = 3
+DEFAULT_MAX_AGE_HOURS = 24
+DEFAULT_MIN_AGE_HOURS = 0
+LIMIT_MAX_AGE_HOURS = 720  # 30 days
 
 
 class TreeReportQueryParameters(BaseModel):
@@ -46,6 +49,25 @@ class TreeReportQueryParameters(BaseModel):
             description=DocStrings.TREE_REPORT_GROUP_SIZE_DESCRIPTION,
         ),
         make_default_validator(DEFAULT_GROUP_SIZE),
+    ]
+    min_age_in_hours: Annotated[
+        int,
+        Field(
+            default=DEFAULT_MIN_AGE_HOURS,
+            gte=0,
+            description=DocStrings.TREE_REPORT_MIN_AGE,
+        ),
+        make_default_validator(DEFAULT_MIN_AGE_HOURS),
+    ]
+    max_age_in_hours: Annotated[
+        int,
+        Field(
+            default=DEFAULT_MAX_AGE_HOURS,
+            gt=0,
+            le=LIMIT_MAX_AGE_HOURS,
+            description=DocStrings.TREE_REPORT_MAX_AGE,
+        ),
+        make_default_validator(DEFAULT_MAX_AGE_HOURS),
     ]
 
 
