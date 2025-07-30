@@ -20,6 +20,9 @@ start time: {{ test["start_time"] }}
 {% if test["log_url"] -%}
 log: {{ test["log_url"] }}
 {%- endif %}
+{% if test["status_history"] -%}
+history: {{ test["status_history"] }}
+{%- endif %}
 
 # Test details:
 - test path: {{ test["path"] }}
