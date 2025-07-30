@@ -152,7 +152,7 @@ CRONJOBS = [
         [
             "notifications",
             "--action=summary",
-            "--to=Johnson.George@microsoft.com",
+            "--to=kernelcialerts@microsoft.com",
             "--cc=gus@collabora.com",
             "--ignore-recipients",
             "--send",
