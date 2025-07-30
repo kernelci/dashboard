@@ -4,10 +4,50 @@ stable:
     - stable@vger.kernel.org
 
   reports:
+    - maestro-6.12.y:
+      branch: linux-6.12.y
+      origin: maestro
+
+    - maestro-6.6.y:
+      branch: linux-6.6.y
+      origin: maestro
+
+    - maestro-6.1.y:
+      branch: linux-6.1.y
+      origin: maestro
+
+    - maestro-5.15.y:
+      branch: linux-5.15.y
+      origin: maestro
+
+    - maestro-5.10.y:
+      branch: linux-5.10.y
+      origin: maestro
+
+    - maestro-5.4.y:
+      branch: linux-5.4.y
+      origin: maestro
+
     - microsoft-6.12.y:
       branch: linux-6.12.y
       origin: microsoft
 
     - microsoft-6.6.y:
       branch: linux-6.6.y
+      origin: microsoft
+
+    - microsoft-6.1.y:
+      branch: linux-6.1.y
+      origin: microsoft
+
+    - microsoft-5.15.y:
+      branch: linux-5.15.y
+      origin: microsoft
+
+    - microsoft-5.10.y:
+      branch: linux-5.10.y
+      origin: microsoft
+
+    - microsoft-5.4.y:
+      branch: linux-5.4.y
       origin: microsoft
