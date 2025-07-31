@@ -38,7 +38,7 @@ const LinkWithIcon = ({
   }, [title, unformattedTitle]);
 
   return (
-    <div className="flex flex-col items-start gap-2 text-sm">
+    <div className="flex flex-col items-start gap-1 text-[16px]">
       <div className="flex flex-row gap-[5px]">
         <span className="font-bold">{titleText}</span>
         {titleIcon}
