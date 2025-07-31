@@ -18,7 +18,7 @@ import { formatDate, getTitle } from '@/utils/utils';
 
 import IssueSection from '@/components/Issue/IssueSection';
 
-import { shouldTruncate, truncateBigText, valueOrEmpty } from '@/lib/string';
+import { shouldTruncate, valueOrEmpty } from '@/lib/string';
 
 import { Sheet } from '@/components/Sheet';
 
@@ -47,11 +47,11 @@ import PageWithTitle from '@/components/PageWithTitle';
 import { MemoizedBuildDetailsOGTags } from '@/components/OpenGraphTags/BuildDetailsOGTags';
 import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
 
-import MemoizedLinkItem from '@/components/DetailsLink';
-import { LinkIcon } from '@/components/Icons/Link';
 import { processLogData } from '@/hooks/useLogData';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+
+import { TreeDetailsLink } from '@/components/TreeDetailsLink/TreeDetailsLink';
 
 import BuildDetailsTestSection from './BuildDetailsTestSection';
 
@@ -94,30 +94,6 @@ const BuildDetails = ({
     [navigate],
   );
 
-  const treeDetailsLink = useMemo(
-    () => (
-      <MemoizedLinkItem
-        to="/tree/$treeId"
-        params={{ treeId: data?.git_commit_hash }}
-        state={s => s}
-        search={s => ({
-          origin: s.origin,
-          treeInfo: {
-            gitBranch: data?.git_repository_branch,
-            gitUrl: data?.git_repository_url,
-            treeName: data?.tree_name,
-            commitName: data?.git_commit_name,
-            headCommitHash: data?.git_commit_hash,
-          },
-        })}
-      >
-        {truncateBigText(data?.git_commit_hash)}
-        <LinkIcon className="text-blue text-xl" />
-      </MemoizedLinkItem>
-    ),
-    [data],
-  );
-
   const miscSection: ISection | undefined = useMemo(():
     | ISection
     | undefined => {
@@ -155,12 +131,29 @@ const BuildDetails = ({
     if (!data) {
       return [];
     }
+
+    const archCompilerConfigText =
+      valueOrEmpty(data.architecture) +
+      ' / ' +
+      valueOrEmpty(data.compiler) +
+      ' / ' +
+      valueOrEmpty(data.config_name);
+    const gitUrl = valueOrEmpty(data.git_repository_url);
+    const logUrl = valueOrEmpty(data.log_url);
+    const configUrl = valueOrEmpty(data.config_url);
+
     return [
       {
         title: buildDetailsTitle,
-        subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
-        leftIcon: <StatusIcon status={data?.status} />,
-        eyebrow: formatMessage({ id: 'buildDetails.buildDetails' }),
+        subtitle: (
+          <div>
+            <span className="text-[18px]">
+              {formatDate(valueOrEmpty(data.start_time), false, true)}
+            </span>
+            <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />
+          </div>
+        ),
+        leftIcon: <StatusIcon status={data.status} />,
         subsections: [
           {
             infos: [
@@ -170,34 +163,24 @@ const BuildDetails = ({
                 icon: <StatusIcon status={data.status} className="text-xl" />,
               },
               {
-                title: 'buildDetails.gitDescribe',
-                linkText: valueOrEmpty(data.git_commit_name),
-              },
-              {
-                title: 'global.tree',
-                linkText: valueOrEmpty(data.tree_name),
-              },
-              {
-                title: 'commonDetails.gitRepositoryBranch',
-                linkText: valueOrEmpty(data.git_repository_branch),
-              },
-              {
-                title: 'commonDetails.gitCommitHash',
-                linkText: valueOrEmpty(data.git_commit_hash),
-                linkComponent: treeDetailsLink,
+                title: 'global.treeBranchHash',
+                linkComponent: (
+                  <TreeDetailsLink
+                    treeName={data.tree_name}
+                    gitBranch={data.git_repository_branch}
+                    commitHash={data.git_commit_hash}
+                    gitUrl={data.git_repository_url}
+                    commitName={data.git_commit_name}
+                  />
+                ),
                 copyValue: valueOrEmpty(data.git_commit_hash),
               },
               {
                 title: 'commonDetails.gitRepositoryUrl',
-                linkText: shouldTruncate(
-                  valueOrEmpty(data.git_repository_url),
-                ) ? (
-                  <TruncatedValueTooltip
-                    value={data.git_repository_url}
-                    isUrl={true}
-                  />
+                linkText: shouldTruncate(gitUrl) ? (
+                  <TruncatedValueTooltip value={gitUrl} isUrl={true} />
                 ) : (
-                  <span>{valueOrEmpty(data.git_repository_url)}</span>
+                  <span>{gitUrl}</span>
                 ),
                 link: data.git_repository_url,
               },
@@ -206,24 +189,16 @@ const BuildDetails = ({
                 linkText: valueOrEmpty(data.git_commit_tags?.[0]),
               },
               {
+                title: 'buildDetails.gitDescribe',
+                linkText: valueOrEmpty(data.git_commit_name),
+              },
+              {
+                title: 'global.archCompilerConfig',
+                linkText: archCompilerConfigText,
+              },
+              {
                 title: 'global.command',
                 linkText: valueOrEmpty(data.command),
-              },
-              {
-                title: 'global.architecture',
-                linkText: valueOrEmpty(data.architecture),
-              },
-              {
-                title: 'global.compiler',
-                linkText: valueOrEmpty(data.compiler),
-              },
-              {
-                title: 'global.config',
-                linkText: valueOrEmpty(data.config_name),
-              },
-              {
-                title: 'global.date',
-                linkText: formatDate(valueOrEmpty(data.start_time)),
               },
               {
                 title: 'global.buildTime',
@@ -239,15 +214,19 @@ const BuildDetails = ({
             infos: [
               {
                 title: 'buildDetails.buildLogs',
-                linkText: (
-                  <TruncatedValueTooltip value={data.log_url} isUrl={true} />
+                linkText: shouldTruncate(logUrl) ? (
+                  <TruncatedValueTooltip value={logUrl} isUrl={true} />
+                ) : (
+                  <span>{logUrl}</span>
                 ),
                 link: data.log_url,
               },
               {
                 title: 'buildDetails.kernelConfig',
-                linkText: (
-                  <TruncatedValueTooltip value={data.config_url} isUrl={true} />
+                linkText: shouldTruncate(configUrl) ? (
+                  <TruncatedValueTooltip value={configUrl} isUrl={true} />
+                ) : (
+                  <span>{configUrl}</span>
                 ),
                 link: data.config_url,
               },
@@ -256,14 +235,7 @@ const BuildDetails = ({
         ],
       },
     ];
-  }, [
-    data,
-    buildDetailsTitle,
-    setSheetToLog,
-    formatMessage,
-    buildId,
-    treeDetailsLink,
-  ]);
+  }, [data, buildDetailsTitle, setSheetToLog, buildId]);
 
   const buildDetailsTabTitle: string = useMemo(() => {
     const buildTitle = `${data?.tree_name} ${data?.git_commit_name}`;
@@ -308,7 +280,7 @@ const BuildDetails = ({
       >
         <ErrorBoundary FallbackComponent={UnexpectedError}>
           <Sheet open={logOpen} onOpenChange={logOpenChange}>
-            <div className="flex flex-col gap-4 pb-8">
+            <div className="flex flex-col gap-4 pb-10">
               {breadcrumb}
               <SectionGroup sections={generalSections} />
               <BuildDetailsTestSection

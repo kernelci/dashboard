@@ -164,10 +164,12 @@ export const IssueDetails = ({
     if (!data) {
       return [];
     }
+    const reportUrl = valueOrEmpty(data.report_url);
+    const reportSubject = valueOrEmpty(data.report_subject);
+
     return [
       {
         title: data.comment ?? data.id,
-        eyebrow: formatMessage({ id: 'issueDetails.issueDetails' }),
         subtitle: tagPills,
         subsections: [
           {
@@ -182,19 +184,19 @@ export const IssueDetails = ({
               },
               {
                 title: 'issueDetails.reportUrl',
-                linkText: shouldTruncate(valueOrEmpty(data.report_url)) ? (
-                  <TruncatedValueTooltip value={data.report_url} isUrl={true} />
+                linkText: shouldTruncate(reportUrl) ? (
+                  <TruncatedValueTooltip value={reportUrl} isUrl={true} />
                 ) : (
-                  valueOrEmpty(data.report_url)
+                  reportUrl
                 ),
                 link: data.report_url ?? undefined,
               },
               {
                 title: 'issueDetails.reportSubject',
-                linkText: shouldTruncate(valueOrEmpty(data.report_subject)) ? (
-                  <TruncatedValueTooltip value={data.report_subject} />
+                linkText: shouldTruncate(reportSubject) ? (
+                  <TruncatedValueTooltip value={reportSubject} />
                 ) : (
-                  valueOrEmpty(data.report_subject)
+                  reportSubject
                 ),
               },
               {
@@ -215,7 +217,7 @@ export const IssueDetails = ({
         ],
       },
     ];
-  }, [data, tagPills, formatMessage, issueCulprit]);
+  }, [data, tagPills, issueCulprit]);
 
   const sectionsData: ISection[] = useMemo(() => {
     return [
@@ -254,7 +256,7 @@ export const IssueDetails = ({
       >
         <ErrorBoundary FallbackComponent={UnexpectedError}>
           <Sheet>
-            <div className="pb-10">
+            <div className="flex flex-col gap-4 pb-10">
               {breadcrumb}
               <SectionGroup sections={sectionsData} />
               <IssueDetailsTestSection
