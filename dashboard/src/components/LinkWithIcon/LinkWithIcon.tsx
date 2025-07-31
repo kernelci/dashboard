@@ -1,4 +1,4 @@
-import type { ReactElement, JSX } from 'react';
+import { type ReactElement, type JSX, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -27,17 +27,24 @@ const LinkWithIcon = ({
   titleIcon,
 }: ILinkWithIcon): JSX.Element => {
   const WrapperLink = link ? 'a' : 'div';
+
+  const titleText = useMemo(() => {
+    if (title) {
+      return <FormattedMessage id={title} />;
+    } else if (unformattedTitle) {
+      return unformattedTitle;
+    }
+    return null;
+  }, [title, unformattedTitle]);
+
   return (
-    <div className="flex flex-col items-start gap-2 text-sm">
-      {(title && (
+    <div className="flex flex-col items-start gap-1 text-[16px]">
+      {(titleText || titleIcon) && (
         <div className="flex flex-row gap-[5px]">
-          <span className="font-bold">
-            <FormattedMessage id={title} />
-          </span>
+          {titleText && <span className="font-bold">{titleText}</span>}
           {titleIcon}
         </div>
-      )) ||
-        (unformattedTitle && <p className="font-bold">{unformattedTitle}</p>)}
+      )}
       {linkComponent ?? (
         <WrapperLink
           className={cn('flex flex-row items-center gap-1', {

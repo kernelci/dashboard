@@ -24,6 +24,8 @@ export interface SubsectionLink extends ILinkWithIcon {
   copyValue?: string;
   children?: JSX.Element;
 }
+
+// TODO: move the children from inside the info to the subsection itself
 export interface ISubsection {
   infos: SubsectionLink[];
   title?: string;
@@ -93,7 +95,7 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
     <div className="border-dark-gray border-t pt-4">
       {title && <span className="text-xl">{title}</span>}
       {items.length > 0 && (
-        <div className="grid grid-cols-2 gap-8 pb-4">{items}</div>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-11 pb-4">{items}</div>
       )}
       {children.length > 0 && <div className="mb-4 w-[80vw]">{children}</div>}
     </div>

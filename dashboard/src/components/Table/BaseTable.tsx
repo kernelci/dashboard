@@ -40,13 +40,16 @@ type TBaseTable = (IBodyTable | IChildrenTable) &
 export const DumbBaseTable = ({
   children,
   className,
+  containerClassName,
 }: {
   children: ReactNode;
   className?: string;
+  containerClassName?: string;
 }): JSX.Element => {
   return (
     <Table
       className={classNames(className, 'w-full rounded-lg bg-white text-black')}
+      containerClassName={containerClassName}
     >
       {children}
     </Table>
