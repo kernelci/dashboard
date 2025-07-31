@@ -144,7 +144,14 @@ def send_email_report(
     print(f"sending {subject}.")
 
     return smtp_send_email(
-        service, sender_email, to, subject, message_text, cc, reply_to
+        service,
+        sender_email,
+        to,
+        subject,
+        message_text,
+        cc,
+        reply_to,
+        email_args.in_reply_to,
     )
 
 
@@ -649,6 +656,11 @@ class Command(BaseCommand):
         parser.add_argument("--to", type=str, help="Recipient To: of the email")
         parser.add_argument("--cc", type=str, help="Recipient CC: of the email")
         parser.add_argument(
+            "--in-reply-to",
+            type=str,
+            help="Message ID to reply to (sets In-Reply-To header)",
+        )
+        parser.add_argument(
             "--add-mailing-lists",
             action="store_true",
             help="Add community mailing lists to recipients (See docs).",
@@ -729,6 +741,7 @@ class Command(BaseCommand):
         email_args.yes = options.get("yes", False)
         email_args.to = options.get("to")
         email_args.cc = options.get("cc")
+        email_args.in_reply_to = options.get("in_reply_to")
         email_args.ignore_recipients = options.get("ignore_recipients", False)
         email_args.add_mailing_lists = options.get("add_mailing_lists", False)
         email_args.regression_report = False
