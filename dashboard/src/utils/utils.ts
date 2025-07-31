@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 
 import type { IListingItem } from '@/components/ListingItem/ListingItem';
 import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
@@ -17,7 +17,11 @@ import { UNKNOWN_STRING } from './constants/backend';
 import { groupStatus } from './status';
 import { buildTreeBranch } from './table';
 
-export function formatDate(date: Date | string, short?: boolean): string {
+export function formatDate(
+  date: Date | string,
+  short?: boolean,
+  addRelative?: boolean,
+): string {
   const options: Intl.DateTimeFormatOptions = {
     year: short ? '2-digit' : 'numeric',
     month: short ? 'numeric' : 'long',
@@ -35,7 +39,14 @@ export function formatDate(date: Date | string, short?: boolean): string {
     return '-';
   }
 
-  return new Intl.DateTimeFormat('en-US', options).format(date);
+  const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
+
+  // TODO: use intl for the "ago" part
+  if (addRelative) {
+    return `${formattedDate} (${formatDistanceToNow(date)} ago)`;
+  }
+
+  return formattedDate;
 }
 
 export const getDateOffset = (date: Date): string => {
