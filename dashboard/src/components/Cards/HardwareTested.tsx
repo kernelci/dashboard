@@ -1,4 +1,4 @@
-import { memo, type JSX } from 'react';
+import { memo, useMemo, type JSX } from 'react';
 
 import type { IBaseCard } from '@/components/Cards/BaseCard';
 import BaseCard from '@/components/Cards/BaseCard';
@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { TFilter } from '@/types/general';
 
 import FilterLink from '@/components/Tabs/FilterLink';
+import { UNKNOWN_STRING } from '@/utils/constants/backend';
 
 interface IHardwareTested
   extends Pick<TTreeTestsData, 'environmentCompatible'> {
@@ -24,13 +25,33 @@ const HardwareTested = ({
   title,
   diffFilter,
 }: IHardwareTested): JSX.Element => {
+  const sortedEnvironmentCompatibles = useMemo(() => {
+    return Object.keys(environmentCompatible).sort((a, b) => {
+      if (a === UNKNOWN_STRING) {
+        return 1;
+      }
+      if (b === UNKNOWN_STRING) {
+        return -1;
+      }
+
+      const failA = environmentCompatible[a].FAIL ?? 0;
+      const failB = environmentCompatible[b].FAIL ?? 0;
+
+      if (failB !== failA) {
+        return failB - failA;
+      }
+
+      return a.localeCompare(b);
+    });
+  }, [environmentCompatible]);
+
   return (
     <BaseCard
       title={title}
       content={
         <ScrollArea className="h-[350px]">
           <DumbListingContent>
-            {Object.keys(environmentCompatible).map(hardwareTestedName => {
+            {sortedEnvironmentCompatibles.map(hardwareTestedName => {
               const { DONE, FAIL, ERROR, MISS, PASS, SKIP, NULL } =
                 environmentCompatible[hardwareTestedName];
 
