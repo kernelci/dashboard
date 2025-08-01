@@ -412,6 +412,7 @@ def handle_build_summary(
             and compiler not in builds_summary.architectures.get(arch).compilers
         ):
             builds_summary.architectures[arch].compilers.append(compiler)
+            builds_summary.architectures[arch].compilers.sort()
 
     if origin := build.origin:
         build_origin_summary = builds_summary.origins.get(origin)

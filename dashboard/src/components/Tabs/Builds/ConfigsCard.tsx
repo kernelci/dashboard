@@ -21,10 +21,25 @@ interface IConfigsCard {
 }
 
 const ConfigsCard = ({ configs, diffFilter }: IConfigsCard): JSX.Element => {
+  const sortedConfigs = useMemo(
+    () =>
+      configs.sort((a, b) => {
+        const errorsA = a.errors ?? 0;
+        const errorsB = b.errors ?? 0;
+
+        if (errorsB !== errorsA) {
+          return errorsB - errorsA;
+        }
+
+        return a.text.localeCompare(b.text);
+      }),
+    [configs],
+  );
+
   const content = useMemo(() => {
     return (
       <DumbListingContent>
-        {configs.map((item, i) => (
+        {sortedConfigs.map((item, i) => (
           <FilterLink
             key={i}
             filterSection="configs"
@@ -45,7 +60,7 @@ const ConfigsCard = ({ configs, diffFilter }: IConfigsCard): JSX.Element => {
         ))}
       </DumbListingContent>
     );
-  }, [configs, diffFilter]);
+  }, [sortedConfigs, diffFilter]);
 
   return (
     <BaseCard

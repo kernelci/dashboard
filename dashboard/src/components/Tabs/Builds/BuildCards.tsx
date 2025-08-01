@@ -22,6 +22,21 @@ const ErrorsSummaryBuild = ({
   toggleFilterBySection,
   diffFilter,
 }: IErrorsSummaryBuild): JSX.Element => {
+  const sortedSummaryBody = useMemo(
+    () =>
+      summaryBody.sort((a, b) => {
+        const errorsA = a.arch.errors ?? 0;
+        const errorsB = b.arch.errors ?? 0;
+
+        if (errorsB !== errorsA) {
+          return errorsB - errorsA;
+        }
+
+        return a.arch.text.localeCompare(b.arch.text);
+      }),
+    [summaryBody],
+  );
+
   const summaryHeaders = useMemo(
     () => [
       <FormattedMessage key="global.arch" id="global.arch" />,
@@ -35,7 +50,7 @@ const ErrorsSummaryBuild = ({
       title={<FormattedMessage id="global.summary" />}
       content={
         <DumbSummary summaryHeaders={summaryHeaders}>
-          {summaryBody?.map(row => {
+          {sortedSummaryBody?.map(row => {
             return (
               <MemoizedSummaryItem
                 key={row.arch.text}
