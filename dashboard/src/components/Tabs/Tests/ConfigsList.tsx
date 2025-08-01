@@ -1,4 +1,4 @@
-import { memo, type JSX } from 'react';
+import { memo, useMemo, type JSX } from 'react';
 
 import type { IBaseCard } from '@/components/Cards/BaseCard';
 import BaseCard from '@/components/Cards/BaseCard';
@@ -9,6 +9,7 @@ import type { TTreeTestsData } from '@/types/tree/TreeDetails';
 
 import FilterLink from '@/components/Tabs/FilterLink';
 import type { TFilter } from '@/types/general';
+import { sortByErrorsAndText } from '@/utils/utils';
 
 interface IConfigList extends Pick<TTreeTestsData, 'configStatusCounts'> {
   title: IBaseCard['title'];
@@ -20,12 +21,23 @@ const ConfigsList = ({
   title,
   diffFilter,
 }: IConfigList): JSX.Element => {
+  const sortedConfigStatusCounts = useMemo(
+    () =>
+      Object.keys(configStatusCounts).sort((a, b) =>
+        sortByErrorsAndText(
+          { errors: configStatusCounts[a].FAIL ?? 0, text: a },
+          { errors: configStatusCounts[b].FAIL ?? 0, text: b },
+        ),
+      ),
+    [configStatusCounts],
+  );
+
   return (
     <BaseCard
       title={title}
       content={
         <DumbListingContent>
-          {Object.keys(configStatusCounts).map(configName => {
+          {sortedConfigStatusCounts.map(configName => {
             const { DONE, FAIL, ERROR, MISS, PASS, SKIP, NULL } =
               configStatusCounts[configName];
             return (

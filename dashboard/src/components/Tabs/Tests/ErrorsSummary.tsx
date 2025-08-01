@@ -1,4 +1,4 @@
-import { memo, type JSX } from 'react';
+import { memo, useMemo, type JSX } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import type { IBaseCard } from '@/components/Cards/BaseCard';
@@ -8,6 +8,7 @@ import { GroupedTestStatus } from '@/components/Status/Status';
 import type { ArchCompilerStatus, TFilter } from '@/types/general';
 
 import { DumbSummary, MemoizedSummaryItem } from '@/components/Tabs/Summary';
+import { sortByErrorsAndText } from '@/utils/utils';
 
 interface IErrorsSummary {
   archCompilerErrors: ArchCompilerStatus[];
@@ -25,12 +26,23 @@ const ErrorsSummary = ({
   title,
   diffFilter,
 }: IErrorsSummary): JSX.Element => {
+  const sortedArchCompilerErrors = useMemo(
+    () =>
+      archCompilerErrors.sort((a, b) =>
+        sortByErrorsAndText(
+          { errors: a.status.FAIL ?? 0, text: a.arch },
+          { errors: b.status.FAIL ?? 0, text: b.arch },
+        ),
+      ),
+    [archCompilerErrors],
+  );
+
   return (
     <BaseCard
       title={title}
       content={
         <DumbSummary summaryHeaders={summaryHeaders}>
-          {archCompilerErrors.map(e => {
+          {sortedArchCompilerErrors.map(e => {
             const statusCounts = e.status;
             const currentCompilers = [e.compiler];
             return (

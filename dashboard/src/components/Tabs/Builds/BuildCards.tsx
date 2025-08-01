@@ -8,6 +8,7 @@ import { GroupedTestStatus } from '@/components/Status/Status';
 import type { ISummaryTable } from '@/components/Tabs/Summary';
 import { DumbSummary, MemoizedSummaryItem } from '@/components/Tabs/Summary';
 import type { TFilter, TFilterObjectsKeys } from '@/types/general';
+import { sortByErrorsAndText } from '@/utils/utils';
 
 interface IErrorsSummaryBuild extends Pick<ISummaryTable, 'summaryBody'> {
   toggleFilterBySection: (
@@ -22,6 +23,17 @@ const ErrorsSummaryBuild = ({
   toggleFilterBySection,
   diffFilter,
 }: IErrorsSummaryBuild): JSX.Element => {
+  const sortedSummaryBody = useMemo(
+    () =>
+      summaryBody.sort((a, b) =>
+        sortByErrorsAndText(
+          { errors: a.arch.errors ?? 0, text: a.arch.text },
+          { errors: b.arch.errors ?? 0, text: b.arch.text },
+        ),
+      ),
+    [summaryBody],
+  );
+
   const summaryHeaders = useMemo(
     () => [
       <FormattedMessage key="global.arch" id="global.arch" />,
@@ -35,7 +47,7 @@ const ErrorsSummaryBuild = ({
       title={<FormattedMessage id="global.summary" />}
       content={
         <DumbSummary summaryHeaders={summaryHeaders}>
-          {summaryBody?.map(row => {
+          {sortedSummaryBody?.map(row => {
             return (
               <MemoizedSummaryItem
                 key={row.arch.text}

@@ -31,6 +31,7 @@ def create_details_build_summary(builds: list[BuildHistoryItem]) -> BaseBuildSum
             compiler = build.compiler
             if compiler and compiler not in status.compilers:
                 status.compilers.append(compiler)
+            status.compilers.sort()
 
         if origin := build.origin:
             status = origin_summ.setdefault(origin, StatusCount())
