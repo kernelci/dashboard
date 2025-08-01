@@ -1,4 +1,4 @@
-import { memo, type JSX } from 'react';
+import { memo, useMemo, type JSX } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import type { IBaseCard } from '@/components/Cards/BaseCard';
@@ -25,12 +25,27 @@ const ErrorsSummary = ({
   title,
   diffFilter,
 }: IErrorsSummary): JSX.Element => {
+  const sortedArchCompilerErrors = useMemo(
+    () =>
+      archCompilerErrors.sort((a, b) => {
+        const failA = a.status.FAIL ?? 0;
+        const failB = b.status.FAIL ?? 0;
+
+        if (failB !== failA) {
+          return failB - failA;
+        }
+
+        return a.arch.localeCompare(b.arch);
+      }),
+    [archCompilerErrors],
+  );
+
   return (
     <BaseCard
       title={title}
       content={
         <DumbSummary summaryHeaders={summaryHeaders}>
-          {archCompilerErrors.map(e => {
+          {sortedArchCompilerErrors.map(e => {
             const statusCounts = e.status;
             const currentCompilers = [e.compiler];
             return (

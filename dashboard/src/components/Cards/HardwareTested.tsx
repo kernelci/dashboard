@@ -1,4 +1,4 @@
-import { memo, type JSX } from 'react';
+import { memo, useMemo, type JSX } from 'react';
 
 import type { IBaseCard } from '@/components/Cards/BaseCard';
 import BaseCard from '@/components/Cards/BaseCard';
@@ -24,13 +24,26 @@ const HardwareTested = ({
   title,
   diffFilter,
 }: IHardwareTested): JSX.Element => {
+  const sortedEnvironmentCompatibleNames = useMemo(() => {
+    return Object.keys(environmentCompatible).sort((a, b) => {
+      const failA = environmentCompatible[a].FAIL ?? 0;
+      const failB = environmentCompatible[b].FAIL ?? 0;
+
+      if (failB !== failA) {
+        return failB - failA;
+      }
+
+      return a.localeCompare(b);
+    });
+  }, [environmentCompatible]);
+
   return (
     <BaseCard
       title={title}
       content={
         <ScrollArea className="h-[350px]">
           <DumbListingContent>
-            {Object.keys(environmentCompatible).map(hardwareTestedName => {
+            {sortedEnvironmentCompatibleNames.map(hardwareTestedName => {
               const { DONE, FAIL, ERROR, MISS, PASS, SKIP, NULL } =
                 environmentCompatible[hardwareTestedName];
 
