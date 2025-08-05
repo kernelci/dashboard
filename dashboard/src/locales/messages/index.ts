@@ -176,6 +176,7 @@ export const messages = {
     'global.timeAgo': '{time} ago',
     'global.tree': 'Tree',
     'global.treeBranch': 'Tree / Branch',
+    'global.treeBranchHash': 'Tree / Branch / Hash',
     'global.trees': 'Trees',
     'global.underDevelopment': 'Under Development',
     'global.unknown': 'Unknown',
