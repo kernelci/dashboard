@@ -38,7 +38,6 @@ import type {
 } from '@/components/Sheet/LogOrJsonSheetContent';
 import { LogOrJsonSheetContent } from '@/components/Sheet/LogOrJsonSheetContent';
 import type { ISection } from '@/components/Section/Section';
-import { TooltipDateTime } from '@/components/TooltipDateTime';
 import IssueSection from '@/components/Issue/IssueSection';
 import SectionGroup from '@/components/Section/SectionGroup';
 import { getMiscSection } from '@/components/Section/MiscSection';
@@ -51,7 +50,7 @@ import { LinkIcon } from '@/components/Icons/Link';
 import { StatusIcon } from '@/components/Icons/StatusIcons';
 
 import PageWithTitle from '@/components/PageWithTitle';
-import { getTitle } from '@/utils/utils';
+import { formatDate, getTitle } from '@/utils/utils';
 import { getTestHardware } from '@/lib/test';
 
 import { MemoizedTestDetailsOGTags } from '@/components/OpenGraphTags/TestDetailsOGTags';
@@ -72,6 +71,12 @@ import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
 import { isBoot } from '@/utils/test';
+
+import { TreeDetailsLink } from '@/components/TreeDetailsLink/TreeDetailsLink';
+
+import { DetailsInfoCard } from '@/components/Cards/DetailsInfoCard';
+
+import CopyButton from '@/components/Button/CopyButton';
 
 import { StatusHistoryItem } from './StatusHistoryItem';
 
@@ -122,34 +127,6 @@ const TestDetailsSections = ({
       </MemoizedLinkItem>
     );
   }, [historyState, test.build_id, searchParams]);
-
-  const treeDetailsLink = useMemo(() => {
-    return (
-      <MemoizedLinkItem
-        to="/tree/$treeId"
-        params={{ treeId: test.git_commit_hash }}
-        search={{
-          ...searchParams,
-          treeInfo: {
-            gitBranch: test.git_repository_branch,
-            gitUrl: test.git_repository_url,
-            treeName: test.tree_name,
-            commitName: test.git_commit_hash,
-            headCommitHash: test.git_commit_hash,
-          },
-        }}
-      >
-        {truncateBigText(test.git_commit_hash)}
-        <LinkIcon className="text-blue text-xl" />
-      </MemoizedLinkItem>
-    );
-  }, [
-    searchParams,
-    test.git_commit_hash,
-    test.git_repository_branch,
-    test.git_repository_url,
-    test.tree_name,
-  ]);
 
   const endTimestampInSeconds = dateObjectToTimestampInSeconds(
     roundToNearestMinutes(new Date(), {
@@ -342,128 +319,140 @@ const TestDetailsSections = ({
   ]);
 
   const generalSection: ISection = useMemo(() => {
+    const logUrl = valueOrEmpty(test.log_url);
+    const gitUrl = valueOrEmpty(test.git_repository_url);
+
     return {
-      title: test.path,
-      subtitle: <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />,
-      eyebrow: formatMessage({ id: 'test.details' }),
-      leftIcon: <StatusIcon status={test.status} />,
+      title: test.path ?? test.id,
+      subtitle: (
+        <div>
+          <span className="text-[18px]">
+            {formatDate(valueOrEmpty(test.start_time), false, true)}
+          </span>
+          <ButtonOpenLogSheet setSheetToLog={setSheetToLog} />
+        </div>
+      ),
+      leftIcon: <StatusIcon status={test.status} showTooltip />,
       subsections: [
         {
           infos: [
             {
-              title: 'global.status',
-              linkText: truncateBigText(valueOrEmpty(test.status, 'NULL')),
-              icon: <StatusIcon status={test.status} className="text-xl" />,
-            },
-            {
-              title: 'global.path',
-              linkText: valueOrEmpty(test.path),
-            },
-            {
-              title: 'global.tree',
-              linkText: truncateBigText(test.tree_name),
-            },
-            {
-              title: 'commonDetails.gitRepositoryBranch',
-              linkText: valueOrEmpty(test.git_repository_branch),
-            },
-            {
-              title: 'commonDetails.gitCommitHash',
-              linkText: valueOrEmpty(test.git_commit_hash),
-              linkComponent: treeDetailsLink,
-              copyValue: valueOrEmpty(test.git_commit_hash),
-            },
-            {
-              title: 'commonDetails.gitRepositoryUrl',
-              linkText: shouldTruncate(
-                valueOrEmpty(test.git_repository_url),
-              ) ? (
-                <TruncatedValueTooltip
-                  value={test.git_repository_url}
-                  isUrl={true}
-                />
-              ) : (
-                valueOrEmpty(test.git_repository_url)
+              children: (
+                <div className="grid grid-cols-2 gap-4">
+                  <DetailsInfoCard
+                    cardTitle="testDetails.testInfo"
+                    data={[
+                      {
+                        title: 'global.status',
+                        linkText: test.status,
+                        icon: <StatusIcon status={test.status} />,
+                      },
+                      {
+                        title: 'global.hardware',
+                        linkText: hardware,
+                        linkComponent: hardwareDetailsLink,
+                      },
+                      {
+                        title: 'global.architecture',
+                        linkText: valueOrEmpty(test.architecture),
+                      },
+                      {
+                        title: 'global.compiler',
+                        linkText: valueOrEmpty(test.compiler),
+                      },
+                      {
+                        title: 'global.config',
+                        linkText: valueOrEmpty(test.config_name),
+                      },
+                      {
+                        title: 'testDetails.buildInfo',
+                        linkText: truncateBigText(test.build_id),
+                        linkComponent: buildDetailsLink,
+                      },
+                      {
+                        title: 'global.compatibles',
+                        linkText: valueOrEmpty(
+                          test.environment_compatible?.join(' | '),
+                        ),
+                        linkComponent: compatiblesLink,
+                      },
+                      {
+                        title: 'global.logs',
+                        linkText: shouldTruncate(logUrl) ? (
+                          <TruncatedValueTooltip value={logUrl} isUrl />
+                        ) : (
+                          logUrl
+                        ),
+                        link: test.log_url,
+                        icon: test.log_url ? (
+                          <LinkIcon className="text-blue text-xl" />
+                        ) : undefined,
+                      },
+                      {
+                        title: 'testDetails.testId',
+                        linkText: test.id,
+                      },
+                    ]}
+                  />
+                  <DetailsInfoCard
+                    cardTitle="commonDetails.gitInfo"
+                    data={[
+                      {
+                        title: 'global.tree',
+                        linkText: valueOrEmpty(test.tree_name),
+                      },
+                      {
+                        title: 'globalTable.branch',
+                        linkText: valueOrEmpty(test.git_repository_branch),
+                      },
+                      {
+                        title: 'global.commitHash',
+                        linkComponent: (
+                          <span className="flex">
+                            <TreeDetailsLink
+                              treeName={test.tree_name}
+                              gitBranch={test.git_repository_branch}
+                              commitHash={test.git_commit_hash}
+                              gitUrl={test.git_repository_url}
+                            />
+                            {test.git_commit_hash && (
+                              <CopyButton value={test.git_commit_hash} />
+                            )}
+                          </span>
+                        ),
+                      },
+                      {
+                        title: 'global.repository',
+                        linkText: shouldTruncate(gitUrl) ? (
+                          <TruncatedValueTooltip value={gitUrl} isUrl />
+                        ) : (
+                          gitUrl
+                        ),
+                        link: test.git_repository_url,
+                        icon: test.git_repository_url ? (
+                          <LinkIcon className="text-blue text-xl" />
+                        ) : undefined,
+                      },
+                      {
+                        title: 'global.commitTags',
+                        linkText: valueOrEmpty(test.git_commit_tags?.[0]),
+                      },
+                    ]}
+                  />
+                </div>
               ),
-              link: test.git_repository_url,
-            },
-            {
-              title: 'commonDetails.gitCommitTag',
-              linkText: valueOrEmpty(test.git_commit_tags?.[0]),
-            },
-            {
-              title: 'global.hardware',
-              linkText: hardware,
-              linkComponent: hardwareDetailsLink,
-            },
-            {
-              title: 'global.architecture',
-              linkText: valueOrEmpty(test.architecture),
-            },
-            {
-              title: 'global.compiler',
-              linkText: valueOrEmpty(test.compiler),
-            },
-            {
-              title: 'testDetails.buildInfo',
-              linkText: truncateBigText(test.build_id),
-              linkComponent: buildDetailsLink,
-            },
-            {
-              title: 'global.startTime',
-              linkText: (
-                <TooltipDateTime
-                  dateTime={test.start_time}
-                  lineBreak={true}
-                  showLabelTime={true}
-                  showLabelTZ={true}
-                />
-              ),
-            },
-            {
-              title: 'global.logs',
-              linkText: shouldTruncate(valueOrEmpty(test.log_url)) ? (
-                <TruncatedValueTooltip value={test.log_url} isUrl={true} />
-              ) : (
-                valueOrEmpty(test.log_url)
-              ),
-              link: test.log_url,
-            },
-            {
-              title: 'global.compatibles',
-              linkText: valueOrEmpty(test.environment_compatible?.join(' | ')),
-              linkComponent: compatiblesLink,
-            },
-            {
-              title: 'testDetails.testId',
-              linkText: test.id,
             },
           ],
         },
       ],
     };
   }, [
-    test.path,
-    test.status,
-    test.tree_name,
-    test.architecture,
-    test.compiler,
-    test.log_url,
-    test.git_commit_hash,
-    test.git_repository_url,
-    test.git_repository_branch,
-    test.git_commit_tags,
-    test.build_id,
-    test.start_time,
-    test.id,
-    test.environment_compatible,
-    formatMessage,
+    test,
     setSheetToLog,
-    treeDetailsLink,
-    hardwareDetailsLink,
-    compatiblesLink,
-    buildDetailsLink,
     hardware,
+    hardwareDetailsLink,
+    buildDetailsLink,
+    compatiblesLink,
   ]);
 
   const miscSection: ISection | undefined = useMemo(():
@@ -607,7 +596,7 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
         }
       >
         <Sheet open={logOpen} onOpenChange={logOpenChange}>
-          <div className="w-full pb-8">
+          <div className="flex flex-col gap-4 pb-10">
             {breadcrumb}
 
             {data && (

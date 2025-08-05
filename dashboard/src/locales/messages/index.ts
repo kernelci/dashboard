@@ -299,6 +299,7 @@ export const messages = {
     'testDetails.statusHistoryTooltip':
       'The {amount} previous tests before the current test.\nClick on an icon to see details of that specific test.',
     'testDetails.testId': 'Test Id',
+    'testDetails.testInfo': 'Test Info',
     'testStatus.done': 'Done',
     'testStatus.error': 'Error',
     'testStatus.fail': 'Fail',
