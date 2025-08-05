@@ -2,12 +2,10 @@ import json
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connections
 import logging
-from kernelCI.settings import USE_DASHBOARD_DB
+from django.conf import settings
 from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
 from datetime import timedelta
 from django.utils import timezone
-
-from utils.validation import is_boolean_or_string_true
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +44,7 @@ class Command(BaseCommand):
         self.end_interval = None
         self.start_timestamp = None
         self.end_timestamp = None
-        if is_boolean_or_string_true(USE_DASHBOARD_DB):
+        if settings.USE_DASHBOARD_DB:
             self.kcidb_connection = connections["kcidb"]
             self.dashboard_conn_name = "default"
         else:

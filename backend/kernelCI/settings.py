@@ -211,11 +211,11 @@ kcidb_config = get_json_env_var(
 
 dashboard_db_config = {
     "ENGINE": "django.db.backends.postgresql",
-    "NAME": "dashboard",
-    "USER": get_json_env_var("DASH_DB_USER", "dev"),
-    "PASSWORD": get_json_env_var("DASH_DB_PASSWORD", "dev"),
-    "HOST": get_json_env_var("DASH_DB_HOST", "127.0.0.1"),
-    "PORT": get_json_env_var("DASH_DB_PORT", 5434),
+    "NAME": os.environ.get("DASH_DB_NAME", "dashboard"),
+    "USER": os.environ.get("DASH_DB_USER", "dev"),
+    "PASSWORD": os.environ.get("DASH_DB_PASSWORD", "dev"),
+    "HOST": os.environ.get("DASH_DB_HOST", "127.0.0.1"),
+    "PORT": os.environ.get("DASH_DB_PORT", 5434),
     "OPTIONS": {
         "connect_timeout": 5,
     },
@@ -232,8 +232,8 @@ notifications_db_config = {
     "NAME": os.path.join(BACKEND_VOLUME_DIR, "notifications.sqlite3"),
 }
 
-USE_DASHBOARD_DB = os.environ.get("USE_DASHBOARD_DB", False)
-if is_boolean_or_string_true(USE_DASHBOARD_DB):
+USE_DASHBOARD_DB = is_boolean_or_string_true(os.environ.get("USE_DASHBOARD_DB", False))
+if USE_DASHBOARD_DB:
     DATABASES = {
         "default": dashboard_db_config,
         "kcidb": kcidb_config,

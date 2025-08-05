@@ -1,3 +1,6 @@
+from django.conf import settings
+
+
 class DatabaseRouter:
     """
     A router to control all database operations on models in the
@@ -6,17 +9,17 @@ class DatabaseRouter:
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         if db == "default":
-            return False
+            return settings.USE_DASHBOARD_DB
         if model_name in ["notificationscheckout", "notificationsissue"]:
             return db == "notifications"
         if model_name in ["checkoutscache"]:
             return db == "cache"
         if hints.get("run_always", False):
             return app_label == "kernelci_cache"
-        if app_label == "kernelci_app":
-            return db == "dashboard_db"
+        if app_label == "kernelCI_app":
+            return db == "dashboard_db" and not settings.USE_DASHBOARD_DB
 
-        # Default None return to prevent duplication of schema.
+        # Default False return to prevent duplication of schema.
         # If new model is added, it will not be migrated to any database.
         # To create new model schema, add it to the logic as above.
-        return None
+        return False
