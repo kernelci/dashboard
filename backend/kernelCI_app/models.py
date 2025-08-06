@@ -66,7 +66,9 @@ class Builds(models.Model):
     field_timestamp = models.DateTimeField(
         db_column="_timestamp", blank=True, null=True
     )
-    checkout = models.ForeignKey(Checkouts, on_delete=models.DO_NOTHING)
+    checkout = models.ForeignKey(
+        Checkouts, db_constraint=False, on_delete=models.DO_NOTHING
+    )
     id = models.TextField(primary_key=True)
     origin = models.TextField()
     comment = models.TextField(blank=True, null=True)
@@ -98,7 +100,7 @@ class Tests(models.Model):
     field_timestamp = models.DateTimeField(
         db_column="_timestamp", blank=True, null=True
     )
-    build = models.ForeignKey(Builds, on_delete=models.DO_NOTHING)
+    build = models.ForeignKey(Builds, db_constraint=False, on_delete=models.DO_NOTHING)
     id = models.TextField(primary_key=True)
     origin = models.TextField()
     environment_comment = models.TextField(blank=True, null=True)
@@ -132,12 +134,14 @@ class Incidents(models.Model):
     )
     id = models.TextField(primary_key=True)
     origin = models.TextField()
-    issue = models.ForeignKey(Issues, on_delete=models.DO_NOTHING)
+    issue = models.ForeignKey(Issues, db_constraint=False, on_delete=models.DO_NOTHING)
     issue_version = models.IntegerField()
     build = models.ForeignKey(
-        Builds, on_delete=models.DO_NOTHING, null=True, blank=True
+        Builds, db_constraint=False, null=True, blank=True, on_delete=models.DO_NOTHING
     )
-    test = models.ForeignKey(Tests, on_delete=models.DO_NOTHING, null=True, blank=True)
+    test = models.ForeignKey(
+        Tests, db_constraint=False, null=True, blank=True, on_delete=models.DO_NOTHING
+    )
     present = models.BooleanField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
