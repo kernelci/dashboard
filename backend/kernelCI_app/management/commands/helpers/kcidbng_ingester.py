@@ -1,29 +1,35 @@
-import kcidb
-import tempfile
-import os
-import argparse
-import json
-import time
-import logging
-import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import requests
-import hashlib
-import threading
-from queue import Queue
-import queue
-import traceback
 import gzip
+import hashlib
+import json
+import logging
+import os
+from queue import Queue, Empty
+import requests
+import tempfile
+import threading
+import time
+import traceback
+from typing import Any, Literal, Optional
+import yaml
+import kcidb_io
 
-# default database
-DATABASE = "postgresql:dbname=kcidb user=kcidb password=kcidb host=localhost port=5432"
+from kernelCI_app.management.commands.helpers.process_submissions import (
+    insert_submission_data,
+)
+
 VERBOSE = 0
-STORAGE_TOKEN = os.environ.get("STORAGE_TOKEN", None)
-STORAGE_BASE_URL = os.environ.get("STORAGE_BASE_URL", None)
 LOGEXCERPT_THRESHOLD = 256  # 256 bytes threshold for logexcerpt
 CONVERT_LOG_EXCERPT = False  # If True, convert log_excerpt to output_files url
+
 CACHE_LOGS = {}
+CACHE_LOGS_SIZE_LIMIT = 100000  # Arbitrary limit for cache_logs size, adjust as needed
 cache_logs_lock = threading.Lock()
+
+STORAGE_TOKEN = os.environ.get("STORAGE_TOKEN", None)
+STORAGE_BASE_URL = "https://files-staging.kernelci.org"
+
+TREES_FILE = "/app/trees.yaml"
 
 logger = logging.getLogger("ingester")
 
@@ -32,42 +38,19 @@ db_queue = Queue()
 db_lock = threading.Lock()
 
 
-def get_db_credentials():
-    global DATABASE
-    # if PG_URI present - use it instead of default DATABASE
-    pg_uri = os.environ.get("PG_URI")
-    if pg_uri:
-        DATABASE = pg_uri
-    pgpass = os.environ.get("POSTGRES_PASSWORD")
-    if not pgpass:
-        raise Exception("POSTGRES_PASSWORD environment variable not set")
-    (pgpass_fd, pgpass_filename) = tempfile.mkstemp(suffix=".pgpass")
-    with os.fdopen(pgpass_fd, mode="w", encoding="utf-8") as pgpass_file:
-        pgpass_file.write(pgpass)
-    os.environ["PGPASSFILE"] = pgpass_filename
-    db_uri = os.environ.get("PG_DSN")
-    if db_uri:
-        DATABASE = db_uri
-
-
-def get_db_client(database):
-    get_db_credentials()
-    db = kcidb.db.Client(database)
-    return db
-
-
 def move_file_to_failed_dir(filename, failed_dir):
     try:
         os.rename(filename, os.path.join(failed_dir, os.path.basename(filename)))
     except Exception as e:
-        print(f"Error moving file {filename} to failed directory: {e}")
+        logger.error("Error moving file %s to failed directory: %s", filename, str(e))
         raise e
 
 
-TREES_FILE = "/app/trees.yml"
+def load_trees_name(trees_file_override: Optional[str]) -> dict[str, str]:
+    global TREES_FILE
+    if trees_file_override is not None:
+        TREES_FILE = trees_file_override
 
-
-def load_trees_name():
     with open(TREES_FILE, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
@@ -76,10 +59,16 @@ def load_trees_name():
     return trees_name
 
 
-def standardize_trees_name(input_data, trees_name):
-    """Standardize tree names in input data using the provided mapping"""
+def standardize_trees_name(input_data: dict[str, Any], trees_name):
+    """
+    Standardize tree names in input data using the provided mapping
 
-    for checkout in input_data.get("checkouts", []):
+    Returns the modified input data with standardized tree names.
+    """
+
+    checkouts: list[dict[str, Any]] = input_data.get("checkouts", [])
+
+    for checkout in checkouts:
         git_url = checkout.get("git_repository_url")
         if git_url in trees_name:
             correct_tree = trees_name[git_url]
@@ -95,13 +84,11 @@ def upload_logexcerpt(logexcerpt, id):
     """
     upload_url = f"{STORAGE_BASE_URL}/upload"
     if VERBOSE:
-        logger.info(f"Uploading logexcerpt for {id} to {upload_url}")
+        logger.info("Uploading logexcerpt for %s to %s", id, upload_url)
     # make temporary file with logexcerpt data
     with tempfile.NamedTemporaryFile(delete=False, suffix=".logexcerpt") as temp_file:
         logexcerpt_filename = temp_file.name
-        # gzip the logexcerpt
         logexcerpt_compressed = gzip.compress(logexcerpt.encode("utf-8"))
-        # write to the temporary file
         temp_file.write(logexcerpt_compressed)
         temp_file.flush()
     with open(logexcerpt_filename, "rb") as f:
@@ -112,13 +99,13 @@ def upload_logexcerpt(logexcerpt, id):
         try:
             r = requests.post(upload_url, headers=hdr, files=files)
         except Exception as e:
-            logger.error(f"Error uploading logexcerpt for {id}: {e}")
+            logger.error("Error uploading logexcerpt for %s: %s", id, str(e))
             os.remove(logexcerpt_filename)
             return logexcerpt  # Return original logexcerpt if upload fails
     os.remove(logexcerpt_filename)
     if r.status_code != 200:
         logger.error(
-            f"Failed to upload logexcerpt for {id}: {r.status_code} : {r.text}"
+            "Failed to upload logexcerpt for %s: %d : %s", id, r.status_code, r.text
         )
         return logexcerpt  # Return original logexcerpt if upload fails
 
@@ -140,91 +127,91 @@ def set_in_cache(log_hash, url):
     with cache_logs_lock:
         CACHE_LOGS[log_hash] = url
         if VERBOSE:
-            logger.info(f"Cached log excerpt with hash {log_hash} at {url}")
+            logger.info("Cached log excerpt with hash %s at %s", log_hash, url)
 
 
-def set_log_excerpt_ofile(build, url):
+def set_log_excerpt_ofile(item: dict[str, Any], url):
     """
     Clean log_excerpt field
     Create name/url dict and append to output_files of job
+
+    item is a build or test
     """
-    build["log_excerpt"] = ""
+    item["log_excerpt"] = None
     data = {
         "name": "log_excerpt",
         "url": url,
     }
-    if "output_files" not in build:
-        build["output_files"] = []
+    if "output_files" not in item:
+        item["output_files"] = []
 
-    build["output_files"].append(data)
-    return build
+    item["output_files"].append(data)
+    return item
 
 
-def extract_log_excerpt(input_data):  # noqa: C901 (too complex)
+def process_log_excerpt_from_item(
+    item: dict[str, Any], item_type: Literal["build", "test"]
+) -> None:
+    """
+    Process log_excerpt from a single build or test (item).
+    If log_excerpt is large, upload it to storage and replace with a reference.
+    """
+    id = item.get("id", "unknown")
+    log_excerpt = item["log_excerpt"]
+
+    if isinstance(log_excerpt, str) and len(log_excerpt) > LOGEXCERPT_THRESHOLD:
+        log_hash = hashlib.sha256(log_excerpt.encode("utf-8")).hexdigest()
+        if VERBOSE:
+            logger.info(
+                "Uploading log_excerpt for %s id %s hash %s with size %d bytes",
+                item_type,
+                id,
+                log_hash,
+                len(log_excerpt),
+            )
+        # check if log_excerpt already uploaded (by hash as key)
+        cached_url = get_from_cache(log_hash)
+        if cached_url:
+            if VERBOSE:
+                logger.info(
+                    "Log excerpt for %s %s already uploaded, using cached URL",
+                    item_type,
+                    id,
+                )
+            set_log_excerpt_ofile(item, cached_url)
+        else:
+            cached_url = upload_logexcerpt(log_excerpt, log_hash)
+            set_in_cache(log_hash, cached_url)
+            set_log_excerpt_ofile(item, cached_url)
+
+
+def extract_log_excerpt(input_data: dict[str, Any]) -> dict[str, Any]:
     """
     Extract log_excerpt from builds and tests, if it is large,
-    upload to storage and replace with a reference
+    upload to storage and replace with a reference.
+
+    Returns:
+        input_data: dict with log_excerpt replaced by URL if it was large
     """
-    if not STORAGE_TOKEN or not STORAGE_BASE_URL:
-        logger.warning(
-            "STORAGE_TOKEN or STORAGE_BASE_URL "
-            "is not set, log_excerpts will not be uploaded"
-        )
+    if not STORAGE_TOKEN:
+        logger.warning("STORAGE_TOKEN is not set, log_excerpts will not be uploaded")
         return input_data
 
-    builds = input_data.get("builds", [])
-    tests = input_data.get("tests", [])
+    builds: list[dict[str, Any]] = input_data.get("builds", [])
+    tests: list[dict[str, Any]] = input_data.get("tests", [])
+
     for build in builds:
         if build.get("log_excerpt"):
-            id = build.get("id", "unknown")
-            log_excerpt = build["log_excerpt"]
-            if isinstance(log_excerpt, str) and len(log_excerpt) > LOGEXCERPT_THRESHOLD:
-                log_hash = hashlib.sha256(log_excerpt.encode("utf-8")).hexdigest()
-                if VERBOSE:
-                    logger.info(
-                        f"""Uploading log_excerpt for build {id}
-                          hash {log_hash} with size {len(log_excerpt)} bytes"""
-                    )
-                cached_url = get_from_cache(log_hash)
-                if cached_url:
-                    if VERBOSE:
-                        logger.info(
-                            f"Log excerpt for build {id} already uploaded, using cached URL"
-                        )
-                    set_log_excerpt_ofile(build, cached_url)
-                else:
-                    cached_url = upload_logexcerpt(log_excerpt, log_hash)
-                    set_in_cache(log_hash, cached_url)
-                    set_log_excerpt_ofile(build, cached_url)
+            process_log_excerpt_from_item(item=build, item_type="build")
 
     for test in tests:
         if test.get("log_excerpt"):
-            id = test.get("id", "unknown")
-            log_excerpt = test["log_excerpt"]
-            if isinstance(log_excerpt, str) and len(log_excerpt) > LOGEXCERPT_THRESHOLD:
-                log_hash = hashlib.sha256(log_excerpt.encode("utf-8")).hexdigest()
-                if VERBOSE:
-                    logger.info(
-                        f"""Uploading log_excerpt for test {id}
-                         hash {log_hash} with size {len(log_excerpt)} bytes"""
-                    )
-                # check if log_excerpt already uploaded (by hash as key)
-                cached_url = get_from_cache(log_hash)
-                if cached_url:
-                    if VERBOSE:
-                        logger.info(
-                            f"Log excerpt for test {id} already uploaded, using cached URL"
-                        )
-                    set_log_excerpt_ofile(test, cached_url)
-                else:
-                    cached_url = upload_logexcerpt(log_excerpt, log_hash)
-                    set_in_cache(log_hash, cached_url)
-                    set_log_excerpt_ofile(test, cached_url)
+            process_log_excerpt_from_item(item=test, item_type="test")
 
     return input_data
 
 
-def prepare_file_data(filename, trees_name, spool_dir, io_schema):
+def prepare_file_data(filename, trees_name, spool_dir):
     """
     Prepare file data: read, extract log excerpts, standardize tree names, validate.
     This function does everything except the actual database load.
@@ -234,13 +221,13 @@ def prepare_file_data(filename, trees_name, spool_dir, io_schema):
 
     if fsize == 0:
         if VERBOSE:
-            logger.info(f"File {full_filename} is empty, skipping, deleting")
+            logger.info("File %s is empty, skipping, deleting", full_filename)
         os.remove(full_filename)
         return None, None
 
     start_time = time.time()
     if VERBOSE:
-        logger.info(f"Processing file {filename}, size: {fsize}")
+        logger.info("Processing file %s, size: %d", filename, fsize)
 
     try:
         with open(full_filename, "r") as f:
@@ -250,8 +237,8 @@ def prepare_file_data(filename, trees_name, spool_dir, io_schema):
         if CONVERT_LOG_EXCERPT:
             data = extract_log_excerpt(data)
         data = standardize_trees_name(data, trees_name)
-        data = io_schema.validate(data)
-        data = io_schema.upgrade(data, copy=False)
+        kcidb_io.schema.LATEST.validate(data)
+        kcidb_io.schema.LATEST.upgrade(data)
 
         processing_time = time.time() - start_time
         return data, {
@@ -261,7 +248,7 @@ def prepare_file_data(filename, trees_name, spool_dir, io_schema):
             "processing_time": processing_time,
         }
     except Exception as e:
-        logger.error(f"Error preparing data from {filename}: {e}")
+        logger.error("Error preparing data from %s: %s", filename, str(e))
         logger.error(traceback.format_exc())
         return None, {
             "filename": filename,
@@ -270,11 +257,24 @@ def prepare_file_data(filename, trees_name, spool_dir, io_schema):
         }
 
 
-def db_worker(db_client, stop_event):  # noqa: C901 (too complex)
+def process_submission_item(data: dict[str, Any], metadata: dict[str, Any]):
+    with db_lock:
+        insert_submission_data(data, metadata)
+
+    if VERBOSE and "processing_time" in metadata:
+        ing_speed = metadata["fsize"] / metadata["processing_time"] / 1024
+        logger.info("Ingested %s in %.2f KB/s", metadata["filename"], ing_speed)
+
+
+def db_worker(stop_event: threading.Event):
     """
     Worker thread that processes the database queue.
     This is the only thread that interacts with the database.
+
+    Params:
+        stop_event: threading.Event (flag) to signal the worker to stop processing
     """
+
     while not stop_event.is_set() or not db_queue.empty():
         try:
             item = db_queue.get(timeout=0.1)
@@ -284,42 +284,35 @@ def db_worker(db_client, stop_event):  # noqa: C901 (too complex)
             try:
                 data, metadata = item
                 if data is not None:
-                    with db_lock:
-                        db_client.load(data)
-
-                    if VERBOSE and "processing_time" in metadata:
-                        ing_speed = (
-                            metadata["fsize"] / metadata["processing_time"] / 1024
-                        )
-                        logger.info(
-                            f"Ingested {metadata['filename']} in {ing_speed:.2f} KB/s"
-                        )
+                    process_submission_item(data, metadata)
                 if VERBOSE:
                     logger.info(
-                        f"Processed file {metadata['filename']} with size {metadata['fsize']} bytes"
+                        "Processed file %s with size %s bytes",
+                        metadata["filename"],
+                        str(metadata["fsize"]),
                     )
+
             except Exception as e:
-                logger.error(f"Error processing item in db_worker: {e}")
+                logger.error("Error processing item in db_worker: %s", str(e))
             finally:
                 db_queue.task_done()  # Always mark task as done, even if processing failed
 
-        except queue.Empty:
+        except Empty:
             continue  # Timeout occurred, continue to check stop_event
         except Exception as e:
-            logger.error(f"Unexpected error in db_worker: {e}")
+            logger.error("Unexpected error in db_worker: %s", str(e))
 
 
-def process_file(filename, trees_name, spool_dir, io_schema):
+def process_file(filename, trees_name, spool_dir):
     """
     Process a single file in a thread, then queue it for database insertion.
     """
     failed_dir = os.path.join(spool_dir, "failed")
     archive_dir = os.path.join(spool_dir, "archive")
 
-    data, metadata = prepare_file_data(filename, trees_name, spool_dir, io_schema)
+    data, metadata = prepare_file_data(filename, trees_name, spool_dir)
 
     if "error" in metadata:
-        # Move to failed directory
         try:
             move_file_to_failed_dir(metadata["full_filename"], failed_dir)
         except Exception:
@@ -330,7 +323,6 @@ def process_file(filename, trees_name, spool_dir, io_schema):
         # Empty file, already deleted
         return True
 
-    # Queue for database insertion
     db_queue.put((data, metadata))
 
     # Archive the file after queuing (we can do this optimistically)
@@ -339,21 +331,19 @@ def process_file(filename, trees_name, spool_dir, io_schema):
             metadata["full_filename"], os.path.join(archive_dir, metadata["filename"])
         )
     except Exception as e:
-        logger.error(f"Error archiving file {metadata['filename']}: {e}")
+        logger.error("Error archiving file %s: %s", metadata["filename"], str(e))
         return False
 
     return True
 
 
-def ingest_submissions_parallel(spool_dir, trees_name, db_client=None, max_workers=5):
+def ingest_submissions_parallel(
+    spool_dir: str, trees_name: dict[str, str], max_workers=5
+):
     """
     Ingest submissions in parallel using ThreadPoolExecutor for I/O operations
     and a single database worker thread.
     """
-    if db_client is None:
-        raise Exception("db_client is None")
-
-    io_schema = db_client.get_schema()[1]
 
     # Get list of JSON files to process
     json_files = [
@@ -361,15 +351,15 @@ def ingest_submissions_parallel(spool_dir, trees_name, db_client=None, max_worke
         for f in os.listdir(spool_dir)
         if os.path.isfile(os.path.join(spool_dir, f)) and f.endswith(".json")
     ]
-
     if not json_files:
         return
 
-    logger.info(f"Found {len(json_files)} files to process")
+    logger.info("Found %d files to process", len(json_files))
 
     # Start database worker thread
+    # This thread will constantly consume the db_queue and send data to the database
     stop_event = threading.Event()
-    db_thread = threading.Thread(target=db_worker, args=(db_client, stop_event))
+    db_thread = threading.Thread(target=db_worker, args=(stop_event,))
     db_thread.start()
 
     stat_ok = 0
@@ -380,9 +370,7 @@ def ingest_submissions_parallel(spool_dir, trees_name, db_client=None, max_worke
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all files for processing
             future_to_file = {
-                executor.submit(
-                    process_file, filename, trees_name, spool_dir, io_schema
-                ): filename
+                executor.submit(process_file, filename, trees_name, spool_dir): filename
                 for filename in json_files
             }
 
@@ -396,7 +384,7 @@ def ingest_submissions_parallel(spool_dir, trees_name, db_client=None, max_worke
                     else:
                         stat_fail += 1
                 except Exception as e:
-                    logger.error(f"Exception processing {filename}: {e}")
+                    logger.error("Exception processing %s: %s", filename, str(e))
                     stat_fail += 1
 
         # Wait for all database operations to complete
@@ -410,7 +398,10 @@ def ingest_submissions_parallel(spool_dir, trees_name, db_client=None, max_worke
 
     if stat_ok + stat_fail > 0:
         logger.info(
-            f"Processed {stat_ok + stat_fail} files: {stat_ok} succeeded, {stat_fail} failed"
+            "Processed %d files: %d succeeded, %d failed",
+            stat_ok + stat_fail,
+            stat_ok,
+            stat_fail,
         )
     else:
         logger.info("No files processed, nothing to do")
@@ -418,19 +409,19 @@ def ingest_submissions_parallel(spool_dir, trees_name, db_client=None, max_worke
 
 def verify_dir(dir):
     if not os.path.exists(dir):
-        logger.error(f"Directory {dir} does not exist")
+        logger.error("Directory %s does not exist", dir)
         # try to create it
         try:
             os.makedirs(dir)
-            logger.info(f"Directory {dir} created")
+            logger.info("Directory %s created", dir)
         except Exception as e:
-            logger.error(f"Error creating directory {dir}: {e}")
+            logger.error("Error creating directory %s: %s", dir, str(e))
             raise e
     if not os.path.isdir(dir):
         raise Exception(f"Directory {dir} is not a directory")
     if not os.access(dir, os.W_OK):
         raise Exception(f"Directory {dir} is not writable")
-    logger.info(f"Directory {dir} is valid and writable")
+    logger.info("Directory %s is valid and writable", dir)
 
 
 def verify_spool_dirs(spool_dir):
@@ -444,58 +435,13 @@ def verify_spool_dirs(spool_dir):
 def cache_logs_maintenance():
     """
     Periodically clean up the cache logs to prevent memory leak and slow down.
-    If CACHE_LOGS grow over 100k entries, truncate it to 0.
+    If CACHE_LOGS grow over 100k entries, clear it.
     """
 
     # Limit the size of the cache to prevent memory leaks
     # (we don't really need lock, as workers idle, but just in case)
     with cache_logs_lock:
-        if len(CACHE_LOGS) > 100000:  # Arbitrary limit, adjust as needed
+        if len(CACHE_LOGS) > CACHE_LOGS_SIZE_LIMIT:
             CACHE_LOGS.clear()
             if VERBOSE:
                 logger.info("Cache logs cleared")
-
-
-def main():
-    global VERBOSE, CONVERT_LOG_EXCERPT
-    # read from environment variable KCIDB_VERBOSE
-    VERBOSE = int(os.environ.get("KCIDB_VERBOSE", 0))
-    if VERBOSE:
-        logging.basicConfig(level=logging.INFO)
-    else:
-        logging.basicConfig(level=logging.WARNING)
-    CONVERT_LOG_EXCERPT = os.environ.get("CONVERT_LOG_EXCERPT", "False").lower() in (
-        "true",
-        "1",
-        "yes",
-    )
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--spool-dir", type=str, required=True)
-    parser.add_argument("--verbose", type=int, default=VERBOSE)
-    parser.add_argument(
-        "--max-workers",
-        type=int,
-        default=5,
-        help="Maximum number of parallel workers for file processing",
-    )
-    args = parser.parse_args()
-
-    VERBOSE = args.verbose
-
-    logger.info("Starting ingestion process...")
-    verify_spool_dirs(args.spool_dir)
-    trees_name = load_trees_name()
-    get_db_credentials()
-    db_client = get_db_client(DATABASE)
-
-    while True:
-        ingest_submissions_parallel(
-            args.spool_dir, trees_name, db_client, args.max_workers
-        )
-        cache_logs_maintenance()
-        time.sleep(1)
-
-
-if __name__ == "__main__":
-    main()
