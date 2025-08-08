@@ -454,6 +454,18 @@ paths:
   /api/issue/extras/:
     post:
       operationId: issue_extras_create
+      description: |-
+        Returns the information about the first incident and the trees where a list of issues appeared.
+        Some tags are also added in case the issue appeared on specific trees.
+
+        If an issue id exists and has incidents, the first incident will be returned
+        considering the issues' first version
+
+        If an issue id doesn't exist or had no incidents, it won't be present in the returned list.
+
+        If an issue id exists and has incidents but the search version doesn't exist,
+        then the version of that issue will be marked as `null`.
+        If the version exists but had no incidents, it will simply have an empty list of trees.
       tags:
       - issue
       requestBody:
@@ -911,6 +923,23 @@ paths:
           title: Group Size
           type: integer
         description: Maximum number of entries to be retrieved in a test history.
+      - in: query
+        name: max_age_in_hours
+        schema:
+          default: 24
+          exclusiveMinimum: 0
+          maximum: 720
+          title: Max Age In Hours
+          type: integer
+        description: Maximum age for the queried checkout and related tests in hours
+      - in: query
+        name: min_age_in_hours
+        schema:
+          default: 0
+          gte: 0
+          title: Min Age In Hours
+          type: integer
+        description: Minimum age of the queried checkout in hours
       - in: query
         name: origin
         schema:
@@ -2043,7 +2072,9 @@ components:
           $ref: '#/components/schemas/FirstIncident'
         versions:
           additionalProperties:
-            $ref: '#/components/schemas/IssueWithExtraInfo'
+            anyOf:
+            - $ref: '#/components/schemas/IssueWithExtraInfo'
+            - type: 'null'
           title: Versions
           type: object
       required:
@@ -2075,6 +2106,10 @@ components:
           anyOf:
           - $ref: '#/components/schemas/Checkout__TreeName'
           - type: 'null'
+        issue_version:
+          anyOf:
+          - $ref: '#/components/schemas/Issue__Version'
+          - type: 'null'
       required:
       - first_seen
       - git_commit_hash
@@ -2082,6 +2117,7 @@ components:
       - git_repository_branch
       - git_commit_name
       - tree_name
+      - issue_version
       title: FirstIncident
       type: object
     GlobalFilters:

@@ -82,7 +82,7 @@ class IssueView(APIView):
         issues_without_trees = set()
         processed_extras_with_trees = {}
         for issue_id, issue_extras_data in self.processed_extra_issue_details.items():
-            for info in issue_extras_data["versions"].values():
+            for info in issue_extras_data.versions.values():
                 if not info.trees:
                     issues_without_trees.add(issue_id)
                 else:
@@ -101,7 +101,7 @@ class IssueView(APIView):
             issue_extras_id,
             issue_extras_data,
         ) in self.processed_extra_issue_details.items():
-            self.first_incidents[issue_extras_id] = issue_extras_data["first_incident"]
+            self.first_incidents[issue_extras_id] = issue_extras_data.first_incident
 
     @extend_schema(
         parameters=[IssueListingQueryParameters],

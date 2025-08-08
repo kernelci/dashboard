@@ -36,7 +36,9 @@ class ClientStrings:
     NO_ISSUE_FOUND = "No issues found"
     INVALID_JSON_BODY = "Invalid body, request body must be a valid json string"
     ISSUE_EMPTY_LIST = "Invalid body, the issue list must not be empty"
-    ISSUE_NO_EXTRA_DETAILS = "No extra details found"
+    ISSUE_NO_EXTRA_DETAILS = (
+        "No extra details found. Issue id has no incident or doesn't exist."
+    )
     ISSUE_TESTS_NOT_FOUND = "No tests found for this issue"
     ISSUE_BUILDS_NOT_FOUND = "No builds found for this issue"
     NO_HARDWARE_FOUND = "No hardware found"
