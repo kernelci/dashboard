@@ -1,8 +1,8 @@
-from typing import Optional
-from django.db import connection
+from typing import Any, Optional
+from django.db import connection, connections
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.database import dict_fetchall
-from kernelCI_app.models import Checkouts, Issues
+from kernelCI_app.models import Issues
 
 
 def _get_issue_version_clause(*, version: Optional[int]) -> str:
@@ -218,9 +218,11 @@ def get_test_issues(*, test_id: str) -> list[dict]:
 
 
 def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
-    """Retrieves the incident and checkout data
+    """
+    Retrieves the incident and checkout data
     of the first incident of a list of issues
-    through a list of `issue_id`s."""
+    through a list of `issue_id`s.
+    """
 
     if not issue_id_list:
         return []
@@ -230,9 +232,12 @@ def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
     records = get_query_cache(key=cache_key, params=params)
 
     if records is None:
-        placeholders = ", ".join(["%s"] * len(issue_id_list))
+        if len(issue_id_list) == 1:
+            comparison = "= %s"
+        else:
+            placeholders = ", ".join(["%s"] * len(issue_id_list))
+            comparison = f"IN ({placeholders})"
 
-        # TODO: use '=' instead of 'IN' when the list has a single element
         query = f"""
             WITH first_incident AS (
                 SELECT DISTINCT
@@ -240,7 +245,7 @@ def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
                 FROM
                     incidents IC
                 WHERE
-                    IC.issue_id IN ({placeholders})
+                    IC.issue_id {comparison}
                 ORDER BY
                     IC.issue_id,
                     IC.issue_version ASC,
@@ -276,11 +281,23 @@ def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
     return records
 
 
-def get_issue_trees_data(*, issue_key_list: list[tuple[str, int]]):
-    """Retrieves the list of trees in which a list of issues appear
-    through a list of tuples `issue_id, issue_version`.\n
-    The return is a single list where each element contains
-    the checkout data and the issue_id and issue_version of the incident."""
+def get_issue_trees_data(
+    *, issue_key_list: list[tuple[str, int]]
+) -> list[dict[str, Any]]:
+    """
+    Retrieves the list of trees in which a list of issues appears
+    through a list of tuples `issue_id, issue_version`.
+
+    If an `(issue_id, issue_version)` doesn't exist,
+    the entry for that won't be returned.
+
+    However, if an (issue_id, issue_version) exists but has no incidents,
+    a row with the issue_id will be returned but the incident_issue_id will be null
+
+    Returns:
+        - A list of entries with the issue_id, issue_version, checkout data,
+          and incident_issue_id and incident_issue_version
+    """
 
     tuple_param_list = []
     params = {}
@@ -296,35 +313,45 @@ def get_issue_trees_data(*, issue_key_list: list[tuple[str, int]]):
         params[version_key] = key[1]
     tuple_str = ", ".join(tuple_param_list)
 
-    # TODO: use '=' instead of 'IN' when the list has a single element
-    records = Checkouts.objects.raw(
-        f"""
+    if len(tuple_param_list) == 1:
+        comparison = "="
+    else:
+        comparison = "IN"
+
+    # The query starts from the issues table in order to differentiate
+    # between "issue doesn't exist" and "issue has no incidents"
+    query = f"""
         SELECT DISTINCT
             ON (
                 C.TREE_NAME,
                 C.GIT_REPOSITORY_URL,
                 C.GIT_REPOSITORY_BRANCH,
-                IC.ISSUE_ID,
-                IC.ISSUE_VERSION
+                I.ID,
+                I.VERSION
             )
-            C.ID,
+            I.ID AS ISSUE_ID,
+            I.VERSION AS ISSUE_VERSION,
+            C.ID AS CHECKOUT_ID,
             C.TREE_NAME,
             C.GIT_REPOSITORY_URL,
             C.GIT_REPOSITORY_BRANCH,
-            IC.ISSUE_ID,
-            IC.ISSUE_VERSION
+            IC.ISSUE_ID AS INCIDENT_ISSUE_ID,
+            IC.ISSUE_VERSION AS INCIDENT_ISSUE_VERSION
         FROM
-            INCIDENTS IC
+            ISSUES I
+            LEFT JOIN INCIDENTS IC ON (IC.ISSUE_ID, IC.ISSUE_VERSION) = (I.ID, I.VERSION)
             LEFT JOIN TESTS T ON IC.TEST_ID = T.ID
             LEFT JOIN BUILDS B ON (
                 IC.BUILD_ID = B.ID
                 OR T.BUILD_ID = B.ID
             )
-            JOIN CHECKOUTS C ON B.CHECKOUT_ID = C.ID
+            LEFT JOIN CHECKOUTS C ON B.CHECKOUT_ID = C.ID
         WHERE
-            (IC.ISSUE_ID, IC.ISSUE_VERSION) IN ({tuple_str})
-        """,
-        params,
-    )
+            (I.ID, I.VERSION) {comparison} ({tuple_str})
+        """
+
+    with connections["default"].cursor() as cursor:
+        cursor.execute(query, params)
+        records = dict_fetchall(cursor)
 
     return records

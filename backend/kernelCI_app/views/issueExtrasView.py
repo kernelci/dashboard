@@ -35,6 +35,19 @@ class IssueExtraDetails(APIView):
         methods=["POST"],
     )
     def post(self, request) -> Response:
+        """
+        Returns the information about the first incident and the trees where a list of issues appeared.
+        Some tags are also added in case the issue appeared on specific trees.
+
+        If an issue id exists and has incidents, the first incident will be returned
+        considering the issues' first version
+
+        If an issue id doesn't exist or had no incidents, it won't be present in the returned list.
+
+        If an issue id exists and has incidents but the search version doesn't exist,
+        then the version of that issue will be marked as `null`.
+        If the version exists but had no incidents, it will simply have an empty list of trees.
+        """
         try:
             body = json.loads(request.body)
             valid_body = IssueExtraDetailsRequest(**body)

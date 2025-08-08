@@ -1,9 +1,10 @@
-from typing import Dict, List, Literal, Optional, Set, Tuple, Annotated
+from typing import Literal, Optional, Annotated
 from pydantic import BaseModel, Field
 
 from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.databases import (
+    Issue__Version,
     Timestamp,
     Checkout__GitCommitHash,
     Checkout__GitRepositoryUrl,
@@ -28,7 +29,7 @@ class Issue(IssueKeys):
     incidents_info: StatusCount
 
 
-type IssueDict = Dict[Tuple[str, int], Issue]
+type IssueDict = dict[tuple[str, int], Issue]
 
 
 type PossibleIssueTags = Literal["mainline", "stable", "linux-next"]
@@ -40,12 +41,12 @@ class TreeSetItem(BaseModel):
 
 
 class IssueWithExtraInfo(IssueKeys):
-    trees: Optional[List[TreeSetItem]] = []
-    tags: Optional[Set[PossibleIssueTags]] = set()
+    trees: Optional[list[TreeSetItem]] = []
+    tags: Optional[set[PossibleIssueTags]] = set()
 
 
 class IssueExtraDetailsRequest(BaseModel):
-    issues: List[Tuple[str, int]] = Field(
+    issues: list[tuple[str, int]] = Field(
         description=DocStrings.ISSUE_EXTRA_ID_LIST_DESCRIPTION
     )
 
@@ -57,15 +58,16 @@ class FirstIncident(BaseModel):
     git_repository_branch: Optional[Checkout__GitRepositoryBranch]
     git_commit_name: Optional[Checkout__GitCommitName]
     tree_name: Optional[Checkout__TreeName]
+    issue_version: Optional[Issue__Version]
 
 
 class ExtraIssuesData(BaseModel):
     first_incident: FirstIncident
-    versions: Dict[int, IssueWithExtraInfo]
+    versions: dict[int, Optional[IssueWithExtraInfo]]
 
 
 type ProcessedExtraDetailedIssues = Annotated[
-    Dict[str, ExtraIssuesData],
+    dict[str, ExtraIssuesData],
     Field(
         description="Extra info about issues, grouped by ID when it's version-agnostic",
         examples=[
