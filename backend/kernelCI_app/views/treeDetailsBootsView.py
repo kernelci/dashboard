@@ -1,5 +1,7 @@
 from http import HTTPStatus
+from typing import Optional
 
+from django.http import HttpRequest
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 from kernelCI_app.constants.localization import ClientStrings
@@ -17,8 +19,11 @@ from kernelCI_app.helpers.treeDetails import (
 from kernelCI_app.queries.tree import get_tree_details_data
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     COMMIT_HASH_PATH_PARAM,
+    GIT_BRANCH_PATH_PARAM,
+    TREE_NAME_PATH_PARAM,
 )
 from kernelCI_app.typeModels.treeDetails import (
+    DirectTreeQueryParameters,
     TreeQueryParameters,
 )
 from kernelCI_app.typeModels.commonDetails import (
@@ -28,7 +33,7 @@ from kernelCI_app.typeModels.commonDetails import (
 from kernelCI_app.utils import is_boot
 
 
-class TreeDetailsBoots(APIView):
+class BaseTreeDetailsBoots(APIView):
     def __init__(self):
         self.processedTests = set()
         self.filters = None
@@ -62,23 +67,20 @@ class TreeDetailsBoots(APIView):
             if is_boot(row_data["test_path"]):
                 self._process_boots_test(row_data)
 
-    @extend_schema(
-        parameters=[
-            COMMIT_HASH_PATH_PARAM,
-            TreeQueryParameters,
-        ],
-        methods=["GET"],
-        responses=CommonDetailsBootsResponse,
-    )
-    def get(self, request, commit_hash: str | None) -> Response:
-        origin_param = request.GET.get("origin")
-        git_url_param = request.GET.get("git_url")
-        git_branch_param = request.GET.get("git_branch")
-
+    def get(
+        self,
+        request: HttpRequest,
+        git_url: Optional[str],
+        tree_name: Optional[str],
+        git_branch: str,
+        commit_hash: str,
+        origin: str,
+    ) -> Response:
         rows = get_tree_details_data(
-            origin_param=origin_param,
-            git_url_param=git_url_param,
-            git_branch_param=git_branch_param,
+            origin_param=origin,
+            git_url_param=git_url,
+            git_branch_param=git_branch,
+            tree_name=tree_name,
             commit_hash=commit_hash,
         )
 
@@ -108,3 +110,65 @@ class TreeDetailsBoots(APIView):
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(valid_response.model_dump())
+
+
+class TreeDetailsBootsDirect(BaseTreeDetailsBoots):
+    @extend_schema(
+        parameters=[
+            TREE_NAME_PATH_PARAM,
+            GIT_BRANCH_PATH_PARAM,
+            COMMIT_HASH_PATH_PARAM,
+            DirectTreeQueryParameters,
+        ],
+        methods=["GET"],
+        responses=CommonDetailsBootsResponse,
+    )
+    def get(
+        self,
+        request: HttpRequest,
+        tree_name: str,
+        git_branch: str,
+        commit_hash: str,
+    ) -> Response:
+        try:
+            params = DirectTreeQueryParameters.model_validate(request.GET.dict())
+        except ValidationError as e:
+            return create_api_error_response(error_message=e.json())
+
+        return super().get(
+            request=request,
+            git_url=None,
+            tree_name=tree_name,
+            git_branch=git_branch,
+            commit_hash=commit_hash,
+            origin=params.origin,
+        )
+
+
+class TreeDetailsBoots(BaseTreeDetailsBoots):
+    @extend_schema(
+        parameters=[
+            COMMIT_HASH_PATH_PARAM,
+            TreeQueryParameters,
+        ],
+        methods=["GET"],
+        responses=CommonDetailsBootsResponse,
+    )
+    def get(
+        self,
+        request: HttpRequest,
+        commit_hash: str,
+    ) -> Response:
+        try:
+            params = TreeQueryParameters.model_validate(request.GET.dict())
+        except ValidationError as e:
+            return create_api_error_response(error_message=e.json())
+
+        return super().get(
+            request=request,
+            git_url=params.git_url,
+            tree_name=None,
+            git_branch=params.git_branch,
+            commit_hash=commit_hash,
+            origin=params.origin,
+        )
