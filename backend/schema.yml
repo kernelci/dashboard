@@ -1562,6 +1562,48 @@ paths:
               schema:
                 $ref: '#/components/schemas/SummaryResponse'
           description: ''
+  /api/tree/{tree_name}/{git_branch}/{commit_hash}/tests:
+    get:
+      operationId: tree_tests_retrieve_2
+      parameters:
+      - in: path
+        name: commit_hash
+        schema:
+          type: string
+        description: Commit hash of the tree
+        required: true
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonDetailsTestsResponse'
+          description: ''
 components:
   schemas:
     BuildArchitectures:
