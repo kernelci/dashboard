@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Dict, List
+from typing import Dict, List, Optional
+from django.http import HttpRequest
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 from rest_framework.response import Response
@@ -20,15 +21,18 @@ from kernelCI_app.helpers.treeDetails import (
 from kernelCI_app.queries.tree import get_tree_details_data
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     COMMIT_HASH_PATH_PARAM,
+    GIT_BRANCH_PATH_PARAM,
+    TREE_NAME_PATH_PARAM,
 )
 from kernelCI_app.typeModels.treeDetails import (
+    DirectTreeQueryParameters,
     TreeDetailsBuildsResponse,
     TreeQueryParameters,
 )
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 
 
-class TreeDetailsBuilds(APIView):
+class BaseTreeDetailsBuilds(APIView):
     def __init__(self):
         self.filters = None
 
@@ -65,23 +69,20 @@ class TreeDetailsBuilds(APIView):
             ):
                 self._process_builds(row_data)
 
-    @extend_schema(
-        parameters=[
-            COMMIT_HASH_PATH_PARAM,
-            TreeQueryParameters,
-        ],
-        responses=TreeDetailsBuildsResponse,
-        methods=["GET"],
-    )
-    def get(self, request, commit_hash: str | None) -> Response:
-        origin_param = request.GET.get("origin")
-        git_url_param = request.GET.get("git_url")
-        git_branch_param = request.GET.get("git_branch")
-
+    def get(
+        self,
+        request: HttpRequest,
+        git_url: Optional[str],
+        tree_name: Optional[str],
+        git_branch: str,
+        commit_hash: str,
+        origin: str,
+    ) -> Response:
         rows = get_tree_details_data(
-            origin_param=origin_param,
-            git_url_param=git_url_param,
-            git_branch_param=git_branch_param,
+            origin_param=origin,
+            git_url_param=git_url,
+            git_branch_param=git_branch,
+            tree_name=tree_name,
             commit_hash=commit_hash,
         )
 
@@ -116,3 +117,65 @@ class TreeDetailsBuilds(APIView):
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return Response(valid_response.model_dump())
+
+
+class TreeDetailsBuildsDirect(BaseTreeDetailsBuilds):
+    @extend_schema(
+        parameters=[
+            TREE_NAME_PATH_PARAM,
+            GIT_BRANCH_PATH_PARAM,
+            COMMIT_HASH_PATH_PARAM,
+            DirectTreeQueryParameters,
+        ],
+        methods=["GET"],
+        responses=TreeDetailsBuildsResponse,
+    )
+    def get(
+        self,
+        request: HttpRequest,
+        tree_name: str,
+        git_branch: str,
+        commit_hash: str,
+    ) -> Response:
+        try:
+            params = DirectTreeQueryParameters.model_validate(request.GET.dict())
+        except ValidationError as e:
+            return create_api_error_response(error_message=e.json())
+
+        return super().get(
+            request=request,
+            git_url=None,
+            tree_name=tree_name,
+            git_branch=git_branch,
+            commit_hash=commit_hash,
+            origin=params.origin,
+        )
+
+
+class TreeDetailsBuilds(BaseTreeDetailsBuilds):
+    @extend_schema(
+        parameters=[
+            COMMIT_HASH_PATH_PARAM,
+            TreeQueryParameters,
+        ],
+        methods=["GET"],
+        responses=TreeDetailsBuildsResponse,
+    )
+    def get(
+        self,
+        request: HttpRequest,
+        commit_hash: str,
+    ) -> Response:
+        try:
+            params = TreeQueryParameters.model_validate(request.GET.dict())
+        except ValidationError as e:
+            return create_api_error_response(error_message=e.json())
+
+        return super().get(
+            request=request,
+            git_url=params.git_url,
+            tree_name=None,
+            git_branch=params.git_branch,
+            commit_hash=commit_hash,
+            origin=params.origin,
+        )

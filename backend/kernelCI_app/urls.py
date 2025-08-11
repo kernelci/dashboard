@@ -71,6 +71,11 @@ urlpatterns = [
         name="treeLatestHash",
     ),
     path(
+        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/builds",
+        views.TreeDetailsBuildsDirect.as_view(),
+        name="treeDetailsBuildsDirectView",
+    ),
+    path(
         "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/full",
         views.TreeDetailsDirect.as_view(),
         name="treeDetailsDirectView",
