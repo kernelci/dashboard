@@ -251,3 +251,30 @@ export const getStringParam = (
 ): string => {
   return key in params ? params[key] : defaultValue ?? '';
 };
+
+type SortByErrorsAndTextParam = { errors: number; text: string };
+
+/**
+ * Sorted with UNKNOWN_STRING text last, then by descending error count, then by
+ * text alphabetically.
+ */
+export const sortByErrorsAndText = (
+  a: SortByErrorsAndTextParam,
+  b: SortByErrorsAndTextParam,
+): number => {
+  const { errors: errorsA, text: textA } = a;
+  const { errors: errorsB, text: textB } = b;
+
+  if (textA === UNKNOWN_STRING && textA !== textB) {
+    return 1;
+  }
+  if (textB === UNKNOWN_STRING && textB !== textA) {
+    return -1;
+  }
+
+  if (errorsB !== errorsA) {
+    return errorsB - errorsA;
+  }
+
+  return textA.localeCompare(textB);
+};
