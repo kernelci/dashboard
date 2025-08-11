@@ -76,7 +76,7 @@ def move_file_to_failed_dir(filename, failed_dir):
     try:
         os.rename(filename, os.path.join(failed_dir, os.path.basename(filename)))
     except Exception as e:
-        print(f"Error moving file {filename} to failed directory: {e}")
+        logger.error("Error moving file %s to failed directory: %s", filename, e)
         raise e
 
 
@@ -111,7 +111,7 @@ def upload_logexcerpt(logexcerpt, id):
     """
     upload_url = f"{STORAGE_BASE_URL}/upload"
     if VERBOSE:
-        logger.info(f"Uploading logexcerpt for {id} to {upload_url}")
+        logger.info("Uploading logexcerpt for %s to %s", id, upload_url)
     # make temporary file with logexcerpt data
     with tempfile.NamedTemporaryFile(delete=False, suffix=".logexcerpt") as temp_file:
         logexcerpt_filename = temp_file.name
@@ -128,13 +128,13 @@ def upload_logexcerpt(logexcerpt, id):
         try:
             r = requests.post(upload_url, headers=hdr, files=files)
         except Exception as e:
-            logger.error(f"Error uploading logexcerpt for {id}: {e}")
+            logger.error("Error uploading logexcerpt for %s: %s", id, e)
             os.remove(logexcerpt_filename)
             return logexcerpt  # Return original logexcerpt if upload fails
     os.remove(logexcerpt_filename)
     if r.status_code != 200:
         logger.error(
-            f"Failed to upload logexcerpt for {id}: {r.status_code} : {r.text}"
+            "Failed to upload logexcerpt for %s: %d : %s", id, r.status_code, r.text
         )
         return logexcerpt  # Return original logexcerpt if upload fails
 
@@ -156,7 +156,7 @@ def set_in_cache(log_hash, url):
     with cache_logs_lock:
         CACHE_LOGS[log_hash] = url
         if VERBOSE:
-            logger.info(f"Cached log excerpt with hash {log_hash} at {url}")
+            logger.info("Cached log excerpt with hash %s at %s", log_hash, url)
 
 
 def set_log_excerpt_ofile(build, url):
@@ -198,14 +198,17 @@ def extract_log_excerpt(input_data):  # noqa: C901 (too complex)
                 log_hash = hashlib.sha256(log_excerpt.encode("utf-8")).hexdigest()
                 if VERBOSE:
                     logger.info(
-                        f"""Uploading log_excerpt for build {id}
-                          hash {log_hash} with size {len(log_excerpt)} bytes"""
+                        "Uploading log_excerpt for build %s hash %s with size %d bytes",
+                        id,
+                        log_hash,
+                        len(log_excerpt),
                     )
                 cached_url = get_from_cache(log_hash)
                 if cached_url:
                     if VERBOSE:
                         logger.info(
-                            f"Log excerpt for build {id} already uploaded, using cached URL"
+                            "Log excerpt for build %s already uploaded, using cached URL",
+                            id,
                         )
                     set_log_excerpt_ofile(build, cached_url)
                 else:
@@ -221,15 +224,18 @@ def extract_log_excerpt(input_data):  # noqa: C901 (too complex)
                 log_hash = hashlib.sha256(log_excerpt.encode("utf-8")).hexdigest()
                 if VERBOSE:
                     logger.info(
-                        f"""Uploading log_excerpt for test {id}
-                         hash {log_hash} with size {len(log_excerpt)} bytes"""
+                        "Uploading log_excerpt for test %s hash %s with size %d bytes",
+                        id,
+                        log_hash,
+                        len(log_excerpt),
                     )
                 # check if log_excerpt already uploaded (by hash as key)
                 cached_url = get_from_cache(log_hash)
                 if cached_url:
                     if VERBOSE:
                         logger.info(
-                            f"Log excerpt for test {id} already uploaded, using cached URL"
+                            "Log excerpt for test %s already uploaded, using cached URL",
+                            id,
                         )
                     set_log_excerpt_ofile(test, cached_url)
                 else:
@@ -250,13 +256,13 @@ def prepare_file_data(filename, trees_name, spool_dir, io_schema):
 
     if fsize == 0:
         if VERBOSE:
-            logger.info(f"File {full_filename} is empty, skipping, deleting")
+            logger.info("File %s is empty, skipping, deleting", full_filename)
         os.remove(full_filename)
         return None, None
 
     start_time = time.time()
     if VERBOSE:
-        logger.info(f"Processing file {filename}, size: {fsize}")
+        logger.info("Processing file %s, size: %d", filename, fsize)
 
     try:
         with open(full_filename, "r") as f:
@@ -277,7 +283,7 @@ def prepare_file_data(filename, trees_name, spool_dir, io_schema):
             "processing_time": processing_time,
         }
     except Exception as e:
-        logger.error(f"Error preparing data from {filename}: {e}")
+        logger.error("Error preparing data from %s: %s", filename, e)
         logger.error(traceback.format_exc())
         return None, {
             "filename": filename,
@@ -312,17 +318,19 @@ def db_worker(db_client, stop_event):  # noqa: C901 (too complex)
                         )
                 if VERBOSE:
                     logger.info(
-                        f"Processed file {metadata['filename']} with size {metadata['fsize']} bytes"
+                        "Processed file %s with size %s bytes",
+                        metadata["filename"],
+                        metadata["fsize"],
                     )
             except Exception as e:
-                logger.error(f"Error processing item in db_worker: {e}")
+                logger.error("Error processing item in db_worker: %s", e)
             finally:
                 db_queue.task_done()  # Always mark task as done, even if processing failed
 
         except queue.Empty:
             continue  # Timeout occurred, continue to check stop_event
         except Exception as e:
-            logger.error(f"Unexpected error in db_worker: {e}")
+            logger.error("Unexpected error in db_worker: %s", e)
 
 
 def process_file(filename, trees_name, spool_dir, io_schema):
@@ -355,7 +363,7 @@ def process_file(filename, trees_name, spool_dir, io_schema):
             metadata["full_filename"], os.path.join(archive_dir, metadata["filename"])
         )
     except Exception as e:
-        logger.error(f"Error archiving file {metadata['filename']}: {e}")
+        logger.error("Error archiving file %s: %s", metadata["filename"], e)
         return False
 
     return True
@@ -381,7 +389,7 @@ def ingest_submissions_parallel(spool_dir, trees_name, db_client=None, max_worke
     if not json_files:
         return
 
-    logger.info(f"Found {len(json_files)} files to process")
+    logger.info("Found %d files to process", len(json_files))
 
     # Start database worker thread
     stop_event = threading.Event()
@@ -412,7 +420,7 @@ def ingest_submissions_parallel(spool_dir, trees_name, db_client=None, max_worke
                     else:
                         stat_fail += 1
                 except Exception as e:
-                    logger.error(f"Exception processing {filename}: {e}")
+                    logger.error("Exception processing %s: %s", filename, e)
                     stat_fail += 1
 
         # Wait for all database operations to complete
@@ -426,7 +434,10 @@ def ingest_submissions_parallel(spool_dir, trees_name, db_client=None, max_worke
 
     if stat_ok + stat_fail > 0:
         logger.info(
-            f"Processed {stat_ok + stat_fail} files: {stat_ok} succeeded, {stat_fail} failed"
+            "Processed %d files: %d succeeded, %d failed",
+            stat_ok + stat_fail,
+            stat_ok,
+            stat_fail,
         )
     else:
         logger.info("No files processed, nothing to do")
@@ -434,19 +445,19 @@ def ingest_submissions_parallel(spool_dir, trees_name, db_client=None, max_worke
 
 def verify_dir(dir):
     if not os.path.exists(dir):
-        logger.error(f"Directory {dir} does not exist")
+        logger.error("Directory %s does not exist", dir)
         # try to create it
         try:
             os.makedirs(dir)
-            logger.info(f"Directory {dir} created")
+            logger.info("Directory %s created", dir)
         except Exception as e:
-            logger.error(f"Error creating directory {dir}: {e}")
+            logger.error("Error creating directory %s: %s", dir, e)
             raise e
     if not os.path.isdir(dir):
         raise Exception(f"Directory {dir} is not a directory")
     if not os.access(dir, os.W_OK):
         raise Exception(f"Directory {dir} is not writable")
-    logger.info(f"Directory {dir} is valid and writable")
+    logger.info("Directory %s is valid and writable", dir)
 
 
 def verify_spool_dirs(spool_dir):
