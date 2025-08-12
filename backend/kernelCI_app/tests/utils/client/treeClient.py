@@ -1,8 +1,12 @@
-from typing import Any
+from typing import Any, Literal
 import requests
 from django.urls import reverse
 from kernelCI_app.helpers.filters import FilterFields
-from kernelCI_app.typeModels.treeDetails import TreeQueryParameters
+from kernelCI_app.typeModels.treeDetails import (
+    DirectTreePathParameters,
+    DirectTreeQueryParameters,
+    TreeQueryParameters,
+)
 from kernelCI_app.tests.utils.client.baseClient import BaseClient
 
 
@@ -107,5 +111,21 @@ class TreeClient(BaseClient):
         filters: dict[FilterFields, Any] | None = None,
     ) -> requests.Response:
         path = reverse("treeDetailsTestsView", kwargs={"commit_hash": tree_id})
+        url = self.get_endpoint(path=path, query=query.model_dump(), filters=filters)
+        return requests.get(url)
+
+    def get_tree_details_specific_direct(
+        self,
+        *,
+        base_path: Literal[
+            "treeDetailsBootsDirectView",
+            "treeDetailsBuildsDirectView",
+            "treeDetailsTestsDirectView",
+        ],
+        query: DirectTreeQueryParameters,
+        filters: dict[FilterFields, Any] | None = None,
+        path_params: DirectTreePathParameters,
+    ) -> requests.Response:
+        path = reverse(base_path, kwargs=path_params.model_dump())
         url = self.get_endpoint(path=path, query=query.model_dump(), filters=filters)
         return requests.get(url)

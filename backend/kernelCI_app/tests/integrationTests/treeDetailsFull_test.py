@@ -37,7 +37,7 @@ def test_tree_details_full(
     status_code: HTTPStatus,
     has_error_body: bool,
 ) -> None:
-    id, params = base_tree.values()
+    id, params, _ = base_tree.values()
 
     query = params["query"]
     filters = params.get("filters")

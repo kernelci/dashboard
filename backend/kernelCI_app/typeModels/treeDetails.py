@@ -56,6 +56,12 @@ class DirectTreeQueryParameters(BaseModel):
     )
 
 
+class DirectTreePathParameters(BaseModel):
+    tree_name: str
+    git_branch: str
+    commit_hash: str
+
+
 class TreeQueryParameters(DirectTreeQueryParameters):
     git_branch: str = Field(description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION)
     git_url: str = Field(description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION)
