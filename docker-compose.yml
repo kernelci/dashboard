@@ -88,14 +88,10 @@ services:
             - USE_DASHBOARD_DB=${USE_DASHBOARD_DB:-False}
 
     dashboard:
-        build: ./dashboard
+        build:
+            context: .
+            dockerfile: ./dashboard/Dockerfile
         image: dashboard:latest
-
-    collect_static:
-        build: './collect_static'
-        image: collect_static:latest
-        depends_on:
-            - dashboard
         volumes:
             - static-data:/data/static
 
@@ -104,7 +100,7 @@ services:
         restart: always
         depends_on:
             - backend
-            - collect_static
+            - dashboard
         networks:
             - public
         volumes:
