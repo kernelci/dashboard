@@ -6,15 +6,23 @@ from kernelCI_app.helpers.logger import log_message
 
 def mark_checkout_notification_as_sent(
     *,
-    checkout_id: str,
     msg_id: str,
+    checkout_id: str,
+    git_repository_branch: str,
+    git_repository_url: str,
+    origin: str,
+    path: str,
 ) -> bool:
     try:
         timestamp = get_current_timestamp_kcidb_format()
         NotificationsCheckout.objects.using("notifications").create(
-            checkout_id=checkout_id,
             notification_message_id=msg_id,
             notification_sent=timestamp,
+            checkout_id=checkout_id,
+            git_repository_branch=git_repository_branch,
+            git_repository_url=git_repository_url,
+            origin=origin,
+            path=path,
         )
         return True
     except Exception as e:

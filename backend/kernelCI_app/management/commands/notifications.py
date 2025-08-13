@@ -558,7 +558,12 @@ def run_checkout_summary(
 
             if msg_id and email_args.update:
                 mark_checkout_notification_as_sent(
-                    checkout_id=record["checkout_id"], msg_id=msg_id
+                    msg_id=msg_id,
+                    checkout_id=record["checkout_id"],
+                    git_repository_branch=branch,
+                    git_repository_url=giturl,
+                    origin=origin,
+                    path=path,
                 )
 
 

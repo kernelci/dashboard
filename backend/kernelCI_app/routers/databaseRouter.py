@@ -15,7 +15,7 @@ class DatabaseRouter:
         if model_name in ["checkoutscache"]:
             return db == "cache"
         if hints.get("run_always", False):
-            return app_label == "kernelci_cache"
+            return app_label == "kernelCI_cache"
         if app_label == "kernelCI_app":
             return db == "dashboard_db" and not settings.USE_DASHBOARD_DB
 
