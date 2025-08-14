@@ -307,7 +307,13 @@ MIGRATION_MODULES = {
     "kernelCI_cache": "kernelCI_cache.migrations",
 }
 
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = get_json_env_var(
+    "CORS_ALLOWED_ORIGINS",
+    [],
+)
+CORS_ALLOW_ALL_ORIGINS = is_boolean_or_string_true(
+    os.environ.get("CORS_ALLOW_ALL_ORIGINS", False)
+)
 
 CACHE_TIMEOUT = int(get_json_env_var("CACHE_TIMEOUT", "180"))
 

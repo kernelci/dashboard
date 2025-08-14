@@ -59,6 +59,20 @@ If you are going to use a database user other than `kernelci`, set it to `DB_DEF
 export DB_DEFAULT_USER=<user>
 ```
 
+If you are setting up instance different than production KernelCI dashboard, you need to define CORS_ALLOWED_ORIGINS.
+
+docker-compose example:
+```yaml
+services:
+  backend:
+    environment:
+      CORS_ALLOWED_ORIGINS: ["https://d.kernelci.org","https://dashboard.kernelci.org"]
+```
+or .env file example:
+```
+CORS_ALLOWED_ORIGINS=["https://d.kernelci.org","https://dashboard.kernelci.org"]
+```
+
 > For other optional envs, check the [backend README](backend/README.md).
 
 Startup the services:
