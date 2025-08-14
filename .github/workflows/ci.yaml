@@ -104,7 +104,7 @@ jobs:
         run: pnpm build
         working-directory: ./dashboard
 
-  build-django:
+  lint-and-unit-test-django:
     if: github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -132,6 +132,34 @@ jobs:
 
       - name: Check Format
         run: poetry run black --check .
+        working-directory: ./backend
+
+      - name: Run unit tests
+        run: poetry run pytest -m unit
+        working-directory: ./backend
+
+  integration-test-django:
+    if: github.event.pull_request.draft != true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: django-integration-tests  # Should require approval from GH
+    needs: lint-and-unit-test-django
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Install dependencies
+        run: poetry install
         working-directory: ./backend
 
       - name: Configure credentials variables
@@ -163,8 +191,8 @@ jobs:
             sleep 10
           done
 
-      - name: Run tests
-        run: poetry run pytest --run-all
+      - name: Run integration tests
+        run: poetry run pytest -m "not unit" --run-all
         working-directory: ./backend
 
       - name: Clean containers
@@ -176,7 +204,8 @@ jobs:
     needs:
       - lint-js
       - build-front
-      - build-django
+      - lint-and-unit-test-django
+      - integration-test-django
     steps:
       - name: Configure staging host authenticity
         run: |
