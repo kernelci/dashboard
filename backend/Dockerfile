@@ -49,5 +49,5 @@ VOLUME ${BACKEND_VOLUME_DIR}
 # gunicorn is added here but is run at the end of the entrypoint.
 # This was done here such that we can run a custom command
 # in the backend container without using gunicorn
-CMD ["gunicorn", "kernelCI.wsgi:application", "--workers=5", "--forwarded-allow-ips=*", "--bind=0.0.0.0:8000", "--timeout=240"]
+CMD ["gunicorn", "kernelCI.wsgi:application", "--workers=5", "--forwarded-allow-ips=*", "--bind=0.0.0.0:8000", "--timeout=250"]
 ENTRYPOINT ["/entrypoint.sh"]
