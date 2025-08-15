@@ -25,6 +25,8 @@ from kernelCI_app.management.commands.helpers.common import (
 from kernelCI_app.management.commands.helpers.summary import (
     SUMMARY_SIGNUP_FOLDER,
     PossibleReportOptions,
+    ReportConfigs,
+    TreeKey,
     process_submissions_files,
 )
 from kernelCI_app.queries.notifications import (
@@ -38,6 +40,8 @@ from kernelCI_app.queries.notifications import (
 )
 from kernelCI_app.queries.test import get_test_details_data, get_test_status_history
 from kernelCI_cache.queries.notifications import (
+    RESEND_INTERVAL,
+    check_sent_notifications,
     mark_checkout_notification_as_sent,
     mark_issue_notification_not_sent,
     mark_issue_notification_sent,
@@ -455,12 +459,37 @@ def process_submission_options(
     return recipients
 
 
+def discard_sent_reports(
+    tree_key_set: set[TreeKey],
+    tree_prop_map: dict[TreeKey, ReportConfigs],
+    skip_sent_reports: bool,
+) -> tuple[set[TreeKey], dict[TreeKey, ReportConfigs]]:
+    if skip_sent_reports:
+        return tree_key_set, tree_prop_map
+
+    key_set_copy = tree_key_set.copy()
+    prop_map_copy = tree_prop_map.copy()
+
+    already_sent_report_checkouts = check_sent_notifications(prop_map_copy)
+    for sent_checkout in already_sent_report_checkouts:
+        key_set_copy.discard(sent_checkout)
+        prop_map_copy.pop(sent_checkout, None)
+    print(
+        "Discarded %d reports already sent in the past %s"
+        % (len(already_sent_report_checkouts), RESEND_INTERVAL)
+    )
+
+    return key_set_copy, prop_map_copy
+
+
+# TODO: lower the complexity of this function, we are at the limit
 def run_checkout_summary(
     *,
     service,
     signup_folder: Optional[str] = None,
     summary_origins: Optional[list[str]],
     email_args,
+    skip_sent_reports: bool = True,
 ):
     if is_production_instance():
         return
@@ -468,6 +497,12 @@ def run_checkout_summary(
     tree_key_set, tree_prop_map = process_submissions_files(
         signup_folder=signup_folder,
         summary_origins=summary_origins,
+    )
+
+    tree_key_set, tree_prop_map = discard_sent_reports(
+        tree_key_set=tree_key_set,
+        tree_prop_map=tree_prop_map,
+        skip_sent_reports=skip_sent_reports,
     )
 
     records = get_checkout_summary_data(tuple_params=list(tree_key_set))
@@ -558,7 +593,12 @@ def run_checkout_summary(
 
             if msg_id and email_args.update:
                 mark_checkout_notification_as_sent(
-                    checkout_id=record["checkout_id"], msg_id=msg_id
+                    msg_id=msg_id,
+                    checkout_id=record["checkout_id"],
+                    git_repository_branch=branch,
+                    git_repository_url=giturl,
+                    origin=origin,
+                    path=path,
                 )
 
 
@@ -748,6 +788,11 @@ class Command(BaseCommand):
             help="Limit checkout summary to specific origins (comma-separated list)."
             + " If not provided, any origin will be considered",
         )
+        parser.add_argument(
+            "--skip-sent-reports",
+            action="store_true",
+            help="Skip reports that have already been sent",
+        )
 
         # Fake report specific arguments
         parser.add_argument(
@@ -824,6 +869,7 @@ class Command(BaseCommand):
                 signup_folder=signup_folder,
                 email_args=email_args,
                 summary_origins=summary_origins,
+                skip_sent_reports=options.get("skip_sent_reports", True),
             )
 
         elif action == "fake_report":

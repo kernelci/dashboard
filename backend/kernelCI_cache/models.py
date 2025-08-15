@@ -1,5 +1,7 @@
 from django.db import models
 
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
+
 
 class CheckoutsCache(models.Model):
     field_timestamp = models.DateTimeField(db_column="_timestamp")
@@ -60,9 +62,11 @@ class CheckoutsCache(models.Model):
 class NotificationsCheckout(models.Model):
     notification_message_id = models.TextField()
     notification_sent = models.DateTimeField()
-    checkout_id = (
-        models.TextField()
-    )  # Not necessarily unique, 1 checkout can have n notifications
+    checkout_id = models.TextField()
+    git_repository_branch = models.TextField()
+    git_repository_url = models.TextField()
+    origin = models.TextField(null=True, default=DEFAULT_ORIGIN)
+    path = models.TextField(null=True)  # A list[str] stored as a json-like string
 
     class Meta:
         db_table = "notifications_checkout"

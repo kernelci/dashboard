@@ -1,5 +1,5 @@
 import os
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from django.conf import settings
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
@@ -11,6 +11,9 @@ type PossibleReportOptions = Literal["ignore_default_recipients"]
 
 type TreeKey = tuple[str, str, str]
 """A tuple (branch, giturl, origin)"""
+
+type ReportConfigs = list[dict[str, Any]]
+"""A list of dictionaries containing the definition/configuration of a report"""
 
 SUMMARY_SIGNUP_FOLDER = "notifications/subscriptions/"
 
@@ -32,7 +35,7 @@ def process_submissions_files(
     base_dir: Optional[str] = None,
     signup_folder: Optional[str] = None,
     summary_origins: Optional[list[str]] = None,
-) -> tuple[set[TreeKey], dict[TreeKey, list[dict]]]:
+) -> tuple[set[TreeKey], dict[TreeKey, ReportConfigs]]:
     """Processes all submission files and returns the set of TreeKey and
     the dict linking each tree to its report props"""
     (base_dir, signup_folder) = _assign_default_folders(
@@ -40,7 +43,7 @@ def process_submissions_files(
     )
 
     tree_key_set: set[TreeKey] = set()
-    tree_prop_map: dict[TreeKey, list[dict]] = {}
+    tree_prop_map: dict[TreeKey, ReportConfigs] = {}
     """Example:
     tree_prop_map[(master, <mainline_url>, maestro)] = [
         {
