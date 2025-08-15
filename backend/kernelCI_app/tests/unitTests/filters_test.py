@@ -1,7 +1,9 @@
+import pytest
 from kernelCI_app.helpers.filters import should_filter_test_issue
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 
 
+@pytest.mark.unit
 class TestShouldFilterTestIssue:
     def test_no_issue_filters(self):
         assert not should_filter_test_issue(

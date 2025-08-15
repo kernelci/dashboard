@@ -1,3 +1,4 @@
+import pytest
 from kernelCI_app.helpers.issueListing import (
     should_discard_issue_by_category,
     should_discard_issue_by_culprit,
@@ -6,6 +7,7 @@ from kernelCI_app.helpers.issueListing import (
 from kernelCI_app.typeModels.issues import CULPRIT_CODE
 
 
+@pytest.mark.unit
 class TestShouldDiscardIssue:
     def test_discard_by_culprit(self):
         assert (

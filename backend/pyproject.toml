@@ -36,6 +36,9 @@ pytest-rerunfailures = "^15.0"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "kernelCI.settings"
 addopts = "-n 4 --dist loadscope --reruns 4 -x"
+markers = [
+    "unit: marks tests as unit tests (fast, no external dependencies)"
+]
 
 [build-system]
 requires = ["poetry-core"]
