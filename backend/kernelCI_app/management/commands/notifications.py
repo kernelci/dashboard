@@ -482,12 +482,14 @@ def discard_sent_reports(
     return key_set_copy, prop_map_copy
 
 
+# TODO: lower the complexity of this function, we are at the limit
 def run_checkout_summary(
     *,
     service,
     signup_folder: Optional[str] = None,
     summary_origins: Optional[list[str]],
     email_args,
+    skip_sent_reports: bool = True,
 ):
     if is_production_instance():
         return
@@ -495,6 +497,12 @@ def run_checkout_summary(
     tree_key_set, tree_prop_map = process_submissions_files(
         signup_folder=signup_folder,
         summary_origins=summary_origins,
+    )
+
+    tree_key_set, tree_prop_map = discard_sent_reports(
+        tree_key_set=tree_key_set,
+        tree_prop_map=tree_prop_map,
+        skip_sent_reports=skip_sent_reports,
     )
 
     records = get_checkout_summary_data(tuple_params=list(tree_key_set))
@@ -780,6 +788,11 @@ class Command(BaseCommand):
             help="Limit checkout summary to specific origins (comma-separated list)."
             + " If not provided, any origin will be considered",
         )
+        parser.add_argument(
+            "--skip-sent-reports",
+            action="store_true",
+            help="Skip reports that have already been sent",
+        )
 
         # Fake report specific arguments
         parser.add_argument(
@@ -856,6 +869,7 @@ class Command(BaseCommand):
                 signup_folder=signup_folder,
                 email_args=email_args,
                 summary_origins=summary_origins,
+                skip_sent_reports=options.get("skip_sent_reports", True),
             )
 
         elif action == "fake_report":
