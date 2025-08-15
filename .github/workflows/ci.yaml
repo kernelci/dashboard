@@ -201,6 +201,7 @@ jobs:
   deploy-staging:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: dev-staging
     needs:
       - lint-js
       - build-front
