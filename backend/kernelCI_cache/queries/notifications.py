@@ -1,7 +1,18 @@
+import json
+
+from django.db import connections
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from kernelCI_app.management.commands.helpers.summary import ReportConfigs, TreeKey
 from kernelCI_cache.typeModels.databases import PossibleIssueType
 from kernelCI_cache.utils import get_current_timestamp_kcidb_format
 from kernelCI_cache.models import NotificationsCheckout, NotificationsIssue
 from kernelCI_app.helpers.logger import log_message
+
+
+RESEND_INTERVAL = "12 hours"
+"""The time interval where a report can be resent.
+
+ Meaning that if a report was sent now, it must wait this value until it can be sent again"""
 
 
 def mark_checkout_notification_as_sent(
@@ -88,3 +99,53 @@ def mark_issue_notification_not_sent(
     except Exception as e:
         log_message(f"Error marking issue notification not sent:\n{e}")
         return False
+
+
+def check_sent_notifications(
+    tree_prop_map: dict[TreeKey, ReportConfigs],
+) -> list[TreeKey]:
+    """
+    Queries the notification_checkout table to see
+    which of the current reports (represented by the tree_prop_map)
+    can be sent again.
+
+    Returns:
+        A list of tuples containing the TreeKeys of the reports that were already sent.
+    """
+    if not tree_prop_map:
+        return []
+
+    checkouts_for_checking: list[tuple[str, str, str, str]] = []
+    for tree_props in tree_prop_map.values():
+        for prop in tree_props:
+            prop_path = prop.get("path")
+            # For our purposes, a unique report is defined by these fields
+            checkouts_for_checking.append(
+                (
+                    prop.get("branch"),
+                    prop.get("giturl"),
+                    prop.get("origin", DEFAULT_ORIGIN),
+                    json.dumps(prop_path) if prop_path else "%",
+                )
+            )
+
+    if not checkouts_for_checking:
+        return []
+
+    placeholders = ", ".join(["(%s, %s, %s, %s)"] * len(checkouts_for_checking))
+    query = f"""
+        SELECT
+            git_repository_branch, git_repository_url, origin
+        FROM
+            notifications_checkout
+        WHERE
+            (git_repository_branch, git_repository_url, origin, path) IN ({placeholders})
+            AND notification_sent >= datetime('now', '-{RESEND_INTERVAL}')
+        """
+    with connections["notifications"].cursor() as cursor:
+        cursor.execute(
+            query, [item for checkout in checkouts_for_checking for item in checkout]
+        )
+        sent_reports = cursor.fetchall()
+
+    return sent_reports
