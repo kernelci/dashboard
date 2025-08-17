@@ -2,6 +2,9 @@
 application_default_credentials.json
 .vscode
 .env
+.env.backend
+.env.db
+.env.proxy
 .idea
 
 # Data from docker volume that should only be automatically generated
