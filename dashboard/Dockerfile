@@ -15,6 +15,8 @@ FROM alpine:3.20
 
 VOLUME ["/data/static/"]
 
+RUN apk add --no-cache rsync
+
 COPY --from=builder /dashboard/dist /files
 
 CMD rsync -azvi --checksum --exclude='*.map' /files/ /data/static/
