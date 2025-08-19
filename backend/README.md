@@ -1,11 +1,35 @@
 # Backend
 
-To run it, it's necessary to have Poetry installed. To run it outside the docker
-you will also need to have redis installed and a server running. Then run,
+## Prerequisites
 
+Before you begin, ensure you have the following installed on your system:
+
+1.  **Poetry**: This project uses Poetry to manage dependencies and virtual environments. If you don't have it installed yet, follow the [official Poetry installation guide](https://python-poetry.org/docs/#installation).
+
+2.  **Redis**: To run the backend outside of a Docker container, you will also need a running Redis instance.
+
+## Installation
+
+Once the prerequisites are in place, you can install the project's dependencies.
+
+1.  Clone the repository and navigate to the `backend` directory.
+2.  Run the installation command:
+    ```sh
+    poetry install
+    ```
+
+> NOTE: The **psycopg** library, used to connect to the PostgreSQL database, requires the PostgreSQL development libraries (libpq-dev) to be installed on your operating system. If these are not present, you may encounter an ImportError when the application tries to connect to the database and you should install it with apt or apt-get.
+
+## IDE Configuration (Virtual Environment)
+
+Running `poetry install` creates an isolated virtual environment (`.venv`) for this project. It is crucial to configure your IDE (like VS Code, PyCharm, etc.) to use the Python interpreter from this virtual environment.
+
+To find the exact path to the Python executable inside the virtual environment, run the following command in your terminal:
 ```sh
-poetry install
+poetry env info --executable
 ```
+
+## Setting up the DB
 
 To configure the database connection, the Backend uses a `DB_DEFAULT` variable 
 that must have a JSON string such as:
@@ -26,14 +50,16 @@ export DB_DEFAULT="{
 ```
 Attention to <DB-USER> and <DB-PASSWORD> placeholders
 
+## Running server
+
 After connecting to Google Cloud, execute the server with:
 
 ```sh
 poetry run python3 manage.py runserver
 ```
 
-
 ## Running unit tests
+
 The backend includes unit tests covering some parts of the source code. To run the tests, use the following command:
 
 ```sh
