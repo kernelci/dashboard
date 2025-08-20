@@ -143,6 +143,9 @@ jobs:
           echo "DB_DEFAULT_USER=${{ secrets.PG_USERNAME }}" >> $GITHUB_ENV
           echo "DJANGO_SECRET_KEY=$(openssl rand -base64 22)" >> $GITHUB_ENV
           echo "DB_DEFAULT_NAME=kcidb" >> $GITHUB_ENV
+          cp .env.backend.example .env.backend
+          cp .env.db.example .env.db
+          cp .env.proxy.example .env.proxy
 
       - name: Run database proxy and backend docker services
         run: docker compose up backend -d --build
