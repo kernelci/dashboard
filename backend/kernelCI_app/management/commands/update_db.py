@@ -1,10 +1,11 @@
 import json
+from typing import Generator
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connections
 import logging
 from django.conf import settings
 from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
@@ -16,8 +17,7 @@ TEST_BATCH_SIZE = 100000
 SELECT_BATCH_SIZE = 25000
 
 
-def parse_interval(interval_str: str):
-    now = timezone.now()
+def parse_interval(interval_str: str) -> datetime:
     parts = interval_str.split()
     if len(parts) != 2:
         raise ValueError(f"Invalid interval format: {interval_str}")
@@ -25,14 +25,16 @@ def parse_interval(interval_str: str):
     value, unit = parts
     value = int(value)
 
-    if unit.lower() in ["hour", "hours"]:
+    if unit.lower() in ["minute", "minutes"]:
+        delta = timedelta(minutes=value)
+    elif unit.lower() in ["hour", "hours"]:
         delta = timedelta(hours=value)
     elif unit.lower() in ["day", "days"]:
         delta = timedelta(days=value)
     else:
         raise ValueError(f"Unsupported time unit: {unit}")
 
-    return now - delta
+    return timezone.now() - delta
 
 
 class Command(BaseCommand):
@@ -40,10 +42,11 @@ class Command(BaseCommand):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.start_interval = None
-        self.end_interval = None
-        self.start_timestamp = None
-        self.end_timestamp = None
+        self.start_interval: str
+        self.end_interval: str
+        self.start_timestamp: datetime
+        self.end_timestamp: datetime
+
         if settings.USE_DASHBOARD_DB:
             self.kcidb_connection = connections["kcidb"]
             self.dashboard_conn_name = "default"
@@ -56,11 +59,13 @@ class Command(BaseCommand):
             "--start-interval",
             type=str,
             help="Start interval for filtering data ('x days' or 'x hours' format)",
+            required=True,
         )
         parser.add_argument(
             "--end-interval",
             type=str,
             help="End interval for filtering data ('x days' or 'x hours' format)",
+            required=True,
         )
         parser.add_argument(
             "--table",
@@ -69,18 +74,9 @@ class Command(BaseCommand):
               (optional, if not provided all tables will be migrated)""",
         )
 
-    def handle(self, *args, **options):
-        self.start_interval = options.get("start_interval")
-        self.end_interval = options.get("end_interval")
-        table = options.get("table", None)
-
-        if not self.start_interval or not self.end_interval:
-            self.stdout.write(
-                self.style.ERROR(
-                    "Both self.start_interval and self.end_interval must be provided. Aborting."
-                )
-            )
-            return
+    def handle(self, *args, start_interval: str, end_interval: str, table: str, **options):
+        self.start_interval = start_interval
+        self.end_interval = end_interval
 
         self.start_timestamp = parse_interval(self.start_interval)
         self.end_timestamp = parse_interval(self.end_interval)
@@ -185,7 +181,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Processed {total_inserted} Issues records")
         return total_inserted
 
-    def migrate_issues(self):
+    def migrate_issues(self) -> None:
         """Migrate Issues data from default to dashboard_db"""
 
         self.stdout.write("\nMigrating Issues...")
@@ -297,11 +293,13 @@ class Command(BaseCommand):
             AND _timestamp <= NOW() - INTERVAL %s
             ORDER BY _timestamp, id
         """
+        query_params = list(checkout_ids) + [
+            self.start_interval,
+            self.end_interval,
+        ]
 
         with self.kcidb_connection.cursor() as kcidb_cursor:
-            kcidb_cursor.execute(
-                query, list(checkout_ids) + [self.start_interval, self.end_interval]
-            )
+            kcidb_cursor.execute(query, query_params)
             return kcidb_cursor.fetchall()
 
     def insert_builds_data(self, records: list[tuple]) -> int:
@@ -350,7 +348,7 @@ class Command(BaseCommand):
         self.stdout.write("Builds migration completed")
 
     # TESTS ########################################
-    def select_tests_data(self):
+    def select_tests_data(self) -> Generator[list[tuple], None, list[tuple]]:
         existing_build_ids = set(
             Builds.objects.using(self.dashboard_conn_name)
             .filter(
