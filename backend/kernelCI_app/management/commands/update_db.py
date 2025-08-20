@@ -1,7 +1,7 @@
 import json
 from typing import Generator
 from django.core.management.base import BaseCommand, CommandError
-from django.db import connections
+from django.db import connections, models
 import logging
 from django.conf import settings
 from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
@@ -46,6 +46,7 @@ class Command(BaseCommand):
         self.end_interval: str
         self.start_timestamp: datetime
         self.end_timestamp: datetime
+        self.related_data_only: bool
 
         if settings.USE_DASHBOARD_DB:
             self.kcidb_connection = connections["kcidb"]
@@ -73,10 +74,26 @@ class Command(BaseCommand):
             help="""Table name to limit the migration to
               (optional, if not provided all tables will be migrated)""",
         )
+        parser.add_argument(
+            "--related-data-only",
+            action="store_true",
+            help="""Only retrieves data that are related to the existing data.
+                This allows to follow foreign key constraints,
+                but it almost certainly won't retrieve all data in the given interval.""",
+        )
 
-    def handle(self, *args, start_interval: str, end_interval: str, table: str, **options):
+    def handle(
+        self,
+        *args,
+        start_interval: str,
+        end_interval: str,
+        table: str,
+        related_data_only,
+        **options,
+    ):
         self.start_interval = start_interval
         self.end_interval = end_interval
+        self.related_data_only = related_data_only
 
         self.start_timestamp = parse_interval(self.start_interval)
         self.end_timestamp = parse_interval(self.end_interval)
@@ -128,6 +145,30 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error(f"Error updating database: {str(e)}")
             raise CommandError("Command failed") from e
+
+    def get_related_data(
+        self, *, model: models.Model, field_name: str, filter_timestamp: bool = True
+    ) -> tuple[set[str], str]:
+        """Gets the related ids and makes the condition string"""
+
+        # Avoids making an unnecessary query
+        if self.related_data_only is False:
+            return set(), ""
+
+        values = model.objects.using(self.dashboard_conn_name)
+        if filter_timestamp:
+            values = values.filter(
+                field_timestamp__gte=self.start_timestamp,
+                field_timestamp__lte=self.end_timestamp,
+            )
+        values = values.values_list("id", flat=True)
+        related_ids = set(values)
+
+        related_condition = (
+            f"AND {field_name} IN ({",".join(["%s"] * len(related_ids))})"
+        )
+
+        return related_ids, related_condition
 
     # ISSUES ########################################
     def select_issues_data(self) -> list[tuple]:
@@ -267,20 +308,11 @@ class Command(BaseCommand):
 
     # BUILDS ########################################
     def select_builds_data(self) -> list[tuple]:
-        checkout_ids = set(
-            (
-                Checkouts.objects.using(self.dashboard_conn_name)
-                .filter(
-                    field_timestamp__gte=self.start_timestamp,
-                    field_timestamp__lte=self.end_timestamp,
-                )
-                .values_list("id", flat=True)
-            )
+        related_checkout_ids, related_condition = self.get_related_data(
+            model=Checkouts, field_name="checkout_id"
         )
-
-        if len(checkout_ids) == 0:
+        if self.related_data_only and len(related_checkout_ids) == 0:
             return []
-        checkout_id_placeholders = ",".join(["%s"] * len(checkout_ids))
 
         query = f"""
             SELECT _timestamp, checkout_id, id, origin, comment, start_time,
@@ -288,15 +320,15 @@ class Command(BaseCommand):
                    output_files, config_name, config_url, log_url, log_excerpt,
                    misc, status
             FROM builds
-            WHERE builds.checkout_id IN ({checkout_id_placeholders})
-            AND _timestamp >= NOW() - INTERVAL %s
+            WHERE _timestamp >= NOW() - INTERVAL %s
             AND _timestamp <= NOW() - INTERVAL %s
+            {related_condition}
             ORDER BY _timestamp, id
         """
-        query_params = list(checkout_ids) + [
+        query_params = [
             self.start_interval,
             self.end_interval,
-        ]
+        ] + list(related_checkout_ids)
 
         with self.kcidb_connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(query, query_params)
@@ -349,18 +381,11 @@ class Command(BaseCommand):
 
     # TESTS ########################################
     def select_tests_data(self) -> Generator[list[tuple], None, list[tuple]]:
-        existing_build_ids = set(
-            Builds.objects.using(self.dashboard_conn_name)
-            .filter(
-                field_timestamp__gte=self.start_timestamp,
-                field_timestamp__lte=self.end_timestamp,
-            )
-            .values_list("id", flat=True)
+        related_build_ids, related_condition = self.get_related_data(
+            model=Builds, field_name="build_id"
         )
-
-        if len(existing_build_ids) == 0:
+        if self.related_data_only and len(related_build_ids) == 0:
             return []
-        build_id_placeholders = ",".join(["%s"] * len(existing_build_ids))
 
         tests_query = f"""
             SELECT _timestamp, build_id, id, origin, environment_comment,
@@ -369,15 +394,15 @@ class Command(BaseCommand):
                     number_value, environment_compatible, number_prefix,
                     number_unit, input_files
             FROM tests
-            WHERE build_id IN ({build_id_placeholders})
-            AND _timestamp >= NOW() - INTERVAL %s
+            WHERE _timestamp >= NOW() - INTERVAL %s
             AND _timestamp <= NOW() - INTERVAL %s
+            {related_condition}
             ORDER BY _timestamp, id
         """
-        query_params = list(existing_build_ids) + [
+        query_params = [
             self.start_interval,
             self.end_interval,
-        ]
+        ] + list(related_build_ids)
 
         with self.kcidb_connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(tests_query, query_params)
@@ -439,13 +464,11 @@ class Command(BaseCommand):
 
     # INCIDENTS ########################################
     def select_incidents_data(self) -> list[tuple]:
-        existing_issues_ids = set(
-            Issues.objects.using(self.dashboard_conn_name).values_list("id", flat=True)
+        related_issue_ids, related_condition = self.get_related_data(
+            model=Issues, field_name="issue_id", filter_timestamp=False
         )
-
-        if len(existing_issues_ids) == 0:
+        if self.related_data_only and len(related_issue_ids) == 0:
             return []
-        issue_id_placeholders = ",".join(["%s"] * len(existing_issues_ids))
 
         # Though we can filter with the build and test ID, filtering by
         # issue ID is more consistent since incidents can be triggered for
@@ -454,16 +477,16 @@ class Command(BaseCommand):
             SELECT _timestamp, id, origin, issue_id, issue_version,
                    build_id, test_id, present, comment, misc
             FROM incidents
-            WHERE issue_id IN ({issue_id_placeholders})
-            AND _timestamp >= NOW() - INTERVAL %s
+            WHERE _timestamp >= NOW() - INTERVAL %s
             AND _timestamp <= NOW() - INTERVAL %s
+            {related_condition}
             ORDER BY _timestamp
         """
 
-        query_params = list(existing_issues_ids) + [
+        query_params = [
             self.start_interval,
             self.end_interval,
-        ]
+        ] + list(related_issue_ids)
 
         with self.kcidb_connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(query, query_params)
@@ -473,52 +496,58 @@ class Command(BaseCommand):
 
     def insert_incidents_data(self, records: list[tuple]) -> int:
         original_incidents: list[Incidents] = []
-        proposed_issue_ids: set[tuple[str, int]] = set()
-        proposed_build_ids: set[str] = set()
-        proposed_test_ids: set[str] = set()
+        existing_issue_ids: set[tuple[str, int]] = set()
+        existing_build_ids: set[str] = set()
+        existing_test_ids: set[str] = set()
         skipped_incidents = 0
 
-        for record in records:
-            issue_id = record[3]
-            issue_version = record[4]
-            build_id = record[5]
-            test_id = record[6]
-            proposed_issue_ids.add((issue_id, issue_version))
-            if build_id:
-                proposed_build_ids.add(build_id)
-            if test_id:
-                proposed_test_ids.add(test_id)
+        if self.related_data_only:
+            proposed_issue_ids: set[tuple[str, int]] = set()
+            proposed_build_ids: set[str] = set()
+            proposed_test_ids: set[str] = set()
 
-        existing_issue_ids = set(
-            Issues.objects.using(self.dashboard_conn_name)
-            .filter(id__in=[issue[0] for issue in proposed_issue_ids])
-            .values_list("id", flat=True)
-        )
+            for record in records:
+                issue_id = record[3]
+                issue_version = record[4]
+                build_id = record[5]
+                test_id = record[6]
+                proposed_issue_ids.add((issue_id, issue_version))
+                if build_id:
+                    proposed_build_ids.add(build_id)
+                if test_id:
+                    proposed_test_ids.add(test_id)
 
-        existing_build_ids = set(
-            Builds.objects.using(self.dashboard_conn_name)
-            .filter(id__in=proposed_build_ids)
-            .values_list("id", flat=True)
-        )
+            existing_issue_ids = set(
+                Issues.objects.using(self.dashboard_conn_name)
+                .filter(id__in=[issue[0] for issue in proposed_issue_ids])
+                .values_list("id", flat=True)
+            )
 
-        existing_test_ids = set(
-            Tests.objects.using(self.dashboard_conn_name)
-            .filter(id__in=proposed_test_ids)
-            .values_list("id", flat=True)
-        )
+            existing_build_ids = set(
+                Builds.objects.using(self.dashboard_conn_name)
+                .filter(id__in=proposed_build_ids)
+                .values_list("id", flat=True)
+            )
+
+            existing_test_ids = set(
+                Tests.objects.using(self.dashboard_conn_name)
+                .filter(id__in=proposed_test_ids)
+                .values_list("id", flat=True)
+            )
 
         # Incidents that don't have a related issue, build or test in the dashboard_db
-        # will be skipped to preserve the foreign key constraints
+        # will be skipped to preserve the foreign key constraints unless explicited
         for record in records:
             issue_id = record[3]
             issue_version = record[4]
             build_id = record[5]
             test_id = record[6]
 
-            if issue_id in existing_issue_ids:
-                if (build_id is not None and build_id not in existing_build_ids) or (
-                    test_id is not None and test_id not in existing_test_ids
-                ):
+            if not self.related_data_only or issue_id in existing_issue_ids:
+                if (
+                    (build_id is not None and build_id not in existing_build_ids)
+                    or (test_id is not None and test_id not in existing_test_ids)
+                ) and self.related_data_only:
                     skipped_incidents += 1
                     continue
 
