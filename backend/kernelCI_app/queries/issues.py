@@ -299,6 +299,9 @@ def get_issue_trees_data(
           and incident_issue_id and incident_issue_version
     """
 
+    if not issue_key_list:
+        return []
+
     tuple_param_list = []
     params = {}
 

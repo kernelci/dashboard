@@ -25,6 +25,9 @@ def process_issues_extra_details(
     issue_key_list: List[Tuple[str, int]],
     processed_issues_table: ProcessedExtraDetailedIssues,
 ) -> None:
+    if len(issue_key_list) == 0:
+        return
+
     # TODO: combine both queries into one
     assign_issue_first_seen(
         issue_key_list=issue_key_list,
