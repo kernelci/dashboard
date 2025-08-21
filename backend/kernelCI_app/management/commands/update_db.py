@@ -47,6 +47,8 @@ class Command(BaseCommand):
         self.start_timestamp: datetime
         self.end_timestamp: datetime
         self.related_data_only: bool
+        self.origins: list[str]
+        self.origin_condition: str
 
         if settings.USE_DASHBOARD_DB:
             self.kcidb_connection = connections["kcidb"]
@@ -81,6 +83,13 @@ class Command(BaseCommand):
                 This allows to follow foreign key constraints,
                 but it almost certainly won't retrieve all data in the given interval.""",
         )
+        parser.add_argument(
+            "--origins",
+            type=lambda s: [origin.strip() for origin in s.split(",")],
+            help="Limit database changes to specific origins (comma-separated list)."
+            + " If not provided, any origin will be considered",
+            default=[],
+        )
 
     def handle(
         self,
@@ -88,12 +97,17 @@ class Command(BaseCommand):
         start_interval: str,
         end_interval: str,
         table: str,
+        origins: list[str],
         related_data_only,
         **options,
     ):
         self.start_interval = start_interval
         self.end_interval = end_interval
         self.related_data_only = related_data_only
+        self.origins = origins
+        self.origin_condition = (
+            f"AND origin IN ({','.join(['%s'] * len(origins))})" if origins else ""
+        )
 
         self.start_timestamp = parse_interval(self.start_interval)
         self.end_timestamp = parse_interval(self.end_interval)
@@ -172,22 +186,23 @@ class Command(BaseCommand):
 
     # ISSUES ########################################
     def select_issues_data(self) -> list[tuple]:
-        query = """
+        query = f"""
             SELECT _timestamp, id, version, origin, report_url, report_subject,
                    culprit_code, culprit_tool, culprit_harness, comment, misc,
                    categories
             FROM issues
-                WHERE _timestamp >= NOW() - INTERVAL %(start_interval)s
-                AND _timestamp <= NOW() - INTERVAL %(end_interval)s
+                WHERE _timestamp >= NOW() - INTERVAL %s
+                AND _timestamp <= NOW() - INTERVAL %s
+                {self.origin_condition}
             ORDER BY _timestamp
         """
-        params = {
-            "start_interval": self.start_interval,
-            "end_interval": self.end_interval,
-        }
+        query_params = [
+            self.start_interval,
+            self.end_interval,
+        ] + self.origins
 
         with self.kcidb_connection.cursor() as kcidb_cursor:
-            kcidb_cursor.execute(query, params)
+            kcidb_cursor.execute(query, query_params)
             return kcidb_cursor.fetchall()
 
     def insert_issues_data(self, records: list[tuple]) -> int:
@@ -232,7 +247,7 @@ class Command(BaseCommand):
 
     # CHECKOUTS ########################################
     def select_checkouts_data(self) -> list[tuple]:
-        query = """
+        query = f"""
             SELECT _timestamp, id, origin, tree_name, git_repository_url,
                    git_commit_hash, git_commit_name, git_repository_branch,
                    patchset_files, patchset_hash, message_id, comment, start_time,
@@ -240,17 +255,18 @@ class Command(BaseCommand):
                    git_repository_branch_tip, git_commit_tags,
                    origin_builds_finish_time, origin_tests_finish_time
             FROM checkouts
-                WHERE _timestamp >= NOW() - INTERVAL %(start_interval)s
-                AND _timestamp <= NOW() - INTERVAL %(end_interval)s
+                WHERE _timestamp >= NOW() - INTERVAL %s
+                AND _timestamp <= NOW() - INTERVAL %s
+                {self.origin_condition}
             ORDER BY _timestamp
         """
-        params = {
-            "start_interval": self.start_interval,
-            "end_interval": self.end_interval,
-        }
+        query_params = [
+            self.start_interval,
+            self.end_interval,
+        ] + self.origins
 
         with self.kcidb_connection.cursor() as kcidb_cursor:
-            kcidb_cursor.execute(query, params)
+            kcidb_cursor.execute(query, query_params)
             return kcidb_cursor.fetchall()
 
     def insert_checkouts_data(self, records: list[tuple]) -> int:
@@ -323,12 +339,17 @@ class Command(BaseCommand):
             WHERE _timestamp >= NOW() - INTERVAL %s
             AND _timestamp <= NOW() - INTERVAL %s
             {related_condition}
+            {self.origin_condition}
             ORDER BY _timestamp, id
         """
-        query_params = [
-            self.start_interval,
-            self.end_interval,
-        ] + list(related_checkout_ids)
+        query_params = (
+            [
+                self.start_interval,
+                self.end_interval,
+            ]
+            + list(related_checkout_ids)
+            + self.origins
+        )
 
         with self.kcidb_connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(query, query_params)
@@ -397,12 +418,17 @@ class Command(BaseCommand):
             WHERE _timestamp >= NOW() - INTERVAL %s
             AND _timestamp <= NOW() - INTERVAL %s
             {related_condition}
+            {self.origin_condition}
             ORDER BY _timestamp, id
         """
-        query_params = [
-            self.start_interval,
-            self.end_interval,
-        ] + list(related_build_ids)
+        query_params = (
+            [
+                self.start_interval,
+                self.end_interval,
+            ]
+            + list(related_build_ids)
+            + self.origins
+        )
 
         with self.kcidb_connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(tests_query, query_params)
@@ -480,13 +506,18 @@ class Command(BaseCommand):
             WHERE _timestamp >= NOW() - INTERVAL %s
             AND _timestamp <= NOW() - INTERVAL %s
             {related_condition}
+            {self.origin_condition}
             ORDER BY _timestamp
         """
 
-        query_params = [
-            self.start_interval,
-            self.end_interval,
-        ] + list(related_issue_ids)
+        query_params = (
+            [
+                self.start_interval,
+                self.end_interval,
+            ]
+            + list(related_issue_ids)
+            + self.origins
+        )
 
         with self.kcidb_connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(query, query_params)
