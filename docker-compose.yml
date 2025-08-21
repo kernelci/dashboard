@@ -15,10 +15,8 @@ secrets:
 services:
     dashboard_db:
         image: postgres:17
-        environment:
-            - POSTGRES_USER=${DASH_DB_USER:-admin}
-            - POSTGRES_PASSWORD=${DASH_DB_PASSWORD:-admin}
-            - POSTGRES_DB=${DASH_DB_NAME:-dashboard}
+        env_file:
+            - .env.db
         volumes:
             - dashboard-db-data:/var/lib/postgresql/data
         networks:
@@ -69,23 +67,8 @@ services:
             - dashboard_db
         secrets:
             - postgres_password_secret
-        environment:
-            - 'ALLOWED_HOSTS=["backend", "localhost"]'
-            - DB_DEFAULT_PASSWORD_FILE=/run/secrets/postgres_password_secret
-            - DB_DEFAULT_HOST=cloudsql-proxy
-            - DB_DEFAULT_USER=${DB_DEFAULT_USER:-kernelci}
-            - DB_DEFAULT_NAME=${DB_DEFAULT_NAME:-kcidb}
-            - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-            - DEBUG=${DEBUG:-False}
-            - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
-            - REDIS_HOST=redis
-            - GMAIL_API_TOKEN=gmail_api_token.json
-            - DASH_DB_NAME=${DASH_DB_NAME:-dashboard}
-            - DASH_DB_USER=${DASH_DB_USER:-admin}
-            - DASH_DB_PASSWORD=${DASH_DB_PASSWORD:-admin}
-            - DASH_DB_HOST=dashboard_db
-            - DASH_DB_PORT=${DASH_DB_PORT:-5432}
-            - USE_DASHBOARD_DB=${USE_DASHBOARD_DB:-False}
+        env_file:
+            - .env.backend
 
     dashboard:
         build:
@@ -110,5 +93,5 @@ services:
               published: 80
               protocol: tcp
               mode: host
-        environment:
-            - PROXY_TARGET=http://backend:8000
+        env_file:
+            - .env.proxy
