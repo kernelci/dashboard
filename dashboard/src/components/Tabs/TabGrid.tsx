@@ -1,16 +1,50 @@
-import type { ReactNode, JSX } from 'react';
+import { type JSX, memo } from 'react';
 
-type GridProps = {
-  children: ReactNode;
+/**
+ * Top level grid for responsiveness in the tree/hardware details pages.
+ * The topCards will be shown at the top of both columns in large format and have priority in the middle format.
+ * The footerCards will be shown at the bottom and always spanning 2 columns.
+ */
+const ResponsiveDetailsGrid = ({
+  topCards,
+  bodyCards,
+  footerCards,
+}: {
+  topCards: JSX.Element[];
+  bodyCards: JSX.Element[];
+  footerCards: JSX.Element[];
+}): JSX.Element => {
+  const midIndex = Math.ceil(topCards.length / 2);
+  const leftTopCards = topCards.slice(0, midIndex);
+  const rightTopCards = topCards.slice(midIndex);
+
+  const midBodyIndex = Math.ceil(bodyCards.length / 2);
+  const leftBodyCards = bodyCards.slice(0, midBodyIndex);
+  const rightBodyCards = bodyCards.slice(midBodyIndex);
+
+  return (
+    <>
+      <div className="hidden grid-cols-2 gap-4 min-2xl:grid">
+        <div>
+          {leftTopCards}
+          {leftBodyCards}
+        </div>
+        <div>
+          {rightTopCards}
+          {rightBodyCards}
+        </div>
+        <div className="col-span-2">{footerCards}</div>
+      </div>
+      <div className="min-2xl:hidden">
+        {topCards}
+        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-8">
+          <div>{leftBodyCards}</div>
+          <div>{rightBodyCards}</div>
+        </div>
+        {footerCards}
+      </div>
+    </>
+  );
 };
-export const MobileGrid = ({ children }: GridProps): JSX.Element => (
-  <div className="min-[1652px]:hidden">{children}</div>
-);
 
-export const InnerMobileGrid = ({ children }: GridProps): JSX.Element => (
-  <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-8">{children}</div>
-);
-
-export const DesktopGrid = ({ children }: GridProps): JSX.Element => (
-  <div className="hidden grid-cols-2 gap-4 min-[1652px]:grid">{children}</div>
-);
+export const MemoizedResponsiveDetailsCards = memo(ResponsiveDetailsGrid);

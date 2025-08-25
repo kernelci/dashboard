@@ -20,11 +20,7 @@ import {
   type PossibleTableFilters,
 } from '@/types/tree/TreeDetails';
 
-import {
-  DesktopGrid,
-  MobileGrid,
-  InnerMobileGrid,
-} from '@/components/Tabs/TabGrid';
+import { MemoizedResponsiveDetailsCards } from '@/components/Tabs/TabGrid';
 
 import { MemoizedStatusCard } from '@/components/Tabs/StatusCard';
 import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
@@ -147,34 +143,39 @@ const BootsTab = ({
     [hardwareId, origin],
   );
 
-  return (
-    <div className="flex flex-col gap-8 pt-4 pb-10">
-      <DesktopGrid>
-        <div>
-          <MemoizedStatusCard
-            title={<FormattedMessage id="bootsTab.bootStatus" />}
-            statusCounts={bootsSummary.status}
-            toggleFilterBySection={toggleFilterBySection}
-            filterStatusKey="bootStatus"
-          />
-          <MemoizedErrorsSummary
-            title={<FormattedMessage id="global.summary" />}
-            archCompilerErrors={bootsSummary.architectures}
-            diffFilter={diffFilter}
-          />
-        </div>
-        <div>
-          <HardwareCommitNavigationGraph
-            trees={trees}
-            hardwareId={hardwareId}
-          />
-          <MemoizedConfigList
-            title={<FormattedMessage id="bootsTab.configs" />}
-            configStatusCounts={bootsSummary.configs}
-            diffFilter={diffFilter}
-          />
-        </div>
+  const { topCards, bodyCards, footerCards } = useMemo(() => {
+    return {
+      topCards: [
+        <MemoizedStatusCard
+          key="statusGraph"
+          title={<FormattedMessage id="bootsTab.bootStatus" />}
+          statusCounts={bootsSummary.status}
+          toggleFilterBySection={toggleFilterBySection}
+          filterStatusKey="bootStatus"
+        />,
+        <HardwareCommitNavigationGraph
+          key="commitGraph"
+          trees={trees}
+          hardwareId={hardwareId}
+        />,
+      ],
+      bodyCards: [
+        <MemoizedErrorsSummary
+          key="errorSummary"
+          title={<FormattedMessage id="global.summary" />}
+          archCompilerErrors={bootsSummary.architectures}
+          diffFilter={diffFilter}
+        />,
+        <MemoizedConfigList
+          key="configs"
+          title={<FormattedMessage id="bootsTab.configs" />}
+          configStatusCounts={bootsSummary.configs}
+          diffFilter={diffFilter}
+        />,
+      ],
+      footerCards: [
         <MemoizedIssuesList
+          key="issues"
           title={<FormattedMessage id="global.issues" />}
           issues={bootsSummary.issues}
           failedWithUnknownIssues={bootsSummary.unknown_issues}
@@ -182,40 +183,18 @@ const BootsTab = ({
           issueFilterSection="bootIssue"
           detailsId={hardwareId}
           pageFrom={RedirectFrom.Hardware}
-        />
-      </DesktopGrid>
-      <MobileGrid>
-        <MemoizedStatusCard
-          title={<FormattedMessage id="bootsTab.bootStatus" />}
-          statusCounts={bootsSummary.status}
-          toggleFilterBySection={toggleFilterBySection}
-          filterStatusKey="bootStatus"
-        />
-        <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
-        <InnerMobileGrid>
-          <div>
-            <MemoizedConfigList
-              title={<FormattedMessage id="bootsTab.configs" />}
-              configStatusCounts={bootsSummary.configs}
-              diffFilter={diffFilter}
-            />
-            <MemoizedErrorsSummary
-              title={<FormattedMessage id="global.summary" />}
-              archCompilerErrors={bootsSummary.architectures}
-              diffFilter={diffFilter}
-            />
-          </div>
-          <MemoizedIssuesList
-            title={<FormattedMessage id="global.issues" />}
-            issues={bootsSummary.issues}
-            failedWithUnknownIssues={bootsSummary.unknown_issues}
-            diffFilter={diffFilter}
-            issueFilterSection="bootIssue"
-            detailsId={hardwareId}
-            pageFrom={RedirectFrom.Hardware}
-          />
-        </InnerMobileGrid>
-      </MobileGrid>
+        />,
+      ],
+    };
+  }, [bootsSummary, diffFilter, hardwareId, toggleFilterBySection, trees]);
+
+  return (
+    <div className="flex flex-col gap-8 pt-4 pb-10">
+      <MemoizedResponsiveDetailsCards
+        topCards={topCards}
+        bodyCards={bodyCards}
+        footerCards={footerCards}
+      />
       <HardwareDetailsTabsQuerySwitcher
         fullDataResult={fullDataResult}
         tabData={fullDataResult?.data?.boots}

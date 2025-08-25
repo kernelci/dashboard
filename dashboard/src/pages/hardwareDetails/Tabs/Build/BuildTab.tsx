@@ -16,11 +16,7 @@ import MemoizedIssuesList from '@/components/Cards/IssuesList';
 
 import { MemoizedStatusCard } from '@/components/Tabs/StatusCard';
 
-import {
-  DesktopGrid,
-  MobileGrid,
-  InnerMobileGrid,
-} from '@/components/Tabs/TabGrid';
+import { MemoizedResponsiveDetailsCards } from '@/components/Tabs/TabGrid';
 
 import { MemoizedErrorsSummaryBuild } from '@/components/Tabs/Builds/BuildCards';
 import { MemoizedConfigsCard } from '@/components/Tabs/Builds/ConfigsCard';
@@ -104,34 +100,39 @@ const BuildTab = ({
     [hardwareId, origin],
   );
 
-  return (
-    <div className="flex flex-col gap-8 pt-4 pb-10">
-      <DesktopGrid>
-        <div>
-          <MemoizedStatusCard
-            title={<FormattedMessage id="buildTab.buildStatus" />}
-            toggleFilterBySection={toggleFilterBySection}
-            statusCounts={buildsSummary.status}
-            filterStatusKey="buildStatus"
-          />
-          <MemoizedErrorsSummaryBuild
-            summaryBody={archSummary}
-            toggleFilterBySection={toggleFilterBySection}
-            diffFilter={diffFilter}
-          />
-        </div>
-        <div>
-          <HardwareCommitNavigationGraph
-            trees={trees}
-            hardwareId={hardwareId}
-          />
-          <MemoizedConfigsCard
-            configs={configsItems}
-            toggleFilterBySection={toggleFilterBySection}
-            diffFilter={diffFilter}
-          />
-        </div>
+  const { topCards, bodyCards, footerCards } = useMemo(() => {
+    return {
+      topCards: [
+        <MemoizedStatusCard
+          key="statusGraph"
+          title={<FormattedMessage id="buildTab.buildStatus" />}
+          toggleFilterBySection={toggleFilterBySection}
+          statusCounts={buildsSummary.status}
+          filterStatusKey="buildStatus"
+        />,
+        <HardwareCommitNavigationGraph
+          key="commitGraph"
+          trees={trees}
+          hardwareId={hardwareId}
+        />,
+      ],
+      bodyCards: [
+        <MemoizedErrorsSummaryBuild
+          key="errorsSummary"
+          summaryBody={archSummary}
+          toggleFilterBySection={toggleFilterBySection}
+          diffFilter={diffFilter}
+        />,
+        <MemoizedConfigsCard
+          key="configs"
+          configs={configsItems}
+          toggleFilterBySection={toggleFilterBySection}
+          diffFilter={diffFilter}
+        />,
+      ],
+      footerCards: [
         <MemoizedIssuesList
+          key="issues"
           title={<FormattedMessage id="global.issues" />}
           issues={buildsSummary.issues}
           failedWithUnknownIssues={buildsSummary.unknown_issues}
@@ -139,38 +140,26 @@ const BuildTab = ({
           issueFilterSection="buildIssue"
           detailsId={hardwareId}
           pageFrom={RedirectFrom.Hardware}
-        />
-      </DesktopGrid>
-      <MobileGrid>
-        <HardwareCommitNavigationGraph trees={trees} hardwareId={hardwareId} />
-        <MemoizedStatusCard
-          title={<FormattedMessage id="buildTab.buildStatus" />}
-          toggleFilterBySection={toggleFilterBySection}
-          statusCounts={buildsSummary.status}
-          filterStatusKey="buildStatus"
-        />
-        <InnerMobileGrid>
-          <MemoizedErrorsSummaryBuild
-            summaryBody={archSummary}
-            toggleFilterBySection={toggleFilterBySection}
-            diffFilter={diffFilter}
-          />
-          <MemoizedConfigsCard
-            configs={configsItems}
-            toggleFilterBySection={toggleFilterBySection}
-            diffFilter={diffFilter}
-          />
-          <MemoizedIssuesList
-            title={<FormattedMessage id="global.issues" />}
-            issues={buildsSummary.issues}
-            failedWithUnknownIssues={buildsSummary.unknown_issues}
-            diffFilter={diffFilter}
-            issueFilterSection="buildIssue"
-            detailsId={hardwareId}
-            pageFrom={RedirectFrom.Hardware}
-          />
-        </InnerMobileGrid>
-      </MobileGrid>
+        />,
+      ],
+    };
+  }, [
+    archSummary,
+    buildsSummary,
+    configsItems,
+    diffFilter,
+    hardwareId,
+    toggleFilterBySection,
+    trees,
+  ]);
+
+  return (
+    <div className="flex flex-col gap-8 pt-4 pb-10">
+      <MemoizedResponsiveDetailsCards
+        topCards={topCards}
+        bodyCards={bodyCards}
+        footerCards={footerCards}
+      />
 
       <div className="flex flex-col gap-4">
         <div className="text-lg">
