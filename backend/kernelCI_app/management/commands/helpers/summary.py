@@ -15,7 +15,7 @@ type TreeKey = tuple[str, str, str]
 type ReportConfigs = list[dict[str, Any]]
 """A list of dictionaries containing the definition/configuration of a report"""
 
-SUMMARY_SIGNUP_FOLDER = "notifications/subscriptions/"
+SIGNUP_FOLDER = "notifications/subscriptions/"
 
 
 def _assign_default_folders(*, base_dir: str, signup_folder: str) -> tuple[str, str]:
@@ -25,7 +25,7 @@ def _assign_default_folders(*, base_dir: str, signup_folder: str) -> tuple[str, 
     if not base_dir:
         base_dir_return = settings.BACKEND_DATA_DIR
     if not signup_folder:
-        signup_folder_return = SUMMARY_SIGNUP_FOLDER
+        signup_folder_return = SIGNUP_FOLDER
 
     return (base_dir_return, signup_folder_return)
 
