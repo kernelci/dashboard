@@ -32,14 +32,29 @@ The command supports four primary actions:
 
 ### Email Management Options
 
+These options are available for all actions and are always optional:
+
 | Option | Description | Type | Default |
 |--------|-------------|------|---------|
 | `--add-mailing-lists` | Include community mailing lists in recipients | Flag | False |
 | `--ignore-recipients` | Bypass the recipients in the subscription file | Flag | False |
 | `--send` | Send email after generating report | Flag | False |
 | `--to` | Specify direct recipient email | String | None |
-| `--cc` | Specify CC recipient emails a "email1, email2" list  | String | None |
+| `--cc` | Specify CC recipient emails as "email1, email2" list | String | None |
 | `--yes` | Send email without confirmation | Flag | False |
+| `--in-reply-to` | Message-ID to reply to (sets In-Reply-To header) | String | None |
+
+### Action-Specific Options
+
+| Option | Applies to | Required/Optional | Description |
+|--------|------------|-------------------|-------------|
+| `--id` | `issue_report`, `test_report` | **Required** for `test_report`; **Required** for `issue_report` unless `--all` is used | Issue ID or Test ID in Dashboard/KCIDB |
+| `--all` | `issue_report` | **Alternative** to `--id` | Create reports for all issues not sent or not ignored |
+| `--update-storage` / `-u` | `issue_report` | Optional | Update JSON storage while generating/sending reports |
+| `--summary-signup-folder` | `summary` | Optional | Alternative signup folder under `/backend/data` |
+| `--summary-origins` | `summary` | Optional | Comma-separated list to limit to specific origins |
+| `--skip-sent-reports` | `summary` | Optional | Skip reports that have already been sent |
+| `--tree` | `fake_report` | Optional | Add recipients for the given tree name |
 
 
 ## Email Configuration

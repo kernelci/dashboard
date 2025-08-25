@@ -23,7 +23,7 @@ from kernelCI_app.management.commands.helpers.common import (
     get_default_tree_recipients,
 )
 from kernelCI_app.management.commands.helpers.summary import (
-    SUMMARY_SIGNUP_FOLDER,
+    SIGNUP_FOLDER,
     PossibleReportOptions,
     ReportConfigs,
     TreeKey,
@@ -716,29 +716,39 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         # Email sending options (common to all actions)
         parser.add_argument(
-            "--send", action="store_true", help="Send email report at the end."
+            "--send",
+            action="store_true",
+            help="Send email report at the end (optional for all actions)",
         )
-        parser.add_argument("--to", type=str, help="Recipient To: of the email")
-        parser.add_argument("--cc", type=str, help="Recipient CC: of the email")
+        parser.add_argument(
+            "--to",
+            type=str,
+            help="Recipient To: of the email (optional for all actions)",
+        )
+        parser.add_argument(
+            "--cc",
+            type=str,
+            help="Recipient CC: of the email (optional for all actions)",
+        )
         parser.add_argument(
             "--in-reply-to",
             type=str,
-            help="Message ID to reply to (sets In-Reply-To header)",
+            help="Message ID to reply to (sets In-Reply-To header, optional for all actions)",
         )
         parser.add_argument(
             "--add-mailing-lists",
             action="store_true",
-            help="Add community mailing lists to recipients (See docs).",
+            help="Add community mailing lists to recipients (optional for all actions, see docs)",
         )
         parser.add_argument(
             "--yes",
             action="store_true",
-            help="Send email without asking for confirmation",
+            help="Send email without asking for confirmation (optional for all actions)",
         )
         parser.add_argument(
             "--ignore-recipients",
             action="store_true",
-            help="Ignore recipients.yaml file",
+            help="Ignore recipients.yaml file (optional for all actions)",
         )
 
         # Action argument (replaces subparsers)
@@ -761,18 +771,24 @@ class Command(BaseCommand):
         parser.add_argument(
             "--id",
             type=str,
-            help="ID of the issue (for issue_report) or test (for test_report) in the Dashboard/KCIDB",
+            help=(
+                "ID of the issue (required for issue_report unless --all is used) or test "
+                "(required for test_report) in Dashboard/KCIDB"
+            ),
         )
         parser.add_argument(
             "--all",
             action="store_true",
-            help="Create reports for all issues not sent or not ignored (for issue_report action)",
+            help=(
+                "Create reports for all issues not sent or not ignored "
+                "(issue_report only, alternative to --id)"
+            ),
         )
         parser.add_argument(
             "--update-storage",
             "-u",
             action="store_true",
-            help="Update json storage as we manipulate and report issues (for issue_report action)",
+            help="Update JSON storage while generating/sending reports (issue_report only)",
         )
 
         # Summary specific arguments
@@ -780,25 +796,24 @@ class Command(BaseCommand):
         parser.add_argument(
             "--summary-signup-folder",
             type=str,
-            help="Pass alternative summary signup folder. Must be in /backend/data.",
+            help="Alternative summary signup folder (summary only, must be in /backend/data)",
         )
         parser.add_argument(
             "--summary-origins",
             type=lambda s: [origin.strip() for origin in s.split(",")],
-            help="Limit checkout summary to specific origins (comma-separated list)."
-            + " If not provided, any origin will be considered",
+            help="Limit checkout summary to specific origins (summary only, comma-separated list)",
         )
         parser.add_argument(
             "--skip-sent-reports",
             action="store_true",
-            help="Skip reports that have already been sent",
+            help="Skip reports that have already been sent (summary only)",
         )
 
         # Fake report specific arguments
         parser.add_argument(
             "--tree",
             type=str,
-            help="Add recipients for the given tree name (for fake_report action)",
+            help="Add recipients for the given tree name (fake_report only)",
         )
 
     def handle(self, *args, **options):
@@ -819,15 +834,9 @@ class Command(BaseCommand):
         # Get the action and process accordingly
         action = options.get("action")
 
-        # Get the tree name if in fake_report action
-        email_args.tree_name = options.get("tree") if action == "fake_report" else None
-
-        # A custom signup_folder used to get the submission files
-        signup_folder = options.get("summary_signup_folder")
-        if signup_folder is None:
-            signup_folder = SUMMARY_SIGNUP_FOLDER
-
         self.stdout.write(f"Running action: {action}")
+
+        signup_folder = options.get("summary_signup_folder", SIGNUP_FOLDER)
 
         if action == "new_issues":
             look_for_new_issues(
@@ -864,6 +873,7 @@ class Command(BaseCommand):
         elif action == "summary":
             email_args.update = options.get("update_storage", False)
             summary_origins = options.get("summary_origins")
+
             run_checkout_summary(
                 service=service,
                 signup_folder=signup_folder,
@@ -873,6 +883,7 @@ class Command(BaseCommand):
             )
 
         elif action == "fake_report":
+            email_args.tree_name = options.get("tree")
             run_fake_report(service=service, email_args=email_args)
 
         elif action == "test_report":
