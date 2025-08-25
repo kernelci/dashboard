@@ -144,6 +144,7 @@ class DocStrings:
     )
     TREE_REPORT_GROUP_SIZE_DESCRIPTION = (
         "Maximum number of entries to be retrieved in a test history."
+        " A group size of at least two is required in order for tests to be classified."
     )
     TREE_REPORT_MAX_AGE = (
         "Maximum age for the queried checkout and related tests in hours"

@@ -44,7 +44,7 @@ class TreeReportQueryParameters(BaseModel):
     group_size: Annotated[
         int,
         Field(
-            gt=0,
+            gt=1,
             default=DEFAULT_GROUP_SIZE,
             description=DocStrings.TREE_REPORT_GROUP_SIZE_DESCRIPTION,
         ),
