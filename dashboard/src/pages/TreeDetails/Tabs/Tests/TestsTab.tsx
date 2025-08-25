@@ -21,11 +21,7 @@ import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import { MemoizedHardwareTested } from '@/components/Cards/HardwareTested';
 
 import { TestsTable } from '@/components/TestsTable/TestsTable';
-import {
-  DesktopGrid,
-  InnerMobileGrid,
-  MobileGrid,
-} from '@/components/Tabs/TabGrid';
+import { MemoizedResponsiveDetailsCards } from '@/components/Tabs/TabGrid';
 
 import MemoizedConfigList from '@/components/Tabs/Tests/ConfigsList';
 import MemoizedErrorsSummary from '@/components/Tabs/Tests/ErrorsSummary';
@@ -244,6 +240,73 @@ const TestsTab = ({
     ],
   );
 
+  const { topCards, bodyCards, footerCards } = useMemo(() => {
+    return {
+      topCards: [
+        <MemoizedStatusCard
+          key="statusGraph"
+          title={<FormattedMessage id="testsTab.testStatus" />}
+          statusCounts={summaryTestsData?.status}
+          toggleFilterBySection={toggleFilterBySection}
+          filterStatusKey="testStatus"
+        />,
+        <TreeCommitNavigationGraph
+          key="commitGraph"
+          urlFrom={urlFrom}
+          treeName={sanitizedTreeInfo.treeName}
+        />,
+      ],
+      bodyCards: [
+        <MemoizedConfigList
+          key="configs"
+          title={<FormattedMessage id="global.configs" />}
+          configStatusCounts={summaryTestsData?.configs ?? {}}
+          diffFilter={diffFilter}
+        />,
+        <MemoizedErrorsSummary
+          key="errorSummary"
+          title={<FormattedMessage id="global.summary" />}
+          archCompilerErrors={summaryTestsData?.architectures ?? []}
+          diffFilter={diffFilter}
+        />,
+        <MemoizedHardwareTested
+          key="hardwareTested"
+          title={<FormattedMessage id="testsTab.hardwareTested" />}
+          environmentCompatible={hardwareData}
+          diffFilter={diffFilter}
+        />,
+        <MemoizedOriginsCard
+          key="origins"
+          diffFilter={diffFilter}
+          origins={summaryTestsData?.origins ?? {}}
+          filterSection="testOrigin"
+        />,
+      ],
+      footerCards: [
+        <MemoizedIssuesList
+          key="issues"
+          title={<FormattedMessage id="global.issues" />}
+          issues={summaryTestsData?.issues ?? []}
+          failedWithUnknownIssues={summaryTestsData?.unknown_issues}
+          diffFilter={diffFilter}
+          issueFilterSection="testIssue"
+          detailsId={sanitizedTreeInfo.hash}
+          pageFrom={RedirectFrom.Tree}
+          issueExtraDetails={treeDetailsLazyLoaded.issuesExtras.data?.issues}
+          extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
+        />,
+      ],
+    };
+  }, [
+    diffFilter,
+    hardwareData,
+    sanitizedTreeInfo,
+    summaryTestsData,
+    toggleFilterBySection,
+    treeDetailsLazyLoaded.issuesExtras,
+    urlFrom,
+  ]);
+
   return (
     <div className="pb-10">
       <QuerySwitcher
@@ -260,108 +323,11 @@ const TestsTab = ({
         }
       >
         <div className="flex flex-col gap-8 pt-4">
-          <DesktopGrid>
-            <div>
-              <MemoizedStatusCard
-                title={<FormattedMessage id="testsTab.testStatus" />}
-                statusCounts={summaryTestsData?.status}
-                toggleFilterBySection={toggleFilterBySection}
-                filterStatusKey="testStatus"
-              />
-              <MemoizedConfigList
-                title={<FormattedMessage id="global.configs" />}
-                configStatusCounts={summaryTestsData?.configs ?? {}}
-                diffFilter={diffFilter}
-              />
-              <MemoizedErrorsSummary
-                title={<FormattedMessage id="global.summary" />}
-                archCompilerErrors={summaryTestsData?.architectures ?? []}
-                diffFilter={diffFilter}
-              />
-            </div>
-            <div>
-              <TreeCommitNavigationGraph
-                urlFrom={urlFrom}
-                treeName={sanitizedTreeInfo.treeName}
-              />
-              <MemoizedHardwareTested
-                title={<FormattedMessage id="testsTab.hardwareTested" />}
-                environmentCompatible={hardwareData}
-                diffFilter={diffFilter}
-              />
-              <MemoizedOriginsCard
-                diffFilter={diffFilter}
-                origins={summaryTestsData?.origins ?? {}}
-                filterSection="testOrigin"
-              />
-            </div>
-            <MemoizedIssuesList
-              title={<FormattedMessage id="global.issues" />}
-              issues={summaryTestsData?.issues ?? []}
-              failedWithUnknownIssues={summaryTestsData?.unknown_issues}
-              diffFilter={diffFilter}
-              issueFilterSection="testIssue"
-              detailsId={sanitizedTreeInfo.hash}
-              pageFrom={RedirectFrom.Tree}
-              issueExtraDetails={
-                treeDetailsLazyLoaded.issuesExtras.data?.issues
-              }
-              extraDetailsLoading={treeDetailsLazyLoaded.issuesExtras.isLoading}
-            />
-          </DesktopGrid>
-          <MobileGrid>
-            <MemoizedStatusCard
-              title={<FormattedMessage id="testsTab.testStatus" />}
-              statusCounts={summaryTestsData?.status}
-              toggleFilterBySection={toggleFilterBySection}
-              filterStatusKey="testStatus"
-            />
-            <TreeCommitNavigationGraph
-              urlFrom={urlFrom}
-              treeName={sanitizedTreeInfo.treeName}
-            />
-            <InnerMobileGrid>
-              <div>
-                <MemoizedConfigList
-                  title={<FormattedMessage id="global.configs" />}
-                  configStatusCounts={summaryTestsData?.configs ?? {}}
-                  diffFilter={diffFilter}
-                />
-                <MemoizedErrorsSummary
-                  title={<FormattedMessage id="global.summary" />}
-                  archCompilerErrors={summaryTestsData?.architectures ?? []}
-                  diffFilter={diffFilter}
-                />
-              </div>
-              <div>
-                <MemoizedHardwareTested
-                  title={<FormattedMessage id="testsTab.hardwareTested" />}
-                  environmentCompatible={hardwareData}
-                  diffFilter={diffFilter}
-                />
-                <MemoizedOriginsCard
-                  diffFilter={diffFilter}
-                  origins={summaryTestsData?.origins ?? {}}
-                  filterSection="testOrigin"
-                />
-              </div>
-              <MemoizedIssuesList
-                title={<FormattedMessage id="global.issues" />}
-                issues={summaryTestsData?.issues ?? []}
-                failedWithUnknownIssues={summaryTestsData?.unknown_issues}
-                diffFilter={diffFilter}
-                issueFilterSection="testIssue"
-                detailsId={sanitizedTreeInfo.hash}
-                pageFrom={RedirectFrom.Tree}
-                issueExtraDetails={
-                  treeDetailsLazyLoaded.issuesExtras.data?.issues
-                }
-                extraDetailsLoading={
-                  treeDetailsLazyLoaded.issuesExtras.isLoading
-                }
-              />
-            </InnerMobileGrid>
-          </MobileGrid>
+          <MemoizedResponsiveDetailsCards
+            topCards={topCards}
+            bodyCards={bodyCards}
+            footerCards={footerCards}
+          />
 
           <QuerySwitcher status={fullStatus} data={fullData}>
             <TestsTable
