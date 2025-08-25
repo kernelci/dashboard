@@ -251,13 +251,7 @@ const IssuesList = ({
     </DumbListingContent>
   );
 
-  return (
-    <BaseCard
-      title={titleElement}
-      content={contentElement}
-      className="col-span-2"
-    />
-  );
+  return <BaseCard title={titleElement} content={contentElement} />;
 };
 
 const MemoizedIssuesList = memo(IssuesList);
