@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import type {
   CommitHead,
   CommitHistoryResponse,
-  CommitHistoryTable,
   HardwareDetailsSummary,
   THardwareDetails,
   TTreeCommits,
@@ -61,15 +60,15 @@ type fetchHardwareDetailsBody = {
   filter?: Record<string, string[]>;
 };
 
-const fetchHardwareDetails = async ({
+const fetchHardwareDetails = async <T extends HardwareDetailsVariants>({
   hardwareId,
   body,
   variant,
 }: {
   hardwareId: string;
   body: fetchHardwareDetailsBody;
-  variant: HardwareDetailsVariants;
-}): Promise<THardwareDetails> => {
+  variant: T;
+}): Promise<HardwareDetailsResponse<T>> => {
   const urlTable: Record<HardwareDetailsVariants, string> = {
     full: `/api/hardware/${hardwareId}`,
     builds: `/api/hardware/${hardwareId}/builds`,
@@ -78,7 +77,7 @@ const fetchHardwareDetails = async ({
     summary: `/api/hardware/${hardwareId}/summary`,
   };
 
-  const data = await RequestData.post<THardwareDetails>(
+  const data = await RequestData.post<HardwareDetailsResponse<T>>(
     urlTable[variant],
     body,
   );
@@ -157,7 +156,7 @@ export const useHardwareDetails = <T extends HardwareDetailsVariants>({
     placeholderData: previousData => previousData,
     enabled: enabled,
     refetchOnWindowFocus: false,
-  });
+  }) as UseQueryResult<HardwareDetailsResponse<T>>;
 };
 
 type FetchHardwareDetailsCommitHistoryBody = {
@@ -170,8 +169,8 @@ type FetchHardwareDetailsCommitHistoryBody = {
 const fetchCommitHistory = async (
   hardwareId: string,
   body: FetchHardwareDetailsCommitHistoryBody,
-): Promise<CommitHistoryTable> => {
-  const data = await RequestData.post<CommitHistoryTable>(
+): Promise<CommitHistoryResponse> => {
+  const data = await RequestData.post<CommitHistoryResponse>(
     `/api/hardware/${hardwareId}/commit-history`,
     body,
   );
