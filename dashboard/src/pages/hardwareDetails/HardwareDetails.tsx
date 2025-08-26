@@ -204,6 +204,7 @@ function HardwareDetails(): JSX.Element {
     comparedData: hardwareDataPreparedForInconsistencyValidation,
     navigate: navigate,
     enabled: isEmptyObject(reqFilter),
+    navigateParams: { hardwareId: hardwareId },
   });
 
   const hardwareTableForCommitHistory = useMemo(() => {

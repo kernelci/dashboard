@@ -225,6 +225,7 @@ const TreeDetails = ({
     comparedData: comparedData,
     navigate: navigate,
     enabled: isEmptyObject(reqFilter),
+    navigateParams: params,
   });
 
   const onFilterChange = useCallback(
@@ -237,9 +238,10 @@ const TreeDetails = ({
           };
         },
         state: s => s,
+        params: params,
       });
     },
-    [navigate],
+    [navigate, params],
   );
 
   const cleanAll = useCallback(() => {
@@ -251,8 +253,9 @@ const TreeDetails = ({
         };
       },
       state: s => s,
+      params: params,
     });
-  }, [navigate]);
+  }, [navigate, params]);
 
   const filterListElement = useMemo(
     () => (

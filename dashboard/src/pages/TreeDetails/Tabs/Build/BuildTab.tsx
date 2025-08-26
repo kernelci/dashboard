@@ -135,9 +135,10 @@ const BuildTab = ({
           };
         },
         state: s => s,
+        params: params,
       });
     },
-    [navigate],
+    [navigate, params],
   );
 
   const treeDetailsData: IBuildsTab = useMemo(
