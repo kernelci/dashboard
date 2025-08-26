@@ -1,4 +1,4 @@
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
@@ -31,6 +31,9 @@ const TreeDetailsTab = ({
   treeDetailsLazyLoaded,
   urlFrom,
 }: ITreeDetailsTab): JSX.Element => {
+  const params = useParams({
+    from: urlFrom,
+  });
   const { currentPageTab } = useSearch({
     from: urlFrom,
   });
@@ -86,9 +89,10 @@ const TreeDetailsTab = ({
           };
         },
         state: s => s,
+        params: params,
       });
     },
-    [navigate],
+    [navigate, params],
   );
 
   return (

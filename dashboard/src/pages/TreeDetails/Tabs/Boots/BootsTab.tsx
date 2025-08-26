@@ -85,9 +85,10 @@ const BootsTab = ({
           },
         }),
         state: s => s,
+        params: params,
       });
     },
-    [navigate],
+    [navigate, params],
   );
 
   const onClickFilter = useCallback(
@@ -103,9 +104,10 @@ const BootsTab = ({
           };
         },
         state: s => s,
+        params: params,
       });
     },
-    [navigate],
+    [navigate, params],
   );
 
   const toggleFilterBySection = useCallback(
@@ -125,9 +127,10 @@ const BootsTab = ({
           };
         },
         state: s => s,
+        params: params,
       });
     },
-    [navigate],
+    [navigate, params],
   );
 
   const {
