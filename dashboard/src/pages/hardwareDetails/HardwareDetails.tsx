@@ -124,18 +124,20 @@ function HardwareDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const updateTreeFilters = useCallback(
-    (selectedIndexes: number[]) => {
-      navigate({
-        search: previousSearch => ({
-          ...previousSearch,
-          treeIndexes: selectedIndexes,
-        }),
-        state: s => s,
-      });
-    },
-    [navigate],
-  );
+  const updateTreeFilters = useCallback((selectedIndexes: number[]) => {
+    navigate({
+      search: previousSearch => ({
+        ...previousSearch,
+        treeIndexes: selectedIndexes,
+      }),
+      state: s => s,
+    });
+    // Since UpdateTreeFilters is used on a useEffect, anytime that updateTreeFilters is called
+    // it will trigger a rerender, changing the navigate object, changing this function,
+    // calling useEffect again on an infinite loop.
+    // TODO: check for uses of navigate as a dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onFilterChange = useCallback(
     (newFilter: TFilter) => {
