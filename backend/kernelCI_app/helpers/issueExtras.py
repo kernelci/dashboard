@@ -71,6 +71,7 @@ def assign_issue_first_seen(
                     git_commit_name=record["git_commit_name"],
                     tree_name=record["tree_name"],
                     issue_version=record["issue_version"],
+                    checkout_id=record["checkout_id"],
                 ),
                 versions={},
             ),
