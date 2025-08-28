@@ -2262,6 +2262,11 @@ components:
           anyOf:
           - $ref: '#/components/schemas/Issue__Version'
           - type: 'null'
+        checkout_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Checkout Id
       required:
       - first_seen
       - git_commit_hash
@@ -2270,6 +2275,7 @@ components:
       - git_commit_name
       - tree_name
       - issue_version
+      - checkout_id
       title: FirstIncident
       type: object
     GlobalFilters:

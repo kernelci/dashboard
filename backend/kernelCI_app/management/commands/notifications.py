@@ -27,6 +27,7 @@ from kernelCI_app.management.commands.helpers.summary import (
     PossibleReportOptions,
     ReportConfigs,
     TreeKey,
+    get_build_issues_from_checkout,
     process_submissions_files,
 )
 from kernelCI_app.queries.notifications import (
@@ -52,9 +53,7 @@ from kernelCI_cache.queries.issues import (
     get_unsent_issues,
 )
 from kernelCI_cache.typeModels.databases import PossibleIssueType
-
 from kernelCI_app.utils import group_status
-
 
 KERNELCI_RESULTS = "kernelci-results@groups.io"
 KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
@@ -483,6 +482,7 @@ def discard_sent_reports(
 
 
 # TODO: lower the complexity of this function, we are at the limit
+# flake8: noqa: C901
 def run_checkout_summary(
     *,
     service,
@@ -511,8 +511,13 @@ def run_checkout_summary(
         print("No data retrived for summary")
         return
 
+    checkout_ids = [record["checkout_id"] for record in records]
+
+    checkout_build_issues, _ = get_build_issues_from_checkout(checkout_ids=checkout_ids)
+
     for record in records:
         checkout = sanitize_tree(record)
+        build_issues = checkout_build_issues[checkout.id]
         origin = checkout.origin
         giturl = checkout.git_repository_url
         branch = checkout.git_repository_branch
@@ -565,6 +570,7 @@ def run_checkout_summary(
             template = setup_jinja_template("summary.txt.j2")
             report["content"] = template.render(
                 checkout=record,
+                build_issues=build_issues,
                 new_issues=new_issues,
                 fixed_issues=fixed_issues,
                 unstable_tests=unstable_tests,

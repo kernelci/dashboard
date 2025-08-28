@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
 import sys
-from django.db import connection
+from django.db import connection, connections
 
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.queries.tree import get_tree_listing_query
@@ -595,4 +594,36 @@ def kcidb_tests_results(
         # TODO: check if it is possible to remove dict_fetchall.
         # dict_fetchall has a performance impact and this query returns many rows,
         # so they shouldn't be together
+        return dict_fetchall(cursor=cursor)
+
+
+def get_issues_summary_data(*, checkout_ids: list[str]) -> list[dict]:
+    if not checkout_ids:
+        return []
+
+    query = f"""
+        SELECT DISTINCT
+            b.checkout_id,
+            b.id as build_id,
+            inc.issue_id,
+            inc.issue_version,
+            i.report_url,
+            i.culprit_code,
+            i.culprit_tool,
+            i.culprit_harness,
+            i.origin,
+            i.comment
+        FROM
+            builds b
+        LEFT JOIN incidents inc
+            ON b.id = inc.build_id
+        LEFT JOIN issues i
+            ON inc.issue_id = i.id AND inc.issue_version = i.version
+        WHERE
+            b.checkout_id IN ({", ".join(["%s"] * len(checkout_ids))}) and b.status = 'FAIL'
+        ORDER BY issue_id
+    """
+
+    with connections["default"].cursor() as cursor:
+        cursor.execute(query, checkout_ids)
         return dict_fetchall(cursor=cursor)

@@ -72,6 +72,36 @@ Tests: {{ "\t" }}{{ "{:>5}".format(test_status_group["success"]) }} ✅
   No unstable tests observed.
 {% endif %}
 
+
+{%- set new_issues = build_issues | selectattr('is_new_issue', 'equalto', true) | list %}
+{%- set old_issues = build_issues | selectattr('is_new_issue', 'equalto', false) | list %}
+{%- if new_issues | length > 0 %}
+### NEW BUILD ISSUES
+{%- for issue in new_issues %}
+- Issue: {{ issue.issue_id }} | version: {{ issue.version }}
+  {%- if issue.build_id %}
+  Build: {{ issue.build_id }}
+  {%- endif %}
+  Comment: {{ issue.comment }}
+  {%- if issue.first_seen %}
+  First seen: {{ issue.first_seen }}
+  {%- endif %}
+  {%- if issue.report_url %}
+  Report: {{ issue.report_url }}
+  {%- endif %}
+  {%- set culprits = [] -%}
+  {%- if issue.culprit_tool %}{% set culprits = culprits + ["tool"] %}{% endif %}
+  {%- if issue.culprit_code %}{% set culprits = culprits + ["code"] %}{% endif %}
+  {%- if issue.culprit_harness %}{% set culprits = culprits + ["harness"] %}{% endif %}
+  Culprit: {{ culprits | unique | join(", ") if culprits | length > 0 else "None" }}
+{%- endfor %}
+{%- endif %}
+{%- if old_issues | length > 0 %}
+
+
+This branch has {{ old_issues | length }} pre-existing build issues. See details in the dashboard.
+{%- endif %}
+
 Sent every day if there were changes in the past 24 hours.
 Legend: ✅ PASS   ❌ FAIL  ⚠️ INCONCLUSIVE
 {%- endblock -%}

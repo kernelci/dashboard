@@ -29,6 +29,21 @@ class Issue(IssueKeys):
     incidents_info: StatusCount
 
 
+class CheckoutIssue(BaseModel):
+    """Represents a build issue found in a checkout."""
+
+    issue_id: str
+    build_id: str
+    version: int
+    comment: str
+    report_url: Optional[str] = None
+    culprit_code: bool
+    culprit_tool: bool
+    culprit_harness: bool
+    first_seen: Timestamp
+    is_new_issue: bool
+
+
 type IssueDict = dict[tuple[str, int], Issue]
 
 
@@ -59,6 +74,7 @@ class FirstIncident(BaseModel):
     git_commit_name: Optional[Checkout__GitCommitName]
     tree_name: Optional[Checkout__TreeName]
     issue_version: Optional[Issue__Version]
+    checkout_id: Optional[str]
 
 
 class ExtraIssuesData(BaseModel):
