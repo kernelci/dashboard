@@ -90,9 +90,10 @@ export function TreeDetailsBuildsTable({
           };
         },
         state: s => s,
+        params: params,
       });
     },
-    [navigate],
+    [navigate, params],
   );
 
   return (

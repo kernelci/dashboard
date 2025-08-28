@@ -104,9 +104,10 @@ const TestsTab = ({
             testPath: pathFilter === '' ? undefined : { [pathFilter]: true },
           },
         }),
+        params: params,
       });
     },
-    [navigate],
+    [navigate, params],
   );
 
   const { treeName, branch, id } = useRouterState({
@@ -167,9 +168,10 @@ const TestsTab = ({
           };
         },
         state: s => s,
+        params: params,
       });
     },
-    [navigate],
+    [navigate, params],
   );
 
   const toggleFilterBySection = useCallback(
@@ -189,9 +191,10 @@ const TestsTab = ({
           };
         },
         state: s => s,
+        params: params,
       });
     },
-    [navigate],
+    [navigate, params],
   );
 
   const hardwareData = useMemo(() => {

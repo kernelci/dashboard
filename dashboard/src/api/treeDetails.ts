@@ -6,9 +6,7 @@ import { useSearch } from '@tanstack/react-router';
 import { treeDetailsDirectRouteName } from '@/types/tree/TreeDetails';
 import type {
   TTreeDetailsFilter,
-  BuildCountsResponse,
   TreeDetailsFullData,
-  LogFilesResponse,
   TreeDetailsSummary,
   TreeDetailsBoots,
   TreeDetailsBuilds,
@@ -19,8 +17,6 @@ import type {
 import { getTargetFilter, type TFilter } from '@/types/general';
 
 import { mapFiltersKeysToBackendCompatible } from '@/utils/utils';
-
-import { retryHandler } from '@/utils/query';
 
 import { RequestData } from './commonRequest';
 
@@ -155,38 +151,5 @@ export const useTreeDetails = <T extends TreeDetailsVariants>({
     refetchOnWindowFocus: false,
     // TODO: check the cases when the real previous data is null/undefined
     placeholderData: previousData => previousData,
-  });
-};
-
-const fetchLogFiles = async (logUrl: string): Promise<BuildCountsResponse> => {
-  const data = await RequestData.get<BuildCountsResponse>(
-    `/api/log-downloader/`,
-    {
-      params: {
-        log_download_url: logUrl,
-      },
-    },
-  );
-
-  return data;
-};
-
-type Config = {
-  enabled?: boolean;
-};
-
-export const useLogFiles = (
-  {
-    logUrl,
-  }: {
-    logUrl: string;
-  },
-  { enabled }: Config = { enabled: true },
-): UseQueryResult<LogFilesResponse> => {
-  return useQuery({
-    queryKey: [logUrl],
-    enabled,
-    retry: retryHandler(1),
-    queryFn: () => fetchLogFiles(logUrl),
   });
 };

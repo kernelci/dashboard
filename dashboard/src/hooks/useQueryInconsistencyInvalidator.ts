@@ -11,13 +11,20 @@ type QueryInconsistencyInvalidatorArgs<T extends ReferenceTable> = {
   referenceData?: T;
   comparedData?: T;
   enabled?: boolean;
-  navigate: UseNavigateResult<'/tree/$treeId' | '/hardware/$hardwareId'>;
+  navigate: UseNavigateResult<
+    '/tree/$treeId' | '/hardware/$hardwareId' | '/tree/$treeName/$branch/$hash'
+  >;
+  navigateParams:
+    | { hardwareId: string }
+    | { treeId: string }
+    | { treeName: string; branch: string; hash: string };
 };
 
 export const useQueryInconsistencyInvalidator = <T extends ReferenceTable>({
   referenceData: referenceData,
   comparedData: comparedData,
   navigate,
+  navigateParams,
   enabled = true,
 }: QueryInconsistencyInvalidatorArgs<T>): void => {
   const queryClient = useQueryClient();
@@ -39,8 +46,16 @@ export const useQueryInconsistencyInvalidator = <T extends ReferenceTable>({
               hardwareStatusCount: undefined,
             };
           },
+          params: navigateParams,
         });
       });
     }
-  }, [referenceData, comparedData, queryClient, navigate, enabled]);
+  }, [
+    referenceData,
+    comparedData,
+    queryClient,
+    navigate,
+    enabled,
+    navigateParams,
+  ]);
 };
