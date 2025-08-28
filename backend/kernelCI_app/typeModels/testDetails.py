@@ -1,6 +1,7 @@
 from typing import Literal, Optional
 from typing_extensions import Annotated
 from pydantic import BaseModel, BeforeValidator, Field
+from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 
 from kernelCI_app.typeModels.databases import (
@@ -75,25 +76,42 @@ class TestStatusHistoryResponse(BaseModel):
 
 
 class TestStatusHistoryRequest(BaseModel):
-    path: Test__Path = Field(
-        None, description=DocStrings.STATUS_HISTORY_PATH_DESCRIPTION
-    )
-    origin: Origin = Field(description=DocStrings.STATUS_HISTORY_ORIGIN_DESCRIPTION)
-    git_repository_url: Checkout__GitRepositoryUrl = Field(
-        None, description=DocStrings.STATUS_HISTORY_GIT_URL_DESCRIPTION
-    )
-    git_repository_branch: Checkout__GitRepositoryBranch = Field(
-        None, description=DocStrings.STATUS_HISTORY_GIT_BRANCH_DESCRIPTION
-    )
-    platform: Optional[str] = Field(
-        None, description=DocStrings.STATUS_HISTORY_PLATFORM_DESCRIPTION
-    )
-    current_test_start_time: Test__StartTime = Field(
-        None, description=DocStrings.STATUS_HISTORY_CURRENT_TEST_START_DESCRIPTION
-    )
-    config_name: Build__ConfigName = Field(
-        None, description=DocStrings.STATUS_HISTORY_CONFIG_NAME_DESCRIPTION
-    )
-    field_timestamp: Timestamp = Field(
-        None, description=DocStrings.STATUS_HISTORY_FIELD_TS_DESCRIPTION
-    )
+    path: Annotated[str, Field(description=DocStrings.STATUS_HISTORY_PATH_DESCRIPTION)]
+    origin: Annotated[
+        str,
+        Field(DEFAULT_ORIGIN, description=DocStrings.STATUS_HISTORY_ORIGIN_DESCRIPTION),
+    ]
+    git_repository_url: Annotated[
+        str,
+        Field(description=DocStrings.STATUS_HISTORY_GIT_URL_DESCRIPTION),
+    ]
+    git_repository_branch: Annotated[
+        str,
+        Field(description=DocStrings.STATUS_HISTORY_GIT_BRANCH_DESCRIPTION),
+    ]
+    platform: Annotated[
+        Optional[str],
+        Field(None, description=DocStrings.STATUS_HISTORY_PLATFORM_DESCRIPTION),
+    ]
+    current_test_start_time: Annotated[
+        Test__StartTime,
+        Field(
+            None, description=DocStrings.STATUS_HISTORY_CURRENT_TEST_START_DESCRIPTION
+        ),
+    ]
+    config_name: Annotated[
+        str,
+        Field(description=DocStrings.STATUS_HISTORY_CONFIG_NAME_DESCRIPTION),
+    ]
+    field_timestamp: Annotated[
+        Timestamp,
+        Field(None, description=DocStrings.STATUS_HISTORY_FIELD_TS_DESCRIPTION),
+    ]
+    group_size: Annotated[
+        int,
+        Field(
+            default=10,
+            gt=0,
+            description=DocStrings.STATUS_HISTORY_GROUP_SIZE_DESCRIPTION,
+        ),
+    ]

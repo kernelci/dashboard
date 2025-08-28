@@ -4,11 +4,7 @@ from django.db import connection
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.models import Tests
 from kernelCI_app.typeModels.databases import (
-    Build__ConfigName,
-    Checkout__GitRepositoryBranch,
-    Checkout__GitRepositoryUrl,
     Origin,
-    Test__Path,
     Test__StartTime,
     Timestamp,
 )
@@ -56,14 +52,15 @@ def get_test_details_data(*, test_id: str) -> list[dict]:
 
 def get_test_status_history(
     *,
-    path: Test__Path,
+    path: str,
     origin: Origin,
-    git_repository_url: Checkout__GitRepositoryUrl,
-    git_repository_branch: Checkout__GitRepositoryBranch,
+    git_repository_url: str,
+    git_repository_branch: str,
     platform: Optional[str],
     test_start_time: Test__StartTime,
-    config_name: Build__ConfigName,
-    field_timestamp: Timestamp
+    config_name: str,
+    field_timestamp: Timestamp,
+    group_size: int,
 ):
     query = Tests.objects.filter(
         path=path,
@@ -91,10 +88,7 @@ def get_test_status_history(
             )
         else:
             query = query.filter(field_timestamp__lte=field_timestamp)
+        return query.order_by("-field_timestamp")[:group_size]
     else:
         query = query.filter(start_time__lte=test_start_time)
-
-    if test_start_time is not None:
-        return query.order_by("-start_time")[:10]
-    else:
-        return query.order_by("-field_timestamp")[:10]
+        return query.order_by("-start_time")[:group_size]
