@@ -74,6 +74,11 @@ def test_list(pytestconfig, issue_listing_input):
             fields=issues_listing_fields, response_content=content
         )
 
+        # Even if content exists, all issues might have been filtered out.
+        # In that case, we don't need to do further checks.
+        if len(content.get("issues", [])) == 0:
+            return
+
         assert_has_fields_in_response_content(
             fields=issues_expected_fields, response_content=content["issues"][0]
         )
