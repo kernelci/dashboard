@@ -113,9 +113,14 @@ class DocStrings:
     STATUS_HISTORY_ORIGIN_DESCRIPTION = "Origin filter to retrieve tests"
     STATUS_HISTORY_GIT_URL_DESCRIPTION = "Git repository URL to retrieve tests"
     STATUS_HISTORY_GIT_BRANCH_DESCRIPTION = "Git branch name to retrieve tests"
+    STATUS_HISTORY_GROUP_SIZE_DESCRIPTION = (
+        "The maximum amount of tests retrieved for the status history."
+        " This affects the group's classification."
+    )
     STATUS_HISTORY_PLATFORM_DESCRIPTION = "Platform filter to retrieve tests"
     STATUS_HISTORY_CURRENT_TEST_START_DESCRIPTION = (
-        "Test start time filter to retrieve tests prior to it"
+        "Test start time filter to retrieve tests prior to it."
+        " This field has priority over the test's timestamp."
     )
     STATUS_HISTORY_CONFIG_NAME_DESCRIPTION = "Config name filter to retrieve tests"
     STATUS_HISTORY_FIELD_TS_DESCRIPTION = (

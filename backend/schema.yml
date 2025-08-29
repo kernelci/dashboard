@@ -772,15 +772,17 @@ paths:
       - in: query
         name: config_name
         schema:
-          $ref: '#/components/schemas/Build__ConfigName'
-          default: null
+          title: Config Name
+          type: string
         description: Config name filter to retrieve tests
+        required: true
       - in: query
         name: current_test_start_time
         schema:
           $ref: '#/components/schemas/Test__StartTime'
           default: null
-        description: Test start time filter to retrieve tests prior to it
+        description: Test start time filter to retrieve tests prior to it. This field
+          has priority over the test's timestamp.
       - in: query
         name: field_timestamp
         schema:
@@ -790,27 +792,40 @@ paths:
       - in: query
         name: git_repository_branch
         schema:
-          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
-          default: null
+          title: Git Repository Branch
+          type: string
         description: Git branch name to retrieve tests
+        required: true
       - in: query
         name: git_repository_url
         schema:
-          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
-          default: null
+          title: Git Repository Url
+          type: string
         description: Git repository URL to retrieve tests
+        required: true
+      - in: query
+        name: group_size
+        schema:
+          default: 10
+          exclusiveMinimum: 0
+          title: Group Size
+          type: integer
+        description: The maximum amount of tests retrieved for the status history.
+          This affects the group's classification.
       - in: query
         name: origin
         schema:
-          $ref: '#/components/schemas/Origin'
+          default: maestro
+          title: Origin
+          type: string
         description: Origin filter to retrieve tests
-        required: true
       - in: query
         name: path
         schema:
-          $ref: '#/components/schemas/Test__Path'
-          default: null
+          title: Path
+          type: string
         description: Test path filter
+        required: true
       - in: query
         name: platform
         schema:
@@ -919,10 +934,11 @@ paths:
         name: group_size
         schema:
           default: 3
-          exclusiveMinimum: 0
+          exclusiveMinimum: 1
           title: Group Size
           type: integer
         description: Maximum number of entries to be retrieved in a test history.
+          A group size of at least two is required in order for tests to be classified.
       - in: query
         name: max_age_in_hours
         schema:
