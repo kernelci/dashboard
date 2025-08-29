@@ -4,7 +4,7 @@ from typing import Optional
 from django.conf import settings
 
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.management.commands.helpers.summary import SUMMARY_SIGNUP_FOLDER
+from kernelCI_app.management.commands.helpers.summary import SIGNUP_FOLDER
 from kernelCI_app.utils import read_yaml_file
 
 
@@ -31,7 +31,7 @@ def get_default_tree_recipients(
     if not base_dir:
         base_dir = settings.BACKEND_DATA_DIR
     if not signup_folder:
-        signup_folder = SUMMARY_SIGNUP_FOLDER
+        signup_folder = SIGNUP_FOLDER
 
     full_path = os.path.join(base_dir, signup_folder)
     for filename in os.listdir(full_path):
