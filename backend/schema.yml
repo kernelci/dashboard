@@ -2026,6 +2026,53 @@ components:
       - git_commit_tags
       title: CheckoutFast
       type: object
+    CheckoutIssue:
+      description: Represents a build issue found in a checkout.
+      properties:
+        issue_id:
+          title: Issue Id
+          type: string
+        build_id:
+          title: Build Id
+          type: string
+        version:
+          title: Version
+          type: integer
+        comment:
+          title: Comment
+          type: string
+        report_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Report Url
+        culprit_code:
+          title: Culprit Code
+          type: boolean
+        culprit_tool:
+          title: Culprit Tool
+          type: boolean
+        culprit_harness:
+          title: Culprit Harness
+          type: boolean
+        first_seen:
+          $ref: '#/components/schemas/Timestamp'
+        is_new_issue:
+          title: Is New Issue
+          type: boolean
+      required:
+      - issue_id
+      - build_id
+      - version
+      - comment
+      - culprit_code
+      - culprit_tool
+      - culprit_harness
+      - first_seen
+      - is_new_issue
+      title: CheckoutIssue
+      type: object
     Checkout__GitCommitHash:
       anyOf:
       - type: string
@@ -3814,6 +3861,19 @@ components:
         $ref: '#/components/schemas/Checkout'
       title: TreeListingResponse
       type: array
+    TreeReportIssues:
+      properties:
+        builds:
+          description: Build issues found in this checkout, including both new and
+            pre-existing issues.
+          items:
+            $ref: '#/components/schemas/CheckoutIssue'
+          title: Builds
+          type: array
+      required:
+      - builds
+      title: TreeReportIssues
+      type: object
     TreeReportResponse:
       properties:
         dashboard_url:
@@ -3862,6 +3922,9 @@ components:
           $ref: '#/components/schemas/RegressionData'
           description: History of tests that are unstable. Regressions are grouped
             by hardware, config, and path.
+        issues:
+          $ref: '#/components/schemas/TreeReportIssues'
+          description: Issues information for this checkout.
       required:
       - dashboard_url
       - git_url
@@ -3875,6 +3938,7 @@ components:
       - possible_regressions
       - fixed_regressions
       - unstable_tests
+      - issues
       title: TreeReportResponse
       type: object
     TreeSetItem:

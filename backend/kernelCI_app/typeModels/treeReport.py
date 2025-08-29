@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import TypedDict
+from kernelCI_app.typeModels.issues import CheckoutIssue
 from typing_extensions import Annotated
 from pydantic import BaseModel, Field
 
@@ -81,32 +82,52 @@ type RegressionData = dict[str, dict[str, dict[str, list[RegressionHistoryItem]]
 """The history of tests is grouped by hardware, then config, then path."""
 
 
+class TreeReportIssues(BaseModel):
+    builds: Annotated[
+        list[CheckoutIssue],
+        Field(description=DocStrings.TREE_REPORT_BUILD_DESCRIPTION),
+    ]
+
+
 class TreeReportResponse(BaseModel):
-    dashboard_url: str = Field(
-        description=DocStrings.TREE_REPORT_DASHBOARD_URL_DESCRIPTION
-    )
-    git_url: str = Field(description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION)
-    git_branch: str = Field(description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION)
-    commit_hash: str = Field(description=DocStrings.COMMIT_HASH_PATH_DESCRIPTION)
-    origin: str = Field(description=DocStrings.TREE_QUERY_ORIGIN_DESCRIPTION)
-    checkout_start_time: datetime = Field(
-        description=DocStrings.CHECKOUT_START_TIME_DESCRIPTION
-    )
-    build_status_summary: StatusCount = Field(
-        description=DocStrings.BUILD_STATUS_SUMMARY_DESCRIPTION,
-    )
-    boot_status_summary: TestStatusCount = Field(
-        description=DocStrings.BOOT_STATUS_SUMMARY_DESCRIPTION
-    )
-    test_status_summary: TestStatusCount = Field(
-        description=DocStrings.TEST_STATUS_SUMMARY_DESCRIPTION
-    )
-    possible_regressions: RegressionData = Field(
-        description=DocStrings.TREE_REPORT_POSSIBLE_REGRESSIONS_DESCRIPTION,
-    )
-    fixed_regressions: RegressionData = Field(
-        description=DocStrings.TREE_REPORT_FIXED_REGRESSIONS_DESCRIPTION
-    )
-    unstable_tests: RegressionData = Field(
-        description=DocStrings.TREE_REPORT_UNSTABLE_TESTS_DESCRIPTION,
-    )
+    dashboard_url: Annotated[
+        str, Field(description=DocStrings.TREE_REPORT_DASHBOARD_URL_DESCRIPTION)
+    ]
+    git_url: Annotated[
+        str, Field(description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION)
+    ]
+    git_branch: Annotated[
+        str, Field(description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION)
+    ]
+    commit_hash: Annotated[
+        str, Field(description=DocStrings.COMMIT_HASH_PATH_DESCRIPTION)
+    ]
+    origin: Annotated[str, Field(description=DocStrings.TREE_QUERY_ORIGIN_DESCRIPTION)]
+    checkout_start_time: Annotated[
+        datetime, Field(description=DocStrings.CHECKOUT_START_TIME_DESCRIPTION)
+    ]
+    build_status_summary: Annotated[
+        StatusCount, Field(description=DocStrings.BUILD_STATUS_SUMMARY_DESCRIPTION)
+    ]
+    boot_status_summary: Annotated[
+        TestStatusCount, Field(description=DocStrings.BOOT_STATUS_SUMMARY_DESCRIPTION)
+    ]
+    test_status_summary: Annotated[
+        TestStatusCount, Field(description=DocStrings.TEST_STATUS_SUMMARY_DESCRIPTION)
+    ]
+    possible_regressions: Annotated[
+        RegressionData,
+        Field(description=DocStrings.TREE_REPORT_POSSIBLE_REGRESSIONS_DESCRIPTION),
+    ]
+    fixed_regressions: Annotated[
+        RegressionData,
+        Field(description=DocStrings.TREE_REPORT_FIXED_REGRESSIONS_DESCRIPTION),
+    ]
+    unstable_tests: Annotated[
+        RegressionData,
+        Field(description=DocStrings.TREE_REPORT_UNSTABLE_TESTS_DESCRIPTION),
+    ]
+    issues: Annotated[
+        TreeReportIssues,
+        Field(description=DocStrings.TREE_REPORT_ISSUES_DESCRIPTION),
+    ]

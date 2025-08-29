@@ -160,6 +160,6 @@ def get_build_issues_from_checkout(
                 is_new_issue=first_checkout_id == checkout_id,
             )
 
-            result_checkout_issues[checkout_issue.checkout_id].append(checkout_issue)
+            result_checkout_issues[checkout_id].append(checkout_issue)
 
     return result_checkout_issues, checkout_builds_without_issues

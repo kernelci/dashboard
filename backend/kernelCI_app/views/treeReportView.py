@@ -9,12 +9,16 @@ from pydantic import ValidationError
 
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.trees import sanitize_tree
-from kernelCI_app.management.commands.helpers.summary import TreeKey
+from kernelCI_app.management.commands.helpers.summary import (
+    TreeKey,
+    get_build_issues_from_checkout,
+)
 from kernelCI_app.management.commands.notifications import evaluate_test_results
 from kernelCI_app.queries.notifications import get_checkout_summary_data
 from kernelCI_app.typeModels.treeReport import (
     TreeReportQueryParameters,
     TreeReportResponse,
+    TreeReportIssues,
 )
 from kernelCI_app.constants.localization import ClientStrings
 
@@ -66,6 +70,11 @@ class TreeReport(APIView):
         record = records[0]
 
         checkout = sanitize_tree(record)
+
+        checkout_build_issues, _ = get_build_issues_from_checkout(
+            checkout_ids=[checkout.id]
+        )
+
         tree_name = checkout.tree_name
         branch = checkout.git_repository_branch
         commit_hash = checkout.git_commit_hash
@@ -106,6 +115,7 @@ class TreeReport(APIView):
                 possible_regressions=new_issues,
                 fixed_regressions=fixed_issues,
                 unstable_tests=unstable_tests,
+                issues=TreeReportIssues(builds=checkout_build_issues[checkout.id]),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)

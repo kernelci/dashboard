@@ -152,6 +152,11 @@ class DocStrings:
     TREE_REPORT_UNSTABLE_TESTS_DESCRIPTION = (
         "History of tests that are unstable. " + REGRESSIONS_GROUP
     )
+    TREE_REPORT_ISSUES_DESCRIPTION = "Issues information for this checkout."
+    TREE_REPORT_BUILD_DESCRIPTION = (
+        "Build issues found in this checkout,"
+        " including both new and pre-existing issues."
+    )
     TREE_REPORT_GROUP_SIZE_DESCRIPTION = (
         "Maximum number of entries to be retrieved in a test history."
         " A group size of at least two is required in order for tests to be classified."
