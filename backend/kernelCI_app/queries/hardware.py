@@ -418,9 +418,7 @@ def get_hardware_commit_history(
     composes the hardware through a list of commit_heads.\n
     The history is limited by the origin, start_date and end dates params."""
 
-    relevant_commit = commit_heads[0] if commit_heads else None
-
-    if relevant_commit is None:
+    if not commit_heads:
         return
 
     commit_heads_params = _generate_query_params(commit_heads)
@@ -433,6 +431,7 @@ def get_hardware_commit_history(
     }
 
     raw_query = f"""
+        -- Selects the start_time of the latest checkout for the selected trees (+identifier fields)
         WITH filtered_checkouts AS (
             SELECT DISTINCT
                 ON (
@@ -454,6 +453,7 @@ def get_hardware_commit_history(
                     c.git_repository_branch,
                     c.git_commit_hash
                 ) IN {commit_heads_params['tuple_str']}
+                AND c.origin = %(origin)s
             ORDER BY
                 tree_name,
                 git_repository_url,
@@ -461,6 +461,8 @@ def get_hardware_commit_history(
                 origin,
                 c.start_time
         )
+        -- Selects the data from all checkouts prior to the "head checkout" of
+        -- the selected trees (while also limiting by the queried timestamps)
         SELECT
             fc.tree_name AS tree_name,
             fc.git_repository_url AS git_repository_url,
