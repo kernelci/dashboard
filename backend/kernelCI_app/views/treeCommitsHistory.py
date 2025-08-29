@@ -324,16 +324,19 @@ class BaseTreeCommitsHistory(APIView):
             test_environment_misc = handle_environment_misc(
                 row["test_environment_misc"]
             )
-            build_misc = handle_build_misc(row["build_misc"])
 
-            hardware_filter = None
+            hardware_filter = []
             if row["hardware_compatibles"] is not None:
                 hardware_filter = row["hardware_compatibles"]
-            elif test_environment_misc is not None:
-                hardware_filter = [
-                    env_misc_value_or_default(test_environment_misc).get("platform")
-                ]
-            else:
+            if test_environment_misc is not None:
+                platform = env_misc_value_or_default(test_environment_misc).get(
+                    "platform"
+                )
+                if len(hardware_filter) == 0 or platform != UNKNOWN_STRING:
+                    hardware_filter.append(platform)
+            # Only consider build platform if there is neither compatibles nor env platform
+            if len(hardware_filter) == 0:
+                build_misc = handle_build_misc(row["build_misc"])
                 hardware_filter = [
                     build_misc_value_or_default(build_misc).get("platform")
                 ]
