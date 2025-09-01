@@ -16,6 +16,9 @@ from http import HTTPStatus
 
 client = IssueClient()
 
+DEFAULT_LISTING_STARTING_DATE = "2025-08-15"
+DEFAULT_LISTING_INTERVAL_IN_DAYS = 3
+
 CULPRIT_CODE = {
     "filters": {"issue.culprit": "code"},
     "excludes_fields": ["culprit_tool", "culprit_harness"],
@@ -41,16 +44,52 @@ CULPRIT_CODE_AND_TOOL = {
 
 def pytest_generate_tests(metafunc):
     issues_listing_base_cases = [
-        (5, CULPRIT_CODE, HTTPStatus.OK, False),
-        (5, CULPRIT_TOOL, HTTPStatus.OK, False),
-        (5, CULPRIT_HARNESS, HTTPStatus.OK, False),
-        (-5, None, HTTPStatus.BAD_REQUEST, True),
+        (
+            DEFAULT_LISTING_INTERVAL_IN_DAYS,
+            DEFAULT_LISTING_STARTING_DATE,
+            CULPRIT_CODE,
+            HTTPStatus.OK,
+            False,
+        ),
+        (
+            DEFAULT_LISTING_INTERVAL_IN_DAYS,
+            DEFAULT_LISTING_STARTING_DATE,
+            CULPRIT_TOOL,
+            HTTPStatus.OK,
+            False,
+        ),
+        (
+            DEFAULT_LISTING_INTERVAL_IN_DAYS,
+            DEFAULT_LISTING_STARTING_DATE,
+            CULPRIT_HARNESS,
+            HTTPStatus.OK,
+            False,
+        ),
+        (
+            -5,
+            None,
+            None,
+            HTTPStatus.BAD_REQUEST,
+            True,
+        ),
     ]
 
     if metafunc.config.getoption("--run-all"):
         issues_listing_base_cases += [
-            (5, CULPRIT_CODE_AND_TOOL, HTTPStatus.OK, False),
-            (5, None, HTTPStatus.OK, False),
+            (
+                DEFAULT_LISTING_INTERVAL_IN_DAYS,
+                DEFAULT_LISTING_STARTING_DATE,
+                CULPRIT_CODE_AND_TOOL,
+                HTTPStatus.OK,
+                False,
+            ),
+            (
+                DEFAULT_LISTING_INTERVAL_IN_DAYS,
+                DEFAULT_LISTING_STARTING_DATE,
+                None,
+                HTTPStatus.OK,
+                False,
+            ),
         ]
 
     if "issue_listing_input" in metafunc.fixturenames:
@@ -58,9 +97,19 @@ def pytest_generate_tests(metafunc):
 
 
 def test_list(pytestconfig, issue_listing_input):
-    interval_in_day, culprit_data, status_code, has_error_body = issue_listing_input
+    (
+        interval_in_day,
+        starting_date_iso_format,
+        culprit_data,
+        status_code,
+        has_error_body,
+    ) = issue_listing_input
     filters = culprit_data.get("filters") if culprit_data else None
-    response = client.get_issues_list(interval_in_days=interval_in_day, filters=filters)
+    response = client.get_issues_list(
+        interval_in_days=interval_in_day,
+        starting_date_iso_format=starting_date_iso_format,
+        filters=filters,
+    )
     content = string_to_json(response.content.decode())
     assert_status_code_and_error_response(
         response=response,
