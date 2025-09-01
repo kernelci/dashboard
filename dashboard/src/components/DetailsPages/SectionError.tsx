@@ -70,7 +70,7 @@ const SectionError = ({
         errorStatusCode !== HttpStatusCode.Ok && (
           <RiProhibited2Line className="h-14 w-14" />
         )}
-      <p className="text-2xl font-semibold">
+      <p className="px-4 text-center text-2xl font-semibold">
         <FormattedMessage id={message} />
       </p>
       {((errorMessage && errorStatusCode !== HttpStatusCode.Ok) ||
