@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Optional
 from django.db import connection, connections
 from kernelCI_app.cache import get_query_cache, set_query_cache
@@ -95,12 +96,16 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
 def get_issue_listing_data(
     *,
     interval: str,
+    starting_date: datetime,
 ) -> list[dict]:
-    """Queries the list of all issues from `interval_date` parameter to now.
+    """Queries the list of all issues from the past `interval_date` parameter starting from `starting_date`.
 
     Returns the list of issue records (dict) with no other filter."""
 
-    params = {"interval": interval}
+    params = {
+        "interval": interval,
+        "starting_date_filter": starting_date,
+    }
 
     # Note that an issue with timestamp younger than x days ago
     # can still have incidents in tests older than x days ago
@@ -123,7 +128,7 @@ def get_issue_listing_data(
     FROM
         issues i
     WHERE
-        i._timestamp >= NOW() - INTERVAL %(interval)s
+        i._timestamp >= %(starting_date_filter)s - INTERVAL %(interval)s
     """
 
     with connection.cursor() as cursor:

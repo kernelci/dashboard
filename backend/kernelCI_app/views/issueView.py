@@ -1,3 +1,4 @@
+from datetime import datetime
 from http import HTTPStatus
 from typing import Optional
 from django.http import HttpRequest
@@ -110,16 +111,23 @@ class IssueView(APIView):
     )
     def get(self, _request: HttpRequest) -> Response:
         try:
-            request_params = IssueListingQueryParameters(
-                interval_in_days=_request.GET.get("interval_in_days"),
+            request_params = IssueListingQueryParameters.model_validate(
+                _request.GET.dict()
             )
-        except ValidationError as e:
-            return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
-        interval_in_days = request_params.interval_in_days
+            valid_starting_date = datetime.now()
+            if request_params.starting_date_iso_format is not None:
+                valid_starting_date = datetime.fromisoformat(
+                    request_params.starting_date_iso_format
+                )
+        except ValidationError as e:
+            return create_api_error_response(error_message=e.json())
+        except ValueError as e:
+            return create_api_error_response(error_message=str(e))
 
         issue_records: list[dict] = get_issue_listing_data(
-            interval=f"{interval_in_days} days",
+            interval=f"{request_params.interval_in_days} days",
+            starting_date=valid_starting_date,
         )
 
         if len(issue_records) == 0:

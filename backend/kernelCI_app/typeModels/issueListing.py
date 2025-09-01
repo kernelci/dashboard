@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, Field
 from kernelCI_app.constants.localization import DocStrings
 
@@ -20,6 +21,10 @@ class IssueListingQueryParameters(ListingInterval):
     filter: dict[str, str] = Field(
         None,
         description=DocStrings.DEFAULT_FILTER_DESCRIPTION,
+    )
+    starting_date_iso_format: Optional[str] = Field(
+        None,
+        description=DocStrings.DEFAULT_LISTING_STARTING_DATE_DESCRIPTION,
     )
 
 

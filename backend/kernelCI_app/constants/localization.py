@@ -67,6 +67,11 @@ class DocStrings:
         "Optional filter dictionary for additional query parameters"
     )
     DEFAULT_INTERVAL_DESCRIPTION = "Interval in days for the listing"
+    DEFAULT_LISTING_STARTING_DATE_DESCRIPTION = (
+        "Starting date to calculate the search interval."
+        " Should be in ISO format such as 'YYYY-MM-DD HH:MM:SS'."
+        " If None, defaults to 'NOW()'"
+    )
 
     PROXY_URL_DESCRIPTION = "URL to the proxy"
 

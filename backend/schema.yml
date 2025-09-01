@@ -342,6 +342,16 @@ paths:
           title: Interval In Days
           type: integer
         description: Interval in days for the listing
+      - in: query
+        name: starting_date_iso_format
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Starting Date Iso Format
+        description: Starting date to calculate the search interval. Should be in
+          ISO format such as 'YYYY-MM-DD HH:MM:SS'. If None, defaults to 'NOW()'
       tags:
       - issue
       security:

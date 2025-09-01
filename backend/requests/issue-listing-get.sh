@@ -1,13 +1,13 @@
-http 'http://localhost:8000/api/issue/' interval_in_days==1 filter_issue.culprit==code filter_issue.options==hasIncident
+http 'http://localhost:8000/api/issue/' interval_in_days==1 filter_issue.culprit==code filter_issue.options==hasIncident starting_date_iso_format=='2025-05-27 13:08:45'
 
 # HTTP/1.1 200 OK
 # Allow: GET, HEAD, OPTIONS
 # Cache-Control: max-age=0
-# Content-Length: 46881
+# Content-Length: 242237
 # Content-Type: application/json
 # Cross-Origin-Opener-Policy: same-origin
-# Date: Tue, 27 May 2025 13:08:45 GMT
-# Expires: Tue, 27 May 2025 13:08:45 GMT
+# Date: Mon, 01 Sep 2025 17:44:48 GMT
+# Expires: Mon, 01 Sep 2025 17:44:48 GMT
 # Referrer-Policy: same-origin
 # Server: WSGIServer/0.2 CPython/3.12.7
 # Vary: Accept, Cookie, origin
@@ -16,29 +16,32 @@ http 'http://localhost:8000/api/issue/' interval_in_days==1 filter_issue.culprit
 
 # {
 #     "extras": {
-#         "maestro:0d3cbb147d638deb60ed276f06896eef38fcf2a0": {
-#             "first_seen": "2025-04-16T17:36:54.942971Z",
-#             "git_commit_hash": "c62f4b82d57155f35befb5c8bbae176614b87623",
-#             "git_commit_name": "v6.15-rc2-48-gc62f4b82d5715",
-#             "git_repository_branch": "master",
-#             "git_repository_url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
-#             "tree_name": "mainline"
+#         "maestro:004bf14a80eb6d89368b21c355bb6eaab9497376": {
+#             "first_seen": "2025-07-03T11:29:34.479324Z",
+#             "git_commit_hash": "b2f3f38d3cb3347db152bc456d94dd77568b2f50",
+#             "git_commit_name": "v5.4.295-63-gb2f3f38d3cb33",
+#             "git_repository_branch": "linux-5.4.y",
+#             "git_repository_url": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git",
+#             "issue_version": 1,
+#             "tree_name": "stable-rc"
 #         },
-#         "maestro:3e57cb725c9d3e8acaf42a61e15b3c07c0e4ca60": {
-#             "first_seen": "2025-04-16T23:27:17.553063Z",
-#             "git_commit_hash": "c1336865c4c90fcc649df0435a7c86c30030a723",
-#             "git_commit_name": "v6.15-rc2-55-gc1336865c4c90",
-#             "git_repository_branch": "master",
-#             "git_repository_url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
-#             "tree_name": "mainline"
+#         "maestro:0223dc09a1d5442001bff2c9d0addabce3448727": {
+#             "first_seen": "2025-07-03T11:29:34.479324Z",
+#             "git_commit_hash": "b2f3f38d3cb3347db152bc456d94dd77568b2f50",
+#             "git_commit_name": "v5.4.295-63-gb2f3f38d3cb33",
+#             "git_repository_branch": "linux-5.4.y",
+#             "git_repository_url": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git",
+#             "issue_version": 1,
+#             "tree_name": "stable-rc"
 #         },
-#         "maestro:441ce4ab6a1945cc42c0233e47d2f95614fb58a5": {
-#             "first_seen": "2025-04-16T17:55:11.571263Z",
-#             "git_commit_hash": "c62f4b82d57155f35befb5c8bbae176614b87623",
-#             "git_commit_name": "v6.15-rc2-48-gc62f4b82d5715",
+#         "maestro:03520bb99ae60b90afb1b08e7d2febc7fc068615": {
+#             "first_seen": "2025-08-25T10:35:58.691005Z",
+#             "git_commit_hash": "6c68f4c0a147c025ae0b25fab688c7c47964a02f",
+#             "git_commit_name": "next-20250825",
 #             "git_repository_branch": "master",
-#             "git_repository_url": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
-#             "tree_name": "mainline"
+#             "git_repository_url": "https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git",
+#             "issue_version": 1,
+#             "tree_name": "next"
 #         },
 #         ...
 #     },
@@ -46,47 +49,47 @@ http 'http://localhost:8000/api/issue/' interval_in_days==1 filter_issue.culprit
 #         "categories": [],
 #         "culprits": [
 #             "code",
-#             "tool",
-#             "harness"
+#             "harness",
+#             "tool"
 #         ],
 #         "origins": [
-#             "redhat",
+#             "_",
 #             "maestro",
-#             "_"
+#             "redhat"
 #         ]
 #     },
 #     "issues": [
 #         {
 #             "categories": null,
-#             "comment": " implicit declaration of function ‘lru_raw_gen_from_flags’ [-Werror=implicit-function-declaration] in mm/vmscan.o (mm/vmscan.c) [logspec:kbuild,kbuild.compiler.error]",
+#             "comment": " arch/x86/tools/insn_decoder_test: error: malformed line 5965127: in posttest (arch/x86/tools/Makefile:26) [logspec:kbuild,kbuild.other]",
 #             "culprit_code": true,
 #             "culprit_harness": false,
 #             "culprit_tool": false,
-#             "field_timestamp": "2025-05-26T13:41:21.131199Z",
-#             "id": "maestro:e5d19aafa06d4af009e6569b4a0b03b690d9e29a",
-#             "origin": "maestro",
+#             "field_timestamp": "2025-06-02T10:32:03.310353Z",
+#             "id": "redhat:a5eac04d9b50de67ab97fdd463039ec35fae6e5c",
+#             "origin": "redhat",
 #             "version": 1
 #         },
 #         {
 #             "categories": null,
-#             "comment": " error: relocation R_386_32 cannot be used against local symbol; recompile with -fPIC in arch/x86/boot/compressed/vmlinux (arch/x86/boot/compressed/Makefile:124) [logspec:kbuild,kbuild.compiler.linker_error]",
+#             "comment": "[aarch64][coresight_etm4x][kernel 5.19.0] coresight-etm4x: probe of ARMHC500:20 failed with error -17",
 #             "culprit_code": true,
 #             "culprit_harness": false,
 #             "culprit_tool": false,
-#             "field_timestamp": "2025-05-26T14:03:28.234078Z",
-#             "id": "maestro:ab940af48ff006abcf41620daba4d0fe959116f9",
-#             "origin": "maestro",
-#             "version": 1
+#             "field_timestamp": "2025-06-26T00:10:34.477963Z",
+#             "id": "redhat:issue_1261",
+#             "origin": "redhat",
+#             "version": 1654694523
 #         },
 #         {
 #             "categories": null,
-#             "comment": " ‘input’ is a pointer; did you mean to use ‘->’? in drivers/gpu/drm/amd/amdgpu/../display/dc/calcs/dcn_calcs.o (drivers/gpu/drm/amd/amdgpu/../display/dc/calcs/dcn_calcs.c) [logspec:kbuild,kbuild.compiler.error]",
+#             "comment": " arch/x86/tools/insn_decoder_test: error: malformed line 5965213: in posttest (arch/x86/tools/Makefile:26) [logspec:kbuild,kbuild.other]",
 #             "culprit_code": true,
 #             "culprit_harness": false,
 #             "culprit_tool": false,
-#             "field_timestamp": "2025-05-26T14:26:31.608536Z",
-#             "id": "maestro:bd048bdc8156ad24e3a5903c41c0424edc532371",
-#             "origin": "maestro",
+#             "field_timestamp": "2025-06-10T12:45:36.237936Z",
+#             "id": "redhat:e785bf812797ba380f48befb2e74cc41afc944e8",
+#             "origin": "redhat",
 #             "version": 1
 #         },
 #         ...

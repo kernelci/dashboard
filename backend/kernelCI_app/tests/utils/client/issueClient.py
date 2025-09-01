@@ -11,11 +11,13 @@ class IssueClient(BaseClient):
         self,
         *,
         interval_in_days: int | None,
+        starting_date_iso_format: str | None,
         filters: dict[FilterFields, Any] | None = None,
     ) -> requests.Response:
         path = reverse("issue")
         query = {
             "interval_in_days": interval_in_days,
+            "starting_date_iso_format": starting_date_iso_format,
         }
         url = self.get_endpoint(path=path, query=query, filters=filters)
         return requests.get(url)
