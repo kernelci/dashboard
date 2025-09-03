@@ -1,4 +1,4 @@
-# Backend
+# Backend [![cov](https://kernelci.github.io/dashboard/badges/coverage.svg)](https://github.com/kernelci/dashboard/actions)
 
 ## Prerequisites
 
