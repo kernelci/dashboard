@@ -21,22 +21,23 @@ import { RequestData } from './commonRequest';
 const TREE_SELECT_HEAD_VALUE = 'head';
 
 const mapIndexesToSelectedTrees = (
-  selectedIndexes: number[],
+  selectedIndexes: number[] | null,
   treeIndexesLength?: number,
   treeCommits: TTreeCommits = {},
 ): Record<string, string> => {
   const selectedTrees: Record<string, string> = {};
 
-  if (selectedIndexes.length === 0 && isEmptyObject(treeCommits)) {
+  if (selectedIndexes?.length === 0 && isEmptyObject(treeCommits)) {
     return selectedTrees;
   }
 
   const selectedArray =
-    treeIndexesLength && selectedIndexes.length === 0
+    treeIndexesLength &&
+    (selectedIndexes === null || selectedIndexes.length === 0)
       ? Array.from({ length: treeIndexesLength }, (_, i) => i)
       : selectedIndexes;
 
-  selectedArray.forEach(i => {
+  selectedArray?.forEach(i => {
     const key = i.toString();
     const value = treeCommits[key] || TREE_SELECT_HEAD_VALUE;
     selectedTrees[key] = value;
@@ -102,7 +103,7 @@ export type UseHardwareDetailsWithoutVariant = {
   endTimestampInSeconds: number;
   origin: string;
   filter: TFilter;
-  selectedIndexes: number[];
+  selectedIndexes: number[] | null;
   treeCommits: TTreeCommits;
   treeIndexesLength?: number;
   enabled?: boolean;

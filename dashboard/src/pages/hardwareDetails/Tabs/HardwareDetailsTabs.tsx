@@ -1,5 +1,7 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
+import { FormattedMessage } from 'react-intl';
+
 import type { JSX } from 'react';
 import { useCallback, useMemo } from 'react';
 
@@ -25,6 +27,7 @@ export interface IHardwareDetailsTab {
   countElements: TabRightElementRecord;
   fullDataResult?: UseQueryResult<THardwareDetails>;
   summaryData: HardwareDetailsSummary;
+  hasSelectedTrees: boolean;
 }
 
 const HardwareDetailsTabs = ({
@@ -33,6 +36,7 @@ const HardwareDetailsTabs = ({
   countElements,
   fullDataResult,
   summaryData,
+  hasSelectedTrees,
 }: IHardwareDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
     from: '/_main/hardware/$hardwareId',
@@ -108,6 +112,21 @@ const HardwareDetailsTabs = ({
       countElements,
     ],
   );
+
+  if (!hasSelectedTrees) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <h3 className="text-lg font-medium">
+            <FormattedMessage id="hardwareDetails.selectTreeTitle" />
+          </h3>
+          <p className="m-4 mx-auto max-w-lg">
+            <FormattedMessage id="hardwareDetails.selectTreeMessage" />
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Tabs

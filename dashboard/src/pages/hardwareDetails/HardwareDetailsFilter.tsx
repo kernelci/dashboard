@@ -27,7 +27,7 @@ interface IHardwareDetailsFilter {
   paramFilter: TFilter;
   hardwareName: string;
   data: HardwareDetailsSummary | undefined;
-  selectedTrees?: number[];
+  selectedTrees: number[] | null;
 }
 
 type TFilterCreate = TFilter & {
@@ -207,7 +207,7 @@ const HardwareDetailsFilter = ({
 
   useEffect(() => {
     const initialTrees =
-      selectedTrees && selectedTrees?.length > 0
+      selectedTrees && selectedTrees.length > 0
         ? selectedTrees
         : filter.treeIndexes;
 

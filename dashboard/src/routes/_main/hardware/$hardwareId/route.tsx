@@ -21,7 +21,7 @@ import {
 const defaultValues = {
   origin: DEFAULT_ORIGIN,
   currentPageTab: defaultValidadorValues.tab,
-  treeIndexes: [],
+  treeIndexes: null,
   treeCommits: {},
   tableFilter: zTableFilterInfoDefault,
   diffFilter: DEFAULT_DIFF_FILTER,
@@ -29,7 +29,7 @@ const defaultValues = {
 const hardwareDetailsSearchSchema = z.object({
   origin: zOrigin,
   currentPageTab: zPossibleTabValidator,
-  treeIndexes: z.array(z.number().int()).default([]),
+  treeIndexes: z.array(z.number().int()).nullable().default(null),
   treeCommits: zTreeCommits,
   tableFilter: zTableFilterInfoValidator,
   diffFilter: zDiffFilter,

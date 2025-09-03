@@ -54,8 +54,8 @@ const DEBOUNCE_INTERVAL = 2000;
 
 interface IHardwareHeader {
   treeItems: PreparedTrees[];
-  selectedIndexes?: number[];
-  updateTreeFilters: (selectedIndexes: number[]) => void;
+  selectedIndexes: number[] | null;
+  updateTreeFilters: (selectedIndexes: number[] | null) => void;
   setTreeIndexesLength: Dispatch<SetStateAction<number>>;
 }
 
@@ -215,18 +215,13 @@ const getColumns = (
             checked: table.getIsAllRowsSelected(),
             indeterminate: table.getIsSomeRowsSelected(),
             onChange: table.getToggleAllRowsSelectedHandler(),
-            disabled: table.getIsAllRowsSelected(),
           }}
         />
       ),
-      cell: ({ row, table }) => (
+      cell: ({ row }) => (
         <IndeterminateCheckbox
           {...{
             checked: row.getIsSelected(),
-            disabled:
-              !row.getCanSelect() ||
-              (Object.keys(table.getState().rowSelection).length === 1 &&
-                row.getIsSelected()),
             onChange: row.getToggleSelectedHandler(),
           }}
         />
@@ -333,14 +328,22 @@ const getColumns = (
 };
 
 const getInitialRowSelection = (
-  selectedIndexes: number[],
+  selectedIndexes: number[] | null,
   treeItemsLength: number,
+  isInitialLoad = false,
 ): Record<string, boolean> => {
-  if (selectedIndexes.length === 0) {
+  if (selectedIndexes === null) {
     return Object.fromEntries(
       Array.from({ length: treeItemsLength }, (_, i) => [i.toString(), true]),
     );
   }
+
+  if (selectedIndexes.length === 0 && isInitialLoad) {
+    return Object.fromEntries(
+      Array.from({ length: treeItemsLength }, (_, i) => [i.toString(), true]),
+    );
+  }
+
   return Object.fromEntries(
     Array.from(selectedIndexes, treeIndex => [treeIndex.toString(), true]),
   );
@@ -349,20 +352,26 @@ const getInitialRowSelection = (
 const indexesFromRowSelection = (
   rowSelection: RowSelectionState,
   maxTreeItems: number,
-): number[] => {
+): number[] | null => {
   const rowSelectionValues = Object.values(rowSelection);
-  if (
-    rowSelectionValues.length === maxTreeItems ||
-    rowSelectionValues.length === 0
-  ) {
+  if (rowSelectionValues.length === 0) {
     return [];
   }
-  return Object.keys(rowSelection).map(rowId => parseInt(rowId));
+
+  const selectedIndexes = Object.keys(rowSelection).map(rowId =>
+    parseInt(rowId),
+  );
+
+  if (selectedIndexes.length === maxTreeItems) {
+    return null;
+  }
+
+  return selectedIndexes;
 };
 
 export function HardwareHeader({
   treeItems,
-  selectedIndexes = [],
+  selectedIndexes = null,
   updateTreeFilters,
   setTreeIndexesLength,
 }: IHardwareHeader): JSX.Element {
@@ -375,7 +384,7 @@ export function HardwareHeader({
 
   // The initial assignment is useful to catch the initial indexes from URL
   const [rowSelection, setRowSelection] = useState(() =>
-    getInitialRowSelection(selectedIndexes, treeItems.length),
+    getInitialRowSelection(selectedIndexes, treeItems.length, true),
   );
 
   const rowSelectionDebounced = useDebounce(rowSelection, DEBOUNCE_INTERVAL);
@@ -386,7 +395,7 @@ export function HardwareHeader({
       treeItems.length,
     );
     updateTreeFilters(updatedSelection);
-  }, [rowSelectionDebounced, treeItems.length, updateTreeFilters]);
+  }, [rowSelectionDebounced, updateTreeFilters, treeItems.length]);
 
   // This useEffect update the current row selection when the selectedIndexes change.
   // Useful when the user select a tree by filter modal.
