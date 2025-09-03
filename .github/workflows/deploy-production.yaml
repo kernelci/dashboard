@@ -9,7 +9,7 @@ on:
         default: 'main'
 
 jobs:
-  deploy-staging:
+  deploy-production:
     runs-on: ubuntu-latest
     steps:
       - name: Configure host authenticity
