@@ -1,0 +1,10 @@
+[run]
+  parallel = True
+  source =
+      kernelCI_app
+      kernelCI_cache
+
+[report]
+  omit =
+      */tests/*
+      */migrations/*
