@@ -24,12 +24,8 @@ import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
 import { formattedBreakLineValue } from '@/locales/messages';
 
-import {
-  TableBody,
-  TableCell,
-  TableCellWithLink,
-  TableRow,
-} from '@/components/ui/table';
+import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { ConditionalTableCell } from '@/components/Table/ConditionalTableCell';
 
 import { GroupedTestStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
@@ -410,18 +406,17 @@ export function HardwareTable({
               cell.column.columnDef.meta as ListingTableColumnMeta
             ).tabTarget;
             return (
-              <TableCellWithLink
+              <ConditionalTableCell
                 key={cell.id}
-                linkClassName="w-full inline-block h-full"
+                cell={cell}
                 linkProps={getLinkProps(
                   row,
                   startTimestampInSeconds,
                   endTimestampInSeconds,
                   tabTarget,
                 )}
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCellWithLink>
+                linkClassName="w-full inline-block h-full"
+              />
             );
           })}
         </TableRow>
