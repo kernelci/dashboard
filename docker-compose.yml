@@ -51,6 +51,8 @@ services:
                 BACKEND_VOLUME_DIR: ${BACKEND_VOLUME_DIR:-/volume_data}
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+            - ../data:/app
+            - ../spool:/app/spool
         restart: always
         container_name: dashboard_backend_service
         networks:
