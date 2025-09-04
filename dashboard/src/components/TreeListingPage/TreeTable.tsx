@@ -18,7 +18,7 @@ import { useCallback, useMemo, useState, type JSX } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
-import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
@@ -33,12 +33,8 @@ import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 import { usePaginationState } from '@/hooks/usePaginationState';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
-import {
-  TableBody,
-  TableCell,
-  TableCellWithLink,
-  TableRow,
-} from '@/components/ui/table';
+import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { ConditionalTableCell } from '@/components/Table/ConditionalTableCell';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
@@ -47,11 +43,7 @@ import { sanitizeTableValue } from '@/components/Table/tableUtils';
 import { GroupedTestStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
-import {
-  CommitTagTooltip,
-  gitCommitValueSelector,
-} from '@/components/Tooltip/CommitTagTooltip';
-import CopyButton from '@/components/Button/CopyButton';
+import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
 
 import type { ListingTableColumnMeta } from '@/types/table';
 
@@ -455,39 +447,13 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
             const tabTarget = (
               cell.column.columnDef.meta as ListingTableColumnMeta
             ).tabTarget;
-            // The CopyButton is defined outside of the cell column because I couldn't find
-            // a way to include it within the cell definition while also using it outside of
-            // a Link component. I attempted to modify CommitTagTooltip to wrap the tooltip
-            // inside a Link component, but this would require the column cell to be a function
-            // that receives LinkProps and returns the CommitTagTooltip component. However,
-            // I couldn't figure out how to achieve this using TanStack Table, as
-            // `cell.getValue()` would return an array instead of the expected function.
-            return cell.column.columnDef.id === 'git_commit_tags' ? (
-              <TableCell key={cell.id}>
-                <Link
-                  className="inline-block"
-                  {...getLinkProps(row, origin, tabTarget)}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </Link>
-                <CopyButton
-                  value={
-                    gitCommitValueSelector({
-                      commitHash: cell.row.original.git_commit_hash,
-                      commitName: cell.row.original.git_commit_name,
-                      commitTags: cell.row.original.git_commit_tags,
-                    }).content
-                  }
-                />
-              </TableCell>
-            ) : (
-              <TableCellWithLink
+            return (
+              <ConditionalTableCell
                 key={cell.id}
-                linkClassName="w-full inline-block h-full"
+                cell={cell}
                 linkProps={getLinkProps(row, origin, tabTarget)}
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCellWithLink>
+                linkClassName="w-full inline-block h-full"
+              />
             );
           })}
         </TableRow>
