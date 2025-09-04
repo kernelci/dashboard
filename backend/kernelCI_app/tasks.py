@@ -9,6 +9,8 @@ from kernelCI_cache.queries.checkouts import get_all_checkout_ids
 from datetime import timedelta
 from django.utils.timezone import now
 
+UPDATE_INTERVAL_IN_DAYS = 90
+
 
 def _is_checkout_done(*, checkout: dict | Checkouts) -> bool:
     if isinstance(checkout, Checkouts):
@@ -24,13 +26,13 @@ def _is_checkout_done(*, checkout: dict | Checkouts) -> bool:
 
 
 def _is_checkout_unstable(*, checkout: dict | Checkouts) -> bool:
-    three_days_ago = now() - timedelta(days=UNSTABLE_CHECKOUT_THRESHOLD)
+    unstable_threshold = now() - timedelta(days=UNSTABLE_CHECKOUT_THRESHOLD)
     if isinstance(checkout, Checkouts):
         start_time = checkout.start_time
     else:
         start_time = checkout["start_time"]
 
-    is_old = start_time is not None and start_time < three_days_ago
+    is_old = start_time is not None and start_time < unstable_threshold
     is_done = _is_checkout_done(checkout=checkout)
     if is_old or is_done:
         return False
@@ -39,10 +41,13 @@ def _is_checkout_unstable(*, checkout: dict | Checkouts) -> bool:
 
 
 def update_checkout_cache():
-    checkout_ids_for_update: list[str] = []
+    checkout_ids_for_update: set[str] = set()
 
-    all_kcidb_checkouts = get_tree_listing_fast(interval={"days": 90})
+    all_kcidb_checkouts = get_tree_listing_fast(
+        interval={"days": UPDATE_INTERVAL_IN_DAYS}
+    )
 
+    # TODO: instead of simply getting all ids, get the unstable tree data for comparison
     all_sqlite_checkout_ids_records = get_all_checkout_ids()
     all_sqlite_checkout_ids = [
         record["checkout_id"] for record in all_sqlite_checkout_ids_records
@@ -56,16 +61,15 @@ def update_checkout_cache():
             continue
 
         if checkout.id not in all_sqlite_checkout_ids:
-            checkout_ids_for_update.append(checkout.id)
+            checkout_ids_for_update.add(checkout.id)
             continue
 
         is_unstable = _is_checkout_unstable(checkout=checkout)
-
         if is_unstable:
-            checkout_ids_for_update.append(checkout.id)
+            checkout_ids_for_update.add(checkout.id)
 
     updated_checkouts_data = get_tree_listing_data_by_checkout_id(
-        checkout_ids=checkout_ids_for_update,
+        checkout_ids=list(checkout_ids_for_update),
     )
 
     for checkout in updated_checkouts_data:
