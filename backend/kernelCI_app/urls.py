@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 from django.views.decorators.cache import cache_page
 from django.conf import settings
 from kernelCI_app import views
@@ -55,45 +55,45 @@ urlpatterns = [
         view_cache(views.TreeCommitsHistory),
         name="treeCommits",
     ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/commits",
+    re_path(
+        r"^tree/(?P<tree_name>[^/]+)/(?P<git_branch>.+?)/(?P<commit_hash>[a-f0-9]{40})/commits$",
         view_cache(views.TreeCommitsHistoryDirect),
         name="treeCommitsDirectView",
     ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>",
-        view_cache(views.TreeLatestCheckout),
-        name="treeLatest",
-    ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>",
-        view_cache(views.TreeCheckoutInfo),
-        name="treeLatestHash",
-    ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/boots",
+    re_path(
+        r"^tree/(?P<tree_name>[^/]+)/(?P<git_branch>.+?)/(?P<commit_hash>[a-f0-9]{40})/boots$",
         views.TreeDetailsBootsDirect.as_view(),
         name="treeDetailsBootsDirectView",
     ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/builds",
+    re_path(
+        r"^tree/(?P<tree_name>[^/]+)/(?P<git_branch>.+?)/(?P<commit_hash>[a-f0-9]{40})/builds$",
         views.TreeDetailsBuildsDirect.as_view(),
         name="treeDetailsBuildsDirectView",
     ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/full",
+    re_path(
+        r"^tree/(?P<tree_name>[^/]+)/(?P<git_branch>.+?)/(?P<commit_hash>[a-f0-9]{40})/full$",
         views.TreeDetailsDirect.as_view(),
         name="treeDetailsDirectView",
     ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/summary",
+    re_path(
+        r"^tree/(?P<tree_name>[^/]+)/(?P<git_branch>.+?)/(?P<commit_hash>[a-f0-9]{40})/summary$",
         views.TreeDetailsSummaryDirect.as_view(),
         name="treeDetailsDirectSummaryView",
     ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/tests",
+    re_path(
+        r"^tree/(?P<tree_name>[^/]+)/(?P<git_branch>.+?)/(?P<commit_hash>[a-f0-9]{40})/tests$",
         views.TreeDetailsTestsDirect.as_view(),
         name="treeDetailsTestsDirectView",
+    ),
+    re_path(
+        r"^tree/(?P<tree_name>[^/]+)/(?P<git_branch>.+?)/(?P<commit_hash>[a-f0-9]{40})$",
+        view_cache(views.TreeCheckoutInfo),
+        name="treeLatestHash",
+    ),
+    re_path(
+        r"^tree/(?P<tree_name>[^/]+)/(?P<git_branch>.+)$",
+        view_cache(views.TreeLatestCheckout),
+        name="treeLatest",
     ),
     path("build/<str:build_id>", view_cache(views.BuildDetails), name="buildDetails"),
     path("build/<str:build_id>/tests", view_cache(views.BuildTests), name="buildTests"),
