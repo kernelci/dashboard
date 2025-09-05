@@ -128,7 +128,11 @@ const Section = ({
         {eyebrow && <span className="text-sm">{eyebrow}</span>}
         <div className="flex flex-row items-center gap-2">
           {leftIcon}
-          {title && <span className="text-2xl font-bold">{title}</span>}
+          {title && (
+            <span className="max-w-full text-2xl font-bold break-all">
+              {title}
+            </span>
+          )}
           {rightIcon}
         </div>
         {subtitle}
