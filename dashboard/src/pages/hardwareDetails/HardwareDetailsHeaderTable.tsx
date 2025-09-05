@@ -215,18 +215,13 @@ const getColumns = (
             checked: table.getIsAllRowsSelected(),
             indeterminate: table.getIsSomeRowsSelected(),
             onChange: table.getToggleAllRowsSelectedHandler(),
-            disabled: table.getIsAllRowsSelected(),
           }}
         />
       ),
-      cell: ({ row, table }) => (
+      cell: ({ row }) => (
         <IndeterminateCheckbox
           {...{
             checked: row.getIsSelected(),
-            disabled:
-              !row.getCanSelect() ||
-              (Object.keys(table.getState().rowSelection).length === 1 &&
-                row.getIsSelected()),
             onChange: row.getToggleSelectedHandler(),
           }}
         />
@@ -335,8 +330,9 @@ const getColumns = (
 const getInitialRowSelection = (
   selectedIndexes: number[],
   treeItemsLength: number,
+  isInitialLoad = false,
 ): Record<string, boolean> => {
-  if (selectedIndexes.length === 0) {
+  if (selectedIndexes.length === 0 && isInitialLoad) {
     return Object.fromEntries(
       Array.from({ length: treeItemsLength }, (_, i) => [i.toString(), true]),
     );
@@ -346,17 +342,12 @@ const getInitialRowSelection = (
   );
 };
 
-const indexesFromRowSelection = (
-  rowSelection: RowSelectionState,
-  maxTreeItems: number,
-): number[] => {
+const indexesFromRowSelection = (rowSelection: RowSelectionState): number[] => {
   const rowSelectionValues = Object.values(rowSelection);
-  if (
-    rowSelectionValues.length === maxTreeItems ||
-    rowSelectionValues.length === 0
-  ) {
+  if (rowSelectionValues.length === 0) {
     return [];
   }
+
   return Object.keys(rowSelection).map(rowId => parseInt(rowId));
 };
 
@@ -375,18 +366,15 @@ export function HardwareHeader({
 
   // The initial assignment is useful to catch the initial indexes from URL
   const [rowSelection, setRowSelection] = useState(() =>
-    getInitialRowSelection(selectedIndexes, treeItems.length),
+    getInitialRowSelection(selectedIndexes, treeItems.length, true),
   );
 
   const rowSelectionDebounced = useDebounce(rowSelection, DEBOUNCE_INTERVAL);
 
   useEffect(() => {
-    const updatedSelection = indexesFromRowSelection(
-      rowSelectionDebounced,
-      treeItems.length,
-    );
+    const updatedSelection = indexesFromRowSelection(rowSelectionDebounced);
     updateTreeFilters(updatedSelection);
-  }, [rowSelectionDebounced, treeItems.length, updateTreeFilters]);
+  }, [rowSelectionDebounced, updateTreeFilters]);
 
   // This useEffect update the current row selection when the selectedIndexes change.
   // Useful when the user select a tree by filter modal.

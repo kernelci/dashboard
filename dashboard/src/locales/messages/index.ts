@@ -197,6 +197,9 @@ export const messages = {
       'Search by hardware name or platform with a regex',
     'hardwareDetails.notFound': 'Hardware not found',
     'hardwareDetails.platforms': 'Platforms',
+    'hardwareDetails.selectTreeMessage':
+      'Please select one or more trees from the table above to view detailed information about builds, boots, and tests for this hardware.',
+    'hardwareDetails.selectTreeTitle': 'No Tree Selected',
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
     'hardwareListing.description': 'List of hardware from kernel tests',
