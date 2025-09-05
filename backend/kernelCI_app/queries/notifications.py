@@ -551,7 +551,9 @@ def kcidb_tests_results(
                         PARTITION BY
                             path,
                             platform,
-                            config_name
+                            config_name,
+                            architecture,
+                            compiler
                         ORDER BY
                             start_time DESC NULLS LAST
                     ) AS rn,
@@ -559,7 +561,9 @@ def kcidb_tests_results(
                         PARTITION BY
                             path,
                             platform,
-                            config_name
+                            config_name,
+                            architecture,
+                            compiler
                         ORDER BY
                             start_time DESC NULLS LAST
                     ) AS first_hash_by_group
@@ -586,6 +590,8 @@ def kcidb_tests_results(
             path,
             platform,
             config_name,
+            architecture,
+            compiler,
             start_time DESC NULLS LAST;
         """
 
