@@ -56,14 +56,34 @@ urlpatterns = [
         name="treeCommits",
     ),
     path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/commits",
+        "tree/<str:tree_name>/<path:git_branch>/<str:commit_hash>/commits",
         view_cache(views.TreeCommitsHistoryDirect),
         name="treeCommitsDirectView",
     ),
     path(
-        "tree/<str:tree_name>/<str:git_branch>",
-        view_cache(views.TreeLatestCheckout),
-        name="treeLatest",
+        "tree/<str:tree_name>/<path:git_branch>/<str:commit_hash>/boots",
+        views.TreeDetailsBootsDirect.as_view(),
+        name="treeDetailsBootsDirectView",
+    ),
+    path(
+        "tree/<str:tree_name>/<path:git_branch>/<str:commit_hash>/builds",
+        views.TreeDetailsBuildsDirect.as_view(),
+        name="treeDetailsBuildsDirectView",
+    ),
+    path(
+        "tree/<str:tree_name>/<path:git_branch>/<str:commit_hash>/full",
+        views.TreeDetailsDirect.as_view(),
+        name="treeDetailsDirectView",
+    ),
+    path(
+        "tree/<str:tree_name>/<path:git_branch>/<str:commit_hash>/summary",
+        views.TreeDetailsSummaryDirect.as_view(),
+        name="treeDetailsDirectSummaryView",
+    ),
+    path(
+        "tree/<str:tree_name>/<path:git_branch>/<str:commit_hash>/tests",
+        views.TreeDetailsTestsDirect.as_view(),
+        name="treeDetailsTestsDirectView",
     ),
     path(
         "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>",
@@ -71,29 +91,9 @@ urlpatterns = [
         name="treeLatestHash",
     ),
     path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/boots",
-        views.TreeDetailsBootsDirect.as_view(),
-        name="treeDetailsBootsDirectView",
-    ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/builds",
-        views.TreeDetailsBuildsDirect.as_view(),
-        name="treeDetailsBuildsDirectView",
-    ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/full",
-        views.TreeDetailsDirect.as_view(),
-        name="treeDetailsDirectView",
-    ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/summary",
-        views.TreeDetailsSummaryDirect.as_view(),
-        name="treeDetailsDirectSummaryView",
-    ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>/tests",
-        views.TreeDetailsTestsDirect.as_view(),
-        name="treeDetailsTestsDirectView",
+        "tree/<str:tree_name>/<str:git_branch>",
+        view_cache(views.TreeLatestCheckout),
+        name="treeLatest",
     ),
     path("build/<str:build_id>", view_cache(views.BuildDetails), name="buildDetails"),
     path("build/<str:build_id>/tests", view_cache(views.BuildTests), name="buildTests"),
