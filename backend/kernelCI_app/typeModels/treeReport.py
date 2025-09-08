@@ -78,8 +78,11 @@ class RegressionHistoryItem(TypedDict):
     status: Test__Status
 
 
-type RegressionData = dict[str, dict[str, dict[str, list[RegressionHistoryItem]]]]
-"""The history of tests is grouped by hardware, then config, then path."""
+type RegressionData = dict[
+    str, dict[str, dict[str, dict[str, list[RegressionHistoryItem]]]]
+]
+"""The history of tests is grouped by hardware, then architecture/compiler string,
+then config, then path."""
 
 
 class TreeReportIssues(BaseModel):

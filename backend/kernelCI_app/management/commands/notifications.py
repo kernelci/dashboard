@@ -414,32 +414,49 @@ def evaluate_test_results(
         group_size=group_size,
     )
 
-    # Group by platform, then by config_name, then by path
-    grouped = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    new_issues = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    fixed_issues = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    unstable_tests = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    # Group by platform, then by config_name, then by arch/compiler, then by path
+    grouped = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    )
+    new_issues = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    )
+    fixed_issues = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    )
+    unstable_tests = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    )
 
     for test in tests:
         platform = test.get("platform", "unknown platform")
         config_name = test.get("config_name", "unknown config")
-        grouped[platform][config_name][test["path"]].append(test)
+        arch = test.get("architecture", "unknown architecture")
+        compiler = test.get("compiler", "unknown compiler")
+        grouped[platform][config_name][f"{arch}/{compiler}"][test["path"]].append(test)
 
     for platform, configs in grouped.items():
-        for config_name, paths in configs.items():
-            for path, test_group in paths.items():
-                unique_statuses = {t["status"] for t in test_group}
-                if len(unique_statuses) == 1:
-                    continue
+        for config_name, arch_compilers in configs.items():
+            for arch_compiler, paths in arch_compilers.items():
+                for path, test_group in paths.items():
+                    unique_statuses = {t["status"] for t in test_group}
+                    if len(unique_statuses) == 1:
+                        continue
 
-                category = categorize_test_history(test_group)
+                    category = categorize_test_history(test_group)
 
-                if category == "regression":
-                    new_issues[platform][config_name][path] = test_group
-                elif category == "fixed":
-                    fixed_issues[platform][config_name][path] = test_group
-                else:
-                    unstable_tests[platform][config_name][path] = test_group
+                    if category == "regression":
+                        new_issues[platform][config_name][arch_compiler][
+                            path
+                        ] = test_group
+                    elif category == "fixed":
+                        fixed_issues[platform][config_name][arch_compiler][
+                            path
+                        ] = test_group
+                    else:
+                        unstable_tests[platform][config_name][arch_compiler][
+                            path
+                        ] = test_group
 
     return new_issues, fixed_issues, unstable_tests
 
