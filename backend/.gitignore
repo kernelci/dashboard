@@ -173,7 +173,10 @@ cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/django
 
-runtime/
+# Password file for docker
+runtime/secrets/postgres_password_secret
 
-# Gmail API token
-gmail_api_token.json
+# Local folder that reflects the docker volume.
+# This is where the sqlite cache will be stored by default if not running on Docker.
+volume_data/*.sqlite3
+volume_data/*.yaml

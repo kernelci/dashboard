@@ -6,6 +6,3 @@ application_default_credentials.json
 .env.db
 .env.proxy
 .idea
-
-# Data from docker volume that should only be automatically generated
-volume_data
