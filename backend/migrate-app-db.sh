@@ -1,4 +1,9 @@
 poetry run python3 manage.py makemigrations kernelCI_app
 
-# If the dashboard_db is set as default, change the database name to default or omit it
-poetry run python3 manage.py migrate --database=dashboard_db --verbosity 3
+if [ "$(echo "${USE_DASHBOARD_DB}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
+    DB_NAME="default"
+else
+    DB_NAME="dashboard_db"
+fi
+
+poetry run python3 manage.py migrate --database="$DB_NAME" --verbosity 3
