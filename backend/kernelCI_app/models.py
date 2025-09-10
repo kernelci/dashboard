@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.db.models import F
+from django.db.models.functions import Concat, MD5
 
 
 class StatusChoices(models.TextChoices):
@@ -87,9 +89,23 @@ class Builds(models.Model):
     status = models.CharField(
         max_length=10, choices=StatusChoices.choices, blank=True, null=True
     )
+    series = models.GeneratedField(
+        expression=MD5(
+            Concat(
+                F("config_name"),
+                F("compiler"),
+                F("architecture"),
+            ),
+        ),
+        output_field=models.TextField(blank=True, null=True),
+        db_persist=True,
+    )
 
     class Meta:
         db_table = "builds"
+        indexes = [
+            models.Index(fields=["series"], name="builds_series_idx"),
+        ]
 
 
 class Tests(models.Model):
