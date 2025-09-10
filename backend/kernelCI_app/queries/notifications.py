@@ -2,15 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from django.db import connection, connections
+from django.conf import settings
+from django.db import connections
 
-from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.helpers.database import dict_fetchall, get_kcidb_connection
 from kernelCI_app.queries.tree import get_tree_listing_query
 
 
 def kcidb_execute_query(query, params=None):
     try:
-        with connection.cursor() as cur:
+        with get_kcidb_connection().cursor() as cur:
             # print(cur.mogrify(query, params))
             cur.execute(query, params)
             rows = cur.fetchall()
@@ -442,7 +443,7 @@ def get_checkout_summary_data(
     for tuple in tuple_params:
         flattened_list += list(tuple)
 
-    with connection.cursor() as cursor:
+    with get_kcidb_connection().cursor() as cursor:
         cursor.execute(
             query,
             flattened_list
@@ -589,7 +590,7 @@ def kcidb_tests_results(
             start_time DESC NULLS LAST;
         """
 
-    with connection.cursor() as cursor:
+    with get_kcidb_connection().cursor() as cursor:
         cursor.execute(query, params)
         # TODO: check if it is possible to remove dict_fetchall.
         # dict_fetchall has a performance impact and this query returns many rows,
@@ -624,6 +625,8 @@ def get_issues_summary_data(*, checkout_ids: list[str]) -> list[dict]:
         ORDER BY issue_id
     """
 
-    with connections["default"].cursor() as cursor:
+    # KCIDB lives under the KCIDB connection when USE_DASHBOARD_DB is True
+    kcidb_conn = connections["kcidb"] if getattr(settings, "USE_DASHBOARD_DB", False) else connections["default"]
+    with kcidb_conn.cursor() as cursor:
         cursor.execute(query, checkout_ids)
         return dict_fetchall(cursor=cursor)

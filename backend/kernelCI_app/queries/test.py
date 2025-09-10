@@ -1,7 +1,7 @@
 from typing import Optional
 
 from django.db import connection
-from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.helpers.database import dict_fetchall, get_kcidb_connection, get_kcidb_alias
 from kernelCI_app.models import Tests
 from kernelCI_app.typeModels.databases import (
     Origin,
@@ -45,7 +45,7 @@ def get_test_details_data(*, test_id: str) -> list[dict]:
         T.ID = %(test_id)s
     """
 
-    with connection.cursor() as cursor:
+    with get_kcidb_connection().cursor() as cursor:
         cursor.execute(query, params)
         return dict_fetchall(cursor)
 
@@ -62,7 +62,7 @@ def get_test_status_history(
     field_timestamp: Timestamp,
     group_size: int,
 ):
-    query = Tests.objects.filter(
+    query = Tests.objects.using(get_kcidb_alias()).filter(
         path=path,
         build__checkout__origin=origin,
         build__checkout__git_repository_url=git_repository_url,
