@@ -782,10 +782,12 @@ paths:
       - in: query
         name: config_name
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Config Name
-          type: string
         description: Config name filter to retrieve tests
-        required: true
       - in: query
         name: current_test_start_time
         schema:
@@ -802,17 +804,21 @@ paths:
       - in: query
         name: git_repository_branch
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Git Repository Branch
-          type: string
         description: Git branch name to retrieve tests
-        required: true
       - in: query
         name: git_repository_url
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Git Repository Url
-          type: string
         description: Git repository URL to retrieve tests
-        required: true
       - in: query
         name: group_size
         schema:
@@ -825,17 +831,19 @@ paths:
       - in: query
         name: origin
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
           default: maestro
           title: Origin
-          type: string
         description: Origin filter to retrieve tests
       - in: query
         name: path
         schema:
+          default: null
           title: Path
           type: string
         description: Test path filter
-        required: true
       - in: query
         name: platform
         schema:
@@ -3185,9 +3193,11 @@ components:
       additionalProperties:
         additionalProperties:
           additionalProperties:
-            items:
-              $ref: '#/components/schemas/RegressionHistoryItem'
-            type: array
+            additionalProperties:
+              items:
+                $ref: '#/components/schemas/RegressionHistoryItem'
+              type: array
+            type: object
           type: object
         type: object
       type: object

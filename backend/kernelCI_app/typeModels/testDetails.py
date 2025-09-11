@@ -76,18 +76,20 @@ class TestStatusHistoryResponse(BaseModel):
 
 
 class TestStatusHistoryRequest(BaseModel):
-    path: Annotated[str, Field(description=DocStrings.STATUS_HISTORY_PATH_DESCRIPTION)]
+    path: Annotated[
+        str, Field(None, description=DocStrings.STATUS_HISTORY_PATH_DESCRIPTION)
+    ]
     origin: Annotated[
-        str,
+        Optional[str],
         Field(DEFAULT_ORIGIN, description=DocStrings.STATUS_HISTORY_ORIGIN_DESCRIPTION),
     ]
     git_repository_url: Annotated[
-        str,
-        Field(description=DocStrings.STATUS_HISTORY_GIT_URL_DESCRIPTION),
+        Optional[str],
+        Field(None, description=DocStrings.STATUS_HISTORY_GIT_URL_DESCRIPTION),
     ]
     git_repository_branch: Annotated[
-        str,
-        Field(description=DocStrings.STATUS_HISTORY_GIT_BRANCH_DESCRIPTION),
+        Optional[str],
+        Field(None, description=DocStrings.STATUS_HISTORY_GIT_BRANCH_DESCRIPTION),
     ]
     platform: Annotated[
         Optional[str],
@@ -100,8 +102,8 @@ class TestStatusHistoryRequest(BaseModel):
         ),
     ]
     config_name: Annotated[
-        str,
-        Field(description=DocStrings.STATUS_HISTORY_CONFIG_NAME_DESCRIPTION),
+        Optional[str],
+        Field(None, description=DocStrings.STATUS_HISTORY_CONFIG_NAME_DESCRIPTION),
     ]
     field_timestamp: Annotated[
         Timestamp,
