@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 from typing_extensions import Annotated
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import BaseModel, BeforeValidator, Field, PositiveInt
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 
@@ -75,6 +75,47 @@ class TestStatusHistoryResponse(BaseModel):
     regression_type: PossibleRegressionType
 
 
+class TestStatusSeriesResponse(BaseModel):
+    status_history: list[TestStatusHistoryItem]
+    regression_type: PossibleRegressionType
+    test_series: str
+    build_series: str
+
+
+class TestStatusSeriesRequest(BaseModel):
+    path: Annotated[
+        Optional[str],
+        Field(None, description=DocStrings.STATUS_HISTORY_PATH_DESCRIPTION),
+    ]
+    platform: Annotated[
+        Optional[str],
+        Field(None, description=DocStrings.STATUS_HISTORY_PLATFORM_DESCRIPTION),
+    ]
+    origin: Annotated[
+        Optional[str],
+        Field(DEFAULT_ORIGIN, description=DocStrings.STATUS_HISTORY_ORIGIN_DESCRIPTION),
+    ]
+    config_name: Annotated[
+        Optional[str],
+        Field(None, description=DocStrings.STATUS_HISTORY_CONFIG_NAME_DESCRIPTION),
+    ]
+    architecture: Annotated[
+        Optional[str],
+        Field(None, description=DocStrings.SERIES_ARCHITECTURE_DESCRIPTION),
+    ]
+    compiler: Annotated[
+        Optional[str],
+        Field(None, description=DocStrings.SERIES_COMPILER_DESCRIPTION),
+    ]
+    group_size: Annotated[
+        PositiveInt,
+        Field(
+            default=10,
+            description=DocStrings.STATUS_HISTORY_GROUP_SIZE_DESCRIPTION,
+        ),
+    ]
+
+
 class TestStatusHistoryRequest(BaseModel):
     path: Annotated[
         str, Field(None, description=DocStrings.STATUS_HISTORY_PATH_DESCRIPTION)
@@ -110,10 +151,9 @@ class TestStatusHistoryRequest(BaseModel):
         Field(None, description=DocStrings.STATUS_HISTORY_FIELD_TS_DESCRIPTION),
     ]
     group_size: Annotated[
-        int,
+        PositiveInt,
         Field(
             default=10,
-            gt=0,
             description=DocStrings.STATUS_HISTORY_GROUP_SIZE_DESCRIPTION,
         ),
     ]
