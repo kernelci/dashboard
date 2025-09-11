@@ -1,6 +1,6 @@
 from typing import Optional
 
-from django.db import connection
+from django.db import connection, connections
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.models import Tests
 from kernelCI_app.typeModels.databases import (
@@ -92,3 +92,37 @@ def get_test_status_history(
     else:
         query = query.filter(start_time__lte=test_start_time)
         return query.order_by("-start_time")[:group_size]
+
+
+def get_series_data(
+    *, test_series: str, build_series: str, limit: str, origin: str
+) -> list[dict]:
+    params = {
+        "test_series": test_series,
+        "build_series": build_series,
+        "limit": limit,
+        "test_origin": origin,
+    }
+
+    # TODO: check if we should filter by checkout origin or test origin
+    query = """
+            SELECT
+                t.id,
+                t.start_time,
+                t.status,
+                c.git_commit_hash AS build__checkout__git_commit_hash
+            FROM
+                tests t
+            LEFT JOIN builds b ON t.build_id = b.id
+            LEFT JOIN checkouts c ON b.checkout_id = c.id
+            WHERE
+                t.series = %(test_series)s
+                AND b.series = %(build_series)s
+                AND t.origin = %(test_origin)s
+            ORDER BY t.start_time DESC
+            LIMIT %(limit)s
+        """
+
+    with connections["default"].cursor() as cursor:
+        cursor.execute(query, params)
+        return dict_fetchall(cursor)

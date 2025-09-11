@@ -45,3 +45,10 @@ status_history_item_fields = [
     "start_time",
     "git_commit_hash",
 ]
+
+test_series_response_expected_fields = [
+    "status_history",
+    "regression_type",
+    "test_series",
+    "build_series",
+]

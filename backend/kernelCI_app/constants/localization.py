@@ -18,6 +18,7 @@ class ClientStrings:
     TREE_REPORT_MIN_MAX_AGE = (
         "Minimum age can't be greater than or equal to the maximum age"
     )
+    TEST_SERIES_NOT_FOUND = "Test series not found"
     TEST_STATUS_HISTORY_NOT_FOUND = "Test status history not found"
     TEST_ISSUES_NOT_FOUND = "No issues were found for this test"
     TEST_NOT_FOUND = "Test not found"
@@ -113,6 +114,9 @@ class DocStrings:
 
     TREE_QUERY_ORIGIN_DESCRIPTION = "Origin of the tree"
     TREE_QUERY_GIT_URL_DESCRIPTION = "Git repository URL of the tree"
+
+    SERIES_ARCHITECTURE_DESCRIPTION = "Architecture filter to retrieve tests"
+    SERIES_COMPILER_DESCRIPTION = "Compiler filter to retrieve tests"
 
     STATUS_HISTORY_PATH_DESCRIPTION = "Test path filter"
     STATUS_HISTORY_ORIGIN_DESCRIPTION = "Origin filter to retrieve tests"

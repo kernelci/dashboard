@@ -17,10 +17,16 @@ def view_cache(view):
 
 
 urlpatterns = [
+    # Since all parameters for status-history/series can be null, they are all passed as query parameters
     path(
         "test/status-history",
         view_cache(views.TestStatusHistory),
         name="testStatusHistory",
+    ),
+    path(
+        "test/status-series",
+        view_cache(views.TestStatusSeries),
+        name="TestStatusSeries",
     ),
     path("test/<str:test_id>", view_cache(views.TestDetails), name="testDetails"),
     path("tree/", view_cache(views.TreeView), name="tree"),
