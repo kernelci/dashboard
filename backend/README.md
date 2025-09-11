@@ -29,49 +29,101 @@ To find the exact path to the Python executable inside the virtual environment, 
 poetry env info --executable
 ```
 
-## Setting up the DB
+## Setting up the environment
 
-To configure the database connection, the Backend uses a `DB_DEFAULT` variable 
-that must have a JSON string such as:
+### General
+
+Start by exporting `DEBUG=True` in order to allow localhost connection and avoid CORS issues (**should NOT be set to True on production environments**).
+
+It's possible to export `DEBUG_SQL_QUERY=True` if you want to see which SQL queries are made but it is quite verbose, so it's recommended to keep it as False unless needed.
+
+### Databases
+
+For the main database, the backend uses a `DB_DEFAULT` variable that must have a JSON string such as:
 
 ```sh
-export DB_DEFAULT="{
+DB_DEFAULT="{
     \"ENGINE\": \"${DB_DEFAULT_ENGINE:=django.db.backends.postgresql}\",
-    \"NAME\": \"${DB_DEFAULT_NAME:=playground_kcidb}\",
-    \"USER\": \"${DB_DEFAULT_USER:=<DB-USER>}\",
-    \"PASSWORD\": \"<DB-PASSWORD>\",
+    \"NAME\": \"${DB_DEFAULT_NAME:=kcidb}\",
+    \"USER\": \"${DB_DEFAULT_USER:=<your-email-here>}\",
+    \"PASSWORD\": \"<your-password-here-don't-forget-to-scape-special-characters>\", 
     \"HOST\": \"${DB_DEFAULT_HOST:=127.0.0.1}\",
     \"PORT\": \"${DB_DEFAULT_PORT:=5432}\",
-    \"CONN_MAX_AGE\": ${DB_DEAFULT_CONN_MAX_AGE:=null},
+    \"CONN_MAX_AGE\": ${DB_DEFAULT_CONN_MAX_AGE:=null},
     \"OPTIONS\": {
-      \"connect_timeout\": ${DB_DEFAULT_TIMEOUT:=2}
+      \"connect_timeout\": ${DB_DEFAULT_TIMEOUT:=10}
     }
 }"
 ```
-Attention to <DB-USER> and <DB-PASSWORD> placeholders
+> [!NOTE]
+> It is possible to have authentication issues when escaping special characters. In some cases, it is necessary to add more than one backslash, while in others, no addition is needed. To assist with this, when `DEBUG` is set to `True`, the default database info will be printed in the terminal, allowing you to determine if the characters got escaped as intended.
 
-## Running server
+Along with the main database, the backend also connects to a secondary, local db made while we transition between database providers. It uses a simpler environment variable structure:
+```sh
+DASH_DB_NAME=dashboard
+DASH_DB_USER=admin
+DASH_DB_PASSWORD=admin
+DASH_DB_HOST=127.0.0.1
+DASH_DB_PORT=5434 # Note that this is not 5432, avoids conflict with the proxy port.
+```
 
-After connecting to Google Cloud, execute the server with:
+If you have both connections and you want to use the local one as the default, the env var `USE_DASHBOARD_DB` can be exported as `True` for a quick flag change.
+
+#### SQLite
+
+Before running the server, you must also update a local SQLite database used for caching. You can simply run the [migrate-cache-db.sh](./migrate-cache-db.sh) script, which will update the migrations if needed and apply them.
+
+
+## Running the server
+
+After connecting to the database proxy, execute the server with:
 
 ```sh
 poetry run python3 manage.py runserver
 ```
 
-## Running unit tests
+## Helper scripts
 
-The backend includes unit tests covering some parts of the source code. To run the tests, use the following command:
+We have a couple of useful scripts:
+
+* [migrate-cache-db.sh](./migrate-cache-db.sh) will create and apply migrations for the cache SQLite database. This runs automatically when running on docker, but you have to run it mannually otherwise.
+* [migrate-app-db.sh](./migrate-app-db.sh) will create and apply migrations for the main app, used for the secondary database. This does not run automatically in order to avoid potential problems. For this script, be aware of the `USE_DASHBOARD_DB` environment variable, because that variable will change the name of the databases (`dashboard_db` becomes `default` and `default` becomes `kcidb`) and so you'll have to change the command accordingly.
+
+It is important to note that Django automatically creates migrations based on changes to the models when running the first command of the scripts above. You can edit the migrations manually, and you can also run the commands by hand if you want more control over it.
+
+* [update_db_7_days.sh](./scripts/update_db_7_days.sh) will copy 7 days of data from you `DB_DEFAULT` to your `DASH_DB`. You can also run just parts of this script if you don't want to copy a whole week, and you can check the [update_db](./kernelCI_app/management/commands/update_db.py) command for other arguments such as `--table` and `--origins`.
+* [generate-schema.sh](./generate-schema.sh) will automatically generate the OpenAPI schema for the endpoints. Please use it whenever the ins and outs of endpoints change.
+
+
+## Running tests
+
+The backend includes unit and integration tests covering some parts of the source code. To run all tests, use the following command:
 
 ```sh
 poetry run pytest
 ```
 
-This command runs the tests, splitted into 4 processes. Each process runs a test file. If a test fails for any reason, it's retried up to 4 times.
+To run only the unit tests, use:
+```sh
+poetry run pytest -m unit
+```
+
+Similarly, to run only the integration tests, use:
+```sh
+poetry run pytest -m integration
+```
+
+Since these integration tests might be slow (depending on the endpoint you are requesting, each test case
+can take between 1.5s and 5s) we added a command-line flag to run all test cases. By default, only a
+subset of tests cases is run to save time. To run all integration test cases, use the
+`--run-all` flag:
+```sh
+poetry run pytest -m integration --run-all
+```
+
+These commands run the tests, splitted into 4 processes. Each process runs a test file. If a test fails for any reason, it's retried up to 4 times.
 This behavior is due to the flags we are passing to `addopts` in the `pyproject.toml` settings file.
-All unit test files must follow this naming convention: `*_test.py`.
-
-endpoints using the built-in `requests` library from python. Because of that, it's necessary to be running the server for the django tests to be performed. When running pytest with the server
-
+All test files must follow this naming convention: `*_test.py`. Unit tests must be under a folder with "unit" in its name, and integration tests must be under a folder with "integration" in its name.
 
 The django tests are being done 'externally', that means, instead of using the utilies the framework
 has for testing (like `Client` from Django or `APIClient` from DRF) we are performing requests to the
@@ -79,16 +131,7 @@ endpoints using the built-in `requests` library from python. Because of that, it
 the server for the django tests to be performed. When running pytest with the server offline, all django 
 tests will be skipped.
 
-Also, since django tests might be slow (depending on the endpoint you are requesting, each test case
-can take between 1.5s and 5s) we added a new command-line flag to run all test cases. By default, only a
-subset of tests cases is run to save time, especially during push. To run all test cases, use the
-`--run-all` flag:
-
-```sh
-poetry run pytest --run-all
-```
-
-The command above is also executed in our CI system, and every pull request must pass the tests before
+The tests are also executed in our CI system, and every pull request must pass the tests before
 it can be merged.
 
 
@@ -138,15 +181,6 @@ For debugging we have two env variables
 `DEBUG` and `DEBUG_SQL_QUERY` that can be set to `True` to enable debugging. The reason `DEBUG_SQL_QUERY` is separated is that it can be very verbose.
 
 
-## Open API generate
-You can update the OpenAPI schema by running the `generate-schema.sh` script
-
-
-## SQLite migrations
-
-Besides KCIDB, we also have sqlite databases that store cached data and other custom data. You can update it by running the `migrate-cache-db.sh` script
-
-
 ## Discord Webhook Integration
 
 The webdashboard backend can send notifications to discord via a webhook. In order to enable that, export an environment variable with the URL to the discord webhook called `DISCORD_WEBHOOK_URL`, which should be in the structure of:
@@ -160,7 +194,7 @@ For more detailed developer resources, visit https://discord.com/developers/docs
 
 ## Email notifications
 
-The email notification system is used with cron jobs to be able to send regular updates about specific actions to the relevant recipients. You can check more information about it on ~/docs/notifications.md
+The email notification system is used with cron jobs to be able to send regular updates about specific actions to the relevant recipients. You can check more information about it on [notifications.md](../docs/notifications.md)
 
 
 ## IDE Specific:
