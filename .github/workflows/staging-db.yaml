@@ -20,8 +20,9 @@ jobs:
         username: ${{ secrets.DB_SSH_USER }}
         key: ${{ secrets.DB_SSH_KEY }}
         script: |
-          cd /srv/dashboard
+          cd /srv/kcidb-ng/dashboard
           git fetch
           git checkout ${{ github.event.inputs.GIT_BRANCH }}
-          docker compose build
-          docker compose up -d --remove-orphans
+          cd ..
+          docker compose -f docker-compose-all.yaml --profile=self-hosted build
+          docker compose -f docker-compose-all.yaml --profile=self-hosted up -d --remove-orphans
