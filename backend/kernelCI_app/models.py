@@ -139,9 +139,22 @@ class Tests(models.Model):
     )
     number_unit = models.TextField(blank=True, null=True)
     input_files = models.JSONField(blank=True, null=True)
+    series = models.GeneratedField(
+        expression=MD5(
+            Concat(
+                F("path"),
+                F("environment_misc__platform"),
+            )
+        ),
+        output_field=models.TextField(blank=True, null=True),
+        db_persist=True,
+    )
 
     class Meta:
         db_table = "tests"
+        indexes = [
+            models.Index(fields=["series"], name="tests_series_idx"),
+        ]
 
 
 class Incidents(models.Model):
