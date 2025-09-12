@@ -64,6 +64,8 @@ const getLinkProps = (
   const tree_name = row.original.tree_name;
   const branch = row.original.git_repository_branch;
   const hash = row.original.git_commit_hash;
+  const repositoryUrl = row.original.git_repository_url;
+  const commitName = row.original.git_commit_name;
 
   const canGoDirect = tree_name && branch && hash;
 
@@ -90,10 +92,10 @@ const getLinkProps = (
           currentPageTab: zPossibleTabValidator.parse(tabTarget),
           diffFilter: diffFilter ?? {},
           treeInfo: {
-            gitUrl: row.original.git_repository_url,
-            gitBranch: branch,
-            treeName: tree_name,
-            commitName: row.original.git_commit_name,
+            ...(repositoryUrl && { gitUrl: repositoryUrl }),
+            ...(branch && { gitBranch: branch }),
+            ...(tree_name && { treeName: tree_name }),
+            ...(commitName && { commitName: commitName }),
             headCommitHash: hash,
           },
           intervalInDays: previousSearch.intervalInDays,
