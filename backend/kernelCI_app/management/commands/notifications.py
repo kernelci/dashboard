@@ -12,7 +12,7 @@ from urllib.parse import quote_plus
 from django.core.management.base import BaseCommand
 
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.helpers.system import is_production_instance
+from kernelCI_app.helpers.system import get_running_instance
 
 from kernelCI_app.helpers.email import (
     smtp_setup_connection,
@@ -199,7 +199,8 @@ def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
 
 
 def look_for_new_issues(*, service, signup_folder, email_args):
-    if is_production_instance():
+    if get_running_instance() == "staging":
+        print("This command only runs on production or dev environments.")
         return
 
     issues = kcidb_new_issues()
@@ -499,7 +500,6 @@ def discard_sent_reports(
 
 
 # TODO: lower the complexity of this function, we are at the limit
-# flake8: noqa: C901
 def run_checkout_summary(
     *,
     service,
@@ -508,7 +508,8 @@ def run_checkout_summary(
     email_args,
     skip_sent_reports: bool = True,
 ):
-    if is_production_instance():
+    if get_running_instance() == "staging":
+        print("This command only runs on production or dev environments.")
         return
 
     tree_key_set, tree_prop_map = process_submissions_files(
