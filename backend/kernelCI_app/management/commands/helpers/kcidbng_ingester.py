@@ -31,7 +31,7 @@ STORAGE_BASE_URL = os.environ.get(
     "STORAGE_BASE_URL", "https://files-staging.kernelci.org"
 )
 
-TREES_FILE = "/app/trees.yaml"
+TREES_FILE = "/app/trees.yml"
 
 logger = logging.getLogger("ingester")
 
