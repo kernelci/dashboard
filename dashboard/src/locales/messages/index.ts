@@ -31,6 +31,7 @@ export const messages = {
     'buildDetails.buildId': 'Build Id',
     'buildDetails.buildInfo': 'Build Info',
     'buildDetails.buildLogs': 'Build Logs',
+    'buildDetails.buildOrigin': 'Build Origin',
     'buildDetails.gitDescribe': 'Git Describe',
     'buildDetails.kernelConfig': 'Kernel Config',
     'buildDetails.noTestResults': 'No tests executed for this build',
@@ -214,7 +215,6 @@ export const messages = {
     'issue.tooltip':
       'Issues groups several builds or tests by matching result status and logs.{br}They may also be linked to an external issue tracker or mailing list discussion.',
     'issue.uncategorized': 'Uncategorized',
-    'issueDetails.buildValid': 'Build Valid',
     'issueDetails.comment': 'Comment',
     'issueDetails.culpritCode': 'Code',
     'issueDetails.culpritHarness': 'Harness',

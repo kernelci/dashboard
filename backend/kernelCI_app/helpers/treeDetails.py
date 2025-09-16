@@ -199,7 +199,7 @@ def get_build(row_data: dict) -> BuildHistoryItem:
         misc=row_data["build_misc"],
         config_url=row_data["build_config_url"],
         compiler=row_data["build_compiler"],
-        valid=row_data["build_status"],
+        status=row_data["build_status"],
         duration=row_data["build_duration"],
         log_url=row_data["build_log_url"],
         start_time=row_data["build_start_time"],

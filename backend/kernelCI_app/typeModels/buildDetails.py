@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from typing_extensions import Annotated
 from pydantic import BaseModel, RootModel
 
@@ -37,10 +37,11 @@ class BuildDetailsResponse(BuildHistoryItem):
     git_commit_hash: Checkout__GitCommitHash
     git_commit_name: Checkout__GitCommitName
     git_commit_tags: Checkout__GitCommitTags
-    origin: Origin
+    origin: Optional[Origin]
     log_excerpt: Build__LogExcerpt
     input_files: Build__InputFiles
     output_files: Build__OutputFiles
+    build_origin: Origin
 
 
 class BuildTestItem(BaseModel):

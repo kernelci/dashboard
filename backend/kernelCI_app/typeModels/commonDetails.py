@@ -62,7 +62,6 @@ class BuildHistoryItem(BaseModel):
     compiler: Build__Compiler
     status: Annotated[
         Build__Status,
-        Field(validation_alias="valid"),
         make_default_validator(NULL_STATUS),
     ]
     duration: Build__Duration

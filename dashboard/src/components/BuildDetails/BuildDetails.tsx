@@ -181,6 +181,10 @@ const BuildDetails = ({
                           linkText: valueOrEmpty(data.config_name),
                         },
                         {
+                          title: 'buildDetails.buildOrigin',
+                          linkText: valueOrEmpty(data.build_origin),
+                        },
+                        {
                           title: 'global.command',
                           linkText: valueOrEmpty(data.command),
                         },

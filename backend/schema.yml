@@ -1691,7 +1691,9 @@ components:
         id:
           $ref: '#/components/schemas/Build__Id'
         origin:
-          $ref: '#/components/schemas/Origin'
+          anyOf:
+          - $ref: '#/components/schemas/Origin'
+          - type: 'null'
         architecture:
           $ref: '#/components/schemas/Build__Architecture'
         config_name:
@@ -1734,6 +1736,8 @@ components:
           $ref: '#/components/schemas/Build__InputFiles'
         output_files:
           $ref: '#/components/schemas/Build__OutputFiles'
+        build_origin:
+          $ref: '#/components/schemas/Origin'
       required:
       - id
       - origin
@@ -1758,6 +1762,7 @@ components:
       - log_excerpt
       - input_files
       - output_files
+      - build_origin
       title: BuildDetailsResponse
       type: object
     BuildHistoryItem:
@@ -3185,9 +3190,11 @@ components:
       additionalProperties:
         additionalProperties:
           additionalProperties:
-            items:
-              $ref: '#/components/schemas/RegressionHistoryItem'
-            type: array
+            additionalProperties:
+              items:
+                $ref: '#/components/schemas/RegressionHistoryItem'
+              type: array
+            type: object
           type: object
         type: object
       type: object
@@ -3353,6 +3360,8 @@ components:
           anyOf:
           - $ref: '#/components/schemas/Origin'
           - type: 'null'
+        test_origin:
+          $ref: '#/components/schemas/Origin'
       required:
       - field_timestamp
       - id
@@ -3376,6 +3385,7 @@ components:
       - git_commit_tags
       - tree_name
       - origin
+      - test_origin
       title: TestDetailsResponse
       type: object
     TestHistoryItem:

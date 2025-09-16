@@ -139,7 +139,7 @@ def get_build_typed(record: Dict, tree_idx: int) -> HardwareBuildHistoryItem:
         misc=record["build__misc"],
         config_url=record["build__config_url"],
         compiler=record["build__compiler"],
-        valid=record["build__status"],
+        status=record["build__status"],
         duration=record["build__duration"],
         log_url=record["build__log_url"],
         start_time=record["build__start_time"],
