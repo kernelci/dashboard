@@ -28,6 +28,7 @@ def get_test_details_data(*, test_id: str) -> list[dict]:
         T.ENVIRONMENT_COMPATIBLE,
         T.OUTPUT_FILES,
         T.INPUT_FILES,
+        T.ORIGIN AS TEST_ORIGIN,
         B.COMPILER,
         B.ARCHITECTURE,
         B.CONFIG_NAME,

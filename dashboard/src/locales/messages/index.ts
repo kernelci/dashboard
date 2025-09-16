@@ -304,6 +304,7 @@ export const messages = {
       'The {amount} previous tests before the current test.\nClick on an icon to see details of that specific test.',
     'testDetails.testId': 'Test Id',
     'testDetails.testInfo': 'Test Info',
+    'testDetails.testOrigin': 'Test Origin',
     'testStatus.done': 'Done',
     'testStatus.error': 'Error',
     'testStatus.fail': 'Fail',

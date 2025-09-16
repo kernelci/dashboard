@@ -23,6 +23,7 @@ export type TTestDetails = {
   tree_name?: string;
   origin?: string;
   field_timestamp: string;
+  test_origin: string;
 };
 
 export type TestStatusHistoryItem = {

@@ -56,6 +56,7 @@ class TestDetailsResponse(BaseModel):
     git_commit_tags: Checkout__GitCommitTags
     tree_name: Checkout__TreeName
     origin: Optional[Origin]
+    test_origin: Origin
 
 
 type PossibleRegressionType = Literal["regression", "fixed", "unstable", "pass", "fail"]

@@ -365,6 +365,10 @@ const TestDetailsSections = ({
                         linkText: valueOrEmpty(test.config_name),
                       },
                       {
+                        title: 'testDetails.testOrigin',
+                        linkText: valueOrEmpty(test.test_origin),
+                      },
+                      {
                         title: 'testDetails.buildInfo',
                         linkText: truncateBigText(test.build_id),
                         linkComponent: buildDetailsLink,
