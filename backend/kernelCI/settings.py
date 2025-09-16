@@ -174,14 +174,14 @@ CRONJOBS = [
 ]
 
 # Email settings for SMTP backend
-EMAIL_BACKEND = get_json_env_var(
+EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
 )
-EMAIL_HOST = get_json_env_var("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = get_json_env_var("EMAIL_PORT", 587)
-EMAIL_USE_TLS = get_json_env_var("EMAIL_USE_TLS", True)
-EMAIL_HOST_USER = get_json_env_var("EMAIL_HOST_USER", "bot@kernelci.org")
-EMAIL_HOST_PASSWORD = get_json_env_var("EMAIL_HOST_PASSWORD", "")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = os.environ.get("EMAIL_PORT", 587)
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", True)
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "bot@kernelci.org")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -202,7 +202,7 @@ kcidb_config = get_json_env_var(
         "PASSWORD": "kernelci-db-password",
         "HOST": "127.0.0.1",
         "OPTIONS": {
-            "connect_timeout": 5,
+            "connect_timeout": 16,
         },
     },
 )
@@ -215,7 +215,7 @@ dashboard_db_config = {
     "HOST": os.environ.get("DASH_DB_HOST", "127.0.0.1"),
     "PORT": os.environ.get("DASH_DB_PORT", 5434),
     "OPTIONS": {
-        "connect_timeout": 5,
+        "connect_timeout": 16,
     },
 }
 
