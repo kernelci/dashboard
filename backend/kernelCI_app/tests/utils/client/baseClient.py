@@ -2,10 +2,11 @@ from abc import ABC
 from typing import Any, Optional
 from urllib.parse import urljoin, urlencode
 from kernelCI_app.helpers.filters import FilterFields
+import os
 
 
 class BaseClient(ABC):
-    base_url = "http://localhost:8000/"
+    base_url = os.environ.get("TEST_BASE_URL", "http://localhost:8000/")
 
     def get_endpoint(
         self,
