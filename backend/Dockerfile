@@ -25,7 +25,12 @@ COPY . /backend
 COPY ./utils/docker/entrypoint.sh /entrypoint.sh
 WORKDIR /backend
 
-RUN poetry install --no-interaction --only main
+ARG INSTALL_DEV_DEPS=false
+RUN if [ "$INSTALL_DEV_DEPS" = "true" ]; then \
+        poetry install --no-interaction; \
+    else \
+        poetry install --no-interaction --only main; \
+    fi
 
 ENV DJANGO_APP="kernelCI"
 
