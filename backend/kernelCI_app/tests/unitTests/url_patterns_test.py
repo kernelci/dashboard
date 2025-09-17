@@ -15,7 +15,6 @@ class TestURLPatterns:
             "treeDetailsDirectView",
             "treeDetailsDirectSummaryView",
             "treeDetailsTestsDirectView",
-            "treeLatestHash",
         ]
 
         for pattern in patterns:
@@ -78,6 +77,23 @@ class TestURLPatterns:
         """Test that treeLatest works correctly with simple branch names."""
         tree_name = "mainline"
         git_branch = "master"
+
+        url = reverse(
+            "treeLatest",
+            kwargs={
+                "tree_name": tree_name,
+                "git_branch": git_branch,
+            },
+        )
+        resolved = resolve(url)
+        assert resolved.url_name == "treeLatest"
+        assert resolved.kwargs["tree_name"] == tree_name
+        assert resolved.kwargs["git_branch"] == git_branch
+
+    def test_tree_latest_with_complex_branches(self):
+        """Test that treeLatest works correctly with complex branch names."""
+        tree_name = "soc"
+        git_branch = "arm/fixes"
 
         url = reverse(
             "treeLatest",

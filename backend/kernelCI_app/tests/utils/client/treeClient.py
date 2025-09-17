@@ -34,20 +34,6 @@ class TreeClient(BaseClient):
         url = self.get_endpoint(path=path, query=query)
         return requests.get(url)
 
-    def get_tree_latest_hash(
-        self, *, tree_name: str, git_branch: str, commit_hash: str, query: dict
-    ) -> requests.Response:
-        path = reverse(
-            "treeLatestHash",
-            kwargs={
-                "tree_name": tree_name,
-                "git_branch": git_branch,
-                "commit_hash": commit_hash,
-            },
-        )
-        url = self.get_endpoint(path=path, query=query)
-        return requests.get(url)
-
     def get_tree_details_summary(
         self,
         *,

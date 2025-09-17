@@ -16,14 +16,14 @@ from kernelCI_app.constants.general import DEFAULT_ORIGIN
 class TreeLatestPathParameters(BaseModel):
     tree_name: str = Field(description=DocStrings.TREE_LATEST_TREE_NAME_DESCRIPTION)
     git_branch: str = Field(description=DocStrings.TREE_LATEST_GIT_BRANCH_DESCRIPTION)
-    commit_hash: Optional[str] = Field(
-        description=DocStrings.TREE_LATEST_COMMIT_HASH_DESCRIPTION
-    )
 
 
 class TreeLatestQueryParameters(BaseModel):
     origin: str = Field(
         DEFAULT_ORIGIN, description=DocStrings.TREE_LATEST_ORIGIN_DESCRIPTION
+    )
+    commit_hash: Optional[str] = Field(
+        None, description=DocStrings.TREE_LATEST_COMMIT_HASH_DESCRIPTION
     )
 
 

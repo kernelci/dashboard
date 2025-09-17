@@ -1286,48 +1286,15 @@ paths:
     get:
       operationId: tree_retrieve_2
       parameters:
-      - in: path
-        name: git_branch
-        schema:
-          type: string
-        description: Git branch name of the tree
-        required: true
       - in: query
-        name: origin
-        schema:
-          default: maestro
-          title: Origin
-          type: string
-        description: Origin filter to retrieve tree information
-      - in: path
-        name: tree_name
-        schema:
-          type: string
-        description: Name of the tree
-        required: true
-      tags:
-      - tree
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TreeLatestResponse'
-          description: ''
-  /api/tree/{tree_name}/{git_branch}/{commit_hash}:
-    get:
-      operationId: tree_retrieve_3
-      parameters:
-      - in: path
         name: commit_hash
         schema:
-          type: string
-        description: Commit hash of the tree
-        required: true
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Commit Hash
+        description: Commit hash to retrieve tree information
       - in: path
         name: git_branch
         schema:

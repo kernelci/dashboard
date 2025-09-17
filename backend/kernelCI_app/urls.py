@@ -86,13 +86,8 @@ urlpatterns = [
         name="treeDetailsTestsDirectView",
     ),
     path(
-        "tree/<str:tree_name>/<str:git_branch>/<str:commit_hash>",
-        view_cache(views.TreeCheckoutInfo),
-        name="treeLatestHash",
-    ),
-    path(
-        "tree/<str:tree_name>/<str:git_branch>",
-        view_cache(views.TreeLatestCheckout),
+        "tree/<str:tree_name>/<path:git_branch>",
+        view_cache(views.TreeLatest),
         name="treeLatest",
     ),
     path("build/<str:build_id>", view_cache(views.BuildDetails), name="buildDetails"),
