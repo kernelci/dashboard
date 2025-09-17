@@ -21,10 +21,10 @@ export type TPathTests = {
 
 export type TIndividualTest = {
   id: string;
-  path: string;
+  path?: string;
   status?: Status;
-  start_time: string;
-  duration: string;
+  start_time?: string;
+  duration?: string;
   hardware?: string[];
   treeBranch?: string;
 };
@@ -39,9 +39,9 @@ export type TreeBranchItem = {
 };
 
 export type TestHistory = TreeBranchItem & {
-  start_time: string;
+  start_time?: string;
   status: Status;
-  path: string;
+  path?: string;
   id: string;
   duration?: number;
   environment_compatible?: string[];

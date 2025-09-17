@@ -66,7 +66,7 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
 
     query = f"""
         SELECT
-            T.ID,
+            INC.TEST_ID AS ID,
             T.STATUS,
             T.DURATION,
             T.PATH,
@@ -78,7 +78,7 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
             C.GIT_REPOSITORY_URL
         FROM
             INCIDENTS INC
-            INNER JOIN TESTS T ON (INC.TEST_ID = T.ID)
+            LEFT JOIN TESTS T ON (INC.TEST_ID = T.ID)
             LEFT JOIN BUILDS B ON (T.BUILD_ID = B.ID)
             LEFT JOIN CHECKOUTS C ON (B.CHECKOUT_ID = C.ID)
         WHERE
@@ -86,6 +86,7 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
                 INC.ISSUE_ID = %(issue_id)s
                 AND {version_clause}
             )
+            AND INC.TEST_ID IS NOT NULL
     """
 
     with connection.cursor() as cursor:

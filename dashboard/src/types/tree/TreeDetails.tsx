@@ -167,7 +167,7 @@ export type TestByCommitHash = {
   path: string | null;
   status: Status;
   duration: string;
-  startTime: string;
+  startTime?: string;
   hardware?: string[];
   treeBranch?: string;
 };

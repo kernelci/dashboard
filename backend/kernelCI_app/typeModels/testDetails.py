@@ -4,8 +4,11 @@ from pydantic import BaseModel, BeforeValidator, Field
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 
+from kernelCI_app.typeModels.common import make_default_validator
 from kernelCI_app.typeModels.databases import (
+    NULL_STATUS,
     Origin,
+    StatusValues,
     Test__Id,
     Build__Id,
     Test__Status,
@@ -35,7 +38,10 @@ class TestDetailsResponse(BaseModel):
     field_timestamp: Timestamp = Field(validation_alias="_timestamp")
     id: Test__Id
     build_id: Build__Id
-    status: Test__Status
+    status: Annotated[
+        StatusValues,
+        make_default_validator(NULL_STATUS),
+    ]
     path: Test__Path
     log_excerpt: Test__LogExcerpt
     log_url: Test__LogUrl

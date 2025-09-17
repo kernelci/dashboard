@@ -52,6 +52,7 @@ import { TableHeader } from '@/components/Table/TableHeader';
 
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import TooltipHardware from '@/components/Table/TooltipHardware';
+import { EMPTY_VALUE } from '@/lib/string';
 
 const defaultColumns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -141,6 +142,10 @@ export function BootsTable({
     (): TTestByCommitHashResponse => ({
       tests: testHistory
         ? testHistory.map((e): TestByCommitHash => {
+            if (!e.path) {
+              e.path = EMPTY_VALUE;
+            }
+
             return {
               duration: e.duration?.toString() ?? '',
               id: e.id,

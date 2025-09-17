@@ -39,7 +39,7 @@ class IssueDetailsTests(APIView):
             issue_id=path_params.issue_id, version=query_params.version
         )
 
-        if not tests_data:
+        if not tests_data or len(tests_data) == 1 and tests_data[0].get("id") is None:
             return create_api_error_response(
                 error_message=ClientStrings.ISSUE_TESTS_NOT_FOUND,
                 status_code=HTTPStatus.OK,

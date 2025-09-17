@@ -41,6 +41,8 @@ import { usePaginationState } from '@/hooks/usePaginationState';
 import type { TableKeys } from '@/utils/constants/tables';
 import { buildHardwareArray, buildTreeBranch } from '@/utils/table';
 
+import { EMPTY_VALUE } from '@/lib/string';
+
 import { IndividualTestsTable } from './IndividualTestsTable';
 import { defaultColumns, defaultInnerColumns } from './DefaultTestsColumns';
 
@@ -120,6 +122,9 @@ export function TestsTable({
     const groups: Groups = {};
     if (testHistory !== undefined) {
       testHistory.forEach(e => {
+        if (!e.path) {
+          e.path = EMPTY_VALUE;
+        }
         const parts = e.path.split('.', 1);
         const group = parts.length > 0 ? parts[0] : '-';
         if (!(group in groups)) {
@@ -184,7 +189,7 @@ export function TestsTable({
       const individualTest = test.individual_tests.filter(t => {
         let dataIncludesPath = true;
         if (isValidPath) {
-          dataIncludesPath = t.path.includes(path);
+          dataIncludesPath = t.path?.includes(path) ?? false;
         }
         if (dataIncludesPath) {
           countStatus(localGroup, t.status);
