@@ -18,6 +18,7 @@ export type FirstIncident = {
   git_commit_name?: string;
   tree_name?: string;
   checkout_id?: string;
+  issue_version?: string;
 };
 
 type TExtraIssuesData = {

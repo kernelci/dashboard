@@ -61,6 +61,10 @@ export const getFirstIncidentSection = ({
         />
       ),
     },
+    {
+      title: 'issueDetails.firstIncidentVersion',
+      linkText: firstIncident.issue_version,
+    },
   ];
 
   return {
