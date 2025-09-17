@@ -33,6 +33,7 @@ pep8-naming = "^0.14.1"
 pytest-xdist = {extras = ["psutil"], version = "^3.6.1"}
 pytest-rerunfailures = "^15.0"
 pytest-cov = "^6.2.1"
+factory-boy = "^3.3.3"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "kernelCI.settings"
