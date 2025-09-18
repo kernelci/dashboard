@@ -144,41 +144,27 @@ jobs:
       - name: Setup Backend
         uses: ./.github/actions/setup-backend
 
-      - name: Configure credentials variables
+      - name: Run test database, redis service
         run: |
-          echo -n "${{ secrets.PG_JSON }}" | base64 --decode > application_default_credentials.json
-          chmod 777 application_default_credentials.json
-          mkdir -p backend/runtime/secrets
-          echo "${{ secrets.PG_PASSWORD }}" > backend/runtime/secrets/postgres_password_secret
-          echo "DB_DEFAULT_USER=${{ secrets.PG_USERNAME }}" >> $GITHUB_ENV
-          echo "DJANGO_SECRET_KEY=$(openssl rand -base64 22)" >> $GITHUB_ENV
-          echo "DB_DEFAULT_NAME=kcidb" >> $GITHUB_ENV
-          cp .env.backend.example .env.backend
-          cp .env.db.example .env.db
-          cp .env.proxy.example .env.proxy
+          docker compose -f docker-compose.test.yml up test_db redis -d
 
-      - name: Run database proxy and backend docker services
-        run: docker compose up backend -d --build
-
-      - name: Wait for backend to be ready
+      - name: Execute migrations
         run: |
-          for i in {1..20}; do
-            BACKEND_STATUS=$(docker ps -q -f "name=dashboard_backend_service" -f "status=running")
-            PROXY_STATUS=$(docker ps -q -f "name=cloudsql-proxy" -f "status=running")
+          docker compose -f docker-compose.test.yml run --rm test_backend python manage.py migrate
 
-            if [[ -n "$BACKEND_STATUS" && -n "$PROXY_STATUS" ]] then
-                echo "Backend is ready!"
-                docker ps
-                sleep 5
-                break
-            fi
-            echo "Waiting for backend to be ready... $i"
-            sleep 5
-          done
+      - name: Populate database with test data
+        run: |
+          docker compose -f docker-compose.test.yml run --rm test_backend python manage.py seed_test_data --clear --yes
+
+      - name: Start test backend
+        run: |
+          docker compose -f docker-compose.test.yml up test_backend -d
+          sleep 5
+          docker ps
 
       - name: Run integration tests with coverage
         run: |
-          poetry run pytest -m "integration" --run-all --cov=kernelCI_app --cov=kernelCI_cache --cov-report=term-missing
+          TEST_BASE_URL=http://localhost:8001 poetry run pytest -m "integration" --use-local-db --run-all --cov=kernelCI_app --cov=kernelCI_cache --cov-report=term-missing
           cp .coverage coverage-integration.sqlite
         working-directory: ./backend
 
@@ -189,7 +175,9 @@ jobs:
           path: backend/coverage-integration.sqlite
       
       - name: Clean containers
-        run: docker compose down --volumes --remove-orphans && docker system prune -af
+        run: |
+          docker compose -f docker-compose.test.yml down --volumes --remove-orphans
+          docker system prune -af
   
   update-coverage-badge:
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
