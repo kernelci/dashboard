@@ -97,7 +97,9 @@ It is important to note that Django automatically creates migrations based on ch
 
 ## Running tests
 
-The backend includes unit and integration tests covering some parts of the source code. To run all tests, use the following command:
+The backend includes unit and integration tests covering some parts of the source code. For detailed information about integration tests, including setup instructions and best practices, see the [Integration Tests documentation](../docs/IntegrationTests.md).
+
+To run all tests, use the following command:
 
 ```sh
 poetry run pytest
@@ -120,6 +122,8 @@ subset of tests cases is run to save time. To run all integration test cases, us
 ```sh
 poetry run pytest -m integration --run-all
 ```
+
+> **Performance Tip**: To make tests run significantly faster, use the local database instead of the production database. See the [Integration Tests documentation](../docs/IntegrationTests.md) for detailed setup instructions.
 
 These commands run the tests, splitted into 4 processes. Each process runs a test file. If a test fails for any reason, it's retried up to 4 times.
 This behavior is due to the flags we are passing to `addopts` in the `pyproject.toml` settings file.
