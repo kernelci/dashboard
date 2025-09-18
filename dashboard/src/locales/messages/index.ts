@@ -221,6 +221,7 @@ export const messages = {
     'issueDetails.culpritTitle': 'Culprit',
     'issueDetails.culpritTool': 'Tool',
     'issueDetails.firstIncidentData': 'First Incident Data',
+    'issueDetails.firstIncidentVersion': 'First Incident Version',
     'issueDetails.id': 'Issue Id',
     'issueDetails.issueDetails': 'Issue Details',
     'issueDetails.issueListingInfo':
