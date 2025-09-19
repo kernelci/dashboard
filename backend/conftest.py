@@ -1,12 +1,33 @@
 import tomllib
 from pytest import Item
 import os
+import django
+from django.conf import settings
 
 
 def pytest_addoption(parser):
     parser.addoption(
         "--run-all", action="store_true", default=False, help="run all test cases"
     )
+    parser.addoption(
+        "--use-local-db",
+        action="store_true",
+        default=False,
+        help="use local test database instead of remote",
+    )
+
+
+def pytest_configure(config):
+    """Configure Django settings for tests."""
+    if not settings.configured:
+        use_local_db = config.getoption("--use-local-db")
+
+        if use_local_db:
+            os.environ.setdefault("DJANGO_SETTINGS_MODULE", "kernelCI.test_settings")
+        else:
+            os.environ.setdefault("DJANGO_SETTINGS_MODULE", "kernelCI.settings")
+
+        django.setup()
 
 
 def get_test_markers() -> list[str]:
