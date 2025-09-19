@@ -64,6 +64,7 @@ def get_notification_cache(*, notification: str) -> str:
 def _add_to_lookup(cache_key, property_key, lookup):
     if property_key is None:
         return
-    if lookup[property_key] is None:
-        lookup[property_key] = set()
-    lookup[property_key].append(cache_key)
+
+    lookup_property_key = lookup.get(property_key, set())
+    lookup_property_key.add(cache_key)
+    lookup[property_key] = lookup_property_key
