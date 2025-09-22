@@ -20,8 +20,8 @@ def _is_checkout_done(*, checkout: dict | Checkouts) -> bool:
         origin_builds_finish_time = checkout.origin_builds_finish_time
         origin_tests_finish_time = checkout.origin_tests_finish_time
     else:
-        origin_builds_finish_time = checkout["origin_builds_finish_time"]
-        origin_tests_finish_time = checkout["origin_tests_finish_time"]
+        origin_builds_finish_time = checkout.get("origin_builds_finish_time")
+        origin_tests_finish_time = checkout.get("origin_tests_finish_time")
 
     return (
         origin_builds_finish_time is not None and origin_tests_finish_time is not None
@@ -41,7 +41,7 @@ def _is_checkout_unstable(*, checkout: dict | Checkouts) -> bool:
     if isinstance(checkout, Checkouts):
         start_time = checkout.start_time
     else:
-        start_time = checkout["start_time"]
+        start_time = checkout.get("start_time")
 
     is_old = start_time is not None and start_time < unstable_threshold
     is_done = _is_checkout_done(checkout=checkout)
@@ -71,8 +71,8 @@ def get_checkout_ids_for_update(
 
         # If the equivalent tree in sqlite is unstable, update it nonetheless
         same_tree_on_sqlite = sqlite_trees_map.get(checkout_key)
-        if same_tree_on_sqlite["unstable"]:
-            checkout_ids_for_update.add(same_tree_on_sqlite["checkout_id"])
+        if same_tree_on_sqlite is not None and same_tree_on_sqlite.get("unstable"):
+            checkout_ids_for_update.add(same_tree_on_sqlite.get("checkout_id"))
 
         # Trees that aren't in the sqlite should be added
         if checkout_key not in sqlite_tree_keys:
@@ -85,11 +85,13 @@ def get_checkout_ids_for_update(
             continue
 
         # Even if the current checkout is stable, if it is newer than the cached one, update it
-        cached_start_time = same_tree_on_sqlite["start_time"]
+        cached_start_time = same_tree_on_sqlite.get("start_time")
         if cached_start_time is not None:
-            if cached_start_time.tzinfo is None:
-                cached_start_time = make_aware(cached_start_time)
-            if checkout.start_time > cached_start_time:
+            if (
+                cached_start_time.tzinfo is None
+                and make_aware(checkout.start_time) > make_aware(cached_start_time)
+                or checkout.start_time > cached_start_time
+            ):
                 checkout_ids_for_update.add(checkout.id)
                 continue
 
@@ -106,9 +108,9 @@ def update_checkout_cache():
     sqlite_tree_keys: set[TreeIdentifier] = set()
     for cached_checkout in sqlite_checkouts:
         tree_ident: TreeIdentifier = (
-            cached_checkout["tree_name"],
-            cached_checkout["git_repository_branch"],
-            cached_checkout["git_repository_url"],
+            cached_checkout.get("tree_name"),
+            cached_checkout.get("git_repository_branch"),
+            cached_checkout.get("git_repository_url"),
         )
         sqlite_tree_keys.add(tree_ident)
         sqlite_trees_map[tree_ident] = cached_checkout
@@ -124,6 +126,6 @@ def update_checkout_cache():
     )
 
     for checkout in updated_checkouts_data:
-        checkout["unstable"] = _is_checkout_unstable(checkout=checkout)
+        checkout.update({"unstable": _is_checkout_unstable(checkout=checkout)})
 
     populate_checkouts_cache_db(data=updated_checkouts_data)
