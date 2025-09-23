@@ -8,6 +8,9 @@ from pydantic import ValidationError
 from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Tests
 
 
+TableNames = Literal["issues", "checkouts", "builds", "tests", "incidents"]
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -80,58 +83,105 @@ def flatten_dict_specific(target: dict[str, Any], target_fields: list[str]):
     return flattened_dict
 
 
-def save_issue(issue) -> None:
+def make_issue_instance(issue) -> Issues:
     flattened_issue = flatten_dict_specific(issue, ["culprit"])
     filtered_issue = {
         key: value for key, value in flattened_issue.items() if key in ISSUE_FIELDS
     }
-    valid_issue = Issues(**filtered_issue)
-    valid_issue.field_timestamp = timezone.now()
-    valid_issue.save()
-    return
+    obj = Issues(**filtered_issue)
+    obj.field_timestamp = timezone.now()
+    return obj
 
 
-def save_checkout(checkout) -> None:
+def make_checkout_instance(checkout) -> Checkouts:
     filtered_checkout = {
         key: value for key, value in checkout.items() if key in CHECKOUT_FIELDS
     }
-    valid_checkout = Checkouts(**filtered_checkout)
-    valid_checkout.field_timestamp = timezone.now()
-    valid_checkout.save()
-    return
+    obj = Checkouts(**filtered_checkout)
+    obj.field_timestamp = timezone.now()
+    return obj
 
 
-def save_build(build: dict[str, Any]) -> None:
+def make_build_instance(build: dict[str, Any]) -> Builds:
     filtered_build = {key: value for key, value in build.items() if key in BUILD_FIELDS}
-    valid_build = Builds(**filtered_build)
-    valid_build.field_timestamp = timezone.now()
-    valid_build.save()
-    return
+    obj = Builds(**filtered_build)
+    obj.field_timestamp = timezone.now()
+    return obj
 
 
-def save_test(test: dict[str, Any]) -> None:
+def make_test_instance(test: dict[str, Any]) -> Tests:
     flattened_test = flatten_dict_specific(test, ["environment", "number"])
     filtered_test = {
         key: value for key, value in flattened_test.items() if key in TEST_FIELDS
     }
-    valid_test = Tests(**filtered_test)
-    valid_test.field_timestamp = timezone.now()
-    valid_test.save()
-    return
+    obj = Tests(**filtered_test)
+    obj.field_timestamp = timezone.now()
+    return obj
 
 
-def save_incident(incident) -> None:
+def make_incident_instance(incident) -> Incidents:
     filtered_incident = {
         key: value for key, value in incident.items() if key in INCIDENT_FIELDS
     }
-    valid_incident = Incidents(**filtered_incident)
-    valid_incident.field_timestamp = timezone.now()
-    valid_incident.save()
-    return
+    obj = Incidents(**filtered_incident)
+    obj.field_timestamp = timezone.now()
+    return obj
+
+
+def build_instances_from_submission(data: dict[str, Any]) -> dict[TableNames, list]:
+    """
+    Convert raw submission dicts into unsaved Django model instances, grouped by type.
+    Per-item errors are logged and the item is skipped, matching the previous behavior.
+    """
+    out: dict[TableNames, list] = {
+        "issues": [],
+        "checkouts": [],
+        "builds": [],
+        "tests": [],
+        "incidents": [],
+    }
+
+    def _process(items, item_type: TableNames):
+        if not items:
+            return
+        for item in items:
+            if not isinstance(item, dict):
+                logger.warning(
+                    f"{item_type.capitalize()} data is not a dict, its type is: {type(item)}"
+                )
+                continue
+            try:
+                match item_type:
+                    case "issues":
+                        out["issues"].append(make_issue_instance(item))
+                    case "checkouts":
+                        out["checkouts"].append(make_checkout_instance(item))
+                    case "builds":
+                        out["builds"].append(make_build_instance(item))
+                    case "tests":
+                        out["tests"].append(make_test_instance(item))
+                    case "incidents":
+                        out["incidents"].append(make_incident_instance(item))
+                    case _:
+                        raise ValueError(f"Unknown item type: {item_type}")
+            except ValidationError as ve:
+                logger.error(f"Validation error for {item_type} item: {ve}")
+                continue
+            except Exception as e:
+                logger.error(f"{e.__class__.__name__} error for {item_type} item: {e}")
+                continue
+
+    _process(data.get("issues"), "issues")
+    _process(data.get("checkouts"), "checkouts")
+    _process(data.get("builds"), "builds")
+    _process(data.get("tests"), "tests")
+    _process(data.get("incidents"), "incidents")
+
+    return out
 
 
 def insert_items(
-    item_type: Literal["issues", "checkouts", "builds", "tests", "incidents"],
+    item_type: TableNames,
     items: list[dict[str, Any]],
 ):
     logger.info(f"Processing {len(items)} {item_type}")
@@ -147,20 +197,21 @@ def insert_items(
         item_counter += 1
 
         try:
-            # TODO: pass the timestamp at insertion
             match item_type:
                 case "issues":
-                    save_issue(item)
+                    model_instance = make_issue_instance(item)
                 case "checkouts":
-                    save_checkout(item)
+                    model_instance = make_checkout_instance(item)
                 case "builds":
-                    save_build(item)
+                    model_instance = make_build_instance(item)
                 case "tests":
-                    save_test(item)
+                    model_instance = make_test_instance(item)
                 case "incidents":
-                    save_incident(item)
+                    model_instance = make_incident_instance(item)
                 case _:
                     raise ValueError(f"Unknown item type: {item_type}")
+
+            model_instance.save()
             success_counter += 1
         except ValidationError as ve:
             logger.error(f"Validation error for {item_type} item: {ve}")

@@ -2,6 +2,7 @@ import argparse
 from django.core.management.base import BaseCommand
 import logging
 import time
+import os
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     cache_logs_maintenance,
     ingest_submissions_parallel,
@@ -70,7 +71,21 @@ class Command(BaseCommand):
         try:
             while True:
                 # TODO: retry failed files every x cycles
-                ingest_submissions_parallel(spool_dir, trees_name, max_workers)
+                try:
+                    with os.scandir(spool_dir) as it:
+                        json_files = [
+                            entry.name
+                            for entry in it
+                            if entry.is_file() and entry.name.endswith(".json")
+                        ]
+                        ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                        self.stdout.write(
+                            f"[{ts}] Spool has {len(json_files)} .json files pending"
+                        )
+                except Exception:
+                    pass
+                if len(json_files) > 0:
+                    ingest_submissions_parallel(spool_dir, trees_name, max_workers)
                 cache_logs_maintenance()
 
                 time.sleep(interval)
