@@ -93,7 +93,10 @@ def is_boot(path: str | None) -> bool:
 
 def validate_str_to_dict(value):
     if isinstance(value, str):
-        return json.loads(value)
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return value
     return value
 
 
@@ -134,4 +137,7 @@ def read_yaml_file(*, base_dir, file):
         return None
     except yaml.YAMLError as exc:
         print(f"Error parsing YAML: {exc}")
+        return None
+    except Exception as exc:
+        print(f"Error reading YAML file: {exc}")
         return None
