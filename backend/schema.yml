@@ -782,10 +782,12 @@ paths:
       - in: query
         name: config_name
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Config Name
-          type: string
         description: Config name filter to retrieve tests
-        required: true
       - in: query
         name: current_test_start_time
         schema:
@@ -802,17 +804,21 @@ paths:
       - in: query
         name: git_repository_branch
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Git Repository Branch
-          type: string
         description: Git branch name to retrieve tests
-        required: true
       - in: query
         name: git_repository_url
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Git Repository Url
-          type: string
         description: Git repository URL to retrieve tests
-        required: true
       - in: query
         name: group_size
         schema:
@@ -825,17 +831,19 @@ paths:
       - in: query
         name: origin
         schema:
+          anyOf:
+          - type: string
+          - type: 'null'
           default: maestro
           title: Origin
-          type: string
         description: Origin filter to retrieve tests
       - in: query
         name: path
         schema:
+          default: null
           title: Path
           type: string
         description: Test path filter
-        required: true
       - in: query
         name: platform
         schema:
@@ -857,6 +865,86 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestStatusHistoryResponse'
+          description: ''
+  /api/test/status-series:
+    get:
+      operationId: test_status_series_retrieve
+      parameters:
+      - in: query
+        name: architecture
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Architecture
+        description: Architecture filter to retrieve tests
+      - in: query
+        name: compiler
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Compiler
+        description: Compiler filter to retrieve tests
+      - in: query
+        name: config_name
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Config Name
+        description: Config name filter to retrieve tests
+      - in: query
+        name: group_size
+        schema:
+          default: 10
+          exclusiveMinimum: 0
+          title: Group Size
+          type: integer
+        description: The maximum amount of tests retrieved for the status history.
+          This affects the group's classification.
+      - in: query
+        name: origin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: maestro
+          title: Origin
+        description: Origin filter to retrieve tests
+      - in: query
+        name: path
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Path
+        description: Test path filter
+      - in: query
+        name: platform
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Platform
+        description: Platform filter to retrieve tests
+      tags:
+      - test
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestStatusSeriesResponse'
           description: ''
   /api/tree/:
     get:
@@ -3495,6 +3583,28 @@ components:
       - status_history
       - regression_type
       title: TestStatusHistoryResponse
+      type: object
+    TestStatusSeriesResponse:
+      properties:
+        status_history:
+          items:
+            $ref: '#/components/schemas/TestStatusHistoryItem'
+          title: Status History
+          type: array
+        regression_type:
+          $ref: '#/components/schemas/PossibleRegressionType'
+        test_series:
+          title: Test Series
+          type: string
+        build_series:
+          title: Build Series
+          type: string
+      required:
+      - status_history
+      - regression_type
+      - test_series
+      - build_series
+      title: TestStatusSeriesResponse
       type: object
     TestSummary:
       properties:
