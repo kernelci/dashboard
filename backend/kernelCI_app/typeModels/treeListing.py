@@ -62,27 +62,6 @@ class Checkout(CommonCheckouts):
     tree_name: Checkout__TreeName
     git_commit_tags: list[Checkout__GitCommitTags]
 
-    def add_counts(
-        self,
-        build_status: StatusCount,
-        test_status: TestStatusCount,
-        boot_status: TestStatusCount,
-    ) -> None:
-        self.build_status += build_status
-        self.test_status += test_status
-        self.boot_status += boot_status
-
-    def combine_tags(self, tags: list[Checkout__GitCommitTags]) -> None:
-        if not tags:
-            return
-
-        existing_tags = set(self.git_commit_tags)
-
-        for tag in tags:
-            if tag not in existing_tags:
-                existing_tags.add(tag)
-                self.git_commit_tags.append(tag)
-
 
 class CheckoutFast(CommonCheckouts):
     id: Checkout__Id

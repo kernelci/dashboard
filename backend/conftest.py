@@ -65,9 +65,11 @@ def pytest_collection_modifyitems(items: list[Item]):
     test_markers = get_test_markers()
 
     for item in items:
-        parent_folder = item.path.parent.name.lower()
-
-        matched_markers = [marker for marker in test_markers if marker in parent_folder]
+        path_parts = [part.lower() for part in item.path.parts]
+        matched_markers = []
+        for marker in test_markers:
+            if any(marker in part for part in path_parts):
+                matched_markers.append(marker)
         match len(matched_markers):
             case 0:
                 raise Exception(
@@ -80,11 +82,10 @@ def pytest_collection_modifyitems(items: list[Item]):
             case _:
                 raise Exception(
                     """Test %s can only be of a single type (one of %s),
-                        but found multiple markers (%s) at folder %s"""
+                        but found multiple markers (%s)"""
                     % (
                         item.name,
                         test_markers,
                         matched_markers,
-                        parent_folder,
                     )
                 )
