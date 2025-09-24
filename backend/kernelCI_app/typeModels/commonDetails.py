@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Optional, Set, Union, Tuple, Any
+from typing import Optional, Union
 from typing_extensions import Annotated
 
 from pydantic import BaseModel, field_validator, Field
@@ -34,7 +34,7 @@ class TestArchSummaryItem(BaseModel):
 
 
 class BuildArchitectures(StatusCount):
-    compilers: Optional[List[str]] = []
+    compilers: Optional[list[str]] = []
 
 
 class TestHistoryItem(BaseModel):
@@ -44,7 +44,7 @@ class TestHistoryItem(BaseModel):
     duration: Optional[Union[int, float]]
     path: Optional[str]
     start_time: Optional[Union[datetime, str]]
-    environment_compatible: Optional[Union[str, List[str]]]
+    environment_compatible: Optional[Union[str, list[str]]]
     config: Optional[str]
     log_url: Optional[str]
     architecture: Optional[str]
@@ -72,9 +72,15 @@ class BuildHistoryItem(BaseModel):
 
     @field_validator("misc", mode="before")
     @classmethod
-    def to_dict(cls, value: Any) -> Any:
+    def to_dict(cls, value) -> Optional[dict]:
         if isinstance(value, str):
-            return json.loads(value)
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError as err:
+                log_message(
+                    f"Invalid misc for BuildHistoryItem;\nType: {type(value)}\nError: {err.msg}"
+                )
+                return None
         elif isinstance(value, dict):
             return value
         elif value is None:
@@ -86,15 +92,15 @@ class BuildHistoryItem(BaseModel):
 class TestSummary(BaseModel):
     status: StatusCount
     origins: dict[str, StatusCount]
-    architectures: List[TestArchSummaryItem]
-    configs: Dict[str, StatusCount]
-    issues: List[Issue]
+    architectures: list[TestArchSummaryItem]
+    configs: dict[str, StatusCount]
+    issues: list[Issue]
     unknown_issues: int
     fail_reasons: defaultdict[str, int]
-    failed_platforms: Set
-    environment_compatible: Optional[Dict] = None
-    environment_misc: Optional[Dict] = None
-    platforms: Optional[Dict[str, StatusCount]] = None
+    failed_platforms: set
+    environment_compatible: Optional[dict] = None
+    environment_misc: Optional[dict] = None
+    platforms: Optional[dict[str, StatusCount]] = None
 
 
 class BaseBuildSummary(BaseModel):
@@ -105,7 +111,7 @@ class BaseBuildSummary(BaseModel):
 
 
 class BuildSummary(BaseBuildSummary):
-    issues: List[Issue]
+    issues: list[Issue]
     unknown_issues: int
 
 
@@ -116,13 +122,13 @@ class Summary(BaseModel):
 
 
 class GlobalFilters(BaseModel):
-    configs: List[str]
-    architectures: List[str]
-    compilers: List[str]
+    configs: list[str]
+    architectures: list[str]
+    compilers: list[str]
 
 
 class LocalFilters(BaseModel):
-    issues: List[Tuple[str, Optional[int]]]
+    issues: list[tuple[str, Optional[int]]]
     origins: list[str]
     has_unknown_issue: bool
 
@@ -135,8 +141,8 @@ class DetailsFilters(BaseModel):
 
 
 class CommonDetailsTestsResponse(BaseModel):
-    tests: List[TestHistoryItem]
+    tests: list[TestHistoryItem]
 
 
 class CommonDetailsBootsResponse(BaseModel):
-    boots: List[TestHistoryItem]
+    boots: list[TestHistoryItem]

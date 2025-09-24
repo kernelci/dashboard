@@ -72,17 +72,6 @@ class Checkout(CommonCheckouts):
         self.test_status += test_status
         self.boot_status += boot_status
 
-    def combine_tags(self, tags: list[Checkout__GitCommitTags]) -> None:
-        if not tags:
-            return
-
-        existing_tags = set(self.git_commit_tags)
-
-        for tag in tags:
-            if tag not in existing_tags:
-                existing_tags.add(tag)
-                self.git_commit_tags.append(tag)
-
 
 class CheckoutFast(CommonCheckouts):
     id: Checkout__Id
