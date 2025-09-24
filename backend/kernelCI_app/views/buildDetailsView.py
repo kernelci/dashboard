@@ -15,7 +15,7 @@ class BuildDetails(APIView):
         parameters=[BUILD_ID_PATH_PARAM],
         responses=BuildDetailsResponse,
     )
-    def get(self, request, build_id: str) -> Response:
+    def get(self, _request, build_id: str) -> Response:
         records = get_build_details(build_id)
 
         if not records:
