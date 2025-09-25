@@ -6,3 +6,7 @@ application_default_credentials.json
 .env.db
 .env.proxy
 .idea
+
+# k6 data
+k6/data/dump.sql
+k6/results/*.json

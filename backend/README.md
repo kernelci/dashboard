@@ -139,6 +139,11 @@ The tests are also executed in our CI system, and every pull request must pass t
 it can be merged.
 
 
+### Performance tests
+
+Apart from unit and integration tests, we can also make performance tests with k6. Though this is not intrinsically from the backend, it tests the requests to the endpoint and doesn't require the frontend to work. You can check the [performanceTests.md file](../docs/performanceTests.md) for more information on how to setup and run them.
+
+
 ## Cron jobs
 
 We have support for cron jobs using django-crontab. To set up cron jobs, edit the `CRONJOBS` variable in /backend/kernelCI/settings.py

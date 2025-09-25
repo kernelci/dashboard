@@ -1,0 +1,89 @@
+volumes:
+    k6-db-data:
+    test-backend-data:
+
+networks:
+    public:
+    private:
+
+services:
+    k6-db:
+        image: postgres:17
+        container_name: k6-db
+        environment:
+            POSTGRES_DB: dashboard
+            POSTGRES_USER: admin
+            POSTGRES_PASSWORD: admin
+        volumes:
+            - k6-db-data:/var/lib/postgresql/data
+            - ./k6/data:/docker-entrypoint-initdb.d:ro
+        networks:
+            - private
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U admin -d dashboard"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+        ports:
+            - "5436:5432"
+
+    redis:
+        image: redis:8.0-M04-alpine
+        restart: always
+        networks:
+            - private
+        ports:
+            - "6380:6379"
+
+    test-backend:
+        build:
+            context: ./backend
+            args:
+                BACKEND_VOLUME_DIR: /volume_data
+        volumes:
+            - test-backend-data:/volume_data
+        networks:
+            - private
+        ports:
+            - 8002:8000
+        depends_on:
+            - redis
+            - k6-db
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://test-backend:8000/api/schema/swagger-ui/"]
+            interval: 60s
+            timeout: 5s
+            retries: 5
+            start_period: 15s
+        environment:
+            DB_DEFAULT_NAME: dashboard
+            DB_DEFAULT_USER: admin
+            DB_DEFAULT_PASSWORD: admin
+            DB_DEFAULT_HOST: k6-db
+            DB_DEFAULT_PORT: 5432
+            DASH_DB_NAME: dashboard
+            DASH_DB_USER: admin
+            DASH_DB_PASSWORD: admin
+            DASH_DB_HOST: k6-db
+            DASH_DB_PORT: 5432
+            USE_DASHBOARD_DB: True
+            DEBUG: True
+            DEBUG_SQL_QUERY: False
+            REDIS_HOST: redis
+            CACHE_TIMEOUT: 60
+            CORS_ALLOW_ALL_ORIGINS: True
+            ALLOWED_HOSTS: '["localhost", "test-backend"]'
+            SKIP_CRONJOBS: True
+    k6:
+        build:
+            context: ./k6
+            dockerfile: Dockerfile
+        volumes:
+            - ./k6/results:/results
+        networks:
+            - private
+        depends_on:
+            test-backend:
+                condition: service_healthy
+        # Modify to run specific tests or comment to run all tests:
+        # command: ["hardwareDetails"]
