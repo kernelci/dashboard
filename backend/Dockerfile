@@ -16,6 +16,7 @@ RUN apk update \
         libc-dev \
         libpq-dev \
         postgresql \
+        curl \
     && python3 -m venv $POETRY_HOME \
     && $POETRY_HOME/bin/pip install poetry==1.8.3 \
     && ln -s $POETRY_HOME/bin/poetry /bin/poetry
