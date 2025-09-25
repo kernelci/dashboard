@@ -75,6 +75,8 @@ const StatusChart = ({
         })),
         innerRadius: 50,
         outerRadius: 80,
+        cx: 80,
+        cy: 80,
       },
     ];
   }, [elements]);
@@ -83,13 +85,13 @@ const StatusChart = ({
     return <></>;
   }
   return (
-    <div>
+    <div className="p-4">
       <span className="font-bold">{title}</span>
-      <div className="flex items-center">
+      <div className="flex flex-col items-center sm:flex-row">
         <PieChart
           series={dataSeries}
-          width={200}
-          height={200}
+          height={170}
+          width={170}
           slotProps={{
             legend: {
               hidden: true,
@@ -101,7 +103,7 @@ const StatusChart = ({
             description={pieCentralDescription ?? <></>}
           />
         </PieChart>
-        <div className="flex flex-row gap-4 pt-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-end">
           <ChartLegend chartValues={elements} onClick={onLegendClick} />
           <RegressionsStatus
             increaseElement={increaseElement}
@@ -164,16 +166,20 @@ const ChartLegend = ({ chartValues, onClick }: IChartLegend): JSX.Element => {
                 />
               </div>
             )}
-            <div className="flex flex-col">
+            <div className="flex min-w-0 flex-col">
               <span className="font-bold">{chartValue?.value}</span>
-              <span className="text-dark-gray2">{status}</span>
+              <span className="text-dark-gray2 text-sm">{status}</span>
             </div>
           </WrapperElement>
         )
       );
     });
   }, [chartValues, intl, onClick]);
-  return <div className="flex flex-col gap-2">{legend}</div>;
+  return (
+    <div className="flex flex-row flex-wrap justify-center gap-4 sm:flex-col">
+      {legend}
+    </div>
+  );
 };
 
 const RegressionsStatus = ({
@@ -225,7 +231,8 @@ const PieCenterLabel = ({
   const yPositionLabel = 9 / 20;
   // eslint-disable-next-line no-magic-numbers
   const yPositionDescription = 11 / 20;
-  const xPosition = left + width / 2;
+  // eslint-disable-next-line no-magic-numbers
+  const xPosition = left + width * 1.3;
   return (
     <>
       <StyledText x={xPosition} y={top + yPositionLabel * height}>
