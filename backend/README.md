@@ -154,6 +154,8 @@ You can check that the cron jobs are listed inside the docker container with
 or
 ```docker exec -it dashboard-backend-1 poetry run ./manage.py crontab show```
 
+If you are a developer and want to skip the cron job setup while you're testing, you can also export the `SKIP_CRONJOBS` variable as `True` to skip cron jobs entirely.
+
 
 ## Deploy instructions
 

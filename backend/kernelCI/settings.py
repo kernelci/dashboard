@@ -131,47 +131,51 @@ SPECTACULAR_SETTINGS = {
 # To run cronjobs locally, execute
 # poetry run ./manage.py crontab arg
 # where "arg" is add, remove or show
-CRONJOBS = [
-    ("0 * * * *", "kernelCI_app.tasks.update_checkout_cache"),
-    ("0 0 * * *", "django.core.management.call_command", ["treeproof"]),
-    (
-        "59 * * * *",
-        "django.core.management.call_command",
-        [
-            "notifications",
-            "--action=new_issues",
-            "--to=kernelci-results@groups.io",
-            "--cc=gus@collabora.com",
-            "--send",
-            "--yes",
-        ],
-    ),
-    (
-        "30 14 * * *",
-        "django.core.management.call_command",
-        [
-            "notifications",
-            "--action=summary",
-            "--to=kernelcialerts@microsoft.com",
-            "--ignore-recipients",
-            "--send",
-            "--yes",
-            "--summary-origins=microsoft",
-        ],
-    ),
-    (
-        "30 2 * * *",
-        "django.core.management.call_command",
-        [
-            "notifications",
-            "--action=summary",
-            "--add-mailing-lists",
-            "--send",
-            "--yes",
-            "--summary-origins=maestro",
-        ],
-    ),
-]
+SKIP_CRONJOBS = is_boolean_or_string_true(os.environ.get("SKIP_CRONJOBS", False))
+if SKIP_CRONJOBS:
+    CRONJOBS = []
+else:
+    CRONJOBS = [
+        ("0 * * * *", "kernelCI_app.tasks.update_checkout_cache"),
+        ("0 0 * * *", "django.core.management.call_command", ["treeproof"]),
+        (
+            "59 * * * *",
+            "django.core.management.call_command",
+            [
+                "notifications",
+                "--action=new_issues",
+                "--to=kernelci-results@groups.io",
+                "--cc=gus@collabora.com",
+                "--send",
+                "--yes",
+            ],
+        ),
+        (
+            "30 14 * * *",
+            "django.core.management.call_command",
+            [
+                "notifications",
+                "--action=summary",
+                "--to=kernelcialerts@microsoft.com",
+                "--ignore-recipients",
+                "--send",
+                "--yes",
+                "--summary-origins=microsoft",
+            ],
+        ),
+        (
+            "30 2 * * *",
+            "django.core.management.call_command",
+            [
+                "notifications",
+                "--action=summary",
+                "--add-mailing-lists",
+                "--send",
+                "--yes",
+                "--summary-origins=maestro",
+            ],
+        ),
+    ]
 
 # Email settings for SMTP backend
 EMAIL_BACKEND = os.environ.get(
