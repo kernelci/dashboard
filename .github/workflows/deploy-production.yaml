@@ -12,6 +12,13 @@ jobs:
   deploy-production:
     runs-on: ubuntu-latest
     steps:
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@v0.4.0
+        with:
+          args: "Deploying production Dashboard with tag `${{ github.event.inputs.tag }}`"
+
       - name: Configure host authenticity
         run: |
           mkdir -p ~/.ssh/ && chmod 700 ~/.ssh/
@@ -29,3 +36,19 @@ jobs:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
+
+      - name: Discord notification on success
+        if: success()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@v0.4.0
+        with:
+          args: "Production Dashboard deployment successful with tag `${{ github.event.inputs.tag }}`"
+
+      - name: Discord notification on failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@v0.4.0
+        with:
+          args: "Production Dashboard deployment failed with tag `${{ github.event.inputs.tag }}`"
