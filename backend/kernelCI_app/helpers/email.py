@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from email.mime.text import MIMEText
 from email.utils import make_msgid
 
 from django.core.mail import get_connection, EmailMessage
@@ -68,18 +67,3 @@ def smtp_send_email(
     except Exception as error:
         print(f"An error occurred: {error}")
         raise
-
-
-def create_email(sender, to, subject, message_text, cc, reply_to):
-    msg = MIMEText(message_text, "plain", "utf-8")
-    msg["Subject"] = subject
-    msg["From"] = sender
-
-    if to:
-        msg["To"] = to
-    if cc:
-        msg["Cc"] = cc
-    if reply_to:
-        msg["Reply-To"] = reply_to
-
-    return msg
