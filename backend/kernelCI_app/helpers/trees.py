@@ -19,13 +19,13 @@ def get_tree_file_data() -> dict[str, dict[str, str]]:
     """Returns the data from the tree names file"""
     filepath = os.path.join(settings.BACKEND_VOLUME_DIR, "trees-name.yaml")
 
+    trees_from_file = None
+
     if os.path.exists(filepath):
         with open(filepath, "r") as file:
             trees_from_file = yaml.safe_load(file)
 
-    if trees_from_file is not None:
-        return trees_from_file
-    return {}
+    return trees_from_file if trees_from_file is not None else {}
 
 
 @typing_extensions.deprecated(
