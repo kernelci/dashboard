@@ -262,7 +262,7 @@ def process_tests_issue(*, instance, row_data, is_boot=False) -> None:
         else:
             table: IssueDict = instance.test_issues_dict
 
-        current_issue: Issue = table.get((issue_id, issue_version))
+        current_issue: Issue | None = table.get((issue_id, issue_version))
         if current_issue:
             current_issue.incidents_info.increment(test_status)
         else:
@@ -458,9 +458,9 @@ def process_filters(instance, row_data: dict) -> None:
     issue_id = row_data["issue_id"]
     issue_version = row_data["issue_version"]
     incident_test_id = row_data["incident_test_id"]
-    build_status = row_data["build_status"]
 
     if row_data["build_id"] is not None:
+        build_status = row_data["build_status"]
         instance.global_configs.add(row_data["build_config_name"])
         instance.global_architectures.add(row_data["build_architecture"])
         instance.global_compilers.add(row_data["build_compiler"])
