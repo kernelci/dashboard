@@ -251,10 +251,12 @@ def should_increment_build_issue(
 
 
 def to_int_or_default(value, default):
-    try:
-        return int(value)
-    except ValueError:
-        return default
+    if value:
+        try:
+            return int(value)
+        except ValueError:
+            return default
+    return default
 
 
 type FilterFields = Literal[
