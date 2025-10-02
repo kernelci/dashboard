@@ -206,3 +206,11 @@ class Incidents(models.Model):
 
     class Meta:
         db_table = "incidents"
+        indexes = [
+            models.Index(fields=["field_timestamp"], name="incidents__timestamp"),
+            # Since there is no such thing as a composite foreign key, there is no automatic index on
+            # (issue_id, issue_version). But since the issue_id alone is defined as an FK, there is
+            # an automatic index on it. So we just need to add an index on issue_version alone.
+            models.Index(fields=["issue_version"], name="incidents_issue_version"),
+            models.Index(fields=["origin"], name="incidents_origin"),
+        ]
