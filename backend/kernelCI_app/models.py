@@ -71,6 +71,17 @@ class Checkouts(models.Model):
 
     class Meta:
         db_table = "checkouts"
+        indexes = [
+            models.Index(fields=["field_timestamp"], name="checkouts__timestamp"),
+            models.Index(fields=["git_commit_hash"], name="checkouts_commit_hash"),
+            models.Index(fields=["git_commit_name"], name="checkouts_commit_name"),
+            GinIndex(fields=["git_commit_tags"], name="checkouts_commit_tags"),
+            models.Index(fields=["git_repository_branch"], name="checkouts_git_branch"),
+            models.Index(fields=["git_repository_url"], name="checkouts_git_url"),
+            models.Index(fields=["origin"], name="checkouts_origin"),
+            models.Index(fields=["start_time"], name="checkouts_start_time"),
+            models.Index(fields=["tree_name"], name="checkouts_tree_name"),
+        ]
 
 
 class Builds(models.Model):
