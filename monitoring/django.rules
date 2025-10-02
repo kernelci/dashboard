@@ -1,0 +1,38 @@
+groups:
+  - name: django
+    rules:
+      - alert: DjangoHighErrorRate
+        expr: rate(django_http_responses_total_by_status_view_method{status=~"5.."}[5m]) / rate(django_http_responses_total_by_status_view_method[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected for endpoint {{ $labels.view }}"
+          description: "Django error rate is {{ $value | humanizePercentage }} for endpoint {{ $labels.view }}"
+
+      - alert: DjangoHighResponseTime
+        expr: histogram_quantile(0.95, rate(django_http_requests_latency_seconds_by_view_method_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected for endpoint {{ $labels.view }}"
+          description: "Django 95th percentile response time is {{ $value }}s for endpoint {{ $labels.view }}"
+
+      - alert: DjangoHighRequestRate
+        expr: sum(rate(django_http_requests_total_by_view_method[5m])) by (view) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request rate detected for endpoint {{ $labels.view }}"
+          description: "Django request rate is {{ $value }} req/s for endpoint {{ $labels.view }}"
+
+      - alert: DjangoDatabaseHighQueryTime
+        expr: rate(django_db_query_duration_seconds_sum[5m]) / rate(django_db_query_duration_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database query time detected"
+          description: "Django average database query time is {{ $value }}s"

@@ -63,14 +63,21 @@ SECURE_SSL_REDIRECT = False
 SECURE_HSTS_SECONDS = 31536000
 
 
+base_allowed_hosts = ["localhost"]
+
+if DEBUG:
+    base_allowed_hosts.append("0.0.0.0")
+    base_allowed_hosts.append("host.docker.internal")
+
 ALLOWED_HOSTS = get_json_env_var(
     "ALLOWED_HOSTS",
-    ["localhost"],
+    base_allowed_hosts,
 )
 
 # Application definition
 
 INSTALLED_APPS = [
+    "django_prometheus",
     "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -86,6 +93,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -95,6 +103,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "kernelCI_app.middleware.logServerErrorMiddleware.LogServerErrorMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "kernelCI.urls"
@@ -200,7 +209,7 @@ DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 kcidb_config = get_json_env_var(
     "DB_DEFAULT",
     {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django_prometheus.db.backends.postgresql",
         "NAME": "kernelci",
         "USER": "kernelci",
         "PASSWORD": "kernelci-db-password",
@@ -212,7 +221,7 @@ kcidb_config = get_json_env_var(
 )
 
 dashboard_db_config = {
-    "ENGINE": "django.db.backends.postgresql",
+    "ENGINE": "django_prometheus.db.backends.postgresql",
     "NAME": os.environ.get("DASH_DB_NAME", "dashboard"),
     "USER": os.environ.get("DASH_DB_USER", "dev"),
     "PASSWORD": os.environ.get("DASH_DB_PASSWORD", "dev"),
