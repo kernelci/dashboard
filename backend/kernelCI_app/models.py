@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.indexes import GinIndex
 from django.db.models import F
 from django.db.models.functions import Concat, MD5
 
@@ -32,6 +33,14 @@ class Issues(models.Model):
     class Meta:
         db_table = "issues"
         unique_together = (("id", "version"),)
+        indexes = [
+            models.Index(fields=["field_timestamp"], name="issues__timestamp"),
+            GinIndex(fields=["categories"], name="issues_categories"),
+            models.Index(fields=["culprit_code"], name="issues_culprit_code"),
+            models.Index(fields=["culprit_harness"], name="issues_culprit_harness"),
+            models.Index(fields=["culprit_tool"], name="issues_culprit_tool"),
+            models.Index(fields=["origin"], name="issues_origin"),
+        ]
 
 
 class Checkouts(models.Model):
