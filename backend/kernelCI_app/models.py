@@ -3,6 +3,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
 from django.db.models import F
 from django.db.models.functions import Concat, MD5
+from django.db.models.expressions import RawSQL
 
 
 class StatusChoices(models.TextChoices):
@@ -169,6 +170,20 @@ class Tests(models.Model):
 
     class Meta:
         db_table = "tests"
+        indexes = [
+            models.Index(fields=["field_timestamp"], name="tests__timestamp"),
+            GinIndex(
+                fields=["environment_compatible"], name="tests_environment_compatible"
+            ),
+            models.Index(fields=["origin"], name="tests_origin"),
+            models.Index(fields=["path"], name="tests_path"),
+            models.Index(
+                RawSQL("(environment_misc ->> 'platform')", []),
+                name="tests_platform_idx",
+            ),
+            models.Index(fields=["start_time"], name="tests_start_time"),
+            models.Index(fields=["status"], name="tests_status"),
+        ]
 
 
 class Incidents(models.Model):
