@@ -43,7 +43,7 @@ For the main database, the backend uses a `DB_DEFAULT` variable that must have a
 
 ```sh
 DB_DEFAULT="{
-    \"ENGINE\": \"${DB_DEFAULT_ENGINE:=django.db.backends.postgresql}\",
+    \"ENGINE\": \"${DB_DEFAULT_ENGINE:=django_prometheus.db.backends.postgresql}\",
     \"NAME\": \"${DB_DEFAULT_NAME:=kcidb}\",
     \"USER\": \"${DB_DEFAULT_USER:=<your-email-here>}\",
     \"PASSWORD\": \"<your-password-here-don't-forget-to-scape-special-characters>\", 
@@ -211,6 +211,9 @@ The email notification system is used with cron jobs to be able to send regular 
 ## IDE Specific:
 You are free to use whichever tool you would like, but here are tips for specific IDEs
 
+## Monitoring and Metrics
+
+The project includes monitoring using Prometheus and Grafana. See the [monitoring documentation](docs/monitoring.md) for detailed information about.
 
 ### (Optional): Running in PyCharm
 
