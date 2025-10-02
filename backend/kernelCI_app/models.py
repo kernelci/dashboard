@@ -124,7 +124,14 @@ class Builds(models.Model):
     class Meta:
         db_table = "builds"
         indexes = [
+            models.Index(fields=["field_timestamp"], name="builds__timestamp"),
+            models.Index(fields=["architecture"], name="builds_architecture"),
+            models.Index(fields=["compiler"], name="builds_compiler"),
+            models.Index(fields=["config_name"], name="builds_config_name"),
+            models.Index(fields=["origin"], name="builds_origin"),
+            models.Index(fields=["start_time"], name="builds_start_time"),
             models.Index(fields=["series"], name="builds_series_idx"),
+            models.Index(fields=["status"], name="builds_status"),
         ]
 
 
