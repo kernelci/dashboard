@@ -14,6 +14,8 @@ from pathlib import Path
 from utils.validation import is_boolean_or_string_true
 import os
 import json
+import threading
+from django_prometheus import exports
 
 
 def get_json_env_var(name, default):
@@ -61,18 +63,6 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 SECURE_HSTS_SECONDS = 31536000
-
-
-base_allowed_hosts = ["localhost"]
-
-if DEBUG:
-    base_allowed_hosts.append("0.0.0.0")
-    base_allowed_hosts.append("host.docker.internal")
-
-ALLOWED_HOSTS = get_json_env_var(
-    "ALLOWED_HOSTS",
-    base_allowed_hosts,
-)
 
 # Application definition
 
@@ -368,4 +358,33 @@ if DEBUG_SQL_QUERY:
 
 DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS = get_json_env_var(
     "DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS", 30
+)
+
+PROMETHEUS_METRICS_ENABLED = is_boolean_or_string_true(
+    os.environ.get("PROMETHEUS_METRICS_ENABLED", False)
+)
+
+if PROMETHEUS_METRICS_ENABLED:
+    PROMETHEUS_METRICS_PORT = os.environ.get("PROMETHEUS_METRICS_PORT", 8001)
+
+    def start_metrics_server():
+        try:
+            exports.SetupPrometheusEndpointOnPort(
+                PROMETHEUS_METRICS_PORT, addr="0.0.0.0"
+            )
+        except Exception as e:
+            print(f"Failed to start Prometheus metrics server: {e}")
+
+    metrics_thread = threading.Thread(target=start_metrics_server, daemon=True)
+    metrics_thread.start()
+
+base_allowed_hosts = ["localhost"]
+
+if DEBUG and PROMETHEUS_METRICS_ENABLED:
+    base_allowed_hosts.append("0.0.0.0")
+    base_allowed_hosts.append("host.docker.internal")
+
+ALLOWED_HOSTS = get_json_env_var(
+    "ALLOWED_HOSTS",
+    base_allowed_hosts,
 )

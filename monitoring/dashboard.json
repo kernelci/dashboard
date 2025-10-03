@@ -103,7 +103,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(django_http_requests_latency_seconds_by_view_method_sum{view!=\"prometheus-django-metrics\"}[5m]) / rate(django_http_requests_latency_seconds_by_view_method_count{view!=\"prometheus-django-metrics\"}[5m])",
+          "expr": "rate(django_http_requests_latency_seconds_by_view_method_sum{view!=\"<unnamed view>\"}[5m]) / rate(django_http_requests_latency_seconds_by_view_method_count{view!=\"<unnamed view>\"}[5m])",
           "instant": false,
           "legendFormat": "{{view}} - {{method}}",
           "range": true,
@@ -194,7 +194,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "django_http_requests_latency_seconds_by_view_method_count{view!=\"prometheus-django-metrics\"}",
+          "expr": "django_http_requests_latency_seconds_by_view_method_count{view!=\"<unnamed view>\"}",
           "instant": false,
           "legendFormat": "{{view}} - {{method}}",
           "range": true,
@@ -365,7 +365,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "django_http_requests_latency_seconds_by_view_method_count{view!=\"prometheus-django-metrics\"}",
+          "expr": "sum(django_http_requests_latency_seconds_by_view_method_count{view!=\"<unnamed view>\"}) by (view, method)",
           "format": "table",
           "instant": true,
           "legendFormat": "{{view}} - {{method}}",
@@ -378,7 +378,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "django_http_requests_latency_seconds_by_view_method_sum{view!=\"prometheus-django-metrics\"}",
+          "expr": "sum(django_http_requests_latency_seconds_by_view_method_sum{view!=\"<unnamed view>\"}) by (view, method)",
           "format": "table",
           "hide": false,
           "instant": true,
