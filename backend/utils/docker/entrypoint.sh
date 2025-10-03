@@ -60,6 +60,13 @@ if [ "$SETUP_DJANGO" = 1 ]; then
     exit 0
 fi
 
+MODE="${CONTAINER_MODE:-backend}"
+if [ "$MODE" = "command" ]; then
+    # Commands don't need cronjobs or cache migrations
+    exec "$@"
+    exit 0
+fi
+
 # Add and start cronjobs
 poetry run ./manage.py crontab add
 crond start

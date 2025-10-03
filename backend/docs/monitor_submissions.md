@@ -35,6 +35,11 @@ The command uses the following environment variables:
 
 If `STORAGE_TOKEN` is not set, log_excerpts will not be uploaded and the original log_excerpt will be inserted in the database.
 
+### On Docker
+
+It is possible to run the ingester within docker, as visible in the [docker-compose file](/docker-compose.yml). If you want to test it there, it is suggested to change the volume mount from `../spool` to just `./backend/spool`, which will allow you to interact with it from inside the project files.
+
+If you have permission errors with the directory, try fixing it with `sudo chown -R $USER:$USER ./backend/spool` as this will change the ownership from docker to your user.
 
 ## Directory Structure
 

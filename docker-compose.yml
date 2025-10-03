@@ -1,3 +1,20 @@
+x-backend-common: &backend-common
+    build:
+        context: ./backend
+        args:
+            BACKEND_VOLUME_DIR: ${BACKEND_VOLUME_DIR:-/volume_data}
+    volumes:
+        - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+        - ../data:/app  # Directory of the tree names file and other data
+        - ../spool:/app/spool  # Directory for ingester to monitor
+    env_file:
+        - .env.backend
+    secrets:
+        - postgres_password_secret
+    networks:
+        - private
+        - public
+
 volumes:
     backend-data:
     runtime-data:
@@ -13,6 +30,50 @@ secrets:
         file: ./backend/runtime/secrets/postgres_password_secret
 
 services:
+    backend:
+        <<: *backend-common
+        container_name: dashboard_backend_service
+        restart: always
+        environment:
+            - CONTAINER_MODE=backend
+        depends_on:
+            - redis
+            - dashboard_db
+        ports:
+            - target: 8000
+              published: 8000
+              protocol: tcp
+              mode: host
+            - target: 8001
+              published: 8001
+              protocol: tcp
+              mode: host
+
+    ingester:
+        <<: *backend-common
+        container_name: dashboard_ingester_service
+        environment:
+            - CONTAINER_MODE=command
+            # Pass down the variable from .env to inside the container
+            - INGESTER_METRICS_PORT=${INGESTER_METRICS_PORT:-8002}
+        command:
+            - poetry
+            - run
+            - python3
+            - manage.py
+            - monitor_submissions
+            - --spool-dir
+            - /app/spool
+        restart: always
+        depends_on:
+            - dashboard_db
+        ports:
+            - target: ${INGESTER_METRICS_PORT:-8002}
+              published: ${INGESTER_METRICS_PORT:-8002}
+              protocol: tcp
+              mode: host
+        profiles: ["with_commands"]
+
     dashboard_db:
         image: postgres:17
         env_file:
@@ -43,36 +104,6 @@ services:
             - private
         ports:
             - 6379:6379
-
-    backend:
-        build:
-            context: ./backend
-            args:
-                BACKEND_VOLUME_DIR: ${BACKEND_VOLUME_DIR:-/volume_data}
-        volumes:
-            - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
-        restart: always
-        container_name: dashboard_backend_service
-        networks:
-            - private
-            - public
-        ports:
-            - target: 8000
-              published: 8000
-              protocol: tcp
-              mode: host
-            - target: 8001
-              published: 8001
-              protocol: tcp
-              mode: host
-        depends_on:
-            - cloudsql-proxy
-            - redis
-            - dashboard_db
-        secrets:
-            - postgres_password_secret
-        env_file:
-            - .env.backend
 
     dashboard:
         build:
