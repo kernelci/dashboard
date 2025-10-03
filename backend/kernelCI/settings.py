@@ -43,19 +43,12 @@ SECRET_KEY = get_json_env_var(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = is_boolean_or_string_true(os.environ.get("DEBUG", False))
 
-ENV_DEBUG = get_json_env_var("DEBUG", False)
+DEBUG_SQL_QUERY = is_boolean_or_string_true(os.environ.get("DEBUG_SQL_QUERY", False))
 
-if is_boolean_or_string_true(ENV_DEBUG):
-    DEBUG = True
-
-DEBUG_SQL_QUERY = False
-
-ENV_DEBUG_SQL_QUERY = get_json_env_var("DEBUG_SQL_QUERY", False)
-
-if is_boolean_or_string_true(ENV_DEBUG_SQL_QUERY) and DEBUG:
-    DEBUG_SQL_QUERY = True
+# SECURITY WARNING: DO NOT PRINT PRODUCTION ENV VARS
+DEBUG_DB_VARS = is_boolean_or_string_true(os.environ.get("DEBUG_DB_VARS", False))
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -192,7 +185,7 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
 # When running on docker it won't build without this variable,
 # the default value here is for when running locally
-BACKEND_VOLUME_DIR = get_json_env_var("BACKEND_VOLUME_DIR", "volume_data")
+BACKEND_VOLUME_DIR = os.environ.get("BACKEND_VOLUME_DIR", "volume_data")
 
 DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
@@ -250,11 +243,11 @@ else:
         "notifications": notifications_db_config,
     }
 
-if DEBUG:
+if DEBUG_DB_VARS:
     print("DEBUG: DATABASES:", DATABASES)
 
 
-REDIS_HOST = get_json_env_var("REDIS_HOST", "127.0.0.1")
+REDIS_HOST = os.environ.get("REDIS_HOST", "127.0.0.1")
 
 CACHES = {
     "default": {
@@ -317,7 +310,7 @@ CORS_ALLOW_ALL_ORIGINS = is_boolean_or_string_true(
     os.environ.get("CORS_ALLOW_ALL_ORIGINS", False)
 )
 
-CACHE_TIMEOUT = int(get_json_env_var("CACHE_TIMEOUT", "180"))
+CACHE_TIMEOUT = int(os.environ.get("CACHE_TIMEOUT", "180"))
 
 if DEBUG:
     CORS_ALLOWED_ORIGIN_REGEXES = [
@@ -329,34 +322,37 @@ if DEBUG:
     SECURE_HSTS_SECONDS = 3600
     CACHE_TIMEOUT = 0
 
-if DEBUG_SQL_QUERY:
-    LOGGING = {
-        "disable_existing_loggers": False,
-        "version": 1,
-        "handlers": {
-            "console": {
-                # logging handler that outputs log messages to terminal
-                "class": "logging.StreamHandler",
-                "level": "DEBUG",  # message level to be written to console
-            },
-        },
-        "loggers": {
-            "": {
-                # this sets root level logger to log debug and higher level
-                # logs to console. All other loggers inherit settings from
-                # root level logger.
-                "handlers": ["console"],
-                "level": "DEBUG",
-                "propagate": False,  # this tells logger to send logging message
-                # to its parent (will send if set to True)
-            },
-            "django.db": {
-                # django also has database level logging
-                "level": "DEBUG"
-            },
-        },
-    }
+ENABLE_LOGGING = is_boolean_or_string_true(os.environ.get("ENABLE_LOGGING", True))
 
-DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS = get_json_env_var(
-    "DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS", 30
+LOGGING = {
+    "disable_existing_loggers": False,
+    "version": 1,
+    "handlers": {
+        "console": {
+            # logging handler that outputs log messages to terminal
+            "class": "logging.StreamHandler",
+            "level": "DEBUG",  # message level to be written to console
+        },
+    },
+    "loggers": {
+        "": {
+            # this sets root level logger to log debug and higher level
+            # logs to console. All other loggers inherit settings from
+            # root level logger.
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,  # this tells logger to send logging message
+            # to its parent (will send if set to True)
+        },
+    },
+}
+
+if DEBUG_SQL_QUERY:
+    LOGGING["loggers"]["django.db"] = {
+        # django also has database level logging
+        "level": "DEBUG"
+    },
+
+DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS = int(
+    os.environ.get("DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS", 30)
 )
