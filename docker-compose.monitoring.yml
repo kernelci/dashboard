@@ -1,0 +1,35 @@
+volumes:
+    grafana-data:
+
+networks:
+    monitoring:
+        driver: bridge
+
+services:
+    prometheus:
+        image: prom/prometheus:v3.6.0
+        container_name: prometheus
+        ports:
+            - "9090:9090"
+        volumes:
+            - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+            - ./monitoring/django.rules:/etc/prometheus/django.rules
+        networks:
+            - monitoring
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+
+    grafana:
+        image: grafana/grafana-oss:12.2.0-17142428006
+        container_name: grafana
+        ports:
+            - "3000:3000"
+        environment:
+            - GF_SECURITY_ADMIN_USER=admin
+            - GF_SECURITY_ADMIN_PASSWORD=admin
+        volumes:
+            - grafana-data:/var/lib/grafana
+        networks:
+            - monitoring
+        depends_on:
+            - prometheus
