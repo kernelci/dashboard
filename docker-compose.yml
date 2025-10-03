@@ -104,18 +104,6 @@ services:
         ports:
             - "5434:5432"
 
-    cloudsql-proxy:
-        image: gcr.io/cloudsql-docker/gce-proxy:latest
-        container_name: cloudsql-proxy
-        command: /cloud_sql_proxy --dir=/cloudsql -instances=kernelci-production:us-central1:postgresql2=tcp:0.0.0.0:5432 -credential_file=/secrets/cloudsql/application_default_credentials.json
-        ports:
-            - 5432:5432
-        volumes:
-            - ./application_default_credentials.json:/secrets/cloudsql/application_default_credentials.json
-        networks:
-            - private
-        restart: always
-
     redis:
         image: redis:8.0-M04-alpine
         restart: always

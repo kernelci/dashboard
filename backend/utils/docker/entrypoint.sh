@@ -44,10 +44,10 @@ fi
 
 export DB_DEFAULT="{
     \"ENGINE\": \"${DB_DEFAULT_ENGINE:=django.db.backends.postgresql}\",
-    \"NAME\": \"${DB_DEFAULT_NAME:=kcidb}\",
-    \"USER\": \"${DB_DEFAULT_USER:=kernelci}\",
+    \"NAME\": \"${DB_DEFAULT_NAME:=dashboard}\",
+    \"USER\": \"${DB_DEFAULT_USER:=admin}\",
     \"PASSWORD\": \"$DB_DEFAULT_PASSWORD\",
-    \"HOST\": \"${DB_DEFAULT_HOST:=cloudsql-proxy}\",
+    \"HOST\": \"${DB_DEFAULT_HOST:=dashboard_db}\",
     \"PORT\": \"${DB_DEFAULT_PORT:=5432}\",
     \"CONN_MAX_AGE\": ${DB_DEFAULT_CONN_MAX_AGE:=null},
     \"OPTIONS\": {
