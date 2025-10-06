@@ -191,7 +191,7 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
 # When running on docker it won't build without this variable,
 # the default value here is for when running locally
-BACKEND_VOLUME_DIR = get_json_env_var("BACKEND_VOLUME_DIR", "volume_data")
+BACKEND_VOLUME_DIR = os.environ.get("BACKEND_VOLUME_DIR", "volume_data")
 
 DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
@@ -253,7 +253,7 @@ if DEBUG:
     print("DEBUG: DATABASES:", DATABASES)
 
 
-REDIS_HOST = get_json_env_var("REDIS_HOST", "127.0.0.1")
+REDIS_HOST = os.environ.get("REDIS_HOST", "127.0.0.1")
 
 CACHES = {
     "default": {
@@ -316,7 +316,7 @@ CORS_ALLOW_ALL_ORIGINS = is_boolean_or_string_true(
     os.environ.get("CORS_ALLOW_ALL_ORIGINS", False)
 )
 
-CACHE_TIMEOUT = int(get_json_env_var("CACHE_TIMEOUT", "180"))
+CACHE_TIMEOUT = int(os.environ.get("CACHE_TIMEOUT", "180"))
 
 if DEBUG:
     CORS_ALLOWED_ORIGIN_REGEXES = [
@@ -356,8 +356,8 @@ if DEBUG_SQL_QUERY:
         },
     }
 
-DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS = get_json_env_var(
-    "DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS", 30
+DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS = int(
+    os.environ.get("DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS", 30)
 )
 
 PROMETHEUS_METRICS_ENABLED = is_boolean_or_string_true(
