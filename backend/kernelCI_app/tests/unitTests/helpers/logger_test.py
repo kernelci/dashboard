@@ -1,30 +1,46 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 from django.http import HttpRequest
 from kernelCI_app.constants.general import PRODUCTION_HOST, STAGING_HOST
 from kernelCI_app.helpers.logger import log_message, create_endpoint_notification
 
 
 class TestLogMessage:
-    @patch("builtins.print")
-    def test_log_message_basic(self, mock_print):
+    @patch("kernelCI_app.helpers.logger.logger")
+    def test_log_message_basic(self, mock_logger):
         """Test log_message prints the message."""
         message = "Test log message"
         log_message(message)
-        mock_print.assert_called_once_with(message)
+        mock_logger.info.assert_called_once_with(message)
 
-    @patch("builtins.print")
-    def test_log_message_empty_string(self, mock_print):
+    @patch("kernelCI_app.helpers.logger.logger")
+    def test_log_message_empty_string(self, mock_logger):
         """Test log_message with empty string."""
         message = ""
         log_message(message)
-        mock_print.assert_called_once_with("")
+        mock_logger.info.assert_called_once_with("")
 
-    @patch("builtins.print")
-    def test_log_message_none(self, mock_print):
+    @patch("kernelCI_app.helpers.logger.logger")
+    def test_log_message_none(self, mock_logger):
         """Test log_message with None (should not happen but testing robustness)."""
         message = None
         log_message(message)
-        mock_print.assert_called_once_with(None)
+        mock_logger.info.assert_called_once_with(None)
+
+    @patch("kernelCI_app.helpers.logger.logger")
+    @patch("builtins.print")
+    def test_log_message_without_logger(self, mock_print, mock_logger):
+        """Test log_message if logger fails, which should fallback to print."""
+        message = "Any message"
+        mock_logger.info.side_effect = Exception("Logger failure")
+
+        log_message(message)
+
+        assert mock_print.call_count == 2
+        expected_calls = [
+            call("LOGGER FAILED, using print as fallback"),
+            call(message),
+        ]
+        mock_print.assert_has_calls(expected_calls)
 
 
 class TestCreateEndpointNotification:

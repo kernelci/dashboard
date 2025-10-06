@@ -45,19 +45,12 @@ SECRET_KEY = get_json_env_var(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = is_boolean_or_string_true(os.environ.get("DEBUG", False))
 
-ENV_DEBUG = get_json_env_var("DEBUG", False)
+DEBUG_SQL_QUERY = is_boolean_or_string_true(os.environ.get("DEBUG_SQL_QUERY", False))
 
-if is_boolean_or_string_true(ENV_DEBUG):
-    DEBUG = True
-
-DEBUG_SQL_QUERY = False
-
-ENV_DEBUG_SQL_QUERY = get_json_env_var("DEBUG_SQL_QUERY", False)
-
-if is_boolean_or_string_true(ENV_DEBUG_SQL_QUERY) and DEBUG:
-    DEBUG_SQL_QUERY = True
+# SECURITY WARNING: DO NOT PRINT PRODUCTION DB VARS
+DEBUG_DB_VARS = is_boolean_or_string_true(os.environ.get("DEBUG_DB_VARS", False))
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -249,7 +242,7 @@ else:
         "notifications": notifications_db_config,
     }
 
-if DEBUG:
+if DEBUG_DB_VARS:
     print("DEBUG: DATABASES:", DATABASES)
 
 
@@ -328,33 +321,46 @@ if DEBUG:
     SECURE_HSTS_SECONDS = 3600
     CACHE_TIMEOUT = 0
 
-if DEBUG_SQL_QUERY:
-    LOGGING = {
-        "disable_existing_loggers": False,
-        "version": 1,
-        "handlers": {
-            "console": {
-                # logging handler that outputs log messages to terminal
-                "class": "logging.StreamHandler",
-                "level": "DEBUG",  # message level to be written to console
-            },
+
+# Base logging configuration. Individual loggers must be set in order to log messages.
+LOGGING = {
+    "disable_existing_loggers": False,
+    "version": 1,
+    "handlers": {
+        "console": {
+            # logging handler that outputs log messages to terminal
+            "class": "logging.StreamHandler",
+            "level": "DEBUG",  # message level to be written to console
         },
-        "loggers": {
-            "": {
-                # this sets root level logger to log debug and higher level
-                # logs to console. All other loggers inherit settings from
-                # root level logger.
-                "handlers": ["console"],
-                "level": "DEBUG",
-                "propagate": False,  # this tells logger to send logging message
-                # to its parent (will send if set to True)
-            },
-            "django.db": {
-                # django also has database level logging
-                "level": "DEBUG"
-            },
+    },
+}
+
+# this sets root level logger to log debug and higher level
+# logs to console. All other loggers inherit settings from
+# root level logger.
+ENABLE_LOGGING = is_boolean_or_string_true(os.environ.get("ENABLE_LOGGING", False))
+if ENABLE_LOGGING:
+    LOGGING["loggers"] = {
+        "": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,  # this tells logger to send logging message
+            # to its parent (will send if set to True)
         },
     }
+
+if DEBUG_SQL_QUERY:
+    if LOGGING.get("loggers") is None:
+        # No other logger set, only db logs
+        LOGGING["loggers"] = {
+            "django.db": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+            }
+        }
+    else:
+        # Adds database logging
+        LOGGING["loggers"]["django.db"] = {"level": "DEBUG"}
 
 DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS = int(
     os.environ.get("DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS", 30)

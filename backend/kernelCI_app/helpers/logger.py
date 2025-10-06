@@ -2,12 +2,19 @@ from django.http import HttpRequest
 
 from kernelCI_app.constants.general import PRODUCTION_HOST, STAGING_HOST
 from kernelCI_app.helpers.system import get_running_instance
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # For logging that we care about, we create a function so we can easily use
 # a more sophisticated logging library later.
 def log_message(message: str) -> None:
-    print(message)
+    try:
+        logger.info(message)
+    except Exception:
+        print("LOGGER FAILED, using print as fallback")
+        print(message)
 
 
 def create_endpoint_notification(*, message: str, request: HttpRequest) -> str:
