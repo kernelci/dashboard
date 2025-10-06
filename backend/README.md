@@ -35,6 +35,8 @@ poetry env info --executable
 
 Start by exporting `DEBUG=True` in order to allow localhost connection and avoid CORS issues (**should NOT be set to True on production environments**).
 
+In order to check messages from the `log_message` function, also export `ENABLE_LOGGING=True`.
+
 It's possible to export `DEBUG_SQL_QUERY=True` if you want to see which SQL queries are made but it is quite verbose, so it's recommended to keep it as False unless needed.
 
 ### Databases
@@ -56,7 +58,7 @@ DB_DEFAULT="{
 }"
 ```
 > [!NOTE]
-> It is possible to have authentication issues when escaping special characters. In some cases, it is necessary to add more than one backslash, while in others, no addition is needed. To assist with this, when `DEBUG` is set to `True`, the default database info will be printed in the terminal, allowing you to determine if the characters got escaped as intended.
+> It is possible to have authentication issues when escaping special characters. In some cases, it is necessary to add more than one backslash, while in others, no addition is needed. To assist with this, you can export `DEBUG_DB_VARS=True` to check the database connection info in the terminal, allowing you to determine if the characters got escaped as intended. **This variable should NOT be set to True in production**.
 
 Along with the main database, the backend also connects to a secondary, local db made while we transition between database providers. It uses a simpler environment variable structure:
 ```sh
@@ -159,7 +161,7 @@ You can check that the cron jobs are listed inside the docker container with
 or
 ```docker exec -it dashboard-backend-1 poetry run ./manage.py crontab show```
 
-If you are a developer and want to skip the cron job setup while you're testing, you can also export the `SKIP_CRONJOBS` variable as `True` to skip cron jobs entirely.
+If you are a developer and want to skip the cron job setup while you're testing, you can also export `SKIP_CRONJOBS=True` to skip cron jobs entirely.
 
 
 ## Deploy instructions
@@ -187,9 +189,12 @@ In the `/requests` directory we have scripts that execute requests to endpoints 
 
 ## Debug
 
-For debugging we have two env variables
+For debugging we have four env variables:
 
-`DEBUG` and `DEBUG_SQL_QUERY` that can be set to `True` to enable debugging. The reason `DEBUG_SQL_QUERY` is separated is that it can be very verbose.
+- `DEBUG`: Required for local development, returns more data on errors, should not be set to True on production;
+- `DEBUG_SQL_QUERY`: logs every query made, can be verbose;
+- `DEBUG_DB_VARS`: logs the database connection vars, to check if the characters were escaped correctly, should not be set to True on production;
+- `ENABLE_LOGGING`: enables general debug logging.
 
 
 ## Discord Webhook Integration
