@@ -20,7 +20,7 @@ from kernelCI_app.helpers.filters import (
     should_increment_test_issue,
 )
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.helpers.misc import env_misc_value_or_default, handle_environment_misc
+from kernelCI_app.helpers.misc import misc_value_or_default, handle_misc
 from kernelCI_app.typeModels.databases import (
     FAIL_STATUS,
     NULL_STATUS,
@@ -267,8 +267,8 @@ def handle_tree_status_summary(
 
 
 def create_record_test_platform(*, record: Dict) -> str:
-    environment_misc = handle_environment_misc(record["environment_misc"])
-    test_platform = env_misc_value_or_default(environment_misc).get("platform")
+    environment_misc = handle_misc(record["environment_misc"])
+    test_platform = misc_value_or_default(environment_misc).get("platform")
     record["test_platform"] = test_platform
 
     return test_platform
@@ -324,8 +324,8 @@ def handle_test_summary(
         getattr(task.configs[config_name], status) + 1,
     )
 
-    environment_misc = handle_environment_misc(record["environment_misc"])
-    test_platform = env_misc_value_or_default(environment_misc).get("platform")
+    environment_misc = handle_misc(record["environment_misc"])
+    test_platform = misc_value_or_default(environment_misc).get("platform")
     if task.platforms is None:
         task.platforms = {}
     if task.platforms.get(test_platform) is None:
@@ -601,9 +601,9 @@ def decide_if_is_test_in_filter(
     issue_version = record["incidents__issue__version"]
     incidents_test_id = record["incidents__test_id"]
     origin = record["test_origin"]
-    platform = env_misc_value_or_default(
-        handle_environment_misc(record["environment_misc"])
-    ).get("platform")
+    platform = misc_value_or_default(handle_misc(record["environment_misc"])).get(
+        "platform"
+    )
 
     if test_type == "boot":
         test_filter_pass = not instance.filters.is_boot_filtered_out(
@@ -711,8 +711,8 @@ def process_filters(*, instance, record: Dict) -> None:
             unknown_issue_flag_tab=flag_tab,
         )
 
-        environment_misc = handle_environment_misc(record["environment_misc"])
-        test_platform = env_misc_value_or_default(environment_misc).get("platform")
+        environment_misc = handle_misc(record["environment_misc"])
+        test_platform = misc_value_or_default(environment_misc).get("platform")
         platform_set.add(test_platform)
         origin_set.add(record["test_origin"])
 

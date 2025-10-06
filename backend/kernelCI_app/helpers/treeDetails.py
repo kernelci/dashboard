@@ -18,10 +18,8 @@ from kernelCI_app.typeModels.databases import (
 from kernelCI_app.typeModels.issues import Issue, IssueDict
 from kernelCI_app.utils import create_issue_typed, extract_error_message
 from kernelCI_app.helpers.misc import (
-    handle_build_misc,
-    handle_environment_misc,
-    build_misc_value_or_default,
-    env_misc_value_or_default,
+    handle_misc,
+    misc_value_or_default,
 )
 from kernelCI_app.utils import is_boot
 
@@ -109,10 +107,8 @@ def get_current_row_data(current_row: dict) -> dict:
         "issue_report_url": current_row[37],
     }
 
-    environment_misc = handle_environment_misc(
-        current_row_data["test_environment_misc"]
-    )
-    current_row_data["test_platform"] = env_misc_value_or_default(environment_misc).get(
+    environment_misc = handle_misc(current_row_data["test_environment_misc"])
+    current_row_data["test_platform"] = misc_value_or_default(environment_misc).get(
         "platform"
     )
     if current_row_data["test_status"] is None:
@@ -139,7 +135,7 @@ def get_current_row_data(current_row: dict) -> dict:
         or current_row_data["test_status"] == FAIL_STATUS
     ):
         current_row_data["issue_id"] = UNCATEGORIZED_STRING
-    current_row_data["build_misc"] = handle_build_misc(current_row_data["build_misc"])
+    current_row_data["build_misc"] = handle_misc(current_row_data["build_misc"])
     if current_row_data["test_path"] is None:
         current_row_data["test_path"] = UNKNOWN_STRING
 
@@ -172,9 +168,7 @@ def call_based_on_compatible_and_misc_platform(
 ) -> Any:
     test_environment_compatible = row_data["test_environment_compatible"]
     test_environment_misc_platform = row_data["test_platform"]
-    build_misc_platform = build_misc_value_or_default(row_data["build_misc"]).get(
-        "platform"
-    )
+    build_misc_platform = misc_value_or_default(row_data["build_misc"]).get("platform")
 
     if test_environment_compatible != UNKNOWN_STRING:
         return callback(test_environment_compatible)

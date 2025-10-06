@@ -10,10 +10,8 @@ from kernelCI_app.helpers.filters import (
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING, UNKNOWN_STRING
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import (
-    handle_build_misc,
-    handle_environment_misc,
-    build_misc_value_or_default,
-    env_misc_value_or_default,
+    handle_misc,
+    misc_value_or_default,
 )
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     COMMIT_HASH_PATH_PARAM,
@@ -321,25 +319,19 @@ class BaseTreeCommitsHistory(APIView):
         sanitized_rows = self.sanitize_rows(rows)
 
         for row in sanitized_rows:
-            test_environment_misc = handle_environment_misc(
-                row["test_environment_misc"]
-            )
+            test_environment_misc = handle_misc(row["test_environment_misc"])
 
             hardware_filter = []
             if row["hardware_compatibles"] is not None:
                 hardware_filter = row["hardware_compatibles"]
             if test_environment_misc is not None:
-                platform = env_misc_value_or_default(test_environment_misc).get(
-                    "platform"
-                )
+                platform = misc_value_or_default(test_environment_misc).get("platform")
                 if len(hardware_filter) == 0 or platform != UNKNOWN_STRING:
                     hardware_filter.append(platform)
             # Only consider build platform if there is neither compatibles nor env platform
             if len(hardware_filter) == 0:
-                build_misc = handle_build_misc(row["build_misc"])
-                hardware_filter = [
-                    build_misc_value_or_default(build_misc).get("platform")
-                ]
+                build_misc = handle_misc(row["build_misc"])
+                hardware_filter = [misc_value_or_default(build_misc).get("platform")]
 
             record_in_period = self._is_record_in_time_period(
                 start_time=row["earliest_start_time"]
