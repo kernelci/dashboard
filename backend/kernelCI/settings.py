@@ -14,6 +14,7 @@ from pathlib import Path
 from utils.validation import is_boolean_or_string_true
 import os
 import json
+import socket
 import threading
 from django_prometheus import exports
 
@@ -368,15 +369,26 @@ if PROMETHEUS_METRICS_ENABLED:
     PROMETHEUS_METRICS_PORT = int(os.environ.get("PROMETHEUS_METRICS_PORT", 8001))
 
     def start_metrics_server():
+        # Check if port is already in use (another worker already started the server)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
+            sock.bind(('0.0.0.0', PROMETHEUS_METRICS_PORT))
+            sock.close()
+            # Port is free, we can start the server
+            print(f"Starting Prometheus metrics server on port {PROMETHEUS_METRICS_PORT}")
             exports.SetupPrometheusEndpointOnPort(
                 PROMETHEUS_METRICS_PORT, addr="0.0.0.0"
             )
+        except OSError:
+            # Port already in use, another worker has started the server
+            pass
         except Exception as e:
             print(f"Failed to start Prometheus metrics server: {e}")
 
-    metrics_thread = threading.Thread(target=start_metrics_server, daemon=True)
-    metrics_thread.start()
+    # Only attempt to start for runserver child process or always for production servers
+    if os.environ.get('RUN_MAIN') == 'true' or os.environ.get('RUN_MAIN') is None:
+        metrics_thread = threading.Thread(target=start_metrics_server, daemon=True)
+        metrics_thread.start()
 
 base_allowed_hosts = ["localhost"]
 
