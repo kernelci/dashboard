@@ -365,7 +365,7 @@ PROMETHEUS_METRICS_ENABLED = is_boolean_or_string_true(
 )
 
 if PROMETHEUS_METRICS_ENABLED:
-    PROMETHEUS_METRICS_PORT = os.environ.get("PROMETHEUS_METRICS_PORT", 8001)
+    PROMETHEUS_METRICS_PORT = int(os.environ.get("PROMETHEUS_METRICS_PORT", 8001))
 
     def start_metrics_server():
         try:
