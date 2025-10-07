@@ -28,6 +28,7 @@ Log excerpt:
 {% for build in builds %}
 ## {{ build["config_name"] }} on ({{ build["architecture"] }}):
 - compiler: {{ build["compiler"] }}
+- config: {{ build["config_url"] }}
 - dashboard: https://d.kernelci.org/build/{{build["id"]}}
 {% endfor %}
 

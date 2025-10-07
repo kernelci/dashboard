@@ -260,6 +260,7 @@ def kcidb_build_incidents(issue_id):
         SELECT DISTINCT ON (b.config_name, b.architecture, b.compiler)
             b.id,
             b.config_name,
+            b.config_url,
             b.architecture,
             b.compiler
         FROM builds b
