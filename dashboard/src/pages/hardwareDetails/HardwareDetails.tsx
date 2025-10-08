@@ -378,35 +378,33 @@ function HardwareDetails(): JSX.Element {
         }
       >
         <div className="flex flex-col pt-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink
-                      to="/hardware"
-                      search={previousParams => {
-                        return {
-                          intervalInDays: previousParams.intervalInDays,
-                          origin: previousParams.origin,
-                          hardwareSearch: previousParams.hardwareSearch,
-                        };
-                      }}
-                      state={s => s}
-                    >
-                      <FormattedMessage id="hardware.path" />
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>
-                      <span>{hardwareId}</span>
-                    </BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-            <p className="text-sm font-medium text-gray-900">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink
+                    to="/hardware"
+                    search={previousParams => {
+                      return {
+                        intervalInDays: previousParams.intervalInDays,
+                        origin: previousParams.origin,
+                        hardwareSearch: previousParams.hardwareSearch,
+                      };
+                    }}
+                    state={s => s}
+                  >
+                    <FormattedMessage id="hardware.path" />
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>
+                    <span>{hardwareId}</span>
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+            <p className="gap-2 text-sm font-medium text-gray-900 lg:gap-0">
               <FormattedMessage
                 id="hardwareDetails.timeFrame"
                 values={{
