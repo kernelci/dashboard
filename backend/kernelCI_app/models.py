@@ -164,3 +164,60 @@ class Incidents(models.Model):
 
     class Meta:
         db_table = "incidents"
+
+
+class TreeListing(models.Model):
+    field_timestamp = models.DateTimeField(db_column="_timestamp")  # Created at
+    checkout_id = models.TextField()
+    origin = models.TextField()
+    tree_name = models.TextField(blank=True, null=True)
+    git_repository_url = models.TextField(blank=True, null=True)
+    git_repository_branch = models.TextField(blank=True, null=True)
+    git_commit_hash = models.TextField(blank=True, null=True)
+    git_commit_name = models.TextField(blank=True, null=True)
+    git_commit_tags = ArrayField(models.TextField())  # Cannot be null, but can be empty
+    start_time = models.DateTimeField(blank=True, null=True)
+    origin_builds_finish_time = models.DateTimeField(blank=True, null=True)
+    origin_tests_finish_time = models.DateTimeField(blank=True, null=True)
+
+    pass_builds = models.IntegerField(default=0)
+    fail_builds = models.IntegerField(default=0)
+    done_builds = models.IntegerField(default=0)
+    miss_builds = models.IntegerField(default=0)
+    skip_builds = models.IntegerField(default=0)
+    error_builds = models.IntegerField(default=0)
+    null_builds = models.IntegerField(default=0)
+
+    pass_boots = models.IntegerField(default=0)
+    fail_boots = models.IntegerField(default=0)
+    done_boots = models.IntegerField(default=0)
+    miss_boots = models.IntegerField(default=0)
+    skip_boots = models.IntegerField(default=0)
+    error_boots = models.IntegerField(default=0)
+    null_boots = models.IntegerField(default=0)
+
+    pass_tests = models.IntegerField(default=0)
+    fail_tests = models.IntegerField(default=0)
+    done_tests = models.IntegerField(default=0)
+    miss_tests = models.IntegerField(default=0)
+    skip_tests = models.IntegerField(default=0)
+    error_tests = models.IntegerField(default=0)
+    null_tests = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "tree_listing"
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "origin",
+                    "tree_name",
+                    "git_repository_url",
+                    "git_repository_branch",
+                ],
+                name="unique_tree",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["start_time"], name="tree_listing_start_time"),
+            models.Index(fields=["origin"], name="tree_listing_origin"),
+        ]
