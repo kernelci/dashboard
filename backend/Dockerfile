@@ -45,12 +45,13 @@ RUN O='0 1 2' \
             PYTHONOPTIMIZE=$N poetry run python -m compileall -q $D || exit 1; \
         done
 
-EXPOSE 8000
-
 ARG BACKEND_VOLUME_DIR
 ENV BACKEND_VOLUME_DIR=${BACKEND_VOLUME_DIR}
 RUN echo "Building with volume on: $BACKEND_VOLUME_DIR"
 VOLUME ${BACKEND_VOLUME_DIR}
+
+# Expose both application and metrics ports
+EXPOSE 8000 8001
 
 # gunicorn is added here but is run at the end of the entrypoint.
 # This was done here such that we can run a custom command

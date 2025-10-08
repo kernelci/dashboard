@@ -28,6 +28,20 @@ function file_env() {
 
 file_env DB_DEFAULT_PASSWORD
 
+# Initialize Prometheus metrics before Django starts
+PROMETHEUS_METRICS_ENABLED=$(echo "$PROMETHEUS_METRICS_ENABLED" | tr '[:upper:]' '[:lower:]')
+if [ "$PROMETHEUS_METRICS_ENABLED" = "true" ]; then
+    echo "Initializing Prometheus metrics before Django startup..."
+    PROMETHEUS_METRICS_PORT=${PROMETHEUS_METRICS_PORT:-8001}
+    PROMETHEUS_MULTIPROC_DIR=${PROMETHEUS_MULTIPROC_DIR:-/tmp/prometheus_multiproc_dir}
+    export PROMETHEUS_MULTIPROC_DIR
+    export PROMETHEUS_METRICS_PORT
+    
+    rm -f $PROMETHEUS_MULTIPROC_DIR/*.db || true
+    
+    python3 utils/prometheus_aggregator.py &
+fi
+
 export DB_DEFAULT="{
     \"ENGINE\": \"${DB_DEFAULT_ENGINE:=django.db.backends.postgresql}\",
     \"NAME\": \"${DB_DEFAULT_NAME:=kcidb}\",

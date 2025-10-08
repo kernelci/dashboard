@@ -61,6 +61,10 @@ services:
               published: 8000
               protocol: tcp
               mode: host
+            - target: 8001
+              published: 8001
+              protocol: tcp
+              mode: host
         depends_on:
             - cloudsql-proxy
             - redis
