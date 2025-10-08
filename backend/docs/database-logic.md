@@ -120,3 +120,18 @@ the same structure
 
 Revision has no respective table, but it is a collection of checkouts with
 the same `git_commit_hash` and `patchset_hash`. But `patchset_hash` is not commonly used these days.
+
+## Indexes
+
+Some indexes were defined to improve the database performance, they were chosen based on if the field is used on _query_ filters. Fields that are only selected or only filtered in the Python layer don't need to be indexed, and the excess of indexes can impact insertion performance.
+
+For most fields, a default b-tree index is used; for array fields, a GIN index is used since it can handle containment checks. One expression index was also created for the test platform, which lives inside the `environment_misc` JSON field.
+
+Django also creates some indexes automatically:
+
+- Index for primary key as b-tree;
+- Index for primary key as b-tree with `text_pattern_ops`, specialized for `LIKE` operations.
+- Index for foreign key as b-tree;
+- Index for foreign key as b-tree with `text_pattern_ops`, specialized for `LIKE` operations.
+
+One of the operations that we are doing benefits from this double indexes, which is the filtering of dummy builds (builds where id LIKE `maestro:_dummy%`)

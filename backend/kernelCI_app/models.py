@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.indexes import GinIndex
 from django.db.models import F
 from django.db.models.functions import Concat, MD5
+from django.db.models.expressions import RawSQL
 
 
 class StatusChoices(models.TextChoices):
@@ -32,6 +34,14 @@ class Issues(models.Model):
     class Meta:
         db_table = "issues"
         unique_together = (("id", "version"),)
+        indexes = [
+            models.Index(fields=["field_timestamp"], name="issues__timestamp"),
+            GinIndex(fields=["categories"], name="issues_categories"),
+            models.Index(fields=["culprit_code"], name="issues_culprit_code"),
+            models.Index(fields=["culprit_harness"], name="issues_culprit_harness"),
+            models.Index(fields=["culprit_tool"], name="issues_culprit_tool"),
+            models.Index(fields=["origin"], name="issues_origin"),
+        ]
 
 
 class Checkouts(models.Model):
@@ -62,6 +72,17 @@ class Checkouts(models.Model):
 
     class Meta:
         db_table = "checkouts"
+        indexes = [
+            models.Index(fields=["field_timestamp"], name="checkouts__timestamp"),
+            models.Index(fields=["git_commit_hash"], name="checkouts_commit_hash"),
+            models.Index(fields=["git_commit_name"], name="checkouts_commit_name"),
+            GinIndex(fields=["git_commit_tags"], name="checkouts_commit_tags"),
+            models.Index(fields=["git_repository_branch"], name="checkouts_git_branch"),
+            models.Index(fields=["git_repository_url"], name="checkouts_git_url"),
+            models.Index(fields=["origin"], name="checkouts_origin"),
+            models.Index(fields=["start_time"], name="checkouts_start_time"),
+            models.Index(fields=["tree_name"], name="checkouts_tree_name"),
+        ]
 
 
 class Builds(models.Model):
@@ -104,7 +125,14 @@ class Builds(models.Model):
     class Meta:
         db_table = "builds"
         indexes = [
+            models.Index(fields=["field_timestamp"], name="builds__timestamp"),
+            models.Index(fields=["architecture"], name="builds_architecture"),
+            models.Index(fields=["compiler"], name="builds_compiler"),
+            models.Index(fields=["config_name"], name="builds_config_name"),
+            models.Index(fields=["origin"], name="builds_origin"),
+            models.Index(fields=["start_time"], name="builds_start_time"),
             models.Index(fields=["series"], name="builds_series_idx"),
+            models.Index(fields=["status"], name="builds_status"),
         ]
 
 
@@ -142,6 +170,20 @@ class Tests(models.Model):
 
     class Meta:
         db_table = "tests"
+        indexes = [
+            models.Index(fields=["field_timestamp"], name="tests__timestamp"),
+            GinIndex(
+                fields=["environment_compatible"], name="tests_environment_compatible"
+            ),
+            models.Index(fields=["origin"], name="tests_origin"),
+            models.Index(fields=["path"], name="tests_path"),
+            models.Index(
+                RawSQL("(environment_misc ->> 'platform')", []),
+                name="tests_platform_idx",
+            ),
+            models.Index(fields=["start_time"], name="tests_start_time"),
+            models.Index(fields=["status"], name="tests_status"),
+        ]
 
 
 class Incidents(models.Model):
@@ -164,3 +206,11 @@ class Incidents(models.Model):
 
     class Meta:
         db_table = "incidents"
+        indexes = [
+            models.Index(fields=["field_timestamp"], name="incidents__timestamp"),
+            # Since there is no such thing as a composite foreign key, there is no automatic index on
+            # (issue_id, issue_version). But since the issue_id alone is defined as an FK, there is
+            # an automatic index on it. So we just need to add an index on issue_version alone.
+            models.Index(fields=["issue_version"], name="incidents_issue_version"),
+            models.Index(fields=["origin"], name="incidents_origin"),
+        ]

@@ -9,7 +9,7 @@ class DatabaseRouter:
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         if db == "default":
-            return settings.USE_DASHBOARD_DB
+            return settings.USE_DASHBOARD_DB and app_label != "kernelCI_cache"
         if model_name in ["notificationscheckout", "notificationsissue"]:
             return db == "notifications"
         if model_name in ["checkoutscache"]:
