@@ -11,11 +11,12 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import sys
+import threading
 from utils.validation import is_boolean_or_string_true
+from utils.development_metrics import start_development_metrics_server
 import os
 import json
-import threading
-from django_prometheus import exports
 
 
 def get_json_env_var(name, default):
@@ -371,18 +372,14 @@ PROMETHEUS_METRICS_ENABLED = is_boolean_or_string_true(
 )
 
 if PROMETHEUS_METRICS_ENABLED:
-    PROMETHEUS_METRICS_PORT = os.environ.get("PROMETHEUS_METRICS_PORT", 8001)
-
-    def start_metrics_server():
-        try:
-            exports.SetupPrometheusEndpointOnPort(
-                PROMETHEUS_METRICS_PORT, addr="0.0.0.0"
-            )
-        except Exception as e:
-            print(f"Failed to start Prometheus metrics server: {e}")
-
-    metrics_thread = threading.Thread(target=start_metrics_server, daemon=True)
-    metrics_thread.start()
+    # Local development
+    if "runserver" in sys.argv:
+        print("Starting development metrics server")
+        # The '--noreload' is important, otherwise Django will start two processes
+        metrics_thread = threading.Thread(
+            target=start_development_metrics_server, daemon=True
+        )
+        metrics_thread.start()
 
 base_allowed_hosts = ["localhost"]
 
