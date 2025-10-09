@@ -1597,6 +1597,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/CommonDetailsTestsResponse'
           description: ''
+  /api/tree/listing:
+    get:
+      operationId: tree_listing_retrieve
+      description: |-
+        Returns the checkout data for trees in a specific origin, in the last X days.
+        The data includes the number of builds, boots and tests, grouped by status, for each checkout.
+
+        Query params (`ListingQueryParameters`):
+            - origin: str
+            - interval_in_days: int
+
+        Status returns:
+            - 200: A list of checkouts with their respective data.
+            - 400: Bad request, invalid parameters.
+            - 500: Internal server error, something went wrong on the server. Usually validation.
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin filter
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeListingResponse'
+          description: ''
 components:
   schemas:
     BuildArchitectures:
@@ -3288,7 +3332,7 @@ components:
         build_id:
           $ref: '#/components/schemas/Build__Id'
         status:
-          $ref: '#/components/schemas/Test__Status'
+          $ref: '#/components/schemas/StatusValues'
         path:
           $ref: '#/components/schemas/Test__Path'
         log_excerpt:

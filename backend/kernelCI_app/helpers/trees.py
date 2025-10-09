@@ -57,6 +57,7 @@ def sanitize_tree(
     """Sanitizes a checkout that was returned by a 'treelisting-like' query
 
     Returns a Checkout object"""
+
     build_status = StatusCount(
         PASS=checkout["pass_builds"],
         FAIL=checkout["fail_builds"],
@@ -87,13 +88,23 @@ def sanitize_tree(
         "skip": checkout["skip_boots"],
     }
 
-    if isinstance(checkout.get("git_commit_tags"), str):
+    # Has to check if it's a string because sqlite doesn't support ArrayFields.
+    # So if the query came from sqlite, it will be a string.
+    git_commit_tags = checkout.get("git_commit_tags")
+    if isinstance(git_commit_tags, str):
         try:
             checkout["git_commit_tags"] = json.loads(checkout["git_commit_tags"])
             if not isinstance(checkout["git_commit_tags"], list):
                 checkout["git_commit_tags"] = []
         except json.JSONDecodeError:
             checkout["git_commit_tags"] = []
+    elif git_commit_tags and isinstance(git_commit_tags, list):
+        first_tag = git_commit_tags[0]
+        if isinstance(first_tag, str):
+            # The git_commit_tags comes as list[str] on a normal query, but `Checkout`
+            # expects list[list[str]]. This is a workaround, the queries should *always*
+            # return a simples list[str].
+            checkout["git_commit_tags"] = [git_commit_tags]
 
     return Checkout(
         **checkout,
