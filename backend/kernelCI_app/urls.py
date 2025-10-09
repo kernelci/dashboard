@@ -25,6 +25,7 @@ urlpatterns = [
     path("test/<str:test_id>", view_cache(views.TestDetails), name="testDetails"),
     path("tree/", view_cache(views.TreeView), name="tree"),
     path("tree-fast/", view_cache(views.TreeViewFast), name="tree-fast"),
+    path("tree/listing", view_cache(views.TreeListingView), name="treeListing"),
     path(
         "tree/<str:commit_hash>/full",
         views.TreeDetails.as_view(),
