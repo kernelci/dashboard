@@ -14,6 +14,9 @@ from typing import Any, Literal, Optional
 import yaml
 import kcidb_io
 from django.db import transaction
+from kernelCI_app.management.commands.helpers.denormal import (
+    handle_checkout_denormalization,
+)
 from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
 
 from kernelCI_app.management.commands.helpers.process_submissions import (
@@ -303,6 +306,9 @@ def consume_buffer(buffer: list[TableModels], item_type: TableNames) -> None:
     """
     if not buffer:
         return
+
+    if item_type == "checkouts":
+        handle_checkout_denormalization(buffer=buffer)
 
     model = MODEL_MAP[item_type]
 
