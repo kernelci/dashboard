@@ -1,6 +1,60 @@
 from datetime import datetime
 from django.db import connections
-from kernelCI_app.models import Checkouts, TreeListing
+from kernelCI_app.models import Builds, Checkouts, TreeListing
+
+
+def _update_tree_listing(*, tree_listing_objects: list[TreeListing]) -> None:
+    """Helper function to centralize and reutilize updates to TreeListing"""
+
+    if not tree_listing_objects:
+        return
+
+    TreeListing.objects.bulk_create(
+        tree_listing_objects,
+        update_conflicts=True,
+        unique_fields=[
+            "origin",
+            "tree_name",
+            "git_repository_branch",
+            "git_repository_url",
+        ],
+        update_fields=[
+            "field_timestamp",
+            "checkout_id",
+            "origin",
+            "tree_name",
+            "git_repository_url",
+            "git_repository_branch",
+            "git_commit_hash",
+            "git_commit_name",
+            "git_commit_tags",
+            "start_time",
+            "origin_builds_finish_time",
+            "origin_tests_finish_time",
+            "pass_builds",
+            "fail_builds",
+            "done_builds",
+            "miss_builds",
+            "skip_builds",
+            "error_builds",
+            "null_builds",
+            "pass_boots",
+            "fail_boots",
+            "done_boots",
+            "miss_boots",
+            "skip_boots",
+            "error_boots",
+            "null_boots",
+            "pass_tests",
+            "fail_tests",
+            "done_tests",
+            "miss_tests",
+            "skip_tests",
+            "error_tests",
+            "null_tests",
+        ],
+    )
+    print(f"Updated {len(tree_listing_objects)} trees in TreeListing", flush=True)
 
 
 def handle_checkout_denormalization(*, buffer: list[Checkouts]) -> None:
@@ -79,49 +133,13 @@ def handle_checkout_denormalization(*, buffer: list[Checkouts]) -> None:
             for checkout in checkouts_for_update
         ]
 
-        TreeListing.objects.bulk_create(
-            tree_listing_objects,
-            update_conflicts=True,
-            unique_fields=[
-                "origin",
-                "tree_name",
-                "git_repository_branch",
-                "git_repository_url",
-            ],
-            update_fields=[
-                "field_timestamp",
-                "checkout_id",
-                "origin",
-                "tree_name",
-                "git_repository_url",
-                "git_repository_branch",
-                "git_commit_hash",
-                "git_commit_name",
-                "git_commit_tags",
-                "start_time",
-                "origin_builds_finish_time",
-                "origin_tests_finish_time",
-                "pass_builds",
-                "fail_builds",
-                "done_builds",
-                "miss_builds",
-                "skip_builds",
-                "error_builds",
-                "null_builds",
-                "pass_boots",
-                "fail_boots",
-                "done_boots",
-                "miss_boots",
-                "skip_boots",
-                "error_boots",
-                "null_boots",
-                "pass_tests",
-                "fail_tests",
-                "done_tests",
-                "miss_tests",
-                "skip_tests",
-                "error_tests",
-                "null_tests",
-            ],
-        )
-        print(f"Updated {len(checkouts_for_update)} trees in TreeListing", flush=True)
+        _update_tree_listing(tree_listing_objects=tree_listing_objects)
+
+
+def handle_build_denormalization(*, buffer: list[Builds]) -> None:
+    """Deals with denormalization operations for Builds.
+
+    In the case of Builds, it will update TreeListing and PendingCheckouts, and consume PendingBuilds
+    """
+
+    pass
