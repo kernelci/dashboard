@@ -21,9 +21,17 @@ cache_logs_lock = threading.Lock()
 logger = logging.getLogger("ingester")
 
 
-def upload_logexcerpt(logexcerpt, id):
+def upload_logexcerpt(logexcerpt: str, id: str) -> str:
     """
-    Upload logexcerpt to storage and return a reference(URL)
+    Upload logexcerpt to storage and return a reference (URL string) if successful.
+    If fails, returns the original logexcerpt.
+
+    Args:
+        logexcerpt: the unchanged logexcerpt
+        id: the hash of the logexcerpt
+
+    Returns:
+        str: On success upload: the reference url. On failed upload: the original logexcerpt
     """
     if VERBOSE:
         logger.info("Uploading logexcerpt for %s to %s", id, UPLOAD_URL)
@@ -54,25 +62,30 @@ def upload_logexcerpt(logexcerpt, id):
     return f"{STORAGE_BASE_URL}/logexcerpt/{id}/logexcerpt.txt.gz"
 
 
-def get_from_cache(log_hash):
+def get_from_cache(log_hash: str) -> str | None:
     """
     Check if log_hash is in the cache
+
+    Returns:
+        str|None: The log_excerpt if it exists in cache, None otherwise
     """
     with cache_logs_lock:
         return CACHE_LOGS.get(log_hash)
 
 
-def set_in_cache(log_hash, url):
+def set_in_cache(log_hash: str, log_excerpt: str) -> None:
     """
-    Set log_hash in the cache with the given URL
+    Set log_hash in the cache with the given log_excerpt.
+    Ideally, the log_excerpt will arrive as a reference URL to where it was stored.
+    It can arrive as the entire log_excerpt though.
     """
     with cache_logs_lock:
-        CACHE_LOGS[log_hash] = url
+        CACHE_LOGS[log_hash] = log_excerpt
         if VERBOSE:
-            logger.info("Cached log excerpt with hash %s at %s", log_hash, url)
+            logger.info("Cached log excerpt with hash %s as %s", log_hash, log_excerpt)
 
 
-def set_log_excerpt_ofile(item: dict[str, Any], url):
+def set_log_excerpt_ofile(item: dict[str, Any], url: str) -> dict[str, Any]:
     """
     Clean log_excerpt field
     Create name/url dict and append to output_files of job
@@ -123,6 +136,7 @@ def process_log_excerpt_from_item(
             set_log_excerpt_ofile(item, cached_url)
         else:
             cached_url = upload_logexcerpt(log_excerpt, log_hash)
+            # TODO: if upload_logexcerpt fails, should we be caching the entire logexcerpt?
             set_in_cache(log_hash, cached_url)
             set_log_excerpt_ofile(item, cached_url)
 
@@ -153,7 +167,7 @@ def extract_log_excerpt(input_data: dict[str, Any]) -> dict[str, Any]:
     return input_data
 
 
-def cache_logs_maintenance():
+def cache_logs_maintenance() -> None:
     """
     Periodically clean up the cache logs to prevent memory leak and slow down.
     If CACHE_LOGS grow over 100k entries, clear it.
