@@ -4,10 +4,12 @@ import logging
 import time
 import os
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
-    cache_logs_maintenance,
     ingest_submissions_parallel,
     load_tree_names,
     verify_spool_dirs,
+)
+from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
+    cache_logs_maintenance,
 )
 
 logger = logging.getLogger(__name__)
