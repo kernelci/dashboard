@@ -17,8 +17,11 @@ from django.db import transaction
 from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
 
 from kernelCI_app.management.commands.helpers.process_submissions import (
+    ProcessedSubmission,
+    TableNames,
     build_instances_from_submission,
 )
+from kernelCI_app.typeModels.modelTypes import MODEL_MAP, TableModels
 
 VERBOSE = 0
 LOGEXCERPT_THRESHOLD = 256  # 256 bytes threshold for logexcerpt
@@ -293,6 +296,26 @@ def prepare_file_data(filename, trees_name, spool_dir):
         }
 
 
+def consume_buffer(buffer: list[TableModels], item_type: TableNames) -> None:
+    """
+    Consume a buffer of items and insert them into the database.
+    This function is called by the db_worker thread.
+    """
+    if not buffer:
+        return
+
+    model = MODEL_MAP[item_type]
+
+    t0 = time.time()
+    model.objects.bulk_create(
+        buffer,
+        batch_size=INGEST_BATCH_SIZE,
+        ignore_conflicts=True,
+    )
+    _out("bulk_create %s: n=%d in %.3fs" % (item_type, len(buffer), time.time() - t0))
+
+
+# TODO: lower the complexity of this function
 def db_worker(stop_event: threading.Event):  # noqa: C901
     """
     Worker thread that processes the database queue.
@@ -303,11 +326,11 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
     """
 
     # Local buffers for batching
-    issues_buf = []
-    checkouts_buf = []
-    builds_buf = []
-    tests_buf = []
-    incidents_buf = []
+    issues_buf: list[Issues] = []
+    checkouts_buf: list[Checkouts] = []
+    builds_buf: list[Builds] = []
+    tests_buf: list[Tests] = []
+    incidents_buf: list[Incidents] = []
 
     last_flush_ts = time.time()
 
@@ -331,55 +354,11 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
         try:
             # Single transaction for all tables in the flush
             with transaction.atomic():
-                if issues_buf:
-                    t0 = time.time()
-                    Issues.objects.bulk_create(
-                        issues_buf, batch_size=INGEST_BATCH_SIZE, ignore_conflicts=True
-                    )
-                    _out(
-                        "bulk_create issues: n=%d in %.3fs"
-                        % (len(issues_buf), time.time() - t0)
-                    )
-                if checkouts_buf:
-                    t0 = time.time()
-                    Checkouts.objects.bulk_create(
-                        checkouts_buf,
-                        batch_size=INGEST_BATCH_SIZE,
-                        ignore_conflicts=True,
-                    )
-                    _out(
-                        "bulk_create checkouts: n=%d in %.3fs"
-                        % (len(checkouts_buf), time.time() - t0)
-                    )
-                if builds_buf:
-                    t0 = time.time()
-                    Builds.objects.bulk_create(
-                        builds_buf, batch_size=INGEST_BATCH_SIZE, ignore_conflicts=True
-                    )
-                    _out(
-                        "bulk_create builds: n=%d in %.3fs"
-                        % (len(builds_buf), time.time() - t0)
-                    )
-                if tests_buf:
-                    t0 = time.time()
-                    Tests.objects.bulk_create(
-                        tests_buf, batch_size=INGEST_BATCH_SIZE, ignore_conflicts=True
-                    )
-                    _out(
-                        "bulk_create tests: n=%d in %.3fs"
-                        % (len(tests_buf), time.time() - t0)
-                    )
-                if incidents_buf:
-                    t0 = time.time()
-                    Incidents.objects.bulk_create(
-                        incidents_buf,
-                        batch_size=INGEST_BATCH_SIZE,
-                        ignore_conflicts=True,
-                    )
-                    _out(
-                        "bulk_create incidents: n=%d in %.3fs"
-                        % (len(incidents_buf), time.time() - t0)
-                    )
+                consume_buffer(issues_buf, "issues")
+                consume_buffer(checkouts_buf, "checkouts")
+                consume_buffer(builds_buf, "builds")
+                consume_buffer(tests_buf, "tests")
+                consume_buffer(incidents_buf, "incidents")
         except Exception as e:
             logger.error("Error during bulk_create flush: %s", e)
         finally:
@@ -415,7 +394,7 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
             try:
                 data, metadata = item
                 if data is not None:
-                    inst = build_instances_from_submission(data)
+                    inst: ProcessedSubmission = build_instances_from_submission(data)
                     issues_buf.extend(inst["issues"])
                     checkouts_buf.extend(inst["checkouts"])
                     builds_buf.extend(inst["builds"])
