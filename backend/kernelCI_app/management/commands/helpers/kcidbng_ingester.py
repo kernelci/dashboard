@@ -1,28 +1,23 @@
 from os import DirEntry
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import gzip
-import hashlib
 import json
 import logging
 import os
 from queue import Queue, Empty
 from kernelCI_app.constants.ingester import (
-    CACHE_LOGS_SIZE_LIMIT,
     CONVERT_LOG_EXCERPT,
-    LOGEXCERPT_THRESHOLD,
-    STORAGE_BASE_URL,
-    STORAGE_TOKEN,
     INGEST_BATCH_SIZE,
     INGEST_FLUSH_TIMEOUT_SEC,
     INGEST_QUEUE_MAXSIZE,
     VERBOSE,
 )
-import requests
-import tempfile
 import threading
 import time
 import traceback
-from typing import Any, Literal, Optional
+from typing import Any, Optional
+from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
+    extract_log_excerpt,
+)
 import yaml
 import kcidb_io
 from django.db import transaction
@@ -34,8 +29,7 @@ from kernelCI_app.management.commands.helpers.process_submissions import (
 )
 from kernelCI_app.typeModels.modelTypes import MODEL_MAP, TableModels
 
-CACHE_LOGS = {}
-cache_logs_lock = threading.Lock()
+
 logger = logging.getLogger("ingester")
 
 # Thread-safe queue for database operations (bounded for backpressure)
@@ -92,134 +86,6 @@ def standardize_tree_names(
             correct_tree = tree_names[git_url]
             if checkout.get("tree_name") != correct_tree:
                 checkout["tree_name"] = correct_tree
-
-
-def upload_logexcerpt(logexcerpt: str, id: str) -> str:
-    """
-    Upload logexcerpt to storage and return a reference(URL)
-    """
-    upload_url = f"{STORAGE_BASE_URL}/upload"
-    if VERBOSE:
-        logger.info("Uploading logexcerpt for %s to %s", id, upload_url)
-    # make temporary file with logexcerpt data
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".logexcerpt") as temp_file:
-        logexcerpt_filename = temp_file.name
-        logexcerpt_compressed = gzip.compress(logexcerpt.encode("utf-8"))
-        temp_file.write(logexcerpt_compressed)
-        temp_file.flush()
-    with open(logexcerpt_filename, "rb") as f:
-        hdr = {
-            "Authorization": f"Bearer {STORAGE_TOKEN}",
-        }
-        files = {"file0": ("logexcerpt.txt.gz", f), "path": f"logexcerpt/{id}"}
-        try:
-            r = requests.post(upload_url, headers=hdr, files=files)
-        except Exception as e:
-            logger.error("Error uploading logexcerpt for %s: %s", id, e)
-            os.remove(logexcerpt_filename)
-            return logexcerpt  # Return original logexcerpt if upload fails
-    os.remove(logexcerpt_filename)
-    if r.status_code != 200:
-        logger.error(
-            "Failed to upload logexcerpt for %s: %d : %s", id, r.status_code, r.text
-        )
-        return logexcerpt  # Return original logexcerpt if upload fails
-
-    return f"{STORAGE_BASE_URL}/logexcerpt/{id}/logexcerpt.txt.gz"
-
-
-def get_from_cache(log_hash: str) -> Optional[str]:
-    """
-    Check if log_hash is in the cache
-    """
-    with cache_logs_lock:
-        return CACHE_LOGS.get(log_hash)
-
-
-def set_in_cache(log_hash: str, url: str) -> None:
-    """
-    Set log_hash in the cache with the given URL
-    """
-    with cache_logs_lock:
-        CACHE_LOGS[log_hash] = url
-        if VERBOSE:
-            logger.info("Cached log excerpt with hash %s at %s", log_hash, url)
-
-
-def set_log_excerpt_ofile(item: dict[str, Any], url: str) -> dict[str, Any]:
-    """
-    Clean log_excerpt field
-    Create name/url dict and append to output_files of job
-
-    item is a build or test
-    """
-    item["log_excerpt"] = None
-    data = {
-        "name": "log_excerpt",
-        "url": url,
-    }
-    if "output_files" not in item:
-        item["output_files"] = []
-
-    item["output_files"].append(data)
-    return item
-
-
-def process_log_excerpt_from_item(
-    item: dict[str, Any], item_type: Literal["build", "test"]
-) -> None:
-    """
-    Process log_excerpt from a single build or test (item).
-    If log_excerpt is large, upload it to storage and replace with a reference.
-    """
-    id = item.get("id", "unknown")
-    log_excerpt = item["log_excerpt"]
-
-    if isinstance(log_excerpt, str) and len(log_excerpt) > LOGEXCERPT_THRESHOLD:
-        log_hash = hashlib.sha256(log_excerpt.encode("utf-8")).hexdigest()
-        if VERBOSE:
-            logger.info(
-                "Uploading log_excerpt for %s id %s hash %s with size %d bytes",
-                item_type,
-                id,
-                log_hash,
-                len(log_excerpt),
-            )
-        # check if log_excerpt already uploaded (by hash as key)
-        cached_url = get_from_cache(log_hash)
-        if cached_url:
-            if VERBOSE:
-                logger.info(
-                    "Log excerpt for %s %s already uploaded, using cached URL",
-                    item_type,
-                    id,
-                )
-            set_log_excerpt_ofile(item, cached_url)
-        else:
-            cached_url = upload_logexcerpt(log_excerpt, log_hash)
-            set_in_cache(log_hash, cached_url)
-            set_log_excerpt_ofile(item, cached_url)
-
-
-def extract_log_excerpt(input_data: dict[str, Any]) -> None:
-    """
-    Extract log_excerpt from builds and tests, if it is large,
-    upload to storage and replace with a reference.
-    """
-    if not STORAGE_TOKEN:
-        logger.warning("STORAGE_TOKEN is not set, log_excerpts will not be uploaded")
-        return
-
-    builds: list[dict[str, Any]] = input_data.get("builds", [])
-    tests: list[dict[str, Any]] = input_data.get("tests", [])
-
-    for build in builds:
-        if build.get("log_excerpt"):
-            process_log_excerpt_from_item(item=build, item_type="build")
-
-    for test in tests:
-        if test.get("log_excerpt"):
-            process_log_excerpt_from_item(item=test, item_type="test")
 
 
 def prepare_file_data(
@@ -611,18 +477,3 @@ def verify_spool_dirs(spool_dir: str) -> None:
     verify_dir(spool_dir)
     verify_dir(failed_dir)
     verify_dir(archive_dir)
-
-
-def cache_logs_maintenance() -> None:
-    """
-    Periodically clean up the cache logs to prevent memory leak and slow down.
-    If CACHE_LOGS grow over 100k entries, clear it.
-    """
-
-    # Limit the size of the cache to prevent memory leaks
-    # (we don't really need lock, as workers idle, but just in case)
-    with cache_logs_lock:
-        if len(CACHE_LOGS) > CACHE_LOGS_SIZE_LIMIT:
-            CACHE_LOGS.clear()
-            if VERBOSE:
-                logger.info("Cache logs cleared")
