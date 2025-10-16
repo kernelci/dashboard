@@ -130,6 +130,64 @@ def consume_buffer(buffer: list[TableModels], item_type: TableNames) -> None:
     out("bulk_create %s: n=%d in %.3fs" % (item_type, len(buffer), time.time() - t0))
 
 
+def flush_buffers(
+    *,
+    issues_buf: list[Issues],
+    checkouts_buf: list[Checkouts],
+    builds_buf: list[Builds],
+    tests_buf: list[Tests],
+    incidents_buf: list[Incidents],
+) -> None:
+    """
+    Consumes the list of objects and tries to insert them into the database.
+    """
+    total = (
+        len(issues_buf)
+        + len(checkouts_buf)
+        + len(builds_buf)
+        + len(tests_buf)
+        + len(incidents_buf)
+    )
+
+    if total == 0:
+        return
+
+    # Insert in dependency-safe order
+    flush_start = time.time()
+    try:
+        # Single transaction for all tables in the flush
+        with transaction.atomic():
+            consume_buffer(issues_buf, "issues")
+            consume_buffer(checkouts_buf, "checkouts")
+            consume_buffer(builds_buf, "builds")
+            consume_buffer(tests_buf, "tests")
+            consume_buffer(incidents_buf, "incidents")
+    except Exception as e:
+        logger.error("Error during bulk_create flush: %s", e)
+    finally:
+        flush_dur = time.time() - flush_start
+        rate = total / flush_dur if flush_dur > 0 else 0.0
+        msg = (
+            "Flushed batch in %.3fs (%.1f items/s): "
+            "issues=%d checkouts=%d builds=%d tests=%d incidents=%d"
+            % (
+                flush_dur,
+                rate,
+                len(issues_buf),
+                len(checkouts_buf),
+                len(builds_buf),
+                len(tests_buf),
+                len(incidents_buf),
+            )
+        )
+        out(msg)
+        issues_buf.clear()
+        checkouts_buf.clear()
+        builds_buf.clear()
+        tests_buf.clear()
+        incidents_buf.clear()
+
+
 # TODO: lower the complexity of this function
 def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
     """
@@ -158,48 +216,6 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
             + len(incidents_buf)
         )
 
-    def flush_buffers() -> None:
-        nonlocal last_flush_ts
-        total = buffered_total()
-        if total == 0:
-            return
-
-        # Insert in dependency-safe order
-        flush_start = time.time()
-        try:
-            # Single transaction for all tables in the flush
-            with transaction.atomic():
-                consume_buffer(issues_buf, "issues")
-                consume_buffer(checkouts_buf, "checkouts")
-                consume_buffer(builds_buf, "builds")
-                consume_buffer(tests_buf, "tests")
-                consume_buffer(incidents_buf, "incidents")
-        except Exception as e:
-            logger.error("Error during bulk_create flush: %s", e)
-        finally:
-            flush_dur = time.time() - flush_start
-            rate = total / flush_dur if flush_dur > 0 else 0.0
-            msg = (
-                "Flushed batch in %.3fs (%.1f items/s): "
-                "issues=%d checkouts=%d builds=%d tests=%d incidents=%d"
-                % (
-                    flush_dur,
-                    rate,
-                    len(issues_buf),
-                    len(checkouts_buf),
-                    len(builds_buf),
-                    len(tests_buf),
-                    len(incidents_buf),
-                )
-            )
-            out(msg)
-            issues_buf.clear()
-            checkouts_buf.clear()
-            builds_buf.clear()
-            tests_buf.clear()
-            incidents_buf.clear()
-            last_flush_ts = time.time()
-
     while not stop_event.is_set() or not db_queue.empty():
         try:
             item = db_queue.get(timeout=0.1)
@@ -216,7 +232,14 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
                     incidents_buf.extend(inst["incidents"])
 
                 if buffered_total() >= INGEST_BATCH_SIZE:
-                    flush_buffers()
+                    flush_buffers(
+                        issues_buf=issues_buf,
+                        checkouts_buf=checkouts_buf,
+                        builds_buf=builds_buf,
+                        tests_buf=tests_buf,
+                        incidents_buf=incidents_buf,
+                    )
+                    last_flush_ts = time.time()
 
                 if VERBOSE:
                     msg = (
@@ -248,13 +271,27 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
                             buffered_total(),
                         )
                     )
-                flush_buffers()
+                flush_buffers(
+                    issues_buf=issues_buf,
+                    checkouts_buf=checkouts_buf,
+                    builds_buf=builds_buf,
+                    tests_buf=tests_buf,
+                    incidents_buf=incidents_buf,
+                )
+                last_flush_ts = time.time()
             continue
         except Exception as e:
             logger.error("Unexpected error in db_worker: %s", e)
 
     # Final flush after loop ends
-    flush_buffers()
+    flush_buffers(
+        issues_buf=issues_buf,
+        checkouts_buf=checkouts_buf,
+        builds_buf=builds_buf,
+        tests_buf=tests_buf,
+        incidents_buf=incidents_buf,
+    )
+    last_flush_ts = time.time()
 
 
 def process_file(
