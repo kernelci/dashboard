@@ -1,10 +1,38 @@
 import os
 import yaml
 import logging
+from kernelCI_app.helpers.logger import out
 from kernelCI_app.constants.ingester import TREES_FILE
 
 
 logger = logging.getLogger("ingester")
+
+
+def get_spool_files(spool_dir: str) -> tuple[list[str], int]:
+    json_files = [
+        f
+        for f in os.listdir(spool_dir)
+        if os.path.isfile(os.path.join(spool_dir, f)) and f.endswith(".json")
+    ]
+    if not json_files:
+        return
+
+    total_bytes = 0
+    for f in json_files:
+        try:
+            total_bytes += os.path.getsize(os.path.join(spool_dir, f))
+        except Exception:
+            pass
+
+    out(
+        "Spool status: %d .json files queued (%.2f MB)"
+        % (
+            len(json_files),
+            total_bytes / (1024 * 1024) if total_bytes else 0.0,
+        )
+    )
+
+    return json_files, total_bytes
 
 
 def load_trees_name(trees_file: str = TREES_FILE) -> dict[str, str]:

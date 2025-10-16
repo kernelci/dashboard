@@ -15,7 +15,10 @@ import time
 import traceback
 from typing import Any, Optional, TypedDict
 from kernelCI_app.helpers.logger import out
-from kernelCI_app.management.commands.helpers.file_utils import move_file_to_failed_dir
+from kernelCI_app.management.commands.helpers.file_utils import (
+    get_spool_files,
+    move_file_to_failed_dir,
+)
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
     extract_log_excerpt,
 )
@@ -300,7 +303,7 @@ def process_file(filename: str, trees_name: dict[str, str], spool_dir: str) -> b
     return True
 
 
-def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threading
+def ingest_submissions_parallel(
     spool_dir: str, trees_name: dict[str, str], max_workers: int = 5
 ) -> None:
     """
@@ -309,28 +312,7 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
     """
 
     # Get list of JSON files to process
-    json_files = [
-        f
-        for f in os.listdir(spool_dir)
-        if os.path.isfile(os.path.join(spool_dir, f)) and f.endswith(".json")
-    ]
-    if not json_files:
-        return
-
-    total_bytes = 0
-    for f in json_files:
-        try:
-            total_bytes += os.path.getsize(os.path.join(spool_dir, f))
-        except Exception:
-            pass
-
-    out(
-        "Spool status: %d .json files queued (%.2f MB)"
-        % (
-            len(json_files),
-            total_bytes / (1024 * 1024) if total_bytes else 0.0,
-        )
-    )
+    json_files, total_bytes = get_spool_files(spool_dir)
 
     cycle_start = time.time()
     total_files_count = len(json_files)
