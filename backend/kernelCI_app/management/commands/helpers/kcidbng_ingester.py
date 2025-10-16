@@ -14,6 +14,7 @@ import threading
 import time
 import traceback
 from typing import Any, Optional
+from kernelCI_app.helpers.logger import out
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
     extract_log_excerpt,
 )
@@ -35,19 +36,6 @@ logger = logging.getLogger("ingester")
 # Thread-safe queue for database operations (bounded for backpressure)
 db_queue = Queue(maxsize=INGEST_QUEUE_MAXSIZE)
 db_lock = threading.Lock()
-
-
-def _ts() -> str:
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-
-
-def _out(msg: str) -> None:
-    """Write debug/perf output to stdout"""
-    # logger was unreliable in some environments
-    try:
-        print(f"[{_ts()}] {msg}", flush=True)
-    except Exception:
-        pass
 
 
 def move_file_to_failed_dir(filename, failed_dir):
@@ -152,7 +140,7 @@ def consume_buffer(buffer: list[TableModels], item_type: TableNames) -> None:
         batch_size=INGEST_BATCH_SIZE,
         ignore_conflicts=True,
     )
-    _out("bulk_create %s: n=%d in %.3fs" % (item_type, len(buffer), time.time() - t0))
+    out("bulk_create %s: n=%d in %.3fs" % (item_type, len(buffer), time.time() - t0))
 
 
 # TODO: lower the complexity of this function
@@ -217,7 +205,7 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
                     len(incidents_buf),
                 )
             )
-            _out(msg)
+            out(msg)
             issues_buf.clear()
             checkouts_buf.clear()
             builds_buf.clear()
@@ -257,7 +245,7 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
                             len(inst["incidents"]),
                         )
                     )
-                    _out(msg)
+                    out(msg)
             except Exception as e:
                 logger.error("Error processing item in db_worker: %s", e)
             finally:
@@ -267,7 +255,7 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
             # Time-based flush when idle
             if (time.time() - last_flush_ts) >= INGEST_FLUSH_TIMEOUT_SEC:
                 if VERBOSE:
-                    _out(
+                    out(
                         "Idle flush after %.1fs without new items (buffered=%d)"
                         % (
                             INGEST_FLUSH_TIMEOUT_SEC,
@@ -341,7 +329,7 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
         except Exception:
             pass
 
-    _out(
+    out(
         "Spool status: %d .json files queued (%.2f MB)"
         % (
             len(json_files),
@@ -416,15 +404,15 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
                                 qsz,
                             )
                         )
-                        _out(msg)
+                        out(msg)
                         last_progress = now
 
-        _out("Waiting for DB queue to drain... size=%d" % db_queue.qsize())
+        out("Waiting for DB queue to drain... size=%d" % db_queue.qsize())
         # Wait for all database operations to complete
         db_queue.join()
 
     except KeyboardInterrupt:
-        _out("KeyboardInterrupt: stopping ingestion and flushing...")
+        out("KeyboardInterrupt: stopping ingestion and flushing...")
         try:
             # Attempt to cancel remaining futures and exit early
             # Note: this only cancels tasks not yet started
@@ -456,9 +444,9 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
                 mb_per_sec,
             )
         )
-        _out(msg)
+        out(msg)
     else:
-        _out("No files processed, nothing to do")
+        out("No files processed, nothing to do")
 
 
 def verify_dir(dir):
