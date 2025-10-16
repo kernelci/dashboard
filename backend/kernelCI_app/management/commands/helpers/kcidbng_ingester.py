@@ -14,7 +14,7 @@ from kernelCI_app.constants.ingester import (
 import threading
 import time
 import traceback
-from typing import Any, Optional
+from typing import Any, Optional, TypedDict
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.management.commands.helpers.file_utils import move_file_to_failed_dir
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
@@ -29,6 +29,14 @@ from kernelCI_app.management.commands.helpers.process_submissions import (
     build_instances_from_submission,
 )
 from kernelCI_app.typeModels.modelTypes import MODEL_MAP, TableModels
+
+
+class SubmissionMetadata(TypedDict):
+    filename: str
+    full_filename: str
+    fsize: int | None
+    processing_time: float | None
+    error: str | None
 
 
 logger = logging.getLogger("ingester")
@@ -61,6 +69,9 @@ def prepare_file_data(
     """
     Prepare file data: read, extract log excerpts, standardize tree names, validate.
     This function does everything except the actual database load.
+
+    Returns `data, metadata`.
+    If an error happens, `data` will be None; if file is empty, both are None.
     """
     fsize = file.stat().st_size
 
@@ -138,7 +149,7 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
 
     last_flush_ts = time.time()
 
-    def buffered_total():
+    def buffered_total() -> int:
         return (
             len(issues_buf)
             + len(checkouts_buf)
@@ -147,7 +158,7 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
             + len(incidents_buf)
         )
 
-    def flush_buffers():
+    def flush_buffers() -> None:
         nonlocal last_flush_ts
         total = buffered_total()
         if total == 0:
@@ -254,6 +265,9 @@ def process_file(
 ) -> bool:
     """
     Process a single file in a thread, then queue it for database insertion.
+
+    Returns:
+        True if file was processed or deleted, False if an error occured
     """
     data, metadata = prepare_file_data(file, tree_names)
     file = metadata["file"]
