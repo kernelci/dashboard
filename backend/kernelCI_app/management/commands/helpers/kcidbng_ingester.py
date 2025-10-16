@@ -6,6 +6,17 @@ import json
 import logging
 import os
 from queue import Queue, Empty
+from kernelCI_app.constants.ingester import (
+    CACHE_LOGS_SIZE_LIMIT,
+    CONVERT_LOG_EXCERPT,
+    LOGEXCERPT_THRESHOLD,
+    STORAGE_BASE_URL,
+    STORAGE_TOKEN,
+    INGEST_BATCH_SIZE,
+    INGEST_FLUSH_TIMEOUT_SEC,
+    INGEST_QUEUE_MAXSIZE,
+    VERBOSE,
+)
 import requests
 import tempfile
 import threading
@@ -23,41 +34,9 @@ from kernelCI_app.management.commands.helpers.process_submissions import (
 )
 from kernelCI_app.typeModels.modelTypes import MODEL_MAP, TableModels
 
-VERBOSE = 0
-LOGEXCERPT_THRESHOLD = 256  # 256 bytes threshold for logexcerpt
-CONVERT_LOG_EXCERPT = False  # If True, convert log_excerpt to output_files url
-
 CACHE_LOGS = {}
-CACHE_LOGS_SIZE_LIMIT = 100000  # Arbitrary limit for cache_logs size, adjust as needed
 cache_logs_lock = threading.Lock()
-
-STORAGE_TOKEN = os.environ.get("STORAGE_TOKEN", None)
-STORAGE_BASE_URL = os.environ.get(
-    "STORAGE_BASE_URL", "https://files-staging.kernelci.org"
-)
-
-TREES_FILE = "/app/trees.yaml"
-
 logger = logging.getLogger("ingester")
-
-# Batching and backpressure controls
-try:
-    INGEST_BATCH_SIZE = int(os.environ.get("INGEST_BATCH_SIZE", "10000"))
-except (ValueError, TypeError):
-    logger.warning("Invalid INGEST_BATCH_SIZE, using default 10000")
-    INGEST_BATCH_SIZE = 10000
-
-try:
-    INGEST_FLUSH_TIMEOUT_SEC = float(os.environ.get("INGEST_FLUSH_TIMEOUT_SEC", "2.0"))
-except (ValueError, TypeError):
-    logger.warning("Invalid INGEST_FLUSH_TIMEOUT_SEC, using default 2.0")
-    INGEST_FLUSH_TIMEOUT_SEC = 2.0
-
-try:
-    INGEST_QUEUE_MAXSIZE = int(os.environ.get("INGEST_QUEUE_MAXSIZE", "5000"))
-except (ValueError, TypeError):
-    logger.warning("Invalid INGEST_QUEUE_MAXSIZE, using default 5000")
-    INGEST_QUEUE_MAXSIZE = 5000
 
 # Thread-safe queue for database operations (bounded for backpressure)
 db_queue = Queue(maxsize=INGEST_QUEUE_MAXSIZE)
