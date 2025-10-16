@@ -5,6 +5,8 @@ import time
 import os
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     ingest_submissions_parallel,
+)
+from kernelCI_app.management.commands.helpers.file_utils import (
     load_trees_name,
     verify_spool_dirs,
 )
@@ -66,7 +68,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Using {max_workers} workers")
 
         verify_spool_dirs(spool_dir)
-        trees_name = load_trees_name(trees_file_override=trees_file)
+        trees_name = load_trees_name(trees_file=trees_file)
 
         self.stdout.write("Starting file monitoring... (Press Ctrl+C to stop)")
 
