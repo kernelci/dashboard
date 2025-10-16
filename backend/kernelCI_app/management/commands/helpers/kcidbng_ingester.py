@@ -16,10 +16,10 @@ import time
 import traceback
 from typing import Any, Optional
 from kernelCI_app.helpers.logger import out
+from kernelCI_app.management.commands.helpers.file_utils import move_file_to_failed_dir
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
     extract_log_excerpt,
 )
-import yaml
 import kcidb_io
 from django.db import transaction
 from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
@@ -36,27 +36,6 @@ logger = logging.getLogger("ingester")
 # Thread-safe queue for database operations (bounded for backpressure)
 db_queue = Queue(maxsize=INGEST_QUEUE_MAXSIZE)
 db_lock = threading.Lock()
-
-
-def move_file_to_failed_dir(filename: str, failed_dir: str) -> None:
-    try:
-        os.rename(filename, os.path.join(failed_dir, os.path.basename(filename)))
-    except Exception as e:
-        logger.error("Error moving file %s to failed directory: %s", filename, e)
-        raise e
-
-
-def load_tree_names(trees_file_override: Optional[str]) -> dict[str, str]:
-    global TREES_FILE
-    if trees_file_override is not None:
-        TREES_FILE = trees_file_override
-
-    with open(TREES_FILE, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
-
-    tree_names = {v["url"]: tree_name for tree_name, v in data.get("trees", {}).items()}
-
-    return tree_names
 
 
 def standardize_tree_names(
@@ -440,28 +419,3 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
         out(msg)
     else:
         out("No files processed, nothing to do")
-
-
-def verify_dir(dir: str) -> None:
-    if not os.path.exists(dir):
-        logger.error("Directory %s does not exist", dir)
-        # try to create it
-        try:
-            os.makedirs(dir)
-            logger.info("Directory %s created", dir)
-        except Exception as e:
-            logger.error("Error creating directory %s: %s", dir, e)
-            raise e
-    if not os.path.isdir(dir):
-        raise Exception(f"Directory {dir} is not a directory")
-    if not os.access(dir, os.W_OK):
-        raise Exception(f"Directory {dir} is not writable")
-    logger.info("Directory %s is valid and writable", dir)
-
-
-def verify_spool_dirs(spool_dir: str) -> None:
-    failed_dir = os.path.join(spool_dir, "failed")
-    archive_dir = os.path.join(spool_dir, "archive")
-    verify_dir(spool_dir)
-    verify_dir(failed_dir)
-    verify_dir(archive_dir)
