@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
-from django.db.models import F
+from django.db.models import F, Q
 from django.db.models.functions import Concat, MD5
 from django.db.models.expressions import RawSQL
 
@@ -183,6 +183,20 @@ class Tests(models.Model):
             ),
             models.Index(fields=["start_time"], name="tests_start_time"),
             models.Index(fields=["status"], name="tests_status"),
+            # IMPORTANT: the next index is defined with where `environment_misc -> 'platform' IS NOT NULL`
+            # This is not the desired behavior, it should be where
+            # `environment_misc ->> 'platform' IS NOT NULL`, attention to the `->>`.
+            # However Django doesn't seem to allow this format in a `condition` (Q) parameter. And we
+            # must use `condition` since we are using the `fields` param as well. See PostgreSQL note on:
+            # https://docs.djangoproject.com/en/5.2/topics/db/queries/#module-django.db.models.fields.json
+            #
+            # The fix is that in the migration we create the right condition separately, using raw sql.
+            # *Check the migration for when this was added*.
+            models.Index(
+                fields=["origin", "start_time"],
+                condition=Q(environment_misc__platform__isnull=False),
+                name="tests_origin_time_platform",
+            ),
         ]
 
 

@@ -134,4 +134,6 @@ Django also creates some indexes automatically:
 - Index for foreign key as b-tree;
 - Index for foreign key as b-tree with `text_pattern_ops`, specialized for `LIKE` operations.
 
-One of the operations that we are doing benefits from this double indexes, which is the filtering of dummy builds (builds where id LIKE `maestro:_dummy%`)
+One of the operations that we are doing benefits from this double indexes, which is the filtering of dummy builds (builds where id LIKE `maestro:_dummy%`).
+
+There is only one index that diverges from model to database, which is `tests_origin_time_platform`. This is because we want an index on the json field `environment_misc ->> 'platform'` -- with `->>` -- but Django only uses `->` (check https://docs.djangoproject.com/en/5.2/topics/db/queries/#module-django.db.models.fields.json). The divergence is created in the migration where this index is added.
