@@ -15,7 +15,7 @@ The Docker setup handles all K6 dependencies automatically.
 
 - **Test files**: Place your K6 test scripts in `/k6/tests/`
 - **Results**: Test outputs are saved to `/k6/results/`
-- **Database setup**: For a quick start, add your testing data as a .sql dump in `/k6/data`. See `/k6/data/README.md` for initialization instructions.
+- **Dataset**: Test data should be placed in `/k6/data`. See `/k6/data/README.md` for initialization instructions.
 
 ## Configuration
 
