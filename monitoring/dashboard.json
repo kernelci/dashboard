@@ -301,6 +301,25 @@
               {
                 "id": "decimals",
                 "value": 3
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "match": "null",
+                      "result": {
+                        "index": 0,
+                        "text": "0"
+                      }
+                    },
+                    "type": "special"
+                  }
+                ]
+              },
+              {
+                "id": "noValue",
+                "value": "0"
               }
             ]
           },
@@ -365,7 +384,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(django_http_requests_latency_seconds_by_view_method_count{view!=\"<unnamed view>\"}) by (view, method)",
+          "expr": "(sum(django_http_requests_latency_seconds_by_view_method_count{view!=\"<unnamed view>\"}) by (view, method)  and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"all\", \"\", \"\") or round(sum(increase(django_http_requests_latency_seconds_by_view_method_count{view!=\"<unnamed view>\"}[$__range:])) by (view, method)) and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"range\", \"\", \"\"))",
           "format": "table",
           "instant": true,
           "legendFormat": "{{view}} - {{method}}",
@@ -378,7 +397,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(django_http_requests_latency_seconds_by_view_method_sum{view!=\"<unnamed view>\"}) by (view, method)",
+          "expr": "(sum(django_http_requests_latency_seconds_by_view_method_sum{view!=\"<unnamed view>\"}) by (view, method) and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"all\", \"\", \"\") or sum(increase(django_http_requests_latency_seconds_by_view_method_sum{view!=\"<unnamed view>\"}[$__range:])) by (view, method) and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"range\", \"\", \"\"))",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -504,7 +523,24 @@
     "performance"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": { "selected": false, "text": "Time Range", "value": "range" },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "label": "Summary Mode",
+        "name": "summary_mode",
+        "options": [
+          { "selected": false, "text": "All Time", "value": "all" },
+          { "selected": true, "text": "Time Range", "value": "range" }
+        ],
+        "query": "all,range",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
@@ -514,6 +550,6 @@
   "timezone": "",
   "title": "KernelCI - Performance Dashboard",
   "uid": "kernelci-performance-dashboard",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
