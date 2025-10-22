@@ -47,6 +47,7 @@ def _get_hardware_tree_heads_clause(*, id_only: bool) -> str:
                     C.start_time DESC"""
 
 
+# TODO: unify with get_tree_listing_count_clause
 def _get_hardware_listing_count_clauses() -> str:
     build_count_clause = """
     COUNT(DISTINCT CASE WHEN "build_status" = 'PASS' AND build_id
@@ -68,36 +69,36 @@ def _get_hardware_listing_count_clauses() -> str:
 
     boot_count_clause = """
     COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
+                    AND "status" = 'PASS' THEN 1 END) AS pass_boots,
+    COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
                     AND "status" = 'FAIL' THEN 1 END) AS fail_boots,
+    SUM(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
+                    AND "status" IS NULL AND id IS NOT NULL THEN 1 ELSE 0 END) AS null_boots,
     COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
                     AND "status" = 'ERROR' THEN 1 END) AS error_boots,
     COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
                     AND "status" = 'MISS' THEN 1 END) AS miss_boots,
     COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
-                    AND "status" = 'PASS' THEN 1 END) AS pass_boots,
-    COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
                     AND "status" = 'DONE' THEN 1 END) AS done_boots,
     COUNT(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
                     AND "status" = 'SKIP' THEN 1 END) AS skip_boots,
-    SUM(CASE WHEN ("path" = 'boot' OR "path" LIKE 'boot.%%')
-                    AND "status" IS NULL AND id IS NOT NULL THEN 1 ELSE 0 END) AS null_boots,
     """
 
     test_count_clause = """
     COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
+                    AND "status" = 'PASS' THEN 1 END) AS pass_tests,
+    COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
                     AND "status" = 'FAIL' THEN 1 END) AS fail_tests,
+    SUM(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
+                    AND "status" IS NULL AND id IS NOT NULL THEN 1 ELSE 0 END) AS null_tests,
     COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
                     AND "status" = 'ERROR' THEN 1 END) AS error_tests,
     COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
                     AND "status" = 'MISS' THEN 1 END) AS miss_tests,
     COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
-                    AND "status" = 'PASS' THEN 1 END) AS pass_tests,
-    COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
                     AND "status" = 'DONE' THEN 1 END) AS done_tests,
     COUNT(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
-                    AND "status" = 'SKIP' THEN 1 END) AS skip_tests,
-    SUM(CASE WHEN ("path" <> 'boot' AND "path" NOT LIKE 'boot.%%')
-                    AND "status" IS NULL AND id IS NOT NULL THEN 1 ELSE 0 END) AS null_tests
+                    AND "status" = 'SKIP' THEN 1 END) AS skip_tests
     """
 
     return build_count_clause + boot_count_clause + test_count_clause
@@ -106,6 +107,12 @@ def _get_hardware_listing_count_clauses() -> str:
 def get_hardware_listing_data(
     start_date: datetime, end_date: datetime, origin: str
 ) -> list[dict]:
+    """
+    Retrieves the listing of platform, compatibles, and
+    the status counts of builds, boots and tests
+    for the latest checkout of every tree.
+    The selected checkouts and tests are limited to the start_date/end_date interval.
+    """
 
     count_clauses = _get_hardware_listing_count_clauses()
     tree_head_clause = _get_hardware_tree_heads_clause(id_only=True)
@@ -125,17 +132,18 @@ def get_hardware_listing_data(
     # to the tests, not checkouts. There are no platforms being tested by multiple origins yet.
     query = f"""
         WITH
-            -- Selects the id of the latest checkout of all trees in the given period
+            -- Selects the id of the latest checkout of all trees in the given period.
+            -- No checkout data is returned in the end.
             tree_heads AS (
                 {tree_head_clause}
             ),
+            -- Selects all tests/builds related to those checkouts.
             relevant_tests AS (
                 SELECT
                     "tests"."environment_compatible" AS hardware,
                     "tests"."environment_misc" ->> 'platform' AS platform,
                     "tests"."status",
                     "tests"."path",
-                    "tests"."origin",
                     "tests"."id",
                     b.id AS build_id,
                     b.status AS build_status
@@ -149,6 +157,7 @@ def get_hardware_listing_data(
                     AND "tests"."start_time" >= %(start_date)s
                     AND "tests"."start_time" <= %(end_date)s
             )
+        -- From the raw rows, selects platform, hardware, and performs the status grouping.
         SELECT
             platform,
             hardware,
@@ -162,7 +171,7 @@ def get_hardware_listing_data(
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return dict_fetchall(cursor)
+        return cursor.fetchall()
 
 
 def get_hardware_details_data(
