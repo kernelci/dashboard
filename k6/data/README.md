@@ -2,6 +2,16 @@
 
 ## Database Population
 
+You'll need a dataset for the tests, and you can create it by dumping the data from an existing database.
+
+To do so, you can use the `pg_dump` command line tool. In the directory where you want to dump the file, run:
+
+```
+pg_dump -h localhost -p 5434 -d dashboard -U admin > "dump.sql"
+```
+
+it will then ask for the user password and start dumping the database. This will dump the local (docker volume) database. For a different database connections you can simply adjust the parameters of the command.
+
 > ![NOTE]
 > The test database will be used as a connection in the test backend. It should be in the same schema as the models you'll test.
 > If you use the `pg_dump` tool you can dump not only the data but also the schema, meaning that no migrations are required.
