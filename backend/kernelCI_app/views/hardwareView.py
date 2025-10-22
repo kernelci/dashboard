@@ -20,39 +20,39 @@ from kernelCI_app.constants.localization import ClientStrings
 
 
 class HardwareView(APIView):
-    def _sanitize_records(self, hardwares_raw: list[dict]) -> list[HardwareItem]:
+    def _sanitize_records(self, hardwares_raw: list[tuple]) -> list[HardwareItem]:
         hardwares = []
         for hardware in hardwares_raw:
             hardwares.append(
                 HardwareItem(
-                    hardware=hardware["hardware"],
-                    platform=hardware["platform"],
-                    test_status_summary={
-                        "FAIL": hardware["fail_tests"],
-                        "ERROR": hardware["error_tests"],
-                        "MISS": hardware["miss_tests"],
-                        "PASS": hardware["pass_tests"],
-                        "DONE": hardware["done_tests"],
-                        "SKIP": hardware["skip_tests"],
-                        "NULL": hardware["null_tests"],
+                    platform=hardware[0],
+                    hardware=hardware[1],
+                    build_status_summary={
+                        "PASS": hardware[2],
+                        "FAIL": hardware[3],
+                        "NULL": hardware[4],
+                        "ERROR": hardware[5],
+                        "MISS": hardware[6],
+                        "DONE": hardware[7],
+                        "SKIP": hardware[8],
                     },
                     boot_status_summary={
-                        "FAIL": hardware["fail_boots"],
-                        "ERROR": hardware["error_boots"],
-                        "MISS": hardware["miss_boots"],
-                        "PASS": hardware["pass_boots"],
-                        "DONE": hardware["done_boots"],
-                        "SKIP": hardware["skip_boots"],
-                        "NULL": hardware["null_boots"],
+                        "PASS": hardware[9],
+                        "FAIL": hardware[10],
+                        "NULL": hardware[11],
+                        "ERROR": hardware[12],
+                        "MISS": hardware[13],
+                        "DONE": hardware[14],
+                        "SKIP": hardware[15],
                     },
-                    build_status_summary={
-                        "PASS": hardware["pass_builds"],
-                        "FAIL": hardware["fail_builds"],
-                        "NULL": hardware["null_builds"],
-                        "ERROR": hardware["error_builds"],
-                        "MISS": hardware["miss_builds"],
-                        "DONE": hardware["done_builds"],
-                        "SKIP": hardware["skip_builds"],
+                    test_status_summary={
+                        "PASS": hardware[16],
+                        "FAIL": hardware[17],
+                        "NULL": hardware[18],
+                        "ERROR": hardware[19],
+                        "MISS": hardware[20],
+                        "DONE": hardware[21],
+                        "SKIP": hardware[22],
                     },
                 )
             )
