@@ -597,8 +597,9 @@ def run_checkout_summary(
                 boot_status_group=boot_status_group,
                 test_status_group=test_status_group,
             )
+            origin_tag = f"[{origin.upper()}]" if origin != "maestro" else ""
             report["title"] = (
-                f"[STATUS] {tree_name}/{branch} - {record["git_commit_hash"]}"
+                f"[STATUS]{origin_tag} {tree_name}/{branch} - {record["git_commit_hash"]}"
             )
 
             recipients = process_submission_options(
