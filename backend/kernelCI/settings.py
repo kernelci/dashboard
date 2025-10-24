@@ -150,6 +150,7 @@ else:
                 "notifications",
                 "--action=summary",
                 "--to=kernelcialerts@microsoft.com",
+                "--cc=kernelci-results@groups.io",
                 "--ignore-recipients",
                 "--send",
                 "--yes",
