@@ -74,7 +74,7 @@ def _out(msg: str) -> None:
         pass
 
 
-def move_file_to_failed_dir(filename, failed_dir):
+def move_file_to_failed_dir(filename: str, failed_dir: str) -> None:
     try:
         os.rename(filename, os.path.join(failed_dir, os.path.basename(filename)))
     except Exception as e:
@@ -95,7 +95,9 @@ def load_tree_names(trees_file_override: Optional[str]) -> dict[str, str]:
     return tree_names
 
 
-def standardize_tree_names(input_data: dict[str, Any], tree_names):
+def standardize_tree_names(
+    input_data: dict[str, Any], tree_names: dict[str, str]
+) -> None:
     """
     Standardize tree names in input data using the provided mapping
     """
@@ -110,7 +112,7 @@ def standardize_tree_names(input_data: dict[str, Any], tree_names):
                 checkout["tree_name"] = correct_tree
 
 
-def upload_logexcerpt(logexcerpt, id):
+def upload_logexcerpt(logexcerpt: str, id: str) -> str:
     """
     Upload logexcerpt to storage and return a reference(URL)
     """
@@ -144,7 +146,7 @@ def upload_logexcerpt(logexcerpt, id):
     return f"{STORAGE_BASE_URL}/logexcerpt/{id}/logexcerpt.txt.gz"
 
 
-def get_from_cache(log_hash):
+def get_from_cache(log_hash: str) -> Optional[str]:
     """
     Check if log_hash is in the cache
     """
@@ -152,7 +154,7 @@ def get_from_cache(log_hash):
         return CACHE_LOGS.get(log_hash)
 
 
-def set_in_cache(log_hash, url):
+def set_in_cache(log_hash: str, url: str) -> None:
     """
     Set log_hash in the cache with the given URL
     """
@@ -162,7 +164,7 @@ def set_in_cache(log_hash, url):
             logger.info("Cached log excerpt with hash %s at %s", log_hash, url)
 
 
-def set_log_excerpt_ofile(item: dict[str, Any], url):
+def set_log_excerpt_ofile(item: dict[str, Any], url: str) -> dict[str, Any]:
     """
     Clean log_excerpt field
     Create name/url dict and append to output_files of job
@@ -238,7 +240,9 @@ def extract_log_excerpt(input_data: dict[str, Any]) -> None:
             process_log_excerpt_from_item(item=test, item_type="test")
 
 
-def prepare_file_data(filename, tree_names, spool_dir):
+def prepare_file_data(
+    filename: str, tree_names: dict[str, str], spool_dir: str
+) -> tuple[Optional[dict[str, Any]], dict[str, Any]]:
     """
     Prepare file data: read, extract log excerpts, standardize tree names, validate.
     This function does everything except the actual database load.
@@ -284,7 +288,7 @@ def prepare_file_data(filename, tree_names, spool_dir):
         }
 
 
-def db_worker(stop_event: threading.Event):  # noqa: C901
+def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
     """
     Worker thread that processes the database queue.
     This is the only thread that interacts with the database.
@@ -455,7 +459,7 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
     flush_buffers()
 
 
-def process_file(filename, tree_names, spool_dir):
+def process_file(filename: str, tree_names: dict[str, str], spool_dir: str) -> bool:
     """
     Process a single file in a thread, then queue it for database insertion.
     """
@@ -633,7 +637,7 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
         _out("No files processed, nothing to do")
 
 
-def verify_dir(dir):
+def verify_dir(dir: str) -> None:
     if not os.path.exists(dir):
         logger.error("Directory %s does not exist", dir)
         # try to create it
@@ -650,7 +654,7 @@ def verify_dir(dir):
     logger.info("Directory %s is valid and writable", dir)
 
 
-def verify_spool_dirs(spool_dir):
+def verify_spool_dirs(spool_dir: str) -> None:
     failed_dir = os.path.join(spool_dir, "failed")
     archive_dir = os.path.join(spool_dir, "archive")
     verify_dir(spool_dir)
@@ -658,7 +662,7 @@ def verify_spool_dirs(spool_dir):
     verify_dir(archive_dir)
 
 
-def cache_logs_maintenance():
+def cache_logs_maintenance() -> None:
     """
     Periodically clean up the cache logs to prevent memory leak and slow down.
     If CACHE_LOGS grow over 100k entries, clear it.
