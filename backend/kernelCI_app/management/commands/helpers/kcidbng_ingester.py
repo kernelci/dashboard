@@ -98,8 +98,6 @@ def load_tree_names(trees_file_override: Optional[str]) -> dict[str, str]:
 def standardize_tree_names(input_data: dict[str, Any], tree_names):
     """
     Standardize tree names in input data using the provided mapping
-
-    Returns the modified input data with standardized tree names.
     """
 
     checkouts: list[dict[str, Any]] = input_data.get("checkouts", [])
@@ -110,8 +108,6 @@ def standardize_tree_names(input_data: dict[str, Any], tree_names):
             correct_tree = tree_names[git_url]
             if checkout.get("tree_name") != correct_tree:
                 checkout["tree_name"] = correct_tree
-
-    return input_data
 
 
 def upload_logexcerpt(logexcerpt, id):
@@ -221,17 +217,14 @@ def process_log_excerpt_from_item(
             set_log_excerpt_ofile(item, cached_url)
 
 
-def extract_log_excerpt(input_data: dict[str, Any]) -> dict[str, Any]:
+def extract_log_excerpt(input_data: dict[str, Any]) -> None:
     """
     Extract log_excerpt from builds and tests, if it is large,
     upload to storage and replace with a reference.
-
-    Returns:
-        input_data: dict with log_excerpt replaced by URL if it was large
     """
     if not STORAGE_TOKEN:
         logger.warning("STORAGE_TOKEN is not set, log_excerpts will not be uploaded")
-        return input_data
+        return
 
     builds: list[dict[str, Any]] = input_data.get("builds", [])
     tests: list[dict[str, Any]] = input_data.get("tests", [])
@@ -243,8 +236,6 @@ def extract_log_excerpt(input_data: dict[str, Any]) -> dict[str, Any]:
     for test in tests:
         if test.get("log_excerpt"):
             process_log_excerpt_from_item(item=test, item_type="test")
-
-    return input_data
 
 
 def prepare_file_data(filename, tree_names, spool_dir):
@@ -271,8 +262,8 @@ def prepare_file_data(filename, tree_names, spool_dir):
 
         # These operations can be done in parallel (especially extract_log_excerpt)
         if CONVERT_LOG_EXCERPT:
-            data = extract_log_excerpt(data)
-        data = standardize_tree_names(data, tree_names)
+            extract_log_excerpt(data)
+        standardize_tree_names(data, tree_names)
         kcidb_io.schema.V5_3.validate(data)
         kcidb_io.schema.V5_3.upgrade(data)
 
