@@ -82,7 +82,7 @@ def move_file_to_failed_dir(filename, failed_dir):
         raise e
 
 
-def load_trees_name(trees_file_override: Optional[str]) -> dict[str, str]:
+def load_tree_names(trees_file_override: Optional[str]) -> dict[str, str]:
     global TREES_FILE
     if trees_file_override is not None:
         TREES_FILE = trees_file_override
@@ -90,12 +90,12 @@ def load_trees_name(trees_file_override: Optional[str]) -> dict[str, str]:
     with open(TREES_FILE, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
-    trees_name = {v["url"]: tree_name for tree_name, v in data.get("trees", {}).items()}
+    tree_names = {v["url"]: tree_name for tree_name, v in data.get("trees", {}).items()}
 
-    return trees_name
+    return tree_names
 
 
-def standardize_trees_name(input_data: dict[str, Any], trees_name):
+def standardize_tree_names(input_data: dict[str, Any], tree_names):
     """
     Standardize tree names in input data using the provided mapping
 
@@ -106,8 +106,8 @@ def standardize_trees_name(input_data: dict[str, Any], trees_name):
 
     for checkout in checkouts:
         git_url = checkout.get("git_repository_url")
-        if git_url in trees_name:
-            correct_tree = trees_name[git_url]
+        if git_url in tree_names:
+            correct_tree = tree_names[git_url]
             if checkout.get("tree_name") != correct_tree:
                 checkout["tree_name"] = correct_tree
 
@@ -247,7 +247,7 @@ def extract_log_excerpt(input_data: dict[str, Any]) -> dict[str, Any]:
     return input_data
 
 
-def prepare_file_data(filename, trees_name, spool_dir):
+def prepare_file_data(filename, tree_names, spool_dir):
     """
     Prepare file data: read, extract log excerpts, standardize tree names, validate.
     This function does everything except the actual database load.
@@ -272,7 +272,7 @@ def prepare_file_data(filename, trees_name, spool_dir):
         # These operations can be done in parallel (especially extract_log_excerpt)
         if CONVERT_LOG_EXCERPT:
             data = extract_log_excerpt(data)
-        data = standardize_trees_name(data, trees_name)
+        data = standardize_tree_names(data, tree_names)
         kcidb_io.schema.V5_3.validate(data)
         kcidb_io.schema.V5_3.upgrade(data)
 
@@ -464,14 +464,14 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
     flush_buffers()
 
 
-def process_file(filename, trees_name, spool_dir):
+def process_file(filename, tree_names, spool_dir):
     """
     Process a single file in a thread, then queue it for database insertion.
     """
     failed_dir = os.path.join(spool_dir, "failed")
     archive_dir = os.path.join(spool_dir, "archive")
 
-    data, metadata = prepare_file_data(filename, trees_name, spool_dir)
+    data, metadata = prepare_file_data(filename, tree_names, spool_dir)
 
     if "error" in metadata:
         try:
@@ -499,7 +499,7 @@ def process_file(filename, trees_name, spool_dir):
 
 
 def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threading
-    spool_dir: str, trees_name: dict[str, str], max_workers: int = 5
+    spool_dir: str, tree_names: dict[str, str], max_workers: int = 5
 ):
     """
     Ingest submissions in parallel using ThreadPoolExecutor for I/O operations
@@ -552,7 +552,7 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all files for processing
             future_to_file = {
-                executor.submit(process_file, filename, trees_name, spool_dir): filename
+                executor.submit(process_file, filename, tree_names, spool_dir): filename
                 for filename in json_files
             }
 
