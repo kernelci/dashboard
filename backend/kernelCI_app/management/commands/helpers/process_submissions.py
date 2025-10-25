@@ -83,7 +83,7 @@ def flatten_dict_specific(target: dict[str, Any], target_fields: list[str]):
     return flattened_dict
 
 
-def make_issue_instance(issue) -> Issues:
+def make_issue_instance(issue: dict[str, Any]) -> Issues:
     flattened_issue = flatten_dict_specific(issue, ["culprit"])
     filtered_issue = {
         key: value for key, value in flattened_issue.items() if key in ISSUE_FIELDS
@@ -93,7 +93,7 @@ def make_issue_instance(issue) -> Issues:
     return obj
 
 
-def make_checkout_instance(checkout) -> Checkouts:
+def make_checkout_instance(checkout: dict[str, Any]) -> Checkouts:
     filtered_checkout = {
         key: value for key, value in checkout.items() if key in CHECKOUT_FIELDS
     }
@@ -119,7 +119,7 @@ def make_test_instance(test: dict[str, Any]) -> Tests:
     return obj
 
 
-def make_incident_instance(incident) -> Incidents:
+def make_incident_instance(incident: dict[str, Any]) -> Incidents:
     filtered_incident = {
         key: value for key, value in incident.items() if key in INCIDENT_FIELDS
     }
