@@ -1,3 +1,4 @@
+from os import DirEntry
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
 import hashlib
@@ -241,27 +242,26 @@ def extract_log_excerpt(input_data: dict[str, Any]) -> None:
 
 
 def prepare_file_data(
-    filename: str, tree_names: dict[str, str], spool_dir: str
+    file: DirEntry[str], tree_names: dict[str, str]
 ) -> tuple[Optional[dict[str, Any]], dict[str, Any]]:
     """
     Prepare file data: read, extract log excerpts, standardize tree names, validate.
     This function does everything except the actual database load.
     """
-    full_filename = os.path.join(spool_dir, filename)
-    fsize = os.path.getsize(full_filename)
+    fsize = file.stat().st_size
 
     if fsize == 0:
         if VERBOSE:
-            logger.info("File %s is empty, skipping, deleting", full_filename)
-        os.remove(full_filename)
+            logger.info("File %s is empty, skipping, deleting", file.path)
+        os.remove(file.path)
         return None, None
 
     start_time = time.time()
     if VERBOSE:
-        logger.info("Processing file %s, size: %d", filename, fsize)
+        logger.info("Processing file %s, size: %d", file.name, fsize)
 
     try:
-        with open(full_filename, "r") as f:
+        with open(file.path, "r") as f:
             data = json.loads(f.read())
 
         # These operations can be done in parallel (especially extract_log_excerpt)
@@ -273,17 +273,15 @@ def prepare_file_data(
 
         processing_time = time.time() - start_time
         return data, {
-            "filename": filename,
-            "full_filename": full_filename,
+            "file": file,
             "fsize": fsize,
             "processing_time": processing_time,
         }
     except Exception as e:
-        logger.error("Error preparing data from %s: %s", filename, e)
+        logger.error("Error preparing data from %s: %s", file.name, e)
         logger.error(traceback.format_exc())
         return None, {
-            "filename": filename,
-            "full_filename": full_filename,
+            "file": file,
             "error": str(e),
         }
 
@@ -459,18 +457,21 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
     flush_buffers()
 
 
-def process_file(filename: str, tree_names: dict[str, str], spool_dir: str) -> bool:
+def process_file(
+    file: DirEntry[str],
+    tree_names: dict[str, str],
+    failed_dir: str,
+    archive_dir: str,
+) -> bool:
     """
     Process a single file in a thread, then queue it for database insertion.
     """
-    failed_dir = os.path.join(spool_dir, "failed")
-    archive_dir = os.path.join(spool_dir, "archive")
-
-    data, metadata = prepare_file_data(filename, tree_names, spool_dir)
+    data, metadata = prepare_file_data(file, tree_names)
+    file = metadata["file"]
 
     if "error" in metadata:
         try:
-            move_file_to_failed_dir(metadata["full_filename"], failed_dir)
+            move_file_to_failed_dir(os.path.join(file.path, file.name), failed_dir)
         except Exception:
             pass
         return False
@@ -483,37 +484,29 @@ def process_file(filename: str, tree_names: dict[str, str], spool_dir: str) -> b
 
     # Archive the file after queuing (we can do this optimistically)
     try:
-        os.rename(
-            metadata["full_filename"], os.path.join(archive_dir, metadata["filename"])
-        )
+        os.rename(file.path, os.path.join(archive_dir, file.name))
     except Exception as e:
-        logger.error("Error archiving file %s: %s", metadata["filename"], e)
+        logger.error("Error archiving file %s: %s", file.name, e)
         return False
 
     return True
 
 
 def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threading
-    spool_dir: str, tree_names: dict[str, str], max_workers: int = 5
-):
+    json_files: list[DirEntry[str]],
+    tree_names: dict[str, str],
+    archive_dir: str,
+    failed_dir: str,
+    max_workers: int = 5,
+) -> None:
     """
     Ingest submissions in parallel using ThreadPoolExecutor for I/O operations
     and a single database worker thread.
     """
-
-    # Get list of JSON files to process
-    json_files = [
-        f
-        for f in os.listdir(spool_dir)
-        if os.path.isfile(os.path.join(spool_dir, f)) and f.endswith(".json")
-    ]
-    if not json_files:
-        return
-
     total_bytes = 0
     for f in json_files:
         try:
-            total_bytes += os.path.getsize(os.path.join(spool_dir, f))
+            total_bytes += f.stat().st_size
         except Exception:
             pass
 
@@ -547,8 +540,10 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all files for processing
             future_to_file = {
-                executor.submit(process_file, filename, tree_names, spool_dir): filename
-                for filename in json_files
+                executor.submit(
+                    process_file, file, tree_names, failed_dir, archive_dir
+                ): file.name
+                for file in json_files
             }
 
             # Collect results progressively
