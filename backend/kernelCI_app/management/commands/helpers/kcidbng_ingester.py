@@ -48,7 +48,7 @@ try:
     INGEST_FLUSH_TIMEOUT_SEC = float(os.environ.get("INGEST_FLUSH_TIMEOUT_SEC", "2.0"))
 except (ValueError, TypeError):
     logger.warning("Invalid INGEST_FLUSH_TIMEOUT_SEC, using default 2.0")
-    INGEST_FLUSH_TIMEOUT_SEC = 5.0
+    INGEST_FLUSH_TIMEOUT_SEC = 2.0
 
 try:
     INGEST_QUEUE_MAXSIZE = int(os.environ.get("INGEST_QUEUE_MAXSIZE", "5000"))
