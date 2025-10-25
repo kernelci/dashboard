@@ -47,7 +47,7 @@ except (ValueError, TypeError):
 try:
     INGEST_FLUSH_TIMEOUT_SEC = float(os.environ.get("INGEST_FLUSH_TIMEOUT_SEC", "2.0"))
 except (ValueError, TypeError):
-    logger.warning("Invalid INGEST_FLUSH_TIMEOUT_SEC, using default 2.0")
+    logger.warning("Invalid INGEST_FLUSH_TIMEOUT_SEC, using default 5.0")
     INGEST_FLUSH_TIMEOUT_SEC = 5.0
 
 try:
