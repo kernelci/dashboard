@@ -86,4 +86,4 @@ services:
             test-backend:
                 condition: service_healthy
         # Modify to run specific tests or comment to run all tests:
-        # command: ["hardwareDetails"]
+        # command: ["hardwareListing"]

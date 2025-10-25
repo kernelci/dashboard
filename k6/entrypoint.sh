@@ -21,9 +21,9 @@ run_single_test() {
     echo "Running test: $test_file"
     
     k6 run \
-        --summary-export="/results/${test_arg}_summary_${TIMESTAMP}.json" \
+        --summary-export="/results/${test_file}_summary_${TIMESTAMP}.json" \
         --summary-trend-stats="avg,min,med,max,p(95),p(99)" \
-        "$test_file"
+        "./tests/$test_file.js"
         
     echo "Completed test: $test_file"
     echo "Results exported to /results/"
@@ -42,7 +42,8 @@ if [ $# -gt 0 ]; then
         test_file="./tests/${test_arg}.js"
         
         if [ -f "$test_file" ]; then
-            run_single_test "$test_file"
+            test_name=$(basename "$test_file" .js)
+            run_single_test "$test_name"
         else
             echo "Warning: Test file '$test_file' not found, skipping..."
         fi
