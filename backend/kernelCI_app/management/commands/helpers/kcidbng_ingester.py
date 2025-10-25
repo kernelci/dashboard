@@ -406,9 +406,8 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
                 db_queue.task_done()
                 break
             try:
-                data, metadata = item
-                if data is not None:
-                    inst = build_instances_from_submission(data)
+                filename, inst = item
+                if inst is not None:
                     issues_buf.extend(inst["issues"])
                     checkouts_buf.extend(inst["checkouts"])
                     builds_buf.extend(inst["builds"])
@@ -423,7 +422,7 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
                         "Queued from %s: "
                         "issues=%d checkouts=%d builds=%d tests=%d incidents=%d"
                         % (
-                            metadata.get("filename", "unknown"),
+                            filename,
                             len(inst["issues"]),
                             len(inst["checkouts"]),
                             len(inst["builds"]),
@@ -480,7 +479,7 @@ def process_file(
         # Empty file, already deleted
         return True
 
-    db_queue.put((data, metadata))
+    db_queue.put((file.name, build_instances_from_submission(data)))
 
     # Archive the file after queuing (we can do this optimistically)
     try:
