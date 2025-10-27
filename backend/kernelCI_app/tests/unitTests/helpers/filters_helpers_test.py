@@ -20,67 +20,20 @@ from kernelCI_app.helpers.filters import (
 )
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.tests.unitTests.helpers.fixtures.filter_fixtures import (
-    boot_filter_data_with_origin,
-    boot_filter_data_with_platform,
-    boot_path_filter,
-    build_filter_data_with_origin,
-    empty_filters,
-    filter_body_data,
-    empty_filter_body,
-    filter_data_with_tuple_match,
-    filter_data_with_tuple_no_match_id,
-    filter_data_with_tuple_no_match_version,
-    filter_data_with_uncategorized,
-    filter_data_with_uncategorized_issue,
+    BOOT_FILTER_DATA_SCENARIOS,
+    FILTER_DATA_SCENARIOS,
+    FILTER_OBJECTS,
+    FILTER_BODY_DATA,
     filter_params_with_exact_filter,
     filter_params_with_filters,
     filter_params_with_invalid_op,
-    invalid_issue_tuple_filter,
-    issue_filters,
+    MATCHING_ISSUE_FILTERS,
     mock_request,
-    no_filter_body,
     mock_request_with_filters,
     mock_request_with_multiple_filters,
     mock_request_with_string_filter,
     mock_request_with_regex_filter,
     mock_request_with_invalid_param,
-    non_matching_issue_filters,
-    string_filter_body,
-    exact_filter_body,
-    issue_tuple_filter,
-    issue_tuple_null_version_filter,
-    platform_filter,
-    origin_filter,
-    issue_categories_filter,
-    build_origin_filter,
-    boot_origin_filter,
-    test_origin_filter,
-    boot_duration_lte_filter,
-    boot_duration_gte_filter,
-    test_duration_lte_filter,
-    test_duration_gte_filter,
-    build_duration_lte_filter,
-    build_duration_gte_filter,
-    boot_status_filter,
-    test_path_filter,
-    test_status_filter,
-    config_name_filter,
-    compiler_filter,
-    architecture_filter,
-    hardware_filter,
-    build_status_filter,
-    uncategorized_filters,
-    valid_culprit_filter,
-    valid_option_filter,
-    uncategorized_issue_filter,
-    invalid_culprit_filter,
-    invalid_option_filter,
-    build_filter_data,
-    record_filter_data,
-    boot_filter_data,
-    test_filter_data,
-    test_filter_data_with_platform,
-    test_filter_data_with_origin,
 )
 
 
@@ -173,6 +126,11 @@ class TestIsExclusivelyBuildIssue:
         result = is_exclusively_build_issue(None, None, None)
         assert result is False
 
+    def test_is_exclusively_build_issue_with_unknown_issue_with_test(self):
+        """Test is_exclusively_build_issue with unknown issue but with test."""
+        result = is_exclusively_build_issue(None, None, "test123")
+        assert result is False
+
 
 class TestIsExclusivelyTestIssue:
     def test_is_exclusively_test_issue_with_known_issue_with_test(self):
@@ -193,6 +151,13 @@ class TestIsExclusivelyTestIssue:
         """Test is_exclusively_test_issue with unknown issue."""
         result = is_exclusively_test_issue(
             issue_id=None, issue_version=None, incident_test_id="test123"
+        )
+        assert result is False
+
+    def test_is_exclusively_test_issue_with_unknown_issue_no_test(self):
+        """Test is_exclusively_test_issue with unknown issue and no test."""
+        result = is_exclusively_test_issue(
+            issue_id=None, issue_version=None, incident_test_id=None
         )
         assert result is False
 
@@ -246,31 +211,31 @@ class TestIsIssueFromBuild:
 class TestVerifyIssueInFilter:
     def test_verify_issue_in_filter_with_uncategorized(self):
         """Test verify_issue_in_filter with uncategorized."""
-        filter_data = filter_data_with_uncategorized()
+        filter_data = FILTER_DATA_SCENARIOS["uncategorized"]
         result = verify_issue_in_filter(**filter_data)
         assert result is True
 
     def test_verify_issue_in_filter_with_tuple_match(self):
         """Test verify_issue_in_filter with tuple match."""
-        filter_data = filter_data_with_tuple_match()
+        filter_data = FILTER_DATA_SCENARIOS["tuple_match"]
         result = verify_issue_in_filter(**filter_data)
         assert result is True
 
     def test_verify_issue_in_filter_with_tuple_no_match_id(self):
         """Test verify_issue_in_filter with tuple no match ID."""
-        filter_data = filter_data_with_tuple_no_match_id()
+        filter_data = FILTER_DATA_SCENARIOS["tuple_no_match_id"]
         result = verify_issue_in_filter(**filter_data)
         assert result is False
 
     def test_verify_issue_in_filter_with_tuple_no_match_version(self):
         """Test verify_issue_in_filter with tuple no match version."""
-        filter_data = filter_data_with_tuple_no_match_version()
+        filter_data = FILTER_DATA_SCENARIOS["tuple_no_match_version"]
         result = verify_issue_in_filter(**filter_data)
         assert result is False
 
     def test_verify_issue_in_filter_with_uncategorized_issue(self):
         """Test verify_issue_in_filter with uncategorized issue."""
-        filter_data = filter_data_with_uncategorized_issue()
+        filter_data = FILTER_DATA_SCENARIOS["uncategorized_issue"]
         result = verify_issue_in_filter(**filter_data)
         assert result is False
 
@@ -278,26 +243,23 @@ class TestVerifyIssueInFilter:
 class TestIsIssueFilteredOut:
     def test_is_issue_filtered_out_with_empty_filters(self):
         """Test is_issue_filtered_out with empty filters."""
-        empty_filters_data = empty_filters()
         result = is_issue_filtered_out(
-            issue_id="issue123", issue_filters=empty_filters_data, issue_version=1
+            issue_id="issue123", issue_filters=set(), issue_version=1
         )
         assert result is True
 
     def test_is_issue_filtered_out_with_matching_filter(self):
         """Test is_issue_filtered_out with matching filter."""
-        issue_filters_data = issue_filters()
         result = is_issue_filtered_out(
-            issue_id="issue123", issue_filters=issue_filters_data, issue_version=1
+            issue_id="issue123", issue_filters=MATCHING_ISSUE_FILTERS, issue_version=1
         )
         assert result is False
 
     def test_is_issue_filtered_out_with_non_matching_filter(self):
         """Test is_issue_filtered_out with non-matching filter."""
-        non_matching_issue_filters_data = non_matching_issue_filters()
         result = is_issue_filtered_out(
             issue_id="issue123",
-            issue_filters=non_matching_issue_filters_data,
+            issue_filters={("issue456", 2), ("issue789", 3)},
             issue_version=1,
         )
         assert result is True
@@ -306,9 +268,8 @@ class TestIsIssueFilteredOut:
 class TestShouldFilterTestIssue:
     def test_should_filter_test_issue_with_no_filters(self):
         """Test should_filter_test_issue with no filters."""
-        empty_filters_data = empty_filters()
         result = should_filter_test_issue(
-            issue_filters=empty_filters_data,
+            issue_filters=set(),
             issue_id="issue123",
             issue_version=1,
             incident_test_id="test123",
@@ -317,9 +278,8 @@ class TestShouldFilterTestIssue:
 
     def test_should_filter_test_issue_with_uncategorized_filter(self):
         """Test should_filter_test_issue with uncategorized filter."""
-        uncategorized_filters_data = uncategorized_filters()
         result = should_filter_test_issue(
-            issue_filters=uncategorized_filters_data,
+            issue_filters={UNCATEGORIZED_STRING},
             issue_id="issue123",
             issue_version=1,
             incident_test_id=None,
@@ -328,9 +288,8 @@ class TestShouldFilterTestIssue:
 
     def test_should_filter_test_issue_with_exclusively_build_issue(self):
         """Test should_filter_test_issue with exclusively build issue."""
-        issue_filters_data = issue_filters()
         result = should_filter_test_issue(
-            issue_filters=issue_filters_data,
+            issue_filters=MATCHING_ISSUE_FILTERS,
             issue_id="issue123",
             issue_version=1,
             incident_test_id=None,
@@ -339,9 +298,8 @@ class TestShouldFilterTestIssue:
 
     def test_should_filter_test_issue_with_matching_filter(self):
         """Test should_filter_test_issue with matching filter."""
-        issue_filters_data = issue_filters()
         result = should_filter_test_issue(
-            issue_filters=issue_filters_data,
+            issue_filters=MATCHING_ISSUE_FILTERS,
             issue_id="issue123",
             issue_version=1,
             incident_test_id="test123",
@@ -484,11 +442,21 @@ class TestToIntOrDefault:
         result = to_int_or_default("123.45", 0)
         assert result == 0
 
+    def test_to_int_or_default_with_empty_string(self):
+        """Test to_int_or_default with empty string."""
+        result = to_int_or_default("", 0)
+        assert result == 0
+
+    def test_to_int_or_default_with_negative_number(self):
+        """Test to_int_or_default with negative number."""
+        result = to_int_or_default("-123", 0)
+        assert result == -123
+
 
 class TestFilterParamsInitialization:
     def test_init_with_process_body(self):
         """Test FilterParams initialization with process_body=True."""
-        filter_params = FilterParams(filter_body_data(), process_body=True)
+        filter_params = FilterParams(FILTER_BODY_DATA, process_body=True)
         assert len(filter_params.filters) >= 3
         assert "test.status" in [f["field"] for f in filter_params.filters]
 
@@ -576,7 +544,15 @@ class TestBuildFilters:
         """Test is_build_filtered_out with status filter."""
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filterBuildStatus = {"FAIL"}
-        result = filter_params.is_build_filtered_out(**build_filter_data())
+        result = filter_params.is_build_filtered_out(
+            **{
+                "duration": 100,
+                "build_status": "PASS",
+                "issue_id": "issue123",
+                "issue_version": 1,
+                "incident_test_id": None,
+            }
+        )
         assert result is True
 
     def test_is_build_filtered_out_with_duration_filter(self):
@@ -594,7 +570,14 @@ class TestBuildFilters:
 
     def test_is_build_filtered_out_with_origin_filter(self):
         """Test is_build_filtered_out with origin filter."""
-        build_filter_data = build_filter_data_with_origin()
+        build_filter_data = {
+            "duration": 100,
+            "build_status": "FAIL",
+            "issue_id": "issue123",
+            "issue_version": 1,
+            "incident_test_id": None,
+            "build_origin": "origin2",
+        }
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filter_build_origin = {"origin1"}
         result = filter_params.is_build_filtered_out(**build_filter_data)
@@ -606,7 +589,14 @@ class TestRecordFilters:
         """Test is_record_filtered_out with hardware filter."""
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filterHardware = {"hardware1"}
-        result = filter_params.is_record_filtered_out(**record_filter_data())
+        result = filter_params.is_record_filtered_out(
+            **{
+                "hardwares": ["hardware2"],
+                "architecture": "x86_64",
+                "compiler": "gcc",
+                "config_name": "defconfig",
+            }
+        )
         assert result is True
 
     def test_is_record_filtered_out_with_architecture_filter(self):
@@ -710,7 +700,9 @@ class TestBootFilters:
         """Test is_boot_filtered_out with path filter."""
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filterBootPath = "boot.test"
-        result = filter_params.is_boot_filtered_out(**boot_filter_data())
+        result = filter_params.is_boot_filtered_out(
+            **BOOT_FILTER_DATA_SCENARIOS["base"]
+        )
         assert result is True
 
     def test_is_boot_filtered_out_with_status_filter(self):
@@ -718,12 +710,7 @@ class TestBootFilters:
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filterBootStatus = {"PASS"}
         result = filter_params.is_boot_filtered_out(
-            path="boot.test",
-            status="FAIL",
-            duration=100,
-            issue_id="issue123",
-            issue_version=1,
-            incident_test_id="test123",
+            **BOOT_FILTER_DATA_SCENARIOS["with_status"]
         )
         assert result is True
 
@@ -732,18 +719,13 @@ class TestBootFilters:
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filterBootDurationMax = 100
         result = filter_params.is_boot_filtered_out(
-            path="boot.test",
-            status="PASS",
-            duration=150,
-            issue_id="issue123",
-            issue_version=1,
-            incident_test_id="test123",
+            **BOOT_FILTER_DATA_SCENARIOS["with_duration"]
         )
         assert result is True
 
     def test_is_boot_filtered_out_with_platform_filter(self):
         """Test is_boot_filtered_out with platform filter."""
-        boot_filter_data = boot_filter_data_with_platform()
+        boot_filter_data = BOOT_FILTER_DATA_SCENARIOS["with_platform"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filterPlatforms["boot"] = {"platform1"}
         result = filter_params.is_boot_filtered_out(**boot_filter_data)
@@ -751,7 +733,7 @@ class TestBootFilters:
 
     def test_is_boot_filtered_out_with_origin_filter(self):
         """Test is_boot_filtered_out with origin filter."""
-        boot_filter_data = boot_filter_data_with_origin()
+        boot_filter_data = BOOT_FILTER_DATA_SCENARIOS["with_origin"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filter_boot_origin = {"origin1"}
         result = filter_params.is_boot_filtered_out(**boot_filter_data)
@@ -761,26 +743,16 @@ class TestBootFilters:
         """Test is_boot_filtered_out with no filters returns False."""
         filter_params = FilterParams(mock_request(), process_body=False)
         result = filter_params.is_boot_filtered_out(
-            path="boot.test",
-            status="PASS",
-            duration=100,
-            issue_id="issue123",
-            issue_version=1,
-            incident_test_id="test123",
+            **BOOT_FILTER_DATA_SCENARIOS["base"]
         )
         assert result is False
 
     def test_is_boot_filtered_out_with_matching_path_returns_false(self):
         """Test is_boot_filtered_out with matching path returns False."""
         filter_params = FilterParams(mock_request(), process_body=False)
-        filter_params.filterBootPath = "boot.test"
+        filter_params.filterBootPath = "boot.other"
         result = filter_params.is_boot_filtered_out(
-            path="boot.test",
-            status="PASS",
-            duration=100,
-            issue_id="issue123",
-            issue_version=1,
-            incident_test_id="test123",
+            **BOOT_FILTER_DATA_SCENARIOS["base"]
         )
         assert result is False
 
@@ -789,12 +761,7 @@ class TestBootFilters:
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filterBootStatus = {"PASS"}
         result = filter_params.is_boot_filtered_out(
-            path="boot.test",
-            status="PASS",
-            duration=100,
-            issue_id="issue123",
-            issue_version=1,
-            incident_test_id="test123",
+            **BOOT_FILTER_DATA_SCENARIOS["base"]
         )
         assert result is False
 
@@ -805,7 +772,7 @@ class TestBootFilters:
         result = filter_params.is_boot_filtered_out(
             path="boot.test",
             status="PASS",
-            duration=100,
+            duration=150,
             issue_id="issue123",
             issue_version=1,
             incident_test_id="test123",
@@ -862,7 +829,16 @@ class TestTestFilters:
         """Test is_test_filtered_out with path filter."""
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filterTestPath = "test.specific"
-        result = filter_params.is_test_filtered_out(**test_filter_data())
+        result = filter_params.is_test_filtered_out(
+            **{
+                "path": "test.other",
+                "status": "PASS",
+                "duration": 100,
+                "issue_id": "issue123",
+                "issue_version": 1,
+                "incident_test_id": "test123",
+            }
+        )
         assert result is True
 
     def test_is_test_filtered_out_with_status_filter(self):
@@ -897,14 +873,34 @@ class TestTestFilters:
         """Test is_test_filtered_out with platform filter."""
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filterPlatforms["test"] = {"platform1"}
-        result = filter_params.is_test_filtered_out(**test_filter_data_with_platform())
+        result = filter_params.is_test_filtered_out(
+            **{
+                "path": "test.specific",
+                "status": "PASS",
+                "duration": 100,
+                "issue_id": "issue123",
+                "issue_version": 1,
+                "incident_test_id": "test123",
+                "platform": "platform2",
+            }
+        )
         assert result is True
 
     def test_is_test_filtered_out_with_origin_filter(self):
         """Test is_test_filtered_out with origin filter."""
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params.filter_test_origin = {"origin1"}
-        result = filter_params.is_test_filtered_out(**test_filter_data_with_origin())
+        result = filter_params.is_test_filtered_out(
+            **{
+                "path": "test.specific",
+                "status": "PASS",
+                "duration": 100,
+                "issue_id": "issue123",
+                "issue_version": 1,
+                "incident_test_id": "test123",
+                "origin": "origin2",
+            }
+        )
         assert result is True
 
     def test_is_test_filtered_out_with_no_filters_returns_false(self):
@@ -1011,7 +1007,7 @@ class TestFilterHandlers:
     @patch("kernelCI_app.helpers.filters.log_message")
     def test_handle_issue_culprits_with_invalid_culprit(self, mock_log_message):
         """Test _handle_issue_culprits with invalid culprit."""
-        invalid_culprit_filter_data = invalid_culprit_filter()
+        invalid_culprit_filter_data = FILTER_OBJECTS["invalid_culprit"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_issue_culprits(invalid_culprit_filter_data)
         mock_log_message.assert_called_once()
@@ -1020,7 +1016,7 @@ class TestFilterHandlers:
     @patch("kernelCI_app.helpers.filters.log_message")
     def test_handle_issue_options_with_invalid_option(self, mock_log_message):
         """Test _handle_issue_options with invalid option."""
-        invalid_option_filter_data = invalid_option_filter()
+        invalid_option_filter_data = FILTER_OBJECTS["invalid_option"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_issue_options(invalid_option_filter_data)
         mock_log_message.assert_called_once()
@@ -1028,70 +1024,72 @@ class TestFilterHandlers:
 
     def test_handle_issues_with_uncategorized(self):
         """Test _handle_issues with uncategorized."""
-        uncategorized_issue_filter_data = uncategorized_issue_filter()
+        uncategorized_issue_filter_data = FILTER_OBJECTS["uncategorized_issue"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_issues(uncategorized_issue_filter_data)
         assert (UNCATEGORIZED_STRING, None) in filter_params.filterIssues["build"]
 
     def test_handle_issues_with_issue_tuple(self):
         """Test _handle_issues with issue tuple."""
-        issue_tuple_filter_data = issue_tuple_filter()
+        issue_tuple_filter_data = FILTER_OBJECTS["issue_tuple"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_issues(issue_tuple_filter_data)
         assert ("issue123", 1) in filter_params.filterIssues["build"]
 
     def test_handle_issues_with_issue_tuple_null_version(self):
         """Test _handle_issues with issue tuple null version."""
-        issue_tuple_null_version_filter_data = issue_tuple_null_version_filter()
+        issue_tuple_null_version_filter_data = FILTER_OBJECTS[
+            "issue_tuple_null_version"
+        ]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_issues(issue_tuple_null_version_filter_data)
         assert ("issue123", None) in filter_params.filterIssues["build"]
 
     def test_handle_platforms(self):
         """Test _handle_platforms."""
-        platform_filter_data = platform_filter()
+        platform_filter_data = FILTER_OBJECTS["platform"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_platforms(platform_filter_data)
         assert "x86_64" in filter_params.filterPlatforms["boot"]
 
     def test_handle_origins(self):
         """Test _handle_origins."""
-        origin_filter_data = origin_filter()
+        origin_filter_data = FILTER_OBJECTS["origin"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_origins(origin_filter_data)
         assert "origin1" in filter_params.filter_origins
 
     def test_handle_issue_categories(self):
         """Test _handle_issue_categories."""
-        issue_categories_filter_data = issue_categories_filter()
+        issue_categories_filter_data = FILTER_OBJECTS["issue_categories"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_issue_categories(issue_categories_filter_data)
         assert "category1" in filter_params.filter_issue_categories
 
     def test_handle_build_origin(self):
         """Test _handle_build_origin."""
-        build_origin_filter_data = build_origin_filter()
+        build_origin_filter_data = FILTER_OBJECTS["build_origin"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_build_origin(build_origin_filter_data)
         assert "origin1" in filter_params.filter_build_origin
 
     def test_handle_boot_origin(self):
         """Test _handle_boot_origin."""
-        boot_origin_filter_data = boot_origin_filter()
+        boot_origin_filter_data = FILTER_OBJECTS["boot_origin"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_boot_origin(boot_origin_filter_data)
         assert "origin1" in filter_params.filter_boot_origin
 
     def test_handle_test_origin(self):
         """Test _handle_test_origin."""
-        test_origin_filter_data = test_origin_filter()
+        test_origin_filter_data = FILTER_OBJECTS["test_origin"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_test_origin(test_origin_filter_data)
         assert "origin1" in filter_params.filter_test_origin
 
     def test_handle_boot_duration_lte(self):
         """Test _handle_boot_duration with lte operation."""
-        boot_duration_lte_filter_data = boot_duration_lte_filter()
+        boot_duration_lte_filter_data = FILTER_OBJECTS["boot_duration_lte"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_boot_duration(boot_duration_lte_filter_data)
         assert filter_params.filterBootDurationMax == 100
@@ -1099,7 +1097,7 @@ class TestFilterHandlers:
 
     def test_handle_boot_duration_gte(self):
         """Test _handle_boot_duration with gte operation."""
-        boot_duration_gte_filter_data = boot_duration_gte_filter()
+        boot_duration_gte_filter_data = FILTER_OBJECTS["boot_duration_gte"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_boot_duration(boot_duration_gte_filter_data)
         assert filter_params.filterBootDurationMin == 50
@@ -1107,7 +1105,7 @@ class TestFilterHandlers:
 
     def test_handle_test_duration_lte(self):
         """Test _handle_test_duration with lte operation."""
-        test_duration_lte_filter_data = test_duration_lte_filter()
+        test_duration_lte_filter_data = FILTER_OBJECTS["test_duration_lte"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_test_duration(test_duration_lte_filter_data)
         assert filter_params.filterTestDurationMax == 200
@@ -1115,7 +1113,7 @@ class TestFilterHandlers:
 
     def test_handle_test_duration_gte(self):
         """Test _handle_test_duration with gte operation."""
-        test_duration_gte_filter_data = test_duration_gte_filter()
+        test_duration_gte_filter_data = FILTER_OBJECTS["test_duration_gte"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_test_duration(test_duration_gte_filter_data)
         assert filter_params.filterTestDurationMin == 75
@@ -1123,7 +1121,7 @@ class TestFilterHandlers:
 
     def test_handle_build_duration_lte(self):
         """Test _handle_build_duration with lte operation."""
-        build_duration_lte_filter_data = build_duration_lte_filter()
+        build_duration_lte_filter_data = FILTER_OBJECTS["build_duration_lte"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_build_duration(build_duration_lte_filter_data)
         assert filter_params.filterBuildDurationMax == 300
@@ -1131,7 +1129,7 @@ class TestFilterHandlers:
 
     def test_handle_build_duration_gte(self):
         """Test _handle_build_duration with gte operation."""
-        build_duration_gte_filter_data = build_duration_gte_filter()
+        build_duration_gte_filter_data = FILTER_OBJECTS["build_duration_gte"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_build_duration(build_duration_gte_filter_data)
         assert filter_params.filterBuildDurationMin == 150
@@ -1139,7 +1137,7 @@ class TestFilterHandlers:
 
     def test_handle_path_boot_path(self):
         """Test _handle_path with boot.path field."""
-        boot_path_filter_data = boot_path_filter()
+        boot_path_filter_data = FILTER_OBJECTS["boot_path"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_path(boot_path_filter_data)
         assert filter_params.filterBootPath == "boot.test"
@@ -1147,7 +1145,7 @@ class TestFilterHandlers:
 
     def test_handle_path_test_path(self):
         """Test _handle_path with test.path field."""
-        test_path_filter_data = test_path_filter()
+        test_path_filter_data = FILTER_OBJECTS["test_path"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_path(test_path_filter_data)
         assert filter_params.filterTestPath == "test.specific"
@@ -1155,7 +1153,7 @@ class TestFilterHandlers:
 
     def test_handle_issues_with_issue_tuple_invalid_format(self):
         """Test _handle_issues with invalid issue tuple format."""
-        invalid_issue_tuple_filter_data = invalid_issue_tuple_filter()
+        invalid_issue_tuple_filter_data = FILTER_OBJECTS["invalid_issue_tuple"]
         filter_params = FilterParams(mock_request(), process_body=False)
         with pytest.raises(ValueError):
             filter_params._handle_issues(invalid_issue_tuple_filter_data)
@@ -1206,7 +1204,7 @@ class TestFilterProcessing:
 class TestFilterCreation:
     def test_create_filters_from_body_with_valid_filters(self):
         """Test create_filters_from_body with valid filters."""
-        filter_params = FilterParams(filter_body_data(), process_body=True)
+        filter_params = FilterParams(FILTER_BODY_DATA, process_body=True)
         assert "PASS" in filter_params.filterTestStatus
         assert "FAIL" in filter_params.filterTestStatus
         assert filter_params.filterBootDurationMax == 100
@@ -1226,13 +1224,13 @@ class TestFilterCreation:
     def test_create_filters_from_body_with_empty_filter(self):
         """Test create_filters_from_body with empty filter."""
         filter_params = FilterParams(mock_request(), process_body=False)
-        filter_params.create_filters_from_body(empty_filter_body())
+        filter_params.create_filters_from_body({"filter": {}})
         assert len(filter_params.filters) == 0
 
     def test_create_filters_from_body_with_no_filter_key(self):
         """Test create_filters_from_body with no filter key."""
         filter_params = FilterParams(mock_request(), process_body=False)
-        filter_params.create_filters_from_body(no_filter_body())
+        filter_params.create_filters_from_body({})
         assert len(filter_params.filters) == 0
 
     def test_create_filters_from_req_with_empty_request(self):
@@ -1249,49 +1247,49 @@ class TestFilterCreation:
 class TestSpecificHandlers:
     def test_handle_boot_status(self):
         """Test _handle_boot_status method."""
-        boot_status_filter_data = boot_status_filter()
+        boot_status_filter_data = FILTER_OBJECTS["boot_status"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_boot_status(boot_status_filter_data)
         assert "PASS" in filter_params.filterBootStatus
 
     def test_handle_test_status(self):
         """Test _handle_test_status method."""
-        test_status_filter_data = test_status_filter()
+        test_status_filter_data = FILTER_OBJECTS["test_status"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_test_status(test_status_filter_data)
         assert "FAIL" in filter_params.filterTestStatus
 
     def test_handle_config_name(self):
         """Test _handle_config_name method."""
-        config_name_filter_data = config_name_filter()
+        config_name_filter_data = FILTER_OBJECTS["config_name"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_config_name(config_name_filter_data)
         assert "defconfig" in filter_params.filterConfigs
 
     def test_handle_compiler(self):
         """Test _handle_compiler method."""
-        compiler_filter_data = compiler_filter()
+        compiler_filter_data = FILTER_OBJECTS["compiler"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_compiler(compiler_filter_data)
         assert "gcc" in filter_params.filterCompiler
 
     def test_handle_architecture(self):
         """Test _handle_architecture method."""
-        architecture_filter_data = architecture_filter()
+        architecture_filter_data = FILTER_OBJECTS["architecture"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_architecture(architecture_filter_data)
         assert "x86_64" in filter_params.filterArchitecture
 
     def test_handle_hardware(self):
         """Test _handle_hardware method."""
-        hardware_filter_data = hardware_filter()
+        hardware_filter_data = FILTER_OBJECTS["hardware"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_hardware(hardware_filter_data)
         assert "hardware1" in filter_params.filterHardware
 
     def test_handle_build_status(self):
         """Test _handle_build_status method."""
-        build_status_filter_data = build_status_filter()
+        build_status_filter_data = FILTER_OBJECTS["build_status"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_build_status(build_status_filter_data)
         assert "PASS" in filter_params.filterBuildStatus
@@ -1299,7 +1297,7 @@ class TestSpecificHandlers:
     @patch("kernelCI_app.helpers.filters.log_message")
     def test_handle_issue_culprits_with_valid_culprit(self, mock_log_message):
         """Test _handle_issue_culprits with valid culprit."""
-        valid_culprit_filter_data = valid_culprit_filter()
+        valid_culprit_filter_data = FILTER_OBJECTS["valid_culprit"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_issue_culprits(valid_culprit_filter_data)
         mock_log_message.assert_not_called()
@@ -1308,7 +1306,7 @@ class TestSpecificHandlers:
     @patch("kernelCI_app.helpers.filters.log_message")
     def test_handle_issue_options_with_valid_option(self, mock_log_message):
         """Test _handle_issue_options with valid option."""
-        valid_option_filter_data = valid_option_filter()
+        valid_option_filter_data = FILTER_OBJECTS["valid_option"]
         filter_params = FilterParams(mock_request(), process_body=False)
         filter_params._handle_issue_options(valid_option_filter_data)
         mock_log_message.assert_not_called()
@@ -1346,10 +1344,14 @@ class TestRequestFilters:
 
     def test_create_filters_from_body_with_string_like_filter(self):
         """Test create_filters_from_body with string-like filter."""
-        filter_params = FilterParams(string_filter_body(), process_body=True)
+        filter_params = FilterParams(
+            {"filter": {"filter_test.path": "test.specific"}}, process_body=True
+        )
         assert len(filter_params.filters) == 1
 
     def test_create_filters_from_body_with_exact_filter(self):
         """Test create_filters_from_body with exact filter."""
-        filter_params = FilterParams(exact_filter_body(), process_body=True)
+        filter_params = FilterParams(
+            {"filter": {"filter_test.status": "PASS"}}, process_body=True
+        )
         assert len(filter_params.filters) == 1
