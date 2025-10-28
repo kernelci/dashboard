@@ -241,7 +241,7 @@ class TestGetValidatedCurrentTree:
         )
 
         assert result is None
-        mock_log_message.assert_called_once()
+        mock_log_message.assert_called_once_with(f"Invalid row status for {record}")
 
     @patch("kernelCI_app.helpers.hardwareDetails.DefaultRecordValues")
     @patch("kernelCI_app.helpers.hardwareDetails.get_current_record_tree_in_selection")
@@ -261,7 +261,7 @@ class TestGetValidatedCurrentTree:
         )
 
         assert result is None
-        mock_log_message.assert_called_once()
+        mock_log_message.assert_called_once_with(f"Tree not found for record: {record}")
 
 
 class TestGetCurrentRecordTreeInSelection:
@@ -436,25 +436,51 @@ class TestHandleTreeStatusSummary:
         assert tree_status_summary["1"]["tests"]["FAIL"] == 1
         assert tree_status_summary["1"]["builds"]["PASS"] == 0
 
+    @patch("kernelCI_app.helpers.hardwareDetails.is_boot")
+    def test_handle_tree_status_summary_with_missing_build_status(self, mock_is_boot):
+        """Test handle_tree_status_summary with missing build__status."""
+        mock_is_boot.return_value = False
+
+        record = {
+            "path": "test.specific",
+            "status": "PASS",
+            "build_id": "build123",
+        }
+
+        tree_status_summary = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+        processed_builds = set()
+
+        handle_tree_status_summary(
+            record=record,
+            tree_status_summary=tree_status_summary,
+            tree_index="1",
+            processed_builds=processed_builds,
+        )
+
+        assert tree_status_summary["1"]["tests"]["PASS"] == 1
+        assert tree_status_summary["1"]["builds"]["NULL"] == 1
+
 
 class TestCreateRecordTestPlatform:
-    @patch("kernelCI_app.helpers.hardwareDetails.handle_environment_misc")
-    @patch("kernelCI_app.helpers.hardwareDetails.env_misc_value_or_default")
+    @patch("kernelCI_app.helpers.hardwareDetails.handle_misc")
+    @patch("kernelCI_app.helpers.hardwareDetails.misc_value_or_default")
     def test_create_record_test_platform(
         self, mock_env_misc_value, mock_handle_env_misc
     ):
         """Test create_record_test_platform function."""
-        mock_handle_env_misc.return_value = {"platform": "x86_64"}
-        mock_env_misc_value.return_value = {"platform": "x86_64"}
+        mock_handle_env_misc.return_value = {"platform": "hp-x360-14a-cb0001xx-zork"}
+        mock_env_misc_value.return_value = {"platform": "hp-x360-14a-cb0001xx-zork"}
 
         record = {"environment_misc": "{}"}
 
         result = create_record_test_platform(record=record)
 
-        assert result == "x86_64"
-        assert record["test_platform"] == "x86_64"
+        assert result == "hp-x360-14a-cb0001xx-zork"
+        assert record["test_platform"] == "hp-x360-14a-cb0001xx-zork"
         mock_handle_env_misc.assert_called_once_with("{}")
-        mock_env_misc_value.assert_called_once_with({"platform": "x86_64"})
+        mock_env_misc_value.assert_called_once_with(
+            {"platform": "hp-x360-14a-cb0001xx-zork"}
+        )
 
 
 class TestHandleTestHistory:
@@ -522,6 +548,7 @@ class TestHandleTestSummary:
             processed_archs=processed_archs,
         )
 
+        mock_process_issue.assert_called_once()
         assert task.status.NULL == 1
 
     @patch("kernelCI_app.helpers.hardwareDetails.process_issue")
@@ -552,8 +579,8 @@ class TestHandleTestSummary:
         mock_process_issue.assert_called_once()
         assert task.status.PASS == 1
 
-    @patch("kernelCI_app.helpers.hardwareDetails.handle_environment_misc")
-    @patch("kernelCI_app.helpers.hardwareDetails.env_misc_value_or_default")
+    @patch("kernelCI_app.helpers.hardwareDetails.handle_misc")
+    @patch("kernelCI_app.helpers.hardwareDetails.misc_value_or_default")
     @patch("kernelCI_app.helpers.hardwareDetails.is_status_failure")
     @patch("kernelCI_app.helpers.hardwareDetails.extract_error_message")
     @patch("kernelCI_app.helpers.hardwareDetails.process_issue")
@@ -606,6 +633,73 @@ class TestHandleTestSummary:
         assert "x86_64" in task.failed_platforms
         assert task.fail_reasons["Test error"] == 1
         mock_process_issue.assert_called_once()
+
+    @patch("kernelCI_app.helpers.hardwareDetails.process_issue")
+    def test_handle_test_summary_with_new_config(self, mock_process_issue):
+        """Test handle_test_summary with new config."""
+        task = create_test_summary(
+            status=StatusCount(DONE=0, PASS=0, FAIL=0, ERROR=0, SKIP=0, MISS=0, NULL=0)
+        )
+        record = handle_test_summary_record_new_config
+        issue_dict = {}
+        processed_archs = {}
+
+        handle_test_summary(
+            record=record,
+            task=task,
+            issue_dict=issue_dict,
+            processed_archs=processed_archs,
+        )
+
+        mock_process_issue.assert_called_once()
+        assert "newconfig" in task.configs
+        assert task.configs["newconfig"].PASS == 1
+        assert task.status.PASS == 1
+
+    @patch("kernelCI_app.helpers.hardwareDetails.process_issue")
+    def test_handle_test_summary_with_new_platform(self, mock_process_issue):
+        """Test handle_test_summary with new platform."""
+        task = create_test_summary(
+            status=StatusCount(DONE=0, PASS=0, FAIL=0, ERROR=0, SKIP=0, MISS=0, NULL=0)
+        )
+        record = handle_test_summary_record_new_platform
+        issue_dict = {}
+        processed_archs = {}
+
+        handle_test_summary(
+            record=record,
+            task=task,
+            issue_dict=issue_dict,
+            processed_archs=processed_archs,
+        )
+
+        mock_process_issue.assert_called_once()
+        assert "newplatform" in task.platforms
+        assert task.platforms["newplatform"].FAIL == 1
+        assert "newplatform" in task.failed_platforms
+        assert "Test failed" in task.fail_reasons
+
+    @patch("kernelCI_app.helpers.hardwareDetails.process_issue")
+    def test_handle_test_summary_with_new_origin(self, mock_process_issue):
+        """Test handle_test_summary with new origin."""
+        task = create_test_summary(
+            status=StatusCount(DONE=0, PASS=0, FAIL=0, ERROR=0, SKIP=0, MISS=0, NULL=0)
+        )
+        record = handle_test_summary_record_new_origin
+        issue_dict = {}
+        processed_archs = {}
+
+        handle_test_summary(
+            record=record,
+            task=task,
+            issue_dict=issue_dict,
+            processed_archs=processed_archs,
+        )
+
+        mock_process_issue.assert_called_once()
+        assert "neworigin" in task.origins
+        assert task.origins["neworigin"].PASS == 1
+        assert task.status.PASS == 1
 
 
 class TestHandleBuildHistory:
@@ -739,6 +833,28 @@ class TestUpdateIssues:
         assert ("issue123", 1) in task["issues"]
         mock_create_issue.assert_called_once()
 
+    @patch("kernelCI_app.helpers.hardwareDetails.should_increment_build_issue")
+    def test_update_issues_build_with_unknown_issue(self, mock_should_increment):
+        """Test update_issues with build unknown issue."""
+        mock_should_increment.return_value = (None, None, False)
+
+        task = {"issues": {}, "failedWithUnknownIssues": 0}
+
+        update_issues(
+            issue_id=None,
+            issue_version=None,
+            incident_test_id=None,
+            build_status="FAIL",
+            test_status=None,
+            issue_comment=None,
+            issue_report_url=None,
+            task=task,
+            is_failed_task=True,
+            issue_from="build",
+        )
+
+        assert task["failedWithUnknownIssues"] == 1
+
     @patch("kernelCI_app.helpers.hardwareDetails.should_increment_test_issue")
     def test_update_issues_test_with_unknown_issue(self, mock_should_increment):
         """Test update_issues with test unknown issue."""
@@ -760,6 +876,65 @@ class TestUpdateIssues:
         )
 
         assert task["failedWithUnknownIssues"] == 1
+
+    @patch("kernelCI_app.helpers.hardwareDetails.should_increment_test_issue")
+    @patch("kernelCI_app.helpers.hardwareDetails.create_issue_typed")
+    def test_update_issues_test_with_issue(
+        self, mock_create_issue, mock_should_increment
+    ):
+        """Test update_issues with test valid issue."""
+        mock_should_increment.return_value = ("test_issue123", 1, True)
+        mock_issue = MagicMock()
+        mock_create_issue.return_value = mock_issue
+
+        task = {"issues": {}}
+
+        update_issues(
+            issue_id="test_issue123",
+            issue_version=1,
+            incident_test_id="test123",
+            build_status="PASS",
+            test_status="FAIL",
+            issue_comment="Test comment",
+            issue_report_url="http://example.com",
+            task=task,
+            is_failed_task=True,
+            issue_from="test",
+        )
+
+        assert ("test_issue123", 1) in task["issues"]
+        mock_create_issue.assert_called_once_with(
+            issue_id="test_issue123",
+            issue_version=1,
+            issue_comment="Test comment",
+            issue_report_url="http://example.com",
+            starting_count_status="FAIL",
+        )
+
+    @patch("kernelCI_app.helpers.hardwareDetails.should_increment_test_issue")
+    def test_update_issues_with_existing_issue(self, mock_should_increment):
+        """Test update_issues with existing issue."""
+        task = {"issues": {}}
+        existing_issue = MagicMock()
+        existing_issue.incidents_info = MagicMock()
+        task["issues"][("issue123", 1)] = existing_issue
+
+        mock_should_increment.return_value = ("issue123", 1, True)
+
+        update_issues(
+            issue_id="issue123",
+            issue_version=1,
+            incident_test_id="test123",
+            build_status="PASS",
+            test_status="PASS",
+            issue_comment="Test comment",
+            issue_report_url="http://example.com",
+            is_failed_task=True,
+            issue_from="test",
+            task=task,
+        )
+
+        existing_issue.incidents_info.increment.assert_called_once_with("PASS")
 
 
 class TestDecideIfIsFullRecordFilteredOut:
@@ -819,11 +994,9 @@ class TestDecideIfIsFullRecordFilteredOut:
 
 
 class TestDecideIfIsBuildInFilter:
-    @patch("kernelCI_app.helpers.hardwareDetails.is_status_failure")
-    def test_decide_if_is_build_in_filter(self, mock_is_status_failure):
-        """Test decide_if_is_build_in_filter function."""
-        mock_is_status_failure.return_value = False
 
+    def test_decide_if_is_build_in_filter(self):
+        """Test decide_if_is_build_in_filter function."""
         instance = MagicMock()
         instance.filters.is_build_filtered_out.return_value = False
 
@@ -845,6 +1018,61 @@ class TestDecideIfIsBuildInFilter:
         )
 
         assert result is True
+        instance.filters.is_build_filtered_out.assert_called_once()
+
+    def test_decide_if_is_build_in_filter_with_dummy_build(self):
+        """Test decide_if_is_build_in_filter with dummy build."""
+        instance = MagicMock()
+        instance.filters.is_build_filtered_out.return_value = False
+
+        build = MagicMock()
+        build.id = "maestro:dummy_123"
+        build.status = "PASS"
+        build.duration = 100
+        build.issue_id = "issue123"
+        build.issue_version = 1
+        build.origin = "test"
+
+        processed_builds = set()
+
+        result = decide_if_is_build_in_filter(
+            instance=instance,
+            build=build,
+            processed_builds=processed_builds,
+            incident_test_id=None,
+        )
+
+        assert result is False
+        instance.filters.is_build_filtered_out.assert_called_once()
+
+    @patch("kernelCI_app.helpers.hardwareDetails.is_status_failure")
+    def test_decide_if_is_build_in_filter_with_processed_build(
+        self, mock_is_status_failure
+    ):
+        """Test decide_if_is_build_in_filter with processed build."""
+        mock_is_status_failure.return_value = False
+
+        instance = MagicMock()
+        instance.filters.is_build_filtered_out.return_value = False
+
+        build = MagicMock()
+        build.id = "build123"
+        build.status = "PASS"
+        build.duration = 100
+        build.issue_id = "issue123"
+        build.issue_version = 1
+        build.origin = "test"
+
+        processed_builds = {"build123"}
+
+        result = decide_if_is_build_in_filter(
+            instance=instance,
+            build=build,
+            processed_builds=processed_builds,
+            incident_test_id=None,
+        )
+
+        assert result is False
         instance.filters.is_build_filtered_out.assert_called_once()
 
 
@@ -910,8 +1138,8 @@ class TestIsTestProcessed:
 
 
 class TestDecideIfIsTestInFilter:
-    @patch("kernelCI_app.helpers.hardwareDetails.env_misc_value_or_default")
-    @patch("kernelCI_app.helpers.hardwareDetails.handle_environment_misc")
+    @patch("kernelCI_app.helpers.hardwareDetails.misc_value_or_default")
+    @patch("kernelCI_app.helpers.hardwareDetails.handle_misc")
     def test_decide_if_is_test_in_filter_boot(
         self, mock_handle_env_misc, mock_env_misc_value
     ):
@@ -945,8 +1173,8 @@ class TestDecideIfIsTestInFilter:
         assert result is True
         instance.filters.is_boot_filtered_out.assert_called_once()
 
-    @patch("kernelCI_app.helpers.hardwareDetails.env_misc_value_or_default")
-    @patch("kernelCI_app.helpers.hardwareDetails.handle_environment_misc")
+    @patch("kernelCI_app.helpers.hardwareDetails.misc_value_or_default")
+    @patch("kernelCI_app.helpers.hardwareDetails.handle_misc")
     def test_decide_if_is_test_in_filter_test(
         self, mock_handle_env_misc, mock_env_misc_value
     ):
@@ -1150,35 +1378,6 @@ class TestHandleBuildDeprecated:
             mock_update_issues.assert_called_once()
 
 
-class TestUpdateIssuesWithExistingIssue:
-    def test_update_issues_with_existing_issue(self):
-        """Test update_issues with existing issue."""
-        task = {"issues": {}}
-        existing_issue = MagicMock()
-        existing_issue.incidents_info = MagicMock()
-        task["issues"][("issue123", 1)] = existing_issue
-
-        with patch(
-            "kernelCI_app.helpers.hardwareDetails.should_increment_test_issue"
-        ) as mock_should_increment:
-            mock_should_increment.return_value = ("issue123", 1, True)
-
-            update_issues(
-                issue_id="issue123",
-                issue_version=1,
-                incident_test_id="test123",
-                build_status="PASS",
-                test_status="PASS",
-                issue_comment="Test comment",
-                issue_report_url="http://example.com",
-                is_failed_task=True,
-                issue_from="test",
-                task=task,
-            )
-
-            existing_issue.incidents_info.increment.assert_called_once_with("PASS")
-
-
 class TestProcessRecordsWithFilters:
     def test_get_filter_options(self):
         """Test get_filter_options with filters."""
@@ -1283,70 +1482,8 @@ class TestProcessFilters:
         assert len(instance.global_architectures) == 0
         assert len(instance.global_compilers) == 0
 
-    @patch("kernelCI_app.helpers.hardwareDetails.process_issue")
-    def test_handle_test_summary_with_new_config(self, mock_process_issue):
-        """Test handle_test_summary with new config (line 320)."""
-        task = create_test_summary(
-            status=StatusCount(DONE=0, PASS=0, FAIL=0, ERROR=0, SKIP=0, MISS=0, NULL=0)
-        )
-        record = handle_test_summary_record_new_config
-        issue_dict = {}
-        processed_archs = {}
-
-        handle_test_summary(
-            record=record,
-            task=task,
-            issue_dict=issue_dict,
-            processed_archs=processed_archs,
-        )
-
-        assert "newconfig" in task.configs
-        assert task.configs["newconfig"].PASS == 1
-
-    @patch("kernelCI_app.helpers.hardwareDetails.process_issue")
-    def test_handle_test_summary_with_new_platform(self, mock_process_issue):
-        """Test handle_test_summary with new platform (line 340-341)."""
-        task = create_test_summary(
-            status=StatusCount(DONE=0, PASS=0, FAIL=0, ERROR=0, SKIP=0, MISS=0, NULL=0)
-        )
-        record = handle_test_summary_record_new_platform
-        issue_dict = {}
-        processed_archs = {}
-
-        handle_test_summary(
-            record=record,
-            task=task,
-            issue_dict=issue_dict,
-            processed_archs=processed_archs,
-        )
-
-        assert "newplatform" in task.platforms
-        assert task.platforms["newplatform"].FAIL == 1
-        assert "newplatform" in task.failed_platforms
-        assert "Test failed" in task.fail_reasons
-
-    @patch("kernelCI_app.helpers.hardwareDetails.process_issue")
-    def test_handle_test_summary_with_new_origin(self, mock_process_issue):
-        """Test handle_test_summary with new origin (line 354)."""
-        task = create_test_summary(
-            status=StatusCount(DONE=0, PASS=0, FAIL=0, ERROR=0, SKIP=0, MISS=0, NULL=0)
-        )
-        record = handle_test_summary_record_new_origin
-        issue_dict = {}
-        processed_archs = {}
-
-        handle_test_summary(
-            record=record,
-            task=task,
-            issue_dict=issue_dict,
-            processed_archs=processed_archs,
-        )
-
-        assert "neworigin" in task.origins
-        assert task.origins["neworigin"].PASS == 1
-
     def test_process_filters_with_boot_record(self):
-        """Test process_filters with boot record (lines 685-688)."""
+        """Test process_filters with boot record."""
         instance = process_filters_instance
         record = process_filters_record_boot
 

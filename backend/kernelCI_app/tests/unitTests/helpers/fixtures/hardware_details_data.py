@@ -2,9 +2,7 @@ from collections import defaultdict
 from kernelCI_app.typeModels.hardwareDetails import Tree
 from kernelCI_app.typeModels.commonDetails import (
     TestArchSummaryItem,
-    BuildSummary,
     TestSummary,
-    BuildArchitectures,
 )
 from kernelCI_app.typeModels.common import StatusCount
 
@@ -45,31 +43,6 @@ def create_tree_status_summary(**overrides):
     return summary
 
 
-def create_test_record(**overrides):
-    """Create test record."""
-    base_record = {
-        "path": "test.specific",
-        "status": "PASS",
-        "build_id": "build123",
-        "test_id": "test123",
-        "duration": 100,
-        "start_time": "2024-01-15T10:00:00Z",
-        "environment_compatible": ["hardware1"],
-        "environment_misc": {"platform": "x86_64"},
-        "origin": "test",
-        "incident_id": "incident123",
-        "incident_test_id": "test123",
-        "incident_is_culprit": True,
-        "issue_id": "issue123",
-        "issue_version": 1,
-        "issue_comment": "Test issue",
-        "issue_report_url": "http://example.com",
-    }
-
-    base_record.update(overrides)
-    return base_record
-
-
 def create_build_record(**overrides):
     """Create build record."""
     base_record = {
@@ -95,66 +68,6 @@ def create_build_record(**overrides):
 
     base_record.update(overrides)
     return base_record
-
-
-def create_issue_record(**overrides):
-    """Create issue record."""
-    base_record = {
-        "issue_id": "issue123",
-        "issue_version": 1,
-        "issue_comment": "Test issue",
-        "issue_report_url": "http://example.com",
-        "incidents_info": StatusCount(
-            DONE=0, PASS=1, FAIL=0, ERROR=0, SKIP=0, MISS=0, NULL=0
-        ),
-    }
-
-    base_record.update(overrides)
-    return base_record
-
-
-def create_test_arch_summary_item(**overrides):
-    """Create TestArchSummaryItem."""
-    base_item = TestArchSummaryItem(
-        arch="x86_64",
-        compiler="gcc",
-        status=StatusCount(DONE=0, PASS=5, FAIL=2, ERROR=1, SKIP=0, MISS=0, NULL=0),
-    )
-
-    for key, value in overrides.items():
-        setattr(base_item, key, value)
-
-    return base_item
-
-
-def create_build_summary(**overrides):
-    """Create BuildSummary."""
-    base_summary = BuildSummary(
-        status=StatusCount(DONE=0, PASS=10, FAIL=3, ERROR=1, SKIP=0, MISS=0, NULL=0),
-        architectures={
-            "x86_64": BuildArchitectures(
-                DONE=0, PASS=5, FAIL=2, ERROR=1, SKIP=0, MISS=0, NULL=0
-            ),
-            "arm64": BuildArchitectures(
-                DONE=0, PASS=5, FAIL=1, ERROR=0, SKIP=0, MISS=0, NULL=0
-            ),
-        },
-        configs={
-            "defconfig": StatusCount(
-                DONE=0, PASS=8, FAIL=2, ERROR=1, SKIP=0, MISS=0, NULL=0
-            ),
-            "allmodconfig": StatusCount(
-                DONE=0, PASS=2, FAIL=1, ERROR=0, SKIP=0, MISS=0, NULL=0
-            ),
-        },
-        issues=[],
-        unknown_issues=0,
-    )
-
-    for key, value in overrides.items():
-        setattr(base_summary, key, value)
-
-    return base_summary
 
 
 def create_test_summary(**overrides):
@@ -211,8 +124,6 @@ def create_test_summary(**overrides):
 
 base_tree = create_tree()
 
-tree_with_selected_commit = create_tree(selected_commit_status={"builds": {"PASS": 5}})
-
 tree_with_different_commit = create_tree(
     index="2",
     tree_name="stable",
@@ -223,28 +134,6 @@ tree_with_different_commit = create_tree(
 )
 
 base_tree_status_summary = create_tree_status_summary()
-
-base_test_record = create_test_record()
-
-test_record_with_fail = create_test_record(
-    status="FAIL",
-    path="boot.test",
-)
-
-base_build_record = create_build_record()
-
-build_record_with_fail = create_build_record(
-    status="FAIL",
-    architecture="arm64",
-)
-
-base_issue_record = create_issue_record()
-
-base_test_arch_summary_item = create_test_arch_summary_item()
-
-base_build_summary = create_build_summary()
-
-base_test_summary = create_test_summary()
 
 
 def create_process_filters_instance(**overrides):
@@ -330,7 +219,6 @@ process_filters_record_boot = create_process_filters_record(
     incidents__issue__version=1,
 )
 
-handle_test_summary_record_basic = create_handle_test_summary_record()
 
 handle_test_summary_record_new_config = create_handle_test_summary_record(
     build__config_name="newconfig",
