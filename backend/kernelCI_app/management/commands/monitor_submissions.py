@@ -6,7 +6,7 @@ import os
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     cache_logs_maintenance,
     ingest_submissions_parallel,
-    load_trees_name,
+    load_tree_names,
     verify_spool_dirs,
 )
 
@@ -59,12 +59,17 @@ class Command(BaseCommand):
         trees_file: str,
         **options,
     ):
+        archive_dir = os.path.join(spool_dir, "archive")
+        failed_dir = os.path.join(spool_dir, "failed")
+
         self.stdout.write(f"Monitoring folder: {spool_dir}")
+        self.stdout.write(f"Archive directory: {archive_dir}")
+        self.stdout.write(f"Failed directory: {failed_dir}")
         self.stdout.write(f"Check interval: {interval} seconds")
         self.stdout.write(f"Using {max_workers} workers")
 
         verify_spool_dirs(spool_dir)
-        trees_name = load_trees_name(trees_file_override=trees_file)
+        tree_names = load_tree_names(trees_file_override=trees_file)
 
         self.stdout.write("Starting file monitoring... (Press Ctrl+C to stop)")
 
@@ -74,7 +79,7 @@ class Command(BaseCommand):
                 try:
                     with os.scandir(spool_dir) as it:
                         json_files = [
-                            entry.name
+                            entry
                             for entry in it
                             if entry.is_file() and entry.name.endswith(".json")
                         ]
@@ -85,7 +90,9 @@ class Command(BaseCommand):
                 except Exception:
                     pass
                 if len(json_files) > 0:
-                    ingest_submissions_parallel(spool_dir, trees_name, max_workers)
+                    ingest_submissions_parallel(
+                        json_files, tree_names, archive_dir, failed_dir, max_workers
+                    )
                 cache_logs_maintenance()
 
                 time.sleep(interval)

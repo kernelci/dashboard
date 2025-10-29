@@ -1,3 +1,4 @@
+from os import DirEntry
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import gzip
 import hashlib
@@ -48,7 +49,7 @@ try:
     INGEST_FLUSH_TIMEOUT_SEC = float(os.environ.get("INGEST_FLUSH_TIMEOUT_SEC", "2.0"))
 except (ValueError, TypeError):
     logger.warning("Invalid INGEST_FLUSH_TIMEOUT_SEC, using default 2.0")
-    INGEST_FLUSH_TIMEOUT_SEC = 5.0
+    INGEST_FLUSH_TIMEOUT_SEC = 2.0
 
 try:
     INGEST_QUEUE_MAXSIZE = int(os.environ.get("INGEST_QUEUE_MAXSIZE", "5000"))
@@ -74,7 +75,7 @@ def _out(msg: str) -> None:
         pass
 
 
-def move_file_to_failed_dir(filename, failed_dir):
+def move_file_to_failed_dir(filename: str, failed_dir: str) -> None:
     try:
         os.rename(filename, os.path.join(failed_dir, os.path.basename(filename)))
     except Exception as e:
@@ -82,7 +83,7 @@ def move_file_to_failed_dir(filename, failed_dir):
         raise e
 
 
-def load_trees_name(trees_file_override: Optional[str]) -> dict[str, str]:
+def load_tree_names(trees_file_override: Optional[str]) -> dict[str, str]:
     global TREES_FILE
     if trees_file_override is not None:
         TREES_FILE = trees_file_override
@@ -90,31 +91,29 @@ def load_trees_name(trees_file_override: Optional[str]) -> dict[str, str]:
     with open(TREES_FILE, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
-    trees_name = {v["url"]: tree_name for tree_name, v in data.get("trees", {}).items()}
+    tree_names = {v["url"]: tree_name for tree_name, v in data.get("trees", {}).items()}
 
-    return trees_name
+    return tree_names
 
 
-def standardize_trees_name(input_data: dict[str, Any], trees_name):
+def standardize_tree_names(
+    input_data: dict[str, Any], tree_names: dict[str, str]
+) -> None:
     """
     Standardize tree names in input data using the provided mapping
-
-    Returns the modified input data with standardized tree names.
     """
 
     checkouts: list[dict[str, Any]] = input_data.get("checkouts", [])
 
     for checkout in checkouts:
         git_url = checkout.get("git_repository_url")
-        if git_url in trees_name:
-            correct_tree = trees_name[git_url]
+        if git_url in tree_names:
+            correct_tree = tree_names[git_url]
             if checkout.get("tree_name") != correct_tree:
                 checkout["tree_name"] = correct_tree
 
-    return input_data
 
-
-def upload_logexcerpt(logexcerpt, id):
+def upload_logexcerpt(logexcerpt: str, id: str) -> str:
     """
     Upload logexcerpt to storage and return a reference(URL)
     """
@@ -148,7 +147,7 @@ def upload_logexcerpt(logexcerpt, id):
     return f"{STORAGE_BASE_URL}/logexcerpt/{id}/logexcerpt.txt.gz"
 
 
-def get_from_cache(log_hash):
+def get_from_cache(log_hash: str) -> Optional[str]:
     """
     Check if log_hash is in the cache
     """
@@ -156,7 +155,7 @@ def get_from_cache(log_hash):
         return CACHE_LOGS.get(log_hash)
 
 
-def set_in_cache(log_hash, url):
+def set_in_cache(log_hash: str, url: str) -> None:
     """
     Set log_hash in the cache with the given URL
     """
@@ -166,7 +165,7 @@ def set_in_cache(log_hash, url):
             logger.info("Cached log excerpt with hash %s at %s", log_hash, url)
 
 
-def set_log_excerpt_ofile(item: dict[str, Any], url):
+def set_log_excerpt_ofile(item: dict[str, Any], url: str) -> dict[str, Any]:
     """
     Clean log_excerpt field
     Create name/url dict and append to output_files of job
@@ -221,17 +220,14 @@ def process_log_excerpt_from_item(
             set_log_excerpt_ofile(item, cached_url)
 
 
-def extract_log_excerpt(input_data: dict[str, Any]) -> dict[str, Any]:
+def extract_log_excerpt(input_data: dict[str, Any]) -> None:
     """
     Extract log_excerpt from builds and tests, if it is large,
     upload to storage and replace with a reference.
-
-    Returns:
-        input_data: dict with log_excerpt replaced by URL if it was large
     """
     if not STORAGE_TOKEN:
         logger.warning("STORAGE_TOKEN is not set, log_excerpts will not be uploaded")
-        return input_data
+        return
 
     builds: list[dict[str, Any]] = input_data.get("builds", [])
     tests: list[dict[str, Any]] = input_data.get("tests", [])
@@ -244,56 +240,53 @@ def extract_log_excerpt(input_data: dict[str, Any]) -> dict[str, Any]:
         if test.get("log_excerpt"):
             process_log_excerpt_from_item(item=test, item_type="test")
 
-    return input_data
 
-
-def prepare_file_data(filename, trees_name, spool_dir):
+def prepare_file_data(
+    file: DirEntry[str], tree_names: dict[str, str]
+) -> tuple[Optional[dict[str, Any]], dict[str, Any]]:
     """
     Prepare file data: read, extract log excerpts, standardize tree names, validate.
     This function does everything except the actual database load.
     """
-    full_filename = os.path.join(spool_dir, filename)
-    fsize = os.path.getsize(full_filename)
+    fsize = file.stat().st_size
 
     if fsize == 0:
         if VERBOSE:
-            logger.info("File %s is empty, skipping, deleting", full_filename)
-        os.remove(full_filename)
+            logger.info("File %s is empty, skipping, deleting", file.path)
+        os.remove(file.path)
         return None, None
 
     start_time = time.time()
     if VERBOSE:
-        logger.info("Processing file %s, size: %d", filename, fsize)
+        logger.info("Processing file %s, size: %d", file.name, fsize)
 
     try:
-        with open(full_filename, "r") as f:
+        with open(file.path, "r") as f:
             data = json.loads(f.read())
 
         # These operations can be done in parallel (especially extract_log_excerpt)
         if CONVERT_LOG_EXCERPT:
-            data = extract_log_excerpt(data)
-        data = standardize_trees_name(data, trees_name)
+            extract_log_excerpt(data)
+        standardize_tree_names(data, tree_names)
         kcidb_io.schema.V5_3.validate(data)
         kcidb_io.schema.V5_3.upgrade(data)
 
         processing_time = time.time() - start_time
         return data, {
-            "filename": filename,
-            "full_filename": full_filename,
+            "file": file,
             "fsize": fsize,
             "processing_time": processing_time,
         }
     except Exception as e:
-        logger.error("Error preparing data from %s: %s", filename, e)
+        logger.error("Error preparing data from %s: %s", file.name, e)
         logger.error(traceback.format_exc())
         return None, {
-            "filename": filename,
-            "full_filename": full_filename,
+            "file": file,
             "error": str(e),
         }
 
 
-def db_worker(stop_event: threading.Event):  # noqa: C901
+def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
     """
     Worker thread that processes the database queue.
     This is the only thread that interacts with the database.
@@ -413,9 +406,8 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
                 db_queue.task_done()
                 break
             try:
-                data, metadata = item
-                if data is not None:
-                    inst = build_instances_from_submission(data)
+                filename, inst = item
+                if inst is not None:
                     issues_buf.extend(inst["issues"])
                     checkouts_buf.extend(inst["checkouts"])
                     builds_buf.extend(inst["builds"])
@@ -430,7 +422,7 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
                         "Queued from %s: "
                         "issues=%d checkouts=%d builds=%d tests=%d incidents=%d"
                         % (
-                            metadata.get("filename", "unknown"),
+                            filename,
                             len(inst["issues"]),
                             len(inst["checkouts"]),
                             len(inst["builds"]),
@@ -464,18 +456,21 @@ def db_worker(stop_event: threading.Event):  # noqa: C901
     flush_buffers()
 
 
-def process_file(filename, trees_name, spool_dir):
+def process_file(
+    file: DirEntry[str],
+    tree_names: dict[str, str],
+    failed_dir: str,
+    archive_dir: str,
+) -> bool:
     """
     Process a single file in a thread, then queue it for database insertion.
     """
-    failed_dir = os.path.join(spool_dir, "failed")
-    archive_dir = os.path.join(spool_dir, "archive")
-
-    data, metadata = prepare_file_data(filename, trees_name, spool_dir)
+    data, metadata = prepare_file_data(file, tree_names)
+    file = metadata["file"]
 
     if "error" in metadata:
         try:
-            move_file_to_failed_dir(metadata["full_filename"], failed_dir)
+            move_file_to_failed_dir(os.path.join(file.path, file.name), failed_dir)
         except Exception:
             pass
         return False
@@ -484,41 +479,33 @@ def process_file(filename, trees_name, spool_dir):
         # Empty file, already deleted
         return True
 
-    db_queue.put((data, metadata))
+    db_queue.put((file.name, build_instances_from_submission(data)))
 
     # Archive the file after queuing (we can do this optimistically)
     try:
-        os.rename(
-            metadata["full_filename"], os.path.join(archive_dir, metadata["filename"])
-        )
+        os.rename(file.path, os.path.join(archive_dir, file.name))
     except Exception as e:
-        logger.error("Error archiving file %s: %s", metadata["filename"], e)
+        logger.error("Error archiving file %s: %s", file.name, e)
         return False
 
     return True
 
 
 def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threading
-    spool_dir: str, trees_name: dict[str, str], max_workers: int = 5
-):
+    json_files: list[DirEntry[str]],
+    tree_names: dict[str, str],
+    archive_dir: str,
+    failed_dir: str,
+    max_workers: int = 5,
+) -> None:
     """
     Ingest submissions in parallel using ThreadPoolExecutor for I/O operations
     and a single database worker thread.
     """
-
-    # Get list of JSON files to process
-    json_files = [
-        f
-        for f in os.listdir(spool_dir)
-        if os.path.isfile(os.path.join(spool_dir, f)) and f.endswith(".json")
-    ]
-    if not json_files:
-        return
-
     total_bytes = 0
     for f in json_files:
         try:
-            total_bytes += os.path.getsize(os.path.join(spool_dir, f))
+            total_bytes += f.stat().st_size
         except Exception:
             pass
 
@@ -552,8 +539,10 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all files for processing
             future_to_file = {
-                executor.submit(process_file, filename, trees_name, spool_dir): filename
-                for filename in json_files
+                executor.submit(
+                    process_file, file, tree_names, failed_dir, archive_dir
+                ): file.name
+                for file in json_files
             }
 
             # Collect results progressively
@@ -642,7 +631,7 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
         _out("No files processed, nothing to do")
 
 
-def verify_dir(dir):
+def verify_dir(dir: str) -> None:
     if not os.path.exists(dir):
         logger.error("Directory %s does not exist", dir)
         # try to create it
@@ -659,7 +648,7 @@ def verify_dir(dir):
     logger.info("Directory %s is valid and writable", dir)
 
 
-def verify_spool_dirs(spool_dir):
+def verify_spool_dirs(spool_dir: str) -> None:
     failed_dir = os.path.join(spool_dir, "failed")
     archive_dir = os.path.join(spool_dir, "archive")
     verify_dir(spool_dir)
@@ -667,7 +656,7 @@ def verify_spool_dirs(spool_dir):
     verify_dir(archive_dir)
 
 
-def cache_logs_maintenance():
+def cache_logs_maintenance() -> None:
     """
     Periodically clean up the cache logs to prevent memory leak and slow down.
     If CACHE_LOGS grow over 100k entries, clear it.
