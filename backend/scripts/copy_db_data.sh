@@ -13,13 +13,18 @@
 START_DAYS_AGO=7
 END_DAYS_AGO=0
 INTERVAL_HOURS=8
+ORIGINS="maestro" # comma-separated list of origins. If empty will select all origins
 
 START_HOURS_AGO=$((START_DAYS_AGO * 24))
 END_HOURS_AGO=$((END_DAYS_AGO * 24))
 
-echo "Starting database update from $START_HOURS_AGO hours ago to $END_HOURS_AGO hours ago in $INTERVAL_HOURS hour intervals..."
+echo "Starting database update from $START_HOURS_AGO hours ago to $END_HOURS_AGO hours ago in $INTERVAL_HOURS hour intervals on origins $ORIGINS..."
 
 current_start=$START_HOURS_AGO
+origins_arg=""
+if [ $ORIGINS ]; then
+    origins_arg="--origins $ORIGINS"
+fi
 while [ $current_start -gt $END_HOURS_AGO ]; do
     current_end=$((current_start - INTERVAL_HOURS))
     
@@ -28,7 +33,7 @@ while [ $current_start -gt $END_HOURS_AGO ]; do
     fi
     
     echo "Updating database from $current_start hours ago to $current_end hours ago..."
-    poetry run python3 manage.py update_db --start-interval "${current_start} hours" --end-interval "${current_end} hours"
+    poetry run python3 manage.py update_db ${origins_arg} --start-interval "${current_start} hours" --end-interval "${current_end} hours"
     
     if [ $? -ne 0 ]; then
         echo "Error: Command failed for interval ${current_start} to ${current_end} hours ago"

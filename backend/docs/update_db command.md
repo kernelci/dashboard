@@ -13,9 +13,13 @@ The migration preserves foreign key constraints. For example, if a test A refere
 
 ### Optional Parameters
 
-- `--table`: Limit migration to a specific table (optional)
+- `--table`: Limit data copy to a specific table
   - Valid options: `issues`, `checkouts`, `builds`, `tests`, `incidents`
-  - If not provided, all tables will be migrated
+  - If not provided, data from all tables will be copied
+- `--related-data-only`: Limits the selected data to data where the foreign key constraint is not broken.
+  - Default: False.
+- `--origins`: Limits the selected data to specific origins formatted as a comma-separated string.
+  - If not provided, data from all origins will be copied
 
 ## Examples
 
