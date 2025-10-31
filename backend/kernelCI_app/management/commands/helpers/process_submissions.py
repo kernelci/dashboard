@@ -1,14 +1,23 @@
 import logging
 from django.utils import timezone
-from typing import Any, Literal
+from typing import Any, TypedDict
 
 from django.db import IntegrityError
 from pydantic import ValidationError
 
 from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Tests
+from kernelCI_app.typeModels.modelTypes import TableNames
 
 
-TableNames = Literal["issues", "checkouts", "builds", "tests", "incidents"]
+class ProcessedSubmission(TypedDict):
+    """Stores the list of items in a single submission.
+    Lists can't be None but can be empty."""
+
+    issues: list[Issues]
+    checkouts: list[Checkouts]
+    builds: list[Builds]
+    tests: list[Tests]
+    incidents: list[Incidents]
 
 
 logger = logging.getLogger(__name__)
@@ -128,12 +137,12 @@ def make_incident_instance(incident: dict[str, Any]) -> Incidents:
     return obj
 
 
-def build_instances_from_submission(data: dict[str, Any]) -> dict[TableNames, list]:
+def build_instances_from_submission(data: dict[str, Any]) -> ProcessedSubmission:
     """
     Convert raw submission dicts into unsaved Django model instances, grouped by type.
     Per-item errors are logged and the item is skipped, matching the previous behavior.
     """
-    out: dict[TableNames, list] = {
+    out: ProcessedSubmission = {
         "issues": [],
         "checkouts": [],
         "builds": [],
