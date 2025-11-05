@@ -1,3 +1,4 @@
+import time
 from django.http import HttpRequest
 
 from kernelCI_app.constants.general import PRODUCTION_HOST, STAGING_HOST
@@ -15,6 +16,17 @@ def log_message(message: str) -> None:
     except Exception:
         print("LOGGER FAILED, using print as fallback")
         print(message)
+
+
+def out(msg: str) -> None:
+    """Write debug/perf output to stdout. Logger was unreliable in some environments."""
+    try:
+        print(
+            f"[{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}] {msg}",
+            flush=True,
+        )
+    except Exception:
+        pass
 
 
 def create_endpoint_notification(*, message: str, request: HttpRequest) -> str:
