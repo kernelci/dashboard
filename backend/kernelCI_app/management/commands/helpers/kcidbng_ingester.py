@@ -291,7 +291,6 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
         tests_buf=tests_buf,
         incidents_buf=incidents_buf,
     )
-    last_flush_ts = time.time()
 
 
 def process_file(
