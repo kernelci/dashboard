@@ -29,7 +29,12 @@ import { ConditionalTableCell } from '@/components/Table/ConditionalTableCell';
 
 import { GroupedTestStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
-import { PaginationInfo } from '@/components/Table/PaginationInfo';
+import {
+  ItemsPerPageSelector,
+  ListingCount,
+  PaginationButtons,
+  PaginationInfo,
+} from '@/components/Table/PaginationInfo';
 
 import type { HardwareItem } from '@/types/hardware';
 
@@ -447,23 +452,27 @@ export function HardwareTable({
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-dim-gray text-left text-sm">
+      <div className="grid grid-cols-1 items-center gap-4 min-[850px]:grid-cols-2 lg:grid-cols-[1fr_auto_auto] lg:gap-8">
+        <span className="text-dim-gray w-full justify-start text-left text-sm min-[850px]:col-span-2 lg:col-span-1">
           <FormattedMessage
             id="global.projectUnderDevelopment"
             values={formattedBreakLineValue}
           />
         </span>
-        <div className="flex items-center justify-between gap-10">
+        <div className="flex w-full justify-end gap-y-2 max-[700px]:flex-wrap min-[850px]:justify-start">
           <MemoizedInputTime
             navigateFrom="/hardware"
             defaultInterval={REDUCED_TIME_SEARCH}
           />
-          <PaginationInfo
+          <ItemsPerPageSelector
             table={table}
-            intlLabel="global.hardware"
             onPaginationChange={navigateWithPageSize}
+            className="pl-4"
           />
+        </div>
+        <div className="flex w-full justify-end gap-y-2 max-[700px]:flex-wrap">
+          <ListingCount table={table} intlLabel="global.hardware" />
+          <PaginationButtons table={table} className="pl-4" />
         </div>
       </div>
       <BaseTable headerComponents={tableHeaders}>

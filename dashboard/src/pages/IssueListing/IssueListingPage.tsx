@@ -82,14 +82,14 @@ export const IssueListingPage = ({
     >
       <Toaster />
       <div className="flex flex-col gap-6 pb-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 max-[650px]:flex-wrap">
           <span className="text-dim-gray text-left text-sm">
             <FormattedMessage
               id="global.projectUnderDevelopment"
               values={formattedBreakLineValue}
             />
           </span>
-          <div className="flex items-center justify-between gap-10">
+          <div className="flex items-center justify-between gap-x-8 gap-y-2 max-[650px]:w-full max-[650px]:flex-wrap max-[650px]:justify-end">
             <MemoizedInputTime
               navigateFrom="/issues"
               defaultInterval={REDUCED_TIME_SEARCH}
