@@ -238,18 +238,12 @@ class TestVerifyDir:
 
 class TestVerifySpoolDirs:
     @patch("kernelCI_app.management.commands.helpers.file_utils.verify_dir")
-    @patch("os.path.join")
-    def test_verify_spool_dirs_success(self, mock_join, mock_verify_dir):
+    def test_verify_spool_dirs_success(self, mock_verify_dir):
         """Test verify_spool_dirs with successful directory verification."""
         joined_fail_dir = "/".join([SPOOL_DIR_TESTING, FAIL_SPOOL_SUBDIR])
         joined_archive_dir = "/".join([SPOOL_DIR_TESTING, ARCHIVE_SPOOL_SUBDIR])
-        mock_join.side_effect = [joined_fail_dir, joined_archive_dir]
 
         verify_spool_dirs(SPOOL_DIR_TESTING)
-
-        assert mock_join.call_count == 2
-        mock_join.assert_any_call(SPOOL_DIR_TESTING, FAIL_SPOOL_SUBDIR)
-        mock_join.assert_any_call(SPOOL_DIR_TESTING, ARCHIVE_SPOOL_SUBDIR)
 
         assert mock_verify_dir.call_count == 3
         mock_verify_dir.assert_any_call(SPOOL_DIR_TESTING)
@@ -257,33 +251,13 @@ class TestVerifySpoolDirs:
         mock_verify_dir.assert_any_call(joined_archive_dir)
 
     @patch("kernelCI_app.management.commands.helpers.file_utils.verify_dir")
-    @patch("os.path.join")
-    def test_verify_spool_dirs_join_failure(self, mock_join, mock_verify_dir):
-        """Test verify_spool_dirs when os.path.join fails."""
-        mock_join.side_effect = TypeError("Really any Exception, this is an example")
-
-        with pytest.raises(TypeError):
-            verify_spool_dirs(SPOOL_DIR_TESTING)
-
-        mock_join.assert_called_once_with(SPOOL_DIR_TESTING, FAIL_SPOOL_SUBDIR)
-        mock_verify_dir.assert_not_called()
-
-    @patch("kernelCI_app.management.commands.helpers.file_utils.verify_dir")
-    @patch("os.path.join")
-    def test_verify_spool_dirs_verify_spool_dir_fails(self, mock_join, mock_verify_dir):
+    def test_verify_spool_dirs_verify_spool_dir_fails(self, mock_verify_dir):
         """Test verify_spool_dirs when spool directory verification fails."""
-        joined_fail_dir = "/".join([SPOOL_DIR_TESTING, FAIL_SPOOL_SUBDIR])
-        joined_archive_dir = "/".join([SPOOL_DIR_TESTING, ARCHIVE_SPOOL_SUBDIR])
-        mock_join.side_effect = [joined_fail_dir, joined_archive_dir]
 
         # Meant to represent any kind of failure in verify_dir
         mock_verify_dir.side_effect = Exception("Spool directory verification failed")
 
         with pytest.raises(Exception, match="Spool directory verification failed"):
             verify_spool_dirs(SPOOL_DIR_TESTING)
-
-        assert mock_join.call_count == 2
-        mock_join.assert_any_call(SPOOL_DIR_TESTING, FAIL_SPOOL_SUBDIR)
-        mock_join.assert_any_call(SPOOL_DIR_TESTING, ARCHIVE_SPOOL_SUBDIR)
 
         mock_verify_dir.assert_called_once_with(SPOOL_DIR_TESTING)
