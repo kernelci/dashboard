@@ -311,7 +311,7 @@ def process_file(
 
     if "error" in metadata:
         try:
-            move_file_to_failed_dir(os.path.join(file.path, file.name), failed_dir)
+            move_file_to_failed_dir(file.path, failed_dir)
         except Exception:
             pass
         return False
