@@ -2,26 +2,29 @@
 Test-specific Django settings for integration tests with local database.
 """
 
+import os
+from kernelCI.settings import *  # noqa: F403, F401
+
 # Override database configuration for tests
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "kcidb_test",
-        "USER": "test_user",
-        "PASSWORD": "test_password",
-        "HOST": "test_db",
-        "PORT": "5432",
+        "NAME": os.environ.get("TEST_DB_DEFAULT_NAME", "kcidb_test"),
+        "USER": os.environ.get("TEST_DB_DEFAULT_USER", "test_user"),
+        "PASSWORD": os.environ.get("TEST_DB_DEFAULT_PASSWORD", "test_password"),
+        "HOST": os.environ.get("TEST_DB_HOST", "test_db"),
+        "PORT": os.environ.get("TEST_DB_PORT", "5432"),
         "OPTIONS": {
             "connect_timeout": 5,
         },
     },
     "dashboard_db": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "dashboard_test",
-        "USER": "test_user",
-        "PASSWORD": "test_password",
-        "HOST": "test_db",
-        "PORT": "5432",
+        "NAME": os.environ.get("TEST_DASH_DB_NAME", "dashboard_test"),
+        "USER": os.environ.get("TEST_DASH_DB_USER", "test_user"),
+        "PASSWORD": os.environ.get("TEST_DASH_DB_PASSWORD", "test_password"),
+        "HOST": os.environ.get("TEST_DB_HOST", "test_db"),
+        "PORT": os.environ.get("TEST_DB_PORT", "5432"),
         "OPTIONS": {
             "connect_timeout": 5,
         },

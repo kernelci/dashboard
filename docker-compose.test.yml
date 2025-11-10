@@ -64,3 +64,5 @@ services:
             REDIS_HOST: redis
             CACHE_TIMEOUT: 60
             CORS_ALLOW_ALL_ORIGINS: true
+            TEST_DB_HOST: test_db
+            TEST_DB_PORT: 5432
