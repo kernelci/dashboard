@@ -134,10 +134,6 @@ export const sanitizeBuilds = (
     status: build.status,
     buildLogs: build.log_url,
     kernelConfig: build.config_url,
-    kernelImage: build.misc ? build.misc['kernel_type'] : undefined,
-    dtb: build.misc ? build.misc['dtb'] : undefined,
-    systemMap: build.misc ? build.misc['system_map'] : undefined,
-    modules: build.misc ? build.misc['modules'] : undefined,
     treeBranch: buildTreeBranch(build.tree_name, build.git_repository_branch),
   }));
 };

@@ -148,7 +148,6 @@ export const messages = {
     'global.loading': 'Loading...',
     'global.logExcerpt': 'Log Excerpt',
     'global.logs': 'Logs',
-    'global.modules': 'Modules',
     'global.name': 'Name',
     'global.new': 'New',
     'global.next': 'Next',

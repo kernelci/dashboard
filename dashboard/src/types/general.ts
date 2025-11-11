@@ -53,16 +53,6 @@ export type TestHistoryWithOrigin = TestHistory & {
   origin: string;
 };
 
-/**
- * @deprecated Use a more generic approach to the misc field.
- */
-interface ITreeDetailsMisc {
-  kernel_type?: string;
-  dtb?: string;
-  modules?: string;
-  system_map?: string;
-}
-
 export type BuildsTabBuild = {
   id: string;
   origin: string;
@@ -76,7 +66,7 @@ export type BuildsTabBuild = {
   log_url: string;
   git_repository_branch: string;
   git_repository_url: string;
-  misc: ITreeDetailsMisc | null;
+  misc: Record<string, unknown> | null;
   tree_name?: string;
   tree_index?: number;
 };
