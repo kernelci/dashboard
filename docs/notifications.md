@@ -26,6 +26,8 @@ The command supports four primary actions:
         * Report for all pending issues
 1. `summary`
     * Runs a checkout summary report for trees listed in the [subscriptions folder](../backend/data/notifications/subscriptions/).
+1. `hardware_summary`
+    * Generate weekly hardware reports for hardware listed in the [subscriptions folder](../backend/data/notifications/subscriptions/). Emails are sent only for hardware with failed tests.
 1.  `fake_report`
     * Generates a fake report (for  testing email send).
 
@@ -54,6 +56,7 @@ These options are available for all actions and are always optional:
 | `--summary-signup-folder` | `summary` | Optional | Alternative signup folder under `/backend/data` |
 | `--summary-origins` | `summary` | Optional | Comma-separated list to limit to specific origins |
 | `--skip-sent-reports` | `summary` | Optional | Skip reports that have already been sent |
+| `--hardware-origins` | `hardware_summary` | Optional | Comma-separated list to limit to specific origins |
 | `--tree` | `fake_report` | Optional | Add recipients for the given tree name |
 
 

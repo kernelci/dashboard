@@ -1,0 +1,32 @@
+{% extends "base.txt" %}
+{% block header %}{% endblock %}
+{% block content %}
+Hello,
+
+Status summary for {{ hardware_id }}
+
+Builds:{{ "\t" }}{{ "{:>5}".format(build_status_group["success"]) }} ✅
+{{- "{:>5}".format(build_status_group["failed"]) }} ❌
+{{- "{:>5}".format(build_status_group["inconclusive"]) }} ⚠️
+Boots: {{ "\t" }}{{ "{:>5}".format(boot_status_group["success"]) }} ✅
+{{- "{:>5}".format(boot_status_group["failed"]) }} ❌
+{{- "{:>5}".format(boot_status_group["inconclusive"]) }} ⚠️
+Tests: {{ "\t" }}{{ "{:>5}".format(test_status_group["success"]) }} ✅
+{{- "{:>5}".format(test_status_group["failed"]) }} ❌
+{{- "{:>5}".format(test_status_group["inconclusive"]) }} ⚠️
+-------------
+{% for data in hardware_data %}
+#kernelci test {{ data["id"] }}
+- Path: {{ data["path"] }}
+- Status: {{ data["status"] }}
+- Comment: {{ data["comment"] }}
+- Starttime: {{ data["start_time"] }}
+- Tree: {{ data["tree_name"] }}/{{ data["git_repository_branch"] }}
+- Origin: {{ data["test_origin"] }}
+- Test_lab: {{ data["runtime"] }}
+- Lava_job_id: {{ data["job_id"] }}
+- Commit: {{ data["git_commit_hash"] }}
+- Dashboard: https://dashboard.kernelci.org/test/{{ data["id"] }}
+-------------
+{% endfor %}
+{%- endblock -%}

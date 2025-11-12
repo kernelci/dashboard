@@ -174,6 +174,72 @@ def get_hardware_listing_data(
         return cursor.fetchall()
 
 
+def get_hardware_listing_data_bulk(
+    keys: list[tuple[str, str]], start_date: datetime, end_date: datetime
+) -> list[dict]:
+    if not keys:
+        return []
+
+    count_clauses = _get_hardware_listing_count_clauses()
+    values_clause = ", ".join(
+        [f"(%(hardware_id_{i})s, %(origin_{i})s)" for i in range(len(keys))]
+    )
+
+    query = f"""
+        WITH
+            relevant_tests AS (
+                SELECT
+                    "tests"."environment_compatible" AS hardware,
+                    "tests"."environment_misc" ->> 'platform' AS platform,
+                    "tests"."status",
+                    "tests"."path",
+                    "tests"."origin" AS test_origin,
+                    "tests"."id",
+                    b.id AS build_id,
+                    b.status AS build_status
+                FROM
+                    tests
+                    INNER JOIN builds b ON tests.build_id = b.id
+                WHERE
+                    "tests"."environment_misc" ->> 'platform' IS NOT NULL
+                    AND "tests"."start_time" >= %(start_date)s
+                    AND "tests"."start_time" <= %(end_date)s
+                    AND EXISTS (
+                    SELECT 1
+                    FROM (VALUES {values_clause}) AS key_list(hardware_id, origin)
+                    WHERE(
+                        tests.environment_compatible @> ARRAY[key_list.hardware_id]::TEXT[]
+                        OR tests.environment_misc ->> 'platform' = key_list.hardware_id
+                    )
+                    AND tests.origin = key_list.origin
+                    )
+            )
+        SELECT
+            platform,
+            hardware,
+            test_origin,
+            {count_clauses}
+        FROM
+            relevant_tests
+        GROUP BY
+            platform,
+            hardware,
+            test_origin
+    """
+
+    params = {
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+    for i, (hardware_id, origin) in enumerate(keys):
+        params[f"hardware_id_{i}"] = hardware_id
+        params[f"origin_{i}"] = origin
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return dict_fetchall(cursor)
+
+
 def get_hardware_details_data(
     *,
     hardware_id: str,
@@ -290,6 +356,81 @@ def query_records(
             ]
             + commit_hashes,
         )
+
+        return dict_fetchall(cursor)
+
+
+def get_hardware_summary_data(
+    *, keys: list[tuple[str, str]], start_date: datetime, end_date: datetime
+) -> list[dict] | None:
+    """
+    Get hardware summary data for given keys within a date range.
+    Only failed tests are included in the result.
+    """
+    if not keys:
+        return []
+
+    with connection.cursor() as cursor:
+        values_clause = ", ".join(["(%s, %s)"] * len(keys))
+
+        query = f"""
+            SELECT
+                tests.id,
+                tests.origin AS test_origin,
+                tests.environment_misc,
+                tests.path,
+                tests.comment,
+                tests.log_url,
+                tests.status,
+                tests.start_time,
+                tests.duration,
+                tests.misc,
+                tests.build_id,
+                tests.environment_compatible,
+                builds.architecture,
+                builds.config_name,
+                builds.misc AS build_misc,
+                builds.config_url,
+                builds.compiler,
+                builds.status AS build_status,
+                builds.duration AS build_duration,
+                builds.log_url AS build_log_url,
+                builds.start_time AS build_start_time,
+                builds.origin AS build_origin,
+                checkouts.git_repository_url,
+                checkouts.git_repository_branch,
+                checkouts.git_commit_name,
+                checkouts.git_commit_hash,
+                checkouts.tree_name,
+                checkouts.origin AS checkout_origin
+            FROM
+                tests
+            INNER JOIN builds ON
+                tests.build_id = builds.id
+            INNER JOIN checkouts ON
+                builds.checkout_id = checkouts.id
+            WHERE
+                tests.start_time >= %s
+                AND tests.start_time <= %s
+                AND tests.status = 'FAIL'
+                AND EXISTS (
+                SELECT 1
+                FROM (VALUES {values_clause}) AS key_list(hardware_id, origin)
+                WHERE(
+                    tests.environment_compatible @> ARRAY[key_list.hardware_id]::TEXT[]
+                    OR tests.environment_misc ->> 'platform' = key_list.hardware_id
+                )
+                AND tests.origin = key_list.origin
+                )
+            ORDER BY
+                tests.start_time DESC
+            """
+
+        params = [start_date, end_date]
+        for hardware_id, origin in keys:
+            params.extend([hardware_id, origin])
+
+        cursor.execute(query, params)
 
         return dict_fetchall(cursor)
 

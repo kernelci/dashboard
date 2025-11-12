@@ -5,7 +5,7 @@ import os
 import sys
 
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from types import SimpleNamespace
 from urllib.parse import quote_plus
 
@@ -29,6 +29,7 @@ from kernelCI_app.management.commands.helpers.summary import (
     TreeKey,
     get_build_issues_from_checkout,
     process_submissions_files,
+    process_hardware_submissions_files,
 )
 from kernelCI_app.queries.notifications import (
     get_checkout_summary_data,
@@ -54,6 +55,12 @@ from kernelCI_cache.queries.issues import (
 )
 from kernelCI_cache.typeModels.databases import PossibleIssueType
 from kernelCI_app.utils import group_status
+
+from kernelCI_app.queries.hardware import (
+    get_hardware_summary_data,
+    get_hardware_listing_data_bulk,
+)
+from kernelCI_app.helpers.hardwares import sanitize_hardware
 
 KERNELCI_RESULTS = "kernelci-results@groups.io"
 KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
@@ -723,6 +730,101 @@ def generate_test_report(*, service, test_id, email_args, signup_folder):
     )
 
 
+def generate_hardware_summary_report(
+    *,
+    service,
+    hardware_origins: Optional[list[str]],
+    email_args,
+    signup_folder: Optional[str] = None,
+):
+    """
+    Generate weekly hardware reports for hardware submission file.
+    Emails are sent only for hardware with failed tests.
+    """
+
+    now = datetime.now(timezone.utc)
+    start_date = now - timedelta(days=7)
+    end_date = now
+
+    # process the hardware submission files
+    hardware_key_set, hardware_prop_map = process_hardware_submissions_files(
+        signup_folder=signup_folder,
+        hardware_origins=hardware_origins,
+    )
+
+    # get detailed data for all hardware
+    hardwares_data_raw = get_hardware_summary_data(
+        keys=list(hardware_key_set),
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    if not hardwares_data_raw:
+        print("No data for hardware summary")
+        return
+
+    hardwares_data_dict = defaultdict(list)
+    for raw in hardwares_data_raw:
+        try:
+            environment_misc = json.loads(raw.get("environment_misc", "{}"))
+            misc = json.loads(raw.get("misc", "{}"))
+        except json.JSONDecodeError:
+            print(f'Error decoding JSON for key: {raw.get("environment_misc")}')
+            continue
+        hardware_id = environment_misc.get("platform")
+        raw["job_id"] = environment_misc.get("job_id")
+        raw["runtime"] = misc.get("runtime")
+        origin = raw.get("test_origin")
+        key = (hardware_id, origin)
+        hardwares_data_dict[key].append(raw)
+
+    # get the total build/boot/test counts for each hardware
+    hardwares_list_raw = get_hardware_listing_data_bulk(
+        keys=list(hardware_key_set),
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    # Iterate through each hardware record to render report, extract recipient, send email
+    for (hardware_id, origin), hardware_data in hardwares_data_dict.items():
+        hardware_raw = next(
+            (row for row in hardwares_list_raw if row.get("platform") == hardware_id),
+            None,
+        )
+
+        hardware_item = sanitize_hardware(hardware_raw)
+        build_status_group = group_status(hardware_item.build_status_summary)
+        boot_status_group = group_status(hardware_item.boot_status_summary)
+        test_status_group = group_status(hardware_item.test_status_summary)
+
+        # render the template
+        template = setup_jinja_template("hardware_report.txt.j2")
+        report = {}
+        report["content"] = template.render(
+            hardware_id=hardware_id,
+            hardware_data=hardware_data,
+            build_status_group=build_status_group,
+            boot_status_group=boot_status_group,
+            test_status_group=test_status_group,
+        )
+        report["title"] = (
+            f"hardware {hardware_id} summary - {now.strftime("%Y-%m-%d %H:%M %Z")}"
+        )
+
+        # extract recipient
+        hardware_report = hardware_prop_map.get((hardware_id, origin), {})
+        recipients = hardware_report.get("default_recipients", [])
+
+        # send email
+        send_email_report(
+            service=service,
+            report=report,
+            email_args=email_args,
+            signup_folder=signup_folder,
+            recipients=recipients,
+        )
+
+
 def run_fake_report(*, service, email_args):
     report = {}
     report["content"] = "Testing the email sending path..."
@@ -787,6 +889,7 @@ class Command(BaseCommand):
                 "summary",
                 "fake_report",
                 "test_report",
+                "hardware_summary",
             ],
             help="Action to perform: new_issues, issue_report, summary, fake_report, or test_report",
         )
@@ -839,6 +942,13 @@ class Command(BaseCommand):
             "--tree",
             type=str,
             help="Add recipients for the given tree name (fake_report only)",
+        )
+
+        # hardware summary report specific arguments
+        parser.add_argument(
+            "--hardware-origins",
+            type=lambda s: [origin.strip() for origin in s.split(",")],
+            help="Limit hardware summary to specific origins (hardware summary only, comma-separated list)",
         )
 
     def handle(self, *args, **options):
@@ -928,4 +1038,14 @@ class Command(BaseCommand):
             )
             self.stdout.write(
                 self.style.SUCCESS(f"Test report generated for test {test_id}")
+            )
+
+        elif action == "hardware_summary":
+            email_args.update = options.get("update_storage", False)
+            hardware_origins = options.get("hardware_origins")
+            generate_hardware_summary_report(
+                service=service,
+                signup_folder=signup_folder,
+                email_args=email_args,
+                hardware_origins=hardware_origins,
             )
