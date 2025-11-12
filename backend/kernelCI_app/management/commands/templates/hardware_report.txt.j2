@@ -1,0 +1,30 @@
+{% extends "base.txt" %}
+{% block header %}{% endblock %}
+{% block content %}
+Hello,
+
+Status summary for {{ hardware_id }}
+
+Builds:{{ "\t" }}{{ "{:>5}".format(build_status_group["success"]) }} ✅
+{{- "{:>5}".format(build_status_group["failed"]) }} ❌
+{{- "{:>5}".format(build_status_group["inconclusive"]) }} ⚠️
+Boots: {{ "\t" }}{{ "{:>5}".format(boot_status_group["success"]) }} ✅
+{{- "{:>5}".format(boot_status_group["failed"]) }} ❌
+{{- "{:>5}".format(boot_status_group["inconclusive"]) }} ⚠️
+Tests: {{ "\t" }}{{ "{:>5}".format(test_status_group["success"]) }} ✅
+{{- "{:>5}".format(test_status_group["failed"]) }} ❌
+{{- "{:>5}".format(test_status_group["inconclusive"]) }} ⚠️
+-------------
+{% for data in hardware_data %}
+#kernelci test {{ data["id"] }}
+- Status: {{ data["status"] }}
+- Comment: {{ data["comment"] }}
+- Starttime: {{ data["start_time"] }}
+- Tree: {{ data["build__checkout__tree_name"] }}/{{ data["build__checkout__git_repository_branch"] }}
+- Origin: {{ data["test_origin"] }}
+- Test_lab: {{ data["runtime"] }}
+- Commit: {{ data["build__checkout__git_commit_hash"] }}
+- Dashboard: https://dashboard.kernelci.org/test/{{ data["id"] }}
+-------------
+{% endfor %}
+{%- endblock -%}

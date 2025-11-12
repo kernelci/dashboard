@@ -1,0 +1,9 @@
+# Add a subscription file for your hardware platform by following this format.
+# Place the file under: dashboard/backend/data/notifications/subscriptions
+# The file name must end with _hardware.yml or _hardware.yaml
+
+qcs9100-ride: # The hardware platform name
+  origin: maestro
+  default_recipients:
+    - Recipient One <Recipient1@example.com>
+    - Recipient Two <Recipient2@example.com>

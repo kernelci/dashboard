@@ -1,0 +1,8 @@
+qcs6490-rb3gen2:
+  origin: maestro
+  default_recipients:
+    - Trilok Soni <tsoni@quicinc.com>
+    - Shiraz Hashim <shashim@qti.qualcomm.com>
+    - Yogesh Lal <yogesh.lal@oss.qualcomm.com>
+    - Yijie Yang <yijie.yang@oss.qualcomm.com>
+    - Yushan Li <yushan.li@oss.qualcomm.com>
