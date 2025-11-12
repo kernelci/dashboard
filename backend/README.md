@@ -140,10 +140,15 @@ tests will be skipped.
 The tests are also executed in our CI system, and every pull request must pass the tests before
 it can be merged.
 
-
 ### Performance tests
 
-Apart from unit and integration tests, we can also make performance tests with k6. Though this is not intrinsically from the backend, it tests the requests to the endpoint and doesn't require the frontend to work. You can check the [performanceTests.md file](../docs/performanceTests.md) for more information on how to setup and run them.
+The project includes two types of performance testing:
+
+1. **Pytest-Benchmark**: For benchmarking backend components like the ingestion system.
+
+2. **K6**: For load testing API endpoints. Though this is not intrinsically from the backend, it tests the requests to the endpoint and doesn't require the frontend to work.
+
+For detailed information on both types of performance testing, including setup instructions and best practices, see the [performanceTests.md file](../docs/performanceTests.md).
 
 
 ## Cron jobs

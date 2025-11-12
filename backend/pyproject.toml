@@ -35,13 +35,15 @@ pytest-xdist = {extras = ["psutil"], version = "^3.6.1"}
 pytest-rerunfailures = "^15.0"
 pytest-cov = "^6.2.1"
 factory-boy = "^3.3.3"
+pytest-benchmark = "^5.2.3"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "kernelCI.settings"
 addopts = "-n 4 --dist loadscope --reruns 4 -x"
 markers = [
     "unit: marks tests as unit tests (fast, no external dependencies)",
-    "integration: marks tests as integration tests (slow, connects to the database)"
+    "integration: marks tests as integration tests (slow, connects to the database)",
+    "performance: marks tests as performance/benchmark tests (very slow, requires full setup)"
 ]
 
 [build-system]

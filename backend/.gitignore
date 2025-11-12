@@ -180,3 +180,8 @@ runtime/secrets/postgres_password_secret
 # This is where the sqlite cache will be stored by default if not running on Docker.
 volume_data/*.sqlite3
 volume_data/*.yaml
+
+
+# benchmarks
+.benchmarks/*
+!.benchmarks/.gitkeep
