@@ -28,6 +28,7 @@ export type AccordionItemBuilds = {
   buildLogs?: string;
   kernelConfig?: string;
   treeBranch?: string;
+  lab?: string;
 };
 
 export interface TTreeDetailsFilter

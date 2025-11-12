@@ -39,6 +39,7 @@ def get_issue_builds(*, issue_id: str, version: Optional[int]) -> list[dict]:
             B.DURATION,
             B.COMPILER,
             B.LOG_URL,
+            B.MISC,
             C.TREE_NAME,
             C.GIT_REPOSITORY_BRANCH,
             C.GIT_REPOSITORY_URL

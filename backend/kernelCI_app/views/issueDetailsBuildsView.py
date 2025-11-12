@@ -3,6 +3,7 @@ from typing import Optional
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
+from kernelCI_app.helpers.misc import handle_misc
 from kernelCI_app.typeModels.commonOpenApiParameters import ISSUE_ID_PATH_PARAM
 from kernelCI_app.typeModels.issueDetails import (
     IssueBuildsResponse,
@@ -38,6 +39,9 @@ class IssueDetailsBuilds(APIView):
         builds_data = get_issue_builds(
             issue_id=path_params.issue_id, version=query_params.version
         )
+
+        for build in builds_data:
+            build["misc"] = handle_misc(build.get("misc"))
 
         if not builds_data:
             return create_api_error_response(

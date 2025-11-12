@@ -135,6 +135,7 @@ export const sanitizeBuilds = (
     buildLogs: build.log_url,
     kernelConfig: build.config_url,
     treeBranch: buildTreeBranch(build.tree_name, build.git_repository_branch),
+    lab: typeof build.misc?.lab === 'string' ? build.misc.lab : undefined,
   }));
 };
 
@@ -152,6 +153,7 @@ export const sanitizeBuildTable = (
     status: build.status,
     buildLogs: build.log_url,
     treeBranch: buildTreeBranch(build.tree_name, build.git_repository_branch),
+    lab: typeof build.misc?.lab === 'string' ? build.misc.lab : undefined,
   }));
 };
 

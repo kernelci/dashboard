@@ -143,6 +143,7 @@ export const messages = {
     'global.info': 'Info',
     'global.issues': 'Issues',
     'global.kcidev': 'kci-dev',
+    'global.lab': 'Lab',
     'global.last': 'Last',
     'global.legend': 'Legend',
     'global.loading': 'Loading...',

@@ -83,6 +83,7 @@ export type BuildsTableBuild = Pick<
   | 'log_url'
   | 'tree_name'
   | 'git_repository_branch'
+  | 'misc'
 >;
 
 export type StatusCount = {

@@ -9,6 +9,7 @@ from kernelCI_app.typeModels.databases import (
     Build__Id,
     Build__Architecture,
     Build__ConfigName,
+    Build__Misc,
     Build__Status,
     Build__StartTime,
     Build__Duration,
@@ -60,6 +61,7 @@ class IssueBuildItem(BaseModel):
     log_url: Build__LogUrl
     tree_name: Checkout__TreeName
     git_repository_branch: Checkout__GitRepositoryBranch
+    misc: Build__Misc
 
 
 class IssueTestItem(BaseModel):
