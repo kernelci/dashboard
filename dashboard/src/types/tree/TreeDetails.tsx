@@ -167,6 +167,7 @@ export type TestByCommitHash = {
   startTime?: string;
   hardware?: string[];
   treeBranch?: string;
+  lab?: string;
 };
 
 export type TTestByCommitHashResponse = {

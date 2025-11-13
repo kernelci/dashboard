@@ -27,6 +27,7 @@ export type TIndividualTest = {
   duration?: string;
   hardware?: string[];
   treeBranch?: string;
+  lab?: string;
 };
 
 interface IEnvironmentMisc {
@@ -46,6 +47,7 @@ export type TestHistory = TreeBranchItem & {
   duration?: number;
   environment_compatible?: string[];
   environment_misc?: IEnvironmentMisc;
+  lab?: string;
 };
 
 // TODO: make other endpoints also return the test origin and combine this type with TestHistory

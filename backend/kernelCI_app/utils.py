@@ -87,6 +87,23 @@ def string_to_json(string: str) -> Optional[dict]:
             return None
 
 
+def sanitize_dict(maybe_dict: Union[str, dict, None]) -> Optional[dict]:
+    """
+    Corrects data to always be either None or a dict.
+    If data is a string, it attempts to parse it as JSON.
+
+    Returns None or the data as a dict.
+    """
+
+    if maybe_dict is None or isinstance(maybe_dict, dict):
+        return maybe_dict
+
+    if isinstance(maybe_dict, str):
+        return string_to_json(maybe_dict)
+
+    return None
+
+
 def is_boot(path: str | None) -> bool:
     return path is not None and (path == "boot" or path.startswith("boot."))
 

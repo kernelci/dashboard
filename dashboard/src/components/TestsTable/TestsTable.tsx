@@ -152,6 +152,7 @@ export function TestsTable({
             e.environment_misc,
           ),
           treeBranch: buildTreeBranch(e.tree_name, e.git_repository_branch),
+          lab: e.lab,
         });
       });
     }

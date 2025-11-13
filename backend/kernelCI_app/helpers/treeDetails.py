@@ -16,7 +16,7 @@ from kernelCI_app.typeModels.databases import (
     build_fail_status_list,
 )
 from kernelCI_app.typeModels.issues import Issue, IssueDict
-from kernelCI_app.utils import create_issue_typed, extract_error_message
+from kernelCI_app.utils import create_issue_typed, extract_error_message, sanitize_dict
 from kernelCI_app.helpers.misc import (
     handle_misc,
     misc_value_or_default,
@@ -107,12 +107,16 @@ def get_current_row_data(current_row: dict) -> dict:
         "issue_report_url": current_row[37],
     }
 
-    environment_misc = handle_misc(current_row_data["test_environment_misc"])
-    current_row_data["test_platform"] = misc_value_or_default(environment_misc).get(
-        "platform"
+    environment_misc = handle_misc(
+        misc_value_or_default(current_row_data["test_environment_misc"])
     )
+    current_row_data["test_platform"] = environment_misc.get("platform")
+    test_misc = sanitize_dict(current_row_data["test_misc"])
+    test_runtime_lab = test_misc.get("runtime") if test_misc is not None else None
+
     if current_row_data["test_status"] is None:
-        current_row_data["test_status"] = "NULL"
+        current_row_data["test_status"] = NULL_STATUS
+
     current_row_data["test_error"] = extract_error_message(
         current_row_data["test_misc"]
     )
@@ -152,6 +156,7 @@ def get_current_row_data(current_row: dict) -> dict:
         "architecture": current_row_data["build_architecture"],
         "compiler": current_row_data["build_compiler"],
         "environment_misc": {"platform": current_row_data["test_platform"]},
+        "lab": test_runtime_lab,
     }
 
     return current_row_data

@@ -24,6 +24,7 @@ import type { TestHistory } from '@/types/general';
 import type { TableKeys } from '@/utils/constants/tables';
 
 import { BootsTable } from '@/components/BootsTable/BootsTable';
+import { UNKNOWN_STRING } from '@/utils/constants/backend';
 
 export const columns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -49,6 +50,16 @@ export const columns: ColumnDef<TestByCommitHash>[] = [
         tooltipId="boots.statusTooltip"
       />
     ),
+  },
+  {
+    id: 'lab',
+    accessorKey: 'lab',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.lab" />
+    ),
+    cell: ({ row }): string => {
+      return row.getValue('lab') || UNKNOWN_STRING;
+    },
   },
   {
     accessorKey: 'startTime',

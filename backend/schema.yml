@@ -1824,6 +1824,11 @@ components:
           $ref: '#/components/schemas/Test__EnvironmentCompatible'
         environment_misc:
           $ref: '#/components/schemas/Test__EnvironmentMisc'
+        lab:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Lab
       required:
       - id
       - status
@@ -1832,6 +1837,7 @@ components:
       - start_time
       - environment_compatible
       - environment_misc
+      - lab
       title: BuildTestItem
       type: object
     BuildTestsResponse:
@@ -2671,6 +2677,11 @@ components:
           anyOf:
           - $ref: '#/components/schemas/EnvironmentMisc'
           - type: 'null'
+        lab:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Lab
         tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
         git_repository_branch:
@@ -2688,6 +2699,7 @@ components:
       - architecture
       - compiler
       - environment_misc
+      - lab
       - tree_name
       - git_repository_branch
       title: HardwareTestHistoryItem
@@ -2776,6 +2788,8 @@ components:
           $ref: '#/components/schemas/Checkout__TreeName'
         git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        misc:
+          $ref: '#/components/schemas/Build__Misc'
       required:
       - id
       - architecture
@@ -2787,6 +2801,7 @@ components:
       - log_url
       - tree_name
       - git_repository_branch
+      - misc
       title: IssueBuildItem
       type: object
     IssueBuildsResponse:
@@ -2960,6 +2975,11 @@ components:
           $ref: '#/components/schemas/Checkout__TreeName'
         git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        lab:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Lab
       required:
       - id
       - status
@@ -2970,6 +2990,7 @@ components:
       - environment_misc
       - tree_name
       - git_repository_branch
+      - lab
       title: IssueTestItem
       type: object
     IssueTestsResponse:
@@ -3288,7 +3309,7 @@ components:
         build_id:
           $ref: '#/components/schemas/Build__Id'
         status:
-          $ref: '#/components/schemas/Test__Status'
+          $ref: '#/components/schemas/StatusValues'
         path:
           $ref: '#/components/schemas/Test__Path'
         log_excerpt:
@@ -3417,6 +3438,11 @@ components:
           anyOf:
           - $ref: '#/components/schemas/EnvironmentMisc'
           - type: 'null'
+        lab:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Lab
       required:
       - id
       - origin
@@ -3430,6 +3456,7 @@ components:
       - architecture
       - compiler
       - environment_misc
+      - lab
       title: TestHistoryItem
       type: object
     TestStatusCount:

@@ -79,6 +79,7 @@ class IssueTestItem(BaseModel):
     ]
     tree_name: Checkout__TreeName
     git_repository_branch: Checkout__GitRepositoryBranch
+    lab: Optional[str]
 
 
 class IssueTestsResponse(RootModel):
