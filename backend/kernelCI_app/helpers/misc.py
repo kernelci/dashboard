@@ -5,10 +5,15 @@ from kernelCI_app.utils import string_to_json
 
 class Misc(TypedDict):
     platform: str
+    lab: Optional[str]
 
 
 def handle_misc(misc: Union[str, dict, None]) -> Optional[Misc]:
-    """Handle misc data (environment or build) by parsing JSON string or dict."""
+    """
+    Handle misc data (environment or build) by parsing JSON string or dict.
+    Also sets some default values and returns only the necessary fields.
+    """
+
     parsed_misc: Misc = {}
 
     if isinstance(misc, str):
@@ -19,6 +24,8 @@ def handle_misc(misc: Union[str, dict, None]) -> Optional[Misc]:
         return None
 
     parsed_misc["platform"] = misc.get("platform", UNKNOWN_STRING)
+    if "lab" in misc:
+        parsed_misc["lab"] = misc.get("lab")
 
     return parsed_misc
 

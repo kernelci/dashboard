@@ -25,13 +25,10 @@ export type AccordionItemBuilds = {
   buildErrors?: number;
   buildTime?: string | ReactNode;
   status: Status;
-  kernelImage?: string;
   buildLogs?: string;
   kernelConfig?: string;
-  dtb?: string;
-  systemMap?: string;
-  modules?: string;
   treeBranch?: string;
+  lab?: string;
 };
 
 export interface TTreeDetailsFilter
