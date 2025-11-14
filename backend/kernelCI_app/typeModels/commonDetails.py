@@ -50,6 +50,7 @@ class TestHistoryItem(BaseModel):
     architecture: Optional[str]
     compiler: Optional[str]
     environment_misc: Optional[EnvironmentMisc]
+    lab: Optional[str]
 
 
 class BuildHistoryItem(BaseModel):

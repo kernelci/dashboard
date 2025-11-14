@@ -20,6 +20,7 @@ import {
   MoreDetailsIcon,
   DETAILS_COLUMN_ID,
 } from '@/components/Table/DetailsColumn';
+import { UNKNOWN_STRING } from '@/utils/constants/backend';
 
 export const defaultColumns: ColumnDef<TPathTests>[] = [
   {
@@ -103,6 +104,16 @@ export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
     ),
     cell: ({ row }): string =>
       row.getValue('duration') ? row.getValue('duration') : '-',
+  },
+  {
+    id: 'lab',
+    accessorKey: 'lab',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.lab" />
+    ),
+    cell: ({ row }): string => {
+      return row.getValue('lab') || UNKNOWN_STRING;
+    },
   },
   {
     id: 'hardware',

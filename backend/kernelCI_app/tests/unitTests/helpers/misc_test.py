@@ -1,4 +1,3 @@
-from unittest.mock import patch
 from kernelCI_app.helpers.misc import (
     handle_misc,
     misc_value_or_default,
@@ -8,21 +7,14 @@ from kernelCI_app.helpers.filters import UNKNOWN_STRING
 
 
 class TestHandleMisc:
-    @patch("kernelCI_app.helpers.misc.string_to_json")
-    def test_handle_misc_with_string(self, mock_string_to_json):
+    def test_handle_misc_with_string(self):
         """Test handle_misc with string input."""
-        mock_string_to_json.return_value = {"platform": "x86_64"}
-
         result = handle_misc('{"platform": "x86_64"}')
 
-        mock_string_to_json.assert_called_once_with('{"platform": "x86_64"}')
         assert result == {"platform": "x86_64"}
 
-    @patch("kernelCI_app.helpers.misc.string_to_json")
-    def test_handle_misc_with_invalid_string(self, mock_string_to_json):
+    def test_handle_misc_with_invalid_string(self):
         """Test handle_misc with invalid JSON string."""
-        mock_string_to_json.return_value = None
-
         result = handle_misc("invalid json")
 
         assert result is None
@@ -54,6 +46,14 @@ class TestHandleMisc:
         result = handle_misc(123)
 
         assert result is None
+
+    def test_handle_misc_with_lab(self):
+        """Test handle_misc with lab key present."""
+        misc_string = '{"platform": "x86_64", "lab": "lab1"}'
+
+        result = handle_misc(misc_string)
+
+        assert result == {"platform": "x86_64", "lab": "lab1"}
 
 
 class TestMiscValueOrDefault:

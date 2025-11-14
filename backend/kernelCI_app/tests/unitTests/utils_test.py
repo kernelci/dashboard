@@ -9,6 +9,7 @@ from kernelCI_app.utils import (
     extract_error_message,
     get_query_time_interval,
     get_error_body_response,
+    sanitize_dict,
     string_to_json,
     is_boot,
     validate_str_to_dict,
@@ -294,6 +295,50 @@ class TestStringToJson:
 
         assert result is None
         mock_log_message.assert_not_called()
+
+
+class TestSanitizeDict:
+    def test_sanitize_none(self):
+        """Test sanitize_dict with None input."""
+        result = sanitize_dict(None)
+        assert result is None
+
+    def test_sanitize_dict_input(self):
+        """Test sanitize_dict with dict input."""
+        input_dict = {"key": "value"}
+        expected = input_dict.copy()
+
+        result = sanitize_dict(input_dict)
+
+        assert input_dict == expected  # Ensure original dict is unchanged
+        assert result == expected
+
+    def test_sanitize_valid_json_string(self):
+        """Test sanitize_dict with valid JSON string."""
+        json_string = '{"key": "value", "number": 123}'
+
+        result = sanitize_dict(json_string)
+
+        expected = {"key": "value", "number": 123}
+        assert result == expected
+
+    @patch("kernelCI_app.utils.log_message")
+    def test_sanitize_invalid_json_string(self, mock_log_message):
+        """Test sanitize_dict with invalid JSON string."""
+        json_string = '{"invalid": json}'
+
+        result = sanitize_dict(json_string)
+
+        mock_log_message.assert_called_once()
+        assert result is None
+
+    def test_sanitize_other_type(self):
+        """Test sanitize_dict with other type input."""
+        input_value = 12345
+
+        result = sanitize_dict(input_value)
+
+        assert result is None
 
 
 class TestIsBoot:

@@ -17,6 +17,7 @@ import {
   MoreDetailsIcon,
   MoreDetailsTableHeader,
 } from '@/components/Table/DetailsColumn';
+import { UNKNOWN_STRING } from '@/utils/constants/backend';
 
 const innerColumns: ColumnDef<TIndividualTest>[] = [
   {
@@ -48,6 +49,16 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.status" />
     ),
+  },
+  {
+    id: 'lab',
+    accessorKey: 'lab',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.lab" />
+    ),
+    cell: ({ row }): string => {
+      return row.getValue('lab') || UNKNOWN_STRING;
+    },
   },
   {
     accessorKey: 'start_time',

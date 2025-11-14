@@ -53,6 +53,7 @@ import { TableHeader } from '@/components/Table/TableHeader';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import TooltipHardware from '@/components/Table/TooltipHardware';
 import { EMPTY_VALUE } from '@/lib/string';
+import { UNKNOWN_STRING } from '@/utils/constants/backend';
 
 const defaultColumns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -94,6 +95,16 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
     ),
     cell: ({ row }): string =>
       row.getValue('duration') ? row.getValue('duration') : '-',
+  },
+  {
+    id: 'lab',
+    accessorKey: 'lab',
+    header: ({ column }): JSX.Element => (
+      <TableHeader column={column} intlKey="global.lab" />
+    ),
+    cell: ({ row }): string => {
+      return row.getValue('lab') || UNKNOWN_STRING;
+    },
   },
   {
     accessorKey: 'hardware',
@@ -157,6 +168,7 @@ export function BootsTable({
                 e.environment_misc,
               ),
               treeBranch: buildTreeBranch(e.tree_name, e.git_repository_branch),
+              lab: e.lab,
             };
           })
         : [],

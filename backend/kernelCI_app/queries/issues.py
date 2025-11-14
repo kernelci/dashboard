@@ -74,6 +74,7 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
             T.START_TIME,
             T.ENVIRONMENT_COMPATIBLE,
             T.ENVIRONMENT_MISC,
+            T.MISC->>'runtime' AS lab,
             C.TREE_NAME,
             C.GIT_REPOSITORY_BRANCH,
             C.GIT_REPOSITORY_URL

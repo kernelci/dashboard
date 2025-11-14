@@ -1,6 +1,7 @@
 from typing import Optional
 from querybuilder.query import Query
 from kernelCI_app.models import Builds, Tests
+from django.db.models.expressions import F
 
 
 def get_build_details(build_id: str) -> Optional[list[dict]]:
@@ -46,14 +47,19 @@ def get_build_details(build_id: str) -> Optional[list[dict]]:
 
 
 def get_build_tests(build_id: str) -> Optional[list[dict]]:
-    result = Tests.objects.filter(build_id=build_id).values(
-        "id",
-        "duration",
-        "status",
-        "path",
-        "start_time",
-        "environment_compatible",
-        "environment_misc",
-        "build__status",
+    result = (
+        Tests.objects.filter(build_id=build_id)
+        .annotate(lab=F("misc__runtime"))
+        .values(
+            "id",
+            "duration",
+            "status",
+            "path",
+            "start_time",
+            "environment_compatible",
+            "environment_misc",
+            "build__status",
+            "lab",
+        )
     )
     return list(result)

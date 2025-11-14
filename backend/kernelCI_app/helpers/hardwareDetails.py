@@ -48,6 +48,7 @@ from kernelCI_app.utils import (
     create_issue_typed,
     extract_error_message,
     is_boot,
+    sanitize_dict,
 )
 from pydantic import ValidationError
 from kernelCI_app.typeModels.hardwareDetails import (
@@ -280,6 +281,7 @@ def handle_test_history(
     task: List[HardwareTestHistoryItem],
 ) -> None:
     create_record_test_platform(record=record)
+    record_misc = sanitize_dict(record.get("misc"))
 
     test_history_item = HardwareTestHistoryItem(
         id=record["id"],
@@ -296,6 +298,7 @@ def handle_test_history(
         environment_misc=EnvironmentMisc(platform=record["test_platform"]),
         tree_name=record["build__checkout__tree_name"],
         git_repository_branch=record["build__checkout__git_repository_branch"],
+        lab=record_misc.get("runtime") if record_misc else None,
     )
 
     task.append(test_history_item)

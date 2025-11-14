@@ -48,4 +48,5 @@ base_test_data = {
     "start_time": datetime.now(),
     "environment_compatible": ["test_environment_compatible"],
     "environment_misc": {"test_environment_misc": "test_environment_misc"},
+    "lab": "test_lab",
 }

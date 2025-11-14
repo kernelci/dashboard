@@ -1,6 +1,6 @@
 from typing import Union, TypedDict, Optional
 from kernelCI_app.helpers.filters import UNKNOWN_STRING
-from kernelCI_app.utils import string_to_json
+from kernelCI_app.utils import sanitize_dict
 
 
 class Misc(TypedDict):
@@ -14,15 +14,11 @@ def handle_misc(misc: Union[str, dict, None]) -> Optional[Misc]:
     Also sets some default values and returns only the necessary fields.
     """
 
-    parsed_misc: Misc = {}
-
-    if isinstance(misc, str):
-        misc = string_to_json(misc)
-        if misc is None:
-            return None
-    elif not isinstance(misc, dict):
+    misc = sanitize_dict(misc)
+    if misc is None:
         return None
 
+    parsed_misc: Misc = {}
     parsed_misc["platform"] = misc.get("platform", UNKNOWN_STRING)
     if "lab" in misc:
         parsed_misc["lab"] = misc.get("lab")
