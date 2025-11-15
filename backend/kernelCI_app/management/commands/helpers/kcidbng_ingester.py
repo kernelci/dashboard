@@ -22,7 +22,19 @@ from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
 )
 import kcidb_io
 from django.db import transaction
-from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
+from kernelCI_app.models import (
+    Issues,
+    Checkouts,
+    Builds,
+    NewBuild,
+    NewTest,
+    Tests,
+    Incidents,
+)
+from kernelCI_app.management.commands.helpers.aggregation_helpers import (
+    aggregate_builds_status,
+    aggregate_tests_status,
+)
 
 from kernelCI_app.management.commands.helpers.process_submissions import (
     TableNames,
@@ -204,6 +216,8 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
     builds_buf: list[Builds] = []
     tests_buf: list[Tests] = []
     incidents_buf: list[Incidents] = []
+    new_tests_buf: list[NewTest] = []
+    new_builds_buf: list[NewBuild] = []
 
     last_flush_ts = time.time()
 
@@ -230,6 +244,8 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
                     builds_buf.extend(inst["builds"])
                     tests_buf.extend(inst["tests"])
                     incidents_buf.extend(inst["incidents"])
+                    new_tests_buf.extend(inst["tests"])
+                    new_builds_buf.extend(inst["builds"])
 
                 if buffered_total() >= INGEST_BATCH_SIZE:
                     flush_buffers(
@@ -239,6 +255,10 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
                         tests_buf=tests_buf,
                         incidents_buf=incidents_buf,
                     )
+                    aggregate_tests_status(new_tests_buf)
+                    aggregate_builds_status(new_builds_buf)
+                    new_tests_buf.clear()
+                    new_builds_buf.clear()
                     last_flush_ts = time.time()
 
                 if VERBOSE:
@@ -278,6 +298,10 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
                     tests_buf=tests_buf,
                     incidents_buf=incidents_buf,
                 )
+                aggregate_tests_status(new_tests_buf)
+                aggregate_builds_status(new_builds_buf)
+                new_tests_buf.clear()
+                new_builds_buf.clear()
                 last_flush_ts = time.time()
             continue
         except Exception as e:
@@ -291,6 +315,10 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
         tests_buf=tests_buf,
         incidents_buf=incidents_buf,
     )
+    aggregate_tests_status(new_tests_buf)
+    aggregate_builds_status(new_builds_buf)
+    new_tests_buf.clear()
+    new_builds_buf.clear()
 
 
 def process_file(

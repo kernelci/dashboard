@@ -228,3 +228,64 @@ class Incidents(models.Model):
             models.Index(fields=["issue_version"], name="incidents_issue_version"),
             models.Index(fields=["origin"], name="incidents_origin"),
         ]
+
+
+class HardwareStatus(models.Model):
+    hardware_origin = models.CharField(max_length=100)
+    hardware_platform = models.CharField(max_length=100)
+    compatibles = ArrayField(models.TextField(), null=True)
+    date = models.IntegerField()
+
+    build_pass = models.IntegerField()
+    build_failed = models.IntegerField()
+    build_inc = models.IntegerField()
+    boot_pass = models.IntegerField()
+    boot_failed = models.IntegerField()
+    boot_inc = models.IntegerField()
+    test_pass = models.IntegerField()
+    test_failed = models.IntegerField()
+    test_inc = models.IntegerField()
+
+    class Meta:
+        db_table = "hardware_status"
+        unique_together = ("hardware_origin", "hardware_platform", "date")
+
+
+class NewBuild(models.Model):
+    build_id = models.TextField(primary_key=True)
+    checkout_id = models.TextField()
+    build_origin = models.CharField(max_length=100)
+    status = models.CharField(
+        max_length=10, choices=StatusChoices.choices, blank=True, null=True
+    )
+
+    class Meta:
+        db_table = "new_build"
+        unique_together = ("build_id", "checkout_id")
+
+
+class NewTest(models.Model):
+    test_id = models.TextField(primary_key=True)
+    build_id = models.TextField()
+    test_origin = models.CharField(max_length=100)
+    test_platform = models.CharField(max_length=100)
+    test_compatible = ArrayField(models.TextField(), null=True)
+    status = models.CharField(
+        max_length=10, choices=StatusChoices.choices, blank=True, null=True
+    )
+    start_time = models.IntegerField()
+    is_boot = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "new_test"
+        unique_together = ("test_id", "build_id")
+
+
+class BuildStatusByHardware(models.Model):
+    hardware_origin = models.CharField(max_length=100)
+    hardware_platform = models.CharField(max_length=100)
+    build_id = models.TextField()
+
+    class Meta:
+        db_table = "build_status_by_hardware"
+        unique_together = ("hardware_origin", "hardware_platform", "build_id")
