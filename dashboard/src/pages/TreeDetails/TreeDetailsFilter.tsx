@@ -33,6 +33,7 @@ type PossibleTreeDetailsFilters = Pick<
   | 'buildOrigin'
   | 'bootOrigin'
   | 'testOrigin'
+  | 'buildLab'
 >;
 
 interface ITreeDetailsFilter {
@@ -67,6 +68,8 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
   filters.bootOrigin = {};
   filters.testOrigin = {};
 
+  filters.buildLab = {};
+
   // Filters affecting all tabs
   const allFilters = data.filters.all;
   for (const config of allFilters.configs) {
@@ -94,6 +97,9 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
   }
   for (const o of buildFilters.origins) {
     filters.buildOrigin[o] = false;
+  }
+  for (const l of buildFilters.labs) {
+    filters.buildLab[l] = false;
   }
 
   // Boot tab filters
@@ -196,7 +202,15 @@ const sectionTrees: ISectionItem[] = [
     sectionKey: 'testOrigin',
     isGlobal: false,
   },
+  {
+    title: 'filter.buildLab',
+    subtitle: 'filter.labsSubtitle',
+    sectionKey: 'buildLab',
+    isGlobal: false,
+  },
 ];
+
+// TODO: some sections can be hidden if there is only 1 value for them (e.g., origins, labs)
 const TreeDetailsFilter = ({
   paramFilter,
   treeUrl,
