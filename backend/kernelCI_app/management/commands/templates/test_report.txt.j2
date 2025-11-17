@@ -24,6 +24,10 @@ log: {{ test["log_url"] }}
 history: {{ test["status_history"] }}
 {%- endif %}
 
+Please include the KernelCI tag when submitting a fix:
+
+Reported-by: kernelci.org bot <bot@kernelci.org>
+
 # Test details:
 - test path: {{ test["path"] }}
 - platform: {{ test["platform"] }}
@@ -50,7 +54,5 @@ Log excerpt:
 {% endif %}
 
 #kernelci test {{ test["id"] }}
-
-Reported-by: kernelci.org bot <bot@kernelci.org>
 
 {%- endblock -%}
