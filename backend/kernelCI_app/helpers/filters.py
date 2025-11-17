@@ -353,6 +353,8 @@ class FilterParams:
         self.filter_boot_origin: set[str] = set()
         self.filter_test_origin: set[str] = set()
 
+        self.filter_build_lab: set[str] = set()
+
         self.filter_handlers: FilterHandlers = {
             "boot.status": self._handle_boot_status,
             "boot.duration": self._handle_boot_duration,
@@ -378,6 +380,7 @@ class FilterParams:
             "build.origin": self._handle_build_origin,
             "boot.origin": self._handle_boot_origin,
             "test.origin": self._handle_test_origin,
+            "build.lab": self._handle_build_lab,
         }
 
         self.filters: List[FilterParams.ParsedFilter] = []
@@ -485,6 +488,9 @@ class FilterParams:
 
     def _handle_test_origin(self, current_filter: ParsedFilter) -> None:
         self.filter_test_origin.add(current_filter["value"])
+
+    def _handle_build_lab(self, current_filter: ParsedFilter) -> None:
+        self.filter_build_lab.add(current_filter["value"])
 
     def _process_filters(self):
         try:
@@ -603,6 +609,7 @@ class FilterParams:
         issue_version: Optional[int],
         incident_test_id: Optional[str],
         build_origin: Optional[str] = None,
+        build_lab: Optional[str] = None,
     ) -> bool:
         return (
             (
@@ -636,6 +643,10 @@ class FilterParams:
                     incident_test_id=incident_test_id,
                     build_status=build_status,
                 )
+            )
+            or (
+                len(self.filter_build_lab) > 0
+                and (build_lab not in self.filter_build_lab)
             )
         )
 

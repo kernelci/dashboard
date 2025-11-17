@@ -110,10 +110,14 @@ class HardwareDetails(APIView):
 
         self.tree_status_summary = defaultdict(generate_tree_status_summary_dict)
 
-        self.unfiltered_origins: dict[str, set[str]] = {
+        self.unfiltered_origins: dict[PossibleTabs, set[str]] = {
             "build": set(),
             "boot": set(),
             "test": set(),
+        }
+
+        self.unfiltered_labs: dict[PossibleTabs, set[str]] = {
+            "build": set(),
         }
 
         # TODO: move to a BuildSummary model and combine with self.builds above
@@ -313,6 +317,7 @@ class HardwareDetails(APIView):
                         configs=self.base_build_summary.configs,
                         issues=self.builds["issues"],
                         unknown_issues=self.builds["failedWithUnknownIssues"],
+                        labs={},
                     ),
                     boots=TestSummary(
                         status=self.boots["statusSummary"],
@@ -349,6 +354,7 @@ class HardwareDetails(APIView):
                             "build"
                         ],
                         origins=sorted(self.unfiltered_origins["build"]),
+                        labs=self.unfiltered_labs["build"],
                     ),
                     boots=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_boot_issues),

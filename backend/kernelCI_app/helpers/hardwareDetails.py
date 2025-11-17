@@ -226,6 +226,7 @@ def generate_build_summary_typed() -> BuildSummary:
         configs={},
         issues=[],
         unknown_issues=0,
+        labs={},
     )
 
 

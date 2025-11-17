@@ -109,6 +109,7 @@ class BaseBuildSummary(BaseModel):
     origins: dict[str, StatusCount] = Field(default_factory=dict)
     architectures: dict[str, BuildArchitectures] = Field(default_factory=dict)
     configs: dict[str, StatusCount] = Field(default_factory=dict)
+    labs: dict[str, StatusCount] = Field(default_factory=dict)
 
 
 class BuildSummary(BaseBuildSummary):
@@ -134,9 +135,13 @@ class LocalFilters(BaseModel):
     has_unknown_issue: bool
 
 
+class LocalFiltersWithLabs(LocalFilters):
+    labs: list[str]
+
+
 class DetailsFilters(BaseModel):
     all: GlobalFilters
-    builds: LocalFilters
+    builds: LocalFiltersWithLabs
     boots: LocalFilters
     tests: LocalFilters
 
