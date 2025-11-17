@@ -64,6 +64,7 @@ interface IBuildsTab {
   failedBuildsWithUnknownIssues?: number;
   builds: AccordionItemBuilds[];
   origins: Record<string, RequiredStatusCount>;
+  labs: Record<string, RequiredStatusCount>;
 }
 
 const BuildTab = ({
@@ -146,6 +147,7 @@ const BuildTab = ({
       failedBuildsWithUnknownIssues: summaryBuildsData?.unknown_issues,
       builds: sanitizeBuilds(fullBuildsData),
       origins: summaryBuildsData?.origins || {},
+      labs: summaryBuildsData?.labs || {},
     }),
     [
       fullBuildsData,
@@ -155,6 +157,7 @@ const BuildTab = ({
       summaryBuildsData?.origins,
       summaryBuildsData?.status,
       summaryBuildsData?.unknown_issues,
+      summaryBuildsData?.labs,
     ],
   );
 
@@ -208,6 +211,14 @@ const BuildTab = ({
           summaryBody={treeDetailsData.architectures}
           toggleFilterBySection={toggleFilterBySection}
           diffFilter={diffFilter}
+        />,
+        <MemoizedFilterCard
+          cardTitle="filter.labs"
+          key="labs"
+          diffFilter={diffFilter}
+          data={treeDetailsData.labs}
+          filterSection="buildLab"
+          hideSingleValue={false}
         />,
         <MemoizedFilterCard
           cardTitle="filter.origins"

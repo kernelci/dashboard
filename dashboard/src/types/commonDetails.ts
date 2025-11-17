@@ -28,6 +28,7 @@ type BuildSummary = {
   origins: Record<string, RequiredStatusCount>;
   architectures: Architecture;
   configs: Record<string, RequiredStatusCount>;
+  labs: Record<string, RequiredStatusCount>;
   issues: TIssue[];
   unknown_issues: number;
 };
@@ -54,7 +55,7 @@ export type LocalFilters = {
 
 export type DetailsFilters = {
   all: GlobalFilters;
-  builds: LocalFilters;
+  builds: LocalFilters & { labs: string[] };
   boots: LocalFilters;
   tests: LocalFilters;
 };
