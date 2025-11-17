@@ -18,6 +18,7 @@ hardware_build_summary = [
     "configs",
     "issues",
     "unknown_issues",
+    "labs",
 ]
 hardware_test_summary = [
     "status",

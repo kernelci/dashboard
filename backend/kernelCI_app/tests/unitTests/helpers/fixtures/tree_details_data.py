@@ -102,6 +102,7 @@ def create_filter_row_data(**overrides):
         "build_compiler": "gcc",
         "build_origin": "build_origin",
         "test_origin": "test_origin",
+        "build_misc": {"lab": "lab1"},
     }
     base_data.update(overrides)
     return base_data
