@@ -45,7 +45,7 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
-import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
+import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
@@ -209,10 +209,11 @@ const BuildTab = ({
           toggleFilterBySection={toggleFilterBySection}
           diffFilter={diffFilter}
         />,
-        <MemoizedOriginsCard
+        <MemoizedFilterCard
+          cardTitle="filter.origins"
           key="origins"
           diffFilter={diffFilter}
-          origins={treeDetailsData.origins}
+          data={treeDetailsData.origins}
           filterSection="buildOrigin"
         />,
         <MemoizedConfigsCard

@@ -13,35 +13,38 @@ import type {
   TFilter,
   TFilterObjectsKeys,
 } from '@/types/general';
+import type { MessagesKey } from '@/locales/messages';
 
-interface IOriginsCard {
-  origins: Record<string, RequiredStatusCount>;
+interface IFilterCard {
+  data: Record<string, RequiredStatusCount>;
   diffFilter: TFilter;
   filterSection: TFilterObjectsKeys;
-  hideSingleOrigin?: boolean;
+  hideSingleValue?: boolean;
+  cardTitle: MessagesKey;
 }
 
-const OriginsCard = ({
-  origins,
+const FilterCard = ({
+  data,
   diffFilter,
   filterSection,
-  hideSingleOrigin = true,
-}: IOriginsCard): JSX.Element => {
+  hideSingleValue = true,
+  cardTitle,
+}: IFilterCard): JSX.Element => {
   const content: JSX.Element[] = useMemo(() => {
-    return Object.keys(origins).map(originItem => {
-      const { DONE, FAIL, ERROR, MISS, PASS, SKIP, NULL } = origins[originItem];
+    return Object.keys(data).map(item => {
+      const { DONE, FAIL, ERROR, MISS, PASS, SKIP, NULL } = data[item];
 
       return (
         <FilterLink
-          key={originItem}
-          filterValue={originItem}
+          key={item}
+          filterValue={item}
           filterSection={filterSection}
           diffFilter={diffFilter}
         >
           <ListingItem
             hasBottomBorder
-            key={originItem}
-            text={originItem}
+            key={item}
+            text={item}
             leftIcon={
               <GroupedTestStatus
                 done={DONE}
@@ -57,17 +60,17 @@ const OriginsCard = ({
         </FilterLink>
       );
     });
-  }, [origins, filterSection, diffFilter]);
+  }, [data, filterSection, diffFilter]);
 
-  if (hideSingleOrigin && Object.keys(origins).length === 1) {
+  if (hideSingleValue && Object.keys(data).length === 1) {
     return <></>;
   }
 
   return (
-    <BaseCard title={<FormattedMessage id="filter.origins" />}>
+    <BaseCard title={<FormattedMessage id={cardTitle} />}>
       <DumbListingContent>{content}</DumbListingContent>
     </BaseCard>
   );
 };
 
-export const MemoizedOriginsCard = memo(OriginsCard);
+export const MemoizedFilterCard = memo(FilterCard);
