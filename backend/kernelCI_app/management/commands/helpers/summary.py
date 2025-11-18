@@ -19,6 +19,9 @@ type PossibleReportOptions = Literal["ignore_default_recipients"]
 type TreeKey = tuple[str, str, str]
 """A tuple (branch, giturl, origin)"""
 
+type HardwareKey = tuple[str, str]
+"""A tuple (hardware, origin)"""
+
 type ReportConfigs = list[dict[str, Any]]
 """A list of dictionaries containing the definition/configuration of a report"""
 
@@ -163,3 +166,61 @@ def get_build_issues_from_checkout(
             result_checkout_issues[checkout_id].append(checkout_issue)
 
     return result_checkout_issues, checkout_builds_without_issues
+
+
+def process_hardware_submissions_files(
+    *,
+    base_dir: Optional[str] = None,
+    signup_folder: Optional[str] = None,
+    hardware_origins: Optional[list[str]] = None,
+) -> tuple[set[HardwareKey], dict[HardwareKey, dict[str, Any]]]:
+    """
+    Processes all hardware submission files and returns the set of HardwareKey
+    and the dict linking each hardware to its default recipients
+    """
+    (base_dir, signup_folder) = _assign_default_folders(
+        base_dir=base_dir, signup_folder=signup_folder
+    )
+
+    hardware_key_set: set[HardwareKey] = set()
+    hardware_prop_map: dict[HardwareKey, dict[str, Any]] = {}
+    """Example:
+    hardware_prop_map[(imx6q-sabrelite, maestro)] = {
+        "default_recipients": [
+            "Recipient One <Recipient1@example.com>",
+            "Recipient Two <Recipient2@example.com>"
+        ]
+    }
+    """
+
+    full_path = os.path.join(base_dir, signup_folder)
+    for filename in os.listdir(full_path):
+        """Example:
+        Filename: imx6q_hardware.yaml
+
+        imx6q-sabrelite:
+        origin: maestro
+        default_recipients:
+            - Recipient One <Recipient1@example.com>
+            - Recipient Two <Recipient2@example.com>
+        """
+        if filename.endswith("_hardware.yaml") or filename.endswith("_hardware.yml"):
+            file_path = os.path.join(signup_folder, filename)
+            file_data = read_yaml_file(base_dir=base_dir, file=file_path)
+            for hardware_name, hardware_values in file_data.items():
+                origin = hardware_values.get("origin", DEFAULT_ORIGIN)
+                if hardware_origins is not None and origin not in hardware_origins:
+                    continue
+                default_recipients = hardware_values.get("default_recipients", [])
+
+                hardware_key = (hardware_name, origin)
+                hardware_key_set.add(hardware_key)
+                hardware_prop_map[hardware_key] = {
+                    "default_recipients": default_recipients
+                }
+        else:
+            log_message(
+                f"Skipping file {filename} on loading summary files. Not a hardware yaml file."
+            )
+
+    return hardware_key_set, hardware_prop_map

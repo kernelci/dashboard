@@ -169,6 +169,16 @@ else:
                 "--summary-origins=maestro",
             ],
         ),
+        (
+            "33 3 * * 1",
+            "django.core.management.call_command",
+            [
+                "notifications",
+                "--action=hardware_summary",
+                "--send",
+                "--yes",
+            ],
+        ),
     ]
 
 # Email settings for SMTP backend
