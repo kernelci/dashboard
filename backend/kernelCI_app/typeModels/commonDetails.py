@@ -102,6 +102,7 @@ class TestSummary(BaseModel):
     environment_compatible: Optional[dict] = None
     environment_misc: Optional[dict] = None
     platforms: Optional[dict[str, StatusCount]] = None
+    labs: dict[str, StatusCount]
 
 
 class BaseBuildSummary(BaseModel):
@@ -133,15 +134,12 @@ class LocalFilters(BaseModel):
     issues: list[tuple[str, Optional[int]]]
     origins: list[str]
     has_unknown_issue: bool
-
-
-class LocalFiltersWithLabs(LocalFilters):
     labs: list[str]
 
 
 class DetailsFilters(BaseModel):
     all: GlobalFilters
-    builds: LocalFiltersWithLabs
+    builds: LocalFilters
     boots: LocalFilters
     tests: LocalFilters
 

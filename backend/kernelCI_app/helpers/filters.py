@@ -354,6 +354,8 @@ class FilterParams:
         self.filter_test_origin: set[str] = set()
 
         self.filter_build_lab: set[str] = set()
+        self.filter_boot_lab: set[str] = set()
+        self.filter_test_lab: set[str] = set()
 
         self.filter_handlers: FilterHandlers = {
             "boot.status": self._handle_boot_status,
@@ -381,6 +383,8 @@ class FilterParams:
             "boot.origin": self._handle_boot_origin,
             "test.origin": self._handle_test_origin,
             "build.lab": self._handle_build_lab,
+            "boot.lab": self._handle_boot_lab,
+            "test.lab": self._handle_test_lab,
         }
 
         self.filters: List[FilterParams.ParsedFilter] = []
@@ -491,6 +495,12 @@ class FilterParams:
 
     def _handle_build_lab(self, current_filter: ParsedFilter) -> None:
         self.filter_build_lab.add(current_filter["value"])
+
+    def _handle_boot_lab(self, current_filter: ParsedFilter) -> None:
+        self.filter_boot_lab.add(current_filter["value"])
+
+    def _handle_test_lab(self, current_filter: ParsedFilter) -> None:
+        self.filter_test_lab.add(current_filter["value"])
 
     def _process_filters(self):
         try:
@@ -705,6 +715,7 @@ class FilterParams:
         incident_test_id: Optional[str] = "incident_test_id",
         platform: Optional[str] = None,
         origin: Optional[str] = None,
+        lab: Optional[str] = None,
     ) -> bool:
         if (
             (self.filterBootPath != "" and (self.filterBootPath not in path))
@@ -740,6 +751,7 @@ class FilterParams:
                 len(self.filter_boot_origin) > 0
                 and (origin not in self.filter_boot_origin)
             )
+            or (len(self.filter_boot_lab) > 0 and (lab not in self.filter_boot_lab))
         ):
             return True
 
@@ -756,6 +768,7 @@ class FilterParams:
         incident_test_id: Optional[str] = "incident_test_id",
         platform: Optional[str] = None,
         origin: Optional[str] = None,
+        lab: Optional[str] = None,
     ) -> bool:
         if (
             (self.filterTestPath != "" and (self.filterTestPath not in path))
@@ -791,6 +804,7 @@ class FilterParams:
                 len(self.filter_test_origin) > 0
                 and (origin not in self.filter_test_origin)
             )
+            or (len(self.filter_test_lab) > 0 and (lab not in self.filter_test_lab))
         ):
             return True
 

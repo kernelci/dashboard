@@ -240,6 +240,7 @@ def generate_test_summary_typed() -> TestSummary:
         unknown_issues=0,
         fail_reasons={},
         failed_platforms=set(),
+        labs={},
     )
 
 
@@ -299,7 +300,11 @@ def handle_test_history(
         environment_misc=EnvironmentMisc(platform=record["test_platform"]),
         tree_name=record["build__checkout__tree_name"],
         git_repository_branch=record["build__checkout__git_repository_branch"],
-        lab=record_misc.get("runtime") if record_misc else None,
+        lab=(
+            record_misc.get("runtime", UNKNOWN_STRING)
+            if record_misc
+            else UNKNOWN_STRING
+        ),
     )
 
     task.append(test_history_item)

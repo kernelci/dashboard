@@ -114,6 +114,7 @@ def create_test_summary(**overrides):
         failed_platforms={"x86_64", "arm64"},
         environment_compatible={"hardware1": StatusCount()},
         environment_misc={"x86_64": StatusCount()},
+        labs={},
     )
 
     for key, value in overrides.items():

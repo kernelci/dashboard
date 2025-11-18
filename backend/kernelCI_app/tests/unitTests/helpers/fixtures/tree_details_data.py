@@ -81,6 +81,9 @@ def create_summary_row_data(**overrides):
         "test_error": "Test error",
         "test_environment_compatible": "hardware1",
         "test_origin": "test",
+        "history_item": {
+            "lab": "test_runtime_lab",
+        },
     }
     base_data.update(overrides)
     return base_data
@@ -103,6 +106,9 @@ def create_filter_row_data(**overrides):
         "build_origin": "build_origin",
         "test_origin": "test_origin",
         "build_misc": {"lab": "lab1"},
+        "history_item": {
+            "lab": "test_runtime_lab",
+        },
     }
     base_data.update(overrides)
     return base_data
