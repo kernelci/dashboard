@@ -164,6 +164,8 @@ export const zFilterObjectsKeys = z.enum([
   'bootOrigin',
   'testOrigin',
   'buildLab',
+  'bootLab',
+  'testLab',
 ]);
 
 export const zFilterNumberKeys = z.enum([
@@ -210,6 +212,8 @@ export const zDiffFilter = z
       bootOrigin: zFilterBoolValue,
       testOrigin: zFilterBoolValue,
       buildLab: zFilterBoolValue,
+      bootLab: zFilterBoolValue,
+      testLab: zFilterBoolValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])
@@ -281,6 +285,8 @@ const requestFilters = {
     'boot.origin',
     'test.origin',
     'build.lab',
+    'boot.lab',
+    'test.lab',
   ],
   issueListing: [
     'origin',
@@ -325,6 +331,8 @@ export const filterFieldMap = {
   'build.status': 'buildStatus',
   'build.origin': 'buildOrigin',
   'build.lab': 'buildLab',
+  'boot.lab': 'bootLab',
+  'test.lab': 'testLab',
   origin: 'origins',
   'issue.culprit': 'issueCulprits',
   'issue.categories': 'issueCategories',

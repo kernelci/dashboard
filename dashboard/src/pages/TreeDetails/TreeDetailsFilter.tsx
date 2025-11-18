@@ -34,6 +34,8 @@ type PossibleTreeDetailsFilters = Pick<
   | 'bootOrigin'
   | 'testOrigin'
   | 'buildLab'
+  | 'bootLab'
+  | 'testLab'
 >;
 
 interface ITreeDetailsFilter {
@@ -69,6 +71,8 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
   filters.testOrigin = {};
 
   filters.buildLab = {};
+  filters.bootLab = {};
+  filters.testLab = {};
 
   // Filters affecting all tabs
   const allFilters = data.filters.all;
@@ -113,6 +117,9 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
   for (const o of bootFilters.origins) {
     filters.bootOrigin[o] = false;
   }
+  for (const l of bootFilters.labs) {
+    filters.bootLab[l] = false;
+  }
 
   // Test tab filters
   const testFilters = data.filters.tests;
@@ -124,6 +131,9 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
   }
   for (const o of testFilters.origins) {
     filters.testOrigin[o] = false;
+  }
+  for (const l of testFilters.labs) {
+    filters.testLab[l] = false;
   }
 
   return filters;
@@ -206,6 +216,18 @@ const sectionTrees: ISectionItem[] = [
     title: 'filter.buildLab',
     subtitle: 'filter.labsSubtitle',
     sectionKey: 'buildLab',
+    isGlobal: false,
+  },
+  {
+    title: 'filter.bootLab',
+    subtitle: 'filter.labsSubtitle',
+    sectionKey: 'bootLab',
+    isGlobal: false,
+  },
+  {
+    title: 'filter.testLab',
+    subtitle: 'filter.labsSubtitle',
+    sectionKey: 'testLab',
     isGlobal: false,
   },
 ];
