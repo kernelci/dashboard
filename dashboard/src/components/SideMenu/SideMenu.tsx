@@ -68,10 +68,6 @@ const dashboardItems: LinkStringItems[] = [
     url: 'https://netdev.bots.linux.dev/contest.html',
     label: 'netdev-CI',
   },
-  {
-    url: 'https://grafana.kernelci.org/d/home',
-    label: 'Grafana',
-  },
 ];
 
 type SideMenuItemProps = {

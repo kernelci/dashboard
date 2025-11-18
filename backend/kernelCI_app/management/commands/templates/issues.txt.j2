@@ -14,7 +14,6 @@ Build regressions:
 - Commit HEAD: {{ issue["git_commit_hash"] }}
 - Incidents Count: {{issue["incident_count"]}}
 - Dashboard: https://d.kernelci.org/issue/{{ issue["id"] }}
-- Grafana: https://grafana.kernelci.org/d/issue/issue?var-id={{ issue["id"] }}
 ---
 {% endfor %}
 {% endif %}
@@ -30,7 +29,6 @@ Boot regressions:
 - Commit HEAD: {{ issue["git_commit_hash"] }}
 - Incidents Count: {{issue["incident_count"]}}
 - Dashboard: https://d.kernelci.org/issue/{{ issue["id"] }}
-- Grafana: https://grafana.kernelci.org/d/issue/issue?var-id={{ issue["id"] }}
 ---
 {% endfor %}
 {% endif %}
