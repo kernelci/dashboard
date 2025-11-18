@@ -136,6 +136,8 @@ class HardwareDetailsSummary(APIView):
 
         self.unfiltered_labs: dict[PossibleTabs, set[str]] = {
             "build": set(),
+            "boot": set(),
+            "test": set(),
         }
 
     def _process_test(self, record: Dict) -> None:
@@ -357,6 +359,7 @@ class HardwareDetailsSummary(APIView):
                             "boot"
                         ],
                         origins=sorted(self.unfiltered_origins["boot"]),
+                        labs=self.unfiltered_labs["boot"],
                     ),
                     tests=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_test_issues),
@@ -365,6 +368,7 @@ class HardwareDetailsSummary(APIView):
                             "test"
                         ],
                         origins=sorted(self.unfiltered_origins["test"]),
+                        labs=self.unfiltered_labs["test"],
                     ),
                 ),
                 common=HardwareCommon(

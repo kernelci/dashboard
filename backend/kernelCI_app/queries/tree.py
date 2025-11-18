@@ -597,6 +597,7 @@ def get_tree_commit_history(
         t.environment_compatible,
         t.environment_misc,
         t.origin,
+        t.misc->>'runtime' AS test_lab,
         b.id AS build_id,
         b.misc AS build_misc,
         t.id AS test_id,

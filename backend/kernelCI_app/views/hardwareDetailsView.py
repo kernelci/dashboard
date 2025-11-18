@@ -118,6 +118,8 @@ class HardwareDetails(APIView):
 
         self.unfiltered_labs: dict[PossibleTabs, set[str]] = {
             "build": set(),
+            "boot": set(),
+            "test": set(),
         }
 
         # TODO: move to a BuildSummary model and combine with self.builds above
@@ -329,6 +331,7 @@ class HardwareDetails(APIView):
                         platforms=self.boots["platforms"],
                         fail_reasons=self.boots["failReasons"],
                         failed_platforms=list(self.boots["platformsFailing"]),
+                        labs={},
                     ),
                     tests=TestSummary(
                         status=self.tests["statusSummary"],
@@ -340,6 +343,7 @@ class HardwareDetails(APIView):
                         platforms=self.tests["platforms"],
                         fail_reasons=self.tests["failReasons"],
                         failed_platforms=list(self.tests["platformsFailing"]),
+                        labs={},
                     ),
                 ),
                 filters=HardwareDetailsFilters(
@@ -363,6 +367,7 @@ class HardwareDetails(APIView):
                             "boot"
                         ],
                         origins=sorted(self.unfiltered_origins["boot"]),
+                        labs=self.unfiltered_labs["boot"],
                     ),
                     tests=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_test_issues),
@@ -371,6 +376,7 @@ class HardwareDetails(APIView):
                             "test"
                         ],
                         origins=sorted(self.unfiltered_origins["test"]),
+                        labs=self.unfiltered_labs["test"],
                     ),
                 ),
                 common=HardwareCommon(

@@ -30,6 +30,7 @@ hardware_test_summary = [
     "environment_misc",
     "fail_reasons",
     "failed_platforms",
+    "labs",
 ]
 
 hardware_history_checkouts = [

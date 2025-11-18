@@ -583,6 +583,7 @@ class TestDecideIfIsBootFilteredOut:
             "test_path": "boot.test",
             "incident_test_id": "test123",
             "test_origin": "test",
+            "history_item": {"lab": "boot_lab"},
         }
 
         result = decide_if_is_boot_filtered_out(instance, row_data)
@@ -596,6 +597,7 @@ class TestDecideIfIsBootFilteredOut:
             status="FAIL",
             incident_test_id="test123",
             origin="test",
+            lab="boot_lab",
         )
 
 
@@ -639,6 +641,7 @@ class TestDecideIfIsTestFilteredOut:
             "test_path": "test.specific",
             "incident_test_id": "test123",
             "test_origin": "test",
+            "history_item": {"lab": "test_lab"},
         }
 
         result = decide_if_is_test_filtered_out(instance, row_data)
@@ -652,6 +655,7 @@ class TestDecideIfIsTestFilteredOut:
             status="FAIL",
             incident_test_id="test123",
             origin="test",
+            lab="test_lab",
         )
 
 
