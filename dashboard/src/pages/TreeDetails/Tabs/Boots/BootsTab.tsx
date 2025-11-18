@@ -284,6 +284,14 @@ const BootsTab = ({
           data={summaryBootsData?.origins ?? {}}
           filterSection="bootOrigin"
         />,
+        <MemoizedFilterCard
+          cardTitle="filter.labs"
+          key="labs"
+          diffFilter={diffFilter}
+          data={summaryBootsData?.labs ?? {}}
+          filterSection="bootLab"
+          hideSingleValue={false}
+        />,
       ],
       footerCards: [
         <MemoizedIssuesList

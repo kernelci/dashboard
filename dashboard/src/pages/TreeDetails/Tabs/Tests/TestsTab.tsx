@@ -285,6 +285,14 @@ const TestsTab = ({
           data={summaryTestsData?.origins ?? {}}
           filterSection="testOrigin"
         />,
+        <MemoizedFilterCard
+          cardTitle="filter.labs"
+          key="labs"
+          diffFilter={diffFilter}
+          data={summaryTestsData?.labs ?? {}}
+          filterSection="testLab"
+          hideSingleValue={false}
+        />,
       ],
       footerCards: [
         <MemoizedIssuesList
