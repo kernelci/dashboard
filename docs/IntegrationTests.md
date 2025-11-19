@@ -252,7 +252,7 @@ docker compose -f docker-compose.test.yml run --rm test_backend python manage.py
 
 **Step 4: Start test backend**
 ```bash
-docker compose -f docker-compose.test.yml up test_db redis -d
+docker compose -f docker-compose.test.yml up --build -d
 ```
 
 **Step 5: Run integration tests**
@@ -265,6 +265,8 @@ TEST_BASE_URL=http://localhost:8001 poetry run pytest -m integration --use-local
 ```bash
 docker compose -f docker-compose.test.yml down --volumes --remove-orphans
 ```
+
+>![IMPORTANT] If you run the tests, see a problem and go about fixing it, remember to rebuild the docker containers at Step 4 with `--force-recreate`
 
 ### Test Configuration
 
