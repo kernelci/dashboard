@@ -15,6 +15,12 @@ class StatusChoices(models.TextChoices):
     DONE = "DONE"
 
 
+class SimplifiedStatusChoices(models.TextChoices):
+    PASS = "P"
+    FAIL = "F"
+    INCOMPLETE = "I"
+
+
 class Issues(models.Model):
     field_timestamp = models.DateTimeField(
         db_column="_timestamp", blank=True, null=True
@@ -228,3 +234,91 @@ class Incidents(models.Model):
             models.Index(fields=["issue_version"], name="incidents_issue_version"),
             models.Index(fields=["origin"], name="incidents_origin"),
         ]
+
+
+class HardwareStatus(models.Model):
+    checkout_id = models.TextField()
+    origin = models.CharField(max_length=100)
+    platform = models.CharField(max_length=100)
+    compatibles = ArrayField(models.TextField(), null=True)
+    start_time = models.DateTimeField()
+
+    # build status
+    build_pass = models.IntegerField(default=0)
+    build_failed = models.IntegerField(default=0)
+    build_inc = models.IntegerField(default=0)
+
+    # boot status
+    boot_pass = models.IntegerField(default=0)
+    boot_failed = models.IntegerField(default=0)
+    boot_inc = models.IntegerField(default=0)
+
+    # test status
+    test_pass = models.IntegerField(default=0)
+    test_failed = models.IntegerField(default=0)
+    test_inc = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "hardware_status"
+        unique_together = ("origin", "platform", "checkout_id")
+        indexes = [
+            models.Index(fields=["origin", "start_time"], name="hw_status_origin_time"),
+            models.Index(fields=["checkout_id"], name="hw_status_checkout_id"),
+        ]
+
+
+class LatestCheckout(models.Model):
+    checkout_id = models.TextField()
+    origin = models.CharField(max_length=100)
+    tree_name = models.TextField()
+    git_repository_url = models.TextField()
+    git_repository_branch = models.TextField(null=True, blank=True)
+    start_time = models.DateTimeField()
+
+    class Meta:
+        db_table = "latest_checkout"
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "origin",
+                    "tree_name",
+                    "git_repository_url",
+                    "git_repository_branch",
+                ],
+                name="latest_checkout_unique",
+                nulls_distinct=False,
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["checkout_id"], name="lc_checkout_id"),
+        ]
+
+
+class PendingTest(models.Model):
+    test_id = models.TextField(unique=True)
+    origin = models.CharField(max_length=100)
+    platform = models.CharField(max_length=100)
+    compatible = ArrayField(models.TextField(), null=True)
+    build_id = models.TextField()
+    status = models.CharField(max_length=1, choices=SimplifiedStatusChoices.choices)
+    is_boot = models.BooleanField()
+
+    class Meta:
+        db_table = "pending_test"
+
+
+class HardwareStatusEntityType(models.TextChoices):
+    TEST = "T"
+    BUILD = "B"
+
+
+class ProcessedHardwareStatus(models.Model):
+    hardware_key = models.BinaryField()
+    entity_id = models.TextField()
+    entity_type = models.CharField(
+        max_length=1, choices=HardwareStatusEntityType.choices
+    )
+
+    class Meta:
+        db_table = "processed_hardware_status"
+        unique_together = ("hardware_key", "entity_id", "entity_type")

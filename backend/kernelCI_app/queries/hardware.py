@@ -240,6 +240,68 @@ def get_hardware_listing_data_bulk(
         return dict_fetchall(cursor)
 
 
+def get_hardware_listing_data_from_status_table(
+    start_date: datetime, end_date: datetime, origin: str
+) -> list[tuple]:
+    """
+    Retrieves hardware listing data from the HardwareStatus denormalized table.
+    Groups by platform and compatibles, aggregating status counts.
+    """
+    params = {
+        "start_date": start_date,
+        "end_date": end_date,
+        "origin": origin,
+    }
+
+    query = """
+        SELECT
+            platform,
+            compatibles AS hardware,
+            -- Build status: pass -> PASS, failed -> FAIL, inc -> NULL, others -> 0
+            SUM(build_pass) AS build_pass,
+            SUM(build_failed) AS build_fail,
+            SUM(build_inc) AS build_null,
+            0 AS build_error,
+            0 AS build_miss,
+            0 AS build_done,
+            0 AS build_skip,
+            -- Boot status: pass -> PASS, failed -> FAIL, inc -> NULL, others -> 0
+            SUM(boot_pass) AS boot_pass,
+            SUM(boot_failed) AS boot_fail,
+            SUM(boot_inc) AS boot_null,
+            0 AS boot_error,
+            0 AS boot_miss,
+            0 AS boot_done,
+            0 AS boot_skip,
+            -- Test status: pass -> PASS, failed -> FAIL, inc -> NULL, others -> 0
+            SUM(test_pass) AS test_pass,
+            SUM(test_failed) AS test_fail,
+            SUM(test_inc) AS test_null,
+            0 AS test_error,
+            0 AS test_miss,
+            0 AS test_done,
+            0 AS test_skip
+        FROM
+            hardware_status
+        INNER JOIN
+            latest_checkout ON hardware_status.checkout_id = latest_checkout.checkout_id
+        WHERE
+            hardware_status.origin = %(origin)s
+            AND hardware_status.start_time >= %(start_date)s
+            AND hardware_status.start_time <= %(end_date)s
+        GROUP BY
+            platform,
+            compatibles
+        ORDER BY
+            platform,
+            compatibles
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return cursor.fetchall()
+
+
 def get_hardware_details_data(
     *,
     hardware_id: str,
