@@ -276,12 +276,15 @@ class TestFlushBuffers:
 
         mock_consume.assert_not_called()
 
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_tests"
+    )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.consume_buffer")
     @patch("django.db.transaction.atomic")
     @patch("time.time", side_effect=TIME_MOCK)
     def test_flush_buffers_with_items(
-        self, mock_time, mock_atomic, mock_consume, mock_out
+        self, mock_time, mock_atomic, mock_consume, mock_out, mock_aggregate
     ):
         """Test flush_buffers with items in buffers."""
         # Arbitrary amount of items in each buffer
@@ -339,14 +342,26 @@ class TestFlushBuffers:
 
         assert mock_time.call_count == 2
         mock_atomic.assert_called_once()
+        mock_aggregate.assert_called_once_with(
+            checkouts_instances=checkouts_buf, tests_instances=tests_buf
+        )
 
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_tests"
+    )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.consume_buffer")
     @patch("django.db.transaction.atomic")
     @patch("time.time", side_effect=TIME_MOCK)
     def test_flush_buffers_with_db_error(
-        self, mock_time, mock_atomic, mock_consume, mock_out, mock_logger
+        self,
+        mock_time,
+        mock_atomic,
+        mock_consume,
+        mock_out,
+        mock_logger,
+        mock_aggregate,
     ):
         """Test flush_buffers with a database error (insertion error or any other)."""
         # Arbitrary amount of items in each buffer
@@ -403,6 +418,7 @@ class TestFlushBuffers:
         mock_logger.error.assert_called_once_with(
             "Error during bulk_create flush: %s", mock_consume.side_effect
         )
+        mock_aggregate.assert_not_called()
 
 
 class TestDbWorker:
