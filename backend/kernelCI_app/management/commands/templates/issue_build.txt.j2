@@ -24,6 +24,10 @@ Log excerpt:
 =====================================================
 {% endif %}
 
+Include the KernelCI tag when submitting fixes:
+
+Reported-by: kernelci.org bot <bot@kernelci.org>
+
 # Builds where the incident occurred:
 {% for build in builds %}
 ## {{ build["config_name"] }} on ({{ build["architecture"] }}):
@@ -33,7 +37,5 @@ Log excerpt:
 {% endfor %}
 
 #kernelci issue {{ issue["id"] }}
-
-Reported-by: kernelci.org bot <bot@kernelci.org>
 
 {%- endblock -%}

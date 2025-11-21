@@ -25,6 +25,10 @@ Log excerpt:
 =====================================================
 {% endif %}
 
+Include the KernelCI tag when submitting fixes:
+
+Reported-by: kernelci.org bot <bot@kernelci.org>
+
 # Hardware platforms affected:
 {% for boot in boots %}
 ## {{boot["platform"]}}
@@ -44,7 +48,5 @@ Log excerpt:
 {% endfor %}
 
 #kernelci issue {{ issue["id"] }}
-
-Reported-by: kernelci.org bot <bot@kernelci.org>
 
 {%- endblock -%}
