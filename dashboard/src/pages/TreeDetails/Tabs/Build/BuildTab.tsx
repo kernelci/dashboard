@@ -45,7 +45,7 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
-import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
+import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
@@ -64,6 +64,7 @@ interface IBuildsTab {
   failedBuildsWithUnknownIssues?: number;
   builds: AccordionItemBuilds[];
   origins: Record<string, RequiredStatusCount>;
+  labs: Record<string, RequiredStatusCount>;
 }
 
 const BuildTab = ({
@@ -146,6 +147,7 @@ const BuildTab = ({
       failedBuildsWithUnknownIssues: summaryBuildsData?.unknown_issues,
       builds: sanitizeBuilds(fullBuildsData),
       origins: summaryBuildsData?.origins || {},
+      labs: summaryBuildsData?.labs || {},
     }),
     [
       fullBuildsData,
@@ -155,6 +157,7 @@ const BuildTab = ({
       summaryBuildsData?.origins,
       summaryBuildsData?.status,
       summaryBuildsData?.unknown_issues,
+      summaryBuildsData?.labs,
     ],
   );
 
@@ -209,10 +212,19 @@ const BuildTab = ({
           toggleFilterBySection={toggleFilterBySection}
           diffFilter={diffFilter}
         />,
-        <MemoizedOriginsCard
+        <MemoizedFilterCard
+          cardTitle="filter.labs"
+          key="labs"
+          diffFilter={diffFilter}
+          data={treeDetailsData.labs}
+          filterSection="buildLab"
+          hideSingleValue={false}
+        />,
+        <MemoizedFilterCard
+          cardTitle="filter.origins"
           key="origins"
           diffFilter={diffFilter}
-          origins={treeDetailsData.origins}
+          data={treeDetailsData.origins}
           filterSection="buildOrigin"
         />,
         <MemoizedConfigsCard

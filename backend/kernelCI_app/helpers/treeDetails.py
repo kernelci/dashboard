@@ -112,7 +112,9 @@ def get_current_row_data(current_row: dict) -> dict:
     )
     current_row_data["test_platform"] = environment_misc.get("platform")
     test_misc = sanitize_dict(current_row_data["test_misc"])
-    test_runtime_lab = test_misc.get("runtime") if test_misc is not None else None
+    test_runtime_lab = UNKNOWN_STRING
+    if test_misc is not None:
+        test_runtime_lab = test_misc.get("runtime", UNKNOWN_STRING)
 
     if current_row_data["test_status"] is None:
         current_row_data["test_status"] = NULL_STATUS
@@ -286,6 +288,9 @@ def decide_if_is_build_filtered_out(instance, row_data):
     build_duration = row_data["build_duration"]
     incident_test_id = row_data["incident_test_id"]
     build_origin = row_data["build_origin"]
+    build_lab = UNKNOWN_STRING
+    if row_data.get("build_misc") is not None:
+        build_lab = row_data["build_misc"].get("lab", UNKNOWN_STRING)
 
     is_build_filtered_out = instance.filters.is_build_filtered_out(
         build_status=build_status,
@@ -294,6 +299,7 @@ def decide_if_is_build_filtered_out(instance, row_data):
         issue_version=issue_version,
         incident_test_id=incident_test_id,
         build_origin=build_origin,
+        build_lab=build_lab,
     )
     return is_build_filtered_out
 
@@ -306,6 +312,7 @@ def decide_if_is_boot_filtered_out(instance, row_data):
     test_path = row_data["test_path"]
     incident_test_id = row_data["incident_test_id"]
     origin = row_data["test_origin"]
+    lab = row_data["history_item"].get("lab", UNKNOWN_STRING)
 
     return instance.filters.is_boot_filtered_out(
         duration=test_duration,
@@ -315,6 +322,7 @@ def decide_if_is_boot_filtered_out(instance, row_data):
         status=test_status,
         incident_test_id=incident_test_id,
         origin=origin,
+        lab=lab,
     )
 
 
@@ -337,6 +345,7 @@ def decide_if_is_test_filtered_out(instance, row_data):
     test_path = row_data["test_path"]
     incident_test_id = row_data["incident_test_id"]
     origin = row_data["test_origin"]
+    lab = row_data["history_item"].get("lab", UNKNOWN_STRING)
 
     return instance.filters.is_test_filtered_out(
         duration=test_duration,
@@ -346,6 +355,7 @@ def decide_if_is_test_filtered_out(instance, row_data):
         status=test_status,
         incident_test_id=incident_test_id,
         origin=origin,
+        lab=lab,
     )
 
 
@@ -371,6 +381,8 @@ def process_test_summary(instance, row_data):
     test_platform = row_data["test_platform"]
     test_error = row_data["test_error"]
     test_environment_compatible = row_data["test_environment_compatible"]
+    test_origin = row_data["test_origin"]
+    test_lab = row_data["history_item"].get("lab", UNKNOWN_STRING)
 
     instance.testStatusSummary[test_status] = (
         instance.testStatusSummary.get(test_status, 0) + 1
@@ -402,13 +414,18 @@ def process_test_summary(instance, row_data):
         instance.testEnvironmentMisc[test_platform][test_status] += 1
 
     increment_test_origin_summary(
-        test_origin=row_data["test_origin"],
+        test_origin=test_origin,
         test_status=test_status,
         origin_summary=instance.test_summary["origins"],
     )
 
+    if instance.test_summary_typed.labs.get(test_lab) is None:
+        instance.test_summary_typed.labs[test_lab] = StatusCount()
+    instance.test_summary_typed.labs[test_lab].increment(test_status)
 
-def process_boots_summary(instance, row_data):
+
+# TODO: use types instead of all dicts, receive specific fields instead of entire row_data
+def process_boots_summary(instance, row_data: dict[str, Any]) -> None:
     test_status = row_data["test_status"]
     build_config = row_data["build_config_name"]
     build_arch = row_data["build_architecture"]
@@ -416,6 +433,8 @@ def process_boots_summary(instance, row_data):
     test_platform = row_data["test_platform"]
     test_error = row_data["test_error"]
     test_environment_compatible = row_data["test_environment_compatible"]
+    test_origin = row_data["test_origin"]
+    test_lab = row_data["history_item"].get("lab", UNKNOWN_STRING)
 
     instance.bootStatusSummary[test_status] = (
         instance.bootStatusSummary.get(test_status, 0) + 1
@@ -447,10 +466,14 @@ def process_boots_summary(instance, row_data):
         instance.bootEnvironmentMisc[test_platform][test_status] += 1
 
     increment_test_origin_summary(
-        test_origin=row_data["test_origin"],
+        test_origin=test_origin,
         test_status=test_status,
         origin_summary=instance.boot_summary["origins"],
     )
+
+    if instance.boot_summary_typed.labs.get(test_lab) is None:
+        instance.boot_summary_typed.labs[test_lab] = StatusCount()
+    instance.boot_summary_typed.labs[test_lab].increment(test_status)
 
 
 def process_filters(instance, row_data: dict) -> None:
@@ -464,6 +487,8 @@ def process_filters(instance, row_data: dict) -> None:
         instance.global_architectures.add(row_data["build_architecture"])
         instance.global_compilers.add(row_data["build_compiler"])
         instance.unfiltered_origins["build"].add(row_data["build_origin"])
+        if (build_misc := row_data["build_misc"]) is not None:
+            instance.unfiltered_labs["build"].add(build_misc.get("lab", UNKNOWN_STRING))
 
         build_issue_id, build_issue_version, is_build_issue = (
             should_increment_build_issue(
@@ -495,10 +520,12 @@ def process_filters(instance, row_data: dict) -> None:
         if is_boot(row_data["test_path"]):
             issue_set = instance.unfiltered_boot_issues
             origin_set = instance.unfiltered_origins["boot"]
+            lab_set = instance.unfiltered_labs["boot"]
             flag_tab: PossibleTabs = "boot"
         else:
             issue_set = instance.unfiltered_test_issues
             origin_set = instance.unfiltered_origins["test"]
+            lab_set = instance.unfiltered_labs["test"]
             flag_tab: PossibleTabs = "test"
 
         is_failed_test = row_data["test_status"] == FAIL_STATUS
@@ -513,3 +540,5 @@ def process_filters(instance, row_data: dict) -> None:
         )
 
         origin_set.add(row_data["test_origin"])
+        if (history_item := row_data.get("history_item")) is not None:
+            lab_set.add(history_item.get("lab", UNKNOWN_STRING))

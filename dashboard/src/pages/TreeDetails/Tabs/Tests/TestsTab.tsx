@@ -34,7 +34,7 @@ import type { TreeDetailsLazyLoaded } from '@/hooks/useTreeDetailsLazyLoadQuery'
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
-import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
+import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 import { getStringParam } from '@/utils/utils';
@@ -278,11 +278,20 @@ const TestsTab = ({
           environmentCompatible={hardwareData}
           diffFilter={diffFilter}
         />,
-        <MemoizedOriginsCard
+        <MemoizedFilterCard
+          cardTitle="filter.origins"
           key="origins"
           diffFilter={diffFilter}
-          origins={summaryTestsData?.origins ?? {}}
+          data={summaryTestsData?.origins ?? {}}
           filterSection="testOrigin"
+        />,
+        <MemoizedFilterCard
+          cardTitle="filter.labs"
+          key="labs"
+          diffFilter={diffFilter}
+          data={summaryTestsData?.labs ?? {}}
+          filterSection="testLab"
+          hideSingleValue={false}
         />,
       ],
       footerCards: [

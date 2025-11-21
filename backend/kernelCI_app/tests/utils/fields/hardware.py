@@ -18,6 +18,7 @@ hardware_build_summary = [
     "configs",
     "issues",
     "unknown_issues",
+    "labs",
 ]
 hardware_test_summary = [
     "status",
@@ -29,6 +30,7 @@ hardware_test_summary = [
     "environment_misc",
     "fail_reasons",
     "failed_platforms",
+    "labs",
 ]
 
 hardware_history_checkouts = [

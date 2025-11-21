@@ -21,6 +21,7 @@ type TestSummary = {
   environment_compatible?: PropertyStatusCounts;
   environment_misc?: PropertyStatusCounts;
   platforms?: PropertyStatusCounts;
+  labs: Record<string, RequiredStatusCount>;
 };
 
 type BuildSummary = {
@@ -28,6 +29,7 @@ type BuildSummary = {
   origins: Record<string, RequiredStatusCount>;
   architectures: Architecture;
   configs: Record<string, RequiredStatusCount>;
+  labs: Record<string, RequiredStatusCount>;
   issues: TIssue[];
   unknown_issues: number;
 };
@@ -50,6 +52,7 @@ export type LocalFilters = {
   issues: IssueFilterItem[];
   has_unknown_issue: boolean;
   origins: string[];
+  labs: string[];
 };
 
 export type DetailsFilters = {
