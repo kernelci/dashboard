@@ -18,6 +18,7 @@ from pydantic import ValidationError
 from kernelCI_cache.constants import UNSTABLE_CHECKOUT_THRESHOLD
 from kernelCI_cache.queries.tree import get_cached_tree_listing_data
 from kernelCI_app.constants.localization import ClientStrings
+from django.utils.timezone import now, make_aware
 
 
 class TreeView(APIView):
@@ -45,11 +46,19 @@ class TreeView(APIView):
         )
 
         has_cache = cached_checkouts is not None and len(cached_checkouts) > 0
-        kcidb_interval = (
-            min(interval_param, UNSTABLE_CHECKOUT_THRESHOLD)
-            if has_cache
-            else interval_param
-        )
+
+        if has_cache:
+            # Query kcidb from now up to the earliest cache entry so that we can
+            # avoid a cache gap between the last cache entry and UNSTABLE_CHECKOUT_THRESHOLD
+            earliest_cache_time = min(
+                checkout["start_time"] for checkout in cached_checkouts
+            )
+            if earliest_cache_time.tzinfo is None:
+                earliest_cache_time = make_aware(earliest_cache_time)
+            days_to_earliest = (now() - earliest_cache_time).days
+            kcidb_interval = max(days_to_earliest, UNSTABLE_CHECKOUT_THRESHOLD)
+        else:
+            kcidb_interval = interval_param
 
         kcidb_checkouts = get_tree_listing_data(
             origin=origin_param,
