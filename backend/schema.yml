@@ -111,6 +111,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/HardwareListingResponse'
           description: ''
+  /api/hardware-v2/:
+    get:
+      operationId: hardware_v2_retrieve
+      parameters:
+      - in: query
+        name: endTimestampInSeconds
+        schema:
+          title: Endtimestampinseconds
+          type: string
+        description: Interval end timestamp in seconds for the results
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the hardware
+      - in: query
+        name: startTimestampInSeconds
+        schema:
+          title: Starttimestampinseconds
+          type: string
+        description: Interval start timestamp in seconds for the results
+        required: true
+      tags:
+      - hardware-v2
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareListingResponseV2'
+          description: ''
   /api/hardware/{hardware_id}:
     post:
       operationId: hardware_create
@@ -1795,6 +1833,11 @@ components:
             $ref: '#/components/schemas/StatusCount'
           title: Configs
           type: object
+        labs:
+          additionalProperties:
+            $ref: '#/components/schemas/StatusCount'
+          title: Labs
+          type: object
         issues:
           items:
             $ref: '#/components/schemas/Issue'
@@ -2604,6 +2647,34 @@ components:
       - build_status_summary
       title: HardwareItem
       type: object
+    HardwareItemV2:
+      properties:
+        hardware:
+          anyOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+            uniqueItems: true
+          - type: 'null'
+          title: Hardware
+        platform:
+          title: Platform
+          type: string
+        test_status_summary:
+          $ref: '#/components/schemas/StatusCountV2'
+        boot_status_summary:
+          $ref: '#/components/schemas/StatusCountV2'
+        build_status_summary:
+          $ref: '#/components/schemas/StatusCountV2'
+      required:
+      - hardware
+      - platform
+      - test_status_summary
+      - boot_status_summary
+      - build_status_summary
+      title: HardwareItemV2
+      type: object
     HardwareListingResponse:
       properties:
         hardware:
@@ -2614,6 +2685,17 @@ components:
       required:
       - hardware
       title: HardwareListingResponse
+      type: object
+    HardwareListingResponseV2:
+      properties:
+        hardware:
+          items:
+            $ref: '#/components/schemas/HardwareItemV2'
+          title: Hardware
+          type: array
+      required:
+      - hardware
+      title: HardwareListingResponseV2
       type: object
     HardwareTestHistoryItem:
       properties:
@@ -2726,6 +2808,11 @@ components:
         has_unknown_issue:
           title: Has Unknown Issue
           type: boolean
+        labs:
+          items:
+            type: string
+          title: Labs
+          type: array
         platforms:
           items:
             type: string
@@ -2735,6 +2822,7 @@ components:
       - issues
       - origins
       - has_unknown_issue
+      - labs
       - platforms
       title: HardwareTestLocalFilters
       type: object
@@ -3091,10 +3179,16 @@ components:
         has_unknown_issue:
           title: Has Unknown Issue
           type: boolean
+        labs:
+          items:
+            type: string
+          title: Labs
+          type: array
       required:
       - issues
       - origins
       - has_unknown_issue
+      - labs
       title: LocalFilters
       type: object
     LogData:
@@ -3245,6 +3339,28 @@ components:
           default: 0
           title: 'Null'
       title: StatusCount
+      type: object
+    StatusCountV2:
+      properties:
+        PASS:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Pass
+        FAIL:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Fail
+        INCONCLUSIVE:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Inconclusive
+      title: StatusCountV2
       type: object
     StatusValues:
       enum:
@@ -3580,6 +3696,11 @@ components:
           - type: 'null'
           default: null
           title: Platforms
+        labs:
+          additionalProperties:
+            $ref: '#/components/schemas/StatusCount'
+          title: Labs
+          type: object
       required:
       - status
       - origins
@@ -3589,6 +3710,7 @@ components:
       - unknown_issues
       - fail_reasons
       - failed_platforms
+      - labs
       title: TestSummary
       type: object
     Test__Duration:

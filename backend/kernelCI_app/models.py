@@ -312,24 +312,12 @@ class PendingTest(models.Model):
         db_table = "pending_test"
 
 
-class HardwareStatusEntityType(models.TextChoices):
-    TEST = "T"
-    BUILD = "B"
-
-
 class ProcessedHardwareStatus(models.Model):
-    pk = models.CompositePrimaryKey(
-        "hardware_key",
-        "entity_id",
-        "entity_type",
-    )
     hardware_key = models.BinaryField(
-        max_length=32
+        max_length=32,
+        primary_key=True,
     )  # this holds a sha256, thus digest_size = 32 bytes
-    entity_id = models.TextField()
-    entity_type = models.CharField(
-        max_length=1, choices=HardwareStatusEntityType.choices
-    )
+    checkout_id = models.TextField()
 
     class Meta:
         db_table = "processed_hardware_status"

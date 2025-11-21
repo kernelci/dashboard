@@ -240,6 +240,57 @@ def get_hardware_listing_data_bulk(
         return dict_fetchall(cursor)
 
 
+def get_hardware_listing_data_from_status_table(
+    start_date: datetime, end_date: datetime, origin: str
+) -> list[tuple]:
+    """
+    Retrieves hardware listing data from the HardwareStatus denormalized table.
+    Groups by platform and compatibles, aggregating status counts.
+    """
+    params = {
+        "start_date": start_date,
+        "end_date": end_date,
+        "origin": origin,
+    }
+
+    query = """
+        SELECT
+            platform,
+            compatibles AS hardware,
+            SUM(build_pass) AS build_pass,
+            SUM(build_failed) AS build_fail,
+            SUM(build_inc) AS build_null,
+            SUM(boot_pass) AS boot_pass,
+            SUM(boot_failed) AS boot_fail,
+            SUM(boot_inc) AS boot_null,
+            SUM(test_pass) AS test_pass,
+            SUM(test_failed) AS test_fail,
+            SUM(test_inc) AS test_null
+        FROM
+            hardware_status
+        INNER JOIN
+            latest_checkout
+            ON
+                hardware_status.checkout_id = latest_checkout.checkout_id
+            AND
+                latest_checkout.start_time >= %(start_date)s
+            AND
+                latest_checkout.start_time <= %(end_date)s
+        WHERE
+            hardware_status.test_origin = %(origin)s
+        GROUP BY
+            platform,
+            compatibles
+        ORDER BY
+            platform,
+            compatibles
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return cursor.fetchall()
+
+
 def get_hardware_details_data(
     *,
     hardware_id: str,
