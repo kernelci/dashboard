@@ -885,7 +885,7 @@ dev = ["flake8", "pylint", "pytest"]
 type = "git"
 url = "https://github.com/kernelci/kcidb-io.git"
 reference = "HEAD"
-resolved_reference = "de0b71bef26ccaf2fbcd01a5828af8e0aefb1c4e"
+resolved_reference = "6cff0df92a282caf6a3e44eb0d2a8d2808676f2d"
 
 [[package]]
 name = "markupsafe"
