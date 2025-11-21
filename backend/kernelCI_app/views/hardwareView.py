@@ -1,6 +1,7 @@
 from datetime import datetime
 from http import HTTPStatus
 
+from django.conf import settings
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 from rest_framework.request import Request
@@ -15,7 +16,10 @@ from kernelCI_app.typeModels.hardwareListing import (
     HardwareQueryParamsDocumentationOnly,
     HardwareListingResponse,
 )
-from kernelCI_app.queries.hardware import get_hardware_listing_data
+from kernelCI_app.queries.hardware import (
+    get_hardware_listing_data,
+    get_hardware_listing_data_from_status_table,
+)
 from kernelCI_app.constants.localization import ClientStrings
 
 
@@ -77,11 +81,18 @@ class HardwareView(APIView):
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
-        hardwares_raw = get_hardware_listing_data(
-            origin=origin,
-            start_date=start_date,
-            end_date=end_date,
-        )
+        if settings.USE_HARDWARE_STATUS_TABLE:
+            hardwares_raw = get_hardware_listing_data_from_status_table(
+                origin=origin,
+                start_date=start_date,
+                end_date=end_date,
+            )
+        else:
+            hardwares_raw = get_hardware_listing_data(
+                origin=origin,
+                start_date=start_date,
+                end_date=end_date,
+            )
 
         try:
             sanitized_records = self._sanitize_records(hardwares_raw=hardwares_raw)

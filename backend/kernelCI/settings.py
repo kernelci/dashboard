@@ -257,6 +257,9 @@ else:
 if DEBUG_DB_VARS:
     print("DEBUG: DATABASES:", DATABASES)
 
+USE_HARDWARE_STATUS_TABLE = is_boolean_or_string_true(
+    os.environ.get("USE_HARDWARE_STATUS_TABLE", False)
+)
 
 REDIS_HOST = os.environ.get("REDIS_HOST", "127.0.0.1")
 
