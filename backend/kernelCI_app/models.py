@@ -15,6 +15,12 @@ class StatusChoices(models.TextChoices):
     DONE = "DONE"
 
 
+class SimplifiedStatusChoices(models.TextChoices):
+    PASS = "P"
+    FAIL = "F"
+    INCONCLUSIVE = "I"
+
+
 class Issues(models.Model):
     field_timestamp = models.DateTimeField(
         db_column="_timestamp", blank=True, null=True
@@ -227,4 +233,106 @@ class Incidents(models.Model):
             # an automatic index on it. So we just need to add an index on issue_version alone.
             models.Index(fields=["issue_version"], name="incidents_issue_version"),
             models.Index(fields=["origin"], name="incidents_origin"),
+        ]
+
+
+class HardwareStatus(models.Model):
+    pk = models.CompositePrimaryKey(
+        "test_origin",
+        "platform",
+        "checkout_id",
+    )
+    checkout_id = models.TextField()
+    test_origin = models.CharField(max_length=100)
+    platform = models.CharField(max_length=100)
+
+    compatibles = ArrayField(models.TextField(), null=True)
+    start_time = models.DateTimeField()
+
+    # build status
+    build_pass = models.IntegerField(default=0)
+    build_failed = models.IntegerField(default=0)
+    build_inc = models.IntegerField(default=0)
+
+    # boot status
+    boot_pass = models.IntegerField(default=0)
+    boot_failed = models.IntegerField(default=0)
+    boot_inc = models.IntegerField(default=0)
+
+    # test status
+    test_pass = models.IntegerField(default=0)
+    test_failed = models.IntegerField(default=0)
+    test_inc = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "hardware_status"
+        indexes = [
+            models.Index(
+                fields=["test_origin", "start_time"], name="hw_status_origin_time"
+            ),
+            models.Index(fields=["checkout_id"], name="hw_status_checkout_id"),
+        ]
+
+
+class LatestCheckout(models.Model):
+    checkout_id = models.TextField(primary_key=True)
+    start_time = models.DateTimeField()
+
+    origin = models.CharField(max_length=100)
+    tree_name = models.TextField(null=True, blank=True)
+    git_repository_url = models.TextField(null=True, blank=True)
+    git_repository_branch = models.TextField(null=True, blank=True)
+
+    class Meta:
+        db_table = "latest_checkout"
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "origin",
+                    "tree_name",
+                    "git_repository_url",
+                    "git_repository_branch",
+                ],
+                name="latest_checkout_unique",
+                nulls_distinct=False,
+            ),
+        ]
+
+
+class PendingTest(models.Model):
+    test_id = models.TextField(primary_key=True)
+    origin = models.CharField(max_length=100)
+    platform = models.CharField(max_length=100)
+    compatible = ArrayField(models.TextField(), null=True)
+    build_id = models.TextField()
+    status = models.CharField(max_length=1, choices=SimplifiedStatusChoices.choices)
+    is_boot = models.BooleanField()
+
+    class Meta:
+        db_table = "pending_test"
+
+
+class HardwareStatusEntityType(models.TextChoices):
+    TEST = "T"
+    BUILD = "B"
+
+
+class ProcessedHardwareStatus(models.Model):
+    pk = models.CompositePrimaryKey(
+        "hardware_key",
+        "entity_id",
+        "entity_type",
+    )
+    hardware_key = models.BinaryField(
+        max_length=32
+    )  # this holds a sha256, thus digest_size = 32 bytes
+    entity_id = models.TextField()
+    entity_type = models.CharField(
+        max_length=1, choices=HardwareStatusEntityType.choices
+    )
+
+    class Meta:
+        db_table = "processed_hardware_status"
+        indexes = [
+            models.Index(fields=["checkout_id"], name="phs_checkout_id"),
         ]
