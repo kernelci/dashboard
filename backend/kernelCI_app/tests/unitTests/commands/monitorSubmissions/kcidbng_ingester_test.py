@@ -414,9 +414,12 @@ class TestDbWorker:
     # - more items than the limit for flushing
     # - time-based flush when idle
 
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_tests"
+    )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.flush_buffers")
     @patch("time.time", return_value=1000)
-    def test_db_worker_stop_event(self, mock_time, mock_flush):
+    def test_db_worker_stop_event(self, mock_time, mock_flush, mock_aggregate):
         """Test db_worker with stop event set."""
         test_queue = Queue()
 
@@ -433,7 +436,11 @@ class TestDbWorker:
         assert test_queue.all_tasks_done
         assert mock_time.call_count == 1
         mock_flush.assert_called_once()
+        mock_aggregate.assert_called_once()
 
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_tests"
+    )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.flush_buffers")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.VERBOSE", False)
     @patch(
@@ -441,7 +448,7 @@ class TestDbWorker:
         10,
     )
     @patch("time.time", return_value=1000)
-    def test_db_worker_with_item_then_none(self, mock_time, mock_flush):
+    def test_db_worker_with_item_then_none(self, mock_time, mock_flush, mock_aggregate):
         """Test db_worker processes one item and then stops with None poison pill."""
         test_queue = Queue()
         stop_event = threading.Event()
@@ -467,7 +474,11 @@ class TestDbWorker:
 
         # The only flush is the last one after receiving None
         mock_flush.assert_called_once()
+        mock_aggregate.assert_called_once()
 
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_tests"
+    )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.flush_buffers")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.VERBOSE", True)
@@ -475,7 +486,9 @@ class TestDbWorker:
         "kernelCI_app.management.commands.helpers.kcidbng_ingester.INGEST_BATCH_SIZE", 5
     )
     @patch("time.time", return_value=TIME_MOCK)
-    def test_db_worker_flush_on_batch_size_limit(self, mock_time, mock_out, mock_flush):
+    def test_db_worker_flush_on_batch_size_limit(
+        self, mock_time, mock_out, mock_flush, mock_aggregate
+    ):
         """Test db_worker flushes when batch size limit is reached (5 individual items)."""
         test_queue = Queue()
         stop_event = threading.Event()
@@ -516,7 +529,12 @@ class TestDbWorker:
         # 2 flushes: one after reaching limit, one at the end
         assert mock_flush.call_count == 2
         assert mock_time.call_count == 2
+        # 2 aggregation runs: one after reaching limit, one at the end
+        assert mock_aggregate.call_count == 2
 
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_tests"
+    )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.flush_buffers")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.VERBOSE", True)
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
@@ -529,7 +547,9 @@ class TestDbWorker:
         10,
     )
     @patch("time.time", side_effect=TIME_MOCK)
-    def test_db_worker_time_based_flush(self, mock_time, mock_out, mock_flush):
+    def test_db_worker_time_based_flush(
+        self, mock_time, mock_out, mock_flush, mock_aggregate
+    ):
         """Test db_worker triggers flush after timeout when idle."""
         stop_event = threading.Event()
 
@@ -571,6 +591,8 @@ class TestDbWorker:
         # 2 flushes: one after timeout, one at the end
         assert mock_flush.call_count == 2
         assert mock_time.call_count == 3
+        # 2 aggregation runs: one after timeout, one at the end
+        assert mock_aggregate.call_count == 2
 
         out_calls = [
             "Queued from %s: "
