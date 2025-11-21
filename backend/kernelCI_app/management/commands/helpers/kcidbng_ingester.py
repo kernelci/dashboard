@@ -22,7 +22,16 @@ from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
 )
 import kcidb_io
 from django.db import transaction
-from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
+from kernelCI_app.models import (
+    Issues,
+    Checkouts,
+    Builds,
+    Tests,
+    Incidents,
+)
+from kernelCI_app.management.commands.helpers.aggregation_helpers import (
+    aggregate_checkouts_and_tests,
+)
 
 from kernelCI_app.management.commands.helpers.process_submissions import (
     TableNames,
@@ -232,6 +241,10 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
                     incidents_buf.extend(inst["incidents"])
 
                 if buffered_total() >= INGEST_BATCH_SIZE:
+                    aggregate_checkouts_and_tests(
+                        checkouts_instances=checkouts_buf,
+                        tests_instances=tests_buf,
+                    )
                     flush_buffers(
                         issues_buf=issues_buf,
                         checkouts_buf=checkouts_buf,
@@ -271,6 +284,10 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
                             buffered_total(),
                         )
                     )
+                aggregate_checkouts_and_tests(
+                    checkouts_instances=checkouts_buf,
+                    tests_instances=tests_buf,
+                )
                 flush_buffers(
                     issues_buf=issues_buf,
                     checkouts_buf=checkouts_buf,
@@ -284,6 +301,12 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
             logger.error("Unexpected error in db_worker: %s", e)
 
     # Final flush after loop ends
+    # Run aggregations before flushing since they only read from objects
+    # and flush_buffers only clears the lists, not the objects
+    aggregate_checkouts_and_tests(
+        checkouts_instances=checkouts_buf,
+        tests_instances=tests_buf,
+    )
     flush_buffers(
         issues_buf=issues_buf,
         checkouts_buf=checkouts_buf,
