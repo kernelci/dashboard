@@ -22,7 +22,16 @@ from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
 )
 import kcidb_io
 from django.db import transaction
-from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
+from kernelCI_app.models import (
+    Issues,
+    Checkouts,
+    Builds,
+    Tests,
+    Incidents,
+)
+from kernelCI_app.management.commands.helpers.aggregation_helpers import (
+    aggregate_checkouts_and_tests,
+)
 
 from kernelCI_app.management.commands.helpers.process_submissions import (
     TableNames,
@@ -162,6 +171,10 @@ def flush_buffers(
             consume_buffer(builds_buf, "builds")
             consume_buffer(tests_buf, "tests")
             consume_buffer(incidents_buf, "incidents")
+            aggregate_checkouts_and_tests(
+                checkouts_instances=checkouts_buf,
+                tests_instances=tests_buf,
+            )
     except Exception as e:
         logger.error("Error during bulk_create flush: %s", e)
     finally:
