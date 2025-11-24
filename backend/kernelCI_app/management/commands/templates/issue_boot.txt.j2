@@ -18,6 +18,10 @@ New boot regression found on {{ issue["tree_name"] }}/{{ issue["git_repository_b
 - tags: {% for tag in issue["git_commit_tags"] %}{{tag}}{% if not loop.last %},{% endif %}{% endfor %}
 {%- endif %}
 
+Please include the KernelCI tag when submitting a fix:
+
+Reported-by: kernelci.org bot <bot@kernelci.org>
+
 {% if "misc" in issue.keys() and "logspec" in issue["misc"].keys() %}
 Log excerpt:
 =====================================================
@@ -44,7 +48,5 @@ Log excerpt:
 {% endfor %}
 
 #kernelci issue {{ issue["id"] }}
-
-Reported-by: kernelci.org bot <bot@kernelci.org>
 
 {%- endblock -%}
