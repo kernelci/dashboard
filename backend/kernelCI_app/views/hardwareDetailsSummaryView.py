@@ -128,7 +128,13 @@ class HardwareDetailsSummary(APIView):
         self.tree_status_summary = defaultdict(generate_tree_status_summary_dict)
         self.compatibles: List[str] = []
 
-        self.unfiltered_origins: dict[str, set[str]] = {
+        self.unfiltered_origins: dict[PossibleTabs, set[str]] = {
+            "build": set(),
+            "boot": set(),
+            "test": set(),
+        }
+
+        self.unfiltered_labs: dict[PossibleTabs, set[str]] = {
             "build": set(),
             "boot": set(),
             "test": set(),
@@ -344,6 +350,7 @@ class HardwareDetailsSummary(APIView):
                             "build"
                         ],
                         origins=sorted(self.unfiltered_origins["build"]),
+                        labs=self.unfiltered_labs["build"],
                     ),
                     boots=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_boot_issues),
@@ -352,6 +359,7 @@ class HardwareDetailsSummary(APIView):
                             "boot"
                         ],
                         origins=sorted(self.unfiltered_origins["boot"]),
+                        labs=self.unfiltered_labs["boot"],
                     ),
                     tests=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_test_issues),
@@ -360,6 +368,7 @@ class HardwareDetailsSummary(APIView):
                             "test"
                         ],
                         origins=sorted(self.unfiltered_origins["test"]),
+                        labs=self.unfiltered_labs["test"],
                     ),
                 ),
                 common=HardwareCommon(

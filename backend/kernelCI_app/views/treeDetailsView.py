@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 from http import HTTPStatus
 from django.http import HttpRequest
+from kernelCI_app.helpers.hardwareDetails import generate_test_summary_typed
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from kernelCI_app.constants.localization import ClientStrings
@@ -112,13 +113,21 @@ class BaseTreeDetails(APIView):
             "test": set(),
         }
 
+        self.unfiltered_labs: dict[PossibleTabs, set[Optional[str]]] = {
+            "build": set(),
+            "boot": set(),
+            "test": set(),
+        }
+
         # TODO: move to a BuildSummary model and combine with the other fields above
         self.base_build_summary = BaseBuildSummary()
 
         # TODO: move to a TestSummary model and combine with the other fields above
         self.test_summary: dict[str, Any] = {"origins": {}}
+        self.test_summary_typed: TestSummary = generate_test_summary_typed()
 
         self.boot_summary: dict[str, Any] = {"origins": {}}
+        self.boot_summary_typed: TestSummary = generate_test_summary_typed()
 
     def _process_boots_test(self, row_data):
         test_id = row_data["test_id"]
@@ -263,10 +272,7 @@ class BaseTreeDetails(APIView):
                 tests=self.testHistory,
                 summary=Summary(
                     builds=BuildSummary(
-                        status=self.base_build_summary.status,
-                        origins=self.base_build_summary.origins,
-                        architectures=self.base_build_summary.architectures,
-                        configs=self.base_build_summary.configs,
+                        **self.base_build_summary.model_dump(),
                         issues=self.build_issues,
                         unknown_issues=self.failed_builds_with_unknown_issues,
                     ),
@@ -281,6 +287,7 @@ class BaseTreeDetails(APIView):
                         environment_misc=self.bootEnvironmentMisc,
                         fail_reasons=self.bootFailReasons,
                         failed_platforms=list(self.bootPlatformsFailing),
+                        labs=self.boot_summary_typed.labs,
                     ),
                     tests=TestSummary(
                         status=self.testStatusSummary,
@@ -293,6 +300,7 @@ class BaseTreeDetails(APIView):
                         environment_misc=self.testEnvironmentMisc,
                         fail_reasons=self.testFailReasons,
                         failed_platforms=list(self.testPlatformsWithErrors),
+                        labs=self.test_summary_typed.labs,
                     ),
                 ),
                 common=TreeCommon(
@@ -312,6 +320,7 @@ class BaseTreeDetails(APIView):
                             "build"
                         ],
                         origins=sorted(self.unfiltered_origins["build"]),
+                        labs=self.unfiltered_labs["build"],
                     ),
                     boots=LocalFilters(
                         issues=list(self.unfiltered_boot_issues),
@@ -319,6 +328,7 @@ class BaseTreeDetails(APIView):
                             "boot"
                         ],
                         origins=sorted(self.unfiltered_origins["boot"]),
+                        labs=self.unfiltered_labs["boot"],
                     ),
                     tests=LocalFilters(
                         issues=list(self.unfiltered_test_issues),
@@ -326,6 +336,7 @@ class BaseTreeDetails(APIView):
                             "test"
                         ],
                         origins=sorted(self.unfiltered_origins["test"]),
+                        labs=self.unfiltered_labs["test"],
                     ),
                 ),
             )

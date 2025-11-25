@@ -34,7 +34,7 @@ import type { TreeDetailsLazyLoaded } from '@/hooks/useTreeDetailsLazyLoadQuery'
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
-import { MemoizedOriginsCard } from '@/components/Cards/OriginsCard';
+import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 import { getStringParam } from '@/utils/utils';
@@ -277,11 +277,20 @@ const BootsTab = ({
           environmentCompatible={hardwareData}
           diffFilter={diffFilter}
         />,
-        <MemoizedOriginsCard
+        <MemoizedFilterCard
+          cardTitle="filter.origins"
           key="origins"
           diffFilter={diffFilter}
-          origins={summaryBootsData?.origins ?? {}}
+          data={summaryBootsData?.origins ?? {}}
           filterSection="bootOrigin"
+        />,
+        <MemoizedFilterCard
+          cardTitle="filter.labs"
+          key="labs"
+          diffFilter={diffFilter}
+          data={summaryBootsData?.labs ?? {}}
+          filterSection="bootLab"
+          hideSingleValue={false}
         />,
       ],
       footerCards: [

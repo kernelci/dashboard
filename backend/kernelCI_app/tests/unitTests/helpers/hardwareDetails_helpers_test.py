@@ -617,6 +617,7 @@ class TestHandleTestSummary:
             unknown_issues=0,
             fail_reasons={},
             failed_platforms=set(),
+            labs={},
         )
 
         issue_dict = {}
@@ -1317,6 +1318,7 @@ class TestFormatIssueSummaryForResponse:
             unknown_issues=0,
             fail_reasons={},
             failed_platforms=set(),
+            labs={},
         )
         tests_summary = TestSummary(
             status=StatusCount(),
@@ -1327,6 +1329,7 @@ class TestFormatIssueSummaryForResponse:
             unknown_issues=0,
             fail_reasons={},
             failed_platforms=set(),
+            labs={},
         )
 
         issue_dicts = {

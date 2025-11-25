@@ -431,6 +431,7 @@ def test_invalid_filters(invalid_filters_input):
             "DONE": 0,
         },
         "unknown_issues": 0,
+        "labs": {},
     }
 
     empty_build = {
@@ -448,6 +449,7 @@ def test_invalid_filters(invalid_filters_input):
             "DONE": 0,
         },
         "unknown_issues": 0,
+        "labs": {},
     }
 
     empty_summary = {

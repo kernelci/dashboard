@@ -102,6 +102,7 @@ class TestSummary(BaseModel):
     environment_compatible: Optional[dict] = None
     environment_misc: Optional[dict] = None
     platforms: Optional[dict[str, StatusCount]] = None
+    labs: dict[str, StatusCount]
 
 
 class BaseBuildSummary(BaseModel):
@@ -109,6 +110,7 @@ class BaseBuildSummary(BaseModel):
     origins: dict[str, StatusCount] = Field(default_factory=dict)
     architectures: dict[str, BuildArchitectures] = Field(default_factory=dict)
     configs: dict[str, StatusCount] = Field(default_factory=dict)
+    labs: dict[str, StatusCount] = Field(default_factory=dict)
 
 
 class BuildSummary(BaseBuildSummary):
@@ -132,6 +134,7 @@ class LocalFilters(BaseModel):
     issues: list[tuple[str, Optional[int]]]
     origins: list[str]
     has_unknown_issue: bool
+    labs: list[str]
 
 
 class DetailsFilters(BaseModel):
