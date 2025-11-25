@@ -18,13 +18,13 @@ const ResponsiveDetailsGrid = ({
   const leftTopCards = topCards.slice(0, midIndex);
   const rightTopCards = topCards.slice(midIndex);
 
-  const midBodyIndex = Math.ceil(bodyCards.length / 2);
+  const midBodyIndex = Math.floor(bodyCards.length / 2);
   const leftBodyCards = bodyCards.slice(0, midBodyIndex);
   const rightBodyCards = bodyCards.slice(midBodyIndex);
 
   return (
     <>
-      <div className="hidden grid-cols-2 gap-4 min-2xl:grid">
+      <div className="hidden grid-cols-2 gap-4 2xl:grid">
         <div>
           {leftTopCards}
           {leftBodyCards}
@@ -35,7 +35,7 @@ const ResponsiveDetailsGrid = ({
         </div>
         <div className="col-span-2">{footerCards}</div>
       </div>
-      <div className="min-2xl:hidden">
+      <div className="2xl:hidden">
         {topCards}
         <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-8">
           <div>{leftBodyCards}</div>
