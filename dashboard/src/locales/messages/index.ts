@@ -348,6 +348,8 @@ export const messages = {
     'treeDetails.validBuilds': 'Success builds',
     'treeListing.description': 'List of trees for kernel builds and tests',
     'treeListing.notFound': 'No tree information available',
+    'treeListing.statusUnavailable':
+      'Error: Unable to load tree status information. Displaying basic information only.',
     'treeListing.title': 'Tree Listing ― KCI Dashboard',
   },
 };

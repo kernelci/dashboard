@@ -20,6 +20,7 @@ import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { useCallback, useMemo, useState } from 'react';
+import type { UseQueryResult } from '@tanstack/react-query';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -45,6 +46,9 @@ import { valueOrEmpty } from '@/lib/string';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 import { shouldShowRelativeDate } from '@/lib/date';
 import { RedirectFrom } from '@/types/general';
+
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 const getLinkProps = (
   row: Row<IssueListingTableItem>,
@@ -178,9 +182,19 @@ const columns: ColumnDef<IssueListingTableItem>[] = [
 
 interface IIssueTable {
   issueListing?: IssueListingResponse;
+  status?: UseQueryResult['status'];
+  queryData?: unknown;
+  error?: Error | null;
+  isLoading?: boolean;
 }
 
-export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
+export const IssueTable = ({
+  issueListing,
+  status,
+  queryData,
+  error,
+  isLoading,
+}: IIssueTable): JSX.Element => {
   const { listingSize } = useSearch({ from: '/_main/issues' });
   const navigate = useNavigate({ from: '/issues' });
 
@@ -261,7 +275,7 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
     ) : (
       <TableRow>
         <TableCell colSpan={columns.length} className="h-24 text-center">
-          <FormattedMessage id="global.noResults" />
+          <FormattedMessage id="issueListing.notFound" />
         </TableCell>
       </TableRow>
     );
@@ -279,9 +293,22 @@ export const IssueTable = ({ issueListing }: IIssueTable): JSX.Element => {
 
   return (
     <>
-      <BaseTable headerComponents={tableHeaders}>
-        <TableBody>{tableBody}</TableBody>
-      </BaseTable>
+      <QuerySwitcher
+        status={status}
+        data={queryData}
+        error={error}
+        customError={
+          <MemoizedSectionError
+            isLoading={isLoading}
+            errorMessage={error?.message}
+            emptyLabel="issueListing.notFound"
+          />
+        }
+      >
+        <BaseTable headerComponents={tableHeaders}>
+          <TableBody>{tableBody}</TableBody>
+        </BaseTable>
+      </QuerySwitcher>
       <PaginationInfo
         table={table}
         intlLabel="global.issues"

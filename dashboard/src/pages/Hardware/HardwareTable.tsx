@@ -15,6 +15,7 @@ import {
 } from '@tanstack/react-table';
 
 import { useCallback, useMemo, useState, type JSX } from 'react';
+import type { UseQueryResult } from '@tanstack/react-query';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -53,11 +54,18 @@ import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 import { EMPTY_VALUE } from '@/lib/string';
 import { Badge } from '@/components/ui/badge';
 
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
 // TODO Extract and reuse the table
 interface IHardwareTable {
   treeTableRows: HardwareItem[];
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
+  status?: UseQueryResult['status'];
+  queryData?: unknown;
+  error?: Error | null;
+  isLoading?: boolean;
 }
 
 const getLinkProps = (
@@ -345,6 +353,10 @@ export function HardwareTable({
   treeTableRows,
   startTimestampInSeconds,
   endTimestampInSeconds,
+  status,
+  queryData,
+  error,
+  isLoading,
 }: IHardwareTable): JSX.Element {
   const { listingSize } = useSearch({ strict: false });
   const navigate = useNavigate({ from: '/hardware' });
@@ -429,7 +441,7 @@ export function HardwareTable({
     ) : (
       <TableRow>
         <TableCell colSpan={columns.length} className="h-24 text-center">
-          <FormattedMessage id="global.noResults" />
+          <FormattedMessage id="hardwareListing.notFound" />
         </TableCell>
       </TableRow>
     );
@@ -475,9 +487,22 @@ export function HardwareTable({
           <PaginationButtons table={table} className="pl-4" />
         </div>
       </div>
-      <BaseTable headerComponents={tableHeaders}>
-        <TableBody>{tableBody}</TableBody>
-      </BaseTable>
+      <QuerySwitcher
+        status={status}
+        data={queryData}
+        error={error}
+        customError={
+          <MemoizedSectionError
+            isLoading={isLoading}
+            errorMessage={error?.message}
+            emptyLabel="hardwareListing.notFound"
+          />
+        }
+      >
+        <BaseTable headerComponents={tableHeaders}>
+          <TableBody>{tableBody}</TableBody>
+        </BaseTable>
+      </QuerySwitcher>
       <PaginationInfo
         table={table}
         intlLabel="global.hardware"

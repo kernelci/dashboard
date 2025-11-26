@@ -3,6 +3,8 @@ import { Fragment, type ReactNode, type JSX } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
+import { HttpStatusCode } from 'axios';
+
 import { cn } from '@/lib/utils';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,6 +19,7 @@ type QuerySwitcherProps = {
   data?: unknown;
   customError?: ReactNode;
   customEmptyDataComponent?: JSX.Element;
+  error?: Error | null;
 };
 
 const QuerySwitcher = ({
@@ -26,6 +29,7 @@ const QuerySwitcher = ({
   data,
   customError,
   customEmptyDataComponent,
+  error,
 }: QuerySwitcherProps): JSX.Element => {
   if (!status) {
     return customEmptyDataComponent ?? <Fragment />;
@@ -40,7 +44,20 @@ const QuerySwitcher = ({
           <FormattedMessage id="global.loading" />
         </Skeleton>
       );
-    case 'error':
+    case 'error': {
+      let errorStatusCode: number | undefined;
+      const errorMessage = error?.message;
+      if (errorMessage) {
+        const splittedError = errorMessage.split(':');
+        if (splittedError.length > 1) {
+          errorStatusCode = parseInt(splittedError[0]);
+        }
+      }
+
+      if (errorStatusCode === HttpStatusCode.Ok) {
+        return <>{children}</>;
+      }
+
       return (
         <>
           {customError ?? (
@@ -50,6 +67,7 @@ const QuerySwitcher = ({
           )}
         </>
       );
+    }
   }
 
   if (!data) {
