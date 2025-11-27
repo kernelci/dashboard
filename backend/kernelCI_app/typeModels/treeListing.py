@@ -18,6 +18,9 @@ from pydantic import BaseModel, Field, RootModel
 
 
 class TestStatusCount(BaseModel):
+    # Disables automatic pytest test discovery for this class
+    __test__ = False
+
     pass_count: int = Field(alias="pass")
     error_count: int = Field(alias="error")
     fail_count: int = Field(alias="fail")
