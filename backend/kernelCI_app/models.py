@@ -1,3 +1,6 @@
+"""Defines the models used in the main database.
+All models should have explicit id column for the ingester to work properly."""
+
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
