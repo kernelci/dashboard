@@ -83,6 +83,9 @@ class TestStatusHistoryResponse(BaseModel):
 
 
 class TestStatusHistoryRequest(BaseModel):
+    # Disables automatic pytest test discovery for this class
+    __test__ = False
+
     path: Annotated[str, Field(description=DocStrings.STATUS_HISTORY_PATH_DESCRIPTION)]
     origin: Annotated[
         str,

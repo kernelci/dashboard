@@ -13,6 +13,9 @@ from .mocks import Test, Checkout
 class TestFactory(DjangoModelFactory):
     """Factory for creating Test instances with realistic test data."""
 
+    # Disables automatic pytest test discovery for this class
+    __test__ = False
+
     class Meta:
         model = Tests
 

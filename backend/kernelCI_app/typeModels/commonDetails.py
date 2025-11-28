@@ -28,6 +28,9 @@ from kernelCI_app.typeModels.databases import (
 
 
 class TestArchSummaryItem(BaseModel):
+    # Disables automatic pytest test discovery for this class
+    __test__ = False
+
     arch: str
     compiler: str
     status: StatusCount
@@ -91,6 +94,9 @@ class BuildHistoryItem(BaseModel):
 
 
 class TestSummary(BaseModel):
+    # Disables automatic pytest test discovery for this class
+    __test__ = False
+
     status: StatusCount
     origins: dict[str, StatusCount]
     architectures: list[TestArchSummaryItem]

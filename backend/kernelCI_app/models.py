@@ -137,6 +137,9 @@ class Builds(models.Model):
 
 
 class Tests(models.Model):
+    # Disables automatic pytest test discovery for this class
+    __test__ = False
+
     class UnitPrefix(models.TextChoices):
         METRIC = "metric"
         BINARY = "binary"
