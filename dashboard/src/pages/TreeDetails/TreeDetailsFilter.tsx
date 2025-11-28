@@ -5,7 +5,11 @@ import { useNavigate } from '@tanstack/react-router';
 import { status as testStatuses } from '@/utils/constants/database';
 import type { IDrawerLink } from '@/components/Filter/Drawer';
 import FilterDrawer from '@/components/Filter/Drawer';
-import type { TreeDetailsSummary } from '@/types/tree/TreeDetails';
+import {
+  treeDetailsFromMap,
+  type TreeDetailsRouteFrom,
+  type TreeDetailsSummary,
+} from '@/types/tree/TreeDetails';
 import type { ISectionItem } from '@/components/Filter/CheckboxSection';
 
 import {
@@ -37,12 +41,6 @@ type PossibleTreeDetailsFilters = Pick<
   | 'bootLab'
   | 'testLab'
 >;
-
-interface ITreeDetailsFilter {
-  paramFilter: TFilter;
-  treeUrl: string;
-  data: TreeDetailsSummary;
-}
 
 export const createFilter = (data: TreeDetailsSummary): TFilter => {
   const filters: PossibleTreeDetailsFilters = {};
@@ -232,14 +230,22 @@ const sectionTrees: ISectionItem[] = [
   },
 ];
 
+interface ITreeDetailsFilter {
+  paramFilter: TFilter;
+  treeUrl: string;
+  data: TreeDetailsSummary;
+  urlFrom: TreeDetailsRouteFrom;
+}
+
 // TODO: some sections can be hidden if there is only 1 value for them (e.g., origins, labs)
 const TreeDetailsFilter = ({
   paramFilter,
   treeUrl,
   data,
+  urlFrom,
 }: ITreeDetailsFilter): JSX.Element => {
   const navigate = useNavigate({
-    from: '/tree/$treeId',
+    from: treeDetailsFromMap[urlFrom],
   });
 
   const filter: TFilter = useMemo(() => {
@@ -261,6 +267,7 @@ const TreeDetailsFilter = ({
           diffFilter: cleanedFilter,
         };
       },
+      params: p => p,
       state: s => s,
     });
   }, [diffFilter, navigate]);

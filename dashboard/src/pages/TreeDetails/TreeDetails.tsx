@@ -402,6 +402,7 @@ const TreeDetails = ({
                   paramFilter={diffFilter}
                   treeUrl={data.common.tree_url}
                   data={data}
+                  urlFrom={urlFrom}
                 />
               ) : (
                 isLoading && <LoadingCircle className="mt-6 mr-8" />
