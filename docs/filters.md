@@ -29,7 +29,7 @@ Our filter system is currently somewhat complex. Most of the parts are required,
 - Edit the tree/hardware commitHistory endpoint to be affected by the filter too
 - Check unit tests to see if they need updates
 - Check integration tests to see if they need updates
-- Update backend schema with `generate_schema.sh` script
+- Update backend schema with `generate-schema.sh` script
 
 ### In the frontend
 
