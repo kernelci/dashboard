@@ -185,3 +185,7 @@ volume_data/*.yaml
 # benchmarks
 .benchmarks/*
 !.benchmarks/.gitkeep
+
+tests_submissions
+tests_submissions_backup
+!tests_submissions/submissions.zip
