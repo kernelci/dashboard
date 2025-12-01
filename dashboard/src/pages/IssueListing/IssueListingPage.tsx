@@ -4,11 +4,7 @@ import { useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage } from 'react-intl';
 
-import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
-
 import { Toaster } from '@/components/ui/toaster';
-
-import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { useIssueListing } from '@/api/issue';
 import { IssueTable } from '@/components/IssueTable/IssueTable';
@@ -69,17 +65,7 @@ export const IssueListingPage = ({
   }, [data, inputFilter]);
 
   return (
-    <QuerySwitcher
-      status={status}
-      data={data}
-      customError={
-        <MemoizedSectionError
-          isLoading={isLoading}
-          errorMessage={error?.message}
-          emptyLabel="issueListing.notFound"
-        />
-      }
-    >
+    <>
       <Toaster />
       <div className="flex flex-col gap-6 pb-4">
         <div className="flex items-center justify-between gap-4 max-[650px]:flex-wrap">
@@ -97,9 +83,15 @@ export const IssueListingPage = ({
             <IssueListingFilter paramFilter={diffFilter} data={data?.filters} />
           </div>
         </div>
-        <IssueTable issueListing={filteredData} />
+        <IssueTable
+          issueListing={filteredData}
+          status={status}
+          queryData={data}
+          error={error}
+          isLoading={isLoading}
+        />
         <MemoizedKcidevFooter commandGroup="issue" />
       </div>
-    </QuerySwitcher>
+    </>
   );
 };

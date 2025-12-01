@@ -3,8 +3,6 @@ import { roundToNearestMinutes } from 'date-fns';
 
 import { useSearch } from '@tanstack/react-router';
 
-import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
-
 import { Toaster } from '@/components/ui/toaster';
 
 import type { HardwareItem } from '@/types/hardware';
@@ -12,8 +10,6 @@ import type { HardwareItem } from '@/types/hardware';
 import { useHardwareListing } from '@/api/hardware';
 
 import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
-
-import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { RequiredStatusCount, StatusCount } from '@/types/general';
 
@@ -144,27 +140,21 @@ const HardwareListingPage = ({
   );
 
   return (
-    <QuerySwitcher
-      status={status}
-      data={data}
-      customError={
-        <MemoizedSectionError
-          isLoading={isLoading}
-          errorMessage={error?.message}
-          emptyLabel="hardwareListing.notFound"
-        />
-      }
-    >
+    <>
       <Toaster />
       <div className="flex flex-col gap-6">
         <HardwareTable
           treeTableRows={listItems}
           endTimestampInSeconds={endTimestampInSeconds}
           startTimestampInSeconds={startTimestampInSeconds}
+          status={status}
+          queryData={data}
+          error={error}
+          isLoading={isLoading}
         />
       </div>
       {kcidevComponent}
-    </QuerySwitcher>
+    </>
   );
 };
 

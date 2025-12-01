@@ -14,6 +14,7 @@ import {
 } from '@tanstack/react-table';
 
 import { useCallback, useMemo, useState, type JSX } from 'react';
+import type { UseQueryResult } from '@tanstack/react-query';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -59,6 +60,9 @@ import { shouldShowRelativeDate } from '@/lib/date';
 import { valueOrEmpty } from '@/lib/string';
 import { PinnedTrees } from '@/utils/constants/tables';
 import { makeTreeIdentifierKey } from '@/utils/trees';
+
+import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 const getLinkProps = (
   row: Row<TreeTableBody>,
@@ -154,7 +158,10 @@ const getLinkProps = (
   };
 };
 
-const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
+const getColumns = (
+  origin: string,
+  showStatusUnavailable?: boolean,
+): ColumnDef<TreeTableBody>[] => {
   return [
     {
       accessorKey: 'tree_name',
@@ -263,6 +270,8 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
               },
             })}
           />
+        ) : showStatusUnavailable ? (
+          <span>-</span>
         ) : (
           <FormattedMessage id="global.loading" defaultMessage="Loading..." />
         );
@@ -308,6 +317,8 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
               },
             })}
           />
+        ) : showStatusUnavailable ? (
+          <span>-</span>
         ) : (
           <FormattedMessage id="global.loading" defaultMessage="Loading..." />
         );
@@ -353,6 +364,8 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
               },
             })}
           />
+        ) : showStatusUnavailable ? (
+          <span>-</span>
         ) : (
           <FormattedMessage id="global.loading" defaultMessage="Loading..." />
         );
@@ -366,9 +379,21 @@ const getColumns = (origin: string): ColumnDef<TreeTableBody>[] => {
 
 interface ITreeTable {
   treeTableRows: TreeTableBody[];
+  status?: UseQueryResult['status'];
+  queryData?: unknown;
+  error?: Error | null;
+  isLoading?: boolean;
+  showStatusUnavailable?: boolean;
 }
 
-export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
+export function TreeTable({
+  treeTableRows,
+  status,
+  queryData,
+  error,
+  isLoading,
+  showStatusUnavailable,
+}: ITreeTable): JSX.Element {
   const { origin: unsafeOrigin, listingSize } = useSearch({ strict: false });
   const origin = unsafeOrigin ?? DEFAULT_ORIGIN;
   const navigate = useNavigate({ from: '/tree' });
@@ -407,7 +432,10 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
     });
   }, [treeTableRows]);
 
-  const columns = useMemo(() => getColumns(origin), [origin]);
+  const columns = useMemo(
+    () => getColumns(origin, showStatusUnavailable),
+    [origin, showStatusUnavailable],
+  );
 
   const table = useReactTable({
     data: orderedData,
@@ -468,7 +496,7 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
     ) : (
       <TableRow>
         <TableCell colSpan={columns.length} className="h-24 text-center">
-          <FormattedMessage id="global.noResults" />
+          <FormattedMessage id="treeListing.notFound" />
         </TableCell>
       </TableRow>
     );
@@ -506,9 +534,29 @@ export function TreeTable({ treeTableRows }: ITreeTable): JSX.Element {
           <PaginationButtons table={table} className="pl-4" />
         </div>
       </div>
-      <BaseTable headerComponents={tableHeaders}>
-        <TableBody>{tableBody}</TableBody>
-      </BaseTable>
+      {showStatusUnavailable && (
+        <div className="rounded-md border border-red-500 bg-red-50 p-4 text-red-800">
+          <p className="text-sm">
+            <FormattedMessage id="treeListing.statusUnavailable" />
+          </p>
+        </div>
+      )}
+      <QuerySwitcher
+        status={status}
+        data={queryData}
+        error={error}
+        customError={
+          <MemoizedSectionError
+            isLoading={isLoading}
+            errorMessage={error?.message}
+            emptyLabel="treeListing.notFound"
+          />
+        }
+      >
+        <BaseTable headerComponents={tableHeaders}>
+          <TableBody>{tableBody}</TableBody>
+        </BaseTable>
+      </QuerySwitcher>
       <PaginationInfo
         table={table}
         intlLabel="global.trees"
