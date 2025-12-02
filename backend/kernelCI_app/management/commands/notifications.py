@@ -894,7 +894,8 @@ class Command(BaseCommand):
                 "test_report",
                 "hardware_summary",
             ],
-            help="Action to perform: new_issues, issue_report, summary, fake_report, or test_report",
+            help="""Action to perform: new_issues, issue_report, summary, fake_report,
+              test_report, or hardware_summary""",
         )
 
         # Issue report specific arguments
@@ -976,79 +977,84 @@ class Command(BaseCommand):
 
         signup_folder = options.get("summary_signup_folder", SIGNUP_FOLDER)
 
-        if action == "new_issues":
-            look_for_new_issues(
-                service=service,
-                email_args=email_args,
-                signup_folder=signup_folder,
-            )
-
-        elif action == "issue_report":
-            email_args.update = options.get("update_storage", False)
-            if options.get("all", False):
-                create_and_send_issue_reports(
+        match action:
+            case "new_issues":
+                look_for_new_issues(
                     service=service,
                     email_args=email_args,
                     signup_folder=signup_folder,
                 )
-            else:
-                issue_id = options.get("id")
-                if not issue_id:
+
+            case "issue_report":
+                email_args.update = options.get("update_storage", False)
+                if options.get("all", False):
+                    create_and_send_issue_reports(
+                        service=service,
+                        email_args=email_args,
+                        signup_folder=signup_folder,
+                    )
+                else:
+                    issue_id = options.get("id")
+                    if not issue_id:
+                        self.stdout.write(
+                            self.style.ERROR(
+                                "You must provide an issue ID or use --all"
+                            )
+                        )
+                        return
+                    generate_issue_report(
+                        service=service,
+                        issue_id=issue_id,
+                        email_args=email_args,
+                        signup_folder=signup_folder,
+                    )
                     self.stdout.write(
-                        self.style.ERROR("You must provide an issue ID or use --all")
+                        self.style.SUCCESS(
+                            f"Issue report generated for issue {issue_id}"
+                        )
+                    )
+
+            case "summary":
+                email_args.update = options.get("update_storage", False)
+                summary_origins = options.get("summary_origins")
+
+                run_checkout_summary(
+                    service=service,
+                    signup_folder=signup_folder,
+                    email_args=email_args,
+                    summary_origins=summary_origins,
+                    skip_sent_reports=options.get("skip_sent_reports", True),
+                )
+
+            case "fake_report":
+                email_args.tree_name = options.get("tree")
+                run_fake_report(service=service, email_args=email_args)
+
+            case "test_report":
+                test_id = options.get("id")
+                if not test_id:
+                    self.stdout.write(
+                        self.style.ERROR(
+                            "You must provide a test ID with --id for test_report action"
+                        )
                     )
                     return
-                generate_issue_report(
+                generate_test_report(
                     service=service,
-                    issue_id=issue_id,
+                    test_id=test_id,
                     email_args=email_args,
                     signup_folder=signup_folder,
                 )
                 self.stdout.write(
-                    self.style.SUCCESS(f"Issue report generated for issue {issue_id}")
+                    self.style.SUCCESS(f"Test report generated for test {test_id}")
                 )
 
-        elif action == "summary":
-            email_args.update = options.get("update_storage", False)
-            summary_origins = options.get("summary_origins")
-
-            run_checkout_summary(
-                service=service,
-                signup_folder=signup_folder,
-                email_args=email_args,
-                summary_origins=summary_origins,
-                skip_sent_reports=options.get("skip_sent_reports", True),
-            )
-
-        elif action == "fake_report":
-            email_args.tree_name = options.get("tree")
-            run_fake_report(service=service, email_args=email_args)
-
-        elif action == "test_report":
-            test_id = options.get("id")
-            if not test_id:
-                self.stdout.write(
-                    self.style.ERROR(
-                        "You must provide a test ID with --id for test_report action"
-                    )
+            case "hardware_summary":
+                email_args.update = options.get("update_storage", False)
+                hardware_origins = options.get("hardware_origins")
+                generate_hardware_summary_report(
+                    service=service,
+                    signup_folder=signup_folder,
+                    email_args=email_args,
+                    hardware_origins=hardware_origins,
                 )
-                return
-            generate_test_report(
-                service=service,
-                test_id=test_id,
-                email_args=email_args,
-                signup_folder=signup_folder,
-            )
-            self.stdout.write(
-                self.style.SUCCESS(f"Test report generated for test {test_id}")
-            )
-
-        elif action == "hardware_summary":
-            email_args.update = options.get("update_storage", False)
-            hardware_origins = options.get("hardware_origins")
-            generate_hardware_summary_report(
-                service=service,
-                signup_folder=signup_folder,
-                email_args=email_args,
-                hardware_origins=hardware_origins,
-            )
