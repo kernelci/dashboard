@@ -179,6 +179,13 @@ else:
                 "--yes",
             ],
         ),
+        (
+            "0 0 * * 1",
+            "django.core.management.call_command",
+            [
+                "delete_unused_hardware_status",
+            ],
+        ),
     ]
 
 # Email settings for SMTP backend
