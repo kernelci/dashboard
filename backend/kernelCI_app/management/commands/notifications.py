@@ -21,6 +21,10 @@ from kernelCI_app.management.commands.helpers.common import (
     get_default_tree_recipients,
     setup_jinja_template,
 )
+
+from kernelCI_app.management.commands.helpers.metrics_report import (
+    generate_metrics_report,
+)
 from kernelCI_app.management.commands.helpers.summary import (
     SIGNUP_FOLDER,
     PossibleReportOptions,
@@ -1050,3 +1054,6 @@ class Command(BaseCommand):
                     email_args=email_args,
                     hardware_origins=hardware_origins,
                 )
+
+            case "metrics_summary":
+                generate_metrics_report()
