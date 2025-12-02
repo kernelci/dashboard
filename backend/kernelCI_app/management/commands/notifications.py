@@ -739,8 +739,11 @@ def generate_hardware_summary_report(
 ):
     """
     Generate weekly hardware reports for hardware submission file.
-    Emails are sent only for hardware with failed tests.
     """
+
+    if get_running_instance() == "staging":
+        print("This command only runs on production or dev environments.")
+        return
 
     now = datetime.now(timezone.utc)
     start_date = now - timedelta(days=7)
@@ -758,10 +761,6 @@ def generate_hardware_summary_report(
         start_date=start_date,
         end_date=end_date,
     )
-
-    if not hardwares_data_raw:
-        print("No data for hardware summary")
-        return
 
     hardwares_data_dict = defaultdict(list)
     for raw in hardwares_data_raw:
@@ -786,11 +785,15 @@ def generate_hardware_summary_report(
     )
 
     # Iterate through each hardware record to render report, extract recipient, send email
-    for (hardware_id, origin), hardware_data in hardwares_data_dict.items():
+    for hardware_id, origin in hardware_key_set:
+        hardware_data = hardwares_data_dict.get((hardware_id, origin), [])
         hardware_raw = next(
             (row for row in hardwares_list_raw if row.get("platform") == hardware_id),
             None,
         )
+        if hardware_raw is None:
+            print(f"Hardware {hardware_id} not found in listing data")
+            continue
 
         hardware_item = sanitize_hardware(hardware_raw)
         build_status_group = group_status(hardware_item.build_status_summary)
