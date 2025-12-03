@@ -27,7 +27,7 @@ The command supports four primary actions:
 1. `summary`
     * Runs a checkout summary report for trees listed in the [subscriptions folder](../backend/data/notifications/subscriptions/).
 1. `hardware_summary`
-    * Generate weekly hardware reports for hardware listed in the [subscriptions folder](../backend/data/notifications/subscriptions/). Emails are sent only for hardware with failed tests.
+    * Generate weekly hardware reports for hardware listed in the [subscriptions folder](../backend/data/notifications/subscriptions/).
 1.  `fake_report`
     * Generates a fake report (for  testing email send).
 
