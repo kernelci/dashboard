@@ -1,7 +1,5 @@
 from typing import Optional
-import jinja2
 import json
-import os
 import sys
 
 from collections import defaultdict
@@ -21,6 +19,7 @@ from kernelCI_app.helpers.email import (
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
     get_default_tree_recipients,
+    setup_jinja_template,
 )
 from kernelCI_app.management.commands.helpers.summary import (
     SIGNUP_FOLDER,
@@ -163,14 +162,6 @@ def send_email_report(
         reply_to,
         email_args.in_reply_to,
     )
-
-
-def setup_jinja_template(file):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    templates = os.path.join(base_dir, "templates")
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(templates))
-
-    return env.get_template(file)
 
 
 def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
@@ -879,20 +870,24 @@ class Command(BaseCommand):
         )
 
         # Action argument (replaces subparsers)
+        actions = [
+            "new_issues",
+            "issue_report",
+            "summary",
+            "fake_report",
+            "test_report",
+            "hardware_summary",
+            "metrics_summary",
+        ]
         parser.add_argument(
             "--action",
             type=str,
             required=True,
-            choices=[
-                "new_issues",
-                "issue_report",
-                "summary",
-                "fake_report",
-                "test_report",
-                "hardware_summary",
-            ],
-            help="""Action to perform: new_issues, issue_report, summary, fake_report,
-              test_report, or hardware_summary""",
+            choices=actions,
+            help="Action to perform: "
+            + ", ".join(actions[:-1])
+            + ", or "
+            + actions[-1],
         )
 
         # Issue report specific arguments
