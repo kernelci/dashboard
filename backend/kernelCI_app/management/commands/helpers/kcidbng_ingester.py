@@ -16,28 +16,23 @@ import time
 import traceback
 from typing import Any, Optional, TypedDict
 from kernelCI_app.helpers.logger import out
+from kernelCI_app.management.commands.generated.insert_queries import INSERT_QUERIES
 from kernelCI_app.management.commands.helpers.file_utils import move_file_to_failed_dir
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
     extract_log_excerpt,
 )
 import kcidb_io
-from django.db import transaction
-from kernelCI_app.models import (
-    Issues,
-    Checkouts,
-    Builds,
-    Tests,
-    Incidents,
-)
 from kernelCI_app.management.commands.helpers.aggregation_helpers import (
     aggregate_checkouts_and_tests,
 )
+from django.db import connections, transaction
+from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
 
 from kernelCI_app.management.commands.helpers.process_submissions import (
     TableNames,
     build_instances_from_submission,
 )
-from kernelCI_app.typeModels.modelTypes import MODEL_MAP, TableModels
+from kernelCI_app.typeModels.modelTypes import TableModels
 
 
 class SubmissionMetadata(TypedDict):
@@ -120,7 +115,7 @@ def prepare_file_data(
         }
 
 
-def consume_buffer(buffer: list[TableModels], item_type: TableNames) -> None:
+def consume_buffer(buffer: list[TableModels], table_name: TableNames) -> None:
     """
     Consume a buffer of items and insert them into the database.
     This function is called by the db_worker thread.
@@ -128,15 +123,26 @@ def consume_buffer(buffer: list[TableModels], item_type: TableNames) -> None:
     if not buffer:
         return
 
-    model = MODEL_MAP[item_type]
+    insert_props = INSERT_QUERIES[table_name]
+    updateable_model_fields = insert_props["updateable_model_fields"]
+    query = insert_props["query"]
+
+    params = []
+    for obj in buffer:
+        obj_values = []
+        for field in updateable_model_fields:
+            value = getattr(obj, field)
+            model_field = obj._meta.get_field(field)
+            if model_field.get_internal_type() == "JSONField" and value is not None:
+                value = json.dumps(value)
+            obj_values.append(value)
+        params.append(tuple(obj_values))
 
     t0 = time.time()
-    model.objects.bulk_create(
-        buffer,
-        batch_size=INGEST_BATCH_SIZE,
-        ignore_conflicts=True,
-    )
-    out("bulk_create %s: n=%d in %.3fs" % (item_type, len(buffer), time.time() - t0))
+    with connections["default"].cursor() as cursor:
+        cursor.executemany(query, params)
+
+    out("bulk_create %s: n=%d in %.3fs" % (table_name, len(buffer), time.time() - t0))
 
 
 def flush_buffers(
@@ -176,7 +182,7 @@ def flush_buffers(
                 tests_instances=tests_buf,
             )
     except Exception as e:
-        logger.error("Error during bulk_create flush: %s", e)
+        logger.error("Error during buffer flush: %s", e)
     finally:
         flush_dur = time.time() - flush_start
         rate = total / flush_dur if flush_dur > 0 else 0.0

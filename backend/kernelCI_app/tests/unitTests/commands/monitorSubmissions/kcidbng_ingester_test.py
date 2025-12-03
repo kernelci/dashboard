@@ -212,30 +212,29 @@ class TestConsumeBuffer:
     # Test cases:
     # - buffer with items
     # - empty buffer
+    # - trying to insert in an invalid table
 
     @patch(
         "kernelCI_app.management.commands.helpers.kcidbng_ingester.INGEST_BATCH_SIZE",
         INGEST_BATCH_SIZE_MOCK,
     )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
+    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.connections")
     @patch("time.time", side_effect=TIME_MOCK)
-    def test_consume_buffer_with_items(self, mock_time, mock_out):
+    def test_consume_buffer_with_items(self, mock_time, mock_connections, mock_out):
         """Test consume_buffer with items in buffer."""
-        mock_model = MagicMock()
+        table_name = "issues"
+        # TODO: test with a real example
         mock_buffer = [MagicMock(), MagicMock()]
+        mock_cursor = MagicMock()
+        mock_connections["default"].cursor.return_value.__enter__.return_value = (
+            mock_cursor
+        )
 
-        with patch(
-            "kernelCI_app.management.commands.helpers.kcidbng_ingester.MODEL_MAP",
-            {"issues": mock_model},
-        ):
-            consume_buffer(mock_buffer, "issues")
+        consume_buffer(mock_buffer, table_name)
 
         assert mock_time.call_count == 2
-        mock_model.objects.bulk_create.assert_called_once_with(
-            mock_buffer,
-            batch_size=INGEST_BATCH_SIZE_MOCK,
-            ignore_conflicts=True,
-        )
+        mock_cursor.executemany.assert_called_once()
         mock_out.assert_called_once()
 
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
@@ -244,15 +243,17 @@ class TestConsumeBuffer:
         """Test consume_buffer with empty buffer."""
         mock_model = MagicMock()
 
-        with patch(
-            "kernelCI_app.management.commands.helpers.kcidbng_ingester.MODEL_MAP",
-            {"issues": mock_model},
-        ):
-            consume_buffer([], "issues")
+        consume_buffer([], "issues")
 
         mock_model.objects.bulk_create.assert_not_called()
         mock_time.assert_not_called()
         mock_out.assert_not_called()
+
+    def test_consume_buffer_wrong_table(self):
+        """Test consume_buffer with invalid table name raises KeyError."""
+        with pytest.raises(KeyError):
+            mock_model = MagicMock()
+            consume_buffer([mock_model], "another")
 
 
 class TestFlushBuffers:
@@ -416,7 +417,7 @@ class TestFlushBuffers:
         assert mock_time.call_count == 2
         mock_atomic.assert_called_once()
         mock_logger.error.assert_called_once_with(
-            "Error during bulk_create flush: %s", mock_consume.side_effect
+            "Error during buffer flush: %s", mock_consume.side_effect
         )
         mock_aggregate.assert_not_called()
 
