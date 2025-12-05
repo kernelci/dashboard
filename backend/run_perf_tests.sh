@@ -14,5 +14,4 @@ export DJANGO_SETTINGS_MODULE=kernelCI.perf_test_settings
 export TEST_DB_HOST=localhost
 export TEST_DB_PORT=5435
 
-poetry run pytest -m performance -n 0 --reuse-db --benchmark-autosave "$@"
-
+poetry run pytest -m performance -n 0 --reuse-db --benchmark-time-unit=s --benchmark-autosave "$@"
