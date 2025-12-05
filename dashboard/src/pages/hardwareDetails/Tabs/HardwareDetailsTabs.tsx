@@ -2,7 +2,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { FormattedMessage } from 'react-intl';
 
-import type { JSX } from 'react';
+import type { JSX, ReactElement } from 'react';
 import { useCallback, useMemo } from 'react';
 
 import type { UseQueryResult } from '@tanstack/react-query';
@@ -28,6 +28,7 @@ export interface IHardwareDetailsTab {
   fullDataResult?: UseQueryResult<THardwareDetails>;
   summaryData: HardwareDetailsSummary;
   hasSelectedTrees: boolean;
+  headerExtra?: ReactElement;
 }
 
 const HardwareDetailsTabs = ({
@@ -37,6 +38,7 @@ const HardwareDetailsTabs = ({
   fullDataResult,
   summaryData,
   hasSelectedTrees,
+  headerExtra,
 }: IHardwareDetailsTab): JSX.Element => {
   const { currentPageTab } = useSearch({
     from: '/_main/hardware/$hardwareId',
@@ -134,6 +136,7 @@ const HardwareDetailsTabs = ({
       value={currentPageTab}
       onValueChange={onTabChange}
       filterListElement={filterListElement}
+      headerExtra={headerExtra}
     />
   );
 };

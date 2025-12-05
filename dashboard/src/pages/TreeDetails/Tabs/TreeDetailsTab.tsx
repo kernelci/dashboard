@@ -23,6 +23,7 @@ export interface ITreeDetailsTab {
   filterListElement?: JSX.Element;
   countElements: TabRightElementRecord;
   urlFrom: TreeDetailsRouteFrom;
+  headerExtra?: React.JSX.Element;
 }
 
 const TreeDetailsTab = ({
@@ -30,6 +31,7 @@ const TreeDetailsTab = ({
   countElements,
   treeDetailsLazyLoaded,
   urlFrom,
+  headerExtra,
 }: ITreeDetailsTab): JSX.Element => {
   const params = useParams({
     from: urlFrom,
@@ -101,6 +103,7 @@ const TreeDetailsTab = ({
       filterListElement={filterListElement}
       value={currentPageTab}
       onValueChange={onValueChange}
+      headerExtra={headerExtra}
     />
   );
 };
