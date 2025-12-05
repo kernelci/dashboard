@@ -1,7 +1,5 @@
 from typing import Optional
-import jinja2
 import json
-import os
 import sys
 
 from collections import defaultdict
@@ -21,6 +19,11 @@ from kernelCI_app.helpers.email import (
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
     get_default_tree_recipients,
+    setup_jinja_template,
+)
+
+from kernelCI_app.management.commands.helpers.metrics_report import (
+    generate_metrics_report,
 )
 from kernelCI_app.management.commands.helpers.summary import (
     SIGNUP_FOLDER,
@@ -163,14 +166,6 @@ def send_email_report(
         reply_to,
         email_args.in_reply_to,
     )
-
-
-def setup_jinja_template(file):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    templates = os.path.join(base_dir, "templates")
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(templates))
-
-    return env.get_template(file)
 
 
 def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
@@ -882,19 +877,24 @@ class Command(BaseCommand):
         )
 
         # Action argument (replaces subparsers)
+        actions = [
+            "new_issues",
+            "issue_report",
+            "summary",
+            "fake_report",
+            "test_report",
+            "hardware_summary",
+            "metrics_summary",
+        ]
         parser.add_argument(
             "--action",
             type=str,
             required=True,
-            choices=[
-                "new_issues",
-                "issue_report",
-                "summary",
-                "fake_report",
-                "test_report",
-                "hardware_summary",
-            ],
-            help="Action to perform: new_issues, issue_report, summary, fake_report, or test_report",
+            choices=actions,
+            help="Action to perform: "
+            + ", ".join(actions[:-1])
+            + ", or "
+            + actions[-1],
         )
 
         # Issue report specific arguments
@@ -976,79 +976,87 @@ class Command(BaseCommand):
 
         signup_folder = options.get("summary_signup_folder", SIGNUP_FOLDER)
 
-        if action == "new_issues":
-            look_for_new_issues(
-                service=service,
-                email_args=email_args,
-                signup_folder=signup_folder,
-            )
-
-        elif action == "issue_report":
-            email_args.update = options.get("update_storage", False)
-            if options.get("all", False):
-                create_and_send_issue_reports(
+        match action:
+            case "new_issues":
+                look_for_new_issues(
                     service=service,
                     email_args=email_args,
                     signup_folder=signup_folder,
                 )
-            else:
-                issue_id = options.get("id")
-                if not issue_id:
+
+            case "issue_report":
+                email_args.update = options.get("update_storage", False)
+                if options.get("all", False):
+                    create_and_send_issue_reports(
+                        service=service,
+                        email_args=email_args,
+                        signup_folder=signup_folder,
+                    )
+                else:
+                    issue_id = options.get("id")
+                    if not issue_id:
+                        self.stdout.write(
+                            self.style.ERROR(
+                                "You must provide an issue ID or use --all"
+                            )
+                        )
+                        return
+                    generate_issue_report(
+                        service=service,
+                        issue_id=issue_id,
+                        email_args=email_args,
+                        signup_folder=signup_folder,
+                    )
                     self.stdout.write(
-                        self.style.ERROR("You must provide an issue ID or use --all")
+                        self.style.SUCCESS(
+                            f"Issue report generated for issue {issue_id}"
+                        )
+                    )
+
+            case "summary":
+                email_args.update = options.get("update_storage", False)
+                summary_origins = options.get("summary_origins")
+
+                run_checkout_summary(
+                    service=service,
+                    signup_folder=signup_folder,
+                    email_args=email_args,
+                    summary_origins=summary_origins,
+                    skip_sent_reports=options.get("skip_sent_reports", True),
+                )
+
+            case "fake_report":
+                email_args.tree_name = options.get("tree")
+                run_fake_report(service=service, email_args=email_args)
+
+            case "test_report":
+                test_id = options.get("id")
+                if not test_id:
+                    self.stdout.write(
+                        self.style.ERROR(
+                            "You must provide a test ID with --id for test_report action"
+                        )
                     )
                     return
-                generate_issue_report(
+                generate_test_report(
                     service=service,
-                    issue_id=issue_id,
+                    test_id=test_id,
                     email_args=email_args,
                     signup_folder=signup_folder,
                 )
                 self.stdout.write(
-                    self.style.SUCCESS(f"Issue report generated for issue {issue_id}")
+                    self.style.SUCCESS(f"Test report generated for test {test_id}")
                 )
 
-        elif action == "summary":
-            email_args.update = options.get("update_storage", False)
-            summary_origins = options.get("summary_origins")
-
-            run_checkout_summary(
-                service=service,
-                signup_folder=signup_folder,
-                email_args=email_args,
-                summary_origins=summary_origins,
-                skip_sent_reports=options.get("skip_sent_reports", True),
-            )
-
-        elif action == "fake_report":
-            email_args.tree_name = options.get("tree")
-            run_fake_report(service=service, email_args=email_args)
-
-        elif action == "test_report":
-            test_id = options.get("id")
-            if not test_id:
-                self.stdout.write(
-                    self.style.ERROR(
-                        "You must provide a test ID with --id for test_report action"
-                    )
+            case "hardware_summary":
+                email_args.update = options.get("update_storage", False)
+                hardware_origins = options.get("hardware_origins")
+                generate_hardware_summary_report(
+                    service=service,
+                    signup_folder=signup_folder,
+                    email_args=email_args,
+                    hardware_origins=hardware_origins,
                 )
-                return
-            generate_test_report(
-                service=service,
-                test_id=test_id,
-                email_args=email_args,
-                signup_folder=signup_folder,
-            )
-            self.stdout.write(
-                self.style.SUCCESS(f"Test report generated for test {test_id}")
-            )
 
-        elif action == "hardware_summary":
-            email_args.update = options.get("update_storage", False)
-            hardware_origins = options.get("hardware_origins")
-            generate_hardware_summary_report(
-                service=service,
-                signup_folder=signup_folder,
-                email_args=email_args,
-                hardware_origins=hardware_origins,
-            )
+            case "metrics_summary":
+                generate_metrics_report()

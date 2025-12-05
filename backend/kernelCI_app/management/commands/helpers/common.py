@@ -6,6 +6,7 @@ from django.conf import settings
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.management.commands.helpers.summary import SIGNUP_FOLDER
 from kernelCI_app.utils import read_yaml_file
+from jinja2 import Environment, FileSystemLoader, Template
 
 
 def get_default_tree_recipients(
@@ -49,3 +50,15 @@ def get_default_tree_recipients(
             log_message(
                 f"Skipping file {filename} on loading summary files. Not a yaml file."
             )
+
+
+def setup_jinja_template(template_name: str) -> Template:
+    """Gets the template file from management/commands/templates
+    independently from where this function was called"""
+
+    base_commands_path = os.path.dirname(os.path.abspath(__file__))
+    parts = base_commands_path.split("management/commands")
+    templates_dir = os.path.join(parts[0], "management/commands", "templates")
+
+    jinja_env = Environment(loader=FileSystemLoader(templates_dir))
+    return jinja_env.get_template(template_name)
