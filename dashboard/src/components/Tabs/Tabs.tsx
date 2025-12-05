@@ -26,6 +26,7 @@ export interface ITabsComponent {
   filterListElement?: JSX.Element;
   onValueChange?: TabsProp['onValueChange'];
   value?: TabsProp['value'];
+  headerExtra?: ReactElement;
 }
 
 const TabsComponent = ({
@@ -34,6 +35,7 @@ const TabsComponent = ({
   filterListElement,
   onValueChange,
   value,
+  headerExtra,
 }: ITabsComponent): JSX.Element => {
   const tabsTrigger = useMemo(
     () =>
@@ -68,11 +70,14 @@ const TabsComponent = ({
       defaultValue={defaultTab}
       className="w-full"
     >
-      <div className="bg-light-gray sticky top-16 z-5 rounded-md pt-12 pb-6">
-        <TabsList className="border-dark-gray w-full justify-start rounded-none border-b bg-transparent">
-          {tabsTrigger}
-        </TabsList>
-        {filterListElement && <div className="pt-6">{filterListElement}</div>}
+      <div className="bg-light-gray sticky top-18 z-5 flex flex-col gap-6 rounded-md pt-6 pb-6">
+        <div className="flex w-full flex-wrap justify-between gap-6">
+          <TabsList className="border-dark-gray flex-1 items-baseline justify-start rounded-none border-b bg-transparent">
+            {tabsTrigger}
+          </TabsList>
+          {headerExtra}
+        </div>
+        {filterListElement}
       </div>
 
       {tabsContent}

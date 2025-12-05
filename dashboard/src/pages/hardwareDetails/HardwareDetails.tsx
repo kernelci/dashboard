@@ -35,7 +35,9 @@ import { GroupedTestStatus } from '@/components/Status/Status';
 
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 
-import DetailsFilterList from '@/components/Tabs/FilterList';
+import DetailsFilterList, {
+  createFlatFilter,
+} from '@/components/Tabs/FilterList';
 
 import type { TFilter } from '@/types/general';
 
@@ -61,6 +63,8 @@ import { MemoizedTreeHardwareDetailsOGTags } from '@/components/OpenGraphTags/Tr
 import type { TabRightElementRecord } from '@/components/Tabs/Tabs';
 
 import { isEmptyObject } from '@/utils/utils';
+
+import { LoadingCircle } from '@/components/ui/loading-circle';
 
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
@@ -238,17 +242,22 @@ function HardwareDetails(): JSX.Element {
       { enabled: !fullResponse.isLoading && !!fullResponse.data },
     );
 
-  const filterListElement = useMemo(
-    () => (
+  const filterListElement = useMemo(() => {
+    const flatFilter = createFlatFilter(diffFilter);
+    if (flatFilter.length === 0) {
+      return undefined;
+    }
+
+    return (
       <DetailsFilterList
         filter={diffFilter}
+        flatFilter={flatFilter}
         cleanFilters={cleanAll}
         navigate={onFilterChange}
         isLoading={summaryResponse.isPlaceholderData}
       />
-    ),
-    [cleanAll, diffFilter, onFilterChange, summaryResponse.isPlaceholderData],
-  );
+    );
+  }, [cleanAll, diffFilter, onFilterChange, summaryResponse.isPlaceholderData]);
 
   const startTime = getFormattedTime(startTimestampInSeconds);
   const endTime = getFormattedTime(endTimestampInSeconds);
@@ -356,6 +365,36 @@ function HardwareDetails(): JSX.Element {
     );
   }, [formatMessage, hardwareId]);
 
+  const filterButtonHeaderExtra = useMemo(() => {
+    if (!hasSelectedTrees) {
+      return undefined;
+    }
+
+    if (!summaryResponse.data) {
+      if (summaryResponse.isLoading) {
+        return <LoadingCircle className="mr-8" />;
+      } else {
+        return undefined;
+      }
+    }
+
+    return (
+      <HardwareDetailsFilter
+        paramFilter={diffFilter}
+        hardwareName={hardwareId}
+        data={summaryResponse.data}
+        selectedTrees={treeIndexes}
+      />
+    );
+  }, [
+    diffFilter,
+    hardwareId,
+    hasSelectedTrees,
+    summaryResponse.data,
+    summaryResponse.isLoading,
+    treeIndexes,
+  ]);
+
   return (
     <PageWithTitle title={hardwareTitle}>
       <MemoizedTreeHardwareDetailsOGTags
@@ -438,18 +477,6 @@ function HardwareDetails(): JSX.Element {
               </>
             )}
             <div className="flex flex-col pb-2">
-              {hasSelectedTrees && (
-                <div className="sticky top-[4.5rem] z-10">
-                  <div className="absolute top-2 right-0 py-4">
-                    <HardwareDetailsFilter
-                      paramFilter={diffFilter}
-                      hardwareName={hardwareId}
-                      data={summaryResponse.data}
-                      selectedTrees={treeIndexes}
-                    />
-                  </div>
-                </div>
-              )}
               {summaryResponse.data && (
                 <HardwareDetailsTabs
                   hardwareId={hardwareId}
@@ -458,6 +485,7 @@ function HardwareDetails(): JSX.Element {
                   summaryData={summaryResponse.data}
                   fullDataResult={fullResponse}
                   hasSelectedTrees={hasSelectedTrees}
+                  headerExtra={filterButtonHeaderExtra}
                 />
               )}
             </div>

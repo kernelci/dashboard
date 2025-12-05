@@ -1,16 +1,17 @@
-import { useCallback, useMemo, type JSX } from 'react';
+import { useCallback, type JSX } from 'react';
 
 import FilterList from '@/components/FilterList/FilterList';
 import type { TFilter } from '@/types/general';
 
 interface IDetailsFilterList {
   filter: TFilter;
+  flatFilter: string[];
   navigate: (filter: TFilter) => void;
   cleanFilters: () => void;
   isLoading: boolean;
 }
 
-const createFlatFilter = (filter: TFilter): string[] => {
+export const createFlatFilter = (filter: TFilter): string[] => {
   const flatFilter: string[] = [];
 
   Object.entries(filter).forEach(([field, fieldValue]) => {
@@ -29,12 +30,11 @@ const createFlatFilter = (filter: TFilter): string[] => {
 
 const DetailsFilterList = ({
   filter,
+  flatFilter,
   navigate,
   cleanFilters,
   isLoading = false,
 }: IDetailsFilterList): JSX.Element => {
-  const flatFilter = useMemo(() => createFlatFilter(filter), [filter]);
-
   const onClickItem = useCallback(
     (flatValue: string, _: number) => {
       const [field, ...rest] = flatValue.split(':');

@@ -36,7 +36,9 @@ import type { TFilter } from '@/types/general';
 
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 
-import DetailsFilterList from '@/components/Tabs/FilterList';
+import DetailsFilterList, {
+  createFlatFilter,
+} from '@/components/Tabs/FilterList';
 
 import { truncateUrl } from '@/lib/string';
 
@@ -257,22 +259,27 @@ const TreeDetails = ({
     });
   }, [navigate, params]);
 
-  const filterListElement = useMemo(
-    () => (
+  const filterListElement = useMemo(() => {
+    const flatFilter = createFlatFilter(diffFilter);
+    if (flatFilter.length === 0) {
+      return undefined;
+    }
+
+    return (
       <DetailsFilterList
         filter={diffFilter}
+        flatFilter={flatFilter}
         cleanFilters={cleanAll}
         navigate={onFilterChange}
         isLoading={treeDetailsLazyLoaded.summary.isPlaceholderData}
       />
-    ),
-    [
-      cleanAll,
-      diffFilter,
-      onFilterChange,
-      treeDetailsLazyLoaded.summary.isPlaceholderData,
-    ],
-  );
+    );
+  }, [
+    cleanAll,
+    diffFilter,
+    onFilterChange,
+    treeDetailsLazyLoaded.summary.isPlaceholderData,
+  ]);
 
   const [buildStatusCount, bootStatusCount, testStatusCount]: [
     GroupedStatus,
@@ -350,6 +357,25 @@ const TreeDetails = ({
     },
   );
 
+  const filterButtonHeaderExtra = useMemo(() => {
+    if (!data) {
+      if (isLoading) {
+        return <LoadingCircle className="mr-8" />;
+      } else {
+        return undefined;
+      }
+    }
+
+    return (
+      <TreeDetailsFilter
+        paramFilter={diffFilter}
+        treeUrl={data.common.tree_url}
+        data={data}
+        urlFrom={urlFrom}
+      />
+    );
+  }, [data, diffFilter, isLoading, urlFrom]);
+
   return (
     <PageWithTitle title={treeDetailsTitle}>
       <MemoizedTreeHardwareDetailsOGTags
@@ -395,25 +421,12 @@ const TreeDetails = ({
           />
         </div>
         <div className="flex flex-col pb-2">
-          <div className="sticky top-[4.5rem] z-10">
-            <div className="absolute top-2 right-0 py-4">
-              {data ? (
-                <TreeDetailsFilter
-                  paramFilter={diffFilter}
-                  treeUrl={data.common.tree_url}
-                  data={data}
-                  urlFrom={urlFrom}
-                />
-              ) : (
-                isLoading && <LoadingCircle className="mt-6 mr-8" />
-              )}
-            </div>
-          </div>
           <TreeDetailsTab
             treeDetailsLazyLoaded={treeDetailsLazyLoaded}
             filterListElement={filterListElement}
             countElements={tabsCounts}
             urlFrom={urlFrom}
+            headerExtra={filterButtonHeaderExtra}
           />
         </div>
       </div>
