@@ -2,6 +2,9 @@ from unittest.mock import patch, MagicMock
 from django.db import IntegrityError
 from django.test import SimpleTestCase
 from django.utils import timezone
+from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
+    MAP_TABLENAMES_TO_COUNTER,
+)
 from pydantic import ValidationError
 
 from kernelCI_app.management.commands.helpers.process_submissions import (
@@ -329,7 +332,9 @@ class TestBuildInstancesFromSubmission(SimpleTestCase):
             ],
         }
 
-        result = build_instances_from_submission(submission_data)
+        result = build_instances_from_submission(
+            submission_data, MAP_TABLENAMES_TO_COUNTER
+        )
 
         expected = {
             "issues": [mock_make_issue.return_value],
@@ -347,7 +352,7 @@ class TestBuildInstancesFromSubmission(SimpleTestCase):
         mock_make_incident.assert_called_once()
 
     def test_build_instances_from_submission_with_empty_data(self):
-        result = build_instances_from_submission({})
+        result = build_instances_from_submission({}, MAP_TABLENAMES_TO_COUNTER)
 
         expected = {
             "issues": [],
@@ -370,7 +375,9 @@ class TestBuildInstancesFromSubmission(SimpleTestCase):
             "TestModel", []
         )
 
-        result = build_instances_from_submission(submission_data)
+        result = build_instances_from_submission(
+            submission_data, MAP_TABLENAMES_TO_COUNTER
+        )
 
         self.assertEqual(len(result["issues"]), 0)
         mock_logger.error.assert_called_once()
@@ -390,7 +397,9 @@ class TestBuildInstancesFromSubmission(SimpleTestCase):
             ]
         }
 
-        result = build_instances_from_submission(submission_data)
+        result = build_instances_from_submission(
+            submission_data, MAP_TABLENAMES_TO_COUNTER
+        )
 
         self.assertEqual(len(result["issues"]), 2)
         self.assertEqual(mock_make_issue.call_count, 2)
@@ -415,7 +424,9 @@ class TestBuildInstancesFromSubmission(SimpleTestCase):
             mock_issue_3,
         ]
 
-        result = build_instances_from_submission(submission_data)
+        result = build_instances_from_submission(
+            submission_data, MAP_TABLENAMES_TO_COUNTER
+        )
 
         self.assertEqual(len(result["issues"]), 2)
         self.assertEqual(result["issues"][0], mock_issue_1)

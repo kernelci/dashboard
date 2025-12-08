@@ -9,6 +9,7 @@ from kernelCI_app.constants.ingester import (
     INGEST_BATCH_SIZE,
     INGEST_FLUSH_TIMEOUT_SEC,
     INGEST_QUEUE_MAXSIZE,
+    INGESTER_GRAFANA_LABEL,
     VERBOSE,
 )
 import threading
@@ -34,6 +35,8 @@ from kernelCI_app.management.commands.helpers.process_submissions import (
 )
 from kernelCI_app.typeModels.modelTypes import TableModels
 
+from prometheus_client import Counter
+
 
 class SubmissionMetadata(TypedDict):
     filename: str
@@ -48,6 +51,27 @@ logger = logging.getLogger("ingester")
 # Thread-safe queue for database operations (bounded for backpressure)
 db_queue = Queue(maxsize=INGEST_QUEUE_MAXSIZE)
 db_lock = threading.Lock()
+
+
+FILES_INGESTER_COUNTER = Counter(
+    "kcidb_ingestions", "Number of files ingested", ["ingester"]
+)
+
+CHECKOUTS_COUNTER = Counter(
+    "kcidb_checkouts", "Number of checkouts ingested", ["ingester", "origin"]
+)
+ISSUES_COUNTER = Counter(
+    "kcidb_issues", "Number of issues ingested", ["ingester", "origin"]
+)
+BUILDS_COUNTER = Counter(
+    "kcidb_builds", "Number of builds ingested", ["ingester", "origin", "lab"]
+)
+TESTS_COUNTER = Counter(
+    "kcidb_tests", "Number of tests ingested", ["ingester", "origin", "lab", "platform"]
+)
+INCIDENTS_COUNTER = Counter(
+    "kcidb_incidents", "Number of incidents ingested", ["ingester", "origin"]
+)
 
 
 def standardize_tree_names(
@@ -312,6 +336,15 @@ def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
     )
 
 
+MAP_TABLENAMES_TO_COUNTER: dict[TableNames, Counter] = {
+    "checkouts": CHECKOUTS_COUNTER,
+    "issues": ISSUES_COUNTER,
+    "builds": BUILDS_COUNTER,
+    "tests": TESTS_COUNTER,
+    "incidents": INCIDENTS_COUNTER,
+}
+
+
 def process_file(
     file: DirEntry[str],
     tree_names: dict[str, str],
@@ -338,7 +371,10 @@ def process_file(
         # Empty file, already deleted
         return True
 
-    db_queue.put((file.name, build_instances_from_submission(data)))
+    db_queue.put(
+        (file.name, build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER))
+    )
+    FILES_INGESTER_COUNTER.labels(INGESTER_GRAFANA_LABEL).inc()
 
     # Archive the file after queuing (we can do this optimistically)
     try:
