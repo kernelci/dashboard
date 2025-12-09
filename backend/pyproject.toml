@@ -23,6 +23,7 @@ django-crontab = "^0.7.1"
 django-prometheus = "^2.3.1"
 redis = {extras = ["hiredis"], version = "^5.2.1"}
 kcidb_io = {git = "https://github.com/kernelci/kcidb-io.git"}
+prometheus-client = "^0.23.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

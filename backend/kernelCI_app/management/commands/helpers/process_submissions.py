@@ -3,10 +3,13 @@ from django.utils import timezone
 from typing import Any, TypedDict
 
 from django.db import IntegrityError
+
+from kernelCI_app.constants.ingester import INGESTER_GRAFANA_LABEL
 from pydantic import ValidationError
 
 from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Tests
 from kernelCI_app.typeModels.modelTypes import TableNames
+from prometheus_client import Counter
 
 
 class ProcessedSubmission(TypedDict):
@@ -137,10 +140,16 @@ def make_incident_instance(incident: dict[str, Any]) -> Incidents:
     return obj
 
 
-def build_instances_from_submission(data: dict[str, Any]) -> ProcessedSubmission:
+def build_instances_from_submission(
+    data: dict[str, Any], counters: dict[TableNames, Counter]
+) -> ProcessedSubmission:
     """
     Convert raw submission dicts into unsaved Django model instances, grouped by type.
     Per-item errors are logged and the item is skipped, matching the previous behavior.
+
+    Params:
+        data: the submission data in dict format
+        counters: a dict mapping tables to its prometheus counter
     """
     out: ProcessedSubmission = {
         "issues": [],
@@ -162,15 +171,60 @@ def build_instances_from_submission(data: dict[str, Any]) -> ProcessedSubmission
             try:
                 match item_type:
                     case "issues":
-                        out["issues"].append(make_issue_instance(item))
+                        issue = make_issue_instance(item)
+                        out["issues"].append(issue)
+                        counters["issues"].labels(
+                            ingester=INGESTER_GRAFANA_LABEL, origin=issue.origin
+                        ).inc()
                     case "checkouts":
-                        out["checkouts"].append(make_checkout_instance(item))
+                        checkout = make_checkout_instance(item)
+                        out["checkouts"].append(checkout)
+                        counters["checkouts"].labels(
+                            ingester=INGESTER_GRAFANA_LABEL, origin=checkout.origin
+                        ).inc()
                     case "builds":
-                        out["builds"].append(make_build_instance(item))
+                        build = make_build_instance(item)
+                        out["builds"].append(build)
+
+                        try:
+                            misc = build.misc
+                            lab = misc.get("lab")
+                        except AttributeError:
+                            lab = None
+
+                        counters["builds"].labels(
+                            ingester=INGESTER_GRAFANA_LABEL,
+                            origin=build.origin,
+                            lab=lab,
+                        ).inc()
                     case "tests":
-                        out["tests"].append(make_test_instance(item))
+                        test = make_test_instance(item)
+                        out["tests"].append(test)
+
+                        try:
+                            misc = test.misc
+                            lab = misc.get("lab", misc.get("runtime"))
+                        except AttributeError:
+                            lab = None
+
+                        try:
+                            environment_misc = test.environment_misc
+                            platform = environment_misc.get("platform")
+                        except AttributeError:
+                            platform = None
+
+                        counters["tests"].labels(
+                            ingester=INGESTER_GRAFANA_LABEL,
+                            origin=test.origin,
+                            lab=lab,
+                            platform=platform,
+                        ).inc()
                     case "incidents":
-                        out["incidents"].append(make_incident_instance(item))
+                        incident = make_incident_instance(item)
+                        out["incidents"].append(incident)
+                        counters["incidents"].labels(
+                            ingester=INGESTER_GRAFANA_LABEL, origin=incident.origin
+                        ).inc()
                     case _:
                         raise ValueError(f"Unknown item type: {item_type}")
             except ValidationError as ve:

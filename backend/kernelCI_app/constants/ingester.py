@@ -29,6 +29,13 @@ CACHE_LOGS_SIZE_LIMIT = int(os.environ.get("CACHE_LOGS_SIZE_LIMIT", 100000))
 
 TREES_FILE = "/app/trees.yaml"
 
+INGESTER_GRAFANA_LABEL = "django"
+
+try:
+    INGESTER_METRICS_PORT = int(os.environ.get("INGESTER_METRICS_PORT", 8002))
+except (ValueError, TypeError):
+    logger.warning("Invalid INGESTER_METRICS_PORT, using default 8002")
+    INGESTER_METRICS_PORT = 8002
 
 # Batching and backpressure controls
 try:

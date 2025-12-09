@@ -6,6 +6,7 @@ import os
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     ingest_submissions_parallel,
 )
+from kernelCI_app.constants.ingester import INGESTER_METRICS_PORT
 from kernelCI_app.management.commands.helpers.file_utils import (
     load_tree_names,
     verify_spool_dirs,
@@ -13,6 +14,7 @@ from kernelCI_app.management.commands.helpers.file_utils import (
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
     cache_logs_maintenance,
 )
+from prometheus_client import start_http_server
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +65,7 @@ class Command(BaseCommand):
         trees_file: str,
         **options,
     ):
+        start_http_server(INGESTER_METRICS_PORT)
         archive_dir = os.path.join(spool_dir, "archive")
         failed_dir = os.path.join(spool_dir, "failed")
 
