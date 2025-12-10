@@ -31,6 +31,10 @@ TREES_FILE = "/app/trees.yaml"
 
 INGESTER_GRAFANA_LABEL = "django"
 
+PROMETHEUS_MULTIPROC_DIR = os.environ.get(
+    "PROMETHEUS_MULTIPROC_DIR", "/tmp/prometheus_multiproc_dir"
+)
+
 try:
     INGESTER_METRICS_PORT = int(os.environ.get("INGESTER_METRICS_PORT", 8002))
 except (ValueError, TypeError):
