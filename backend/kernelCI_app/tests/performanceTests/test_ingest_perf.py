@@ -10,6 +10,8 @@ import kcidb_io
 import pytest
 
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
+    MAP_TABLENAMES_TO_COUNTER,
+    SubmissionFileMetadata,
     flush_buffers,
     ingest_submissions_parallel,
     prepare_file_data,
@@ -204,9 +206,17 @@ def test_prepare_file_data(
 
     assert len(files) > 0, "No submissions found"
 
-    def prepare_files(files, trees_names):
+    def prepare_files(
+        files: list[os.DirEntry[str]], trees_names: dict[str, str]
+    ) -> None:
         for file in files:
-            prepare_file_data(file, trees_names)
+            file_metadata: SubmissionFileMetadata = {
+                "path": file.path,
+                "name": file.name,
+                "size": file.stat().st_size,
+            }
+
+            prepare_file_data(file_metadata, trees_names)
 
     benchmark.pedantic(
         prepare_files,
@@ -226,7 +236,7 @@ def test_prepare_file_data(
 
 
 def _prepare_buffers(
-    files: list[str], trees_names: dict[str, str]
+    files: list[os.DirEntry[str]], trees_names: dict[str, str]
 ) -> tuple[list, dict[str, list[Any]]]:
     """
     Prepare object buffers from submission files.
@@ -244,12 +254,18 @@ def _prepare_buffers(
     }
 
     for file in files:
-        data, metadata = prepare_file_data(file, trees_names)
+        file_metadata: SubmissionFileMetadata = {
+            "path": file.path,
+            "name": file.name,
+            "size": file.stat().st_size,
+        }
+
+        data, metadata = prepare_file_data(file_metadata, trees_names)
 
         if not data:
             continue
 
-        instances = build_instances_from_submission(data)
+        instances = build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER)
 
         objects_buffers["issues"].extend(instances["issues"])
         objects_buffers["checkouts"].extend(instances["checkouts"])
@@ -336,20 +352,26 @@ def test_build_instances_perf(benchmark, cleanup_submission_files, file_subset):
 
     data_list = []
     for file in files:
-        data, _ = prepare_file_data(file, trees_names)
+        file_metadata: SubmissionFileMetadata = {
+            "path": file.path,
+            "name": file.name,
+            "size": file.stat().st_size,
+        }
+
+        data, _ = prepare_file_data(file_metadata, trees_names)
         if data:
             data_list.append(data)
 
     # Calculate total items to be processed
     total_items = 0
     for data in data_list:
-        instances = build_instances_from_submission(data)
+        instances = build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER)
         for key in instances:
             total_items += len(instances[key])
 
     def run_build_instances(data_list):
         for data in data_list:
-            build_instances_from_submission(data)
+            build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER)
 
     benchmark.pedantic(
         run_build_instances,
