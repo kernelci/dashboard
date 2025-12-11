@@ -33,6 +33,8 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
+import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
+
 import { HardwareDetailsBootsTable } from './HardwareDetailsBootsTable';
 
 interface IBootsTab {
@@ -168,9 +170,17 @@ const BootsTab = ({
         />,
         <MemoizedConfigList
           key="configs"
-          title={<FormattedMessage id="bootsTab.configs" />}
+          title={<FormattedMessage id="global.configs" />}
           configStatusCounts={bootsSummary.configs}
           diffFilter={diffFilter}
+        />,
+        <MemoizedFilterCard
+          cardTitle="filter.labs"
+          key="labs"
+          diffFilter={diffFilter}
+          data={bootsSummary.labs}
+          filterSection="bootLab"
+          hideSingleValue={false}
         />,
       ],
       footerCards: [

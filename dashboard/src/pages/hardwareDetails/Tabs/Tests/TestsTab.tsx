@@ -32,6 +32,8 @@ import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/H
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
+import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
+
 import HardwareDetailsTestTable from './HardwareDetailsTestsTable';
 
 interface ITestsTab {
@@ -153,9 +155,17 @@ const TestsTab = ({
         />,
         <MemoizedConfigList
           key="configs"
-          title={<FormattedMessage id="bootsTab.configs" />}
+          title={<FormattedMessage id="global.configs" />}
           configStatusCounts={testsSummary.configs}
           diffFilter={diffFilter}
+        />,
+        <MemoizedFilterCard
+          cardTitle="filter.labs"
+          key="labs"
+          diffFilter={diffFilter}
+          data={testsSummary.labs}
+          filterSection="testLab"
+          hideSingleValue={false}
         />,
       ],
       footerCards: [

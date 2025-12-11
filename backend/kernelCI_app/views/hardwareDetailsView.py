@@ -13,7 +13,9 @@ from kernelCI_app.helpers.hardwareDetails import (
     decide_if_is_build_in_filter,
     decide_if_is_full_record_filtered_out,
     decide_if_is_test_in_filter,
-    generate_test_dict,
+    format_issue_summary_for_response,
+    generate_build_summary_typed,
+    generate_test_summary_typed,
     generate_tree_status_summary_dict,
     get_build_typed,
     get_filter_options,
@@ -21,6 +23,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     get_trees_with_selected_commit,
     get_validated_current_tree,
     handle_build,
+    handle_test_summary,
     handle_tree_status_summary,
     is_issue_processed,
     is_test_processed,
@@ -40,7 +43,7 @@ from kernelCI_app.typeModels.commonDetails import (
     GlobalFilters,
     LocalFilters,
     Summary,
-    TestSummary,
+    TestArchSummaryItem,
 )
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     HARDWARE_ID_PATH_PARAM,
@@ -50,6 +53,7 @@ from kernelCI_app.typeModels.hardwareDetails import (
     HardwareDetailsFilters,
     HardwareDetailsFullResponse,
     HardwareDetailsPostBody,
+    HardwareTestHistoryItem,
     HardwareTestLocalFilters,
     PossibleTestType,
     Tree,
@@ -59,7 +63,7 @@ from kernelCI_app.viewCommon import create_details_build_summary
 from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from typing import Dict, List, Set
+from typing import Dict, List, Literal, Set
 from kernelCI_app.constants.localization import ClientStrings
 
 
@@ -89,13 +93,42 @@ class HardwareDetails(APIView):
 
         self.processed_compatibles: Set[str] = set()
 
+        self.processed_architectures: dict[
+            PossibleTabs, dict[str, TestArchSummaryItem]
+        ] = {
+            "build": {},
+            "boot": {},
+            "test": {},
+        }
+
         self.builds = {
             "items": [],
             "issues": {},
             "failedWithUnknownIssues": 0,
         }
-        self.boots = generate_test_dict()
-        self.tests = generate_test_dict()
+
+        # TODO: move this to a pydantic model, in a good synergy with TestSummary
+        self.issue_dicts: dict[
+            PossibleTabs, dict[Literal["issues", "failedWithUnknownIssues"], dict | int]
+        ] = {
+            "build": {
+                "issues": {},
+                "failedWithUnknownIssues": 0,
+            },
+            "boot": {
+                "issues": {},
+                "failedWithUnknownIssues": 0,
+            },
+            "test": {
+                "issues": {},
+                "failedWithUnknownIssues": 0,
+            },
+        }
+
+        self.boot_history: list[HardwareTestHistoryItem] = []
+        self.test_history: list[HardwareTestHistoryItem] = []
+        self.boot_summary = generate_test_summary_typed()
+        self.test_summary = generate_test_summary_typed()
 
         self.unfiltered_build_issues = set()
         self.unfiltered_boot_issues = set()
@@ -125,16 +158,16 @@ class HardwareDetails(APIView):
         # TODO: move to a BuildSummary model and combine with self.builds above
         self.base_build_summary = BaseBuildSummary()
 
-    def _process_test(self, record: Dict) -> None:
+    def _process_test(self, record: dict) -> None:
         is_record_boot = is_boot(record["path"])
-        test_type_key: PossibleTestType = "boot" if is_record_boot else "test"
-        task = self.boots if is_record_boot else self.tests
+        test_type: PossibleTestType = "boot" if is_record_boot else "test"
+        task_issue_summary = self.issue_dicts.get(test_type)
 
         is_test_processed_result = is_test_processed(
             record=record, processed_tests=self.processed_tests
         )
         is_issue_processed_result = is_issue_processed(
-            record=record, processed_issues=self.processed_issues[test_type_key]
+            record=record, processed_issues=self.processed_issues[test_type]
         )
         should_process_test = decide_if_is_test_in_filter(
             instance=self, test_type=test_type, record=record
@@ -147,20 +180,25 @@ class HardwareDetails(APIView):
         ):
             process_issue(
                 record=record,
-                task_issues_dict=task,
+                task_issues_dict=task_issue_summary,
                 issue_from="test",
             )
             processed_issue_key = get_processed_issue_key(record=record)
-            self.processed_issues[test_type_key].add(processed_issue_key)
+            self.processed_issues[test_type].add(processed_issue_key)
 
         if should_process_test and not is_test_processed_result:
             self.processed_tests.add(record["id"])
-            test_or_boot_history = (
-                self.boots["history"] if is_record_boot else self.tests["history"]
-            )
+            task_history = self.boot_history if is_record_boot else self.test_history
+            task_summary = self.boot_summary if is_record_boot else self.test_summary
             handle_test_history(
                 record=record,
-                task=test_or_boot_history,
+                task=task_history,
+            )
+            handle_test_summary(
+                record=record,
+                task=task_summary,
+                issue_dict=task_issue_summary,
+                processed_archs=self.processed_architectures[test_type],
             )
 
     def _process_build(self, record: Dict, tree_index: int) -> None:
@@ -218,11 +256,20 @@ class HardwareDetails(APIView):
 
     def _format_processing_for_response(self):
         mutate_properties_to_list(self.builds, ["issues"])
-        mutate_properties_to_list(
-            self.tests, ["issues", "platformsFailing", "archSummary"]
+        self.boot_summary.architectures = list(
+            self.processed_architectures["boot"].values()
         )
-        mutate_properties_to_list(
-            self.boots, ["issues", "platformsFailing", "archSummary"]
+        self.test_summary.architectures = list(
+            self.processed_architectures["test"].values()
+        )
+
+        # TODO: change the current build summary from BaseBuildSummary to BuildSummary
+        # For now it is not needed in this function since we are collecting build issue summary separetely
+        format_issue_summary_for_response(
+            builds_summary=generate_build_summary_typed(),
+            boots_summary=self.boot_summary,
+            tests_summary=self.test_summary,
+            issue_dicts=self.issue_dicts,
         )
 
     # Using post to receive a body request
@@ -306,8 +353,8 @@ class HardwareDetails(APIView):
         try:
             valid_response = HardwareDetailsFullResponse(
                 builds=self.builds["items"],
-                boots=self.boots["history"],
-                tests=self.tests["history"],
+                boots=self.boot_history,
+                tests=self.test_history,
                 summary=Summary(
                     builds=BuildSummary(
                         status=self.base_build_summary.status,
@@ -316,32 +363,10 @@ class HardwareDetails(APIView):
                         configs=self.base_build_summary.configs,
                         issues=self.builds["issues"],
                         unknown_issues=self.builds["failedWithUnknownIssues"],
-                        labs={},
+                        labs=self.base_build_summary.labs,
                     ),
-                    boots=TestSummary(
-                        status=self.boots["statusSummary"],
-                        origins=self.boots["origins"],
-                        architectures=self.boots["archSummary"],
-                        configs=self.boots["configs"],
-                        issues=self.boots["issues"],
-                        unknown_issues=self.boots["failedWithUnknownIssues"],
-                        platforms=self.boots["platforms"],
-                        fail_reasons=self.boots["failReasons"],
-                        failed_platforms=list(self.boots["platformsFailing"]),
-                        labs={},
-                    ),
-                    tests=TestSummary(
-                        status=self.tests["statusSummary"],
-                        origins=self.tests["origins"],
-                        architectures=self.tests["archSummary"],
-                        configs=self.tests["configs"],
-                        issues=self.tests["issues"],
-                        unknown_issues=self.tests["failedWithUnknownIssues"],
-                        platforms=self.tests["platforms"],
-                        fail_reasons=self.tests["failReasons"],
-                        failed_platforms=list(self.tests["platformsFailing"]),
-                        labs={},
-                    ),
+                    boots=self.boot_summary,
+                    tests=self.test_summary,
                 ),
                 filters=HardwareDetailsFilters(
                     all=GlobalFilters(

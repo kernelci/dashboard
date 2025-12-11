@@ -143,7 +143,7 @@ class HardwareDetailsSummary(APIView):
     def _process_test(self, record: Dict) -> None:
         is_record_boot = is_boot(record["path"])
         test_type_key: PossibleTestType = "boot" if is_record_boot else "test"
-        task = self.boots_summary if is_record_boot else self.tests_summary
+        task_issue_summary = self.issue_dicts[test_type_key]
 
         is_test_processed_result = is_test_processed(
             record=record, processed_tests=self.processed_tests
@@ -162,17 +162,18 @@ class HardwareDetailsSummary(APIView):
         ):
             process_issue(
                 record=record,
-                task_issues_dict=self.issue_dicts[test_type_key],
+                task_issues_dict=task_issue_summary,
                 issue_from="test",
             )
             processed_issue_key = get_processed_issue_key(record=record)
             self.processed_issues[test_type_key].add(processed_issue_key)
 
         if should_process_test and not is_test_processed_result:
+            task_summary = self.boots_summary if is_record_boot else self.tests_summary
             handle_test_summary(
                 record=record,
-                task=task,
-                issue_dict=self.issue_dicts.get(test_type_key),
+                task=task_summary,
+                issue_dict=task_issue_summary,
                 processed_archs=self.processed_architectures[test_type_key],
             )
             self.processed_tests.add(record["id"])
@@ -347,7 +348,7 @@ class HardwareDetailsSummary(APIView):
                             "build"
                         ],
                         origins=sorted(self.unfiltered_origins["build"]),
-                        labs=self.unfiltered_labs["build"],
+                        labs=sorted(self.unfiltered_labs["build"]),
                     ),
                     boots=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_boot_issues),
@@ -356,7 +357,7 @@ class HardwareDetailsSummary(APIView):
                             "boot"
                         ],
                         origins=sorted(self.unfiltered_origins["boot"]),
-                        labs=self.unfiltered_labs["boot"],
+                        labs=sorted(self.unfiltered_labs["boot"]),
                     ),
                     tests=HardwareTestLocalFilters(
                         issues=list(self.unfiltered_test_issues),
@@ -365,7 +366,7 @@ class HardwareDetailsSummary(APIView):
                             "test"
                         ],
                         origins=sorted(self.unfiltered_origins["test"]),
-                        labs=self.unfiltered_labs["test"],
+                        labs=sorted(self.unfiltered_labs["test"]),
                     ),
                 ),
                 common=HardwareCommon(
