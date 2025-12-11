@@ -1,16 +1,16 @@
 import multiprocessing
-from multiprocessing.synchronize import Event as EventClass
+from multiprocessing.sharedctypes import Synchronized
+from multiprocessing.synchronize import Lock as ProcessLock
 from os import DirEntry
-from concurrent.futures import ProcessPoolExecutor, as_completed
 import json
 import logging
 import os
-from queue import Queue, Empty
+from queue import Queue
 from typing_extensions import Literal
 from kernelCI_app.constants.ingester import (
     CONVERT_LOG_EXCERPT,
     INGEST_BATCH_SIZE,
-    INGEST_FLUSH_TIMEOUT_SEC,
+    INGEST_FILES_BATCH_SIZE,
     INGEST_QUEUE_MAXSIZE,
     INGESTER_GRAFANA_LABEL,
     VERBOSE,
@@ -91,7 +91,7 @@ def standardize_tree_names(
 
 def prepare_file_data(
     file: SubmissionFileMetadata, tree_names: dict[str, str]
-) -> tuple[Optional[dict[str, Any]], dict[str, Any]]:
+) -> tuple[Optional[dict[str, Any]], Optional[dict[str, Any]]]:
     """
     Prepare file data: read, extract log excerpts, standardize tree names, validate.
     This function does everything except the actual database load.
@@ -173,8 +173,10 @@ def flush_buffers(
     tests_buf: list[Tests],
     incidents_buf: list[Incidents],
     buffer_files: set[tuple[str, str]],
-    archive_dir: str,
-    pending_retry_dir: str,
+    dirs: dict[INGESTER_DIRS, str],
+    stat_ok: Synchronized,
+    stat_fail: Synchronized,
+    counter_lock: ProcessLock,
 ) -> None:
     """
     Consumes the list of objects and tries to insert them into the database.
@@ -205,13 +207,18 @@ def flush_buffers(
                 tests_instances=tests_buf,
             )
         for filename, filepath in buffer_files:
-            os.rename(filepath, os.path.join(archive_dir, filename))
+            os.rename(filepath, os.path.join(dirs["archive"], filename))
+
+        with counter_lock:
+            stat_ok.value += len(buffer_files)
     except Exception as e:
         logger.error("Error during buffer flush: %s", e)
         try:
             for filename, filepath in buffer_files:
-                os.rename(filepath, os.path.join(pending_retry_dir, filename))
+                os.rename(filepath, os.path.join(dirs["failed"], filename))
             out("Moved %d files to pending retry directory" % len(buffer_files))
+            with counter_lock:
+                stat_fail.value += len(buffer_files)
         except OSError as oe:
             logger.error("OS error during buffer file pending retry move: %s", oe)
             logger.error("Removing files from buffer set, they should be retried")
@@ -240,128 +247,6 @@ def flush_buffers(
         buffer_files.clear()
 
 
-# TODO: lower the complexity of this function
-def db_worker(  # noqa: C901
-    stop_event: EventClass,
-    db_queue: Queue,
-    archive_dir: str,
-    pending_retry_dir: str,
-) -> None:
-    """
-    Worker process that processes the database queue.
-    This is the only process that interacts with the database.
-
-    Args:
-        stop_event: multiprocessing.Event (flag) to signal the worker to stop processing
-        queue: multiprocessing.JoinableQueue to communicate with the worker
-    """
-
-    # Local buffers for batching
-    issues_buf: list[Issues] = []
-    checkouts_buf: list[Checkouts] = []
-    builds_buf: list[Builds] = []
-    tests_buf: list[Tests] = []
-    incidents_buf: list[Incidents] = []
-    buffer_files: set[tuple[str, str]] = set()
-
-    last_flush_ts = time.time()
-
-    def buffered_total() -> int:
-        return (
-            len(issues_buf)
-            + len(checkouts_buf)
-            + len(builds_buf)
-            + len(tests_buf)
-            + len(incidents_buf)
-        )
-
-    while not stop_event.is_set() or not db_queue.empty():
-        try:
-            item = db_queue.get(timeout=0.1)
-            if item is None:
-                db_queue.task_done()
-                break
-            try:
-                filename, filepath, inst = item
-                if inst is not None:
-                    buffer_files.add((filename, filepath))
-                    issues_buf.extend(inst["issues"])
-                    checkouts_buf.extend(inst["checkouts"])
-                    builds_buf.extend(inst["builds"])
-                    tests_buf.extend(inst["tests"])
-                    incidents_buf.extend(inst["incidents"])
-
-                if buffered_total() >= INGEST_BATCH_SIZE:
-                    flush_buffers(
-                        issues_buf=issues_buf,
-                        checkouts_buf=checkouts_buf,
-                        builds_buf=builds_buf,
-                        tests_buf=tests_buf,
-                        incidents_buf=incidents_buf,
-                        archive_dir=archive_dir,
-                        pending_retry_dir=pending_retry_dir,
-                        buffer_files=buffer_files,
-                    )
-                    last_flush_ts = time.time()
-
-                if VERBOSE:
-                    msg = (
-                        "Queued from %s: "
-                        "issues=%d checkouts=%d builds=%d tests=%d incidents=%d"
-                        % (
-                            filename,
-                            len(inst["issues"]),
-                            len(inst["checkouts"]),
-                            len(inst["builds"]),
-                            len(inst["tests"]),
-                            len(inst["incidents"]),
-                        )
-                    )
-                    out(msg)
-            except Exception as e:
-                logger.error("Error processing item in db_worker: %s", e)
-            finally:
-                db_queue.task_done()
-
-        except Empty:
-            # Time-based flush when idle
-            if (time.time() - last_flush_ts) >= INGEST_FLUSH_TIMEOUT_SEC:
-                if VERBOSE:
-                    out(
-                        "Idle flush after %.1fs without new items (buffered=%d)"
-                        % (
-                            INGEST_FLUSH_TIMEOUT_SEC,
-                            buffered_total(),
-                        )
-                    )
-                flush_buffers(
-                    issues_buf=issues_buf,
-                    checkouts_buf=checkouts_buf,
-                    builds_buf=builds_buf,
-                    tests_buf=tests_buf,
-                    incidents_buf=incidents_buf,
-                    archive_dir=archive_dir,
-                    pending_retry_dir=pending_retry_dir,
-                    buffer_files=buffer_files,
-                )
-                last_flush_ts = time.time()
-            continue
-        except Exception as e:
-            logger.error("Unexpected error in db_worker: %s", e)
-
-    # Final flush after loop ends
-    flush_buffers(
-        issues_buf=issues_buf,
-        checkouts_buf=checkouts_buf,
-        builds_buf=builds_buf,
-        tests_buf=tests_buf,
-        incidents_buf=incidents_buf,
-        archive_dir=archive_dir,
-        pending_retry_dir=pending_retry_dir,
-        buffer_files=buffer_files,
-    )
-
-
 MAP_TABLENAMES_TO_COUNTER: dict[TableNames, Counter] = {
     "checkouts": CHECKOUTS_COUNTER,
     "issues": ISSUES_COUNTER,
@@ -371,179 +256,165 @@ MAP_TABLENAMES_TO_COUNTER: dict[TableNames, Counter] = {
 }
 
 
-def process_file(
-    file: SubmissionFileMetadata,
-    tree_names: dict[str, str],
-    failed_dir: str,
-    db_queue: Queue,
-) -> bool:
-    """
-    Process a single file in a process, then queue it for database insertion.
-
-    Returns:
-        True if file was processed or deleted, False if an error occured
-    """
-    data, metadata = prepare_file_data(file, tree_names)
-
-    if "error" in metadata:
-        try:
-            move_file_to_failed_dir(file["path"], failed_dir)
-        except Exception:
-            pass
-        return False
-
-    if data is None:
-        # Empty file, already deleted
-        return True
-
-    db_queue.put(
-        (
-            file["name"],
-            file["path"],
-            build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER),
-        )
-    )
-    FILES_INGESTER_COUNTER.labels(INGESTER_GRAFANA_LABEL).inc()
-
-    return True
+class SubmissionsInstances(TypedDict):
+    issues: list[Issues]
+    checkouts: list[Checkouts]
+    builds: list[Builds]
+    tests: list[Tests]
+    incidents: list[Incidents]
 
 
-def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threading
-    json_files: list[DirEntry[str]],
+def process_batch(
+    process_queue: Queue,
     tree_names: dict[str, str],
     dirs: dict[INGESTER_DIRS, str],
-    max_workers: int = 5,
+    processed: Synchronized,
+    stat_ok: Synchronized,
+    stat_fail: Synchronized,
+    counter_lock: ProcessLock,
+) -> None:
+    # Ensure that the new process has a unique connection to the database
+    connections.close_all()
+
+    instances_dict: SubmissionsInstances = {
+        "issues": [],
+        "checkouts": [],
+        "builds": [],
+        "tests": [],
+        "incidents": [],
+    }
+
+    buffer_files = set()
+
+    while True:
+        batch = process_queue.get()
+
+        if batch is None or len(batch) == 0:
+            break
+
+        for file in batch:
+            data, metadata = prepare_file_data(file, tree_names)
+
+            if metadata and metadata.get("error"):
+                try:
+                    move_file_to_failed_dir(file["path"], dirs["failed"])
+                except Exception:
+                    pass
+                with counter_lock:
+                    stat_fail.value += 1
+                    processed.value += 1
+                continue
+
+            if data is None:
+                with counter_lock:
+                    processed.value += 1
+                continue
+
+            with counter_lock:
+                processed.value += 1
+            FILES_INGESTER_COUNTER.labels(ingester=INGESTER_GRAFANA_LABEL).inc()
+
+            instances = build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER)
+
+            instances_dict["issues"].extend(instances["issues"])
+            instances_dict["checkouts"].extend(instances["checkouts"])
+            instances_dict["builds"].extend(instances["builds"])
+            instances_dict["tests"].extend(instances["tests"])
+            instances_dict["incidents"].extend(instances["incidents"])
+
+            buffer_files.add((file["name"], file["path"]))
+
+        # Sort instances to prevent deadlocks when multiple transactions update the same rows
+        instances_dict["issues"].sort(key=lambda x: x.id)
+        instances_dict["checkouts"].sort(key=lambda x: x.id)
+        instances_dict["builds"].sort(key=lambda x: x.id)
+        instances_dict["tests"].sort(key=lambda x: x.id)
+        instances_dict["incidents"].sort(key=lambda x: x.id)
+
+        flush_buffers(
+            issues_buf=(
+                instances_dict["issues"]
+                if len(instances_dict["issues"]) >= INGEST_BATCH_SIZE
+                else []
+            ),
+            checkouts_buf=(
+                instances_dict["checkouts"]
+                if len(instances_dict["checkouts"]) >= INGEST_BATCH_SIZE
+                else []
+            ),
+            builds_buf=(
+                instances_dict["builds"]
+                if len(instances_dict["builds"]) >= INGEST_BATCH_SIZE
+                else []
+            ),
+            tests_buf=(
+                instances_dict["tests"]
+                if len(instances_dict["tests"]) >= INGEST_BATCH_SIZE
+                else []
+            ),
+            incidents_buf=(
+                instances_dict["incidents"]
+                if len(instances_dict["incidents"]) >= INGEST_BATCH_SIZE
+                else []
+            ),
+            buffer_files=buffer_files,
+            dirs=dirs,
+            stat_ok=stat_ok,
+            stat_fail=stat_fail,
+            counter_lock=counter_lock,
+        )
+
+    if any(len(instances_dict[table]) for table in instances_dict):  # type: ignore
+        out("Process finished, flushing remaining buffers")
+        flush_buffers(
+            issues_buf=instances_dict["issues"],
+            checkouts_buf=instances_dict["checkouts"],
+            builds_buf=instances_dict["builds"],
+            tests_buf=instances_dict["tests"],
+            incidents_buf=instances_dict["incidents"],
+            buffer_files=buffer_files,
+            dirs=dirs,
+            stat_ok=stat_ok,
+            stat_fail=stat_fail,
+            counter_lock=counter_lock,
+        )
+
+
+def print_ingest_progress(
+    processed: int,
+    total_files: int,
+    total_bytes: int,
+    stat_ok: int,
+    stat_fail: int,
+    elapsed: float,
+    queue_size: int,
 ) -> None:
     """
-    Ingest submissions in parallel using ThreadPoolExecutor for I/O operations
-    and a single database worker thread.
+    Print a report of the ingestion process.
     """
-    total_bytes = 0
-    for f in json_files:
-        try:
-            total_bytes += f.stat().st_size
-        except Exception:
-            pass
+    files_per_sec = total_files / elapsed if elapsed > 0 else 0.0
+    mb = total_bytes / (1024 * 1024)
+    mb_per_sec = mb / elapsed if elapsed > 0 else 0.0
+    rate = processed / elapsed if elapsed > 0 else 0.0
+    remaining = total_files - processed
+    eta = remaining / rate if rate > 0 else float("inf")
 
-    out(
-        "Spool status: %d .json files queued (%.2f MB)"
-        % (
-            len(json_files),
-            total_bytes / (1024 * 1024) if total_bytes else 0.0,
+    if remaining > 0:
+        msg = (
+            "Progress: %d/%d files (ok=%d, fail=%d) | "
+            "%.2fs elapsed | %.1f files/s | ETA %.1fs | Queue size: %d"
+            % (
+                processed,
+                total_files,
+                stat_ok,
+                stat_fail,
+                elapsed,
+                rate,
+                eta,
+                queue_size,
+            )
         )
-    )
-
-    cycle_start = time.time()
-    total_files_count = len(json_files)
-
-    manager = multiprocessing.Manager()
-    db_queue = manager.JoinableQueue(maxsize=INGEST_QUEUE_MAXSIZE)
-
-    # Start database worker process
-    # This process will constantly consume the db_queue and send data to the database
-    stop_event = multiprocessing.Event()
-    db_process = multiprocessing.Process(
-        target=db_worker,
-        args=(
-            stop_event,
-            db_queue,
-            dirs["archive"],
-            dirs["pending_retry"],
-        ),
-    )
-    db_process.start()
-
-    stat_ok = 0
-    stat_fail = 0
-
-    processed = 0
-    last_progress = cycle_start
-    progress_every_n = 200
-    progress_every_sec = 2.0
-
-    try:
-        # Process files in parallel
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
-            # Submit all files for processing
-            future_to_file = {
-                executor.submit(
-                    process_file,
-                    {"path": file.path, "name": file.name, "size": file.stat().st_size},
-                    tree_names,
-                    dirs["failed"],
-                    db_queue,
-                ): file.name
-                for file in json_files
-            }
-
-            # Collect results progressively
-            for future in as_completed(future_to_file):
-                filename = future_to_file[future]
-                try:
-                    result = future.result()
-                    if result:
-                        stat_ok += 1
-                    else:
-                        stat_fail += 1
-                except Exception as e:
-                    logger.error("Exception processing %s: %s", filename, e)
-                    stat_fail += 1
-                finally:
-                    processed += 1
-                    now = time.time()
-                    if (
-                        processed % progress_every_n == 0
-                        or (now - last_progress) >= progress_every_sec
-                    ):
-                        elapsed = now - cycle_start
-                        rate = processed / elapsed if elapsed > 0 else 0.0
-                        remaining = total_files_count - processed
-                        eta = remaining / rate if rate > 0 else float("inf")
-                        try:
-                            qsz = db_queue.qsize()
-                        except Exception:
-                            qsz = -1
-                        msg = (
-                            "Progress: %d/%d files (ok=%d, fail=%d) | "
-                            "%.2fs elapsed | %.1f files/s | ETA %.1fs | db_queue=%d"
-                            % (
-                                processed,
-                                total_files_count,
-                                stat_ok,
-                                stat_fail,
-                                elapsed,
-                                rate,
-                                eta,
-                                qsz,
-                            )
-                        )
-                        out(msg)
-                        last_progress = now
-
-        out("Waiting for DB queue to drain... size=%d" % db_queue.qsize())
-        # Wait for all database operations to complete
-        db_queue.join()
-
-    except KeyboardInterrupt:
-        out("KeyboardInterrupt: stopping ingestion and flushing...")
-        try:
-            # Attempt to cancel remaining futures and exit early
-            # Note: this only cancels tasks not yet started
-            pass
-        finally:
-            raise
-    finally:
-        # Signal database worker to stop
-        stop_event.set()
-        db_queue.put(None)  # Poison pill
-        db_process.join()
-
-    elapsed = time.time() - cycle_start
-    total_files = stat_ok + stat_fail
-    if total_files > 0:
-        files_per_sec = total_files / elapsed if elapsed > 0 else 0.0
-        mb = total_bytes / (1024 * 1024)
-        mb_per_sec = mb / elapsed if elapsed > 0 else 0.0
+    else:
         msg = (
             "Ingest cycle: %d files (ok=%d, fail=%d) in %.2fs | "
             "%.2f files/s | %.2f MB processed (%.2f MB/s)"
@@ -557,6 +428,113 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
                 mb_per_sec,
             )
         )
-        out(msg)
-    else:
-        out("No files processed, nothing to do")
+    out(msg)
+
+
+def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + multiprocessing
+    json_files: list[DirEntry[str]],
+    tree_names: dict[str, str],
+    dirs: dict[INGESTER_DIRS, str],
+    max_workers: int = 5,
+) -> None:
+    """
+    Ingest submissions in parallel using child processes for I/O and database operations.
+    """
+    cycle_start = time.time()
+    total_bytes = 0
+    total_files_count = len(json_files)
+
+    process_queue: multiprocessing.Queue[Optional[list[SubmissionFileMetadata]]] = (
+        multiprocessing.Queue(maxsize=INGEST_QUEUE_MAXSIZE)
+    )
+
+    batch = []
+    for file in json_files:
+        try:
+            total_bytes += file.stat().st_size
+        except Exception:
+            pass
+
+        batch.append(
+            SubmissionFileMetadata(
+                path=file.path,
+                name=file.name,
+                size=file.stat().st_size,
+            )
+        )
+
+        batch_len = len(batch)
+        if batch_len >= INGEST_FILES_BATCH_SIZE or batch_len >= total_files_count:
+            process_queue.put(batch)
+            batch = []
+
+    out(
+        "Spool status: %d .json files queued (%.2f MB)"
+        % (
+            len(json_files),
+            total_bytes / (1024 * 1024) if total_bytes else 0.0,
+        )
+    )
+
+    stat_ok = multiprocessing.Value("i", 0)
+    stat_fail = multiprocessing.Value("i", 0)
+    counter_lock = multiprocessing.Lock()
+    processed = multiprocessing.Value("i", 0)
+    last_progress = cycle_start
+    progress_every_sec = 2.0
+
+    writers = []
+    try:
+        for _ in range(max_workers):
+            writer = multiprocessing.Process(
+                target=process_batch,
+                args=(
+                    process_queue,
+                    tree_names,
+                    dirs,
+                    processed,
+                    stat_ok,
+                    stat_fail,
+                    counter_lock,
+                ),
+            )
+            writers.append(writer)
+            writer.start()
+            process_queue.put(None)  # Poison pill to signal the end of the queue
+
+        while not process_queue.empty():
+            if time.time() - last_progress > progress_every_sec:
+                print_ingest_progress(
+                    processed.value,
+                    total_files_count,
+                    total_bytes,
+                    stat_ok.value,
+                    stat_fail.value,
+                    time.time() - cycle_start,
+                    process_queue.qsize(),
+                )
+                last_progress = time.time()
+            time.sleep(1)
+
+        for writer in writers:
+            writer.join()
+    except KeyboardInterrupt:
+        out("\nKeyboardInterrupt: terminating workers...")
+        for writer in writers:
+            if writer.is_alive():
+                writer.terminate()
+        for writer in writers:
+            writer.join()
+        out("Workers terminated.")
+
+    elapsed = time.time() - cycle_start
+    total_files = total_files_count
+    print_ingest_progress(
+        processed.value,
+        total_files,
+        total_bytes,
+        stat_ok.value,
+        stat_fail.value,
+        elapsed,
+        process_queue.qsize(),
+    )

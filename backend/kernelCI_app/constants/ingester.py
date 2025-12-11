@@ -38,6 +38,9 @@ PROMETHEUS_MULTIPROC_DIR must be set for Prometheus multiprocess metrics to be c
 See https://prometheus.github.io/client_python/multiprocess/ for more details.
 """
 
+INGEST_FILES_BATCH_SIZE = int(os.environ.get("INGEST_FILES_BATCH_SIZE", 100))
+"""Size of the batch of files to be queued. Default: 100"""
+
 try:
     INGESTER_METRICS_PORT = int(os.environ.get("INGESTER_METRICS_PORT", 8002))
 except (ValueError, TypeError):

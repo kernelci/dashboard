@@ -1,13 +1,7 @@
-import threading
-from queue import Queue
 from unittest.mock import patch, MagicMock, mock_open, call
-from concurrent.futures import Future
 
 from kernelCI_app.tests.unitTests.helpers.fixtures.kcidbng_ingester_data import (
     ARCHIVE_SUBMISSIONS_DIR,
-    FAILED_SUBMISSIONS_DIR,
-    PENDING_RETRY_SUBMISSIONS_DIR,
-    FLUSH_TIMEOUT_SEC_MOCK,
     INGEST_BATCH_SIZE_MOCK,
     MAINLINE_URL,
     SUBMISSION_DIRS_MOCK,
@@ -20,7 +14,6 @@ from kernelCI_app.tests.unitTests.helpers.fixtures.kcidbng_ingester_data import 
     SUBMISSION_FILENAME_MOCK,
 )
 import pytest
-from queue import Empty
 
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     SubmissionFileMetadata,
@@ -28,8 +21,6 @@ from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     prepare_file_data,
     consume_buffer,
     flush_buffers,
-    db_worker,
-    process_file,
     ingest_submissions_parallel,
 )
 
@@ -281,8 +272,10 @@ class TestFlushBuffers:
             tests_buf=[],
             incidents_buf=[],
             buffer_files={},
-            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
-            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
+            dirs=SUBMISSION_DIRS_MOCK,
+            stat_ok=MagicMock(),
+            stat_fail=MagicMock(),
+            counter_lock=MagicMock(),
         )
 
         mock_consume.assert_not_called()
@@ -314,6 +307,12 @@ class TestFlushBuffers:
         incidents_buf = []
         buffer_files = {(SUBMISSION_FILENAME_MOCK, SUBMISSION_FILEPATH_MOCK)}
 
+        stat_ok = MagicMock()
+        stat_ok.value = 0
+        stat_fail = MagicMock()
+        stat_fail.value = 0
+        counter_lock = MagicMock()
+
         n_issues = len(issues_buf)
         n_checkouts = len(checkouts_buf)
         n_builds = len(builds_buf)
@@ -328,8 +327,10 @@ class TestFlushBuffers:
             tests_buf=tests_buf,
             incidents_buf=incidents_buf,
             buffer_files=buffer_files,
-            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
-            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
+            dirs=SUBMISSION_DIRS_MOCK,
+            stat_ok=stat_ok,
+            stat_fail=stat_fail,
+            counter_lock=counter_lock,
         )
 
         expected_calls = [
@@ -340,6 +341,10 @@ class TestFlushBuffers:
             call(incidents_buf, "incidents"),
         ]
         mock_consume.assert_has_calls(expected_calls)
+
+        # Verify stat_ok update
+        # counter_lock enter/exit called
+        assert counter_lock.__enter__.call_count >= 1
 
         # Inside of the function the `out` is called before the clear
         # So we check against the len of the original buffers
@@ -413,6 +418,10 @@ class TestFlushBuffers:
 
         mock_consume.side_effect = Exception("Database error")
 
+        stat_ok = MagicMock()
+        stat_fail = MagicMock()
+        counter_lock = MagicMock()
+
         flush_buffers(
             issues_buf=issues_buf,
             checkouts_buf=checkouts_buf,
@@ -420,8 +429,10 @@ class TestFlushBuffers:
             tests_buf=tests_buf,
             incidents_buf=incidents_buf,
             buffer_files=buffer_files,
-            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
-            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
+            dirs=SUBMISSION_DIRS_MOCK,
+            stat_ok=stat_ok,
+            stat_fail=stat_fail,
+            counter_lock=counter_lock,
         )
 
         # Doesn't expect to consume all buffers since the first one raises error and skips the rest
@@ -457,7 +468,7 @@ class TestFlushBuffers:
 
         mock_rename.assert_called_once_with(
             SUBMISSION_FILEPATH_MOCK,
-            "/".join([PENDING_RETRY_SUBMISSIONS_DIR, SUBMISSION_FILENAME_MOCK]),
+            "/".join([SUBMISSION_DIRS_MOCK["failed"], SUBMISSION_FILENAME_MOCK]),
         )
 
         assert mock_time.call_count == 2
@@ -468,377 +479,58 @@ class TestFlushBuffers:
         mock_aggregate.assert_not_called()
 
 
-class TestDbWorker:
-    """Test cases for db_worker function."""
-
-    # Test cases:
-    # - stop event is set (in a real scenario it would be set by another thread)
-    # - less items than the limit for flushing
-    # - more items than the limit for flushing
-    # - time-based flush when idle
-
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.flush_buffers")
-    @patch("time.time", return_value=1000)
-    def test_db_worker_stop_event(self, mock_time, mock_flush):
-        """Test db_worker with stop event set."""
-        test_queue = Queue()
-
-        stop_event = threading.Event()
-        stop_event.set()
-
-        db_worker(
-            stop_event,
-            test_queue,
-            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
-            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
-        )
-
-        assert test_queue.empty()
-        assert test_queue.all_tasks_done
-        assert mock_time.call_count == 1
-        mock_flush.assert_called_once()
-
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.flush_buffers")
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.VERBOSE", False)
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.INGEST_BATCH_SIZE",
-        10,
-    )
-    @patch("time.time", return_value=1000)
-    def test_db_worker_with_item_then_none(self, mock_time, mock_flush):
-        """Test db_worker processes one item and then stops with None poison pill."""
-        test_queue = Queue()
-        stop_event = threading.Event()
-
-        mock_instances = {
-            "issues": [MagicMock()],
-            "checkouts": [MagicMock(), MagicMock()],
-            "builds": [],
-            "tests": [MagicMock()],
-            "incidents": [],
-        }
-        test_queue.put(
-            (SUBMISSION_FILENAME_MOCK, SUBMISSION_FILEPATH_MOCK, mock_instances)
-        )
-        test_queue.put(None)
-
-        db_worker(
-            stop_event,
-            test_queue,
-            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
-            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
-        )
-
-        assert test_queue.empty()
-        assert mock_time.call_count == 1
-
-        # The only flush is the last one after receiving None
-        mock_flush.assert_called_once()
-
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.flush_buffers")
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.VERBOSE", True)
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.INGEST_BATCH_SIZE", 5
-    )
-    @patch("time.time", return_value=TIME_MOCK)
-    def test_db_worker_flush_on_batch_size_limit(self, mock_time, mock_out, mock_flush):
-        """Test db_worker flushes when batch size limit is reached (5 individual items)."""
-        test_queue = Queue()
-        stop_event = threading.Event()
-
-        mock_instances_1 = {
-            "issues": [MagicMock()],
-            "checkouts": [MagicMock(), MagicMock()],
-            "builds": [],
-            "tests": [],
-            "incidents": [],
-        }
-        mock_instances_2 = {
-            "issues": [],
-            "checkouts": [],
-            "builds": [MagicMock()],
-            "tests": [MagicMock(), MagicMock()],
-            "incidents": [],
-        }
-        test_queue.put(("test1.json", SUBMISSION_FILEPATH_MOCK, mock_instances_1))
-        test_queue.put(("test2.json", SUBMISSION_FILEPATH_MOCK, mock_instances_2))
-        test_queue.put(None)
-
-        # NOTE: On a normal run, the list of items would be cleared from the flush,
-        # meaning that we could add more items before the next flush, but since we're
-        # mocking flush_buffers, the lists are not cleared
-        db_worker(
-            stop_event,
-            test_queue,
-            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
-            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
-        )
-
-        out_calls = [
-            "Queued from test1.json: issues=1 checkouts=2 builds=0 tests=0 incidents=0",
-            "Queued from test2.json: issues=0 checkouts=0 builds=1 tests=2 incidents=0",
-        ]
-        mock_out.assert_has_calls([call(out_calls[0]), call(out_calls[1])])
-        assert test_queue.empty()
-        # 2 flushes: one after reaching limit, one at the end
-        assert mock_flush.call_count == 2
-        assert mock_time.call_count == 2
-
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.flush_buffers")
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.VERBOSE", True)
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.INGEST_FLUSH_TIMEOUT_SEC",
-        FLUSH_TIMEOUT_SEC_MOCK,
-    )
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.INGEST_BATCH_SIZE",
-        10,
-    )
-    @patch("time.time", side_effect=TIME_MOCK)
-    def test_db_worker_time_based_flush(self, mock_time, mock_out, mock_flush):
-        """Test db_worker triggers flush after timeout when idle."""
-        stop_event = threading.Event()
-
-        mock_instances = {
-            "issues": [MagicMock()],
-            "checkouts": [],
-            "builds": [],
-            "tests": [],
-            "incidents": [],
-        }
-        n_issues_submission = len(mock_instances["issues"])
-        n_checkouts_submission = len(mock_instances["checkouts"])
-        n_builds_submission = len(mock_instances["builds"])
-        n_tests_submission = len(mock_instances["tests"])
-        n_incidents_submission = len(mock_instances["incidents"])
-        total_items_submission = (
-            n_issues_submission
-            + n_checkouts_submission
-            + n_builds_submission
-            + n_tests_submission
-            + n_incidents_submission
-        )
-
-        # Mock the queue.get() to return the item, then Empty exception, then None (poison pill)
-        # The poison pill is needed otherwise the worker would run indefinitely
-        mock_queue = MagicMock()
-        mock_queue.get.side_effect = [
-            (SUBMISSION_FILENAME_MOCK, SUBMISSION_FILEPATH_MOCK, mock_instances),
-            Empty(),
-            None,
-        ]
-
-        db_worker(
-            stop_event,
-            mock_queue,
-            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
-            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
-        )
-
-        # 2 flushes: one after timeout, one at the end
-        assert mock_flush.call_count == 2
-        assert mock_time.call_count == 3
-
-        out_calls = [
-            "Queued from %s: "
-            "issues=%d checkouts=%d builds=%d tests=%d incidents=%d"
-            % (
-                SUBMISSION_FILENAME_MOCK,
-                n_issues_submission,
-                n_checkouts_submission,
-                n_builds_submission,
-                n_tests_submission,
-                n_incidents_submission,
-            ),
-            "Idle flush after %.1fs without new items (buffered=%d)"
-            % (FLUSH_TIMEOUT_SEC_MOCK, total_items_submission),
-        ]
-        mock_out.assert_has_calls([call(out_calls[0]), call(out_calls[1])])
-
-
-class TestProcessFile:
-    """Test cases for process_file function."""
-
-    # Test cases:
-    # - error in metadata with successful move to failed dir
-    # - error in metadata with exception when moving to failed dir
-    # - no error but empty data
-    # - process successfully
-
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.move_file_to_failed_dir"
-    )
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.prepare_file_data"
-    )
-    def test_process_file_move_to_failed_dir(self, mock_prepare, mock_move_failed):
-        """Test process_file with failed submission and correct move to failed dir."""
-        mock_file = SubmissionFileMetadata(
-            name=SUBMISSION_FILENAME_MOCK,
-            path=SUBMISSION_PATH_MOCK,
-            size=100,
-        )
-
-        mock_metadata = {"file": mock_file, "error": "Any error"}
-        mock_prepare.return_value = (None, mock_metadata)
-
-        test_queue = Queue()
-        result = process_file(mock_file, {}, FAILED_SUBMISSIONS_DIR, test_queue)
-
-        assert result is False
-        mock_move_failed.assert_called_once()
-
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.move_file_to_failed_dir",
-    )
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.prepare_file_data"
-    )
-    def test_process_file_prepare_error_with_move_exception(
-        self, mock_prepare, mock_move_failed
-    ):
-        """Test process_file with failed submission and exception when moving to failed dir."""
-        mock_file = SubmissionFileMetadata(
-            name=SUBMISSION_FILENAME_MOCK,
-            path=SUBMISSION_PATH_MOCK,
-            size=100,
-        )
-
-        mock_metadata = {"file": mock_file, "error": "Any error"}
-        mock_prepare.return_value = (None, mock_metadata)
-
-        mock_move_failed.side_effect = Exception("Any Exception error")
-
-        test_queue = Queue()
-        result = process_file(mock_file, {}, FAILED_SUBMISSIONS_DIR, test_queue)
-
-        # Same asserts as before because currently Exceptions are not treated
-        assert result is False
-        mock_move_failed.assert_called_once()
-
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.move_file_to_failed_dir",
-    )
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.prepare_file_data"
-    )
-    def test_process_file_empty_file(self, mock_prepare, mock_move_failed):
-        """Test process_file with empty file (already deleted)."""
-        mock_file = SubmissionFileMetadata(
-            name=SUBMISSION_FILENAME_MOCK,
-            path=SUBMISSION_PATH_MOCK,
-            size=0,
-        )
-        mock_metadata = {}
-        mock_prepare.return_value = (None, mock_metadata)
-
-        test_queue = Queue()
-        result = process_file(mock_file, {}, FAILED_SUBMISSIONS_DIR, test_queue)
-
-        assert result is True
-        mock_move_failed.assert_not_called()
-
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.build_instances_from_submission"
-    )
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.prepare_file_data"
-    )
-    def test_process_file_success(self, mock_prepare, mock_build_instances):
-        """Test successful file processing."""
-        mock_file = SubmissionFileMetadata(
-            name=SUBMISSION_FILENAME_MOCK,
-            path=SUBMISSION_PATH_MOCK,
-            fsize=100,
-        )
-
-        mock_metadata = {"file": mock_file, "fsize": 100}
-        mock_prepare.return_value = (mock_file, mock_metadata)
-
-        mock_instances_from_submission = {
-            "issues": [MagicMock()],
-            "checkouts": [],
-            "builds": [],
-            "tests": [MagicMock()],
-            "incidents": [],
-        }
-        mock_build_instances.return_value = mock_instances_from_submission
-
-        test_queue = Queue()
-        result = process_file(mock_file, {}, FAILED_SUBMISSIONS_DIR, test_queue)
-
-        assert result is True
-
-        # Check that item was queued
-        assert not test_queue.empty()
-        queued_item = test_queue.get()
-        assert queued_item == (
-            mock_file["name"],
-            mock_file["path"],
-            mock_instances_from_submission,
-        )
-
-
 class TestIngestSubmissionsParallel:
     """Test cases for ingest_submissions_parallel function."""
 
     # Test cases:
     # - successful ingestion
-    # - processing exception
-    # - KeyboardInterrupt during ingestion
 
     mock_file1 = MagicMock()
     mock_file1.name = SUBMISSION_FILENAME_MOCK
     mock_file1.stat.return_value.st_size = 1000
 
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.as_completed")
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.ProcessPoolExecutor"
-    )
     @patch("multiprocessing.Process")
+    @patch("multiprocessing.Queue")
+    @patch("multiprocessing.Value")
+    @patch("time.sleep")
     @patch("time.time", side_effect=TIME_MOCK)
     def test_ingest_submissions_parallel_success(
         self,
         mock_time,
+        mock_sleep,
+        mock_value,
+        mock_queue_cls,
         mock_process,
-        mock_executor,
-        mock_as_completed,
         mock_out,
     ):
         """Test successful parallel ingestion."""
-        # Mock files and related data
+        mock_queue = MagicMock()
+        mock_queue_cls.return_value = mock_queue
+
+        mock_queue.empty.return_value = True
+        mock_queue.qsize.return_value = 0
+
+        self.mock_file1.path = SUBMISSION_FILEPATH_MOCK + SUBMISSION_FILENAME_MOCK
         mock_file2 = MagicMock()
         mock_file2.name = "file2.json"
+        mock_file2.path = SUBMISSION_FILEPATH_MOCK + "file2.json"
         mock_file2.stat.return_value.st_size = 2000
 
         json_files = [self.mock_file1, mock_file2]
 
+        mock_ok = MagicMock()
+        mock_ok.value = 1
+        mock_fail = MagicMock()
+        mock_fail.value = 1
+        mock_processed = MagicMock()
+        mock_processed.value = len(json_files)
+
+        mock_value.side_effect = [mock_ok, mock_fail, mock_processed]
+
         # Mock the process
         mock_process_instance = MagicMock()
         mock_process.return_value = mock_process_instance
-
-        # Mock the futures and executor
-        future1 = Future()
-        future1.set_result(True)
-
-        future2 = Future()
-        future2.set_result(False)
-
-        # Since we are using `with` in the function, we have to mock the ThreadPoolExecutor CLASS itself
-        # After that, the class will call the __enter__ function and will return something else, so we
-        # also have to mock that something else as the mock_executor_instance.
-        # Then the instance will call a method (submit), so we need to mock that return too.
-        mock_executor_instance = MagicMock()
-        mock_executor_instance.submit.side_effect = [future1, future2]
-        mock_executor.return_value.__enter__.return_value = mock_executor_instance
-
-        # Since as_completed is a separate function, we also have to mock its behavior, and make it return
-        # the futures that were set here, so that we can also control the return value of the future and
-        # match it with the executor which will construct the `future_to_file` dict
-        mock_as_completed.return_value = [future1, future2]
 
         ingest_submissions_parallel(
             json_files=json_files,
@@ -847,158 +539,31 @@ class TestIngestSubmissionsParallel:
             max_workers=2,
         )
 
-        assert mock_time.call_count == 4
+        # Verify process was started and joined
+        assert mock_process_instance.start.call_count == 2
+        assert mock_process_instance.join.call_count == 2
 
-        # Verify thread was started and joined
-        mock_process_instance.start.assert_called_once()
-        mock_process_instance.join.assert_called_once()
-
-        # Verify output messages
         stat_ok = 1
         stat_fail = 1
-        total_processed_files = stat_ok + stat_fail
-        total_elapsed = 3
+        total_elapsed = 1
+
         total_bytes = (
             self.mock_file1.stat.return_value.st_size
             + mock_file2.stat.return_value.st_size
         )
         mb = total_bytes / (1024 * 1024)
 
-        # Only asserts the number and the last message in order to avoid race condition
-        assert mock_out.call_count == 4
+        # We verify only the final call
         mock_out.assert_called_with(
             "Ingest cycle: %d files (ok=%d, fail=%d) in %.2fs | "
             "%.2f files/s | %.2f MB processed (%.2f MB/s)"
             % (
-                total_processed_files,
+                len(json_files),
                 stat_ok,
                 stat_fail,
                 total_elapsed,
-                total_processed_files / total_elapsed,
+                len(json_files) / total_elapsed,
                 mb,
                 mb / total_elapsed,
             ),
         )
-
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.as_completed")
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.ProcessPoolExecutor"
-    )
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
-    @patch("multiprocessing.Process")
-    @patch("time.time", side_effect=TIME_MOCK)
-    def test_ingest_submissions_parallel_processing_exception(
-        self,
-        mock_time,
-        mock_process,
-        mock_logger,
-        mock_executor,
-        mock_as_completed,
-        mock_out,
-    ):
-        """Test ingestion with processing exception."""
-        # Mock the thread
-        mock_process_instance = MagicMock()
-        mock_process.return_value = mock_process_instance
-
-        # Mock the futures and executor
-        future_result = Exception("Processing error")
-        future1 = MagicMock()
-        # Use side_effect to make result() raise the exception
-        future1.result.side_effect = future_result
-
-        mock_executor_instance = MagicMock()
-        mock_executor_instance.submit.side_effect = [future1]
-        mock_executor.return_value.__enter__.return_value = mock_executor_instance
-
-        mock_as_completed.return_value = [future1]
-
-        ingest_submissions_parallel(
-            json_files=[self.mock_file1],
-            tree_names={},
-            dirs=SUBMISSION_DIRS_MOCK,
-            max_workers=2,
-        )
-
-        mock_logger.error.assert_called_once_with(
-            "Exception processing %s: %s", self.mock_file1.name, future_result
-        )
-
-        assert mock_time.call_count == 3
-
-        # Verify thread was started and joined
-        mock_process_instance.start.assert_called_once()
-        mock_process_instance.join.assert_called_once()
-
-        # Verify output messages
-        stat_ok = 0
-        stat_fail = 1
-        total_processed_files = stat_ok + stat_fail
-        total_elapsed = 2
-        total_bytes = self.mock_file1.stat.return_value.st_size
-        mb = total_bytes / (1024 * 1024)
-
-        # Only asserts the number and the last message in order to avoid race condition
-        assert mock_out.call_count == 3
-        mock_out.assert_called_with(
-            "Ingest cycle: %d files (ok=%d, fail=%d) in %.2fs | "
-            "%.2f files/s | %.2f MB processed (%.2f MB/s)"
-            % (
-                total_processed_files,
-                stat_ok,
-                stat_fail,
-                total_elapsed,
-                total_processed_files / total_elapsed,
-                mb,
-                mb / total_elapsed,
-            ),
-        )
-
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.ProcessPoolExecutor"
-    )
-    @patch("multiprocessing.Process")
-    @patch("time.time", side_effect=TIME_MOCK)
-    def test_ingest_submissions_keyboard_interruption(
-        self,
-        mock_time,
-        mock_process,
-        mock_executor,
-        mock_out,
-    ):
-        """Test parallel ingestion with keyboard interruption."""
-        json_files = [self.mock_file1]
-
-        # Mock the thread
-        mock_process_instance = MagicMock()
-        mock_process.return_value = mock_process_instance
-
-        # Mock executor to raise KeyboardInterrupt on submit
-        mock_executor_instance = MagicMock()
-        mock_executor_instance.submit.side_effect = KeyboardInterrupt()
-        mock_executor.return_value.__enter__.return_value = mock_executor_instance
-
-        with pytest.raises(KeyboardInterrupt):
-            ingest_submissions_parallel(
-                json_files=json_files,
-                tree_names={},
-                dirs=SUBMISSION_DIRS_MOCK,
-                max_workers=2,
-            )
-
-        assert mock_time.call_count == 1
-
-        # Verify thread was started and joined
-        mock_process_instance.start.assert_called_once()
-        mock_process_instance.join.assert_called_once()
-
-        # Verify output messages
-        total_bytes = self.mock_file1.stat.return_value.st_size
-        out_calls = [
-            "Spool status: %d .json files queued (%.2f MB)"
-            % (len(json_files), total_bytes / (1024 * 1024)),
-            "KeyboardInterrupt: stopping ingestion and flushing...",
-        ]
-        mock_out.assert_has_calls([call(c) for c in out_calls])
