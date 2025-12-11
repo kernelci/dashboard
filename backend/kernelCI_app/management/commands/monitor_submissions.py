@@ -69,13 +69,18 @@ class Command(BaseCommand):
         trees_file: str,
         **options,
     ):
-        if os.path.exists(PROMETHEUS_MULTIPROC_DIR):
-            shutil.rmtree(PROMETHEUS_MULTIPROC_DIR)
+        if PROMETHEUS_MULTIPROC_DIR:
+            if os.path.exists(PROMETHEUS_MULTIPROC_DIR):
+                shutil.rmtree(PROMETHEUS_MULTIPROC_DIR)
 
-        os.makedirs(PROMETHEUS_MULTIPROC_DIR, exist_ok=True)
-        registry = CollectorRegistry()
-        multiprocess.MultiProcessCollector(registry)
-        start_http_server(INGESTER_METRICS_PORT, registry=registry)
+            os.makedirs(PROMETHEUS_MULTIPROC_DIR, exist_ok=True)
+            registry = CollectorRegistry()
+            multiprocess.MultiProcessCollector(registry)
+            start_http_server(INGESTER_METRICS_PORT, registry=registry)
+        else:
+            logger.warning(
+                "PROMETHEUS_MULTIPROC_DIR is not set, skipping Prometheus metrics"
+            )
 
         archive_dir = os.path.join(spool_dir, "archive")
         failed_dir = os.path.join(spool_dir, "failed")

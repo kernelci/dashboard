@@ -31,9 +31,12 @@ TREES_FILE = "/app/trees.yaml"
 
 INGESTER_GRAFANA_LABEL = "django"
 
-PROMETHEUS_MULTIPROC_DIR = os.environ.get(
-    "PROMETHEUS_MULTIPROC_DIR", "/tmp/prometheus_multiproc_dir"
-)
+PROMETHEUS_MULTIPROC_DIR = os.environ.get("PROMETHEUS_MULTIPROC_DIR")
+"""
+Directory for Prometheus multiprocess metric files. Default: None
+PROMETHEUS_MULTIPROC_DIR must be set for Prometheus multiprocess metrics to be collected correctly.
+See https://prometheus.github.io/client_python/multiprocess/ for more details.
+"""
 
 try:
     INGESTER_METRICS_PORT = int(os.environ.get("INGESTER_METRICS_PORT", 8002))
