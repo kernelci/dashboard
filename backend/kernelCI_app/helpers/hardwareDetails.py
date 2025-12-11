@@ -599,7 +599,7 @@ def is_test_processed(*, record: Dict, processed_tests: Set[str]) -> bool:
 
 
 def decide_if_is_test_in_filter(
-    *, instance, test_type: PossibleTestType, record: Dict, processed_tests: Set[str]
+    *, instance, test_type: PossibleTestType, record: dict[str, Any]
 ) -> bool:
     test_filter_pass = True
 

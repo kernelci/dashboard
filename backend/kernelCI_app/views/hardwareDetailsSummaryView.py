@@ -152,10 +152,7 @@ class HardwareDetailsSummary(APIView):
             record=record, processed_issues=self.processed_issues[test_type_key]
         )
         should_process_test = decide_if_is_test_in_filter(
-            instance=self,
-            test_type=test_type_key,
-            record=record,
-            processed_tests=self.processed_tests,
+            instance=self, test_type=test_type_key, record=record
         )
 
         if (

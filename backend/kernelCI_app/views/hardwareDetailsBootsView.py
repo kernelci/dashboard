@@ -65,10 +65,7 @@ class HardwareDetailsBoots(APIView):
             return
 
         should_process_test = decide_if_is_test_in_filter(
-            instance=self,
-            test_type="boot",
-            record=record,
-            processed_tests=self.processed_tests,
+            instance=self, test_type="boot", record=record
         )
 
         if should_process_test:

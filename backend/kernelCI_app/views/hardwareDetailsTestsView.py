@@ -65,10 +65,7 @@ class HardwareDetailsTests(APIView):
             return
 
         should_process_test = decide_if_is_test_in_filter(
-            instance=self,
-            test_type="test",
-            record=record,
-            processed_tests=self.processed_tests,
+            instance=self, test_type="test", record=record
         )
 
         if should_process_test:
