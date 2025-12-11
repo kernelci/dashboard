@@ -1,5 +1,7 @@
+import multiprocessing
+from multiprocessing.synchronize import Event as EventClass
 from os import DirEntry
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import json
 import logging
 import os
@@ -12,7 +14,6 @@ from kernelCI_app.constants.ingester import (
     INGESTER_GRAFANA_LABEL,
     VERBOSE,
 )
-import threading
 import time
 import traceback
 from typing import Any, Optional, TypedDict
@@ -46,11 +47,13 @@ class SubmissionMetadata(TypedDict):
     error: str | None
 
 
-logger = logging.getLogger("ingester")
+class SubmissionFileMetadata(TypedDict):
+    path: str
+    name: str
+    size: int
 
-# Thread-safe queue for database operations (bounded for backpressure)
-db_queue = Queue(maxsize=INGEST_QUEUE_MAXSIZE)
-db_lock = threading.Lock()
+
+logger = logging.getLogger("ingester")
 
 
 FILES_INGESTER_COUNTER = Counter(
@@ -92,7 +95,7 @@ def standardize_tree_names(
 
 
 def prepare_file_data(
-    file: DirEntry[str], tree_names: dict[str, str]
+    file: SubmissionFileMetadata, tree_names: dict[str, str]
 ) -> tuple[Optional[dict[str, Any]], dict[str, Any]]:
     """
     Prepare file data: read, extract log excerpts, standardize tree names, validate.
@@ -101,20 +104,20 @@ def prepare_file_data(
     Returns `data, metadata`.
     If an error happens, `data` will be None; if file is empty, both are None.
     """
-    fsize = file.stat().st_size
+    fsize = file["size"]
 
     if fsize == 0:
         if VERBOSE:
-            logger.info("File %s is empty, skipping, deleting", file.path)
-        os.remove(file.path)
+            logger.info("File %s is empty, skipping, deleting", file["path"])
+        os.remove(file["path"])
         return None, None
 
     start_time = time.time()
     if VERBOSE:
-        logger.info("Processing file %s, size: %d", file.name, fsize)
+        logger.info("Processing file %s, size: %d", file["name"], fsize)
 
     try:
-        with open(file.path, "r") as f:
+        with open(file["path"], "r") as f:
             data = json.loads(f.read())
 
         # These operations can be done in parallel (especially extract_log_excerpt)
@@ -126,15 +129,13 @@ def prepare_file_data(
 
         processing_time = time.time() - start_time
         return data, {
-            "file": file,
             "fsize": fsize,
             "processing_time": processing_time,
         }
     except Exception as e:
-        logger.error("Error preparing data from %s: %s", file.name, e)
+        logger.error("Error preparing data from %s: %s", file["name"], e)
         logger.error(traceback.format_exc())
         return None, {
-            "file": file,
             "error": str(e),
         }
 
@@ -232,13 +233,14 @@ def flush_buffers(
 
 
 # TODO: lower the complexity of this function
-def db_worker(stop_event: threading.Event) -> None:  # noqa: C901
+def db_worker(stop_event: EventClass, db_queue: Queue) -> None:  # noqa: C901
     """
-    Worker thread that processes the database queue.
-    This is the only thread that interacts with the database.
+    Worker process that processes the database queue.
+    This is the only process that interacts with the database.
 
     Args:
-        stop_event: threading.Event (flag) to signal the worker to stop processing
+        stop_event: multiprocessing.Event (flag) to signal the worker to stop processing
+        queue: multiprocessing.JoinableQueue to communicate with the worker
     """
 
     # Local buffers for batching
@@ -346,23 +348,23 @@ MAP_TABLENAMES_TO_COUNTER: dict[TableNames, Counter] = {
 
 
 def process_file(
-    file: DirEntry[str],
+    file: SubmissionFileMetadata,
     tree_names: dict[str, str],
     failed_dir: str,
     archive_dir: str,
+    db_queue: Queue,
 ) -> bool:
     """
-    Process a single file in a thread, then queue it for database insertion.
+    Process a single file in a process, then queue it for database insertion.
 
     Returns:
         True if file was processed or deleted, False if an error occured
     """
     data, metadata = prepare_file_data(file, tree_names)
-    file = metadata["file"]
 
     if "error" in metadata:
         try:
-            move_file_to_failed_dir(file.path, failed_dir)
+            move_file_to_failed_dir(file["path"], failed_dir)
         except Exception:
             pass
         return False
@@ -372,15 +374,15 @@ def process_file(
         return True
 
     db_queue.put(
-        (file.name, build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER))
+        (file["name"], build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER))
     )
     FILES_INGESTER_COUNTER.labels(INGESTER_GRAFANA_LABEL).inc()
 
     # Archive the file after queuing (we can do this optimistically)
     try:
-        os.rename(file.path, os.path.join(archive_dir, file.name))
+        os.rename(file["path"], os.path.join(archive_dir, file["name"]))
     except Exception as e:
-        logger.error("Error archiving file %s: %s", file.name, e)
+        logger.error("Error archiving file %s: %s", file["name"], e)
         return False
 
     return True
@@ -415,11 +417,14 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
     cycle_start = time.time()
     total_files_count = len(json_files)
 
-    # Start database worker thread
-    # This thread will constantly consume the db_queue and send data to the database
-    stop_event = threading.Event()
-    db_thread = threading.Thread(target=db_worker, args=(stop_event,))
-    db_thread.start()
+    manager = multiprocessing.Manager()
+    db_queue = manager.JoinableQueue(maxsize=INGEST_QUEUE_MAXSIZE)
+
+    # Start database worker process
+    # This process will constantly consume the db_queue and send data to the database
+    stop_event = multiprocessing.Event()
+    db_process = multiprocessing.Process(target=db_worker, args=(stop_event, db_queue))
+    db_process.start()
 
     stat_ok = 0
     stat_fail = 0
@@ -431,11 +436,16 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
 
     try:
         # Process files in parallel
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
             # Submit all files for processing
             future_to_file = {
                 executor.submit(
-                    process_file, file, tree_names, failed_dir, archive_dir
+                    process_file,
+                    {"path": file.path, "name": file.name, "size": file.stat().st_size},
+                    tree_names,
+                    failed_dir,
+                    archive_dir,
+                    db_queue,
                 ): file.name
                 for file in json_files
             }
@@ -500,7 +510,7 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
         # Signal database worker to stop
         stop_event.set()
         db_queue.put(None)  # Poison pill
-        db_thread.join()
+        db_process.join()
 
     elapsed = time.time() - cycle_start
     total_files = stat_ok + stat_fail
