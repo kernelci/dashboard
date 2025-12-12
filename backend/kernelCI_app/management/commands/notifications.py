@@ -1,7 +1,5 @@
 from typing import Optional
-import jinja2
 import json
-import os
 import sys
 
 from collections import defaultdict
@@ -14,14 +12,13 @@ from django.core.management.base import BaseCommand
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.system import get_running_instance
 
-from kernelCI_app.helpers.email import (
-    smtp_setup_connection,
-    smtp_send_email,
-)
+from kernelCI_app.helpers.email import smtp_setup_connection
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
-    get_default_tree_recipients,
+    setup_jinja_template,
+    send_email_report,
 )
+
 from kernelCI_app.management.commands.helpers.summary import (
     SIGNUP_FOLDER,
     PossibleReportOptions,
@@ -61,116 +58,6 @@ from kernelCI_app.queries.hardware import (
     get_hardware_listing_data_bulk,
 )
 from kernelCI_app.helpers.hardwares import sanitize_hardware
-
-KERNELCI_RESULTS = "kernelci-results@groups.io"
-KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
-REGRESSIONS_LIST = "regressions@lists.linux.dev"
-
-
-def ask_confirmation():
-    while True:
-        choice = input(">> Do you want to send the email? (y/n): ").strip().lower()
-        if choice in ["y", "yes"]:
-            return True
-        elif choice in ["n", "no"]:
-            return False
-        else:
-            print("Please enter 'y' or 'n'.")
-
-
-def send_email_report(
-    *,
-    service,
-    report,
-    email_args,
-    git_url: Optional[str] = None,
-    signup_folder: Optional[str] = None,
-    recipients: Optional[list[str]] = None,
-):
-    """Sets up the email arguments and sends the report.
-
-    Params:
-        service: the email service used to send the email itself
-        report: the dict with information about the report, usually set up with jinja
-        email_args: the SimpleNamespace with options for the email sending
-        git_url: the git_repository_url of a tree that is used to retrieve the recipients for the email.\n
-          Requires signup_folder to be set in order to take effect.
-        signup_folder: the folder with the tree submissions files that is used
-          to retrieve the recipients for the email.\n
-          Is only used if git_url is set and default recipients are not ignored.
-        recipients: a direct list of email recipients to use,
-          this parameter overrides the use of git_url + signup_folder.
-    """
-    sender_email = "KernelCI bot <bot@kernelci.org>"
-    subject = report["title"]
-    message_text = report["content"]
-
-    if not email_args.send:
-        print("\n==============================================")
-        print("DRY RUN (--send is False)")
-        print(f"new report:\n> {subject}")
-        print(message_text)
-        print("==============================================")
-        return None
-
-    cc = ""
-    reply_to = None
-    if email_args.add_mailing_lists:
-        to = KERNELCI_RESULTS
-        reply_to = KERNELCI_REPLYTO
-    else:
-        to = email_args.to
-
-    if not email_args.ignore_recipients:
-        if not recipients:
-            recipients = get_default_tree_recipients(
-                signup_folder=signup_folder,
-                search_url=git_url,
-            )
-        formatted_recipients = ", ".join(recipients) if recipients else ""
-        cc = ", ".join([formatted_recipients, cc]) if cc else formatted_recipients
-
-    if email_args.cc:
-        cc = ", ".join([email_args.cc, cc]) if cc else email_args.cc
-
-    if (
-        email_args.add_mailing_lists
-        and email_args.regression_report
-        and (email_args.tree_name == "mainline" or email_args.tree_name == "next")
-    ):
-        cc = ", ".join([REGRESSIONS_LIST, cc]) if cc else REGRESSIONS_LIST
-
-    if not email_args.yes:
-        print("===================")
-        print(f"Subject: {subject}")
-        print(f"To: {to}")
-        if cc:
-            print(f"Cc: {cc}")
-        print(message_text)
-        if not ask_confirmation():
-            print("Email sending aborted.")
-            return None
-
-    print(f"sending {subject}.")
-
-    return smtp_send_email(
-        service,
-        sender_email,
-        to,
-        subject,
-        message_text,
-        cc,
-        reply_to,
-        email_args.in_reply_to,
-    )
-
-
-def setup_jinja_template(file):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    templates = os.path.join(base_dir, "templates")
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(templates))
-
-    return env.get_template(file)
 
 
 def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
