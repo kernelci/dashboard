@@ -30,6 +30,8 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
+import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
+
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
 interface IBuildTab {
@@ -128,6 +130,14 @@ const BuildTab = ({
           configs={configsItems}
           toggleFilterBySection={toggleFilterBySection}
           diffFilter={diffFilter}
+        />,
+        <MemoizedFilterCard
+          cardTitle="filter.labs"
+          key="labs"
+          diffFilter={diffFilter}
+          data={buildsSummary.labs}
+          filterSection="buildLab"
+          hideSingleValue={false}
         />,
       ],
       footerCards: [

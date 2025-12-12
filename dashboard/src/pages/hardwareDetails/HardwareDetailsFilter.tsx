@@ -50,6 +50,10 @@ export const createFilter = (
   const bootIssue: TFilterValues = {};
   const testIssue: TFilterValues = {};
 
+  const buildLab: TFilterValues = {};
+  const bootLab: TFilterValues = {};
+  const testLab: TFilterValues = {};
+
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};
   const compilers: TFilterValues = {};
@@ -58,6 +62,7 @@ export const createFilter = (
   const treeIndexes: number[] = [];
 
   if (data) {
+    // Global filters
     data.common.trees.forEach(tree => {
       const treeIdx = Number(tree.index);
       const treeName = tree.tree_name ?? 'Unknown';
@@ -73,6 +78,8 @@ export const createFilter = (
       treeIndexes.push(treeIdx);
     });
 
+    data.common.compatibles.forEach(c => (compatibles[c] = false));
+
     data.filters.all.architectures.forEach(arch => {
       archs[arch ?? 'Unknown'] = false;
     });
@@ -83,6 +90,7 @@ export const createFilter = (
       configs[config ?? 'Unknown'] = false;
     });
 
+    // Build filters
     const buildFilters = data.filters.builds;
     buildFilters.issues.forEach(
       i =>
@@ -92,6 +100,11 @@ export const createFilter = (
       buildIssue[UNCATEGORIZED_STRING] = false;
     }
 
+    buildFilters.labs.forEach(lab => {
+      buildLab[lab] = false;
+    });
+
+    // Boot filters
     const bootFilters = data.filters.boots;
     bootFilters.issues.forEach(
       i =>
@@ -100,7 +113,11 @@ export const createFilter = (
     if (bootFilters.has_unknown_issue) {
       bootIssue[UNCATEGORIZED_STRING] = false;
     }
+    bootFilters.labs.forEach(lab => {
+      bootLab[lab] = false;
+    });
 
+    // Test filters
     const testFilters = data.filters.tests;
     testFilters.issues.forEach(
       i =>
@@ -109,8 +126,9 @@ export const createFilter = (
     if (testFilters.has_unknown_issue) {
       testIssue[UNCATEGORIZED_STRING] = false;
     }
-
-    data.common.compatibles.forEach(c => (compatibles[c] = false));
+    testFilters.labs.forEach(lab => {
+      testLab[lab] = false;
+    });
   }
 
   return {
@@ -126,6 +144,9 @@ export const createFilter = (
     bootIssue,
     testIssue,
     hardware: compatibles,
+    buildLab,
+    bootLab,
+    testLab,
   };
 };
 
@@ -183,6 +204,24 @@ const sectionHardware: ISectionItem[] = [
     subtitle: 'filter.compatiblesSubtitle',
     sectionKey: 'hardware',
     isGlobal: true,
+  },
+  {
+    title: 'filter.buildLab',
+    subtitle: 'filter.labsSubtitle',
+    sectionKey: 'buildLab',
+    isGlobal: false,
+  },
+  {
+    title: 'filter.bootLab',
+    subtitle: 'filter.labsSubtitle',
+    sectionKey: 'bootLab',
+    isGlobal: false,
+  },
+  {
+    title: 'filter.testLab',
+    subtitle: 'filter.labsSubtitle',
+    sectionKey: 'testLab',
+    isGlobal: false,
   },
 ];
 

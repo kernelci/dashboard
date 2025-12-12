@@ -215,6 +215,7 @@ def generate_test_dict() -> dict[str, Any]:
         "configs": defaultdict(lambda: defaultdict(int)),
         "issues": {},
         "failedWithUnknownIssues": 0,
+        "labSummary": defaultdict(int),
     }
 
 
@@ -312,10 +313,10 @@ def handle_test_history(
 
 def handle_test_summary(
     *,
-    record: Dict,
+    record: dict,
     task: TestSummary,
-    issue_dict: Dict,
-    processed_archs: Dict[str, TestArchSummaryItem],
+    issue_dict: dict,
+    processed_archs: dict[str, TestArchSummaryItem],
 ) -> None:
     status = record["status"]
 
@@ -366,6 +367,17 @@ def handle_test_summary(
         status,
         getattr(task.origins[origin], status) + 1,
     )
+
+    misc = sanitize_dict(record.get("misc", {}))
+    lab = misc.get("runtime")
+    if lab:
+        if task.labs.get(lab) is None:
+            task.labs[lab] = StatusCount()
+        setattr(
+            task.labs[lab],
+            status,
+            getattr(task.labs[lab], status) + 1,
+        )
 
 
 def handle_build_history(
@@ -432,6 +444,17 @@ def handle_build_summary(
             builds_summary.origins[origin],
             status_key,
             getattr(builds_summary.origins[origin], status_key) + 1,
+        )
+
+    if lab := build.misc.get("lab"):
+        build_lab_summary = builds_summary.labs.get(lab)
+        if not build_lab_summary:
+            build_lab_summary = StatusCount()
+            builds_summary.labs[lab] = build_lab_summary
+        setattr(
+            builds_summary.labs[lab],
+            status_key,
+            getattr(builds_summary.labs[lab], status_key) + 1,
         )
 
     process_issue(record=record, task_issues_dict=issue_dict, issue_from="build")
@@ -568,6 +591,7 @@ def decide_if_is_build_in_filter(
         issue_version=build.issue_version,
         incident_test_id=incident_test_id,
         build_origin=build.origin,
+        build_lab=build.misc.get("lab") if build.misc else None,
     )
     return (
         is_build_not_processed
@@ -599,7 +623,7 @@ def is_test_processed(*, record: Dict, processed_tests: Set[str]) -> bool:
 
 
 def decide_if_is_test_in_filter(
-    *, instance, test_type: PossibleTestType, record: Dict, processed_tests: Set[str]
+    *, instance, test_type: PossibleTestType, record: dict[str, Any]
 ) -> bool:
     test_filter_pass = True
 
@@ -610,9 +634,10 @@ def decide_if_is_test_in_filter(
     issue_version = record["incidents__issue__version"]
     incidents_test_id = record["incidents__test_id"]
     origin = record["test_origin"]
-    platform = misc_value_or_default(handle_misc(record["environment_misc"])).get(
-        "platform"
+    platform = sanitize_dict(record.get("environment_misc", {})).get(
+        "platform", UNKNOWN_STRING
     )
+    lab = sanitize_dict(record.get("misc", {})).get("runtime")
 
     if test_type == "boot":
         test_filter_pass = not instance.filters.is_boot_filtered_out(
@@ -624,6 +649,7 @@ def decide_if_is_test_in_filter(
             incident_test_id=incidents_test_id,
             platform=platform,
             origin=origin,
+            lab=lab,
         )
     else:
         test_filter_pass = not instance.filters.is_test_filtered_out(
@@ -635,6 +661,7 @@ def decide_if_is_test_in_filter(
             incident_test_id=incidents_test_id,
             platform=platform,
             origin=origin,
+            lab=lab,
         )
 
     return test_filter_pass
@@ -689,6 +716,10 @@ def process_filters(*, instance, record: Dict) -> None:
 
         instance.unfiltered_origins["build"].add(record["build__origin"])
 
+        lab = sanitize_dict(record.get("build__misc", {})).get("lab")
+        if lab:
+            instance.unfiltered_labs["build"].add(lab)
+
     if record["id"] is not None:
         if is_boot(record["path"]):
             issue_set = instance.unfiltered_boot_issues
@@ -724,6 +755,10 @@ def process_filters(*, instance, record: Dict) -> None:
         test_platform = misc_value_or_default(environment_misc).get("platform")
         platform_set.add(test_platform)
         origin_set.add(record["test_origin"])
+
+        lab = sanitize_dict(record.get("misc", {})).get("runtime")
+        if lab:
+            instance.unfiltered_labs[flag_tab].add(lab)
 
 
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:

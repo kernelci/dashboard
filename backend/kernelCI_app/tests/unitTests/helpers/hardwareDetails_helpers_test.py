@@ -1162,13 +1162,8 @@ class TestDecideIfIsTestInFilter:
             "test_origin": "test",
         }
 
-        processed_tests = set()
-
         result = decide_if_is_test_in_filter(
-            instance=instance,
-            test_type="boot",
-            record=record,
-            processed_tests=processed_tests,
+            instance=instance, test_type="boot", record=record
         )
 
         assert result is True
@@ -1197,13 +1192,8 @@ class TestDecideIfIsTestInFilter:
             "test_origin": "test",
         }
 
-        processed_tests = set()
-
         result = decide_if_is_test_in_filter(
-            instance=instance,
-            test_type="test",
-            record=record,
-            processed_tests=processed_tests,
+            instance=instance, test_type="test", record=record
         )
 
         assert result is True
