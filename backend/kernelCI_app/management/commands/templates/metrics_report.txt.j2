@@ -1,0 +1,50 @@
+{% extends "base.txt" %}
+{% block header %}{% endblock %}
+{% block content -%}
+KernelCI Metrics Summary
+========================
+Period: {{ start_datetime }} to {{ end_datetime }}
+
+
+ACTIVITY
+--------
+{{ "{:>6}".format(n_issues) }} issues
+{{ "{:>6}".format(n_incidents) }} incidents
+{{ "{:>6}".format(n_checkouts) }} checkouts
+{{ "{:>6}".format(n_builds) }} builds
+{{ "{:>6}".format(n_tests) }} tests
+
+
+BUILD REGRESSIONS
+-----------------
+Incidents are any occurrences of an issue.
+New regressions are the first incident of an issue.
+
+Origin      Total Incidents    New Regressions
+──────────────────────────────────────────────
+{% for origin, data in build_incidents_by_origin.items() | sort -%}
+{{ "{:<12}".format(origin) -}}
+{{ "{:<19}".format(data.total) -}}
+{{ data.new_regressions }}
+{% endfor %}
+
+LAB ACTIVITY
+------------
+There were {{ lab_maps | length }} labs registered. Incidents reported per lab:
+
+Origin      Lab                    Builds    Boots     Tests
+────────────────────────────────────────────────────────────
+{% for lab_key, lab_values in lab_maps.items() | sort -%}
+{{ "{:<12}".format(lab_values["origin"]) -}}
+{{ "{:<23}".format(lab_key) -}}
+{{ "{:<10}".format(lab_values["builds"]) -}}
+{{ "{:<10}".format(lab_values["boots"]) -}}
+{{ lab_values["tests"] }}
+{% endfor -%}
+────────────────────────────────────────────────────────────
+{{ "{:<35}".format("Total") -}}
+{{ "{:<10}".format(lab_maps.values() | map(attribute='builds') | sum) -}}
+{{ "{:<10}".format(lab_maps.values() | map(attribute='boots') | sum) -}}
+{{ lab_maps.values() | map(attribute='tests') | sum }}
+
+{% endblock -%}
