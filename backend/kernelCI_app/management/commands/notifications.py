@@ -1,7 +1,5 @@
 from typing import Optional
-import jinja2
 import json
-import os
 import sys
 
 from collections import defaultdict
@@ -14,14 +12,13 @@ from django.core.management.base import BaseCommand
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.system import get_running_instance
 
-from kernelCI_app.helpers.email import (
-    smtp_setup_connection,
-    smtp_send_email,
-)
+from kernelCI_app.helpers.email import smtp_setup_connection
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
-    get_default_tree_recipients,
+    setup_jinja_template,
+    send_email_report,
 )
+
 from kernelCI_app.management.commands.helpers.summary import (
     SIGNUP_FOLDER,
     PossibleReportOptions,
@@ -33,6 +30,7 @@ from kernelCI_app.management.commands.helpers.summary import (
 )
 from kernelCI_app.queries.notifications import (
     get_checkout_summary_data,
+    get_metrics_data,
     kcidb_new_issues,
     kcidb_issue_details,
     kcidb_build_incidents,
@@ -61,116 +59,6 @@ from kernelCI_app.queries.hardware import (
     get_hardware_listing_data_bulk,
 )
 from kernelCI_app.helpers.hardwares import sanitize_hardware
-
-KERNELCI_RESULTS = "kernelci-results@groups.io"
-KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
-REGRESSIONS_LIST = "regressions@lists.linux.dev"
-
-
-def ask_confirmation():
-    while True:
-        choice = input(">> Do you want to send the email? (y/n): ").strip().lower()
-        if choice in ["y", "yes"]:
-            return True
-        elif choice in ["n", "no"]:
-            return False
-        else:
-            print("Please enter 'y' or 'n'.")
-
-
-def send_email_report(
-    *,
-    service,
-    report,
-    email_args,
-    git_url: Optional[str] = None,
-    signup_folder: Optional[str] = None,
-    recipients: Optional[list[str]] = None,
-):
-    """Sets up the email arguments and sends the report.
-
-    Params:
-        service: the email service used to send the email itself
-        report: the dict with information about the report, usually set up with jinja
-        email_args: the SimpleNamespace with options for the email sending
-        git_url: the git_repository_url of a tree that is used to retrieve the recipients for the email.\n
-          Requires signup_folder to be set in order to take effect.
-        signup_folder: the folder with the tree submissions files that is used
-          to retrieve the recipients for the email.\n
-          Is only used if git_url is set and default recipients are not ignored.
-        recipients: a direct list of email recipients to use,
-          this parameter overrides the use of git_url + signup_folder.
-    """
-    sender_email = "KernelCI bot <bot@kernelci.org>"
-    subject = report["title"]
-    message_text = report["content"]
-
-    if not email_args.send:
-        print("\n==============================================")
-        print("DRY RUN (--send is False)")
-        print(f"new report:\n> {subject}")
-        print(message_text)
-        print("==============================================")
-        return None
-
-    cc = ""
-    reply_to = None
-    if email_args.add_mailing_lists:
-        to = KERNELCI_RESULTS
-        reply_to = KERNELCI_REPLYTO
-    else:
-        to = email_args.to
-
-    if not email_args.ignore_recipients:
-        if not recipients:
-            recipients = get_default_tree_recipients(
-                signup_folder=signup_folder,
-                search_url=git_url,
-            )
-        formatted_recipients = ", ".join(recipients) if recipients else ""
-        cc = ", ".join([formatted_recipients, cc]) if cc else formatted_recipients
-
-    if email_args.cc:
-        cc = ", ".join([email_args.cc, cc]) if cc else email_args.cc
-
-    if (
-        email_args.add_mailing_lists
-        and email_args.regression_report
-        and (email_args.tree_name == "mainline" or email_args.tree_name == "next")
-    ):
-        cc = ", ".join([REGRESSIONS_LIST, cc]) if cc else REGRESSIONS_LIST
-
-    if not email_args.yes:
-        print("===================")
-        print(f"Subject: {subject}")
-        print(f"To: {to}")
-        if cc:
-            print(f"Cc: {cc}")
-        print(message_text)
-        if not ask_confirmation():
-            print("Email sending aborted.")
-            return None
-
-    print(f"sending {subject}.")
-
-    return smtp_send_email(
-        service,
-        sender_email,
-        to,
-        subject,
-        message_text,
-        cc,
-        reply_to,
-        email_args.in_reply_to,
-    )
-
-
-def setup_jinja_template(file):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    templates = os.path.join(base_dir, "templates")
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(templates))
-
-    return env.get_template(file)
 
 
 def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:
@@ -828,6 +716,43 @@ def generate_hardware_summary_report(
         )
 
 
+def generate_metrics_report(
+    *,
+    email_service,
+    email_args,
+    start_days_ago: int = 7,
+    end_days_ago: int = 0,
+) -> None:
+    """Gathers data for a metrics report, formats it with jinja, and send the notification"""
+
+    if get_running_instance() == "staging":
+        print("This command only runs on production or dev environments.")
+        return
+
+    now = datetime.now(timezone.utc)
+    start_datetime = now - timedelta(days=start_days_ago)
+    end_datetime = now - timedelta(days=end_days_ago)
+
+    data = get_metrics_data(
+        start_days_ago=start_days_ago,
+        end_days_ago=end_days_ago,
+    )
+
+    report = {}
+    template = setup_jinja_template("metrics_report.txt.j2")
+    report["content"] = template.render(
+        **data.model_dump(),
+        start_datetime=start_datetime.strftime("%Y-%m-%d %H:%M %Z"),
+        end_datetime=end_datetime.strftime("%Y-%m-%d %H:%M %Z"),
+    )
+
+    report["title"] = "KernelCI Metrics Report - %s" % now.strftime("%Y-%m-%d %H:%M %Z")
+
+    send_email_report(service=email_service, report=report, email_args=email_args)
+
+    return
+
+
 def run_fake_report(*, service, email_args):
     report = {}
     report["content"] = "Testing the email sending path..."
@@ -882,19 +807,24 @@ class Command(BaseCommand):
         )
 
         # Action argument (replaces subparsers)
+        actions = [
+            "new_issues",
+            "issue_report",
+            "summary",
+            "fake_report",
+            "test_report",
+            "hardware_summary",
+            "metrics_summary",
+        ]
         parser.add_argument(
             "--action",
             type=str,
             required=True,
-            choices=[
-                "new_issues",
-                "issue_report",
-                "summary",
-                "fake_report",
-                "test_report",
-                "hardware_summary",
-            ],
-            help="Action to perform: new_issues, issue_report, summary, fake_report, or test_report",
+            choices=actions,
+            help="Action to perform: "
+            + ", ".join(actions[:-1])
+            + ", or "
+            + actions[-1],
         )
 
         # Issue report specific arguments
@@ -976,79 +906,90 @@ class Command(BaseCommand):
 
         signup_folder = options.get("summary_signup_folder", SIGNUP_FOLDER)
 
-        if action == "new_issues":
-            look_for_new_issues(
-                service=service,
-                email_args=email_args,
-                signup_folder=signup_folder,
-            )
-
-        elif action == "issue_report":
-            email_args.update = options.get("update_storage", False)
-            if options.get("all", False):
-                create_and_send_issue_reports(
+        match action:
+            case "new_issues":
+                look_for_new_issues(
                     service=service,
                     email_args=email_args,
                     signup_folder=signup_folder,
                 )
-            else:
-                issue_id = options.get("id")
-                if not issue_id:
+
+            case "issue_report":
+                email_args.update = options.get("update_storage", False)
+                if options.get("all", False):
+                    create_and_send_issue_reports(
+                        service=service,
+                        email_args=email_args,
+                        signup_folder=signup_folder,
+                    )
+                else:
+                    issue_id = options.get("id")
+                    if not issue_id:
+                        self.stdout.write(
+                            self.style.ERROR(
+                                "You must provide an issue ID or use --all"
+                            )
+                        )
+                        return
+                    generate_issue_report(
+                        service=service,
+                        issue_id=issue_id,
+                        email_args=email_args,
+                        signup_folder=signup_folder,
+                    )
                     self.stdout.write(
-                        self.style.ERROR("You must provide an issue ID or use --all")
+                        self.style.SUCCESS(
+                            f"Issue report generated for issue {issue_id}"
+                        )
+                    )
+
+            case "summary":
+                email_args.update = options.get("update_storage", False)
+                summary_origins = options.get("summary_origins")
+
+                run_checkout_summary(
+                    service=service,
+                    signup_folder=signup_folder,
+                    email_args=email_args,
+                    summary_origins=summary_origins,
+                    skip_sent_reports=options.get("skip_sent_reports", True),
+                )
+
+            case "fake_report":
+                email_args.tree_name = options.get("tree")
+                run_fake_report(service=service, email_args=email_args)
+
+            case "test_report":
+                test_id = options.get("id")
+                if not test_id:
+                    self.stdout.write(
+                        self.style.ERROR(
+                            "You must provide a test ID with --id for test_report action"
+                        )
                     )
                     return
-                generate_issue_report(
+                generate_test_report(
                     service=service,
-                    issue_id=issue_id,
+                    test_id=test_id,
                     email_args=email_args,
                     signup_folder=signup_folder,
                 )
                 self.stdout.write(
-                    self.style.SUCCESS(f"Issue report generated for issue {issue_id}")
+                    self.style.SUCCESS(f"Test report generated for test {test_id}")
                 )
 
-        elif action == "summary":
-            email_args.update = options.get("update_storage", False)
-            summary_origins = options.get("summary_origins")
-
-            run_checkout_summary(
-                service=service,
-                signup_folder=signup_folder,
-                email_args=email_args,
-                summary_origins=summary_origins,
-                skip_sent_reports=options.get("skip_sent_reports", True),
-            )
-
-        elif action == "fake_report":
-            email_args.tree_name = options.get("tree")
-            run_fake_report(service=service, email_args=email_args)
-
-        elif action == "test_report":
-            test_id = options.get("id")
-            if not test_id:
-                self.stdout.write(
-                    self.style.ERROR(
-                        "You must provide a test ID with --id for test_report action"
-                    )
+            case "hardware_summary":
+                email_args.update = options.get("update_storage", False)
+                hardware_origins = options.get("hardware_origins")
+                generate_hardware_summary_report(
+                    service=service,
+                    signup_folder=signup_folder,
+                    email_args=email_args,
+                    hardware_origins=hardware_origins,
                 )
-                return
-            generate_test_report(
-                service=service,
-                test_id=test_id,
-                email_args=email_args,
-                signup_folder=signup_folder,
-            )
-            self.stdout.write(
-                self.style.SUCCESS(f"Test report generated for test {test_id}")
-            )
 
-        elif action == "hardware_summary":
-            email_args.update = options.get("update_storage", False)
-            hardware_origins = options.get("hardware_origins")
-            generate_hardware_summary_report(
-                service=service,
-                signup_folder=signup_folder,
-                email_args=email_args,
-                hardware_origins=hardware_origins,
-            )
+            case "metrics_summary":
+                generate_metrics_report(
+                    email_service=service,
+                    email_args=email_args,
+                )

@@ -5,7 +5,14 @@ import sys
 from django.db import connection, connections
 
 from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.helpers.logger import out
 from kernelCI_app.queries.tree import get_tree_listing_query
+from kernelCI_app.typeModels.metrics_notifications import (
+    BuildIncidentsByOrigin,
+    LabMetricsData,
+    MetricsReportData,
+)
+from pydantic import ValidationError
 
 
 def kcidb_execute_query(query, params=None):
@@ -634,3 +641,159 @@ def get_issues_summary_data(*, checkout_ids: list[str]) -> list[dict]:
     with connections["default"].cursor() as cursor:
         cursor.execute(query, checkout_ids)
         return dict_fetchall(cursor=cursor)
+
+
+def get_metrics_data(
+    *,
+    start_days_ago: int,
+    end_days_ago: int,
+) -> MetricsReportData:
+
+    if start_days_ago > 30:
+        out(
+            "Warning: metrics report for more than 30 days may take a long time to generate."
+        )
+
+    params = {
+        "start_days_ago": str(start_days_ago) + " days",
+        "end_days_ago": str(end_days_ago) + " days",
+    }
+
+    total_objects_query = """
+    SELECT
+        (SELECT COUNT(*) FROM checkouts WHERE _timestamp BETWEEN
+            NOW() - INTERVAL %(start_days_ago)s
+            AND NOW() - INTERVAL %(end_days_ago)s)
+            AS n_checkouts,
+        (SELECT COUNT(*) FROM builds WHERE _timestamp BETWEEN
+            NOW() - INTERVAL %(start_days_ago)s
+            AND NOW() - INTERVAL %(end_days_ago)s)
+            AS n_builds,
+        (SELECT COUNT(*) FROM tests WHERE _timestamp BETWEEN
+            NOW() - INTERVAL %(start_days_ago)s
+            AND NOW() - INTERVAL %(end_days_ago)s)
+            AS n_tests,
+        (SELECT COUNT(*) FROM issues WHERE _timestamp BETWEEN
+            NOW() - INTERVAL %(start_days_ago)s
+            AND NOW() - INTERVAL %(end_days_ago)s)
+            AS n_issues,
+        (SELECT COUNT(*) FROM incidents WHERE _timestamp BETWEEN
+            NOW() - INTERVAL %(start_days_ago)s
+            AND NOW() - INTERVAL %(end_days_ago)s)
+            AS n_incidents;
+    """
+
+    build_incidents_query = """
+    WITH ranked AS (
+        SELECT
+            _timestamp,
+            origin,
+            id,
+            ROW_NUMBER() OVER (PARTITION BY issue_id ORDER BY _timestamp) AS rn
+        FROM incidents
+            where build_id is not null
+    )
+    SELECT
+        origin,
+        COUNT(*) FILTER (
+            WHERE _timestamp BETWEEN
+                NOW() - INTERVAL %(start_days_ago)s
+                AND NOW() - INTERVAL %(end_days_ago)s
+        ) AS total_incidents,
+        COUNT(*) FILTER (
+            WHERE rn = 1
+            AND _timestamp BETWEEN
+                NOW() - INTERVAL %(start_days_ago)s
+                AND NOW() - INTERVAL %(end_days_ago)s
+        ) AS first_incidents_in_interval
+    FROM ranked
+    GROUP BY origin;
+    """
+
+    # For the lab query, we can't simply join the builds of the tests by lab,
+    # because we want the builds made by a lab and tests made by a lab,
+    # not the builds related to tests made by a lab, neither the tests related to builds made by a lab.
+    lab_summary_query = """
+    WITH unioned_results AS (
+        (SELECT
+            b.misc->>'lab' AS lab,
+            b.origin,
+            COUNT(DISTINCT b.id) AS n_builds,
+            0 AS n_boots,
+            0 AS n_tests
+        FROM builds b
+        WHERE
+            b.misc->>'lab' IS NOT NULL
+            AND b._timestamp BETWEEN
+                NOW() - INTERVAL %(start_days_ago)s
+                AND NOW() - INTERVAL %(end_days_ago)s
+        GROUP BY lab, origin
+        )
+        UNION ALL
+        (
+        SELECT
+            t.misc->>'runtime' AS lab,
+            t.origin,
+            0 AS n_builds,
+            COUNT(CASE WHEN (t.path LIKE 'boot.%%' OR t.path = 'boot') THEN 1 END) AS n_boots,
+            COUNT(CASE WHEN (t.path NOT LIKE 'boot.%%' AND t.path != 'boot') THEN 1 END) AS n_tests
+        FROM tests t
+        WHERE
+            t.misc->>'runtime' IS NOT NULL
+            AND t._timestamp BETWEEN
+                NOW() - INTERVAL %(start_days_ago)s
+                AND NOW() - INTERVAL %(end_days_ago)s
+        GROUP BY lab, origin
+        )
+    )
+    SELECT
+        lab,
+        origin,
+        SUM(n_builds) AS n_builds,
+        SUM(n_boots) AS n_boots,
+        SUM(n_tests) AS n_tests
+    FROM
+        unioned_results u
+    GROUP BY u.lab, u.origin
+    ORDER BY u.lab, u.origin
+    """
+
+    with connections["default"].cursor() as cursor:
+        cursor.execute(total_objects_query, params)
+        total_objects_result = cursor.fetchone()
+
+        cursor.execute(build_incidents_query, params)
+        build_incidents_result = cursor.fetchall()
+
+        cursor.execute(lab_summary_query, params)
+        lab_summary_results = cursor.fetchall()
+
+    try:
+        data = MetricsReportData(
+            n_checkouts=total_objects_result[0],
+            n_builds=total_objects_result[1],
+            n_tests=total_objects_result[2],
+            n_issues=total_objects_result[3],
+            n_incidents=total_objects_result[4],
+            build_incidents_by_origin={
+                row[0]: BuildIncidentsByOrigin(
+                    total=row[1],
+                    new_regressions=row[2],
+                )
+                for row in build_incidents_result
+            },
+            lab_maps={
+                row[0]: LabMetricsData(
+                    origin=row[1],
+                    builds=row[2],
+                    boots=row[3],
+                    tests=row[4],
+                )
+                for row in lab_summary_results
+            },
+        )
+    except ValidationError as e:
+        out(f"Validation error when constructing MetricsReportData: {e}")
+        raise e
+
+    return data
