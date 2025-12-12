@@ -30,6 +30,7 @@ from kernelCI_app.management.commands.helpers.summary import (
 )
 from kernelCI_app.queries.notifications import (
     get_checkout_summary_data,
+    get_metrics_data,
     kcidb_new_issues,
     kcidb_issue_details,
     kcidb_build_incidents,
@@ -715,6 +716,43 @@ def generate_hardware_summary_report(
         )
 
 
+def generate_metrics_report(
+    *,
+    email_service,
+    email_args,
+    start_days_ago: int = 7,
+    end_days_ago: int = 0,
+) -> None:
+    """Gathers data for a metrics report, formats it with jinja, and send the notification"""
+
+    if get_running_instance() == "staging":
+        print("This command only runs on production or dev environments.")
+        return
+
+    now = datetime.now(timezone.utc)
+    start_datetime = now - timedelta(days=start_days_ago)
+    end_datetime = now - timedelta(days=end_days_ago)
+
+    data = get_metrics_data(
+        start_days_ago=start_days_ago,
+        end_days_ago=end_days_ago,
+    )
+
+    report = {}
+    template = setup_jinja_template("metrics_report.txt.j2")
+    report["content"] = template.render(
+        **data.model_dump(),
+        start_datetime=start_datetime.strftime("%Y-%m-%d %H:%M %Z"),
+        end_datetime=end_datetime.strftime("%Y-%m-%d %H:%M %Z"),
+    )
+
+    report["title"] = "KernelCI Metrics Report - %s" % now.strftime("%Y-%m-%d %H:%M %Z")
+
+    send_email_report(service=email_service, report=report, email_args=email_args)
+
+    return
+
+
 def run_fake_report(*, service, email_args):
     report = {}
     report["content"] = "Testing the email sending path..."
@@ -769,20 +807,24 @@ class Command(BaseCommand):
         )
 
         # Action argument (replaces subparsers)
+        actions = [
+            "new_issues",
+            "issue_report",
+            "summary",
+            "fake_report",
+            "test_report",
+            "hardware_summary",
+            "metrics_summary",
+        ]
         parser.add_argument(
             "--action",
             type=str,
             required=True,
-            choices=[
-                "new_issues",
-                "issue_report",
-                "summary",
-                "fake_report",
-                "test_report",
-                "hardware_summary",
-            ],
-            help="""Action to perform: new_issues, issue_report, summary, fake_report,
-              test_report, or hardware_summary""",
+            choices=actions,
+            help="Action to perform: "
+            + ", ".join(actions[:-1])
+            + ", or "
+            + actions[-1],
         )
 
         # Issue report specific arguments
@@ -944,4 +986,10 @@ class Command(BaseCommand):
                     signup_folder=signup_folder,
                     email_args=email_args,
                     hardware_origins=hardware_origins,
+                )
+
+            case "metrics_summary":
+                generate_metrics_report(
+                    email_service=service,
+                    email_args=email_args,
                 )

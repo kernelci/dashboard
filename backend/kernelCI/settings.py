@@ -186,6 +186,17 @@ else:
                 "delete_unused_hardware_status",
             ],
         ),
+        (
+            "0 0 * * 6",
+            "django.core.management.call_command",
+            [
+                "notifications",
+                "--action=metrics_summary",
+                "--add-mailing-lists",
+                "--send",
+                "--yes",
+            ],
+        ),
     ]
 
 # Email settings for SMTP backend
