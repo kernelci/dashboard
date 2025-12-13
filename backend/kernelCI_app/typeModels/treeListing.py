@@ -1,4 +1,3 @@
-from typing import List
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
@@ -74,8 +73,8 @@ class CheckoutFast(CommonCheckouts):
 
 
 class TreeListingResponse(RootModel):
-    root: List[Checkout]
+    root: list[Checkout]
 
 
 class TreeListingFastResponse(RootModel):
-    root: List[CheckoutFast]
+    root: list[CheckoutFast]

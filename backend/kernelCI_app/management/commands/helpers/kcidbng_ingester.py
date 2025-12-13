@@ -28,6 +28,9 @@ from kernelCI_app.management.commands.helpers.aggregation_helpers import (
     aggregate_checkouts_and_tests,
 )
 from django.db import connections, transaction
+from kernelCI_app.management.commands.helpers.denormal import (
+    handle_checkout_denormalization,
+)
 from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
 
 from kernelCI_app.management.commands.helpers.process_submissions import (
@@ -162,6 +165,9 @@ def consume_buffer(buffer: list[TableModels], table_name: TableNames) -> None:
                 value = json.dumps(value)
             obj_values.append(value)
         params.append(tuple(obj_values))
+
+    if table_name == "checkouts":
+        handle_checkout_denormalization(buffer=buffer)
 
     t0 = time.time()
     with connections["default"].cursor() as cursor:

@@ -189,3 +189,6 @@ volume_data/*.yaml
 tests_submissions
 tests_submissions_backup
 !tests_submissions/submissions.zip
+
+# Temporary submissions directory (for development/testing purposes)
+kernelCI_app/management/commands/tmp_submissions/*
