@@ -8,6 +8,7 @@ from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     ingest_submissions_parallel,
 )
 from kernelCI_app.constants.ingester import (
+    INGESTER_GRAFANA_LABEL,
     INGESTER_METRICS_PORT,
     PROMETHEUS_MULTIPROC_DIR,
 )
@@ -18,9 +19,17 @@ from kernelCI_app.management.commands.helpers.file_utils import (
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
     cache_logs_maintenance,
 )
-from prometheus_client import CollectorRegistry, start_http_server, multiprocess
+from prometheus_client import CollectorRegistry, Gauge, start_http_server, multiprocess
 
 logger = logging.getLogger(__name__)
+
+
+QUEUE_SIZE_GAUGE = Gauge(
+    "kcidb_ingestion_queue",
+    "Number of files in queue to be ingested",
+    ["ingester"],
+    multiprocess_mode="livemax",
+)
 
 
 def check_positive_int(value) -> bool:
@@ -112,6 +121,9 @@ class Command(BaseCommand):
                         )
                 except Exception:
                     pass
+
+                QUEUE_SIZE_GAUGE.labels(INGESTER_GRAFANA_LABEL).set(len(json_files))
+
                 if len(json_files) > 0:
                     ingest_submissions_parallel(
                         json_files, tree_names, archive_dir, failed_dir, max_workers
