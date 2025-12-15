@@ -54,7 +54,7 @@ export default [{
             },
 
             requireConfigFile: false,
-            project: ["./tsconfig.app.json", "./tsconfig.node.json"],
+            project: ["./tsconfig.app.json", "./tsconfig.node.json", "./tsconfig.e2e.json"],
             tsconfigRootDir: __dirname,
         }
     },
@@ -137,6 +137,7 @@ export default [{
                 ".storybook/**",
                 "src/stories/**",
                 "**/*.stories*",
+                "playwright.config.ts",
             ],
         }],
 
