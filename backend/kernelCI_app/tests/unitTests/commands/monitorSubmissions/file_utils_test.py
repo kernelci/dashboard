@@ -9,6 +9,7 @@ from kernelCI_app.management.commands.helpers.file_utils import (
     verify_spool_dirs,
 )
 from kernelCI_app.tests.unitTests.helpers.fixtures.file_utils_data import (
+    PENDING_RETRY_SPOOL_SUBDIR,
     TREES_PATH_TESTING,
     BASE_TREES_FILE,
     EXPECTED_PARSED_TREES_FILE,
@@ -242,13 +243,17 @@ class TestVerifySpoolDirs:
         """Test verify_spool_dirs with successful directory verification."""
         joined_fail_dir = "/".join([SPOOL_DIR_TESTING, FAIL_SPOOL_SUBDIR])
         joined_archive_dir = "/".join([SPOOL_DIR_TESTING, ARCHIVE_SPOOL_SUBDIR])
+        joined_pending_retry_dir = "/".join(
+            [SPOOL_DIR_TESTING, PENDING_RETRY_SPOOL_SUBDIR]
+        )
 
         verify_spool_dirs(SPOOL_DIR_TESTING)
 
-        assert mock_verify_dir.call_count == 3
+        assert mock_verify_dir.call_count == 4
         mock_verify_dir.assert_any_call(SPOOL_DIR_TESTING)
         mock_verify_dir.assert_any_call(joined_fail_dir)
         mock_verify_dir.assert_any_call(joined_archive_dir)
+        mock_verify_dir.assert_any_call(joined_pending_retry_dir)
 
     @patch("kernelCI_app.management.commands.helpers.file_utils.verify_dir")
     def test_verify_spool_dirs_verify_spool_dir_fails(self, mock_verify_dir):

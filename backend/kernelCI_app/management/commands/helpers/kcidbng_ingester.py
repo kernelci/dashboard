@@ -6,6 +6,7 @@ import json
 import logging
 import os
 from queue import Queue, Empty
+from typing_extensions import Literal
 from kernelCI_app.constants.ingester import (
     CONVERT_LOG_EXCERPT,
     INGEST_BATCH_SIZE,
@@ -38,13 +39,7 @@ from kernelCI_app.typeModels.modelTypes import TableModels
 
 from prometheus_client import Counter
 
-
-class SubmissionMetadata(TypedDict):
-    filename: str
-    full_filename: str
-    fsize: int | None
-    processing_time: float | None
-    error: str | None
+type INGESTER_DIRS = Literal["archive", "failed", "pending_retry"]
 
 
 class SubmissionFileMetadata(TypedDict):
@@ -177,6 +172,9 @@ def flush_buffers(
     builds_buf: list[Builds],
     tests_buf: list[Tests],
     incidents_buf: list[Incidents],
+    buffer_files: set[tuple[str, str]],
+    archive_dir: str,
+    pending_retry_dir: str,
 ) -> None:
     """
     Consumes the list of objects and tries to insert them into the database.
@@ -206,8 +204,17 @@ def flush_buffers(
                 checkouts_instances=checkouts_buf,
                 tests_instances=tests_buf,
             )
+        for filename, filepath in buffer_files:
+            os.rename(filepath, os.path.join(archive_dir, filename))
     except Exception as e:
         logger.error("Error during buffer flush: %s", e)
+        try:
+            for filename, filepath in buffer_files:
+                os.rename(filepath, os.path.join(pending_retry_dir, filename))
+            out("Moved %d files to pending retry directory" % len(buffer_files))
+        except OSError as oe:
+            logger.error("OS error during buffer file pending retry move: %s", oe)
+            logger.error("Removing files from buffer set, they should be retried")
     finally:
         flush_dur = time.time() - flush_start
         rate = total / flush_dur if flush_dur > 0 else 0.0
@@ -230,10 +237,16 @@ def flush_buffers(
         builds_buf.clear()
         tests_buf.clear()
         incidents_buf.clear()
+        buffer_files.clear()
 
 
 # TODO: lower the complexity of this function
-def db_worker(stop_event: EventClass, db_queue: Queue) -> None:  # noqa: C901
+def db_worker(  # noqa: C901
+    stop_event: EventClass,
+    db_queue: Queue,
+    archive_dir: str,
+    pending_retry_dir: str,
+) -> None:
     """
     Worker process that processes the database queue.
     This is the only process that interacts with the database.
@@ -249,6 +262,7 @@ def db_worker(stop_event: EventClass, db_queue: Queue) -> None:  # noqa: C901
     builds_buf: list[Builds] = []
     tests_buf: list[Tests] = []
     incidents_buf: list[Incidents] = []
+    buffer_files: set[tuple[str, str]] = set()
 
     last_flush_ts = time.time()
 
@@ -268,8 +282,9 @@ def db_worker(stop_event: EventClass, db_queue: Queue) -> None:  # noqa: C901
                 db_queue.task_done()
                 break
             try:
-                filename, inst = item
+                filename, filepath, inst = item
                 if inst is not None:
+                    buffer_files.add((filename, filepath))
                     issues_buf.extend(inst["issues"])
                     checkouts_buf.extend(inst["checkouts"])
                     builds_buf.extend(inst["builds"])
@@ -283,6 +298,9 @@ def db_worker(stop_event: EventClass, db_queue: Queue) -> None:  # noqa: C901
                         builds_buf=builds_buf,
                         tests_buf=tests_buf,
                         incidents_buf=incidents_buf,
+                        archive_dir=archive_dir,
+                        pending_retry_dir=pending_retry_dir,
+                        buffer_files=buffer_files,
                     )
                     last_flush_ts = time.time()
 
@@ -322,6 +340,9 @@ def db_worker(stop_event: EventClass, db_queue: Queue) -> None:  # noqa: C901
                     builds_buf=builds_buf,
                     tests_buf=tests_buf,
                     incidents_buf=incidents_buf,
+                    archive_dir=archive_dir,
+                    pending_retry_dir=pending_retry_dir,
+                    buffer_files=buffer_files,
                 )
                 last_flush_ts = time.time()
             continue
@@ -335,6 +356,9 @@ def db_worker(stop_event: EventClass, db_queue: Queue) -> None:  # noqa: C901
         builds_buf=builds_buf,
         tests_buf=tests_buf,
         incidents_buf=incidents_buf,
+        archive_dir=archive_dir,
+        pending_retry_dir=pending_retry_dir,
+        buffer_files=buffer_files,
     )
 
 
@@ -351,7 +375,6 @@ def process_file(
     file: SubmissionFileMetadata,
     tree_names: dict[str, str],
     failed_dir: str,
-    archive_dir: str,
     db_queue: Queue,
 ) -> bool:
     """
@@ -374,16 +397,13 @@ def process_file(
         return True
 
     db_queue.put(
-        (file["name"], build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER))
+        (
+            file["name"],
+            file["path"],
+            build_instances_from_submission(data, MAP_TABLENAMES_TO_COUNTER),
+        )
     )
     FILES_INGESTER_COUNTER.labels(INGESTER_GRAFANA_LABEL).inc()
-
-    # Archive the file after queuing (we can do this optimistically)
-    try:
-        os.rename(file["path"], os.path.join(archive_dir, file["name"]))
-    except Exception as e:
-        logger.error("Error archiving file %s: %s", file["name"], e)
-        return False
 
     return True
 
@@ -391,8 +411,7 @@ def process_file(
 def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threading
     json_files: list[DirEntry[str]],
     tree_names: dict[str, str],
-    archive_dir: str,
-    failed_dir: str,
+    dirs: dict[INGESTER_DIRS, str],
     max_workers: int = 5,
 ) -> None:
     """
@@ -423,7 +442,15 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
     # Start database worker process
     # This process will constantly consume the db_queue and send data to the database
     stop_event = multiprocessing.Event()
-    db_process = multiprocessing.Process(target=db_worker, args=(stop_event, db_queue))
+    db_process = multiprocessing.Process(
+        target=db_worker,
+        args=(
+            stop_event,
+            db_queue,
+            dirs["archive"],
+            dirs["pending_retry"],
+        ),
+    )
     db_process.start()
 
     stat_ok = 0
@@ -443,8 +470,7 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + threadin
                     process_file,
                     {"path": file.path, "name": file.name, "size": file.stat().st_size},
                     tree_names,
-                    failed_dir,
-                    archive_dir,
+                    dirs["failed"],
                     db_queue,
                 ): file.name
                 for file in json_files

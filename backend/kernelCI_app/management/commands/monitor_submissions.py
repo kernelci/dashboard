@@ -5,6 +5,7 @@ import logging
 import time
 import os
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
+    INGESTER_DIRS,
     ingest_submissions_parallel,
 )
 from kernelCI_app.constants.ingester import (
@@ -91,12 +92,16 @@ class Command(BaseCommand):
                 "PROMETHEUS_MULTIPROC_DIR is not set, skipping Prometheus metrics"
             )
 
-        archive_dir = os.path.join(spool_dir, "archive")
-        failed_dir = os.path.join(spool_dir, "failed")
+        dirs: dict[INGESTER_DIRS, str] = {
+            "archive": os.path.join(spool_dir, "archive"),
+            "failed": os.path.join(spool_dir, "failed"),
+            "pending_retry": os.path.join(spool_dir, "pending_retry"),
+        }
 
         self.stdout.write(f"Monitoring folder: {spool_dir}")
-        self.stdout.write(f"Archive directory: {archive_dir}")
-        self.stdout.write(f"Failed directory: {failed_dir}")
+        self.stdout.write(f"Archive directory: {dirs['archive']}")
+        self.stdout.write(f"Failed directory: {dirs['failed']}")
+        self.stdout.write(f"Pending retry directory: {dirs['pending_retry']}")
         self.stdout.write(f"Check interval: {interval} seconds")
         self.stdout.write(f"Using {max_workers} workers")
 
@@ -126,7 +131,10 @@ class Command(BaseCommand):
 
                 if len(json_files) > 0:
                     ingest_submissions_parallel(
-                        json_files, tree_names, archive_dir, failed_dir, max_workers
+                        json_files,
+                        tree_names,
+                        dirs,
+                        max_workers,
                     )
                 cache_logs_maintenance()
 
