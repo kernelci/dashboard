@@ -55,23 +55,24 @@ def aggregate_checkouts(checkouts_instances: Sequence[Checkouts]) -> None:
         for checkout in checkouts_instances
     ]
 
-    with connection.cursor() as cursor:
-        cursor.executemany(
-            """
-            INSERT INTO latest_checkout (
-                checkout_id, origin, tree_name,
-                git_repository_url, git_repository_branch, start_time
+    if len(values) > 0:
+        with connection.cursor() as cursor:
+            cursor.executemany(
+                """
+                INSERT INTO latest_checkout (
+                    checkout_id, origin, tree_name,
+                    git_repository_url, git_repository_branch, start_time
+                )
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (origin, tree_name, git_repository_url, git_repository_branch)
+                DO UPDATE SET
+                    start_time = EXCLUDED.start_time,
+                    checkout_id = EXCLUDED.checkout_id
+                WHERE latest_checkout.start_time < EXCLUDED.start_time
+                """,
+                values,
             )
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (origin, tree_name, git_repository_url, git_repository_branch)
-            DO UPDATE SET
-                start_time = EXCLUDED.start_time,
-                checkout_id = EXCLUDED.checkout_id
-            WHERE latest_checkout.start_time < EXCLUDED.start_time
-            """,
-            values,
-        )
-    out(f"inserted {len(checkouts_instances)} checkouts in {time.time() - t0:.3f}s")
+        out(f"inserted {len(checkouts_instances)} checkouts in {time.time() - t0:.3f}s")
 
 
 def aggregate_tests(
