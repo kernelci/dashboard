@@ -125,8 +125,11 @@ def test_ingest_perf_workers(
         args=(
             files,
             trees_names,
-            os.path.join(SUBMISSIONS_DIR, "archive"),
-            os.path.join(SUBMISSIONS_DIR, "failed"),
+            {
+                "archive": os.path.join(SUBMISSIONS_DIR, "archive"),
+                "failed": os.path.join(SUBMISSIONS_DIR, "failed"),
+                "pending_retry": os.path.join(SUBMISSIONS_DIR, "pending_retry"),
+            },
             max_workers,
         ),
         rounds=5,
@@ -158,8 +161,11 @@ def test_ingest_perf_file_count(
         args=(
             files,
             trees_names,
-            os.path.join(SUBMISSIONS_DIR, "archive"),
-            os.path.join(SUBMISSIONS_DIR, "failed"),
+            {
+                "archive": os.path.join(SUBMISSIONS_DIR, "archive"),
+                "failed": os.path.join(SUBMISSIONS_DIR, "failed"),
+                "pending_retry": os.path.join(SUBMISSIONS_DIR, "pending_retry"),
+            },
             3,
         ),
         rounds=5,
@@ -252,6 +258,7 @@ def _prepare_buffers(
         "tests": [],
         "incidents": [],
     }
+    buffer_files: set[tuple[str, str]] = set()
 
     for file in files:
         file_metadata: SubmissionFileMetadata = {
@@ -272,6 +279,7 @@ def _prepare_buffers(
         objects_buffers["builds"].extend(instances["builds"])
         objects_buffers["tests"].extend(instances["tests"])
         objects_buffers["incidents"].extend(instances["incidents"])
+        buffer_files.add((file.name, file.path))
 
     return [], {
         "issues_buf": objects_buffers["issues"],
@@ -279,6 +287,9 @@ def _prepare_buffers(
         "builds_buf": objects_buffers["builds"],
         "tests_buf": objects_buffers["tests"],
         "incidents_buf": objects_buffers["incidents"],
+        "buffer_files": buffer_files,
+        "archive_dir": os.path.join(SUBMISSIONS_DIR, "archive"),
+        "pending_retry_dir": os.path.join(SUBMISSIONS_DIR, "pending_retry"),
     }
 
 
@@ -325,8 +336,11 @@ def test_ingest_parallel_batch_size(
             args=(
                 files,
                 trees_names,
-                os.path.join(SUBMISSIONS_DIR, "archive"),
-                os.path.join(SUBMISSIONS_DIR, "failed"),
+                {
+                    "archive": os.path.join(SUBMISSIONS_DIR, "archive"),
+                    "failed": os.path.join(SUBMISSIONS_DIR, "failed"),
+                    "pending_retry": os.path.join(SUBMISSIONS_DIR, "pending_retry"),
+                },
                 1,
             ),
             rounds=5,
