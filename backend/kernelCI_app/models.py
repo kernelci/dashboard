@@ -281,7 +281,8 @@ class HardwareStatus(models.Model):
 
 
 class LatestCheckout(models.Model):
-    checkout_id = models.TextField(primary_key=True)
+    id = models.AutoField(primary_key=True)
+    checkout_id = models.TextField()
     start_time = models.DateTimeField()
 
     origin = models.CharField(max_length=100)
@@ -302,6 +303,9 @@ class LatestCheckout(models.Model):
                 name="latest_checkout_unique",
                 nulls_distinct=False,
             ),
+        ]
+        indexes = [
+            models.Index(fields=["checkout_id"], name="latest_checkout_checkout_id"),
         ]
 
 
