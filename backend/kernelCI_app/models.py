@@ -322,15 +322,15 @@ class PendingTest(models.Model):
         db_table = "pending_test"
 
 
-class ProcessedHardwareStatus(models.Model):
-    hardware_key = models.BinaryField(
+class ProcessedListingItems(models.Model):
+    listing_item_key = models.BinaryField(
         max_length=32,
         primary_key=True,
     )  # this holds a sha256, thus digest_size = 32 bytes
     checkout_id = models.TextField()
 
     class Meta:
-        db_table = "processed_hardware_status"
+        db_table = "processed_listing_items"
         indexes = [
             models.Index(fields=["checkout_id"], name="phs_checkout_id"),
         ]

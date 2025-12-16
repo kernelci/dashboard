@@ -11,7 +11,7 @@ from kernelCI_app.models import (
     Builds,
     Checkouts,
     PendingTest,
-    ProcessedHardwareStatus,
+    ProcessedListingItems,
     SimplifiedStatusChoices,
 )
 
@@ -108,9 +108,9 @@ def _collect_test_contexts(
     return contexts, keys_to_check
 
 
-def _get_existing_processed(keys_to_check: set[bytes]) -> set[ProcessedHardwareStatus]:
+def _get_existing_processed(keys_to_check: set[bytes]) -> set[ProcessedListingItems]:
     """Fetch existing processed entries from the database."""
-    return set(ProcessedHardwareStatus.objects.filter(hardware_key__in=keys_to_check))
+    return set(ProcessedListingItems.objects.filter(listing_item_key__in=keys_to_check))
 
 
 def _process_test_status(
@@ -118,11 +118,11 @@ def _process_test_status(
     test_h_key: bytes,
     checkout_id: str,
     status_record: HardwareStatusRecord,
-    existing_processed: set[ProcessedHardwareStatus],
-    new_processed_entries: set[ProcessedHardwareStatus],
+    existing_processed: set[ProcessedListingItems],
+    new_processed_entries: set[ProcessedListingItems],
 ) -> bool:
-    to_process = ProcessedHardwareStatus(
-        hardware_key=test_h_key, checkout_id=checkout_id
+    to_process = ProcessedListingItems(
+        listing_item_key=test_h_key, checkout_id=checkout_id
     )
 
     if to_process in existing_processed:
@@ -148,8 +148,8 @@ def _process_build_status(
     build: Builds,
     build_h_key: bytes,
     status_record: HardwareStatusRecord,
-    existing_processed: set[ProcessedHardwareStatus],
-    new_processed_entries: set[ProcessedHardwareStatus],
+    existing_processed: set[ProcessedListingItems],
+    new_processed_entries: set[ProcessedListingItems],
 ) -> None:
     """Process build status and update status record if not already processed."""
 
@@ -162,8 +162,8 @@ def _process_build_status(
     if build.id.startswith(MAESTRO_DUMMY_BUILD_PREFIX):
         return
 
-    to_process = ProcessedHardwareStatus(
-        hardware_key=build_h_key, checkout_id=build.checkout.id
+    to_process = ProcessedListingItems(
+        listing_item_key=build_h_key, checkout_id=build.checkout.id
     )
 
     if to_process in existing_processed:
@@ -186,7 +186,7 @@ def aggregate_hardware_status(
     tests_instances: Sequence[PendingTest],
     builds_by_id: dict[str, Builds],
 ) -> tuple[
-    dict[tuple[str, str, str], HardwareStatusRecord], set[ProcessedHardwareStatus]
+    dict[tuple[str, str, str], HardwareStatusRecord], set[ProcessedListingItems]
 ]:
     """
     Aggregate hardware status from pending tests, builds, and checkouts.
@@ -195,7 +195,7 @@ def aggregate_hardware_status(
     and a set of new processed entries.
     """
     hardware_status_data: dict[tuple[str, str, str], HardwareStatusRecord] = {}
-    new_processed_entries: set[ProcessedHardwareStatus] = set()
+    new_processed_entries: set[ProcessedListingItems] = set()
 
     contexts, keys_to_check = _collect_test_contexts(tests_instances, builds_by_id)
 
@@ -410,7 +410,7 @@ class Command(BaseCommand):
 
             if new_processed_entries:
                 t0 = time.time()
-                ProcessedHardwareStatus.objects.bulk_create(
+                ProcessedListingItems.objects.bulk_create(
                     new_processed_entries,
                     ignore_conflicts=True,
                 )
