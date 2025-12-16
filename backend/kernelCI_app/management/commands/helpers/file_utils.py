@@ -45,6 +45,8 @@ def verify_dir(dir: str) -> None:
 def verify_spool_dirs(spool_dir: str) -> None:
     failed_dir = os.path.join(spool_dir, "failed")
     archive_dir = os.path.join(spool_dir, "archive")
+    pending_retry_dir = os.path.join(spool_dir, "pending_retry")
     verify_dir(spool_dir)
     verify_dir(failed_dir)
     verify_dir(archive_dir)
+    verify_dir(pending_retry_dir)

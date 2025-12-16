@@ -6,9 +6,12 @@ from concurrent.futures import Future
 from kernelCI_app.tests.unitTests.helpers.fixtures.kcidbng_ingester_data import (
     ARCHIVE_SUBMISSIONS_DIR,
     FAILED_SUBMISSIONS_DIR,
+    PENDING_RETRY_SUBMISSIONS_DIR,
     FLUSH_TIMEOUT_SEC_MOCK,
     INGEST_BATCH_SIZE_MOCK,
     MAINLINE_URL,
+    SUBMISSION_DIRS_MOCK,
+    SUBMISSION_FILEPATH_MOCK,
     TIME_MOCK,
     TREE_NAMES_MOCK,
     SUBMISSION_PATH_MOCK,
@@ -268,7 +271,8 @@ class TestFlushBuffers:
     # - insertion error
 
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.consume_buffer")
-    def test_flush_buffers_empty_buffers(self, mock_consume):
+    @patch("os.rename")
+    def test_flush_buffers_empty_buffers(self, mock_rename, mock_consume):
         """Test flush_buffers with all empty buffers."""
         flush_buffers(
             issues_buf=[],
@@ -276,19 +280,30 @@ class TestFlushBuffers:
             builds_buf=[],
             tests_buf=[],
             incidents_buf=[],
+            buffer_files={},
+            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
+            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
         )
 
         mock_consume.assert_not_called()
+        mock_rename.assert_not_called()
 
     @patch(
         "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_tests"
     )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.consume_buffer")
+    @patch("os.rename")
     @patch("django.db.transaction.atomic")
     @patch("time.time", side_effect=TIME_MOCK)
     def test_flush_buffers_with_items(
-        self, mock_time, mock_atomic, mock_consume, mock_out, mock_aggregate
+        self,
+        mock_time,
+        mock_atomic,
+        mock_rename,
+        mock_consume,
+        mock_out,
+        mock_aggregate,
     ):
         """Test flush_buffers with items in buffers."""
         # Arbitrary amount of items in each buffer
@@ -297,6 +312,7 @@ class TestFlushBuffers:
         builds_buf = []
         tests_buf = [MagicMock()]
         incidents_buf = []
+        buffer_files = {(SUBMISSION_FILENAME_MOCK, SUBMISSION_FILEPATH_MOCK)}
 
         n_issues = len(issues_buf)
         n_checkouts = len(checkouts_buf)
@@ -311,6 +327,9 @@ class TestFlushBuffers:
             builds_buf=builds_buf,
             tests_buf=tests_buf,
             incidents_buf=incidents_buf,
+            buffer_files=buffer_files,
+            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
+            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
         )
 
         expected_calls = [
@@ -343,6 +362,12 @@ class TestFlushBuffers:
         assert len(builds_buf) == 0
         assert len(tests_buf) == 0
         assert len(incidents_buf) == 0
+        assert len(buffer_files) == 0
+
+        mock_rename.assert_called_once_with(
+            SUBMISSION_FILEPATH_MOCK,
+            "/".join([ARCHIVE_SUBMISSIONS_DIR, SUBMISSION_FILENAME_MOCK]),
+        )
 
         assert mock_time.call_count == 2
         mock_atomic.assert_called_once()
@@ -356,12 +381,14 @@ class TestFlushBuffers:
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.consume_buffer")
+    @patch("os.rename")
     @patch("django.db.transaction.atomic")
     @patch("time.time", side_effect=TIME_MOCK)
     def test_flush_buffers_with_db_error(
         self,
         mock_time,
         mock_atomic,
+        mock_rename,
         mock_consume,
         mock_out,
         mock_logger,
@@ -374,6 +401,7 @@ class TestFlushBuffers:
         builds_buf = [MagicMock(), MagicMock()]
         tests_buf = []
         incidents_buf = [MagicMock()]
+        buffer_files = {(SUBMISSION_FILENAME_MOCK, SUBMISSION_FILEPATH_MOCK)}
 
         n_issues = len(issues_buf)
         n_checkouts = len(checkouts_buf)
@@ -381,6 +409,7 @@ class TestFlushBuffers:
         n_tests = len(tests_buf)
         n_incidents = len(incidents_buf)
         total_items = n_issues + n_checkouts + n_builds + n_tests + n_incidents
+        n_files = len(buffer_files)
 
         mock_consume.side_effect = Exception("Database error")
 
@@ -390,6 +419,9 @@ class TestFlushBuffers:
             builds_buf=builds_buf,
             tests_buf=tests_buf,
             incidents_buf=incidents_buf,
+            buffer_files=buffer_files,
+            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
+            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
         )
 
         # Doesn't expect to consume all buffers since the first one raises error and skips the rest
@@ -397,18 +429,23 @@ class TestFlushBuffers:
 
         # Inside of the function the `out` is called before the clear
         # So we check against the len of the original buffers
-        mock_out.assert_called_once_with(
-            "Flushed batch in %.3fs (%.1f items/s): "
-            "issues=%d checkouts=%d builds=%d tests=%d incidents=%d"
-            % (
-                1,
-                total_items,
-                n_issues,
-                n_checkouts,
-                n_builds,
-                n_tests,
-                n_incidents,
-            )
+        mock_out.assert_has_calls(
+            [
+                call("Moved %s files to pending retry directory" % n_files),
+                call(
+                    "Flushed batch in %.3fs (%.1f items/s): "
+                    "issues=%d checkouts=%d builds=%d tests=%d incidents=%d"
+                    % (
+                        1,
+                        total_items,
+                        n_issues,
+                        n_checkouts,
+                        n_builds,
+                        n_tests,
+                        n_incidents,
+                    )
+                ),
+            ]
         )
 
         assert len(issues_buf) == 0
@@ -416,6 +453,12 @@ class TestFlushBuffers:
         assert len(builds_buf) == 0
         assert len(tests_buf) == 0
         assert len(incidents_buf) == 0
+        assert len(buffer_files) == 0
+
+        mock_rename.assert_called_once_with(
+            SUBMISSION_FILEPATH_MOCK,
+            "/".join([PENDING_RETRY_SUBMISSIONS_DIR, SUBMISSION_FILENAME_MOCK]),
+        )
 
         assert mock_time.call_count == 2
         mock_atomic.assert_called_once()
@@ -443,7 +486,12 @@ class TestDbWorker:
         stop_event = threading.Event()
         stop_event.set()
 
-        db_worker(stop_event, test_queue)
+        db_worker(
+            stop_event,
+            test_queue,
+            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
+            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
+        )
 
         assert test_queue.empty()
         assert test_queue.all_tasks_done
@@ -469,10 +517,17 @@ class TestDbWorker:
             "tests": [MagicMock()],
             "incidents": [],
         }
-        test_queue.put((SUBMISSION_FILENAME_MOCK, mock_instances))
+        test_queue.put(
+            (SUBMISSION_FILENAME_MOCK, SUBMISSION_FILEPATH_MOCK, mock_instances)
+        )
         test_queue.put(None)
 
-        db_worker(stop_event, test_queue)
+        db_worker(
+            stop_event,
+            test_queue,
+            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
+            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
+        )
 
         assert test_queue.empty()
         assert mock_time.call_count == 1
@@ -506,14 +561,19 @@ class TestDbWorker:
             "tests": [MagicMock(), MagicMock()],
             "incidents": [],
         }
-        test_queue.put(("test1.json", mock_instances_1))
-        test_queue.put(("test2.json", mock_instances_2))
+        test_queue.put(("test1.json", SUBMISSION_FILEPATH_MOCK, mock_instances_1))
+        test_queue.put(("test2.json", SUBMISSION_FILEPATH_MOCK, mock_instances_2))
         test_queue.put(None)
 
         # NOTE: On a normal run, the list of items would be cleared from the flush,
         # meaning that we could add more items before the next flush, but since we're
         # mocking flush_buffers, the lists are not cleared
-        db_worker(stop_event, test_queue)
+        db_worker(
+            stop_event,
+            test_queue,
+            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
+            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
+        )
 
         out_calls = [
             "Queued from test1.json: issues=1 checkouts=2 builds=0 tests=0 incidents=0",
@@ -565,12 +625,17 @@ class TestDbWorker:
         # The poison pill is needed otherwise the worker would run indefinitely
         mock_queue = MagicMock()
         mock_queue.get.side_effect = [
-            (SUBMISSION_FILENAME_MOCK, mock_instances),
+            (SUBMISSION_FILENAME_MOCK, SUBMISSION_FILEPATH_MOCK, mock_instances),
             Empty(),
             None,
         ]
 
-        db_worker(stop_event, mock_queue)
+        db_worker(
+            stop_event,
+            mock_queue,
+            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
+            pending_retry_dir=PENDING_RETRY_SUBMISSIONS_DIR,
+        )
 
         # 2 flushes: one after timeout, one at the end
         assert mock_flush.call_count == 2
@@ -600,7 +665,6 @@ class TestProcessFile:
     # - error in metadata with successful move to failed dir
     # - error in metadata with exception when moving to failed dir
     # - no error but empty data
-    # - error when archiving file
     # - process successfully
 
     @patch(
@@ -621,9 +685,7 @@ class TestProcessFile:
         mock_prepare.return_value = (None, mock_metadata)
 
         test_queue = Queue()
-        result = process_file(
-            mock_file, {}, FAILED_SUBMISSIONS_DIR, ARCHIVE_SUBMISSIONS_DIR, test_queue
-        )
+        result = process_file(mock_file, {}, FAILED_SUBMISSIONS_DIR, test_queue)
 
         assert result is False
         mock_move_failed.assert_called_once()
@@ -650,9 +712,7 @@ class TestProcessFile:
         mock_move_failed.side_effect = Exception("Any Exception error")
 
         test_queue = Queue()
-        result = process_file(
-            mock_file, {}, FAILED_SUBMISSIONS_DIR, ARCHIVE_SUBMISSIONS_DIR, test_queue
-        )
+        result = process_file(mock_file, {}, FAILED_SUBMISSIONS_DIR, test_queue)
 
         # Same asserts as before because currently Exceptions are not treated
         assert result is False
@@ -675,69 +735,18 @@ class TestProcessFile:
         mock_prepare.return_value = (None, mock_metadata)
 
         test_queue = Queue()
-        result = process_file(
-            mock_file, {}, FAILED_SUBMISSIONS_DIR, ARCHIVE_SUBMISSIONS_DIR, test_queue
-        )
+        result = process_file(mock_file, {}, FAILED_SUBMISSIONS_DIR, test_queue)
 
         assert result is True
         mock_move_failed.assert_not_called()
 
-    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
     @patch(
         "kernelCI_app.management.commands.helpers.kcidbng_ingester.build_instances_from_submission"
     )
     @patch(
         "kernelCI_app.management.commands.helpers.kcidbng_ingester.prepare_file_data"
     )
-    @patch("os.rename")
-    def test_process_file_archive_error(
-        self, mock_rename, mock_prepare, mock_build_instances, mock_logger
-    ):
-        """Test process_file with archiving error."""
-        mock_file = SubmissionFileMetadata(
-            name=SUBMISSION_FILENAME_MOCK,
-            path=SUBMISSION_PATH_MOCK,
-            fsize=100,
-        )
-
-        mock_metadata = {"file": mock_file, "fsize": 100}
-        mock_prepare.return_value = (mock_file, mock_metadata)
-
-        mock_instances_from_submission = {
-            "issues": [],
-            "checkouts": [],
-            "builds": [],
-            "tests": [],
-            "incidents": [],
-        }
-        mock_build_instances.return_value = mock_instances_from_submission
-
-        mock_rename.side_effect = Exception("Any Exception error, usually OSError")
-
-        test_queue = Queue()
-        result = process_file(
-            mock_file,
-            {},
-            FAILED_SUBMISSIONS_DIR,
-            ARCHIVE_SUBMISSIONS_DIR,
-            test_queue,
-        )
-
-        assert result is False
-        mock_logger.error.assert_called_once_with(
-            "Error archiving file %s: %s", mock_file["name"], mock_rename.side_effect
-        )
-
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.build_instances_from_submission"
-    )
-    @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.prepare_file_data"
-    )
-    @patch("os.rename")
-    def test_process_file_success(
-        self, mock_rename, mock_prepare, mock_build_instances
-    ):
+    def test_process_file_success(self, mock_prepare, mock_build_instances):
         """Test successful file processing."""
         mock_file = SubmissionFileMetadata(
             name=SUBMISSION_FILENAME_MOCK,
@@ -758,19 +767,18 @@ class TestProcessFile:
         mock_build_instances.return_value = mock_instances_from_submission
 
         test_queue = Queue()
-        result = process_file(
-            mock_file, {}, FAILED_SUBMISSIONS_DIR, ARCHIVE_SUBMISSIONS_DIR, test_queue
-        )
+        result = process_file(mock_file, {}, FAILED_SUBMISSIONS_DIR, test_queue)
 
         assert result is True
-        mock_rename.assert_called_once_with(
-            mock_file["path"], ARCHIVE_SUBMISSIONS_DIR + "/" + mock_file["name"]
-        )
 
         # Check that item was queued
         assert not test_queue.empty()
         queued_item = test_queue.get()
-        assert queued_item == (mock_file["name"], mock_instances_from_submission)
+        assert queued_item == (
+            mock_file["name"],
+            mock_file["path"],
+            mock_instances_from_submission,
+        )
 
 
 class TestIngestSubmissionsParallel:
@@ -835,8 +843,7 @@ class TestIngestSubmissionsParallel:
         ingest_submissions_parallel(
             json_files=json_files,
             tree_names={},
-            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
-            failed_dir=FAILED_SUBMISSIONS_DIR,
+            dirs=SUBMISSION_DIRS_MOCK,
             max_workers=2,
         )
 
@@ -910,8 +917,7 @@ class TestIngestSubmissionsParallel:
         ingest_submissions_parallel(
             json_files=[self.mock_file1],
             tree_names={},
-            archive_dir=ARCHIVE_SUBMISSIONS_DIR,
-            failed_dir=FAILED_SUBMISSIONS_DIR,
+            dirs=SUBMISSION_DIRS_MOCK,
             max_workers=2,
         )
 
@@ -978,8 +984,7 @@ class TestIngestSubmissionsParallel:
             ingest_submissions_parallel(
                 json_files=json_files,
                 tree_names={},
-                archive_dir=ARCHIVE_SUBMISSIONS_DIR,
-                failed_dir=FAILED_SUBMISSIONS_DIR,
+                dirs=SUBMISSION_DIRS_MOCK,
                 max_workers=2,
             )
 

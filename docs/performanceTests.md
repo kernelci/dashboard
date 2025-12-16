@@ -11,7 +11,7 @@ This project includes two types of performance testing:
 
 K6 is used for performance and load testing of API endpoints.
 
-## Quick Start
+### Quick Start
 
 Run tests using Docker Compose:
 
@@ -21,13 +21,13 @@ docker-compose -f docker-compose.k6.yml up
 
 The Docker setup handles all K6 dependencies automatically.
 
-## Project Structure
+### Project Structure
 
 - **Test files**: Place your K6 test scripts in `./k6/tests/`
 - **Results**: Test outputs are saved to `./k6/results/`
 - **Dataset**: Test data should be placed in `./k6/data`. See `./k6/data/README.md` for initialization instructions.
 
-## Configuration
+### Configuration
 
 By default, the docker compose command will run all .js files in `./k6/tests/`, but you can send more arguments to the docker command (in the docker-compose file or when using docker run) to specify the file that you want to run.
 
@@ -40,7 +40,7 @@ pytest-benchmark is used for performance benchmarking of backend components such
 1. **Test Database**: You need a running test database. Start it with:
 
    ```bash
-   docker-compose -f docker-compose.test.yml up test_db -d
+   docker compose -f docker-compose.test.yml up test_db -d
    ```
 
 ### Running Performance Tests
