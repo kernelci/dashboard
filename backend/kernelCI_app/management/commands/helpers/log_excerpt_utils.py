@@ -92,7 +92,7 @@ def set_log_excerpt_ofile(item: dict[str, Any], url: str) -> dict[str, Any]:
 
     item is a build or test
     """
-    item["log_excerpt"] = None
+    item["log_excerpt"] = ""
     data = {
         "name": "log_excerpt",
         "url": url,
