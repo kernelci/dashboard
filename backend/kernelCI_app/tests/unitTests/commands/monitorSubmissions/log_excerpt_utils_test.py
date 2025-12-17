@@ -219,7 +219,7 @@ class TestSetLogExcerptOfile:
             LOG_URL_MOCK,
         )
 
-        assert result["log_excerpt"] is None
+        assert result["log_excerpt"] == ""
         assert "output_files" in result
         assert len(result["output_files"]) == 1
         assert result["output_files"][0] == {"name": "log_excerpt", "url": LOG_URL_MOCK}
@@ -238,7 +238,7 @@ class TestSetLogExcerptOfile:
             LOG_URL_MOCK,
         )
 
-        assert result["log_excerpt"] is None
+        assert result["log_excerpt"] == ""
         assert len(result["output_files"]) == 2
         assert result["output_files"][1] == {"name": "log_excerpt", "url": LOG_URL_MOCK}
 
@@ -291,7 +291,7 @@ class TestProcessLogExcerptFromItem:
         """Test processing large log excerpt not in cache."""
 
         def side_effect_set_log_excerpt_ofile(item, url):
-            item["log_excerpt"] = None
+            item["log_excerpt"] = ""
             if "output_files" not in item or not isinstance(item["output_files"], list):
                 item["output_files"] = []
             item["output_files"].append({"name": "log_excerpt", "url": url})
@@ -311,7 +311,7 @@ class TestProcessLogExcerptFromItem:
         mock_upload_logexcerpt.assert_called_once()
         mock_set_in_cache.assert_called_once()
         mock_set_log_excerpt_ofile.assert_called_once()
-        assert item["log_excerpt"] is None
+        assert item["log_excerpt"] == ""
         assert "output_files" in item
         assert len(item["output_files"]) == 1
 
@@ -342,7 +342,7 @@ class TestProcessLogExcerptFromItem:
         """Test processing large log excerpt already in cache."""
 
         def side_effect_set_log_excerpt_ofile(item, url):
-            item["log_excerpt"] = None
+            item["log_excerpt"] = ""
             if "output_files" not in item or not isinstance(item["output_files"], list):
                 item["output_files"] = []
             item["output_files"].append({"name": "log_excerpt", "url": url})
@@ -361,7 +361,7 @@ class TestProcessLogExcerptFromItem:
         mock_upload_logexcerpt.assert_not_called()
         mock_set_in_cache.assert_not_called()
         mock_set_log_excerpt_ofile.assert_called_once()
-        assert item["log_excerpt"] is None
+        assert item["log_excerpt"] == ""
         assert "output_files" in item
         assert len(item["output_files"]) == 1
 
