@@ -192,7 +192,8 @@ else:
             [
                 "notifications",
                 "--action=metrics_summary",
-                "--add-mailing-lists",
+                "--to=kernelci@lists.linux.dev",
+                "--cc=kernelci-results@groups.io",
                 "--send",
                 "--yes",
             ],
