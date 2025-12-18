@@ -1,15 +1,10 @@
 from datetime import datetime
+from kernelCI_app.typeModels.commonListing import StatusCountV2
 from pydantic import BaseModel, BeforeValidator, Field
 from typing import Annotated, Optional, Union
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
-
-
-class StatusCountV2(BaseModel):
-    PASS: Optional[int] = 0
-    FAIL: Optional[int] = 0
-    INCONCLUSIVE: Optional[int] = 0
 
 
 class HardwareItemV2(BaseModel):

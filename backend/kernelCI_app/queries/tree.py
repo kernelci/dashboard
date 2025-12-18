@@ -290,6 +290,48 @@ def get_tree_listing_data_by_checkout_id(*, checkout_ids: list[str]):
         return dict_fetchall(cursor=cursor)
 
 
+def get_tree_listing_data_denormalized(
+    *, origin: str, interval_in_days: int
+) -> Optional[list[tuple]]:
+    interval_param = f"{interval_in_days} days"
+    params = {
+        "origin_param": origin,
+        "interval_param": interval_param,
+    }
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                checkout_id,
+                origin,
+                tree_name,
+                git_repository_url,
+                git_repository_branch,
+                git_commit_hash,
+                git_commit_name,
+                git_commit_tags,
+                start_time,
+                build_pass,
+                build_failed,
+                build_inc,
+                boot_pass,
+                boot_failed,
+                boot_inc,
+                test_pass,
+                test_failed,
+                test_inc
+            FROM
+                tree_listing
+            WHERE
+                start_time >= NOW() - INTERVAL %(interval_param)s
+                AND origin = %(origin_param)s
+            """,
+            params,
+        )
+        return cursor.fetchall()
+
+
 def get_tree_details_data(
     *,
     origin_param: str,

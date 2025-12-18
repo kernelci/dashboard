@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 from pydantic import BaseModel, Field
 
 from kernelCI_app.constants.general import DEFAULT_INTERVAL_IN_DAYS, DEFAULT_ORIGIN
@@ -27,3 +27,9 @@ class ListingQueryParameters(ListingInterval):
         ),
         make_default_validator(DEFAULT_ORIGIN),
     ]
+
+
+class StatusCountV2(BaseModel):
+    PASS: Optional[int] = 0
+    FAIL: Optional[int] = 0
+    INCONCLUSIVE: Optional[int] = 0
