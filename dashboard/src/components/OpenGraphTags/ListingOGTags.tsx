@@ -30,6 +30,9 @@ const ListingOGTags = ({
       case '/issues':
         descriptionId = 'issueListing.description';
         break;
+      case '/hardware-new':
+        descriptionId = 'hardwareListing.description';
+        break;
     }
     return (
       formatMessage({ id: descriptionId }) +
@@ -47,6 +50,8 @@ const ListingOGTags = ({
         return formatMessage({ id: 'hardwareListing.title' });
       case '/issues':
         return formatMessage({ id: 'issueListing.title' });
+      case '/hardware-new':
+        return formatMessage({ id: 'hardwareListing.title' });
     }
   }, [formatMessage, monitor]);
 

@@ -98,6 +98,10 @@ export type StatusCount = {
   DONE?: number;
 };
 
+export type StatusCountV2 = StatusCount & {
+  INCONCLUSIVE?: number;
+};
+
 export type RequiredStatusCount = Required<StatusCount>;
 
 export type Architecture = Record<
@@ -389,7 +393,12 @@ export const getTargetFilter = (
 export enum RedirectFrom {
   Tree = 'tree',
   Hardware = 'hardware',
+  HardwareNew = 'hardware-new',
   Issues = 'issues',
 }
 
-export type PossibleMonitorPath = '/tree' | '/hardware' | '/issues';
+export type PossibleMonitorPath =
+  | '/tree'
+  | '/hardware'
+  | '/issues'
+  | '/hardware-new';

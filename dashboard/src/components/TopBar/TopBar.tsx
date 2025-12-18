@@ -17,6 +17,8 @@ const getTargetPath = (basePath: string): PossibleMonitorPath => {
   switch (basePath) {
     case 'hardware':
       return '/hardware';
+    case 'hardware-new':
+      return '/hardware-new';
     case 'issues':
       return '/issues';
     default:
@@ -47,7 +49,7 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
     }
 
     let pageOrigins: string[];
-    if (targetPath === '/hardware') {
+    if (targetPath === '/hardware' || targetPath === '/hardware-new') {
       pageOrigins = originData.test_origins;
     } else {
       pageOrigins = originData.checkout_origins;
@@ -93,6 +95,8 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
       return <FormattedMessage id="routes.treeMonitor" />;
     case 'hardware':
       return <FormattedMessage id="routes.hardwareMonitor" />;
+    case 'hardware-new':
+      return <FormattedMessage id="routes.hardwareNewMonitor" />;
     case 'issues':
       return <FormattedMessage id="routes.issueMonitor" />;
     case 'build':

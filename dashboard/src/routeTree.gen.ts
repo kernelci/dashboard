@@ -14,10 +14,12 @@ import { Route as MainRouteRouteImport } from './routes/_main/route'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as MainTreeRouteRouteImport } from './routes/_main/tree/route'
 import { Route as MainIssuesRouteRouteImport } from './routes/_main/issues/route'
+import { Route as MainHardwareNewRouteRouteImport } from './routes/_main/hardware-new/route'
 import { Route as MainHardwareRouteRouteImport } from './routes/_main/hardware/route'
 import { Route as MainTreeIndexRouteImport } from './routes/_main/tree/index'
 import { Route as MainIssuesIndexRouteImport } from './routes/_main/issues/index'
 import { Route as MainHardwareIndexRouteImport } from './routes/_main/hardware/index'
+import { Route as MainHardwareNewIndexRouteImport } from './routes/_main/hardware-new/index'
 import { Route as MainTreeTreeIdRouteRouteImport } from './routes/_main/tree/$treeId/route'
 import { Route as MainTestTestIdRouteRouteImport } from './routes/_main/test/$testId/route'
 import { Route as MainIssueIssueIdRouteRouteImport } from './routes/_main/issue/$issueId/route'
@@ -75,6 +77,11 @@ const MainIssuesRouteRoute = MainIssuesRouteRouteImport.update({
   path: '/issues',
   getParentRoute: () => MainRouteRoute,
 } as any)
+const MainHardwareNewRouteRoute = MainHardwareNewRouteRouteImport.update({
+  id: '/hardware-new',
+  path: '/hardware-new',
+  getParentRoute: () => MainRouteRoute,
+} as any)
 const MainHardwareRouteRoute = MainHardwareRouteRouteImport.update({
   id: '/hardware',
   path: '/hardware',
@@ -94,6 +101,11 @@ const MainHardwareIndexRoute = MainHardwareIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainHardwareRouteRoute,
+} as any)
+const MainHardwareNewIndexRoute = MainHardwareNewIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MainHardwareNewRouteRoute,
 } as any)
 const MainTreeTreeIdRouteRoute = MainTreeTreeIdRouteRouteImport.update({
   id: '/$treeId',
@@ -282,6 +294,7 @@ const MainalternativesCTreeNameBranchHashIndexRoute =
 export interface FileRoutesByFullPath {
   '/log-viewer': typeof LogViewerRoute
   '/hardware': typeof MainHardwareRouteRouteWithChildren
+  '/hardware-new': typeof MainHardwareNewRouteRouteWithChildren
   '/issues': typeof MainIssuesRouteRouteWithChildren
   '/tree': typeof MainTreeRouteRouteWithChildren
   '/': typeof MainIndexRoute
@@ -290,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/issue/$issueId': typeof MainIssueIssueIdRouteRouteWithChildren
   '/test/$testId': typeof MainTestTestIdRouteRouteWithChildren
   '/tree/$treeId': typeof MainTreeTreeIdRouteRouteWithChildren
+  '/hardware-new/': typeof MainHardwareNewIndexRoute
   '/hardware/': typeof MainHardwareIndexRoute
   '/issues/': typeof MainIssuesIndexRoute
   '/tree/': typeof MainTreeIndexRoute
@@ -324,6 +338,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/log-viewer': typeof LogViewerRoute
   '/': typeof MainIndexRoute
+  '/hardware-new': typeof MainHardwareNewIndexRoute
   '/hardware': typeof MainHardwareIndexRoute
   '/issues': typeof MainIssuesIndexRoute
   '/tree': typeof MainTreeIndexRoute
@@ -356,6 +371,7 @@ export interface FileRoutesById {
   '/_main': typeof MainRouteRouteWithChildren
   '/log-viewer': typeof LogViewerRoute
   '/_main/hardware': typeof MainHardwareRouteRouteWithChildren
+  '/_main/hardware-new': typeof MainHardwareNewRouteRouteWithChildren
   '/_main/issues': typeof MainIssuesRouteRouteWithChildren
   '/_main/tree': typeof MainTreeRouteRouteWithChildren
   '/_main/': typeof MainIndexRoute
@@ -364,6 +380,7 @@ export interface FileRoutesById {
   '/_main/issue/$issueId': typeof MainIssueIssueIdRouteRouteWithChildren
   '/_main/test/$testId': typeof MainTestTestIdRouteRouteWithChildren
   '/_main/tree/$treeId': typeof MainTreeTreeIdRouteRouteWithChildren
+  '/_main/hardware-new/': typeof MainHardwareNewIndexRoute
   '/_main/hardware/': typeof MainHardwareIndexRoute
   '/_main/issues/': typeof MainIssuesIndexRoute
   '/_main/tree/': typeof MainTreeIndexRoute
@@ -400,6 +417,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/log-viewer'
     | '/hardware'
+    | '/hardware-new'
     | '/issues'
     | '/tree'
     | '/'
@@ -408,6 +426,7 @@ export interface FileRouteTypes {
     | '/issue/$issueId'
     | '/test/$testId'
     | '/tree/$treeId'
+    | '/hardware-new/'
     | '/hardware/'
     | '/issues/'
     | '/tree/'
@@ -442,6 +461,7 @@ export interface FileRouteTypes {
   to:
     | '/log-viewer'
     | '/'
+    | '/hardware-new'
     | '/hardware'
     | '/issues'
     | '/tree'
@@ -473,6 +493,7 @@ export interface FileRouteTypes {
     | '/_main'
     | '/log-viewer'
     | '/_main/hardware'
+    | '/_main/hardware-new'
     | '/_main/issues'
     | '/_main/tree'
     | '/_main/'
@@ -481,6 +502,7 @@ export interface FileRouteTypes {
     | '/_main/issue/$issueId'
     | '/_main/test/$testId'
     | '/_main/tree/$treeId'
+    | '/_main/hardware-new/'
     | '/_main/hardware/'
     | '/_main/issues/'
     | '/_main/tree/'
@@ -555,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainIssuesRouteRouteImport
       parentRoute: typeof MainRouteRoute
     }
+    '/_main/hardware-new': {
+      id: '/_main/hardware-new'
+      path: '/hardware-new'
+      fullPath: '/hardware-new'
+      preLoaderRoute: typeof MainHardwareNewRouteRouteImport
+      parentRoute: typeof MainRouteRoute
+    }
     '/_main/hardware': {
       id: '/_main/hardware'
       path: '/hardware'
@@ -582,6 +611,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/hardware/'
       preLoaderRoute: typeof MainHardwareIndexRouteImport
       parentRoute: typeof MainHardwareRouteRoute
+    }
+    '/_main/hardware-new/': {
+      id: '/_main/hardware-new/'
+      path: '/'
+      fullPath: '/hardware-new/'
+      preLoaderRoute: typeof MainHardwareNewIndexRouteImport
+      parentRoute: typeof MainHardwareNewRouteRoute
     }
     '/_main/tree/$treeId': {
       id: '/_main/tree/$treeId'
@@ -854,6 +890,17 @@ const MainHardwareRouteRouteChildren: MainHardwareRouteRouteChildren = {
 const MainHardwareRouteRouteWithChildren =
   MainHardwareRouteRoute._addFileChildren(MainHardwareRouteRouteChildren)
 
+interface MainHardwareNewRouteRouteChildren {
+  MainHardwareNewIndexRoute: typeof MainHardwareNewIndexRoute
+}
+
+const MainHardwareNewRouteRouteChildren: MainHardwareNewRouteRouteChildren = {
+  MainHardwareNewIndexRoute: MainHardwareNewIndexRoute,
+}
+
+const MainHardwareNewRouteRouteWithChildren =
+  MainHardwareNewRouteRoute._addFileChildren(MainHardwareNewRouteRouteChildren)
+
 interface MainIssuesRouteRouteChildren {
   MainIssuesIndexRoute: typeof MainIssuesIndexRoute
 }
@@ -995,6 +1042,7 @@ const MainalternativesTTestIdRouteRouteWithChildren =
 
 interface MainRouteRouteChildren {
   MainHardwareRouteRoute: typeof MainHardwareRouteRouteWithChildren
+  MainHardwareNewRouteRoute: typeof MainHardwareNewRouteRouteWithChildren
   MainIssuesRouteRoute: typeof MainIssuesRouteRouteWithChildren
   MainTreeRouteRoute: typeof MainTreeRouteRouteWithChildren
   MainIndexRoute: typeof MainIndexRoute
@@ -1013,6 +1061,7 @@ interface MainRouteRouteChildren {
 
 const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainHardwareRouteRoute: MainHardwareRouteRouteWithChildren,
+  MainHardwareNewRouteRoute: MainHardwareNewRouteRouteWithChildren,
   MainIssuesRouteRoute: MainIssuesRouteRouteWithChildren,
   MainTreeRouteRoute: MainTreeRouteRouteWithChildren,
   MainIndexRoute: MainIndexRoute,

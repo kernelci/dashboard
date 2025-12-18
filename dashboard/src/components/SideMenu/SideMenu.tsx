@@ -77,7 +77,10 @@ type SideMenuItemProps = {
 const SideMenuItem = ({ item }: SideMenuItemProps): JSX.Element => {
   const { pathname } = useLocation();
 
-  const isCurrentPath = pathname.startsWith(item.navigateTo);
+  const isCurrentPath =
+    pathname.startsWith(item.navigateTo) &&
+    (pathname.length === item.navigateTo.length ||
+      pathname[item.navigateTo.length] === '/');
 
   return (
     <NavigationMenuItem key={item.idIntl} className="w-full">
@@ -105,6 +108,12 @@ const SideMenu = (): JSX.Element => {
     {
       navigateTo: '/hardware',
       idIntl: 'routes.hardwareMonitor',
+      icon: <MdOutlineMonitorHeart className="size-5" />,
+      selected: false,
+    },
+    {
+      navigateTo: '/hardware-new',
+      idIntl: 'routes.hardwareNewMonitor',
       icon: <MdOutlineMonitorHeart className="size-5" />,
       selected: false,
     },
