@@ -26,7 +26,7 @@ from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
 )
 import kcidb_io
 from kernelCI_app.management.commands.helpers.aggregation_helpers import (
-    aggregate_checkouts_and_tests,
+    aggregate_checkouts_and_pendings,
 )
 from django.db import connections, transaction
 from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
@@ -202,9 +202,10 @@ def flush_buffers(
             consume_buffer(builds_buf, "builds")
             consume_buffer(tests_buf, "tests")
             consume_buffer(incidents_buf, "incidents")
-            aggregate_checkouts_and_tests(
+            aggregate_checkouts_and_pendings(
                 checkouts_instances=checkouts_buf,
                 tests_instances=tests_buf,
+                build_instances=builds_buf,
             )
         for filename, filepath in buffer_files:
             os.rename(filepath, os.path.join(dirs["archive"], filename))
