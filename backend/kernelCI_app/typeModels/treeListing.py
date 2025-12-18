@@ -1,5 +1,6 @@
 from typing import List
 from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.commonListing import StatusCountV2
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
     Checkout__GitCommitName,
@@ -79,3 +80,22 @@ class TreeListingResponse(RootModel):
 
 class TreeListingFastResponse(RootModel):
     root: List[CheckoutFast]
+
+
+class TreeListingItem(BaseModel):
+    id: Checkout__Id = Field(validation_alias="checkout_id")
+    build_status: StatusCountV2
+    boot_status: StatusCountV2
+    test_status: StatusCountV2
+    tree_name: Checkout__TreeName
+    git_commit_tags: Checkout__GitCommitTags
+    origin: Origin
+    git_repository_url: Checkout__GitRepositoryUrl
+    git_repository_branch: Checkout__GitRepositoryBranch
+    git_commit_hash: Checkout__GitCommitHash
+    git_commit_name: Checkout__GitCommitName
+    start_time: Timestamp
+
+
+class TreeListingResponseV2(RootModel):
+    root: list[TreeListingItem]
