@@ -1034,6 +1034,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/TreeReportResponse'
           description: ''
+  /api/tree-v2/:
+    get:
+      operationId: tree_v2_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin filter
+      tags:
+      - tree-v2
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeListingResponseV2'
+          description: ''
   /api/tree/{commit_hash}/boots:
     get:
       operationId: tree_boots_retrieve
@@ -3982,10 +4014,56 @@ components:
         $ref: '#/components/schemas/CheckoutFast'
       title: TreeListingFastResponse
       type: array
+    TreeListingItem:
+      properties:
+        id:
+          $ref: '#/components/schemas/Checkout__Id'
+        build_status:
+          $ref: '#/components/schemas/StatusCountV2'
+        boot_status:
+          $ref: '#/components/schemas/StatusCountV2'
+        test_status:
+          $ref: '#/components/schemas/StatusCountV2'
+        tree_name:
+          $ref: '#/components/schemas/Checkout__TreeName'
+        git_commit_tags:
+          $ref: '#/components/schemas/Checkout__GitCommitTags'
+        origin:
+          $ref: '#/components/schemas/Origin'
+        git_repository_url:
+          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+        git_repository_branch:
+          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        git_commit_hash:
+          $ref: '#/components/schemas/Checkout__GitCommitHash'
+        git_commit_name:
+          $ref: '#/components/schemas/Checkout__GitCommitName'
+        start_time:
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - id
+      - build_status
+      - boot_status
+      - test_status
+      - tree_name
+      - git_commit_tags
+      - origin
+      - git_repository_url
+      - git_repository_branch
+      - git_commit_hash
+      - git_commit_name
+      - start_time
+      title: TreeListingItem
+      type: object
     TreeListingResponse:
       items:
         $ref: '#/components/schemas/Checkout'
       title: TreeListingResponse
+      type: array
+    TreeListingResponseV2:
+      items:
+        $ref: '#/components/schemas/TreeListingItem'
+      title: TreeListingResponseV2
       type: array
     TreeReportIssues:
       properties:
