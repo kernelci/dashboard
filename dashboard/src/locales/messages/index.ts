@@ -263,6 +263,7 @@ export const messages = {
       "This is the same logspec data that's in the misc data section",
     'routes.buildDetails': 'Build',
     'routes.hardwareMonitor': 'Hardware',
+    'routes.hardwareNewMonitor': 'Hardware New',
     'routes.issueDetails': 'Issue',
     'routes.issueMonitor': 'Issues',
     'routes.testDetails': 'Test',
