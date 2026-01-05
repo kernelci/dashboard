@@ -368,8 +368,8 @@ def handle_test_summary(
         getattr(task.origins[origin], status) + 1,
     )
 
-    misc = sanitize_dict(record.get("misc", {}))
-    lab = misc.get("runtime")
+    misc = sanitize_dict(record.get("misc")) or {}
+    lab = misc.get("runtime", UNKNOWN_STRING)
     if lab:
         if task.labs.get(lab) is None:
             task.labs[lab] = StatusCount()
@@ -446,7 +446,9 @@ def handle_build_summary(
             getattr(builds_summary.origins[origin], status_key) + 1,
         )
 
-    if lab := build.misc.get("lab"):
+    misc = sanitize_dict(build.misc) or {}
+    lab = misc.get("lab", UNKNOWN_STRING)
+    if lab:
         build_lab_summary = builds_summary.labs.get(lab)
         if not build_lab_summary:
             build_lab_summary = StatusCount()
@@ -591,7 +593,9 @@ def decide_if_is_build_in_filter(
         issue_version=build.issue_version,
         incident_test_id=incident_test_id,
         build_origin=build.origin,
-        build_lab=build.misc.get("lab") if build.misc else None,
+        build_lab=(
+            build.misc.get("lab", UNKNOWN_STRING) if build.misc else UNKNOWN_STRING
+        ),
     )
     return (
         is_build_not_processed
@@ -637,7 +641,8 @@ def decide_if_is_test_in_filter(
     platform = sanitize_dict(record.get("environment_misc", {})).get(
         "platform", UNKNOWN_STRING
     )
-    lab = sanitize_dict(record.get("misc", {})).get("runtime")
+    misc = sanitize_dict(record.get("misc")) or {}
+    lab = misc.get("runtime", UNKNOWN_STRING)
 
     if test_type == "boot":
         test_filter_pass = not instance.filters.is_boot_filtered_out(
@@ -716,9 +721,10 @@ def process_filters(*, instance, record: Dict) -> None:
 
         instance.unfiltered_origins["build"].add(record["build__origin"])
 
-        lab = sanitize_dict(record.get("build__misc", {})).get("lab")
-        if lab:
-            instance.unfiltered_labs["build"].add(lab)
+        build_misc = sanitize_dict(record.get("build__misc")) or {}
+        build_lab = build_misc.get("lab")
+        if build_lab:
+            instance.unfiltered_labs["build"].add(build_lab)
 
     if record["id"] is not None:
         if is_boot(record["path"]):
@@ -756,9 +762,10 @@ def process_filters(*, instance, record: Dict) -> None:
         platform_set.add(test_platform)
         origin_set.add(record["test_origin"])
 
-        lab = sanitize_dict(record.get("misc", {})).get("runtime")
-        if lab:
-            instance.unfiltered_labs[flag_tab].add(lab)
+        test_misc = sanitize_dict(record.get("misc")) or {}
+        test_lab = test_misc.get("runtime")
+        if test_lab:
+            instance.unfiltered_labs[flag_tab].add(test_lab)
 
 
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:
