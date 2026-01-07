@@ -28,5 +28,9 @@ dist-ssr
 # eslint cache
 .eslintcache
 
+# Playwright test reports and artifacts
+test-results/
+playwright-report/
+
 .env*
 !.env.example

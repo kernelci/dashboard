@@ -56,7 +56,11 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
     }
 
     return pageOrigins.map(option => (
-      <SelectItem key={option} value={option}>
+      <SelectItem
+        key={option}
+        value={option}
+        data-test-id={`origin-option-${option}`}
+      >
         {option}
       </SelectItem>
     ));
@@ -82,7 +86,11 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
       <span className="text-dim-gray mr-4 text-base font-medium">
         <FormattedMessage id="global.origin" />
       </span>
-      <Select onValueChange={onValueChange} value={origin}>
+      <Select
+        onValueChange={onValueChange}
+        value={origin}
+        data-test-id="origin-dropdown"
+      >
         {selectItems}
       </Select>
     </div>

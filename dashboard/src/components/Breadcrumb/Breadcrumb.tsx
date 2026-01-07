@@ -33,6 +33,7 @@ const BreadcrumbLink = ({
     <Link
       {...props}
       className="transition-colors hover:text-slate-500 dark:hover:text-slate-50"
+      data-test-id="breadcrumb-link"
     >
       {children}
     </Link>

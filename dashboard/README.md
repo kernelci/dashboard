@@ -21,11 +21,44 @@ pnpm dev
 ```
 
 ## Running unit tests
+
 The frontend includes unit tests covering some parts of the source code. To run the tests, use the following command:
 
 ```sh
 pnpm test
 ```
+
+## Running end-to-end (e2e) tests
+
+The project includes Playwright-based end-to-end tests. To run the tests, first set the test environment URL in your .env file:
+
+```sh
+# Copy the example file
+cp .env.example .env
+
+# Edit the .env file to set PLAYWRIGHT_TEST_BASE_URL to your desired environment
+# Available environments:
+# - Staging: https://staging.dashboard.kernelci.org:9000 (default)
+# - Production: https://dashboard.kernelci.org
+# - Local: http://localhost:5173
+
+# Install Playwright browsers if you don't have them yet
+pnpm exec playwright install
+```
+
+Then run the e2e tests:
+
+```sh
+# Run all e2e tests
+pnpm run e2e
+
+# Run e2e tests with UI mode for debugging
+pnpm run e2e-ui
+```
+
+## E2E Test Selectors
+
+To avoid complex css selectors, you can add a data-test-id attribute to elements that you want to target in your e2e tests. That way you don't need to fight with complex selectors.
 
 # Routing and State Management
 
@@ -37,5 +70,5 @@ Also, we are using file based routing in the tanstack router, only files that st
 # Feature Flags
 
 They are used when we want to hide a feature for some users, without having to do branch manipulation.
-Right now the only feature flag is for Dev only and it is controlled by the env 
+Right now the only feature flag is for Dev only and it is controlled by the env
 `FEATURE_FLAG_SHOW_DEV=false` it is a boolean.
