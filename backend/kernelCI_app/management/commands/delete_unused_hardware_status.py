@@ -7,7 +7,7 @@ Removes HardwareStatus entries that have no corresponding checkout_id in the Lat
 import logging
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from kernelCI_app.models import HardwareStatus, LatestCheckout, ProcessedHardwareStatus
+from kernelCI_app.models import HardwareStatus, LatestCheckout, ProcessedListingItems
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +46,10 @@ class Command(BaseCommand):
             orphaned_hardware_count = orphaned_hardware_entries.count()
 
             orphaned_processed_hardware_entries = (
-                ProcessedHardwareStatus.objects.exclude(
+                ProcessedListingItems.objects.exclude(
                     checkout_id__in=valid_checkout_ids
                 )
-            ).values_list("hardware_key", flat=True)
+            ).values_list("listing_item_key", flat=True)
 
             orphaned_processed_hardware_count = (
                 orphaned_processed_hardware_entries.count()
@@ -58,7 +58,7 @@ class Command(BaseCommand):
             if orphaned_hardware_count == 0 and orphaned_processed_hardware_count == 0:
                 self.stdout.write(
                     self.style.SUCCESS(
-                        "No orphaned HardwareStatus/ProcessedHardwareStatus entries found."
+                        "No orphaned HardwareStatus/ProcessedListingItems entries found."
                     )
                 )
                 return
@@ -67,7 +67,7 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.WARNING(
                         f"[DRY RUN] Would delete {orphaned_hardware_count} HardwareStatus entries and "
-                        f"{orphaned_processed_hardware_count} ProcessedHardwareStatus entries "
+                        f"{orphaned_processed_hardware_count} ProcessedListingItems entries "
                         "Run without --dry-run to execute deletion."
                     )
                 )
@@ -75,7 +75,7 @@ class Command(BaseCommand):
 
             self.stdout.write(
                 f"Found {orphaned_hardware_count} HardwareStatus entries "
-                f"and {orphaned_processed_hardware_count} ProcessedHardwareStatus entries "
+                f"and {orphaned_processed_hardware_count} ProcessedListingItems entries "
                 "with no corresponding LatestCheckout."
             )
 
@@ -102,8 +102,8 @@ class Command(BaseCommand):
 
                 if processed_hardware_batch_ids:
                     processed_hardware_delete_count = (
-                        ProcessedHardwareStatus.objects.filter(
-                            hardware_key__in=processed_hardware_batch_ids
+                        ProcessedListingItems.objects.filter(
+                            listing_item_key__in=processed_hardware_batch_ids
                         ).delete()[0]
                     )
 
