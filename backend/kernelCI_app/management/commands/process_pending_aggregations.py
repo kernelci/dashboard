@@ -1,7 +1,7 @@
 import hashlib
 import time
 from datetime import datetime
-from typing import Optional, Sequence, TypedDict, Union
+from typing import Literal, Optional, Sequence, TypedDict, Union
 from django.core.management.base import BaseCommand
 from django.db import connection, transaction
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
@@ -71,6 +71,7 @@ SIMPLIFIED_STATUS_TO_COUNT = {
     SimplifiedStatusChoices.PASS: (1, 0, 0),
     SimplifiedStatusChoices.FAIL: (0, 1, 0),
     SimplifiedStatusChoices.INCONCLUSIVE: (0, 0, 1),
+    None: (0, 0, 1),
 }
 
 
@@ -159,6 +160,56 @@ def _get_existing_processed(keys_to_check: set[bytes]) -> set[ProcessedListingIt
     return set(ProcessedListingItems.objects.filter(listing_item_key__in=keys_to_check))
 
 
+def _check_item_was_processed(
+    *,
+    existing_processed: set[ProcessedListingItems],
+    new_processed_entries: set[ProcessedListingItems],
+    status_record: ListingItemCount,
+    listing_item_key: bytes,
+    item_checkout_id: str,
+    item_status: Optional[SimplifiedStatusChoices],
+    decrement_status_type: Literal["build_inc", "boot_inc", "test_inc"],
+) -> bool:
+    """
+    Checks if an item is already processed in existing or new processed entries.
+    Returns True if already processed, False otherwise.
+
+    Item means either PendingTest or Builds/PendingBuilds.
+    """
+    for existing in existing_processed:
+        if (
+            existing.listing_item_key == listing_item_key
+            and existing.checkout_id == item_checkout_id
+        ):
+            if existing.status is not None:
+                return True
+            if existing.status is None and item_status is None:
+                return True
+            # If existing status is null and new status is not null,
+            # we will update this entry as well as the count
+            status_record[decrement_status_type] -= 1
+            break
+
+    for new_entry in new_processed_entries:
+        if (
+            new_entry.listing_item_key == listing_item_key
+            and new_entry.checkout_id == item_checkout_id
+        ):
+            if new_entry.status is not None:
+                return True
+            if new_entry.status is None and item_status is None:
+                return True
+            # It can happen to exist both in existing_processed and new_processed_entries
+            # in which case we do double the decrement, because both previous entries incremented it
+            status_record[decrement_status_type] -= 1
+            new_processed_entries.remove(
+                new_entry
+            )  # no need to process the old entry anymore
+            break
+
+    return False
+
+
 def _process_test_status(
     test: PendingTest,
     test_listing_key: bytes,
@@ -173,10 +224,18 @@ def _process_test_status(
     """
     # TODO: we should be checking if it is already processed before entering this function
     to_process = ProcessedListingItems(
-        listing_item_key=test_listing_key, checkout_id=checkout_id
+        listing_item_key=test_listing_key, checkout_id=checkout_id, status=test.status
     )
 
-    if to_process in existing_processed:
+    if _check_item_was_processed(
+        existing_processed=existing_processed,
+        new_processed_entries=new_processed_entries,
+        status_record=status_record,
+        listing_item_key=test_listing_key,
+        item_checkout_id=checkout_id,
+        item_status=test.status,
+        decrement_status_type="boot_inc" if test.is_boot else "test_inc",
+    ):
         return False
 
     t_pass, t_fail, t_inc = map_simplified_status_to_count(test.status)
@@ -198,7 +257,7 @@ def _process_test_status(
 def _process_build_status(
     build_id: str,
     build_checkout_id: str,
-    build_status: SimplifiedStatusChoices,
+    build_status: Optional[SimplifiedStatusChoices],
     build_listing_key: bytes,
     status_record: ListingItemCount,
     existing_processed: set[ProcessedListingItems],
@@ -213,13 +272,20 @@ def _process_build_status(
         return
 
     to_process = ProcessedListingItems(
-        listing_item_key=build_listing_key, checkout_id=build_checkout_id
+        listing_item_key=build_listing_key,
+        checkout_id=build_checkout_id,
+        status=build_status,
     )
 
-    if to_process in existing_processed:
-        return
-
-    if to_process in new_processed_entries:
+    if _check_item_was_processed(
+        existing_processed=existing_processed,
+        new_processed_entries=new_processed_entries,
+        status_record=status_record,
+        listing_item_key=build_listing_key,
+        item_checkout_id=build_checkout_id,
+        item_status=build_status,
+        decrement_status_type="build_inc",
+    ):
         return
 
     b_pass, b_fail, b_inc = map_simplified_status_to_count(build_status)
@@ -495,7 +561,9 @@ class Command(BaseCommand):
         t0 = time.time()
         ProcessedListingItems.objects.bulk_create(
             new_processed_entries,
-            ignore_conflicts=True,
+            update_conflicts=True,
+            update_fields=["checkout_id", "status"],
+            unique_fields=["listing_item_key"],
         )
         out(
             f"bulk_create ProcessedListingItems: n={len(new_processed_entries)} "

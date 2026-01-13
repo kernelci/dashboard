@@ -18,7 +18,9 @@ from typing import Optional
 
 
 def simplify_status(status: Optional[StatusChoices]) -> SimplifiedStatusChoices:
-    if status == StatusChoices.PASS:
+    if status is None:
+        return None
+    elif status == StatusChoices.PASS:
         return SimplifiedStatusChoices.PASS
     elif status == StatusChoices.FAIL:
         return SimplifiedStatusChoices.FAIL
@@ -158,15 +160,34 @@ def aggregate_tests(
         for test in tests_instances
         if test.environment_misc and test.environment_misc.get("platform") is not None
     )
+    values = [
+        (
+            test.test_id,
+            test.origin,
+            test.platform,
+            test.compatible,
+            test.build_id,
+            test.status,
+            test.is_boot,
+        )
+        for test in pending_tests
+    ]
 
     if pending_tests:
-        pending_tests_inserted = PendingTest.objects.bulk_create(
-            pending_tests,
-            ignore_conflicts=True,
-        )
-        out(
-            f"bulk_create pending_tests: n={len(pending_tests_inserted)} in {time.time() - t0:.3f}s"
-        )
+        query = """
+            INSERT INTO pending_test (
+                test_id, origin, platform, compatible,
+                build_id, status, is_boot
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (test_id)
+            DO UPDATE SET
+                compatible = COALESCE(pending_test.compatible, EXCLUDED.compatible),
+                status = COALESCE(pending_test.status, EXCLUDED.status)
+        """
+
+        with connections["default"].cursor() as cursor:
+            cursor.executemany(query, values)
+        out(f"bulk_create pending_tests in {time.time() - t0:.3f}s")
 
 
 def aggregate_builds(
@@ -175,15 +196,28 @@ def aggregate_builds(
     """Insert builds data on pending_builds table to be processed later"""
     t0 = time.time()
     pending_builds = (convert_build(build) for build in build_instances)
+    values = [
+        (
+            build.build_id,
+            build.origin,
+            build.checkout_id,
+            build.status,
+        )
+        for build in pending_builds
+    ]
 
     if pending_builds:
-        pending_builds_inserted = PendingBuilds.objects.bulk_create(
-            pending_builds,
-            ignore_conflicts=True,
-        )
-        out(
-            f"bulk_create pending_builds: n={len(pending_builds_inserted)} in {time.time() - t0:.3f}s"
-        )
+        query = """
+            INSERT INTO pending_builds (
+                build_id, origin, checkout_id, status
+            ) VALUES (%s, %s, %s, %s)
+            ON CONFLICT (build_id)
+            DO UPDATE SET
+                status = COALESCE(pending_builds.status, EXCLUDED.status)
+        """
+        with connections["default"].cursor() as cursor:
+            cursor.executemany(query, values)
+        out(f"bulk_create pending_builds in {time.time() - t0:.3f}s")
 
 
 def aggregate_checkouts_and_pendings(

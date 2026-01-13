@@ -315,7 +315,9 @@ class PendingTest(models.Model):
     platform = models.CharField(max_length=100)
     compatible = ArrayField(models.TextField(), null=True)
     build_id = models.TextField()
-    status = models.CharField(max_length=1, choices=SimplifiedStatusChoices.choices)
+    status = models.CharField(
+        max_length=1, choices=SimplifiedStatusChoices.choices, null=True
+    )
     is_boot = models.BooleanField()
 
     class Meta:
@@ -328,6 +330,11 @@ class ProcessedListingItems(models.Model):
         primary_key=True,
     )  # this holds a sha256, thus digest_size = 32 bytes
     checkout_id = models.TextField()
+    # If we already processed an item, but the previous status is null and the new one is not-null,
+    # we need to process it again. That's why we store the status here.
+    status = models.CharField(
+        max_length=1, choices=SimplifiedStatusChoices.choices, null=True
+    )
 
     class Meta:
         db_table = "processed_listing_items"
@@ -340,7 +347,9 @@ class PendingBuilds(models.Model):
     build_id = models.TextField(primary_key=True)
     origin = models.CharField(max_length=100)
     checkout_id = models.TextField()
-    status = models.CharField(max_length=1, choices=SimplifiedStatusChoices.choices)
+    status = models.CharField(
+        max_length=1, choices=SimplifiedStatusChoices.choices, null=True
+    )
 
     class Meta:
         db_table = "pending_builds"
