@@ -312,7 +312,7 @@ class LatestCheckout(models.Model):
 class PendingTest(models.Model):
     test_id = models.TextField(primary_key=True)
     origin = models.CharField(max_length=100)
-    platform = models.CharField(max_length=100)
+    platform = models.CharField(max_length=100, null=True)
     compatible = ArrayField(models.TextField(), null=True)
     build_id = models.TextField()
     status = models.CharField(

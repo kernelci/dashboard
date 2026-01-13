@@ -41,7 +41,7 @@ def convert_test(t: Tests) -> PendingTest:
     return PendingTest(
         test_id=t.id,
         origin=t.origin,
-        platform=t.environment_misc.get("platform"),
+        platform=t.environment_misc.get("platform") if t.environment_misc else None,
         compatible=t.environment_compatible,
         build_id=t.build_id,
         status=simplify_status(t.status),
@@ -155,11 +155,7 @@ def aggregate_tests(
 ) -> None:
     """Insert tests data on pending_tests table to be processed later"""
     t0 = time.time()
-    pending_tests = (
-        convert_test(test)
-        for test in tests_instances
-        if test.environment_misc and test.environment_misc.get("platform") is not None
-    )
+    pending_tests = (convert_test(test) for test in tests_instances)
     values = [
         (
             test.test_id,
@@ -181,6 +177,7 @@ def aggregate_tests(
             ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (test_id)
             DO UPDATE SET
+                platform = COALESCE(pending_test.platform, EXCLUDED.platform),
                 compatible = COALESCE(pending_test.compatible, EXCLUDED.compatible),
                 status = COALESCE(pending_test.status, EXCLUDED.status)
         """

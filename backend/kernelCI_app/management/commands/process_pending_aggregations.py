@@ -137,6 +137,10 @@ def _collect_hardware_status_contexts(
     keys_to_check = set()
 
     for test in tests_instances:
+        # Hardware status only counts tests with non-null platform
+        if test.platform is None:
+            continue
+
         try:
             build = builds_by_id[test.build_id]
         except KeyError:
