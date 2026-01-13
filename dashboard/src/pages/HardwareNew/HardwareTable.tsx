@@ -466,14 +466,14 @@ export function HardwareTable({
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <div className="grid grid-cols-1 items-center gap-4 min-[850px]:grid-cols-2 lg:grid-cols-[1fr_auto_auto] lg:gap-8">
-        <span className="text-dim-gray w-full justify-start text-left text-sm min-[850px]:col-span-2 lg:col-span-1">
+      <div className="flex flex-wrap items-center justify-end gap-4">
+        <span className="text-dim-gray flex-1 justify-start text-left text-sm">
           <FormattedMessage
             id="global.projectUnderDevelopment"
             values={formattedBreakLineValue}
           />
         </span>
-        <div className="flex w-full justify-end gap-y-2 max-[700px]:flex-wrap min-[850px]:justify-start">
+        <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
           <MemoizedInputTime
             navigateFrom="/hardware-new"
             defaultInterval={REDUCED_TIME_SEARCH}
@@ -484,7 +484,7 @@ export function HardwareTable({
             className="pl-4"
           />
         </div>
-        <div className="flex w-full justify-end gap-y-2 max-[700px]:flex-wrap">
+        <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
           <ListingCount table={table} intlLabel="global.hardware" />
           <PaginationButtons table={table} className="pl-4" />
         </div>
