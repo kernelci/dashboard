@@ -1,0 +1,62 @@
+name: Deploy Staging and E2E
+
+on:
+  workflow_call:
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure staging host authenticity
+        run: |
+          mkdir -p ~/.ssh/ && chmod 700 ~/.ssh/
+          touch ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts
+          echo "$SSH_HOSTKEY" > ~/.ssh/known_hosts
+        env:
+          SSH_HOSTKEY: ${{ secrets.STAGING_HOSTKEY }}
+
+      - name: Deploy to staging
+        run: |
+          eval $(ssh-agent -s)
+          echo "$SSH_KEY" | ssh-add - >/dev/null
+          ssh "${SSH_USER}@${SSH_HOST}" "deploy ${GITHUB_SHA}"
+        env:
+          SSH_USER: ${{ secrets.STAGING_USER }}
+          SSH_HOST: ${{ secrets.STAGING_HOST }}
+          SSH_KEY: ${{ secrets.STAGING_KEY }}
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: deploy-staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch node_modules
+        uses: actions/cache@v4
+        id: fetch-node_modules
+        with:
+          key: node_modules-${{ runner.os }}-${{ hashFiles('./dashboard/pnpm-lock.yaml') }}
+          path: ./dashboard/node_modules
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: './dashboard/.nvmrc'
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        working-directory: ./dashboard
+
+      - name: Wait for staging deployment to be ready
+        run: sleep 180
+
+      - name: Run e2e tests against staging
+        run: pnpm e2e
+        working-directory: ./dashboard
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: https://staging.dashboard.kernelci.org:9000

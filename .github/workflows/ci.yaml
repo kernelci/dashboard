@@ -173,12 +173,12 @@ jobs:
         with:
           name: coverage-data-integration
           path: backend/coverage-integration.sqlite
-      
+       
       - name: Clean containers
         run: |
           docker compose -f docker-compose.test.yml down --volumes --remove-orphans
           docker system prune -af
-  
+   
   update-coverage-badge:
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
@@ -214,33 +214,14 @@ jobs:
           poetry run coverage combine
           poetry run coverage json -o ${{ github.workspace }}/coverage.json
         working-directory: ./backend
-      
+       
       - name: Update Coverage Badge
         uses: we-cli/coverage-badge-action@main
 
-  deploy-staging:
+  # Call job in a a split file
+  call-deploy-staging:
+    needs: [lint-js, build-front, lint-and-unit-test-django, integration-test-django]
+    # This 'if' ensures it only runs on pushes to main (the production requirement)
     if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    runs-on: ubuntu-latest
-    needs:
-      - lint-js
-      - build-front
-      - lint-and-unit-test-django
-      - integration-test-django
-    steps:
-      - name: Configure staging host authenticity
-        run: |
-          mkdir -p ~/.ssh/ && chmod 700 ~/.ssh/
-          touch ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts
-          echo "$SSH_HOSTKEY" > ~/.ssh/known_hosts
-        env:
-          SSH_HOSTKEY: ${{ secrets.STAGING_HOSTKEY }}
-
-      - name: Deploy to staging
-        run: |
-          eval $(ssh-agent -s)
-          echo "$SSH_KEY" | ssh-add - >/dev/null
-          ssh "${SSH_USER}@${SSH_HOST}" "deploy ${GITHUB_SHA}"
-        env:
-          SSH_USER: ${{ secrets.STAGING_USER }}
-          SSH_HOST: ${{ secrets.STAGING_HOST }}
-          SSH_KEY: ${{ secrets.STAGING_KEY }}
+    uses: ./.github/workflows/deploy-staging.yaml
+    secrets: inherit
