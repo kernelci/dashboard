@@ -164,7 +164,7 @@ const TestsTab = ({
           key="labs"
           diffFilter={diffFilter}
           data={testsSummary.labs}
-          filterSection="testLab"
+          filterSection="labs"
           hideSingleValue={false}
         />,
       ],

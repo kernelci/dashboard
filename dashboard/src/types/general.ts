@@ -155,6 +155,7 @@ export const zFilterObjectsKeys = z.enum([
   'bootStatus',
   'testStatus',
   'hardware',
+  'labs',
   'trees',
   'testPath',
   'bootPath',
@@ -167,8 +168,6 @@ export const zFilterObjectsKeys = z.enum([
   'buildOrigin',
   'bootOrigin',
   'testOrigin',
-  'bootLab',
-  'testLab',
 ]);
 
 export const zFilterNumberKeys = z.enum([
@@ -204,6 +203,7 @@ export const zDiffFilter = z
       testDurationMin: zFilterNumberValue,
       testDurationMax: zFilterNumberValue,
       hardware: zFilterBoolValue,
+      labs: zFilterBoolValue,
       trees: zFilterBoolValue,
       buildIssue: zFilterBoolValue,
       bootIssue: zFilterBoolValue,
@@ -214,8 +214,6 @@ export const zDiffFilter = z
       buildOrigin: zFilterBoolValue,
       bootOrigin: zFilterBoolValue,
       testOrigin: zFilterBoolValue,
-      bootLab: zFilterBoolValue,
-      testLab: zFilterBoolValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])
@@ -286,7 +284,6 @@ const requestFilters = {
     'build.origin',
     'boot.origin',
     'test.origin',
-    'boot.lab',
     'test.lab',
   ],
   issueListing: [
@@ -331,8 +328,7 @@ export const filterFieldMap = {
   'test.issue': 'testIssue',
   'build.status': 'buildStatus',
   'build.origin': 'buildOrigin',
-  'boot.lab': 'bootLab',
-  'test.lab': 'testLab',
+  'test.lab': 'labs',
   origin: 'origins',
   'issue.culprit': 'issueCulprits',
   'issue.categories': 'issueCategories',

@@ -289,7 +289,7 @@ const BootsTab = ({
           key="labs"
           diffFilter={diffFilter}
           data={summaryBootsData?.labs ?? {}}
-          filterSection="bootLab"
+          filterSection="labs"
           hideSingleValue={false}
         />,
       ],

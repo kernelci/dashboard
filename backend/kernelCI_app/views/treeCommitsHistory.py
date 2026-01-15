@@ -59,6 +59,7 @@ class BaseTreeCommitsHistory(APIView):
         self.filterTreeDetailsCompiler = self.filterParams.filterCompiler
         self.filterArchitecture = self.filterParams.filterArchitecture
         self.filterHardware = self.filterParams.filterHardware
+        self.filter_lab = self.filterParams.filter_labs
         self.filterTestPath = self.filterParams.filterTestPath
         self.filterBootPath = self.filterParams.filterBootPath
         self.filterBuildStatus = self.filterParams.filterBuildStatus
@@ -165,7 +166,6 @@ class BaseTreeCommitsHistory(APIView):
         issue_version: int,
         incident_test_id: str,
         test_origin: str,
-        lab: str,
     ) -> None:
         is_boot_filter_out = self.filterParams.is_boot_filtered_out(
             duration=test_duration,
@@ -175,7 +175,6 @@ class BaseTreeCommitsHistory(APIView):
             status=test_status,
             incident_test_id=incident_test_id,
             origin=test_origin,
-            lab=lab,
         )
 
         is_boot_processed = test_id in self.processed_tests
@@ -199,7 +198,6 @@ class BaseTreeCommitsHistory(APIView):
         issue_version: int,
         incident_test_id: str,
         test_origin: str,
-        lab: str,
     ) -> None:
         is_nonboot_filter_out = self.filterParams.is_test_filtered_out(
             duration=test_duration,
@@ -209,7 +207,6 @@ class BaseTreeCommitsHistory(APIView):
             status=test_status,
             incident_test_id=incident_test_id,
             origin=test_origin,
-            lab=lab,
         )
 
         is_test_processed = test_id in self.processed_tests
@@ -269,7 +266,6 @@ class BaseTreeCommitsHistory(APIView):
         build_status = row["build_status"]
         test_origin = row["test_origin"]
         commit_hash = row["git_commit_hash"]
-        test_lab = row["test_lab"]
 
         if issue_id is None and (
             build_status in [FAIL_STATUS, NULL_STATUS] or test_status == FAIL_STATUS
@@ -290,7 +286,6 @@ class BaseTreeCommitsHistory(APIView):
                 issue_version=issue_version,
                 incident_test_id=incident_test_id,
                 test_origin=test_origin,
-                lab=test_lab,
             )
         else:
             self._process_nonboots_count(
@@ -303,7 +298,6 @@ class BaseTreeCommitsHistory(APIView):
                 issue_version=issue_version,
                 incident_test_id=incident_test_id,
                 test_origin=test_origin,
-                lab=test_lab,
             )
 
     def _process_builds(self, row: dict) -> None:
@@ -363,6 +357,7 @@ class BaseTreeCommitsHistory(APIView):
                     architecture=row["architecture"],
                     compiler=row["compiler"],
                     config_name=row["config_name"],
+                    lab=row["test_lab"],
                 )
             )
 
