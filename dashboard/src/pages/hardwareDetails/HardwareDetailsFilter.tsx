@@ -50,7 +50,6 @@ export const createFilter = (
   const bootIssue: TFilterValues = {};
   const testIssue: TFilterValues = {};
 
-  const buildLab: TFilterValues = {};
   const bootLab: TFilterValues = {};
   const testLab: TFilterValues = {};
 
@@ -100,10 +99,6 @@ export const createFilter = (
       buildIssue[UNCATEGORIZED_STRING] = false;
     }
 
-    buildFilters.labs.forEach(lab => {
-      buildLab[lab] = false;
-    });
-
     // Boot filters
     const bootFilters = data.filters.boots;
     bootFilters.issues.forEach(
@@ -144,7 +139,6 @@ export const createFilter = (
     bootIssue,
     testIssue,
     hardware: compatibles,
-    buildLab,
     bootLab,
     testLab,
   };
@@ -204,12 +198,6 @@ const sectionHardware: ISectionItem[] = [
     subtitle: 'filter.compatiblesSubtitle',
     sectionKey: 'hardware',
     isGlobal: true,
-  },
-  {
-    title: 'filter.buildLab',
-    subtitle: 'filter.labsSubtitle',
-    sectionKey: 'buildLab',
-    isGlobal: false,
   },
   {
     title: 'filter.bootLab',

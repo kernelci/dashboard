@@ -552,7 +552,6 @@ class TestDecideIfIsBuildFilteredOut:
             "build_duration": 100,
             "incident_test_id": "test123",
             "build_origin": "test",
-            "build_misc": {"lab": "build_lab"},
         }
 
         result = decide_if_is_build_filtered_out(instance, row_data)
@@ -565,7 +564,6 @@ class TestDecideIfIsBuildFilteredOut:
             issue_version=1,
             incident_test_id="test123",
             build_origin="test",
-            build_lab="build_lab",
         )
 
 

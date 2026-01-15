@@ -593,9 +593,6 @@ def decide_if_is_build_in_filter(
         issue_version=build.issue_version,
         incident_test_id=incident_test_id,
         build_origin=build.origin,
-        build_lab=(
-            build.misc.get("lab", UNKNOWN_STRING) if build.misc else UNKNOWN_STRING
-        ),
     )
     return (
         is_build_not_processed

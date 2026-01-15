@@ -136,7 +136,6 @@ class BaseTreeCommitsHistory(APIView):
         incident_test_id: Optional[str],
         key: str,
         build_origin: str,
-        build_lab: str,
     ) -> None:
         is_filtered_out = self.filterParams.is_build_filtered_out(
             duration=duration,
@@ -145,7 +144,6 @@ class BaseTreeCommitsHistory(APIView):
             issue_version=issue_version,
             incident_test_id=incident_test_id,
             build_origin=build_origin,
-            build_lab=build_lab,
         )
         if is_filtered_out:
             return
@@ -312,7 +310,6 @@ class BaseTreeCommitsHistory(APIView):
         build_id = row["build_id"]
         commit_hash = row["git_commit_hash"]
         build_origin = row["build_origin"]
-        build_lab = row["build_lab"]
 
         key = f"{build_id}_{commit_hash}"
 
@@ -330,7 +327,6 @@ class BaseTreeCommitsHistory(APIView):
                 incident_test_id=row["incidents_test_id"],
                 key=key,
                 build_origin=build_origin,
-                build_lab=build_lab,
             )
 
     def _is_record_in_time_period(self, start_time: datetime) -> bool:

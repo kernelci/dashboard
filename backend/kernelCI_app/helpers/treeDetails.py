@@ -288,9 +288,6 @@ def decide_if_is_build_filtered_out(instance, row_data):
     build_duration = row_data["build_duration"]
     incident_test_id = row_data["incident_test_id"]
     build_origin = row_data["build_origin"]
-    build_lab = UNKNOWN_STRING
-    if row_data.get("build_misc") is not None:
-        build_lab = row_data["build_misc"].get("lab", UNKNOWN_STRING)
 
     is_build_filtered_out = instance.filters.is_build_filtered_out(
         build_status=build_status,
@@ -299,7 +296,6 @@ def decide_if_is_build_filtered_out(instance, row_data):
         issue_version=issue_version,
         incident_test_id=incident_test_id,
         build_origin=build_origin,
-        build_lab=build_lab,
     )
     return is_build_filtered_out
 

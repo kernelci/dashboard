@@ -213,14 +213,6 @@ const BuildTab = ({
           diffFilter={diffFilter}
         />,
         <MemoizedFilterCard
-          cardTitle="filter.labs"
-          key="labs"
-          diffFilter={diffFilter}
-          data={treeDetailsData.labs}
-          filterSection="buildLab"
-          hideSingleValue={false}
-        />,
-        <MemoizedFilterCard
           cardTitle="filter.origins"
           key="origins"
           diffFilter={diffFilter}

@@ -194,7 +194,6 @@ const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   buildOrigin: 'buo',
   bootOrigin: 'boo',
   testOrigin: 'to',
-  buildLab: 'bul',
   bootLab: 'bol',
   testLab: 'tl',
 } as const satisfies Record<TFilterKeys, string>;

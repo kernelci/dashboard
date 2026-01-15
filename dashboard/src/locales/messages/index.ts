@@ -59,7 +59,6 @@ export const messages = {
     'filter.bootStatus': 'Boot Status',
     'filter.buildDuration': 'Build duration',
     'filter.buildIssue': 'Build Issue',
-    'filter.buildLab': 'Build Lab',
     'filter.buildOrigin': 'Build origin',
     'filter.buildStatus': 'Build Status',
     'filter.compatiblesSubtitle': 'Please select one or more compatibles:',

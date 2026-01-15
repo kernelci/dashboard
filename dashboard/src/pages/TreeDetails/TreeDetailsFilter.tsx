@@ -37,7 +37,6 @@ type PossibleTreeDetailsFilters = Pick<
   | 'buildOrigin'
   | 'bootOrigin'
   | 'testOrigin'
-  | 'buildLab'
   | 'bootLab'
   | 'testLab'
 >;
@@ -68,7 +67,6 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
   filters.bootOrigin = {};
   filters.testOrigin = {};
 
-  filters.buildLab = {};
   filters.bootLab = {};
   filters.testLab = {};
 
@@ -99,9 +97,6 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
   }
   for (const o of buildFilters.origins) {
     filters.buildOrigin[o] = false;
-  }
-  for (const l of buildFilters.labs) {
-    filters.buildLab[l] = false;
   }
 
   // Boot tab filters
@@ -208,12 +203,6 @@ const sectionTrees: ISectionItem[] = [
     title: 'filter.testOrigin',
     subtitle: 'filter.originsSubtitle',
     sectionKey: 'testOrigin',
-    isGlobal: false,
-  },
-  {
-    title: 'filter.buildLab',
-    subtitle: 'filter.labsSubtitle',
-    sectionKey: 'buildLab',
     isGlobal: false,
   },
   {
