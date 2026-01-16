@@ -66,13 +66,13 @@ class HardwareDetailsBuilds(APIView):
             incident_test_id=record["incidents__test_id"],
         )
 
-        self.processed_builds.add(build.id)
         if should_process_build:
             handle_build_history(
                 record=record,
                 tree_idx=tree_index,
                 builds=self.builds,
             )
+            self.processed_builds.add(build.id)
 
     def _sanitize_records(
         self, records, trees: List[Tree], is_all_selected: bool
