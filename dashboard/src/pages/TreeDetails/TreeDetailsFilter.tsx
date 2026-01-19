@@ -34,12 +34,10 @@ type PossibleTreeDetailsFilters = Pick<
   | 'archs'
   | 'compilers'
   | 'hardware'
+  | 'labs'
   | 'buildOrigin'
   | 'bootOrigin'
   | 'testOrigin'
-  | 'buildLab'
-  | 'bootLab'
-  | 'testLab'
 >;
 
 export const createFilter = (data: TreeDetailsSummary): TFilter => {
@@ -63,14 +61,11 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
   filters.compilers = {};
 
   filters.hardware = {};
+  filters.labs = {};
 
   filters.buildOrigin = {};
   filters.bootOrigin = {};
   filters.testOrigin = {};
-
-  filters.buildLab = {};
-  filters.bootLab = {};
-  filters.testLab = {};
 
   // Filters affecting all tabs
   const allFilters = data.filters.all;
@@ -100,9 +95,6 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
   for (const o of buildFilters.origins) {
     filters.buildOrigin[o] = false;
   }
-  for (const l of buildFilters.labs) {
-    filters.buildLab[l] = false;
-  }
 
   // Boot tab filters
   const bootFilters = data.filters.boots;
@@ -116,7 +108,7 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
     filters.bootOrigin[o] = false;
   }
   for (const l of bootFilters.labs) {
-    filters.bootLab[l] = false;
+    filters.labs[l] = false;
   }
 
   // Test tab filters
@@ -131,7 +123,7 @@ export const createFilter = (data: TreeDetailsSummary): TFilter => {
     filters.testOrigin[o] = false;
   }
   for (const l of testFilters.labs) {
-    filters.testLab[l] = false;
+    filters.labs[l] = false;
   }
 
   return filters;
@@ -193,6 +185,12 @@ const sectionTrees: ISectionItem[] = [
     isGlobal: true,
   },
   {
+    title: 'filter.labs',
+    subtitle: 'filter.labsSubtitle',
+    sectionKey: 'labs',
+    isGlobal: true,
+  },
+  {
     title: 'filter.buildOrigin',
     subtitle: 'filter.originsSubtitle',
     sectionKey: 'buildOrigin',
@@ -208,24 +206,6 @@ const sectionTrees: ISectionItem[] = [
     title: 'filter.testOrigin',
     subtitle: 'filter.originsSubtitle',
     sectionKey: 'testOrigin',
-    isGlobal: false,
-  },
-  {
-    title: 'filter.buildLab',
-    subtitle: 'filter.labsSubtitle',
-    sectionKey: 'buildLab',
-    isGlobal: false,
-  },
-  {
-    title: 'filter.bootLab',
-    subtitle: 'filter.labsSubtitle',
-    sectionKey: 'bootLab',
-    isGlobal: false,
-  },
-  {
-    title: 'filter.testLab',
-    subtitle: 'filter.labsSubtitle',
-    sectionKey: 'testLab',
     isGlobal: false,
   },
 ];

@@ -184,6 +184,7 @@ const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   testDurationMax: 'tdc',
   testDurationMin: 'tdf',
   hardware: 'h',
+  labs: 'l',
   trees: 't',
   buildIssue: 'bi',
   bootIssue: 'bti',
@@ -194,9 +195,6 @@ const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   buildOrigin: 'buo',
   bootOrigin: 'boo',
   testOrigin: 'to',
-  buildLab: 'bul',
-  bootLab: 'bol',
-  testLab: 'tl',
 } as const satisfies Record<TFilterKeys, string>;
 
 type MinifiedParams = Record<

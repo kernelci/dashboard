@@ -189,7 +189,6 @@ class HardwareDetailsSummary(APIView):
             incident_test_id=record["incidents__test_id"],
         )
 
-        self.processed_builds.add(build_id)
         if should_process_build:
             handle_build_summary(
                 record=record,
@@ -197,6 +196,7 @@ class HardwareDetailsSummary(APIView):
                 issue_dict=self.issue_dicts["build"],
                 tree_index=tree_index,
             )
+            self.processed_builds.add(build_id)
 
     def _sanitize_records(
         self, records, trees: List[Tree], is_all_selected: bool
@@ -229,7 +229,6 @@ class HardwareDetailsSummary(APIView):
                 is_all_selected=is_all_selected,
             )
             if is_record_filtered_out:
-                self.processed_builds.add(record["build_id"])
                 continue
 
             self._process_test(record=record)

@@ -50,16 +50,14 @@ export const createFilter = (
   const bootIssue: TFilterValues = {};
   const testIssue: TFilterValues = {};
 
-  const buildLab: TFilterValues = {};
-  const bootLab: TFilterValues = {};
-  const testLab: TFilterValues = {};
-
   const configs: TFilterValues = {};
   const archs: TFilterValues = {};
   const compilers: TFilterValues = {};
   const trees: TFilterValues = {};
   const compatibles: TFilterValues = {};
   const treeIndexes: number[] = [];
+
+  const labs: TFilterValues = {};
 
   if (data) {
     // Global filters
@@ -100,10 +98,6 @@ export const createFilter = (
       buildIssue[UNCATEGORIZED_STRING] = false;
     }
 
-    buildFilters.labs.forEach(lab => {
-      buildLab[lab] = false;
-    });
-
     // Boot filters
     const bootFilters = data.filters.boots;
     bootFilters.issues.forEach(
@@ -114,7 +108,7 @@ export const createFilter = (
       bootIssue[UNCATEGORIZED_STRING] = false;
     }
     bootFilters.labs.forEach(lab => {
-      bootLab[lab] = false;
+      labs[lab] = false;
     });
 
     // Test filters
@@ -127,7 +121,7 @@ export const createFilter = (
       testIssue[UNCATEGORIZED_STRING] = false;
     }
     testFilters.labs.forEach(lab => {
-      testLab[lab] = false;
+      labs[lab] = false;
     });
   }
 
@@ -144,9 +138,7 @@ export const createFilter = (
     bootIssue,
     testIssue,
     hardware: compatibles,
-    buildLab,
-    bootLab,
-    testLab,
+    labs,
   };
 };
 
@@ -206,22 +198,10 @@ const sectionHardware: ISectionItem[] = [
     isGlobal: true,
   },
   {
-    title: 'filter.buildLab',
+    title: 'filter.labs',
     subtitle: 'filter.labsSubtitle',
-    sectionKey: 'buildLab',
-    isGlobal: false,
-  },
-  {
-    title: 'filter.bootLab',
-    subtitle: 'filter.labsSubtitle',
-    sectionKey: 'bootLab',
-    isGlobal: false,
-  },
-  {
-    title: 'filter.testLab',
-    subtitle: 'filter.labsSubtitle',
-    sectionKey: 'testLab',
-    isGlobal: false,
+    sectionKey: 'labs',
+    isGlobal: true,
   },
 ];
 
