@@ -312,25 +312,90 @@ class LatestCheckout(models.Model):
 class PendingTest(models.Model):
     test_id = models.TextField(primary_key=True)
     origin = models.CharField(max_length=100)
-    platform = models.CharField(max_length=100)
+    platform = models.CharField(max_length=100, null=True)
     compatible = ArrayField(models.TextField(), null=True)
     build_id = models.TextField()
-    status = models.CharField(max_length=1, choices=SimplifiedStatusChoices.choices)
+    status = models.CharField(
+        max_length=1, choices=SimplifiedStatusChoices.choices, null=True
+    )
     is_boot = models.BooleanField()
 
     class Meta:
         db_table = "pending_test"
 
 
-class ProcessedHardwareStatus(models.Model):
-    hardware_key = models.BinaryField(
+class ProcessedListingItems(models.Model):
+    listing_item_key = models.BinaryField(
         max_length=32,
         primary_key=True,
     )  # this holds a sha256, thus digest_size = 32 bytes
     checkout_id = models.TextField()
+    # If we already processed an item, but the previous status is null and the new one is not-null,
+    # we need to process it again. That's why we store the status here.
+    status = models.CharField(
+        max_length=1, choices=SimplifiedStatusChoices.choices, null=True
+    )
 
     class Meta:
-        db_table = "processed_hardware_status"
+        db_table = "processed_listing_items"
         indexes = [
             models.Index(fields=["checkout_id"], name="phs_checkout_id"),
+        ]
+
+
+class PendingBuilds(models.Model):
+    build_id = models.TextField(primary_key=True)
+    origin = models.CharField(max_length=100)
+    checkout_id = models.TextField()
+    status = models.CharField(
+        max_length=1, choices=SimplifiedStatusChoices.choices, null=True
+    )
+
+    class Meta:
+        db_table = "pending_builds"
+
+
+class TreeListing(models.Model):
+    # Not using composite primary key here because
+    # the combination for a unique tree can have null values
+    # (origin, tree_name, branch, url)
+    id = models.AutoField(primary_key=True)
+    checkout_id = models.TextField()
+    origin = models.TextField()
+    tree_name = models.TextField(blank=True, null=True)
+    git_repository_url = models.TextField(blank=True, null=True)
+    git_repository_branch = models.TextField(blank=True, null=True)
+    git_commit_hash = models.TextField(blank=True, null=True)
+    git_commit_name = models.TextField(blank=True, null=True)
+    git_commit_tags = ArrayField(models.TextField(), blank=True, null=True)
+    start_time = models.DateTimeField(blank=True, null=True)
+
+    build_pass = models.IntegerField(default=0)
+    build_failed = models.IntegerField(default=0)
+    build_inc = models.IntegerField(default=0)
+
+    boot_pass = models.IntegerField(default=0)
+    boot_failed = models.IntegerField(default=0)
+    boot_inc = models.IntegerField(default=0)
+
+    test_pass = models.IntegerField(default=0)
+    test_failed = models.IntegerField(default=0)
+    test_inc = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "tree_listing"
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "origin",
+                    "tree_name",
+                    "git_repository_url",
+                    "git_repository_branch",
+                ],
+                name="tree_listing_tree_unique",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["start_time"], name="tree_listing_start_time"),
+            models.Index(fields=["checkout_id"], name="tree_listing_checkout_id"),
         ]

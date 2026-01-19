@@ -282,7 +282,7 @@ class TestFlushBuffers:
         mock_rename.assert_not_called()
 
     @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_tests"
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_pendings"
     )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.consume_buffer")
@@ -377,11 +377,13 @@ class TestFlushBuffers:
         assert mock_time.call_count == 2
         mock_atomic.assert_called_once()
         mock_aggregate.assert_called_once_with(
-            checkouts_instances=checkouts_buf, tests_instances=tests_buf
+            checkouts_instances=checkouts_buf,
+            tests_instances=tests_buf,
+            build_instances=builds_buf,
         )
 
     @patch(
-        "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_tests"
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_pendings"
     )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
