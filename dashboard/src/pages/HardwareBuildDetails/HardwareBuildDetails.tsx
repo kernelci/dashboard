@@ -19,7 +19,7 @@ const HardwareBuildDetails = (): JSX.Element => {
   const previousSearch = useSearchStore(s => s.previousSearch);
 
   const navigate = useNavigate({
-    from: '/hardware/$hardwareId/build/$buildId',
+    from: '/hardware/$hardwareId/build/$buildId/',
   });
   const getTestTableRowLink = useCallback(
     (testId: string): LinkProps => ({

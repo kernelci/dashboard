@@ -17,7 +17,7 @@ const TreeBuildDetails = (): JSX.Element => {
   const treeId = useRouterState({ select: s => s.location.state.id });
   const previousSearch = useSearchStore(s => s.previousSearch);
 
-  const navigate = useNavigate({ from: '/tree/$treeId/build/$buildId' });
+  const navigate = useNavigate({ from: '/tree/$treeId/build/$buildId/' });
 
   const getTestTableRowLink = useCallback(
     (testId: string): LinkProps => ({
