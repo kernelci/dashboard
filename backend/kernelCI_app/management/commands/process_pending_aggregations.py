@@ -592,7 +592,11 @@ class Command(BaseCommand):
                 data["test_pass"],
                 data["test_failed"],
                 data["test_inc"],
-                data["checkout_id"],
+                data["origin"],
+                data["tree_name"],
+                data["git_repository_branch"],
+                data["git_repository_url"],
+                data["git_commit_hash"],
             )
             for data in tree_listing_data.values()
         ]
@@ -612,7 +616,13 @@ class Command(BaseCommand):
                     test_pass = tree_listing.test_pass + %s,
                     test_failed = tree_listing.test_failed + %s,
                     test_inc = tree_listing.test_inc + %s
-                WHERE tree_listing.checkout_id = %s
+                WHERE
+                    -- IS NOT DISTINCT FROM used to treat NULLs as equal
+                    tree_listing.origin = %s
+                    AND tree_listing.tree_name IS NOT DISTINCT FROM %s
+                    AND tree_listing.git_repository_branch IS NOT DISTINCT FROM %s
+                    AND tree_listing.git_repository_url IS NOT DISTINCT FROM %s
+                    AND tree_listing.git_commit_hash IS NOT DISTINCT FROM %s
                 """,
                 values,
             )

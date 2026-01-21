@@ -302,30 +302,37 @@ def get_tree_listing_data_denormalized(
     with connection.cursor() as cursor:
         cursor.execute(
             """
+            WITH latest AS (
+                SELECT
+                    checkout_id
+                FROM
+                    latest_checkout
+                WHERE
+                    start_time >= NOW() - INTERVAL %(interval_param)s
+                    AND origin = %(origin_param)s
+            )
             SELECT
-                checkout_id,
-                origin,
-                tree_name,
-                git_repository_url,
-                git_repository_branch,
-                git_commit_hash,
-                git_commit_name,
-                git_commit_tags,
-                start_time,
-                build_pass,
-                build_failed,
-                build_inc,
-                boot_pass,
-                boot_failed,
-                boot_inc,
-                test_pass,
-                test_failed,
-                test_inc
+                tl.checkout_id,
+                tl.origin,
+                tl.tree_name,
+                tl.git_repository_url,
+                tl.git_repository_branch,
+                tl.git_commit_hash,
+                tl.git_commit_name,
+                tl.git_commit_tags,
+                tl.start_time,
+                tl.build_pass,
+                tl.build_failed,
+                tl.build_inc,
+                tl.boot_pass,
+                tl.boot_failed,
+                tl.boot_inc,
+                tl.test_pass,
+                tl.test_failed,
+                tl.test_inc
             FROM
-                tree_listing
-            WHERE
-                start_time >= NOW() - INTERVAL %(interval_param)s
-                AND origin = %(origin_param)s
+                tree_listing tl
+                JOIN latest l ON tl.checkout_id = l.checkout_id
             """,
             params,
         )

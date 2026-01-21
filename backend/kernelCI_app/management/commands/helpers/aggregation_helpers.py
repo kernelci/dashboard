@@ -56,6 +56,8 @@ def update_tree_listing(checkouts_instances: Sequence[Checkouts]):
 
     We should also remove the old tree row from the listing
     """
+    if not checkouts_instances:
+        return
 
     t0 = time.time()
     checkout_values = [
@@ -74,7 +76,8 @@ def update_tree_listing(checkouts_instances: Sequence[Checkouts]):
     ]
 
     with connections["default"].cursor() as cursor:
-        # Set values as 0 when inserting a new tree and update as 0 when tree already exists
+        # Set values as 0 when inserting a new tree
+        # and only updates basic information when tree already exists
         cursor.executemany(
             """
             INSERT INTO tree_listing (
@@ -86,22 +89,13 @@ def update_tree_listing(checkouts_instances: Sequence[Checkouts]):
                 test_pass, test_failed, test_inc
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-            ON CONFLICT (origin, tree_name, git_repository_url, git_repository_branch)
+            ON CONFLICT (origin, tree_name, git_repository_url, git_repository_branch, git_commit_hash)
             DO UPDATE SET
                 checkout_id = EXCLUDED.checkout_id,
                 git_commit_hash = EXCLUDED.git_commit_hash,
                 git_commit_name = EXCLUDED.git_commit_name,
                 git_commit_tags = EXCLUDED.git_commit_tags,
-                start_time = EXCLUDED.start_time,
-                build_pass = 0,
-                build_failed = 0,
-                build_inc = 0,
-                boot_pass = 0,
-                boot_failed = 0,
-                boot_inc = 0,
-                test_pass = 0,
-                test_failed = 0,
-                test_inc = 0
+                start_time = EXCLUDED.start_time
             WHERE tree_listing.start_time < EXCLUDED.start_time
             """,
             checkout_values,
