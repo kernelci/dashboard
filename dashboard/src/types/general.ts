@@ -98,6 +98,12 @@ export type StatusCount = {
   DONE?: number;
 };
 
+export type ShortStatusCount = {
+  PASS: number;
+  FAIL: number;
+  INCONCLUSIVE: number;
+};
+
 export type StatusCountV2 = StatusCount & {
   INCONCLUSIVE?: number;
 };

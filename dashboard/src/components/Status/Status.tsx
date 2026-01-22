@@ -6,6 +6,8 @@ import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
 import type { GroupedStatus } from '@/utils/status';
 import { groupStatus } from '@/utils/status';
 
+// TODO: replace the preCalculatedGroupedStatus with a type-safe approach,
+// currently everything is optional
 interface ITestStatus {
   pass?: number;
   error?: number;
@@ -64,11 +66,58 @@ export const GroupedTestStatus = ({
   );
 };
 
-interface ITestStatusWithLink extends ITestStatus {
+interface IStatusLinkProps {
   passLinkProps?: LinkProps;
   failLinkProps?: LinkProps;
   inconclusiveLinkProps?: LinkProps;
 }
+
+interface IBaseGroupedStatusWithLink extends IStatusLinkProps {
+  groupedStatus: GroupedStatus;
+  hideInconclusive?: boolean;
+}
+
+export const BaseGroupedStatusWithLink = ({
+  groupedStatus,
+  passLinkProps,
+  failLinkProps,
+  inconclusiveLinkProps,
+  hideInconclusive = false,
+}: IBaseGroupedStatusWithLink): JSX.Element => {
+  return (
+    <div className="flex flex-row gap-1">
+      {
+        <Link {...passLinkProps}>
+          <ColoredCircle
+            quantity={groupedStatus.successCount}
+            tooltipText="global.success"
+            backgroundClassName="bg-light-green"
+          />
+        </Link>
+      }
+      {
+        <Link {...failLinkProps}>
+          <ColoredCircle
+            quantity={groupedStatus.failedCount}
+            tooltipText="global.failed"
+            backgroundClassName="bg-light-red"
+          />
+        </Link>
+      }
+      {!hideInconclusive && (
+        <Link {...inconclusiveLinkProps}>
+          <ColoredCircle
+            quantity={groupedStatus.inconclusiveCount}
+            tooltipText="global.inconclusive"
+            backgroundClassName="bg-medium-gray"
+          />
+        </Link>
+      )}
+    </div>
+  );
+};
+
+interface ITestStatusWithLink extends ITestStatus, IStatusLinkProps {}
 
 export const GroupedTestStatusWithLink = ({
   pass,
@@ -83,7 +132,7 @@ export const GroupedTestStatusWithLink = ({
   failLinkProps,
   inconclusiveLinkProps,
 }: ITestStatusWithLink): JSX.Element => {
-  const { successCount, inconclusiveCount, failedCount } = groupStatus({
+  const groupedStatus = groupStatus({
     doneCount: done,
     errorCount: error,
     failCount: fail,
@@ -92,36 +141,15 @@ export const GroupedTestStatusWithLink = ({
     skipCount: skip,
     nullCount: nullStatus,
   });
+
   return (
-    <div className="flex flex-row gap-1">
-      {
-        <Link {...passLinkProps}>
-          <ColoredCircle
-            quantity={successCount ?? 0}
-            tooltipText="global.success"
-            backgroundClassName="bg-light-green"
-          />
-        </Link>
-      }
-      {
-        <Link {...failLinkProps}>
-          <ColoredCircle
-            quantity={failedCount}
-            tooltipText="global.failed"
-            backgroundClassName="bg-light-red"
-          />
-        </Link>
-      }
-      {!hideInconclusive && (
-        <Link {...inconclusiveLinkProps}>
-          <ColoredCircle
-            quantity={inconclusiveCount ?? 0}
-            tooltipText="global.inconclusive"
-            backgroundClassName="bg-medium-gray"
-          />
-        </Link>
-      )}
-    </div>
+    <BaseGroupedStatusWithLink
+      groupedStatus={groupedStatus}
+      passLinkProps={passLinkProps}
+      failLinkProps={failLinkProps}
+      inconclusiveLinkProps={inconclusiveLinkProps}
+      hideInconclusive={hideInconclusive}
+    />
   );
 };
 

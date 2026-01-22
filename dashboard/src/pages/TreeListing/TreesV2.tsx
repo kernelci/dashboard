@@ -7,12 +7,11 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { z } from 'zod';
 
-import TreeListingPage from '@/components/TreeListingPage/TreeListingPage';
-
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags';
+import TreeListingV2 from '@/components/TreeListingPage/TreeListingV2';
 
-const Trees = (): JSX.Element => {
+const TreeListingNew = (): JSX.Element => {
   const { treeSearch: unsafeTreeSearch } = useSearch({
     strict: false,
   });
@@ -50,10 +49,10 @@ const Trees = (): JSX.Element => {
         </div>
       </div>
       <div className="bg-light-gray w-full py-10">
-        <TreeListingPage inputFilter={treeSearch} />
+        <TreeListingV2 inputFilter={treeSearch} />
       </div>
     </>
   );
 };
 
-export default Trees;
+export default TreeListingNew;
