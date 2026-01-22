@@ -391,8 +391,10 @@ class TreeListing(models.Model):
                     "tree_name",
                     "git_repository_url",
                     "git_repository_branch",
+                    "git_commit_hash",
                 ],
                 name="tree_listing_tree_unique",
+                nulls_distinct=False,
             ),
         ]
         indexes = [
