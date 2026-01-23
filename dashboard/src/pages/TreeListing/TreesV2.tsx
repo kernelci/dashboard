@@ -10,6 +10,7 @@ import { z } from 'zod';
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags';
 import TreeListingV2 from '@/components/TreeListingPage/TreeListingV2';
+import { NewPageBanner } from '@/components/Banner/PageBanner';
 
 const TreeListingNew = (): JSX.Element => {
   const { treeSearch: unsafeTreeSearch } = useSearch({
@@ -48,7 +49,11 @@ const TreeListingNew = (): JSX.Element => {
           />
         </div>
       </div>
-      <div className="bg-light-gray w-full py-10">
+      <NewPageBanner
+        pageNameId="treeListing.treeListing"
+        pageRoute="/tree/v1"
+      />
+      <div className="bg-light-gray w-full py-4">
         <TreeListingV2 inputFilter={treeSearch} />
       </div>
     </>
