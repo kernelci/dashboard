@@ -27,3 +27,76 @@ export const COMMON_SELECTORS = {
   originDropdown: '[data-test-id="origin-dropdown"]',
   originOption: (origin: string) => `[data-test-id="origin-option-${origin}"]`,
 } as const;
+
+export const TREE_DETAILS_SELECTORS = {
+  breadcrumbTreesLink: '[data-test-id="breadcrumb-link"]',
+
+  treeHeaderTable: 'table',
+
+  tabs: {
+    builds: 'button:has-text("Builds")',
+    boots: 'button:has-text("Boots")',
+    tests: 'button:has-text("Tests")',
+  },
+
+  filters: {
+    button: 'button:has-text("Filters")',
+    drawer: 'div[role="dialog"]',
+    filterButton: 'button:has-text("Filter")',
+    cancelButton: 'button:has-text("Cancel")',
+    clearAllFilters: 'text="Clear all"',
+  },
+
+  buildHistoryGraph: 'img[alt="Builds History"]',
+
+  statusCard: {
+    title: '.border-dark-gray:has-text("Build status")',
+    statusButton: (status: string) => `.border-dark-gray button:has-text("${status}")`,
+  },
+
+  summaryCards: {
+    arch: 'text="Summary"',
+  },
+
+  issuesCard: {
+    title: 'text="Issues"',
+    button: 'button[aria-label="Issues"]',
+  },
+
+  buildTable: {
+    table: 'table',
+    statusFilters: {
+      all: 'button:has-text("All:")',
+      success: 'button:has-text("Success:")',
+      failed: 'button:has-text("Failed:")',
+      inconclusive: 'button:has-text("Inconclusive:")',
+    },
+    searchInput: 'input[placeholder*="Search"]',
+    detailsButton: 'a[href^="/build/"]',
+  },
+
+  bootsTable: {
+    statusFilters: {
+      all: 'button:has-text("All:")',
+      success: 'button:has-text("Success:")',
+      failed: 'button:has-text("Failed:")',
+      inconclusive: 'button:has-text("Inconclusive:")',
+    },
+    detailsButton: 'a[href^="/test/"]',
+  },
+
+  testsTable: {
+    statusFilters: {
+      all: 'button:has-text("All:")',
+      success: 'button:has-text("Success:")',
+      failed: 'button:has-text("Failed:")',
+      inconclusive: 'button:has-text("Inconclusive:")',
+    },
+    testItem: 'tr',
+    detailsButton: 'a[href^="/test/"]',
+  },
+
+  configTable: {
+    link: (config: string) => `a:has-text("${config}")`,
+  },
+} as const;
