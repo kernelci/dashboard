@@ -7,11 +7,15 @@ import {
   useMatches,
 } from '@tanstack/react-router';
 
-import { useCallback, useEffect, useMemo, type JSX } from 'react';
+import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
+
+import { HiMenu } from 'react-icons/hi';
 
 import Select, { SelectItem } from '@/components/Select/Select';
 import { DEFAULT_ORIGIN, type PossibleMonitorPath } from '@/types/general';
 import { useOrigins } from '@/api/origin';
+import { Button } from '@/components/ui/button';
+import MobileSideMenu from '@/components/SideMenu/MobileSideMenu';
 
 const getTargetPath = (basePath: string): PossibleMonitorPath => {
   switch (basePath) {
@@ -119,6 +123,7 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
 };
 
 const TopBar = (): JSX.Element => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const matches = useMatches();
   const redirectStateFrom = useRouterState({
     select: s => s.location.state.from,
@@ -139,16 +144,33 @@ const TopBar = (): JSX.Element => {
   const basePath = redirectStateFrom ?? routeInfo.firstUrlLocation;
 
   return (
-    <div className="fixed top-0 z-10 flex h-20 w-full bg-white px-16">
-      <div className="flex flex-row items-center justify-between">
-        <span className="mr-14 text-2xl">
-          <TitleName basePath={basePath} />
-        </span>
-        {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
-          <OriginSelect basePath={basePath} />
-        )}
+    <>
+      <div className="fixed top-0 z-10 flex h-20 w-full bg-white px-6 md:px-16">
+        <div className="flex w-full flex-row items-center justify-between">
+          <div className="flex flex-row items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <HiMenu className="size-6" />
+            </Button>
+            <span className="mr-10 text-2xl">
+              <TitleName basePath={basePath} />
+            </span>
+            {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
+              <OriginSelect basePath={basePath} />
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+      <MobileSideMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
+    </>
   );
 };
 
