@@ -128,6 +128,22 @@ function HardwareDetails(): JSX.Element {
 
   const reqFilter = mapFilterToReq(diffFilter);
 
+  const inconsistencyNavigateParams = useMemo(
+    () => ({ hardwareId }),
+    [hardwareId],
+  );
+
+  const inconsistencyInvalidatorEnabled = useMemo(() => {
+    // Only compare against listing-provided router state when the page is in its
+    // "default" state. When tree selection / commit selection is active, count
+    // mismatches are expected and should not trigger global invalidations.
+    return (
+      isEmptyObject(reqFilter) &&
+      treeIndexes === null &&
+      isEmptyObject(treeCommits)
+    );
+  }, [reqFilter, treeCommits, treeIndexes]);
+
   const updateTreeFilters = useCallback((selectedIndexes: number[] | null) => {
     navigate({
       search: previousSearch => ({
@@ -209,8 +225,8 @@ function HardwareDetails(): JSX.Element {
     referenceData: hardwareStatusHistoryState,
     comparedData: hardwareDataPreparedForInconsistencyValidation,
     navigate: navigate,
-    enabled: isEmptyObject(reqFilter),
-    navigateParams: { hardwareId: hardwareId },
+    enabled: inconsistencyInvalidatorEnabled,
+    navigateParams: inconsistencyNavigateParams,
   });
 
   const hardwareTableForCommitHistory = useMemo(() => {
