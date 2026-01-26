@@ -207,6 +207,7 @@ export const messages = {
     'hardwareDetails.selectTreeTitle': 'No Tree Selected',
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
+    'hardwareListing.bannerTitle': 'Hardware Listing',
     'hardwareListing.description': 'List of hardware from kernel tests',
     'hardwareListing.notFound': 'No hardware information available',
     'hardwareListing.title': 'Hardware Listing ― KCI Dashboard',

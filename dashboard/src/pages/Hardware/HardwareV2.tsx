@@ -3,24 +3,25 @@ import { useCallback } from 'react';
 
 import { useIntl } from 'react-intl';
 
-import { useNavigate, useSearch, Link } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import HardwareListingPage from '@/pages/HardwareNew/HardwareListingPage';
+import HardwareListingPageV2 from '@/pages/Hardware/HardwareListingPageV2';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags';
+import { NewPageBanner } from '@/components/Banner/PageBanner';
 
-const Hardware = (): JSX.Element => {
+export const HardwareV2 = (): JSX.Element => {
   const { hardwareSearch } = useSearch({
-    from: '/_main/hardware-new',
+    from: '/_main/hardware',
   });
 
-  const navigate = useNavigate({ from: '/hardware-new' });
+  const navigate = useNavigate({ from: '/hardware' });
 
   const onInputSearchTextChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       navigate({
-        from: '/hardware-new',
+        from: '/hardware',
         search: previousSearch => ({
           ...previousSearch,
           hardwareSearch: e.target.value,
@@ -49,29 +50,15 @@ const Hardware = (): JSX.Element => {
           />
         </div>
       </div>
-      <div className="rounded-md bg-green-100 p-3 text-sm text-green-800 dark:bg-green-900 dark:text-green-300">
-        This is the new, optimized version of the hardware listing. If you find
-        any bugs, please report to{' '}
-        <a
-          href="https://github.com/kernelci/dashboard/issues"
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-        >
-          GitHub Issues
-        </a>{' '}
-        and you can still access the old version{' '}
-        <Link to="/hardware" className="underline">
-          here
-        </Link>
-        . Please note that some historical data might be missing, but it should
-        be updated with recent data.
-      </div>
+      <NewPageBanner
+        pageNameId="hardwareListing.bannerTitle"
+        pageRoute="/hardware/v1"
+      />
       <div className="bg-light-gray w-full py-10">
-        <HardwareListingPage inputFilter={hardwareSearch ?? ''} />
+        <HardwareListingPageV2 inputFilter={hardwareSearch ?? ''} />
       </div>
     </>
   );
 };
 
-export default Hardware;
+export default HardwareV2;

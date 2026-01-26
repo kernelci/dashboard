@@ -66,17 +66,21 @@ interface IHardwareTable {
   queryData?: unknown;
   error?: Error | null;
   isLoading?: boolean;
+  navigateFrom: HardwareListingRoutes;
 }
+
+type HardwareListingRoutes = '/hardware' | '/hardware/v1';
 
 const getLinkProps = (
   row: Row<HardwareItem>,
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
+  navigateFrom: HardwareListingRoutes,
   tabTarget?: string,
   newDiffFilter?: TFilter,
 ): LinkProps => {
   return {
-    from: '/hardware',
+    from: navigateFrom,
     to: '/hardware/$hardwareId',
     params: { hardwareId: row.original.platform },
     search: previousSearch => ({
@@ -106,6 +110,7 @@ const getLinkProps = (
 const getColumns = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
+  navigateFrom: HardwareListingRoutes,
 ): ColumnDef<HardwareItem>[] => {
   return [
     {
@@ -178,6 +183,7 @@ const getColumns = (
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
+              navigateFrom,
               tabTarget,
               {
                 buildStatus: { PASS: true },
@@ -187,6 +193,7 @@ const getColumns = (
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
+              navigateFrom,
               tabTarget,
               {
                 buildStatus: { FAIL: true },
@@ -196,6 +203,7 @@ const getColumns = (
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
+              navigateFrom,
               tabTarget,
               {
                 buildStatus: {
@@ -243,6 +251,7 @@ const getColumns = (
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
+              navigateFrom,
               tabTarget,
               {
                 bootStatus: { PASS: true },
@@ -252,6 +261,7 @@ const getColumns = (
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
+              navigateFrom,
               tabTarget,
               {
                 bootStatus: { FAIL: true },
@@ -261,6 +271,7 @@ const getColumns = (
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
+              navigateFrom,
               tabTarget,
               {
                 bootStatus: {
@@ -308,6 +319,7 @@ const getColumns = (
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
+              navigateFrom,
               tabTarget,
               {
                 testStatus: { PASS: true },
@@ -317,6 +329,7 @@ const getColumns = (
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
+              navigateFrom,
               tabTarget,
               {
                 testStatus: { FAIL: true },
@@ -326,6 +339,7 @@ const getColumns = (
               row,
               startTimestampInSeconds,
               endTimestampInSeconds,
+              navigateFrom,
               tabTarget,
               {
                 testStatus: {
@@ -357,9 +371,10 @@ export function HardwareTable({
   queryData,
   error,
   isLoading,
+  navigateFrom,
 }: IHardwareTable): JSX.Element {
   const { listingSize } = useSearch({ strict: false });
-  const navigate = useNavigate({ from: '/hardware' });
+  const navigate = useNavigate({ from: navigateFrom });
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -373,8 +388,9 @@ export function HardwareTable({
   }, [treeTableRows]);
 
   const columns = useMemo(
-    () => getColumns(startTimestampInSeconds, endTimestampInSeconds),
-    [startTimestampInSeconds, endTimestampInSeconds],
+    () =>
+      getColumns(startTimestampInSeconds, endTimestampInSeconds, navigateFrom),
+    [startTimestampInSeconds, endTimestampInSeconds, navigateFrom],
   );
 
   const table = useReactTable({
@@ -430,6 +446,7 @@ export function HardwareTable({
                   row,
                   startTimestampInSeconds,
                   endTimestampInSeconds,
+                  navigateFrom,
                   tabTarget,
                 )}
                 linkClassName="w-full inline-block h-full"
@@ -447,6 +464,7 @@ export function HardwareTable({
     );
   }, [
     modelRows,
+    navigateFrom,
     columns.length,
     startTimestampInSeconds,
     endTimestampInSeconds,
@@ -473,7 +491,7 @@ export function HardwareTable({
         </span>
         <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
           <MemoizedInputTime
-            navigateFrom="/hardware"
+            navigateFrom={navigateFrom}
             defaultInterval={REDUCED_TIME_SEARCH}
           />
           <ItemsPerPageSelector

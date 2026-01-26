@@ -5,11 +5,13 @@ import { useSearch } from '@tanstack/react-router';
 
 import { Toaster } from '@/components/ui/toaster';
 
-import type { HardwareItemV2 } from '@/types/hardware';
+import type { HardwareItem } from '@/types/hardware';
 
 import { useHardwareListingV2 } from '@/api/hardware';
 
 import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
+
+import type { RequiredStatusCount, StatusCount } from '@/types/general';
 
 import {
   matchesRegexOrIncludes,
@@ -18,11 +20,9 @@ import {
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
-import type { RequiredStatusCount, StatusCountV2 } from '@/types/general';
-
 import { HardwareTable } from './HardwareTable';
 
-interface HardwareListingPageProps {
+interface HardwareListingPageV2Props {
   inputFilter: string;
 }
 
@@ -47,7 +47,7 @@ const useHardwareListingTime = (): {
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
 } => {
-  const { intervalInDays } = useSearch({ from: '/_main/hardware-new' });
+  const { intervalInDays } = useSearch({ from: '/_main/hardware' });
   const [timestamps, setTimeStamps] = useState(() => {
     return calculateTimeStamp(intervalInDays);
   });
@@ -61,19 +61,19 @@ const useHardwareListingTime = (): {
   return { startTimestampInSeconds, endTimestampInSeconds };
 };
 
-const HardwareListingPage = ({
+const HardwareListingPageV2 = ({
   inputFilter,
-}: HardwareListingPageProps): JSX.Element => {
+}: HardwareListingPageV2Props): JSX.Element => {
   const { startTimestampInSeconds, endTimestampInSeconds } =
     useHardwareListingTime();
-  const { origin } = useSearch({ from: '/_main/hardware-new' });
+  const { origin } = useSearch({ from: '/_main/hardware' });
 
   const { data, error, status, isLoading } = useHardwareListingV2(
     startTimestampInSeconds,
     endTimestampInSeconds,
   );
 
-  const listItems: HardwareItemV2[] = useMemo(() => {
+  const listItems: HardwareItem[] = useMemo(() => {
     if (!data || error) {
       return [];
     }
@@ -87,41 +87,35 @@ const HardwareListingPage = ({
           includesInAnStringOrStringArray(hardware.hardware ?? '', inputFilter)
         );
       })
-      .map((hardware): HardwareItemV2 => {
+      .map((hardware): HardwareItem => {
         const buildCount: RequiredStatusCount = {
-          PASS: hardware.build_status_summary?.PASS ?? 0,
-          FAIL: hardware.build_status_summary?.FAIL ?? 0,
+          PASS: hardware.build_status_summary?.PASS,
+          FAIL: hardware.build_status_summary?.FAIL,
           NULL: 0,
           ERROR: 0,
           MISS: 0,
           DONE: 0,
-          // TODO: Remove this workaround after migrating to the new hardware listing endpoint
-          // and modify status count to use INCONCLUSIVE field
-          SKIP: hardware.build_status_summary?.INCONCLUSIVE ?? 0,
+          SKIP: hardware.build_status_summary?.INCONCLUSIVE,
         };
 
-        const testStatusCount: StatusCountV2 = {
-          PASS: hardware.test_status_summary?.PASS,
-          FAIL: hardware.test_status_summary?.FAIL,
-          NULL: 0,
-          ERROR: 0,
-          MISS: 0,
+        const testStatusCount: StatusCount = {
           DONE: 0,
-          // TODO: Remove this workaround after migrating to the new hardware listing endpoint
-          // and modify status count to use INCONCLUSIVE field
-          SKIP: hardware.test_status_summary?.INCONCLUSIVE,
+          ERROR: 0,
+          FAIL: hardware.test_status_summary.FAIL,
+          MISS: 0,
+          PASS: hardware.test_status_summary.PASS,
+          SKIP: 0,
+          NULL: hardware.test_status_summary.INCONCLUSIVE,
         };
 
-        const bootStatusCount: StatusCountV2 = {
-          PASS: hardware.boot_status_summary?.PASS,
-          FAIL: hardware.boot_status_summary?.FAIL,
-          NULL: 0,
-          ERROR: 0,
-          MISS: 0,
+        const bootStatusCount: StatusCount = {
           DONE: 0,
-          // TODO: Remove this workaround after migrating to the new hardware listing endpoint
-          // and modify status count to use INCONCLUSIVE field
-          SKIP: hardware.boot_status_summary?.INCONCLUSIVE,
+          ERROR: 0,
+          FAIL: hardware.boot_status_summary.FAIL,
+          MISS: 0,
+          PASS: hardware.boot_status_summary.PASS,
+          SKIP: 0,
+          NULL: hardware.boot_status_summary.INCONCLUSIVE,
         };
 
         return {
@@ -157,6 +151,7 @@ const HardwareListingPage = ({
           queryData={data}
           error={error}
           isLoading={isLoading}
+          navigateFrom="/hardware"
         />
       </div>
       {kcidevComponent}
@@ -164,4 +159,4 @@ const HardwareListingPage = ({
   );
 };
 
-export default HardwareListingPage;
+export default HardwareListingPageV2;

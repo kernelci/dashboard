@@ -46,12 +46,6 @@ export const routeItems: RouteMenuItems[] = [
     selected: false,
   },
   {
-    navigateTo: '/hardware-new',
-    idIntl: 'routes.hardwareNewMonitor',
-    icon: MonitorHeartIcon,
-    selected: false,
-  },
-  {
     navigateTo: '/issues',
     idIntl: 'routes.issueMonitor',
     icon: RadioButtonIcon,

@@ -23,7 +23,7 @@ const zHardwareSchema = z.object({
   listingSize: zListingSize,
 } satisfies SearchSchema);
 
-export const Route = createFileRoute('/_main/hardware-new')({
+export const Route = createFileRoute('/_main/hardware/v1')({
   validateSearch: zHardwareSchema,
   search: { middlewares: [stripSearchParams(defaultValues)] },
 });

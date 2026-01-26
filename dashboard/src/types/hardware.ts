@@ -1,7 +1,7 @@
 import type {
   RequiredStatusCount,
+  ShortStatusCount,
   StatusCount,
-  StatusCountV2,
 } from './general';
 
 export type HardwareItem = {
@@ -19,9 +19,9 @@ export interface HardwareListingResponse {
 export type HardwareItemV2 = {
   hardware?: string[];
   platform: string;
-  build_status_summary: StatusCountV2;
-  test_status_summary: StatusCountV2;
-  boot_status_summary: StatusCountV2;
+  build_status_summary: ShortStatusCount;
+  test_status_summary: ShortStatusCount;
+  boot_status_summary: ShortStatusCount;
 };
 
 export interface HardwareListingResponseV2 {

@@ -94,9 +94,8 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
     case 'tree':
       return <FormattedMessage id="routes.treeMonitor" />;
     case 'hardware':
+    case 'hardware/v1':
       return <FormattedMessage id="routes.hardwareMonitor" />;
-    case 'hardware-new':
-      return <FormattedMessage id="routes.hardwareNewMonitor" />;
     case 'issues':
       return <FormattedMessage id="routes.issueMonitor" />;
     case 'build':
