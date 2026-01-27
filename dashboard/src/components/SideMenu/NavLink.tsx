@@ -17,6 +17,7 @@ type INavLinkBase = LinkProps & {
   asTag?: string;
   selected?: boolean;
   linkClassName?: string;
+  onClickElement?: () => void;
 };
 
 type INavLinkWithIntl = INavLinkBase & {
@@ -38,6 +39,7 @@ const NavLink = ({
   label,
   asTag,
   linkClassName,
+  onClickElement,
   ...props
 }: INavLink): JSX.Element => {
   const LinkElement = asTag ?? Link;
@@ -58,6 +60,7 @@ const NavLink = ({
           selected ? selectedItemClassName : notSelectedItemClassName,
           linkClassName,
         )}
+        onClick={onClickElement}
         {...props}
       >
         {icon && <span className="mr-3">{icon}</span>}

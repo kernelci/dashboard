@@ -20,9 +20,9 @@ const RouteComponent = (): JSX.Element => {
       <div className="h-full w-full">
         <div className="flex w-full flex-row">
           <SideMenu />
-          <main className="flex min-w-0 flex-1 flex-col">
+          <main className="flex min-h-screen min-w-0 flex-1 flex-col">
             <TopBar />
-            <div className="bg-light-gray h-full w-full px-16 pt-24">
+            <div className="bg-light-gray h-full w-full px-8 pt-24 md:px-16">
               <Outlet />
             </div>
           </main>
