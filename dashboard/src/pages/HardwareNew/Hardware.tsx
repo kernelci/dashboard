@@ -35,7 +35,7 @@ const Hardware = (): JSX.Element => {
 
   return (
     <>
-      <MemoizedListingOGTags monitor="/hardware-new" search={hardwareSearch} />
+      <MemoizedListingOGTags monitor="/hardware" search={hardwareSearch} />
       <div className="fixed top-0 z-10 mx-[380px] flex w-full pt-5 pr-12 pl-6">
         <div className="flex w-2/3 items-center px-6">
           <DebounceInput

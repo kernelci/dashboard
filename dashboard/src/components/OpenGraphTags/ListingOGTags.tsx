@@ -3,7 +3,7 @@ import { memo, useMemo } from 'react';
 
 import { useIntl } from 'react-intl';
 
-import type { PossibleMonitorPath } from '@/types/general';
+import type { ListingPaths } from '@/types/general';
 import type { MessagesKey } from '@/locales/messages';
 
 import { OpenGraphTags } from './OpenGraphTags';
@@ -12,7 +12,7 @@ const ListingOGTags = ({
   monitor,
   search,
 }: {
-  monitor: PossibleMonitorPath;
+  monitor: ListingPaths;
   search: string;
 }): JSX.Element => {
   const { formatMessage } = useIntl();
@@ -29,9 +29,6 @@ const ListingOGTags = ({
         break;
       case '/issues':
         descriptionId = 'issueListing.description';
-        break;
-      case '/hardware-new':
-        descriptionId = 'hardwareListing.description';
         break;
     }
     return (
@@ -50,8 +47,6 @@ const ListingOGTags = ({
         return formatMessage({ id: 'hardwareListing.title' });
       case '/issues':
         return formatMessage({ id: 'issueListing.title' });
-      case '/hardware-new':
-        return formatMessage({ id: 'hardwareListing.title' });
     }
   }, [formatMessage, monitor]);
 

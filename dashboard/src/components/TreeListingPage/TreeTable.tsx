@@ -533,7 +533,7 @@ export function TreeTable({
           />
         </span>
         <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
-          <MemoizedInputTime navigateFrom="/tree" />
+          <MemoizedInputTime navigateFrom={urlFromMap.navigate} />
           <ItemsPerPageSelector
             table={table}
             onPaginationChange={navigateWithPageSize}
