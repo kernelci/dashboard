@@ -24,7 +24,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { TooltipDateTime } from '@/components/TooltipDateTime';
 
 import type { TreeTableBody, TreeV2 } from '@/types/tree/Tree';
-import { DEFAULT_ORIGIN, RedirectFrom } from '@/types/general';
+import { RedirectFrom } from '@/types/general';
 import type { TFilter } from '@/types/general';
 
 import { formattedBreakLineValue } from '@/locales/messages';
@@ -63,6 +63,7 @@ import { makeTreeIdentifierKey } from '@/utils/trees';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
 
 const getLinkProps = (
   row: Row<TreeTableBody>,
@@ -410,15 +411,6 @@ export const sortTreesWithPinnedFirst = <T extends TreeTableBody | TreeV2>(
   });
 };
 
-interface ITreeTable {
-  treeTableRows: TreeTableBody[];
-  status?: UseQueryResult['status'];
-  queryData?: unknown;
-  error?: Error | null;
-  isLoading?: boolean;
-  showStatusUnavailable?: boolean;
-}
-
 export function TreeTable({
   treeTableRows,
   status,
@@ -426,10 +418,18 @@ export function TreeTable({
   error,
   isLoading,
   showStatusUnavailable,
-}: ITreeTable): JSX.Element {
-  const { origin: unsafeOrigin, listingSize } = useSearch({ strict: false });
-  const origin = unsafeOrigin ?? DEFAULT_ORIGIN;
-  const navigate = useNavigate({ from: '/tree' });
+  urlFromMap,
+}: {
+  treeTableRows: TreeTableBody[];
+  status?: UseQueryResult['status'];
+  queryData?: unknown;
+  error?: Error | null;
+  isLoading?: boolean;
+  showStatusUnavailable?: boolean;
+  urlFromMap: TreeListingRoutesMap['v1'];
+}): JSX.Element {
+  const { origin, listingSize } = useSearch({ from: urlFromMap.search });
+  const navigate = useNavigate({ from: urlFromMap.navigate });
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);

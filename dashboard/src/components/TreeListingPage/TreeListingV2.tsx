@@ -10,14 +10,20 @@ import { matchesRegexOrIncludes } from '@/lib/string';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
+import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
+
 import { TreeTableV2 } from './TreeTableV2';
 
-const TreeListingPage = ({
+const TreeListingV2 = ({
   inputFilter,
+  urlFromMap,
 }: {
   inputFilter: string;
+  urlFromMap: TreeListingRoutesMap['v2'];
 }): JSX.Element => {
-  const { data, error, status, isLoading } = useTreeListingV2();
+  const { data, error, status, isLoading } = useTreeListingV2({
+    searchFrom: urlFromMap.search,
+  });
 
   const listItems: TreeV2[] = useMemo(() => {
     if (!data) {
@@ -76,6 +82,7 @@ const TreeListingPage = ({
           queryData={data}
           error={error}
           isLoading={isLoading}
+          urlFromMap={urlFromMap}
         />
       </div>
       {kcidevComponent}
@@ -83,4 +90,4 @@ const TreeListingPage = ({
   );
 };
 
-export default TreeListingPage;
+export default TreeListingV2;

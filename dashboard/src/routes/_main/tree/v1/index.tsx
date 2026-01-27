@@ -9,5 +9,7 @@ export const TreeSearchSchema = z.object({
 });
 
 export const Route = createFileRoute('/_main/tree/v1/')({
-  component: Trees,
+  component: () => (
+    <Trees urlFromMap={{ search: '/_main/tree/v1', navigate: '/tree/v1' }} />
+  ),
 });

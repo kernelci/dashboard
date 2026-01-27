@@ -22,7 +22,7 @@ import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import type { TreeV2 } from '@/types/tree/Tree';
-import { DEFAULT_ORIGIN, RedirectFrom } from '@/types/general';
+import { RedirectFrom } from '@/types/general';
 import type { TFilter } from '@/types/general';
 
 import { formattedBreakLineValue } from '@/locales/messages';
@@ -50,6 +50,8 @@ import { MemoizedInputTime } from '@/components/InputTime';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
+import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
 
 import { commonTreeTableColumns, sortTreesWithPinnedFirst } from './TreeTable';
 
@@ -247,25 +249,26 @@ const getColumns = (origin: string): ColumnDef<TreeV2>[] => {
   ];
 };
 
-interface ITreeTableV2 {
-  treeTableRows: TreeV2[];
-  status?: UseQueryResult['status'];
-  queryData?: unknown;
-  error?: Error | null;
-  isLoading?: boolean;
-  showStatusUnavailable?: boolean;
-}
-
 export function TreeTableV2({
   treeTableRows,
   status,
   queryData,
   error,
   isLoading,
-}: ITreeTableV2): JSX.Element {
-  const { origin: unsafeOrigin, listingSize } = useSearch({ strict: false });
-  const origin = unsafeOrigin ?? DEFAULT_ORIGIN;
-  const navigate = useNavigate({ from: '/tree' });
+  urlFromMap,
+}: {
+  treeTableRows: TreeV2[];
+  status?: UseQueryResult['status'];
+  queryData?: unknown;
+  error?: Error | null;
+  isLoading?: boolean;
+  showStatusUnavailable?: boolean;
+  urlFromMap: TreeListingRoutesMap['v2'];
+}): JSX.Element {
+  const { origin, listingSize } = useSearch({
+    from: urlFromMap.search,
+  });
+  const navigate = useNavigate({ from: urlFromMap.navigate });
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);

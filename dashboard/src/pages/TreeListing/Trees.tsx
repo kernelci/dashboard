@@ -5,22 +5,25 @@ import { useIntl } from 'react-intl';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import { z } from 'zod';
-
 import TreeListingPage from '@/components/TreeListingPage/TreeListingPage';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags';
 import { OldPageBanner } from '@/components/Banner/PageBanner';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
 
-const Trees = (): JSX.Element => {
-  const { treeSearch: unsafeTreeSearch } = useSearch({
-    strict: false,
+const Trees = ({
+  urlFromMap,
+}: {
+  urlFromMap: TreeListingRoutesMap['v1'];
+}): JSX.Element => {
+  const { treeListingVersion } = useFeatureFlag();
+  const { treeSearch } = useSearch({
+    from: urlFromMap.search,
   });
 
-  const treeSearch = z.string().catch('').parse(unsafeTreeSearch);
-
-  const navigate = useNavigate({ from: '/tree/v1' });
+  const navigate = useNavigate({ from: urlFromMap.navigate });
 
   const onInputSearchTextChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -50,9 +53,11 @@ const Trees = (): JSX.Element => {
           />
         </div>
       </div>
-      <OldPageBanner pageNameId="treeListing.treeListing" pageRoute="/tree" />
+      {treeListingVersion !== 'v1' && (
+        <OldPageBanner pageNameId="treeListing.treeListing" pageRoute="/tree" />
+      )}
       <div className="bg-light-gray w-full py-4">
-        <TreeListingPage inputFilter={treeSearch} />
+        <TreeListingPage inputFilter={treeSearch} urlFromMap={urlFromMap} />
       </div>
     </>
   );
