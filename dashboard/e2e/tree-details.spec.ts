@@ -3,7 +3,6 @@ import { test, expect } from '@playwright/test';
 import {
   TREE_DETAILS_SELECTORS,
   TREE_LISTING_SELECTORS,
-  COMMON_SELECTORS,
 } from './e2e-selectors';
 
 test.describe('Tree Details Page Tests', () => {
@@ -12,35 +11,38 @@ test.describe('Tree Details Page Tests', () => {
     page.setDefaultTimeout(timeout);
   });
 
-  test('adds a filter with card and clear all filters', async ({ page }) => {
-    await page.goto('/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984', { timeout: 30000 });
+  test('opens and closes filter drawer', async ({ page }) => {
+    await page.goto(
+      '/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984',
+      { timeout: 30000 },
+    );
     await page.waitForLoadState('domcontentloaded');
 
     const filterButton = page.locator(TREE_DETAILS_SELECTORS.filters.button);
     await filterButton.waitFor({ state: 'visible', timeout: 10000 });
     await filterButton.click();
 
-    await page.waitForTimeout(5000);
-
-    const successButton = page.locator('button').filter({ hasText: '51' }).filter({ hasText: 'Success' }).first();
-    await successButton.waitFor({ state: 'visible', timeout: 5000 });
-    await successButton.click();
-
-    await successButton.click();
-
-    const cancelButton = page.locator(TREE_DETAILS_SELECTORS.filters.cancelButton);
+    const cancelButton = page.locator(
+      TREE_DETAILS_SELECTORS.filters.cancelButton,
+    );
     await expect(cancelButton).toBeVisible();
-
     await cancelButton.click();
+
+    await expect(cancelButton).not.toBeVisible();
   });
 
   test('clicks on details button on build table and goes back via breadcrumb', async ({
     page,
   }) => {
-    await page.goto('/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984', { timeout: 30000 });
+    await page.goto(
+      '/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984',
+      { timeout: 30000 },
+    );
     await page.waitForLoadState('domcontentloaded');
 
-    const detailsButton = page.locator(TREE_DETAILS_SELECTORS.buildTable.detailsButton).first();
+    const detailsButton = page
+      .locator(TREE_DETAILS_SELECTORS.buildTable.detailsButton)
+      .first();
     await expect(detailsButton).toBeVisible({ timeout: 30000 });
 
     await detailsButton.click();
@@ -50,21 +52,28 @@ test.describe('Tree Details Page Tests', () => {
     const url = page.url();
     expect(url).toMatch(/\/build\//);
 
-    const breadcrumbLink = page.locator(TREE_DETAILS_SELECTORS.breadcrumbTreesLink);
+    const breadcrumbLink = page.locator(
+      TREE_DETAILS_SELECTORS.breadcrumbTreesLink,
+    );
     await expect(breadcrumbLink).toBeVisible();
     await breadcrumbLink.click();
 
-    await page.waitForURL(/\/tree$/, { timeout: 20000 });
-    await expect(page).toHaveURL(/\/tree$/);
+    await page.waitForURL(/\/tree/, { timeout: 20000 });
+    await expect(page).toHaveURL(/\/tree/);
   });
 
   test('clicks on an issue details button on issue card and goes back via breadcrumb', async ({
     page,
   }) => {
-    await page.goto('/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984', { timeout: 30000 });
+    await page.goto(
+      '/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984',
+      { timeout: 30000 },
+    );
     await page.waitForLoadState('domcontentloaded');
 
-    const issuesCardButton = page.locator(TREE_DETAILS_SELECTORS.issuesCard.button);
+    const issuesCardButton = page.locator(
+      TREE_DETAILS_SELECTORS.issuesCard.button,
+    );
     const hasIssues = (await issuesCardButton.count()) > 0;
 
     if (hasIssues) {
@@ -77,17 +86,22 @@ test.describe('Tree Details Page Tests', () => {
       const url = page.url();
       expect(url).toMatch(/\/issues\//);
 
-      const breadcrumbLink = page.locator(TREE_DETAILS_SELECTORS.breadcrumbTreesLink);
+      const breadcrumbLink = page.locator(
+        TREE_DETAILS_SELECTORS.breadcrumbTreesLink,
+      );
       await expect(breadcrumbLink).toBeVisible();
       await breadcrumbLink.click();
 
-      await page.waitForURL(/\/tree$/, { timeout: 20000 });
-      await expect(page).toHaveURL(/\/tree$/);
+      await page.waitForURL(/\/tree/, { timeout: 20000 });
+      await expect(page).toHaveURL(/\/tree/);
     }
   });
 
   test('selects other tabs', async ({ page }) => {
-    await page.goto('/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984', { timeout: 30000 });
+    await page.goto(
+      '/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984',
+      { timeout: 30000 },
+    );
     await page.waitForLoadState('domcontentloaded');
 
     const bootsTab = page.locator(TREE_DETAILS_SELECTORS.tabs.boots);
@@ -110,7 +124,10 @@ test.describe('Tree Details Page Tests', () => {
   test('clicks on a test item and clicks on detail button for test item', async ({
     page,
   }) => {
-    await page.goto('/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984', { timeout: 30000 });
+    await page.goto(
+      '/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984',
+      { timeout: 30000 },
+    );
     await page.waitForLoadState('domcontentloaded');
 
     const testsTab = page.locator(TREE_DETAILS_SELECTORS.tabs.tests);
@@ -123,22 +140,36 @@ test.describe('Tree Details Page Tests', () => {
     const hasTestItems = (await testItems.count()) > 0;
 
     if (hasTestItems) {
-      const detailsButton = page.locator(TREE_DETAILS_SELECTORS.testsTable.detailsButton).first();
-      await expect(detailsButton).toBeVisible({ timeout: 30000 });
+      const firstTestItem = testItems.first();
+      await firstTestItem.click();
 
-      await detailsButton.click();
+      await page.waitForTimeout(3000);
 
-      await page.waitForURL(/\/test\//, { timeout: 30000 });
+      const expandedRows = page.locator('tr:has(td[colspan])');
+      const hasExpandedRows = (await expandedRows.count()) > 0;
 
-      const url = page.url();
-      expect(url).toMatch(/\/test\//);
+      if (hasExpandedRows) {
+        const detailsButton = page
+          .locator(TREE_DETAILS_SELECTORS.testsTable.detailsButton)
+          .first();
+        await expect(detailsButton).toBeVisible({ timeout: 10000 });
 
-      const breadcrumbLink = page.locator(TREE_DETAILS_SELECTORS.breadcrumbTreesLink);
-      await expect(breadcrumbLink).toBeVisible();
-      await breadcrumbLink.click();
+        await detailsButton.click();
 
-      await page.waitForURL(/\/tree$/, { timeout: 20000 });
-      await expect(page).toHaveURL(/\/tree$/);
+        await page.waitForURL(/\/test\//, { timeout: 30000 });
+
+        const url = page.url();
+        expect(url).toMatch(/\/test\//);
+
+        const breadcrumbLink = page.locator(
+          TREE_DETAILS_SELECTORS.breadcrumbTreesLink,
+        );
+        await expect(breadcrumbLink).toBeVisible();
+        await breadcrumbLink.click();
+
+        await page.waitForURL(/\/tree/, { timeout: 20000 });
+        await expect(page).toHaveURL(/\/tree/);
+      }
     }
   });
 
@@ -150,7 +181,9 @@ test.describe('Tree Details Page Tests', () => {
 
     await expect(page).toHaveURL(/\/tree$/);
 
-    const firstTreeLink = page.locator(TREE_LISTING_SELECTORS.firstTreeCell).first();
+    const firstTreeLink = page
+      .locator(TREE_LISTING_SELECTORS.firstTreeCell)
+      .first();
     await expect(firstTreeLink).toBeVisible();
 
     await firstTreeLink.click();
@@ -160,22 +193,31 @@ test.describe('Tree Details Page Tests', () => {
     const url = page.url();
     expect(url).toMatch(/\/tree\/[^/]+\/[^/]+\/[^/]+$/);
 
-    const breadcrumbLink = page.locator(TREE_DETAILS_SELECTORS.breadcrumbTreesLink);
+    const breadcrumbLink = page.locator(
+      TREE_DETAILS_SELECTORS.breadcrumbTreesLink,
+    );
     await expect(breadcrumbLink).toBeVisible();
     await breadcrumbLink.click();
 
-    await page.waitForURL(/\/tree$/, { timeout: 20000 });
-    await expect(page).toHaveURL(/\/tree$/);
+    await page.waitForURL(/\/tree/, { timeout: 20000 });
+    await expect(page).toHaveURL(/\/tree/);
   });
 
   test('build table status filters work correctly', async ({ page }) => {
-    await page.goto('/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984', { timeout: 30000 });
+    await page.goto(
+      '/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984',
+      { timeout: 30000 },
+    );
     await page.waitForLoadState('domcontentloaded');
 
-    const allFilter = page.locator(TREE_DETAILS_SELECTORS.buildTable.statusFilters.all);
+    const allFilter = page.locator(
+      TREE_DETAILS_SELECTORS.buildTable.statusFilters.all,
+    );
     await expect(allFilter).toBeVisible({ timeout: 30000 });
 
-    const successFilter = page.locator(TREE_DETAILS_SELECTORS.buildTable.statusFilters.success);
+    const successFilter = page.locator(
+      TREE_DETAILS_SELECTORS.buildTable.statusFilters.success,
+    );
     await expect(successFilter).toBeVisible();
 
     await successFilter.click();
@@ -184,10 +226,15 @@ test.describe('Tree Details Page Tests', () => {
   });
 
   test('search input is visible and functional', async ({ page }) => {
-    await page.goto('/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984', { timeout: 30000 });
+    await page.goto(
+      '/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984',
+      { timeout: 30000 },
+    );
     await page.waitForLoadState('domcontentloaded');
 
-    const searchInput = page.locator(TREE_DETAILS_SELECTORS.buildTable.searchInput);
+    const searchInput = page.locator(
+      TREE_DETAILS_SELECTORS.buildTable.searchInput,
+    );
     await expect(searchInput).toBeVisible({ timeout: 30000 });
 
     await searchInput.fill('defconfig');

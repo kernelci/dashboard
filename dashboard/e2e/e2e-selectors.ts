@@ -29,7 +29,7 @@ export const COMMON_SELECTORS = {
 } as const;
 
 export const TREE_DETAILS_SELECTORS = {
-  breadcrumbTreesLink: '[data-test-id="breadcrumb-link"]',
+  breadcrumbTreesLink: '[data-test-id="breadcrumb-trees-link"]',
 
   treeHeaderTable: 'table',
 
@@ -42,8 +42,8 @@ export const TREE_DETAILS_SELECTORS = {
   filters: {
     button: 'button:has-text("Filters")',
     drawer: 'aside',
-    filterButton: 'button:has-text("Filter")',
-    cancelButton: 'button:has-text("Cancel")',
+    filterButton: '[data-test-id="filter-button"]',
+    cancelButton: '[data-test-id="filter-cancel-button"]',
     clearAllFilters: 'text="Clear all"',
   },
 
@@ -52,7 +52,7 @@ export const TREE_DETAILS_SELECTORS = {
   statusCard: {
     title: '.flex-col:has(div:has-text("Build status"))',
     titleFirst: '.flex-col:has(div:has-text("Build status"))',
-    statusButton: (status: string) => `button:has-text("${status}")`,
+    statusButton: (status: string) => `[data-test-id="${status}"]`,
   },
 
   summaryCards: {
@@ -73,7 +73,7 @@ export const TREE_DETAILS_SELECTORS = {
       inconclusive: 'button:has-text("Inconclusive:")',
     },
     searchInput: 'input[placeholder*="Search"]',
-    detailsButton: 'a[href^="/build/"]',
+    detailsButton: '[data-test-id="details-button"]',
   },
 
   bootsTable: {
@@ -83,7 +83,7 @@ export const TREE_DETAILS_SELECTORS = {
       failed: 'button:has-text("Failed:")',
       inconclusive: 'button:has-text("Inconclusive:")',
     },
-    detailsButton: 'a[href^="/test/"]',
+    detailsButton: '[data-test-id="details-button"]',
   },
 
   testsTable: {
@@ -94,7 +94,7 @@ export const TREE_DETAILS_SELECTORS = {
       inconclusive: 'button:has-text("Inconclusive:")',
     },
     testItem: 'tr',
-    detailsButton: 'a[href^="/test/"]',
+    detailsButton: '[data-test-id="details-button"]',
   },
 
   configTable: {
