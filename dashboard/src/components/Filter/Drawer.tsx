@@ -176,7 +176,11 @@ const Drawer = ({
 
         <DrawerFooter className="text-dim-gray mt-6 flex h-20 w-full flex-row justify-end gap-x-6 bg-white">
           <DrawerClose asChild>
-            <Button variant="ghost" onClick={onCancel}>
+            <Button
+              variant="ghost"
+              onClick={onCancel}
+              data-test-id="filter-cancel-button"
+            >
               <FormattedMessage id={'global.cancel'} />
             </Button>
           </DrawerClose>
@@ -184,7 +188,11 @@ const Drawer = ({
             asChild
             className="bg-blue w-[200px] rounded-full text-white"
           >
-            <Button variant="outline" onClick={onFilter}>
+            <Button
+              variant="outline"
+              onClick={onFilter}
+              data-test-id="filter-button"
+            >
               <FormattedMessage id="global.filter" />
             </Button>
           </DrawerClose>

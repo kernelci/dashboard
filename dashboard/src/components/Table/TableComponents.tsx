@@ -43,6 +43,9 @@ const TableCellComponent = <T,>({
       onClick={parsedHandleClick}
       key={cell.id}
       linkProps={parsedLinkProps}
+      dataTestId={
+        cell.column.id === DETAILS_COLUMN_ID ? 'details-button' : undefined
+      }
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
     </TableCellWithLink>

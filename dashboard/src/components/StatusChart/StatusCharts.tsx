@@ -141,37 +141,29 @@ const ChartLegend = ({ chartValues, onClick }: IChartLegend): JSX.Element => {
   const legend = useMemo(() => {
     return chartValues.map(chartValue => {
       const WrapperElement = onClick ? 'button' : 'div';
-      const status = intl.formatMessage({ id: chartValue?.label });
-
-      if (!chartValue?.label) {
-        return (
-          <div key={chartValue?.color} className="hidden">
-            Invalid chart value
-            <pre>{JSON.stringify(chartValue)}</pre>
-          </div>
-        );
-      }
+      const status = chartValue?.label
+        ? intl.formatMessage({ id: chartValue.label })
+        : '';
 
       return (
-        chartValue.value !== 0 && (
-          <WrapperElement
-            onClick={(): void => onClick?.(status)}
-            key={chartValue?.color}
-            className="flex flex-row text-left"
-          >
-            {chartValue && (
-              <div className="pt-1 pr-2">
-                <ColoredCircle
-                  backgroundClassName={getColorClassName(chartValue.color)}
-                />
-              </div>
-            )}
-            <div className="flex min-w-0 flex-col">
-              <span className="font-bold">{chartValue?.value}</span>
-              <span className="text-dark-gray2 text-sm">{status}</span>
+        <WrapperElement
+          onClick={(): void => onClick?.(status)}
+          key={chartValue?.color}
+          className="flex flex-row text-left"
+          data-test-id={chartValue?.label}
+        >
+          {chartValue && (
+            <div className="pt-1 pr-2">
+              <ColoredCircle
+                backgroundClassName={getColorClassName(chartValue.color)}
+              />
             </div>
-          </WrapperElement>
-        )
+          )}
+          <div className="flex min-w-0 flex-col">
+            <span className="font-bold">{chartValue?.value}</span>
+            <span className="text-dark-gray2 text-sm">{status}</span>
+          </div>
+        </WrapperElement>
       );
     });
   }, [chartValues, intl, onClick]);

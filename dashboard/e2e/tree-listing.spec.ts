@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-import { TREE_LISTING_SELECTORS, COMMON_SELECTORS } from './e2e-selectors';
+import {
+  TREE_LISTING_SELECTORS,
+  COMMON_SELECTORS,
+  TREE_DETAILS_SELECTORS,
+} from './selectors';
 
 const PAGE_LOAD_TIMEOUT = 5000;
 const DEFAULT_ACTION_TIMEOUT = 1000;
@@ -88,7 +92,7 @@ test.describe('Tree Listing Page Tests', () => {
     expect(url).toMatch(/\/tree\/[^/]+\/[^/]+\/[^/]+$/);
 
     const breadcrumbLink = page.locator(
-      TREE_LISTING_SELECTORS.breadcrumbTreesLink,
+      TREE_DETAILS_SELECTORS.breadcrumbTreesLink,
     );
     await expect(breadcrumbLink).toBeVisible({ timeout: 15000 });
     await breadcrumbLink.click();
