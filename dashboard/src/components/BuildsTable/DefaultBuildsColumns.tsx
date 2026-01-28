@@ -15,7 +15,6 @@ import {
   MoreDetailsTableHeader,
 } from '@/components/Table/DetailsColumn';
 import { getBuildStatusGroup } from '@/utils/status';
-import { UNKNOWN_STRING } from '@/utils/constants/backend';
 
 export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
   {
@@ -39,16 +38,6 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.compiler" />
     ),
-  },
-  {
-    id: 'lab',
-    accessorKey: 'lab',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="global.lab" />
-    ),
-    cell: ({ row }): string => {
-      return row.getValue('lab') || UNKNOWN_STRING;
-    },
   },
   {
     accessorKey: 'date',
