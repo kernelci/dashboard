@@ -1,9 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import {
-  TREE_DETAILS_SELECTORS,
-  TREE_LISTING_SELECTORS,
-} from './e2e-selectors';
+import { TREE_DETAILS_SELECTORS, TREE_LISTING_SELECTORS } from './selectors';
 
 test.describe('Tree Details Page Tests', () => {
   test.beforeEach(async ({ page }) => {
