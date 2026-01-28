@@ -138,7 +138,9 @@ export const messages = {
     'global.filter': 'Filter',
     'global.filters': 'Filters',
     'global.fullLogs': 'Full logs',
+    'global.gitHubIssue': 'GitHub Issue',
     'global.hardware': 'Hardware',
+    'global.here': 'here',
     'global.id': 'Id',
     'global.inconclusive': 'Inconclusive',
     'global.inconclusiveCount': 'Inconclusive: {count}',
@@ -258,6 +260,10 @@ export const messages = {
     'logViewer.viewFullLog': 'View full log for {fileName}',
     'logspec.info':
       "This is the same logspec data that's in the misc data section",
+    'messages.newerPageVersion':
+      'This is the new, optimized version of the {page}. If you find any bugs, please file a {gitHubLink} and you can still access the old version {oldVersionLink}. Please note that some historical data might be missing, but it should be updated with recent data.',
+    'messages.olderPageVersion':
+      'This is the legacy version of the {page}, please refer to the new, optimized version {newPageLink}. If you find any bugs or divergences, please report to {gitHubLink}.',
     'routes.buildDetails': 'Build',
     'routes.hardwareMonitor': 'Hardware',
     'routes.hardwareNewMonitor': 'Hardware New',
@@ -352,6 +358,7 @@ export const messages = {
     'treeListing.statusUnavailable':
       'Error: Unable to load tree status information. Displaying basic information only.',
     'treeListing.title': 'Tree Listing ― KCI Dashboard',
+    'treeListing.treeListing': 'Tree Listing',
   },
 };
 

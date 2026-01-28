@@ -12,39 +12,29 @@ import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
 import { HiMenu } from 'react-icons/hi';
 
 import Select, { SelectItem } from '@/components/Select/Select';
-import { DEFAULT_ORIGIN, type PossibleMonitorPath } from '@/types/general';
+import { DEFAULT_ORIGIN } from '@/types/general';
 import { useOrigins } from '@/api/origin';
 import { Button } from '@/components/ui/button';
 import MobileSideMenu from '@/components/SideMenu/MobileSideMenu';
 
-const getTargetPath = (basePath: string): PossibleMonitorPath => {
-  switch (basePath) {
-    case 'hardware':
-      return '/hardware';
-    case 'hardware-new':
-      return '/hardware-new';
-    case 'issues':
-      return '/issues';
-    default:
-      return '/tree';
-  }
-};
-
-const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
+const OriginSelect = ({
+  isHardwarePath,
+}: {
+  isHardwarePath: boolean;
+}): JSX.Element => {
   const { origin } = useSearch({ strict: false });
   const { data: originData, status: originStatus } = useOrigins();
 
-  const targetPath = getTargetPath(basePath);
-  const navigate = useNavigate({ from: targetPath });
+  const navigate = useNavigate();
 
   const onValueChange = useCallback(
     (value: string) => {
       navigate({
-        to: targetPath,
+        to: '.',
         search: previousSearch => ({ ...previousSearch, origin: value }),
       });
     },
-    [navigate, targetPath],
+    [navigate],
   );
 
   const selectItems = useMemo(() => {
@@ -52,12 +42,9 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
       return <></>;
     }
 
-    let pageOrigins: string[];
-    if (targetPath === '/hardware' || targetPath === '/hardware-new') {
-      pageOrigins = originData.test_origins;
-    } else {
-      pageOrigins = originData.checkout_origins;
-    }
+    const pageOrigins = isHardwarePath
+      ? originData.test_origins
+      : originData.checkout_origins;
 
     return pageOrigins.map(option => (
       <SelectItem
@@ -68,18 +55,19 @@ const OriginSelect = ({ basePath }: { basePath: string }): JSX.Element => {
         {option}
       </SelectItem>
     ));
-  }, [originData, targetPath]);
+  }, [originData, isHardwarePath]);
 
   useEffect(() => {
     if (origin === undefined) {
       navigate({
+        to: '.',
         search: previousSearch => ({
           ...previousSearch,
           origin: DEFAULT_ORIGIN,
         }),
       });
     }
-  });
+  }, [navigate, origin]);
 
   if (originStatus === 'pending') {
     return <FormattedMessage id="global.loading" />;
@@ -136,7 +124,7 @@ const TopBar = (): JSX.Element => {
 
     return {
       firstUrlLocation,
-      isTreeListing: cleanFullPath === 'tree',
+      isTreeListing: ['tree', 'treev1', 'treev2'].includes(cleanFullPath),
       isHardwarePage: cleanFullPath.includes('hardware'),
     };
   }, [matches]);
@@ -161,7 +149,7 @@ const TopBar = (): JSX.Element => {
               <TitleName basePath={basePath} />
             </span>
             {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
-              <OriginSelect basePath={basePath} />
+              <OriginSelect isHardwarePath={routeInfo.isHardwarePage} />
             )}
           </div>
         </div>

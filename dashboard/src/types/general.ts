@@ -98,6 +98,12 @@ export type StatusCount = {
   DONE?: number;
 };
 
+export type ShortStatusCount = {
+  PASS: number;
+  FAIL: number;
+  INCONCLUSIVE: number;
+};
+
 export type StatusCountV2 = StatusCount & {
   INCONCLUSIVE?: number;
 };
@@ -389,8 +395,10 @@ export enum RedirectFrom {
   Issues = 'issues',
 }
 
+export type ListingPaths = '/tree' | '/hardware' | '/issues';
+
 export type PossibleMonitorPath =
-  | '/tree'
-  | '/hardware'
-  | '/issues'
-  | '/hardware-new';
+  | ListingPaths
+  | '/hardware-new'
+  | '/tree/v1'
+  | '/tree/v2';

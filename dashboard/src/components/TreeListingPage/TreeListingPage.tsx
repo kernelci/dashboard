@@ -14,11 +14,9 @@ import { matchesRegexOrIncludes } from '@/lib/string';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
-import { TreeTable } from './TreeTable';
+import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
 
-interface ITreeListingPage {
-  inputFilter: string;
-}
+import { TreeTable } from './TreeTable';
 
 function isCompleteTree(
   data: Tree | TreeFastPathResponse[number],
@@ -26,16 +24,23 @@ function isCompleteTree(
   return 'build_status' in data;
 }
 
-const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
+const TreeListingPage = ({
+  inputFilter,
+  urlFromMap,
+}: {
+  inputFilter: string;
+  urlFromMap: TreeListingRoutesMap['v1'];
+}): JSX.Element => {
   //TODO: Combine these 2 hooks inside a single hook
   const {
     data: fastData,
     status: fastStatus,
     error: fastError,
     isLoading: isFastLoading,
-  } = useTreeTableFast();
+  } = useTreeTableFast({ searchFrom: urlFromMap.search });
   const { data, error, status, isLoading } = useTreeTable({
     enabled: fastStatus === 'success' && !!fastData,
+    searchFrom: urlFromMap.search,
   });
 
   const listItems: TreeTableBody[] = useMemo(() => {
@@ -124,6 +129,7 @@ const TreeListingPage = ({ inputFilter }: ITreeListingPage): JSX.Element => {
           error={actualError}
           isLoading={isFastLoading}
           showStatusUnavailable={hasPartialFailure}
+          urlFromMap={urlFromMap}
         />
       </div>
       {kcidevComponent}

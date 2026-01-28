@@ -21,9 +21,7 @@ import { FormattedMessage } from 'react-intl';
 import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
-import { TooltipDateTime } from '@/components/TooltipDateTime';
-
-import type { TreeTableBody, TreeV2 } from '@/types/tree/Tree';
+import type { TreeV2 } from '@/types/tree/Tree';
 import { RedirectFrom } from '@/types/general';
 import type { TFilter } from '@/types/general';
 
@@ -37,11 +35,7 @@ import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ConditionalTableCell } from '@/components/Table/ConditionalTableCell';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
-
-import { sanitizeTableValue } from '@/components/Table/tableUtils';
-
-import { GroupedTestStatusWithLink } from '@/components/Status/Status';
+import { BaseGroupedStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
 import {
   ItemsPerPageSelector,
@@ -49,24 +43,20 @@ import {
   PaginationButtons,
   PaginationInfo,
 } from '@/components/Table/PaginationInfo';
-import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
 
 import type { ListingTableColumnMeta } from '@/types/table';
 
-import { statusCountToRequiredStatusCount } from '@/utils/status';
-
 import { MemoizedInputTime } from '@/components/InputTime';
-import { shouldShowRelativeDate } from '@/lib/date';
-import { valueOrEmpty } from '@/lib/string';
-import { PinnedTrees } from '@/utils/constants/tables';
-import { makeTreeIdentifierKey } from '@/utils/trees';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+
 import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
 
+import { commonTreeTableColumns, sortTreesWithPinnedFirst } from './TreeTable';
+
 const getLinkProps = (
-  row: Row<TreeTableBody>,
+  row: Row<TreeV2>,
   origin: string,
   tabTarget?: string,
   diffFilter?: TFilter,
@@ -126,118 +116,13 @@ const getLinkProps = (
       ...s,
       ...stateParams,
       from: RedirectFrom.Tree,
-      treeStatusCount: {
-        builds: statusCountToRequiredStatusCount({
-          PASS: row.original.build_status?.PASS,
-          FAIL: row.original.build_status?.FAIL,
-          NULL: row.original.build_status?.NULL,
-          DONE: row.original.build_status?.DONE,
-          ERROR: row.original.build_status?.ERROR,
-          MISS: row.original.build_status?.MISS,
-          SKIP: row.original.build_status?.SKIP,
-        }),
-        tests: statusCountToRequiredStatusCount({
-          PASS: row.original.test_status?.pass,
-          FAIL: row.original.test_status?.fail,
-          NULL: row.original.test_status?.null,
-          DONE: row.original.test_status?.done,
-          ERROR: row.original.test_status?.error,
-          MISS: row.original.test_status?.miss,
-          SKIP: row.original.test_status?.skip,
-        }),
-        boots: statusCountToRequiredStatusCount({
-          PASS: row.original.boot_status?.pass,
-          FAIL: row.original.boot_status?.fail,
-          NULL: row.original.boot_status?.null,
-          DONE: row.original.boot_status?.done,
-          ERROR: row.original.boot_status?.error,
-          MISS: row.original.boot_status?.miss,
-          SKIP: row.original.boot_status?.skip,
-        }),
-      },
     }),
   };
 };
 
-export const commonTreeTableColumns: ColumnDef<TreeTableBody | TreeV2>[] = [
-  {
-    accessorKey: 'tree_name',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.tree" />
-    ),
-    cell: ({ row }): JSX.Element => {
-      return (
-        <Tooltip>
-          <TooltipTrigger>
-            {sanitizeTableValue(row.getValue('tree_name') ?? '', false)}
-          </TooltipTrigger>
-          <TooltipContent>
-            <a
-              href={row.original.git_repository_url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {sanitizeTableValue(row.original.git_repository_url, false)}
-            </a>
-          </TooltipContent>
-        </Tooltip>
-      );
-    },
-    meta: {
-      tabTarget: 'global.builds',
-    },
-  },
-  {
-    accessorKey: 'git_repository_branch',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.branch" />
-    ),
-    cell: ({ row }) => valueOrEmpty(row.getValue('git_repository_branch')),
-    meta: {
-      tabTarget: 'global.builds',
-    },
-  },
-  {
-    id: 'git_commit_tags',
-    accessorKey: 'git_commit_tags',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="globalTable.commitTag" />
-    ),
-    cell: ({ row }): JSX.Element => (
-      <CommitTagTooltip
-        commitName={row.original.git_commit_name}
-        commitHash={row.original.git_commit_hash}
-        commitTags={row.original.git_commit_tags}
-      />
-    ),
-    meta: {
-      tabTarget: 'global.builds',
-    },
-  },
-  {
-    accessorKey: 'start_time',
-    header: ({ column }): JSX.Element => (
-      <TableHeader column={column} intlKey="global.date" />
-    ),
-    cell: ({ row }): JSX.Element => (
-      <TooltipDateTime
-        dateTime={row.getValue('start_time')}
-        lineBreak={true}
-        showRelative={shouldShowRelativeDate(row.getValue('start_time'))}
-      />
-    ),
-    meta: {
-      tabTarget: 'global.builds',
-    },
-  },
-];
-
-const getColumns = (
-  origin: string,
-  showStatusUnavailable?: boolean,
-): ColumnDef<TreeTableBody>[] => {
+const getColumns = (origin: string): ColumnDef<TreeV2>[] => {
   return [
-    ...(commonTreeTableColumns as ColumnDef<TreeTableBody>[]),
+    ...(commonTreeTableColumns as ColumnDef<TreeV2>[]),
     {
       accessorKey: 'build_status.PASS',
       header: ({ column }): JSX.Element => (
@@ -250,15 +135,13 @@ const getColumns = (
       cell: ({ column, row }): JSX.Element => {
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
-        return row.original.build_status ? (
-          <GroupedTestStatusWithLink
-            pass={row.original.build_status.PASS}
-            skip={row.original.build_status.SKIP}
-            fail={row.original.build_status.FAIL}
-            miss={row.original.build_status.MISS}
-            done={row.original.build_status.DONE}
-            error={row.original.build_status.ERROR}
-            nullStatus={row.original.build_status.NULL}
+        return (
+          <BaseGroupedStatusWithLink
+            groupedStatus={{
+              successCount: row.original.build_status.PASS,
+              failedCount: row.original.build_status.FAIL,
+              inconclusiveCount: row.original.build_status.INCONCLUSIVE,
+            }}
             passLinkProps={getLinkProps(row, origin, tabTarget, {
               buildStatus: { PASS: true },
             })}
@@ -275,10 +158,6 @@ const getColumns = (
               },
             })}
           />
-        ) : showStatusUnavailable ? (
-          <span>-</span>
-        ) : (
-          <FormattedMessage id="global.loading" defaultMessage="Loading..." />
         );
       },
       meta: {
@@ -297,15 +176,13 @@ const getColumns = (
       cell: ({ column, row }): JSX.Element => {
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
-        return row.original.boot_status ? (
-          <GroupedTestStatusWithLink
-            pass={row.original.boot_status.pass}
-            skip={row.original.boot_status.skip}
-            fail={row.original.boot_status.fail}
-            miss={row.original.boot_status.miss}
-            done={row.original.boot_status.done}
-            error={row.original.boot_status.error}
-            nullStatus={row.original.boot_status.null}
+        return (
+          <BaseGroupedStatusWithLink
+            groupedStatus={{
+              successCount: row.original.boot_status.PASS,
+              failedCount: row.original.boot_status.FAIL,
+              inconclusiveCount: row.original.boot_status.INCONCLUSIVE,
+            }}
             passLinkProps={getLinkProps(row, origin, tabTarget, {
               bootStatus: { PASS: true },
             })}
@@ -322,10 +199,6 @@ const getColumns = (
               },
             })}
           />
-        ) : showStatusUnavailable ? (
-          <span>-</span>
-        ) : (
-          <FormattedMessage id="global.loading" defaultMessage="Loading..." />
         );
       },
       meta: {
@@ -344,15 +217,13 @@ const getColumns = (
       cell: ({ column, row }): JSX.Element => {
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
-        return row.original.test_status ? (
-          <GroupedTestStatusWithLink
-            pass={row.original.test_status.pass}
-            skip={row.original.test_status.skip}
-            fail={row.original.test_status.fail}
-            miss={row.original.test_status.miss}
-            done={row.original.test_status.done}
-            error={row.original.test_status.error}
-            nullStatus={row.original.test_status.null}
+        return (
+          <BaseGroupedStatusWithLink
+            groupedStatus={{
+              successCount: row.original.test_status.PASS,
+              failedCount: row.original.test_status.FAIL,
+              inconclusiveCount: row.original.test_status.INCONCLUSIVE,
+            }}
             passLinkProps={getLinkProps(row, origin, tabTarget, {
               testStatus: { PASS: true },
             })}
@@ -369,10 +240,6 @@ const getColumns = (
               },
             })}
           />
-        ) : showStatusUnavailable ? (
-          <span>-</span>
-        ) : (
-          <FormattedMessage id="global.loading" defaultMessage="Loading..." />
         );
       },
       meta: {
@@ -382,53 +249,25 @@ const getColumns = (
   ];
 };
 
-export const sortTreesWithPinnedFirst = <T extends TreeTableBody | TreeV2>(
-  treeTableRows: T[],
-): T[] => {
-  return treeTableRows.sort((a, b) => {
-    const aKey = makeTreeIdentifierKey({
-      treeName: valueOrEmpty(a.tree_name),
-      gitRepositoryBranch: valueOrEmpty(a.git_repository_branch),
-      separator: '/',
-    });
-    const bKey = makeTreeIdentifierKey({
-      treeName: valueOrEmpty(b.tree_name),
-      gitRepositoryBranch: valueOrEmpty(b.git_repository_branch),
-      separator: '/',
-    });
-
-    const aIsPinned = PinnedTrees.some(regex => regex.test(aKey));
-    const bIsPinned = PinnedTrees.some(regex => regex.test(bKey));
-
-    if (aIsPinned && !bIsPinned) {
-      return -1;
-    }
-    if (!aIsPinned && bIsPinned) {
-      return 1;
-    }
-
-    return aKey.localeCompare(bKey);
-  });
-};
-
-export function TreeTable({
+export function TreeTableV2({
   treeTableRows,
   status,
   queryData,
   error,
   isLoading,
-  showStatusUnavailable,
   urlFromMap,
 }: {
-  treeTableRows: TreeTableBody[];
+  treeTableRows: TreeV2[];
   status?: UseQueryResult['status'];
   queryData?: unknown;
   error?: Error | null;
   isLoading?: boolean;
   showStatusUnavailable?: boolean;
-  urlFromMap: TreeListingRoutesMap['v1'];
+  urlFromMap: TreeListingRoutesMap['v2'];
 }): JSX.Element {
-  const { origin, listingSize } = useSearch({ from: urlFromMap.search });
+  const { origin, listingSize } = useSearch({
+    from: urlFromMap.search,
+  });
   const navigate = useNavigate({ from: urlFromMap.navigate });
 
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -438,15 +277,11 @@ export function TreeTable({
     listingSize,
   );
 
-  const orderedData = useMemo(
-    () => sortTreesWithPinnedFirst(treeTableRows),
-    [treeTableRows],
-  );
+  const orderedData = useMemo(() => {
+    return sortTreesWithPinnedFirst(treeTableRows);
+  }, [treeTableRows]);
 
-  const columns = useMemo(
-    () => getColumns(origin, showStatusUnavailable),
-    [origin, showStatusUnavailable],
-  );
+  const columns = useMemo(() => getColumns(origin), [origin]);
 
   const table = useReactTable({
     data: orderedData,
@@ -545,13 +380,6 @@ export function TreeTable({
           <PaginationButtons table={table} className="pl-4" />
         </div>
       </div>
-      {showStatusUnavailable && (
-        <div className="rounded-md border border-red-500 bg-red-50 p-4 text-red-800">
-          <p className="text-sm">
-            <FormattedMessage id="treeListing.statusUnavailable" />
-          </p>
-        </div>
-      )}
       <QuerySwitcher
         status={status}
         data={queryData}

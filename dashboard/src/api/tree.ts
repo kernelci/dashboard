@@ -7,8 +7,11 @@ import type {
   Tree,
   TreeFastPathResponse,
   TreeLatestResponse,
+  TreeV2,
 } from '@/types/tree/Tree';
 import { DEFAULT_ORIGIN } from '@/types/general';
+
+import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
 
 import { RequestData } from './commonRequest';
 
@@ -29,11 +32,12 @@ const fetchTreeCheckoutData = async (
 
 export const useTreeTable = ({
   enabled,
+  searchFrom,
 }: {
   enabled: boolean;
+  searchFrom: TreeListingRoutesMap['v1']['search'];
 }): UseQueryResult<Tree[]> => {
-  const { origin, intervalInDays } = useSearch({ from: '/_main/tree' });
-
+  const { origin, intervalInDays } = useSearch({ from: searchFrom });
   const queryKey = ['treeTable', origin, intervalInDays];
 
   return useQuery({
@@ -46,7 +50,7 @@ export const useTreeTable = ({
 
 const fetchTreeFastCheckoutData = async (
   origin: string,
-  intervalInDays?: number,
+  intervalInDays: number,
 ): Promise<TreeFastPathResponse> => {
   const params = {
     origin: origin,
@@ -59,8 +63,12 @@ const fetchTreeFastCheckoutData = async (
   return data;
 };
 
-export const useTreeTableFast = (): UseQueryResult<TreeFastPathResponse> => {
-  const { origin, intervalInDays } = useSearch({ from: '/_main/tree' });
+export const useTreeTableFast = ({
+  searchFrom,
+}: {
+  searchFrom: TreeListingRoutesMap['v1']['search'];
+}): UseQueryResult<TreeFastPathResponse> => {
+  const { origin, intervalInDays } = useSearch({ from: searchFrom });
 
   const queryKey = ['treeTableFast', origin, intervalInDays];
 
@@ -97,6 +105,36 @@ export const useTreeLatest = (
   return useQuery({
     queryKey: ['treeLatest', treeName, branch, origin, gitCommitHash],
     queryFn: () => fetchTreeLatest(treeName, branch, origin, gitCommitHash),
+    refetchOnWindowFocus: false,
+  });
+};
+
+const fetchTreeListingV2 = async (
+  origin: string,
+  intervalInDays: number,
+): Promise<TreeV2[]> => {
+  const params = {
+    origin: origin,
+    interval_in_days: intervalInDays,
+  };
+
+  const data = await RequestData.get<TreeV2[]>('/api/tree-v2/', {
+    params,
+  });
+  return data;
+};
+
+export const useTreeListingV2 = ({
+  searchFrom,
+}: {
+  searchFrom: TreeListingRoutesMap['v2']['search'];
+}): UseQueryResult<TreeV2[]> => {
+  const { origin, intervalInDays } = useSearch({ from: searchFrom });
+  const queryKey = ['treeTableV2', origin, intervalInDays];
+
+  return useQuery({
+    queryKey,
+    queryFn: () => fetchTreeListingV2(origin, intervalInDays),
     refetchOnWindowFocus: false,
   });
 };

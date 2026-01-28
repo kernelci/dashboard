@@ -70,5 +70,8 @@ Also, we are using file based routing in the tanstack router, only files that st
 # Feature Flags
 
 They are used when we want to hide a feature for some users, without having to do branch manipulation.
-Right now the only feature flag is for Dev only and it is controlled by the env
-`FEATURE_FLAG_SHOW_DEV=false` it is a boolean.
+
+Available feature flags:
+
+- `VITE_FEATURE_FLAG_SHOW_DEV` - Controls visibility of dev-only features (boolean, default: `false`)
+- `VITE_FEATURE_FLAG_TREE_LISTING_VERSION` - Controls which tree listing version to display. Set to `"v1"` for the old version or `"v2"` for the new version (string, default: `"v1"`)

@@ -1,4 +1,4 @@
-import type { RequiredStatusCount } from '@/types/general';
+import type { RequiredStatusCount, ShortStatusCount } from '@/types/general';
 
 export type TreeFastPathResponse = Array<{
   id: string;
@@ -42,6 +42,12 @@ type AllTabCounts = {
 export type TreeTableBody = BaseTree & AllTabCounts;
 
 export type Tree = BaseTree & Required<AllTabCounts>;
+
+export type TreeV2 = BaseTree & {
+  build_status: ShortStatusCount;
+  test_status: ShortStatusCount;
+  boot_status: ShortStatusCount;
+};
 
 export type TreeLatestResponse = {
   tree_name: string;
