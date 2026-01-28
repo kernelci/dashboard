@@ -3,24 +3,25 @@ import { useCallback } from 'react';
 
 import { useIntl } from 'react-intl';
 
-import { useNavigate, useSearch, Link } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import HardwareListingPage from '@/pages/Hardware/HardwareListingPage';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags';
+import { OldPageBanner } from '@/components/Banner/PageBanner';
 
 const Hardware = (): JSX.Element => {
   const { hardwareSearch } = useSearch({
-    from: '/_main/hardware',
+    from: '/_main/hardware/v1',
   });
 
-  const navigate = useNavigate({ from: '/hardware' });
+  const navigate = useNavigate({ from: '/hardware/v1' });
 
   const onInputSearchTextChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       navigate({
-        from: '/hardware',
+        from: '/hardware/v1',
         search: previousSearch => ({
           ...previousSearch,
           hardwareSearch: e.target.value,
@@ -48,23 +49,10 @@ const Hardware = (): JSX.Element => {
           />
         </div>
       </div>
-      <div className="rounded-md bg-yellow-100 p-3 text-sm text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
-        This is the original version of the hardware listing, please refer to
-        the new, optimized version{' '}
-        <Link to="/hardware-new" className="underline">
-          here
-        </Link>
-        . If you find any bugs or divergences, please report to{' '}
-        <a
-          href="https://github.com/kernelci/dashboard/issues"
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-        >
-          GitHub Issues
-        </a>
-        . This page will be deprecated on March 27, 2026.
-      </div>
+      <OldPageBanner
+        pageNameId="hardwareListing.bannerTitle"
+        pageRoute="/hardware"
+      />
       <div className="bg-light-gray w-full py-10">
         <HardwareListingPage inputFilter={hardwareSearch ?? ''} />
       </div>

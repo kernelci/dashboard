@@ -47,7 +47,7 @@ const useHardwareListingTime = (): {
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
 } => {
-  const { intervalInDays } = useSearch({ from: '/_main/hardware' });
+  const { intervalInDays } = useSearch({ from: '/_main/hardware/v1' });
   const [timestamps, setTimeStamps] = useState(() => {
     return calculateTimeStamp(intervalInDays);
   });
@@ -66,7 +66,7 @@ const HardwareListingPage = ({
 }: HardwareListingPageProps): JSX.Element => {
   const { startTimestampInSeconds, endTimestampInSeconds } =
     useHardwareListingTime();
-  const { origin } = useSearch({ from: '/_main/hardware' });
+  const { origin } = useSearch({ from: '/_main/hardware/v1' });
 
   const { data, error, status, isLoading } = useHardwareListing(
     startTimestampInSeconds,
@@ -151,6 +151,7 @@ const HardwareListingPage = ({
           queryData={data}
           error={error}
           isLoading={isLoading}
+          navigateFrom="/hardware/v1"
         />
       </div>
       {kcidevComponent}

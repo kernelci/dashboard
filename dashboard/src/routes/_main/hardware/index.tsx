@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import Hardware from '@/pages/Hardware';
+import HardwareV2 from '@/pages/Hardware/HardwareV2';
 
 export const Route = createFileRoute('/_main/hardware/')({
-  component: Hardware,
+  component: HardwareV2,
 });
