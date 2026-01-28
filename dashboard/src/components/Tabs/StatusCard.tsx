@@ -85,6 +85,7 @@ const StatusCard = ({
   return (
     <BaseCard
       title={title}
+      data-test-id="status-card"
       content={
         <StatusChartMemoized
           type="chart"

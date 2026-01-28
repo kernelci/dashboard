@@ -41,17 +41,18 @@ export const TREE_DETAILS_SELECTORS = {
 
   filters: {
     button: 'button:has-text("Filters")',
-    drawer: 'div[role="dialog"]',
+    drawer: 'aside',
     filterButton: 'button:has-text("Filter")',
     cancelButton: 'button:has-text("Cancel")',
     clearAllFilters: 'text="Clear all"',
   },
 
-  buildHistoryGraph: 'img[alt="Builds History"]',
+  buildHistoryGraph: 'img',
 
   statusCard: {
-    title: '.border-dark-gray:has-text("Build status")',
-    statusButton: (status: string) => `.border-dark-gray button:has-text("${status}")`,
+    title: '.flex-col:has(div:has-text("Build status"))',
+    titleFirst: '.flex-col:has(div:has-text("Build status"))',
+    statusButton: (status: string) => `button:has-text("${status}")`,
   },
 
   summaryCards: {

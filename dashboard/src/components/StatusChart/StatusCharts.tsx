@@ -141,24 +141,13 @@ const ChartLegend = ({ chartValues, onClick }: IChartLegend): JSX.Element => {
   const legend = useMemo(() => {
     return chartValues.map(chartValue => {
       const WrapperElement = onClick ? 'button' : 'div';
-      const status = intl.formatMessage({ id: chartValue?.label });
-
-      if (!chartValue?.label) {
-        return (
-          <div key={chartValue?.color} className="hidden">
-            Invalid chart value
-            <pre>{JSON.stringify(chartValue)}</pre>
-          </div>
-        );
-      }
-
+      
       return (
-        chartValue.value !== 0 && (
-          <WrapperElement
-            onClick={(): void => onClick?.(status)}
-            key={chartValue?.color}
-            className="flex flex-row text-left"
-          >
+        <WrapperElement
+          onClick={(): void => onClick?.(status)}
+          key={chartValue?.color}
+          className="flex flex-row text-left"
+        >
             {chartValue && (
               <div className="pt-1 pr-2">
                 <ColoredCircle
@@ -172,7 +161,6 @@ const ChartLegend = ({ chartValues, onClick }: IChartLegend): JSX.Element => {
             </div>
           </WrapperElement>
         )
-      );
     });
   }, [chartValues, intl, onClick]);
   return (

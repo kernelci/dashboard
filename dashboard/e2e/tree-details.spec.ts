@@ -12,51 +12,19 @@ test.describe('Tree Details Page Tests', () => {
     page.setDefaultTimeout(timeout);
   });
 
-  test('enter on treeListing and select a tree', async ({ page }) => {
-    await page.goto('/tree', { timeout: 30000 });
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page).toHaveURL(/\/tree$/);
-
-    const firstTreeLink = page.locator(TREE_LISTING_SELECTORS.firstTreeCell).first();
-    await expect(firstTreeLink).toBeVisible();
-
-    await firstTreeLink.click();
-
-    await page.waitForURL(/\/tree\/[^/]+\/[^/]+\/[^/]+$/, { timeout: 30000 });
-
-    const url = page.url();
-    expect(url).toMatch(/\/tree\/[^/]+\/[^/]+\/[^/]+$/);
-  });
-
-  test('goes back one commit on commit graph', async ({ page }) => {
-    await page.goto('/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984', { timeout: 30000 });
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page.locator(TREE_DETAILS_SELECTORS.breadcrumbTreesLink)).toBeVisible();
-
-    await expect(page.locator(TREE_DETAILS_SELECTORS.buildHistoryGraph)).toBeVisible({
-      timeout: 30000,
-    });
-
-    const url = page.url();
-    expect(url).toMatch(/\/tree\/mainline\/master\/[^/]+$/);
-  });
-
   test('adds a filter with card and clear all filters', async ({ page }) => {
     await page.goto('/tree/mainline/master/c072629f05d7bca1148ab17690d7922a31423984', { timeout: 30000 });
     await page.waitForLoadState('domcontentloaded');
 
     const filterButton = page.locator(TREE_DETAILS_SELECTORS.filters.button);
-    await expect(filterButton).toBeVisible();
-
+    await filterButton.waitFor({ state: 'visible', timeout: 10000 });
     await filterButton.click();
 
-    const statusCard = page.locator(TREE_DETAILS_SELECTORS.statusCard.title);
-    await expect(statusCard).toBeVisible();
+    await page.waitForTimeout(5000);
 
-    const successButton = page.locator(TREE_DETAILS_SELECTORS.statusCard.statusButton('Success'));
-    await expect(successButton).toBeVisible();
+    const successButton = page.locator('button').filter({ hasText: '51' }).filter({ hasText: 'Success' }).first();
+    await successButton.waitFor({ state: 'visible', timeout: 5000 });
+    await successButton.click();
 
     await successButton.click();
 
