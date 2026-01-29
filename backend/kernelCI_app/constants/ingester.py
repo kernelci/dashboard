@@ -2,6 +2,7 @@
 
 import os
 import logging
+import re
 from utils.validation import is_boolean_or_string_true
 
 logger = logging.getLogger("ingester")
@@ -65,3 +66,8 @@ try:
 except (ValueError, TypeError):
     logger.warning("Invalid INGEST_QUEUE_MAXSIZE, using default 5000")
     INGEST_QUEUE_MAXSIZE = 5000
+
+AUTOMATIC_LABS = re.compile(r"^(shell|k8s.*)$")
+"""Regex pattern to find labs that were named automatically and should not be in the real lab/runtime field"""
+AUTOMATIC_LAB_FIELD = "automatic_lab"
+"""Field name where automatic lab names will be moved to"""

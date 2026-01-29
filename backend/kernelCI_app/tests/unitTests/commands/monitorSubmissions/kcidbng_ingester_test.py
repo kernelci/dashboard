@@ -13,11 +13,13 @@ from kernelCI_app.tests.unitTests.helpers.fixtures.kcidbng_ingester_data import 
     SUBMISSION_FILE_DATA_MOCK,
     SUBMISSION_FILENAME_MOCK,
 )
+from kernelCI_app.constants.ingester import AUTOMATIC_LAB_FIELD
 import pytest
 
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     SubmissionFileMetadata,
     standardize_tree_names,
+    standardize_labs,
     prepare_file_data,
     consume_buffer,
     flush_buffers,
@@ -109,6 +111,111 @@ class TestStandardizeTreeNames:
         assert "tree_name" not in input_data["checkouts"][1]
 
 
+class TestStandardizeLabs:
+    """Test cases for standardize_labs function."""
+
+    # Test cases:
+    # - builds/tests with missing misc field
+    # - builds/tests with misc but not lab field
+    # - empty builds/tests data
+    # - builds/tests with real/automatic labs/runtimes
+
+    def test_standardize_labs_missing_misc(self):
+        """Test with builds/tests missing misc field."""
+        input_data = {
+            "builds": [
+                {"id": "build1"},
+            ],
+            "tests": [
+                {"id": "test1"},
+            ],
+        }
+
+        standardize_labs(input_data)
+
+        assert "misc" not in input_data["builds"][0]
+        assert "misc" not in input_data["tests"][0]
+
+    def test_standardize_labs_missing_lab_runtime(self):
+        """Test with builds/tests having misc but missing lab/runtime field."""
+        input_data = {
+            "builds": [
+                {
+                    "misc": {
+                        "other_field": "value",
+                    }
+                },
+            ],
+            "tests": [
+                {
+                    "misc": {
+                        "platform": "x86",
+                    }
+                },
+            ],
+        }
+
+        standardize_labs(input_data)
+
+        assert "lab" not in input_data["builds"][0]["misc"]
+        assert AUTOMATIC_LAB_FIELD not in input_data["builds"][0]["misc"]
+        assert "runtime" not in input_data["tests"][0]["misc"]
+        assert AUTOMATIC_LAB_FIELD not in input_data["tests"][0]["misc"]
+
+    def test_standardize_labs_empty_data(self):
+        """Test with empty builds and tests."""
+        input_data = {
+            "builds": [],
+            "tests": [],
+        }
+
+        standardize_labs(input_data)
+
+        assert input_data["builds"] == []
+        assert input_data["tests"] == []
+
+    def test_standardize_labs_mixed_builds_and_tests(self):
+        """Test with a mix of automatic and real labs/runtimes."""
+        input_data = {
+            "builds": [
+                {"misc": {"lab": "shell"}},
+                {"misc": {"lab": "collabora"}},
+                {"misc": {"lab": "k8s-cluster"}},
+            ],
+            "tests": [
+                {"misc": {"runtime": "shell"}},
+                {"misc": {"runtime": "lava-lab"}},
+                {"misc": {"runtime": "k8s"}},
+            ],
+        }
+
+        standardize_labs(input_data)
+
+        # Build 0: shell -> automatic_lab
+        assert "lab" not in input_data["builds"][0]["misc"]
+        assert input_data["builds"][0]["misc"][AUTOMATIC_LAB_FIELD] == "shell"
+
+        # Build 1: real lab stays
+        assert input_data["builds"][1]["misc"]["lab"] == "collabora"
+        assert AUTOMATIC_LAB_FIELD not in input_data["builds"][1]["misc"]
+
+        # Build 2: k8s* -> automatic_lab
+        assert "lab" not in input_data["builds"][2]["misc"]
+        assert input_data["builds"][2]["misc"][AUTOMATIC_LAB_FIELD] == "k8s-cluster"
+
+        # Test 0: shell -> automatic_lab
+        assert "runtime" not in input_data["tests"][0]["misc"]
+        assert input_data["tests"][0]["misc"][AUTOMATIC_LAB_FIELD] == "shell"
+
+        # Test 1: real runtime stays
+        assert input_data["tests"][1]["misc"]["runtime"] == "lava-lab"
+        assert AUTOMATIC_LAB_FIELD not in input_data["tests"][1]["misc"]
+
+        # Test 2: k8s -> automatic_lab
+        assert "runtime" not in input_data["tests"][2]["misc"]
+        assert input_data["tests"][2]["misc"][AUTOMATIC_LAB_FIELD] == "k8s"
+
+
 class TestPrepareFileData:
     """Test cases for prepare_file_data function."""
 
@@ -145,6 +252,7 @@ class TestPrepareFileData:
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.VERBOSE", False)
     @patch("kcidb_io.schema.V5_3.validate")
     @patch("kcidb_io.schema.V5_3.upgrade")
+    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.standardize_labs")
     @patch(
         "kernelCI_app.management.commands.helpers.kcidbng_ingester.standardize_tree_names"
     )
@@ -158,7 +266,8 @@ class TestPrepareFileData:
         mock_time,
         mock_file_open,
         mock_extract_log,
-        mock_standardize,
+        mock_standardize_tree,
+        mock_standardize_labs,
         mock_upgrade,
         mock_validate,
     ):
@@ -179,9 +288,10 @@ class TestPrepareFileData:
         assert result_metadata["processing_time"] == 1
         assert mock_time.call_count == 2
         mock_extract_log.assert_called_once_with(expected_data)
-        mock_standardize.assert_called_once_with(expected_data, tree_names)
+        mock_standardize_tree.assert_called_once_with(expected_data, tree_names)
         mock_validate.assert_called_once()
         mock_upgrade.assert_called_once()
+        mock_standardize_labs.assert_called_once_with(expected_data)
         mock_file_open.assert_called_once_with(SUBMISSION_PATH_MOCK, "r")
 
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
