@@ -29,23 +29,20 @@ This frontend is written in TypeScript and uses the React library.
 > Remember:
 > Always try to look to the production dashboard between tasks to see if you can assimilate the code to the project
 
-### Task 0: Check your proxy and database access
-In order to access the production database, you must be granted access to it first - proxy connection and database user. If you don't have access to the production database, you can point the environment variables of the main database to a local database.
+### Task 0: Check your ssh and database access
+In order to access the production database, you must be granted access to it first - ssh connection and database user. If you don't have access to the production database, you can point the environment variables from the main database to a local database.
 
-We are currently in a transition between database infraestructures, switching from the old database on Google Cloud to the new one on Azure.
+1. Connect to the Azure database ssh bridge:
 
-1. Connect to the database proxy, depending on the desired platform:
-
-* If you'll connect the database on Google Cloud, set up your default credentials by following Google's guide [here](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment#google-account). The Google Cloud database is deprecated and will be deactivated soon.
-
-* If you'll connect to kcidb on Azure, create a new SSH key and add it to your ssh agent. You can follow this [Github guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) for it (but you don't need to add the key to your Github account, it can stay only in your PC).
+* Create a new SSH key and add it to your ssh agent. You can follow this [Github guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) for it (but you don't need to add the key to your Github account, it can stay only in your PC).
 * Share the public SSH key to the database maintainer, so you can receive access to the SSH tunnel.
 * Connect to the database via SSH tunnel with the provided URL.
 
 2. You should ask for the creation of a new user/password for the database access. Once you have your credentials, connect to the database via `psql`, pgAdmin, DBeaver or any other postgresql manager.
-3. Spin up the *secondary*, local dashboard-db by starting its docker container and running the [migration script](../backend/migrate-app-db.sh). This secondary database is being used during the transition between database platforms and is required for now.
+3. Spin up the *secondary*, local dashboard-db by starting its docker container and running the [migration script](../backend/migrate-app-db.sh). This secondary database is very useful for local development and you can modify it as much as you like.
 
 Definition of Done: You have access to kcidb and created the local database.
+
 
 ### Task 1: Install and run redis locally
 Redis is needed for the use of query cache in the backend, so it must be running before you start the backend. There are a couple of ways to install Redis ([see official docs](https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/)), and any method is fine as long as you don't encounter any Redis-related errors when running Task 2 (starting the backend).
@@ -98,44 +95,26 @@ Definition of Done: You have the KernelCI Dashboard frontend running locally.
 > [!TIP]
 > Running the project with Docker is especially useful for testing, as the production instance also runs in containers. This setup provides a more similar environment to production and helps ensure consistency between development and deployment.
 
-1. Make sure your backend, frontend, cloud proxy and Redis are **not** running locally.
-   - If Redis is running and you installed it with snap, stop it with:
-     ```bash
-     sudo snap stop redis
-     ```
+1. Make sure your backend, frontend, db ssh and Redis are **not** running locally.
+  - If Redis is running and you installed it with snap, stop it with:
+    ```bash
+    sudo snap stop redis
+    ```
 
-2. Add your Google ADC to a file:
-   - Run in the repository root directory:
-     ```bash
-     gcloud auth application-default login
-
-     cp ~/.config/gcloud application_default_credentials.json .
-     ```
-   - You should have this file at the same level as `docker-compose.yml`
-
-   - If you encounter permission issues with the proxy, ensure that the Docker usergroup has permission to read the credential file and adjust it if necessary.
-
-   - You can check the file permissions to ensure Docker can access it with:
-     ```bash
-     ls -l application_default_credentials.json
-     ```
-
-   - If you have difficulty, check the [Configure ADC with your Google Account](https://cloud.google.com/docs/authentication/provide-credentials-adc#google-idp) documentation.
-
-3. Create a secret file with your database password (no extension and no other data is needed):
+2. Create a secret file with your database password (no extension and no other data is needed):
 ```bash
 echo <password> > backend/runtime/secrets/postgres_password_secret
 ```
 
-4. Set up the `.env` files in the root of the project by copying the `.env.name.example` files and removing the `.example` at the end of the filenames. For the development you'll need to change the following variables in the .env.backend file:
+3. Set up the `.env` files in the root of the project by copying the `.env.name.example` files and removing the `.example` at the end of the filenames. For the development you'll need to change the following variables in the .env.backend file:
 ```
 DEBUG_SQL_QUERY=False
 DEBUG=True
 
-DB_DEFAULT_NAME=kcidb
+DB_DEFAULT_NAME=kcidb_db
 DB_DEFAULT_USER=<your user>
 DB_DEFAULT_PASSWORD=<your password>
-DB_DEFAULT_HOST=cloudsql-proxy
+DB_DEFAULT_HOST=dashboard_db  # Docker can't connect to the ssh tunnel host directly.
 DJANGO_SECRET_KEY=$(openssl rand -base64 22)
 
 DASH_DB_NAME=dashboard
@@ -151,7 +130,7 @@ EMAIL_HOST_PASSWORD=<your app password>
 ```
 For the onboarding you can skip those, but do check out the [notifications](./notifications.md) part of the dashboard.
 
-5. Start up the services with the command:
+4. Start up the services with the command:
 
 ```bash
 docker compose up build -d

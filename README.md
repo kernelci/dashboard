@@ -49,7 +49,7 @@ pnpm preview
 
 Create a .env file in the base directory,
 ```sh
- cp .env.backend.example .env.bakckend
+ cp .env.backend.example .env.backend
 ```
 
 Create a secret key for Django:
@@ -58,24 +58,9 @@ export DJANGO_SECRET_KEY=$(openssl rand -base64 22)
 ```
 We are not using sessions or anything like that right now, so changing the secret key won't be a big deal.
 
+Since the production *database* is not open for the public, we use ssh tunneling with a whitelist to access it. This means that the docker setup currently can't access it, but we have a local database that is connected automatically if you don't change the env vars.
 
-Add a `application_default_credentials.json` file with your ADC in the root of the project.
-```sh
-gcloud auth application-default login
-cp ~/.config/gcloud/application_default_credentials.json .
-```
-**Important**: Check the `application_default_credentials.json` file permissions with `ls -l` to see if docker has access to it.
-
-After setting up your connection with Google Cloud with the following commands:
-
-```sh
-cloud-sql-proxy kernelci-production:us-central1:postgresql2 &
-gcloud auth application-default login
-```
-
- If it doesn't work, check the [Configure ADC with your Google Account](https://cloud.google.com/docs/authentication/provide-credentials-adc#google-idp) documentation.
-
-Create a secret file with the database password:
+If you do use docker, you should create a secret file with the database password:
 ```sh
 mkdir -p backend/runtime/secrets
 echo <password> > backend/runtime/secrets/postgres_password_secret
