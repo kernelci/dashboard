@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 import yaml
 import logging
 from kernelCI_app.constants.ingester import TREES_FILE
@@ -7,8 +8,11 @@ from kernelCI_app.constants.ingester import TREES_FILE
 logger = logging.getLogger("ingester")
 
 
-def load_tree_names(trees_file: str = TREES_FILE) -> dict[str, str]:
+def load_tree_names(trees_file: Optional[str] = TREES_FILE) -> dict[str, str]:
     """Reads data from the trees_file, which correlates git_repository_url to tree_name"""
+    if trees_file is None:
+        trees_file = TREES_FILE
+
     with open(trees_file, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
