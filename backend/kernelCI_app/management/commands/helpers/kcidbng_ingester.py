@@ -8,6 +8,8 @@ import os
 from queue import Queue
 from typing_extensions import Literal
 from kernelCI_app.constants.ingester import (
+    AUTOMATIC_LAB_FIELD,
+    AUTOMATIC_LABS,
     CONVERT_LOG_EXCERPT,
     INGEST_BATCH_SIZE,
     INGEST_FILES_BATCH_SIZE,
@@ -89,6 +91,26 @@ def standardize_tree_names(
                 checkout["tree_name"] = correct_tree
 
 
+def standardize_labs(input_data: dict[str, Any]) -> None:
+    """
+    Standardize labs in data, moving automatic lab names to AUTOMATIC_LAB_FIELD
+    """
+
+    builds: list[dict[str, Any]] = input_data.get("builds", [])
+    for build in builds:
+        lab = build.get("misc", {}).get("lab")
+        if lab and AUTOMATIC_LABS.match(lab):
+            build["misc"][AUTOMATIC_LAB_FIELD] = lab
+            build["misc"].pop("lab", None)
+
+    tests: list[dict[str, Any]] = input_data.get("tests", [])
+    for test in tests:
+        lab = test.get("misc", {}).get("runtime")
+        if lab and AUTOMATIC_LABS.match(lab):
+            test["misc"][AUTOMATIC_LAB_FIELD] = lab
+            test["misc"].pop("runtime", None)
+
+
 def prepare_file_data(
     file: SubmissionFileMetadata, tree_names: dict[str, str]
 ) -> tuple[Optional[dict[str, Any]], Optional[dict[str, Any]]]:
@@ -121,6 +143,7 @@ def prepare_file_data(
         standardize_tree_names(data, tree_names)
         kcidb_io.schema.V5_3.validate(data)
         kcidb_io.schema.V5_3.upgrade(data)
+        standardize_labs(data)
 
         processing_time = time.time() - start_time
         return data, {
