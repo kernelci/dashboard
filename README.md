@@ -8,7 +8,7 @@ to static checks, build logs, boot logs and test results related for the Linux k
 CI/test ecosystem. All that data will be provided by [KCIDB](https://docs.kernelci.org/kcidb/)
 system from the [KernelCI Foundation](https://kernelci.org/).
 
-# Repository
+## Repository
 What we have as a repository is a monorepo containing the *dashboard* (the web application) and a *backend*.
 
 ### Dashboard
@@ -18,11 +18,38 @@ A web app built with [React](https://react.dev/) + [Typescript](https://www.type
 A Python http server built with [Django](https://www.djangoproject.com/) + [DRF](https://www.django-rest-framework.org/), to see more information check the backend [README](/backend/README.md).
 
 
-# Build
+## Build
 
-Create a .env file in /dashboard (Do not forget to check and set the variables and their values)
+### Frontend
+
+Create a .env file in /dashboard, check and set the variables and their values
 ```sh
  cp ./dashboard/.env.example ./dashboard/.env
+```
+
+With docker, you can start just the frontend with `docker compose up --build proxy`. It is also possible to run the dashboard outside of it for development purposes.
+
+We use `pnpm` to help with the package management. Install the dependencies with
+```sh
+pnpm install
+```
+
+Then start the dev server with
+```sh
+pnpm dev
+```
+
+If you want to test the production state of the dashboard, use
+```sh
+pnpm build
+pnpm preview
+```
+
+### Backend
+
+Create a .env file in the base directory,
+```sh
+ cp .env.backend.example .env.bakckend
 ```
 
 Create a secret key for Django:
@@ -59,21 +86,16 @@ If you are going to use a database user other than `kernelci`, set it to `DB_DEF
 export DB_DEFAULT_USER=<user>
 ```
 
-If you are setting up instance different than production KernelCI dashboard, you need to define CORS_ALLOWED_ORIGINS.
-
-docker-compose example:
-```yaml
-services:
-  backend:
-    environment:
-      CORS_ALLOWED_ORIGINS: ["https://d.kernelci.org","https://dashboard.kernelci.org"]
-```
-or .env file example:
+If you are setting up instance different than production KernelCI dashboard, you need to define CORS_ALLOWED_ORIGINS. On .env.backend:
 ```
 CORS_ALLOWED_ORIGINS=["https://d.kernelci.org","https://dashboard.kernelci.org"]
 ```
 
+It is also possible to run the backend outside of docker for development purposes. Simply run the ssh tunnel with the instructions sent to you by the database manager, then export the variables seen in [.env.backend.example](/.env.backend.example).
+
 > For other optional envs, check the [backend README](backend/README.md).
+
+### Common
 
 Startup the services:
  ```sh
@@ -90,7 +112,7 @@ sudo -E docker compose up --build -d
 ```
 Or you can also run the env exports and docker compose within the root user by running `sudo su`.
 
-> Tip: you can create a quick script to set all the necessary envs and start the services. This will also allow docker to see the environment variables correclty.
+> Tip: you can create a quick script to set all the necessary envs and start the services. This will also allow docker to see the environment variables correclty. Example:
 
 ```sh
 export DB_DEFAULT_USER=email@email.com
@@ -101,9 +123,9 @@ export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
 docker compose up --build
 ```
 
-> [Note] If you are going to run using only a dump of the database, the DB_DEFAULT_NAME should be `dashboard` and the `DB_DEFAULT_USER` and `DB_DEFAULT_PASSWORD` should be `admin` (for now).
+> [Note] If you are going to run using only the local database, the DB_DEFAULT_NAME should be `dashboard` and the `DB_DEFAULT_USER` and `DB_DEFAULT_PASSWORD` should be `admin` (for now).
 > After you define those values, also set the env var `USE_DASHBOARD_DB` to True, setting the local database as the default one.
-> You can also skip the cloud-proxy on such case.
+> You could also set the DB_DEFAULT variables to point to the local database and leave `USE_DASHBOARD_DB` as False.
 
 
 ## Deploying to production
@@ -117,5 +139,5 @@ See details about our new [notifications](docs/notifications.md) system.
 
 ## Contributing 
 
-There is an [onboarding guide](docs/Onboarding.md) to help get acquainted with the project.
+Check out our [CONTRIBUTING.md](/CONTRIBUTING.md), and there is an [onboarding guide](docs/Onboarding.md) to help get acquainted with the project. Contributions are welcome!
 

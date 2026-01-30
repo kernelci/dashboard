@@ -57,10 +57,11 @@ Definition of Done: The Redis server is running and you do not encounter Redis-r
 
 ### Task 2: Run the Backend locally
 1. Clone the KernelCI Dashboard repository from the following link: https://github.com/kernelci/dashboard
-2. Read the main README.md file to understand the project structure and how to run the project. Don't forget to communicate if there is something that you don't understand and feel free to send a PR with improvements.
-3. Go to the `backend` directory, see the README.md from the backend and run the project locally (read at least up to "Running the server").
+2. Go to the `backend` directory, see the [README.md](../backend/README.md) from the backend and run the project locally (read at least up to "Running the server").
+3. At this point you should have already read the [main README](../README.md) file for a general context of the project and how to run it too. If there are any mistakes feel free to send a PR with corrections and changes.
 
 Definition of Done: You have the KernelCI Dashboard backend running locally.
+
 
 ### Task 3: Get acquainted with the backend
 > Note:
@@ -68,8 +69,8 @@ Definition of Done: You have the KernelCI Dashboard backend running locally.
 
 1. Install [httpie](https://github.com/httpie)
 2. Check the folder `backend/requests` and see that there are multiple bash scripts file, those are httpie requests, try to run some of those. (If one of those requests is not working, it is a good opportunity to created a ticket or fix in a PR).
-3. Try to see in the [KernelCI Dashboard](https://dashboard.kernelci.org/) to see if you can view where those calls are being made.
-4. Try to see how the endpoints you can see where the URLs lead to in the `backend/kernelCI_app/urls.py` file.
+3. Try to look in the [KernelCI Dashboard](https://dashboard.kernelci.org/) to see if you can view where those calls are being made.
+4. Check the URL to endpoint relationship in the [backend/kernelCI_app/urls.py](../backend/kernelCI_app/urls.py) file.
 
 Definition of Done: You have run some requests to the KernelCI Dashboard API and try to have a high level understanding of at least one endpoint from the dashboard to the database.
 
@@ -78,17 +79,19 @@ Definition of Done: You have run some requests to the KernelCI Dashboard API and
 1. Install a Database management software like [DBeaver](https://dbeaver.io/) or [pgAdmin](https://www.pgadmin.org/) 
 2. Connect to the KernelCI Database and try to see the tables and the data that is stored there.
 3. Read this docs to understand the database: [Database Knowledge](../backend/docs/database-logic.md)
-4. Try to make some SQL queries to see what you can do, feel free to look at the Backend code.
+4. Make some direct SQL queries to see what you can do, feel free to look at the Backend code.
 5. Move some data from kcidb to the dashboard_db by running the `update_db` command with `poetry run python3 manage.py update_db`. You don't need a lot of data, specially considering that the database is heavy. For now, just a couple of hours should suffice.
 
-Definition of Done: Run a SQL query that gets all the tests from a specific Tree. (Feel free to choose any), you can post the query Result in the Github Issue.
+Definition of Done: Run a SQL query that gets all the tests from a specific Tree. (Feel free to choose any), post the query Result in the Github Issue.
+
 
 ### Task 5: Run the Frontend locally
-1. Go to the `dashboard` directory, see the README.md from the frontend and try running the project locally.
-2. Look at the folder `api` and see how the requests are made, copy and search for where those requests are being used and see if you can relate with the production dashboard.
+1. Go to the `dashboard` directory, see the [README.md](../dashboard/README.md) from the frontend and try running the project locally.
+2. Look at the folder `api` and see how the requests are made, search for where those functions are being used (where the requests are made) and see if you can relate with the production dashboard.
 3. Try to mess with the code, change some colors, add some logs, try to understand the code structure, if there is a library that you don't know, read the documentation on that.
 
 Definition of Done: You have the KernelCI Dashboard frontend running locally.
+
 
 ### Task 6: Run the project in docker
 
