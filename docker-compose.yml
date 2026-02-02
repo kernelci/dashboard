@@ -73,6 +73,25 @@ services:
               protocol: tcp
               mode: host
         profiles: ["with_commands"]
+    
+    pending_aggregations_processor:
+        <<: *backend-common
+        container_name: pending_aggregations_processor_service
+        environment:
+            - CONTAINER_MODE=command
+        command:
+            - poetry
+            - run
+            - python3
+            - manage.py
+            - process_pending_aggregations
+            - --loop
+            - --interval
+            - "5"
+        restart: always
+        depends_on:
+            - dashboard_db
+        profiles: ["with_commands"]
 
     dashboard_db:
         image: postgres:17
