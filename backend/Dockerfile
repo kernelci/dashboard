@@ -16,7 +16,8 @@ RUN apk update && \
 
 COPY pyproject.toml poetry.lock /build/
 
-ENV POETRY_HOME=/opt/poetry
+ENV POETRY_HOME=/opt/poetry \
+    POETRY_VIRTUALENVS_IN_PROJECT=1
 
 RUN python3 -m venv $POETRY_HOME
 RUN $POETRY_HOME/bin/pip install poetry==1.8.3
@@ -53,7 +54,11 @@ RUN apk update && \
         postgresql-client \
         curl
 
-COPY --from=builder /root/.cache/pypoetry/virtualenvs /root/.cache/pypoetry/virtualenvs
+COPY --from=builder /opt/poetry /opt/poetry
+COPY --from=builder /build/.venv /backend/.venv
+
+ENV PATH="/backend/.venv/bin:/opt/poetry/bin:$PATH"
+
 COPY --from=builder /build /backend
 COPY --from=builder /build/utils/docker/entrypoint.sh /entrypoint.sh
 
