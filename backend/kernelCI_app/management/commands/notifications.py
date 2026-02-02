@@ -637,20 +637,31 @@ def generate_hardware_summary_report(
     start_date = now - timedelta(days=7)
     end_date = now
 
-    # process the hardware submission files
+    # Process the hardware submission files
     hardware_key_set, hardware_prop_map = process_hardware_submissions_files(
         signup_folder=signup_folder,
         hardware_origins=hardware_origins,
     )
+    # Map used to filter tests by lab
+    labs_by_key = {}
+    for key, props in hardware_prop_map.items():
+        labs = props.get("labs")
+        lab_names = set(labs.keys())
+        labs_by_key[key] = lab_names
 
-    # get detailed data for all hardware
+    # Get detailed data for all hardware
     hardwares_data_raw = get_hardware_summary_data(
         keys=list(hardware_key_set),
         start_date=start_date,
         end_date=end_date,
+        labs_by_key=labs_by_key,
     )
 
-    hardwares_data_dict = defaultdict(list)
+    hardwares_data_dict = defaultdict(
+        lambda: defaultdict(
+            lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        )
+    )
     for raw in hardwares_data_raw:
         try:
             environment_misc = json.loads(raw.get("environment_misc", "{}"))
@@ -663,50 +674,65 @@ def generate_hardware_summary_report(
         raw["runtime"] = misc.get("runtime")
         origin = raw.get("test_origin")
         key = (hardware_id, origin)
-        hardwares_data_dict[key].append(raw)
+        tree = raw.get("tree_name")
+        branch = raw.get("git_repository_branch")
+        commit = raw.get("git_commit_hash")
+        path = raw.get("path")
+        dot = path.find(".")
+        suite = path[:dot] if dot != -1 else path
 
-    # get the total build/boot/test counts for each hardware
+        hardwares_data_dict[key][suite][tree][branch][commit].append(raw)
+
+    # Get the total build/boot/test counts for each hardware
     hardwares_list_raw = get_hardware_listing_data_bulk(
         keys=list(hardware_key_set),
         start_date=start_date,
         end_date=end_date,
+        labs_by_key=labs_by_key,
     )
 
     # Iterate through each hardware record to render report, extract recipient, send email
     for hardware_id, origin in hardware_key_set:
-        hardware_data = hardwares_data_dict.get((hardware_id, origin), [])
+        hardware_data = hardwares_data_dict.get((hardware_id, origin), {})
         hardware_raw = next(
-            (row for row in hardwares_list_raw if row.get("platform") == hardware_id),
+            (
+                row
+                for row in hardwares_list_raw
+                if row.get("platform") == hardware_id
+                and row.get("test_origin") == origin
+            ),
             None,
         )
         if hardware_raw is None:
-            print(f"Hardware {hardware_id} not found in listing data")
+            print(f"Hardware {hardware_id} from {origin} not found in listing data")
             continue
 
         hardware_item = sanitize_hardware(hardware_raw)
-        build_status_group = group_status(hardware_item.build_status_summary)
-        boot_status_group = group_status(hardware_item.boot_status_summary)
-        test_status_group = group_status(hardware_item.test_status_summary)
+        build_status_group_all = group_status(hardware_item.build_status_summary)
+        boot_status_group_all = group_status(hardware_item.boot_status_summary)
+        test_status_group_all = group_status(hardware_item.test_status_summary)
 
-        # render the template
+        # Render the template
         template = setup_jinja_template("hardware_report.txt.j2")
         report = {}
+        labs_for_key = hardware_prop_map[(hardware_id, origin)]["labs"]
         report["content"] = template.render(
             hardware_id=hardware_id,
             hardware_data=hardware_data,
-            build_status_group=build_status_group,
-            boot_status_group=boot_status_group,
-            test_status_group=test_status_group,
+            labs_for_key=labs_for_key,
+            build_status_group_all=build_status_group_all,
+            boot_status_group_all=boot_status_group_all,
+            test_status_group_all=test_status_group_all,
         )
         report["title"] = (
             f"hardware {hardware_id} summary - {now.strftime("%Y-%m-%d %H:%M %Z")}"
         )
 
-        # extract recipient
+        # Extract recipient
         hardware_report = hardware_prop_map.get((hardware_id, origin), {})
         recipients = hardware_report.get("default_recipients", [])
 
-        # send email
+        # Send email
         send_email_report(
             service=service,
             report=report,
