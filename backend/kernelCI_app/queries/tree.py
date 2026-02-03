@@ -518,7 +518,13 @@ def get_tree_commit_history(
     git_url: Optional[str],
     git_branch: Optional[str],
     tree_name: Optional[str],
+    include_types: Optional[list[str]] = None,
 ) -> Optional[list[tuple]]:
+    if not include_types:
+        include_types = ["builds", "boots", "tests"]
+
+    include_types = [t.lower() for t in include_types]
+
     field_values = {
         "commit_hash": commit_hash,
         "origin_param": origin,
@@ -540,6 +546,62 @@ def get_tree_commit_history(
     selected_checkouts_clause = _create_selected_checkouts_clause(
         git_url=git_url, git_branch=git_branch, tree_name=tree_name
     )
+
+    include_builds = "builds" in include_types
+    include_boots = "boots" in include_types
+    include_tests = "tests" in include_types
+    include_test_data = include_tests or include_boots
+
+    build_prefix = "b." if include_builds else "NULL AS "
+    test_prefix = "t." if include_test_data else "NULL AS "
+    build_id = "b.id" if include_builds else "NULL"
+    build_misc = "b.misc" if include_builds else "NULL"
+    test_misc_runtime = "t.misc->>'runtime'" if include_test_data else "NULL"
+    test_id = "t.id" if include_test_data else "NULL"
+
+    select_clause = f"""c.git_commit_hash,
+        c.git_commit_name,
+        c.git_commit_tags,
+        c.start_time,
+        {build_prefix}duration,
+        {build_prefix}architecture,
+        {build_prefix}compiler,
+        {build_prefix}config_name,
+        {build_prefix}status,
+        {build_prefix}origin,
+        {build_id} AS build_id,
+        {build_misc} AS build_misc,
+        {test_prefix}path,
+        {test_prefix}status,
+        {test_prefix}duration,
+        {test_prefix}environment_compatible,
+        {test_prefix}environment_misc,
+        {test_prefix}origin,
+        {test_misc_runtime} AS test_lab,
+        {test_id} AS test_id,
+        ic.id AS incidents_id,
+        ic.test_id AS incidents_test_id,
+        i.id AS issues_id,
+        i.version AS issues_version"""
+
+    if include_boots and not include_tests:
+        test_filter = "AND (t.path IS NULL OR t.path LIKE 'boot%%')"
+    elif include_tests and not include_boots:
+        test_filter = "AND (t.path IS NULL OR t.path NOT LIKE 'boot%%')"
+    else:
+        test_filter = ""
+
+    if include_test_data:
+        test_join = f"LEFT JOIN tests AS t ON t.build_id = b.id {test_filter}"
+        incidents_condition = "t.id = ic.test_id OR b.id = ic.build_id"
+    else:
+        test_join = ""
+        incidents_condition = "b.id = ic.build_id"
+
+    join_clause = f"""LEFT JOIN builds AS b ON c.id = b.checkout_id
+        {test_join}
+        LEFT JOIN incidents AS ic ON {incidents_condition}
+        LEFT JOIN issues AS i ON ic.issue_id = i.id"""
 
     query = f"""
     WITH HEAD_START_TIME AS (
@@ -630,37 +692,10 @@ def get_tree_commit_history(
             c.start_time DESC
     )
     SELECT
-        c.git_commit_hash,
-        c.git_commit_name,
-        c.git_commit_tags,
-        c.start_time,
-        b.duration,
-        b.architecture,
-        b.compiler,
-        b.config_name,
-        b.status,
-        b.origin,
-        t.path,
-        t.status,
-        t.duration,
-        t.environment_compatible,
-        t.environment_misc,
-        t.origin,
-        t.misc->>'runtime' AS test_lab,
-        b.id AS build_id,
-        b.misc AS build_misc,
-        t.id AS test_id,
-        ic.id AS incidents_id,
-        ic.test_id AS incidents_test_id,
-        i.id AS issues_id,
-        i.version AS issues_version
+        {select_clause}
     FROM
         SELECTED_CHECKOUTS AS c
-        LEFT JOIN builds AS b ON c.id = b.checkout_id
-        LEFT JOIN tests AS t ON t.build_id = b.id
-        LEFT JOIN incidents AS ic ON t.id = ic.test_id
-        OR b.id = ic.build_id
-        LEFT JOIN issues AS i ON ic.issue_id = i.id
+        {join_clause}
     """
 
     with connection.cursor() as cursor:
