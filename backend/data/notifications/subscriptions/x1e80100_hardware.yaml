@@ -1,5 +1,7 @@
 x1e80100:
   origin: maestro
+  labs:
+    lava-kci-qualcomm: https://lava-oss.qualcomm.com
   default_recipients:
     - Trilok Soni <tsoni@quicinc.com>
     - Shiraz Hashim <shashim@qti.qualcomm.com>

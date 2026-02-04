@@ -176,7 +176,7 @@ def process_hardware_submissions_files(
 ) -> tuple[set[HardwareKey], dict[HardwareKey, dict[str, Any]]]:
     """
     Processes all hardware submission files and returns the set of HardwareKey
-    and the dict linking each hardware to its default recipients
+    and the dict linking each hardware to its default recipients and labs
     """
     (base_dir, signup_folder) = _assign_default_folders(
         base_dir=base_dir, signup_folder=signup_folder
@@ -189,7 +189,10 @@ def process_hardware_submissions_files(
         "default_recipients": [
             "Recipient One <Recipient1@example.com>",
             "Recipient Two <Recipient2@example.com>"
-        ]
+        ],
+        "labs": {
+            "lava-collabora": "https://lava.collabora.dev",
+        },
     }
     """
 
@@ -200,6 +203,8 @@ def process_hardware_submissions_files(
 
         imx6q-sabrelite:
         origin: maestro
+        labs:
+            lava-collabora: https://lava.collabora.dev
         default_recipients:
             - Recipient One <Recipient1@example.com>
             - Recipient Two <Recipient2@example.com>
@@ -212,11 +217,13 @@ def process_hardware_submissions_files(
                 if hardware_origins is not None and origin not in hardware_origins:
                     continue
                 default_recipients = hardware_values.get("default_recipients", [])
+                labs = hardware_values.get("labs")
 
                 hardware_key = (hardware_name, origin)
                 hardware_key_set.add(hardware_key)
                 hardware_prop_map[hardware_key] = {
-                    "default_recipients": default_recipients
+                    "default_recipients": default_recipients,
+                    "labs": labs,
                 }
         else:
             log_message(

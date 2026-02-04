@@ -1,32 +1,42 @@
 {% extends "base.txt" %}
+{% set IND = ' ' %}
 {% block header %}{% endblock %}
 {% block content %}
 Hello,
 
 Status summary for {{ hardware_id }}
+Builds:{{ "\t" }}{{ "{:>5}".format(build_status_group_all["success"]) }} ✅
+{{- "{:>5}".format(build_status_group_all["failed"]) }} ❌
+{{- "{:>5}".format(build_status_group_all["inconclusive"]) }} ⚠️
+Boots: {{ "\t" }}{{ "{:>5}".format(boot_status_group_all["success"]) }} ✅
+{{- "{:>5}".format(boot_status_group_all["failed"]) }} ❌
+{{- "{:>5}".format(boot_status_group_all["inconclusive"]) }} ⚠️
+Tests: {{ "\t" }}{{ "{:>5}".format(test_status_group_all["success"]) }} ✅
+{{- "{:>5}".format(test_status_group_all["failed"]) }} ❌
+{{- "{:>5}".format(test_status_group_all["inconclusive"]) }} ⚠️
+================================================================
+{% for suite_name, trees in hardware_data.items() %}
+>{{ IND }}TEST SUITE: {{ suite_name }}
+------------------------------------------------------------------------------------------------------------
+{%- for tree_name, branches in trees.items() %}
+{%- for branch_name, commits in branches.items() %}
+{{ IND * 4 }}>>{{ IND }}TREE: {{ tree_name }}{{ IND }}|{{ IND }}BRANCH: {{ branch_name }}
 
-Builds:{{ "\t" }}{{ "{:>5}".format(build_status_group["success"]) }} ✅
-{{- "{:>5}".format(build_status_group["failed"]) }} ❌
-{{- "{:>5}".format(build_status_group["inconclusive"]) }} ⚠️
-Boots: {{ "\t" }}{{ "{:>5}".format(boot_status_group["success"]) }} ✅
-{{- "{:>5}".format(boot_status_group["failed"]) }} ❌
-{{- "{:>5}".format(boot_status_group["inconclusive"]) }} ⚠️
-Tests: {{ "\t" }}{{ "{:>5}".format(test_status_group["success"]) }} ✅
-{{- "{:>5}".format(test_status_group["failed"]) }} ❌
-{{- "{:>5}".format(test_status_group["inconclusive"]) }} ⚠️
--------------
-{% for data in hardware_data %}
-#kernelci test {{ data["id"] }}
-- Path: {{ data["path"] }}
-- Status: {{ data["status"] }}
-- Comment: {{ data["comment"] }}
-- Starttime: {{ data["start_time"] }}
-- Tree: {{ data["tree_name"] }}/{{ data["git_repository_branch"] }}
-- Origin: {{ data["test_origin"] }}
-- Test_lab: {{ data["runtime"] }}
-- Lava_job_id: {{ data["job_id"] }}
-- Commit: {{ data["git_commit_hash"] }}
-- Dashboard: https://dashboard.kernelci.org/test/{{ data["id"] }}
--------------
+{%- for commit_hash, commit_data in commits.items() %}
+{{ IND * 8 }}>>>{{ IND }}COMMIT: {{ commit_hash }}
+
+{%- for data in commit_data | sort(attribute='path') %}
+{{ IND * 12 }}- Path: {{ data["path"] }}
+{{ IND * 12 }}- Status: {{ data["status"] }}
+{{ IND * 12 }}- Origin: {{ data["test_origin"] }}
+{{ IND * 12 }}- Starttime: {{ data["start_time"] }}
+{{ IND * 12 }}- Test_lab: {{ data["runtime"] }}
+{{ IND * 12 }}- Lava_job: {{ labs_for_key[data["runtime"]]}}/scheduler/job/{{ data["job_id"] }}
+{{ IND * 12 }}- Dashboard: https://dashboard.kernelci.org/test/{{ data["id"] }}
+{{ IND * 12 }}------------------------------------------------------------
+{% endfor %}
+{%- endfor -%}
+{%- endfor -%}
+{%- endfor -%}
 {% endfor %}
 {%- endblock -%}

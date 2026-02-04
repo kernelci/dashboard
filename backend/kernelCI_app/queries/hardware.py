@@ -175,14 +175,27 @@ def get_hardware_listing_data(
 
 
 def get_hardware_listing_data_bulk(
-    keys: list[tuple[str, str]], start_date: datetime, end_date: datetime
+    keys: list[tuple[str, str]],
+    start_date: datetime,
+    end_date: datetime,
+    labs_by_key: dict[tuple[str, str], set[str]],
 ) -> list[dict]:
     if not keys:
         return []
 
     count_clauses = _get_hardware_listing_count_clauses()
+
+    triples: list[tuple[str, str, str]] = []
+    for hardware_id, origin in keys:
+        lab_names = labs_by_key[(hardware_id, origin)]
+        for lab in lab_names:
+            triples.append((hardware_id, origin, lab))
+
     values_clause = ", ".join(
-        [f"(%(hardware_id_{i})s, %(origin_{i})s)" for i in range(len(keys))]
+        [
+            f"(%(hardware_id_{i})s, %(origin_{i})s, %(lab_name_{i})s)"
+            for i in range(len(triples))
+        ]
     )
 
     query = f"""
@@ -206,12 +219,13 @@ def get_hardware_listing_data_bulk(
                     AND "tests"."start_time" <= %(end_date)s
                     AND EXISTS (
                     SELECT 1
-                    FROM (VALUES {values_clause}) AS key_list(hardware_id, origin)
+                    FROM (VALUES {values_clause}) AS key_list(hardware_id, origin, lab_name)
                     WHERE(
                         tests.environment_compatible @> ARRAY[key_list.hardware_id]::TEXT[]
                         OR tests.environment_misc ->> 'platform' = key_list.hardware_id
                     )
                     AND tests.origin = key_list.origin
+                    AND tests.misc ->> 'runtime' = key_list.lab_name
                     )
             )
         SELECT
@@ -231,9 +245,10 @@ def get_hardware_listing_data_bulk(
         "start_date": start_date,
         "end_date": end_date,
     }
-    for i, (hardware_id, origin) in enumerate(keys):
+    for i, (hardware_id, origin, lab_name) in enumerate(triples):
         params[f"hardware_id_{i}"] = hardware_id
         params[f"origin_{i}"] = origin
+        params[f"lab_name_{i}"] = lab_name
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
@@ -412,7 +427,11 @@ def query_records(
 
 
 def get_hardware_summary_data(
-    *, keys: list[tuple[str, str]], start_date: datetime, end_date: datetime
+    *,
+    keys: list[tuple[str, str]],
+    start_date: datetime,
+    end_date: datetime,
+    labs_by_key: dict[tuple[str, str], set[str]],
 ) -> list[dict] | None:
     """
     Get hardware summary data for given keys within a date range.
@@ -421,8 +440,14 @@ def get_hardware_summary_data(
     if not keys:
         return []
 
+    triples: list[tuple[str, str, str]] = []
+    for hardware_id, origin in keys:
+        lab_names = labs_by_key[(hardware_id, origin)]
+        for lab in lab_names:
+            triples.append((hardware_id, origin, lab))
+
     with connection.cursor() as cursor:
-        values_clause = ", ".join(["(%s, %s)"] * len(keys))
+        values_clause = ", ".join(["(%s, %s, %s)"] * len(triples))
 
         query = f"""
             SELECT
@@ -466,20 +491,21 @@ def get_hardware_summary_data(
                 AND tests.status = 'FAIL'
                 AND EXISTS (
                 SELECT 1
-                FROM (VALUES {values_clause}) AS key_list(hardware_id, origin)
+                FROM (VALUES {values_clause}) AS key_list(hardware_id, origin, lab_name)
                 WHERE(
                     tests.environment_compatible @> ARRAY[key_list.hardware_id]::TEXT[]
                     OR tests.environment_misc ->> 'platform' = key_list.hardware_id
                 )
                 AND tests.origin = key_list.origin
+                AND tests.misc ->> 'runtime' = key_list.lab_name
                 )
             ORDER BY
                 tests.start_time DESC
             """
 
         params = [start_date, end_date]
-        for hardware_id, origin in keys:
-            params.extend([hardware_id, origin])
+        for hardware_id, origin, lab_name in triples:
+            params.extend([hardware_id, origin, lab_name])
 
         cursor.execute(query, params)
 
