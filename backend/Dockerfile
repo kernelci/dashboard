@@ -2,7 +2,7 @@
 
 # Build stage: Install dependencies and build the application
 FROM alpine:3.20 as builder
-WORKDIR /build
+WORKDIR /backend
 
 RUN apk update && \
     apk add --no-cache \
@@ -14,7 +14,7 @@ RUN apk update && \
         libpq-dev \
         curl
 
-COPY pyproject.toml poetry.lock /build/
+COPY pyproject.toml poetry.lock /backend/
 
 ENV POETRY_HOME=/opt/poetry \
     POETRY_VIRTUALENVS_IN_PROJECT=1
@@ -30,7 +30,7 @@ RUN if [ "$INSTALL_DEV_DEPS" = "true" ]; then \
     fi
 
 # Copy application code
-COPY . /build/
+COPY . /backend/
 
 # Precompile Python modules
 RUN O='0 1 2' \
@@ -55,12 +55,12 @@ RUN apk update && \
         curl
 
 COPY --from=builder /opt/poetry /opt/poetry
-COPY --from=builder /build/.venv /backend/.venv
+COPY --from=builder /backend/.venv /backend/.venv
 
 ENV PATH="/backend/.venv/bin:/opt/poetry/bin:$PATH"
 
-COPY --from=builder /build /backend
-COPY --from=builder /build/utils/docker/entrypoint.sh /entrypoint.sh
+COPY --from=builder /backend /backend
+COPY --from=builder /backend/utils/docker/entrypoint.sh /entrypoint.sh
 
 ARG BACKEND_VOLUME_DIR
 ENV BACKEND_VOLUME_DIR=${BACKEND_VOLUME_DIR}
