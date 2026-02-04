@@ -242,6 +242,7 @@ const CommitNavigationGraph = ({
         title={formatMessage({ id: messagesId.graphName })}
         content={
           <LineChart
+            dataTestId="commit-navigation-graph"
             xAxis={xAxis}
             series={series}
             slots={{
