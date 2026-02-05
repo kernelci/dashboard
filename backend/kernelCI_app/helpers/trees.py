@@ -7,6 +7,7 @@ import yaml
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.treeListing import Checkout
+from kernelCI_app.constants.tree_names import TREE_NAMES_FILENAME
 
 
 def make_tree_identifier_key(
@@ -17,7 +18,7 @@ def make_tree_identifier_key(
 
 def get_tree_file_data() -> dict[str, dict[str, str]]:
     """Returns the data from the tree names file"""
-    filepath = os.path.join(settings.BACKEND_VOLUME_DIR, "trees-name.yaml")
+    filepath = os.path.join(settings.BACKEND_VOLUME_DIR, TREE_NAMES_FILENAME)
 
     trees_from_file = None
 
@@ -29,7 +30,7 @@ def get_tree_file_data() -> dict[str, dict[str, str]]:
 
 
 @typing_extensions.deprecated(
-    "Only use this function when the trees-name.yaml file is solidified and ready to be used.",
+    "Only use this function when the tree-names.yaml file is solidified and ready to be used.",
     category=None,
 )
 def get_tree_url_to_name_map() -> dict[str, str]:

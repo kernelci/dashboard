@@ -1,9 +1,14 @@
+import logging
+from typing import Optional
 from django.core.management.base import BaseCommand
+from kernelCI_app.constants.tree_names import TREE_NAMES_FILENAME
 from kernelCI_app.models import Checkouts
 import re
 import yaml
 import os
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 def process_dict(d):
@@ -96,8 +101,27 @@ class Command(BaseCommand):
 
         return trees_yml
 
-    def handle(self, *args, **options):
-        filepath = os.path.join(settings.BACKEND_VOLUME_DIR, "trees-name.yaml")
+    def generate_tree_names(self, filepath: Optional[str] = None) -> dict:
+        """
+        Reads the Checkouts table to find all unique git_repository_url and tree_name combinations,
+        then generates a tree-names.yaml file with the format:
+
+        trees:
+            tree_name:
+                url: git_repository_url
+
+        If a tree_name is missing or duplicated, it will be generated based on the git_repository_url.
+        If the tree_name already exists in the list but there's a new git_repository_url,
+        the existing one will be kept and the new name will be suffixed with a number.
+
+        Maestro and non-maestro trees are processed separately to avoid naming conflicts
+        (maestro has priority).
+
+        Writes the resulting file into BACKEND_VOLUME_DIR/TREE_NAMES_FILENAME.
+        Returns the data that will be written to the tree-names.yaml file.
+        """
+        if filepath is None:
+            filepath = os.path.join(settings.BACKEND_VOLUME_DIR, TREE_NAMES_FILENAME)
 
         if os.path.exists(filepath):
             with open(filepath, "r") as file:
@@ -117,8 +141,25 @@ class Command(BaseCommand):
         merged_dict = self._merge_trees(default_trees=trees_from_file)
         formatted_dict = self._format_trees_to_yml_format(merged_dict)
 
-        filepath = os.path.join(settings.BACKEND_VOLUME_DIR, "trees-name.yaml")
-        with open(filepath, "w") as file:
-            yaml.dump(
-                formatted_dict, file, default_flow_style=False, allow_unicode=True
-            )
+        try:
+            with open(filepath, "w") as file:
+                yaml.dump(
+                    formatted_dict, file, default_flow_style=False, allow_unicode=True
+                )
+        except Exception as e:
+            # There's an exception but shouldn't stop the run because this can be used
+            # in the code and is not a critical failure, so it shouldn't stop the execution.
+            logger.error("Error writing %s: %s", TREE_NAMES_FILENAME, e)
+        else:
+            logger.info("Tree names file generated/updated at: %s", filepath)
+
+        return formatted_dict
+
+    def handle(self, *args, **options):
+        """
+        Generates the tree-names.yaml with a relation from tree_name to git_repository_url.
+        """
+
+        # Calls a separate function so that we can use the generation in the code while
+        # also avoiding returning from handle(), which is expected to return None.
+        self.generate_tree_names()

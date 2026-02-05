@@ -1,4 +1,4 @@
-tree: # The filename and the name of the tree may follow the trees-name.yaml file, but does not matter in the code
+tree: # The filename and the name of the tree may follow the tree-names.yaml file, but does not matter in the code
   url: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git # the git_repository_url of the tree
   default_recipients:
     - laura.nao@collabora.com
