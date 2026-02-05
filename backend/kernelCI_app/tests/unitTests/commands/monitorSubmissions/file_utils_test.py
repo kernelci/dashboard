@@ -1,4 +1,5 @@
 import os
+from kernelCI_app.constants.ingester import INGESTER_TREES_FILEPATH
 import yaml
 import pytest
 from unittest.mock import patch
@@ -28,71 +29,89 @@ from kernelCI_app.tests.unitTests.helpers.fixtures.file_utils_data import (
 
 
 class TestLoadTreeNames:
-    @patch("builtins.open")
-    @patch("yaml.safe_load")
-    def test_load_tree_names_with_default_file(self, mock_yaml_load, mock_open):
+    @patch(
+        "kernelCI_app.management.commands.helpers.file_utils.TreeproofCommand.generate_tree_names"
+    )
+    def test_load_tree_names_with_default_file(self, mock_generate_tree_names):
         """Test load_tree_names using default TREES_FILE constant."""
-        mock_yaml_data = BASE_TREES_FILE
-        mock_yaml_load.return_value = mock_yaml_data
+        mock_generate_tree_names.return_value = BASE_TREES_FILE
 
         result = load_tree_names()
 
-        mock_open.assert_called_once_with("/app/trees.yaml", "r", encoding="utf-8")
-        mock_yaml_load.assert_called_once()
+        mock_generate_tree_names.assert_called_once_with(
+            filepath=INGESTER_TREES_FILEPATH
+        )
         assert result == EXPECTED_PARSED_TREES_FILE
 
-    @patch("builtins.open")
-    @patch("yaml.safe_load")
-    def test_load_tree_names_with_valid_yaml(self, mock_yaml_load, mock_open):
+    @patch(
+        "kernelCI_app.management.commands.helpers.file_utils.TreeproofCommand.generate_tree_names"
+    )
+    def test_load_tree_names_with_valid_yaml(self, mock_generate_tree_names):
         """Test load_tree_names with valid YAML data."""
-        mock_yaml_load.return_value = BASE_TREES_FILE
+        mock_generate_tree_names.return_value = BASE_TREES_FILE
 
         result = load_tree_names(TREES_PATH_TESTING)
 
-        mock_open.assert_called_once_with(TREES_PATH_TESTING, "r", encoding="utf-8")
-        mock_yaml_load.assert_called_once()
+        mock_generate_tree_names.assert_called_once_with(filepath=TREES_PATH_TESTING)
         assert result == EXPECTED_PARSED_TREES_FILE
 
-    @patch("builtins.open")
-    @patch("yaml.safe_load")
-    def test_load_tree_names_with_empty_trees(self, mock_yaml_load, mock_open):
+    @patch(
+        "kernelCI_app.management.commands.helpers.file_utils.TreeproofCommand.generate_tree_names"
+    )
+    def test_load_tree_names_with_empty_trees(self, mock_generate_tree_names):
         """Test load_tree_names with empty trees section."""
         empty_trees_file = {"trees": {}}
-        mock_yaml_load.return_value = empty_trees_file
+        mock_generate_tree_names.return_value = empty_trees_file
 
         result = load_tree_names(TREES_PATH_TESTING)
 
-        mock_open.assert_called_once_with(TREES_PATH_TESTING, "r", encoding="utf-8")
-        mock_yaml_load.assert_called_once()
+        mock_generate_tree_names.assert_called_once_with(filepath=TREES_PATH_TESTING)
         assert result == {}
 
-    @patch("builtins.open")
-    @patch("yaml.safe_load")
-    def test_load_tree_names_with_no_trees_key(self, mock_yaml_load, mock_open):
+    @patch(
+        "kernelCI_app.management.commands.helpers.file_utils.TreeproofCommand.generate_tree_names"
+    )
+    def test_load_tree_names_with_no_trees_key(self, mock_generate_tree_names):
         """Test load_tree_names with YAML data missing trees key."""
         wrong_trees_file = {"not_trees": "any_value"}
-        mock_yaml_load.return_value = wrong_trees_file
+        mock_generate_tree_names.return_value = wrong_trees_file
 
         result = load_tree_names(TREES_PATH_TESTING)
 
-        mock_open.assert_called_once_with(TREES_PATH_TESTING, "r", encoding="utf-8")
-        mock_yaml_load.assert_called_once()
+        mock_generate_tree_names.assert_called_once_with(filepath=TREES_PATH_TESTING)
         assert result == {}
 
-    @patch("builtins.open")
-    def test_load_tree_names_file_not_found(self, mock_open):
+    @patch(
+        "kernelCI_app.management.commands.helpers.file_utils.TreeproofCommand.generate_tree_names"
+    )
+    @patch("kernelCI_app.management.commands.helpers.file_utils.logger")
+    def test_load_tree_names_file_not_found(
+        self, mock_logger, mock_generate_tree_names
+    ):
         """Test load_tree_names when file doesn't exist."""
-        mock_open.side_effect = FileNotFoundError("File not found")
+        mock_generate_tree_names.side_effect = FileNotFoundError("File not found")
+
         with pytest.raises(FileNotFoundError):
             load_tree_names("/nonexistent/trees.yaml")
 
-    @patch("builtins.open")
-    @patch("yaml.safe_load")
-    def test_load_tree_names_invalid_yaml(self, mock_yaml_load, _):
+        mock_generate_tree_names.assert_called_once_with(
+            filepath="/nonexistent/trees.yaml"
+        )
+        mock_logger.error.assert_called_once()
+
+    @patch(
+        "kernelCI_app.management.commands.helpers.file_utils.TreeproofCommand.generate_tree_names"
+    )
+    @patch("kernelCI_app.management.commands.helpers.file_utils.logger")
+    def test_load_tree_names_invalid_yaml(self, mock_logger, mock_generate_tree_names):
         """Test load_tree_names with invalid YAML content."""
-        mock_yaml_load.side_effect = yaml.YAMLError("Invalid YAML")
+        mock_generate_tree_names.side_effect = yaml.YAMLError("Invalid YAML")
+
         with pytest.raises(yaml.YAMLError):
             load_tree_names(TREES_PATH_TESTING)
+
+        mock_generate_tree_names.assert_called_once_with(filepath=TREES_PATH_TESTING)
+        mock_logger.error.assert_called_once()
 
 
 class TestMoveFileToFailedDir:

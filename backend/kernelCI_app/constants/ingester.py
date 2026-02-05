@@ -3,6 +3,7 @@
 import os
 import logging
 import re
+from kernelCI_app.constants.tree_names import TREE_NAMES_FILENAME
 from utils.validation import is_boolean_or_string_true
 
 logger = logging.getLogger("ingester")
@@ -28,7 +29,7 @@ UPLOAD_URL = f"{STORAGE_BASE_URL}/upload"
 CACHE_LOGS_SIZE_LIMIT = int(os.environ.get("CACHE_LOGS_SIZE_LIMIT", 100000))
 """Arbitrary limit for cache_logs size, adjust as needed. Default: 100000"""
 
-TREES_FILE = "/app/trees.yaml"
+INGESTER_TREES_FILEPATH = f"/app/{TREE_NAMES_FILENAME}"
 
 INGESTER_GRAFANA_LABEL = "django"
 
