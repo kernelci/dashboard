@@ -1,66 +1,49 @@
 # syntax=docker/dockerfile:1
 
-# Build stage: Install dependencies and build the application
-FROM alpine:3.20 as builder
-WORKDIR /backend
+# Create server docker image (all non-code dependencies)
+FROM alpine:3.20 as backend-base
 
-RUN apk update && \
-    apk add --no-cache \
+WORKDIR /
+
+ENV POETRY_HOME=/opt/poetry
+
+RUN apk update \
+    && apk add --no-cache \
         python3 \
         python3-dev \
         gcc \
         libffi-dev \
         libc-dev \
         libpq-dev \
-        curl
+        postgresql \
+        curl \
+    && python3 -m venv $POETRY_HOME \
+    && $POETRY_HOME/bin/pip install poetry==1.8.3 \
+    && ln -s $POETRY_HOME/bin/poetry /bin/poetry
 
-COPY pyproject.toml poetry.lock /backend/
-
-ENV POETRY_HOME=/opt/poetry \
-    POETRY_VIRTUALENVS_IN_PROJECT=1
-
-RUN python3 -m venv $POETRY_HOME
-RUN $POETRY_HOME/bin/pip install poetry==1.8.3
+FROM backend-base
+COPY . /backend
+COPY ./utils/docker/entrypoint.sh /entrypoint.sh
+WORKDIR /backend
 
 ARG INSTALL_DEV_DEPS=false
 RUN if [ "$INSTALL_DEV_DEPS" = "true" ]; then \
-        $POETRY_HOME/bin/poetry install --no-interaction; \
+        poetry install --no-interaction; \
     else \
-        $POETRY_HOME/bin/poetry install --no-interaction --only main; \
+        poetry install --no-interaction --only main; \
     fi
 
-# Copy application code
-COPY . /backend/
+ENV DJANGO_APP="kernelCI"
 
 # Precompile Python modules
 RUN O='0 1 2' \
-        PY_MAJMIN=`$POETRY_HOME/bin/poetry run python -c "import sys; print('%s.%s'%sys.version_info[0:2])"`  \
-        PY_D=`$POETRY_HOME/bin/poetry env info --path` \
-        D="$PY_D kernelCI"; \
+        PY_MAJMIN=`poetry run python -c "import sys; print('%s.%s'%sys.version_info[0:2])"` \
+        PY_D=`poetry env info --path` \
+        D="$PY_D $DJANGO_APP"; \
         for N in $O; do \
             echo "compile python $PY_MAJMIN byte code at -O$N: $D"; \
-            PYTHONOPTIMIZE=$N $POETRY_HOME/bin/poetry run python -m compileall -q $D || exit 1; \
+            PYTHONOPTIMIZE=$N poetry run python -m compileall -q $D || exit 1; \
         done
-
-# Runtime stage: Create a clean image with only runtime dependencies
-FROM alpine:3.20 as app
-WORKDIR /backend
-
-# Install only runtime dependencies (no build tools)
-RUN apk update && \
-    apk add --no-cache \
-        python3 \
-        libpq \
-        postgresql-client \
-        curl
-
-COPY --from=builder /opt/poetry /opt/poetry
-COPY --from=builder /backend/.venv /backend/.venv
-
-ENV PATH="/backend/.venv/bin:/opt/poetry/bin:$PATH"
-
-COPY --from=builder /backend /backend
-COPY --from=builder /backend/utils/docker/entrypoint.sh /entrypoint.sh
 
 ARG BACKEND_VOLUME_DIR
 ENV BACKEND_VOLUME_DIR=${BACKEND_VOLUME_DIR}

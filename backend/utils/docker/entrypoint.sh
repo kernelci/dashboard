@@ -2,6 +2,7 @@
 export PYTHONOPTIMIZE=${PYTHONOPTIMIZE:-2}
 export PYTHONUNBUFFERED=${PYTHONUNBUFFERED:-1}
 
+source $(poetry env info -C ./backend --path)/bin/activate
 set -e
 
 # usage: file_env VAR [DEFAULT]
