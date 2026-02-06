@@ -49,8 +49,9 @@ const TreeBreadcrumb = ({
         params={treeParams.params}
         search={searchParams}
         state={s => s}
+        data-test-id="breadcrumb-trees-link"
       >
-        <FormattedMessage id="tree.details" />
+        <FormattedMessage id="tree.path" />
       </BreadcrumbLink>
     ),
     [treeParams, searchParams],

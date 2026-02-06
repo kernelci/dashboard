@@ -1,33 +1,3 @@
-export const TREE_LISTING_SELECTORS = {
-  table: 'table',
-  treeColumnHeader: 'th button:has-text("Tree")',
-  branchColumnHeader: 'th button:has-text("Branch")',
-
-  intervalInput: 'input[type="number"][min="1"]',
-
-  // This requires nth() selector which can't be stored as string
-  itemsPerPageDropdown: '[role="listbox"]',
-  itemsPerPageOption: (value: string) => `[role="option"]:has-text("${value}")`,
-
-  searchInput: 'input[type="text"]',
-
-  nextPageButton: '[role="button"]:has-text(">")',
-  previousPageButton: '[role="button"]:has-text("<")',
-
-  treeNameCell: (treeName: string) => `td a:has-text("${treeName}")`,
-  firstTreeCell: 'td a',
-
-  breadcrumbTreesLink: '[data-test-id="breadcrumb-link"]:has-text("Trees")',
-} as const;
-
-export const COMMON_SELECTORS = {
-  tableRow: 'tr',
-  tableHeader: 'th',
-
-  originDropdown: '[data-test-id="origin-dropdown"]',
-  originOption: (origin: string) => `[data-test-id="origin-option-${origin}"]`,
-} as const;
-
 export const TREE_DETAILS_SELECTORS = {
   breadcrumbTreesLink: '[data-test-id="breadcrumb-trees-link"]',
 
@@ -42,6 +12,7 @@ export const TREE_DETAILS_SELECTORS = {
   filters: {
     button: 'button:has-text("Filters")',
     drawer: 'aside',
+    drawerContent: '[role="dialog"]',
     filterButton: '[data-test-id="filter-button"]',
     cancelButton: '[data-test-id="filter-cancel-button"]',
     clearAllFilters: 'text="Clear all"',
@@ -94,10 +65,17 @@ export const TREE_DETAILS_SELECTORS = {
       inconclusive: 'button:has-text("Inconclusive:")',
     },
     testItem: 'tr',
+    expandedRows: 'tr:has(td[colspan])',
     detailsButton: '[data-test-id="details-button"]',
   },
 
   configTable: {
     link: (config: string) => `a:has-text("${config}")`,
+  },
+
+  commitGraph: {
+    container: '[data-test-id="commit-navigation-graph"]',
+    svg: '[data-test-id="commit-navigation-graph"] svg',
+    marks: '[data-test-id="commit-navigation-graph"] [class*="MuiMarkElement"]',
   },
 } as const;
