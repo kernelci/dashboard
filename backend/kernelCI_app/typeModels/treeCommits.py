@@ -1,6 +1,7 @@
 from datetime import datetime
+from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel, RootModel, field_validator
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
@@ -14,6 +15,12 @@ from kernelCI_app.typeModels.databases import (
 )
 
 
+class TreeEntityTypes(str, Enum):
+    BUILDS = "builds"
+    BOOTS = "boots"
+    TESTS = "tests"
+
+
 class DirectTreeCommitsQueryParameters(BaseModel):
     origin: str = Field(
         DEFAULT_ORIGIN, description=DocStrings.TREE_COMMIT_ORIGIN_DESCRIPTION
@@ -24,7 +31,20 @@ class DirectTreeCommitsQueryParameters(BaseModel):
     end_time_stamp_in_seconds: Optional[str] = Field(
         None, description=DocStrings.TREE_COMMIT_END_TS_DESCRIPTION
     )
+    types: Optional[list[TreeEntityTypes]] = Field(
+        None,
+        description="List of types to include (builds, boots, tests)",
+    )
     # TODO: Add filters field in this model
+
+    @field_validator("types", mode="before")
+    @classmethod
+    def validate_types(cls, value):
+        if not value:
+            return []
+        if isinstance(value, str):
+            value = [t.strip() for t in value.split(",") if t.strip()]
+        return value
 
 
 class TreeCommitsQueryParameters(DirectTreeCommitsQueryParameters):

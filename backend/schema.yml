@@ -1207,6 +1207,17 @@ paths:
           default: null
           title: Start Time Stamp In Seconds
         description: Start time filter in seconds for tree commits
+      - in: query
+        name: types
+        schema:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/TreeEntityTypes'
+            type: array
+          - type: 'null'
+          default: null
+          title: Types
+        description: List of types to include (builds, boots, tests)
       tags:
       - tree
       security:
@@ -1528,6 +1539,17 @@ paths:
           type: string
         description: Name of the tree
         required: true
+      - in: query
+        name: types
+        schema:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/TreeEntityTypes'
+            type: array
+          - type: 'null'
+          default: null
+          title: Types
+        description: List of types to include (builds, boots, tests)
       tags:
       - tree
       security:
@@ -3976,6 +3998,13 @@ components:
       - builds
       title: TreeDetailsFullResponse
       type: object
+    TreeEntityTypes:
+      enum:
+      - builds
+      - boots
+      - tests
+      title: TreeEntityTypes
+      type: string
     TreeLatestResponse:
       properties:
         git_repository_url:
