@@ -11,7 +11,7 @@ import type {
 import { mapFiltersKeysToBackendCompatible } from '@/utils/utils';
 
 import { getTargetFilter } from '@/types/general';
-import type { TFilter } from '@/types/general';
+import type { TFilter, TreeEntityTypes } from '@/types/general';
 
 import { RequestData } from './commonRequest';
 
@@ -25,6 +25,7 @@ const fetchCommitHistory = async (
   endTimestampInSeconds: number | undefined,
   treeName?: string,
   treeUrlFrom?: TreeDetailsRouteFrom,
+  types?: TreeEntityTypes[],
 ): Promise<TTreeCommitHistoryResponse> => {
   const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
 
@@ -34,6 +35,7 @@ const fetchCommitHistory = async (
     git_branch: gitBranch,
     start_time_stamp_in_seconds: startTimestampInSeconds,
     end_time_stamp_in_seconds: endTimestampInSeconds,
+    types: types?.join(','),
     ...filtersFormatted,
   };
 
@@ -62,6 +64,7 @@ export const useCommitHistory = ({
   startTimestampInSeconds,
   treeName,
   treeUrlFrom,
+  types,
 }: {
   commitHash: string;
   origin: string;
@@ -72,6 +75,7 @@ export const useCommitHistory = ({
   endTimestampInSeconds?: number;
   treeName?: string;
   treeUrlFrom?: TreeDetailsRouteFrom;
+  types?: TreeEntityTypes[];
 }): UseQueryResult<TTreeCommitHistoryResponse> => {
   const testFilter = getTargetFilter(filter, 'test');
   const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
@@ -93,6 +97,7 @@ export const useCommitHistory = ({
       endTimestampInSeconds,
       treeName,
       treeUrlFrom,
+      types,
     ],
     queryFn: () =>
       fetchCommitHistory(
@@ -105,6 +110,7 @@ export const useCommitHistory = ({
         endTimestampInSeconds,
         treeName,
         treeUrlFrom,
+        types,
       ),
   });
 };
