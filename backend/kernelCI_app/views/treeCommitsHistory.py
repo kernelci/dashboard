@@ -68,7 +68,7 @@ class BaseTreeCommitsHistory(APIView):
     def sanitize_rows(self, rows: dict) -> list:
         result = []
         for row in rows:
-            build_misc = row[11]
+            build_misc = row[18]
             sanitized_build_misc = sanitize_dict(build_misc)
             build_lab = (
                 sanitized_build_misc.get("lab", UNKNOWN_STRING)
@@ -88,15 +88,15 @@ class BaseTreeCommitsHistory(APIView):
                     "config_name": row[7],
                     "build_status": NULL_STATUS if row[8] is None else row[8],
                     "build_origin": row[9],
-                    "build_id": row[10],
+                    "test_path": row[10],
+                    "test_status": row[11],
+                    "test_duration": row[12],
+                    "hardware_compatibles": row[13],
+                    "test_environment_misc": row[14],
+                    "test_origin": row[15],
+                    "test_lab": row[16],
+                    "build_id": row[17],
                     "build_misc": build_misc,
-                    "test_path": row[12],
-                    "test_status": row[13],
-                    "test_duration": row[14],
-                    "hardware_compatibles": row[15],
-                    "test_environment_misc": row[16],
-                    "test_origin": row[17],
-                    "test_lab": row[18],
                     "test_id": row[19],
                     "incidents_id": row[20],
                     "incidents_test_id": row[21],
@@ -403,7 +403,6 @@ class BaseTreeCommitsHistory(APIView):
                     "start_timestamp_in_seconds"
                 ),
                 end_timestamp_in_seconds=request.GET.get("end_timestamp_in_seconds"),
-                types=request.GET.get("types"),
             )
         except ValidationError as e:
             return create_api_error_response(
@@ -431,7 +430,6 @@ class BaseTreeCommitsHistory(APIView):
             git_url=params.git_url,
             git_branch=params.git_branch or git_branch,
             tree_name=tree_name,
-            include_types=params.types,
         )
 
         if not rows:

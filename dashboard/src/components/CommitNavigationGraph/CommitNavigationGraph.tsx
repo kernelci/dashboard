@@ -13,7 +13,7 @@ import type { MessagesKey } from '@/locales/messages';
 import { formatDate } from '@/utils/utils';
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 import { useCommitHistory } from '@/api/commitHistory';
-import type { TFilter, TreeEntityTypes } from '@/types/general';
+import type { TFilter } from '@/types/general';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
@@ -74,19 +74,6 @@ const CommitNavigationGraph = ({
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const types: TreeEntityTypes[] = useMemo(() => {
-    switch (currentPageTab) {
-      case 'global.builds':
-        return ['builds'];
-      case 'global.boots':
-        return ['boots'];
-      case 'global.tests':
-        return ['tests'];
-      default:
-        return ['builds'];
-    }
-  }, [currentPageTab]);
-
   const { data, status, error, isLoading } = useCommitHistory({
     gitBranch: gitBranch ?? '',
     gitUrl: gitUrl ?? '',
@@ -97,7 +84,6 @@ const CommitNavigationGraph = ({
     startTimestampInSeconds,
     treeName,
     treeUrlFrom,
-    types,
   });
 
   const displayableData = data ? data : null;
