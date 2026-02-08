@@ -49,6 +49,7 @@ services:
             context: ./backend
             args:
                 BACKEND_VOLUME_DIR: ${BACKEND_VOLUME_DIR:-/volume_data}
+        image: ghcr.io/${IMAGE_NAME:-local}/backend:latest
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
         restart: always
@@ -66,7 +67,6 @@ services:
               protocol: tcp
               mode: host
         depends_on:
-            - cloudsql-proxy
             - redis
             - dashboard_db
         secrets:
@@ -78,12 +78,13 @@ services:
         build:
             context: .
             dockerfile: ./dashboard/Dockerfile
-        image: dashboard:latest
+        image: ghcr.io/${IMAGE_NAME:-local}/dashboard:latest
         volumes:
             - static-data:/data/static
 
     proxy:
         build: ./proxy
+        image: ghcr.io/${IMAGE_NAME:-local}/proxy:latest
         restart: always
         depends_on:
             - backend
