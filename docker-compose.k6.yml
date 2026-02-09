@@ -38,8 +38,6 @@ services:
     test-backend:
         build:
             context: ./backend
-            args:
-                BACKEND_VOLUME_DIR: /volume_data
         volumes:
             - test-backend-data:/volume_data
         networks:

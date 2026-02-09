@@ -45,11 +45,6 @@ RUN O='0 1 2' \
             PYTHONOPTIMIZE=$N poetry run python -m compileall -q $D || exit 1; \
         done
 
-ARG BACKEND_VOLUME_DIR
-ENV BACKEND_VOLUME_DIR=${BACKEND_VOLUME_DIR}
-RUN echo "Building with volume on: $BACKEND_VOLUME_DIR"
-VOLUME ${BACKEND_VOLUME_DIR}
-
 # Expose both application and metrics ports
 EXPOSE 8000 8001
 

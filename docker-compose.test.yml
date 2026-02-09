@@ -32,7 +32,6 @@ services:
         build:
             context: ./backend
             args:
-                BACKEND_VOLUME_DIR: /volume_data
                 INSTALL_DEV_DEPS: "true"
         volumes:
             - test-backend-data:/volume_data

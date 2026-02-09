@@ -8,10 +8,6 @@ networks:
     public:
     private:
 
-secrets:
-    postgres_password_secret:
-        file: ./backend/runtime/secrets/postgres_password_secret
-
 services:
     dashboard_db:
         image: postgres:17
@@ -24,18 +20,6 @@ services:
         ports:
             - "5434:5432"
 
-    cloudsql-proxy:
-        image: gcr.io/cloudsql-docker/gce-proxy:latest
-        container_name: cloudsql-proxy
-        command: /cloud_sql_proxy --dir=/cloudsql -instances=kernelci-production:us-central1:postgresql2=tcp:0.0.0.0:5432 -credential_file=/secrets/cloudsql/application_default_credentials.json
-        ports:
-            - 5432:5432
-        volumes:
-            - ./application_default_credentials.json:/secrets/cloudsql/application_default_credentials.json
-        networks:
-            - private
-        restart: always
-
     redis:
         image: redis:8.0-M04-alpine
         restart: always
@@ -45,13 +29,10 @@ services:
             - 6379:6379
 
     backend:
-        build:
-            context: ./backend
-        image: ghcr.io/${IMAGE_NAME:-local}/backend:latest
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER}/${IMAGE_REPOSITORY}/dashboard-backend:${IMAGE_TAG}
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
         restart: always
-        container_name: dashboard_backend_service
         networks:
             - private
             - public
@@ -59,31 +40,24 @@ services:
             - target: 8000
               published: 8000
               protocol: tcp
-              mode: host
             - target: 8001
               published: 8001
               protocol: tcp
-              mode: host
         depends_on:
-            - cloudsql-proxy
             - redis
             - dashboard_db
-        secrets:
-            - postgres_password_secret
         env_file:
             - .env.backend
+        environment:
+            DB_DEFAULT_HOST: ${DB_DEFAULT_HOST:-dashboard_db}
 
     dashboard:
-        build:
-            context: .
-            dockerfile: ./dashboard/Dockerfile
-        image: ghcr.io/${IMAGE_NAME:-local}/dashboard:latest
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER}/${IMAGE_REPOSITORY}/dashboard-frontend:${IMAGE_TAG}
         volumes:
             - static-data:/data/static
 
     proxy:
-        build: ./proxy
-        image: ghcr.io/${IMAGE_NAME:-local}/proxy:latest
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER}/${IMAGE_REPOSITORY}/dashboard-proxy:${IMAGE_TAG}
         restart: always
         depends_on:
             - backend
@@ -96,6 +70,5 @@ services:
             - target: 80
               published: 80
               protocol: tcp
-              mode: host
         env_file:
             - .env.proxy
