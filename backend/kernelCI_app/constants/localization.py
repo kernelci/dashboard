@@ -24,6 +24,7 @@ class ClientStrings:
     NO_TREES_FOUND = "No trees were found"
     PROXY_FETCH_FAILED = "Failed to fetch resource:"
     PROXY_INVALID_URL = "Invalid URL"
+    PROXY_FORBIDDEN_DOMAIN = "Domain not allowed"
     PROXY_ERROR_FETCH = "Error fetching the resource"
     NO_ORIGIN_FOUND = "No origins found"
     LOG_TABLE_NOT_FOUND = "Table with id 'list' not found"
