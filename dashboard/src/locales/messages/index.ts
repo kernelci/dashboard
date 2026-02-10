@@ -255,6 +255,8 @@ export const messages = {
     'logSheet.title': 'Log Viewer',
     'logViewer.disabledHighlight':
       'The text highlight was disabled in this log due to the log size',
+    'logViewer.domainNotAllowed':
+      'This log domain is not supported by the proxy. You can still download the log directly using the link above.',
     'logViewer.download': 'Download full log',
     'logViewer.errorFetchingLogExcerpt':
       'Error fetching logExcerpt at: {logExcerpt}',

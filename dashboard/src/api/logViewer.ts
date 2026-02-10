@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { minutesToMilliseconds } from 'date-fns';
 import { useIntl } from 'react-intl';
 
+import { AxiosError, HttpStatusCode } from 'axios';
+
 import { LOG_EXCERPT_ALLOWED_DOMAINS } from '@/utils/constants/log_excerpt_allowed_domain';
 
 import { RequestData } from './commonRequest';
@@ -43,6 +45,14 @@ async function fetchAndDecompressLog(
     }
   } catch (error) {
     console.error(error);
+
+    if (
+      error instanceof AxiosError &&
+      error.response?.status === HttpStatusCode.Forbidden
+    ) {
+      throw new Error('403:Domain not allowed');
+    }
+
     throw new Error(
       `Failed to fetch logs: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );

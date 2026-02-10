@@ -6,7 +6,7 @@ const Constants = {
   URL_END_PATH_SIZE: 50,
 } as const;
 
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import { LogExcerpt } from '@/components/Log/LogExcerpt';
 import { truncateUrl } from '@/lib/string';
@@ -57,8 +57,16 @@ export function LogViewer(): JSX.Element {
   const { url, type, itemId } = useSearch({ from: '/log-viewer' });
   const historyState = useRouterState({ select: s => s.location.state });
   const previousSearch = useSearchStore(s => s.previousSearch);
+  const { formatMessage } = useIntl();
 
-  const { data, status } = useLogViewer(url);
+  const { data, status, error } = useLogViewer(url);
+
+  const isDomainNotAllowed = error?.message.startsWith('403');
+  const domainNotAllowedError = isDomainNotAllowed ? (
+    <p className="text-weak-gray py-6 text-center text-xl font-semibold">
+      {formatMessage({ id: 'logViewer.domainNotAllowed' })}
+    </p>
+  ) : undefined;
   const { data: logData, isLoading } = useLogData(itemId ?? '', type);
 
   const { treeName, branch, id } = historyState;
@@ -192,7 +200,12 @@ export function LogViewer(): JSX.Element {
         </div>
       </div>
       <div className="overflow-hidden rounded-md">
-        <QuerySwitcher data={data} status={status}>
+        <QuerySwitcher
+          data={data}
+          status={status}
+          error={error}
+          customError={domainNotAllowedError}
+        >
           <LogExcerpt logExcerpt={data?.content} variant="log-viewer" />
         </QuerySwitcher>
       </div>
