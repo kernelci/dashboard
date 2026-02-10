@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "rm -rf ./node_modules/.vite && vite",
+    "dev-remote-api": "rm -rf ./node_modules/.vite && VITE_API_BASE_URL=/staging-api vite",
     "build": "tsc -b && vite build",
     "test": "vitest",
     "coverage": "vitest run --coverage",

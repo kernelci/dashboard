@@ -87,6 +87,9 @@ export const columns: ColumnDef<TestByCommitHash>[] = [
     id: DETAILS_COLUMN_ID,
     header: (): JSX.Element => <MoreDetailsTableHeader />,
     cell: (): JSX.Element => <MoreDetailsIcon />,
+    meta: {
+      dataTestId: 'details-button',
+    },
   },
 ];
 

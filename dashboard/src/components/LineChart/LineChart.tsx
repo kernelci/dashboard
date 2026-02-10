@@ -34,6 +34,7 @@ export type TLineChartProps = {
   onMarkClick?: MUILineChartProps['onMarkClick'];
   slots?: MUILineChartProps['slots'];
   slotProps?: MUILineChartProps['slotProps'];
+  dataTestId?: string;
 };
 
 export const LineChart = ({
@@ -44,9 +45,10 @@ export const LineChart = ({
   slotProps,
   sx,
   onMarkClick,
+  dataTestId,
 }: TLineChartProps): JSX.Element => {
   return (
-    <div className="px-4">
+    <div className="px-4" data-test-id={dataTestId}>
       {labels && (
         <div className="mt-3 mb-0 flex justify-end gap-2">{labels}</div>
       )}

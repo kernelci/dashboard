@@ -60,7 +60,11 @@ const TreeBreadcrumb = ({
     <Breadcrumb className="pt-6 pb-6">
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink to="/tree" search={searchParams}>
+          <BreadcrumbLink
+            to="/tree"
+            search={searchParams}
+            data-test-id="breadcrumb-trees-link"
+          >
             <FormattedMessage id="tree.path" />
           </BreadcrumbLink>
         </BreadcrumbItem>
