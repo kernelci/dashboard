@@ -17,6 +17,8 @@ import { useOrigins } from '@/api/origin';
 import { Button } from '@/components/ui/button';
 import MobileSideMenu from '@/components/SideMenu/MobileSideMenu';
 
+import { SearchBoxNavigate } from '@/components/SearchBoxNavigate';
+
 const OriginSelect = ({
   isHardwarePath,
 }: {
@@ -120,11 +122,16 @@ const TopBar = (): JSX.Element => {
     const lastMatch = matches[matches.length - 1];
     const firstUrlLocation = lastMatch?.pathname.split('/')[1] ?? '';
     const cleanFullPath = lastMatch?.fullPath.replace(/\//g, '') ?? '';
+    const isTreeListing = ['tree', 'treev1', 'treev2'].includes(cleanFullPath);
+    const isListingPage =
+      isTreeListing ||
+      ['hardware', 'hardwarev1', 'issues'].includes(cleanFullPath);
 
     return {
       firstUrlLocation,
-      isTreeListing: ['tree', 'treev1', 'treev2'].includes(cleanFullPath),
+      isTreeListing: isTreeListing,
       isHardwarePage: cleanFullPath.includes('hardware'),
+      isListingPage: isListingPage,
     };
   }, [matches]);
 
@@ -150,6 +157,7 @@ const TopBar = (): JSX.Element => {
             {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
               <OriginSelect isHardwarePath={routeInfo.isHardwarePage} />
             )}
+            {routeInfo.isListingPage && <SearchBoxNavigate />}
           </div>
         </div>
       </div>

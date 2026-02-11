@@ -33,6 +33,19 @@ const RouteComponent = (): JSX.Element => {
   );
 };
 
+// the treeListing controls the search, but it doesn't control the topbar
+// we should give the topbar the control of the search as well since they are in the same place (pagewise)
+// the listings should check the search by the url since that's where we are storing state
+// with the topbar having control over the search, we can change responsivity all at once in there
+
+// steps:
+// X remove searchbar from treeListing
+// X add searchbar to topbar
+// X validate behavior (validate as in check and make sure it is correct)
+// add simple responsivity to topbar
+// validate behavior
+// propagate changes to hardware and issue listing
+
 export const Route = createFileRoute('/_main')({
   component: RouteComponent,
 });
