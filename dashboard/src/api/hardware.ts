@@ -8,6 +8,8 @@ import type {
   HardwareListingResponseV2,
 } from '@/types/hardware';
 
+import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
+
 import { RequestData } from './commonRequest';
 
 const fetchHardwareListing = async (
@@ -32,8 +34,9 @@ const fetchHardwareListing = async (
 export const useHardwareListing = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
+  searchFrom: HardwareListingRoutesMap['v1']['search'],
 ): UseQueryResult<HardwareListingResponse> => {
-  const { origin } = useSearch({ from: '/_main/hardware/v1' });
+  const { origin } = useSearch({ from: searchFrom });
 
   const queryKey = [
     'hardwareListing',
@@ -76,8 +79,9 @@ const fetchHardwareListingV2 = async (
 export const useHardwareListingV2 = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
+  searchFrom: HardwareListingRoutesMap['v2']['search'],
 ): UseQueryResult<HardwareListingResponseV2> => {
-  const { origin } = useSearch({ from: '/_main/hardware' });
+  const { origin } = useSearch({ from: searchFrom });
 
   const queryKey = [
     'hardwareListingV2',

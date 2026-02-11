@@ -10,18 +10,24 @@ import HardwareListingPage from '@/pages/Hardware/HardwareListingPage';
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags';
 import { OldPageBanner } from '@/components/Banner/PageBanner';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
 
-const Hardware = (): JSX.Element => {
+const Hardware = ({
+  urlFromMap,
+}: {
+  urlFromMap: HardwareListingRoutesMap['v1'];
+}): JSX.Element => {
+  const { hardwareListingVersion } = useFeatureFlag();
   const { hardwareSearch } = useSearch({
-    from: '/_main/hardware/v1',
+    from: urlFromMap.search,
   });
 
-  const navigate = useNavigate({ from: '/hardware/v1' });
+  const navigate = useNavigate({ from: urlFromMap.navigate });
 
   const onInputSearchTextChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       navigate({
-        from: '/hardware/v1',
         search: previousSearch => ({
           ...previousSearch,
           hardwareSearch: e.target.value,
@@ -49,12 +55,17 @@ const Hardware = (): JSX.Element => {
           />
         </div>
       </div>
-      <OldPageBanner
-        pageNameId="hardwareListing.bannerTitle"
-        pageRoute="/hardware"
-      />
+      {hardwareListingVersion !== 'v1' && (
+        <OldPageBanner
+          pageNameId="hardwareListing.bannerTitle"
+          pageRoute="/hardware"
+        />
+      )}
       <div className="bg-light-gray w-full py-10">
-        <HardwareListingPage inputFilter={hardwareSearch ?? ''} />
+        <HardwareListingPage
+          inputFilter={hardwareSearch ?? ''}
+          urlFromMap={urlFromMap}
+        />
       </div>
     </>
   );
