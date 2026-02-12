@@ -396,5 +396,6 @@ export type ListingPaths = '/tree' | '/hardware' | '/issues';
 export type PossibleMonitorPath =
   | ListingPaths
   | '/hardware/v1'
+  | '/hardware/v2'
   | '/tree/v1'
   | '/tree/v2';

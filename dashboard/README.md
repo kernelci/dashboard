@@ -75,3 +75,4 @@ Available feature flags:
 
 - `VITE_FEATURE_FLAG_SHOW_DEV` - Controls visibility of dev-only features (boolean, default: `false`)
 - `VITE_FEATURE_FLAG_TREE_LISTING_VERSION` - Controls which tree listing version to display. Set to `"v1"` for the old version or `"v2"` for the new version (string, default: `"v1"`)
+- `VITE_FEATURE_FLAG_HARDWARE_LISTING_VERSION` - Controls which hardware listing version to display. Set to `"v1"` for the old version or `"v2"` for the new version (string, default: `"v1"`)

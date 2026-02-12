@@ -20,10 +20,13 @@ import {
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
+import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
+
 import { HardwareTable } from './HardwareTable';
 
 interface HardwareListingPageV2Props {
   inputFilter: string;
+  urlFromMap: HardwareListingRoutesMap['v2'];
 }
 
 const calculateTimeStamp = (
@@ -43,11 +46,13 @@ const calculateTimeStamp = (
   return { startTimestampInSeconds, endTimestampInSeconds };
 };
 
-const useHardwareListingTime = (): {
+const useHardwareListingTime = (
+  searchFrom: HardwareListingPageV2Props['urlFromMap']['search'],
+): {
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
 } => {
-  const { intervalInDays } = useSearch({ from: '/_main/hardware' });
+  const { intervalInDays } = useSearch({ from: searchFrom });
   const [timestamps, setTimeStamps] = useState(() => {
     return calculateTimeStamp(intervalInDays);
   });
@@ -63,14 +68,16 @@ const useHardwareListingTime = (): {
 
 const HardwareListingPageV2 = ({
   inputFilter,
+  urlFromMap,
 }: HardwareListingPageV2Props): JSX.Element => {
   const { startTimestampInSeconds, endTimestampInSeconds } =
-    useHardwareListingTime();
-  const { origin } = useSearch({ from: '/_main/hardware' });
+    useHardwareListingTime(urlFromMap.search);
+  const { origin } = useSearch({ from: urlFromMap.search });
 
   const { data, error, status, isLoading } = useHardwareListingV2(
     startTimestampInSeconds,
     endTimestampInSeconds,
+    urlFromMap.search,
   );
 
   const listItems: HardwareItem[] = useMemo(() => {
@@ -151,7 +158,7 @@ const HardwareListingPageV2 = ({
           queryData={data}
           error={error}
           isLoading={isLoading}
-          navigateFrom="/hardware"
+          navigateFrom={urlFromMap.navigate}
         />
       </div>
       {kcidevComponent}

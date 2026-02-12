@@ -69,7 +69,7 @@ interface IHardwareTable {
   navigateFrom: HardwareListingRoutes;
 }
 
-type HardwareListingRoutes = '/hardware' | '/hardware/v1';
+type HardwareListingRoutes = '/hardware' | '/hardware/v1' | '/hardware/v2';
 
 const getLinkProps = (
   row: Row<HardwareItem>,
