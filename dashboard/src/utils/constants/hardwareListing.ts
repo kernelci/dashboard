@@ -9,7 +9,7 @@ export type HardwareListingRoutesMap = {
     search: ValidHardwareFroms<'/_main/hardware' | '/_main/hardware/v1'>;
   };
   v2: {
-    navigate: ValidHardwareNavigates<'/hardware'>;
-    search: ValidHardwareFroms<'/_main/hardware'>;
+    navigate: ValidHardwareNavigates<'/hardware' | '/hardware/v2'>;
+    search: ValidHardwareFroms<'/_main/hardware' | '/_main/hardware/v2'>;
   };
 };
