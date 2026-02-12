@@ -14,4 +14,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/staging-api': {
+        target: 'https://staging.dashboard.kernelci.org:9000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: urlPath => urlPath.replace(/^\/staging-api/, ''),
+      },
+    },
+  },
 });

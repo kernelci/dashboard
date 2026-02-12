@@ -2,12 +2,17 @@ import type { LinkProps } from '@tanstack/react-router';
 import type { Cell, Row } from '@tanstack/react-table';
 import { flexRender } from '@tanstack/react-table';
 import { memo, useCallback, useMemo, type JSX } from 'react';
+import { z } from 'zod';
 
 import { TableCellWithLink, TableRow } from '@/components/ui/table';
 
 import { cn } from '@/lib/utils';
 
 import { DETAILS_COLUMN_ID } from './DetailsColumn';
+
+const ColumnMetaSchema = z.object({
+  dataTestId: z.string().optional(),
+});
 
 type BaseComponentType = {
   id: string;
@@ -38,11 +43,17 @@ const TableCellComponent = <T,>({
       ? detailsLinkProps
       : { search: s => s, state: s => s };
 
+  const metaResult = ColumnMetaSchema.safeParse(cell.column.columnDef.meta);
+  const dataTestId = metaResult.success
+    ? metaResult.data.dataTestId
+    : undefined;
+
   return (
     <TableCellWithLink
       onClick={parsedHandleClick}
       key={cell.id}
       linkProps={parsedLinkProps}
+      dataTestId={dataTestId}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
     </TableCellWithLink>

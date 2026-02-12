@@ -158,6 +158,7 @@ const ChartLegend = ({ chartValues, onClick }: IChartLegend): JSX.Element => {
             onClick={(): void => onClick?.(status)}
             key={chartValue?.color}
             className="flex flex-row text-left"
+            data-test-id={chartValue?.label}
           >
             {chartValue && (
               <div className="pt-1 pr-2">
