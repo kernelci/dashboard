@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "rm -rf ./node_modules/.vite && vite",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
