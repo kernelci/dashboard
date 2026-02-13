@@ -175,6 +175,7 @@ else:
             [
                 "notifications",
                 "--action=hardware_summary",
+                "--cc=kernelci-results@groups.io",
                 "--send",
                 "--yes",
             ],
