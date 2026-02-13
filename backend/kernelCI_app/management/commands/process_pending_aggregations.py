@@ -1,4 +1,5 @@
 import hashlib
+import signal
 import time
 from datetime import datetime
 from typing import Literal, Optional, Sequence, TypedDict, Union
@@ -484,6 +485,12 @@ class Command(BaseCommand):
         checking corresponding builds and checkouts in the database.
         Pending tests are generated through the monitor_submissions command.
         """
+    running = True
+
+    def signal_handler(self, signum, frame):
+        """Handle shutdown signals gracefully"""
+        out(f"Received signal {signum}, initiating graceful shutdown...")
+        raise SystemExit(0)
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -510,15 +517,20 @@ class Command(BaseCommand):
         interval = options["interval"]
 
         if loop:
+            signal.signal(signal.SIGTERM, self.signal_handler)
+            signal.signal(signal.SIGINT, self.signal_handler)
+
             out(f"Starting pending aggregation processor (interval={interval}s)...")
             try:
-                while True:
+                while self.running:
                     processed_count = self.process_pending_batch(batch_size)
                     if processed_count == 0:
                         out(f"Sleeping for {interval} seconds")
                         time.sleep(interval)
             except KeyboardInterrupt:
                 out("Stopping pending aggregation processor...")
+            finally:
+                out("Pending aggregation processor shutdown complete")
         else:
             self.process_pending_batch(batch_size)
 

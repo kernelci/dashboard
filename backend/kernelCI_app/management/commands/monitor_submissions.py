@@ -1,5 +1,6 @@
 import argparse
 import shutil
+import signal
 from django.core.management.base import BaseCommand
 import logging
 import time
@@ -42,6 +43,12 @@ def check_positive_int(value) -> bool:
 
 class Command(BaseCommand):
     help = "Monitor a folder for new files and print when found"
+    running = True
+
+    def signal_handler(self, signum, frame):
+        """Handle shutdown signals gracefully when running on Docker"""
+        logger.info(f"Received signal {signum}, initiating graceful shutdown...")
+        self.running = False
 
     def add_arguments(self, parser):
         # TODO: add a way to set the folder by env var instead of by argument
@@ -79,6 +86,9 @@ class Command(BaseCommand):
         trees_file: str,
         **options,
     ):
+        signal.signal(signal.SIGTERM, self.signal_handler)
+        signal.signal(signal.SIGINT, self.signal_handler)
+
         if PROMETHEUS_MULTIPROC_DIR:
             if os.path.exists(PROMETHEUS_MULTIPROC_DIR):
                 shutil.rmtree(PROMETHEUS_MULTIPROC_DIR)
@@ -111,7 +121,7 @@ class Command(BaseCommand):
         self.stdout.write("Starting file monitoring... (Press Ctrl+C to stop)")
 
         try:
-            while True:
+            while self.running:
                 # TODO: retry failed files every x cycles
                 try:
                     with os.scandir(spool_dir) as it:
@@ -145,3 +155,5 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}")
             raise
+        finally:
+            logger.info("File monitoring shutdown complete")

@@ -130,7 +130,6 @@ if SKIP_CRONJOBS:
 else:
     CRONJOBS = [
         ("0 * * * *", "kernelCI_app.tasks.update_checkout_cache"),
-        ("0 0 * * *", "django.core.management.call_command", ["treeproof"]),
         (
             "59 * * * *",
             "django.core.management.call_command",

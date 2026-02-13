@@ -1,16 +1,28 @@
 import os
-import yaml
+from typing import Optional
 import logging
-from kernelCI_app.constants.ingester import TREES_FILE
+from kernelCI_app.constants.ingester import INGESTER_TREES_FILEPATH
+from kernelCI_app.management.commands.treeproof import Command as TreeproofCommand
 
 
 logger = logging.getLogger("ingester")
 
 
-def load_tree_names(trees_file: str = TREES_FILE) -> dict[str, str]:
-    """Reads data from the trees_file, which correlates git_repository_url to tree_name"""
-    with open(trees_file, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
+def load_tree_names(
+    trees_file: Optional[str] = INGESTER_TREES_FILEPATH,
+) -> dict[str, str]:
+    """
+    Updates data from the tree_names, which correlates git_repository_url to tree_name,
+    and returns a dict with the updated data.
+    """
+    if trees_file is None:
+        trees_file = INGESTER_TREES_FILEPATH
+
+    try:
+        data = TreeproofCommand().generate_tree_names(filepath=trees_file)
+    except Exception as e:
+        logger.error("Error reading trees file %s: %s", trees_file, e)
+        raise e
 
     tree_names = {v["url"]: tree_name for tree_name, v in data.get("trees", {}).items()}
 

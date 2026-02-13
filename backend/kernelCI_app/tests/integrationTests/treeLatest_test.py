@@ -21,13 +21,13 @@ client = TreeClient()
             "for-next",
             {},
             False,
-        ),  # No qcom tree in trees-name.yaml, only in kcidb
+        ),  # No qcom tree in tree-names.yaml, only in kcidb
         (
             "agross",
             "for-next",
             {},
             True,
-        ),  # No agross tree in kcidb, only in trees-name.yaml
+        ),  # No agross tree in kcidb, only in tree-names.yaml
         (
             "android",
             "android-mainline",
