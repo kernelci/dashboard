@@ -1,0 +1,53 @@
+name: Deploy Containers
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: marcelorobert/dashboard
+  COMMIT_SHA: ${{ github.sha }}
+
+jobs:
+  build-and-push:
+    # Experimental: Only run this job for this specific fork
+    if: github.repository == 'MarceloRobert/dashboard'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build repository images
+        run: |
+          docker compose build backend dashboard proxy
+
+      - name: Tag images with commit SHA
+        run: |
+          for service in backend dashboard proxy; do
+            docker tag ghcr.io/${{ env.IMAGE_NAME }}/${service}:latest \
+                       ghcr.io/${{ env.IMAGE_NAME }}/${service}:${{ env.COMMIT_SHA }}
+          done
+
+      - name: Push images to GitHub Container Registry
+        run: |
+          for service in backend dashboard proxy; do
+            docker push ghcr.io/${{ env.IMAGE_NAME }}/${service}:latest
+            docker push ghcr.io/${{ env.IMAGE_NAME }}/${service}:${{ env.COMMIT_SHA }}
+          done
+
