@@ -48,17 +48,11 @@ services:
             - test_db
             - redis
         environment:
-            DB_DEFAULT_NAME: kcidb_test
-            DB_DEFAULT_USER: test_user
-            DB_DEFAULT_PASSWORD: test_password
-            DB_DEFAULT_HOST: test_db
-            DB_DEFAULT_PORT: 5432
-            DASH_DB_NAME: dashboard_test
-            DASH_DB_USER: test_user
-            DASH_DB_PASSWORD: test_password
-            DASH_DB_HOST: test_db
-            DASH_DB_PORT: 5432
-            USE_DASHBOARD_DB: true
+            DB_NAME: kcidb_test
+            DB_USER: test_user
+            DB_PASSWORD: test_password
+            DB_HOST: test_db
+            DB_PORT: 5432
             DEBUG: true
             DEBUG_SQL_QUERY: false
             REDIS_HOST: redis
@@ -66,3 +60,13 @@ services:
             CORS_ALLOW_ALL_ORIGINS: true
             TEST_DB_HOST: test_db
             TEST_DB_PORT: 5432
+        command:
+            - poetry
+            - run
+            - gunicorn
+            - kernelCI.wsgi:application
+            - --workers=5
+            - --forwarded-allow-ips=*
+            - --bind=0.0.0.0:8000
+            - --timeout=250
+        entrypoint: "./utils/docker/backend_entrypoint.sh"

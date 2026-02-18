@@ -6,6 +6,8 @@ FROM alpine:3.20 as backend-base
 WORKDIR /
 
 ENV POETRY_HOME=/opt/poetry
+ENV PYTHONOPTIMIZE=${PYTHONOPTIMIZE:-2}
+ENV PYTHONUNBUFFERED=${PYTHONUNBUFFERED:-1}
 
 RUN apk update \
     && apk add --no-cache \
@@ -21,10 +23,9 @@ RUN apk update \
     && $POETRY_HOME/bin/pip install poetry==1.8.3 \
     && ln -s $POETRY_HOME/bin/poetry /bin/poetry
 
-FROM backend-base
-COPY . /backend
-COPY ./utils/docker/entrypoint.sh /entrypoint.sh
+FROM backend-base as kernelci-django-backend
 WORKDIR /backend
+COPY . /backend
 
 ARG INSTALL_DEV_DEPS=false
 RUN if [ "$INSTALL_DEV_DEPS" = "true" ]; then \
@@ -36,25 +37,8 @@ RUN if [ "$INSTALL_DEV_DEPS" = "true" ]; then \
 ENV DJANGO_APP="kernelCI"
 
 # Precompile Python modules
-RUN O='0 1 2' \
-        PY_MAJMIN=`poetry run python -c "import sys; print('%s.%s'%sys.version_info[0:2])"` \
-        PY_D=`poetry env info --path` \
-        D="$PY_D $DJANGO_APP"; \
-        for N in $O; do \
-            echo "compile python $PY_MAJMIN byte code at -O$N: $D"; \
-            PYTHONOPTIMIZE=$N poetry run python -m compileall -q $D || exit 1; \
-        done
-
-ARG BACKEND_VOLUME_DIR
-ENV BACKEND_VOLUME_DIR=${BACKEND_VOLUME_DIR}
-RUN echo "Building with volume on: $BACKEND_VOLUME_DIR"
-VOLUME ${BACKEND_VOLUME_DIR}
-
-# Expose both application and metrics ports
-EXPOSE 8000 8001
-
-# gunicorn is added here but is run at the end of the entrypoint.
-# This was done here such that we can run a custom command
-# in the backend container without using gunicorn
-CMD ["gunicorn", "kernelCI.wsgi:application", "--workers=5", "--forwarded-allow-ips=*", "--bind=0.0.0.0:8000", "--timeout=250"]
-ENTRYPOINT ["/entrypoint.sh"]
+RUN PY_MAJMIN=`poetry run python -c "import sys; print('%s.%s'%sys.version_info[0:2])"` \
+    PY_D=`poetry env info --path` \
+    D="$PY_D $DJANGO_APP"; \
+    echo "compile python $PY_MAJMIN byte code at $D"; \
+    poetry run python -m compileall -q $D || exit 1;

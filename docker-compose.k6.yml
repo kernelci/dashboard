@@ -56,17 +56,11 @@ services:
             retries: 5
             start_period: 15s
         environment:
-            DB_DEFAULT_NAME: dashboard
-            DB_DEFAULT_USER: admin
-            DB_DEFAULT_PASSWORD: admin
-            DB_DEFAULT_HOST: k6-db
-            DB_DEFAULT_PORT: 5432
-            DASH_DB_NAME: dashboard
-            DASH_DB_USER: admin
-            DASH_DB_PASSWORD: admin
-            DASH_DB_HOST: k6-db
-            DASH_DB_PORT: 5432
-            USE_DASHBOARD_DB: True
+            DB_NAME: dashboard
+            DB_USER: admin
+            DB_PASSWORD: admin
+            DB_HOST: k6-db
+            DB_PORT: 5432
             DEBUG: True
             DEBUG_SQL_QUERY: False
             REDIS_HOST: redis
@@ -74,6 +68,17 @@ services:
             CORS_ALLOW_ALL_ORIGINS: True
             ALLOWED_HOSTS: '["localhost", "test-backend"]'
             SKIP_CRONJOBS: True
+        command:
+            - poetry
+            - run
+            - gunicorn
+            - kernelCI.wsgi:application
+            - --workers=5
+            - --forwarded-allow-ips=*
+            - --bind=0.0.0.0:8000
+            - --timeout=250
+        entrypoint: "./utils/docker/backend_entrypoint.sh"
+
     k6:
         build:
             context: ./k6

@@ -66,9 +66,9 @@ mkdir -p backend/runtime/secrets
 echo <password> > backend/runtime/secrets/postgres_password_secret
 ```
 
-If you are going to use a database user other than `kernelci`, set it to `DB_DEFAULT_USER`:
+If you are going to use a database user other than `kernelci`, set it to `DB_USER`:
 ```sh
-export DB_DEFAULT_USER=<user>
+export DB_USER=<user>
 ```
 
 If you are setting up instance different than production KernelCI dashboard, you need to define CORS_ALLOWED_ORIGINS. On .env.backend:
@@ -100,17 +100,15 @@ Or you can also run the env exports and docker compose within the root user by r
 > Tip: you can create a quick script to set all the necessary envs and start the services. This will also allow docker to see the environment variables correclty. Example:
 
 ```sh
-export DB_DEFAULT_USER=email@email.com
+export DB_USER=email@email.com
 export DJANGO_SECRET_KEY=$(openssl rand -base64 22)
-export DB_DEFAULT_NAME=kcidb
+export DB_NAME=kcidb
 export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
 
 docker compose up --build
 ```
 
-> [Note] If you are going to run using only the local database, the DB_DEFAULT_NAME should be `dashboard` and the `DB_DEFAULT_USER` and `DB_DEFAULT_PASSWORD` should be `admin` (for now).
-> After you define those values, also set the env var `USE_DASHBOARD_DB` to True, setting the local database as the default one.
-> You could also set the DB_DEFAULT variables to point to the local database and leave `USE_DASHBOARD_DB` as False.
+> [Note] If you are going to run using only the local database, the DB_NAME should be `dashboard` and the `DB_USER` and `DB_PASSWORD` should be `admin` (for now). This simply follows what is going to be setup by the `dashboard_db` service on docker compose.
 
 
 ## Deploying to production

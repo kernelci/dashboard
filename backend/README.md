@@ -41,35 +41,19 @@ It's possible to export `DEBUG_SQL_QUERY=True` if you want to see which SQL quer
 
 ### Databases
 
-For the main database, the backend uses a `DB_DEFAULT` variable that must have a JSON string such as:
+For the main database, the backend uses a series of `DB_` environment variables that have to be set such as:
 
 ```sh
-DB_DEFAULT="{
-    \"ENGINE\": \"${DB_DEFAULT_ENGINE:=django_prometheus.db.backends.postgresql}\",
-    \"NAME\": \"${DB_DEFAULT_NAME:=kcidb}\",
-    \"USER\": \"${DB_DEFAULT_USER:=<your-email-here>}\",
-    \"PASSWORD\": \"<your-password-here-don't-forget-to-scape-special-characters>\", 
-    \"HOST\": \"${DB_DEFAULT_HOST:=127.0.0.1}\",
-    \"PORT\": \"${DB_DEFAULT_PORT:=5432}\",
-    \"CONN_MAX_AGE\": ${DB_DEFAULT_CONN_MAX_AGE:=null},
-    \"OPTIONS\": {
-      \"connect_timeout\": ${DB_DEFAULT_TIMEOUT:=10}
-    }
-}"
+export DB_NAME=kcidb
+export DB_USER=your-email-here
+export DB_PASSWORD=your-password-here-dont-forget-to-scape-special-characters
+export DB_HOST=127.0.0.1
+export DB_PORT=5432
+export DB_ENGINE=django_prometheus.db.backends.postgresql
+export DB_OPTIONS_CONNECT_TIMEOUT=16
 ```
 > [!NOTE]
 > It is possible to have authentication issues when escaping special characters. In some cases, it is necessary to add more than one backslash, while in others, no addition is needed. To assist with this, you can export `DEBUG_DB_VARS=True` to check the database connection info in the terminal, allowing you to determine if the characters got escaped as intended. **This variable should NOT be set to True in production**.
-
-Along with the main database, the backend also connects to a secondary, local db made while we transition between database providers. It uses a simpler environment variable structure:
-```sh
-DASH_DB_NAME=dashboard
-DASH_DB_USER=admin
-DASH_DB_PASSWORD=admin
-DASH_DB_HOST=127.0.0.1
-DASH_DB_PORT=5434 # Note that this is not 5432, avoids conflict with the proxy port.
-```
-
-If you have both connections and you want to use the local one as the default, the env var `USE_DASHBOARD_DB` can be exported as `True` for a quick flag change.
 
 #### SQLite
 
@@ -78,7 +62,7 @@ Before running the server, you must also update a local SQLite database used for
 
 ## Running the server
 
-After connecting to the database proxy, execute the server with:
+After connecting to the database, execute the server with:
 
 ```sh
 poetry run python3 manage.py runserver
@@ -89,7 +73,7 @@ poetry run python3 manage.py runserver
 We have a couple of useful scripts:
 
 * [migrate-cache-db.sh](./migrate-cache-db.sh) will create and apply migrations for the cache SQLite database. This runs automatically when running on docker, but you have to run it mannually otherwise.
-* [migrate-app-db.sh](./migrate-app-db.sh) will create and apply migrations for the main app, used for the secondary database. This does not run automatically in order to avoid potential problems. For this script, be aware of the `USE_DASHBOARD_DB` environment variable, because that variable will change the name of the databases (`dashboard_db` becomes `default` and `default` becomes `kcidb`) and so you'll have to change the command accordingly.
+* [migrate-app-db.sh](./migrate-app-db.sh) will create and apply migrations for the main app, generally used for the local database. This does not run automatically in order to avoid potential problems. Be aware that *if* you have write permissions to the production database it will be changed, so double check that you are connected to the right one (but usually developers won't have write access to the production database anyway).
 
 It is important to note that Django automatically creates migrations based on changes to the models when running the first command of the scripts above. You can edit the migrations manually, and you can also run the commands by hand if you want more control over it.
 
@@ -236,7 +220,7 @@ In order to debug backend in PyCharm, just follow these steps:
    - in `Run` session of the dialog, select `script`, then find the script `manage.py` at the `backend` folder
    - at `script` name input, just enter `runserver`
    - at `Environment Variables`, enter the following values:
-     - `DB_DEFAULT`: `{"ENGINE": "django.db.backends.postgresql", "NAME": "playground_kcidb", "USER": "<youremail>@profusion.mobi", "PASSWORD": "<yourpassword>", "HOST": "127.0.0.1", "PORT": "5432", "CONN_MAX_AGE": null, "OPTIONS": {"connect_timeout": 2, "sslmode": "disable"}}`
+     - `DB_ENGINE`: `django.db.backends.postgresql`, `DB_NAME`: `dashboard`, `DB_USER`: `<youremail>@profusion.mobi`, `DB_PASSWORD`: `<yourpassword>`, `DB_HOST`: `127.0.0.1`, `DB_PORT`: `5432`, `DB_OPTIONS_CONNECT_TIMEOUT`: `16`
      - `DEBUG`: `True`
 
 Quote character in password field is escaped normally with `\"` .
