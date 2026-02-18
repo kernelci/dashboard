@@ -66,7 +66,6 @@ You can also run performance tests manually with more control:
 
 ```bash
 cd backend
-export USE_DASHBOARD_DB=true
 export DJANGO_SETTINGS_MODULE=kernelCI.perf_test_settings
 export TEST_DB_HOST=localhost
 export TEST_DB_PORT=5435

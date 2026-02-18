@@ -213,40 +213,23 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# When running on docker it won't build without this variable,
-# the default value here is for when running locally
 BACKEND_VOLUME_DIR = os.environ.get("BACKEND_VOLUME_DIR", "volume_data")
 
 DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
 # Database definition configurations
-kcidb_config = get_json_env_var(
-    "DB_DEFAULT",
-    {
-        "ENGINE": "django_prometheus.db.backends.postgresql",
-        "NAME": "kernelci",
-        "USER": "kernelci",
-        "PASSWORD": "kernelci-db-password",
-        "HOST": "127.0.0.1",
-        "OPTIONS": {
-            "connect_timeout": 16,
-        },
-    },
-)
-
-dashboard_db_config = {
-    "ENGINE": "django_prometheus.db.backends.postgresql",
-    "NAME": os.environ.get("DASH_DB_NAME", "dashboard"),
-    "USER": os.environ.get("DASH_DB_USER", "dev"),
-    "PASSWORD": os.environ.get("DASH_DB_PASSWORD", "dev"),
-    "HOST": os.environ.get("DASH_DB_HOST", "127.0.0.1"),
-    "PORT": os.environ.get("DASH_DB_PORT", 5434),
+kcidb_config = {
+    "NAME": os.getenv("DB_NAME", "dashboard"),
+    "USER": os.getenv("DB_USER", "admin"),
+    "PASSWORD": os.getenv("DB_PASSWORD", "admin"),
+    "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+    "PORT": os.getenv("DB_PORT", "5432"),
+    "ENGINE": os.getenv("DB_ENGINE", "django_prometheus.db.backends.postgresql"),
     "OPTIONS": {
-        "connect_timeout": 16,
+        "connect_timeout": int(os.getenv("DB_OPTIONS_CONNECT_TIMEOUT", "16")),
     },
 }
 
-# Common databases
 cache_db_config = {
     "ENGINE": "django.db.backends.sqlite3",
     "NAME": os.path.join(BACKEND_VOLUME_DIR, "cache.sqlite3"),
@@ -257,21 +240,11 @@ notifications_db_config = {
     "NAME": os.path.join(BACKEND_VOLUME_DIR, "notifications.sqlite3"),
 }
 
-USE_DASHBOARD_DB = is_boolean_or_string_true(os.environ.get("USE_DASHBOARD_DB", False))
-if USE_DASHBOARD_DB:
-    DATABASES = {
-        "default": dashboard_db_config,
-        "kcidb": kcidb_config,
-        "cache": cache_db_config,
-        "notifications": notifications_db_config,
-    }
-else:
-    DATABASES = {
-        "default": kcidb_config,
-        "dashboard_db": dashboard_db_config,
-        "cache": cache_db_config,
-        "notifications": notifications_db_config,
-    }
+DATABASES = {
+    "default": kcidb_config,
+    "cache": cache_db_config,
+    "notifications": notifications_db_config,
+}
 
 if DEBUG_DB_VARS:
     print("DEBUG: DATABASES:", DATABASES)

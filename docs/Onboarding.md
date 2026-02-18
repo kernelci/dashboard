@@ -39,7 +39,7 @@ In order to access the production database, you must be granted access to it fir
 * Connect to the database via SSH tunnel with the provided URL.
 
 2. You should ask for the creation of a new user/password for the database access. Once you have your credentials, connect to the database via `psql`, pgAdmin, DBeaver or any other postgresql manager.
-3. Spin up the *secondary*, local dashboard-db by starting its docker container and running the [migration script](../backend/migrate-app-db.sh). This secondary database is very useful for local development and you can modify it as much as you like.
+3. Start up the local dashboard-db by starting its docker container and running the [migration script](../backend/migrate-app-db.sh). This secondary database is very useful for local development and you can modify it as much as you like.
 
 Definition of Done: You have access to kcidb and created the local database.
 
@@ -101,26 +101,16 @@ Definition of Done: You have the KernelCI Dashboard frontend running locally.
     sudo snap stop redis
     ```
 
-2. Create a secret file with your database password (no extension and no other data is needed):
-```bash
-echo <password> > backend/runtime/secrets/postgres_password_secret
-```
-
-3. Set up the `.env` files in the root of the project by copying the `.env.name.example` files and removing the `.example` at the end of the filenames. For the development you'll need to change the following variables in the .env.backend file:
+2. Set up the `.env` files in the root of the project by copying the `.env.name.example` files and removing the `.example` at the end of the filenames. For the development you'll need to change the following variables in the .env.backend file:
 ```
 DEBUG_SQL_QUERY=False
 DEBUG=True
 
-DB_DEFAULT_NAME=kcidb_db
-DB_DEFAULT_USER=<your user>
-DB_DEFAULT_PASSWORD=<your password>
-DB_DEFAULT_HOST=dashboard_db  # Docker can't connect to the ssh tunnel host directly.
+DB_NAME=dashboard
+DB_USER=admin
+DB_PASSWORD=admin
+DB_HOST=dashboard_db  # Docker can't connect to the ssh tunnel host directly.
 DJANGO_SECRET_KEY=$(openssl rand -base64 22)
-
-DASH_DB_NAME=dashboard
-DASH_DB_USER=admin
-DASH_DB_PASSWORD=admin
-DASH_DB_HOST=dashboard_db
 ```
 
 If running the notification commands, you should add to your .env.backend the following variables:
@@ -130,7 +120,9 @@ EMAIL_HOST_PASSWORD=<your app password>
 ```
 For the onboarding you can skip those, but do check out the [notifications](./notifications.md) part of the dashboard.
 
-4. Start up the services with the command:
+Other environment variables can be set as needed.
+
+3. Start up the services with the command:
 
 ```bash
 docker compose up build -d
