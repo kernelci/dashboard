@@ -3,7 +3,9 @@ application_default_credentials.json
 .vscode
 .env
 .env.backend
+.env.ingester
 .env.db
+.env.pending_aggregations
 .env.proxy
 .idea
 
