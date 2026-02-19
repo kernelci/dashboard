@@ -1165,13 +1165,13 @@ paths:
         description: Commit hash of the tree
         required: true
       - in: query
-        name: end_time_stamp_in_seconds
+        name: end_timestamp_in_seconds
         schema:
           anyOf:
           - type: string
           - type: 'null'
           default: null
-          title: End Time Stamp In Seconds
+          title: End Timestamp In Seconds
         description: End time filter in seconds for tree commits
       - in: query
         name: git_branch
@@ -1199,13 +1199,13 @@ paths:
           type: string
         description: Origin to retrieve the tree commits
       - in: query
-        name: start_time_stamp_in_seconds
+        name: start_timestamp_in_seconds
         schema:
           anyOf:
           - type: string
           - type: 'null'
           default: null
-          title: Start Time Stamp In Seconds
+          title: Start Timestamp In Seconds
         description: Start time filter in seconds for tree commits
       - in: query
         name: types
@@ -1503,13 +1503,13 @@ paths:
         description: Commit hash of the tree
         required: true
       - in: query
-        name: end_time_stamp_in_seconds
+        name: end_timestamp_in_seconds
         schema:
           anyOf:
           - type: string
           - type: 'null'
           default: null
-          title: End Time Stamp In Seconds
+          title: End Timestamp In Seconds
         description: End time filter in seconds for tree commits
       - in: path
         name: git_branch
@@ -1525,13 +1525,13 @@ paths:
           type: string
         description: Origin to retrieve the tree commits
       - in: query
-        name: start_time_stamp_in_seconds
+        name: start_timestamp_in_seconds
         schema:
           anyOf:
           - type: string
           - type: 'null'
           default: null
-          title: Start Time Stamp In Seconds
+          title: Start Timestamp In Seconds
         description: Start time filter in seconds for tree commits
       - in: path
         name: tree_name

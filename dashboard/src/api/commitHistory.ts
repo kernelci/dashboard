@@ -33,8 +33,8 @@ const fetchCommitHistory = async (
     origin,
     git_url: gitUrl,
     git_branch: gitBranch,
-    start_time_stamp_in_seconds: startTimestampInSeconds,
-    end_time_stamp_in_seconds: endTimestampInSeconds,
+    start_timestamp_in_seconds: startTimestampInSeconds,
+    end_timestamp_in_seconds: endTimestampInSeconds,
     types: types?.join(','),
     ...filtersFormatted,
   };

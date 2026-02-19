@@ -411,9 +411,8 @@ class BaseTreeCommitsHistory(APIView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        start_timestamp = params.start_time_stamp_in_seconds
-        end_timestamp = params.end_time_stamp_in_seconds
-
+        start_timestamp = params.start_timestamp_in_seconds
+        end_timestamp = params.end_timestamp_in_seconds
         if None not in (start_timestamp, end_timestamp):
             self._process_time_range(
                 start_timestamp=start_timestamp, end_timestamp=end_timestamp

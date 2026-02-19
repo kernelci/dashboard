@@ -25,10 +25,10 @@ class DirectTreeCommitsQueryParameters(BaseModel):
     origin: str = Field(
         DEFAULT_ORIGIN, description=DocStrings.TREE_COMMIT_ORIGIN_DESCRIPTION
     )
-    start_time_stamp_in_seconds: Optional[str] = Field(
+    start_timestamp_in_seconds: Optional[str] = Field(
         None, description=DocStrings.TREE_COMMIT_START_TS_DESCRIPTION
     )
-    end_time_stamp_in_seconds: Optional[str] = Field(
+    end_timestamp_in_seconds: Optional[str] = Field(
         None, description=DocStrings.TREE_COMMIT_END_TS_DESCRIPTION
     )
     types: Optional[list[TreeEntityTypes]] = Field(
