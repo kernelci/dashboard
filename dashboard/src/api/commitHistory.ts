@@ -26,6 +26,7 @@ const fetchCommitHistory = async (
   treeName?: string,
   treeUrlFrom?: TreeDetailsRouteFrom,
   types?: TreeEntityTypes[],
+  buildsRelatedToFilteredTestsOnly?: boolean,
 ): Promise<TTreeCommitHistoryResponse> => {
   const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
 
@@ -36,6 +37,7 @@ const fetchCommitHistory = async (
     start_timestamp_in_seconds: startTimestampInSeconds,
     end_timestamp_in_seconds: endTimestampInSeconds,
     types: types?.join(','),
+    builds_related_to_filtered_tests_only: buildsRelatedToFilteredTestsOnly,
     ...filtersFormatted,
   };
 
@@ -65,6 +67,7 @@ export const useCommitHistory = ({
   treeName,
   treeUrlFrom,
   types,
+  buildsRelatedToFilteredTestsOnly,
 }: {
   commitHash: string;
   origin: string;
@@ -76,6 +79,7 @@ export const useCommitHistory = ({
   treeName?: string;
   treeUrlFrom?: TreeDetailsRouteFrom;
   types?: TreeEntityTypes[];
+  buildsRelatedToFilteredTestsOnly?: boolean;
 }): UseQueryResult<TTreeCommitHistoryResponse> => {
   const testFilter = getTargetFilter(filter, 'test');
   const treeDetailsFilter = getTargetFilter(filter, 'treeDetails');
@@ -98,6 +102,7 @@ export const useCommitHistory = ({
       treeName,
       treeUrlFrom,
       types,
+      buildsRelatedToFilteredTestsOnly,
     ],
     queryFn: () =>
       fetchCommitHistory(
@@ -111,6 +116,7 @@ export const useCommitHistory = ({
         treeName,
         treeUrlFrom,
         types,
+        buildsRelatedToFilteredTestsOnly,
       ),
   });
 };

@@ -35,6 +35,13 @@ class DirectTreeCommitsQueryParameters(BaseModel):
         None,
         description="List of types to include (builds, boots, tests)",
     )
+    builds_related_to_filtered_tests_only: bool = Field(
+        False,
+        description=(
+            "When true, and requesting only builds, count only builds related to "
+            "tests/boots that pass the current filters."
+        ),
+    )
     # TODO: Add filters field in this model
 
     @field_validator("types", mode="before")
