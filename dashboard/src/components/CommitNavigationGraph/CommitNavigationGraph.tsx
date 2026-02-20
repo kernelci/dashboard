@@ -54,6 +54,7 @@ interface ICommitNavigationGraph {
   onMarkClick: (commitHash: string, commitName?: string) => void;
   treeName?: string;
   treeUrlFrom?: TreeDetailsRouteFrom;
+  buildsRelatedToFilteredTestsOnly?: boolean;
 }
 
 const CommitNavigationGraph = ({
@@ -69,6 +70,7 @@ const CommitNavigationGraph = ({
   startTimestampInSeconds,
   treeName,
   treeUrlFrom,
+  buildsRelatedToFilteredTestsOnly,
 }: ICommitNavigationGraph): JSX.Element => {
   const { formatMessage } = useIntl();
 
@@ -98,6 +100,7 @@ const CommitNavigationGraph = ({
     treeName,
     treeUrlFrom,
     types,
+    buildsRelatedToFilteredTestsOnly,
   });
 
   const displayableData = data ? data : null;

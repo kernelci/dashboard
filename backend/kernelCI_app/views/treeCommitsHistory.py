@@ -28,6 +28,7 @@ from kernelCI_app.typeModels.treeCommits import (
     DirectTreeCommitsQueryParameters,
     TreeCommitsQueryParameters,
     TreeCommitsResponse,
+    TreeEntityTypes,
 )
 from pydantic import ValidationError
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
@@ -45,6 +46,7 @@ class BaseTreeCommitsHistory(APIView):
         self.end_datetime = None
         self.processed_builds = set()
         self.processed_tests = set()
+        self.builds_related_to_filtered_tests_only = False
 
     def setup_filters(self):
         self.filterTestDurationMin = self.filterParams.filterTestDurationMin
@@ -160,26 +162,10 @@ class BaseTreeCommitsHistory(APIView):
         test_id: str,
         test_status: str,
         commit_hash: str,
-        test_duration: int,
-        test_path: str,
-        issue_id: str,
-        issue_version: int,
-        incident_test_id: str,
-        test_origin: str,
     ) -> None:
-        is_boot_filter_out = self.filterParams.is_boot_filtered_out(
-            duration=test_duration,
-            issue_id=issue_id,
-            issue_version=issue_version,
-            path=test_path,
-            status=test_status,
-            incident_test_id=incident_test_id,
-            origin=test_origin,
-        )
-
         is_boot_processed = test_id in self.processed_tests
 
-        if is_boot_filter_out or is_boot_processed:
+        if is_boot_processed:
             return
 
         self.processed_tests.add(test_id)
@@ -192,26 +178,10 @@ class BaseTreeCommitsHistory(APIView):
         test_id: str,
         test_status: str,
         commit_hash: str,
-        test_duration: int,
-        test_path: str,
-        issue_id: str,
-        issue_version: int,
-        incident_test_id: str,
-        test_origin: str,
     ) -> None:
-        is_nonboot_filter_out = self.filterParams.is_test_filtered_out(
-            duration=test_duration,
-            issue_id=issue_id,
-            issue_version=issue_version,
-            path=test_path,
-            status=test_status,
-            incident_test_id=incident_test_id,
-            origin=test_origin,
-        )
-
         is_test_processed = test_id in self.processed_tests
 
-        if is_nonboot_filter_out or is_test_processed:
+        if is_test_processed:
             return
 
         self.processed_tests.add(test_id)
@@ -257,20 +227,9 @@ class BaseTreeCommitsHistory(APIView):
 
     def _process_tests(self, row: dict) -> None:
         test_id = row["test_id"]
-        issue_id = row["issue_id"]
         test_status = row["test_status"] or "NULL"
-        test_duration = row["test_duration"]
         test_path = row["test_path"]
-        issue_version = row["issue_version"]
-        incident_test_id = row["incidents_test_id"]
-        build_status = row["build_status"]
-        test_origin = row["test_origin"]
         commit_hash = row["git_commit_hash"]
-
-        if issue_id is None and (
-            build_status in [FAIL_STATUS, NULL_STATUS] or test_status == FAIL_STATUS
-        ):
-            issue_id = UNCATEGORIZED_STRING
 
         if test_id is None:
             return
@@ -280,28 +239,18 @@ class BaseTreeCommitsHistory(APIView):
                 test_id=test_id,
                 test_status=test_status,
                 commit_hash=commit_hash,
-                test_duration=test_duration,
-                test_path=test_path,
-                issue_id=issue_id,
-                issue_version=issue_version,
-                incident_test_id=incident_test_id,
-                test_origin=test_origin,
             )
         else:
             self._process_nonboots_count(
                 test_id=test_id,
                 test_status=test_status,
                 commit_hash=commit_hash,
-                test_duration=test_duration,
-                test_path=test_path,
-                issue_id=issue_id,
-                issue_version=issue_version,
-                incident_test_id=incident_test_id,
-                test_origin=test_origin,
             )
 
     def _process_builds(self, row: dict) -> None:
         build_id = row["build_id"]
+        if build_id is None:
+            return
         commit_hash = row["git_commit_hash"]
         build_origin = row["build_origin"]
 
@@ -328,7 +277,47 @@ class BaseTreeCommitsHistory(APIView):
             return start_time >= self.start_datetime and start_time <= self.end_datetime
         return True
 
-    def _process_rows(self, rows: dict) -> None:
+    def _is_test_row_filtered_out(self, row: dict) -> bool:
+        test_id = row["test_id"]
+        if test_id is None:
+            return True
+
+        issue_id = row["issue_id"]
+        test_status = row["test_status"] or "NULL"
+        test_duration = row["test_duration"]
+        test_path = row["test_path"]
+        issue_version = row["issue_version"]
+        incident_test_id = row["incidents_test_id"]
+        build_status = row["build_status"]
+        test_origin = row["test_origin"]
+
+        if issue_id is None and (
+            build_status in [FAIL_STATUS, NULL_STATUS] or test_status == FAIL_STATUS
+        ):
+            issue_id = UNCATEGORIZED_STRING
+
+        if is_boot(test_path):
+            return self.filterParams.is_boot_filtered_out(
+                duration=test_duration,
+                issue_id=issue_id,
+                issue_version=issue_version,
+                path=test_path,
+                status=test_status,
+                incident_test_id=incident_test_id,
+                origin=test_origin,
+            )
+
+        return self.filterParams.is_test_filtered_out(
+            duration=test_duration,
+            issue_id=issue_id,
+            issue_version=issue_version,
+            path=test_path,
+            status=test_status,
+            incident_test_id=incident_test_id,
+            origin=test_origin,
+        )
+
+    def _process_rows(self, rows: dict, requested_types: list[TreeEntityTypes]) -> None:
         sanitized_rows = self.sanitize_rows(rows)
 
         for row in sanitized_rows:
@@ -339,7 +328,7 @@ class BaseTreeCommitsHistory(APIView):
                 hardware_filter = row["hardware_compatibles"]
             if test_environment_misc is not None:
                 platform = misc_value_or_default(test_environment_misc).get("platform")
-                if len(hardware_filter) == 0 or platform != UNKNOWN_STRING:
+                if platform and str(platform).lower() != UNKNOWN_STRING.lower():
                     hardware_filter.append(platform)
             # Only consider build platform if there is neither compatibles nor env platform
             if len(hardware_filter) == 0:
@@ -375,7 +364,16 @@ class BaseTreeCommitsHistory(APIView):
                     "earliest_start_time"
                 ]
 
-            self._process_tests(row)
+            is_test_filtered_out = self._is_test_row_filtered_out(row)
+
+            # Ignore the boots/tests counts if we just asked for builds
+            if not requested_types == ["builds"] and not is_test_filtered_out:
+                self._process_tests(row)
+
+            # Only process the builds if either we allow any build or
+            # if we only asked for builds related to tests that passed the filter and it did
+            if self.builds_related_to_filtered_tests_only and is_test_filtered_out:
+                continue
             self._process_builds(row)
 
     def _process_time_range(self, *, start_timestamp: str, end_timestamp: str) -> None:
@@ -387,7 +385,8 @@ class BaseTreeCommitsHistory(APIView):
         except Exception as ex:
             log_message(ex)
 
-    def get(
+    # TODO: lower the complexity of this function
+    def get(  # noqa: C901
         self,
         request: HttpRequest,
         commit_hash: str,
@@ -404,16 +403,15 @@ class BaseTreeCommitsHistory(APIView):
                 ),
                 end_timestamp_in_seconds=request.GET.get("end_timestamp_in_seconds"),
                 types=request.GET.get("types"),
+                builds_related_to_filtered_tests_only=request.GET.get(
+                    "builds_related_to_filtered_tests_only", False
+                ),
             )
         except ValidationError as e:
-            return create_api_error_response(
-                error_message=e.json(),
-                status_code=HTTPStatus.BAD_REQUEST,
-            )
+            return create_api_error_response(error_message=e.json())
 
-        start_timestamp = params.start_time_stamp_in_seconds
-        end_timestamp = params.end_time_stamp_in_seconds
-
+        start_timestamp = params.start_timestamp_in_seconds
+        end_timestamp = params.end_timestamp_in_seconds
         if None not in (start_timestamp, end_timestamp):
             self._process_time_range(
                 start_timestamp=start_timestamp, end_timestamp=end_timestamp
@@ -425,13 +423,25 @@ class BaseTreeCommitsHistory(APIView):
         except InvalidComparisonOPError as e:
             return create_api_error_response(error_message=str(e))
 
+        # When relation-gated builds mode is enabled we need tests/boots rows to identify
+        # which builds are related to filtered tests.
+        self.builds_related_to_filtered_tests_only = (
+            params.builds_related_to_filtered_tests_only
+        )
+
+        include_types = params.types
+        if params.types == ["builds"] and (
+            self.builds_related_to_filtered_tests_only or len(self.filterHardware) > 0
+        ):
+            include_types = ["builds", "boots", "tests"]
+
         rows = get_tree_commit_history(
             commit_hash=commit_hash,
             origin=params.origin,
             git_url=params.git_url,
             git_branch=params.git_branch or git_branch,
             tree_name=tree_name,
-            include_types=params.types,
+            include_types=include_types,
         )
 
         if not rows:
@@ -440,7 +450,8 @@ class BaseTreeCommitsHistory(APIView):
                 status_code=HTTPStatus.OK,
             )
 
-        self._process_rows(rows)
+        self._process_rows(rows, params.types)
+
         # Format the results as JSON
         results = []
 

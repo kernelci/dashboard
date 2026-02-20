@@ -66,6 +66,7 @@ const HardwareCommitNavigationGraph = ({
       currentPageTab={currentPageTab}
       endTimestampInSeconds={endTimestampInSeconds}
       startTimestampInSeconds={startTimestampInSeconds}
+      buildsRelatedToFilteredTestsOnly={true}
     />
   );
 };

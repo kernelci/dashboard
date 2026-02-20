@@ -25,15 +25,22 @@ class DirectTreeCommitsQueryParameters(BaseModel):
     origin: str = Field(
         DEFAULT_ORIGIN, description=DocStrings.TREE_COMMIT_ORIGIN_DESCRIPTION
     )
-    start_time_stamp_in_seconds: Optional[str] = Field(
+    start_timestamp_in_seconds: Optional[str] = Field(
         None, description=DocStrings.TREE_COMMIT_START_TS_DESCRIPTION
     )
-    end_time_stamp_in_seconds: Optional[str] = Field(
+    end_timestamp_in_seconds: Optional[str] = Field(
         None, description=DocStrings.TREE_COMMIT_END_TS_DESCRIPTION
     )
     types: Optional[list[TreeEntityTypes]] = Field(
         None,
         description="List of types to include (builds, boots, tests)",
+    )
+    builds_related_to_filtered_tests_only: bool = Field(
+        False,
+        description=(
+            "When true, and requesting only builds, count only builds related to "
+            "tests/boots that pass the current filters."
+        ),
     )
     # TODO: Add filters field in this model
 

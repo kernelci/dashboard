@@ -192,6 +192,15 @@ We are not using sessions or anything like that right now, so changing the secre
 ## Requests
 In the `/requests` directory we have scripts that execute requests to endpoints using [httpie](https://httpie.io/). They serve as examples of how you could use the API, and what responses you can expect. If you are contributing to some endpoint and change any of the responses, please remember to update those files.
 
+### Tree commits builds scope
+
+For `GET /api/tree/<commit_hash>/commits` (and direct tree variant), when requesting only builds (`types=builds`) there are two supported scopes:
+
+- default behavior (no extra flag): returns builds that match the active filters directly (used by treeDetails);
+- relation-gated behavior: set `builds_related_to_filtered_tests_only=true` to return only builds related to tests/boots that pass the active filters (used by hardwareDetails commit navigation).
+
+This flag is optional and defaults to `false` to preserve existing behavior.
+
 ## Debug
 
 For debugging we have four env variables:

@@ -1158,6 +1158,14 @@ paths:
     get:
       operationId: tree_commits_retrieve
       parameters:
+      - in: query
+        name: builds_related_to_filtered_tests_only
+        schema:
+          default: false
+          title: Builds Related To Filtered Tests Only
+          type: boolean
+        description: When true, and requesting only builds, count only builds related
+          to tests/boots that pass the current filters.
       - in: path
         name: commit_hash
         schema:
@@ -1165,13 +1173,13 @@ paths:
         description: Commit hash of the tree
         required: true
       - in: query
-        name: end_time_stamp_in_seconds
+        name: end_timestamp_in_seconds
         schema:
           anyOf:
           - type: string
           - type: 'null'
           default: null
-          title: End Time Stamp In Seconds
+          title: End Timestamp In Seconds
         description: End time filter in seconds for tree commits
       - in: query
         name: git_branch
@@ -1199,13 +1207,13 @@ paths:
           type: string
         description: Origin to retrieve the tree commits
       - in: query
-        name: start_time_stamp_in_seconds
+        name: start_timestamp_in_seconds
         schema:
           anyOf:
           - type: string
           - type: 'null'
           default: null
-          title: Start Time Stamp In Seconds
+          title: Start Timestamp In Seconds
         description: Start time filter in seconds for tree commits
       - in: query
         name: types
@@ -1496,6 +1504,14 @@ paths:
     get:
       operationId: tree_commits_retrieve_2
       parameters:
+      - in: query
+        name: builds_related_to_filtered_tests_only
+        schema:
+          default: false
+          title: Builds Related To Filtered Tests Only
+          type: boolean
+        description: When true, and requesting only builds, count only builds related
+          to tests/boots that pass the current filters.
       - in: path
         name: commit_hash
         schema:
@@ -1503,13 +1519,13 @@ paths:
         description: Commit hash of the tree
         required: true
       - in: query
-        name: end_time_stamp_in_seconds
+        name: end_timestamp_in_seconds
         schema:
           anyOf:
           - type: string
           - type: 'null'
           default: null
-          title: End Time Stamp In Seconds
+          title: End Timestamp In Seconds
         description: End time filter in seconds for tree commits
       - in: path
         name: git_branch
@@ -1525,13 +1541,13 @@ paths:
           type: string
         description: Origin to retrieve the tree commits
       - in: query
-        name: start_time_stamp_in_seconds
+        name: start_timestamp_in_seconds
         schema:
           anyOf:
           - type: string
           - type: 'null'
           default: null
-          title: Start Time Stamp In Seconds
+          title: Start Timestamp In Seconds
         description: Start time filter in seconds for tree commits
       - in: path
         name: tree_name
