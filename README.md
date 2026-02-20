@@ -145,7 +145,7 @@ The workflow `.github/workflows/deploy-containers.yaml` publishes Docker images 
 - `dashboard-frontend` (from `./dashboard/Dockerfile`)
 - `dashboard-proxy` (from `./proxy`)
 
-This workflow is manual for now (`workflow_dispatch`) and pushes images to GHCR under `ghcr.io/<owner>/<repo>` with two tags for each image:
+This workflow is triggered on pushes to main (on the original repository) and also manually (`workflow_dispatch`) and pushes images to GHCR under `ghcr.io/<owner>/<repo>` with two tags for each image:
 
 - `latest`
 - `${{ github.sha }}`
