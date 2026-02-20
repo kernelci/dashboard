@@ -5,7 +5,6 @@ export const TREE_LISTING_SELECTORS = {
 
   intervalInput: 'input[type="number"][min="1"]',
 
-  // This requires nth() selector which can't be stored as string
   itemsPerPageDropdown: '[role="listbox"]',
   itemsPerPageOption: (value: string) => `[role="option"]:has-text("${value}")`,
 
@@ -18,12 +17,4 @@ export const TREE_LISTING_SELECTORS = {
   firstTreeCell: 'td a',
 
   breadcrumbTreesLink: '[data-test-id="breadcrumb-link"]:has-text("Trees")',
-} as const;
-
-export const COMMON_SELECTORS = {
-  tableRow: 'tr',
-  tableHeader: 'th',
-
-  originDropdown: '[data-test-id="origin-dropdown"]',
-  originOption: (origin: string) => `[data-test-id="origin-option-${origin}"]`,
 } as const;

@@ -1,12 +1,16 @@
 import { test, expect } from '@playwright/test';
 
-import { TREE_LISTING_SELECTORS, COMMON_SELECTORS } from './e2e-selectors';
+import {
+  TREE_LISTING_SELECTORS,
+  COMMON_SELECTORS,
+  TREE_DETAILS_SELECTORS,
+} from './selectors';
+import { navigateBackViaBreadcrumb, clickAndVerifyNavigation } from './utils';
 
 const PAGE_LOAD_TIMEOUT = 5000;
 const DEFAULT_ACTION_TIMEOUT = 1000;
 const SEARCH_UPDATE_TIMEOUT = 2000;
 const NAVIGATION_TIMEOUT = 5000;
-const GO_BACK_TIMEOUT = 3000;
 
 test.describe('Tree Listing Page Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -80,21 +84,17 @@ test.describe('Tree Listing Page Tests', () => {
     const firstTreeLink = page.locator('td a').first();
     await expect(firstTreeLink).toBeVisible();
 
-    await firstTreeLink.click();
-
-    await page.waitForTimeout(NAVIGATION_TIMEOUT);
-
-    const url = page.url();
-    expect(url).toMatch(/\/tree\/[^/]+\/[^/]+\/[^/]+$/);
-
-    const breadcrumbLink = page.locator(
-      TREE_LISTING_SELECTORS.breadcrumbTreesLink,
+    await clickAndVerifyNavigation(
+      firstTreeLink,
+      /\/tree\/[^/]+\/[^/]+\/[^/]+$/,
+      { waitAfterClick: NAVIGATION_TIMEOUT },
     );
-    await expect(breadcrumbLink).toBeVisible({ timeout: 15000 });
-    await breadcrumbLink.click();
-    await page.waitForTimeout(GO_BACK_TIMEOUT);
 
-    await expect(page).toHaveURL(/\/tree$/);
+    await navigateBackViaBreadcrumb(
+      page,
+      TREE_DETAILS_SELECTORS.breadcrumbTreesLink,
+      { expectedUrl: /\/tree$/ },
+    );
   });
 
   test('pagination navigation', async ({ page }) => {

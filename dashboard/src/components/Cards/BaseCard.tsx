@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 type CommonProps = {
   title: ReactNode;
   className?: string;
+  'data-test-id'?: string;
 };
 
 type WithChildren = {
@@ -24,6 +25,7 @@ export const BaseCard = ({
   content,
   className,
   children,
+  'data-test-id': dataTestId,
 }: IBaseCard): JSX.Element => {
   return (
     <div
@@ -31,6 +33,7 @@ export const BaseCard = ({
         'border-dark-gray mb-6 flex h-fit w-full break-inside-avoid-column flex-col gap-2 rounded-xl border bg-white pt-4 text-black',
         className,
       )}
+      data-test-id={dataTestId}
     >
       <div className="border-dark-gray border-b pb-2 pl-3 font-bold">
         {title}

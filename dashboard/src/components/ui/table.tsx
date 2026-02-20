@@ -103,22 +103,32 @@ type TableCellWithLinkAttributes =
   React.TdHTMLAttributes<HTMLTableCellElement> & {
     linkProps: RouterLinkProps;
     linkClassName?: string;
+    dataTestId?: string;
   };
 
 const TableCellWithLink = React.forwardRef<
   HTMLTableCellElement,
   TableCellWithLinkAttributes
->(({ className, children, linkProps, linkClassName, ...props }, ref) => (
-  <td
-    ref={ref}
-    className={cn('align-middle [&:has([role=checkbox])]:pr-0', className)}
-    {...props}
-  >
-    <Link className={cn('flex flex-1 p-4', linkClassName)} {...linkProps}>
-      {children}
-    </Link>
-  </td>
-));
+>(
+  (
+    { className, children, linkProps, linkClassName, dataTestId, ...props },
+    ref,
+  ) => (
+    <td
+      ref={ref}
+      className={cn('align-middle [&:has([role=checkbox])]:pr-0', className)}
+      {...props}
+    >
+      <Link
+        className={cn('flex flex-1 p-4', linkClassName)}
+        {...linkProps}
+        data-test-id={dataTestId}
+      >
+        {children}
+      </Link>
+    </td>
+  ),
+);
 TableCellWithLink.displayName = 'TableCellWithLink';
 
 const TableCaption = React.forwardRef<

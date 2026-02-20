@@ -28,12 +28,12 @@ type BreadcrumbLinkProps = Pick<
 const BreadcrumbLink = ({
   children,
   ...props
-}: BreadcrumbLinkProps): JSX.Element => {
+}: BreadcrumbLinkProps & { 'data-test-id'?: string }): JSX.Element => {
   return (
     <Link
       {...props}
       className="transition-colors hover:text-slate-500 dark:hover:text-slate-50"
-      data-test-id="breadcrumb-link"
+      data-test-id={props['data-test-id'] ?? 'breadcrumb-link'}
     >
       {children}
     </Link>

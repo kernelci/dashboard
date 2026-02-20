@@ -138,6 +138,7 @@ export default [{
                 "src/stories/**",
                 "**/*.stories*",
                 "playwright.config.ts",
+                "e2e/**/*.{ts,tsx}",
             ],
         }],
 

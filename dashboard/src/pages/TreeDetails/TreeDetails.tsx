@@ -397,6 +397,7 @@ const TreeDetails = ({
                   };
                 }}
                 state={s => s}
+                data-test-id="breadcrumb-trees-link"
               >
                 <FormattedMessage id="tree.path" />
               </BreadcrumbLink>
