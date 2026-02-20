@@ -18,6 +18,10 @@ A web app built with [React](https://react.dev/) + [Typescript](https://www.type
 A Python http server built with [Django](https://www.djangoproject.com/) + [DRF](https://www.django-rest-framework.org/), to see more information check the backend [README](/backend/README.md).
 
 
+## Quick run
+
+If you want to just run the project, you can try out pre-built images with the [docker-compose-next.yml](./docker-compose-next.yml) file. This pulls images from GHCR and runs them locally without needing to rebuild them. You may still need to set up environment variables, so read the docs.
+
 ## Build
 
 ### Frontend
@@ -132,6 +136,21 @@ docker compose up --build
 
 To deploy to prod you need to push a tag in the `release/YYYYMMDD.N` format
 like: `release/20240910.0`
+
+### Publishing container images to GHCR
+
+The workflow `.github/workflows/deploy-containers.yaml` publishes Docker images for the three services used by the dashboard stack:
+
+- `dashboard-backend` (from `./backend`)
+- `dashboard-frontend` (from `./dashboard/Dockerfile`)
+- `dashboard-proxy` (from `./proxy`)
+
+This workflow is manual for now (`workflow_dispatch`) and pushes images to GHCR under `ghcr.io/<owner>/<repo>` with two tags for each image:
+
+- `latest`
+- `${{ github.sha }}`
+
+At the end of the run, the workflow writes an image digest summary in the GitHub Actions job summary.
 
 ## Test results email reports
 
