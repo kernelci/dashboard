@@ -52,6 +52,8 @@ services:
             DB_PASSWORD: test_password
             DB_HOST: test_db
             DB_PORT: 5432
+            APP_DB_USER: dashboard
+            APP_DB: dashboard
             DEBUG: true
             DEBUG_SQL_QUERY: false
             REDIS_HOST: redis
