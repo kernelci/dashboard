@@ -55,8 +55,8 @@ export DB_DEFAULT="{
     }
 }"
 
-chmod +x ./utils/docker/setup-dashboard-db.sh
-./utils/docker/setup-dashboard-db.sh
+chmod +x ./setup-dashboard-db.sh
+./setup-dashboard-db.sh
 
 # Add and start cronjobs
 poetry run ./manage.py crontab add
