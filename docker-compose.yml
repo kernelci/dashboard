@@ -25,7 +25,7 @@ services:
             - private
             - public
         restart: always
-        image: ghcr.io/${IMAGE_NAME:-local}/backend:latest
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-backend:${IMAGE_TAG:-latest}
         environment:
             - CONTAINER_MODE=backend
         command:
@@ -130,13 +130,13 @@ services:
         build:
             context: .
             dockerfile: ./dashboard/Dockerfile
-        image: ghcr.io/${IMAGE_NAME:-local}/dashboard:latest
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-frontend:${IMAGE_TAG:-latest}
         volumes:
             - static-data:/data/static
 
     proxy:
         build: ./proxy
-        image: ghcr.io/${IMAGE_NAME:-local}/proxy:latest
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-proxy:${IMAGE_TAG:-latest}
         restart: always
         depends_on:
             - backend
