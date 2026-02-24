@@ -38,6 +38,8 @@ services:
             - --bind=0.0.0.0:8000
             - --timeout=250
         entrypoint: "./utils/docker/backend_entrypoint.sh"
+        secrets:
+            - postgres_password_secret
         depends_on:
             - redis
             - dashboard_db

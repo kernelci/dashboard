@@ -2,7 +2,7 @@
 # Initializes dashboard database roles and databases via direct psql.
 set -eu
 
-# Resolve env vars: prefer explicit names, fall back to backend naming (DB_DEFAULT_*)
+# Resolve env vars: prefer explicit names, fall back to backend naming (DB_*)
 export DB_HOST="${DB_HOST:-dashboard_db}"
 export DB_PORT="${DB_PORT:-5432}"
 export DB_PASSWORD="${DB_PASSWORD:?DB_PASSWORD is required}"

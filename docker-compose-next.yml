@@ -1,6 +1,13 @@
+# docker-compose-next.yml — Pre-built images, single .env file
+# Usage:
+#   Production (external DB):  docker compose -f docker-compose-next.yml up -d
+#   Staging (local DB):        docker compose -f docker-compose-next.yml --profile=local-db up -d
+#   With ingester/aggregation: docker compose -f docker-compose-next.yml --profile=with_commands up -d
+#   All services:              docker compose -f docker-compose-next.yml --profile=local-db --profile=with_commands up -d
+# See DEPLOYMENT.md for full instructions.
+
 volumes:
     backend-data:
-    runtime-data:
     static-data:
     dashboard-db-data:
 
@@ -11,14 +18,22 @@ networks:
 services:
     dashboard_db:
         image: postgres:17
-        env_file:
-            - .env.db
+        environment:
+            POSTGRES_USER: ${DB_USER:-admin}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env}
+            POSTGRES_DB: ${DB_NAME:-dashboard}
         volumes:
             - dashboard-db-data:/var/lib/postgresql/data
         networks:
             - private
         ports:
             - "5434:5432"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin}"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+        profiles: ["local-db"]
 
     redis:
         image: redis:8.0-M04-alpine
@@ -29,7 +44,18 @@ services:
             - 6379:6379
 
     backend:
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER}/${IMAGE_REPOSITORY}/dashboard-backend:${IMAGE_TAG}
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-backend:${IMAGE_TAG:-latest}
+        entrypoint: "./utils/docker/backend_entrypoint.sh"
+        command:
+            - poetry
+            - run
+            - gunicorn
+            - kernelCI.wsgi:application
+            - --workers=5
+            - --forwarded-allow-ips=*
+            - --bind=0.0.0.0:8000
+            - --timeout=250
+        env_file: .env
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
         restart: always
@@ -45,19 +71,14 @@ services:
               protocol: tcp
         depends_on:
             - redis
-            - dashboard_db
-        env_file:
-            - .env.backend
-        environment:
-            DB_DEFAULT_HOST: ${DB_DEFAULT_HOST:-dashboard_db}
 
     dashboard:
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER}/${IMAGE_REPOSITORY}/dashboard-frontend:${IMAGE_TAG}
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-frontend:${IMAGE_TAG:-latest}
         volumes:
             - static-data:/data/static
 
     proxy:
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER}/${IMAGE_REPOSITORY}/dashboard-proxy:${IMAGE_TAG}
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-proxy:${IMAGE_TAG:-latest}
         restart: always
         depends_on:
             - backend
@@ -70,5 +91,56 @@ services:
             - target: 80
               published: 80
               protocol: tcp
-        env_file:
-            - .env.proxy
+        env_file: .env
+        environment:
+            PROXY_TARGET: ${PROXY_TARGET:-http://backend:8000}
+
+    ingester:
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-backend:${IMAGE_TAG:-latest}
+        command:
+            - poetry
+            - run
+            - python3
+            - manage.py
+            - monitor_submissions
+            - --spool-dir
+            - /app/spool
+        env_file: .env
+        environment:
+            SKIP_CRONJOBS: "True"
+        volumes:
+            - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+            - ${INGESTER_SPOOL_DIR:-../spool}:/app/spool
+        restart: always
+        networks:
+            - private
+            - public
+        ports:
+            - target: ${INGESTER_METRICS_PORT:-8002}
+              published: ${INGESTER_METRICS_PORT:-8002}
+              protocol: tcp
+        depends_on:
+            - redis
+        profiles: ["with_commands"]
+
+    pending_aggregations_processor:
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-kernelci}/${IMAGE_REPOSITORY:-dashboard}/dashboard-backend:${IMAGE_TAG:-latest}
+        command:
+            - poetry
+            - run
+            - python3
+            - manage.py
+            - process_pending_aggregations
+            - --loop
+            - --interval
+            - "5"
+        env_file: .env
+        environment:
+            SKIP_CRONJOBS: "True"
+        restart: always
+        networks:
+            - private
+            - public
+        depends_on:
+            - redis
+        profiles: ["with_commands"]

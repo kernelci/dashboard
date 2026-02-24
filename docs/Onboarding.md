@@ -125,7 +125,7 @@ Other environment variables can be set as needed.
 3. Start up the services with the command:
 
 ```bash
-docker compose up build -d
+docker compose up --build -d
 ```
 
 After starting the services, you can check if your Docker containers are running with:
