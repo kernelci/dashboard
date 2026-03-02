@@ -8,22 +8,20 @@ networks:
     public:
     private:
 
-secrets:
-    postgres_password_secret:
-        file: ./backend/runtime/secrets/postgres_password_secret
-
 services:
     backend:
-        container_name: dashboard_backend_service
+        container_name: dashboard_backend_service_staging
         build:
             context: ./backend
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
         env_file:
-            - .env.backend
+            - .env
         networks:
             - private
             - public
+        ports:
+            - 8000:8000
         restart: always
         image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-backend:${IMAGE_TAG:-latest}
         environment:
@@ -38,30 +36,19 @@ services:
             - --bind=0.0.0.0:8000
             - --timeout=250
         entrypoint: "./utils/docker/backend_entrypoint.sh"
-        secrets:
-            - postgres_password_secret
         depends_on:
             - redis
             - dashboard_db
-        ports:
-            - target: 8000
-              published: 8000
-              protocol: tcp
-              mode: host
-            - target: 8001
-              published: 8001
-              protocol: tcp
-              mode: host
 
     ingester:
-        container_name: dashboard_ingester_service
+        container_name: dashboard_ingester_service_staging
         build:
             context: ./backend
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data} # Directory of the tree names file and other data
             - ${INGESTER_SPOOL_DIR}:/app/spool                 # Directory for ingester to monitor
         env_file:
-            - .env.ingester
+            - .env
         networks:
             - private
             - public
@@ -80,18 +67,15 @@ services:
         depends_on:
             - dashboard_db
         ports:
-            - target: ${INGESTER_METRICS_PORT:-8002}
-              published: ${INGESTER_METRICS_PORT:-8002}
-              protocol: tcp
-              mode: host
+            - 8002:8002
         profiles: ["with_commands"]
-    
+
     pending_aggregations_processor:
-        container_name: pending_aggregations_processor_service
+        container_name: pending_aggregations_processor_service_staging
         build:
             context: ./backend
         env_file:
-            - .env.pending_aggregations
+            - .env
         networks:
             - private
             - public
@@ -110,30 +94,23 @@ services:
         depends_on:
             - dashboard_db
         ports:
-            - target: 8001
-              published: ${PENDING_AGGREGATIONS_METRICS_PORT:-8003}
-              protocol: tcp
-              mode: host
+            - 8003:8001
         profiles: ["with_commands"]
 
     dashboard_db:
         image: postgres:17
         env_file:
-            - .env.db
+            - .env
         volumes:
             - dashboard-db-data:/var/lib/postgresql/data
         networks:
             - private
-        ports:
-            - "${DB_PORT:-5434}:5432"
 
     redis:
         image: redis:8.0-M04-alpine
         restart: always
         networks:
             - private
-        ports:
-            - 6379:6379
 
     dashboard:
         build:
@@ -143,21 +120,20 @@ services:
         volumes:
             - static-data:/data/static
 
-    proxy:
-        build: ./proxy
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-proxy:${IMAGE_TAG:-latest}
-        restart: always
-        depends_on:
-            - backend
-            - dashboard
-        networks:
-            - public
-        volumes:
-            - static-data:/data/static
-        ports:
-            - target: 80
-              published: 80
-              protocol: tcp
-              mode: host
-        env_file:
-            - .env.proxy
+#    proxy:
+#        build: ./proxy
+#        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-proxy:${IMAGE_TAG:-latest}
+#        restart: always
+#        depends_on:
+#            - backend
+#            - dashboard
+#        networks:
+#            - public
+#        volumes:
+#            - static-data:/data/static
+#            - /etc/letsencrypt/live/staging.dashboard.kernelci.org/fullchain.pem:/etc/nginx/ssl/fullchain.pem
+#            - /etc/letsencrypt/live/staging.dashboard.kernelci.org/privkey.pem:/etc/nginx/ssl/privkey.pem
+#        ports:
+#            - 9000:9000
+#        env_file:
+#            - .env
