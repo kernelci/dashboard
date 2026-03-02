@@ -125,7 +125,7 @@ services:
         networks:
             - private
         ports:
-            - "5434:5432"
+            - "${DB_PORT:-5434}:5432"
 
     redis:
         image: redis:8.0-M04-alpine
