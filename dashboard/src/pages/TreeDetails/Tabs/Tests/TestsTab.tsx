@@ -83,12 +83,12 @@ const TestsTab = ({
     [summaryData?.summary.tests],
   );
 
-  const { data: fullData, status: fullStatus } = useMemo(
-    () => treeDetailsLazyLoaded.full,
-    [treeDetailsLazyLoaded.full],
+  const { data: testsData, status: testsStatus } = useMemo(
+    () => treeDetailsLazyLoaded.tests,
+    [treeDetailsLazyLoaded.tests],
   );
 
-  const fullTestsData = useMemo(() => fullData?.tests, [fullData?.tests]);
+  const fullTestsData = useMemo(() => testsData?.tests, [testsData?.tests]);
 
   const currentPathFilter = diffFilter.testPath
     ? Object.keys(diffFilter.testPath)[0]
@@ -341,7 +341,7 @@ const TestsTab = ({
             footerCards={footerCards}
           />
 
-          <QuerySwitcher status={fullStatus} data={fullData}>
+          <QuerySwitcher status={testsStatus} data={testsData}>
             <TestsTable
               tableKey="treeDetailsTests"
               testHistory={fullTestsData}

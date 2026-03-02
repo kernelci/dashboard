@@ -148,12 +148,15 @@ const BootsTab = ({
     [summaryData?.summary.boots],
   );
 
-  const { data: fullData, status: fullStatus } = useMemo(
-    () => treeDetailsLazyLoaded.full,
-    [treeDetailsLazyLoaded.full],
+  const { data: bootsResponseData, status: bootsStatus } = useMemo(
+    () => treeDetailsLazyLoaded.boots,
+    [treeDetailsLazyLoaded.boots],
   );
 
-  const bootsData = useMemo(() => fullData?.boots, [fullData?.boots]);
+  const bootsData = useMemo(
+    () => bootsResponseData?.boots,
+    [bootsResponseData?.boots],
+  );
 
   const { treeName, branch, id } = useRouterState({
     select: s => s.location.state,
@@ -339,7 +342,7 @@ const BootsTab = ({
             bodyCards={bodyCards}
             footerCards={footerCards}
           />
-          <QuerySwitcher data={bootsData} status={fullStatus}>
+          <QuerySwitcher data={bootsData} status={bootsStatus}>
             <BootsTable
               tableKey="treeDetailsBoots"
               filter={tableFilter.bootsTable}
