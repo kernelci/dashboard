@@ -10,9 +10,7 @@ class ClientStrings:
     """Simple class for storing basis for internationalization strings"""
 
     TREE_BUILDS_NO_RESULTS = "No builds available for this tree/branch/commit"
-    TREE_BOOTS_NO_RESULTS = "No boots available for this tree/branch/commit"
     TREE_NO_RESULTS = "No results available for this tree/branch/commit"
-    TREE_TESTS_NO_RESULTS = "No tests available for this tree/branch/commit"
     TREE_COMMITS_HISTORY_NOT_FOUND = "History of tree commits not found"
     TREE_NOT_FOUND_IN_INTERVAL = "Tree not found in the given interval"
     TREE_REPORT_MIN_MAX_AGE = (

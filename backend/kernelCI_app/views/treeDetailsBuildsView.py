@@ -18,7 +18,7 @@ from kernelCI_app.helpers.treeDetails import (
     get_build,
     get_current_row_data,
 )
-from kernelCI_app.queries.tree import get_tree_details_data
+from kernelCI_app.queries.tree import get_tree_data
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     COMMIT_HASH_PATH_PARAM,
     GIT_BRANCH_PATH_PARAM,
@@ -78,7 +78,8 @@ class BaseTreeDetailsBuilds(APIView):
         commit_hash: str,
         origin: str,
     ) -> Response:
-        rows = get_tree_details_data(
+        rows = get_tree_data(
+            data_type="builds",
             origin_param=origin,
             git_url_param=git_url,
             git_branch_param=git_branch,
