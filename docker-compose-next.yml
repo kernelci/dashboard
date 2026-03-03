@@ -59,7 +59,7 @@ services:
             - private
             - public
         ports:
-            - 2001:2001
+            - ${EXTERNAL_PROM_METRICS_PORT:-2001}:${PROM_METRICS_PORT:-8002}
         depends_on:
             - redis
 
