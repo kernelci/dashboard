@@ -81,8 +81,8 @@ services:
             - ${SSL_CHAIN_FILE:-/etc/letsencrypt/live/d.kernelci.org/fullchain.pem}:/etc/nginx/ssl/fullchain.pem
             - ${SSL_KEY_FILE:-/etc/letsencrypt/live/d.kernelci.org/privkey.pem}:/etc/nginx/ssl/privkey.pem
         ports:
-            - 80:80
-            - 443:443
+            - ${EXTERNAL_HTTP_PORT:-80}:80
+            - ${EXTERNAL_HTTPS_PORT:-443}:443
         env_file: .env
         environment:
             PROXY_TARGET: ${PROXY_TARGET:-http://backend:8000}
