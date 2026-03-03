@@ -14,12 +14,21 @@ jobs:
           echo "$SSH_HOSTKEY" > ~/.ssh/known_hosts
         env:
           SSH_HOSTKEY: ${{ secrets.STAGING_HOSTKEY }}
-
+            
       - name: Deploy to staging
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_KEY" | ssh-add - >/dev/null
-          ssh "${SSH_USER}@${SSH_HOST}" "deploy ${GITHUB_SHA}"
+          ssh "${SSH_USER}@${SSH_HOST}" "
+            rm -rf dashboard-staging &&
+            git clone --depth 1 --branch main https://github.com/kernelci/dashboard.git dashboard-staging &&
+            cp ~/.env-staging dashboard-staging/.env &&
+            cd dashboard-staging &&
+            git checkout ${GITHUB_SHA} &&
+            docker compose down &&
+            docker compose build --no-cache &&
+            docker compose up -d
+          "
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
