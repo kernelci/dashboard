@@ -120,20 +120,20 @@ services:
         volumes:
             - static-data:/data/static
 
-#    proxy:
-#        build: ./proxy
-#        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-proxy:${IMAGE_TAG:-latest}
-#        restart: always
-#        depends_on:
-#            - backend
-#            - dashboard
-#        networks:
-#            - public
-#        volumes:
-#            - static-data:/data/static
-#            - /etc/letsencrypt/live/staging.dashboard.kernelci.org/fullchain.pem:/etc/nginx/ssl/fullchain.pem
-#            - /etc/letsencrypt/live/staging.dashboard.kernelci.org/privkey.pem:/etc/nginx/ssl/privkey.pem
-#        ports:
-#            - 9000:9000
-#        env_file:
-#            - .env
+    proxy:
+        build: ./proxy
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-proxy:${IMAGE_TAG:-latest}
+        restart: always
+        depends_on:
+            - backend
+            - dashboard
+        networks:
+            - public
+        volumes:
+            - static-data:/data/static
+            - /etc/letsencrypt/live/staging.dashboard.kernelci.org/fullchain.pem:/etc/nginx/ssl/fullchain.pem
+            - /etc/letsencrypt/live/staging.dashboard.kernelci.org/privkey.pem:/etc/nginx/ssl/privkey.pem
+        ports:
+            - ${STAGING_EXTERNAL_HTTP_PORT:-9000}:80
+        env_file:
+            - .env
