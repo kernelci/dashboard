@@ -381,6 +381,7 @@ class TreeListing(models.Model):
     test_pass = models.IntegerField(default=0)
     test_failed = models.IntegerField(default=0)
     test_inc = models.IntegerField(default=0)
+    new_field = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = "tree_listing"
