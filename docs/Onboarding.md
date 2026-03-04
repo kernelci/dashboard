@@ -23,7 +23,7 @@ This frontend is written in TypeScript and uses the React library.
 ## Tasks
 > Note:
 > In case you don't have access to the backend, feel free to use the staging api to run the Frontend Code and send PRs.
-> https://staging.dashboard.kernelci.org:9000
+> https://staging.dashboard.kernelci.org
 > You can also ask for access in the #webdashboard channel in the KernelCI Discord.
 
 > Remember:
