@@ -68,4 +68,4 @@ jobs:
         run: pnpm e2e
         working-directory: ./dashboard
         env:
-          PLAYWRIGHT_TEST_BASE_URL: https://staging.dashboard.kernelci.org:9000
+          PLAYWRIGHT_TEST_BASE_URL: https://staging.dashboard.kernelci.org

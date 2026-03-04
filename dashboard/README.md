@@ -38,7 +38,7 @@ cp .env.example .env
 
 # Edit the .env file to set PLAYWRIGHT_TEST_BASE_URL to your desired environment
 # Available environments:
-# - Staging: https://staging.dashboard.kernelci.org:9000 (default)
+# - Staging: https://staging.dashboard.kernelci.org (default)
 # - Production: https://dashboard.kernelci.org
 # - Local: http://localhost:5173
 
