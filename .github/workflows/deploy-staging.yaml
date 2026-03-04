@@ -4,7 +4,49 @@ on:
   workflow_call:
 
 jobs:
+  check-migrations:
+    runs-on: ubuntu-latest
+    outputs:
+      has_new_migrations: ${{ steps.check.outputs.has_new_migrations }}
+      migration_list: ${{ steps.check.outputs.migration_list }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new Django migrations
+        id: check
+        run: |
+          NEW_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD -- '**/migrations/*.py' \
+            | grep -v '__init__.py' || true)
+
+          if [ -n "$NEW_MIGRATIONS" ]; then
+            echo "has_new_migrations=true" >> $GITHUB_OUTPUT
+            ENCODED=$(echo "$NEW_MIGRATIONS" | tr '\n' '|')
+            echo "migration_list=$ENCODED" >> $GITHUB_OUTPUT
+            echo "New migration files detected:"
+            echo "$NEW_MIGRATIONS"
+          else
+            echo "has_new_migrations=false" >> $GITHUB_OUTPUT
+            echo "migration_list=" >> $GITHUB_OUTPUT
+            echo "No new migration files found"
+          fi
+
+  notify-new-migrations:
+    needs: check-migrations
+    if: needs.check-migrations.outputs.has_new_migrations == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord notification - new migrations detected
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "New Django migrations detected in this staging deployment: `${{ needs.check-migrations.outputs.migration_list }}`"
+
   deploy-staging:
+    needs: check-migrations
     runs-on: ubuntu-latest
     steps:
       - name: Configure staging host authenticity
