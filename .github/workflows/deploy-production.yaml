@@ -31,7 +31,15 @@ jobs:
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_KEY" | ssh-add - >/dev/null
-          ssh "${SSH_USER}@${SSH_HOST}" "./prod.sh ${{ github.event.inputs.tag }}"
+          ssh "${SSH_USER}@${SSH_HOST}" "
+            rm -rf dashboard-production &&
+            git clone --depth 1 --branch main https://github.com/kernelci/dashboard.git dashboard-production &&
+            cp ~/.env-production dashboard-production/.env &&
+            cd dashboard-production &&
+            git checkout ${GITHUB_SHA} &&
+            docker compose -f docker-compose-next.yml pull &&
+            docker compose -f docker-compose-next.yml up -d
+          "
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
