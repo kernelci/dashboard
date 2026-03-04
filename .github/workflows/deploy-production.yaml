@@ -9,7 +9,7 @@ on:
         default: 'main'
 
 jobs:
-  deploy-production:
+  start-notification:
     runs-on: ubuntu-latest
     steps:
       - name: Discord notification
@@ -19,6 +19,75 @@ jobs:
         with:
           args: "Deploying production Dashboard with tag `${{ github.event.inputs.tag }}`"
 
+  check-migrations:
+    needs: start-notification
+    runs-on: ubuntu-latest
+    outputs:
+      has_new_migrations: ${{ steps.check.outputs.has_new_migrations }}
+      migration_list: ${{ steps.check.outputs.migration_list }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new Django migrations
+        id: check
+        run: |
+          # Compare against the previous tag; fall back to HEAD~1 if no tags exist
+          PREV_TAG=$(git describe --abbrev=0 --tags HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found, comparing against HEAD~1"
+            COMPARE_REF="HEAD~1"
+          else
+            echo "Comparing migrations against tag: $PREV_TAG"
+            COMPARE_REF="$PREV_TAG"
+          fi
+
+          NEW_MIGRATIONS=$(git diff --name-only "$COMPARE_REF" HEAD -- '**/migrations/*.py' \
+            | grep -v '__init__.py' || true)
+
+          if [ -n "$NEW_MIGRATIONS" ]; then
+            echo "has_new_migrations=true" >> $GITHUB_OUTPUT
+            # Encode newlines for the output so it can be passed between jobs
+            ENCODED=$(echo "$NEW_MIGRATIONS" | tr '\n' '|')
+            echo "migration_list=$ENCODED" >> $GITHUB_OUTPUT
+            echo "New migration files detected:"
+            echo "$NEW_MIGRATIONS"
+          else
+            echo "has_new_migrations=false" >> $GITHUB_OUTPUT
+            echo "migration_list=" >> $GITHUB_OUTPUT
+            echo "No new migration files found"
+          fi
+
+  notify-new-migrations:
+    needs: check-migrations
+    if: needs.check-migrations.outputs.has_new_migrations == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord notification - new migrations detected
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "New Django migrations detected in production deployment of `${{ github.event.inputs.tag }}`:\n`${{ needs.check-migrations.outputs.migration_list }}`"
+  
+  notify-no-migrations:
+    needs: check-migrations
+    if: needs.check-migrations.outputs.has_new_migrations == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord notification - no migrations detected
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "No new Django migrations detected in production deployment of `${{ github.event.inputs.tag }}`"
+
+  deploy-production:
+    needs: start-notification
+    runs-on: ubuntu-latest
+    steps:
       - name: Configure host authenticity
         run: |
           mkdir -p ~/.ssh/ && chmod 700 ~/.ssh/
