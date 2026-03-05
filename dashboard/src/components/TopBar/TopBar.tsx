@@ -17,6 +17,8 @@ import { useOrigins } from '@/api/origin';
 import { Button } from '@/components/ui/button';
 import MobileSideMenu from '@/components/SideMenu/MobileSideMenu';
 
+import { SearchBoxNavigate } from '@/components/SearchBoxNavigate';
+
 const OriginSelect = ({
   isHardwarePath,
 }: {
@@ -75,7 +77,7 @@ const OriginSelect = ({
 
   return (
     <div className="flex items-center">
-      <span className="text-dim-gray mr-4 text-base font-medium">
+      <span className="text-dim-gray mr-4 hidden text-base font-medium sm:block">
         <FormattedMessage id="global.origin" />
       </span>
       <Select
@@ -120,11 +122,16 @@ const TopBar = (): JSX.Element => {
     const lastMatch = matches[matches.length - 1];
     const firstUrlLocation = lastMatch?.pathname.split('/')[1] ?? '';
     const cleanFullPath = lastMatch?.fullPath.replace(/\//g, '') ?? '';
+    const isTreeListing = ['tree', 'treev1', 'treev2'].includes(cleanFullPath);
+    const isListingPage =
+      isTreeListing ||
+      ['hardware', 'hardwarev1', 'issues'].includes(cleanFullPath);
 
     return {
       firstUrlLocation,
-      isTreeListing: ['tree', 'treev1', 'treev2'].includes(cleanFullPath),
+      isTreeListing: isTreeListing,
       isHardwarePage: cleanFullPath.includes('hardware'),
+      isListingPage: isListingPage,
     };
   }, [matches]);
 
@@ -132,9 +139,9 @@ const TopBar = (): JSX.Element => {
 
   return (
     <>
-      <div className="fixed top-0 z-10 flex h-20 w-full bg-white px-6 md:px-16">
+      <div className="fixed top-0 z-10 flex h-20 w-full max-w-full bg-white px-6 md:max-w-[calc(100%-14rem)] md:px-16">
         <div className="flex w-full flex-row items-center justify-between">
-          <div className="flex flex-row items-center gap-4">
+          <div className="flex w-full flex-row items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
@@ -144,12 +151,15 @@ const TopBar = (): JSX.Element => {
             >
               <HiMenu className="size-6" />
             </Button>
-            <span className="mr-10 text-2xl">
+            <span className="mr-2 text-2xl sm:mr-10">
               <TitleName basePath={basePath} />
             </span>
             {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
               <OriginSelect isHardwarePath={routeInfo.isHardwarePage} />
             )}
+            <span className="ml-0 flex w-full px-6 lg:ml-14">
+              {routeInfo.isListingPage && <SearchBoxNavigate />}
+            </span>
           </div>
         </div>
       </div>
