@@ -47,6 +47,7 @@ import CopyButton from '@/components/Button/CopyButton';
 import { CommitTagTooltip } from '@/components/Tooltip/CommitTagTooltip';
 
 import { useTreeDetailsLazyLoadQuery } from '@/hooks/useTreeDetailsLazyLoadQuery';
+import type { UseTreeDetailsLazyLoadQueryArgs } from '@/hooks/useTreeDetailsLazyLoadQuery';
 
 import { LoadingCircle } from '@/components/ui/loading-circle';
 
@@ -177,7 +178,7 @@ const TreeDetails = ({
     from: urlFrom,
   });
 
-  const { diffFilter, treeInfo } = searchParams;
+  const { diffFilter, treeInfo, currentPageTab } = searchParams;
   const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
   const updatePreviousSearch = useSearchStore(s => s.updatePreviousSearch);
 
@@ -198,7 +199,8 @@ const TreeDetails = ({
     gitBranch: sanitizedTreeInfo.gitBranch ?? '',
     filter: reqFilter,
     urlFrom: urlFrom,
-  });
+    currentPageTab,
+  } satisfies UseTreeDetailsLazyLoadQueryArgs);
 
   const { data, isLoading } = treeDetailsLazyLoaded.summary;
 

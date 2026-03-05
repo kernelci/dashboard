@@ -3,12 +3,22 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import type { UseTreeDetailsWithoutVariant } from '@/api/treeDetails';
 import { useTreeDetails } from '@/api/treeDetails';
 import type {
-  TreeDetailsFullData,
+  TreeDetailsBuilds,
+  TreeDetailsBoots,
+  TreeDetailsTests,
   TreeDetailsSummary,
+  PossibleTabs,
 } from '@/types/tree/TreeDetails';
 import type { QuerySelectorStatus } from '@/components/QuerySwitcher/QuerySwitcher';
 import { useIssueExtraDetails } from '@/api/issueExtras';
 import type { IssueExtraDetailsResponse } from '@/types/issueExtras';
+
+type TabQueryResult<T> = {
+  data?: T;
+  isLoading: boolean;
+  status: QuerySelectorStatus;
+  error: UseQueryResult['error'];
+};
 
 export type TreeDetailsLazyLoaded = {
   summary: {
@@ -18,12 +28,9 @@ export type TreeDetailsLazyLoaded = {
     error: UseQueryResult['error'];
     isPlaceholderData: boolean;
   };
-  full: {
-    data?: TreeDetailsFullData;
-    isLoading: boolean;
-    status: QuerySelectorStatus;
-    error: UseQueryResult['error'];
-  };
+  builds: TabQueryResult<TreeDetailsBuilds>;
+  boots: TabQueryResult<TreeDetailsBoots>;
+  tests: TabQueryResult<TreeDetailsTests>;
   issuesExtras: {
     data?: IssueExtraDetailsResponse;
     isLoading: boolean;
@@ -36,18 +43,37 @@ export type TreeDetailsLazyLoaded = {
   };
 };
 
-export const useTreeDetailsLazyLoadQuery = (
-  useTreeDetailsArgs: UseTreeDetailsWithoutVariant,
-): TreeDetailsLazyLoaded => {
+export type UseTreeDetailsLazyLoadQueryArgs = UseTreeDetailsWithoutVariant & {
+  currentPageTab: PossibleTabs;
+};
+
+export const useTreeDetailsLazyLoadQuery = ({
+  currentPageTab,
+  ...useTreeDetailsArgs
+}: UseTreeDetailsLazyLoadQueryArgs): TreeDetailsLazyLoaded => {
   const summaryResult = useTreeDetails({
     ...useTreeDetailsArgs,
     variant: 'summary',
   });
 
-  const fullResult = useTreeDetails({
+  const hasSummary = !!summaryResult.data;
+
+  const buildsResult = useTreeDetails({
     ...useTreeDetailsArgs,
-    variant: 'full',
-    enabled: !!summaryResult.data,
+    variant: 'builds',
+    enabled: hasSummary && currentPageTab === 'global.builds',
+  });
+
+  const bootsResult = useTreeDetails({
+    ...useTreeDetailsArgs,
+    variant: 'boots',
+    enabled: hasSummary && currentPageTab === 'global.boots',
+  });
+
+  const testsResult = useTreeDetails({
+    ...useTreeDetailsArgs,
+    variant: 'tests',
+    enabled: hasSummary && currentPageTab === 'global.tests',
   });
 
   const issuesExtrasResult = useIssueExtraDetails({
@@ -65,11 +91,23 @@ export const useTreeDetailsLazyLoadQuery = (
       isPlaceholderData: summaryResult.isPlaceholderData,
       error: summaryResult.error,
     },
-    full: {
-      data: fullResult.data,
-      isLoading: fullResult.isLoading,
-      status: fullResult.status,
-      error: fullResult.error,
+    builds: {
+      data: buildsResult.data,
+      isLoading: buildsResult.isLoading,
+      status: buildsResult.status,
+      error: buildsResult.error,
+    },
+    boots: {
+      data: bootsResult.data,
+      isLoading: bootsResult.isLoading,
+      status: bootsResult.status,
+      error: bootsResult.error,
+    },
+    tests: {
+      data: testsResult.data,
+      isLoading: testsResult.isLoading,
+      status: testsResult.status,
+      error: testsResult.error,
     },
     issuesExtras: {
       data: issuesExtrasResult.data,
@@ -78,10 +116,17 @@ export const useTreeDetailsLazyLoadQuery = (
       error: issuesExtrasResult.error,
     },
     common: {
-      isAllReady: !!summaryResult && !!fullResult && !!issuesExtrasResult,
+      isAllReady:
+        !!summaryResult &&
+        !!buildsResult &&
+        !!bootsResult &&
+        !!testsResult &&
+        !!issuesExtrasResult,
       isAnyLoading:
         summaryResult.isLoading ||
-        fullResult.isLoading ||
+        buildsResult.isLoading ||
+        bootsResult.isLoading ||
+        testsResult.isLoading ||
         issuesExtrasResult.isLoading,
     },
   };

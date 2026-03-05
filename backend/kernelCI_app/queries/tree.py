@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from django.db import connection
 from django.db.models import Q
 
@@ -450,6 +450,174 @@ def get_tree_details_data(
         LEFT JOIN incidents
             ON tests.id = incidents.test_id OR
                builds_filter.builds_id = incidents.build_id
+        LEFT JOIN issues
+            ON incidents.issue_id = issues.id
+            AND incidents.issue_version = issues.version
+        ORDER BY
+            issues."_timestamp" DESC
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            set_query_cache(key=cache_key, params=params, rows=rows)
+
+    return rows
+
+
+def get_tree_data(
+    *,
+    data_type: Literal["builds", "boots", "tests"],
+    origin_param: str,
+    git_url_param: Optional[str],
+    git_branch_param: Optional[str],
+    commit_hash: Optional[str],
+    tree_name: Optional[str] = None,
+) -> Optional[list[tuple]]:
+    """Fetch build, boot, or test rows for a given tree commit."""
+    cache_key = f"treeDetails{data_type.capitalize()}"
+
+    params = {
+        "commit_hash": commit_hash,
+        "tree_name": tree_name,
+        "origin_param": origin_param,
+        "git_url_param": git_url_param,
+        "git_branch_param": git_branch_param,
+    }
+
+    rows = get_query_cache(cache_key, params)
+    if rows is None:
+        checkout_clauses = create_checkouts_where_clauses(
+            git_url=git_url_param,
+            git_branch=git_branch_param,
+            tree_name=tree_name,
+        )
+
+        git_branch_clause = checkout_clauses.get("git_branch_clause")
+        tree_name_clause = checkout_clauses.get("tree_name_clause")
+        git_url_clause = checkout_clauses.get("git_url_clause")
+        tree_name_full_clause = "AND " + tree_name_clause if tree_name_clause else ""
+        git_url_full_clause = "AND " + git_url_clause if git_url_clause else ""
+
+        is_boots = data_type == "boots"
+        is_tests = data_type == "tests"
+        include_test_cols = is_boots or is_tests
+
+        tests_select = (
+            """
+                tests.id AS tests_id,
+                tests.origin,
+                tests.environment_comment AS tests_environment_comment,
+                tests.environment_misc AS tests_environment_misc,
+                tests.path AS tests_path,
+                tests.comment AS tests_comment,
+                tests.log_url AS tests_log_url,
+                tests.status AS tests_status,
+                tests.start_time AS tests_start_time,
+                tests.duration AS tests_duration,
+                tests.number_value AS tests_number_value,
+                tests.misc AS tests_misc,
+                tests.environment_compatible AS tests_environment_compatible,"""
+            if include_test_cols
+            else """
+                NULL AS tests_id,
+                NULL AS tests_origin,
+                NULL AS tests_environment_comment,
+                NULL AS tests_environment_misc,
+                NULL AS tests_path,
+                NULL AS tests_comment,
+                NULL AS tests_log_url,
+                NULL AS tests_status,
+                NULL AS tests_start_time,
+                NULL AS tests_duration,
+                NULL AS tests_number_value,
+                NULL AS tests_misc,
+                NULL AS tests_environment_compatible,"""
+        )
+
+        tests_join = ""
+        if is_boots:
+            tests_join = (
+                "LEFT JOIN tests ON builds_filter.builds_id = tests.build_id"
+                " AND (tests.path = 'boot' OR tests.path LIKE 'boot.%%')"
+            )
+        elif is_tests:
+            tests_join = (
+                "LEFT JOIN tests ON builds_filter.builds_id = tests.build_id"
+                " AND tests.path <> 'boot' AND tests.path NOT LIKE 'boot.%%'"
+            )
+
+        incidents_on = (
+            "tests.id = incidents.test_id"
+            if include_test_cols
+            else "builds_filter.builds_id = incidents.build_id"
+        )
+
+        query = f"""
+        WITH RELEVANT_HASH AS (
+            SELECT
+                c.git_commit_hash
+            FROM
+                checkouts c
+            WHERE
+                c.git_commit_hash = %(commit_hash)s
+                OR %(commit_hash)s = ANY (c.git_commit_tags)
+            ORDER BY
+                c._timestamp DESC
+            LIMIT 1
+        )
+        SELECT
+            {tests_select}
+                builds_filter.*,
+                incidents.id AS incidents_id,
+                incidents.test_id AS incidents_test_id,
+                incidents.present AS incidents_present,
+                issues.id AS issues_id,
+                issues.version AS issues_version,
+                issues.comment AS issues_comment,
+                issues.report_url AS issues_report_url
+        FROM
+            (
+                SELECT
+                    builds.id AS builds_id,
+                    builds.origin,
+                    builds.comment AS builds_comment,
+                    builds.start_time AS builds_start_time,
+                    builds.duration AS builds_duration,
+                    builds.architecture AS builds_architecture,
+                    builds.command AS builds_command,
+                    builds.compiler AS builds_compiler,
+                    builds.config_name AS builds_config_name,
+                    builds.config_url AS builds_config_url,
+                    builds.log_url AS builds_log_url,
+                    builds.status AS builds_valid,
+                    builds.misc AS builds_misc,
+                    tree_head.*
+                FROM
+                    (
+                        SELECT
+                            checkouts.id AS checkout_id,
+                            checkouts.git_repository_url AS checkouts_git_repository_url,
+                            checkouts.git_repository_branch AS checkouts_git_repository_branch,
+                            checkouts.git_commit_tags AS checkout_git_commit_tags,
+                            checkouts.origin AS checkouts_origin
+                        FROM
+                            checkouts
+                        WHERE
+                            checkouts.git_commit_hash = (
+                                SELECT git_commit_hash FROM RELEVANT_HASH
+                            )
+                            {git_url_full_clause}
+                            {tree_name_full_clause}
+                            AND {git_branch_clause}
+                            AND checkouts.origin = %(origin_param)s
+                    ) AS tree_head
+                LEFT JOIN builds
+                    ON tree_head.checkout_id = builds.checkout_id
+            ) AS builds_filter
+        {tests_join}
+        LEFT JOIN incidents
+            ON {incidents_on}
         LEFT JOIN issues
             ON incidents.issue_id = issues.id
             AND incidents.issue_version = issues.version

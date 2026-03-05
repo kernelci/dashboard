@@ -16,7 +16,7 @@ from kernelCI_app.helpers.treeDetails import (
     decide_if_is_full_row_filtered_out,
     get_current_row_data,
 )
-from kernelCI_app.queries.tree import get_tree_details_data
+from kernelCI_app.queries.tree import get_tree_data
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     COMMIT_HASH_PATH_PARAM,
     GIT_BRANCH_PATH_PARAM,
@@ -76,7 +76,8 @@ class BaseTreeDetailsBoots(APIView):
         commit_hash: str,
         origin: str,
     ) -> Response:
-        rows = get_tree_details_data(
+        rows = get_tree_data(
+            data_type="boots",
             origin_param=origin,
             git_url_param=git_url,
             git_branch_param=git_branch,
@@ -91,14 +92,6 @@ class BaseTreeDetailsBoots(APIView):
                 error_message=ClientStrings.TREE_NO_RESULTS,
                 status_code=HTTPStatus.OK,
             )
-
-        if len(rows) == 1:
-            row_data = get_current_row_data(current_row=rows[0])
-            if row_data["test_id"] is None:
-                return create_api_error_response(
-                    error_message=ClientStrings.TREE_BOOTS_NO_RESULTS,
-                    status_code=HTTPStatus.OK,
-                )
 
         try:
             self._sanitize_rows(rows)

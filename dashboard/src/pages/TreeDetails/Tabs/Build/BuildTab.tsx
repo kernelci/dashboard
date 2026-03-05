@@ -107,13 +107,19 @@ const BuildTab = ({
   );
 
   const {
-    data: fullData,
-    status: fullStatus,
-    error: fullError,
-    isLoading: fullIsLoading,
-  } = useMemo(() => treeDetailsLazyLoaded.full, [treeDetailsLazyLoaded.full]);
+    data: buildsData,
+    status: buildsStatus,
+    error: buildsError,
+    isLoading: buildsIsLoading,
+  } = useMemo(
+    () => treeDetailsLazyLoaded.builds,
+    [treeDetailsLazyLoaded.builds],
+  );
 
-  const fullBuildsData = useMemo(() => fullData?.builds, [fullData?.builds]);
+  const fullBuildsData = useMemo(
+    () => buildsData?.builds,
+    [buildsData?.builds],
+  );
 
   const toggleFilterBySection = useCallback(
     (filterSectionKey: string, filterSection: TFilterObjectsKeys): void => {
@@ -276,11 +282,11 @@ const BuildTab = ({
 
           <QuerySwitcher
             data={fullBuildsData}
-            status={fullStatus}
+            status={buildsStatus}
             customError={
               <MemoizedSectionError
-                isLoading={fullIsLoading}
-                errorMessage={fullError?.message}
+                isLoading={buildsIsLoading}
+                errorMessage={buildsError?.message}
                 emptyLabel={'global.error'}
               />
             }
