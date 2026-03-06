@@ -55,7 +55,9 @@ crond start
 chmod +x ./migrate-cache-db.sh
 ./migrate-cache-db.sh
 
-# To update the app db, run MANNUALLY:
-# docker compose run --rm backend sh -c "chmod +x ./migrate-app-db.sh && ./migrate-app-db.sh"
+# Update the MAIN db
+chmod +x ./migrate-app-db.sh
+./migrate-app-db.sh
+
 
 exec "$@"

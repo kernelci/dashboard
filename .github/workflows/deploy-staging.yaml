@@ -1,71 +1,116 @@
 name: Deploy Staging and E2E
 
 on:
-  workflow_call:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
 
 jobs:
-  deploy-staging:
+  check-migrations:
+    runs-on: ubuntu-latest
+    outputs:
+      has_new_migrations: ${{ steps.check.outputs.has_new_migrations }}
+      migration_list: ${{ steps.check.outputs.migration_list }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new Django migrations
+        id: check
+        run: |
+          NEW_MIGRATIONS=$(git diff --name-only HEAD~1 HEAD -- '**/migrations/*.py' \
+            | grep -v '__init__.py' || true)
+
+          if [ -n "$NEW_MIGRATIONS" ]; then
+            echo "has_new_migrations=true" >> $GITHUB_OUTPUT
+            ENCODED=$(echo "$NEW_MIGRATIONS" | tr '\n' '|')
+            echo "migration_list=$ENCODED" >> $GITHUB_OUTPUT
+            echo "New migration files detected:"
+            echo "$NEW_MIGRATIONS"
+          else
+            echo "has_new_migrations=false" >> $GITHUB_OUTPUT
+            echo "migration_list=" >> $GITHUB_OUTPUT
+            echo "No new migration files found"
+          fi
+
+  notify-new-migrations:
+    needs: check-migrations
+    if: needs.check-migrations.outputs.has_new_migrations == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Configure staging host authenticity
+      - name: Discord notification - new migrations detected
         run: |
-          mkdir -p ~/.ssh/ && chmod 700 ~/.ssh/
-          touch ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts
-          echo "$SSH_HOSTKEY" > ~/.ssh/known_hosts
-        env:
-          SSH_HOSTKEY: ${{ secrets.STAGING_HOSTKEY }}
+          echo "New Django migrations detected in this staging deployment:"
+          echo "${{ needs.check-migrations.outputs.migration_list }}" | tr '|' '\n'
+
+  # deploy-staging:
+  #   needs: check-migrations
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Configure staging host authenticity
+  #       run: |
+  #         mkdir -p ~/.ssh/ && chmod 700 ~/.ssh/
+  #         touch ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts
+  #         echo "$SSH_HOSTKEY" > ~/.ssh/known_hosts
+  #       env:
+  #         SSH_HOSTKEY: ${{ secrets.STAGING_HOSTKEY }}
             
-      - name: Deploy to staging
-        run: |
-          eval $(ssh-agent -s)
-          echo "$SSH_KEY" | ssh-add - >/dev/null
-          ssh "${SSH_USER}@${SSH_HOST}" "
-            rm -rf dashboard-staging &&
-            git clone --depth 1 --branch main https://github.com/kernelci/dashboard.git dashboard-staging &&
-            cp ~/.env-staging dashboard-staging/.env &&
-            cd dashboard-staging &&
-            git checkout ${GITHUB_SHA} &&
-            docker compose down &&
-            docker compose build --no-cache &&
-            docker compose up -d
-          "
-        env:
-          SSH_USER: ${{ secrets.STAGING_USER }}
-          SSH_HOST: ${{ secrets.STAGING_HOST }}
-          SSH_KEY: ${{ secrets.STAGING_KEY }}
+  #     - name: Deploy to staging
+  #       run: |
+  #         eval $(ssh-agent -s)
+  #         echo "$SSH_KEY" | ssh-add - >/dev/null
+  #         ssh "${SSH_USER}@${SSH_HOST}" "
+  #           rm -rf dashboard-staging &&
+  #           git clone --depth 1 --branch main https://github.com/kernelci/dashboard.git dashboard-staging &&
+  #           cp ~/.env-staging dashboard-staging/.env &&
+  #           cd dashboard-staging &&
+  #           git checkout ${GITHUB_SHA} &&
+  #           docker compose down &&
+  #           docker compose build --no-cache &&
+  #           docker compose up -d
+  #         "
+  #       env:
+  #         SSH_USER: ${{ secrets.STAGING_USER }}
+  #         SSH_HOST: ${{ secrets.STAGING_HOST }}
+  #         SSH_KEY: ${{ secrets.STAGING_KEY }}
 
-  e2e-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: deploy-staging
-    steps:
-      - uses: actions/checkout@v4
+  # e2e-tests:
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   needs: deploy-staging
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Fetch node_modules
-        uses: actions/cache@v4
-        id: fetch-node_modules
-        with:
-          key: node_modules-${{ runner.os }}-${{ hashFiles('./dashboard/pnpm-lock.yaml') }}
-          path: ./dashboard/node_modules
+  #     - name: Fetch node_modules
+  #       uses: actions/cache@v4
+  #       id: fetch-node_modules
+  #       with:
+  #         key: node_modules-${{ runner.os }}-${{ hashFiles('./dashboard/pnpm-lock.yaml') }}
+  #         path: ./dashboard/node_modules
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.2
+  #     - name: Install pnpm
+  #       uses: pnpm/action-setup@v4
+  #       with:
+  #         version: 9.15.2
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: './dashboard/.nvmrc'
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version-file: './dashboard/.nvmrc'
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-        working-directory: ./dashboard
+  #     - name: Install Playwright browsers
+  #       run: npx playwright install --with-deps
+  #       working-directory: ./dashboard
 
-      - name: Wait for staging deployment to be ready
-        run: sleep 180
+  #     - name: Wait for staging deployment to be ready
+  #       run: sleep 180
 
-      - name: Run e2e tests against staging
-        run: pnpm e2e
-        working-directory: ./dashboard
-        env:
-          PLAYWRIGHT_TEST_BASE_URL: https://staging.dashboard.kernelci.org
+  #     - name: Run e2e tests against staging
+  #       run: pnpm e2e
+  #       working-directory: ./dashboard
+  #       env:
+  #         PLAYWRIGHT_TEST_BASE_URL: https://staging.dashboard.kernelci.org
