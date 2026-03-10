@@ -128,6 +128,10 @@ SKIP_CRONJOBS = is_boolean_or_string_true(os.environ.get("SKIP_CRONJOBS", False)
 if SKIP_CRONJOBS:
     CRONJOBS = []
 else:
+    # Make cron task output visible in `docker compose logs backend`.
+    CRONTAB_COMMAND_SUFFIX = os.environ.get(
+        "CRONTAB_COMMAND_SUFFIX", ">> /proc/1/fd/1 2>&1"
+    )
     CRONJOBS = [
         ("0 * * * *", "kernelCI_app.tasks.update_checkout_cache"),
         (
