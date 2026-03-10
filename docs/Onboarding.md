@@ -6,6 +6,7 @@ This onboarding is written in the form of Tasks that you you can complete to get
 The KernelCI Dashboard is composed by two main parts
 
 1. The KernelCI Dashboard Backend
+
 This API is responsible for querying the KernelCI database and returning the data to the KernelCI Dashboard frontend.
 Here are made calculations and data processing to return the data in a way that the frontend can understand.
 This API is written in Python and uses the Django Rest Framework.
@@ -13,6 +14,7 @@ This API is written in Python and uses the Django Rest Framework.
 Our backend also houses an email notification system and a submissions monitoring command, which are both disconnected from the frontend. The email notification system runs on a cron job, tracking changes on trees and reporting its status, regressions, fixes and more. You can check more details about it on [notifications.md](notifications.md). The submission monitoring - also known as "ingester" - is used to listen changes in a folder and insert json data into the database through the django models. See more information about it on [monitor_submissions.md](../backend/docs/monitor_submissions.md); the ingester is a port from the [kcidb-ng repository](https://github.com/kernelci/kcidb-ng).
 
 2. The KernelCI Dashboard Frontend
+
 This is the user interface that will be used to interact with the KernelCI Dashboard API.
 Here the user can see the data returned by the API in a more user-friendly way and request diferents forms of visualization.
 This frontend is written in TypeScript and uses the React library.
@@ -30,7 +32,7 @@ This frontend is written in TypeScript and uses the React library.
 > Always try to look to the production dashboard between tasks to see if you can assimilate the code to the project
 
 ### Task 0: Check your ssh and database access
-In order to access the production database, you must be granted access to it first - ssh connection and database user. If you don't have access to the production database, you can point the environment variables from the main database to a local database.
+In order to access the production database, you must be granted access to it first - ssh connection and database user. If you don't have access to the production database, you can use a local database.
 
 1. Connect to the Azure database ssh bridge:
 
@@ -39,7 +41,9 @@ In order to access the production database, you must be granted access to it fir
 * Connect to the database via SSH tunnel with the provided URL.
 
 2. You should ask for the creation of a new user/password for the database access. Once you have your credentials, connect to the database via `psql`, pgAdmin, DBeaver or any other postgresql manager.
-3. Start up the local dashboard-db by starting its docker container and running the [migration script](../backend/migrate-app-db.sh). This secondary database is very useful for local development and you can modify it as much as you like.
+3. Start up the local dashboard_db by starting its docker container and running the [migration script](../backend/migrate-app-db.sh). This secondary database is very useful for local development and you can modify it as much as you like.
+
+You can populate the local db with data dumps provided by colleagues, or run the the `monitor_submissions` command (aka "ingester") and use provided json files to insert data into the db. If you use the ingester, check the [monitor_submissions docs](../backend/docs/monitor_submissions.md) on its description.
 
 Definition of Done: You have access to kcidb and created the local database.
 
@@ -49,13 +53,15 @@ Redis is needed for the use of query cache in the backend, so it must be running
 
 A simple way is through snap, which will run Redis as a background service and start it automatically when you boot your computer (if set to auto-start). Be careful when running the project with Docker, as you need to stop the local Redis server to avoid port conflicts. If installed via snap, you can check its status with `sudo snap services`, and start or stop it with `sudo snap start redis` or `sudo snap stop redis`.
 
-Definition of Done: The Redis server is running and you do not encounter Redis-related errors when starting the backend in Task 2.
+Definition of Done: The Redis server is running.
 
 
 ### Task 2: Run the Backend locally
 1. Clone the KernelCI Dashboard repository from the following link: https://github.com/kernelci/dashboard
 2. Go to the `backend` directory, see the [README.md](../backend/README.md) from the backend and run the project locally (read at least up to "Running the server").
 3. At this point you should have already read the [main README](../README.md) file for a general context of the project and how to run it too. If there are any mistakes feel free to send a PR with corrections and changes.
+
+Remember that you need redis running before starting the backend.
 
 Definition of Done: You have the KernelCI Dashboard backend running locally.
 
@@ -65,7 +71,7 @@ Definition of Done: You have the KernelCI Dashboard backend running locally.
 > Although the example requests use httpie, you can use any other request tool (such as curl, Postman, or Insomnia) to interact with the API.
 
 1. Install [httpie](https://github.com/httpie)
-2. Check the folder `backend/requests` and see that there are multiple bash scripts file, those are httpie requests, try to run some of those. (If one of those requests is not working, it is a good opportunity to created a ticket or fix in a PR).
+2. Check the folder `backend/requests` and you'll see that there are multiple bash scripts file. Those are httpie requests, try to run some of those. If one of those requests is not working, it is a good opportunity to created a ticket or fix in a PR.
 3. Try to look in the [KernelCI Dashboard](https://dashboard.kernelci.org/) to see if you can view where those calls are being made.
 4. Check the URL to endpoint relationship in the [backend/kernelCI_app/urls.py](../backend/kernelCI_app/urls.py) file.
 
@@ -77,9 +83,9 @@ Definition of Done: You have run some requests to the KernelCI Dashboard API and
 2. Connect to the KernelCI Database and try to see the tables and the data that is stored there.
 3. Read this docs to understand the database: [Database Knowledge](../backend/docs/database-logic.md)
 4. Make some direct SQL queries to see what you can do, feel free to look at the Backend code.
-5. Move some data from kcidb to the dashboard_db by running the `update_db` command with `poetry run python3 manage.py update_db`. You don't need a lot of data, specially considering that the database is heavy. For now, just a couple of hours should suffice.
+5. As an exercise, run an SQL query that gets all the tests from a specific Tree (feel free to choose any tree).
 
-Definition of Done: Run a SQL query that gets all the tests from a specific Tree. (Feel free to choose any), post the query Result in the Github Issue.
+Definition of Done: You are able to query database data with no problem.
 
 
 ### Task 5: Run the Frontend locally
@@ -95,11 +101,15 @@ Definition of Done: You have the KernelCI Dashboard frontend running locally.
 > [!TIP]
 > Running the project with Docker is especially useful for testing, as the production instance also runs in containers. This setup provides a more similar environment to production and helps ensure consistency between development and deployment.
 
+> [!IMPORTANT]
+> The current docker compose has settings meant for the staging deployment; for local development you'll need to open the `dashboard_db` service's port (set `5434:5432` so the external port doesn't conflict with the backend) and set `STAGING_EXTERNAL_HTTP_PORT` as `80` in the .env. You'll also use a single `.env` instead of the separate `.env.service`s.
+
 1. Make sure your backend, frontend, db ssh and Redis are **not** running locally.
-  - If Redis is running and you installed it with snap, stop it with:
-    ```bash
-    sudo snap stop redis
-    ```
+  
+  If Redis is running and you installed it with snap, stop it with:
+  ```bash
+  sudo snap stop redis
+  ```
 
 2. Set up the `.env` files in the root of the project by copying the `.env.name.example` files and removing the `.example` at the end of the filenames. For the development you'll need to change the following variables in the .env.backend file:
 ```
