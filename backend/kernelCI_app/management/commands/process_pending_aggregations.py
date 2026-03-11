@@ -1,5 +1,6 @@
 import hashlib
 import os
+import shutil
 import signal
 import time
 from datetime import datetime
@@ -10,6 +11,7 @@ from django.db import connection, transaction
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.management.commands.helpers.aggregation_helpers import simplify_status
+from kernelCI_app.constants.ingester import PROMETHEUS_MULTIPROC_DIR
 from prometheus_client import start_http_server
 from kernelCI_app.models import (
     Builds,
@@ -528,6 +530,11 @@ class Command(BaseCommand):
         interval = options["interval"]
 
         metrics_port = int(os.environ.get("PROMETHEUS_METRICS_PORT", 8001))
+        if PROMETHEUS_MULTIPROC_DIR:
+            if os.path.exists(PROMETHEUS_MULTIPROC_DIR):
+                shutil.rmtree(PROMETHEUS_MULTIPROC_DIR)
+            os.makedirs(PROMETHEUS_MULTIPROC_DIR, exist_ok=True)
+
         if settings.PROMETHEUS_METRICS_ENABLED:
             start_http_server(metrics_port)
             out(f"Prometheus metrics server started on port {metrics_port}")
