@@ -49,7 +49,9 @@ chmod +x ./setup-dashboard-db.sh
 
 # Add and start cronjobs
 poetry run ./manage.py crontab add
-crond start
+# BusyBox crond doesn't support a "start" subcommand.
+# Start cronjobs in background and emit logs to container stdout.
+crond -b -L /proc/1/fd/1
 
 # Update the sqlite cache db
 chmod +x ./migrate-cache-db.sh

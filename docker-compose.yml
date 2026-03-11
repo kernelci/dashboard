@@ -24,8 +24,6 @@ services:
             - 8000:8000
         restart: always
         image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-backend:${IMAGE_TAG:-latest}
-        environment:
-            - CONTAINER_MODE=backend
         command:
             - poetry
             - run
