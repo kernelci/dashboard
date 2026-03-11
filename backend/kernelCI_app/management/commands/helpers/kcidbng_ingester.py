@@ -111,6 +111,22 @@ def standardize_labs(input_data: dict[str, Any]) -> None:
             test["misc"].pop("runtime", None)
 
 
+def _extract_origins_info(data: Optional[dict[str, Any]]) -> str:
+    """Extract unique origins from submissions for error reporting.
+
+    Returns a formatted string like " [origins: origin1, origin2]" if origins
+    are found, otherwise an empty string.
+    """
+    origins: set[str] = set()
+    if data:
+        for section in ("tests", "builds", "checkouts", "issues", "incidents"):
+            for item in data.get(section, []):
+                origin = item.get("origin")
+                if origin:
+                    origins.add(origin)
+    return f" [origins: {', '.join(sorted(origins))}]" if origins else ""
+
+
 def prepare_file_data(
     file: SubmissionFileMetadata, tree_names: dict[str, str]
 ) -> tuple[Optional[dict[str, Any]], Optional[dict[str, Any]]]:
@@ -133,6 +149,7 @@ def prepare_file_data(
     if VERBOSE:
         logger.info("Processing file %s, size: %d", file["name"], fsize)
 
+    data: Optional[dict[str, Any]] = None
     try:
         with open(file["path"], "r") as f:
             data = json.loads(f.read())
@@ -151,7 +168,8 @@ def prepare_file_data(
             "processing_time": processing_time,
         }
     except Exception as e:
-        logger.error("Error preparing data from %s: %s", file["name"], e)
+        origin_info = _extract_origins_info(data)
+        logger.error("Error preparing data from %s%s: %s", file["name"], origin_info, e)
         logger.error(traceback.format_exc())
         return None, {
             "error": str(e),
