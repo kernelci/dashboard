@@ -1,8 +1,9 @@
 from unittest.mock import patch, MagicMock
-from datetime import datetime
+from datetime import datetime, timezone
 from kernelCI_app.tasks import (
     _is_checkout_done,
     _is_checkout_unstable,
+    _is_checkout_newer,
     get_checkout_ids_for_update,
     update_checkout_cache,
     UPDATE_INTERVAL_IN_DAYS,
@@ -134,6 +135,88 @@ class TestIsCheckoutUnstable:
             result = _is_checkout_unstable(checkout=mock_checkout)
 
         assert result is True
+
+
+class TestIsCheckoutNewer:
+    def test_cached_start_time_none_returns_false(self):
+        result = _is_checkout_newer(
+            cached_start_time=None,
+            old_checkout_start_time=datetime(2024, 1, 15, 12, 0, 0),
+            old_checkout_id="checkout1",
+        )
+
+        assert result is False
+
+    def test_checkout_start_time_none_returns_false(self):
+        result = _is_checkout_newer(
+            cached_start_time=datetime(2024, 1, 14, 12, 0, 0),
+            old_checkout_start_time=None,
+            old_checkout_id="checkout1",
+        )
+
+        assert result is False
+
+    def test_both_none_returns_false(self):
+        result = _is_checkout_newer(
+            cached_start_time=None,
+            old_checkout_start_time=None,
+            old_checkout_id="checkout1",
+        )
+
+        assert result is False
+
+    def test_newer_checkout_returns_true(self):
+        result = _is_checkout_newer(
+            cached_start_time=datetime(2024, 1, 14, 12, 0, 0),
+            old_checkout_start_time=datetime(2024, 1, 15, 12, 0, 0),
+            old_checkout_id="checkout1",
+        )
+
+        assert result is True
+
+    def test_older_checkout_returns_false(self):
+        result = _is_checkout_newer(
+            cached_start_time=datetime(2024, 1, 15, 12, 0, 0),
+            old_checkout_start_time=datetime(2024, 1, 14, 12, 0, 0),
+            old_checkout_id="checkout1",
+        )
+
+        assert result is False
+
+    def test_equal_start_times_returns_false(self):
+        same_time = datetime(2024, 1, 15, 12, 0, 0)
+
+        result = _is_checkout_newer(
+            cached_start_time=same_time,
+            old_checkout_start_time=same_time,
+            old_checkout_id="checkout1",
+        )
+
+        assert result is False
+
+    def test_already_aware_datetimes_still_compared(self):
+        cached = datetime(2024, 1, 14, 12, 0, 0, tzinfo=timezone.utc)
+        newer = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+
+        result = _is_checkout_newer(
+            cached_start_time=cached,
+            old_checkout_start_time=newer,
+            old_checkout_id="checkout1",
+        )
+
+        assert result is True
+
+    def test_exception_during_make_aware_returns_false(self):
+        with patch(
+            "kernelCI_app.tasks.make_aware", side_effect=Exception("unexpected")
+        ):
+            result = _is_checkout_newer(
+                cached_start_time=datetime(2024, 1, 14, 12, 0, 0),
+                old_checkout_start_time=datetime(2024, 1, 15, 12, 0, 0),
+                old_checkout_id="checkout1",
+            )
+
+        assert result is False
 
 
 class TestGetCheckoutIdsForUpdate:

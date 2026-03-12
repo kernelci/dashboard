@@ -239,7 +239,10 @@ def get_tree_listing_fast(
     return list(checkouts)
 
 
-def get_tree_listing_data_by_checkout_id(*, checkout_ids: list[str]):
+def get_tree_listing_data_by_checkout_id(*, checkout_ids: list[str]) -> list[dict]:
+    if not checkout_ids:
+        return []
+
     count_clauses = _get_tree_listing_count_clause()
 
     # TODO: check if those conditions of case, coalesce and group by are necessary
