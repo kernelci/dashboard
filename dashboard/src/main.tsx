@@ -44,6 +44,7 @@ declare module '@tanstack/react-router' {
     from?: RedirectFrom;
     treeName?: string;
     branch?: string;
+    hardwareId?: string;
     treeStatusCount?: {
       builds?: RequiredStatusCount;
       boots?: RequiredStatusCount;
