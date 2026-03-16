@@ -47,11 +47,10 @@ fi
 chmod +x ./setup-dashboard-db.sh
 ./setup-dashboard-db.sh
 
-# Add and start cronjobs
-poetry run ./manage.py crontab add
-# BusyBox crond doesn't support a "start" subcommand.
-# Start cronjobs in background and emit logs to container stdout.
-crond -b -L /proc/1/fd/1
+
+# Assure that the sqlite folder exists and export the variable for crond
+export BACKEND_VOLUME_DIR=${BACKEND_VOLUME_DIR:-/volume_data}
+mkdir -p "$BACKEND_VOLUME_DIR"
 
 # Update the sqlite cache db
 chmod +x ./migrate-cache-db.sh
@@ -60,6 +59,10 @@ chmod +x ./migrate-cache-db.sh
 # Update the MAIN db
 chmod +x ./migrate-app-db.sh
 ./migrate-app-db.sh
+
+# Add and start cronjobs in background and emit logs to container stdout.
+poetry run ./manage.py crontab add
+crond -b -L /proc/1/fd/1
 
 
 exec "$@"

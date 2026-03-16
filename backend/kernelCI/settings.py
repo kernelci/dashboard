@@ -217,7 +217,7 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-BACKEND_VOLUME_DIR = os.environ.get("BACKEND_VOLUME_DIR", "volume_data")
+BACKEND_VOLUME_DIR = os.environ.get("BACKEND_VOLUME_DIR", "/volume_data")
 
 DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
