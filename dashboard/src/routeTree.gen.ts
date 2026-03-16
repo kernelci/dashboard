@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LogViewerRouteImport } from './routes/log-viewer'
+import { Route as SplatRouteImport } from './routes/$'
 import { Route as MainRouteRouteImport } from './routes/_main/route'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as MainTreeRouteRouteImport } from './routes/_main/tree/route'
@@ -62,6 +63,11 @@ import { Route as MainalternativesCTreeNameBranchHashIndexRouteImport } from './
 const LogViewerRoute = LogViewerRouteImport.update({
   id: '/log-viewer',
   path: '/log-viewer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MainRouteRoute = MainRouteRouteImport.update({
@@ -329,6 +335,7 @@ const MainalternativesCTreeNameBranchHashIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
+  '/$': typeof SplatRoute
   '/log-viewer': typeof LogViewerRoute
   '/hardware': typeof MainHardwareRouteRouteWithChildren
   '/issues': typeof MainIssuesRouteRouteWithChildren
@@ -378,6 +385,7 @@ export interface FileRoutesByFullPath {
   '/c/$treeName/$branch/$hash/': typeof MainalternativesCTreeNameBranchHashIndexRoute
 }
 export interface FileRoutesByTo {
+  '/$': typeof SplatRoute
   '/log-viewer': typeof LogViewerRoute
   '/': typeof MainIndexRoute
   '/hardware': typeof MainHardwareIndexRoute
@@ -414,6 +422,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteRouteWithChildren
+  '/$': typeof SplatRoute
   '/log-viewer': typeof LogViewerRoute
   '/_main/hardware': typeof MainHardwareRouteRouteWithChildren
   '/_main/issues': typeof MainIssuesRouteRouteWithChildren
@@ -467,6 +476,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$'
     | '/log-viewer'
     | '/hardware'
     | '/issues'
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/c/$treeName/$branch/$hash/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/$'
     | '/log-viewer'
     | '/'
     | '/hardware'
@@ -551,6 +562,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_main'
+    | '/$'
     | '/log-viewer'
     | '/_main/hardware'
     | '/_main/issues'
@@ -603,6 +615,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   MainRouteRoute: typeof MainRouteRouteWithChildren
+  SplatRoute: typeof SplatRoute
   LogViewerRoute: typeof LogViewerRoute
 }
 
@@ -613,6 +626,13 @@ declare module '@tanstack/react-router' {
       path: '/log-viewer'
       fullPath: '/log-viewer'
       preLoaderRoute: typeof LogViewerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_main': {
@@ -1239,6 +1259,7 @@ const MainRouteRouteWithChildren = MainRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   MainRouteRoute: MainRouteRouteWithChildren,
+  SplatRoute: SplatRoute,
   LogViewerRoute: LogViewerRoute,
 }
 export const routeTree = rootRouteImport

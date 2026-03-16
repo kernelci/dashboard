@@ -8,6 +8,18 @@ const SEARCH_UPDATE_TIMEOUT = 2000;
 const NAVIGATION_TIMEOUT = 5000;
 const GO_BACK_TIMEOUT = 3000;
 
+test.describe('Test Fallback page', () => {
+  test('it loads a 404 page with a link to the main view', async ({ page }) => {
+    await page.goto('/i_do_not_exist');
+    await page.waitForTimeout(PAGE_LOAD_TIMEOUT);
+
+    await expect(page.getByText('Page not found')).toBeVisible();
+    await page.getByRole('link', { name: 'Go back to Home' }).click();
+
+    await page.goto('/tree');
+  });
+});
+
 test.describe('Tree Listing Page Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/tree');
