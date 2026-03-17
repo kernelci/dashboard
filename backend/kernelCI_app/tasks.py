@@ -1,5 +1,5 @@
 from django.conf import settings
-from kernelCI_app.helpers.logger import out, log_message
+from kernelCI_app.helpers.logger import out
 from kernelCI_app.models import Checkouts
 from kernelCI_app.queries.tree import (
     get_tree_listing_data_by_checkout_id,
@@ -9,7 +9,7 @@ from kernelCI_cache.checkouts import populate_checkouts_cache_db
 from kernelCI_cache.constants import NO_CACHE_ORIGINS, UNSTABLE_CHECKOUT_THRESHOLD
 from kernelCI_cache.queries.checkouts import get_cached_tree_listing_fast
 from datetime import timedelta
-from django.utils.timezone import now, make_aware
+from django.utils.timezone import now, make_aware, is_aware
 
 UPDATE_INTERVAL_IN_DAYS = 90
 
@@ -57,28 +57,17 @@ def _is_checkout_newer(
     *,
     cached_start_time,
     old_checkout_start_time,
-    old_checkout_id,
 ) -> bool:
     if cached_start_time is None or old_checkout_start_time is None:
         return False
 
-    try:
+    if not is_aware(cached_start_time):
         cached_start_time = make_aware(cached_start_time)
-        old_checkout_start_time = make_aware(old_checkout_start_time)
-    except ValueError as e:  # datetime is already aware, log but still compare
-        log_message(
-            "Value Error on _is_checkout_newer for %s: %s" % (old_checkout_id, str(e))
-        )
-    except Exception as e:  # other exceptions, don't compare
-        log_message(
-            "Exception on _is_checkout_newer for %s: %s" % (old_checkout_id, str(e))
-        )
-        return False
 
-    if old_checkout_start_time > cached_start_time:
-        return True
-    else:
-        return False
+    if not is_aware(old_checkout_start_time):
+        old_checkout_start_time = make_aware(old_checkout_start_time)
+
+    return old_checkout_start_time > cached_start_time
 
 
 def get_checkout_ids_for_update(
@@ -118,7 +107,6 @@ def get_checkout_ids_for_update(
         if _is_checkout_newer(
             cached_start_time=same_tree_on_sqlite.get("start_time"),
             old_checkout_start_time=checkout.start_time,
-            old_checkout_id=checkout.id,
         ):
             checkout_ids_for_update.add(checkout.id)
 

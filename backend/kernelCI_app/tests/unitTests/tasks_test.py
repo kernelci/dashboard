@@ -142,7 +142,6 @@ class TestIsCheckoutNewer:
         result = _is_checkout_newer(
             cached_start_time=None,
             old_checkout_start_time=datetime(2024, 1, 15, 12, 0, 0),
-            old_checkout_id="checkout1",
         )
 
         assert result is False
@@ -151,7 +150,6 @@ class TestIsCheckoutNewer:
         result = _is_checkout_newer(
             cached_start_time=datetime(2024, 1, 14, 12, 0, 0),
             old_checkout_start_time=None,
-            old_checkout_id="checkout1",
         )
 
         assert result is False
@@ -160,7 +158,6 @@ class TestIsCheckoutNewer:
         result = _is_checkout_newer(
             cached_start_time=None,
             old_checkout_start_time=None,
-            old_checkout_id="checkout1",
         )
 
         assert result is False
@@ -168,8 +165,7 @@ class TestIsCheckoutNewer:
     def test_newer_checkout_returns_true(self):
         result = _is_checkout_newer(
             cached_start_time=datetime(2024, 1, 14, 12, 0, 0),
-            old_checkout_start_time=datetime(2024, 1, 15, 12, 0, 0),
-            old_checkout_id="checkout1",
+            old_checkout_start_time=datetime(2024, 1, 15, 12, 0, 0, 0, timezone.utc),
         )
 
         assert result is True
@@ -177,19 +173,17 @@ class TestIsCheckoutNewer:
     def test_older_checkout_returns_false(self):
         result = _is_checkout_newer(
             cached_start_time=datetime(2024, 1, 15, 12, 0, 0),
-            old_checkout_start_time=datetime(2024, 1, 14, 12, 0, 0),
-            old_checkout_id="checkout1",
+            old_checkout_start_time=datetime(2024, 1, 14, 12, 0, 0, 0, timezone.utc),
         )
 
         assert result is False
 
     def test_equal_start_times_returns_false(self):
-        same_time = datetime(2024, 1, 15, 12, 0, 0)
+        same_time = datetime(2024, 1, 15, 12, 0, 0, 0, timezone.utc)
 
         result = _is_checkout_newer(
             cached_start_time=same_time,
             old_checkout_start_time=same_time,
-            old_checkout_id="checkout1",
         )
 
         assert result is False
@@ -201,22 +195,9 @@ class TestIsCheckoutNewer:
         result = _is_checkout_newer(
             cached_start_time=cached,
             old_checkout_start_time=newer,
-            old_checkout_id="checkout1",
         )
 
         assert result is True
-
-    def test_exception_during_make_aware_returns_false(self):
-        with patch(
-            "kernelCI_app.tasks.make_aware", side_effect=Exception("unexpected")
-        ):
-            result = _is_checkout_newer(
-                cached_start_time=datetime(2024, 1, 14, 12, 0, 0),
-                old_checkout_start_time=datetime(2024, 1, 15, 12, 0, 0),
-                old_checkout_id="checkout1",
-            )
-
-        assert result is False
 
 
 class TestGetCheckoutIdsForUpdate:
@@ -305,7 +286,7 @@ class TestGetCheckoutIdsForUpdate:
         mock_checkout.tree_name = "tree1"
         mock_checkout.git_repository_branch = "branch1"
         mock_checkout.git_repository_url = "url1"
-        mock_checkout.start_time = datetime(2024, 1, 15, 12, 0, 0)
+        mock_checkout.start_time = datetime(2024, 1, 15, 12, 0, 0, 0, timezone.utc)
 
         tree_key = ("tree1", "branch1", "url1")
         sqlite_trees_map = {
