@@ -1,3 +1,5 @@
+from django.conf import settings
+from kernelCI_app.helpers.logger import out, log_message
 from kernelCI_app.models import Checkouts
 from kernelCI_app.queries.tree import (
     get_tree_listing_data_by_checkout_id,
@@ -51,6 +53,34 @@ def _is_checkout_unstable(*, checkout: dict | Checkouts) -> bool:
         return True
 
 
+def _is_checkout_newer(
+    *,
+    cached_start_time,
+    old_checkout_start_time,
+    old_checkout_id,
+) -> bool:
+    if cached_start_time is None or old_checkout_start_time is None:
+        return False
+
+    try:
+        cached_start_time = make_aware(cached_start_time)
+        old_checkout_start_time = make_aware(old_checkout_start_time)
+    except ValueError as e:  # datetime is already aware, log but still compare
+        log_message(
+            "Value Error on _is_checkout_newer for %s: %s" % (old_checkout_id, str(e))
+        )
+    except Exception as e:  # other exceptions, don't compare
+        log_message(
+            "Exception on _is_checkout_newer for %s: %s" % (old_checkout_id, str(e))
+        )
+        return False
+
+    if old_checkout_start_time > cached_start_time:
+        return True
+    else:
+        return False
+
+
 def get_checkout_ids_for_update(
     *,
     kcidb_checkouts: list[Checkouts],
@@ -85,21 +115,23 @@ def get_checkout_ids_for_update(
             continue
 
         # Even if the current checkout is stable, if it is newer than the cached one, update it
-        cached_start_time = same_tree_on_sqlite.get("start_time")
-        if cached_start_time is not None:
-            if (
-                cached_start_time.tzinfo is None
-                and make_aware(checkout.start_time) > make_aware(cached_start_time)
-                or checkout.start_time > cached_start_time
-            ):
-                checkout_ids_for_update.add(checkout.id)
-                continue
+        if _is_checkout_newer(
+            cached_start_time=same_tree_on_sqlite.get("start_time"),
+            old_checkout_start_time=checkout.start_time,
+            old_checkout_id=checkout.id,
+        ):
+            checkout_ids_for_update.add(checkout.id)
 
     return checkout_ids_for_update
 
 
 def update_checkout_cache():
     checkout_ids_for_update: set[str] = set()
+
+    out(
+        "Started Updating checkout cache at %s/cache.sqlite3"
+        % settings.BACKEND_VOLUME_DIR
+    )
 
     kcidb_checkouts = get_tree_listing_fast(interval={"days": UPDATE_INTERVAL_IN_DAYS})
 
@@ -129,3 +161,8 @@ def update_checkout_cache():
         checkout.update({"unstable": _is_checkout_unstable(checkout=checkout)})
 
     populate_checkouts_cache_db(data=updated_checkouts_data)
+
+    out(
+        "Finished checkout cache update task, updated %d checkouts"
+        % len(checkout_ids_for_update)
+    )
