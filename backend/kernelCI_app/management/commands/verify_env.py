@@ -117,6 +117,11 @@ class Command(BaseCommand):
             default=None,
             help="Redis password override (optional)",
         )
+        parser.add_argument(
+            "--create-dirs",
+            action="store_true",
+            help="Create missing directories during storage checks (default: report as failure)",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         selected_checks = self._collect_selected_checks(options)
@@ -129,7 +134,7 @@ class Command(BaseCommand):
             "db": lambda: self._check_databases(options),
             "redis": lambda: [self._check_redis(options)],
             "email": lambda: self._check_email_configuration(options),
-            "storage": self._check_storage_paths,
+            "storage": lambda: self._check_storage_paths(options),
             "env": self._check_environment_values,
         }
 
@@ -343,9 +348,12 @@ class Command(BaseCommand):
 
         return results
 
-    def _check_storage_paths(self) -> list[tuple[str, bool, str]]:
+    def _check_storage_paths(
+        self, options: dict[str, Any]
+    ) -> list[tuple[str, bool, str]]:
         required_paths = self._collect_storage_paths()
         results: list[tuple[str, bool, str]] = []
+        create_dirs = options.get("create_dirs", False)
 
         for label, path in required_paths:
             try:
@@ -357,8 +365,20 @@ class Command(BaseCommand):
                 else:
                     path_to_check = path
 
+                was_created = False
                 if not os.path.exists(path_to_check):
-                    os.makedirs(path_to_check, exist_ok=True)
+                    if create_dirs:
+                        os.makedirs(path_to_check, exist_ok=True)
+                        was_created = True
+                    else:
+                        results.append(
+                            (
+                                f"storage:{label}",
+                                False,
+                                f"Path does not exist: {path_to_check} (use --create-dirs to create)",
+                            )
+                        )
+                        continue
 
                 if not os.access(path_to_check, os.W_OK):
                     results.append(
@@ -375,11 +395,15 @@ class Command(BaseCommand):
                 ):
                     pass
 
+                msg = f"{path_to_check} exists and is writable"
+                if was_created:
+                    msg += " (created by --create-dirs)"
+
                 results.append(
                     (
                         f"storage:{label}",
                         True,
-                        f"{path_to_check} exists and is writable",
+                        msg,
                     )
                 )
             except Exception as err:

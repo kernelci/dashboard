@@ -36,6 +36,10 @@ docker compose run --rm backend poetry run python3 manage.py verify_env --check-
 
 docker compose run --rm backend poetry run python3 manage.py verify_env --check-storage
 
+# Validate storage and create missing directories (normally reports as failure)
+
+docker compose run --rm backend poetry run python3 manage.py verify_env --check-storage --create-dirs
+
 # Validate env/secrets sanity only
 
 docker compose run --rm backend poetry run python3 manage.py verify_env --check-env
@@ -60,5 +64,5 @@ Optional email overrides:
 ## Notes
 
 - The command uses settings from `kernelCI/settings.py` plus the environment values in `.env.backend`.
-- Non-sending checks are read-only and safe for routine manual execution.
+- Non-sending checks are read-only and safe for routine manual execution (storage checks are read-only unless `--create-dirs` is used).
 - Use send mode with a mailbox you control, so you can confirm deliverability and final headers.
