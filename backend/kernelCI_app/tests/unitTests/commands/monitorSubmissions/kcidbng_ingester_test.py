@@ -24,7 +24,96 @@ from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     consume_buffer,
     flush_buffers,
     ingest_submissions_parallel,
+    _extract_origins_info,
 )
+
+
+class TestExtractOriginsInfo:
+    """Test cases for _extract_origins_info function."""
+
+    # Test cases:
+    # - None data
+    # - empty data (no sections)
+    # - data with no origin fields
+    # - data with single origin in one section
+    # - data with multiple origins across sections
+    # - data with duplicate origins (should dedupe)
+
+    def test_extract_origins_info_none_data(self):
+        """Test with None data returns empty string."""
+        result = _extract_origins_info(None)
+        assert result == ""
+
+    def test_extract_origins_info_empty_data(self):
+        """Test with empty data (no sections) returns empty string."""
+        result = _extract_origins_info({})
+        assert result == ""
+
+    def test_extract_origins_info_no_origin_fields(self):
+        """Test with data that has sections but no origin fields."""
+        data = {
+            "tests": [{"id": "test1"}, {"id": "test2"}],
+            "builds": [{"id": "build1"}],
+            "checkouts": [{"id": "checkout1"}],
+        }
+        result = _extract_origins_info(data)
+        assert result == ""
+
+    def test_extract_origins_info_single_origin(self):
+        """Test extracting single origin from one section."""
+        data = {
+            "tests": [{"id": "test1", "origin": "testlab"}],
+        }
+        result = _extract_origins_info(data)
+        assert result == " [origins: testlab]"
+
+    def test_extract_origins_info_multiple_origins_across_sections(self):
+        """Test extracting multiple origins from different sections."""
+        data = {
+            "tests": [{"id": "test1", "origin": "lab1"}],
+            "builds": [{"id": "build1", "origin": "lab2"}],
+            "checkouts": [{"id": "checkout1", "origin": "lab3"}],
+            "issues": [{"id": "issue1", "origin": "lab4"}],
+            "incidents": [{"id": "incident1", "origin": "lab5"}],
+        }
+        result = _extract_origins_info(data)
+        assert result == " [origins: lab1, lab2, lab3, lab4, lab5]"
+
+    def test_extract_origins_info_duplicate_origins_deduped(self):
+        """Test that duplicate origins are deduplicated and sorted."""
+        data = {
+            "tests": [
+                {"id": "test1", "origin": "lab1"},
+                {"id": "test2", "origin": "lab1"},
+            ],
+            "builds": [{"id": "build1", "origin": "lab2"}],
+            "checkouts": [{"id": "checkout1", "origin": "lab1"}],
+        }
+        result = _extract_origins_info(data)
+        # lab1 appears 3 times but should only appear once, sorted
+        assert result == " [origins: lab1, lab2]"
+
+    def test_extract_origins_info_origins_sorted(self):
+        """Test that origins are returned in sorted order."""
+        data = {
+            "tests": [{"id": "test1", "origin": "zebra"}],
+            "builds": [{"id": "build1", "origin": "alpha"}],
+            "checkouts": [{"id": "checkout1", "origin": "beta"}],
+        }
+        result = _extract_origins_info(data)
+        assert result == " [origins: alpha, beta, zebra]"
+
+    def test_extract_origins_info_none_origin_skipped(self):
+        """Test that None origins are skipped."""
+        data = {
+            "tests": [
+                {"id": "test1", "origin": "lab1"},
+                {"id": "test2"},
+                {"id": "test3", "origin": None},
+            ],
+        }
+        result = _extract_origins_info(data)
+        assert result == " [origins: lab1]"
 
 
 class TestStandardizeTreeNames:
