@@ -43,13 +43,12 @@ docker compose run --rm backend poetry run python3 manage.py verify_env --check-
 
 ## Send a test email
 
-Use `--send-test-email` together with `--to` and `--yes`.
+Use `--send-test-email` together with `--to-email`.
 
 ```bash
 docker compose run --rm backend poetry run python3 manage.py verify_env \
   --send-test-email \
-  --to your-email@example.com \
-  --yes
+  --to-email your-email@example.com
 ```
 
 Optional email overrides:
@@ -57,8 +56,6 @@ Optional email overrides:
 - `--subject "KernelCI env smoke"`
 - `--body "Custom message"`
 - `--cc recipient1@example.com,recipient2@example.com`
-
-> `--send-test-email` skips all interactive prompts because it requires explicit confirmation (`--yes`).
 
 ## Notes
 

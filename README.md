@@ -145,7 +145,7 @@ If you want to verify container/deployment environment settings before running s
 
  - `docker compose run --rm backend poetry run python3 manage.py verify_env` for DB/Redis/Email + storage + env/secrets checks
 - [docs/verify_env.md](docs/verify_env.md) for detailed examples, including test email sending to a specific destination
-  - Destination is required with `--send-test-email` and `--to`.
+  - Destination is required with `--send-test-email` and `--to-email`.
 
 ## Contributing 
 

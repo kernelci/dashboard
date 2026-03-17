@@ -510,7 +510,7 @@ class Command(BaseCommand):
             smtp_send_email(
                 connection=service,
                 sender_email=sender,
-                to=options["to"],
+                to=options["to_email"],
                 subject=options["subject"],
                 message_text=options["body"],
                 cc=cc,
