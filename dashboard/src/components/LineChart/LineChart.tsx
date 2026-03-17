@@ -34,6 +34,8 @@ export type TLineChartProps = {
   onMarkClick?: MUILineChartProps['onMarkClick'];
   slots?: MUILineChartProps['slots'];
   slotProps?: MUILineChartProps['slotProps'];
+  height?: MUILineChartProps['height'];
+  margin?: MUILineChartProps['margin'];
 };
 
 export const LineChart = ({
@@ -43,6 +45,8 @@ export const LineChart = ({
   slots,
   slotProps,
   sx,
+  height,
+  margin,
   onMarkClick,
 }: TLineChartProps): JSX.Element => {
   return (
@@ -58,7 +62,8 @@ export const LineChart = ({
         slotProps={slotProps}
         series={series}
         onMarkClick={onMarkClick}
-        height={300}
+        height={height}
+        margin={margin}
       />
     </div>
   );

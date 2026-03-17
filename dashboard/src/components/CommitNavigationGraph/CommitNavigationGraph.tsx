@@ -4,6 +4,10 @@ import { memo, useMemo, type JSX } from 'react';
 
 import { z } from 'zod';
 
+import { useMediaQuery } from '@mui/material';
+
+import { useTheme } from '@mui/material/styles';
+
 import { Colors } from '@/components/StatusChart/StatusCharts';
 import { LineChart } from '@/components/LineChart';
 import BaseCard from '@/components/Cards/BaseCard';
@@ -138,6 +142,9 @@ const CommitNavigationGraph = ({
     }
   }, [currentPageTab]);
 
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
+
   // Transform the data to fit the format required by the MUI LineChart component
   const series: TLineChartProps['series'] = [
     {
@@ -217,6 +224,15 @@ const CommitNavigationGraph = ({
     xAxisIndexes.push(index);
   });
 
+  // filter only selected, first and last commit
+  const smallScreenTickFilter = (value: number, _: number): boolean =>
+    value === 0 ||
+    value === commitData.length - 1 ||
+    commitData[value].commitHash === treeId;
+
+  // tickLabelInterval can be set to auto, or to a custom filter
+  const tickLabelInterval = isSmallScreen ? smallScreenTickFilter : 'auto';
+
   const xAxis: TLineChartProps['xAxis'] = [
     {
       scaleType: 'point',
@@ -239,6 +255,7 @@ const CommitNavigationGraph = ({
 
         return `commitIndex-${value}`;
       },
+      tickLabelInterval: tickLabelInterval,
     },
   ];
 
@@ -259,8 +276,22 @@ const CommitNavigationGraph = ({
         title={formatMessage({ id: messagesId.graphName })}
         content={
           <LineChart
+            height={400}
+            margin={{ top: 100 }}
             xAxis={xAxis}
             series={series}
+            sx={{
+              '& .MuiChartsAxis-directionY .MuiChartsAxis-tickContainer:first-of-type':
+                {
+                  display: 'none', // hides first tick on y axis (avoiding text colision)
+                },
+            }}
+            slotProps={{
+              legend: {
+                itemGap: 2,
+                position: { vertical: 'top', horizontal: 'middle' },
+              },
+            }}
             slots={{
               axisTickLabel: chartTextProps => {
                 let displayText = chartTextProps.text;
@@ -290,14 +321,14 @@ const CommitNavigationGraph = ({
                   <>
                     {isCurrentCommit && (
                       <>
-                        <polygon points="-5,-200 5,-200 0,-190" fill="blue" />
+                        <polygon points="-5,-250 5,-250 0,-240" fill="blue" />
                         <line
                           x1="0"
                           y1="0"
                           x2="0"
-                          y2="-200"
+                          y2="-250"
                           stroke="blue"
-                          strokeWidth="1.2"
+                          strokeWidth="2"
                           strokeDasharray="5,5"
                         />
                       </>
