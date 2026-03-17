@@ -20,7 +20,7 @@ const compat = new FlatCompat({
 });
 
 export default [{
-    ignores: ["**/.eslintrc.cjs", "**/*.config.*js", "src/components/ui/*", ".storybook/**", "dist/*"],
+    ignores: ["**/.eslintrc.cjs", "**/*.config.*js", "src/components/ui/*", ".storybook/**", "dist/*", "e2e/*.js", "e2e/*.d.ts"],
 }, ...fixupConfigRules(compat.extends(
     "eslint:recommended",
     "plugin:@tanstack/eslint-plugin-query/recommended",

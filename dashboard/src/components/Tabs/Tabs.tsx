@@ -71,8 +71,8 @@ const TabsComponent = ({
       className="w-full"
     >
       <div className="bg-light-gray sticky top-18 z-5 flex flex-col gap-6 rounded-md pt-6 pb-6">
-        <div className="flex w-full flex-wrap justify-between gap-6">
-          <TabsList className="border-dark-gray flex-1 items-baseline justify-start rounded-none border-b bg-transparent">
+        <div className="flex w-full flex-col justify-between gap-6 md:flex-row">
+          <TabsList className="border-dark-gray flex-1 items-baseline justify-start overflow-x-auto overflow-y-hidden rounded-none border-b bg-transparent">
             {tabsTrigger}
           </TabsList>
           {headerExtra}
