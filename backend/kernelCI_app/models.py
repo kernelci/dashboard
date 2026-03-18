@@ -320,6 +320,13 @@ class PendingTest(models.Model):
     )
     is_boot = models.BooleanField()
 
+    path = models.TextField(blank=True, null=True)
+    start_time = models.DateTimeField(blank=True, null=True)
+    lab = models.TextField(blank=True, null=True)
+    full_status = models.CharField(
+        max_length=10, choices=StatusChoices.choices, blank=True, null=True
+    )
+
     class Meta:
         db_table = "pending_test"
 
@@ -400,4 +407,79 @@ class TreeListing(models.Model):
         indexes = [
             models.Index(fields=["start_time"], name="tree_listing_start_time"),
             models.Index(fields=["checkout_id"], name="tree_listing_checkout_id"),
+        ]
+
+
+class TestsRollup(models.Model):
+    origin = models.TextField()
+    tree_name = models.TextField(blank=True, null=True)
+    git_repository_branch = models.TextField(blank=True, null=True)
+    git_repository_url = models.TextField(blank=True, null=True)
+    git_commit_hash = models.TextField(blank=True, null=True)
+
+    path_group = models.TextField()
+    build_config_name = models.TextField()
+    build_architecture = models.TextField()
+    build_compiler = models.TextField()
+    hardware_key = models.TextField()
+    test_platform = models.TextField(blank=True, null=True)
+    test_lab = models.TextField(blank=True, null=True)
+    test_origin = models.TextField(blank=True, null=True)
+
+    issue_id = models.TextField(blank=True, null=True)
+    issue_version = models.IntegerField(blank=True, null=True)
+    issue_uncategorized = models.BooleanField(default=False)
+
+    is_boot = models.BooleanField(default=False)
+
+    pass_tests = models.IntegerField(default=0)
+    fail_tests = models.IntegerField(default=0)
+    skip_tests = models.IntegerField(default=0)
+    error_tests = models.IntegerField(default=0)
+    miss_tests = models.IntegerField(default=0)
+    done_tests = models.IntegerField(default=0)
+    null_tests = models.IntegerField(default=0)
+    total_tests = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "tests_rollup"
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "origin",
+                    "tree_name",
+                    "git_repository_branch",
+                    "git_repository_url",
+                    "git_commit_hash",
+                    "path_group",
+                    "build_config_name",
+                    "build_architecture",
+                    "build_compiler",
+                    "hardware_key",
+                    "test_platform",
+                    "test_lab",
+                    "test_origin",
+                    "issue_id",
+                    "issue_version",
+                    "issue_uncategorized",
+                ],
+                name="tests_rollup_unique",
+                nulls_distinct=False,
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "origin",
+                    "tree_name",
+                    "git_repository_branch",
+                    "git_repository_url",
+                    "git_commit_hash",
+                ],
+                name="tests_rollup_scope",
+            ),
+            models.Index(
+                fields=["path_group", "total_tests"],
+                name="tests_rollup_group_total",
+            ),
         ]
