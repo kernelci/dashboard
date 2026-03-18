@@ -134,16 +134,16 @@ class Command(BaseCommand):
             "db": lambda: self._check_databases(options),
             "redis": lambda: [self._check_redis(options)],
             "email": lambda: self._check_email_configuration(options),
-            "storage": lambda: self._check_storage_paths(options),
+            "storage": lambda: self._check_storage_paths(
+                options.get("create_dirs", False)
+            ),
+            "email_test": lambda: self._send_email_test(options),
             "env": self._check_environment_values,
         }
 
         for check_name, gather in check_map.items():
             if check_name in selected_checks:
                 results.extend(gather())
-
-        if options.get("send_test_email"):
-            results.append(self._send_email_test(options))
 
         failures = [result for result in results if not result[1]]
         self._print_summary(results)
@@ -155,28 +155,6 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS("Environment verification passed."))
-
-    def _warn_send_test_email(
-        self,
-        selected_checks: set[str],
-        options: dict[str, Any],
-    ) -> None:
-        if "email" not in selected_checks or not options.get("send_test_email"):
-            return
-        if not options.get("to_email"):
-            raise CommandError("--send-test-email requires --to-email to be set.")
-        self.stdout.write(
-            "WARNING: This will attempt to send a real email using the "
-            "configured SMTP settings.\n"
-        )
-
-    def _check_databases(self, options: dict[str, Any]) -> list[tuple[str, bool, str]]:
-        results: list[tuple[str, bool, str]] = []
-        for alias in self._collect_database_aliases(
-            options.get("database_alias") or []
-        ):
-            results.extend(self._check_database(alias))
-        return results
 
     def _collect_selected_checks(self, options: dict[str, Any]) -> set[str]:
         explicit = (
@@ -198,14 +176,39 @@ class Command(BaseCommand):
             selected.add("db")
         if options.get("check_redis"):
             selected.add("redis")
-        if options.get("check_email") or options.get("send_test_email"):
+        if options.get("check_email"):
             selected.add("email")
+        if options.get("send_test_email"):
+            selected.add("email")
+            selected.add("email_test")
         if options.get("check_storage"):
             selected.add("storage")
         if options.get("check_env"):
             selected.add("env")
 
         return selected
+
+    def _warn_send_test_email(
+        self,
+        selected_checks: set[str],
+        options: dict[str, Any],
+    ) -> None:
+        if "email" not in selected_checks or not options.get("send_test_email"):
+            return
+        if not options.get("to_email"):
+            raise CommandError("--send-test-email requires --to-email to be set.")
+        self.stdout.write(
+            "WARNING: This will attempt to send a real email using the "
+            "configured SMTP settings.\n"
+        )
+
+    def _check_databases(self, options: dict[str, Any]) -> list[tuple[str, bool, str]]:
+        results: list[tuple[str, bool, str]] = []
+        for alias in self._collect_database_aliases(
+            options.get("database_alias") or []
+        ):
+            results.append(self._check_database(alias))
+        return results
 
     def _collect_database_aliases(self, raw_aliases: list[str]) -> list[str]:
         aliases: list[str] = []
@@ -220,15 +223,13 @@ class Command(BaseCommand):
 
         return aliases or ["default"]
 
-    def _check_database(self, alias: str) -> list[tuple[str, bool, str]]:
+    def _check_database(self, alias: str) -> tuple[str, bool, str]:
         if alias not in settings.DATABASES:
-            return [
-                (
-                    f"db:{alias}",
-                    False,
-                    f"Database alias '{alias}' is not defined in settings",
-                )
-            ]
+            return (
+                f"db:{alias}",
+                False,
+                f"Database alias '{alias}' is not defined in settings",
+            )
 
         connection = connections[alias]
 
@@ -236,41 +237,33 @@ class Command(BaseCommand):
             with connection.cursor() as cursor:
                 cursor.execute("SELECT 1")
                 row = cursor.fetchone()
-            return [
-                (
-                    f"db:{alias}",
-                    True,
-                    f"Connected to DB alias '{alias}' and got result: {row}",
-                )
-            ]
+            return (
+                f"db:{alias}",
+                True,
+                f"Connected to DB alias '{alias}' and got result: {row}",
+            )
         except OperationalError as err:
-            return [
-                (f"db:{alias}", False, f"Failed connecting DB alias '{alias}': {err}")
-            ]
+            return (
+                f"db:{alias}",
+                False,
+                f"Failed connecting DB alias '{alias}': {err}",
+            )
         except Exception as err:
-            return [
-                (
-                    f"db:{alias}",
-                    False,
-                    f"Unexpected DB error for alias '{alias}': {err}",
-                )
-            ]
+            return (
+                f"db:{alias}",
+                False,
+                f"Unexpected DB error for alias '{alias}': {err}",
+            )
 
     def _check_redis(self, options: dict[str, Any]) -> tuple[str, bool, str]:
         host = options.get("redis_host") or os.getenv("REDIS_HOST", "localhost")
-        port = options.get("redis_port")
-        db = options.get("redis_db")
+        port = options.get("redis_port") or os.getenv("REDIS_PORT", "6379")
+        db = options.get("redis_db") or os.getenv("REDIS_DB", "0")
         password = options.get("redis_password") or os.getenv("REDIS_PASSWORD")
 
         try:
-            if port is None:
-                port = int(os.getenv("REDIS_PORT", "6379"))
-            else:
-                port = int(port)
-            if db is None:
-                db = int(os.getenv("REDIS_DB", "0"))
-            else:
-                db = int(db)
+            port = int(port)
+            db = int(db)
 
             client = Redis(
                 host=host,
@@ -299,10 +292,53 @@ class Command(BaseCommand):
                 f"Invalid Redis configuration for {host}:{port}/{db}: {err}",
             )
 
+    def _check_smtp_connection(self) -> list[tuple[str, bool, str]]:
+        try:
+            service = smtp_setup_connection()
+            service.open()
+            service.close()
+            return [("email:smtp", True, "SMTP backend opened successfully")]
+        except Exception as err:
+            return [("email:smtp", False, f"SMTP backend connection failed: {err}")]
+
+    def _send_email_test(self, options: dict[str, Any]) -> tuple[str, bool, str]:
+        try:
+            service = smtp_setup_connection()
+            sender = (
+                f"KernelCI Dashboard <{settings.EMAIL_HOST_USER}>"
+                if getattr(settings, "EMAIL_HOST_USER", "")
+                else "KernelCI Dashboard <kernelci-noreply@localhost>"
+            )
+            cc = options.get("cc") or ""
+            smtp_send_email(
+                connection=service,
+                sender_email=sender,
+                to=options["to_email"],
+                subject=options["subject"],
+                message_text=options["body"],
+                cc=cc,
+                reply_to=None,
+                in_reply_to=None,
+            )
+            return ("email:test", True, "Test email sent successfully")
+        except Exception as err:
+            return ("email:test", False, f"Test email send failed: {err}")
+
+    def _email_password_message(self, password: str, is_smtp: bool) -> str:
+        if password:
+            return "EMAIL_HOST_PASSWORD is set"
+        if is_smtp:
+            return "EMAIL_HOST_PASSWORD is empty (SMTP authentication likely fails)"
+        return "EMAIL_HOST_PASSWORD skipped for non-SMTP backend"
+
     def _check_email_configuration(
         self, options: dict[str, Any]
     ) -> list[tuple[str, bool, str]]:
         email_backend = getattr(settings, "EMAIL_BACKEND", "")
+        email_host = getattr(settings, "EMAIL_HOST", "")
+        email_port = getattr(settings, "EMAIL_PORT", "")
+        email_user = getattr(settings, "EMAIL_HOST_USER", "")
+        email_password = getattr(settings, "EMAIL_HOST_PASSWORD", "")
         is_smtp_backend = "smtp" in email_backend
 
         results = [
@@ -313,33 +349,18 @@ class Command(BaseCommand):
             ),
             (
                 "email:server",
-                bool(
-                    getattr(settings, "EMAIL_HOST", "")
-                    and getattr(settings, "EMAIL_PORT", "")
-                ),
-                (
-                    f"EMAIL_HOST={getattr(settings, 'EMAIL_HOST', '<unset>')} "
-                    f"EMAIL_PORT={getattr(settings, 'EMAIL_PORT', '<unset>')}"
-                ),
+                bool(email_host and email_port),
+                f"EMAIL_HOST={email_host or '<unset>'} EMAIL_PORT={email_port or '<unset>'}",
             ),
             (
                 "email:sender",
-                bool(getattr(settings, "EMAIL_HOST_USER", "")),
-                f"EMAIL_HOST_USER={'<unset>' if not settings.EMAIL_HOST_USER else settings.EMAIL_HOST_USER}",
+                bool(email_user),
+                f"EMAIL_HOST_USER={email_user or '<unset>'}",
             ),
             (
                 "email:password",
-                (not is_smtp_backend)
-                or bool(getattr(settings, "EMAIL_HOST_PASSWORD", "")),
-                (
-                    "EMAIL_HOST_PASSWORD is set"
-                    if getattr(settings, "EMAIL_HOST_PASSWORD", "")
-                    else (
-                        "EMAIL_HOST_PASSWORD is empty (SMTP authentication likely fails)"
-                        if is_smtp_backend
-                        else "EMAIL_HOST_PASSWORD skipped for non-SMTP backend"
-                    )
-                ),
+                not is_smtp_backend or bool(email_password),
+                self._email_password_message(email_password, is_smtp_backend),
             ),
         ]
 
@@ -348,12 +369,9 @@ class Command(BaseCommand):
 
         return results
 
-    def _check_storage_paths(
-        self, options: dict[str, Any]
-    ) -> list[tuple[str, bool, str]]:
+    def _check_storage_paths(self, create_dirs: bool) -> list[tuple[str, bool, str]]:
         required_paths = self._collect_storage_paths()
         results: list[tuple[str, bool, str]] = []
-        create_dirs = options.get("create_dirs", False)
 
         for label, path in required_paths:
             try:
@@ -456,9 +474,6 @@ class Command(BaseCommand):
                 self._environment_secret_present("DB_PASSWORD"),
                 self._environment_secret_message("DB_PASSWORD"),
             ),
-        ]
-
-        email_checks = [
             (
                 "env:EMAIL_HOST_PASSWORD",
                 (
@@ -471,12 +486,7 @@ class Command(BaseCommand):
                     if "smtp" in str(getattr(settings, "EMAIL_BACKEND", ""))
                     else "EMAIL_HOST_PASSWORD skipped for non-SMTP backend"
                 ),
-            )
-        ]
-
-        checks.extend(email_checks)
-
-        checks.append(
+            ),
             (
                 "env:DISCORD_WEBHOOK_URL",
                 True,
@@ -485,8 +495,8 @@ class Command(BaseCommand):
                     if os.environ.get("DISCORD_WEBHOOK_URL")
                     else "DISCORD_WEBHOOK_URL is not set (notifications to Discord will be skipped)"
                 ),
-            )
-        )
+            ),
+        ]
 
         return checks
 
@@ -512,38 +522,6 @@ class Command(BaseCommand):
             return f"{env_var}_FILE is set but unreadable/missing: {secret_file}"
 
         return f"{env_var} is not set"
-
-    def _check_smtp_connection(self) -> list[tuple[str, bool, str]]:
-        try:
-            service = smtp_setup_connection()
-            service.open()
-            service.close()
-            return [("email:smtp", True, "SMTP backend opened successfully")]
-        except Exception as err:
-            return [("email:smtp", False, f"SMTP backend connection failed: {err}")]
-
-    def _send_email_test(self, options: dict[str, Any]) -> tuple[str, bool, str]:
-        try:
-            service = smtp_setup_connection()
-            sender = (
-                f"KernelCI Dashboard <{settings.EMAIL_HOST_USER}>"
-                if getattr(settings, "EMAIL_HOST_USER", "")
-                else "KernelCI Dashboard <kernelci-noreply@localhost>"
-            )
-            cc = options.get("cc") or ""
-            smtp_send_email(
-                connection=service,
-                sender_email=sender,
-                to=options["to_email"],
-                subject=options["subject"],
-                message_text=options["body"],
-                cc=cc,
-                reply_to=None,
-                in_reply_to=None,
-            )
-            return ("email:test", True, "Test email sent successfully")
-        except Exception as err:
-            return ("email:test", False, f"Test email send failed: {err}")
 
     def _print_summary(self, results: list[tuple[str, bool, str]]) -> None:
         self.stdout.write("\nVerification results:")
