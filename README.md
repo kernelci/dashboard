@@ -12,10 +12,10 @@ system from the [KernelCI Foundation](https://kernelci.org/).
 What we have as a repository is a monorepo containing the *dashboard* (the web application) and a *backend*.
 
 ### Dashboard
-A web app built with [React](https://react.dev/) + [Typescript](https://www.typescriptlang.org/), to see more information check the dashboard [README](dashboard/README.md).
+ A web app built with [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/), to see more information check the dashboard [README](dashboard/README.md).
 
 ### Backend
-A Python http server built with [Django](https://www.djangoproject.com/) + [DRF](https://www.django-rest-framework.org/), to see more information check the backend [README](/backend/README.md).
+A Python http server built with [Django](https://www.djangoproject.com/) + [DRF](https://www.django-rest-framework.org/), to see more information check the backend [README](backend/README.md).
 
 
 ## Quick run
@@ -101,7 +101,7 @@ sudo -E docker compose up --build -d
 ```
 Or you can also run the env exports and docker compose within the root user by running `sudo su`.
 
-> Tip: you can create a quick script to set all the necessary envs and start the services. This will also allow docker to see the environment variables correclty. Example:
+> Tip: you can create a quick script to set all the necessary envs and start the services. This will also allow docker to see the environment variables correctly. Example:
 
 ```sh
 export DB_USER=email@email.com
@@ -116,6 +116,8 @@ docker compose up --build
 
 
 ## Deploying to production
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for full deployment instructions covering development, staging, and production scenarios.
 
 To deploy to prod you need to push a tag in the `release/YYYYMMDD.N` format
 like: `release/20240910.0`
@@ -142,4 +144,3 @@ See details about our new [notifications](docs/notifications.md) system.
 ## Contributing 
 
 Check out our [CONTRIBUTING.md](/CONTRIBUTING.md), and there is an [onboarding guide](docs/Onboarding.md) to help get acquainted with the project. Contributions are welcome!
-
