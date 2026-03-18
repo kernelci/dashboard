@@ -5,6 +5,9 @@ import signal
 import time
 from datetime import datetime
 from typing import Literal, Optional, Sequence, TypedDict, Union
+from kernelCI_app.management.commands.helpers.process_pending_helpers import (
+    aggregate_tests_rollup,
+)
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import connection, transaction
@@ -16,6 +19,7 @@ from prometheus_client import start_http_server
 from kernelCI_app.models import (
     Builds,
     Checkouts,
+    Incidents,
     PendingTest,
     PendingBuilds,
     ProcessedListingItems,
@@ -492,6 +496,25 @@ def aggregate_hardware_status(
     return hardware_status_data, new_processed_entries
 
 
+def _fetch_test_issues(test_ids: list[str]) -> dict[str, dict]:
+    """Bulk-fetch the first incident per test_id, returning {test_id: {issue_id, issue_version}}."""
+    issues_map: dict[str, dict] = {}
+    incidents = Incidents.objects.filter(
+        test_id__in=test_ids,
+    ).values("test_id", "issue_id", "issue_version")
+
+    for inc in incidents:
+        issues_map.setdefault(
+            inc["test_id"],
+            {
+                "issue_id": inc["issue_id"],
+                "issue_version": inc["issue_version"],
+            },
+        )
+
+    return issues_map
+
+
 class Command(BaseCommand):
     help = """
         Process pending tests for hardware status aggregation,
@@ -855,8 +878,17 @@ class Command(BaseCommand):
             .only(
                 "id",
                 "status",
+                "architecture",
+                "compiler",
+                "config_name",
+                "misc",
                 "checkout__id",
                 "checkout__start_time",
+                "checkout__origin",
+                "checkout__tree_name",
+                "checkout__git_repository_url",
+                "checkout__git_repository_branch",
+                "checkout__git_commit_hash",
             )
             .in_bulk(pending_test_build_ids)
         )
@@ -886,6 +918,75 @@ class Command(BaseCommand):
             skipped_no_build,
             pending_test_count,
         )
+
+    def _process_tests_rollup(self, rollup_data: dict[tuple, dict]) -> None:
+        if not rollup_data:
+            return
+
+        values = [
+            (
+                *key,
+                data["pass_tests"],
+                data["fail_tests"],
+                data["skip_tests"],
+                data["error_tests"],
+                data["miss_tests"],
+                data["done_tests"],
+                data["null_tests"],
+                data["total_tests"],
+            )
+            for key, data in rollup_data.items()
+        ]
+
+        t0 = time.time()
+        with connection.cursor() as cursor:
+            cursor.executemany(
+                """
+                INSERT INTO tests_rollup (
+                    origin, tree_name, git_repository_branch, git_repository_url,
+                    git_commit_hash,
+                    path_group, build_config_name, build_architecture, build_compiler,
+                    hardware_key, test_platform, test_lab, test_origin,
+                    issue_id, issue_version, issue_uncategorized, is_boot,
+                    pass_tests, fail_tests, skip_tests,
+                    error_tests, miss_tests, done_tests,
+                    null_tests, total_tests
+                )
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s
+                )
+                ON CONFLICT ON CONSTRAINT tests_rollup_unique DO UPDATE SET
+                    pass_tests = tests_rollup.pass_tests + EXCLUDED.pass_tests,
+                    fail_tests = tests_rollup.fail_tests + EXCLUDED.fail_tests,
+                    skip_tests = tests_rollup.skip_tests + EXCLUDED.skip_tests,
+                    error_tests = tests_rollup.error_tests + EXCLUDED.error_tests,
+                    miss_tests = tests_rollup.miss_tests + EXCLUDED.miss_tests,
+                    done_tests = tests_rollup.done_tests + EXCLUDED.done_tests,
+                    null_tests = tests_rollup.null_tests + EXCLUDED.null_tests,
+                    total_tests = tests_rollup.total_tests + EXCLUDED.total_tests
+                """,
+                values,
+            )
+        out(
+            f"Upserted {len(values)} tests_rollup records "
+            f"in {time.time() - t0:.3f}s"
+        )
+        AGGREGATION_RECORDS_WRITTEN.labels(table="tests_rollup").inc(len(values))
+
+    def _process_tests_rollup_batch(
+        self,
+        ready_tests: Sequence[PendingTest],
+        test_builds_by_id: dict[str, Builds],
+    ) -> None:
+        if not ready_tests:
+            return
+
+        test_ids = [t.test_id for t in ready_tests]
+        issues_map = _fetch_test_issues(test_ids)
+        rollup_data = aggregate_tests_rollup(ready_tests, test_builds_by_id, issues_map)
+        self._process_tests_rollup(rollup_data)
 
     def _process_hardware_batch(
         self,
@@ -943,6 +1044,7 @@ class Command(BaseCommand):
 
                 if ready_tests:
                     self._process_hardware_batch(ready_tests, test_builds_by_id)
+                    self._process_tests_rollup_batch(ready_tests, test_builds_by_id)
 
                 (
                     ready_builds,

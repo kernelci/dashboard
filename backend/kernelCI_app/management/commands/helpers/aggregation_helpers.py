@@ -38,6 +38,7 @@ def convert_build(b: Builds) -> PendingBuilds:
 
 
 def convert_test(t: Tests) -> PendingTest:
+    misc = t.misc if t.misc else {}
     return PendingTest(
         test_id=t.id,
         origin=t.origin,
@@ -46,6 +47,10 @@ def convert_test(t: Tests) -> PendingTest:
         build_id=t.build_id,
         status=simplify_status(t.status),
         is_boot=is_boot(t.path) if t.path else False,
+        path=t.path,
+        start_time=t.start_time,
+        lab=misc.get("runtime"),
+        full_status=t.status,
     )
 
 
@@ -159,6 +164,10 @@ def aggregate_tests(
             test.build_id,
             test.status,
             test.is_boot,
+            test.path,
+            test.start_time,
+            test.lab,
+            test.full_status,
         )
         for test in pending_tests
     ]
@@ -167,13 +176,18 @@ def aggregate_tests(
         query = """
             INSERT INTO pending_test (
                 test_id, origin, platform, compatible,
-                build_id, status, is_boot
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                build_id, status, is_boot,
+                path, start_time, lab, full_status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (test_id)
             DO UPDATE SET
                 platform = COALESCE(pending_test.platform, EXCLUDED.platform),
                 compatible = COALESCE(pending_test.compatible, EXCLUDED.compatible),
-                status = COALESCE(pending_test.status, EXCLUDED.status)
+                status = COALESCE(pending_test.status, EXCLUDED.status),
+                path = COALESCE(pending_test.path, EXCLUDED.path),
+                start_time = COALESCE(pending_test.start_time, EXCLUDED.start_time),
+                lab = COALESCE(pending_test.lab, EXCLUDED.lab),
+                full_status = COALESCE(pending_test.full_status, EXCLUDED.full_status)
         """
 
         with connections["default"].cursor() as cursor:

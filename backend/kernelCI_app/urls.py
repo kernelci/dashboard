@@ -37,6 +37,11 @@ urlpatterns = [
         name="treeDetailsSummaryView",
     ),
     path(
+        "tree/<str:commit_hash>/summary-v2",
+        views.TreeDetailsSummaryV2.as_view(),
+        name="treeDetailsSummaryViewV2",
+    ),
+    path(
         "tree/<str:commit_hash>/builds",
         views.TreeDetailsBuilds.as_view(),
         name="treeDetailsBuildsView",
@@ -80,6 +85,11 @@ urlpatterns = [
         "tree/<str:tree_name>/<path:git_branch>/<str:commit_hash>/summary",
         views.TreeDetailsSummaryDirect.as_view(),
         name="treeDetailsDirectSummaryView",
+    ),
+    path(
+        "tree/<str:tree_name>/<path:git_branch>/<str:commit_hash>/summary-v2",
+        views.TreeDetailsSummaryDirectV2.as_view(),
+        name="treeDetailsDirectSummaryViewV2",
     ),
     path(
         "tree/<str:tree_name>/<path:git_branch>/<str:commit_hash>/tests",
