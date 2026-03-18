@@ -95,12 +95,12 @@ export const WrapperSheetContent = ({
 
       <div
         className={cn(
-          'mt-auto flex',
+          'my-auto mr-12 flex flex-wrap',
           detailsButton ? 'justify-between' : 'justify-end',
         )}
       >
         {detailsButton}
-        <div className="flex">
+        <div className="flex flex-wrap">
           <div className="mt-auto flex justify-end">
             {navigationLogsActions && (
               <>
