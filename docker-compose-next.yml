@@ -59,7 +59,7 @@ services:
             - private
             - public
         ports:
-            - ${EXTERNAL_PROM_METRICS_PORT:-2001}:${PROM_METRICS_PORT:-8002}
+            - ${EXTERNAL_PROM_METRICS_PORT:-2001}:${PROMETHEUS_METRICS_PORT:-8001}
         depends_on:
             - redis
 
