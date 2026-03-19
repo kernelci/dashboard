@@ -139,7 +139,14 @@ At the end of the run, the workflow writes an image digest summary in the GitHub
 
 See details about our new [notifications](docs/notifications.md) system.
 
+## Manual environment checks
+
+If you want to verify container/deployment environment settings before running services, use:
+
+ - `docker compose run --rm backend poetry run python3 manage.py verify_env` for DB/Redis/Email + storage + env/secrets checks
+- [docs/verify_env.md](docs/verify_env.md) for detailed examples, including test email sending to a specific destination
+  - Destination is required with `--send-test-email` and `--to-email`.
+
 ## Contributing 
 
 Check out our [CONTRIBUTING.md](/CONTRIBUTING.md), and there is an [onboarding guide](docs/Onboarding.md) to help get acquainted with the project. Contributions are welcome!
-
