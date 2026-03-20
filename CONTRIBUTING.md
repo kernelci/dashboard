@@ -7,20 +7,24 @@ KernelCI Dashboard is an open-source project and contributions of all kinds are 
 - Read the README for an overview of the monorepo.
 - We recommend following the [Onboarding guide](./docs/Onboarding.md) to set up your environment and learn the project workflow. **Start here** if this is your first setup.
 - New to the project? Pick an issue labeled ["good first issue"](https://github.com/kernelci/dashboard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+- There are a couple of extensions that may help you with linting and formatting your code. Consider installing [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/) for your preferred code editor.
+- There are some of these to help with your Python development: [Black](https://black.readthedocs.io/en/stable/), [Flake8](https://flake8.pycqa.org/en/latest/), and [isort](https://pycqa.github.io/isort/).
 
 ## Useful links
 
 - README: [./README.md](./README.md)
 - Onboarding guide: [./docs/Onboarding.md](./docs/Onboarding.md)
-- Open issues: https://github.com/kernelci/dashboard/issues
-- Good first issues: https://github.com/kernelci/dashboard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+- Open issues on [this page](https://github.com/kernelci/dashboard/issues)
+- Good first issues on [this page](https://github.com/kernelci/dashboard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
 ## Reporting bugs
 
 #### Did you find a bug?
 
-- Ensure the bug was not already reported by searching on GitHub under Issues: https://github.com/kernelci/dashboard/issues
-- If you're unable to find an open issue addressing the problem, open a new one: https://github.com/kernelci/dashboard/issues/new
+- **<ins>Ensure the bug was not already reported</ins>** by searching on GitHub under [our Issues](https://github.com/kernelci/dashboard/issues)
+- If the issue is reported, give it a thumbs up or comment on it to "upvote" it
+- If you're unable to find an open issue addressing the problem, open a new one
+  - [You can do it in this link](https://github.com/kernelci/dashboard/issues/new)
   - Include a clear title and description
   - Add steps to reproduce, logs, and screenshots if applicable
   - Provide a code sample or an executable test case demonstrating the expected behavior that is not occurring
@@ -52,18 +56,6 @@ Examples of good issues:
 - [Display Test Results Hierarchically: Group Test Cases Under Their Parent Test Suites](https://github.com/kernelci/dashboard/issues/1800)
 - [Tree Details Page: each grouping of execution items in the tests execution list](https://github.com/kernelci/dashboard/issues/286)
 
-### Guidelines for PRs to create
-
-A good PR includes:
-- A title that follows the Conventional Commits format (e.g., `fix(backend): correct pagination offset`)
-- A body describing the motivation, approach, and any trade-offs
-- Screenshots or GIFs for UI changes
-- References to related issues (e.g., `Closes #123`)
-
-Examples of good PRs:
-- [feat(deploy): migrate compose-next to single-env deployment with profiles and prebuilt images](https://github.com/kernelci/dashboard/pull/1759)
-- [fix: always initialize Prometheus multiproc directory on process_pending](https://github.com/kernelci/dashboard/pull/1789)
-
 ## Staging environment
 
 If you don't have access to the production database, you can point the frontend to the staging API at `https://staging.dashboard.kernelci.org`. To do so, set `VITE_API_BASE_URL=https://staging.dashboard.kernelci.org` in your `dashboard/.env` file (copy from `dashboard/.env.example`). Ask for access in the `#webdashboard` channel on [KernelCI Discord](https://discord.gg/GRv3RhUa6P).
@@ -72,7 +64,7 @@ If you don't have access to the production database, you can point the frontend 
 
 ### Suggested commit format
 
-We recommend following the Conventional Commits specification (https://www.conventionalcommits.org/en/v1.0.0/#specification), which has the following format:
+We recommend following the [**Conventional Commits specification** (click for further details)](https://www.conventionalcommits.org/en/v1.0.0/#specification), which has the following format:
 
 ```shell
 <type>[optional scope]: <description>
@@ -125,8 +117,6 @@ You can find more details on the Conventional Commits specification site.
 - Describe the motivation, approach, and any trade-offs
 - Include screenshots/GIFs for UI changes
 - Wait for someone to approve the execution of GitHub Actions. Ensure CI is green before requesting reviews
-- At least one approval is required before merging
-- Merge via the command line (fetch + merge), not the GitHub merge button
 - Take a look at merged PRs to see examples of good descriptions and commit messages
 
 ## Communication and help
