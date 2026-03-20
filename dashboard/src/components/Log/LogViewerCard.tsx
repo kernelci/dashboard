@@ -2,7 +2,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useMemo, type JSX } from 'react';
 
-import { Link, useRouterState } from '@tanstack/react-router';
+import { Link, useParams, useRouterState } from '@tanstack/react-router';
 
 import { SearchIcon } from '@/components/Icons/SearchIcon';
 import { StatusIcon } from '@/components/Icons/StatusIcons';
@@ -61,6 +61,7 @@ export const LogViewerCard = ({
     }
   }, [logUrl]);
 
+  const { hardwareId } = useParams({ strict: false });
   const { treeName, branch, id } = useRouterState({
     select: s => s.location.state,
   });
@@ -70,13 +71,17 @@ export const LogViewerCard = ({
   const logDataHash = logData?.git_commit_hash;
 
   const stateIsSetted = treeName && branch && id;
-  const stateParams = useMemo(
-    () =>
-      !stateIsSetted
-        ? { treeName: logDataTreeName, branch: logDataBranch, id: logDataHash }
-        : {},
-    [stateIsSetted, logDataTreeName, logDataBranch, logDataHash],
-  );
+  const stateParams = useMemo(() => {
+    if (stateIsSetted) {
+      return hardwareId ? { hardwareId } : {};
+    }
+    return {
+      hardwareId: hardwareId,
+      treeName: logDataTreeName,
+      branch: logDataBranch,
+      id: logDataHash,
+    };
+  }, [stateIsSetted, hardwareId, logDataTreeName, logDataBranch, logDataHash]);
 
   const linkComponent = useMemo(() => {
     if (logUrl) {

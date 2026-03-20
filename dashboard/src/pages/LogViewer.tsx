@@ -69,8 +69,9 @@ export function LogViewer(): JSX.Element {
   ) : undefined;
   const { data: logData, isLoading } = useLogData(itemId ?? '', type);
 
-  const { treeName, branch, id } = historyState;
-  const canGoDirect = treeName && branch && id;
+  const { treeName, branch, id, hardwareId } = historyState;
+  const hasTreeDetailsLink = treeName && branch && id;
+  const hasHardwareDetailsLink = !!hardwareId;
 
   const breadcrumbComponent = useMemo(() => {
     if (!type || !itemId) {
@@ -92,7 +93,17 @@ export function LogViewer(): JSX.Element {
         messageId: base.messageId,
       });
 
-      if (canGoDirect) {
+      if (hasHardwareDetailsLink) {
+        components.push({
+          linkProps: {
+            to: '/hardware/$hardwareId',
+            params: { hardwareId },
+            state: s => s,
+            search: previousSearch,
+          },
+          messageId: 'hardware.details',
+        });
+      } else if (hasTreeDetailsLink) {
         components.push({
           linkProps: {
             to: '/tree/$treeName/$branch/$hash',
@@ -100,7 +111,7 @@ export function LogViewer(): JSX.Element {
             state: s => s,
             search: previousSearch,
           },
-          messageId: details.messageId,
+          messageId: 'tree.details',
         });
       } else {
         components.push({
@@ -127,7 +138,7 @@ export function LogViewer(): JSX.Element {
         components.push({
           linkProps: {
             to: test.path,
-            params: { [details.paramKey]: id, buildId: itemId },
+            params: { [details.paramKey]: id, testId: itemId },
             state: s => s,
           },
           messageId: test.messageId,
@@ -153,7 +164,10 @@ export function LogViewer(): JSX.Element {
       }
     }
 
-    components.push({ linkProps: {}, messageId: 'logSheet.title' });
+    components.push({
+      linkProps: { disabled: true },
+      messageId: 'logSheet.title',
+    });
 
     return <MemoizedBreadcrumbGenerator components={components} />;
   }, [
@@ -164,7 +178,9 @@ export function LogViewer(): JSX.Element {
     branch,
     treeName,
     id,
-    canGoDirect,
+    hardwareId,
+    hasHardwareDetailsLink,
+    hasTreeDetailsLink,
   ]);
 
   return (
