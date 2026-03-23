@@ -57,8 +57,14 @@ chmod +x ./migrate-cache-db.sh
 ./migrate-cache-db.sh
 
 # Update the MAIN db
-chmod +x ./migrate-app-db.sh
-./migrate-app-db.sh
+RUN_APP_MIGRATIONS_ON_STARTUP=$(echo "${RUN_APP_MIGRATIONS_ON_STARTUP:-false}" | tr '[:upper:]' '[:lower:]')
+if [ "$RUN_APP_MIGRATIONS_ON_STARTUP" = "true" ]; then
+  echo "Applying app DB migrations..."
+  chmod +x ./migrate-app-db.sh
+  ./migrate-app-db.sh
+else
+  echo "Skipping app DB migrations at startup (set RUN_APP_MIGRATIONS_ON_STARTUP=true to enable)."
+fi
 
 # Add and start cronjobs in background and emit logs to container stdout.
 poetry run ./manage.py crontab add

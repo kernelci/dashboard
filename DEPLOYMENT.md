@@ -145,10 +145,11 @@ the `Publish GHCR Images` workflow is triggered manually.
 The GitHub workflow for production is defined at: [deploy-production](.github/workflows/deploy-production.yaml)
 
 > [!WARNING]
-> It is important to point out that the backend entrypoint in Docker container
-> will run database migrations.
+> By default, backend startup skips app migrations.
+> To run them automatically on startup, set `RUN_APP_MIGRATIONS_ON_STARTUP=true` in the `.env` file.
 > Changes that involve alterations in database schema should be previously communicated
 > via [Discord channel](https://discord.com/channels/1245820301053530313/1301896040349433957).
+
 
 ### Setup
 
@@ -163,6 +164,7 @@ cp .env.example .env
 #    DJANGO_SECRET_KEY → a strong random string
 #    ALLOWED_HOSTS → e.g. ["backend", "your-domain.com"]
 #    CORS_ALLOWED_ORIGINS → e.g. ["https://your-domain.com"]
+#    RUN_APP_MIGRATIONS_ON_STARTUP → true (if you want backend startup to apply app migrations)
 
 # 3. Start services
 docker compose -f docker-compose-next.yml up -d
@@ -208,8 +210,7 @@ significantly impact the database.
 A GitHub workflow for staging is defined at [deploy-staging](.github/workflows/deploy-staging.yaml)
 
 > [!WARNING]
-> Migrations are automatically executed in the backend entrypoint
-> when the docker container is executed.
+> Migrations can be automatically executed by setting `RUN_APP_MIGRATIONS_ON_STARTUP=true` in the `.env` file.
 > And as the staging environment is shared with production, the same precautions should follow.
 > Changes that involve alterations in database schema should be previously communicated
 > via [Discord channel](https://discord.com/channels/1245820301053530313/1301896040349433957).
