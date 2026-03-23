@@ -64,7 +64,7 @@ If you don't have access to the production database, you can point the frontend 
 
 ### Suggested commit format
 
-We recommend following the [**Conventional Commits specification** (click for further details)](https://www.conventionalcommits.org/en/v1.0.0/#specification), which has the following format:
+We recommend following the [**Conventional Commits specification**](https://www.conventionalcommits.org/en/v1.0.0/#specification), which has the following format:
 
 ```shell
 <type>[optional scope]: <description>
