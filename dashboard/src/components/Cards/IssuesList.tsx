@@ -40,6 +40,119 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { GroupedTestStatus } from '@/components/Status/Status';
 
+type IssueItemProps = {
+  issue: TIssue;
+  extraDetails?: IssueExtraDetailsDict[string];
+  extraDetailsLoading?: boolean;
+  detailsId?: string;
+  getIssueLink: (id: string, version: number) => LinkProps;
+  issueFilterSection: TFilterObjectsKeys;
+  diffFilter: TFilter;
+};
+
+const IssueItem = ({
+  issue,
+  extraDetails,
+  extraDetailsLoading,
+  detailsId,
+  getIssueLink,
+  issueFilterSection,
+  diffFilter,
+}: IssueItemProps): JSX.Element => {
+  const { formatMessage } = useIntl();
+
+  const isFirstIncident =
+    detailsId === extraDetails?.first_incident.git_commit_hash;
+  const currentVersion = extraDetails?.versions[issue.version];
+  const firstSeen = extraDetails?.first_incident.first_seen;
+  const counts = issue.incidents_info;
+
+  const tagPills = currentVersion?.tags?.map(tag => (
+    <BranchBadge key={tag} tag={tag} />
+  ));
+
+  if (isFirstIncident) {
+    tagPills?.unshift(
+      <Tooltip key="starburst">
+        <TooltipTrigger className="cursor-default">
+          <div className="starburst bg-red aspect-square w-[24px]" />
+        </TooltipTrigger>
+        <TooltipContent>
+          <FormattedMessage id="issue.newIssue" />
+        </TooltipContent>
+      </Tooltip>,
+    );
+  }
+
+  const hasMeta = !extraDetailsLoading && !!(firstSeen || tagPills?.length);
+
+  return (
+    <div className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3">
+      {/* Col 1: status circles — fixed width */}
+      <GroupedTestStatus
+        pass={counts.PASS}
+        fail={counts.FAIL}
+        nullStatus={counts.NULL}
+        error={counts.ERROR}
+        done={counts.DONE}
+        miss={counts.MISS}
+        skip={counts.SKIP}
+      />
+
+      {/* Col 2: issue text — takes remaining space, truncates */}
+      <FilterLink
+        filterSection={issueFilterSection}
+        filterValue={getIssueFilterLabel(issue)}
+        diffFilter={diffFilter}
+      >
+        <div className="max-w-5/6 min-w-0 text-sm sm:max-w-3/4">
+          <ListingItem
+            showNumber={false}
+            hasBottomBorder
+            text={issue.comment ?? formatMessage({ id: 'issue.uncategorized' })}
+            tooltip={issue.comment}
+          />
+        </div>
+      </FilterLink>
+
+      {/* Col 3: action icons — fixed width */}
+      <div className="flex items-center gap-3">
+        {extraDetailsLoading && <LoadingCircle />}
+        {!extraDetailsLoading && issue.report_url && (
+          <LinkWithIcon
+            link={issue.report_url}
+            icon={<LinkIcon className="h-4 w-4" />}
+          />
+        )}
+        {!extraDetailsLoading && issue.id !== UNCATEGORIZED_STRING && (
+          <MemoizedMoreDetailsIconLink
+            linkProps={getIssueLink(issue.id, issue.version)}
+          />
+        )}
+      </div>
+
+      {/* Row 2, Col 2: first_seen + tags below text, col 1 and 3 stay empty */}
+      {hasMeta && (
+        <div className="col-start-2 flex flex-wrap items-center gap-2 pb-1">
+          {firstSeen && (
+            <span className="text-sm text-nowrap text-gray-600">
+              <TooltipDateTime
+                dateTime={firstSeen}
+                lineBreak={true}
+                showRelative={true}
+                message={`• ${formatMessage({ id: 'issue.firstSeen' })}: `}
+              />
+            </span>
+          )}
+          {tagPills && (
+            <div className="flex flex-wrap gap-2">{...tagPills}</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface IIssuesList {
   issues: TIssue[];
   failedWithUnknownIssues?: number;
@@ -135,107 +248,18 @@ const IssuesList = ({
     />
   ) : (
     <DumbListingContent>
-      {sortedIssues.map(issue => {
-        const currentExtraDetailsId = issueExtraDetails?.[issue.id];
-        const currentExtraDetailsVersion =
-          currentExtraDetailsId?.['versions'][issue.version];
-
-        const tagPills = currentExtraDetailsVersion?.tags?.map(tag => {
-          return <BranchBadge key={tag} tag={tag} />;
-        });
-
-        if (
-          detailsId === currentExtraDetailsId?.first_incident.git_commit_hash
-        ) {
-          tagPills?.unshift(
-            <Tooltip>
-              <TooltipTrigger className="cursor-default">
-                <div className="starburst bg-red aspect-square w-[24px]"></div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <FormattedMessage id="issue.newIssue" />
-              </TooltipContent>
-            </Tooltip>,
-          );
-        }
-
-        const first_seen = currentExtraDetailsId?.first_incident.first_seen;
-
-        const counts = issue.incidents_info;
-        const countElement = (
-          <GroupedTestStatus
-            pass={counts.PASS}
-            fail={counts.FAIL}
-            nullStatus={counts.NULL}
-            error={counts.ERROR}
-            done={counts.DONE}
-            miss={counts.MISS}
-            skip={counts.SKIP}
-          />
-        );
-
-        return (
-          <div
-            key={`${issue.id}${issue.version}`}
-            className="flex w-full justify-between gap-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="overflow-hidden">
-                <FilterLink
-                  filterSection={issueFilterSection}
-                  filterValue={getIssueFilterLabel(issue)}
-                  diffFilter={diffFilter}
-                >
-                  <span className="flex items-center text-sm">
-                    <div className="flex gap-2">
-                      {countElement}
-                      <ListingItem
-                        showNumber={false}
-                        hasBottomBorder
-                        text={
-                          issue.comment ??
-                          formatMessage({ id: 'issue.uncategorized' })
-                        }
-                        tooltip={issue.comment}
-                      />
-                    </div>
-                    {extraDetailsLoading ? (
-                      <LoadingCircle className="mx-2" />
-                    ) : (
-                      first_seen && (
-                        <span className="pb-1 text-nowrap text-gray-600">
-                          <TooltipDateTime
-                            dateTime={first_seen}
-                            lineBreak={true}
-                            showRelative={true}
-                            message={`• ${formatMessage({ id: 'issue.firstSeen' })}: `}
-                          />
-                        </span>
-                      )
-                    )}
-                  </span>
-                </FilterLink>
-              </div>
-              {tagPills && !extraDetailsLoading && (
-                <div className="flex gap-3">{...tagPills}</div>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              {issue.report_url && (
-                <LinkWithIcon
-                  link={issue.report_url}
-                  icon={<LinkIcon className="h-4 w-4" />}
-                />
-              )}
-              {issue.id !== UNCATEGORIZED_STRING && (
-                <MemoizedMoreDetailsIconLink
-                  linkProps={getIssueLink(issue.id, issue.version)}
-                />
-              )}
-            </div>
-          </div>
-        );
-      })}
+      {sortedIssues.map(issue => (
+        <IssueItem
+          key={`${issue.id}${issue.version}`}
+          issue={issue}
+          extraDetails={issueExtraDetails?.[issue.id]}
+          extraDetailsLoading={extraDetailsLoading}
+          detailsId={detailsId}
+          getIssueLink={getIssueLink}
+          issueFilterSection={issueFilterSection}
+          diffFilter={diffFilter}
+        />
+      ))}
       {failedWithUnknownIssues && (
         <FilterLink
           filterSection={issueFilterSection}
