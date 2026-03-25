@@ -95,8 +95,8 @@ export const WrapperSheetContent = ({
 
       <div
         className={cn(
-          'my-auto mr-12 flex flex-wrap',
-          detailsButton ? 'justify-between' : 'justify-end',
+          'mt-auto flex flex-col lg:flex-row',
+          detailsButton ? 'lg:justify-between' : 'lg:justify-end',
         )}
       >
         {detailsButton}
@@ -136,12 +136,12 @@ export const WrapperSheetContent = ({
                 </Tooltip>
               </>
             )}
+            <SheetTrigger asChild>
+              <Button className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white">
+                <FormattedMessage id="global.close" defaultMessage="Close" />
+              </Button>
+            </SheetTrigger>
           </div>
-          <SheetTrigger asChild>
-            <Button className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white">
-              <FormattedMessage id="global.close" defaultMessage="Close" />
-            </Button>
-          </SheetTrigger>
         </div>
       </div>
     </SheetContent>
