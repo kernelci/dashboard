@@ -99,9 +99,9 @@ export const WrapperSheetContent = ({
           detailsButton ? 'lg:justify-between' : 'lg:justify-end',
         )}
       >
-        {detailsButton}
-        <div className="flex flex-wrap">
-          <div className="mt-auto flex justify-end">
+        <div className="flex justify-around">{detailsButton}</div>
+        <div className="flex flex-wrap justify-evenly lg:justify-end">
+          <div className="mt-auto grid grid-cols-1 lg:grid-cols-3">
             {navigationLogsActions && (
               <>
                 <Tooltip>
@@ -109,7 +109,7 @@ export const WrapperSheetContent = ({
                     <Button
                       onClick={navigationLogsActions.previousItem}
                       disabled={!navigationLogsActions.hasPrevious}
-                      className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
+                      className="mt-4 mb-2 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white lg:my-0"
                     >
                       <FormattedMessage
                         id="global.prev"
@@ -124,7 +124,7 @@ export const WrapperSheetContent = ({
                     <Button
                       onClick={navigationLogsActions.nextItem}
                       disabled={!navigationLogsActions.hasNext}
-                      className="mx-5 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white"
+                      className="mx-5 my-2 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white lg:my-0"
                     >
                       <FormattedMessage
                         id="global.next"
@@ -137,7 +137,7 @@ export const WrapperSheetContent = ({
               </>
             )}
             <SheetTrigger asChild>
-              <Button className="rounded-3xl bg-[#11B3E6] px-14 font-bold text-white">
+              <Button className="mt-2 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white lg:mt-0">
                 <FormattedMessage id="global.close" defaultMessage="Close" />
               </Button>
             </SheetTrigger>
