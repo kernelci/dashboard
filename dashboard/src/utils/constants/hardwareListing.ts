@@ -13,3 +13,5 @@ export type HardwareListingRoutesMap = {
     search: ValidHardwareFroms<'/_main/hardware' | '/_main/hardware/v2'>;
   };
 };
+
+export const hwListingCleanFullPaths = ['hardware', 'hardwarev1', 'hardwarev2'];

@@ -6,6 +6,8 @@ import { HiSearch } from 'react-icons/hi';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { CustomDialog } from '@/components/Dialog/CustomDialog';
+import { treeListingCleanFullPaths } from '@/utils/constants/treeListing';
+import { hwListingCleanFullPaths } from '@/utils/constants/hardwareListing';
 
 // Relates the type of listing to the corresponding search key
 const forwardFields: Record<string, string> = {
@@ -26,11 +28,11 @@ export const SearchBoxNavigate = (): JSX.Element => {
     const lastMatch = matches[matches.length - 1];
     const cleanFullPath = lastMatch?.fullPath.replace(/\//g, '') ?? '';
 
-    if (['tree', 'treev1', 'treev2'].includes(cleanFullPath)) {
+    if (treeListingCleanFullPaths.includes(cleanFullPath)) {
       return 'tree';
     }
 
-    if (['hardware', 'hardwarev1'].includes(cleanFullPath)) {
+    if (hwListingCleanFullPaths.includes(cleanFullPath)) {
       return 'hardware';
     }
 

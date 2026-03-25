@@ -13,3 +13,5 @@ export type TreeListingRoutesMap = {
     search: ValidTreeFroms<'/_main/tree' | '/_main/tree/v2'>;
   };
 };
+
+export const treeListingCleanFullPaths = ['tree', 'treev1', 'treev2'];
