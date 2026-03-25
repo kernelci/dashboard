@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import MobileSideMenu from '@/components/SideMenu/MobileSideMenu';
 
 import { SearchBoxNavigate } from '@/components/SearchBoxNavigate';
+import { treeListingCleanFullPaths } from '@/utils/constants/treeListing';
+import { hwListingCleanFullPaths } from '@/utils/constants/hardwareListing';
 
 const OriginSelect = ({
   isHardwarePath,
@@ -122,10 +124,10 @@ const TopBar = (): JSX.Element => {
     const lastMatch = matches[matches.length - 1];
     const firstUrlLocation = lastMatch?.pathname.split('/')[1] ?? '';
     const cleanFullPath = lastMatch?.fullPath.replace(/\//g, '') ?? '';
-    const isTreeListing = ['tree', 'treev1', 'treev2'].includes(cleanFullPath);
+    const isTreeListing = treeListingCleanFullPaths.includes(cleanFullPath);
+    const isHardwareListing = hwListingCleanFullPaths.includes(cleanFullPath);
     const isListingPage =
-      isTreeListing ||
-      ['hardware', 'hardwarev1', 'issues'].includes(cleanFullPath);
+      isTreeListing || isHardwareListing || cleanFullPath.includes('issues');
 
     return {
       firstUrlLocation,
