@@ -124,7 +124,7 @@ export const WrapperSheetContent = ({
                     <Button
                       onClick={navigationLogsActions.nextItem}
                       disabled={!navigationLogsActions.hasNext}
-                      className="mx-5 my-2 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white lg:my-0"
+                      className="mx-0 my-2 rounded-3xl bg-[#11B3E6] px-14 font-bold text-white lg:mx-5 lg:my-0"
                     >
                       <FormattedMessage
                         id="global.next"
