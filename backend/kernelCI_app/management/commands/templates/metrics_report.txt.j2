@@ -20,27 +20,53 @@ Period: {{ start_datetime }} to {{ end_datetime }}
 
   BUILD REGRESSIONS
   -----------------
-  A "regression" is a newly detected failure (first occurrence).
-  An "occurrence" is each subsequent hit of that same failure.
+  A "regression" is defined as a reported problem affecting 0 or multiple builds.
 
 {% if build_incidents_by_origin -%}
-{{ "{:<14}".format("  Origin") -}}
-{{ "{:<15}".format("Occurrences") -}}
-New regressions
-  ────────────────────────────────────────────
+
+{{ "{:<12}".format("  Origin") -}}
+{{ "{:<18}".format("Regressions") -}}
+{{ "{:<19}".format("Affected") -}}
+Affected builds by top issues
+{{ "{:<12}".format("") -}}
+{{ "{:<18}".format("(known + new)") -}}
+{{ "{:<19}".format("Builds (total)") -}}
+{{ "{:<8}".format("#1") -}}{{ "{:<8}".format("#2") -}}#3
+  ─────────────────────────────────────────────────────────────────────────
 {% for origin, data in build_incidents_by_origin.items() | sort -%}
-{{ "{:<14}".format("  " + origin) -}}
-{{ "{:<15}".format(fmt(data.total)) -}}
-{{ fmt(data.new_regressions) }}
-{% endfor %}  ────────────────────────────────────────────
-{{ "{:<14}".format("  Total") -}}
-{{ "{:<15}".format(fmt(build_incidents_by_origin.values() | map(attribute='total') | sum)) -}}
-{{ fmt(build_incidents_by_origin.values() | map(attribute='new_regressions') | sum) }}
+  {{ "{:<12}".format("  " + origin) -}}
+  {{ "{:<4}".format(fmt(data['n_existing_issues'])) -}} +{{" "}}
+  {{- "{:<4}".format(fmt(data['n_new_issues'])) -}} ={{" "}}
+  {{- "{:<6}".format(fmt(data['n_total_issues'])) -}}
+  {{ "{:<19}".format(fmt(data['total_incidents'])) -}}
+  {% for issue_key, data in top_issues_by_origin.get(origin, {}).items() -%}
+    {{ "{:<8}".format(fmt(data['total_incidents'])) -}}
+  {% endfor %}
+{% endfor %}  ─────────────────────────────────────────────────────────────────────────
+{{ "{:<12}".format("  Total") -}}
+{{ "{:<4}".format(fmt(build_incidents_by_origin.values() | map(attribute='n_existing_issues') | sum)) -}} +{{" "}}
+{{- "{:<4}".format(fmt(build_incidents_by_origin.values() | map(attribute='n_new_issues') | sum)) -}} ={{" "}}
+{{- "{:<6}".format(fmt(build_incidents_by_origin.values() | map(attribute='n_total_issues') | sum)) -}}
+{{ fmt(build_incidents_by_origin.values() | map(attribute='total_incidents') | sum) }}
 {%- else %}  No build regressions to show in this period. {%- endif %}
 
 
-  LAB ACTIVITY
-  ------------
+  TOP REGRESSIONS PER ORIGIN
+  --------------------------
+{%- if top_issues_by_origin %}
+  {%- for origin, data in top_issues_by_origin.items() | sort %}
+  {{ origin }}:
+    {%- for issue_key, issue_data in data.items() %}
+    #{{ loop.index }} ({{ fmt(issue_data['total_incidents']) }} occurrences) - {{ issue_data['comment'] | truncate(70, True, '...', 0)}}
+      Dashboard: https://d.kernelci.org/issue/{{issue_data['id']}}?iv={{issue_data['version']}}
+    {%- endfor %}
+  {% endfor -%}
+{%- else %}
+  No regression details to show in this period.
+{%- endif %}
+
+  TEST LABS ACTIVITY
+  ------------------
 {%- set n_labs = lab_maps | length %}
 {%- set prev_n_labs = prev_lab_maps | length %}
 {%- set lab_diff = n_labs - prev_n_labs %}
@@ -53,36 +79,32 @@ New regressions
 {%- endif %}
 
   Labs marked with an asterisk (*) are new.
-  Labs that stopped reporting are shown with a -100% change.
 
 {% if n_labs -%}
-{{ "{:<20}".format("  Origin") -}}
-{{ "{:<25}".format("Lab") -}}
-{{ "{:<9}".format("Builds") -}}
+{{ "{:<{width}}".format("  Lab", width=lab_spacing) -}}
+{{ "{:<16}".format("Covered builds") -}}
 {{ "{:<9}".format("Boots") -}}
 {{ "{:<15}".format("Tests") -}}
 Change (tests)
-  ──────────────────────────────────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────────────────────────────────
 {% for lab_key, lab_values in lab_maps.items() | sort -%}
     {%- set display_name = lab_key + " *" if lab_key in deltas.new_lab_keys else lab_key -%}
-    {{ "{:<20}".format("  " + lab_values["origin"]) -}}
-    {{ "{:<25}".format(display_name) -}}
-    {{ "{:<9}".format(fmt(lab_values["builds"])) -}}
+  {{ "{:<{width}}".format("  " + display_name, width=lab_spacing) -}}
+    {{ "{:<16}".format(fmt(lab_values["builds"])) -}}
     {{ "{:<9}".format(fmt(lab_values["boots"])) -}}
     {{ "{:<15}".format(fmt(lab_values["tests"])) -}}
     {{ deltas.labs.get(lab_key, "") }}
 {% endfor %}
 {%- for lab_key in deltas.extinct_lab_keys | sort -%}
     {%- set lab_values = prev_lab_maps[lab_key] -%}
-    {{ "{:<20}".format("  " + lab_values["origin"]) -}}
-    {{ "{:<25}".format(lab_key) -}}
-    {{ "{:<9}".format(fmt(0)) -}}
+  {{ "{:<{width}}".format("  " + lab_key, width=lab_spacing) -}}
+    {{ "{:<16}".format(fmt(0)) -}}
     {{ "{:<9}".format(fmt(0)) -}}
     {{ "{:<15}".format(fmt(0)) -}}
     {{ deltas.labs.get(lab_key, "") }}
-{% endfor %}  ──────────────────────────────────────────────────────────────────────────────────────────
-{{ "{:<45}".format("  Total") -}}
-{{ "{:<9}".format(fmt(lab_maps.values() | map(attribute='builds') | sum)) -}}
+{% endfor %}  ────────────────────────────────────────────────────────────────────────────────
+{{ "{:<{width}}".format("  Total", width=lab_spacing) -}}
+{{ "{:<16}".format(fmt(lab_maps.values() | map(attribute='builds') | sum)) -}}
 {{ "{:<9}".format(fmt(lab_maps.values() | map(attribute='boots') | sum)) -}}
 {{ "{:<15}".format(fmt(lab_maps.values() | map(attribute='tests') | sum)) -}}
 {{ deltas.n_total_lab_activity }}
