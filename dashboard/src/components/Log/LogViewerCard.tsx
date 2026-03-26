@@ -2,7 +2,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useMemo, type JSX } from 'react';
 
-import { Link, useParams, useRouterState } from '@tanstack/react-router';
+import { Link, useRouterState } from '@tanstack/react-router';
 
 import { SearchIcon } from '@/components/Icons/SearchIcon';
 import { StatusIcon } from '@/components/Icons/StatusIcons';
@@ -61,10 +61,10 @@ export const LogViewerCard = ({
     }
   }, [logUrl]);
 
-  const { hardwareId } = useParams({ strict: false });
-  const { treeName, branch, id } = useRouterState({
+  const { treeName, branch, id, from } = useRouterState({
     select: s => s.location.state,
   });
+  const hardwareId = from === 'hardware' ? id : undefined;
 
   const logDataTreeName = logData?.tree_name;
   const logDataBranch = logData?.git_repository_branch;
