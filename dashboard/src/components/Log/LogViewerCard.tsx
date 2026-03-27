@@ -123,7 +123,7 @@ export const LogViewerCard = ({
 
   return (
     <div className="gap-0">
-      <div className="flex items-start justify-between p-4 text-lg">
+      <div className="grid grid-cols-1 items-start justify-between p-4 text-lg md:grid-cols-2">
         {isLoading ? (
           <FormattedMessage id="global.loading" />
         ) : (

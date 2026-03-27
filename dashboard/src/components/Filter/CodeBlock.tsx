@@ -256,7 +256,7 @@ const CodeBlock = ({
 
   return (
     <>
-      <div className="min-h-[300px]">
+      <div className="min-h-[300px] w-full">
         <div className="pl-3">
           {variant === 'log-viewer' && (
             <h3 className="py-1 text-2xl font-bold">
