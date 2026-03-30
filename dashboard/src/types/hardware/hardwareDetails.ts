@@ -32,7 +32,7 @@ export type PreparedTrees = HardwareTrees & {
   isMainPageLoading: boolean;
 };
 
-type HardwareCommon = {
+export type HardwareCommon = {
   trees: HardwareTrees[];
   compatibles: string[];
 };

@@ -39,6 +39,28 @@ class TestArchSummaryItem(BaseModel):
 class BuildArchitectures(StatusCount):
     compilers: Optional[list[str]] = []
 
+    def __iadd__(self, other: StatusCount) -> "BuildArchitectures":
+        self.PASS += other.PASS
+        self.ERROR += other.ERROR
+        self.FAIL += other.FAIL
+        self.SKIP += other.SKIP
+        self.MISS += other.MISS
+        self.DONE += other.DONE
+        self.NULL += other.NULL
+        return self
+
+    def __add__(self, other: StatusCount) -> "BuildArchitectures":
+        return BuildArchitectures(
+            PASS=self.PASS + other.PASS,
+            ERROR=self.ERROR + other.ERROR,
+            FAIL=self.FAIL + other.FAIL,
+            SKIP=self.SKIP + other.SKIP,
+            MISS=self.MISS + other.MISS,
+            DONE=self.DONE + other.DONE,
+            NULL=self.NULL + other.NULL,
+            compilers=list(self.compilers or []),
+        )
+
 
 class TestHistoryItem(BaseModel):
     id: str

@@ -351,7 +351,6 @@ const getInitialRowSelection = (
 
 const indexesFromRowSelection = (
   rowSelection: RowSelectionState,
-  maxTreeItems: number,
 ): number[] | null => {
   const rowSelectionValues = Object.values(rowSelection);
   if (rowSelectionValues.length === 0) {
@@ -361,10 +360,6 @@ const indexesFromRowSelection = (
   const selectedIndexes = Object.keys(rowSelection).map(rowId =>
     parseInt(rowId),
   );
-
-  if (selectedIndexes.length === maxTreeItems) {
-    return null;
-  }
 
   return selectedIndexes;
 };
@@ -390,10 +385,7 @@ export function HardwareHeader({
   const rowSelectionDebounced = useDebounce(rowSelection, DEBOUNCE_INTERVAL);
 
   useEffect(() => {
-    const updatedSelection = indexesFromRowSelection(
-      rowSelectionDebounced,
-      treeItems.length,
-    );
+    const updatedSelection = indexesFromRowSelection(rowSelectionDebounced);
     updateTreeFilters(updatedSelection);
   }, [rowSelectionDebounced, updateTreeFilters, treeItems.length]);
 

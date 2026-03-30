@@ -144,21 +144,6 @@ function HardwareDetails(): JSX.Element {
     );
   }, [reqFilter, treeCommits, treeIndexes]);
 
-  const updateTreeFilters = useCallback((selectedIndexes: number[] | null) => {
-    navigate({
-      search: previousSearch => ({
-        ...previousSearch,
-        treeIndexes: selectedIndexes,
-      }),
-      state: s => s,
-    });
-    // Since UpdateTreeFilters is used on a useEffect, anytime that updateTreeFilters is called
-    // it will trigger a rerender, changing the navigate object, changing this function,
-    // calling useEffect again on an infinite loop.
-    // TODO: check for uses of navigate as a dependency
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const onFilterChange = useCallback(
     (newFilter: TFilter) => {
       navigate({
@@ -202,6 +187,23 @@ function HardwareDetails(): JSX.Element {
   const hardwareStatusHistoryState = useRouterState({
     select: s => s.location.state.hardwareStatusCount,
   });
+
+  const numIndexes = summaryResponse?.data?.common?.trees?.length || 0;
+  const updateTreeFilters = useCallback(
+    (selectedIndexes: number[] | null) => {
+      const numSelectedIndexes = selectedIndexes?.length || 0;
+      const indexes =
+        numSelectedIndexes === numIndexes ? null : selectedIndexes;
+      navigate({
+        search: previousSearch => ({
+          ...previousSearch,
+          treeIndexes: indexes,
+        }),
+        state: s => s,
+      });
+    },
+    [navigate, numIndexes],
+  );
 
   type HardwareStatusComparedState = typeof hardwareStatusHistoryState;
 
