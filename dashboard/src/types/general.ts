@@ -32,6 +32,7 @@ export type TIndividualTest = {
 
 interface IEnvironmentMisc {
   platform?: string;
+  [key: string]: unknown;
 }
 
 export type TreeBranchItem = {

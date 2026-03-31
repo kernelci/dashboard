@@ -28,12 +28,12 @@ class TestHandleMisc:
         assert result == {"platform": "arm64"}
 
     def test_handle_misc_with_dict_missing_platform(self):
-        """Test handle_misc with dict missing platform key."""
+        """Test handle_misc with dict missing platform key preserves other fields."""
         misc_dict = {"other": "value"}
 
         result = handle_misc(misc_dict)
 
-        assert result == {"platform": UNKNOWN_STRING}
+        assert result == {"other": "value", "platform": UNKNOWN_STRING}
 
     def test_handle_misc_with_none(self):
         """Test handle_misc with None input."""
@@ -54,6 +54,24 @@ class TestHandleMisc:
         result = handle_misc(misc_string)
 
         assert result == {"platform": "x86_64", "lab": "lab1"}
+
+    def test_handle_misc_preserves_extra_fields(self):
+        """Test handle_misc preserves all extra fields like laa_uid, dut_uid, device."""
+        misc_dict = {
+            "platform": "x86_64",
+            "laa_uid": "uid-1",
+            "dut_uid": "dut-1",
+            "device": "dev-a",
+        }
+
+        result = handle_misc(misc_dict)
+
+        assert result == {
+            "platform": "x86_64",
+            "laa_uid": "uid-1",
+            "dut_uid": "dut-1",
+            "device": "dev-a",
+        }
 
 
 class TestMiscValueOrDefault:

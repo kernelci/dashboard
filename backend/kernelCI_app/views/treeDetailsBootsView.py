@@ -23,8 +23,8 @@ from kernelCI_app.typeModels.commonOpenApiParameters import (
     TREE_NAME_PATH_PARAM,
 )
 from kernelCI_app.typeModels.treeDetails import (
-    DirectTreeQueryParameters,
-    TreeQueryParameters,
+    DirectTreeDetailsQueryParameters,
+    TreeDetailsQueryParameters,
 )
 from kernelCI_app.typeModels.commonDetails import (
     CommonDetailsBootsResponse,
@@ -37,6 +37,7 @@ class BaseTreeDetailsBoots(APIView):
     def __init__(self):
         self.processedTests = set()
         self.filters = None
+        self.full_environment_misc: bool = False
         self.bootHistory = []
 
     def _process_boots_test(self, row_data):
@@ -54,7 +55,9 @@ class BaseTreeDetailsBoots(APIView):
 
     def _sanitize_rows(self, rows):
         for row in rows:
-            row_data = get_current_row_data(row)
+            row_data = get_current_row_data(
+                row, full_environment_misc=self.full_environment_misc
+            )
 
             is_record_filter_out = decide_if_is_full_row_filtered_out(self, row_data)
 
@@ -75,7 +78,10 @@ class BaseTreeDetailsBoots(APIView):
         git_branch: str,
         commit_hash: str,
         origin: str,
+        full_environment_misc: bool = False,
     ) -> Response:
+        self.full_environment_misc = full_environment_misc
+
         rows = get_tree_data(
             data_type="boots",
             origin_param=origin,
@@ -111,7 +117,7 @@ class TreeDetailsBootsDirect(BaseTreeDetailsBoots):
             TREE_NAME_PATH_PARAM,
             GIT_BRANCH_PATH_PARAM,
             COMMIT_HASH_PATH_PARAM,
-            DirectTreeQueryParameters,
+            DirectTreeDetailsQueryParameters,
         ],
         methods=["GET"],
         responses=CommonDetailsBootsResponse,
@@ -124,7 +130,7 @@ class TreeDetailsBootsDirect(BaseTreeDetailsBoots):
         commit_hash: str,
     ) -> Response:
         try:
-            params = DirectTreeQueryParameters.model_validate(request.GET.dict())
+            params = DirectTreeDetailsQueryParameters.model_validate(request.GET.dict())
         except ValidationError as e:
             return create_api_error_response(error_message=e.json())
 
@@ -135,6 +141,7 @@ class TreeDetailsBootsDirect(BaseTreeDetailsBoots):
             git_branch=git_branch,
             commit_hash=commit_hash,
             origin=params.origin,
+            full_environment_misc=params.full_environment_misc,
         )
 
 
@@ -142,7 +149,7 @@ class TreeDetailsBoots(BaseTreeDetailsBoots):
     @extend_schema(
         parameters=[
             COMMIT_HASH_PATH_PARAM,
-            TreeQueryParameters,
+            TreeDetailsQueryParameters,
         ],
         methods=["GET"],
         responses=CommonDetailsBootsResponse,
@@ -153,7 +160,7 @@ class TreeDetailsBoots(BaseTreeDetailsBoots):
         commit_hash: str,
     ) -> Response:
         try:
-            params = TreeQueryParameters.model_validate(request.GET.dict())
+            params = TreeDetailsQueryParameters.model_validate(request.GET.dict())
         except ValidationError as e:
             return create_api_error_response(error_message=e.json())
 
@@ -164,4 +171,5 @@ class TreeDetailsBoots(BaseTreeDetailsBoots):
             git_branch=params.git_branch,
             commit_hash=commit_hash,
             origin=params.origin,
+            full_environment_misc=params.full_environment_misc,
         )

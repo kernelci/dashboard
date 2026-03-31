@@ -477,6 +477,9 @@ class TestCreateRecordTestPlatform:
 
         assert result == "hp-x360-14a-cb0001xx-zork"
         assert record["test_platform"] == "hp-x360-14a-cb0001xx-zork"
+        assert record["parsed_environment_misc"] == {
+            "platform": "hp-x360-14a-cb0001xx-zork"
+        }
         mock_handle_env_misc.assert_called_once_with("{}")
         mock_env_misc_value.assert_called_once_with(
             {"platform": "hp-x360-14a-cb0001xx-zork"}
@@ -486,10 +489,11 @@ class TestCreateRecordTestPlatform:
 class TestHandleTestHistory:
     @patch("kernelCI_app.helpers.hardwareDetails.create_record_test_platform")
     def test_handle_test_history(self, mock_create_platform):
-        """Test handle_test_history function."""
+        """Test handle_test_history function with default behavior."""
 
         def mock_create_platform_side_effect(record):
             record["test_platform"] = "x86_64"
+            record["parsed_environment_misc"] = {"platform": "x86_64"}
             return "x86_64"
 
         mock_create_platform.side_effect = mock_create_platform_side_effect
@@ -519,6 +523,96 @@ class TestHandleTestHistory:
         assert task[0].id == "test123"
         assert task[0].status == "PASS"
         assert task[0].environment_misc.platform == "x86_64"
+        mock_create_platform.assert_called_once_with(record=record)
+
+    @patch("kernelCI_app.helpers.hardwareDetails.create_record_test_platform")
+    def test_handle_test_history_full_environment_misc(self, mock_create_platform):
+        """Test handle_test_history with full_environment_misc=True includes all fields."""
+
+        def mock_create_platform_side_effect(record):
+            record["test_platform"] = "x86_64"
+            record["parsed_environment_misc"] = {
+                "platform": "x86_64",
+                "laa_uid": "uid-1",
+                "dut_uid": "dut-1",
+                "device": "dev-a",
+            }
+            return "x86_64"
+
+        mock_create_platform.side_effect = mock_create_platform_side_effect
+
+        record = {
+            "id": "test123",
+            "test_origin": "test",
+            "status": "PASS",
+            "duration": 100,
+            "path": "test.specific",
+            "start_time": "2024-01-15T10:00:00Z",
+            "environment_compatible": "x86_64",
+            "build__config_name": "defconfig",
+            "log_url": "http://example.com/log",
+            "build__architecture": "x86_64",
+            "build__compiler": "gcc",
+            "environment_misc": "{}",
+            "build__checkout__tree_name": "mainline",
+            "build__checkout__git_repository_branch": "master",
+        }
+
+        task = []
+
+        handle_test_history(record=record, task=task, full_environment_misc=True)
+
+        assert len(task) == 1
+        assert task[0].id == "test123"
+        assert task[0].environment_misc.platform == "x86_64"
+        assert task[0].environment_misc.laa_uid == "uid-1"
+        assert task[0].environment_misc.dut_uid == "dut-1"
+        assert task[0].environment_misc.device == "dev-a"
+        mock_create_platform.assert_called_once_with(record=record)
+
+    @patch("kernelCI_app.helpers.hardwareDetails.create_record_test_platform")
+    def test_handle_test_history_default_no_extra_fields(self, mock_create_platform):
+        """Test handle_test_history with full_environment_misc=False only includes platform."""
+
+        def mock_create_platform_side_effect(record):
+            record["test_platform"] = "x86_64"
+            record["parsed_environment_misc"] = {
+                "platform": "x86_64",
+                "laa_uid": "uid-1",
+                "dut_uid": "dut-1",
+                "device": "dev-a",
+            }
+            return "x86_64"
+
+        mock_create_platform.side_effect = mock_create_platform_side_effect
+
+        record = {
+            "id": "test123",
+            "test_origin": "test",
+            "status": "PASS",
+            "duration": 100,
+            "path": "test.specific",
+            "start_time": "2024-01-15T10:00:00Z",
+            "environment_compatible": "x86_64",
+            "build__config_name": "defconfig",
+            "log_url": "http://example.com/log",
+            "build__architecture": "x86_64",
+            "build__compiler": "gcc",
+            "environment_misc": "{}",
+            "build__checkout__tree_name": "mainline",
+            "build__checkout__git_repository_branch": "master",
+        }
+
+        task = []
+
+        # Default behavior (full_environment_misc=False or omitted)
+        handle_test_history(record=record, task=task, full_environment_misc=False)
+
+        assert len(task) == 1
+        assert task[0].id == "test123"
+        assert task[0].environment_misc.platform == "x86_64"
+        # Verify extra fields are NOT present when flag is False
+        assert not hasattr(task[0].environment_misc, "laa_uid")
         mock_create_platform.assert_called_once_with(record=record)
 
 

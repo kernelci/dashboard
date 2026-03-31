@@ -113,6 +113,10 @@ class DocStrings:
     TREE_QUERY_ORIGIN_DESCRIPTION = "Origin of the tree"
     TREE_QUERY_GIT_URL_DESCRIPTION = "Git repository URL of the tree"
 
+    FULL_ENVIRONMENT_MISC_DESCRIPTION = (
+        "When true, returns all fields from environment_misc instead of only platform"
+    )
+
     STATUS_HISTORY_PATH_DESCRIPTION = "Test path filter"
     STATUS_HISTORY_ORIGIN_DESCRIPTION = "Origin filter to retrieve tests"
     STATUS_HISTORY_GIT_URL_DESCRIPTION = "Git repository URL to retrieve tests"

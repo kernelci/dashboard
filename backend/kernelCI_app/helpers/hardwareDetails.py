@@ -20,7 +20,11 @@ from kernelCI_app.helpers.filters import (
     should_increment_test_issue,
 )
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.helpers.misc import misc_value_or_default, handle_misc
+from kernelCI_app.helpers.misc import (
+    get_environment_misc_value,
+    handle_misc,
+    misc_value_or_default,
+)
 from kernelCI_app.typeModels.databases import (
     FAIL_STATUS,
     NULL_STATUS,
@@ -272,8 +276,10 @@ def handle_tree_status_summary(
 
 def create_record_test_platform(*, record: Dict) -> str:
     environment_misc = handle_misc(record["environment_misc"])
-    test_platform = misc_value_or_default(environment_misc).get("platform")
+    resolved_misc = misc_value_or_default(environment_misc)
+    test_platform = resolved_misc.get("platform")
     record["test_platform"] = test_platform
+    record["parsed_environment_misc"] = resolved_misc
 
     return test_platform
 
@@ -282,9 +288,16 @@ def handle_test_history(
     *,
     record: Dict,
     task: List[HardwareTestHistoryItem],
+    full_environment_misc: bool = False,
 ) -> None:
     create_record_test_platform(record=record)
     record_misc = sanitize_dict(record.get("misc"))
+
+    environment_misc_dict = get_environment_misc_value(
+        full_environment_misc=full_environment_misc,
+        parsed_environment_misc=record.get("parsed_environment_misc"),
+    )
+    environment_misc = EnvironmentMisc(**environment_misc_dict)
 
     test_history_item = HardwareTestHistoryItem(
         id=record["id"],
@@ -298,7 +311,7 @@ def handle_test_history(
         log_url=record["log_url"],
         architecture=record["build__architecture"],
         compiler=record["build__compiler"],
-        environment_misc=EnvironmentMisc(platform=record["test_platform"]),
+        environment_misc=environment_misc,
         tree_name=record["build__checkout__tree_name"],
         git_repository_branch=record["build__checkout__git_repository_branch"],
         lab=(
