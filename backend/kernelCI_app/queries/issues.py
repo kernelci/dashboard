@@ -98,16 +98,16 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
 
 def get_issue_listing_data(
     *,
-    interval: str,
-    starting_date: datetime,
+    start_date: datetime,
+    end_date: datetime,
 ) -> list[dict]:
-    """Queries the list of all issues from the past `interval_date` parameter starting from `starting_date`.
+    """Queries the list of all issues whose timestamp falls within [start_date, end_date].
 
     Returns the list of issue records (dict) with no other filter."""
 
     params = {
-        "interval": interval,
-        "starting_date_filter": starting_date,
+        "start_date": start_date,
+        "end_date": end_date,
     }
 
     # Note that an issue with timestamp younger than x days ago
@@ -131,7 +131,8 @@ def get_issue_listing_data(
     FROM
         issues i
     WHERE
-        i._timestamp >= %(starting_date_filter)s - INTERVAL %(interval)s
+        i._timestamp >= %(start_date)s
+        AND i._timestamp <= %(end_date)s
     """
 
     with connection.cursor() as cursor:

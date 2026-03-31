@@ -22,9 +22,13 @@ class IssueListingQueryParameters(ListingInterval):
         None,
         description=DocStrings.DEFAULT_FILTER_DESCRIPTION,
     )
-    starting_date_iso_format: Optional[str] = Field(
-        None,
-        description=DocStrings.DEFAULT_LISTING_STARTING_DATE_DESCRIPTION,
+    startTimestampInSeconds: Optional[str | int] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.DEFAULT_START_TS_DESCRIPTION,
+    )
+    endTimestampInSeconds: Optional[str | int] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.DEFAULT_END_TS_DESCRIPTION,
     )
 
 

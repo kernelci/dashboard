@@ -19,6 +19,10 @@ client = IssueClient()
 DEFAULT_LISTING_STARTING_DATE = "2025-08-15"
 DEFAULT_LISTING_INTERVAL_IN_DAYS = 3
 
+# Unix timestamps for a 3-day window ending 2025-08-15 00:00:00 UTC
+_TS_END = "1755302400"  # 2025-08-15 00:00:00 UTC
+_TS_START = "1755043200"  # 2025-08-12 00:00:00 UTC
+
 CULPRIT_CODE = {
     "filters": {"issue.culprit": "code"},
     "excludes_fields": ["culprit_tool", "culprit_harness"],
@@ -140,6 +144,32 @@ def test_list(pytestconfig, issue_listing_input):
                 for culprit in culprit_data["excludes_fields"]:
                     for issue in content["issues"][1:]:
                         assert not issue[culprit]
+
+
+@pytest.mark.parametrize(
+    "start_timestamp, end_timestamp, status_code, has_error_body",
+    [
+        (_TS_START, _TS_END, HTTPStatus.OK, False),
+        ("not_a_number", _TS_END, HTTPStatus.BAD_REQUEST, True),
+    ],
+)
+def test_list_by_timestamp(start_timestamp, end_timestamp, status_code, has_error_body):
+    response = client.get_issues_list_by_timestamp(
+        start_timestamp=start_timestamp,
+        end_timestamp=end_timestamp,
+    )
+    content = string_to_json(response.content.decode())
+    assert_status_code_and_error_response(
+        response=response,
+        content=content,
+        status_code=status_code,
+        should_error=has_error_body,
+    )
+
+    if not has_error_body:
+        assert_has_fields_in_response_content(
+            fields=issues_listing_fields, response_content=content
+        )
 
 
 @pytest.mark.parametrize(

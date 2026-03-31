@@ -22,6 +22,21 @@ class IssueClient(BaseClient):
         url = self.get_endpoint(path=path, query=query, filters=filters)
         return requests.get(url)
 
+    def get_issues_list_by_timestamp(
+        self,
+        *,
+        start_timestamp: str,
+        end_timestamp: str,
+        filters: dict[FilterFields, Any] | None = None,
+    ) -> requests.Response:
+        path = reverse("issue")
+        query = {
+            "startTimestampInSeconds": start_timestamp,
+            "endTimestampInSeconds": end_timestamp,
+        }
+        url = self.get_endpoint(path=path, query=query, filters=filters)
+        return requests.get(url)
+
     def get_issues_details(
         self, *, issue_id: str, issue_version: int | None
     ) -> requests.Response:

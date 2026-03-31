@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from pydantic import ValidationError
 
+from kernelCI_app.helpers.dateRange import resolve_date_range
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
@@ -28,6 +29,22 @@ from kernelCI_app.typeModels.issues import (
     ProcessedExtraDetailedIssues,
 )
 from kernelCI_app.constants.localization import ClientStrings
+
+
+def _resolve_issue_date_wrapper(
+    request_params: IssueListingQueryParameters,
+) -> tuple[datetime, datetime]:
+    """Resolve start/end dates for issue listing.
+
+    It is meant to be a wrapper function, so the view function just calls it
+    with the params and this method unwraps the params so that it returns
+
+    Raises ValueError for invalid timestamp or ISO format strings.
+    """
+    return resolve_date_range(
+        start_timestamp=request_params.startTimestampInSeconds,
+        end_timestamp=request_params.endTimestampInSeconds,
+    )
 
 
 class IssueView(APIView):
@@ -114,20 +131,18 @@ class IssueView(APIView):
             request_params = IssueListingQueryParameters.model_validate(
                 _request.GET.dict()
             )
-
-            valid_starting_date = datetime.now()
-            if request_params.starting_date_iso_format is not None:
-                valid_starting_date = datetime.fromisoformat(
-                    request_params.starting_date_iso_format
-                )
+            start_date, end_date = _resolve_issue_date_wrapper(request_params)
         except ValidationError as e:
             return create_api_error_response(error_message=e.json())
         except ValueError as e:
-            return create_api_error_response(error_message=str(e))
+            return create_api_error_response(
+                error_message=str(e) if str(e) else ClientStrings.INVALID_TIMESTAMP,
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
 
         issue_records: list[dict] = get_issue_listing_data(
-            interval=f"{request_params.interval_in_days} days",
-            starting_date=valid_starting_date,
+            start_date=start_date,
+            end_date=end_date,
         )
 
         if len(issue_records) == 0:

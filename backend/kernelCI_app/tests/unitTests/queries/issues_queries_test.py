@@ -90,7 +90,8 @@ class TestGetIssueListingData:
         setup_mock_cursor(mock_connection)
 
         result = get_issue_listing_data(
-            interval="7 days", starting_date=datetime(2025, 11, 11)
+            start_date=datetime(2025, 11, 4),
+            end_date=datetime(2025, 11, 11),
         )
 
         assert result == expected_result
