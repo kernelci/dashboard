@@ -1,4 +1,4 @@
-import type { Status } from '@/types/database';
+import type { Resource, Status } from '@/types/database';
 
 export type TBuildDetails = {
   timestamp: string;
@@ -24,6 +24,6 @@ export type TBuildDetails = {
   build_origin: string;
   log_excerpt?: string;
   misc?: Record<string, unknown>;
-  input_files?: Record<string, unknown>;
-  output_files?: Record<string, unknown>;
+  input_files?: Resource[];
+  output_files?: Resource[];
 };

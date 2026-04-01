@@ -55,6 +55,10 @@ export const processLogData = (
         ? data.misc.platform
         : undefined;
 
+  const logExcerptFileLink = data?.output_files?.find(
+    file => file && file['name'] === 'log_excerpt',
+  )?.['url'];
+
   return {
     id,
     type: data.type,
@@ -65,7 +69,7 @@ export const processLogData = (
     git_repository_url: data?.git_repository_url,
     architecture: data?.architecture,
     log_url: data?.log_url,
-    log_excerpt: data?.log_excerpt,
+    log_excerpt: data?.log_excerpt || logExcerptFileLink,
     status: handledStatus,
     hardware: handledHardware,
   };
