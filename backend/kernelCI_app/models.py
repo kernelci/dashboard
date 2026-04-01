@@ -109,6 +109,7 @@ class Builds(models.Model):
     architecture = models.TextField(blank=True, null=True)
     command = models.TextField(blank=True, null=True)
     compiler = models.TextField(blank=True, null=True)
+    # input/output files are an array of objects containing file fields such as name and url
     input_files = models.JSONField(blank=True, null=True)
     output_files = models.JSONField(blank=True, null=True)
     config_name = models.TextField(blank=True, null=True)
@@ -170,6 +171,8 @@ class Tests(models.Model):
     )
     start_time = models.DateTimeField(blank=True, null=True)
     duration = models.FloatField(blank=True, null=True)
+    # input/output files are an array of objects containing file fields such as name and url
+    input_files = models.JSONField(blank=True, null=True)
     output_files = models.JSONField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
     number_value = models.FloatField(blank=True, null=True)
@@ -178,7 +181,6 @@ class Tests(models.Model):
         max_length=10, choices=UnitPrefix.choices, blank=True, null=True
     )
     number_unit = models.TextField(blank=True, null=True)
-    input_files = models.JSONField(blank=True, null=True)
 
     class Meta:
         db_table = "tests"

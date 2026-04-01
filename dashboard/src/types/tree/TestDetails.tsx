@@ -1,4 +1,4 @@
-import type { Status } from '@/types/database';
+import type { Resource, Status } from '@/types/database';
 
 export type TTestDetails = {
   architecture?: string;
@@ -18,8 +18,8 @@ export type TTestDetails = {
   environment_compatible?: string[];
   environment_misc?: Record<string, unknown>;
   misc?: Record<string, unknown>;
-  input_files?: Record<string, unknown>;
-  output_files?: Record<string, unknown>;
+  input_files?: Resource[];
+  output_files?: Resource[];
   tree_name?: string;
   origin?: string;
   field_timestamp: string;
