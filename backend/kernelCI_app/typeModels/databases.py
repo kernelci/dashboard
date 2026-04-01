@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Literal, Any, Union, Annotated
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 # TODO: remove these status types in favor of the StatusChoices enum class
 FAIL_STATUS = "FAIL"
@@ -22,6 +22,7 @@ Jsonb = Annotated[Union[Dict[str, Any], List[Dict[str, Any]]], "Jsonb"]
 
 
 class EnvironmentMisc(BaseModel):
+    model_config = ConfigDict(extra="allow")
     platform: str
 
 

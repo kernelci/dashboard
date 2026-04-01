@@ -24,6 +24,12 @@ from kernelCI_app.typeModels.databases import (
 from pydantic import BaseModel, Field
 
 
+class HardwareDetailsQueryParameters(BaseModel):
+    full_environment_misc: bool = Field(
+        False, description=DocStrings.FULL_ENVIRONMENT_MISC_DESCRIPTION
+    )
+
+
 class DefaultRecordValues(BaseModel):
     status: Annotated[StatusValues, make_default_validator(NULL_STATUS)]
 

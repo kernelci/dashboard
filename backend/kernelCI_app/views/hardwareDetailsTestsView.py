@@ -23,6 +23,7 @@ from kernelCI_app.typeModels.commonOpenApiParameters import (
 )
 from kernelCI_app.typeModels.hardwareDetails import (
     HardwareDetailsPostBody,
+    HardwareDetailsQueryParameters,
     HardwareTestHistoryItem,
     HardwareDetailsTestsResponse,
     Tree,
@@ -31,7 +32,7 @@ from kernelCI_app.utils import is_boot
 from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from typing import Dict, List
+from typing import Dict, List, Optional
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.constants.localization import ClientStrings
 
@@ -48,10 +49,21 @@ class HardwareDetailsTests(APIView):
         self.start_datetime: datetime = None
         self.end_datetime: datetime = None
         self.selected_commits: Dict[str, str] = None
+        self.full_environment_misc: bool = False
 
         self.processed_tests = set()
 
         self.tests: List[HardwareTestHistoryItem] = []
+
+    def _parse_query_params(self, request) -> Optional[Response]:
+        try:
+            query_params = HardwareDetailsQueryParameters.model_validate(
+                request.GET.dict()
+            )
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
+        self.full_environment_misc = query_params.full_environment_misc
+        return None
 
     def _process_test(self, record: Dict) -> None:
         is_record_boot = is_boot(record["path"])
@@ -72,6 +84,7 @@ class HardwareDetailsTests(APIView):
             handle_test_history(
                 record=record,
                 task=self.tests,
+                full_environment_misc=self.full_environment_misc,
             )
             self.processed_tests.add(record["id"])
 
@@ -100,12 +113,16 @@ class HardwareDetailsTests(APIView):
 
     # Using post to receive a body request
     @extend_schema(
-        parameters=[HARDWARE_ID_PATH_PARAM],
+        parameters=[HARDWARE_ID_PATH_PARAM, HardwareDetailsQueryParameters],
         responses=HardwareDetailsTestsResponse,
         request=HardwareDetailsPostBody,
         methods=["POST"],
     )
     def post(self, request, hardware_id) -> Response:
+        query_params_error = self._parse_query_params(request)
+        if query_params_error is not None:
+            return query_params_error
+
         try:
             unstable_parse_post_body(instance=self, request=request)
         except ValidationError as e:

@@ -56,6 +56,12 @@ class DirectTreeQueryParameters(BaseModel):
     )
 
 
+class DirectTreeDetailsQueryParameters(DirectTreeQueryParameters):
+    full_environment_misc: bool = Field(
+        False, description=DocStrings.FULL_ENVIRONMENT_MISC_DESCRIPTION
+    )
+
+
 class DirectTreePathParameters(BaseModel):
     tree_name: str
     git_branch: str
@@ -65,6 +71,12 @@ class DirectTreePathParameters(BaseModel):
 class TreeQueryParameters(DirectTreeQueryParameters):
     git_branch: str = Field(description=DocStrings.DEFAULT_GIT_BRANCH_DESCRIPTION)
     git_url: str = Field(description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION)
+
+
+class TreeDetailsQueryParameters(TreeQueryParameters):
+    full_environment_misc: bool = Field(
+        False, description=DocStrings.FULL_ENVIRONMENT_MISC_DESCRIPTION
+    )
 
 
 class TreeDetailsFullResponse(

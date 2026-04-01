@@ -18,6 +18,7 @@ from kernelCI_app.typeModels.databases import (
 from kernelCI_app.typeModels.issues import Issue, IssueDict
 from kernelCI_app.utils import create_issue_typed, extract_error_message, sanitize_dict
 from kernelCI_app.helpers.misc import (
+    get_environment_misc_value,
     handle_misc,
     misc_value_or_default,
 )
@@ -64,7 +65,9 @@ def create_checkouts_where_clauses(
     }
 
 
-def get_current_row_data(current_row: dict) -> dict:
+def get_current_row_data(
+    current_row: dict, full_environment_misc: bool = False
+) -> dict:
     tmp_test_env_comp_key = 12
     current_row_data = {
         "test_id": current_row[0],
@@ -107,10 +110,11 @@ def get_current_row_data(current_row: dict) -> dict:
         "issue_report_url": current_row[37],
     }
 
-    environment_misc = handle_misc(
+    parsed_environment_misc = handle_misc(
         misc_value_or_default(current_row_data["test_environment_misc"])
     )
-    current_row_data["test_platform"] = environment_misc.get("platform")
+    current_row_data["test_platform"] = parsed_environment_misc.get("platform")
+    current_row_data["parsed_environment_misc"] = parsed_environment_misc
     test_misc = sanitize_dict(current_row_data["test_misc"])
     test_runtime_lab = UNKNOWN_STRING
     if test_misc is not None:
@@ -145,6 +149,11 @@ def get_current_row_data(current_row: dict) -> dict:
     if current_row_data["test_path"] is None:
         current_row_data["test_path"] = UNKNOWN_STRING
 
+    environment_misc_value = get_environment_misc_value(
+        full_environment_misc=full_environment_misc,
+        parsed_environment_misc=parsed_environment_misc,
+    )
+
     current_row_data["history_item"] = {
         "id": current_row_data["test_id"],
         "origin": current_row_data["test_origin"],
@@ -157,7 +166,7 @@ def get_current_row_data(current_row: dict) -> dict:
         "log_url": current_row_data["test_log_url"],
         "architecture": current_row_data["build_architecture"],
         "compiler": current_row_data["build_compiler"],
-        "environment_misc": {"platform": current_row_data["test_platform"]},
+        "environment_misc": environment_misc_value,
         "lab": test_runtime_lab,
     }
 
