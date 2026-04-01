@@ -18,6 +18,10 @@ from kernelCI_app.management.commands.helpers.common import (
     setup_jinja_template,
     send_email_report,
 )
+from kernelCI_app.management.commands.helpers.healthcheck import (
+    MONITORING_ID_PARAM_HELP_TEXT,
+    run_with_healthcheck_monitoring,
+)
 
 from kernelCI_app.management.commands.helpers.summary import (
     SIGNUP_FOLDER,
@@ -892,6 +896,12 @@ class Command(BaseCommand):
             action="store_true",
             help="Ignore recipients.yaml file (optional for all actions)",
         )
+        parser.add_argument(
+            "--monitoring-id",
+            type=str,
+            default=None,
+            help=MONITORING_ID_PARAM_HELP_TEXT,
+        )
 
         # Action argument (replaces subparsers)
         actions = [
@@ -972,6 +982,13 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        monitoring_id = options.get("monitoring_id")
+        return run_with_healthcheck_monitoring(
+            monitoring_id=monitoring_id,
+            action=lambda: self._run_action(options),
+        )
+
+    def _run_action(self, options):
         # Setup connections
         service = smtp_setup_connection()
 

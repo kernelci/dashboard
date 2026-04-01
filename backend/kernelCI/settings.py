@@ -124,6 +124,30 @@ SPECTACULAR_SETTINGS = {
 # To run cronjobs locally, execute
 # poetry run ./manage.py crontab arg
 # where "arg" is add, remove or show
+
+HEALTHCHECK_BASE_URL = "https://hc-ping.com"
+HEALTHCHECK_MONITORING_PATH_MAP: dict[str, str] = {
+    "delete_unused_hardware_status": os.environ.get(
+        "HEALTHCHECK_ID_DELETE_UNUSED_HARDWARE_STATUS", ""
+    ),
+    "notifications_hardware_summary": os.environ.get(
+        "HEALTHCHECK_ID_NOTIFICATIONS_HARDWARE_SUMMARY", ""
+    ),
+    "notifications_metrics_summary": os.environ.get(
+        "HEALTHCHECK_ID_NOTIFICATIONS_METRICS_SUMMARY", ""
+    ),
+    "notifications_new_issues": os.environ.get(
+        "HEALTHCHECK_ID_NOTIFICATIONS_NEW_ISSUES", ""
+    ),
+    "notifications_summary_microsoft": os.environ.get(
+        "HEALTHCHECK_ID_NOTIFICATIONS_SUMMARY_MICROSOFT", ""
+    ),
+    "notifications_summary_maestro": os.environ.get(
+        "HEALTHCHECK_ID_NOTIFICATIONS_SUMMARY_MAESTRO", ""
+    ),
+}
+"""Maps monitoring_id to the relative_path that will be appended to the base healthcheck URL."""
+
 SKIP_CRONJOBS = is_boolean_or_string_true(os.environ.get("SKIP_CRONJOBS", False))
 if SKIP_CRONJOBS:
     CRONJOBS = []
@@ -133,12 +157,15 @@ else:
         "CRONTAB_COMMAND_SUFFIX", ">> /proc/1/fd/1 2>&1"
     )
     CRONJOBS = [
+        # not using a monitoring_id in the first task since it should
+        # be removed once the denormalization is set in stone
         ("0 * * * *", "kernelCI_app.tasks.update_checkout_cache"),
         (
             "59 * * * *",
             "django.core.management.call_command",
             [
                 "notifications",
+                "--monitoring-id=notifications_new_issues",
                 "--action=new_issues",
                 "--to=kernelci-results@groups.io",
                 "--cc=gus@collabora.com",
@@ -151,6 +178,7 @@ else:
             "django.core.management.call_command",
             [
                 "notifications",
+                "--monitoring-id=notifications_summary_microsoft",
                 "--action=summary",
                 "--to=kernelcialerts@microsoft.com",
                 "--cc=kernelci-results@groups.io",
@@ -165,6 +193,7 @@ else:
             "django.core.management.call_command",
             [
                 "notifications",
+                "--monitoring-id=notifications_summary_maestro",
                 "--action=summary",
                 "--add-mailing-lists",
                 "--send",
@@ -177,6 +206,7 @@ else:
             "django.core.management.call_command",
             [
                 "notifications",
+                "--monitoring-id=notifications_hardware_summary",
                 "--action=hardware_summary",
                 "--cc=kernelci-results@groups.io",
                 "--send",
@@ -188,6 +218,7 @@ else:
             "django.core.management.call_command",
             [
                 "delete_unused_hardware_status",
+                "--monitoring-id=delete_unused_hardware_status",
             ],
         ),
         (
@@ -195,6 +226,7 @@ else:
             "django.core.management.call_command",
             [
                 "notifications",
+                "--monitoring-id=notifications_metrics_summary",
                 "--action=metrics_summary",
                 "--to=kernelci@lists.linux.dev",
                 "--cc=kernelci-results@groups.io",
