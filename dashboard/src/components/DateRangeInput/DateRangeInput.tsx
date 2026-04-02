@@ -49,28 +49,24 @@ const DateRangeInput = (): JSX.Element => {
   const [errorField, setErrorField] = useState<ErrorField>(null);
   const clearErrorRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const triggerError = useCallback(
-    (field: ErrorField): void => {
-      if (clearErrorRef.current) {
-        clearTimeout(clearErrorRef.current);
-      }
-      setErrorField(field);
-      clearErrorRef.current = setTimeout(
-        () => setErrorField(null),
-        ERROR_CLEAR_TIMEOUT,
-      );
-    },
-    [],
-  );
+  const triggerError = useCallback((field: ErrorField): void => {
+    if (clearErrorRef.current) {
+      clearTimeout(clearErrorRef.current);
+    }
+    setErrorField(field);
+    clearErrorRef.current = setTimeout(
+      () => setErrorField(null),
+      ERROR_CLEAR_TIMEOUT,
+    );
+  }, []);
 
-  useEffect(
-    () => () => {
+  useEffect((): (() => void) => {
+    return () => {
       if (clearErrorRef.current) {
         clearTimeout(clearErrorRef.current);
       }
-    },
-    [],
-  );
+    };
+  }, []);
 
   const handleStartChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,7 +119,7 @@ const DateRangeInput = (): JSX.Element => {
           value={startDateStr}
           max={endDateStr}
           onChange={handleStartChange}
-          className={`w-[140px] cursor-pointer${errorField === 'start' ? ' border-red' : ''}`}
+          className={`w-[140px] cursor-pointer${errorField === 'start' ? 'border-red' : ''}`}
           data-test-id="date-range-start"
         />
         <span className="text-dim-gray">–</span>
@@ -132,7 +128,7 @@ const DateRangeInput = (): JSX.Element => {
           value={endDateStr}
           min={startDateStr}
           onChange={handleEndChange}
-          className={`w-[140px] cursor-pointer${errorField === 'end' ? ' border-red' : ''}`}
+          className={`w-[140px] cursor-pointer${errorField === 'end' ? 'border-red' : ''}`}
           data-test-id="date-range-end"
         />
       </div>
