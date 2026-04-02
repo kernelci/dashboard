@@ -40,7 +40,7 @@ const DrawerHeader = (): JSX.Element => {
   return (
     <header className="mb-7 w-full">
       <DrawerTitle>
-        <div className="mx-auto mb-4 flex w-[1400px] items-center justify-between">
+        <div className="mx-auto mb-4 flex max-w-[1400px] items-center justify-between">
           <span className="text-2xl/[42px] font-bold">
             <FormattedMessage id="filter.filtering" />
           </span>
@@ -58,12 +58,12 @@ const DrawerHeader = (): JSX.Element => {
 const DrawerLink = ({ title, value, url }: IDrawerLink): JSX.Element => {
   return (
     <div className="mb-8 flex items-center justify-between">
-      <div className="border-dark-gray flex h-[52px] w-full flex-col border bg-white px-4 py-2">
+      <div className="border-dark-gray flex min-h-[52px] max-w-full flex-col border bg-white px-4 py-2">
         <span className="text-dark-gray2 text-xs">
           <FormattedMessage id={title} />
         </span>
         <a
-          className="text-dim-black text-base underline"
+          className="text-dim-black text-base break-all underline"
           href={url ?? '#'}
           target={url ? '_blank' : undefined}
           rel="noreferrer"
@@ -168,7 +168,7 @@ const Drawer = ({
         <DrawerHeader />
         <section className="h-full overflow-y-auto">
           {drawerLinkComponent}
-          <div className="w-[1000px] rounded-lg bg-white px-6 py-5">
+          <div className="w-auto rounded-lg bg-white px-6 py-5">
             {showLegend && <Legend />}
             <div>{children}</div>
           </div>
