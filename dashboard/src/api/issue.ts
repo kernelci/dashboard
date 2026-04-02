@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useSearch } from '@tanstack/react-router';
 
+import { startOfTomorrow } from 'date-fns';
+
 import type { IssueListingResponse } from '@/types/issueListing';
 
 import { mapFiltersKeysToBackendCompatible } from '@/utils/utils';
@@ -16,7 +18,7 @@ import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 import { RequestData } from './commonRequest';
 
 const getDefaultEndTimestamp = (): number =>
-  dateObjectToTimestampInSeconds(new Date());
+  dateObjectToTimestampInSeconds(startOfTomorrow());
 
 export const fetchIssueListing = async ({
   startTimestampInSeconds,

@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { fetchIssueListing } from './issue';
 
+// Arbitrary round-number timestamps ~5 days apart, no domain significance.
+// Chosen for readability; any two valid timestamps where start < end would work.
+//   2023-11-14 22:13:20 UTC
+const START_TIMESTAMP_SECONDS = 1_700_000_000;
+const END_TIMESTAMP_SECONDS = 1_700_432_000; // 5 days later
+
 const mockGet = vi.fn();
 
 vi.mock('./commonRequest', () => ({
@@ -26,14 +32,14 @@ const MOCK_RESPONSE = {
 };
 
 describe('fetchIssueListing', () => {
+  const startTimestampInSeconds = START_TIMESTAMP_SECONDS;
+  const endTimestampInSeconds = END_TIMESTAMP_SECONDS;
+
   beforeEach(() => {
     mockGet.mockResolvedValue(MOCK_RESPONSE);
   });
 
   it('calls /api/issue/ with startTimestampInSeconds and endTimestampInSeconds', async () => {
-    const startTimestampInSeconds = 1_700_000_000;
-    const endTimestampInSeconds = 1_700_432_000;
-
     await fetchIssueListing({
       startTimestampInSeconds,
       endTimestampInSeconds,
@@ -46,9 +52,6 @@ describe('fetchIssueListing', () => {
   });
 
   it('includes backend-compatible filter params alongside timestamps', async () => {
-    const startTimestampInSeconds = 1_700_000_000;
-    const endTimestampInSeconds = 1_700_432_000;
-
     await fetchIssueListing({
       startTimestampInSeconds,
       endTimestampInSeconds,
@@ -66,8 +69,8 @@ describe('fetchIssueListing', () => {
 
   it('returns the API response', async () => {
     const result = await fetchIssueListing({
-      startTimestampInSeconds: 1_700_000_000,
-      endTimestampInSeconds: 1_700_432_000,
+      startTimestampInSeconds,
+      endTimestampInSeconds,
       filters: {},
     });
 
@@ -77,10 +80,10 @@ describe('fetchIssueListing', () => {
   it('propagates errors thrown by RequestData.get', async () => {
     mockGet.mockRejectedValue(new Error('network error'));
 
-    await expect(
+    expect(
       fetchIssueListing({
-        startTimestampInSeconds: 1_700_000_000,
-        endTimestampInSeconds: 1_700_432_000,
+        startTimestampInSeconds,
+        endTimestampInSeconds,
         filters: {},
       }),
     ).rejects.toThrow('network error');
