@@ -18,6 +18,7 @@ import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 const ERROR_CLEAR_TIMEOUT = 3000;
 const MILLISECONDS_IN_SECOND = 1000;
 const ISO_DATE_LENGTH = 10;
+const MIN_DATE_STR = '2024-01-01';
 
 const getDefaultEndTimestamp = (): number =>
   dateObjectToTimestampInSeconds(new Date());
@@ -31,7 +32,7 @@ const timestampToDateString = (ts: number): string =>
 const dateStringToTimestamp = (dateStr: string): number =>
   Math.floor(new Date(dateStr).getTime() / MILLISECONDS_IN_SECOND);
 
-type ErrorField = 'start' | 'end' | null;
+type ErrorField = 'start' | 'startTooEarly' | 'end' | 'endFuture' | null;
 
 const DateRangeInput = (): JSX.Element => {
   const { formatMessage } = useIntl();
@@ -40,8 +41,11 @@ const DateRangeInput = (): JSX.Element => {
     from: '/_main/issues',
   });
 
+  const todayTs = getDefaultEndTimestamp();
   const startTs = startTimestampInSeconds ?? getDefaultStartTimestamp();
-  const endTs = endTimestampInSeconds ?? getDefaultEndTimestamp();
+  const endTs = endTimestampInSeconds ?? todayTs;
+
+  const todayDateStr = timestampToDateString(todayTs);
 
   const startDateStr = timestampToDateString(startTs);
   const endDateStr = timestampToDateString(endTs);
@@ -74,6 +78,10 @@ const DateRangeInput = (): JSX.Element => {
         return;
       }
       const newStartTs = dateStringToTimestamp(e.target.value);
+      if (newStartTs < dateStringToTimestamp(MIN_DATE_STR)) {
+        triggerError('startTooEarly');
+        return;
+      }
       if (newStartTs > endTs) {
         triggerError('start');
         return;
@@ -92,6 +100,10 @@ const DateRangeInput = (): JSX.Element => {
         return;
       }
       const newEndTs = dateStringToTimestamp(e.target.value);
+      if (newEndTs > todayTs) {
+        triggerError('endFuture');
+        return;
+      }
       if (newEndTs < startTs) {
         triggerError('end');
         return;
@@ -101,15 +113,20 @@ const DateRangeInput = (): JSX.Element => {
         search: prev => ({ ...prev, endTimestampInSeconds: newEndTs }),
       });
     },
-    [navigate, startTs, triggerError],
+    [navigate, startTs, todayTs, triggerError],
   );
 
-  const errorMessage =
-    errorField === 'start'
-      ? formatMessage({ id: 'dateRange.startAfterEnd' })
-      : errorField === 'end'
-        ? formatMessage({ id: 'dateRange.endBeforeStart' })
-        : null;
+  const errorMessageIds = {
+    start: 'dateRange.startAfterEnd',
+    startTooEarly: 'dateRange.startTooEarly',
+    end: 'dateRange.endBeforeStart',
+    endFuture: 'dateRange.endAfterToday',
+  } as const satisfies Record<NonNullable<ErrorField>, string>;
+
+  const errorMessageId = errorField ? errorMessageIds[errorField] : null;
+  const errorMessage = errorMessageId
+    ? formatMessage({ id: errorMessageId })
+    : null;
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -117,6 +134,7 @@ const DateRangeInput = (): JSX.Element => {
         <Input
           type="date"
           value={startDateStr}
+          min={MIN_DATE_STR}
           max={endDateStr}
           onChange={handleStartChange}
           className={`w-[140px] cursor-pointer${errorField === 'start' ? 'border-red' : ''}`}
@@ -127,6 +145,7 @@ const DateRangeInput = (): JSX.Element => {
           type="date"
           value={endDateStr}
           min={startDateStr}
+          max={todayDateStr}
           onChange={handleEndChange}
           className={`w-[140px] cursor-pointer${errorField === 'end' ? 'border-red' : ''}`}
           data-test-id="date-range-end"
