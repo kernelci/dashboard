@@ -18,6 +18,8 @@ import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import type { PossibleMonitorPath } from '@/types/general';
 import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
 
+type PossibleIntervalPath = Exclude<PossibleMonitorPath, '/issues'>;
+
 const TOAST_TIMEOUT = 3000;
 
 const validateStringToNumber = (val: string): boolean => {
@@ -29,7 +31,7 @@ const InputTime = ({
   navigateFrom,
   defaultInterval = DEFAULT_TIME_SEARCH,
 }: {
-  navigateFrom: PossibleMonitorPath;
+  navigateFrom: PossibleIntervalPath;
   defaultInterval?: number;
 }): JSX.Element => {
   const { formatMessage } = useIntl();

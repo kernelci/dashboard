@@ -12,9 +12,8 @@ import { matchesRegexOrIncludes } from '@/lib/string';
 import type { IssueListingResponse } from '@/types/issueListing';
 import { useSearchStore } from '@/hooks/store/useSearchStore';
 
-import { MemoizedInputTime } from '@/components/InputTime';
+import { MemoizedDateRangeInput } from '@/components/DateRangeInput';
 import { formattedBreakLineValue } from '@/locales/messages';
-import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 
@@ -76,10 +75,7 @@ export const IssueListingPage = ({
             />
           </span>
           <div className="flex items-center justify-between gap-x-8 gap-y-2 max-[650px]:w-full max-[650px]:flex-wrap max-[650px]:justify-end">
-            <MemoizedInputTime
-              navigateFrom="/issues"
-              defaultInterval={REDUCED_TIME_SEARCH}
-            />
+            <MemoizedDateRangeInput />
             <IssueListingFilter paramFilter={diffFilter} data={data?.filters} />
           </div>
         </div>
