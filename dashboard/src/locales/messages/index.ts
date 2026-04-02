@@ -50,6 +50,8 @@ export const messages = {
     'commonDetails.gitRepositoryBranch': 'Git Repository Branch',
     'commonDetails.gitRepositoryUrl': 'Git Repository Url',
     'commonDetails.miscData': 'Misc Data',
+    'dateRange.endBeforeStart': 'End date cannot be before the start date',
+    'dateRange.startAfterEnd': 'Start date cannot be after the end date',
     'filter.architectureSubtitle': 'Please select one or more Architectures:',
     'filter.bootDuration': 'Boot duration',
     'filter.bootIssue': 'Boot issue',
