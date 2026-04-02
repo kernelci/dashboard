@@ -10,18 +10,27 @@ import { mapFiltersKeysToBackendCompatible } from '@/utils/utils';
 import type { TFilter } from '@/types/general';
 import { getTargetFilter } from '@/types/general';
 
+import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
+import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
+
 import { RequestData } from './commonRequest';
 
-const fetchIssueListing = async ({
-  intervalInDays,
+const getDefaultEndTimestamp = (): number =>
+  dateObjectToTimestampInSeconds(new Date());
+
+export const fetchIssueListing = async ({
+  startTimestampInSeconds,
+  endTimestampInSeconds,
   filters,
 }: {
-  intervalInDays?: number;
+  startTimestampInSeconds: number;
+  endTimestampInSeconds: number;
   filters: object;
 }): Promise<IssueListingResponse> => {
   const backendCompatibleFilters = mapFiltersKeysToBackendCompatible(filters);
   const params = {
-    interval_in_days: intervalInDays,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
     ...backendCompatibleFilters,
   };
 
@@ -34,14 +43,24 @@ const fetchIssueListing = async ({
 export const useIssueListing = (
   reqFilters: TFilter,
 ): UseQueryResult<IssueListingResponse> => {
-  const { intervalInDays } = useSearch({ from: '/_main/issues' });
+  const { startTimestampInSeconds, endTimestampInSeconds } = useSearch({
+    from: '/_main/issues',
+  });
   const filtersAsRecord = getTargetFilter(reqFilters, 'issueListing');
 
-  const queryKey = ['issueTable', intervalInDays, reqFilters, filtersAsRecord];
+  const endTs = endTimestampInSeconds ?? getDefaultEndTimestamp();
+  const startTs =
+    startTimestampInSeconds ?? endTs - daysToSeconds(REDUCED_TIME_SEARCH);
+
+  const queryKey = ['issueTable', startTs, endTs, reqFilters, filtersAsRecord];
 
   return useQuery({
     queryKey,
     queryFn: () =>
-      fetchIssueListing({ intervalInDays, filters: { ...filtersAsRecord } }),
+      fetchIssueListing({
+        startTimestampInSeconds: startTs,
+        endTimestampInSeconds: endTs,
+        filters: { ...filtersAsRecord },
+      }),
   });
 };

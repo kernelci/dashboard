@@ -2,11 +2,7 @@ import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
 
 import { z } from 'zod';
 
-import {
-  zDiffFilter,
-  zListingSize,
-  type SearchSchema,
-} from '@/types/general';
+import { zDiffFilter, zListingSize, type SearchSchema } from '@/types/general';
 import { DEFAULT_LISTING_ITEMS } from '@/utils/constants/general';
 import { CULPRIT_CODE, HAS_INCIDENT_OPTION } from '@/utils/constants/issues';
 
