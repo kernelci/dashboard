@@ -7,6 +7,7 @@ from .build_factory import BuildFactory
 from .test_factory import TestFactory
 from .issue_factory import IssueFactory
 from .incident_factory import IncidentFactory
+from .tree_tests_rollup_factory import TreeTestsRollupFactory
 
 from .mocks import Checkout, Build, Test, Issue
 
@@ -16,6 +17,7 @@ __all__ = [
     "TestFactory",
     "IssueFactory",
     "IncidentFactory",
+    "TreeTestsRollupFactory",
     "Checkout",
     "Build",
     "Test",
