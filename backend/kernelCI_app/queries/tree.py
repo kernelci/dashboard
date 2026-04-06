@@ -468,6 +468,117 @@ def get_tree_details_data(
     return rows
 
 
+def get_tree_details_rollup(
+    *,
+    origin_param: str,
+    git_url_param: Optional[str],
+    git_branch_param: Optional[str],
+    commit_hash: Optional[str],
+    tree_name: Optional[str] = None,
+) -> Optional[list[dict]]:
+    """
+    Fetch denormalized test/boot rollup data for a given tree commit.
+
+    Returns aggregated data from tree_tests_rollup table which pre-aggregates
+    test results by various dimensions (path_group, config, arch, compiler,
+    hardware, platform, lab, origin, and issue).
+    """
+    cache_key = "treeDetailsRollup"
+
+    params = {
+        "commit_hash": commit_hash,
+        "tree_name": tree_name,
+        "origin_param": origin_param,
+        "git_url_param": git_url_param,
+        "git_branch_param": git_branch_param,
+    }
+
+    rows = get_query_cache(cache_key, params)
+    if rows is None:
+        checkout_clauses = create_checkouts_where_clauses(
+            git_url=git_url_param,
+            git_branch=git_branch_param,
+            tree_name=tree_name,
+        )
+
+        git_branch_clause = checkout_clauses.get("git_branch_clause")
+        tree_name_clause = checkout_clauses.get("tree_name_clause")
+        git_url_clause = checkout_clauses.get("git_url_clause")
+        tree_name_full_clause = "AND " + tree_name_clause if tree_name_clause else ""
+        git_url_full_clause = "AND " + git_url_clause if git_url_clause else ""
+
+        query = f"""
+        WITH RELEVANT_CHECKOUTS AS (
+            SELECT
+                c.git_commit_hash,
+                c.tree_name,
+                c.git_repository_branch,
+                c.git_repository_url,
+                c.origin
+            FROM
+                checkouts c
+            WHERE
+                (c.git_commit_hash = %(commit_hash)s
+                OR %(commit_hash)s = ANY (c.git_commit_tags))
+                {git_url_full_clause}
+                {tree_name_full_clause}
+                AND {git_branch_clause}
+                AND c.origin = %(origin_param)s
+            ORDER BY
+                c._timestamp DESC
+            LIMIT 1
+        )
+        SELECT
+            tr.origin,
+            tr.tree_name,
+            tr.git_repository_branch,
+            tr.git_repository_url,
+            tr.git_commit_hash,
+            tr.path_group,
+            tr.build_config_name,
+            tr.build_architecture,
+            tr.build_compiler,
+            tr.hardware_key,
+            tr.test_platform,
+            tr.test_lab,
+            tr.test_origin,
+            tr.issue_id,
+            tr.issue_version,
+            tr.issue_uncategorized,
+            tr.is_boot,
+            tr.pass_tests,
+            tr.fail_tests,
+            tr.skip_tests,
+            tr.error_tests,
+            tr.miss_tests,
+            tr.done_tests,
+            tr.null_tests,
+            tr.total_tests,
+            i.comment AS issue_comment,
+            i.report_url AS issue_report_url
+        FROM
+            tree_tests_rollup tr
+        INNER JOIN RELEVANT_CHECKOUTS rc ON (
+            tr.git_commit_hash = rc.git_commit_hash
+            AND tr.origin = rc.origin
+            AND tr.tree_name IS NOT DISTINCT FROM rc.tree_name
+            AND tr.git_repository_branch IS NOT DISTINCT FROM rc.git_repository_branch
+            AND tr.git_repository_url IS NOT DISTINCT FROM rc.git_repository_url
+        )
+        LEFT JOIN issues i
+            ON tr.issue_id = i.id AND tr.issue_version = i.version
+        ORDER BY
+            tr.total_tests DESC
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            rows = dict_fetchall(cursor=cursor)
+            set_query_cache(key=cache_key, params=params, rows=rows)
+
+    return rows
+
+
 def get_tree_data(
     *,
     data_type: Literal["builds", "boots", "tests"],
@@ -631,6 +742,108 @@ def get_tree_data(
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             rows = cursor.fetchall()
+            set_query_cache(key=cache_key, params=params, rows=rows)
+
+    return rows
+
+
+def get_tree_details_builds(
+    *,
+    origin_param: str,
+    git_url_param: Optional[str],
+    git_branch_param: Optional[str],
+    commit_hash: Optional[str],
+    tree_name: Optional[str] = None,
+) -> Optional[list[dict]]:
+    """
+    Fetch builds for a given tree commit.
+    """
+    cache_key = "treeDetailsBuilds"
+
+    params = {
+        "commit_hash": commit_hash,
+        "tree_name": tree_name,
+        "origin_param": origin_param,
+        "git_url_param": git_url_param,
+        "git_branch_param": git_branch_param,
+    }
+
+    rows = get_query_cache(cache_key, params)
+    if rows is None:
+        checkout_clauses = create_checkouts_where_clauses(
+            git_url=git_url_param,
+            git_branch=git_branch_param,
+            tree_name=tree_name,
+        )
+
+        git_branch_clause = checkout_clauses.get("git_branch_clause")
+        tree_name_clause = checkout_clauses.get("tree_name_clause")
+        git_url_clause = checkout_clauses.get("git_url_clause")
+        tree_name_full_clause = "AND " + tree_name_clause if tree_name_clause else ""
+        git_url_full_clause = "AND " + git_url_clause if git_url_clause else ""
+
+        query = f"""
+        WITH RELEVANT_CHECKOUTS AS (
+            SELECT
+                c.id AS checkout_id,
+                c.git_repository_url,
+                c.git_repository_branch,
+                c.git_commit_tags,
+                c.origin
+            FROM
+                checkouts c
+            WHERE
+                (c.git_commit_hash = %(commit_hash)s
+                OR %(commit_hash)s = ANY (c.git_commit_tags))
+                {git_url_full_clause}
+                {tree_name_full_clause}
+                AND {git_branch_clause}
+                AND c.origin = %(origin_param)s
+            ORDER BY
+                c._timestamp DESC
+            LIMIT 1
+        )
+        SELECT
+            b.id AS build_id,
+            b.origin AS build_origin,
+            b.comment AS build_comment,
+            b.start_time AS build_start_time,
+            b.duration AS build_duration,
+            b.architecture AS build_architecture,
+            b.command AS build_command,
+            b.compiler AS build_compiler,
+            b.config_name AS build_config_name,
+            b.config_url AS build_config_url,
+            b.log_url AS build_log_url,
+            b.status AS build_status,
+            b.misc AS build_misc,
+            rc.checkout_id,
+            rc.git_repository_url AS checkout_git_repository_url,
+            rc.git_repository_branch AS checkout_git_repository_branch,
+            rc.git_commit_tags AS checkout_git_commit_tags,
+            rc.origin AS checkout_origin,
+            inc.id AS incident_id,
+            inc.test_id AS incident_test_id,
+            inc.present AS incident_present,
+            iss.id AS issue_id,
+            iss.version AS issue_version,
+            iss.comment AS issue_comment,
+            iss.report_url AS issue_report_url
+        FROM
+            builds b
+        INNER JOIN RELEVANT_CHECKOUTS rc ON b.checkout_id = rc.checkout_id
+        LEFT JOIN incidents inc
+            ON inc.build_id = b.id AND inc.test_id IS NULL
+        LEFT JOIN issues iss
+            ON inc.issue_id = iss.id AND inc.issue_version = iss.version
+        ORDER BY
+            iss."_timestamp" DESC NULLS LAST,
+            b.start_time DESC
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            rows = dict_fetchall(cursor=cursor)
             set_query_cache(key=cache_key, params=params, rows=rows)
 
     return rows

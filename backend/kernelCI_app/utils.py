@@ -23,9 +23,11 @@ def create_issue_typed(
     issue_comment: Optional[str],
     issue_report_url: Optional[str],
     starting_count_status: Optional[DatabaseStatusValues],
+    autoincrement: bool = True,
 ) -> Issue:
     incident_count = StatusCount()
-    incident_count.increment(starting_count_status)
+    if autoincrement:
+        incident_count.increment(starting_count_status)
     return Issue(
         id=issue_id,
         version=issue_version,

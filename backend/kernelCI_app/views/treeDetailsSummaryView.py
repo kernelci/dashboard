@@ -9,21 +9,20 @@ from kernelCI_app.helpers.discordWebhook import send_discord_notification
 from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.logger import create_endpoint_notification
 from kernelCI_app.helpers.treeDetails import (
-    call_based_on_compatible_and_misc_platform,
-    decide_if_is_boot_filtered_out,
     decide_if_is_build_filtered_out,
-    decide_if_is_full_row_filtered_out,
-    decide_if_is_test_filtered_out,
     get_build,
-    get_current_row_data,
-    process_tree_url,
-    process_boots_summary,
     process_builds_issue,
-    process_test_summary,
-    process_tests_issue,
-    process_filters,
+    process_tree_url,
 )
-from kernelCI_app.queries.tree import get_tree_details_data
+from kernelCI_app.helpers.treeDetailsRollup import (
+    normalize_build_dict,
+    process_build_filters,
+    process_rollup_filters,
+    process_rollup_issues,
+    process_rollup_summary,
+    rollup_test_or_boot_filtered_out,
+)
+from kernelCI_app.queries.tree import get_tree_details_builds, get_tree_details_rollup
 from kernelCI_app.typeModels.commonDetails import (
     BaseBuildSummary,
     BuildSummary,
@@ -45,7 +44,7 @@ from kernelCI_app.typeModels.treeDetails import (
     TreeCommon,
     TreeQueryParameters,
 )
-from kernelCI_app.utils import convert_issues_dict_to_list_typed, is_boot
+from kernelCI_app.utils import convert_issues_dict_to_list_typed
 
 from collections import defaultdict
 
@@ -54,12 +53,15 @@ from rest_framework.views import APIView
 from kernelCI_app.viewCommon import create_details_build_summary
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from http import HTTPStatus
-from kernelCI_app.constants.general import DEFAULT_ORIGIN, MAESTRO_DUMMY_BUILD_PREFIX
+from kernelCI_app.constants.general import (
+    DEFAULT_ORIGIN,
+    MAESTRO_DUMMY_BUILD_PREFIX,
+    UNKNOWN_STRING,
+)
 
 
 class BaseTreeDetailsSummary(APIView):
     def __init__(self):
-        self.processedTests = set()
         self.filters = None
 
         self.testStatusSummary = {}
@@ -68,7 +70,6 @@ class BaseTreeDetailsSummary(APIView):
         self.testFailReasons = {}
         self.test_arch_summary = {}
         self.testIssues = []
-        self.testIssuesTable = {}
         self.testEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
         self.testEnvironmentMisc = defaultdict(lambda: defaultdict(int))
         self.bootStatusSummary = {}
@@ -77,7 +78,6 @@ class BaseTreeDetailsSummary(APIView):
         self.bootFailReasons = {}
         self.bootArchSummary = {}
         self.bootIssues = []
-        self.bootsIssuesTable = {}
         self.bootEnvironmentCompatible = defaultdict(lambda: defaultdict(int))
         self.bootEnvironmentMisc = defaultdict(lambda: defaultdict(int))
         self.hardwareUsed = set()
@@ -128,33 +128,6 @@ class BaseTreeDetailsSummary(APIView):
         self.boot_summary: dict[str, Any] = {"origins": {}}
         self.boot_summary_typed: TestSummary = generate_test_summary_typed()
 
-    def _process_boots_test(self, row_data):
-        test_id = row_data["test_id"]
-
-        if decide_if_is_boot_filtered_out(self, row_data):
-            return
-
-        process_tests_issue(instance=self, row_data=row_data, is_boot=True)
-
-        if test_id in self.processedTests:
-            return
-        self.processedTests.add(test_id)
-        process_boots_summary(self, row_data)
-
-    def _process_non_boots_test(self, row_data):
-        test_id = row_data["test_id"]
-
-        if decide_if_is_test_filtered_out(self, row_data):
-            return
-
-        process_tests_issue(instance=self, row_data=row_data)
-
-        if test_id in self.processedTests:
-            return
-
-        self.processedTests.add(test_id)
-        process_test_summary(self, row_data)
-
     def _process_builds(self, row_data):
         build_id = row_data["build_id"]
 
@@ -167,44 +140,61 @@ class BaseTreeDetailsSummary(APIView):
             return
 
         self.processed_builds.add(build_id)
-
         self.builds.append(get_build(row_data))
 
-    def _sanitize_rows(self, rows):
-        first_iteration = True
-        for row in rows:
-            row_data = get_current_row_data(row)
-            if first_iteration is True:
-                self.git_commit_tags = row_data["checkout_git_commit_tags"]
-                first_iteration = False
+    def _sanitize_builds_rows(self, builds_rows: list[dict]) -> None:
+        for row_dict in builds_rows:
+            row_data = normalize_build_dict(row_dict)
 
-            call_based_on_compatible_and_misc_platform(row_data, self.hardwareUsed.add)
+            if not self.git_commit_tags:
+                self.git_commit_tags = row_data.get("checkout_git_commit_tags", [])
 
             process_tree_url(self, row_data)
-            process_filters(self, row_data)
+            process_build_filters(self, row_data)
 
-            is_record_filter_out = decide_if_is_full_row_filtered_out(self, row_data)
-
-            if is_record_filter_out:
+            if self.filters.is_record_filtered_out(
+                architecture=row_data["build_architecture"],
+                compiler=row_data["build_compiler"],
+                config_name=row_data["build_config_name"],
+            ):
                 continue
 
-            if row_data["build_id"] is not None and not row_data["build_id"].startswith(
+            build_id = row_data.get("build_id")
+            if build_id is not None and not build_id.startswith(
                 MAESTRO_DUMMY_BUILD_PREFIX
             ):
                 self._process_builds(row_data)
-
-            if row_data["test_id"] is None:
-                continue
-
-            if is_boot(row_data["test_path"]):
-                self._process_boots_test(row_data)
-            else:
-                self._process_non_boots_test(row_data)
 
         self.base_build_summary = create_details_build_summary(self.builds)
         self.build_issues = convert_issues_dict_to_list_typed(
             issues_dict=self.build_issues_dict
         )
+
+    def _sanitize_rollup_rows(self, rollup_rows: list[dict]) -> None:
+        for row_dict in rollup_rows:
+            self.hardwareUsed.add(row_dict["hardware_key"])
+
+            process_rollup_filters(self, row_dict)
+
+            if self.filters.is_record_filtered_out(
+                hardwares=[row_dict["hardware_key"]],
+                architecture=row_dict["build_architecture"],
+                compiler=row_dict["build_compiler"],
+                config_name=row_dict["build_config_name"],
+                lab=row_dict.get("test_lab", UNKNOWN_STRING),
+            ):
+                continue
+
+            is_boot_row = row_dict["is_boot"]
+
+            if rollup_test_or_boot_filtered_out(
+                self, row_dict=row_dict, is_boot_row=is_boot_row
+            ):
+                continue
+
+            process_rollup_issues(self, row_dict=row_dict, is_boot_row=is_boot_row)
+            process_rollup_summary(self, row_dict=row_dict, is_boot_row=is_boot_row)
+
         self.bootIssues = convert_issues_dict_to_list_typed(
             issues_dict=self.boot_issues_dict
         )
@@ -223,36 +213,38 @@ class BaseTreeDetailsSummary(APIView):
         git_url_param = request.GET.get("git_url")
         git_branch_param = request.GET.get("git_branch", git_branch)
 
-        rows = get_tree_details_data(
-            origin_param=origin_param,
-            git_url_param=git_url_param,
-            tree_name=tree_name,
-            git_branch_param=git_branch_param,
-            commit_hash=commit_hash,
-        )
+        query_params = {
+            "origin_param": origin_param,
+            "git_url_param": git_url_param,
+            "git_branch_param": git_branch_param,
+            "commit_hash": commit_hash,
+            "tree_name": tree_name,
+        }
 
-        if len(rows) == 0:
+        builds_rows = get_tree_details_builds(**query_params)
+        rollup_rows = get_tree_details_rollup(**query_params)
+
+        if not builds_rows and not rollup_rows:
             return create_api_error_response(
                 error_message=ClientStrings.TREE_NO_RESULTS,
                 status_code=HTTPStatus.OK,
             )
 
-        if len(rows) == 1:
-            row_data = get_current_row_data(rows[0])
-            if row_data["build_id"] is None:
-                notification = create_endpoint_notification(
-                    message="Found checkout without builds",
-                    request=request,
-                )
-                send_discord_notification(content=notification)
-                return create_api_error_response(
-                    error_message=ClientStrings.TREE_BUILDS_NO_RESULTS,
-                    status_code=HTTPStatus.OK,
-                )
+        if not builds_rows:
+            notification = create_endpoint_notification(
+                message="Found checkout without builds",
+                request=request,
+            )
+            send_discord_notification(content=notification)
+            return create_api_error_response(
+                error_message=ClientStrings.TREE_BUILDS_NO_RESULTS,
+                status_code=HTTPStatus.OK,
+            )
 
         self.filters = FilterParams(request)
 
-        self._sanitize_rows(rows)
+        self._sanitize_builds_rows(builds_rows)
+        self._sanitize_rollup_rows(rollup_rows or [])
 
         try:
             valid_response = SummaryResponse(

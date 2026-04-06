@@ -390,7 +390,7 @@ def process_test_summary(instance, row_data):
         instance.testStatusSummary.get(test_status, 0) + 1
     )
 
-    arch_key = "%s-%s" % (build_arch, build_compiler)
+    arch_key = (build_arch, build_compiler)
     arch_summary = instance.test_arch_summary.get(
         arch_key,
         {"arch": build_arch, "compiler": build_compiler, "status": {}},
@@ -442,7 +442,7 @@ def process_boots_summary(instance, row_data: dict[str, Any]) -> None:
         instance.bootStatusSummary.get(test_status, 0) + 1
     )
 
-    arch_key = "%s-%s" % (build_arch, build_compiler)
+    arch_key = (build_arch, build_compiler)
     arch_summary = instance.bootArchSummary.get(
         arch_key,
         {"arch": build_arch, "compiler": build_compiler, "status": {}},
