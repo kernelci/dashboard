@@ -53,6 +53,8 @@ def extract_path_group(path: str) -> str:
 def accumulate_rollup_entry(
     rollup_data: dict[tuple, dict],
     entry: RollupEntryData,
+    *,
+    is_correction: bool = False,
 ) -> None:
     """Accumulate a single test entry into rollup_data in-place."""
     checkout = entry["checkout"]
@@ -91,20 +93,29 @@ def accumulate_rollup_entry(
     )
 
     counter = ROLLUP_STATUS_FIELDS.get(entry["status"], "null_tests")
-    record[counter] += 1
-    record["total_tests"] += 1
+
+    if is_correction:
+        record["null_tests"] -= 1
+        record[counter] += 1
+    else:
+        record[counter] += 1
+        record["total_tests"] += 1
 
 
 def aggregate_tests_rollup(
     ready_tests: Sequence[PendingTest],
     test_builds_by_id: dict[str, Builds],
     issues_map: dict[str, dict],
+    reprocess_test_ids: set[str] | None = None,
 ) -> dict[tuple, dict]:
     """
     Build rollup data from pending tests.
     Returns rollup data without touching the database.
     """
     rollup_data: dict[tuple, dict] = {}
+
+    if reprocess_test_ids is None:
+        reprocess_test_ids = set()
 
     for test in ready_tests:
         # shouldn't happen, but being defensive here
@@ -155,6 +166,7 @@ def aggregate_tests_rollup(
                 "is_boot": test.is_boot,
                 "status": test.full_status,
             },
+            is_correction=test.test_id in reprocess_test_ids,
         )
 
     return rollup_data
