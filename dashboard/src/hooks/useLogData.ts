@@ -56,7 +56,7 @@ export const processLogData = (
         : undefined;
 
   const logExcerptFileLink = data?.output_files?.find(
-    file => file && file['name'] === 'log_excerpt',
+    file => file?.['name'] === 'log_excerpt',
   )?.['url'];
 
   return {
