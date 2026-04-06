@@ -447,3 +447,264 @@ class TestAggregateTestsRollup(SimpleTestCase):
         self.assertEqual(len(result), 1)
         record = next(iter(result.values()))
         self.assertEqual(record["total_tests"], 1)
+
+
+class TestAccumulateRollupEntryCorrection(SimpleTestCase):
+    """Test is_correction=True behavior: null -> non-null transitions."""
+
+    def _make_rollup_data_with_null_entry(self, initial_null_count=1):
+        """Pre-seed rollup_data with a record having some null_tests."""
+        checkout = _make_checkout()
+        entry = _make_rollup_entry(checkout=checkout, status=None)
+        rollup_key = RollupKey(
+            origin=checkout.origin,
+            tree_name=checkout.tree_name,
+            git_repository_branch=checkout.git_repository_branch,
+            git_repository_url=checkout.git_repository_url,
+            git_commit_hash=checkout.git_commit_hash,
+            path_group=entry["path_group"],
+            config=entry["config"],
+            arch=entry["arch"],
+            compiler=entry["compiler"],
+            hardware_key=entry["hardware_key"],
+            platform=entry["platform"],
+            lab=entry["lab"],
+            test_origin=entry["origin"],
+            issue_id=entry["issue_id"],
+            issue_version=entry["issue_version"],
+            issue_uncategorized=entry["issue_uncategorized"],
+            is_boot=entry["is_boot"],
+        )
+        rollup_data = {
+            rollup_key: {
+                "pass_tests": 0,
+                "fail_tests": 0,
+                "skip_tests": 0,
+                "error_tests": 0,
+                "miss_tests": 0,
+                "done_tests": 0,
+                "null_tests": initial_null_count,
+                "total_tests": initial_null_count,
+            }
+        }
+        return rollup_data, entry, rollup_key
+
+    def test_correction_decrements_null_tests(self):
+        """Correction moves count from null_tests to the new status bucket."""
+        rollup_data, entry, rollup_key = self._make_rollup_data_with_null_entry()
+        entry["status"] = StatusChoices.PASS
+
+        accumulate_rollup_entry(rollup_data, entry, is_correction=True)
+
+        record = rollup_data[rollup_key]
+        self.assertEqual(record["null_tests"], 0)
+
+    def test_correction_increments_new_status_bucket(self):
+        """The new status bucket gets the count moved from null_tests."""
+        rollup_data, entry, rollup_key = self._make_rollup_data_with_null_entry()
+        entry["status"] = StatusChoices.PASS
+
+        accumulate_rollup_entry(rollup_data, entry, is_correction=True)
+
+        record = rollup_data[rollup_key]
+        self.assertEqual(record["pass_tests"], 1)
+
+    def test_correction_does_not_change_total_tests(self):
+        """Total should remain unchanged - just moving from null to bucket."""
+        rollup_data, entry, rollup_key = self._make_rollup_data_with_null_entry()
+        entry["status"] = StatusChoices.PASS
+
+        accumulate_rollup_entry(rollup_data, entry, is_correction=True)
+
+        record = rollup_data[rollup_key]
+        self.assertEqual(record["total_tests"], 1)
+
+    def test_correction_with_fail_status(self):
+        """Correction works with fail status too."""
+        rollup_data, entry, rollup_key = self._make_rollup_data_with_null_entry()
+        entry["status"] = StatusChoices.FAIL
+
+        accumulate_rollup_entry(rollup_data, entry, is_correction=True)
+
+        record = rollup_data[rollup_key]
+        self.assertEqual(record["null_tests"], 0)
+        self.assertEqual(record["fail_tests"], 1)
+        self.assertEqual(record["total_tests"], 1)
+
+    def test_correction_with_skip_status(self):
+        """Correction works with skip status."""
+        rollup_data, entry, rollup_key = self._make_rollup_data_with_null_entry()
+        entry["status"] = StatusChoices.SKIP
+
+        accumulate_rollup_entry(rollup_data, entry, is_correction=True)
+
+        record = rollup_data[rollup_key]
+        self.assertEqual(record["null_tests"], 0)
+        self.assertEqual(record["skip_tests"], 1)
+        self.assertEqual(record["total_tests"], 1)
+
+    def test_correction_with_null_as_new_status(self):
+        """If new status is also null, both operations hit null_tests (net zero)."""
+        rollup_data, entry, rollup_key = self._make_rollup_data_with_null_entry()
+        entry["status"] = None
+
+        accumulate_rollup_entry(rollup_data, entry, is_correction=True)
+
+        record = rollup_data[rollup_key]
+        # Decrement then increment null_tests: net change is 0
+        self.assertEqual(record["null_tests"], 1)
+        self.assertEqual(record["total_tests"], 1)
+
+    def test_multiple_corrections_on_same_rollup_key(self):
+        """Multiple corrections on the same key accumulate correctly."""
+        checkout = _make_checkout()
+        base_entry = _make_rollup_entry(checkout=checkout, status=None)
+        rollup_key = RollupKey(
+            origin=checkout.origin,
+            tree_name=checkout.tree_name,
+            git_repository_branch=checkout.git_repository_branch,
+            git_repository_url=checkout.git_repository_url,
+            git_commit_hash=checkout.git_commit_hash,
+            path_group=base_entry["path_group"],
+            config=base_entry["config"],
+            arch=base_entry["arch"],
+            compiler=base_entry["compiler"],
+            hardware_key=base_entry["hardware_key"],
+            platform=base_entry["platform"],
+            lab=base_entry["lab"],
+            test_origin=base_entry["origin"],
+            issue_id=base_entry["issue_id"],
+            issue_version=base_entry["issue_version"],
+            issue_uncategorized=base_entry["issue_uncategorized"],
+            is_boot=base_entry["is_boot"],
+        )
+        rollup_data = {
+            rollup_key: {
+                "pass_tests": 0,
+                "fail_tests": 0,
+                "skip_tests": 0,
+                "error_tests": 0,
+                "miss_tests": 0,
+                "done_tests": 0,
+                "null_tests": 3,
+                "total_tests": 3,
+            }
+        }
+
+        # Three corrections: PASS, FAIL, SKIP
+        entry1 = _make_rollup_entry(checkout=checkout, status=StatusChoices.PASS)
+        entry2 = _make_rollup_entry(checkout=checkout, status=StatusChoices.FAIL)
+        entry3 = _make_rollup_entry(checkout=checkout, status=StatusChoices.SKIP)
+
+        accumulate_rollup_entry(rollup_data, entry1, is_correction=True)
+        accumulate_rollup_entry(rollup_data, entry2, is_correction=True)
+        accumulate_rollup_entry(rollup_data, entry3, is_correction=True)
+
+        record = rollup_data[rollup_key]
+        self.assertEqual(record["null_tests"], 0)
+        self.assertEqual(record["pass_tests"], 1)
+        self.assertEqual(record["fail_tests"], 1)
+        self.assertEqual(record["skip_tests"], 1)
+        self.assertEqual(record["total_tests"], 3)
+
+
+class TestAggregateTestsRollupWithReprocess(SimpleTestCase):
+    """Test aggregate_tests_rollup with reprocess_test_ids parameter."""
+
+    def test_reprocess_test_id_applies_correction(self):
+        """Test in reprocess_test_ids gets correction: null_tests decremented."""
+        checkout = _make_checkout()
+        build = _make_build(checkout=checkout)
+        # This test will be marked as reprocess
+        test = _make_pending_test(
+            test_id="test-1",
+            build_id="build-1",
+            full_status=StatusChoices.PASS,
+        )
+
+        result = aggregate_tests_rollup(
+            [test],
+            {"build-1": build},
+            {},
+            reprocess_test_ids={"test-1"},  # Mark as correction
+        )
+
+        record = next(iter(result.values()))
+        # Correction: total should not increment, pass_tests should be 1
+        # But since there's no prior null_tests to decrement, it goes negative
+        self.assertEqual(record["pass_tests"], 1)
+        self.assertEqual(record["null_tests"], -1)
+        self.assertEqual(record["total_tests"], 0)
+
+    def test_normal_test_not_in_reprocess(self):
+        """Test not in reprocess_test_ids behaves like normal."""
+        checkout = _make_checkout()
+        build = _make_build(checkout=checkout)
+        test = _make_pending_test(
+            test_id="test-1",
+            build_id="build-1",
+            full_status=StatusChoices.PASS,
+        )
+
+        result = aggregate_tests_rollup(
+            [test],
+            {"build-1": build},
+            {},
+            reprocess_test_ids=set(),  # Empty set
+        )
+
+        record = next(iter(result.values()))
+        self.assertEqual(record["pass_tests"], 1)
+        self.assertEqual(record["total_tests"], 1)
+        self.assertEqual(record["null_tests"], 0)
+
+    def test_mixed_batch_corrections_and_new(self):
+        """Two tests same rollup key: one correction + one normal."""
+        checkout = _make_checkout()
+        build = _make_build(checkout=checkout)
+        # Correction: was counted as null, now becoming PASS
+        test_correction = _make_pending_test(
+            test_id="t1",
+            build_id="build-1",
+            full_status=StatusChoices.PASS,
+        )
+        # New test, fresh PASS
+        test_new = _make_pending_test(
+            test_id="t2",
+            build_id="build-1",
+            full_status=StatusChoices.PASS,
+        )
+
+        result = aggregate_tests_rollup(
+            [test_correction, test_new],
+            {"build-1": build},
+            {},
+            reprocess_test_ids={"t1"},  # Only first is correction
+        )
+
+        self.assertEqual(len(result), 1)
+        record = next(iter(result.values()))
+        # Correction: null_tests -1, pass_tests +1, total_tests 0
+        # New: pass_tests +1, total_tests +1
+        # Result: null_tests -1, pass_tests 2, total_tests 1
+        self.assertEqual(record["null_tests"], -1)
+        self.assertEqual(record["pass_tests"], 2)
+        self.assertEqual(record["total_tests"], 1)
+
+    def test_default_reprocess_test_ids_is_empty(self):
+        """Not passing reprocess_test_ids defaults to empty set."""
+        checkout = _make_checkout()
+        build = _make_build(checkout=checkout)
+        test = _make_pending_test(
+            test_id="test-1",
+            build_id="build-1",
+            full_status=StatusChoices.FAIL,
+        )
+
+        # Call without the reprocess_test_ids parameter
+        result = aggregate_tests_rollup([test], {"build-1": build}, {})
+
+        record = next(iter(result.values()))
+        self.assertEqual(record["fail_tests"], 1)
+        self.assertEqual(record["total_tests"], 1)
+        self.assertEqual(record["null_tests"], 0)
