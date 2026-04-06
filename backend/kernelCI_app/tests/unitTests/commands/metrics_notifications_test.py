@@ -12,9 +12,10 @@ from kernelCI_app.tests.unitTests.commands.fixtures.metrics_notifications_data i
     METRICS_NOTIFICATIONS_EXAMPLE_FILEPATH,
 )
 from kernelCI_app.typeModels.metrics_notifications import (
-    BuildIncidentsByOrigin,
+    BuildIncidentsCount,
     LabMetricsData,
     MetricsReportData,
+    TopIssue,
 )
 
 
@@ -28,8 +29,39 @@ def make_metrics_data(**overrides) -> MetricsReportData:
         n_issues=10,
         n_incidents=75,
         build_incidents_by_origin={
-            "maestro": BuildIncidentsByOrigin(total=70, new_regressions=1),
-            "redhat": BuildIncidentsByOrigin(total=5, new_regressions=0),
+            "maestro": BuildIncidentsCount(
+                total_incidents=70,
+                n_new_issues=1,
+                n_total_issues=2,
+                n_existing_issues=1,
+            ),
+            "redhat": BuildIncidentsCount(
+                total_incidents=5, n_new_issues=0, n_total_issues=1, n_existing_issues=1
+            ),
+        },
+        top_issues_by_origin={
+            "maestro": {
+                ("issue-1", 1): TopIssue(
+                    id="issue-1",
+                    version=1,
+                    comment="First issue",
+                    total_incidents=50,
+                ),
+                ("issue-2", 1): TopIssue(
+                    id="issue-2",
+                    version=1,
+                    comment="Second issue",
+                    total_incidents=20,
+                ),
+            },
+            "redhat": {
+                ("issue-3", 1): TopIssue(
+                    id="issue-3",
+                    version=1,
+                    comment="Third issue",
+                    total_incidents=5,
+                ),
+            },
         },
         lab_maps={
             "lava-collabora": LabMetricsData(
@@ -210,6 +242,7 @@ class TestGenerateMetricsReport(TestCase):
             n_issues=10,
             n_incidents=75,
             build_incidents_by_origin=mock.ANY,
+            top_issues_by_origin=mock.ANY,
             lab_maps=mock.ANY,
             prev_n_trees=100,
             prev_n_checkouts=1000,
@@ -219,6 +252,7 @@ class TestGenerateMetricsReport(TestCase):
             start_datetime=mock.ANY,
             end_datetime=mock.ANY,
             deltas=mock.ANY,
+            lab_spacing=mock.ANY,
         )
 
     @patch(f"{MOCK_MODULE}.send_email_report")
@@ -272,6 +306,7 @@ class TestMetricsReportTemplate(TestCase):
         # and update the known report.
         with open(METRICS_NOTIFICATIONS_EXAMPLE_FILEPATH) as f:
             expected = f.read()
+
         assert content == expected
 
     def test_no_build_regressions_message_shown(self):
@@ -321,7 +356,7 @@ class TestMetricsReportTemplate(TestCase):
             prev_lab_maps={"lava-collabora": lab, "gone-lab": lab},
         )
         assert re.search(
-            r"^.*maestro.*gone-lab.*0.*0.*0.*-500.*\(-100%\).*$",
+            r"^.*gone-lab.*0.*0.*0.*-500.*\(-100%\).*$",
             content,
             re.MULTILINE,
         )

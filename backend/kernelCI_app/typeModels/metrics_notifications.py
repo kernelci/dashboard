@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from pydantic import BaseModel
 
 
@@ -5,12 +7,20 @@ class LabMetricsData(BaseModel):
     builds: int
     boots: int
     tests: int
-    origin: str
 
 
-class BuildIncidentsByOrigin(BaseModel):
-    total: int
-    new_regressions: int
+class BuildIncidentsCount(TypedDict):
+    total_incidents: int
+    n_new_issues: int
+    n_existing_issues: int
+    n_total_issues: int
+
+
+class TopIssue(TypedDict):
+    id: str
+    version: int
+    comment: str
+    total_incidents: int
 
 
 class MetricsReportData(BaseModel):
@@ -21,7 +31,9 @@ class MetricsReportData(BaseModel):
     n_tests: int
     n_issues: int
     n_incidents: int
-    build_incidents_by_origin: dict[str, BuildIncidentsByOrigin]
+    build_incidents_by_origin: dict[str, BuildIncidentsCount]
+    # top_issues = origin -> (issue_id, version) -> TopIssue
+    top_issues_by_origin: dict[str, dict[tuple[str, int], TopIssue]]
     lab_maps: dict[str, LabMetricsData]
     # Previous interval (for comparison)
     prev_n_trees: int

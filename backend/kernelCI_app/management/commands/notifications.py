@@ -824,6 +824,10 @@ def generate_metrics_report(
 
     deltas = compute_metrics_deltas(data)
 
+    # Compute the text spacing for the labs so it isn't too big or too small
+    lab_spacing = max((len(lab_key) for lab_key in data.lab_maps.keys()), default=0)
+    lab_spacing += 7  # add spacing for leading tab and possible * mark for new labs
+
     report = {}
     template = setup_jinja_template("metrics_report.txt.j2")
     report["content"] = template.render(
@@ -831,6 +835,7 @@ def generate_metrics_report(
         start_datetime=start_datetime.strftime("%Y-%m-%d %H:%M %Z"),
         end_datetime=end_datetime.strftime("%Y-%m-%d %H:%M %Z"),
         deltas=deltas,
+        lab_spacing=lab_spacing,
     )
 
     report["title"] = "KernelCI Metrics Report - %s" % now.strftime("%Y-%m-%d %H:%M %Z")

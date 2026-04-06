@@ -16,30 +16,42 @@ KernelCI Metrics Summary
 
   BUILD REGRESSIONS
   -----------------
-  A "regression" is a newly detected failure (first occurrence).
-  An "occurrence" is each subsequent hit of that same failure.
+  A "regression" is defined as a reported problem affecting 0 or multiple builds.
 
-  Origin      Occurrences    New regressions
-  ────────────────────────────────────────────
-  maestro     70             1
-  redhat      5              0
-  ────────────────────────────────────────────
-  Total       75             1
+  Origin    Regressions       Affected           Affected builds by top issues
+            (known + new)     Builds (total)     #1      #2      #3
+  ─────────────────────────────────────────────────────────────────────────
+  maestro   1   + 1   = 2     70                 50      20      
+  redhat    1   + 0   = 1     5                  5       
+  ─────────────────────────────────────────────────────────────────────────
+  Total     2   + 1   = 3     75
 
 
-  LAB ACTIVITY
-  ------------
+  TOP REGRESSIONS PER ORIGIN
+  --------------------------
+  maestro:
+    #1 (50 occurrences) - First issue
+      Dashboard: https://d.kernelci.org/issue/issue-1?iv=1
+    #2 (20 occurrences) - Second issue
+      Dashboard: https://d.kernelci.org/issue/issue-2?iv=1
+  
+  redhat:
+    #1 (5 occurrences) - Third issue
+      Dashboard: https://d.kernelci.org/issue/issue-3?iv=1
+  
+
+  TEST LABS ACTIVITY
+  ------------------
   2 labs reported results this week (unchanged from last week).
 
   Labs marked with an asterisk (*) are new.
-  Labs that stopped reporting are shown with a -100% change.
 
-  Origin            Lab                      Builds   Boots    Tests          Change (tests)
-  ──────────────────────────────────────────────────────────────────────────────────────────
-  maestro           lava-broonie             0        25,000   475,000        -175,000  (-27%)
-  maestro           lava-collabora           0        50,000   450,000        -250,000  (-36%)
-  ──────────────────────────────────────────────────────────────────────────────────────────
-  Total                                      0        75,000   925,000        -425,000  (-31%)
+  Lab                Covered builds  Boots    Tests          Change (tests)
+  ────────────────────────────────────────────────────────────────────────────────
+  lava-broonie       0               25,000   475,000        -175,000  (-27%)
+  lava-collabora     0               50,000   450,000        -250,000  (-36%)
+  ────────────────────────────────────────────────────────────────────────────────
+  Total              0               75,000   925,000        -425,000  (-31%)
 
 --
 This is an experimental report format. Please send feedback in!

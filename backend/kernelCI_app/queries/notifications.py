@@ -8,9 +8,10 @@ from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.queries.tree import get_tree_listing_query
 from kernelCI_app.typeModels.metrics_notifications import (
-    BuildIncidentsByOrigin,
+    BuildIncidentsCount,
     LabMetricsData,
     MetricsReportData,
+    TopIssue,
 )
 from pydantic import ValidationError
 
@@ -696,78 +697,95 @@ def get_metrics_data(
     """
 
     build_incidents_query = """
-    WITH ranked AS (
+    -- Ranks incidents of each issue by time to check which incident was the first incident of an issue
+    WITH time_rank AS (
         SELECT
             _timestamp,
             origin,
-            id,
+            issue_id,
             ROW_NUMBER() OVER (PARTITION BY issue_id ORDER BY _timestamp) AS rn
         FROM incidents
             where build_id is not null
+    ),
+    -- counts total incidents in interval and how many were the first incident of an issue
+    numbers AS (
+        SELECT
+            origin,
+            COUNT(*) FILTER (
+                WHERE _timestamp BETWEEN
+                    NOW() - INTERVAL %(start_days_ago)s
+                    AND NOW() - INTERVAL %(end_days_ago)s
+            ) AS total_incidents,
+            COUNT(*) FILTER (
+                WHERE _timestamp BETWEEN
+                    NOW() - INTERVAL %(start_days_ago)s
+                    AND NOW() - INTERVAL %(end_days_ago)s
+                AND rn = 1
+            ) AS n_new_issues,
+            COUNT(DISTINCT issue_id) FILTER (
+                WHERE _timestamp BETWEEN
+                    NOW() - INTERVAL %(start_days_ago)s
+                    AND NOW() - INTERVAL %(end_days_ago)s
+            ) AS n_issues
+        FROM time_rank
+        GROUP BY origin
+    ),
+    -- counts incidents by issue
+    grouped_counted AS (
+        SELECT
+            inc.origin,
+            inc.issue_id,
+            inc.issue_version,
+            i.comment,
+            COUNT(inc.*) AS total
+        FROM incidents inc
+        JOIN issues i ON inc.issue_id = i.id AND inc.issue_version = i.version
+        WHERE
+            inc.build_id is not null
+            AND inc._timestamp BETWEEN
+                NOW() - INTERVAL %(start_days_ago)s
+                AND NOW() - INTERVAL %(end_days_ago)s
+        GROUP BY inc.origin, inc.issue_id, inc.issue_version, i.comment
+        ORDER BY inc.origin, total DESC
+    ),
+    -- ranks issues by number of incidents
+    ranked_counted AS (
+        SELECT
+            *,
+            ROW_NUMBER() OVER (PARTITION BY origin ORDER BY total DESC) as ranked
+        FROM grouped_counted
     )
+    -- combines data into single output,
+    -- repeating total incidents by origin and adding the top 3 issues per origin
     SELECT
-        origin,
-        COUNT(*) FILTER (
-            WHERE _timestamp BETWEEN
-                NOW() - INTERVAL %(start_days_ago)s
-                AND NOW() - INTERVAL %(end_days_ago)s
-        ) AS total_incidents,
-        COUNT(*) FILTER (
-            WHERE rn = 1
-            AND _timestamp BETWEEN
-                NOW() - INTERVAL %(start_days_ago)s
-                AND NOW() - INTERVAL %(end_days_ago)s
-        ) AS first_incidents_in_interval
-    FROM ranked
-    GROUP BY origin;
+        n.origin,
+        n.total_incidents,
+        n.n_new_issues,
+        n.n_issues,
+        r.issue_id,
+        r.issue_version,
+        r.comment,
+        r.total
+    FROM numbers n
+    JOIN ranked_counted r
+    ON n.origin = r.origin
+    WHERE r.ranked <= 3 AND n.total_incidents > 0
     """
 
-    # For the lab query, we can't simply join the builds of the tests by lab,
-    # because we want the builds made by a lab and tests made by a lab,
-    # not the builds related to tests made by a lab, neither the tests related to builds made by a lab.
     lab_summary_query = """
-    WITH unioned_results AS (
-        (SELECT
-            b.misc->>'lab' AS lab,
-            b.origin,
-            COUNT(DISTINCT b.id) AS n_builds,
-            0 AS n_boots,
-            0 AS n_tests
-        FROM builds b
-        WHERE
-            b.misc->>'lab' IS NOT NULL
-            AND b._timestamp BETWEEN
-                NOW() - INTERVAL %(start_days_ago)s
-                AND NOW() - INTERVAL %(end_days_ago)s
-        GROUP BY lab, origin
-        )
-        UNION ALL
-        (
-        SELECT
-            t.misc->>'runtime' AS lab,
-            t.origin,
-            0 AS n_builds,
-            COUNT(CASE WHEN (t.path LIKE 'boot.%%' OR t.path = 'boot') THEN 1 END) AS n_boots,
-            COUNT(CASE WHEN (t.path NOT LIKE 'boot.%%' AND t.path != 'boot') THEN 1 END) AS n_tests
-        FROM tests t
-        WHERE
-            t.misc->>'runtime' IS NOT NULL
-            AND t._timestamp BETWEEN
-                NOW() - INTERVAL %(start_days_ago)s
-                AND NOW() - INTERVAL %(end_days_ago)s
-        GROUP BY lab, origin
-        )
-    )
+    -- get count of tests of each lab and how many builds are related to those tests
     SELECT
-        lab,
-        origin,
-        SUM(n_builds) AS n_builds,
-        SUM(n_boots) AS n_boots,
-        SUM(n_tests) AS n_tests
-    FROM
-        unioned_results u
-    GROUP BY u.lab, u.origin
-    ORDER BY u.lab, u.origin
+        t.misc->>'runtime' AS lab,
+        COUNT(DISTINCT t.build_id) AS n_builds,
+        COUNT(*) FILTER (WHERE t.path LIKE 'boot.%%' OR t.path = 'boot') AS n_boots,
+        COUNT(*) FILTER (WHERE t.path NOT LIKE 'boot.%%' AND t.path != 'boot') AS n_tests
+    FROM tests t
+    WHERE
+        t.misc->>'runtime' IS NOT NULL
+        AND t._timestamp BETWEEN
+            NOW() - INTERVAL %(start_days_ago)s
+            AND NOW() - INTERVAL %(end_days_ago)s
+    GROUP BY lab
     """
 
     with connections["default"].cursor() as cursor:
@@ -787,6 +805,27 @@ def get_metrics_data(
         prev_lab_summary_results = cursor.fetchall()
 
     try:
+        build_incidents_by_origin: dict[str, BuildIncidentsCount] = {}
+        top_issues_by_origin: dict[str, dict[tuple[str, int], TopIssue]] = {}
+        for row in build_incidents_result:
+            origin = row[0]
+            issue_id = row[4]
+            issue_version = row[5]
+            build_incidents_by_origin[origin] = BuildIncidentsCount(
+                total_incidents=row[1],
+                n_new_issues=row[2],
+                n_total_issues=row[3],
+                n_existing_issues=row[3] - row[2],
+            )
+            if top_issues_by_origin.get(origin) is None:
+                top_issues_by_origin[origin] = {}
+            top_issues_by_origin[origin][(issue_id, issue_version)] = TopIssue(
+                id=issue_id,
+                version=issue_version,
+                comment=row[6],
+                total_incidents=row[7],
+            )
+
         data = MetricsReportData(
             n_trees=total_objects_result[0],
             n_checkouts=total_objects_result[1],
@@ -794,20 +833,13 @@ def get_metrics_data(
             n_tests=total_objects_result[3],
             n_issues=total_objects_result[4],
             n_incidents=total_objects_result[5],
-            build_incidents_by_origin={
-                row[0]: BuildIncidentsByOrigin(
-                    total=row[1],
-                    new_regressions=row[2],
-                )
-                for row in build_incidents_result
-                if row[1] != 0 or row[2] != 0
-            },
+            build_incidents_by_origin=build_incidents_by_origin,
+            top_issues_by_origin=top_issues_by_origin,
             lab_maps={
                 row[0]: LabMetricsData(
-                    origin=row[1],
-                    builds=row[2],
-                    boots=row[3],
-                    tests=row[4],
+                    builds=row[1],
+                    boots=row[2],
+                    tests=row[3],
                 )
                 for row in lab_summary_results
             },
@@ -817,10 +849,9 @@ def get_metrics_data(
             prev_n_tests=prev_total_objects_result[3],
             prev_lab_maps={
                 row[0]: LabMetricsData(
-                    origin=row[1],
-                    builds=row[2],
-                    boots=row[3],
-                    tests=row[4],
+                    builds=row[1],
+                    boots=row[2],
+                    tests=row[3],
                 )
                 for row in prev_lab_summary_results
             },
