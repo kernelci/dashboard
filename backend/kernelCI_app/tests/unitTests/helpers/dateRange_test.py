@@ -48,20 +48,26 @@ class TestResolveDateRange:
         assert start == NOV_14_2023
         assert end == FIXED_NOW
 
-    @patch("kernelCI_app.helpers.dateRange.now", return_value=FIXED_NOW)
-    def test_only_end_provided(self, _mock_now):
-        """Only end → start defaults to now()-7d."""
-        # end_ts must be >= FIXED_NOW - 7d, so we use FIXED_NOW itself
-        fixed_now_ts = str(int(FIXED_NOW.timestamp()))
-
+    def test_only_end_provided(self):
+        """Only end → start defaults to end-7d (not now()-7d)."""
         start, end = resolve_date_range(
-            start_timestamp=None, end_timestamp=fixed_now_ts
+            start_timestamp=None, end_timestamp=NOV_19_2023_TS
         )
 
-        assert start == FIXED_NOW - timedelta(days=7)
-        assert end == datetime.fromtimestamp(
-            int(FIXED_NOW.timestamp()), tz=dt_timezone.utc
-        )
+        assert end == NOV_19_2023
+        assert start == NOV_19_2023 - timedelta(days=7)
+
+    def test_only_end_far_in_the_past(self):
+        """End date 30+ days ago without start still produces a valid range."""
+        #   2023-01-15 00:00:00 UTC — ~10 months before NOV_14
+        jan_15_ts = "1673740800"
+        jan_15 = datetime(2023, 1, 15, 0, 0, 0, tzinfo=dt_timezone.utc)
+
+        start, end = resolve_date_range(start_timestamp=None, end_timestamp=jan_15_ts)
+
+        assert end == jan_15
+        assert start == jan_15 - timedelta(days=7)
+        assert start < end
 
     def test_start_after_end_raises(self):
         """start > end → ValueError (Nov 19 as start, Nov 14 as end)."""
@@ -69,6 +75,15 @@ class TestResolveDateRange:
             resolve_date_range(
                 start_timestamp=NOV_19_2023_TS, end_timestamp=NOV_14_2023_TS
             )
+
+    @patch("kernelCI_app.helpers.dateRange.now", return_value=FIXED_NOW)
+    def test_future_start_without_end_raises(self, _mock_now):
+        """Start in the future with no end (defaults to now()) → ValueError."""
+        #   2027-01-01 00:00:00 UTC — ~9 months after FIXED_NOW
+        future_ts = "1798761600"
+
+        with pytest.raises(ValueError, match="start_date must be before end_date"):
+            resolve_date_range(start_timestamp=future_ts, end_timestamp=None)
 
     def test_float_timestamps(self):
         """Fractional seconds are accepted (Nov 14 + 0.5s, Nov 19 + 0.9s)."""

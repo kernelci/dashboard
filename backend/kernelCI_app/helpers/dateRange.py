@@ -14,19 +14,24 @@ def resolve_date_range(
     If both start_timestamp and end_timestamp are provided (as Unix second
     strings), they are converted to timezone-aware datetimes.
 
-    Otherwise, end_date is set to now() and start_date to
-    now() - 7 days.
+    end_date defaults to now(); start_date defaults to end_date - 7 days.
+    start_date is computed relative to end_date (not now()) so that a
+    past end_date without a start_date still produces a valid range.
 
-    Raises ValueError if the timestamp strings are not valid numbers.
+    Raises ValueError if the timestamp strings are not valid numbers,
+    or if start_date ends up after end_date.
     """
-    end_date = now()
-    start_date = end_date - timedelta(days=7)
+    end_date = (
+        datetime.fromtimestamp(float(end_timestamp), tz=dt_timezone.utc)
+        if end_timestamp is not None
+        else now()
+    )
 
-    if start_timestamp is not None:
-        start_date = datetime.fromtimestamp(float(start_timestamp), tz=dt_timezone.utc)
-
-    if end_timestamp is not None:
-        end_date = datetime.fromtimestamp(float(end_timestamp), tz=dt_timezone.utc)
+    start_date = (
+        datetime.fromtimestamp(float(start_timestamp), tz=dt_timezone.utc)
+        if start_timestamp is not None
+        else end_date - timedelta(days=7)
+    )
 
     if start_date > end_date:
         raise ValueError("start_date must be before end_date")
