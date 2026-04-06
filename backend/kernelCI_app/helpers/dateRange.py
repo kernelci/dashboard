@@ -19,11 +19,16 @@ def resolve_date_range(
 
     Raises ValueError if the timestamp strings are not valid numbers.
     """
-    if start_timestamp is not None and end_timestamp is not None:
-        start_date = datetime.fromtimestamp(float(start_timestamp), tz=dt_timezone.utc)
-        end_date = datetime.fromtimestamp(float(end_timestamp), tz=dt_timezone.utc)
-        return start_date, end_date
-
     end_date = now()
     start_date = end_date - timedelta(days=7)
+
+    if start_timestamp is not None:
+        start_date = datetime.fromtimestamp(float(start_timestamp), tz=dt_timezone.utc)
+
+    if end_timestamp is not None:
+        end_date = datetime.fromtimestamp(float(end_timestamp), tz=dt_timezone.utc)
+
+    if start_date > end_date:
+        raise ValueError("start_date must be before end_date")
+
     return start_date, end_date
