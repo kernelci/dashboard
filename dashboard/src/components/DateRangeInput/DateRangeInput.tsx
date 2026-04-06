@@ -9,14 +9,19 @@ import {
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
+import type { MessageDescriptor } from 'react-intl';
 import { useIntl } from 'react-intl';
 
 import { Input } from '@/components/ui/input';
-import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
+import {
+  dateObjectToTimestampInSeconds,
+  daysToSeconds,
+  MILLISECONDS_IN_ONE_SECOND,
+} from '@/utils/date';
 import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
+import { cn } from '@/lib/utils';
 
 const ERROR_CLEAR_TIMEOUT = 3000;
-const MILLISECONDS_IN_SECOND = 1000;
 const ISO_DATE_LENGTH = 10;
 const MIN_DATE_STR = '2024-01-01';
 
@@ -27,10 +32,12 @@ const getDefaultStartTimestamp = (): number =>
   getDefaultEndTimestamp() - daysToSeconds(REDUCED_TIME_SEARCH);
 
 const timestampToDateString = (ts: number): string =>
-  new Date(ts * MILLISECONDS_IN_SECOND).toISOString().slice(0, ISO_DATE_LENGTH);
+  new Date(ts * MILLISECONDS_IN_ONE_SECOND)
+    .toISOString()
+    .slice(0, ISO_DATE_LENGTH);
 
 const dateStringToTimestamp = (dateStr: string): number =>
-  Math.floor(new Date(dateStr).getTime() / MILLISECONDS_IN_SECOND);
+  Math.floor(new Date(dateStr).getTime() / MILLISECONDS_IN_ONE_SECOND);
 
 type ErrorField = 'start' | 'startTooEarly' | 'end' | 'endFuture' | null;
 
@@ -116,12 +123,15 @@ const DateRangeInput = (): JSX.Element => {
     [navigate, startTs, todayTs, triggerError],
   );
 
-  const errorMessageIds = {
+  const errorMessageIds: Record<
+    NonNullable<ErrorField>,
+    MessageDescriptor['id']
+  > = {
     start: 'dateRange.startAfterEnd',
     startTooEarly: 'dateRange.startTooEarly',
     end: 'dateRange.endBeforeStart',
     endFuture: 'dateRange.endAfterToday',
-  } as const satisfies Record<NonNullable<ErrorField>, string>;
+  };
 
   const errorMessageId = errorField ? errorMessageIds[errorField] : null;
   const errorMessage = errorMessageId
@@ -137,7 +147,10 @@ const DateRangeInput = (): JSX.Element => {
           min={MIN_DATE_STR}
           max={endDateStr}
           onChange={handleStartChange}
-          className={`w-[140px] cursor-pointer${errorField === 'start' ? 'border-red' : ''}`}
+          className={cn(
+            'w-[140px] cursor-pointer',
+            errorField === 'start' ? 'border-red' : '',
+          )}
           data-test-id="date-range-start"
         />
         <span className="text-dim-gray">–</span>
@@ -147,11 +160,14 @@ const DateRangeInput = (): JSX.Element => {
           min={startDateStr}
           max={todayDateStr}
           onChange={handleEndChange}
-          className={`w-[140px] cursor-pointer${errorField === 'end' ? 'border-red' : ''}`}
+          className={cn(
+            'w-[140px] cursor-pointer',
+            errorField === 'start' ? 'border-red' : '',
+          )}
           data-test-id="date-range-end"
         />
       </div>
-      {errorMessage && <span className="text-red text-xs">{errorMessage}</span>}
+      {errorMessage && <span className="text-red text-sm">{errorMessage}</span>}
     </div>
   );
 };
