@@ -1,3 +1,5 @@
+src/.tanstack-tmp/
+
 # Logs
 logs
 *.log
