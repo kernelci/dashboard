@@ -45,16 +45,21 @@ const Checkbox = ({
         'border-blue': isChecked,
       })}
     >
-      <input type="checkbox" checked={isChecked} onChange={onToggle} />
+      <input
+        className="mr-4"
+        type="checkbox"
+        checked={isChecked}
+        onChange={onToggle}
+      />
       {shouldTruncateResult ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="ml-4">{truncatedText}</span>
+            <span>{truncatedText}</span>
           </TooltipTrigger>
           <TooltipContent>{text}</TooltipContent>
         </Tooltip>
       ) : (
-        <span className="ml-4">{truncatedText}</span>
+        <span>{truncatedText}</span>
       )}
     </label>
   );
