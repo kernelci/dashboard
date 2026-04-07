@@ -85,6 +85,11 @@ def get_tree_listing_key(
     ).digest()
 
 
+def get_rollup_key(test_id: str) -> bytes:
+    """Generate a hash (rollup key) from test_id with 'rollup|' prefix for namespacing."""
+    return hashlib.sha256(f"rollup|{test_id}".encode("utf-8")).digest()
+
+
 SIMPLIFIED_STATUS_TO_COUNT = {
     SimplifiedStatusChoices.PASS: (1, 0, 0),
     SimplifiedStatusChoices.FAIL: (0, 1, 0),
@@ -983,10 +988,68 @@ class Command(BaseCommand):
         if not ready_tests:
             return
 
-        test_ids = [t.test_id for t in ready_tests]
+        rollup_keys_by_test_id = {
+            t.test_id: get_rollup_key(t.test_id) for t in ready_tests
+        }
+
+        existing_processed = _get_existing_processed(
+            set(rollup_keys_by_test_id.values())
+        )
+        existing_by_key = {
+            (e.listing_item_key, e.checkout_id): e for e in existing_processed
+        }
+
+        tests_to_process: list[PendingTest] = []
+        test_ids = []
+        reprocess_test_ids: set[str] = set()
+        new_processed_entries: set[ProcessedListingItems] = set()
+
+        for test in ready_tests:
+            rollup_key = rollup_keys_by_test_id[test.test_id]
+
+            try:
+                build = test_builds_by_id[test.build_id]
+                checkout_id = build.checkout.id
+            except KeyError:
+                continue
+
+            found_existing = existing_by_key.get((rollup_key, checkout_id), None)
+
+            if found_existing:
+                stored_status = found_existing.status
+
+                if stored_status is not None:
+                    continue
+                if test.status is None:
+                    # Both null - already counted as null
+                    continue
+
+                # null -> non-null: This is a correction (reprocess)
+                reprocess_test_ids.add(test.test_id)
+
+            tests_to_process.append(test)
+            test_ids.append(test.test_id)
+            new_processed_entries.add(
+                ProcessedListingItems(
+                    listing_item_key=rollup_key,
+                    checkout_id=checkout_id,
+                    status=test.status,
+                )
+            )
+
+        if not tests_to_process:
+            return
+
         issues_map = _fetch_test_issues(test_ids)
-        rollup_data = aggregate_tests_rollup(ready_tests, test_builds_by_id, issues_map)
+        rollup_data = aggregate_tests_rollup(
+            tests_to_process,
+            test_builds_by_id,
+            issues_map,
+            reprocess_test_ids=reprocess_test_ids,
+        )
+
         self._process_tests_rollup(rollup_data)
+        self._process_new_processed_entries(new_processed_entries)
 
     def _process_hardware_batch(
         self,
