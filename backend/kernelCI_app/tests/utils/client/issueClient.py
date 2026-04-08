@@ -7,17 +7,17 @@ from kernelCI_app.tests.utils.client.baseClient import BaseClient
 
 
 class IssueClient(BaseClient):
-    def get_issues_list(
+    def get_issues_list_by_timestamp(
         self,
         *,
-        interval_in_days: int | None,
-        starting_date_iso_format: str | None,
+        start_timestamp: str | None = None,
+        end_timestamp: str | None = None,
         filters: dict[FilterFields, Any] | None = None,
     ) -> requests.Response:
         path = reverse("issue")
         query = {
-            "interval_in_days": interval_in_days,
-            "starting_date_iso_format": starting_date_iso_format,
+            "startTimestampInSeconds": start_timestamp,
+            "endTimestampInSeconds": end_timestamp,
         }
         url = self.get_endpoint(path=path, query=query, filters=filters)
         return requests.get(url)

@@ -12,12 +12,19 @@ from kernelCI_app.tests.utils.fields.builds import build_details_expected_fields
 from kernelCI_app.utils import string_to_json
 import pytest
 from http import HTTPStatus
+from datetime import datetime, timezone, timedelta
 
 
 client = IssueClient()
 
-DEFAULT_LISTING_STARTING_DATE = "2025-08-15"
-DEFAULT_LISTING_INTERVAL_IN_DAYS = 3
+# 2025-08-15 00:00:00 UTC — the original listing date, now as a Unix timestamp
+DEFAULT_LISTING_STARTING_DATE = "1755216000"
+
+# Truncate to the current hour so all xdist workers compute the same IDs
+_now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+_TS_END = str(int((_now + timedelta(days=1)).timestamp()))
+_TS_START = str(int((_now - timedelta(days=3)).timestamp()))
+_DEC_25_1969_TS = str(int(datetime(1969, 12, 25).timestamp()))
 
 CULPRIT_CODE = {
     "filters": {"issue.culprit": "code"},
@@ -45,46 +52,40 @@ CULPRIT_CODE_AND_TOOL = {
 def pytest_generate_tests(metafunc):
     issues_listing_base_cases = [
         (
-            DEFAULT_LISTING_INTERVAL_IN_DAYS,
             DEFAULT_LISTING_STARTING_DATE,
             CULPRIT_CODE,
             HTTPStatus.OK,
             False,
         ),
         (
-            DEFAULT_LISTING_INTERVAL_IN_DAYS,
             DEFAULT_LISTING_STARTING_DATE,
             CULPRIT_TOOL,
             HTTPStatus.OK,
             False,
         ),
         (
-            DEFAULT_LISTING_INTERVAL_IN_DAYS,
             DEFAULT_LISTING_STARTING_DATE,
             CULPRIT_HARNESS,
             HTTPStatus.OK,
             False,
         ),
         (
-            -5,
             None,
             None,
-            HTTPStatus.BAD_REQUEST,
-            True,
+            HTTPStatus.OK,
+            False,
         ),
     ]
 
     if metafunc.config.getoption("--run-all"):
         issues_listing_base_cases += [
             (
-                DEFAULT_LISTING_INTERVAL_IN_DAYS,
                 DEFAULT_LISTING_STARTING_DATE,
                 CULPRIT_CODE_AND_TOOL,
                 HTTPStatus.OK,
                 False,
             ),
             (
-                DEFAULT_LISTING_INTERVAL_IN_DAYS,
                 DEFAULT_LISTING_STARTING_DATE,
                 None,
                 HTTPStatus.OK,
@@ -98,16 +99,15 @@ def pytest_generate_tests(metafunc):
 
 def test_list(pytestconfig, issue_listing_input):
     (
-        interval_in_day,
         starting_date_iso_format,
         culprit_data,
         status_code,
         has_error_body,
     ) = issue_listing_input
     filters = culprit_data.get("filters") if culprit_data else None
-    response = client.get_issues_list(
-        interval_in_days=interval_in_day,
-        starting_date_iso_format=starting_date_iso_format,
+    response = client.get_issues_list_by_timestamp(
+        start_timestamp=starting_date_iso_format,
+        end_timestamp=None,
         filters=filters,
     )
     content = string_to_json(response.content.decode())
@@ -140,6 +140,34 @@ def test_list(pytestconfig, issue_listing_input):
                 for culprit in culprit_data["excludes_fields"]:
                     for issue in content["issues"][1:]:
                         assert not issue[culprit]
+
+
+@pytest.mark.parametrize(
+    "start_timestamp, end_timestamp, status_code, has_error_body",
+    [
+        (DEFAULT_LISTING_STARTING_DATE, _TS_END, HTTPStatus.OK, False),
+        ("not_a_number", _TS_END, HTTPStatus.BAD_REQUEST, True),
+        (DEFAULT_LISTING_STARTING_DATE, "not_a_number", HTTPStatus.BAD_REQUEST, True),
+        (_DEC_25_1969_TS, _TS_END, HTTPStatus.OK, False),
+    ],
+)
+def test_list_by_timestamp(start_timestamp, end_timestamp, status_code, has_error_body):
+    response = client.get_issues_list_by_timestamp(
+        start_timestamp=start_timestamp,
+        end_timestamp=end_timestamp,
+    )
+    content = string_to_json(response.content.decode())
+    assert_status_code_and_error_response(
+        response=response,
+        content=content,
+        status_code=status_code,
+        should_error=has_error_body,
+    )
+
+    if not has_error_body:
+        assert_has_fields_in_response_content(
+            fields=issues_listing_fields, response_content=content
+        )
 
 
 @pytest.mark.parametrize(

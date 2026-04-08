@@ -20,6 +20,21 @@ export const TREE_LISTING_SELECTORS = {
   breadcrumbTreesLink: '[data-test-id="breadcrumb-link"]:has-text("Trees")',
 } as const;
 
+export const ISSUE_LISTING_SELECTORS = {
+  table: 'table',
+  commentColumnHeader: 'th button:has-text("Comment")',
+  originColumnHeader: 'th button:has-text("Origin")',
+
+  startDateInput: '[data-test-id="date-range-start"]',
+  endDateInput: '[data-test-id="date-range-end"]',
+
+  itemsPerPageDropdown: '[role="listbox"]',
+  itemsPerPageOption: (value: string) => `[role="option"]:has-text("${value}")`,
+
+  nextPageButton: '[role="button"]:has-text(">")',
+  previousPageButton: '[role="button"]:has-text("<")',
+} as const;
+
 export const COMMON_SELECTORS = {
   tableRow: 'tr',
   tableHeader: 'th',

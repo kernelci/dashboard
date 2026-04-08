@@ -380,6 +380,16 @@ paths:
       operationId: issue_retrieve
       parameters:
       - in: query
+        name: endTimestampInSeconds
+        schema:
+          anyOf:
+          - type: string
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Endtimestampinseconds
+        description: Interval end timestamp in seconds for the results
+      - in: query
         name: filter
         schema:
           additionalProperties:
@@ -397,15 +407,15 @@ paths:
           type: integer
         description: Interval in days for the listing
       - in: query
-        name: starting_date_iso_format
+        name: startTimestampInSeconds
         schema:
           anyOf:
           - type: string
+          - type: integer
           - type: 'null'
           default: null
-          title: Starting Date Iso Format
-        description: Starting date to calculate the search interval. Should be in
-          ISO format such as 'YYYY-MM-DD HH:MM:SS'. If None, defaults to 'NOW()'
+          title: Starttimestampinseconds
+        description: Interval start timestamp in seconds for the results
       tags:
       - issue
       security:
