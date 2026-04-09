@@ -1,0 +1,117 @@
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "__pycache__",
+]
+
+# Will format at line-length but will only give error at max-line-length
+line-length = 88
+indent-width = 4
+target-version = "py312"
+
+[lint]
+select = ["ALL"]
+# With the current ignore list, select "ALL" means:
+# select = ["AIR", "ERA", "FAST", "YTT", "ASYNC", "S", "BLE", "B", "COM", "CPY", "T10", "EXE", "FA", "INT", "ISC", "ICN", "LOG", "INP", "PYI", "Q", "RSE", "SLF", "SLOT", "TID", "I", "C90", "NPY", "PD", "N", "PERF", "E", "W", "DOC", "F", "PGH", "PL", "PLE", "FURB"]
+
+# N999: ignore dashes in the name (ideally only disabled for examples/)
+# D213: multi-line-summary-second-line, incompatible with D212 (multi-line-summary-first-line)
+# COM812: missing-trailing-comma, may cause conflicts with formatter
+# D203: incorrect-blank-line-before-class, may cause conflicts with formatter
+# D: documentation, would take too long to fix
+# ANN: type annotations for parameters and returns, also complex to fix
+# PLW, PLC, PLR: pylint warnings, conventions and refactors, not relevant
+# PTH: flake8-use-pathlib, not necessary
+# TRY: too many "suggestions", complex to fix
+# EM: flake8-errmsg, regards to exception variables, not relevant and complex to fix
+# RET: flake8 return warnings, disagree
+# T20: print/pprint found, not relevant
+# INP001: implicit-namespace-package, not necessary for our context
+# ERA001: commented out code, not useful especially considering auto-generated files by Django
+# BLE001: don't use Exception, complex to fix
+# DJ: flake8-django, not appliable to our context
+# PERF401: use list comprehension instead of for-loop, not necessary given the context
+# TD, FIX: warnings about TODO comments, should not be a blocker
+# TC: flake8-type-checking, not relevant, if using typecheck will use ty
+# PT: flake8-pytest-style, complex to fix
+# SIM, FURB, PIE: simplification suggestions, complex to fix
+# C4: flake8-comprehensions, unnecessary warnings
+# SLF001: private member accessed, not appliable to our use-case
+# A: builtin shadowing, complex to fix
+# S101: no asserts, these are used only in tests
+# S608: no fstring in queries, these are used carefully
+# S105: possible hardcoded password, we use 'pass' as a status, not password
+# S104, S108, S110: bind to all interfaces, usage of tmp file, pass without exception logging; not relevant
+# S113: use of request without timeout, complex to fix
+# S701: jinja autoescape, could cause problems
+# FBT: boolean traps; complex to fix, not super relevant
+# RUF: ruff-specific rules, unnecessary warnings
+# ARG: unused arguments, makes sense but some automatic django functions require it
+# DTZ: datetime rules, complex to fix
+# UP: pyupgrade, unnecessary warnings, many occurences
+# FLY: replace join with fstrings, not necessary
+# G: logging formatting, not necessary
+# B024: abstract class without abstract properties, required in pytest
+ignore = ["N999", "COM812", "D", "ANN", "PLW", "PLC", "PLR", "PTH", "TRY", "EM", "RET", "T20", "INP001", "ERA001", "BLE001", "DJ", "PERF401", "TD", "FIX", "TC", "PT", "SIM", "FURB", "PIE", "C4", "A", "SLF001", "S101", "S608", "S105", "S104", "S108", "S110", "S113", "S701", "FBT", "RUF", "ARG", "DTZ", "UP", "FLY", "G", "B024"]
+
+[lint.pycodestyle]
+# E501 reports lines that exceed the length of 100 in case they can't be wrapped.
+max-line-length = 110
+
+[lint.mccabe]
+max-complexity = 10
+
+[lint.per-file-ignores]
+# Ignore the commands as they can get complex with sub-actions and _handle functions
+"kernelCI_app/management/commands/**/*.py" = ["C901"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Enable auto-formatting of code examples in docstrings. Markdown,
+# reStructuredText code/literal blocks and doctests are all supported.
+#
+# This is currently disabled by default, but it is planned for this
+# to be opt-out in the future.
+docstring-code-format = false
+
+# Set the line length limit used when formatting code snippets in
+# docstrings.
+#
+# This only has an effect when the `docstring-code-format` setting is
+# enabled.
+docstring-code-line-length = "dynamic"
+
+# Note: as of v0.15.9 there is no option to remove the option for
+# "No empty lines after class definition", which happens on every
+# Django migration file. Ref.: https://github.com/astral-sh/ruff/issues/21380
