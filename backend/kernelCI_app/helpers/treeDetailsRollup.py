@@ -33,7 +33,8 @@ def normalize_build_dict(row_dict: dict) -> dict:
         "build_config_name": UNKNOWN_STRING,
     }
     for key, default in defaults.items():
-        row_dict.setdefault(key, default)
+        if row_dict.get(key) is None:
+            row_dict[key] = default
 
     if row_dict.get("issue_id") is None and is_status_failure(
         row_dict["build_status"], build_fail_status_list
