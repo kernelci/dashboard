@@ -91,24 +91,37 @@ def standardize_tree_names(
                 checkout["tree_name"] = correct_tree
 
 
+def _standardize_lab_field(item: dict[str, Any], field: str) -> None:
+    """
+    Moves automatic lab/runtime value to AUTOMATIC_LAB_FIELD and falls back to origin.
+
+        lab is AUTOMATIC_LAB -> fallback to origin
+        lab is None -> fallback to origin
+        lab is not None -> do nothing
+    """
+    lab = item.get("misc", {}).get(field)
+    is_automatic = lab and AUTOMATIC_LABS.match(lab)
+    if is_automatic:
+        item["misc"][AUTOMATIC_LAB_FIELD] = lab
+        item["misc"].pop(field, None)
+        lab = None
+
+    if not lab or is_automatic:
+        origin = item.get("origin")
+        if origin:
+            item.setdefault("misc", {})[field] = origin
+
+
 def standardize_labs(input_data: dict[str, Any]) -> None:
     """
-    Standardize labs in data, moving automatic lab names to AUTOMATIC_LAB_FIELD
+    Standardize labs in data, moving automatic lab names to AUTOMATIC_LAB_FIELD.
+    Falls back to 'origin' when 'lab' (builds) or 'runtime' (tests) is missing.
     """
+    for build in input_data.get("builds", []):
+        _standardize_lab_field(build, "lab")
 
-    builds: list[dict[str, Any]] = input_data.get("builds", [])
-    for build in builds:
-        lab = build.get("misc", {}).get("lab")
-        if lab and AUTOMATIC_LABS.match(lab):
-            build["misc"][AUTOMATIC_LAB_FIELD] = lab
-            build["misc"].pop("lab", None)
-
-    tests: list[dict[str, Any]] = input_data.get("tests", [])
-    for test in tests:
-        lab = test.get("misc", {}).get("runtime")
-        if lab and AUTOMATIC_LABS.match(lab):
-            test["misc"][AUTOMATIC_LAB_FIELD] = lab
-            test["misc"].pop("runtime", None)
+    for test in input_data.get("tests", []):
+        _standardize_lab_field(test, "runtime")
 
 
 def _extract_origins_info(data: Optional[dict[str, Any]]) -> str:
