@@ -20,6 +20,7 @@ from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     SubmissionFileMetadata,
     standardize_tree_names,
     standardize_labs,
+    _standardize_lab_field,
     prepare_file_data,
     consume_buffer,
     flush_buffers,
@@ -198,6 +199,50 @@ class TestStandardizeTreeNames:
 
         assert input_data["checkouts"][0]["tree_name"] == "mainline"
         assert "tree_name" not in input_data["checkouts"][1]
+
+
+class TestStandardizeLabField:
+    """Test cases for _standardize_lab_field helper."""
+
+    # Test cases:
+    # - automatic value with origin → moved to AUTOMATIC_LAB_FIELD, origin used as fallback
+    # - automatic value without origin → moved to AUTOMATIC_LAB_FIELD, field left absent
+    # - missing field with origin → origin used as fallback
+    # - missing field without origin → field stays absent
+    # - real value → unchanged
+
+    def test_automatic_lab_with_origin(self):
+        """Automatic value is moved to AUTOMATIC_LAB_FIELD and origin fills the field."""
+        item = {"misc": {"lab": "shell"}, "origin": "maestro"}
+        _standardize_lab_field(item, "lab")
+        assert item["misc"][AUTOMATIC_LAB_FIELD] == "shell"
+        assert item["misc"]["lab"] == "maestro"
+
+    def test_automatic_lab_without_origin(self):
+        """Automatic value is moved to AUTOMATIC_LAB_FIELD; field stays absent."""
+        item = {"misc": {"lab": "k8s"}}
+        _standardize_lab_field(item, "lab")
+        assert item["misc"][AUTOMATIC_LAB_FIELD] == "k8s"
+        assert "lab" not in item["misc"]
+
+    def test_missing_field_with_origin(self):
+        """Missing field is filled with origin."""
+        item = {"misc": {}, "origin": "broonie"}
+        _standardize_lab_field(item, "runtime")
+        assert item["misc"]["runtime"] == "broonie"
+
+    def test_missing_field_without_origin(self):
+        """Missing field stays absent when there is no origin."""
+        item = {"misc": {}}
+        _standardize_lab_field(item, "runtime")
+        assert "runtime" not in item["misc"]
+
+    def test_real_value_unchanged(self):
+        """A real (non-automatic) lab value is left untouched."""
+        item = {"misc": {"lab": "collabora"}, "origin": "redhat"}
+        _standardize_lab_field(item, "lab")
+        assert item["misc"]["lab"] == "collabora"
+        assert AUTOMATIC_LAB_FIELD not in item["misc"]
 
 
 class TestStandardizeLabs:
