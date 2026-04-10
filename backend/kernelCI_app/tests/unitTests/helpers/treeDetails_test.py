@@ -717,7 +717,7 @@ class TestProcessTestSummary:
         process_test_summary(instance, base_row_data)
 
         assert instance.testStatusSummary["FAIL"] == 1
-        assert "x86_64-gcc" in instance.test_arch_summary
+        assert ("x86_64", "gcc") in instance.test_arch_summary
         assert "defconfig" in instance.test_configs
         assert "x86_64" in instance.testPlatformsWithErrors
         assert instance.testFailReasons["Test error"] == 1
@@ -790,7 +790,7 @@ class TestProcessBootsSummary:
         process_boots_summary(instance, base_row_data)
 
         assert instance.bootStatusSummary["FAIL"] == 1
-        assert "x86_64-gcc" in instance.bootArchSummary
+        assert ("x86_64", "gcc") in instance.bootArchSummary
         assert "defconfig" in instance.bootConfigs
         assert "x86_64" in instance.bootPlatformsFailing
         assert instance.bootFailReasons["Test error"] == 1
