@@ -790,9 +790,8 @@ class TestIngestSubmissionsParallel:
     # Test cases:
     # - successful ingestion
 
-    mock_file1 = MagicMock()
-    mock_file1.name = SUBMISSION_FILENAME_MOCK
-    mock_file1.stat.return_value.st_size = 1000
+    FILE1_SIZE = 1000
+    FILE2_SIZE = 2000
 
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
     @patch("multiprocessing.Process")
@@ -800,8 +799,10 @@ class TestIngestSubmissionsParallel:
     @patch("multiprocessing.Value")
     @patch("time.sleep")
     @patch("time.time", side_effect=TIME_MOCK)
+    @patch("os.path.getsize")
     def test_ingest_submissions_parallel_success(
         self,
+        mock_getsize,
         mock_time,
         mock_sleep,
         mock_value,
@@ -810,19 +811,19 @@ class TestIngestSubmissionsParallel:
         mock_out,
     ):
         """Test successful parallel ingestion."""
+        file1_path = SUBMISSION_FILEPATH_MOCK + SUBMISSION_FILENAME_MOCK
+        file2_path = SUBMISSION_FILEPATH_MOCK + "file2.json"
+
+        file_sizes = {file1_path: self.FILE1_SIZE, file2_path: self.FILE2_SIZE}
+        mock_getsize.side_effect = lambda p: file_sizes[p]
+
         mock_queue = MagicMock()
         mock_queue_cls.return_value = mock_queue
 
         mock_queue.empty.return_value = True
         mock_queue.qsize.return_value = 0
 
-        self.mock_file1.path = SUBMISSION_FILEPATH_MOCK + SUBMISSION_FILENAME_MOCK
-        mock_file2 = MagicMock()
-        mock_file2.name = "file2.json"
-        mock_file2.path = SUBMISSION_FILEPATH_MOCK + "file2.json"
-        mock_file2.stat.return_value.st_size = 2000
-
-        json_files = [self.mock_file1, mock_file2]
+        json_files = [file1_path, file2_path]
 
         mock_ok = MagicMock()
         mock_ok.value = 1
@@ -852,10 +853,7 @@ class TestIngestSubmissionsParallel:
         stat_fail = 1
         total_elapsed = 1
 
-        total_bytes = (
-            self.mock_file1.stat.return_value.st_size
-            + mock_file2.stat.return_value.st_size
-        )
+        total_bytes = self.FILE1_SIZE + self.FILE2_SIZE
         mb = total_bytes / (1024 * 1024)
 
         # We verify only the final call

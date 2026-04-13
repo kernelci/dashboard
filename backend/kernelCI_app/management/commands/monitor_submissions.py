@@ -10,6 +10,7 @@ from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     ingest_submissions_parallel,
 )
 from kernelCI_app.constants.ingester import (
+    INGEST_CYCLE_BATCH_SIZE,
     INGESTER_GRAFANA_LABEL,
     INGESTER_METRICS_PORT,
     PROMETHEUS_MULTIPROC_DIR,
@@ -50,6 +51,50 @@ class Command(BaseCommand):
         logger.info(f"Received signal {signum}, initiating graceful shutdown...")
         self.running = False
 
+    def _setup_prometheus(self):
+        if PROMETHEUS_MULTIPROC_DIR:
+            if os.path.exists(PROMETHEUS_MULTIPROC_DIR):
+                shutil.rmtree(PROMETHEUS_MULTIPROC_DIR)
+
+            os.makedirs(PROMETHEUS_MULTIPROC_DIR, exist_ok=True)
+            registry = CollectorRegistry()
+            multiprocess.MultiProcessCollector(registry)
+            start_http_server(INGESTER_METRICS_PORT, registry=registry)
+        else:
+            logger.warning(
+                "PROMETHEUS_MULTIPROC_DIR is not set, skipping Prometheus metrics"
+            )
+
+    def _scan_spool_dir(self, spool_dir: str) -> list[str]:
+        """Scan spool directory, returning only path strings to keep memory bounded."""
+        try:
+            with os.scandir(spool_dir) as it:
+                cached_paths = [
+                    entry.path
+                    for entry in it
+                    if entry.is_file() and entry.name.endswith(".json")
+                ]
+            ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            self.stdout.write(
+                f"[{ts}] Spool scan: {len(cached_paths)}" " .json files pending"
+            )
+            return cached_paths
+        except PermissionError:
+            logger.error(
+                "Permission denied scanning spool directory: %s",
+                spool_dir,
+                exc_info=True,
+            )
+            self.running = False
+            return []
+        except OSError:
+            logger.warning(
+                "Transient OS error scanning spool directory: %s",
+                spool_dir,
+                exc_info=True,
+            )
+            return []
+
     def add_arguments(self, parser):
         # TODO: add a way to set the folder by env var instead of by argument
         parser.add_argument(
@@ -89,18 +134,7 @@ class Command(BaseCommand):
         signal.signal(signal.SIGTERM, self.signal_handler)
         signal.signal(signal.SIGINT, self.signal_handler)
 
-        if PROMETHEUS_MULTIPROC_DIR:
-            if os.path.exists(PROMETHEUS_MULTIPROC_DIR):
-                shutil.rmtree(PROMETHEUS_MULTIPROC_DIR)
-
-            os.makedirs(PROMETHEUS_MULTIPROC_DIR, exist_ok=True)
-            registry = CollectorRegistry()
-            multiprocess.MultiProcessCollector(registry)
-            start_http_server(INGESTER_METRICS_PORT, registry=registry)
-        else:
-            logger.warning(
-                "PROMETHEUS_MULTIPROC_DIR is not set, skipping Prometheus metrics"
-            )
+        self._setup_prometheus()
 
         dirs: dict[INGESTER_DIRS, str] = {
             "archive": os.path.join(spool_dir, "archive"),
@@ -120,32 +154,37 @@ class Command(BaseCommand):
 
         self.stdout.write("Starting file monitoring... (Press Ctrl+C to stop)")
 
+        cached_files: list[str] = []
+        cache_pos = 0
+
         try:
             while self.running:
                 # TODO: retry failed files every x cycles
-                try:
-                    with os.scandir(spool_dir) as it:
-                        json_files = [
-                            entry
-                            for entry in it
-                            if entry.is_file() and entry.name.endswith(".json")
-                        ]
-                        ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-                        self.stdout.write(
-                            f"[{ts}] Spool has {len(json_files)} .json files pending"
-                        )
-                except Exception:
-                    pass
 
-                QUEUE_SIZE_GAUGE.labels(INGESTER_GRAFANA_LABEL).set(len(json_files))
+                # Only re-scan directory when cache is depleted
+                if cache_pos >= len(cached_files):
+                    cached_files = self._scan_spool_dir(spool_dir)
+                    cache_pos = 0
 
-                if len(json_files) > 0:
+                remaining = len(cached_files) - cache_pos
+                QUEUE_SIZE_GAUGE.labels(INGESTER_GRAFANA_LABEL).set(remaining)
+
+                if remaining > 0:
+                    end = min(cache_pos + INGEST_CYCLE_BATCH_SIZE, len(cached_files))
+                    batch = cached_files[cache_pos:end]
+                    cache_pos = end
+                    self.stdout.write(
+                        f"Processing {len(batch)} files"
+                        f" ({len(cached_files) - cache_pos}"
+                        " remaining in cache)"
+                    )
                     ingest_submissions_parallel(
-                        json_files,
+                        batch,
                         tree_names,
                         dirs,
                         max_workers,
                     )
+
                 cache_logs_maintenance()
 
                 time.sleep(interval)

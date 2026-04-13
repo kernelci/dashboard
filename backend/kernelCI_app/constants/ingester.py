@@ -44,6 +44,14 @@ INGEST_FILES_BATCH_SIZE = int(os.environ.get("INGEST_FILES_BATCH_SIZE", 100))
 """Size of the batch of files to be queued. Default: 100"""
 
 try:
+    INGEST_CYCLE_BATCH_SIZE = int(os.environ.get("INGEST_CYCLE_BATCH_SIZE", "50000"))
+except (ValueError, TypeError):
+    logger.warning("Invalid INGEST_CYCLE_BATCH_SIZE, using default 50000")
+    INGEST_CYCLE_BATCH_SIZE = 50000
+"""Max files to process per cycle from cached scandir results.
+Avoids re-scanning huge directories between cycles. Default: 50000"""
+
+try:
     INGESTER_METRICS_PORT = int(os.environ.get("INGESTER_METRICS_PORT", 8002))
 except (ValueError, TypeError):
     logger.warning("Invalid INGESTER_METRICS_PORT, using default 8002")
