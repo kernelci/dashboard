@@ -34,10 +34,12 @@ BATCH_SIZES = [1000, 5000, 10000]
 FILE_SUBSETS = [100, 300, 500]
 
 
-def _load_submission_files(dir_path: str) -> list[os.DirEntry[str]]:
+def _load_submission_files(dir_path: str) -> list[str]:
     with os.scandir(dir_path) as it:
         return [
-            entry for entry in it if entry.is_file() and entry.name.endswith(".json")
+            entry.path
+            for entry in it
+            if entry.is_file() and entry.name.endswith(".json")
         ]
 
 
@@ -102,9 +104,7 @@ def cleanup_submission_files():
     _delete_json_files()
 
 
-def _get_file_subset(
-    files: list[os.DirEntry[str]], subset: int
-) -> list[os.DirEntry[str]]:
+def _get_file_subset(files: list[str], subset: int) -> list[str]:
     """Get a subset of files based on the subset type."""
     return files[:subset] if len(files) >= subset else files
 
@@ -212,14 +212,12 @@ def test_prepare_file_data(
 
     assert len(files) > 0, "No submissions found"
 
-    def prepare_files(
-        files: list[os.DirEntry[str]], trees_names: dict[str, str]
-    ) -> None:
-        for file in files:
+    def prepare_files(files: list[str], trees_names: dict[str, str]) -> None:
+        for file_path in files:
             file_metadata: SubmissionFileMetadata = {
-                "path": file.path,
-                "name": file.name,
-                "size": file.stat().st_size,
+                "path": file_path,
+                "name": os.path.basename(file_path),
+                "size": os.path.getsize(file_path),
             }
 
             prepare_file_data(file_metadata, trees_names)
@@ -242,7 +240,7 @@ def test_prepare_file_data(
 
 
 def _prepare_buffers(
-    files: list[os.DirEntry[str]], trees_names: dict[str, str]
+    files: list[str], trees_names: dict[str, str]
 ) -> tuple[list, dict[str, list[Any]]]:
     """
     Prepare object buffers from submission files.
@@ -260,11 +258,11 @@ def _prepare_buffers(
     }
     buffer_files: set[tuple[str, str]] = set()
 
-    for file in files:
+    for file_path in files:
         file_metadata: SubmissionFileMetadata = {
-            "path": file.path,
-            "name": file.name,
-            "size": file.stat().st_size,
+            "path": file_path,
+            "name": os.path.basename(file_path),
+            "size": os.path.getsize(file_path),
         }
 
         data, metadata = prepare_file_data(file_metadata, trees_names)
@@ -279,7 +277,7 @@ def _prepare_buffers(
         objects_buffers["builds"].extend(instances["builds"])
         objects_buffers["tests"].extend(instances["tests"])
         objects_buffers["incidents"].extend(instances["incidents"])
-        buffer_files.add((file.name, file.path))
+        buffer_files.add((os.path.basename(file_path), file_path))
 
     return [], {
         "issues_buf": objects_buffers["issues"],
@@ -365,11 +363,11 @@ def test_build_instances_perf(benchmark, cleanup_submission_files, file_subset):
     assert len(files) > 0, "No submissions found"
 
     data_list = []
-    for file in files:
+    for file_path in files:
         file_metadata: SubmissionFileMetadata = {
-            "path": file.path,
-            "name": file.name,
-            "size": file.stat().st_size,
+            "path": file_path,
+            "name": os.path.basename(file_path),
+            "size": os.path.getsize(file_path),
         }
 
         data, _ = prepare_file_data(file_metadata, trees_names)

@@ -1,7 +1,6 @@
 import multiprocessing
 from multiprocessing.sharedctypes import Synchronized
 from multiprocessing.synchronize import Lock as ProcessLock
-from os import DirEntry
 import json
 import logging
 import os
@@ -487,7 +486,7 @@ def print_ingest_progress(
 
 
 def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + multiprocessing
-    json_files: list[DirEntry[str]],
+    json_files: list[str],
     tree_names: dict[str, str],
     dirs: dict[INGESTER_DIRS, str],
     max_workers: int = 5,
@@ -504,17 +503,18 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + multipro
     )
 
     batch = []
-    for file in json_files:
+    for file_path in json_files:
         try:
-            total_bytes += file.stat().st_size
-        except Exception:
-            pass
+            file_size = os.path.getsize(file_path)
+        except OSError:
+            file_size = 0
 
+        total_bytes += file_size
         batch.append(
             SubmissionFileMetadata(
-                path=file.path,
-                name=file.name,
-                size=file.stat().st_size,
+                path=file_path,
+                name=os.path.basename(file_path),
+                size=file_size,
             )
         )
 
