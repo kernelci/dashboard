@@ -647,25 +647,37 @@ class Command(BaseCommand):
         if not tree_listing_data:
             return
 
-        values = [
-            (
-                data["build_pass"],
-                data["build_failed"],
-                data["build_inc"],
-                data["boot_pass"],
-                data["boot_failed"],
-                data["boot_inc"],
-                data["test_pass"],
-                data["test_failed"],
-                data["test_inc"],
-                data["origin"],
-                data["tree_name"],
-                data["git_repository_branch"],
-                data["git_repository_url"],
-                data["git_commit_hash"],
-            )
-            for data in tree_listing_data.values()
-        ]
+        values = sorted(
+            [
+                (
+                    data["build_pass"],
+                    data["build_failed"],
+                    data["build_inc"],
+                    data["boot_pass"],
+                    data["boot_failed"],
+                    data["boot_inc"],
+                    data["test_pass"],
+                    data["test_failed"],
+                    data["test_inc"],
+                    data["origin"],
+                    data["tree_name"],
+                    data["git_repository_branch"],
+                    data["git_repository_url"],
+                    data["git_commit_hash"],
+                )
+                for data in tree_listing_data.values()
+            ],
+            key=lambda v: (
+                (v[9] is None, v[9] or ""),
+                (v[10] is None, v[10] or ""),
+                (
+                    v[12] is None,
+                    v[12] or "",
+                ),  # git_repository_url before git_repository_branch
+                (v[11] is None, v[11] or ""),  # to match unique constraint order
+                (v[13] is None, v[13] or ""),
+            ),
+        )
 
         t0 = time.time()
         with connection.cursor() as cursor:

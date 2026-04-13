@@ -65,20 +65,29 @@ def update_tree_listing(checkouts_instances: Sequence[Checkouts]):
         return
 
     t0 = time.time()
-    checkout_values = [
-        (
-            checkout.id,
-            checkout.origin,
-            checkout.tree_name,
-            checkout.git_repository_url,
-            checkout.git_repository_branch,
-            checkout.git_commit_hash,
-            checkout.git_commit_name,
-            checkout.git_commit_tags,
-            checkout.start_time,
-        )
-        for checkout in checkouts_instances
-    ]
+    checkout_values = sorted(
+        [
+            (
+                checkout.id,
+                checkout.origin,
+                checkout.tree_name,
+                checkout.git_repository_url,
+                checkout.git_repository_branch,
+                checkout.git_commit_hash,
+                checkout.git_commit_name,
+                checkout.git_commit_tags,
+                checkout.start_time,
+            )
+            for checkout in checkouts_instances
+        ],
+        key=lambda v: (
+            (v[1] is None, v[1] or ""),
+            (v[2] is None, v[2] or ""),
+            (v[3] is None, v[3] or ""),
+            (v[4] is None, v[4] or ""),
+            (v[5] is None, v[5] or ""),
+        ),
+    )
 
     with connections["default"].cursor() as cursor:
         # Set values as 0 when inserting a new tree
