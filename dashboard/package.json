@@ -51,7 +51,7 @@
     "@tanstack/react-virtual": "^3.13.12",
     "@tanstack/router-devtools": "^1.154.4",
     "@vitejs/plugin-react": "^4.7.0",
-    "axios": "^1.13.5",
+    "axios": "^1.15.0",
     "class-variance-authority": "^0.7.1",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
