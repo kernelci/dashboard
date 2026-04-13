@@ -1,9 +1,13 @@
 import time
-from typing import Sequence
+from typing import Optional, Sequence
 
 
 from django.db import connections
 from kernelCI_app.helpers.logger import out
+from kernelCI_app.management.commands.helpers.tree_listing import (
+    CheckoutRow,
+    tree_listing_sort_key,
+)
 from kernelCI_app.models import (
     Checkouts,
     PendingTest,
@@ -14,7 +18,6 @@ from kernelCI_app.models import (
     Builds,
 )
 from kernelCI_app.utils import is_boot
-from typing import Optional
 
 
 def simplify_status(status: Optional[StatusChoices]) -> SimplifiedStatusChoices:
@@ -67,26 +70,20 @@ def update_tree_listing(checkouts_instances: Sequence[Checkouts]):
     t0 = time.time()
     checkout_values = sorted(
         [
-            (
-                checkout.id,
-                checkout.origin,
-                checkout.tree_name,
-                checkout.git_repository_url,
-                checkout.git_repository_branch,
-                checkout.git_commit_hash,
-                checkout.git_commit_name,
-                checkout.git_commit_tags,
-                checkout.start_time,
+            CheckoutRow(
+                checkout_id=checkout.id,
+                origin=checkout.origin,
+                tree_name=checkout.tree_name,
+                git_repository_url=checkout.git_repository_url,
+                git_repository_branch=checkout.git_repository_branch,
+                git_commit_hash=checkout.git_commit_hash,
+                git_commit_name=checkout.git_commit_name,
+                git_commit_tags=checkout.git_commit_tags,
+                start_time=checkout.start_time,
             )
             for checkout in checkouts_instances
         ],
-        key=lambda v: (
-            (v[1] is None, v[1] or ""),
-            (v[2] is None, v[2] or ""),
-            (v[3] is None, v[3] or ""),
-            (v[4] is None, v[4] or ""),
-            (v[5] is None, v[5] or ""),
-        ),
+        key=tree_listing_sort_key,
     )
 
     with connections["default"].cursor() as cursor:
