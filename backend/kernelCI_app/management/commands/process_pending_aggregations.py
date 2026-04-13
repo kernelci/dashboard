@@ -14,6 +14,10 @@ from django.db import connection, transaction
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.management.commands.helpers.aggregation_helpers import simplify_status
+from kernelCI_app.management.commands.helpers.tree_listing import (
+    TreeListingRow,
+    tree_listing_sort_key,
+)
 from kernelCI_app.constants.ingester import PROMETHEUS_MULTIPROC_DIR
 from prometheus_client import start_http_server
 from kernelCI_app.models import (
@@ -647,25 +651,28 @@ class Command(BaseCommand):
         if not tree_listing_data:
             return
 
-        values = [
-            (
-                data["build_pass"],
-                data["build_failed"],
-                data["build_inc"],
-                data["boot_pass"],
-                data["boot_failed"],
-                data["boot_inc"],
-                data["test_pass"],
-                data["test_failed"],
-                data["test_inc"],
-                data["origin"],
-                data["tree_name"],
-                data["git_repository_branch"],
-                data["git_repository_url"],
-                data["git_commit_hash"],
-            )
-            for data in tree_listing_data.values()
-        ]
+        values = sorted(
+            [
+                TreeListingRow(
+                    build_pass=data["build_pass"],
+                    build_failed=data["build_failed"],
+                    build_inc=data["build_inc"],
+                    boot_pass=data["boot_pass"],
+                    boot_failed=data["boot_failed"],
+                    boot_inc=data["boot_inc"],
+                    test_pass=data["test_pass"],
+                    test_failed=data["test_failed"],
+                    test_inc=data["test_inc"],
+                    origin=data["origin"],
+                    tree_name=data["tree_name"],
+                    git_repository_branch=data["git_repository_branch"],
+                    git_repository_url=data["git_repository_url"],
+                    git_commit_hash=data["git_commit_hash"],
+                )
+                for data in tree_listing_data.values()
+            ],
+            key=tree_listing_sort_key,
+        )
 
         t0 = time.time()
         with connection.cursor() as cursor:
