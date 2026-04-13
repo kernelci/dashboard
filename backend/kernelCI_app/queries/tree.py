@@ -758,7 +758,7 @@ def get_tree_details_builds(
     """
     Fetch builds for a given tree commit.
     """
-    cache_key = "treeDetailsBuilds"
+    cache_key = "treeDetailsBuildsData"
 
     params = {
         "commit_hash": commit_hash,
