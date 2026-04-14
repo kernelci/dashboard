@@ -5,10 +5,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-<<<<<<< HEAD
-=======
-  useRef,
->>>>>>> b07c7b34b (feat: add sliding window state and data accumulation for commit history)
   useState,
   type JSX,
 } from 'react';
@@ -48,8 +44,6 @@ import type { gitValues } from '@/components/Tooltip/CommitTagTooltip';
 import { Button } from '@/components/ui/button';
 
 const graphDisplaySize = 8;
-const WINDOW_SIZE = 4;
-const BACKEND_PAGE_SIZE = 6;
 
 const NUM_SELECTED_COMMITS = 6;
 
@@ -109,43 +103,10 @@ const CommitNavigationGraph = ({
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-<<<<<<< HEAD
   const [allCommits, setAllCommits] = useState<
     Map<string, PaginatedCommitHistoryByTree>
   >(new Map());
   const [visibleRange, setVisibleRange] = useState<[number, number]>([0, 0]);
-=======
-  // Buffer of all fetched commits (oldest first, i.e. chronological order)
-  const [allCommits, setAllCommits] = useState<
-    PaginatedCommitHistoryByTree[]
-  >([]);
-  // Index of the rightmost visible commit in allCommits
-  const [windowEnd, setWindowEnd] = useState<number>(-1);
-  // Anchor commit hash for fetching older data
-  const [fetchAnchor, setFetchAnchor] = useState<string | undefined>(
-    undefined,
-  );
-  // Whether the backend has no more older commits
-  const [exhausted, setExhausted] = useState(false);
-
-  // Reset everything when key props change
-  const prevDepsRef = useRef({ headCommitHash, currentPageTab });
-  useEffect(() => {
-    const prev = prevDepsRef.current;
-    if (
-      prev.headCommitHash !== headCommitHash ||
-      prev.currentPageTab !== currentPageTab
-    ) {
-      setAllCommits([]);
-      setWindowEnd(-1);
-      setFetchAnchor(undefined);
-      setExhausted(false);
-      prevDepsRef.current = { headCommitHash, currentPageTab };
-    }
-  }, [headCommitHash, currentPageTab]);
-
-  const effectiveAnchor = fetchAnchor ?? headCommitHash ?? '';
->>>>>>> b07c7b34b (feat: add sliding window state and data accumulation for commit history)
 
   const types: TreeEntityTypes[] = useMemo(() => {
     switch (currentPageTab) {
@@ -197,7 +158,6 @@ const CommitNavigationGraph = ({
     buildsRelatedToFilteredTestsOnly,
   });
 
-<<<<<<< HEAD
   useEffect(() => {
     if (!data?.length) {
       return;
@@ -255,97 +215,6 @@ const CommitNavigationGraph = ({
   const visibleCommits = commitHashes
     .map(commit => allCommits.get(commit))
     .reverse();
-=======
-  // Merge fetched data into the buffer when it arrives
-  const lastMergedAnchorRef = useRef<string>('');
-  useEffect(() => {
-    if (!data || data.length === 0) return;
-    if (lastMergedAnchorRef.current === effectiveAnchor) return;
-    lastMergedAnchorRef.current = effectiveAnchor;
-
-    if (data.length < BACKEND_PAGE_SIZE) {
-      setExhausted(true);
-    }
-
-    // Data from API is newest-first; reverse to get chronological (oldest-first)
-    const newCommits = [...data].reverse();
-
-    setAllCommits(prev => {
-      if (prev.length === 0) {
-        return newCommits;
-      }
-
-      // Deduplicate: only prepend commits not already in the buffer
-      const existingHashes = new Set(prev.map(c => c.git_commit_hash));
-      const uniqueNew = newCommits.filter(
-        c => !existingHashes.has(c.git_commit_hash),
-      );
-
-      if (uniqueNew.length === 0) return prev;
-
-      const merged = [...uniqueNew, ...prev];
-      // Shift window to account for prepended items
-      setWindowEnd(w =>
-        w === -1 ? merged.length - 1 : w + uniqueNew.length,
-      );
-      return merged;
-    });
-  }, [data, effectiveAnchor]);
-
-  // Initialize windowEnd when allCommits first populates
-  useEffect(() => {
-    if (allCommits.length > 0 && windowEnd === -1) {
-      setWindowEnd(allCommits.length - 1);
-    }
-  }, [allCommits.length, windowEnd]);
-
-  // Compute visible window
-  const windowStart = Math.max(0, windowEnd - WINDOW_SIZE + 1);
-  const visibleCommits = allCommits.slice(windowStart, windowEnd + 1);
-
-  // Navigation
-  const canGoNewer = windowEnd < allCommits.length - 1;
-  const canGoOlder = windowStart > 0 || !exhausted;
-
-  const goNewer = useCallback(() => {
-    setWindowEnd(w => Math.min(w + 1, allCommits.length - 1));
-  }, [allCommits.length]);
-
-  const goNewest = useCallback(() => {
-    setWindowEnd(allCommits.length - 1);
-  }, [allCommits.length]);
-
-  const goOlder = useCallback(() => {
-    if (windowStart > 0) {
-      setWindowEnd(w => w - 1);
-    } else if (!exhausted && allCommits.length > 0) {
-      const oldestHash = allCommits[0].git_commit_hash;
-      setFetchAnchor(oldestHash);
-    }
-  }, [windowStart, exhausted, allCommits]);
-
-  const goOldest = useCallback(() => {
-    if (exhausted) {
-      setWindowEnd(WINDOW_SIZE - 1);
-    } else if (allCommits.length > 0) {
-      const oldestHash = allCommits[0].git_commit_hash;
-      setFetchAnchor(oldestHash);
-      setWindowEnd(WINDOW_SIZE - 1);
-    }
-  }, [exhausted, allCommits]);
-
-  // Keep goNewer, goNewest, goOlder, goOldest, canGoNewer, canGoOlder
-  // available for the next commit that adds navigation buttons.
-  // For now, suppress unused warnings:
-  void goNewer;
-  void goNewest;
-  void goOlder;
-  void goOldest;
-  void canGoNewer;
-  void canGoOlder;
-
-  const displayableData = visibleCommits.length > 0 ? visibleCommits : null;
->>>>>>> b07c7b34b (feat: add sliding window state and data accumulation for commit history)
 
   type MessagesID = {
     graphName: MessagesKey;
@@ -383,10 +252,7 @@ const CommitNavigationGraph = ({
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-<<<<<<< HEAD
-=======
   // Transform the visible window data for the MUI LineChart
->>>>>>> b07c7b34b (feat: add sliding window state and data accumulation for commit history)
   const series: TLineChartProps['series'] = [
     {
       id: 'good',
@@ -422,15 +288,10 @@ const CommitNavigationGraph = ({
   const xAxisIndexes: number[] = [];
 
   // visibleCommits is already in chronological order (oldest first)
-<<<<<<< HEAD
   visibleCommits.forEach(item => {
     if (!item) {
       return;
     }
-
-=======
-  visibleCommits.forEach((item, index) => {
->>>>>>> b07c7b34b (feat: add sliding window state and data accumulation for commit history)
     if (currentPageTab === 'global.builds') {
       const inconclusiveCount =
         item.builds.MISS +
@@ -544,7 +405,7 @@ const CommitNavigationGraph = ({
               }}
               slotProps={{
                 legend: {
-                  itemGap: 4,
+                  itemGap: 2,
                   position: { vertical: 'top', horizontal: 'middle' },
                 },
               }}
@@ -570,7 +431,6 @@ const CommitNavigationGraph = ({
                     const row = commitData[parsedPossibleIndex];
                     isCurrentCommit = treeId === row?.commitHash;
 
-<<<<<<< HEAD
                     if (row) {
                       displayText = getChartXLabel(row);
                     }
@@ -614,11 +474,6 @@ const CommitNavigationGraph = ({
                 const row = commitData[commitIndex];
                 if (row?.commitHash) {
                   onMarkClick(row.commitHash, row.commitName);
-=======
-                  displayText = getChartXLabel(
-                    commitData[parsedPossibleIndex],
-                  );
->>>>>>> b07c7b34b (feat: add sliding window state and data accumulation for commit history)
                 }
               }}
             />
