@@ -103,10 +103,46 @@ const CommitNavigationGraph = ({
 
   const reqFilter = mapFilterToReq(diffFilter);
 
+<<<<<<< HEAD
   const [allCommits, setAllCommits] = useState<
     Map<string, PaginatedCommitHistoryByTree>
   >(new Map());
   const [visibleRange, setVisibleRange] = useState<[number, number]>([0, 0]);
+=======
+  // Buffer of all fetched commits (oldest first, i.e. chronological order)
+  const [allCommits, setAllCommits] = useState<PaginatedCommitHistoryByTree[]>(
+    [],
+  );
+  // Index of the rightmost visible commit in allCommits
+  const [windowEnd, setWindowEnd] = useState<number>(-1);
+  // Anchor commit hash for fetching older data
+  const [fetchAnchor, setFetchAnchor] = useState<string | undefined>(undefined);
+  // Whether the backend has no more older commits
+  const [exhausted, setExhausted] = useState(false);
+  // When true, the next merge should position the window at the oldest end
+  const jumpToOldestRef = useRef(false);
+
+  // Reset everything when key props change
+  const prevDepsRef = useRef({ headCommitHash, currentPageTab });
+  useEffect(() => {
+    const prev = prevDepsRef.current;
+    if (
+      prev.headCommitHash !== headCommitHash ||
+      prev.currentPageTab !== currentPageTab
+    ) {
+      allCommitsRef.current = [];
+      setAllCommits([]);
+      setWindowEnd(-1);
+      setFetchAnchor(undefined);
+      setExhausted(false);
+      jumpToOldestRef.current = false;
+      lastMergedAnchorRef.current = '';
+      prevDepsRef.current = { headCommitHash, currentPageTab };
+    }
+  }, [headCommitHash, currentPageTab]);
+
+  const effectiveAnchor = fetchAnchor ?? headCommitHash ?? '';
+>>>>>>> 0dc162982 (fix: prevent chart flash and stuck navigation on older page fetch (#1840))
 
   const types: TreeEntityTypes[] = useMemo(() => {
     switch (currentPageTab) {
@@ -158,10 +194,19 @@ const CommitNavigationGraph = ({
     buildsRelatedToFilteredTestsOnly,
   });
 
+<<<<<<< HEAD
+=======
+  // Ref mirror of allCommits for synchronous access in the merge effect
+  const allCommitsRef = useRef<PaginatedCommitHistoryByTree[]>([]);
+
+  // Merge fetched data into the buffer when it arrives
+  const lastMergedAnchorRef = useRef<string>('');
+>>>>>>> 0dc162982 (fix: prevent chart flash and stuck navigation on older page fetch (#1840))
   useEffect(() => {
     if (!data?.length) {
       return;
     }
+<<<<<<< HEAD
     setAllCommits(prev => {
       let next: Map<string, PaginatedCommitHistoryByTree> | null = null;
       missingCommitHashes.forEach((commit, idx) => {
@@ -182,6 +227,83 @@ const CommitNavigationGraph = ({
 
   const canGoNewer = visibleRange[0] > 0;
   const canGoOlder = visibleRange[1] < (commitsList?.length || 1) - 1;
+=======
+    if (lastMergedAnchorRef.current === effectiveAnchor) {
+      return;
+    }
+    lastMergedAnchorRef.current = effectiveAnchor;
+
+    if (data.length < BACKEND_PAGE_SIZE) {
+      setExhausted(true);
+    }
+
+    // Data from API is newest-first; reverse to get chronological (oldest-first)
+    const newCommits = [...data].reverse();
+    const prev = allCommitsRef.current;
+
+    if (prev.length === 0) {
+      // First load — position window to include current commit if present
+      allCommitsRef.current = newCommits;
+      setAllCommits(newCommits);
+
+      const currentIdx = treeId
+        ? newCommits.findIndex(c => c.git_commit_hash === treeId)
+        : -1;
+      if (currentIdx >= 0) {
+        setWindowEnd(
+          Math.max(
+            currentIdx,
+            Math.min(WINDOW_SIZE - 1, newCommits.length - 1),
+          ),
+        );
+      } else {
+        setWindowEnd(newCommits.length - 1);
+      }
+      return;
+    }
+
+    // Deduplicate: only prepend commits not already in the buffer
+    const existingHashes = new Set(prev.map(c => c.git_commit_hash));
+    const uniqueNew = newCommits.filter(
+      c => !existingHashes.has(c.git_commit_hash),
+    );
+
+    if (uniqueNew.length === 0) {
+      return;
+    }
+
+    const merged = [...uniqueNew, ...prev];
+    allCommitsRef.current = merged;
+    setAllCommits(merged);
+
+    // Adjust window position for the prepended items
+    if (jumpToOldestRef.current) {
+      jumpToOldestRef.current = false;
+      setWindowEnd(Math.min(WINDOW_SIZE - 1, merged.length - 1));
+    } else {
+      setWindowEnd(w => w + uniqueNew.length);
+    }
+  }, [data, effectiveAnchor, treeId]);
+
+  // Compute visible window — clamp to valid range and enforce minimum WINDOW_SIZE
+  const clampedWindowEnd =
+    allCommits.length > 0
+      ? Math.min(
+          Math.max(windowEnd, Math.min(WINDOW_SIZE - 1, allCommits.length - 1)),
+          allCommits.length - 1,
+        )
+      : 0;
+  const windowStart = Math.max(0, clampedWindowEnd - WINDOW_SIZE + 1);
+  const visibleCommits =
+    allCommits.length > 0
+      ? allCommits.slice(windowStart, clampedWindowEnd + 1)
+      : [];
+
+  // Navigation
+  const isFetchingOlder = status === 'pending' && allCommits.length > 0;
+  const canGoNewer = clampedWindowEnd < allCommits.length - 1;
+  const canGoOlder = (windowStart > 0 || !exhausted) && !isFetchingOlder;
+>>>>>>> 0dc162982 (fix: prevent chart flash and stuck navigation on older page fetch (#1840))
 
   const goNewer = useCallback(() => {
     setVisibleRange(([start, end]) => [
@@ -197,6 +319,7 @@ const CommitNavigationGraph = ({
   const commitsLength = commitsList?.length ?? 0;
 
   const goOlder = useCallback(() => {
+<<<<<<< HEAD
     const last = Math.max(commitsLength - 1, 0);
     setVisibleRange(
       ([start, end]) =>
@@ -211,10 +334,41 @@ const CommitNavigationGraph = ({
     const last = Math.max(commitsLength - 1, 0);
     setVisibleRange(_ => [last - NUM_SELECTED_COMMITS, last]);
   }, [commitsLength]);
+=======
+    if (windowStart > 0) {
+      setWindowEnd(w => w - 1);
+    } else if (!exhausted && allCommits.length > 0) {
+      // Need to fetch more: use the oldest known commit as anchor
+      const oldestHash = allCommits[0].git_commit_hash;
+      setFetchAnchor(oldestHash);
+      // Pre-decrement so after merge shift (+uniqueNew.length), the net
+      // effect is one position to the left — the user sees the next older commit
+      // immediately once data arrives. The effectiveWindowEnd clamp keeps
+      // the display stable (≥ WINDOW_SIZE items) during the loading gap.
+      setWindowEnd(w => w - 1);
+    }
+  }, [windowStart, exhausted, allCommits]);
+
+  const goOldest = useCallback(() => {
+    if (exhausted) {
+      setWindowEnd(WINDOW_SIZE - 1);
+    } else if (allCommits.length > 0) {
+      // Flag the merge effect to position window at oldest end after fetch
+      jumpToOldestRef.current = true;
+      const oldestHash = allCommits[0].git_commit_hash;
+      setFetchAnchor(oldestHash);
+    }
+  }, [exhausted, allCommits]);
+>>>>>>> 0dc162982 (fix: prevent chart flash and stuck navigation on older page fetch (#1840))
 
   const visibleCommits = commitHashes
     .map(commit => allCommits.get(commit))
     .reverse();
+
+  // Only show loading skeleton on the initial fetch.
+  // When fetching older pages, keep displaying the buffered chart.
+  const effectiveStatus =
+    allCommits.length > 0 && status === 'pending' ? 'success' : status;
 
   type MessagesID = {
     graphName: MessagesKey;
@@ -376,8 +530,13 @@ const CommitNavigationGraph = ({
 
   return (
     <QuerySwitcher
+<<<<<<< HEAD
       status={querySwitcherStatus}
       data={visibleCommits}
+=======
+      status={effectiveStatus}
+      data={displayableData}
+>>>>>>> 0dc162982 (fix: prevent chart flash and stuck navigation on older page fetch (#1840))
       customError={
         <MemoizedSectionError
           isLoading={isLoading && allCommits.size === 0}
