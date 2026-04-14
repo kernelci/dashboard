@@ -1,6 +1,14 @@
 import { useIntl } from 'react-intl';
 
-import { memo, useMemo, type JSX } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type JSX,
+} from 'react';
 
 import { z } from 'zod';
 
@@ -18,13 +26,18 @@ import { formatDate } from '@/utils/utils';
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 import { useCommitHistory } from '@/api/commitHistory';
 import type { TFilter, TreeEntityTypes } from '@/types/general';
+import type {
+  PaginatedCommitHistoryByTree,
+  TreeDetailsRouteFrom,
+} from '@/types/tree/TreeDetails';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { gitValues } from '@/components/Tooltip/CommitTagTooltip';
-import type { TreeDetailsRouteFrom } from '@/types/tree/TreeDetails';
 
 const graphDisplaySize = 8;
+const WINDOW_SIZE = 4;
+const BACKEND_PAGE_SIZE = 6;
 
 export const getChartXLabel = ({
   commitTags,
@@ -80,6 +93,37 @@ const CommitNavigationGraph = ({
 
   const reqFilter = mapFilterToReq(diffFilter);
 
+  // Buffer of all fetched commits (oldest first, i.e. chronological order)
+  const [allCommits, setAllCommits] = useState<
+    PaginatedCommitHistoryByTree[]
+  >([]);
+  // Index of the rightmost visible commit in allCommits
+  const [windowEnd, setWindowEnd] = useState<number>(-1);
+  // Anchor commit hash for fetching older data
+  const [fetchAnchor, setFetchAnchor] = useState<string | undefined>(
+    undefined,
+  );
+  // Whether the backend has no more older commits
+  const [exhausted, setExhausted] = useState(false);
+
+  // Reset everything when key props change
+  const prevDepsRef = useRef({ headCommitHash, currentPageTab });
+  useEffect(() => {
+    const prev = prevDepsRef.current;
+    if (
+      prev.headCommitHash !== headCommitHash ||
+      prev.currentPageTab !== currentPageTab
+    ) {
+      setAllCommits([]);
+      setWindowEnd(-1);
+      setFetchAnchor(undefined);
+      setExhausted(false);
+      prevDepsRef.current = { headCommitHash, currentPageTab };
+    }
+  }, [headCommitHash, currentPageTab]);
+
+  const effectiveAnchor = fetchAnchor ?? headCommitHash ?? '';
+
   const types: TreeEntityTypes[] = useMemo(() => {
     switch (currentPageTab) {
       case 'global.builds':
@@ -96,7 +140,7 @@ const CommitNavigationGraph = ({
   const { data, status, error, isLoading } = useCommitHistory({
     gitBranch: gitBranch ?? '',
     gitUrl: gitUrl ?? '',
-    commitHash: headCommitHash ?? '',
+    commitHash: effectiveAnchor,
     origin: origin,
     filter: reqFilter,
     endTimestampInSeconds,
@@ -107,7 +151,95 @@ const CommitNavigationGraph = ({
     buildsRelatedToFilteredTestsOnly,
   });
 
-  const displayableData = data ? data : null;
+  // Merge fetched data into the buffer when it arrives
+  const lastMergedAnchorRef = useRef<string>('');
+  useEffect(() => {
+    if (!data || data.length === 0) return;
+    if (lastMergedAnchorRef.current === effectiveAnchor) return;
+    lastMergedAnchorRef.current = effectiveAnchor;
+
+    if (data.length < BACKEND_PAGE_SIZE) {
+      setExhausted(true);
+    }
+
+    // Data from API is newest-first; reverse to get chronological (oldest-first)
+    const newCommits = [...data].reverse();
+
+    setAllCommits(prev => {
+      if (prev.length === 0) {
+        return newCommits;
+      }
+
+      // Deduplicate: only prepend commits not already in the buffer
+      const existingHashes = new Set(prev.map(c => c.git_commit_hash));
+      const uniqueNew = newCommits.filter(
+        c => !existingHashes.has(c.git_commit_hash),
+      );
+
+      if (uniqueNew.length === 0) return prev;
+
+      const merged = [...uniqueNew, ...prev];
+      // Shift window to account for prepended items
+      setWindowEnd(w =>
+        w === -1 ? merged.length - 1 : w + uniqueNew.length,
+      );
+      return merged;
+    });
+  }, [data, effectiveAnchor]);
+
+  // Initialize windowEnd when allCommits first populates
+  useEffect(() => {
+    if (allCommits.length > 0 && windowEnd === -1) {
+      setWindowEnd(allCommits.length - 1);
+    }
+  }, [allCommits.length, windowEnd]);
+
+  // Compute visible window
+  const windowStart = Math.max(0, windowEnd - WINDOW_SIZE + 1);
+  const visibleCommits = allCommits.slice(windowStart, windowEnd + 1);
+
+  // Navigation
+  const canGoNewer = windowEnd < allCommits.length - 1;
+  const canGoOlder = windowStart > 0 || !exhausted;
+
+  const goNewer = useCallback(() => {
+    setWindowEnd(w => Math.min(w + 1, allCommits.length - 1));
+  }, [allCommits.length]);
+
+  const goNewest = useCallback(() => {
+    setWindowEnd(allCommits.length - 1);
+  }, [allCommits.length]);
+
+  const goOlder = useCallback(() => {
+    if (windowStart > 0) {
+      setWindowEnd(w => w - 1);
+    } else if (!exhausted && allCommits.length > 0) {
+      const oldestHash = allCommits[0].git_commit_hash;
+      setFetchAnchor(oldestHash);
+    }
+  }, [windowStart, exhausted, allCommits]);
+
+  const goOldest = useCallback(() => {
+    if (exhausted) {
+      setWindowEnd(WINDOW_SIZE - 1);
+    } else if (allCommits.length > 0) {
+      const oldestHash = allCommits[0].git_commit_hash;
+      setFetchAnchor(oldestHash);
+      setWindowEnd(WINDOW_SIZE - 1);
+    }
+  }, [exhausted, allCommits]);
+
+  // Keep goNewer, goNewest, goOlder, goOldest, canGoNewer, canGoOlder
+  // available for the next commit that adds navigation buttons.
+  // For now, suppress unused warnings:
+  void goNewer;
+  void goNewest;
+  void goOlder;
+  void goOldest;
+  void canGoNewer;
+  void canGoOlder;
+
+  const displayableData = visibleCommits.length > 0 ? visibleCommits : null;
 
   type MessagesID = {
     graphName: MessagesKey;
@@ -145,7 +277,7 @@ const CommitNavigationGraph = ({
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Transform the data to fit the format required by the MUI LineChart component
+  // Transform the visible window data for the MUI LineChart
   const series: TLineChartProps['series'] = [
     {
       id: 'good',
@@ -179,8 +311,9 @@ const CommitNavigationGraph = ({
 
   const commitData: TCommitValue[] = [];
   const xAxisIndexes: number[] = [];
-  // TODO Extract the magic code to outside the component
-  data?.forEach((item, index) => {
+
+  // visibleCommits is already in chronological order (oldest first)
+  visibleCommits.forEach((item, index) => {
     if (currentPageTab === 'global.builds') {
       const inconclusiveCount =
         item.builds.MISS +
@@ -188,9 +321,9 @@ const CommitNavigationGraph = ({
         item.builds.ERROR +
         item.builds.DONE +
         item.builds.NULL;
-      series[0].data?.unshift(item.builds.PASS);
-      series[1].data?.unshift(item.builds.FAIL);
-      series[2].data?.unshift(inconclusiveCount);
+      series[0].data?.push(item.builds.PASS);
+      series[1].data?.push(item.builds.FAIL);
+      series[2].data?.push(inconclusiveCount);
     }
     if (currentPageTab === 'global.boots') {
       const inconclusiveCount =
@@ -199,9 +332,9 @@ const CommitNavigationGraph = ({
         item.boots.error +
         item.boots.done +
         item.boots.null;
-      series[0].data?.unshift(item.boots.pass);
-      series[1].data?.unshift(item.boots.fail);
-      series[2].data?.unshift(inconclusiveCount);
+      series[0].data?.push(item.boots.pass);
+      series[1].data?.push(item.boots.fail);
+      series[2].data?.push(inconclusiveCount);
     }
     if (currentPageTab === 'global.tests') {
       const inconclusiveCount =
@@ -210,11 +343,11 @@ const CommitNavigationGraph = ({
         item.tests.error +
         item.tests.done +
         item.tests.null;
-      series[0].data?.unshift(item.tests.pass);
-      series[1].data?.unshift(item.tests.fail);
-      series[2].data?.unshift(inconclusiveCount);
+      series[0].data?.push(item.tests.pass);
+      series[1].data?.push(item.tests.fail);
+      series[2].data?.push(inconclusiveCount);
     }
-    commitData.unshift({
+    commitData.push({
       commitHash: item.git_commit_hash,
       commitName: item.git_commit_name,
       commitTags: item.git_commit_tags,
@@ -314,7 +447,9 @@ const CommitNavigationGraph = ({
                   isCurrentCommit =
                     treeId === commitData[parsedPossibleIndex].commitHash;
 
-                  displayText = getChartXLabel(commitData[parsedPossibleIndex]);
+                  displayText = getChartXLabel(
+                    commitData[parsedPossibleIndex],
+                  );
                 }
 
                 return (
