@@ -478,12 +478,14 @@ def process_boots_summary(instance, row_data: dict[str, Any]) -> None:
     instance.boot_summary_typed.labs[test_lab].increment(test_status)
 
 
-def process_filters(instance, row_data: dict) -> None:
+def process_filters(instance, row_data: dict, skip_build_filters: bool = False) -> None:
+    """skip_build_filters is used on some calls to this function
+    where we know that the build filters are already processed"""
     issue_id = row_data["issue_id"]
     issue_version = row_data["issue_version"]
     incident_test_id = row_data["incident_test_id"]
 
-    if row_data["build_id"] is not None:
+    if not skip_build_filters and row_data["build_id"] is not None:
         build_status = row_data["build_status"]
         instance.global_configs.add(row_data["build_config_name"])
         instance.global_architectures.add(row_data["build_architecture"])
