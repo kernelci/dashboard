@@ -97,6 +97,23 @@ The monitoring system supports multi-worker Gunicorn deployments using Prometheu
 - `PROMETHEUS_METRICS_PORT`: Port for the metrics aggregator (default: `8001`)
 - `PROMETHEUS_MULTIPROC_DIR`: Directory for multiprocess metric files (default: `/tmp/prometheus_multiproc_dir`)
 
+### Cronjob Healthchecks
+
+The backend can ping healthcheck.io for cronjobs that run Django management commands.
+
+- The public base URL is defined in code as `HEALTHCHECK_BASE_URL`.
+- Private monitor tokens stay in environment variables and are mapped in Django settings.
+- Each monitored cron run sends pings to `/start`, `/success`, and `/fail`.
+
+Configure these variables in `.env.backend`:
+
+- `HEALTHCHECK_ID_DELETE_UNUSED_HARDWARE_STATUS`
+- `HEALTHCHECK_ID_NOTIFICATIONS_HARDWARE_SUMMARY`
+- `HEALTHCHECK_ID_NOTIFICATIONS_METRICS_SUMMARY`
+- `HEALTHCHECK_ID_NOTIFICATIONS_NEW_ISSUES`
+- `HEALTHCHECK_ID_NOTIFICATIONS_SUMMARY_MICROSOFT`
+- `HEALTHCHECK_ID_NOTIFICATIONS_SUMMARY_MAESTRO`
+
 ## `prometheus.yml`
 - **Target**: `host.docker.internal:8001` (backend running locally)
 - **Metrics Path**: `/metrics/`

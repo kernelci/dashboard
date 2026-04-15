@@ -7,6 +7,10 @@ Removes HardwareStatus entries that have no corresponding checkout_id in the Lat
 import logging
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from kernelCI_app.management.commands.helpers.healthcheck import (
+    MONITORING_ID_PARAM_HELP_TEXT,
+    run_with_healthcheck_monitoring,
+)
 from kernelCI_app.models import HardwareStatus, LatestCheckout, ProcessedListingItems
 
 logger = logging.getLogger(__name__)
@@ -30,8 +34,21 @@ class Command(BaseCommand):
             default=10000,
             help="Number of records to delete per batch (default: 10000)",
         )
+        parser.add_argument(
+            "--monitoring-id",
+            type=str,
+            default=None,
+            help=MONITORING_ID_PARAM_HELP_TEXT,
+        )
 
     def handle(self, *args, **options):
+        monitoring_id = options.get("monitoring_id")
+        return run_with_healthcheck_monitoring(
+            monitoring_id=monitoring_id,
+            action=lambda: self._run_action(options),
+        )
+
+    def _run_action(self, options):
         dry_run = options["dry_run"]
         batch_size = options["batch_size"]
 
