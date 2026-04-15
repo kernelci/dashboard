@@ -8,10 +8,20 @@ from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.helpers.discordWebhook import send_discord_notification
 from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.logger import create_endpoint_notification
+from kernelCI_app.helpers.logger import out
 from kernelCI_app.helpers.treeDetails import (
+    call_based_on_compatible_and_misc_platform,
+    decide_if_is_boot_filtered_out,
     decide_if_is_build_filtered_out,
+    decide_if_is_full_row_filtered_out,
+    decide_if_is_test_filtered_out,
     get_build,
+    get_current_row_data,
+    process_boots_summary,
     process_builds_issue,
+    process_filters,
+    process_test_summary,
+    process_tests_issue,
     process_tree_url,
 )
 from kernelCI_app.helpers.treeDetailsRollup import (
@@ -22,7 +32,12 @@ from kernelCI_app.helpers.treeDetailsRollup import (
     process_rollup_summary,
     rollup_test_or_boot_filtered_out,
 )
-from kernelCI_app.queries.tree import get_tree_details_builds, get_tree_details_rollup
+from kernelCI_app.queries.tree import (
+    get_tree_details_builds,
+    get_tree_details_data,
+    get_tree_details_rollup,
+)
+from kernelCI_app.utils import is_boot
 from kernelCI_app.typeModels.commonDetails import (
     BaseBuildSummary,
     BuildSummary,
@@ -202,6 +217,56 @@ class BaseTreeDetailsSummary(APIView):
             issues_dict=self.test_issues_dict
         )
 
+    def _sanitize_test_rows_legacy(self, rows: list[tuple]) -> None:
+        """Process legacy test/boot rows when rollup data is not available.
+
+        This method processes only test/boot rows from the legacy get_tree_details_data()
+        query. Builds are already handled by _sanitize_builds_rows().
+
+        Modeled after BaseTreeDetails._sanitize_rows() but without:
+        - _process_builds() calls (builds already handled)
+        - testHistory/bootHistory tracking (summary endpoint doesn't return individual test items)
+        - git_commit_tags assignment (already set by _sanitize_builds_rows)
+        - process_tree_url call (already set by _sanitize_builds_rows)
+        """
+        processed_tests: set[str] = set()  # local dedup set
+
+        for row in rows:
+            row_data = get_current_row_data(row)
+
+            call_based_on_compatible_and_misc_platform(row_data, self.hardwareUsed.add)
+            process_filters(self, row_data, skip_build_filters=True)
+
+            if decide_if_is_full_row_filtered_out(self, row_data):
+                continue
+
+            if row_data["test_id"] is None:
+                continue
+
+            test_id = row_data["test_id"]
+
+            if is_boot(row_data["test_path"]):
+                if decide_if_is_boot_filtered_out(self, row_data):
+                    continue
+                process_tests_issue(instance=self, row_data=row_data, is_boot=True)
+                if test_id not in processed_tests:
+                    processed_tests.add(test_id)
+                    process_boots_summary(self, row_data)
+            else:
+                if decide_if_is_test_filtered_out(self, row_data):
+                    continue
+                process_tests_issue(instance=self, row_data=row_data)
+                if test_id not in processed_tests:
+                    processed_tests.add(test_id)
+                    process_test_summary(self, row_data)
+
+        self.bootIssues = convert_issues_dict_to_list_typed(
+            issues_dict=self.boot_issues_dict
+        )
+        self.testIssues = convert_issues_dict_to_list_typed(
+            issues_dict=self.test_issues_dict
+        )
+
     def get(
         self,
         request: HttpRequest,
@@ -244,7 +309,24 @@ class BaseTreeDetailsSummary(APIView):
         self.filters = FilterParams(request)
 
         self._sanitize_builds_rows(builds_rows)
-        self._sanitize_rollup_rows(rollup_rows or [])
+
+        if rollup_rows:
+            self._sanitize_rollup_rows(rollup_rows)
+        else:
+            out(
+                f"Rollup data empty for commit {commit_hash} "
+                f"(origin={origin_param}, tree={tree_name}, git_url={git_url_param}), "
+                f"falling back to legacy query"
+            )
+            legacy_rows = get_tree_details_data(
+                origin_param=origin_param,
+                git_url_param=git_url_param,
+                tree_name=tree_name,
+                git_branch_param=git_branch_param,
+                commit_hash=commit_hash,
+            )
+            if legacy_rows:
+                self._sanitize_test_rows_legacy(legacy_rows)
 
         try:
             valid_response = SummaryResponse(
