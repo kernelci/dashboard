@@ -128,14 +128,18 @@ const Section = ({
     <div className="text-dim-gray mb-6 flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         {eyebrow && <span className="text-sm">{eyebrow}</span>}
-        <div className="flex flex-row items-center gap-2">
-          {leftIcon}
+        <div className="overflow-hidden">
+          {leftIcon && (
+            <span className="float-left mr-2 -mb-2 [&_svg]:h-8 [&_svg]:w-8">
+              {leftIcon}
+            </span>
+          )}
           {title && (
             <span className="max-w-full text-2xl font-bold break-all">
               {title}
             </span>
           )}
-          {rightIcon}
+          {rightIcon && <span className="ml-1 sm:ml-2">{rightIcon}</span>}
         </div>
         {subtitle}
       </div>
