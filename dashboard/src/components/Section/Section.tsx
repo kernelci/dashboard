@@ -134,12 +134,12 @@ const Section = ({
               {leftIcon}
             </span>
           )}
-          {rightIcon && <span>{rightIcon}</span>}
           {title && (
             <span className="max-w-full text-2xl font-bold break-all">
               {title}
             </span>
           )}
+          {rightIcon && <span className="ml-1 sm:ml-2">{rightIcon}</span>}
         </div>
         {subtitle}
       </div>
