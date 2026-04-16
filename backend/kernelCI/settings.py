@@ -261,6 +261,10 @@ kcidb_config = {
     "HOST": os.getenv("DB_HOST", "127.0.0.1"),
     "PORT": os.getenv("DB_PORT", "5432"),
     "ENGINE": os.getenv("DB_ENGINE", "django_prometheus.db.backends.postgresql"),
+    "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "0")),
+    "CONN_HEALTH_CHECKS": is_boolean_or_string_true(
+        os.environ.get("DB_CONN_HEALTH_CHECKS", False)
+    ),
     "OPTIONS": {
         "connect_timeout": int(os.getenv("DB_OPTIONS_CONNECT_TIMEOUT", "16")),
     },
