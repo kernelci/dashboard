@@ -52,6 +52,26 @@ export DB_PORT=5432
 export DB_ENGINE=django_prometheus.db.backends.postgresql
 export DB_OPTIONS_CONNECT_TIMEOUT=16
 ```
+
+#### Connection Pooling (Production)
+
+For production deployments, you can enable persistent database connections to reduce connection overhead:
+
+```sh
+# Enable persistent connections (value in seconds)
+export DB_CONN_MAX_AGE=60
+
+# Enable health checks to verify connections before reuse (recommended by Django docs)
+export DB_CONN_HEALTH_CHECKS=True
+```
+
+- `DB_CONN_MAX_AGE`: Controls how long database connections are kept open for reuse.
+  - `0` (default): Close connection after each request (development mode)
+  - Positive integer: Keep connections open for that many seconds
+  - Not recommended for local development as the dev server creates a new thread per request
+
+- `DB_CONN_HEALTH_CHECKS`: When `True`, Django verifies the connection is still alive before reusing it. This prevents errors after database restarts or when connections are terminated by the server.
+
 > [!NOTE]
 > It is possible to have authentication issues when escaping special characters. In some cases, it is necessary to add more than one backslash, while in others, no addition is needed. To assist with this, you can export `DEBUG_DB_VARS=True` to check the database connection info in the terminal, allowing you to determine if the characters got escaped as intended. **This variable should NOT be set to True in production**.
 
@@ -229,7 +249,7 @@ In order to debug backend in PyCharm, just follow these steps:
    - in `Run` session of the dialog, select `script`, then find the script `manage.py` at the `backend` folder
    - at `script` name input, just enter `runserver`
    - at `Environment Variables`, enter the following values:
-     - `DB_ENGINE`: `django.db.backends.postgresql`, `DB_NAME`: `dashboard`, `DB_USER`: `<youremail>@profusion.mobi`, `DB_PASSWORD`: `<yourpassword>`, `DB_HOST`: `127.0.0.1`, `DB_PORT`: `5432`, `DB_OPTIONS_CONNECT_TIMEOUT`: `16`
+     - `DB_ENGINE`: `django.db.backends.postgresql`, `DB_NAME`: `dashboard`, `DB_USER`: `<youremail>@profusion.mobi`, `DB_PASSWORD`: `<yourpassword>`, `DB_HOST`: `127.0.0.1`, `DB_PORT`: `5432`, `DB_OPTIONS_CONNECT_TIMEOUT`: `16`, `DB_CONN_MAX_AGE`: `0`, `DB_CONN_HEALTH_CHECKS`: `False`
      - `DEBUG`: `True`
 
 Quote character in password field is escaped normally with `\"` .
