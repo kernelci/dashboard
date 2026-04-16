@@ -41,15 +41,16 @@ const OriginSelect = ({
     [navigate],
   );
 
-  const selectItems = useMemo(() => {
-    if (originData === undefined) {
-      return <></>;
+  const pageOrigins = useMemo(() => {
+    if (!originData) {
+      return [];
     }
-
-    const pageOrigins = isHardwarePath
+    return isHardwarePath
       ? originData.test_origins
       : originData.checkout_origins;
+  }, [originData, isHardwarePath]);
 
+  const selectItems = useMemo(() => {
     return pageOrigins.map(option => (
       <SelectItem
         key={option}
@@ -59,10 +60,14 @@ const OriginSelect = ({
         {option}
       </SelectItem>
     ));
-  }, [originData, isHardwarePath]);
+  }, [pageOrigins]);
 
   useEffect(() => {
-    if (origin === undefined) {
+    if (pageOrigins.length === 0) {
+      return;
+    }
+
+    if (origin === undefined || !pageOrigins.includes(origin)) {
       navigate({
         to: '.',
         search: previousSearch => ({
@@ -71,7 +76,7 @@ const OriginSelect = ({
         }),
       });
     }
-  }, [navigate, origin]);
+  }, [navigate, origin, pageOrigins]);
 
   if (originStatus === 'pending') {
     return <FormattedMessage id="global.loading" />;
