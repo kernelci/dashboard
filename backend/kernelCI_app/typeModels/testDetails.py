@@ -29,7 +29,6 @@ from kernelCI_app.typeModels.databases import (
     Test__OutputFiles,
     Test__Path,
     Test__StartTime,
-    Test__Status,
     Timestamp,
 )
 from kernelCI_app.utils import validate_str_to_dict
@@ -72,7 +71,7 @@ type PossibleRegressionType = Literal["regression", "fixed", "unstable", "pass",
 class TestStatusHistoryItem(BaseModel):
     start_time: Test__StartTime
     id: Test__Id
-    status: Test__Status
+    status: StatusValues
     git_commit_hash: Checkout__GitCommitHash = Field(
         validation_alias="build__checkout__git_commit_hash"
     )
