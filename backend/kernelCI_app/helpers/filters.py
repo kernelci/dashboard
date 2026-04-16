@@ -5,6 +5,7 @@ import re
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.helpers.logger import log_message
+from kernelCI_app.models import StatusChoices
 from kernelCI_app.typeModels.databases import (
     StatusValues,
     failure_status_list,
@@ -20,6 +21,10 @@ from kernelCI_app.utils import get_error_body_response
 from kernelCI_app.constants.general import UNKNOWN_STRING
 
 NULL_STRINGS = set(["null", UNKNOWN_STRING, "NULL"])
+
+
+def is_valid_status(status: str) -> bool:
+    return status.upper() in {*StatusChoices, "NULL"}
 
 
 def is_status_failure(
@@ -127,6 +132,10 @@ def is_issue_filtered_out(
         for issue in issue_filters
     )
     return not in_filter
+
+
+def is_filtered_out(value: str, filter_values: set[str]):
+    return filter_values and value not in filter_values
 
 
 def should_filter_test_issue(
@@ -361,6 +370,7 @@ class FilterParams:
             "test.status": self._handle_test_status,
             "test.duration": self._handle_test_duration,
             "build.status": self._handle_build_status,
+            "duration": self._handle_build_duration,  # TODO: same as build.duration (should be standardized)
             "build.duration": self._handle_build_duration,
             "origin": self._handle_origins,
             "config_name": self._handle_config_name,
@@ -390,6 +400,14 @@ class FilterParams:
             self.create_filters_from_req(data)
 
         self._process_filters()
+
+    def __repr__(self) -> str:
+        parts = ""
+        for parsed_filter in self.filters:
+            parts += "\n\t{},".format(
+                ", ".join([f"{key}={val}" for key, val in parsed_filter.items()])
+            )
+        return f"FilterParams({parts})"
 
     def _handle_boot_status(self, current_filter: ParsedFilter) -> None:
         self.filterBootStatus.add(current_filter["value"])

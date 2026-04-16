@@ -100,10 +100,11 @@ def pytest_generate_tests(metafunc):
                 (ASUS_HARDWARE, {"boot.status": "MISS"}),
                 (ASUS_HARDWARE, {"boot.status": "DONE"}),
                 (ASUS_HARDWARE, {"boot.status": "NULL"}),
+                (ASUS_HARDWARE, {"boot.status": "null"}),
                 (ASUS_HARDWARE, {"test.status": "ERROR"}),
                 (ASUS_HARDWARE, {"test.status": "MISS"}),
                 (ASUS_HARDWARE, {"test.status": "DONE"}),
-                (ASUS_HARDWARE, {"test.status": "NULL"}),
+                (ASUS_HARDWARE, {"test.status": "null"}),
                 (ASUS_HARDWARE, {"boot.status": "PASS"}),
                 (ASUS_HARDWARE, {"boot.status": "SKIP"}),
                 (ASUS_HARDWARE, {"test.status": "SKIP"}),
@@ -238,6 +239,7 @@ def test_filter_test_status(test_status_input):
         (ASUS_HARDWARE, {"build.status": "PASS"}),
         (ASUS_HARDWARE, {"build.status": "FAIL"}),
         (ASUS_HARDWARE, {"build.status": "NULL"}),
+        (ASUS_HARDWARE, {"build.status": "null"}),
     ],
 )
 def test_filter_build_status(base_hardware, filters):
@@ -266,7 +268,7 @@ def test_filter_build_status(base_hardware, filters):
 @pytest.mark.parametrize(
     "base_hardware, filters",
     [
-        (ASUS_HARDWARE, {"config_name": "defconfig+kcidebug+x86-board"}),
+        (ASUS_HARDWARE, {"config_name": "defconfig"}),
     ],
 )
 def test_filter_config_name(base_hardware, filters):
@@ -289,7 +291,7 @@ def test_filter_config_name(base_hardware, filters):
 @pytest.mark.parametrize(
     "base_hardware, filters",
     [
-        (ASUS_HARDWARE, {"architecture": "i386"}),
+        (ASUS_HARDWARE, {"architecture": "asus-CM1400CXA-dalboz"}),
     ],
 )
 def test_filter_architectures(base_hardware, filters):
@@ -420,7 +422,7 @@ def test_invalid_filters(invalid_filters_input):
         "fail_reasons": {},
         "failed_platforms": [],
         "issues": [],
-        "platforms": None,
+        "platforms": {},
         "status": {
             "ERROR": 0,
             "FAIL": 0,
@@ -460,10 +462,13 @@ def test_invalid_filters(invalid_filters_input):
 
     filter, local_field = invalid_filters_input
     response, content = request_data(ASUS_HARDWARE, {filter: "invalid_filter,null"})
-    assert_status_code(response=response, status_code=HTTPStatus.OK)
-    assert "error" not in content
-    assert "summary" in content
-    if local_field is None:
-        assert content["summary"] == empty_summary
-    else:
-        assert content["summary"][local_field] == empty_summary[local_field]
+    if "status" in filter:  # enum literal values
+        assert_status_code(response=response, status_code=HTTPStatus.BAD_REQUEST)
+    else:  # dynamic values
+        assert_status_code(response=response, status_code=HTTPStatus.OK)
+        assert "error" not in content
+        assert "summary" in content
+        if local_field is None:
+            assert content["summary"] == empty_summary
+        else:
+            assert content["summary"][local_field] == empty_summary[local_field]

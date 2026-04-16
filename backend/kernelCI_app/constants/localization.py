@@ -34,6 +34,7 @@ class ClientStrings:
     ISSUE_NOT_FOUND = "Issue not found"
     NO_ISSUE_FOUND = "No issues found"
     INVALID_JSON_BODY = "Invalid body, request body must be a valid json string"
+    INVALID_FILTERS = "Invalid filter key or value"
     ISSUE_EMPTY_LIST = "Invalid body, the issue list must not be empty"
     ISSUE_NO_EXTRA_DETAILS = (
         "No extra details found. Issue id has no incident or doesn't exist."

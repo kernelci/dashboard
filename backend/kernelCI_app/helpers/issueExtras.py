@@ -1,6 +1,7 @@
 from collections import defaultdict
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
+from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.queries.issues import get_issue_first_seen_data, get_issue_trees_data
 from kernelCI_app.typeModels.issues import (
@@ -18,6 +19,14 @@ class TagUrls:
     LINUX_NEXT_URL = (
         "https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
     )
+
+
+def parse_issue(issue_str: Optional[str]) -> tuple[str, Optional[int]]:
+    if issue_str is None:
+        return (UNCATEGORIZED_STRING, None)
+    issue_id, _, issue_version = issue_str.partition(",")
+    issue_version = int(issue_version) if issue_version.upper() != "NULL" else None
+    return (issue_id, issue_version)
 
 
 def process_issues_extra_details(
