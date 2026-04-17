@@ -527,9 +527,9 @@ class TestConsumeBuffer:
         # TODO: test with a real example
         mock_buffer = [MagicMock(), MagicMock()]
         mock_cursor = MagicMock()
-        mock_connections["default"].cursor.return_value.__enter__.return_value = (
-            mock_cursor
-        )
+        mock_connections[
+            "default"
+        ].cursor.return_value.__enter__.return_value = mock_cursor
 
         consume_buffer(mock_buffer, table_name)
 

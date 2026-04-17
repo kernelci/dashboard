@@ -158,10 +158,8 @@ class TestHardwareDetailsTestsView(SimpleTestCase):
             }
         ]
 
-        mock_sanitize_records.side_effect = (
-            lambda records, trees, is_all_selected: self.view.tests.append(
-                {"invalid": "data"}
-            )
+        mock_sanitize_records.side_effect = lambda records, trees, is_all_selected: (
+            self.view.tests.append({"invalid": "data"})
         )
 
         request = self.factory.post(

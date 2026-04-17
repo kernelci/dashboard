@@ -59,19 +59,19 @@ class Command(BaseCommand):
                 )
 
             query = f"""
-                INSERT INTO {table_name} ({','.join(updateable_db_fields_clauses)}
+                INSERT INTO {table_name} ({",".join(updateable_db_fields_clauses)}
                 )
                 VALUES (
-                    {', '.join(['%s'] * len(updateable_db_fields))}
+                    {", ".join(["%s"] * len(updateable_db_fields))}
                 )
                 ON CONFLICT (id)
-                DO UPDATE SET{','.join(conflict_clauses)};
+                DO UPDATE SET{",".join(conflict_clauses)};
             """
 
             var_insert_queries[table_name] = {}
-            var_insert_queries[table_name][
-                "updateable_model_fields"
-            ] = updateable_model_fields
+            var_insert_queries[table_name]["updateable_model_fields"] = (
+                updateable_model_fields
+            )
             var_insert_queries[table_name]["query"] = query
 
         # Read the template file

@@ -58,7 +58,6 @@ from kernelCI_app.constants.localization import ClientStrings
 # supported in this project
 @method_decorator(csrf_exempt, name="dispatch")
 class HardwareDetailsSummary(APIView):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.origin: str = None
@@ -531,7 +530,6 @@ class HardwareDetailsSummary(APIView):
             return validation_error
 
         try:
-
             tree_heads = get_hardware_trees_head_commits(
                 hardware_id=hardware_id,
                 origin=self.origin,

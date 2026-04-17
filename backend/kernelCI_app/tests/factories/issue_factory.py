@@ -31,7 +31,7 @@ class IssueFactory(DjangoModelFactory):
         )
     )
 
-    origin = factory.Sequence(lambda n: (f"origin-fake-{n:08x}"))
+    origin = factory.Sequence(lambda n: f"origin-fake-{n:08x}")
 
     report_url = factory.LazyAttribute(
         lambda obj: f"https://reports.kernelci.org/{obj.origin}/{obj.id}.html"

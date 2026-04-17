@@ -243,9 +243,7 @@ class TestGetIssuesSummaryData:
         expected_result = [{"checkout_id": "checkout_1", "issue_id": "issue_1"}]
         mock_dict_fetchall.return_value = expected_result
         mock_cursor = MagicMock()
-        mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = (
-            mock_cursor
-        )
+        mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = mock_cursor
 
         result = get_issues_summary_data(checkout_ids=["checkout_1", "checkout_2"])
 

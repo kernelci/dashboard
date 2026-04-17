@@ -9,7 +9,6 @@ from kernelCI_app.tests.unitTests.helpers.fixtures.issue_data import (
 
 
 class TestSanitizeDetailsIssuesRows:
-
     @patch("kernelCI_app.helpers.detailsIssues.create_issue_typed")
     @patch("kernelCI_app.helpers.detailsIssues.convert_issues_dict_to_list_typed")
     def test_sanitize_details_issues_rows_with_single_issue(

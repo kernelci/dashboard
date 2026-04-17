@@ -179,7 +179,7 @@ class Command(BaseCommand):
         related_ids = set(values)
 
         related_condition = (
-            f"AND {field_name} IN ({",".join(["%s"] * len(related_ids))})"
+            f"AND {field_name} IN ({','.join(['%s'] * len(related_ids))})"
         )
 
         return related_ids, related_condition

@@ -1089,7 +1089,6 @@ class TestDecideIfIsFullRecordFilteredOut:
 
 
 class TestDecideIfIsBuildInFilter:
-
     def test_decide_if_is_build_in_filter(self):
         """Test decide_if_is_build_in_filter function."""
         instance = MagicMock()

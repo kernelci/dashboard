@@ -37,7 +37,10 @@ def copy_from_cache_to_notification_tables(apps, schema_editor):
     cache_conn = connections["cache"]
     notification_conn = connections["notifications"]
 
-    with cache_conn.cursor() as cache_cursor, notification_conn.cursor() as notif_cursor:
+    with (
+        cache_conn.cursor() as cache_cursor,
+        notification_conn.cursor() as notif_cursor,
+    ):
         try:
             print("\nRUNNING DATA TRANSFER MIGRATION")
             # Check if tables exist in databases
@@ -113,7 +116,6 @@ def copy_from_cache_to_notification_tables(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kernelCI_cache", "0010_notificationsissue"),
     ]

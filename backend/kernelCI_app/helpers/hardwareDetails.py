@@ -363,7 +363,7 @@ def handle_test_summary(
         task.failed_platforms.add(test_platform)
         task.fail_reasons[extract_error_message(record["misc"])] += 1
 
-    arch_key = f'{record["build__architecture"]}{record["build__compiler"]}'
+    arch_key = f"{record['build__architecture']}{record['build__compiler']}"
     arch_summary = processed_archs.get(arch_key)
     if not arch_summary:
         arch_summary = get_arch_summary_typed(record)

@@ -226,7 +226,7 @@ class TestTreeCommitsHistory(SimpleTestCase):
     ):
         commit_hash = "6bd9ed02871f22beb0e50690b0c3caf457104f7c"
         hardware = "fsl,imx8mp-evk"
-        direct_url = "/api/tree/mainline/master/" f"{commit_hash}/commits"
+        direct_url = f"/api/tree/mainline/master/{commit_hash}/commits"
 
         mock_get_tree_commit_history.return_value = [
             (

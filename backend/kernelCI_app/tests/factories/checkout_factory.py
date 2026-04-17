@@ -106,7 +106,9 @@ class CheckoutFactory(DjangoModelFactory):
     )
 
     log_url = factory.LazyAttribute(
-        lambda obj: f"https://logs.kernelci.org/{obj.origin}/{obj.git_commit_hash[:8]}.log"
+        lambda obj: (
+            f"https://logs.kernelci.org/{obj.origin}/{obj.git_commit_hash[:8]}.log"
+        )
     )
 
     log_excerpt = factory.Faker("text", max_nb_chars=1000)

@@ -76,7 +76,7 @@ class Command(BaseCommand):
                 ]
             ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             self.stdout.write(
-                f"[{ts}] Spool scan: {len(cached_paths)}" " .json files pending"
+                f"[{ts}] Spool scan: {len(cached_paths)} .json files pending"
             )
             return cached_paths
         except PermissionError:

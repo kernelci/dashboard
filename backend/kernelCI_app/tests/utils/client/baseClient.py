@@ -30,7 +30,7 @@ class BaseClient(ABC):
             mapped_filters = self.get_filters(filters=filters)
             string_parts.append(urlencode(mapped_filters, doseq=True))
 
-        query_string = f"?{"&".join(string_parts)}" if string_parts else ""
+        query_string = f"?{'&'.join(string_parts)}" if string_parts else ""
 
         url = f"{url}{query_string}"
         return url
