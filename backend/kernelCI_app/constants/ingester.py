@@ -1,8 +1,9 @@
 """Constant settings for the ingester functions"""
 
-import os
 import logging
+import os
 import re
+
 from kernelCI_app.constants.tree_names import TREE_NAMES_FILENAME
 from utils.validation import is_boolean_or_string_true
 

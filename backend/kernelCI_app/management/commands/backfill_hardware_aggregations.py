@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models.query import QuerySet
 from django.utils import timezone
 
+from kernelCI_app.helpers.logger import out
 from kernelCI_app.management.commands.helpers.aggregation_helpers import (
     aggregate_checkouts,
     aggregate_tests,
@@ -17,7 +18,6 @@ from kernelCI_app.models import (
     PendingTest,
     Tests,
 )
-from kernelCI_app.helpers.logger import out
 
 
 class Command(BaseCommand):

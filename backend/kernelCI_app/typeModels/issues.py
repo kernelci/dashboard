@@ -1,16 +1,17 @@
-from typing import Literal, Optional, Annotated
+from typing import Annotated, Literal, Optional
+
 from pydantic import BaseModel, Field
 
 from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.databases import (
+    Checkout__GitCommitHash,
+    Checkout__GitCommitName,
+    Checkout__GitRepositoryBranch,
+    Checkout__GitRepositoryUrl,
+    Checkout__TreeName,
     Issue__Version,
     Timestamp,
-    Checkout__GitCommitHash,
-    Checkout__GitRepositoryUrl,
-    Checkout__GitRepositoryBranch,
-    Checkout__GitCommitName,
-    Checkout__TreeName,
 )
 
 

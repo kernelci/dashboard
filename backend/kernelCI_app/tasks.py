@@ -1,4 +1,8 @@
+from datetime import timedelta
+
 from django.conf import settings
+from django.utils.timezone import is_aware, make_aware, now
+
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.models import Checkouts
 from kernelCI_app.queries.tree import (
@@ -8,8 +12,6 @@ from kernelCI_app.queries.tree import (
 from kernelCI_cache.checkouts import populate_checkouts_cache_db
 from kernelCI_cache.constants import NO_CACHE_ORIGINS, UNSTABLE_CHECKOUT_THRESHOLD
 from kernelCI_cache.queries.checkouts import get_cached_tree_listing_fast
-from datetime import timedelta
-from django.utils.timezone import now, make_aware, is_aware
 
 UPDATE_INTERVAL_IN_DAYS = 90
 

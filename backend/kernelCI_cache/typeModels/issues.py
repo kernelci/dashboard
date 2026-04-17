@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+
 from kernelCI_app.typeModels.databases import Issue__Id, Issue__Version
 from kernelCI_cache.typeModels.databases import PossibleIssueType
 

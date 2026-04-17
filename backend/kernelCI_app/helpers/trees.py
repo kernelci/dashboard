@@ -1,13 +1,14 @@
 import json
 import os
-import typing_extensions
 
-from django.conf import settings
+import typing_extensions
 import yaml
+from django.conf import settings
+
+from kernelCI_app.constants.tree_names import TREE_NAMES_FILENAME
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.treeListing import Checkout
-from kernelCI_app.constants.tree_names import TREE_NAMES_FILENAME
 
 
 def make_tree_identifier_key(

@@ -1,4 +1,5 @@
 from typing import Annotated, Optional
+
 from pydantic import BaseModel, Field
 
 from kernelCI_app.constants.general import DEFAULT_INTERVAL_IN_DAYS, DEFAULT_ORIGIN

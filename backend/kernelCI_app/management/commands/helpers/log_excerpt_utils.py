@@ -2,19 +2,19 @@ import gzip
 import hashlib
 import logging
 import os
-import requests
 import tempfile
 import threading
 from typing import Any, Literal, Optional
+
+import requests
 from kernelCI_app.constants.ingester import (
     CACHE_LOGS_SIZE_LIMIT,
     LOGEXCERPT_THRESHOLD,
-    STORAGE_TOKEN,
     STORAGE_BASE_URL,
+    STORAGE_TOKEN,
     UPLOAD_URL,
     VERBOSE,
 )
-
 
 CACHE_LOGS = {}
 cache_logs_lock = threading.Lock()

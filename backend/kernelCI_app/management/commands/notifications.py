@@ -1,49 +1,56 @@
-from typing import Optional
 import json
 import sys
-
 from collections import defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
+from typing import Optional
 from urllib.parse import quote_plus
 
 from django.core.management.base import BaseCommand
 
+from kernelCI_app.helpers.email import smtp_setup_connection
+from kernelCI_app.helpers.hardwares import sanitize_hardware
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.system import get_running_instance
-
-from kernelCI_app.helpers.email import smtp_setup_connection
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
-    setup_jinja_template,
     send_email_report,
+    setup_jinja_template,
 )
 from kernelCI_app.management.commands.helpers.healthcheck import (
     MONITORING_ID_PARAM_HELP_TEXT,
     run_with_healthcheck_monitoring,
 )
-
 from kernelCI_app.management.commands.helpers.summary import (
     SIGNUP_FOLDER,
     PossibleReportOptions,
     ReportConfigs,
     TreeKey,
     get_build_issues_from_checkout,
-    process_submissions_files,
     process_hardware_submissions_files,
+    process_submissions_files,
+)
+from kernelCI_app.queries.hardware import (
+    get_hardware_listing_data_bulk,
+    get_hardware_summary_data,
 )
 from kernelCI_app.queries.notifications import (
     get_checkout_summary_data,
     get_metrics_data,
-    kcidb_new_issues,
-    kcidb_issue_details,
     kcidb_build_incidents,
-    kcidb_test_incidents,
+    kcidb_issue_details,
     kcidb_last_test_without_issue,
+    kcidb_new_issues,
+    kcidb_test_incidents,
     kcidb_tests_results,
 )
 from kernelCI_app.queries.test import get_test_details_data, get_test_status_history
 from kernelCI_app.typeModels.metrics_notifications import MetricsReportData
+from kernelCI_app.utils import group_status, is_boot
+from kernelCI_cache.queries.issues import (
+    get_all_issue_keys,
+    get_unsent_issues,
+)
 from kernelCI_cache.queries.notifications import (
     RESEND_INTERVAL,
     check_sent_notifications,
@@ -51,19 +58,7 @@ from kernelCI_cache.queries.notifications import (
     mark_issue_notification_not_sent,
     mark_issue_notification_sent,
 )
-from kernelCI_app.utils import is_boot
-from kernelCI_cache.queries.issues import (
-    get_all_issue_keys,
-    get_unsent_issues,
-)
 from kernelCI_cache.typeModels.databases import PossibleIssueType
-from kernelCI_app.utils import group_status
-
-from kernelCI_app.queries.hardware import (
-    get_hardware_summary_data,
-    get_hardware_listing_data_bulk,
-)
-from kernelCI_app.helpers.hardwares import sanitize_hardware
 
 
 def exclude_already_found_and_store(issues: list[dict]) -> list[dict]:

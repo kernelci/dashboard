@@ -1,4 +1,5 @@
 from django.db import connection
+
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.database import dict_fetchall
 

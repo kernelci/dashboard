@@ -1,8 +1,10 @@
 import os
-from kernelCI_app.constants.ingester import INGESTER_TREES_FILEPATH
-import yaml
-import pytest
 from unittest.mock import patch
+
+import pytest
+import yaml
+
+from kernelCI_app.constants.ingester import INGESTER_TREES_FILEPATH
 from kernelCI_app.management.commands.helpers.file_utils import (
     load_tree_names,
     move_file_to_failed_dir,
@@ -10,21 +12,21 @@ from kernelCI_app.management.commands.helpers.file_utils import (
     verify_spool_dirs,
 )
 from kernelCI_app.tests.unitTests.helpers.fixtures.file_utils_data import (
-    PENDING_RETRY_SPOOL_SUBDIR,
-    TREES_PATH_TESTING,
-    BASE_TREES_FILE,
-    EXPECTED_PARSED_TREES_FILE,
-    BASE_FILE_NAME,
-    NONEXISTING_FILE_NAME,
-    TESTING_FAILED_DIR,
-    EXISTING_DIRECTORY,
-    MISSING_DIRECTORY,
-    DENIED_DIRECTORY,
-    NOT_A_DIRECTORY,
-    INACCESSIBLE_DIRECTORY,
-    SPOOL_DIR_TESTING,
-    FAIL_SPOOL_SUBDIR,
     ARCHIVE_SPOOL_SUBDIR,
+    BASE_FILE_NAME,
+    BASE_TREES_FILE,
+    DENIED_DIRECTORY,
+    EXISTING_DIRECTORY,
+    EXPECTED_PARSED_TREES_FILE,
+    FAIL_SPOOL_SUBDIR,
+    INACCESSIBLE_DIRECTORY,
+    MISSING_DIRECTORY,
+    NONEXISTING_FILE_NAME,
+    NOT_A_DIRECTORY,
+    PENDING_RETRY_SPOOL_SUBDIR,
+    SPOOL_DIR_TESTING,
+    TESTING_FAILED_DIR,
+    TREES_PATH_TESTING,
 )
 
 

@@ -1,7 +1,8 @@
 import json
 from http import HTTPStatus
-from kernelCI_app.helpers.logger import create_endpoint_notification
+
 from kernelCI_app.helpers.discordWebhook import send_discord_notification
+from kernelCI_app.helpers.logger import create_endpoint_notification
 
 REASON_MAX_LEN = 500
 

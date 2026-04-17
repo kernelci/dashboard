@@ -1,5 +1,7 @@
 from typing import Union
+
 from django.http import HttpResponseBadRequest
+
 from kernelCI_app.utils import get_error_body_response
 
 

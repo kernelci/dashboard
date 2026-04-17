@@ -1,4 +1,5 @@
 from drf_spectacular.utils import OpenApiParameter
+
 from kernelCI_app.constants.localization import DocStrings
 
 COMMIT_HASH_PATH_PARAM = OpenApiParameter(

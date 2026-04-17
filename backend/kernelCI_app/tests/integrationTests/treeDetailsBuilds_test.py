@@ -1,20 +1,22 @@
-from kernelCI_app.tests.utils.client.treeClient import TreeClient
+from http import HTTPStatus
+
+import pytest
+
 from kernelCI_app.tests.utils.asserts import (
     assert_status_code_and_error_response,
 )
-from kernelCI_app.utils import string_to_json
-from http import HTTPStatus
-import pytest
-from kernelCI_app.tests.utils.treeDetailsCommonTestCases import (
-    ANDROID_MAESTRO_MAINLINE,
-    BROONIE_MISC_BROONIE,
-    NEXT_PENDING_FIXES_BROONIE,
-    UNEXISTENT_TREE,
-    INVALID_QUERY_PARAMS,
-)
+from kernelCI_app.tests.utils.client.treeClient import TreeClient
 from kernelCI_app.tests.utils.commonTreeAsserts import (
     execute_builds_asserts,
 )
+from kernelCI_app.tests.utils.treeDetailsCommonTestCases import (
+    ANDROID_MAESTRO_MAINLINE,
+    BROONIE_MISC_BROONIE,
+    INVALID_QUERY_PARAMS,
+    NEXT_PENDING_FIXES_BROONIE,
+    UNEXISTENT_TREE,
+)
+from kernelCI_app.utils import string_to_json
 
 client = TreeClient()
 

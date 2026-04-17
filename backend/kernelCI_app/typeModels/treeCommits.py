@@ -1,18 +1,18 @@
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, RootModel, field_validator
+
+from pydantic import BaseModel, Field, RootModel, field_validator
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import StatusCount
-from kernelCI_app.typeModels.treeListing import TestStatusCount
-from pydantic import Field
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
     Checkout__GitCommitName,
     Checkout__GitCommitTags,
 )
+from kernelCI_app.typeModels.treeListing import TestStatusCount
 
 
 class TreeEntityTypes(str, Enum):

@@ -1,6 +1,6 @@
-import requests
 from django.urls import reverse
 
+import requests
 from kernelCI_app.tests.utils.client.baseClient import BaseClient
 
 

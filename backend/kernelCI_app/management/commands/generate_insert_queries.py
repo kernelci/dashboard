@@ -1,8 +1,10 @@
-from django.core.management.base import BaseCommand
-from kernelCI_app.typeModels.modelTypes import MODEL_MAP
 import os
 from datetime import datetime
+
+from django.core.management.base import BaseCommand
 from jinja2 import Template
+
+from kernelCI_app.typeModels.modelTypes import MODEL_MAP
 
 
 class Command(BaseCommand):

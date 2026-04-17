@@ -2,7 +2,7 @@
 Test data management class.
 """
 
-from .fixtures import TEST_DATA, BUILD_TEST_STATUS_RULES, CHECKOUT_TEST_STATUS_RULES
+from .fixtures import BUILD_TEST_STATUS_RULES, CHECKOUT_TEST_STATUS_RULES, TEST_DATA
 
 
 class Test:

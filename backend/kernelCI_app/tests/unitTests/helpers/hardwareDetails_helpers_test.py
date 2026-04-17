@@ -1,68 +1,69 @@
-from kernelCI_app.typeModels.common import StatusCount
-from unittest.mock import patch, MagicMock
-from datetime import datetime
 from collections import defaultdict
-from kernelCI_app.helpers.hardwareDetails import (
-    unstable_parse_post_body,
-    set_trees_status_summary,
-    get_displayed_commit,
-    get_trees_with_selected_commit,
-    get_arch_summary_typed,
-    get_build_typed,
-    get_tree_key,
-    get_validated_current_tree,
-    get_current_record_tree_in_selection,
-    generate_test_dict,
-    generate_build_summary_typed,
-    generate_test_summary_typed,
-    generate_tree_status_summary_dict,
-    handle_tree_status_summary,
-    create_record_test_platform,
-    handle_test_history,
-    handle_test_summary,
-    handle_build_history,
-    handle_build_summary,
-    process_issue,
-    update_issues,
-    decide_if_is_full_record_filtered_out,
-    decide_if_is_build_in_filter,
-    get_processed_issue_key,
-    is_issue_processed,
-    is_test_processed,
-    decide_if_is_test_in_filter,
-    is_record_tree_selected,
-    mutate_properties_to_list,
-    assign_default_record_values,
-    format_issue_summary_for_response,
-    handle_build,
-    process_filters,
-    get_filter_options,
-)
-from kernelCI_app.typeModels.hardwareDetails import Tree
-from kernelCI_app.typeModels.commonDetails import (
-    TestArchSummaryItem,
-    BuildSummary,
-    TestSummary,
-)
+from datetime import datetime
+from unittest.mock import MagicMock, patch
+
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING, UNKNOWN_STRING
 from kernelCI_app.constants.hardwareDetails import SELECTED_HEAD_TREE_VALUE
-from kernelCI_app.typeModels.databases import (
-    build_fail_status_list,
+from kernelCI_app.helpers.hardwareDetails import (
+    assign_default_record_values,
+    create_record_test_platform,
+    decide_if_is_build_in_filter,
+    decide_if_is_full_record_filtered_out,
+    decide_if_is_test_in_filter,
+    format_issue_summary_for_response,
+    generate_build_summary_typed,
+    generate_test_dict,
+    generate_test_summary_typed,
+    generate_tree_status_summary_dict,
+    get_arch_summary_typed,
+    get_build_typed,
+    get_current_record_tree_in_selection,
+    get_displayed_commit,
+    get_filter_options,
+    get_processed_issue_key,
+    get_tree_key,
+    get_trees_with_selected_commit,
+    get_validated_current_tree,
+    handle_build,
+    handle_build_history,
+    handle_build_summary,
+    handle_test_history,
+    handle_test_summary,
+    handle_tree_status_summary,
+    is_issue_processed,
+    is_record_tree_selected,
+    is_test_processed,
+    mutate_properties_to_list,
+    process_filters,
+    process_issue,
+    set_trees_status_summary,
+    unstable_parse_post_body,
+    update_issues,
 )
 from kernelCI_app.tests.unitTests.helpers.fixtures.hardware_details_data import (
     base_tree,
-    tree_with_different_commit,
     base_tree_status_summary,
     create_test_summary,
+    handle_test_summary_record_new_config,
+    handle_test_summary_record_new_origin,
+    handle_test_summary_record_new_platform,
     process_filters_instance,
     process_filters_instance_without_build,
+    process_filters_record_boot,
     process_filters_record_with_build,
     process_filters_record_without_build,
-    process_filters_record_boot,
-    handle_test_summary_record_new_config,
-    handle_test_summary_record_new_platform,
-    handle_test_summary_record_new_origin,
+    tree_with_different_commit,
 )
+from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.commonDetails import (
+    BuildSummary,
+    TestArchSummaryItem,
+    TestSummary,
+)
+from kernelCI_app.typeModels.databases import (
+    build_fail_status_list,
+)
+from kernelCI_app.typeModels.hardwareDetails import Tree
 
 
 class TestUnstableParsePostBody:

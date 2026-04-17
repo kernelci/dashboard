@@ -4,6 +4,7 @@ Factory for generating TreeTestsRollup test data.
 
 import factory
 from factory.django import DjangoModelFactory
+
 from kernelCI_app.models import TreeTestsRollup
 
 

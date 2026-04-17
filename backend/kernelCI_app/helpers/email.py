@@ -3,7 +3,7 @@
 
 from email.utils import make_msgid
 
-from django.core.mail import get_connection, EmailMessage
+from django.core.mail import EmailMessage, get_connection
 
 
 def smtp_setup_connection():

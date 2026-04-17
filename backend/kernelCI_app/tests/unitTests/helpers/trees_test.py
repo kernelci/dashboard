@@ -1,20 +1,22 @@
 from datetime import datetime
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
+
 import yaml
+
 from kernelCI_app.helpers.trees import (
-    make_tree_identifier_key,
     get_tree_file_data,
     get_tree_url_to_name_map,
+    make_tree_identifier_key,
     sanitize_tree,
+)
+from kernelCI_app.tests.unitTests.helpers.fixtures.checkout_data import (
+    checkout_data_with_invalid_json_tags,
+    checkout_data_with_list_tags,
+    checkout_data_with_non_list_json_tags,
+    checkout_data_with_string_tags,
 )
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.treeListing import Checkout
-from kernelCI_app.tests.unitTests.helpers.fixtures.checkout_data import (
-    checkout_data_with_list_tags,
-    checkout_data_with_string_tags,
-    checkout_data_with_invalid_json_tags,
-    checkout_data_with_non_list_json_tags,
-)
 
 
 class TestMakeTreeIdentifierKey:

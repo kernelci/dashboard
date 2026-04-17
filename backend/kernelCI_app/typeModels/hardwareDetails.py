@@ -1,8 +1,10 @@
 from datetime import datetime
 from typing import Annotated, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel, Field
+
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
-
 from kernelCI_app.typeModels.common import make_default_validator
 from kernelCI_app.typeModels.commonDetails import (
     BuildHistoryItem,
@@ -11,17 +13,15 @@ from kernelCI_app.typeModels.commonDetails import (
     Summary,
     TestHistoryItem,
 )
-
 from kernelCI_app.typeModels.databases import (
     NULL_STATUS,
+    Checkout__GitRepositoryBranch,
+    Checkout__TreeName,
     Issue__Id,
+    Issue__Version,
     Origin,
     StatusValues,
-    Checkout__TreeName,
-    Checkout__GitRepositoryBranch,
-    Issue__Version,
 )
-from pydantic import BaseModel, Field
 
 
 class HardwareDetailsQueryParameters(BaseModel):

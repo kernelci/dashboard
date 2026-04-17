@@ -1,17 +1,17 @@
 import os
+from collections import defaultdict
 from typing import Any, Literal, Optional
 
 from django.conf import settings
+
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from kernelCI_app.helpers.issueExtras import assign_issue_first_seen
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.utils import read_yaml_file
-from collections import defaultdict
-from kernelCI_app.typeModels.issues import CheckoutIssue
 from kernelCI_app.queries.notifications import (
     get_issues_summary_data,
 )
-from kernelCI_app.helpers.issueExtras import assign_issue_first_seen
-from kernelCI_app.typeModels.issues import ProcessedExtraDetailedIssues
+from kernelCI_app.typeModels.issues import CheckoutIssue, ProcessedExtraDetailedIssues
+from kernelCI_app.utils import read_yaml_file
 
 type PossibleReportOptions = Literal["ignore_default_recipients"]
 """The expected possible options in a report. If a new option is added, add it here too."""

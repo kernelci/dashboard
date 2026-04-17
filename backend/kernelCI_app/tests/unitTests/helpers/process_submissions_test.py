@@ -1,26 +1,26 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from django.db import IntegrityError
 from django.test import SimpleTestCase
 from django.utils import timezone
+from pydantic import ValidationError
+
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     MAP_TABLENAMES_TO_COUNTER,
 )
-from pydantic import ValidationError
-
 from kernelCI_app.management.commands.helpers.process_submissions import (
-    get_model_fields,
-    flatten_dict_specific,
-    make_issue_instance,
-    make_checkout_instance,
-    make_build_instance,
-    make_test_instance,
-    make_incident_instance,
     build_instances_from_submission,
+    flatten_dict_specific,
+    get_model_fields,
     insert_items,
     insert_submission_data,
+    make_build_instance,
+    make_checkout_instance,
+    make_incident_instance,
+    make_issue_instance,
+    make_test_instance,
 )
-from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
-
+from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Tests
 
 MOCK_TIME = timezone.datetime(2025, 10, 11, 12, 0, 0)
 

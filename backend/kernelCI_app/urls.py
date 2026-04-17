@@ -1,12 +1,13 @@
+from django.conf import settings
 from django.urls import path
 from django.views.decorators.cache import cache_page
-from django.conf import settings
-from kernelCI_app import views
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
+
+from kernelCI_app import views
 
 timeout = settings.CACHE_TIMEOUT
 cache = cache_page(timeout)

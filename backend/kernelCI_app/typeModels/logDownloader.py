@@ -1,4 +1,5 @@
 from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 from kernelCI_app.constants.localization import DocStrings

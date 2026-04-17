@@ -1,11 +1,11 @@
+from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.helpers.issueListing import (
-    should_discard_issue_by_culprit,
-    should_discard_issue_by_origin,
-    should_discard_issue_by_options,
     should_discard_issue_by_category,
+    should_discard_issue_by_culprit,
+    should_discard_issue_by_options,
+    should_discard_issue_by_origin,
     should_discard_issue_record,
 )
-from kernelCI_app.helpers.filters import FilterParams
 from kernelCI_app.typeModels.issues import (
     CULPRIT_CODE,
     CULPRIT_HARNESS,

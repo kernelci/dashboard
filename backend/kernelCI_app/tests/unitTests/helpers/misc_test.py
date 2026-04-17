@@ -1,9 +1,9 @@
+from kernelCI_app.helpers.filters import UNKNOWN_STRING
 from kernelCI_app.helpers.misc import (
+    Misc,
     handle_misc,
     misc_value_or_default,
-    Misc,
 )
-from kernelCI_app.helpers.filters import UNKNOWN_STRING
 
 
 class TestHandleMisc:

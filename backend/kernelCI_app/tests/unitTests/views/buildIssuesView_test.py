@@ -1,8 +1,10 @@
 from unittest.mock import patch
+
 from django.test import SimpleTestCase
 from rest_framework.test import APIRequestFactory
-from kernelCI_app.views.buildIssuesView import BuildIssuesView
+
 from kernelCI_app.tests.unitTests.views.fixtures.build_data import base_issue_data
+from kernelCI_app.views.buildIssuesView import BuildIssuesView
 
 
 class TestBuildIssuesView(SimpleTestCase):

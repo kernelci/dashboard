@@ -1,12 +1,14 @@
 import json
+import logging
+from datetime import datetime, timedelta
 from typing import Generator
+
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connections, models
-import logging
-from django.conf import settings
-from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
-from datetime import datetime, timedelta
 from django.utils import timezone
+
+from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Tests
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +89,7 @@ class Command(BaseCommand):
             "--origins",
             type=lambda s: [origin.strip() for origin in s.split(",")],
             help="Limit database changes to specific origins (comma-separated list)."
-            + " If not provided, any origin will be considered",
+             " If not provided, any origin will be considered",
             default=[],
         )
 

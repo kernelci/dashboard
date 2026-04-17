@@ -1,7 +1,9 @@
-from typing import Any
-import requests
-from django.urls import reverse
 import json
+from typing import Any
+
+from django.urls import reverse
+
+import requests
 from kernelCI_app.helpers.filters import FilterFields
 from kernelCI_app.tests.utils.client.baseClient import BaseClient
 

@@ -1,15 +1,14 @@
 import logging
-from django.utils import timezone
 from typing import Any, TypedDict
 
 from django.db import IntegrityError
-
-from kernelCI_app.constants.ingester import INGESTER_GRAFANA_LABEL
+from django.utils import timezone
+from prometheus_client import Counter
 from pydantic import ValidationError
 
+from kernelCI_app.constants.ingester import INGESTER_GRAFANA_LABEL
 from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Tests
 from kernelCI_app.typeModels.modelTypes import TableNames
-from prometheus_client import Counter
 
 
 class ProcessedSubmission(TypedDict):

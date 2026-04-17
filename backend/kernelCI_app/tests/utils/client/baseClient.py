@@ -1,8 +1,9 @@
+import os
 from abc import ABC
 from typing import Any, Optional
-from urllib.parse import urljoin, urlencode
+from urllib.parse import urlencode, urljoin
+
 from kernelCI_app.helpers.filters import FilterFields
-import os
 
 
 class BaseClient(ABC):

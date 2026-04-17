@@ -1,8 +1,14 @@
-from http import HTTPStatus
 import json
+from http import HTTPStatus
 
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.issueExtras import (
     process_issues_extra_details,
@@ -12,11 +18,6 @@ from kernelCI_app.typeModels.issues import (
     IssueExtraDetailsResponse,
     ProcessedExtraDetailedIssues,
 )
-from drf_spectacular.utils import extend_schema
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from pydantic import ValidationError
-from kernelCI_app.constants.localization import ClientStrings
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/

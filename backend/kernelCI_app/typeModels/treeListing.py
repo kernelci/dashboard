@@ -1,21 +1,23 @@
 from typing import List
+
+from pydantic import BaseModel, Field, RootModel
+
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonListing import StatusCountV2
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
     Checkout__GitCommitName,
     Checkout__GitCommitTags,
-    Checkout__TreeName,
-    Checkout__Id,
-    Checkout__PatchsetHash,
     Checkout__GitRepositoryBranch,
     Checkout__GitRepositoryUrl,
+    Checkout__Id,
     Checkout__OriginBuildsFinishTime,
     Checkout__OriginTestsFinishTime,
+    Checkout__PatchsetHash,
+    Checkout__TreeName,
     Origin,
     Timestamp,
 )
-from pydantic import BaseModel, Field, RootModel
 
 
 class TestStatusCount(BaseModel):

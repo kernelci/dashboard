@@ -3,9 +3,11 @@ Factory for generating Issue test data.
 """
 
 import factory
-from factory.django import DjangoModelFactory
 from django.utils import timezone
+from factory.django import DjangoModelFactory
+
 from kernelCI_app.models import Issues
+
 from .mocks import Issue
 
 

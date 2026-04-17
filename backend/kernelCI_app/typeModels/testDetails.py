@@ -1,34 +1,35 @@
 from typing import Literal, Optional
-from typing_extensions import Annotated
+
 from pydantic import BaseModel, BeforeValidator, Field
+from typing_extensions import Annotated
+
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
-
 from kernelCI_app.typeModels.common import make_default_validator
 from kernelCI_app.typeModels.databases import (
     NULL_STATUS,
+    Build__Architecture,
+    Build__Compiler,
+    Build__ConfigName,
+    Build__Id,
+    Checkout__GitCommitHash,
+    Checkout__GitCommitTags,
+    Checkout__GitRepositoryBranch,
+    Checkout__GitRepositoryUrl,
+    Checkout__TreeName,
     Origin,
     StatusValues,
+    Test__EnvironmentCompatible,
+    Test__EnvironmentMisc,
     Test__Id,
-    Build__Id,
-    Test__Status,
-    Test__Path,
+    Test__InputFiles,
     Test__LogExcerpt,
     Test__LogUrl,
     Test__Misc,
-    Test__EnvironmentMisc,
-    Test__StartTime,
-    Test__EnvironmentCompatible,
     Test__OutputFiles,
-    Test__InputFiles,
-    Build__Compiler,
-    Build__Architecture,
-    Build__ConfigName,
-    Checkout__GitCommitHash,
-    Checkout__GitRepositoryBranch,
-    Checkout__GitRepositoryUrl,
-    Checkout__GitCommitTags,
-    Checkout__TreeName,
+    Test__Path,
+    Test__StartTime,
+    Test__Status,
     Timestamp,
 )
 from kernelCI_app.utils import validate_str_to_dict

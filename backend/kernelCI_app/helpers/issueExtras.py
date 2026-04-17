@@ -1,15 +1,15 @@
 from collections import defaultdict
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.queries.issues import get_issue_first_seen_data, get_issue_trees_data
 from kernelCI_app.typeModels.issues import (
     ExtraIssuesData,
+    FirstIncident,
     IssueWithExtraInfo,
     ProcessedExtraDetailedIssues,
     TreeSetItem,
-    FirstIncident,
 )
 
 

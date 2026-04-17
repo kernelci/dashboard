@@ -1,11 +1,12 @@
-from kernelCI_app.tests.utils.client.treeClient import TreeClient
-from kernelCI_app.tests.utils.asserts import (
-    assert_status_code_and_error_response,
-)
-from kernelCI_app.utils import string_to_json
 from http import HTTPStatus
 
 import pytest
+
+from kernelCI_app.tests.utils.asserts import (
+    assert_status_code_and_error_response,
+)
+from kernelCI_app.tests.utils.client.treeClient import TreeClient
+from kernelCI_app.utils import string_to_json
 
 client = TreeClient()
 

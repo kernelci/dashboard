@@ -2,17 +2,16 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 from kernelCI_app.queries.issues import (
-    get_issue_builds,
-    get_issue_tests,
-    get_issue_listing_data,
-    get_latest_issue_version,
-    get_issue_details,
     get_build_issues,
-    get_test_issues,
+    get_issue_builds,
+    get_issue_details,
     get_issue_first_seen_data,
+    get_issue_listing_data,
+    get_issue_tests,
     get_issue_trees_data,
+    get_latest_issue_version,
+    get_test_issues,
 )
-
 from kernelCI_app.tests.unitTests.queries.conftest import (
     setup_mock_cursor,
     setup_mock_queryset,

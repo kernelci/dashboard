@@ -2,7 +2,7 @@
 Build data management class.
 """
 
-from .fixtures import EXPECTED_BUILD_IDS, CHECKOUT_BUILD_STATUS_RULES
+from .fixtures import CHECKOUT_BUILD_STATUS_RULES, EXPECTED_BUILD_IDS
 
 
 class Build:

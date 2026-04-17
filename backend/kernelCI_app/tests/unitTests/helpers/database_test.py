@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 from kernelCI_app.helpers.database import dict_fetchall
 
 

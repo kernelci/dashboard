@@ -1,10 +1,12 @@
+from http import HTTPStatus
 from typing import Optional
+
 from django.http import HttpRequest
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from http import HTTPStatus
+
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
@@ -16,6 +18,10 @@ from kernelCI_app.helpers.treeDetails import (
     get_current_row_data,
 )
 from kernelCI_app.queries.tree import get_tree_data
+from kernelCI_app.typeModels.commonDetails import (
+    CommonDetailsTestsResponse,
+    TestHistoryItem,
+)
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     COMMIT_HASH_PATH_PARAM,
     GIT_BRANCH_PATH_PARAM,
@@ -24,10 +30,6 @@ from kernelCI_app.typeModels.commonOpenApiParameters import (
 from kernelCI_app.typeModels.treeDetails import (
     DirectTreeDetailsQueryParameters,
     TreeDetailsQueryParameters,
-)
-from kernelCI_app.typeModels.commonDetails import (
-    CommonDetailsTestsResponse,
-    TestHistoryItem,
 )
 from kernelCI_app.utils import is_boot
 

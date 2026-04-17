@@ -1,25 +1,27 @@
 import json
-import yaml
-from unittest.mock import patch, mock_open
 from datetime import timedelta
+from unittest.mock import mock_open, patch
+
+import yaml
 from django.utils import timezone
+
+from kernelCI_app.typeModels.common import GroupedStatus, StatusCount
+from kernelCI_app.typeModels.issues import Issue
+from kernelCI_app.typeModels.treeListing import TestStatusCount
 from kernelCI_app.utils import (
-    create_issue_typed,
+    DEFAULT_QUERY_TIME_INTERVAL,
     convert_issues_dict_to_list_typed,
+    create_issue_typed,
     extract_error_message,
-    get_query_time_interval,
     get_error_body_response,
+    get_query_time_interval,
+    group_status,
+    is_boot,
+    read_yaml_file,
     sanitize_dict,
     string_to_json,
-    is_boot,
     validate_str_to_dict,
-    group_status,
-    read_yaml_file,
-    DEFAULT_QUERY_TIME_INTERVAL,
 )
-from kernelCI_app.typeModels.issues import Issue
-from kernelCI_app.typeModels.common import StatusCount, GroupedStatus
-from kernelCI_app.typeModels.treeListing import TestStatusCount
 
 
 class TestCreateIssueTyped:

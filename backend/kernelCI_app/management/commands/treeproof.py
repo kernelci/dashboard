@@ -1,12 +1,14 @@
 import logging
+import os
+import re
 from typing import Optional
+
+import yaml
+from django.conf import settings
 from django.core.management.base import BaseCommand
+
 from kernelCI_app.constants.tree_names import TREE_NAMES_FILENAME
 from kernelCI_app.models import Checkouts
-import re
-import yaml
-import os
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 

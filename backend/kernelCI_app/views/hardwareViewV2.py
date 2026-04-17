@@ -7,20 +7,20 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
-)
-from kernelCI_app.typeModels.hardwareListingV2 import (
-    HardwareItemV2,
-    HardwareQueryParamsV2,
-    HardwareQueryParamsV2DocumentationOnly,
-    HardwareListingResponseV2,
-    StatusCountV2,
 )
 from kernelCI_app.queries.hardware import (
     get_hardware_listing_data_from_status_table,
 )
-from kernelCI_app.constants.localization import ClientStrings
+from kernelCI_app.typeModels.hardwareListingV2 import (
+    HardwareItemV2,
+    HardwareListingResponseV2,
+    HardwareQueryParamsV2,
+    HardwareQueryParamsV2DocumentationOnly,
+    StatusCountV2,
+)
 
 
 class HardwareViewV2(APIView):

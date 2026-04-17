@@ -1,9 +1,9 @@
 from typing import NamedTuple, Optional, Sequence, TypedDict
-from kernelCI_app.helpers.logger import logger
+
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.constants.process_pending import ROLLUP_STATUS_FIELDS
+from kernelCI_app.helpers.logger import logger
 from kernelCI_app.models import Builds, Checkouts, PendingTest, StatusChoices
-
 
 EMPTY_PATH_GROUP = "-"
 

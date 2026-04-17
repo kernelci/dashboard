@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 from kernelCI_app.queries.test import get_test_details_data, get_test_status_history
-
 from kernelCI_app.tests.unitTests.queries.conftest import (
     setup_mock_cursor,
     setup_mock_test_queryset,

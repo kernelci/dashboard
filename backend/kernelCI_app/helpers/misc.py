@@ -1,4 +1,5 @@
-from typing import Union, TypedDict, Optional
+from typing import Optional, TypedDict, Union
+
 from kernelCI_app.helpers.filters import UNKNOWN_STRING
 from kernelCI_app.utils import sanitize_dict
 

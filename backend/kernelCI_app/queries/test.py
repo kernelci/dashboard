@@ -1,6 +1,7 @@
 from typing import Optional
 
 from django.db import connection
+
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.models import Tests
 from kernelCI_app.typeModels.databases import (

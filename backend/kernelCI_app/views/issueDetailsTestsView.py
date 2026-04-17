@@ -2,6 +2,12 @@ from http import HTTPStatus
 from typing import Optional
 
 from django.http import HttpRequest
+from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.issues import get_issue_tests
 from kernelCI_app.typeModels.commonOpenApiParameters import ISSUE_ID_PATH_PARAM
@@ -10,11 +16,6 @@ from kernelCI_app.typeModels.issueDetails import (
     IssueDetailsQueryParameters,
     IssueTestsResponse,
 )
-from drf_spectacular.utils import extend_schema
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from pydantic import ValidationError
-from kernelCI_app.constants.localization import ClientStrings
 
 
 class IssueDetailsTests(APIView):

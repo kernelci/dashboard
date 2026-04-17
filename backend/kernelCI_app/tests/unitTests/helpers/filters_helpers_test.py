@@ -1,39 +1,41 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
+from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.filters import (
-    is_status_failure,
-    is_known_issue,
-    is_unknown_build_issue,
-    is_exclusively_build_issue,
-    is_exclusively_test_issue,
-    is_issue_from_test,
-    is_issue_from_build,
-    verify_issue_in_filter,
-    is_issue_filtered_out,
-    should_filter_test_issue,
-    should_filter_build_issue,
-    should_increment_test_issue,
-    should_increment_build_issue,
-    to_int_or_default,
     FilterParams,
     InvalidComparisonOPError,
+    is_exclusively_build_issue,
+    is_exclusively_test_issue,
+    is_issue_filtered_out,
+    is_issue_from_build,
+    is_issue_from_test,
+    is_known_issue,
+    is_status_failure,
+    is_unknown_build_issue,
+    should_filter_build_issue,
+    should_filter_test_issue,
+    should_increment_build_issue,
+    should_increment_test_issue,
+    to_int_or_default,
+    verify_issue_in_filter,
 )
-from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.tests.unitTests.helpers.fixtures.filter_fixtures import (
     BOOT_FILTER_DATA_SCENARIOS,
+    FILTER_BODY_DATA,
     FILTER_DATA_SCENARIOS,
     FILTER_OBJECTS,
-    FILTER_BODY_DATA,
+    MATCHING_ISSUE_FILTERS,
     filter_params_with_exact_filter,
     filter_params_with_filters,
     filter_params_with_invalid_op,
-    MATCHING_ISSUE_FILTERS,
     mock_request,
     mock_request_with_filters,
-    mock_request_with_multiple_filters,
-    mock_request_with_string_filter,
-    mock_request_with_regex_filter,
     mock_request_with_invalid_param,
+    mock_request_with_multiple_filters,
+    mock_request_with_regex_filter,
+    mock_request_with_string_filter,
 )
 
 

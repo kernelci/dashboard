@@ -1,4 +1,5 @@
 from typing import Literal, Type
+
 from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Tests
 
 type TableNames = Literal["issues", "checkouts", "builds", "tests", "incidents"]

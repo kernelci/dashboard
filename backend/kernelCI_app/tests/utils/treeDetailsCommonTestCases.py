@@ -4,7 +4,6 @@ from kernelCI_app.typeModels.treeDetails import (
     TreeQueryParameters,
 )
 
-
 UNEXISTENT_TREE = {
     "id": "invalid id",
     "params": {

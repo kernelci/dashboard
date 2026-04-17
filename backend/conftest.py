@@ -1,8 +1,9 @@
-import tomllib
-from pytest import Item
 import os
+import tomllib
+
 import django
 from django.conf import settings
+from pytest import Item
 
 
 def pytest_addoption(parser):

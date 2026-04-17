@@ -3,11 +3,13 @@ Factory for generating Incident test data.
 """
 
 import factory
-from factory.django import DjangoModelFactory
 from django.utils import timezone
+from factory.django import DjangoModelFactory
+
 from kernelCI_app.models import Incidents
-from .issue_factory import IssueFactory
+
 from .build_factory import BuildFactory
+from .issue_factory import IssueFactory
 from .test_factory import TestFactory
 
 

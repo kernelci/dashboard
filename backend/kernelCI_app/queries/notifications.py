@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import sys
+
 from django.db import connection, connections
+from pydantic import ValidationError
 
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.logger import out
@@ -13,7 +15,6 @@ from kernelCI_app.typeModels.metrics_notifications import (
     MetricsReportData,
     TopIssue,
 )
-from pydantic import ValidationError
 
 
 def kcidb_execute_query(query, params=None):

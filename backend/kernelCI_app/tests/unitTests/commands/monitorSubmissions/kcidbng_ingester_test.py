@@ -1,31 +1,31 @@
-from unittest.mock import patch, MagicMock, mock_open, call
+from unittest.mock import MagicMock, call, mock_open, patch
 
+import pytest
+
+from kernelCI_app.constants.ingester import AUTOMATIC_LAB_FIELD
+from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
+    SubmissionFileMetadata,
+    _extract_origins_info,
+    _standardize_lab_field,
+    consume_buffer,
+    flush_buffers,
+    ingest_submissions_parallel,
+    prepare_file_data,
+    standardize_labs,
+    standardize_tree_names,
+)
 from kernelCI_app.tests.unitTests.helpers.fixtures.kcidbng_ingester_data import (
     ARCHIVE_SUBMISSIONS_DIR,
     INGEST_BATCH_SIZE_MOCK,
     MAINLINE_URL,
     SUBMISSION_DIRS_MOCK,
+    SUBMISSION_FILE_DATA_MOCK,
+    SUBMISSION_FILE_MOCK,
+    SUBMISSION_FILENAME_MOCK,
     SUBMISSION_FILEPATH_MOCK,
+    SUBMISSION_PATH_MOCK,
     TIME_MOCK,
     TREE_NAMES_MOCK,
-    SUBMISSION_PATH_MOCK,
-    SUBMISSION_FILE_MOCK,
-    SUBMISSION_FILE_DATA_MOCK,
-    SUBMISSION_FILENAME_MOCK,
-)
-from kernelCI_app.constants.ingester import AUTOMATIC_LAB_FIELD
-import pytest
-
-from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
-    SubmissionFileMetadata,
-    standardize_tree_names,
-    standardize_labs,
-    _standardize_lab_field,
-    prepare_file_data,
-    consume_buffer,
-    flush_buffers,
-    ingest_submissions_parallel,
-    _extract_origins_info,
 )
 
 

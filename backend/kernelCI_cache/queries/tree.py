@@ -1,7 +1,8 @@
-from typing import Optional
 from datetime import timedelta
-from django.utils.timezone import now
+from typing import Optional
+
 from django.db import connections
+from django.utils.timezone import now
 
 from kernelCI_app.helpers.database import dict_fetchall
 

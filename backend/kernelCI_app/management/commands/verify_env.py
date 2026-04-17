@@ -13,12 +13,10 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connections
 from django.db.utils import OperationalError
-
 from redis import Redis
 from redis.exceptions import RedisError
 
 from kernelCI_app.helpers.email import smtp_send_email, smtp_setup_connection
-
 
 DEFAULT_REDIS_TIMEOUT_SECONDS = 5
 

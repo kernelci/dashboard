@@ -2,13 +2,12 @@ import os
 from typing import Optional
 
 from django.conf import settings
+from jinja2 import Environment, FileSystemLoader, Template
 
 from kernelCI_app.helpers.email import smtp_send_email
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.management.commands.helpers.summary import SIGNUP_FOLDER
 from kernelCI_app.utils import read_yaml_file
-from jinja2 import Environment, FileSystemLoader, Template
-
 
 KERNELCI_RESULTS = "kernelci-results@groups.io"
 KERNELCI_REPLYTO = "kernelci@lists.linux.dev"

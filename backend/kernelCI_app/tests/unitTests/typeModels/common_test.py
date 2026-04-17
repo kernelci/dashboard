@@ -1,6 +1,6 @@
 from kernelCI_app.typeModels.common import (
-    StatusCount,
     GroupedStatus,
+    StatusCount,
     make_default_validator,
 )
 

@@ -1,6 +1,7 @@
+from django.db import connections, migrations
+
 from kernelCI.settings import DATABASES
 from kernelCI_app.helpers.discordWebhook import send_discord_notification
-from django.db import migrations, connections
 
 cache_path = DATABASES["cache"]["NAME"]
 

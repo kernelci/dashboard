@@ -1,24 +1,24 @@
-from kernelCI_app.tests.utils.client.hardwareClient import HardwareClient
 from kernelCI_app.tests.utils.asserts import (
-    assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
+    assert_status_code_and_error_response,
 )
+from kernelCI_app.tests.utils.client.hardwareClient import HardwareClient
 from kernelCI_app.tests.utils.fields import hardware
-from kernelCI_app.utils import string_to_json
 from kernelCI_app.tests.utils.hardwareDetailsCommonTestCases import (
     ALLWINNER_HARDWARE,
-    UNEXISTENT_HARDWARE_ID,
-    BAD_REQUEST_REQUEST_BODY,
-    GOOGLE_JUNIPER_HARDWARE_WITHOUT_FILTERS,
-    HARDWARE_WITH_UNEXISTENT_FILTER_VALUE,
-    GOOGLE_JUNIPER_HARDWARE_WITH_FILTERS,
     ARM_JUNO_HARDWARE_WITHOUT_FILTERS,
-    HARDWARE_WITH_GLOBAL_FILTER,
     BAD_REQUEST_EXPECTED_RESPONSE,
-    SUCCESS_EXPECTED_RESPONSE,
+    BAD_REQUEST_REQUEST_BODY,
     EMPTY_EXPECTED_RESPONSE,
     ERROR_EXPECTED_RESPONSE,
+    GOOGLE_JUNIPER_HARDWARE_WITH_FILTERS,
+    GOOGLE_JUNIPER_HARDWARE_WITHOUT_FILTERS,
+    HARDWARE_WITH_GLOBAL_FILTER,
+    HARDWARE_WITH_UNEXISTENT_FILTER_VALUE,
+    SUCCESS_EXPECTED_RESPONSE,
+    UNEXISTENT_HARDWARE_ID,
 )
+from kernelCI_app.utils import string_to_json
 
 client = HardwareClient()
 

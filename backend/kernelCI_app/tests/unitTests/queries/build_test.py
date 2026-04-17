@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 from kernelCI_app.queries.build import get_build_details, get_build_tests
-
 from kernelCI_app.tests.unitTests.queries.conftest import (
     setup_mock_filter_values_queryset,
     setup_mock_query_builder,

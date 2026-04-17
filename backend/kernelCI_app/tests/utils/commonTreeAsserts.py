@@ -1,12 +1,13 @@
 from typing import Literal
-from kernelCI_app.typeModels.databases import StatusValues
+
 from kernelCI_app.tests.utils.asserts import (
-    assert_has_fields_in_response_content,
-    assert_build_filters,
     assert_boots_filters,
+    assert_build_filters,
+    assert_has_fields_in_response_content,
     assert_tests_filters,
 )
 from kernelCI_app.tests.utils.fields import tree
+from kernelCI_app.typeModels.databases import StatusValues
 
 type SummaryFields = Literal["builds", "boots", "tests"]
 

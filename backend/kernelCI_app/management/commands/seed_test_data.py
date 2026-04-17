@@ -3,31 +3,33 @@ Management command to seed test database with realistic data.
 """
 
 import sys
+
+from django.core.management.base import BaseCommand
+from django.db import transaction
+
 from kernelCI_app.constants.general import UNKNOWN_STRING
+from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.management.commands.helpers.process_pending_helpers import (
     accumulate_rollup_entry,
     extract_path_group,
 )
-from django.core.management.base import BaseCommand
-from django.db import transaction
-from kernelCI_app.tests.factories import (
-    CheckoutFactory,
-    BuildFactory,
-    TestFactory,
-    IssueFactory,
-    IncidentFactory,
-)
 from kernelCI_app.models import (
-    Issues,
-    Tests,
     Builds,
     Checkouts,
     Incidents,
-    TreeTestsRollup,
+    Issues,
     StatusChoices,
+    Tests,
+    TreeTestsRollup,
+)
+from kernelCI_app.tests.factories import (
+    BuildFactory,
+    CheckoutFactory,
+    IncidentFactory,
+    IssueFactory,
+    TestFactory,
 )
 from kernelCI_app.tests.factories.mocks import Build, Issue, Test
-from kernelCI_app.helpers.system import get_running_instance
 
 
 class Command(BaseCommand):

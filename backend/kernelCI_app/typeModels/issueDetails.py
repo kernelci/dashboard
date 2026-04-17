@@ -1,44 +1,44 @@
 from typing import List, Optional
-from typing_extensions import Annotated
-from pydantic import BaseModel, BeforeValidator, RootModel, Field
-from kernelCI_app.constants.localization import DocStrings
 
+from pydantic import BaseModel, BeforeValidator, Field, RootModel
+from typing_extensions import Annotated
+
+from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import make_default_validator
 from kernelCI_app.typeModels.databases import (
     NULL_STATUS,
-    Build__Id,
     Build__Architecture,
-    Build__ConfigName,
-    Build__Misc,
-    Build__Status,
-    Build__StartTime,
-    Build__Duration,
     Build__Compiler,
+    Build__ConfigName,
+    Build__Duration,
+    Build__Id,
     Build__LogUrl,
+    Build__Misc,
+    Build__StartTime,
+    Build__Status,
+    Checkout__GitRepositoryBranch,
+    Checkout__TreeName,
     Issue__Categories,
-    Issue__Id,
-    Issue__Version,
-    Issue__ReportUrl,
-    Issue__ReportSubject,
-    Issue__CulpritCode,
-    Issue__CulpritTool,
-    Issue__CulpritHarness,
     Issue__Comment,
+    Issue__CulpritCode,
+    Issue__CulpritHarness,
+    Issue__CulpritTool,
+    Issue__Id,
     Issue__Misc,
+    Issue__ReportSubject,
+    Issue__ReportUrl,
+    Issue__Version,
     Origin,
     StatusValues,
-    Test__Id,
     Test__Duration,
-    Test__Path,
-    Test__StartTime,
     Test__EnvironmentCompatible,
     Test__EnvironmentMisc,
+    Test__Id,
+    Test__Path,
+    Test__StartTime,
     Timestamp,
-    Checkout__TreeName,
-    Checkout__GitRepositoryBranch,
 )
 from kernelCI_app.typeModels.issues import ProcessedExtraDetailedIssues
-
 from kernelCI_app.utils import validate_str_to_dict
 
 

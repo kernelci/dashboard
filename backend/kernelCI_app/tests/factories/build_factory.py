@@ -3,9 +3,11 @@ Factory for generating Build test data.
 """
 
 import factory
-from factory.django import DjangoModelFactory
 from django.utils import timezone
+from factory.django import DjangoModelFactory
+
 from kernelCI_app.models import Builds, StatusChoices
+
 from .checkout_factory import CheckoutFactory
 from .mocks import Build, Checkout
 

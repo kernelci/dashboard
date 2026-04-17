@@ -1,13 +1,14 @@
 from datetime import datetime
 from typing import TypedDict
-from kernelCI_app.typeModels.issues import CheckoutIssue
-from typing_extensions import Annotated
+
 from pydantic import BaseModel, Field
+from typing_extensions import Annotated
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import StatusCount, make_default_validator
 from kernelCI_app.typeModels.databases import Test__Id, Test__StartTime, Test__Status
+from kernelCI_app.typeModels.issues import CheckoutIssue
 from kernelCI_app.typeModels.treeListing import TestStatusCount
 
 DEFAULT_PATH_SEARCH = ["%"]

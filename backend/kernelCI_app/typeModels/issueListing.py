@@ -1,7 +1,8 @@
 from typing import Optional
-from pydantic import BaseModel, Field
-from kernelCI_app.constants.localization import DocStrings
 
+from pydantic import BaseModel, Field
+
+from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.commonListing import ListingInterval
 from kernelCI_app.typeModels.databases import (
     Issue__Categories,
@@ -11,8 +12,8 @@ from kernelCI_app.typeModels.databases import (
     Issue__CulpritTool,
     Issue__Id,
     Issue__Version,
-    Timestamp,
     Origin,
+    Timestamp,
 )
 from kernelCI_app.typeModels.issues import FirstIncident
 

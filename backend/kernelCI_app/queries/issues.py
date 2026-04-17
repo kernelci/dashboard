@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Any, Optional
+
 from django.db import connection, connections
+
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.models import Issues

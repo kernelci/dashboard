@@ -1,9 +1,11 @@
-import requests
+import json
+
 from django.urls import reverse
+
+import requests
 from kernelCI_app.tests.utils.client.baseClient import BaseClient
 from kernelCI_app.typeModels.hardwareDetails import HardwareDetailsPostBody
 from kernelCI_app.typeModels.hardwareListing import HardwareQueryParamsDocumentationOnly
-import json
 
 
 class HardwareClient(BaseClient):

@@ -1,12 +1,13 @@
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import MagicMock, mock_open, patch
+
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
-    upload_logexcerpt,
+    cache_logs_maintenance,
+    extract_log_excerpt,
     get_from_cache,
+    process_log_excerpt_from_item,
     set_in_cache,
     set_log_excerpt_ofile,
-    process_log_excerpt_from_item,
-    extract_log_excerpt,
-    cache_logs_maintenance,
+    upload_logexcerpt,
 )
 from kernelCI_app.tests.unitTests.helpers.fixtures.log_excerpt_data import (
     COMPRESSED_LOGEXCERPT,

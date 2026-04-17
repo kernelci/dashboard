@@ -3,11 +3,13 @@ Factory for generating Test test data.
 """
 
 import factory
-from factory.django import DjangoModelFactory
 from django.utils import timezone
-from kernelCI_app.models import Tests, StatusChoices
+from factory.django import DjangoModelFactory
+
+from kernelCI_app.models import StatusChoices, Tests
+
 from .build_factory import BuildFactory
-from .mocks import Test, Checkout
+from .mocks import Checkout, Test
 
 
 class TestFactory(DjangoModelFactory):
@@ -72,7 +74,7 @@ class TestFactory(DjangoModelFactory):
     log_url = factory.LazyAttribute(
         lambda obj: (
             "https://logs.kernelci.org/"
-            + f"{obj.origin}/{obj.build.checkout.git_commit_hash[:8]}/{obj.id}.log"
+             f"{obj.origin}/{obj.build.checkout.git_commit_hash[:8]}/{obj.id}.log"
         )
     )
     log_excerpt = factory.Faker("text", max_nb_chars=1500)

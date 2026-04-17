@@ -1,5 +1,6 @@
-import requests
 from http import HTTPStatus
+
+import requests
 
 
 def assert_status_code(*, response: requests.Response, status_code: HTTPStatus) -> None:

@@ -1,10 +1,17 @@
+import json
 from collections import defaultdict
 from datetime import datetime
-import json
+from http import HTTPStatus
+from typing import Dict, List, Literal, Set
+
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
-from http import HTTPStatus
+from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import FilterParams
@@ -23,6 +30,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     get_trees_with_selected_commit,
     get_validated_current_tree,
     handle_build,
+    handle_test_history,
     handle_test_summary,
     handle_tree_status_summary,
     is_issue_processed,
@@ -31,7 +39,6 @@ from kernelCI_app.helpers.hardwareDetails import (
     process_issue,
     set_trees_status_summary,
     unstable_parse_post_body,
-    handle_test_history,
 )
 from kernelCI_app.queries.hardware import (
     get_hardware_details_data,
@@ -60,11 +67,6 @@ from kernelCI_app.typeModels.hardwareDetails import (
 )
 from kernelCI_app.utils import is_boot
 from kernelCI_app.viewCommon import create_details_build_summary
-from pydantic import ValidationError
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from typing import Dict, List, Literal, Set
-from kernelCI_app.constants.localization import ClientStrings
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/

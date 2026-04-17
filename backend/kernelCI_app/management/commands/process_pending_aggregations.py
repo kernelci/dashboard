@@ -5,32 +5,32 @@ import signal
 import time
 from datetime import datetime
 from typing import Literal, Optional, Sequence, TypedDict, Union
-from kernelCI_app.management.commands.helpers.process_pending_helpers import (
-    aggregate_tests_rollup,
-)
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import connection, transaction
+from prometheus_client import Counter, start_http_server
+
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
+from kernelCI_app.constants.ingester import PROMETHEUS_MULTIPROC_DIR
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.management.commands.helpers.aggregation_helpers import simplify_status
+from kernelCI_app.management.commands.helpers.process_pending_helpers import (
+    aggregate_tests_rollup,
+)
 from kernelCI_app.management.commands.helpers.tree_listing import (
     TreeListingRow,
     tree_listing_sort_key,
 )
-from kernelCI_app.constants.ingester import PROMETHEUS_MULTIPROC_DIR
-from prometheus_client import start_http_server
 from kernelCI_app.models import (
     Builds,
     Checkouts,
     Incidents,
-    PendingTest,
     PendingBuilds,
+    PendingTest,
     ProcessedListingItems,
     SimplifiedStatusChoices,
 )
-
-from prometheus_client import Counter
 
 AGGREGATION_RECORDS_WRITTEN = Counter(
     "aggregation_records_written_total",

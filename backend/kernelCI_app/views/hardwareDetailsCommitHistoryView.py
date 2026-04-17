@@ -1,10 +1,18 @@
-from collections import defaultdict
 import json
+from collections import defaultdict
+from datetime import datetime, timezone
+from http import HTTPStatus
+
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.logger import log_message
-from django.utils.decorators import method_decorator
-from datetime import datetime, timezone
-from django.views.decorators.csrf import csrf_exempt
 from kernelCI_app.helpers.trees import make_tree_identifier_key
 from kernelCI_app.queries.hardware import get_hardware_commit_history
 from kernelCI_app.typeModels.commonOpenApiParameters import (
@@ -15,12 +23,6 @@ from kernelCI_app.typeModels.hardwareDetails import (
     CommitHistoryValidCheckout,
     HardwareCommitHistoryResponse,
 )
-from pydantic import ValidationError
-from http import HTTPStatus
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema
-from kernelCI_app.constants.localization import ClientStrings
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/

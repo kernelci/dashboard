@@ -1,17 +1,19 @@
+import copy
+from http import HTTPStatus
+
 import pytest
-from kernelCI_app.typeModels.hardwareDetails import (
-    CommitHistoryPostBody,
-    CommitHead,
+
+from kernelCI_app.tests.utils.asserts import (
+    assert_has_fields_in_response_content,
+    assert_status_code_and_error_response,
 )
 from kernelCI_app.tests.utils.client.hardwareClient import HardwareClient
-from kernelCI_app.utils import string_to_json
-from kernelCI_app.tests.utils.asserts import (
-    assert_status_code_and_error_response,
-    assert_has_fields_in_response_content,
-)
 from kernelCI_app.tests.utils.fields.hardware import hardware_history_checkouts
-from http import HTTPStatus
-import copy
+from kernelCI_app.typeModels.hardwareDetails import (
+    CommitHead,
+    CommitHistoryPostBody,
+)
+from kernelCI_app.utils import string_to_json
 
 client = HardwareClient()
 

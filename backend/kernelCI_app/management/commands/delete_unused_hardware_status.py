@@ -5,8 +5,10 @@ Removes HardwareStatus entries that have no corresponding checkout_id in the Lat
 """
 
 import logging
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
+
 from kernelCI_app.management.commands.helpers.healthcheck import (
     MONITORING_ID_PARAM_HELP_TEXT,
     run_with_healthcheck_monitoring,

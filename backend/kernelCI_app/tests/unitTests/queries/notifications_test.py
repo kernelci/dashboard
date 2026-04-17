@@ -1,17 +1,16 @@
 from unittest.mock import MagicMock, patch
 
 from kernelCI_app.queries.notifications import (
-    kcidb_new_issues,
-    kcidb_issue_details,
-    kcidb_build_incidents,
-    kcidb_test_incidents,
-    kcidb_last_test_without_issue,
     get_checkout_summary_data,
-    kcidb_tests_results,
     get_issues_summary_data,
+    kcidb_build_incidents,
     kcidb_execute_query,
+    kcidb_issue_details,
+    kcidb_last_test_without_issue,
+    kcidb_new_issues,
+    kcidb_test_incidents,
+    kcidb_tests_results,
 )
-
 from kernelCI_app.tests.unitTests.queries.conftest import setup_mock_cursor
 
 

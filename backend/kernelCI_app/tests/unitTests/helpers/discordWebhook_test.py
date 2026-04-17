@@ -1,10 +1,11 @@
 from unittest.mock import patch
+
 import requests
 from kernelCI_app.helpers.discordWebhook import (
-    validate_notification,
-    send_discord_notification,
     AVATAR_URL,
     WEBHOOK_NAME,
+    send_discord_notification,
+    validate_notification,
 )
 
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from kernelCI_app.typeModels.commonDetails import (
     BuildHistoryItem,
 )

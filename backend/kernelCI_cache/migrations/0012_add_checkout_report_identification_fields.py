@@ -1,4 +1,5 @@
 from django.db import connections, migrations, models
+
 from kernelCI import settings
 
 _TEMP_DEFAULT = "none"

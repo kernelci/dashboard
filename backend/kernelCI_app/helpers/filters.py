@@ -1,15 +1,17 @@
-from collections.abc import Callable
-from typing import Optional, Dict, List, Tuple, TypedDict, Literal, Any, Union
-from django.http import HttpRequest, HttpResponseBadRequest
 import re
-from kernelCI_app.constants.general import UNCATEGORIZED_STRING
+from collections.abc import Callable
+from typing import Any, Dict, List, Literal, Optional, Tuple, TypedDict, Union
+
+from django.http import HttpRequest, HttpResponseBadRequest
+
+from kernelCI_app.constants.general import UNCATEGORIZED_STRING, UNKNOWN_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.models import StatusChoices
 from kernelCI_app.typeModels.databases import (
     StatusValues,
-    failure_status_list,
     build_fail_status_list,
+    failure_status_list,
 )
 from kernelCI_app.typeModels.issues import (
     ISSUE_FILTER_OPTIONS,
@@ -18,7 +20,6 @@ from kernelCI_app.typeModels.issues import (
     PossibleIssueCulprits,
 )
 from kernelCI_app.utils import get_error_body_response
-from kernelCI_app.constants.general import UNKNOWN_STRING
 
 NULL_STRINGS = set(["null", UNKNOWN_STRING, "NULL"])
 

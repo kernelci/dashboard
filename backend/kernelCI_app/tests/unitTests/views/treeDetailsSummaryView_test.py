@@ -1,10 +1,10 @@
 from unittest.mock import patch
+
 from django.test import SimpleTestCase
 from rest_framework.test import APIRequestFactory
 
-from kernelCI_app.views.treeDetailsSummaryView import TreeDetailsSummary
 from kernelCI_app.tests.unitTests.helpers.fixtures.tree_details_data import create_row
-
+from kernelCI_app.views.treeDetailsSummaryView import TreeDetailsSummary
 
 COMMIT_HASH = "abc123def456rollupfallback"
 

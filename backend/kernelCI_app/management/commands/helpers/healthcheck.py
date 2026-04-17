@@ -4,7 +4,6 @@ from typing import Any, Literal
 from django.conf import settings
 
 import requests
-
 from kernelCI_app.helpers.logger import log_message
 
 MONITORING_ID_PARAM_HELP_TEXT = (

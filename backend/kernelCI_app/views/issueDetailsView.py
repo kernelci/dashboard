@@ -1,6 +1,14 @@
 from http import HTTPStatus
 from typing import Optional
+
+from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.helpers.issueExtras import process_issues_extra_details
 from kernelCI_app.queries.issues import get_issue_details, get_latest_issue_version
 from kernelCI_app.typeModels.commonOpenApiParameters import ISSUE_ID_PATH_PARAM
 from kernelCI_app.typeModels.issueDetails import (
@@ -8,12 +16,6 @@ from kernelCI_app.typeModels.issueDetails import (
     IssueDetailsQueryParameters,
     IssueDetailsResponse,
 )
-from kernelCI_app.helpers.issueExtras import process_issues_extra_details
-from drf_spectacular.utils import extend_schema
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from pydantic import ValidationError
-from kernelCI_app.constants.localization import ClientStrings
 
 
 class IssueDetails(APIView):
