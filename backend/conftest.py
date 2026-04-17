@@ -56,10 +56,10 @@ def get_test_markers() -> list[str]:
 
         return marker_names
 
-    except FileNotFoundError:
-        raise FileNotFoundError("pyproject.toml not found")
+    except FileNotFoundError as file_err:
+        raise FileNotFoundError("pyproject.toml not found") from file_err
     except Exception as e:
-        raise e(f"Error reading markers from pyproject.toml: {e}")
+        raise e(f"Error reading markers from pyproject.toml: {e}") from e
 
 
 def pytest_collection_modifyitems(items: list[Item]):

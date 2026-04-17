@@ -89,7 +89,7 @@ def test_get_hardware_details_commit_history(
     if not has_error_body:
         assert "commit_history_table" in content
 
-        for _, commit_data in content["commit_history_table"].items():
+        for commit_data in content["commit_history_table"].values():
             assert_has_fields_in_response_content(
                 fields=hardware_history_checkouts, response_content=commit_data[0]
             )

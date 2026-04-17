@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, Self, Union
 
 from pydantic import BaseModel, Field, field_validator
 from typing_extensions import Annotated
@@ -40,7 +40,7 @@ class TestArchSummaryItem(BaseModel):
 class BuildArchitectures(StatusCount):
     compilers: Optional[list[str]] = []
 
-    def __iadd__(self, other: StatusCount) -> "BuildArchitectures":
+    def __iadd__(self, other: StatusCount) -> Self:
         self.PASS += other.PASS
         self.ERROR += other.ERROR
         self.FAIL += other.FAIL

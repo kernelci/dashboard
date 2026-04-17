@@ -23,7 +23,6 @@ build_details_data = {
     "git_commit_hash": "test_git_commit_hash",
     "git_commit_name": "test_git_commit_name",
     "git_commit_tags": ["test_git_commit_tag"],
-    "origin": "test_origin",
     "log_excerpt": "test_log_excerpt",
     "input_files": None,
     "output_files": None,

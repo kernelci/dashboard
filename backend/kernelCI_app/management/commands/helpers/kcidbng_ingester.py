@@ -418,7 +418,7 @@ def process_batch(
             counter_lock=counter_lock,
         )
 
-    if any(len(instances_dict[table]) for table in instances_dict):  # type: ignore
+    if any(len(instances_dict[table]) for table in instances_dict):
         out("Process finished, flushing remaining buffers")
         flush_buffers(
             issues_buf=instances_dict["issues"],

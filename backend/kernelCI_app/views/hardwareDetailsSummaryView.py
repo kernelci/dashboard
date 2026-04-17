@@ -158,7 +158,7 @@ class HardwareDetailsSummary(APIView):
             is_test = instance["is_test"]
             is_boot = instance["is_boot"]
             (compiler, architecture) = [
-                (val or UNKNOWN_STRING).strip(" []''")
+                (val or UNKNOWN_STRING).strip(" []''")  # noqa: B005
                 for val in (instance["compiler_arch"] or [None, None])
             ]
 

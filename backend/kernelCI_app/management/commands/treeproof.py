@@ -76,8 +76,8 @@ class Command(BaseCommand):
 
             origin_trees[tree_name] = git_url
 
-    def _merge_trees(self, default_trees: dict = {}):
-        merged_trees = default_trees
+    def _merge_trees(self, default_trees: dict | None = None):
+        merged_trees = default_trees if default_trees is not None else {}
 
         for tree, git_url in self.maestro_trees.items():
             tree_in_dict = tree in merged_trees

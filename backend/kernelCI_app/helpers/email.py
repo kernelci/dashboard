@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 from email.utils import make_msgid
 
 from django.core.mail import EmailMessage, get_connection
