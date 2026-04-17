@@ -35,6 +35,7 @@ pytest-cov = "^6.2.1"
 factory-boy = "^3.3.3"
 pytest-benchmark = "^5.2.3"
 ruff = "^0.15.9"
+pre-commit = "^4.5.1"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "kernelCI.settings"
