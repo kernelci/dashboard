@@ -74,7 +74,7 @@ class TestFactory(DjangoModelFactory):
     log_url = factory.LazyAttribute(
         lambda obj: (
             "https://logs.kernelci.org/"
-             f"{obj.origin}/{obj.build.checkout.git_commit_hash[:8]}/{obj.id}.log"
+            f"{obj.origin}/{obj.build.checkout.git_commit_hash[:8]}/{obj.id}.log"
         )
     )
     log_excerpt = factory.Faker("text", max_nb_chars=1500)

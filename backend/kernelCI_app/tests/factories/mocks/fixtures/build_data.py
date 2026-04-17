@@ -135,7 +135,7 @@ EXPECTED_BUILD_IDS = {
         "architecture": "arm64",
         "status": "PASS",
         "config_name": "defconfig+lab-setup+arm64-chromebook"
-         "+CONFIG_MODULE_COMPRESS=n+CONFIG_MODULE_COMPRESS_NONE=y",
+        "+CONFIG_MODULE_COMPRESS=n+CONFIG_MODULE_COMPRESS_NONE=y",
     },
     "failed_tests_build": {
         "checkout_id": "failed_tests_checkout",

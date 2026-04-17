@@ -89,7 +89,7 @@ class Command(BaseCommand):
             "--origins",
             type=lambda s: [origin.strip() for origin in s.split(",")],
             help="Limit database changes to specific origins (comma-separated list)."
-             " If not provided, any origin will be considered",
+            " If not provided, any origin will be considered",
             default=[],
         )
 

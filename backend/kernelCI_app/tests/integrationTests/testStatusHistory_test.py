@@ -30,7 +30,7 @@ client = TestClient()
                 platform="mt8195-cherry-tomato-r2",
                 current_test_start_time="2025-03-10T01:49:23.064000Z",
                 config_name="defconfig+lab-setup+arm64-chromebook"
-                 "+CONFIG_MODULE_COMPRESS=n+CONFIG_MODULE_COMPRESS_NONE=y",
+                "+CONFIG_MODULE_COMPRESS=n+CONFIG_MODULE_COMPRESS_NONE=y",
             ),
             HTTPStatus.OK,
             False,
