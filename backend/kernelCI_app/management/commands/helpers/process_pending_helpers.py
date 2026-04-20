@@ -1,9 +1,16 @@
+import hashlib
 from typing import NamedTuple, Optional, Sequence, TypedDict
 
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.constants.process_pending import ROLLUP_STATUS_FIELDS
 from kernelCI_app.helpers.logger import logger
-from kernelCI_app.models import Builds, Checkouts, PendingTest, StatusChoices
+from kernelCI_app.models import Builds, Checkouts, Incidents, PendingTest, StatusChoices
+
+
+def get_rollup_key(test_id: str) -> bytes:
+    """Generate a hash (rollup key) from test_id with 'rollup|' prefix for namespacing."""
+    return hashlib.sha256(f"rollup|{test_id}".encode("utf-8")).digest()
+
 
 EMPTY_PATH_GROUP = "-"
 
@@ -170,3 +177,30 @@ def aggregate_tests_rollup(
         )
 
     return rollup_data
+
+
+def fetch_test_issues(test_ids: list[str]) -> dict[str, dict]:
+    """
+    Bulk-fetch the first (earliest) incident per test_id.
+
+    Returns a mapping {test_id: {"issue_id": ..., "issue_version": ...}}.
+    "First" is defined as the earliest incident ordered by test_id,
+    field_timestamp, and id to ensure deterministic results.
+    """
+    issues_map: dict[str, dict] = {}
+    incidents = (
+        Incidents.objects.filter(test_id__in=test_ids)
+        .order_by("test_id", "field_timestamp", "id")
+        .values("test_id", "issue_id", "issue_version")
+    )
+
+    for inc in incidents:
+        issues_map.setdefault(
+            inc["test_id"],
+            {
+                "issue_id": inc["issue_id"],
+                "issue_version": inc["issue_version"],
+            },
+        )
+
+    return issues_map
