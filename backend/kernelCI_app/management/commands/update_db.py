@@ -1,12 +1,21 @@
 import json
+import ast
+from io import StringIO, BytesIO, IOBase, TextIOWrapper
+from tempfile import SpooledTemporaryFile
+from typing import Optional
+from itertools import islice
+import csv
+import tarfile
+from os import path
 from typing import Generator
 from django.core.management.base import BaseCommand, CommandError
-from django.db import connections, models
+from django.db import connections, connection, models
 import logging
 from django.conf import settings
 from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +24,17 @@ BUILD_BATCH_SIZE = 10000
 TEST_BATCH_SIZE = 100000
 
 SELECT_BATCH_SIZE = 25000
+
+MAX_MEMORY_BUFFER = 1024**3
+
+
+def parse_array(array_str) -> Optional[list[str]]:
+    try:
+        array = ast.literal_eval(array_str)
+        assert isinstance(array, list)
+        return array
+    except:
+        return None
 
 
 def parse_interval(interval_str: str) -> datetime:
@@ -37,6 +57,15 @@ def parse_interval(interval_str: str) -> datetime:
     return timezone.now() - delta
 
 
+def to_human_readable(num_bytes: int) -> str:
+    """Converts bytes to a human-readable string (KiB, MiB, GiB)."""
+    for unit in ["Bytes", "KiB", "MiB", "GiB"]:
+        if num_bytes < 1024.0:
+            return f"{num_bytes:.2f} {unit}"
+        num_bytes /= 1024.0
+    return f"{num_bytes:.2f} TiB"
+
+
 class Command(BaseCommand):
     help = "Migrate data from default database to dashboard_db"
 
@@ -49,47 +78,57 @@ class Command(BaseCommand):
         self.related_data_only: bool
         self.origins: list[str]
         self.origin_condition: str
-
-        if settings.USE_DASHBOARD_DB:
-            self.kcidb_connection = connections["kcidb"]
-            self.dashboard_conn_name = "default"
-        else:
-            self.kcidb_connection = connections["default"]
-            self.dashboard_conn_name = "dashboard_db"
+        self.snapshot_archive: tarfile.TarFile
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            "--start-interval",
-            type=str,
-            help="Start interval for filtering data ('x days' or 'x hours' format)",
-            required=True,
+
+        command_parser = parser.add_subparsers(dest="command", required=True)
+        snapshot_parser = command_parser.add_parser(
+            "snapshot", help="Save snapshot of database into file."
         )
-        parser.add_argument(
-            "--end-interval",
-            type=str,
-            help="End interval for filtering data ('x days' or 'x hours' format)",
-            required=True,
+        restore_parser = command_parser.add_parser(
+            "restore", help="Load snapshot file onto database (WRITE)."
         )
-        parser.add_argument(
-            "--table",
-            type=str,
-            help="""Table name to limit the migration to
-              (optional, if not provided all tables will be migrated)""",
-        )
-        parser.add_argument(
-            "--related-data-only",
-            action="store_true",
-            help="""Only retrieves data that are related to the existing data.
-                This allows to follow foreign key constraints,
-                but it almost certainly won't retrieve all data in the given interval.""",
-        )
-        parser.add_argument(
-            "--origins",
-            type=lambda s: [origin.strip() for origin in s.split(",")],
-            help="Limit database changes to specific origins (comma-separated list)."
-            + " If not provided, any origin will be considered",
-            default=[],
-        )
+
+        for p in (snapshot_parser, restore_parser):
+            p.add_argument(
+                "--start-interval",
+                type=str,
+                help="Start interval for filtering data ('x days' or 'x hours' format)",
+                required=True,
+            )
+            p.add_argument(
+                "--end-interval",
+                type=str,
+                help="End interval for filtering data ('x days' or 'x hours' format)",
+                required=True,
+            )
+            p.add_argument(
+                "--table",
+                type=str,
+                help="""Table name to limit the migration to
+                  (optional, if not provided all tables will be migrated)""",
+            )
+            p.add_argument(
+                "--related-data-only",
+                action="store_true",
+                help="""Only retrieves data that are related to the existing data.
+                    This allows to follow foreign key constraints,
+                    but it almost certainly won't retrieve all data in the given interval.""",
+            )
+            p.add_argument(
+                "--origins",
+                type=lambda s: [origin.strip() for origin in s.split(",")],
+                help="Limit database changes to specific origins (comma-separated list)."
+                + " If not provided, any origin will be considered",
+                default=[],
+            )
+            p.add_argument(
+                "--filepath",
+                type=str,
+                required=True,
+                help="Path to store/load the snapshot file.",
+            )
 
     def handle(
         self,
@@ -99,6 +138,8 @@ class Command(BaseCommand):
         table: str,
         origins: list[str],
         related_data_only,
+        filepath: str,
+        command: str,
         **options,
     ):
         self.start_interval = start_interval
@@ -127,24 +168,35 @@ class Command(BaseCommand):
             f"\nFiltering data between {self.start_interval} and {self.end_interval}"
         )
 
+        if command == "snapshot":
+            self.snapshot(table, filepath)
+        elif command == "restore":
+            self.restore(table, filepath)
+        else:
+            raise ValueError(f"Invalid command: {command}")
+
+    def snapshot(self, table, snapshot_filepath: str):
+
+        self.snapshot_archive = tarfile.open(snapshot_filepath, "w:gz")
+
         try:
             match table:
                 case None:
-                    self.migrate_issues()
-                    self.migrate_checkouts()
-                    self.migrate_builds()
-                    self.migrate_tests()
-                    self.migrate_incidents()
+                    self.snapshot_issues()
+                    self.snapshot_checkouts()
+                    self.snapshot_builds()
+                    self.snapshot_tests()
+                    self.snapshot_incidents()
                 case "issues":
-                    self.migrate_issues()
+                    self.snapshot_issues()
                 case "checkouts":
-                    self.migrate_checkouts()
+                    self.snapshot_checkouts()
                 case "builds":
-                    self.migrate_builds()
+                    self.snapshot_builds()
                 case "tests":
-                    self.migrate_tests()
+                    self.snapshot_tests()
                 case "incidents":
-                    self.migrate_incidents()
+                    self.snapshot_incidents()
                 case _:
                     self.stdout.write(
                         self.style.ERROR(
@@ -159,6 +211,46 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error(f"Error updating database: {str(e)}")
             raise CommandError("Command failed") from e
+        finally:
+            self.snapshot_archive.close()
+
+    def restore(self, table: str, snapshot_filepath: str):
+        self.snapshot_archive = tarfile.open(snapshot_filepath, "r:*")
+
+        try:
+            match table:
+                case None:
+                    self.restore_incidents()
+                    self.restore_checkouts()
+                    self.restore_builds()
+                    self.restore_issues()
+                    self.restore_tests()
+                case "issues":
+                    self.restore_issues()
+                case "checkouts":
+                    self.restore_checkouts()
+                case "builds":
+                    self.restore_builds()
+                case "tests":
+                    self.restore_tests()
+                case "incidents":
+                    self.restore_incidents()
+                case _:
+                    self.stdout.write(
+                        self.style.ERROR(
+                            f"""Unknown table '{table}'.
+                                Valid options are: issues, checkouts, builds, tests, incidents."""
+                        )
+                    )
+
+            self.stdout.write(
+                self.style.SUCCESS("Successfully migrated all data to dashboard_db")
+            )
+        except Exception as e:
+            logger.error(f"Error updating database: {str(e)}")
+            raise CommandError("Command failed") from e
+        finally:
+            self.snapshot_archive.close()
 
     def get_related_data(
         self, *, model: models.Model, field_name: str, filter_timestamp: bool = True
@@ -169,7 +261,7 @@ class Command(BaseCommand):
         if self.related_data_only is False:
             return set(), ""
 
-        values = model.objects.using(self.dashboard_conn_name)
+        values = model.objects
         if filter_timestamp:
             values = values.filter(
                 field_timestamp__gte=self.start_timestamp,
@@ -201,7 +293,7 @@ class Command(BaseCommand):
             self.end_interval,
         ] + self.origins
 
-        with self.kcidb_connection.cursor() as kcidb_cursor:
+        with connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(query, query_params)
             return kcidb_cursor.fetchall()
 
@@ -214,7 +306,7 @@ class Command(BaseCommand):
                 Issues(
                     id=record[1],
                     version=record[2],
-                    field_timestamp=record[0],
+                    field_timestamp=parse_datetime(record[0]),
                     origin=record[3],
                     report_url=record[4],
                     report_subject=record[5],
@@ -223,11 +315,11 @@ class Command(BaseCommand):
                     culprit_harness=record[8],
                     comment=record[9],
                     misc=json.loads(record[10]) if record[10] else None,
-                    categories=record[11],
+                    categories=record[11] or [],
                 )
             )
 
-        migrated_issues = Issues.objects.using(self.dashboard_conn_name).bulk_create(
+        migrated_issues = Issues.objects.bulk_create(
             original_issues,
             ignore_conflicts=True,
             batch_size=DEFAULT_BATCH_SIZE,
@@ -237,13 +329,23 @@ class Command(BaseCommand):
         self.stdout.write(f"Processed {total_inserted} Issues records")
         return total_inserted
 
-    def migrate_issues(self) -> None:
-        """Migrate Issues data from default to dashboard_db"""
+    def snapshot_issues(self) -> None:
+        """Migrate Issues data from dashboard_db to file"""
+        with SpooledTemporaryFile(mode="wb", max_size=MAX_MEMORY_BUFFER) as file:
+            self.stdout.write("\nMigrating Issues...")
+            records = self.select_issues_data()
+            self.insert_records(file, "issues", records)
+            self.add_file_to_snapshot(file, "issues")
+            self.stdout.write("Issues migration completed")
 
-        self.stdout.write("\nMigrating Issues...")
-        records = self.select_issues_data()
-        self.insert_issues_data(records)
-        self.stdout.write("Issues migration completed")
+    def restore_issues(self) -> None:
+        """Migrate Issues data from file to dashboard_db"""
+        with TextIOWrapper(self.snapshot_archive.extractfile("issues.csv")) as file:
+            self.stdout.write("\nMigrating Issues...")
+            reader = csv.reader(file)
+            records = self.read_records(reader)
+            self.insert_issues_data(records)
+            self.stdout.write("Issues migration completed")
 
     # CHECKOUTS ########################################
     def select_checkouts_data(self) -> list[tuple]:
@@ -265,7 +367,7 @@ class Command(BaseCommand):
             self.end_interval,
         ] + self.origins
 
-        with self.kcidb_connection.cursor() as kcidb_cursor:
+        with connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(query, query_params)
             return kcidb_cursor.fetchall()
 
@@ -275,7 +377,7 @@ class Command(BaseCommand):
         for record in records:
             original_checkouts.append(
                 Checkouts(
-                    field_timestamp=record[0],
+                    field_timestamp=parse_datetime(record[0]),
                     id=record[1],
                     origin=record[2],
                     tree_name=record[3],
@@ -287,22 +389,20 @@ class Command(BaseCommand):
                     patchset_hash=record[9],
                     message_id=record[10],
                     comment=record[11],
-                    start_time=record[12],
+                    start_time=parse_datetime(record[12]),
                     log_url=record[13],
                     log_excerpt=record[14],
                     valid=record[15],
                     misc=json.loads(record[16]) if record[16] else None,
                     git_commit_message=record[17],
                     git_repository_branch_tip=record[18],
-                    git_commit_tags=record[19],
-                    origin_builds_finish_time=record[20],
-                    origin_tests_finish_time=record[21],
+                    git_commit_tags=records[19],
+                    origin_builds_finish_time=record[20] or None,
+                    origin_tests_finish_time=record[21] or None,
                 )
             )
 
-        migrated_checkouts = Checkouts.objects.using(
-            self.dashboard_conn_name
-        ).bulk_create(
+        migrated_checkouts = Checkouts.objects.bulk_create(
             original_checkouts,
             ignore_conflicts=True,
             batch_size=DEFAULT_BATCH_SIZE,
@@ -313,14 +413,25 @@ class Command(BaseCommand):
         self.stdout.write(f"Processed {total_inserted} Checkouts records")
         return total_inserted
 
-    def migrate_checkouts(self) -> None:
+    def snapshot_checkouts(self) -> None:
         """Migrate Checkouts data from default to dashboard_db"""
 
-        self.stdout.write("\nMigrating Checkouts...")
-        records = self.select_checkouts_data()
-        self.insert_checkouts_data(records)
-        self.stdout.write("Checkouts migration completed")
-        return
+        with SpooledTemporaryFile(mode="wb", max_size=MAX_MEMORY_BUFFER) as file:
+            self.stdout.write("\nMigrating Checkouts...")
+            records = self.select_checkouts_data()
+            self.insert_records(file, "checkouts", records)
+            self.add_file_to_snapshot(file, "checkouts")
+            self.stdout.write("Checkouts migration completed")
+
+    def restore_checkouts(self) -> None:
+        """Migrate Checkouts data from default to dashboard_db"""
+
+        with TextIOWrapper(self.snapshot_archive.extractfile("checkouts.csv")) as file:
+            reader = csv.reader(file)
+            self.stdout.write("\nMigrating Checkouts...")
+            records = self.read_records(reader)
+            self.insert_checkouts_data(records)
+            self.stdout.write("Checkouts migration completed")
 
     # BUILDS ########################################
     def select_builds_data(self) -> list[tuple]:
@@ -351,20 +462,62 @@ class Command(BaseCommand):
             + self.origins
         )
 
-        with self.kcidb_connection.cursor() as kcidb_cursor:
+        with connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(query, query_params)
             return kcidb_cursor.fetchall()
+
+    def write_to_csv_stream(self, records: list[tuple]) -> StringIO:
+        stream = StringIO()
+        writer = csv.writer(stream)
+        writer.writerows(records)
+        return stream
+
+    def read_records(
+        self, reader: csv.reader, max_rows: Optional[int] = None
+    ) -> list[tuple]:
+        records = [tuple(record) for record in islice(reader, max_rows)]
+        return records
+
+    def insert_records(self, tmp_file: IOBase, table: str, records: list[tuple]):
+        stream = self.write_to_csv_stream(records)
+        csv_bytes = stream.getvalue().encode("utf-8")
+        tmp_file.write(csv_bytes)
+        self.stdout.write(
+            f"\nProcessed {len(records)} {table} records: {to_human_readable(len(csv_bytes))}"
+        )
+
+    def snapshot_builds(self) -> None:
+        """Migrate Builds data from default to dashboard_db,
+        only inserts builds that have the related checkout in the dashboard_db
+        in order to preserve the foreign key constraint"""
+        with SpooledTemporaryFile(mode="wb", max_size=MAX_MEMORY_BUFFER) as file:
+            self.stdout.write("\nMigrating Builds...")
+            records = self.select_builds_data()
+            self.insert_records(file, "builds", records)
+            self.add_file_to_snapshot(file, "builds")
+            self.stdout.write("Builds migration completed")
+
+    def restore_builds(self) -> None:
+        """Migrate Builds data from default to dashboard_db,
+        only inserts builds that have the related checkout in the dashboard_db
+        in order to preserve the foreign key constraint"""
+        with TextIOWrapper(self.snapshot_archive.extractfile("builds.csv")) as file:
+            self.stdout.write("\nMigrating Builds...")
+            reader = csv.reader(file)
+            records = self.read_records(reader)
+            self.insert_builds_data(records)
+            self.stdout.write("Builds migration completed")
 
     def insert_builds_data(self, records: list[tuple]) -> int:
         original_builds: list[Builds] = [
             Builds(
-                field_timestamp=record[0],
+                field_timestamp=parse_datetime(record[0]),
                 checkout_id=record[1],
                 id=record[2],
                 origin=record[3],
                 comment=record[4],
-                start_time=record[5],
-                duration=record[6],
+                start_time=parse_datetime(record[5]),
+                duration=record[6] or None,
                 architecture=record[7],
                 command=record[8],
                 compiler=record[9],
@@ -380,7 +533,7 @@ class Command(BaseCommand):
             for record in records
         ]
 
-        migrated_builds = Builds.objects.using(self.dashboard_conn_name).bulk_create(
+        migrated_builds = Builds.objects.bulk_create(
             original_builds,
             ignore_conflicts=True,
             batch_size=BUILD_BATCH_SIZE,
@@ -389,16 +542,6 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Processed {total_inserted} Builds records")
         return total_inserted
-
-    def migrate_builds(self) -> None:
-        """Migrate Builds data from default to dashboard_db,
-        only inserts builds that have the related checkout in the dashboard_db
-        in order to preserve the foreign key constraint"""
-        self.stdout.write("\nMigrating Builds...")
-
-        records = self.select_builds_data()
-        self.insert_builds_data(records)
-        self.stdout.write("Builds migration completed")
 
     # TESTS ########################################
     def select_tests_data(self) -> Generator[list[tuple], None, list[tuple]]:
@@ -430,7 +573,7 @@ class Command(BaseCommand):
             + self.origins
         )
 
-        with self.kcidb_connection.cursor() as kcidb_cursor:
+        with connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(tests_query, query_params)
             self.stdout.write("Finished fetching tests")
             while batch := kcidb_cursor.fetchmany(SELECT_BATCH_SIZE):
@@ -440,7 +583,7 @@ class Command(BaseCommand):
         print(f"Processing {len(records)} tests")
         original_tests: list[Tests] = [
             Tests(
-                field_timestamp=record[0],
+                field_timestamp=parse_datetime(record[0]),
                 build_id=record[1],
                 id=record[2],
                 origin=record[3],
@@ -451,12 +594,12 @@ class Command(BaseCommand):
                 log_url=record[8],
                 log_excerpt=record[9],
                 status=record[10],
-                start_time=record[11],
-                duration=record[12],
+                start_time=parse_datetime(record[11]) if record[11] else None,
+                duration=record[12] or None,
                 output_files=json.loads(record[13]) if record[13] else None,
                 misc=json.loads(record[14]) if record[14] else None,
-                number_value=record[15],
-                environment_compatible=record[16],
+                number_value=record[15] or None,
+                environment_compatible=parse_array(record[16]),
                 number_prefix=record[17],
                 number_unit=record[18],
                 input_files=json.loads(record[19]) if record[19] else None,
@@ -464,7 +607,7 @@ class Command(BaseCommand):
             for record in records
         ]
 
-        migrated_tests = Tests.objects.using(self.dashboard_conn_name).bulk_create(
+        migrated_tests = Tests.objects.bulk_create(
             original_tests,
             ignore_conflicts=True,
             batch_size=TEST_BATCH_SIZE,
@@ -474,19 +617,35 @@ class Command(BaseCommand):
         self.stdout.write(f"Processed {total_inserted} Tests records")
         return total_inserted
 
-    def migrate_tests(self) -> None:
+    def add_file_to_snapshot(self, file: IOBase, table: str):
+        tar_info = tarfile.TarInfo(name=f"{table}.csv")
+        file.seek(0, 2)
+        tar_info.size = file.tell()
+        file.seek(0, 0)
+        self.snapshot_archive.addfile(tar_info, file)
+
+    def snapshot_tests(self) -> None:
         """Migrate Tests data from default to dashboard_db,
         only inserts tests that have the related build in the dashboard_db
         in order to preserve the foreign key constraint"""
+        with SpooledTemporaryFile(mode="wb", max_size=MAX_MEMORY_BUFFER) as file:
+            self.stdout.write("\nMigrating Tests...")
+            records = self.select_tests_data()
+            for record_batch in records:
+                self.insert_records(file, "tests", record_batch)
+            self.add_file_to_snapshot(file, "tests")
+            self.stdout.write("Tests migration completed")
 
-        self.stdout.write("\nMigrating Tests...")
-        total_inserted = 0
-        for batch in self.select_tests_data():
-            inserted = self.insert_tests_data(batch)
-            total_inserted += inserted
-        self.stdout.write(
-            f"\nTests migration completed.\nInserted {total_inserted} tests in total."
-        )
+    def restore_tests(self) -> None:
+        """Migrate Tests data from default to dashboard_db,
+        only inserts tests that have the related build in the dashboard_db
+        in order to preserve the foreign key constraint"""
+        with TextIOWrapper(self.snapshot_archive.extractfile("tests.csv")) as file:
+            self.stdout.write("\nMigrating Tests...")
+            reader = csv.reader(file)
+            while records := self.read_records(reader, max_rows=TEST_BATCH_SIZE):
+                self.insert_tests_data(records)
+            self.stdout.write("Tests migration completed")
 
     # INCIDENTS ########################################
     def select_incidents_data(self) -> list[tuple]:
@@ -519,7 +678,7 @@ class Command(BaseCommand):
             + self.origins
         )
 
-        with self.kcidb_connection.cursor() as kcidb_cursor:
+        with connection.cursor() as kcidb_cursor:
             kcidb_cursor.execute(query, query_params)
             records = kcidb_cursor.fetchall()
             print(f"Retrieved {len(records)} Incidents")
@@ -549,21 +708,21 @@ class Command(BaseCommand):
                     proposed_test_ids.add(test_id)
 
             existing_issue_ids = set(
-                Issues.objects.using(self.dashboard_conn_name)
-                .filter(id__in=[issue[0] for issue in proposed_issue_ids])
-                .values_list("id", flat=True)
+                Issues.objects.filter(
+                    id__in=[issue[0] for issue in proposed_issue_ids]
+                ).values_list("id", flat=True)
             )
 
             existing_build_ids = set(
-                Builds.objects.using(self.dashboard_conn_name)
-                .filter(id__in=proposed_build_ids)
-                .values_list("id", flat=True)
+                Builds.objects.filter(id__in=proposed_build_ids).values_list(
+                    "id", flat=True
+                )
             )
 
             existing_test_ids = set(
-                Tests.objects.using(self.dashboard_conn_name)
-                .filter(id__in=proposed_test_ids)
-                .values_list("id", flat=True)
+                Tests.objects.filter(id__in=proposed_test_ids).values_list(
+                    "id", flat=True
+                )
             )
 
         # Incidents that don't have a related issue, build or test in the dashboard_db
@@ -599,9 +758,7 @@ class Command(BaseCommand):
             else:
                 skipped_incidents += 1
 
-        migrated_incidents = Incidents.objects.using(
-            self.dashboard_conn_name
-        ).bulk_create(
+        migrated_incidents = Incidents.objects.bulk_create(
             original_incidents,
             ignore_conflicts=True,
             batch_size=DEFAULT_BATCH_SIZE,
@@ -613,13 +770,28 @@ class Command(BaseCommand):
         )
         return total_inserted
 
-    def migrate_incidents(self) -> None:
+    def snapshot_incidents(self) -> None:
         """Migrate Incidents data from default to dashboard_db,
         incidents are related to issues, builds and tests.
         So if any of them are not null, an incident will only be inserted
         if the related issue, build or test exists in the dashboard_db"""
 
-        self.stdout.write("\nMigrating Incidents...")
-        records = self.select_incidents_data()
-        self.insert_incidents_data(records)
-        self.stdout.write("Incidents migration completed")
+        with SpooledTemporaryFile(mode="wb", max_size=MAX_MEMORY_BUFFER) as file:
+            self.stdout.write("\nMigrating Incidents...")
+            records = self.select_incidents_data()
+            self.insert_records(file, "incidents", records)
+            self.add_file_to_snapshot(file, "incidents")
+            self.stdout.write("Incidents migration completed")
+
+    def restore_incidents(self) -> None:
+        """Migrate Incidents data from default to dashboard_db,
+        incidents are related to issues, builds and tests.
+        So if any of them are not null, an incident will only be inserted
+        if the related issue, build or test exists in the dashboard_db"""
+
+        with TextIOWrapper(self.snapshot_archive.extractfile("incidents.csv")) as file:
+            self.stdout.write("\nMigrating Incidents...")
+            reader = csv.reader(file)
+            records = self.read_records(reader)
+            self.insert_incidents_data(records)
+            self.stdout.write("Incidents migration completed")
