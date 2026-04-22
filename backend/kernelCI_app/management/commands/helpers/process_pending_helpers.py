@@ -58,7 +58,7 @@ def extract_path_group(path: str) -> str:
 
 
 def accumulate_rollup_entry(
-    rollup_data: dict[tuple, dict],
+    rollup_data: dict[RollupKey, dict],
     entry: RollupEntryData,
     *,
     is_correction: bool = False,
@@ -114,12 +114,12 @@ def aggregate_tests_rollup(
     test_builds_by_id: dict[str, Builds],
     issues_map: dict[str, dict],
     reprocess_test_ids: set[str] | None = None,
-) -> dict[tuple, dict]:
+) -> dict[RollupKey, dict]:
     """
     Build rollup data from pending tests.
     Returns rollup data without touching the database.
     """
-    rollup_data: dict[tuple, dict] = {}
+    rollup_data: dict[RollupKey, dict] = {}
 
     if reprocess_test_ids is None:
         reprocess_test_ids = set()
