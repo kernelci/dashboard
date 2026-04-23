@@ -1,16 +1,20 @@
-from typing import Any, Dict, List, Optional
+from collections import defaultdict
 from http import HTTPStatus
+from typing import Any, Dict, List, Optional
+
 from django.http import HttpRequest
-from kernelCI_app.helpers.hardwareDetails import generate_test_summary_typed
-from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.general import DEFAULT_ORIGIN, MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.commonDetails import PossibleTabs
 from kernelCI_app.helpers.discordWebhook import send_discord_notification
-from kernelCI_app.helpers.filters import FilterParams
-from drf_spectacular.utils import extend_schema
-from pydantic import ValidationError
 from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.helpers.filters import FilterParams
+from kernelCI_app.helpers.hardwareDetails import generate_test_summary_typed
 from kernelCI_app.helpers.logger import create_endpoint_notification
 from kernelCI_app.helpers.treeDetails import (
     call_based_on_compatible_and_misc_platform,
@@ -20,12 +24,12 @@ from kernelCI_app.helpers.treeDetails import (
     decide_if_is_test_filtered_out,
     get_build,
     get_current_row_data,
-    process_tree_url,
     process_boots_summary,
     process_builds_issue,
+    process_filters,
     process_test_summary,
     process_tests_issue,
-    process_filters,
+    process_tree_url,
 )
 from kernelCI_app.queries.tree import get_tree_details_data
 from kernelCI_app.typeModels.commonDetails import (
@@ -42,12 +46,6 @@ from kernelCI_app.typeModels.commonOpenApiParameters import (
     GIT_BRANCH_PATH_PARAM,
     TREE_NAME_PATH_PARAM,
 )
-from kernelCI_app.utils import convert_issues_dict_to_list_typed, is_boot
-
-from collections import defaultdict
-
-from kernelCI_app.viewCommon import create_details_build_summary
-
 from kernelCI_app.typeModels.issues import Issue, IssueDict
 from kernelCI_app.typeModels.treeDetails import (
     DirectTreeQueryParameters,
@@ -55,7 +53,8 @@ from kernelCI_app.typeModels.treeDetails import (
     TreeDetailsFullResponse,
     TreeQueryParameters,
 )
-from kernelCI_app.constants.general import DEFAULT_ORIGIN, MAESTRO_DUMMY_BUILD_PREFIX
+from kernelCI_app.utils import convert_issues_dict_to_list_typed, is_boot
+from kernelCI_app.viewCommon import create_details_build_summary
 
 
 class BaseTreeDetails(APIView):

@@ -1,10 +1,10 @@
 import json
 import os
-from typing import Union, List, Optional
-from django.utils import timezone
 from datetime import timedelta
+from typing import List, Optional, Union
 
 import yaml
+from django.utils import timezone
 
 from kernelCI_app.constants.general import DEFAULT_INTERVAL_IN_DAYS
 from kernelCI_app.helpers.logger import log_message

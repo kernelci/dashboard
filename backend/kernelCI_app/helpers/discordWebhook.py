@@ -1,9 +1,8 @@
+import os
 from datetime import datetime, timezone
 from typing import Any, Optional, TypedDict
 
 import requests
-import os
-
 from kernelCI_app.cache import (
     DISCORD_NOTIFICATION_COOLDOWN,
     get_notification_cache,

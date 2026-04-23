@@ -3,9 +3,11 @@ Factory for generating Issue test data.
 """
 
 import factory
-from factory.django import DjangoModelFactory
 from django.utils import timezone
+from factory.django import DjangoModelFactory
+
 from kernelCI_app.models import Issues
+
 from .mocks import Issue
 
 
@@ -31,7 +33,7 @@ class IssueFactory(DjangoModelFactory):
         )
     )
 
-    origin = factory.Sequence(lambda n: (f"origin-fake-{n:08x}"))
+    origin = factory.Sequence(lambda n: f"origin-fake-{n:08x}")
 
     report_url = factory.LazyAttribute(
         lambda obj: f"https://reports.kernelci.org/{obj.origin}/{obj.id}.html"

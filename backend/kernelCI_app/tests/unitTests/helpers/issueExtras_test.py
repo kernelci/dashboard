@@ -1,15 +1,16 @@
-from unittest.mock import patch
 from datetime import datetime
+from unittest.mock import patch
+
 from kernelCI_app.helpers.issueExtras import (
-    process_issues_extra_details,
+    TagUrls,
     assign_issue_first_seen,
     assign_issue_trees,
-    TagUrls,
+    process_issues_extra_details,
 )
 from kernelCI_app.typeModels.issues import (
     ExtraIssuesData,
-    IssueWithExtraInfo,
     FirstIncident,
+    IssueWithExtraInfo,
 )
 
 

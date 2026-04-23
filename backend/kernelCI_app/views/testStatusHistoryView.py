@@ -1,6 +1,12 @@
 from http import HTTPStatus
 
 from django.http import HttpRequest
+from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.test import get_test_status_history
 from kernelCI_app.typeModels.databases import FAIL_STATUS, PASS_STATUS
@@ -9,11 +15,6 @@ from kernelCI_app.typeModels.testDetails import (
     TestStatusHistoryRequest,
     TestStatusHistoryResponse,
 )
-from drf_spectacular.utils import extend_schema
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from pydantic import ValidationError
-from kernelCI_app.constants.localization import ClientStrings
 
 
 class TestStatusHistory(APIView):

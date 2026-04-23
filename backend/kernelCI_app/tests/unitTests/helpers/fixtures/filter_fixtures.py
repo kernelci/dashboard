@@ -3,7 +3,9 @@ Fixtures for filter tests.
 """
 
 from unittest.mock import MagicMock
+
 from django.http import HttpRequest, QueryDict
+
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.filters import FilterParams
 

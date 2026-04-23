@@ -1,13 +1,15 @@
-from http import HTTPStatus
 import json
+from datetime import datetime, timezone
+from http import HTTPStatus
 from unittest.mock import patch
+
 from django.test import SimpleTestCase
+from rest_framework.test import APIRequestFactory
+
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.views.hardwareDetailsCommitHistoryView import (
     HardwareDetailsCommitHistoryView,
 )
-from rest_framework.test import APIRequestFactory
-from datetime import datetime, timezone
 
 
 class TestHardwareDetailsCommitHistoryView(SimpleTestCase):

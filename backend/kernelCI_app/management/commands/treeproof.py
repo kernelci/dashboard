@@ -1,12 +1,14 @@
 import logging
+import os
+import re
 from typing import Optional
+
+import yaml
+from django.conf import settings
 from django.core.management.base import BaseCommand
+
 from kernelCI_app.constants.tree_names import TREE_NAMES_FILENAME
 from kernelCI_app.models import Checkouts
-import re
-import yaml
-import os
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -74,8 +76,8 @@ class Command(BaseCommand):
 
             origin_trees[tree_name] = git_url
 
-    def _merge_trees(self, default_trees: dict = {}):
-        merged_trees = default_trees
+    def _merge_trees(self, default_trees: dict | None = None):
+        merged_trees = default_trees if default_trees is not None else {}
 
         for tree, git_url in self.maestro_trees.items():
             tree_in_dict = tree in merged_trees

@@ -1,19 +1,19 @@
 import warnings
+from http import HTTPStatus
+
 from kernelCI_app.constants.localization import ClientStrings
-from kernelCI_app.tests.utils.client.treeClient import TreeClient
 from kernelCI_app.tests.utils.asserts import (
-    assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
+    assert_status_code_and_error_response,
 )
-from kernelCI_app.utils import string_to_json
+from kernelCI_app.tests.utils.client.treeClient import TreeClient
 from kernelCI_app.tests.utils.fields.tree import (
     tree_fast,
     tree_listing,
-    tree_listing_test_status,
     tree_listing_build_status,
+    tree_listing_test_status,
 )
-from http import HTTPStatus
-
+from kernelCI_app.utils import string_to_json
 
 client = TreeClient()
 

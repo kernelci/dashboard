@@ -1,14 +1,13 @@
 import argparse
+import logging
+import os
 import shutil
 import signal
-from django.core.management.base import BaseCommand
-import logging
 import time
-import os
-from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
-    INGESTER_DIRS,
-    ingest_submissions_parallel,
-)
+
+from django.core.management.base import BaseCommand
+from prometheus_client import CollectorRegistry, Gauge, multiprocess, start_http_server
+
 from kernelCI_app.constants.ingester import (
     INGEST_CYCLE_BATCH_SIZE,
     INGESTER_GRAFANA_LABEL,
@@ -19,10 +18,13 @@ from kernelCI_app.management.commands.helpers.file_utils import (
     load_tree_names,
     verify_spool_dirs,
 )
+from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
+    INGESTER_DIRS,
+    ingest_submissions_parallel,
+)
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
     cache_logs_maintenance,
 )
-from prometheus_client import CollectorRegistry, Gauge, start_http_server, multiprocess
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +78,7 @@ class Command(BaseCommand):
                 ]
             ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             self.stdout.write(
-                f"[{ts}] Spool scan: {len(cached_paths)}" " .json files pending"
+                f"[{ts}] Spool scan: {len(cached_paths)} .json files pending"
             )
             return cached_paths
         except PermissionError:

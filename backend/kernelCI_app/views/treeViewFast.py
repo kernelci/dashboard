@@ -1,17 +1,19 @@
+from http import HTTPStatus
+
 from django.http import HttpRequest
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.localization import ClientStrings
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.queries.tree import get_tree_listing_fast
 from kernelCI_app.typeModels.commonListing import ListingQueryParameters
-from http import HTTPStatus
-from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.treeListing import (
     CheckoutFast,
     TreeListingFastResponse,
 )
-from pydantic import ValidationError
-from kernelCI_app.constants.localization import ClientStrings
 
 
 class TreeViewFast(APIView):

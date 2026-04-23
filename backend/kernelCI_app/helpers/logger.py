@@ -1,9 +1,10 @@
+import logging
 import time
+
 from django.http import HttpRequest
 
 from kernelCI_app.constants.general import PRODUCTION_HOST, STAGING_HOST
 from kernelCI_app.helpers.system import get_running_instance
-import logging
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,13 @@
 from http import HTTPStatus
 from typing import Dict, List, Optional
+
 from django.http import HttpRequest
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.discordWebhook import send_discord_notification
 from kernelCI_app.helpers.errorHandling import create_api_error_response
@@ -29,7 +32,6 @@ from kernelCI_app.typeModels.treeDetails import (
     TreeDetailsBuildsResponse,
     TreeQueryParameters,
 )
-from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 
 
 class BaseTreeDetailsBuilds(APIView):

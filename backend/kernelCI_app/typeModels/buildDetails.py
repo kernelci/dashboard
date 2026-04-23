@@ -1,30 +1,31 @@
 from typing import List, Optional
-from typing_extensions import Annotated
+
 from pydantic import BaseModel, RootModel
+from typing_extensions import Annotated
 
 from kernelCI_app.typeModels.common import make_default_validator
 from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
 from kernelCI_app.typeModels.databases import (
     NULL_STATUS,
-    Origin,
-    StatusValues,
-    Timestamp,
-    Checkout__Id,
-    Checkout__TreeName,
+    Build__Command,
+    Build__Comment,
+    Build__InputFiles,
+    Build__LogExcerpt,
+    Build__OutputFiles,
     Checkout__GitCommitHash,
     Checkout__GitCommitName,
     Checkout__GitCommitTags,
-    Build__Command,
-    Build__Comment,
-    Build__LogExcerpt,
-    Build__InputFiles,
-    Build__OutputFiles,
-    Test__Id,
+    Checkout__Id,
+    Checkout__TreeName,
+    Origin,
+    StatusValues,
     Test__Duration,
-    Test__Path,
-    Test__StartTime,
     Test__EnvironmentCompatible,
     Test__EnvironmentMisc,
+    Test__Id,
+    Test__Path,
+    Test__StartTime,
+    Timestamp,
 )
 
 

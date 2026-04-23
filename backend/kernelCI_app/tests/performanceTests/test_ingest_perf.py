@@ -112,9 +112,7 @@ def _get_file_subset(files: list[str], subset: int) -> list[str]:
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.benchmark(group="ingest-parallel-workers")
 @pytest.mark.parametrize("max_workers", WORKER_COUNTS)
-def test_ingest_perf_workers(
-    benchmark, cleanup_submission_files, max_workers
-):  # noqa: ARG001
+def test_ingest_perf_workers(benchmark, cleanup_submission_files, max_workers):  # noqa: ARG001
     """Benchmark ingestion performance with different worker counts."""
     files = _load_submission_files(SUBMISSIONS_DIR)
 
@@ -147,9 +145,7 @@ def test_ingest_perf_workers(
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.benchmark(group="ingest-parallel-file-count")
 @pytest.mark.parametrize("file_subset", FILE_SUBSETS)
-def test_ingest_perf_file_count(
-    benchmark, cleanup_submission_files, file_subset
-):  # noqa: ARG001
+def test_ingest_perf_file_count(benchmark, cleanup_submission_files, file_subset):  # noqa: ARG001
     """Benchmark ingestion performance with different file counts."""
     all_files = _load_submission_files(SUBMISSIONS_DIR)
     files = _get_file_subset(all_files, file_subset)
@@ -203,9 +199,7 @@ def test_validation_and_upgrade(benchmark, cleanup_submission_files, file_subset
 
 @pytest.mark.benchmark(group="prepare-file")
 @pytest.mark.parametrize("file_subset", FILE_SUBSETS)
-def test_prepare_file_data(
-    benchmark, cleanup_submission_files, file_subset
-):  # noqa: ARG001
+def test_prepare_file_data(benchmark, cleanup_submission_files, file_subset):  # noqa: ARG001
     """Benchmark file preparation with different file counts."""
     all_files = _load_submission_files(SUBMISSIONS_DIR)
     files = _get_file_subset(all_files, file_subset)
@@ -317,9 +311,7 @@ def test_flush_buffers_perf(benchmark, cleanup_submission_files, file_subset):
 
 @pytest.mark.parametrize("batch_size", BATCH_SIZES)
 @pytest.mark.benchmark(group="ingest-parallel-batch-size")
-def test_ingest_parallel_batch_size(
-    benchmark, cleanup_submission_files, batch_size
-):  # noqa: ARG001
+def test_ingest_parallel_batch_size(benchmark, cleanup_submission_files, batch_size):  # noqa: ARG001
     all_files = _load_submission_files(SUBMISSIONS_DIR)
     files = _get_file_subset(all_files, 1000)
 

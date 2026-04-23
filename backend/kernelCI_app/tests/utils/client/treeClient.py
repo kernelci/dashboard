@@ -1,13 +1,15 @@
 from typing import Any, Literal
-import requests
+
 from django.urls import reverse
+
+import requests
 from kernelCI_app.helpers.filters import FilterFields
+from kernelCI_app.tests.utils.client.baseClient import BaseClient
 from kernelCI_app.typeModels.treeDetails import (
     DirectTreePathParameters,
     DirectTreeQueryParameters,
     TreeQueryParameters,
 )
-from kernelCI_app.tests.utils.client.baseClient import BaseClient
 
 
 class TreeClient(BaseClient):

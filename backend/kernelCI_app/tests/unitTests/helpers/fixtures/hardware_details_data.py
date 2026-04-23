@@ -1,10 +1,11 @@
 from collections import defaultdict
-from kernelCI_app.typeModels.hardwareDetails import Tree
+
+from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonDetails import (
     TestArchSummaryItem,
     TestSummary,
 )
-from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.hardwareDetails import Tree
 
 
 def create_tree(**overrides):

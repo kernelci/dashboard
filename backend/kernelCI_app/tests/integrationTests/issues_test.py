@@ -1,19 +1,20 @@
-from kernelCI_app.tests.utils.client.issueClient import IssueClient
+from datetime import datetime, timedelta, timezone
+from http import HTTPStatus
+
+import pytest
+
 from kernelCI_app.tests.utils.asserts import (
-    assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
+    assert_status_code_and_error_response,
 )
+from kernelCI_app.tests.utils.client.issueClient import IssueClient
+from kernelCI_app.tests.utils.fields.builds import build_details_expected_fields
 from kernelCI_app.tests.utils.fields.issues import (
     issues_expected_fields,
     issues_listing_fields,
 )
 from kernelCI_app.tests.utils.fields.tests import issue_tests_expected_fields
-from kernelCI_app.tests.utils.fields.builds import build_details_expected_fields
 from kernelCI_app.utils import string_to_json
-import pytest
-from http import HTTPStatus
-from datetime import datetime, timezone, timedelta
-
 
 client = IssueClient()
 

@@ -1,13 +1,14 @@
 from unittest.mock import patch
+
 from kernelCI_app.cache import (
-    _create_cache_params_hash,
-    set_query_cache,
-    get_query_cache,
-    set_notification_cache,
-    get_notification_cache,
-    _add_to_lookup,
     DISCORD_NOTIFICATION_COOLDOWN,
     DISCORD_NOTIFICATION_KEY,
+    _add_to_lookup,
+    _create_cache_params_hash,
+    get_notification_cache,
+    get_query_cache,
+    set_notification_cache,
+    set_query_cache,
 )
 
 

@@ -1,21 +1,21 @@
 import time
 from typing import Optional, Sequence
 
-
 from django.db import connections
+
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.management.commands.helpers.tree_listing import (
     CheckoutRow,
     tree_listing_sort_key,
 )
 from kernelCI_app.models import (
-    Checkouts,
-    PendingTest,
-    PendingBuilds,
-    StatusChoices,
-    SimplifiedStatusChoices,
-    Tests,
     Builds,
+    Checkouts,
+    PendingBuilds,
+    PendingTest,
+    SimplifiedStatusChoices,
+    StatusChoices,
+    Tests,
 )
 from kernelCI_app.utils import is_boot
 

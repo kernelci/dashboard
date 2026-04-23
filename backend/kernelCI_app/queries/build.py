@@ -1,7 +1,9 @@
 from typing import Optional
-from querybuilder.query import Query
-from kernelCI_app.models import Builds, Tests
+
 from django.db.models.expressions import F
+from querybuilder.query import Query
+
+from kernelCI_app.models import Builds, Tests
 
 
 def get_build_details(build_id: str) -> Optional[list[dict]]:

@@ -1,14 +1,15 @@
-from unittest.mock import patch, MagicMock
 from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
+
+from kernelCI_app.models import Checkouts
 from kernelCI_app.tasks import (
+    UPDATE_INTERVAL_IN_DAYS,
     _is_checkout_done,
-    _is_checkout_unstable,
     _is_checkout_newer,
+    _is_checkout_unstable,
     get_checkout_ids_for_update,
     update_checkout_cache,
-    UPDATE_INTERVAL_IN_DAYS,
 )
-from kernelCI_app.models import Checkouts
 
 
 class TestIsCheckoutDone:

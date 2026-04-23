@@ -1,10 +1,11 @@
 from datetime import datetime
-from kernelCI_app.typeModels.commonListing import StatusCountV2
-from pydantic import BaseModel, BeforeValidator, Field
 from typing import Annotated, Optional, Union
+
+from pydantic import BaseModel, BeforeValidator, Field
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
+from kernelCI_app.typeModels.commonListing import StatusCountV2
 
 
 class HardwareItemV2(BaseModel):

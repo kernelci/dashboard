@@ -3,10 +3,11 @@ from urllib.parse import quote_plus
 
 from django.http import HttpRequest
 from drf_spectacular.utils import extend_schema
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.summary import (
@@ -16,11 +17,10 @@ from kernelCI_app.management.commands.helpers.summary import (
 from kernelCI_app.management.commands.notifications import evaluate_test_results
 from kernelCI_app.queries.notifications import get_checkout_summary_data
 from kernelCI_app.typeModels.treeReport import (
+    TreeReportIssues,
     TreeReportQueryParameters,
     TreeReportResponse,
-    TreeReportIssues,
 )
-from kernelCI_app.constants.localization import ClientStrings
 
 
 class TreeReport(APIView):

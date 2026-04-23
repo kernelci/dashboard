@@ -1,6 +1,7 @@
 from unittest.mock import patch
-from kernelCI_app.helpers.system import get_running_instance
+
 from kernelCI_app.constants.general import PRODUCTION_HOST
+from kernelCI_app.helpers.system import get_running_instance
 
 
 class TestGetRunningInstance:

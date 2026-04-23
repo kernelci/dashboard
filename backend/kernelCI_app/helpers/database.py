@@ -5,4 +5,4 @@ def dict_fetchall(cursor) -> list[dict]:
     This has a performance cost so avoid using it in large unprocessed data.
     """
     columns = [col[0] for col in cursor.description]
-    return [dict(zip(columns, row)) for row in cursor.fetchall()]
+    return [dict(zip(columns, row, strict=False)) for row in cursor.fetchall()]

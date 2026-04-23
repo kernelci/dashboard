@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kernelCI_app", "0014_add_processed_and_pending_status"),
     ]

@@ -1,8 +1,7 @@
-import os
 import glob
 import importlib
+import os
 import sys
-
 
 current_dir = os.path.dirname(__file__)
 modules = glob.glob(os.path.join(current_dir, "*.py"))

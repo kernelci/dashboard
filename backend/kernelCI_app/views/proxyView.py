@@ -1,13 +1,15 @@
-from urllib.parse import ParseResult, urlparse
-import requests
 from fnmatch import fnmatch
-from rest_framework.views import APIView
-from django.http import HttpResponse
 from http import HTTPStatus
+from urllib.parse import ParseResult, urlparse
+
+from django.http import HttpResponse
 from drf_spectacular.utils import extend_schema
+from rest_framework.views import APIView
+
+import requests
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.commonOpenApiParameters import URL_QUERY_PARAM
-from kernelCI_app.constants.localization import ClientStrings
 
 # TIMEOUT to avoid people sending very large files through the proxy
 TIMEOUT_TIME_IN_SECONDS = 45

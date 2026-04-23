@@ -1,8 +1,10 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 from kernelCI_app.helpers.email import (
-    smtp_setup_connection,
     smtp_send_email,
+    smtp_setup_connection,
 )
 
 

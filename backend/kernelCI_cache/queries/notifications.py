@@ -1,13 +1,13 @@
 import json
 
 from django.db import connections
+
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.management.commands.helpers.summary import ReportConfigs, TreeKey
+from kernelCI_cache.models import NotificationsCheckout, NotificationsIssue
 from kernelCI_cache.typeModels.databases import PossibleIssueType
 from kernelCI_cache.utils import get_current_timestamp_kcidb_format
-from kernelCI_cache.models import NotificationsCheckout, NotificationsIssue
-from kernelCI_app.helpers.logger import log_message
-
 
 RESEND_INTERVAL = "12 hours"
 """The time interval where a report can be resent.

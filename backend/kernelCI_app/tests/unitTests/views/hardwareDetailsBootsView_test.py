@@ -1,12 +1,14 @@
-from http import HTTPStatus
 import json
+from http import HTTPStatus
 from unittest.mock import patch
+
 from django.test import SimpleTestCase
-from rest_framework.test import APIRequestFactory
 from pydantic import ValidationError
-from kernelCI_app.views.hardwareDetailsBootsView import HardwareDetailsBoots
+from rest_framework.test import APIRequestFactory
+
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.typeModels.hardwareDetails import HardwareTestHistoryItem
+from kernelCI_app.views.hardwareDetailsBootsView import HardwareDetailsBoots
 
 
 class TestHardwareDetailsBootsView(SimpleTestCase):

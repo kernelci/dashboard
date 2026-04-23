@@ -10,13 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from pathlib import Path
+import json
+import os
 import sys
 import threading
-from utils.validation import is_boolean_or_string_true
+from pathlib import Path
+
 from utils.development_metrics import start_development_metrics_server
-import os
-import json
+from utils.validation import is_boolean_or_string_true
 
 
 def get_json_env_var(name, default):

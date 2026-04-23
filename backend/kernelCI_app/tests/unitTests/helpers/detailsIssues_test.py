@@ -1,15 +1,15 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from kernelCI_app.helpers.detailsIssues import sanitize_details_issues_rows
-from kernelCI_app.typeModels.issues import Issue
 from kernelCI_app.tests.unitTests.helpers.fixtures.issue_data import (
+    create_issue_dict,
     issue1_dict,
     issue2_dict,
-    create_issue_dict,
 )
+from kernelCI_app.typeModels.issues import Issue
 
 
 class TestSanitizeDetailsIssuesRows:
-
     @patch("kernelCI_app.helpers.detailsIssues.create_issue_typed")
     @patch("kernelCI_app.helpers.detailsIssues.convert_issues_dict_to_list_typed")
     def test_sanitize_details_issues_rows_with_single_issue(

@@ -2,14 +2,13 @@
 Factories for generating test data using factory-boy.
 """
 
-from .checkout_factory import CheckoutFactory
 from .build_factory import BuildFactory
-from .test_factory import TestFactory
-from .issue_factory import IssueFactory
+from .checkout_factory import CheckoutFactory
 from .incident_factory import IncidentFactory
+from .issue_factory import IssueFactory
+from .mocks import Build, Checkout, Issue, Test
+from .test_factory import TestFactory
 from .tree_tests_rollup_factory import TreeTestsRollupFactory
-
-from .mocks import Checkout, Build, Test, Issue
 
 __all__ = [
     "CheckoutFactory",

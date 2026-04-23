@@ -1,11 +1,19 @@
-import multiprocessing
-from multiprocessing.sharedctypes import Synchronized
-from multiprocessing.synchronize import Lock as ProcessLock
 import json
 import logging
+import multiprocessing
 import os
+import time
+import traceback
+from multiprocessing.sharedctypes import Synchronized
+from multiprocessing.synchronize import Lock as ProcessLock
 from queue import Queue
+from typing import Any, Optional, TypedDict
+
+import kcidb_io
+from django.db import connections, transaction
+from prometheus_client import Counter
 from typing_extensions import Literal
+
 from kernelCI_app.constants.ingester import (
     AUTOMATIC_LAB_FIELD,
     AUTOMATIC_LABS,
@@ -16,29 +24,21 @@ from kernelCI_app.constants.ingester import (
     INGESTER_GRAFANA_LABEL,
     VERBOSE,
 )
-import time
-import traceback
-from typing import Any, Optional, TypedDict
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.management.commands.generated.insert_queries import INSERT_QUERIES
+from kernelCI_app.management.commands.helpers.aggregation_helpers import (
+    aggregate_checkouts_and_pendings,
+)
 from kernelCI_app.management.commands.helpers.file_utils import move_file_to_failed_dir
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
     extract_log_excerpt,
 )
-import kcidb_io
-from kernelCI_app.management.commands.helpers.aggregation_helpers import (
-    aggregate_checkouts_and_pendings,
-)
-from django.db import connections, transaction
-from kernelCI_app.models import Issues, Checkouts, Builds, Tests, Incidents
-
 from kernelCI_app.management.commands.helpers.process_submissions import (
     TableNames,
     build_instances_from_submission,
 )
+from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Tests
 from kernelCI_app.typeModels.modelTypes import TableModels
-
-from prometheus_client import Counter
 
 type INGESTER_DIRS = Literal["archive", "failed", "pending_retry"]
 
@@ -418,7 +418,7 @@ def process_batch(
             counter_lock=counter_lock,
         )
 
-    if any(len(instances_dict[table]) for table in instances_dict):  # type: ignore
+    if any(len(instances_dict[table]) for table in instances_dict):
         out("Process finished, flushing remaining buffers")
         flush_buffers(
             issues_buf=instances_dict["issues"],

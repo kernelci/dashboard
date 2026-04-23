@@ -1,6 +1,8 @@
 from unittest.mock import MagicMock
+
 from django.test import SimpleTestCase
 
+from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.management.commands.helpers.process_pending_helpers import (
     EMPTY_PATH_GROUP,
     RollupEntryData,
@@ -9,7 +11,6 @@ from kernelCI_app.management.commands.helpers.process_pending_helpers import (
     aggregate_tests_rollup,
     extract_path_group,
 )
-from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.models import StatusChoices
 
 

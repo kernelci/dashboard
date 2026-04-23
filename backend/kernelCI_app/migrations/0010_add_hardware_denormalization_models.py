@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kernelCI_app", "0009_add_test_origin_start_time_platform_index"),
     ]

@@ -1,7 +1,7 @@
-from http import HTTPStatus
-from kernelCI_app.typeModels.hardwareDetails import HardwareDetailsPostBody
 import copy
+from http import HTTPStatus
 
+from kernelCI_app.typeModels.hardwareDetails import HardwareDetailsPostBody
 
 UNEXISTENT_HARDWARE_ID: dict = {
     "id": "no hardware id",

@@ -3,6 +3,7 @@ Test-specific Django settings for integration tests with local database.
 """
 
 import os
+
 from kernelCI.settings import *  # noqa: F403, F401
 
 # Override database configuration for tests

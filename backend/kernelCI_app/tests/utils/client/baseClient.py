@@ -1,8 +1,9 @@
+import os
 from abc import ABC
 from typing import Any, Optional
-from urllib.parse import urljoin, urlencode
+from urllib.parse import urlencode, urljoin
+
 from kernelCI_app.helpers.filters import FilterFields
-import os
 
 
 class BaseClient(ABC):
@@ -30,7 +31,7 @@ class BaseClient(ABC):
             mapped_filters = self.get_filters(filters=filters)
             string_parts.append(urlencode(mapped_filters, doseq=True))
 
-        query_string = f"?{"&".join(string_parts)}" if string_parts else ""
+        query_string = f"?{'&'.join(string_parts)}" if string_parts else ""
 
         url = f"{url}{query_string}"
         return url

@@ -1,5 +1,6 @@
-from django.test import SimpleTestCase, override_settings
 from unittest.mock import Mock, patch
+
+from django.test import SimpleTestCase, override_settings
 
 from kernelCI_app.management.commands.helpers.healthcheck import (
     _resolve_monitoring_url,

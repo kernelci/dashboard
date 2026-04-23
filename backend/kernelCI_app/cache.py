@@ -1,6 +1,7 @@
 from typing import Optional
-from django.core.cache import cache
+
 from django.conf import settings
+from django.core.cache import cache
 
 timeout = settings.CACHE_TIMEOUT
 DISCORD_NOTIFICATION_COOLDOWN = 600

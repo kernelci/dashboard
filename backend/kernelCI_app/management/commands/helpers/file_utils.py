@@ -1,9 +1,9 @@
+import logging
 import os
 from typing import Optional
-import logging
+
 from kernelCI_app.constants.ingester import INGESTER_TREES_FILEPATH
 from kernelCI_app.management.commands.treeproof import Command as TreeproofCommand
-
 
 logger = logging.getLogger("ingester")
 

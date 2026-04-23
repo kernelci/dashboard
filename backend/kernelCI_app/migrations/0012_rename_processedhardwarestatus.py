@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kernelCI_app", "0011_modify_latest_checkout_primary_key"),
     ]

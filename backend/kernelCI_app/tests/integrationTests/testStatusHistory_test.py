@@ -1,17 +1,18 @@
-from kernelCI_app.typeModels.testDetails import TestStatusHistoryRequest
-from kernelCI_app.tests.utils.client.testClient import TestClient
-from kernelCI_app.tests.utils.asserts import (
-    assert_status_code_and_error_response,
-    assert_has_fields_in_response_content,
-)
-from kernelCI_app.tests.utils.fields.tests import (
-    status_history_response_expected_fields,
-    status_history_item_fields,
-)
-from kernelCI_app.utils import string_to_json
-import pytest
 from http import HTTPStatus
 
+import pytest
+
+from kernelCI_app.tests.utils.asserts import (
+    assert_has_fields_in_response_content,
+    assert_status_code_and_error_response,
+)
+from kernelCI_app.tests.utils.client.testClient import TestClient
+from kernelCI_app.tests.utils.fields.tests import (
+    status_history_item_fields,
+    status_history_response_expected_fields,
+)
+from kernelCI_app.typeModels.testDetails import TestStatusHistoryRequest
+from kernelCI_app.utils import string_to_json
 
 client = TestClient()
 
@@ -29,7 +30,7 @@ client = TestClient()
                 platform="mt8195-cherry-tomato-r2",
                 current_test_start_time="2025-03-10T01:49:23.064000Z",
                 config_name="defconfig+lab-setup+arm64-chromebook"
-                + "+CONFIG_MODULE_COMPRESS=n+CONFIG_MODULE_COMPRESS_NONE=y",
+                "+CONFIG_MODULE_COMPRESS=n+CONFIG_MODULE_COMPRESS_NONE=y",
             ),
             HTTPStatus.OK,
             False,

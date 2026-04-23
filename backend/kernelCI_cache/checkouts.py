@@ -1,5 +1,6 @@
 import json
 from typing import Optional
+
 from kernelCI_app.typeModels.databases import Origin
 from kernelCI_cache.models import CheckoutsCache
 from kernelCI_cache.utils import get_current_timestamp_kcidb_format

@@ -1,17 +1,19 @@
 import bisect
+import json
 from collections import defaultdict
 from datetime import datetime, timezone
-import json
 from typing import Any, Dict, List, Literal, Optional, Set
 
+from pydantic import ValidationError
+
 from kernelCI_app.constants.general import (
-    UNCATEGORIZED_STRING,
     MAESTRO_DUMMY_BUILD_PREFIX,
+    UNCATEGORIZED_STRING,
+    UNKNOWN_STRING,
 )
 from kernelCI_app.constants.hardwareDetails import (
     SELECTED_HEAD_TREE_VALUE,
 )
-from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
     FilterParams,
@@ -25,25 +27,26 @@ from kernelCI_app.helpers.misc import (
     handle_misc,
     misc_value_or_default,
 )
+from kernelCI_app.typeModels.commonDetails import (
+    BuildArchitectures,
+    BuildSummary,
+    EnvironmentMisc,
+    StatusCount,
+    TestArchSummaryItem,
+    TestSummary,
+)
 from kernelCI_app.typeModels.databases import (
     FAIL_STATUS,
     NULL_STATUS,
     StatusValues,
     build_fail_status_list,
 )
-from kernelCI_app.typeModels.commonDetails import (
-    BuildArchitectures,
-    BuildSummary,
-    EnvironmentMisc,
-    TestArchSummaryItem,
-    StatusCount,
-    TestSummary,
-)
 from kernelCI_app.typeModels.hardwareDetails import (
     DefaultRecordValues,
     HardwareBuildHistoryItem,
-    HardwareTestHistoryItem,
     HardwareDetailsPostBody,
+    HardwareTestHistoryItem,
+    PossibleTestType,
     Tree,
 )
 from kernelCI_app.typeModels.issues import Issue, IssueDict
@@ -53,10 +56,6 @@ from kernelCI_app.utils import (
     extract_error_message,
     is_boot,
     sanitize_dict,
-)
-from pydantic import ValidationError
-from kernelCI_app.typeModels.hardwareDetails import (
-    PossibleTestType,
 )
 
 
@@ -363,7 +362,7 @@ def handle_test_summary(
         task.failed_platforms.add(test_platform)
         task.fail_reasons[extract_error_message(record["misc"])] += 1
 
-    arch_key = f'{record["build__architecture"]}{record["build__compiler"]}'
+    arch_key = f"{record['build__architecture']}{record['build__compiler']}"
     arch_summary = processed_archs.get(arch_key)
     if not arch_summary:
         arch_summary = get_arch_summary_typed(record)

@@ -1,21 +1,21 @@
-import pytest
-from requests import Response
 from http import HTTPStatus
 
-from kernelCI_app.utils import string_to_json
+import pytest
+
+from kernelCI_app.constants.general import UNCATEGORIZED_STRING
+from kernelCI_app.tests.utils.asserts import (
+    assert_error_response,
+    assert_has_fields_in_response_content,
+    assert_status_code,
+)
 from kernelCI_app.tests.utils.client.hardwareClient import HardwareClient
 from kernelCI_app.tests.utils.commonTreeAsserts import (
     assert_common_summary_status_fields,
 )
 from kernelCI_app.tests.utils.fields import hardware
-from kernelCI_app.tests.utils.asserts import (
-    assert_has_fields_in_response_content,
-    assert_status_code,
-    assert_error_response,
-)
 from kernelCI_app.typeModels.hardwareDetails import HardwareDetailsPostBody
-from kernelCI_app.constants.general import UNCATEGORIZED_STRING
-
+from kernelCI_app.utils import string_to_json
+from requests import Response
 
 INVALID_BODY_HARDWARE = {
     "id": "invalid_id",

@@ -1,16 +1,18 @@
-from bs4 import BeautifulSoup, Tag
-import requests
 from http import HTTPStatus
-from kernelCI_app.helpers.errorHandling import create_api_error_response
-from kernelCI_app.typeModels.logDownloader import (
-    LogDownloaderResponse,
-    LogDownloaderQueryParameters,
-)
-from rest_framework.views import APIView
-from rest_framework.response import Response
+
+from bs4 import BeautifulSoup, Tag
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+import requests
 from kernelCI_app.constants.localization import ClientStrings
+from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.typeModels.logDownloader import (
+    LogDownloaderQueryParameters,
+    LogDownloaderResponse,
+)
 
 
 def scrape_log_data(url):

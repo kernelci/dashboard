@@ -2,17 +2,16 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 from kernelCI_app.queries.issues import (
-    get_issue_builds,
-    get_issue_tests,
-    get_issue_listing_data,
-    get_latest_issue_version,
-    get_issue_details,
     get_build_issues,
-    get_test_issues,
+    get_issue_builds,
+    get_issue_details,
     get_issue_first_seen_data,
+    get_issue_listing_data,
+    get_issue_tests,
     get_issue_trees_data,
+    get_latest_issue_version,
+    get_test_issues,
 )
-
 from kernelCI_app.tests.unitTests.queries.conftest import (
     setup_mock_cursor,
     setup_mock_queryset,
@@ -239,9 +238,7 @@ class TestGetIssueTreesData:
         expected_result = [{"issue_id": "issue_1", "issue_version": 1}]
         mock_dict_fetchall.return_value = expected_result
         mock_cursor = MagicMock()
-        mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = (
-            mock_cursor
-        )
+        mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = mock_cursor
 
         result = get_issue_trees_data(issue_key_list=[("issue_1", 1), ("issue_2", 2)])
 
@@ -281,9 +278,7 @@ class TestGetIssueTreesData:
         ]
         mock_dict_fetchall.return_value = expected_result
         mock_cursor = MagicMock()
-        mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = (
-            mock_cursor
-        )
+        mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = mock_cursor
 
         result = get_issue_trees_data(
             issue_key_list=[("issue_1", 1), ("issue_2", 2), ("issue_3", 3)]
@@ -317,9 +312,7 @@ class TestGetIssueTreesData:
         ]
         mock_dict_fetchall.return_value = expected_result
         mock_cursor = MagicMock()
-        mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = (
-            mock_cursor
-        )
+        mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = mock_cursor
 
         result = get_issue_trees_data(issue_key_list=[("issue_1", 1)])
 

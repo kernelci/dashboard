@@ -1,9 +1,17 @@
+import json
 from datetime import datetime
+from http import HTTPStatus
+from typing import Dict, List, Optional
+
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
-from http import HTTPStatus
-import json
+from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.localization import ClientStrings
+from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.hardwareDetails import (
     assign_default_record_values,
     decide_if_is_full_record_filtered_out,
@@ -18,23 +26,17 @@ from kernelCI_app.queries.hardware import (
     get_hardware_details_data,
     get_hardware_trees_data,
 )
-from kernelCI_app.typeModels.hardwareDetails import (
-    HardwareDetailsPostBody,
-    HardwareDetailsQueryParameters,
-    HardwareTestHistoryItem,
-    HardwareDetailsBootsResponse,
-    Tree,
-)
-from kernelCI_app.utils import is_boot
-from pydantic import ValidationError
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from typing import Dict, List, Optional
-from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     HARDWARE_ID_PATH_PARAM,
 )
-from kernelCI_app.constants.localization import ClientStrings
+from kernelCI_app.typeModels.hardwareDetails import (
+    HardwareDetailsBootsResponse,
+    HardwareDetailsPostBody,
+    HardwareDetailsQueryParameters,
+    HardwareTestHistoryItem,
+    Tree,
+)
+from kernelCI_app.utils import is_boot
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/

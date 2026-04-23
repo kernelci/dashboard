@@ -1,14 +1,19 @@
+import json
 from collections import defaultdict
 from datetime import datetime
+from http import HTTPStatus
 from itertools import chain
 from typing import Dict, Optional
+
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
-from http import HTTPStatus
-import json
+from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from kernelCI_app.constants.general import UNKNOWN_STRING
-from kernelCI_app.helpers.issueExtras import parse_issue
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
     FilterParams,
@@ -20,6 +25,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     generate_test_summary_typed,
     unstable_parse_post_body,
 )
+from kernelCI_app.helpers.issueExtras import parse_issue
 from kernelCI_app.queries.hardware import (
     get_hardware_details_summary,
     get_hardware_trees_head_commits,
@@ -45,10 +51,6 @@ from kernelCI_app.typeModels.hardwareDetails import (
     HardwareTestLocalFilters,
     Tree,
 )
-from pydantic import ValidationError
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from kernelCI_app.constants.localization import ClientStrings
 
 
 # disable django csrf protection https://docs.djangoproject.com/en/5.0/ref/csrf/
@@ -58,7 +60,6 @@ from kernelCI_app.constants.localization import ClientStrings
 # supported in this project
 @method_decorator(csrf_exempt, name="dispatch")
 class HardwareDetailsSummary(APIView):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.origin: str = None
@@ -157,7 +158,7 @@ class HardwareDetailsSummary(APIView):
             is_test = instance["is_test"]
             is_boot = instance["is_boot"]
             (compiler, architecture) = [
-                (val or UNKNOWN_STRING).strip(" []''")
+                (val or UNKNOWN_STRING).strip(" []''")  # noqa: B005
                 for val in (instance["compiler_arch"] or [None, None])
             ]
 
@@ -329,7 +330,7 @@ class HardwareDetailsSummary(APIView):
             status_count = StatusCount()
             status_count.increment(status, count)
 
-            if not (tree_name, git_repository_url, git_repository_branch) in all_trees:
+            if (tree_name, git_repository_url, git_repository_branch) not in all_trees:
                 all_trees[(tree_name, git_repository_url, git_repository_branch)] = (
                     Tree(
                         index="",  # if we dont mind to sort, we can just use len(all_trees)
@@ -531,7 +532,6 @@ class HardwareDetailsSummary(APIView):
             return validation_error
 
         try:
-
             tree_heads = get_hardware_trees_head_commits(
                 hardware_id=hardware_id,
                 origin=self.origin,

@@ -1,5 +1,5 @@
-from kernelCI_app.constants.process_pending import ROLLUP_STATUS_FIELDS
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING, UNKNOWN_STRING
+from kernelCI_app.constants.process_pending import ROLLUP_STATUS_FIELDS
 from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
     is_status_failure,

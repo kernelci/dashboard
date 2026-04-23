@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kernelCI_app", "0012_rename_processedhardwarestatus"),
     ]

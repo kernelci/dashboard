@@ -1,9 +1,10 @@
 from datetime import datetime
-from kernelCI_app.typeModels.treeListing import (
-    TestStatusCount,
-    Checkout,
-)
+
 from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.treeListing import (
+    Checkout,
+    TestStatusCount,
+)
 
 
 class TestCheckout:

@@ -1,11 +1,12 @@
 from http import HTTPStatus
-from kernelCI_app.tests.utils.client.originClient import OriginClient
+
 from kernelCI_app.tests.utils.asserts import (
-    assert_status_code_and_error_response,
     assert_has_fields_in_response_content,
+    assert_status_code_and_error_response,
 )
-from kernelCI_app.utils import string_to_json
+from kernelCI_app.tests.utils.client.originClient import OriginClient
 from kernelCI_app.tests.utils.fields.origins import origins_expected_fields
+from kernelCI_app.utils import string_to_json
 
 client = OriginClient()
 

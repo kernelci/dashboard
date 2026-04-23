@@ -1,9 +1,10 @@
-from typing import Optional, TypedDict
 from datetime import datetime
+from typing import Optional, TypedDict
+
 from django.db import connection
 
-from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.cache import get_query_cache, set_query_cache
+from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
 
@@ -340,7 +341,7 @@ def get_hardware_details_data(
 
 
 def _get_build_duration_clause(
-    builds_duration: tuple[Optional[int], Optional[int]]
+    builds_duration: tuple[Optional[int], Optional[int]],
 ) -> str:
     clause = ""
 
@@ -615,9 +616,7 @@ def query_records(
                 AND checkouts.git_commit_hash IN ({0})
             ORDER BY
                 issues."_timestamp" DESC
-            """.format(
-        ",".join(["%s"] * len(commit_hashes))
-    )
+            """.format(",".join(["%s"] * len(commit_hashes)))
 
     params = [
         hardware_id,
@@ -971,7 +970,7 @@ def get_hardware_commit_history(
                     c.git_repository_url,
                     c.git_repository_branch,
                     c.git_commit_hash
-                ) IN {commit_heads_params['tuple_str']}
+                ) IN {commit_heads_params["tuple_str"]}
                 AND c.origin = %(origin)s
             ORDER BY
                 tree_name,

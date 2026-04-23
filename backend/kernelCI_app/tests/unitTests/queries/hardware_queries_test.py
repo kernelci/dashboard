@@ -2,19 +2,18 @@ from datetime import datetime
 from unittest.mock import patch
 
 from kernelCI_app.queries.hardware import (
-    get_hardware_listing_data,
-    get_hardware_details_data,
-    get_hardware_trees_data,
-    get_hardware_commit_history,
     _generate_query_params,
+    get_hardware_commit_history,
+    get_hardware_details_data,
+    get_hardware_listing_data,
+    get_hardware_trees_data,
     query_records,
 )
-from kernelCI_app.typeModels.hardwareDetails import CommitHead
-
 from kernelCI_app.tests.unitTests.queries.conftest import (
     TEST_TREE,
     setup_mock_cursor,
 )
+from kernelCI_app.typeModels.hardwareDetails import CommitHead
 
 START_DATE = datetime(2025, 11, 11)
 END_DATE = datetime(2025, 11, 12)

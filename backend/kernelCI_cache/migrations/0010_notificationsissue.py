@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kernelCI_cache", "0009_rename_notification_id_to_notification_message_id"),
     ]

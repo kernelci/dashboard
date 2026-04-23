@@ -1,6 +1,5 @@
 import re
-from unittest import TestCase
-from unittest import mock
+from unittest import TestCase, mock
 from unittest.mock import MagicMock, patch
 
 from kernelCI_app.management.commands.notifications import (

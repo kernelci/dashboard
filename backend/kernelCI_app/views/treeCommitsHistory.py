@@ -1,39 +1,43 @@
 from datetime import datetime, timezone
 from http import HTTPStatus
+from typing import Optional
 
 from django.http import HttpRequest
+from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.general import (
+    MAESTRO_DUMMY_BUILD_PREFIX,
+    UNCATEGORIZED_STRING,
+    UNKNOWN_STRING,
+)
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
     FilterParams,
     InvalidComparisonOPError,
 )
-from kernelCI_app.constants.general import UNCATEGORIZED_STRING, UNKNOWN_STRING
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.misc import (
     handle_misc,
     misc_value_or_default,
 )
+from kernelCI_app.queries.tree import get_tree_commit_history
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     COMMIT_HASH_PATH_PARAM,
     GIT_BRANCH_PATH_PARAM,
     TREE_NAME_PATH_PARAM,
 )
 from kernelCI_app.typeModels.databases import FAIL_STATUS, NULL_STATUS, StatusValues
-from kernelCI_app.utils import is_boot, sanitize_dict
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema
-from typing import Optional
 from kernelCI_app.typeModels.treeCommits import (
     DirectTreeCommitsQueryParameters,
     TreeCommitsQueryParameters,
     TreeCommitsResponse,
     TreeEntityTypes,
 )
-from pydantic import ValidationError
-from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
-from kernelCI_app.queries.tree import get_tree_commit_history
-from kernelCI_app.constants.localization import ClientStrings
+from kernelCI_app.utils import is_boot, sanitize_dict
 
 
 # TODO Move this endpoint to a function so it doesn't

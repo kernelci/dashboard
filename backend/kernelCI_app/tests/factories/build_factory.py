@@ -3,9 +3,11 @@ Factory for generating Build test data.
 """
 
 import factory
-from factory.django import DjangoModelFactory
 from django.utils import timezone
+from factory.django import DjangoModelFactory
+
 from kernelCI_app.models import Builds, StatusChoices
+
 from .checkout_factory import CheckoutFactory
 from .mocks import Build, Checkout
 
@@ -28,7 +30,7 @@ class BuildFactory(DjangoModelFactory):
 
     duration = factory.Faker("pyfloat", min_value=300.0, max_value=3600.0)
 
-    architecture = factory.LazyAttribute(lambda obj: ("x86_64"))
+    architecture = factory.LazyAttribute(lambda obj: "x86_64")
 
     command = factory.LazyAttribute(
         lambda obj: f"make ARCH={obj.architecture} defconfig all"
@@ -57,13 +59,15 @@ class BuildFactory(DjangoModelFactory):
         ]
     )
 
-    config_name = factory.LazyAttribute(lambda obj: ("defconfig"))
+    config_name = factory.LazyAttribute(lambda obj: "defconfig")
 
     config_url = factory.LazyAttribute(
         lambda obj: f"https://configs.kernelci.org/{obj.origin}/{obj.config_name}"
     )
     log_url = factory.LazyAttribute(
-        lambda obj: f"https://logs.kernelci.org/{obj.origin}/{obj.checkout.git_commit_hash[:8]}/{obj.id}.log"
+        lambda obj: (
+            f"https://logs.kernelci.org/{obj.origin}/{obj.checkout.git_commit_hash[:8]}/{obj.id}.log"
+        )
     )
     log_excerpt = factory.Faker("text", max_nb_chars=2000)
 

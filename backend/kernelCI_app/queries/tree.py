@@ -1,12 +1,13 @@
 from typing import Literal, Optional
+
 from django.db import connection
 from django.db.models import Q
 
+from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
 from kernelCI_app.models import Checkouts
 from kernelCI_app.utils import get_query_time_interval
-from kernelCI_app.cache import get_query_cache, set_query_cache
-from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
 
 
 def _get_tree_listing_count_clause() -> str:

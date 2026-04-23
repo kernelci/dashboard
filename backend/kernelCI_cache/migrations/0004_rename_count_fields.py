@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kernelCI_cache", "0003_recreate_model"),
     ]

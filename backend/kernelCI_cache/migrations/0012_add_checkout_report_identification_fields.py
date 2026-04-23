@@ -1,4 +1,5 @@
 from django.db import connections, migrations, models
+
 from kernelCI import settings
 
 _TEMP_DEFAULT = "none"
@@ -87,7 +88,6 @@ def populate_checkout_fields(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("kernelCI_cache", "0011_copy_data_from_cache_if_exists"),
     ]

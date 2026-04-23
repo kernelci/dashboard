@@ -1,11 +1,13 @@
-from http import HTTPStatus
 import json
+from http import HTTPStatus
 from unittest.mock import patch
+
 from django.test import SimpleTestCase
+from rest_framework.test import APIRequestFactory
+
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.typeModels.hardwareDetails import HardwareTestHistoryItem
 from kernelCI_app.views.hardwareDetailsTestsView import HardwareDetailsTests
-from rest_framework.test import APIRequestFactory
 
 
 class TestHardwareDetailsTestsView(SimpleTestCase):
@@ -158,10 +160,8 @@ class TestHardwareDetailsTestsView(SimpleTestCase):
             }
         ]
 
-        mock_sanitize_records.side_effect = (
-            lambda records, trees, is_all_selected: self.view.tests.append(
-                {"invalid": "data"}
-            )
+        mock_sanitize_records.side_effect = lambda records, trees, is_all_selected: (
+            self.view.tests.append({"invalid": "data"})
         )
 
         request = self.factory.post(

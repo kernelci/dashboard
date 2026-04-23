@@ -1,6 +1,6 @@
-from kernelCI_app.helpers.database import dict_fetchall
 from django.db import connections
 
+from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_cache.typeModels.issues import IssueKeyTuple, UnsentIssueKeys
 

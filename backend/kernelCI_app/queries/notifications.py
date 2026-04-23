@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import sys
+
 from django.db import connection, connections
+from pydantic import ValidationError
 
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.logger import out
@@ -13,7 +12,6 @@ from kernelCI_app.typeModels.metrics_notifications import (
     MetricsReportData,
     TopIssue,
 )
-from pydantic import ValidationError
 
 
 def kcidb_execute_query(query, params=None):
@@ -28,7 +26,7 @@ def kcidb_execute_query(query, params=None):
             col_names = [desc[0] for desc in cur.description]
             result = []
             for row in rows:
-                row_dict = dict(zip(col_names, row))
+                row_dict = dict(zip(col_names, row, strict=False))
                 result.append(row_dict)
 
             return result

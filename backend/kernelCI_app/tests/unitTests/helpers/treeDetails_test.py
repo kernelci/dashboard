@@ -1,39 +1,40 @@
-from unittest.mock import patch, MagicMock
-from kernelCI_app.helpers.treeDetails import (
-    create_checkouts_where_clauses,
-    get_current_row_data,
-    process_tree_url,
-    call_based_on_compatible_and_misc_platform,
-    get_hardware_filter,
-    get_build,
-    process_builds_issue,
-    process_tests_issue,
-    decide_if_is_build_filtered_out,
-    decide_if_is_boot_filtered_out,
-    decide_if_is_full_row_filtered_out,
-    decide_if_is_test_filtered_out,
-    increment_test_origin_summary,
-    process_test_summary,
-    process_boots_summary,
-    process_filters,
-)
-from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
-from kernelCI_app.typeModels.common import StatusCount
+from unittest.mock import MagicMock, patch
+
 from kernelCI_app.constants.general import (
     UNCATEGORIZED_STRING,
     UNKNOWN_STRING,
 )
-from kernelCI_app.typeModels.databases import NULL_STATUS
+from kernelCI_app.helpers.treeDetails import (
+    call_based_on_compatible_and_misc_platform,
+    create_checkouts_where_clauses,
+    decide_if_is_boot_filtered_out,
+    decide_if_is_build_filtered_out,
+    decide_if_is_full_row_filtered_out,
+    decide_if_is_test_filtered_out,
+    get_build,
+    get_current_row_data,
+    get_hardware_filter,
+    increment_test_origin_summary,
+    process_boots_summary,
+    process_builds_issue,
+    process_filters,
+    process_test_summary,
+    process_tests_issue,
+    process_tree_url,
+)
 from kernelCI_app.tests.unitTests.helpers.fixtures.tree_details_data import (
     base_current_row,
-    current_row_with_none_values,
-    current_row_with_fail_status,
     base_row_data,
-    row_data_with_unknown_compatible,
     build_only_row_data,
-    test_only_row_data,
     combined_row_data,
+    current_row_with_fail_status,
+    current_row_with_none_values,
+    row_data_with_unknown_compatible,
+    test_only_row_data,
 )
+from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
+from kernelCI_app.typeModels.databases import NULL_STATUS
 
 
 class TestCreateCheckoutsWhereClauses:

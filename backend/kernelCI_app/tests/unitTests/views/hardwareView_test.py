@@ -1,9 +1,11 @@
 from http import HTTPStatus
 from unittest.mock import patch
+
 from django.test.testcases import SimpleTestCase
+from rest_framework.test import APIRequestFactory
+
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.views.hardwareView import HardwareView
-from rest_framework.test import APIRequestFactory
 
 
 class TestHardwareView(SimpleTestCase):

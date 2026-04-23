@@ -1,30 +1,31 @@
 import json
 from collections import defaultdict
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, Self, Union
+
+from pydantic import BaseModel, Field, field_validator
 from typing_extensions import Annotated
 
-from pydantic import BaseModel, field_validator, Field
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.common import StatusCount, make_default_validator
-from kernelCI_app.typeModels.issues import Issue
 from kernelCI_app.typeModels.databases import (
     NULL_STATUS,
-    EnvironmentMisc,
-    Build__Id,
     Build__Architecture,
-    Build__ConfigName,
-    Build__Misc,
-    Build__ConfigUrl,
     Build__Compiler,
-    Build__Status,
-    Build__LogUrl,
-    Build__StartTime,
+    Build__ConfigName,
+    Build__ConfigUrl,
     Build__Duration,
-    Checkout__GitRepositoryUrl,
+    Build__Id,
+    Build__LogUrl,
+    Build__Misc,
+    Build__StartTime,
+    Build__Status,
     Checkout__GitRepositoryBranch,
+    Checkout__GitRepositoryUrl,
+    EnvironmentMisc,
     Origin,
 )
+from kernelCI_app.typeModels.issues import Issue
 
 
 class TestArchSummaryItem(BaseModel):
@@ -39,7 +40,7 @@ class TestArchSummaryItem(BaseModel):
 class BuildArchitectures(StatusCount):
     compilers: Optional[list[str]] = []
 
-    def __iadd__(self, other: StatusCount) -> "BuildArchitectures":
+    def __iadd__(self, other: StatusCount) -> Self:
         self.PASS += other.PASS
         self.ERROR += other.ERROR
         self.FAIL += other.FAIL

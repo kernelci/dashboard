@@ -1,14 +1,13 @@
 from unittest.mock import Mock, patch
 
 from kernelCI_app.queries.tree import (
-    get_tree_listing_data,
-    get_tree_listing_fast,
-    get_tree_listing_data_by_checkout_id,
-    get_tree_details_data,
-    get_tree_commit_history,
     get_latest_tree,
+    get_tree_commit_history,
+    get_tree_details_data,
+    get_tree_listing_data,
+    get_tree_listing_data_by_checkout_id,
+    get_tree_listing_fast,
 )
-
 from kernelCI_app.tests.unitTests.queries.conftest import (
     setup_mock_cursor,
     setup_mock_queryset,

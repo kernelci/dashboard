@@ -1,28 +1,32 @@
 from collections.abc import Callable
 from typing import Any, Optional, TypedDict
-from kernelCI_app.constants.general import UNCATEGORIZED_STRING
+
+from kernelCI_app.constants.general import UNCATEGORIZED_STRING, UNKNOWN_STRING
 from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
-from kernelCI_app.typeModels.common import StatusCount
-from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
 from kernelCI_app.helpers.filters import (
     is_status_failure,
     should_increment_build_issue,
     should_increment_test_issue,
 )
-from kernelCI_app.constants.general import UNKNOWN_STRING
+from kernelCI_app.helpers.misc import (
+    get_environment_misc_value,
+    handle_misc,
+    misc_value_or_default,
+)
+from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.commonDetails import BuildHistoryItem
 from kernelCI_app.typeModels.databases import (
     FAIL_STATUS,
     NULL_STATUS,
     build_fail_status_list,
 )
 from kernelCI_app.typeModels.issues import Issue, IssueDict
-from kernelCI_app.utils import create_issue_typed, extract_error_message, sanitize_dict
-from kernelCI_app.helpers.misc import (
-    get_environment_misc_value,
-    handle_misc,
-    misc_value_or_default,
+from kernelCI_app.utils import (
+    create_issue_typed,
+    extract_error_message,
+    is_boot,
+    sanitize_dict,
 )
-from kernelCI_app.utils import is_boot
 
 
 class CheckoutWhereClauses(TypedDict):

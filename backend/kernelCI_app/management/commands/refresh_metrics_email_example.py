@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+
 from kernelCI_app.tests.unitTests.commands.fixtures.metrics_notifications_data import (
     METRICS_NOTIFICATIONS_EXAMPLE_FILEPATH,
 )

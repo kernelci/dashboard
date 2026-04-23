@@ -1,14 +1,15 @@
 from http import HTTPStatus
 from urllib.parse import urlencode
-from drf_spectacular.utils import extend_schema
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from django.http import HttpRequest, JsonResponse
 from django.urls import reverse
+from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.queries.tree import get_latest_tree
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     GIT_BRANCH_PATH_PARAM,
@@ -16,10 +17,9 @@ from kernelCI_app.typeModels.commonOpenApiParameters import (
 )
 from kernelCI_app.typeModels.treeDetails import (
     TreeLatestPathParameters,
-    TreeLatestResponse,
     TreeLatestQueryParameters,
+    TreeLatestResponse,
 )
-from kernelCI_app.constants.localization import ClientStrings
 
 
 class TreeLatest(APIView):

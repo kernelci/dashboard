@@ -1,4 +1,5 @@
 from django.db import connections
+
 from kernelCI_app.helpers.database import dict_fetchall
 
 

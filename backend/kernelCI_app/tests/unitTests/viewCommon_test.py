@@ -1,11 +1,11 @@
-from kernelCI_app.viewCommon import (
-    _increment_status,
-    create_details_build_summary,
-)
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonDetails import (
     BaseBuildSummary,
     BuildHistoryItem,
+)
+from kernelCI_app.viewCommon import (
+    _increment_status,
+    create_details_build_summary,
 )
 
 

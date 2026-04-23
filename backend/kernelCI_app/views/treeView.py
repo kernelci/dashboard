@@ -1,24 +1,25 @@
+from http import HTTPStatus
+
 from django.http import HttpRequest
+from django.utils.timezone import make_aware, now
 from drf_spectacular.utils import extend_schema
-from rest_framework.views import APIView
+from pydantic import ValidationError
 from rest_framework.response import Response
-from kernelCI_app.helpers.trees import sanitize_tree
-from kernelCI_app.queries.tree import get_tree_listing_data
-from kernelCI_app.typeModels.commonListing import ListingQueryParameters
+from rest_framework.views import APIView
+
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import (
     create_api_error_response,
 )
-from http import HTTPStatus
+from kernelCI_app.helpers.trees import sanitize_tree
+from kernelCI_app.queries.tree import get_tree_listing_data
+from kernelCI_app.typeModels.commonListing import ListingQueryParameters
 from kernelCI_app.typeModels.treeListing import (
     Checkout,
     TreeListingResponse,
 )
-from pydantic import ValidationError
-
 from kernelCI_cache.constants import UNSTABLE_CHECKOUT_THRESHOLD
 from kernelCI_cache.queries.tree import get_cached_tree_listing_data
-from kernelCI_app.constants.localization import ClientStrings
-from django.utils.timezone import now, make_aware
 
 
 class TreeView(APIView):

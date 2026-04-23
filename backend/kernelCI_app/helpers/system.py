@@ -1,4 +1,5 @@
 from typing import Literal
+
 from django.conf import settings
 
 from kernelCI_app.constants.general import PRODUCTION_HOST

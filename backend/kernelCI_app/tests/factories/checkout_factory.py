@@ -3,9 +3,11 @@ Factory for generating Checkout test data.
 """
 
 import factory
-from factory.django import DjangoModelFactory
 from django.utils import timezone
+from factory.django import DjangoModelFactory
+
 from kernelCI_app.models import Checkouts
+
 from .mocks import Checkout
 
 
@@ -106,7 +108,9 @@ class CheckoutFactory(DjangoModelFactory):
     )
 
     log_url = factory.LazyAttribute(
-        lambda obj: f"https://logs.kernelci.org/{obj.origin}/{obj.git_commit_hash[:8]}.log"
+        lambda obj: (
+            f"https://logs.kernelci.org/{obj.origin}/{obj.git_commit_hash[:8]}.log"
+        )
     )
 
     log_excerpt = factory.Faker("text", max_nb_chars=1000)

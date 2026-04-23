@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 from kernelCI_app.queries.checkout import get_origins
-
 from kernelCI_app.tests.unitTests.queries.conftest import setup_mock_cursor
 
 
