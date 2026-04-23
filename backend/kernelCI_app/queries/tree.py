@@ -802,7 +802,6 @@ def get_tree_details_builds(
                 AND c.origin = %(origin_param)s
             ORDER BY
                 c._timestamp DESC
-            LIMIT 1
         )
         SELECT
             b.id AS build_id,
@@ -832,7 +831,7 @@ def get_tree_details_builds(
             iss.report_url AS issue_report_url
         FROM
             builds b
-        INNER JOIN RELEVANT_CHECKOUTS rc ON b.checkout_id = rc.checkout_id
+        INNER JOIN RELEVANT_CHECKOUTS rc ON b.checkout_id IN (SELECT checkout_id FROM RELEVANT_CHECKOUTS)
         LEFT JOIN incidents inc
             ON inc.build_id = b.id AND inc.test_id IS NULL
         LEFT JOIN issues iss
