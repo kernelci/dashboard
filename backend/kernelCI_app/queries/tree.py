@@ -1,10 +1,10 @@
 from typing import Literal, Optional
 
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Q
 
 from kernelCI_app.cache import get_query_cache, set_query_cache
-from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.helpers.database import dict_fetchall, print_debug_query
 from kernelCI_app.helpers.treeDetails import create_checkouts_where_clauses
 from kernelCI_app.models import Checkouts
 from kernelCI_app.utils import get_query_time_interval
@@ -896,6 +896,344 @@ def _create_selected_checkouts_clause(
     return selected_checkouts_clause
 
 
+# @profile
+def get_tree_commits(
+    *,
+    origin: Optional[str],
+    git_url: Optional[str],
+    git_branch: Optional[str],
+    tree_name: Optional[str],
+):
+
+    params = {
+        "git_repository_url": git_url,
+        "git_branch": git_branch,
+        "tree_name": tree_name,
+        "origin": origin,
+    }
+
+    if origin:
+        origin_clause = "\nAND origin = %(origin)s"
+    else:
+        origin_clause = "\nAND origin IS NULL"
+
+    url_clause = ""
+    if git_url:
+        url_clause = "\nAND git_repository_url = %(git_repository_url)s"
+
+    query = f"""
+        select
+            git_commit_hash,
+            max(start_time) as start_time_end
+        from
+            checkouts
+        where
+            tree_name = %(tree_name)s
+            and git_repository_branch = %(git_branch)s
+            {url_clause}
+            {origin_clause}
+        group by
+            git_commit_hash
+        order by
+            start_time_end desc;
+    """
+
+    with connection.cursor() as cursor:
+        print(cursor.mogrify(query, params))
+        print(
+            "\n".join(
+                row[0] for row in cursor.execute("explain analyze " + query, params)
+            )
+        )
+        cursor.execute(query, params)
+        rows = dict_fetchall(cursor)
+        return rows
+
+
+# @profile
+def get_tree_commit_history_hashes_aggregated(
+    *,
+    commit_hashes: list[str],
+    origin: str,
+    git_url: Optional[str],
+    git_branch: Optional[str],
+    tree_name: Optional[str],
+    include_types: Optional[list[str]] = None,
+) -> list[dict]:
+
+    if not commit_hashes:
+        return []
+
+    if not include_types:
+        include_types = ["builds", "boots", "tests"]
+
+    include_types = [t.lower() for t in include_types]
+
+    params = {
+        "commit_hashes": commit_hashes,
+        "origin_param": origin,
+        "git_url_param": git_url,
+        "git_branch_param": git_branch,
+        "tree_name": tree_name,
+    }
+
+    checkout_clauses = create_checkouts_where_clauses(
+        git_url=git_url, git_branch=git_branch, tree_name=tree_name
+    )
+
+    git_branch_clause = checkout_clauses.get("git_branch_clause")
+    tree_name_clause = checkout_clauses.get("tree_name_clause")
+    git_url_clause = checkout_clauses.get("git_url_clause")
+    tree_name_full_clause = "\nAND " + tree_name_clause if tree_name_clause else ""
+    git_url_full_clause = "\nAND " + git_url_clause if git_url else ""
+    git_branch_full_clause = "\nAND " + git_branch_clause if git_branch_clause else ""
+
+    include_builds = "builds" in include_types
+    include_boots = "boots" in include_types
+    include_tests = "tests" in include_types
+    include_test_data = include_tests or include_boots
+
+    builds_query = ""
+    if include_builds:
+        builds_query = f"""
+            SELECT
+                COUNT(*) AS count,
+                c.git_commit_hash,
+                c.git_commit_name,
+                c.git_commit_tags,
+                c.start_time,
+                c.origin,
+                b.status AS status,
+                array[b.compiler, b.architecture] AS compiler_arch,
+                b.config_name AS config_name,
+                b.misc->>'lab' AS lab,
+                t.environment_compatible,
+                COUNT(DISTINCT ic.id) AS incidents_count,
+                ARRAY_AGG(DISTINCT ic.issue_id || ',' || ic.issue_version::text) AS known_issues,
+                true AS is_build,
+                false AS is_boot,
+                false AS is_test
+            FROM checkouts c
+            INNER JOIN builds b ON c.id = b.checkout_id
+            LEFT JOIN tests t ON t.build_id = b.id
+            LEFT JOIN incidents ic ON b.id = ic.build_id
+            LEFT JOIN issues i ON ic.issue_id = i.id
+            WHERE
+                c.git_commit_hash = ANY(%(commit_hashes)s)
+                AND c.origin = %(origin_param)s
+                AND b.config_name IS NOT NULL
+                AND b.id NOT LIKE 'maestro:dummy_%%'
+                {git_branch_full_clause}
+                {git_url_full_clause}
+                {tree_name_full_clause}
+            GROUP BY
+                c.git_commit_hash,
+                c.git_commit_name,
+                c.git_commit_tags,
+                c.start_time,
+                c.origin,
+                b.status,
+                b.compiler,
+                b.architecture,
+                b.config_name,
+                lab,
+                t.environment_compatible
+        """
+
+    tests_query = ""
+    if include_test_data:
+        boot_filter = ""
+        if include_boots and not include_tests:
+            boot_filter = "\nAND t.path LIKE 'boot%%'"
+        elif include_tests and not include_boots:
+            boot_filter = "\nAND t.path NOT LIKE 'boot%%'"
+
+        tests_query = f"""
+            SELECT
+                COUNT(*) AS count,
+                c.git_commit_hash,
+                c.git_commit_name,
+                c.git_commit_tags,
+                c.start_time,
+                c.origin,
+                t.status AS status,
+                array[b.compiler, b.architecture] AS compiler_arch,
+                b.config_name AS config_name,
+                t.misc->>'runtime' AS lab,
+                t.environment_compatible,
+                COUNT(DISTINCT ic.id) AS incidents_count,
+                ARRAY_AGG(DISTINCT ic.issue_id || ',' || ic.issue_version::text) AS known_issues,
+                false AS is_build,
+                true AS is_test,
+                (t.path like 'boot.%%' or t.path = 'boot') AS is_boot
+            FROM checkouts c
+            INNER JOIN builds b ON c.id = b.checkout_id
+            INNER JOIN tests t ON t.build_id = b.id {boot_filter}
+            LEFT JOIN incidents ic ON t.id = ic.test_id
+            LEFT JOIN issues i ON ic.issue_id = i.id
+            WHERE
+                c.git_commit_hash = ANY(%(commit_hashes)s)
+                AND c.origin = %(origin_param)s
+                {git_branch_full_clause}
+                {git_url_full_clause}
+                {tree_name_full_clause}
+            GROUP BY
+                c.git_commit_hash,
+                c.git_commit_name,
+                c.git_commit_tags,
+                c.start_time,
+                c.origin,
+                t.status,
+                is_boot,
+                b.compiler,
+                b.architecture,
+                b.config_name,
+                lab,
+                t.environment_compatible
+        """
+
+    queries = []
+    if builds_query:
+        queries.append(builds_query)
+    if tests_query:
+        queries.append(tests_query)
+
+    if not queries:
+        return []
+
+    query = " UNION ALL ".join(queries)
+
+    with connection.cursor() as cursor:
+        print_debug_query(cursor, query, params)
+        cursor.execute(query, params)
+        return dict_fetchall(cursor)
+
+
+# @profile
+def get_tree_commit_history_hashes(
+    *,
+    commit_hashes: list[str],
+    origin: str,
+    git_url: Optional[str],
+    git_branch: Optional[str],
+    tree_name: Optional[str],
+    include_types: Optional[list[str]] = None,
+) -> Optional[list[tuple]]:
+
+    # import pdb; pdb.set_trace()
+
+    # commit_hashes = commit_hashes[:10]
+
+    if not commit_hashes:
+        return []
+
+    if not include_types:
+        include_types = ["builds", "boots", "tests"]
+
+    include_types = [t.lower() for t in include_types]
+
+    params = {
+        "commit_hashes": commit_hashes,
+        "origin_param": origin,
+        "git_url_param": git_url,
+        "git_branch_param": git_branch,
+        "tree_name": tree_name,
+    }
+
+    checkout_clauses = create_checkouts_where_clauses(
+        git_url=git_url, git_branch=git_branch, tree_name=tree_name
+    )
+
+    git_branch_clause = checkout_clauses.get("git_branch_clause")
+    tree_name_clause = checkout_clauses.get("tree_name_clause")
+    git_url_clause = checkout_clauses.get("git_url_clause")
+    tree_name_full_clause = "\nAND " + tree_name_clause if tree_name_clause else ""
+    git_url_full_clause = "\nAND " + git_url_clause if git_url else ""
+    git_branch_full_clause = "\nAND " + git_branch_clause if git_branch_clause else ""
+
+    include_builds = "builds" in include_types
+    include_boots = "boots" in include_types
+    include_tests = "tests" in include_types
+    include_test_data = include_tests or include_boots
+
+    build_prefix = "b." if include_builds else "NULL AS "
+    test_prefix = "t." if include_test_data else "NULL AS "
+    build_id = "b.id" if include_builds else "NULL"
+    build_misc = "b.misc" if include_builds else "NULL"
+    test_misc_runtime = "t.misc->>'runtime'" if include_test_data else "NULL"
+    test_id = "t.id" if include_test_data else "NULL"
+
+    select_clause = f"""c.git_commit_hash,
+        c.git_commit_name,
+        c.git_commit_tags,
+        c.start_time,
+        {build_prefix}duration,
+        {build_prefix}architecture,
+        {build_prefix}compiler,
+        {build_prefix}config_name,
+        {build_prefix}status,
+        {build_prefix}origin,
+        {build_id} AS build_id,
+        {build_misc} AS build_misc,
+        {test_prefix}path,
+        {test_prefix}status,
+        {test_prefix}duration,
+        {test_prefix}environment_compatible,
+        {test_prefix}environment_misc,
+        {test_prefix}origin,
+        {test_misc_runtime} AS test_lab,
+        {test_id} AS test_id,
+        ic.id AS incidents_id,
+        ic.test_id AS incidents_test_id,
+        i.id AS issues_id,
+        i.version AS issues_version"""
+
+    if include_boots and not include_tests:
+        test_filter = "\nAND (t.path IS NULL OR t.path LIKE 'boot%%')"
+    elif include_tests and not include_boots:
+        test_filter = "\nAND (t.path IS NULL OR t.path NOT LIKE 'boot%%')"
+    else:
+        test_filter = ""
+
+    if include_test_data:
+        test_join = f"\nLEFT JOIN tests AS t ON t.build_id = b.id {test_filter}"
+        incidents_condition = "t.id = ic.test_id OR b.id = ic.build_id"
+    else:
+        test_join = ""
+        incidents_condition = "b.id = ic.build_id"
+
+    join_clause = f"""\nLEFT JOIN builds AS b ON c.id = b.checkout_id
+        {test_join}
+        LEFT JOIN incidents AS ic ON {incidents_condition}
+        LEFT JOIN issues AS i ON ic.issue_id = i.id"""
+
+    query = f"""
+        SELECT
+            {select_clause}
+        FROM
+            checkouts c
+        {join_clause}
+        WHERE
+            c.git_commit_hash = ANY(%(commit_hashes)s)
+            AND c.origin = %(origin_param)s
+            {git_branch_full_clause}
+            {git_url_full_clause}
+            {tree_name_full_clause}
+        ORDER BY
+            c.start_time DESC
+    """
+
+    with connection.cursor() as cursor:
+        print_debug_query(cursor, query, params)
+        cursor.execute(query, params)
+        import time
+        t1 = time.time()
+        rows = cursor.fetchall()
+        t2 = time.time()
+        print(f"Fetched {len(rows)} in {t2-t1}s.")
+
+
+# @profile
 def get_tree_commit_history(
     *,
     commit_hash: str,
@@ -1084,10 +1422,8 @@ def get_tree_commit_history(
     """
 
     with connection.cursor() as cursor:
-        cursor.execute(
-            query,
-            field_values,
-        )
+        print_debug_query(cursor, query, field_values)
+        cursor.execute(query, field_values)
         return cursor.fetchall()
 
 

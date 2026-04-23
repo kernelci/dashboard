@@ -16,6 +16,7 @@ from kernelCI_app.constants.general import (
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
+    is_filtered_out,
     FilterParams,
     InvalidComparisonOPError,
 )
@@ -24,7 +25,13 @@ from kernelCI_app.helpers.misc import (
     handle_misc,
     misc_value_or_default,
 )
-from kernelCI_app.queries.tree import get_tree_commit_history
+from kernelCI_app.queries.tree import (
+    get_tree_commit_history_hashes,
+    get_tree_commit_history_hashes_aggregated,
+    get_tree_commit_history,
+)
+from kernelCI_app.typeModels.treeListing import TestStatusCount
+from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonOpenApiParameters import (
     COMMIT_HASH_PATH_PARAM,
     GIT_BRANCH_PATH_PARAM,
@@ -33,8 +40,10 @@ from kernelCI_app.typeModels.commonOpenApiParameters import (
 from kernelCI_app.typeModels.databases import FAIL_STATUS, NULL_STATUS, StatusValues
 from kernelCI_app.typeModels.treeCommits import (
     DirectTreeCommitsQueryParameters,
+    TreeCommitsHistoryQueryParameters,
     TreeCommitsQueryParameters,
     TreeCommitsResponse,
+    TreeCommitsData,
     TreeEntityTypes,
 )
 from kernelCI_app.utils import is_boot, sanitize_dict
@@ -390,6 +399,7 @@ class BaseTreeCommitsHistory(APIView):
             log_message(ex)
 
     # TODO: lower the complexity of this function
+    @profile
     def get(  # noqa: C901
         self,
         request: HttpRequest,
@@ -538,3 +548,206 @@ class TreeCommitsHistory(BaseTreeCommitsHistory):
     )
     def get(self, request, commit_hash: str) -> Response:
         return super().get(request=request, commit_hash=commit_hash)
+
+
+class TreeCommitsHistoryList(BaseTreeCommitsHistory):
+
+    def get_filter_type(
+        self, is_build: bool, is_boot: bool, is_test: bool, **kwargs
+    ) -> str:
+        if is_build:
+            return "build"
+        if is_boot:
+            return "boot"
+        if is_test:
+            return "test"
+        raise ValueError("Invalid filter type")
+
+
+    def filter_instance(
+        self,
+        *,
+        hardware_id: str,
+        config: str,
+        lab: str,
+        compiler: str,
+        architecture: str,
+        compatibles: set[str],
+        status: str,
+        known_issues: set[str],
+        is_build: bool,
+        is_boot: bool,
+        is_test: bool,
+    ) -> bool:
+        filters: FilterParams = self.filterParams
+        filter_type = self.get_filter_type(is_build, is_boot, is_test)
+        status_filter_map = {
+            "build": filters.filterBuildStatus,
+            "boot": filters.filterBootStatus,
+            "test": filters.filterTestStatus,
+        }
+        if is_filtered_out(status, status_filter_map[filter_type]):
+            return True
+        if is_filtered_out(compiler, filters.filterCompiler):
+            return True
+        if is_filtered_out(config, filters.filterConfigs):
+            return True
+        if is_filtered_out(lab, filters.filter_labs):
+            return True
+        if is_filtered_out(architecture, filters.filterArchitecture):
+            return True
+
+        if filters.filterHardware and filters.filterHardware.isdisjoint(compatibles):
+            return True
+
+        filtered_issues = filters.filterIssues.get(filter_type, set())
+        if filtered_issues and not known_issues.issubset(filtered_issues):
+            return True
+
+        return False
+
+
+    @extend_schema(
+        responses=TreeCommitsResponse,
+        parameters=[TreeCommitsHistoryQueryParameters],
+        methods=["GET"],
+    )
+    @profile
+    def get(self, request: HttpRequest) -> Response:
+        # import pdb; pdb.set_trace()
+        try:
+            params = TreeCommitsHistoryQueryParameters(
+                origin=request.GET.get("origin"),
+                git_url=request.GET.get("git_url"),
+                git_branch=request.GET.get("git_branch"),
+                commit_hashes=request.GET.get("commit_hashes"),
+                start_timestamp_in_seconds=request.GET.get(
+                    "start_timestamp_in_seconds"
+                ),
+                end_timestamp_in_seconds=request.GET.get("end_timestamp_in_seconds"),
+                types=request.GET.get("types"),
+                builds_related_to_filtered_tests_only=request.GET.get(
+                    "builds_related_to_filtered_tests_only", False
+                ),
+            )
+        except ValidationError as e:
+            return create_api_error_response(error_message=e.json())
+
+        commit_hashes = params.commit_hashes
+        if not commit_hashes:
+            return create_api_error_response(
+                error_message="commit_hashes query parameter is required",
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+
+        start_timestamp = params.start_timestamp_in_seconds
+        end_timestamp = params.end_timestamp_in_seconds
+        if None not in (start_timestamp, end_timestamp):
+            self._process_time_range(
+                start_timestamp=start_timestamp, end_timestamp=end_timestamp
+            )
+
+        try:
+            self.filterParams = FilterParams(request)
+            self.setup_filters()
+        except InvalidComparisonOPError as e:
+            return create_api_error_response(error_message=str(e))
+
+        self.builds_related_to_filtered_tests_only = (
+            params.builds_related_to_filtered_tests_only
+        )
+
+        include_types = params.types
+        if params.types == ["builds"] and (
+            self.builds_related_to_filtered_tests_only or len(self.filterHardware) > 0
+        ):
+            include_types = ["builds", "boots", "tests"]
+
+        instances = get_tree_commit_history_hashes_aggregated(
+            commit_hashes=commit_hashes,
+            origin=params.origin,
+            git_url=params.git_url,
+            git_branch=params.git_branch,
+            tree_name=None,
+            include_types=include_types,
+        )
+
+        if not instances:
+            return create_api_error_response(
+                error_message=ClientStrings.TREE_COMMITS_HISTORY_NOT_FOUND,
+                status_code=HTTPStatus.OK,
+            )
+
+        # import pdb; pdb.set_trace()
+
+        results = {
+            commit_hash: TreeCommitsData(
+                git_commit_hash=commit_hash,
+                git_commit_name='',
+                git_commit_tags=[],
+                earliest_start_time=datetime.now(timezone.utc),
+                builds=StatusCount(),
+                boots=TestStatusCount(),
+                tests=TestStatusCount(),
+            )
+            for commit_hash in commit_hashes
+        }
+
+        for instance in instances:
+            count = instance['count']
+            commit_hash = instance['git_commit_hash']
+            commit_name = instance['git_commit_name']
+            origin = instance['origin']
+            status = instance['status']
+            config = instance['config_name']
+            lab = instance['lab']
+            (compiler, architecture) = [
+                (val or UNKNOWN_STRING).strip(" []''")  # noqa: B005
+                for val in (instance["compiler_arch"] or [None, None])
+            ]
+            known_issues = instance['known_issues']
+            start_time = instance['start_time']
+            status = instance['status']
+            commit_tags = instance['git_commit_tags'] or []
+            known_issues = instance['known_issues']
+            compatibles = instance['environment_compatible']
+            is_build = instance['is_build']
+            is_test = instance['is_test']
+            is_boot = instance['is_boot']
+
+            if self.filter_instance(
+                hardware_id=None,
+                config=config,
+                lab=lab,
+                compiler=compiler,
+                architecture=architecture,
+                compatibles=compatibles,
+                known_issues=known_issues,
+                status=status,
+                is_build=is_build,
+                is_boot=is_boot,
+                is_test=is_test
+            ):
+                continue
+
+            data = results[commit_hash]
+            data.git_commit_hash = commit_hash
+            data.git_commit_name = commit_name
+            data.git_commit_tags = list({*data.git_commit_tags, *commit_tags})
+            data.earliest_start_time = min(data.earliest_start_time, start_time)
+            if is_build:
+                data.builds.increment(status, count)
+            elif is_boot:
+                data.boots.increment(status, count)
+            else:
+                data.tests.increment(status, count)
+
+        try:
+            valid_response = TreeCommitsResponse(
+                root=[results[commit_hash] for commit_hash in commit_hashes]
+            )
+        except ValidationError as e:
+            print(e)
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        return Response(valid_response.model_dump(by_alias=True))

@@ -63,6 +63,41 @@ class TreeCommitsQueryParameters(DirectTreeCommitsQueryParameters):
     )
 
 
+class TreeCommitsListQueryParameters(BaseModel):
+    origin: Optional[str] = Field(
+        None, description=DocStrings.TREE_COMMIT_ORIGIN_DESCRIPTION
+    )
+    git_url: Optional[str] = Field(
+        None, description=DocStrings.TREE_COMMIT_GIT_URL_DESCRIPTION
+    )
+
+
+class TreeCommitsHistoryQueryParameters(DirectTreeCommitsQueryParameters):
+    git_branch: Optional[str] = Field(
+        None, description=DocStrings.TREE_COMMIT_GIT_BRANCH_DESCRIPTION
+    )
+    git_url: Optional[str] = Field(
+        None, description=DocStrings.TREE_COMMIT_GIT_URL_DESCRIPTION
+    )
+    commit_hashes: list[str] = Field(
+        None, description="Comma-separated list of commit hashes to get history for"
+    )
+
+    @field_validator("commit_hashes", mode="before")
+    @classmethod
+    def validate_commit_hashes(cls, value):
+        if not value:
+            return None
+        if isinstance(value, str):
+            return [h.strip() for h in value.split(",") if h.strip()]
+        return value
+
+
+class TreeCommitItem(BaseModel):
+    git_commit_hash: Checkout__GitCommitHash
+    last_checkout: Optional[datetime] = Field(None, alias="start_time_end")
+
+
 class TreeCommitsData(BaseModel):
     git_commit_hash: Checkout__GitCommitHash
     git_commit_name: Checkout__GitCommitName
@@ -75,3 +110,7 @@ class TreeCommitsData(BaseModel):
 
 class TreeCommitsResponse(RootModel):
     root: List[TreeCommitsData]
+
+
+class TreeCommitsListResponse(RootModel):
+    root: List[TreeCommitItem]

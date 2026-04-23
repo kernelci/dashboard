@@ -2,7 +2,7 @@ from unittest.mock import Mock, patch
 
 from kernelCI_app.queries.tree import (
     get_latest_tree,
-    get_tree_commit_history,
+    get_tree_commit_history_hashes,
     get_tree_details_data,
     get_tree_listing_data,
     get_tree_listing_data_by_checkout_id,
@@ -132,7 +132,7 @@ class TestGetTreeCommitHistory:
         mock_cursor = setup_mock_cursor(mock_connection)
         mock_cursor.fetchall.return_value = expected_result
 
-        result = get_tree_commit_history(
+        result = get_tree_commit_history_hashes(
             commit_hash="abc123",
             origin="maestro",
             git_url="https://my_url.com",
