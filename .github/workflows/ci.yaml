@@ -114,12 +114,12 @@ jobs:
       - name: Setup Backend
         uses: ./.github/actions/setup-backend
 
-      - name: Lint
-        run: poetry run flake8
+      - name: Check Lint
+        run: poetry run ruff check .
         working-directory: ./backend
 
       - name: Check Format
-        run: poetry run black --check .
+        run: poetry run ruff format --check .
         working-directory: ./backend
 
       - name: Run unit tests with coverage

@@ -100,6 +100,27 @@ It is important to note that Django automatically creates migrations based on ch
 * [copy_db_data.sh](./scripts/copy_db_data.sh) will copy 7 days of data from you `DB_DEFAULT` to your `DASH_DB`. You can also modify the script for a custom interval, and you can check the [update_db](./kernelCI_app/management/commands/update_db.py) command for other arguments such as `--table` and `--origins`.
 * [generate-schema.sh](./generate-schema.sh) will automatically generate the OpenAPI schema for the endpoints. Please use it whenever the ins and outs of endpoints change.
 
+## Linting, formatting, and hooks
+
+The backend uses Ruff for linting and formatting.
+
+- Check lint issues: `poetry run ruff check .`
+- Auto-fix lint issues: `poetry run ruff check . --fix`
+- Check formatting: `poetry run ruff format --check .`
+- Auto-fix formatting: `poetry run ruff format .`
+
+This repository uses pre-commit for Git hooks (`pre-commit` and `pre-push`). Install hooks once per clone from the repository root:
+
+```sh
+poetry -C backend run pre-commit install --hook-type pre-commit --hook-type pre-push --install-hooks
+```
+
+To run all configured hooks manually:
+
+```sh
+poetry -C backend run pre-commit run --all-files
+```
+
 
 ## Running tests
 

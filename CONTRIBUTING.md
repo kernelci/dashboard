@@ -8,7 +8,7 @@ KernelCI Dashboard is an open-source project and contributions of all kinds are 
 - We recommend following the [Onboarding guide](./docs/Onboarding.md) to set up your environment and learn the project workflow. **Start here** if this is your first setup.
 - New to the project? Pick an issue labeled ["good first issue"](https://github.com/kernelci/dashboard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 - There are a couple of extensions that may help you with linting and formatting your code. Consider installing [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/) for your preferred code editor.
-- There are some of these to help with your Python development: [Black](https://black.readthedocs.io/en/stable/), [Flake8](https://flake8.pycqa.org/en/latest/), and [isort](https://pycqa.github.io/isort/).
+- For Python development, this repository uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting, and [pre-commit](https://pre-commit.com/) for Git hooks.
 
 ## Useful links
 
@@ -97,10 +97,14 @@ You can find more details on the Conventional Commits specification site.
 
 - Backend
   - See [backend/README.md](backend/README.md) for environment and commands
-  - Run linting: `poetry run flake8`
+  - Run linting: `poetry run ruff check .`
+  - Run formatting check: `poetry run ruff format --check .`
+  - Apply formatting: `poetry run ruff format .`
+  - Auto-fix lint issues: `poetry run ruff check . --fix`
   - Run type checks (optional but recommended): `poetry run mypy`
   - Run tests: `poetry run pytest`
-  - Apply formatting with `poetry run black .` before committing; the `backend/pre-commit` and `backend/pre-push` hooks can help automate this — see [backend/README.md](backend/README.md) for installation instructions
+  - Install Git hooks once per clone: from the repository root run `poetry -C backend run pre-commit install --hook-type pre-commit --hook-type pre-push --install-hooks`
+  - Run all hooks manually: `poetry -C backend run pre-commit run --all-files`
 - Frontend
   - See [dashboard/README.md](dashboard/README.md) for scripts and commands
   - Run linting: `pnpm lint`

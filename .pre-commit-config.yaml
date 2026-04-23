@@ -1,0 +1,51 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.9
+    hooks:
+      - id: ruff-format
+        files: ^backend/
+        args: [--check]
+      - id: ruff-check
+        files: ^backend/
+
+  - repo: local
+    hooks:
+      - id: frontend-lint-staged
+        name: frontend lint-staged
+        entry: bash -lc 'cd dashboard && pnpm lint-staged'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: frontend-typecheck
+        name: frontend typecheck
+        entry: bash -lc 'cd dashboard && pnpm typecheck'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: frontend-pre-push
+        name: frontend pre-push
+        entry: bash
+        args:
+          - -lc
+          - |
+            REMOTE="$1"
+            if [ -z "$MASTER_REF" ]; then
+              MASTER_REF="$REMOTE/main"
+            fi
+
+            if ! read LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; then
+              echo "NOTE: nothing to push, nothing to check"
+              exit 0
+            fi
+
+            if [ "$LOCAL_REF" = "(delete)" ]; then
+              echo "NOTE: deleting branch, nothing to check"
+              exit 0
+            fi
+
+            exit 0
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

@@ -26,17 +26,16 @@ kcidb_io = {git = "https://github.com/kernelci/kcidb-io.git"}
 prometheus-client = "^0.23.1"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.4.2"
 mypy = "^1.10.0"
-flake8 = "^7.1.0"
 pytest = "^8.3.4"
 pytest-django = "^4.10.0"
-pep8-naming = "^0.14.1"
 pytest-xdist = {extras = ["psutil"], version = "^3.6.1"}
 pytest-rerunfailures = "^15.0"
 pytest-cov = "^6.2.1"
 factory-boy = "^3.3.3"
 pytest-benchmark = "^5.2.3"
+ruff = "^0.15.9"
+pre-commit = "^4.5.1"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "kernelCI.settings"
