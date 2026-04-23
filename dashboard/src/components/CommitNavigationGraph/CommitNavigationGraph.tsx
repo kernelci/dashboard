@@ -53,6 +53,7 @@ interface ICommitNavigationGraph {
   gitBranch?: string;
   headCommitHash?: string;
   treeId?: string;
+  commitsList: string[];
   startTimestampInSeconds?: number;
   endTimestampInSeconds?: number;
   onMarkClick: (commitHash: string, commitName?: string) => void;
@@ -60,6 +61,20 @@ interface ICommitNavigationGraph {
   treeUrlFrom?: TreeDetailsRouteFrom;
   buildsRelatedToFilteredTestsOnly?: boolean;
 }
+
+const selectedCommits = (
+  allCommits: string[] | undefined,
+  headCommit: string | undefined,
+): string[] => {
+  allCommits = allCommits || [];
+  headCommit = headCommit || '';
+  const NUM_SELECTED_COMMITS = 6;
+  const headIndex = allCommits.findIndex(x => x === headCommit);
+  if (headIndex < 0) {
+    return [];
+  }
+  return allCommits.slice(headIndex, headIndex + NUM_SELECTED_COMMITS);
+};
 
 const CommitNavigationGraph = ({
   origin,
@@ -69,6 +84,7 @@ const CommitNavigationGraph = ({
   gitBranch,
   headCommitHash,
   treeId,
+  commitsList,
   onMarkClick,
   endTimestampInSeconds,
   startTimestampInSeconds,
@@ -96,7 +112,7 @@ const CommitNavigationGraph = ({
   const { data, status, error, isLoading } = useCommitHistory({
     gitBranch: gitBranch ?? '',
     gitUrl: gitUrl ?? '',
-    commitHash: headCommitHash ?? '',
+    commitHash: selectedCommits(commitsList, headCommitHash),
     origin: origin,
     filter: reqFilter,
     endTimestampInSeconds,

@@ -259,6 +259,7 @@ const BootsTab = ({
           key="commitGraph"
           urlFrom={urlFrom}
           treeName={sanitizedTreeInfo.treeName}
+          summaryTreeUrl={summaryData?.common.tree_url}
         />,
       ],
       bodyCards: [
@@ -316,6 +317,7 @@ const BootsTab = ({
     hardwareData,
     sanitizedTreeInfo,
     summaryBootsData,
+    summaryData?.common.tree_url,
     toggleFilterBySection,
     treeDetailsLazyLoaded.issuesExtras,
     urlFrom,
@@ -371,6 +373,7 @@ const BootsTab = ({
           <TreeCommitNavigationGraph
             urlFrom={urlFrom}
             treeName={sanitizedTreeInfo.treeName}
+            summaryTreeUrl={summaryData?.common.tree_url}
           />
         </div>
       )}

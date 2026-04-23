@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { treeDetailsDirectRouteName } from '@/types/tree/TreeDetails';
 import type {
+  TreeCommitsResponse,
   TreeDetailsRouteFrom,
   TTreeCommitHistoryResponse,
   TTreeDetailsFilter,
@@ -16,7 +17,7 @@ import type { TFilter, TreeEntityTypes } from '@/types/general';
 import { RequestData } from './commonRequest';
 
 const fetchCommitHistory = async (
-  commitHash: string,
+  commitHash: string | string[],
   origin: string,
   gitUrl: string,
   gitBranch: string,
@@ -40,6 +41,20 @@ const fetchCommitHistory = async (
     builds_related_to_filtered_tests_only: buildsRelatedToFilteredTestsOnly,
     ...filtersFormatted,
   };
+
+  // TODO: may be create a new function???
+  if (Array.isArray(commitHash)) {
+    return await RequestData.get<TTreeCommitHistoryResponse>(
+      '/api/tree/commits-history',
+      {
+        params: {
+          ...params,
+          tree_name: treeName,
+          commit_hashes: commitHash.join(),
+        },
+      },
+    );
+  }
 
   const baseUrl =
     treeUrlFrom === treeDetailsDirectRouteName
@@ -69,7 +84,7 @@ export const useCommitHistory = ({
   types,
   buildsRelatedToFilteredTestsOnly,
 }: {
-  commitHash: string;
+  commitHash: string | string[];
   origin: string;
   gitUrl: string;
   gitBranch: string;
@@ -118,5 +133,40 @@ export const useCommitHistory = ({
         types,
         buildsRelatedToFilteredTestsOnly,
       ),
+    enabled: !!commitHash?.length,
+  });
+};
+
+const fetchCommits = async (
+  origin: string,
+  gitUrl: string,
+  gitBranch: string,
+  treeName?: string,
+): Promise<TreeCommitsResponse> => {
+  const params = {
+    origin,
+    git_url: gitUrl,
+  };
+
+  const url = `/api/tree/${treeName}/${gitBranch}/commits`;
+  const data = await RequestData.get<TreeCommitsResponse>(url, { params });
+
+  return data;
+};
+
+export const useCommits = ({
+  origin,
+  gitUrl,
+  gitBranch,
+  treeName,
+}: {
+  origin: string;
+  gitUrl: string;
+  gitBranch: string;
+  treeName?: string;
+}): UseQueryResult<TreeCommitsResponse> => {
+  return useQuery({
+    queryKey: ['treeCommits', origin, gitUrl, gitBranch, treeName],
+    queryFn: () => fetchCommits(origin, gitUrl, gitBranch, treeName),
   });
 };

@@ -111,6 +111,10 @@ class DocStrings:
     TREE_LATEST_COMMIT_HASH_DESCRIPTION = "Commit hash to retrieve tree information"
     TREE_LATEST_ORIGIN_DESCRIPTION = "Origin filter to retrieve tree information"
 
+    TREE_LIST_COMMIT_HASH_DESCRIPTION = (
+        "Comma-separated list of commit hashes to get history for"
+    )
+
     TREE_QUERY_ORIGIN_DESCRIPTION = "Origin of the tree"
     TREE_QUERY_GIT_URL_DESCRIPTION = "Git repository URL of the tree"
 

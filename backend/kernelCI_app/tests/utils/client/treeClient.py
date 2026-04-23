@@ -117,3 +117,21 @@ class TreeClient(BaseClient):
         path = reverse(base_path, kwargs=path_params.model_dump())
         url = self.get_endpoint(path=path, query=query.model_dump(), filters=filters)
         return requests.get(url)
+
+    def get_tree_commits_history_list(self, *, query: dict) -> requests.Response:
+        path = reverse("treeCommitsHistory")
+        url = self.get_endpoint(path=path, query=query)
+        return requests.get(url)
+
+    def get_tree_commits_list(
+        self, *, tree_name: str, git_branch: str, query: dict
+    ) -> requests.Response:
+        path = reverse(
+            "treeCommitsList",
+            kwargs={
+                "tree_name": tree_name,
+                "git_branch": git_branch,
+            },
+        )
+        url = self.get_endpoint(path=path, query=query)
+        return requests.get(url)

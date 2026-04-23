@@ -5,6 +5,10 @@ from django.db import connection
 
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.queries.duration import (
+    get_boot_test_duration_clause,
+    get_build_duration_clause,
+)
 from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
 
@@ -340,56 +344,6 @@ def get_hardware_details_data(
     return records
 
 
-def _get_build_duration_clause(
-    builds_duration: tuple[Optional[int], Optional[int]],
-) -> str:
-    clause = ""
-
-    # builds
-    duration_min, duration_max = builds_duration
-    if duration_min:
-        clause += "AND builds.duration >= %(build_duration_min)s\n"
-    if duration_max:
-        clause += "AND builds.duration <= %(build_duration_max)s\n"
-
-    return clause
-
-
-def _get_boot_test_duration_clause(
-    boots_duration: tuple[Optional[int], Optional[int]],
-    tests_duration: tuple[Optional[int], Optional[int]],
-) -> str:
-    clause = ""
-
-    # tests
-    duration_min, duration_max = tests_duration
-    if duration_min:
-        clause += (
-            "AND ((tests.path like 'boot.%%' or tests.path = 'boot') "
-            "OR tests.duration >= %(test_duration_min)s)\n"
-        )
-    if duration_max:
-        clause += (
-            "AND ((tests.path like 'boot.%%' or tests.path = 'boot') "
-            "OR tests.duration <= %(test_duration_max)s)\n"
-        )
-
-    # boots
-    duration_min, duration_max = boots_duration
-    if duration_min:
-        clause += (
-            "AND (NOT (tests.path like 'boot.%%' or tests.path = 'boot') "
-            "OR tests.duration >= %(boot_duration_min)s)\n"
-        )
-    if duration_max:
-        clause += (
-            "AND (NOT (tests.path like 'boot.%%' or tests.path = 'boot') "
-            "OR tests.duration <= %(boot_duration_max)s)\n"
-        )
-
-    return clause
-
-
 def get_hardware_details_summary(
     *,
     hardware_id: str,
@@ -427,8 +381,8 @@ def get_hardware_details_summary(
     if query_rows is not None:
         return query_rows
 
-    builds_duration_clause = _get_build_duration_clause(builds_duration)
-    boots_tests_duration_clause = _get_boot_test_duration_clause(
+    builds_duration_clause = get_build_duration_clause(builds_duration)
+    boots_tests_duration_clause = get_boot_test_duration_clause(
         boots_duration, tests_duration
     )
 

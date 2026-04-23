@@ -2,24 +2,24 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 
 import { useCallback, useMemo } from 'react';
 
+import { useCommits } from '@/api/commitHistory';
 import CommitNavigationGraph from '@/components/CommitNavigationGraph/CommitNavigationGraph';
-import type {
-  TTreeInformation,
-  TreeDetailsRouteFrom,
-} from '@/types/tree/TreeDetails';
-
 import {
   treeDetailsDirectRouteName,
   treeDetailsFromMap,
+  type TTreeInformation,
+  type TreeDetailsRouteFrom,
 } from '@/types/tree/TreeDetails';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 
 const TreeCommitNavigationGraph = ({
   urlFrom,
   treeName,
+  summaryTreeUrl,
 }: {
   urlFrom: TreeDetailsRouteFrom;
   treeName?: string;
+  summaryTreeUrl?: string;
 }): React.ReactNode => {
   const { origin, currentPageTab, diffFilter, treeInfo } = useSearch({
     from: urlFrom,
@@ -32,8 +32,25 @@ const TreeCommitNavigationGraph = ({
   const sanitizedTreeInfo = useMemo((): TTreeInformation & {
     hash: string;
   } => {
-    return sanitizeTreeinfo({ treeInfo, params, urlFrom });
-  }, [params, treeInfo, urlFrom]);
+    return sanitizeTreeinfo({
+      treeInfo,
+      params,
+      urlFrom,
+      summaryUrl: summaryTreeUrl,
+    });
+  }, [params, summaryTreeUrl, treeInfo, urlFrom]);
+
+  const { data: commitsData } = useCommits({
+    origin,
+    gitUrl: sanitizedTreeInfo.gitUrl ?? '',
+    gitBranch: sanitizedTreeInfo.gitBranch ?? '',
+    treeName,
+  });
+
+  const commitsList = useMemo(
+    () => commitsData?.map(c => c.git_commit_hash) ?? [],
+    [commitsData],
+  );
 
   const navigate = useNavigate({
     from: treeDetailsFromMap[urlFrom],
@@ -98,6 +115,7 @@ const TreeCommitNavigationGraph = ({
       gitUrl={sanitizedTreeInfo.gitUrl}
       treeId={sanitizedTreeInfo.hash}
       headCommitHash={sanitizedTreeInfo.headCommitHash}
+      commitsList={commitsList}
       onMarkClick={markClickHandle}
       diffFilter={diffFilter}
       currentPageTab={currentPageTab}

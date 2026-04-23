@@ -184,6 +184,11 @@ export type PaginatedCommitHistoryByTree = {
   tests: TableTestStatus;
 };
 
+export type Commit = {
+  git_commit_hash: string;
+  earliest_checkout: string;
+};
+
 export type BuildCountsResponse = {
   log_excerpt?: string;
   build_counts: {
@@ -211,6 +216,8 @@ export type LogFilesResponse = {
 };
 
 export type TTreeCommitHistoryResponse = PaginatedCommitHistoryByTree[];
+
+export type TreeCommitsResponse = Commit[];
 
 // TODO: These variables could be defined in the route files but it would cause
 // a circular dependency, requiring rewiring of the imports.

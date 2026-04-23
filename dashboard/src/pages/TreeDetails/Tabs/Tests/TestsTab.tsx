@@ -257,6 +257,7 @@ const TestsTab = ({
           key="commitGraph"
           urlFrom={urlFrom}
           treeName={sanitizedTreeInfo.treeName}
+          summaryTreeUrl={summaryData?.common.tree_url}
         />,
       ],
       bodyCards: [
@@ -314,6 +315,7 @@ const TestsTab = ({
     hardwareData,
     sanitizedTreeInfo,
     summaryTestsData,
+    summaryData?.common.tree_url,
     toggleFilterBySection,
     treeDetailsLazyLoaded.issuesExtras,
     urlFrom,
@@ -370,6 +372,7 @@ const TestsTab = ({
           <TreeCommitNavigationGraph
             urlFrom={urlFrom}
             treeName={sanitizedTreeInfo.treeName}
+            summaryTreeUrl={summaryData?.common.tree_url}
           />
         </div>
       )}

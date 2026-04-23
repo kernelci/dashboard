@@ -209,6 +209,7 @@ const BuildTab = ({
           key="commitGraph"
           urlFrom={urlFrom}
           treeName={sanitizedTreeInfo.treeName}
+          summaryTreeUrl={summaryData?.common.tree_url}
         />,
       ],
       bodyCards: [
@@ -252,6 +253,7 @@ const BuildTab = ({
   }, [
     diffFilter,
     sanitizedTreeInfo,
+    summaryData?.common.tree_url,
     toggleFilterBySection,
     treeDetailsData,
     treeDetailsLazyLoaded.issuesExtras,
@@ -319,6 +321,7 @@ const BuildTab = ({
           <TreeCommitNavigationGraph
             urlFrom={urlFrom}
             treeName={sanitizedTreeInfo.treeName}
+            summaryTreeUrl={summaryData?.common.tree_url}
           />
         </div>
       )}

@@ -2,7 +2,6 @@ from unittest.mock import Mock, patch
 
 from kernelCI_app.queries.tree import (
     get_latest_tree,
-    get_tree_commit_history,
     get_tree_details_data,
     get_tree_listing_data,
     get_tree_listing_data_by_checkout_id,
@@ -115,35 +114,6 @@ class TestGetTreeDetailsData:
 
         assert result == expected_data
         mock_set_cache.assert_called_once()
-
-
-class TestGetTreeCommitHistory:
-    @patch("kernelCI_app.queries.tree.create_checkouts_where_clauses")
-    @patch("kernelCI_app.queries.tree.connection")
-    def test_get_tree_commit_history_success(
-        self, mock_connection, mock_create_clauses
-    ):
-        expected_result = [("abc123", "v6.1", None, "2025-11-10T10:00:00Z")]
-        mock_create_clauses.return_value = {
-            "git_branch_clause": "git_repository_branch = %(git_branch_param)s",
-            "tree_name_clause": "tree_name = %(tree_name)s",
-            "git_url_clause": "git_repository_url = %(git_url_param)s",
-        }
-        mock_cursor = setup_mock_cursor(mock_connection)
-        mock_cursor.fetchall.return_value = expected_result
-
-        result = get_tree_commit_history(
-            commit_hash="abc123",
-            origin="maestro",
-            git_url="https://my_url.com",
-            git_branch="master",
-            tree_name="mainline",
-        )
-
-        assert result == expected_result
-        mock_create_clauses.assert_called_once_with(
-            git_url="https://my_url.com", git_branch="master", tree_name="mainline"
-        )
 
 
 class TestGetLatestTree:
