@@ -1552,7 +1552,7 @@ paths:
           description: ''
   /api/tree/{tree_name}/{git_branch}/{commit_hash}/commits:
     get:
-      operationId: tree_commits_retrieve_2
+      operationId: tree_commits_retrieve_3
       parameters:
       - in: query
         name: builds_related_to_filtered_tests_only
@@ -1762,6 +1762,148 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonDetailsTestsResponse'
+          description: ''
+  /api/tree/{tree_name}/{git_branch}/commits:
+    get:
+      operationId: tree_commits_retrieve_2
+      parameters:
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: git_url
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Url
+        description: Git repository URL to retrieve the tree commits
+      - in: query
+        name: origin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Origin
+        description: Origin to retrieve the tree commits
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCommitsListResponse'
+          description: ''
+  /api/tree/commits-history:
+    get:
+      operationId: tree_commits_history_retrieve
+      parameters:
+      - in: query
+        name: builds_related_to_filtered_tests_only
+        schema:
+          default: false
+          title: Builds Related To Filtered Tests Only
+          type: boolean
+        description: When true, and requesting only builds, count only builds related
+          to tests/boots that pass the current filters.
+      - in: query
+        name: commit_hashes
+        schema:
+          default: null
+          items:
+            type: string
+          title: Commit Hashes
+          type: array
+        description: Comma-separated list of commit hashes to get history for
+      - in: query
+        name: end_timestamp_in_seconds
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: End Timestamp In Seconds
+        description: End time filter in seconds for tree commits
+      - in: query
+        name: git_branch
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Branch
+        description: Git branch name to retrieve the tree commits
+      - in: query
+        name: git_url
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Git Url
+        description: Git repository URL to retrieve the tree commits
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin to retrieve the tree commits
+      - in: query
+        name: start_timestamp_in_seconds
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Start Timestamp In Seconds
+        description: Start time filter in seconds for tree commits
+      - in: query
+        name: tree_name
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Tree Name
+        description: Name of the tree
+      - in: query
+        name: types
+        schema:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/TreeEntityTypes'
+            type: array
+          - type: 'null'
+          default: null
+          title: Types
+        description: List of types to include (builds, boots, tests)
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCommitsResponse'
           description: ''
 components:
   schemas:
@@ -3707,34 +3849,33 @@ components:
     TestStatusCount:
       properties:
         pass:
+          default: 0
           title: Pass
           type: integer
         error:
+          default: 0
           title: Error
           type: integer
         fail:
+          default: 0
           title: Fail
           type: integer
         skip:
+          default: 0
           title: Skip
           type: integer
         miss:
+          default: 0
           title: Miss
           type: integer
         done:
+          default: 0
           title: Done
           type: integer
         'null':
+          default: 0
           title: 'Null'
           type: integer
-      required:
-      - pass
-      - error
-      - fail
-      - skip
-      - miss
-      - done
-      - 'null'
       title: TestStatusCount
       type: object
     TestStatusHistoryItem:
@@ -3970,6 +4111,21 @@ components:
       - is_selected
       title: Tree
       type: object
+    TreeCommitItem:
+      properties:
+        git_commit_hash:
+          $ref: '#/components/schemas/Checkout__GitCommitHash'
+        start_time_end:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Start Time End
+      required:
+      - git_commit_hash
+      title: TreeCommitItem
+      type: object
     TreeCommitsData:
       properties:
         git_commit_hash:
@@ -3998,6 +4154,11 @@ components:
       - tests
       title: TreeCommitsData
       type: object
+    TreeCommitsListResponse:
+      items:
+        $ref: '#/components/schemas/TreeCommitItem'
+      title: TreeCommitsListResponse
+      type: array
     TreeCommitsResponse:
       items:
         $ref: '#/components/schemas/TreeCommitsData'

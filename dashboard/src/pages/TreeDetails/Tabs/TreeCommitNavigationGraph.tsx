@@ -17,9 +17,11 @@ import { sanitizeTreeinfo } from '@/utils/treeDetails';
 const TreeCommitNavigationGraph = ({
   urlFrom,
   treeName,
+  summaryTreeUrl,
 }: {
   urlFrom: TreeDetailsRouteFrom;
   treeName?: string;
+  summaryTreeUrl?: string;
 }): React.ReactNode => {
   const { origin, currentPageTab, diffFilter, treeInfo } = useSearch({
     from: urlFrom,
@@ -32,8 +34,13 @@ const TreeCommitNavigationGraph = ({
   const sanitizedTreeInfo = useMemo((): TTreeInformation & {
     hash: string;
   } => {
-    return sanitizeTreeinfo({ treeInfo, params, urlFrom });
-  }, [params, treeInfo, urlFrom]);
+    return sanitizeTreeinfo({
+      treeInfo,
+      params,
+      urlFrom,
+      summaryUrl: summaryTreeUrl,
+    });
+  }, [params, summaryTreeUrl, treeInfo, urlFrom]);
 
   const navigate = useNavigate({
     from: treeDetailsFromMap[urlFrom],

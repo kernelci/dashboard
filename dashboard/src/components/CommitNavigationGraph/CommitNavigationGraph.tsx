@@ -16,13 +16,13 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { MessagesKey } from '@/locales/messages';
 import { formatDate } from '@/utils/utils';
 import { mapFilterToReq } from '@/components/Tabs/Filters';
-import { useCommitHistory } from '@/api/commitHistory';
+import { useCommitHistory, useCommits } from '@/api/commitHistory';
 import type { TFilter, TreeEntityTypes } from '@/types/general';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { gitValues } from '@/components/Tooltip/CommitTagTooltip';
-import type { TreeDetailsRouteFrom } from '@/types/tree/TreeDetails';
+import type { Commit, TreeDetailsRouteFrom } from '@/types/tree/TreeDetails';
 
 const graphDisplaySize = 8;
 
@@ -61,6 +61,19 @@ interface ICommitNavigationGraph {
   buildsRelatedToFilteredTestsOnly?: boolean;
 }
 
+const selectedCommits = (
+  allCommits: Commit[] | undefined,
+  headCommit: string | undefined,
+): string[] => {
+  allCommits = allCommits || [];
+  headCommit = headCommit || '';
+  const NUM_SELECTED_COMMITS = 6;
+  const headIndex = allCommits.findIndex(x => x.git_commit_hash === headCommit);
+  return allCommits
+    .slice(headIndex, headIndex + NUM_SELECTED_COMMITS)
+    .map(x => x.git_commit_hash);
+};
+
 const CommitNavigationGraph = ({
   origin,
   currentPageTab,
@@ -93,10 +106,17 @@ const CommitNavigationGraph = ({
     }
   }, [currentPageTab]);
 
+  const commitsList = useCommits({
+    gitBranch: gitBranch ?? '',
+    gitUrl: gitUrl ?? '',
+    origin: origin,
+    treeName,
+  });
+
   const { data, status, error, isLoading } = useCommitHistory({
     gitBranch: gitBranch ?? '',
     gitUrl: gitUrl ?? '',
-    commitHash: headCommitHash ?? '',
+    commitHash: selectedCommits(commitsList.data, headCommitHash),
     origin: origin,
     filter: reqFilter,
     endTimestampInSeconds,
