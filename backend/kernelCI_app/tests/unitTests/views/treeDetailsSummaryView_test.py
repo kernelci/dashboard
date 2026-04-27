@@ -36,6 +36,36 @@ BASE_BUILD_ROW: dict[str, object] = {
     "issue_report_url": None,
 }
 
+BASE_ROLLUP_ROW: dict[str, object] = {
+    "origin": "maestro",
+    "tree_name": "mainline",
+    "git_repository_branch": "for-kernelci",
+    "git_repository_url": "https://git.kernel.org",
+    "git_commit_hash": COMMIT_HASH,
+    "path_group": "test",
+    "build_config_name": "defconfig",
+    "build_architecture": "x86_64",
+    "build_compiler": "gcc-12",
+    "hardware_key": "qemu",
+    "test_platform": "qemu",
+    "test_lab": "lab-a",
+    "test_origin": "maestro",
+    "issue_id": None,
+    "issue_version": None,
+    "issue_uncategorized": False,
+    "is_boot": False,
+    "pass_tests": 1,
+    "fail_tests": 0,
+    "skip_tests": 0,
+    "error_tests": 0,
+    "miss_tests": 0,
+    "done_tests": 0,
+    "null_tests": 0,
+    "total_tests": 1,
+    "issue_comment": None,
+    "issue_report_url": None,
+}
+
 # Legacy row representing a boot test (PASS, no issue)
 LEGACY_BOOT_ROW = create_row(
     test_id="legacy_boot_001",
@@ -70,8 +100,11 @@ class TestTreeDetailsSummaryRollupFallback(SimpleTestCase):
             "git_branch": "for-kernelci",
         }
 
-    def _make_request(self):
-        return self.factory.get(self.url, self.base_query)
+    def _make_request(self, query_overrides: dict | None = None):
+        query = dict(self.base_query)
+        if query_overrides:
+            query.update(query_overrides)
+        return self.factory.get(self.url, query)
 
     @patch("kernelCI_app.views.treeDetailsSummaryView.out")
     @patch("kernelCI_app.views.treeDetailsSummaryView.get_tree_details_data")
@@ -164,3 +197,34 @@ class TestTreeDetailsSummaryRollupFallback(SimpleTestCase):
 
         mock_get_legacy_data.assert_not_called()
         mock_out.assert_not_called()
+
+    @patch("kernelCI_app.views.treeDetailsSummaryView.out")
+    @patch("kernelCI_app.views.treeDetailsSummaryView.get_tree_details_data")
+    @patch("kernelCI_app.views.treeDetailsSummaryView.get_tree_details_builds")
+    @patch("kernelCI_app.views.treeDetailsSummaryView.get_tree_details_rollup")
+    def test_path_filter_forces_legacy_even_with_rollup_rows(
+        self,
+        mock_get_rollup,
+        mock_get_builds,
+        mock_get_legacy_data,
+        mock_out,
+    ):
+        """Path filters must use legacy test rows because rollup only has path_group."""
+        mock_get_rollup.return_value = [BASE_ROLLUP_ROW]
+        mock_get_builds.return_value = [BASE_BUILD_ROW]
+        mock_get_legacy_data.return_value = [LEGACY_TEST_ROW]
+
+        response = self.view.get(
+            self._make_request({"filter_test.path": "test.something"}),
+            commit_hash=COMMIT_HASH,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("error", response.data)
+        mock_get_legacy_data.assert_called_once()
+        mock_out.assert_called_once()
+
+        # Value comes from legacy row (FAIL), not from rollup row (PASS).
+        test_status = response.data["summary"]["tests"]["status"]
+        self.assertEqual(test_status.get("FAIL"), 1)
+        self.assertEqual(test_status.get("PASS"), 0)
