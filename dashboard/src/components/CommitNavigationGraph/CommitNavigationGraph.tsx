@@ -1,12 +1,27 @@
 import { useIntl } from 'react-intl';
 
-import { memo, useMemo, type JSX } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type JSX,
+} from 'react';
 
 import { z } from 'zod';
 
 import { useMediaQuery } from '@mui/material';
 
 import { useTheme } from '@mui/material/styles';
+
+import {
+  MdArrowBackIos,
+  MdArrowForwardIos,
+  MdFirstPage,
+  MdLastPage,
+} from 'react-icons/md';
 
 import { Colors } from '@/components/StatusChart/StatusCharts';
 import { LineChart } from '@/components/LineChart';
@@ -18,13 +33,20 @@ import { formatDate } from '@/utils/utils';
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 import { useCommitHistory } from '@/api/commitHistory';
 import type { TFilter, TreeEntityTypes } from '@/types/general';
+import type {
+  PaginatedCommitHistoryByTree,
+  TreeDetailsRouteFrom,
+} from '@/types/tree/TreeDetails';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { gitValues } from '@/components/Tooltip/CommitTagTooltip';
-import type { TreeDetailsRouteFrom } from '@/types/tree/TreeDetails';
+
+import { Button } from '@/components/ui/button';
 
 const graphDisplaySize = 8;
+const WINDOW_SIZE = 4;
+const BACKEND_PAGE_SIZE = 6;
 
 export const getChartXLabel = ({
   commitTags,
@@ -80,6 +102,40 @@ const CommitNavigationGraph = ({
 
   const reqFilter = mapFilterToReq(diffFilter);
 
+  // Buffer of all fetched commits (oldest first, i.e. chronological order)
+  const [allCommits, setAllCommits] = useState<PaginatedCommitHistoryByTree[]>(
+    [],
+  );
+  // Index of the rightmost visible commit in allCommits
+  const [windowEnd, setWindowEnd] = useState<number>(-1);
+  // Anchor commit hash for fetching older data
+  const [fetchAnchor, setFetchAnchor] = useState<string | undefined>(undefined);
+  // Whether the backend has no more older commits
+  const [exhausted, setExhausted] = useState(false);
+  // When true, the next merge should position the window at the oldest end
+  const jumpToOldestRef = useRef(false);
+
+  // Reset everything when key props change
+  const prevDepsRef = useRef({ headCommitHash, currentPageTab });
+  useEffect(() => {
+    const prev = prevDepsRef.current;
+    if (
+      prev.headCommitHash !== headCommitHash ||
+      prev.currentPageTab !== currentPageTab
+    ) {
+      allCommitsRef.current = [];
+      setAllCommits([]);
+      setWindowEnd(-1);
+      setFetchAnchor(undefined);
+      setExhausted(false);
+      jumpToOldestRef.current = false;
+      lastMergedAnchorRef.current = '';
+      prevDepsRef.current = { headCommitHash, currentPageTab };
+    }
+  }, [headCommitHash, currentPageTab]);
+
+  const effectiveAnchor = fetchAnchor ?? headCommitHash ?? '';
+
   const types: TreeEntityTypes[] = useMemo(() => {
     switch (currentPageTab) {
       case 'global.builds':
@@ -96,7 +152,7 @@ const CommitNavigationGraph = ({
   const { data, status, error, isLoading } = useCommitHistory({
     gitBranch: gitBranch ?? '',
     gitUrl: gitUrl ?? '',
-    commitHash: headCommitHash ?? '',
+    commitHash: effectiveAnchor,
     origin: origin,
     filter: reqFilter,
     endTimestampInSeconds,
@@ -107,7 +163,131 @@ const CommitNavigationGraph = ({
     buildsRelatedToFilteredTestsOnly,
   });
 
-  const displayableData = data ? data : null;
+  // Ref mirror of allCommits for synchronous access in the merge effect
+  const allCommitsRef = useRef<PaginatedCommitHistoryByTree[]>([]);
+
+  // Merge fetched data into the buffer when it arrives
+  const lastMergedAnchorRef = useRef<string>('');
+  useEffect(() => {
+    if (!data || data.length === 0) {
+      return;
+    }
+    if (lastMergedAnchorRef.current === effectiveAnchor) {
+      return;
+    }
+    lastMergedAnchorRef.current = effectiveAnchor;
+
+    if (data.length < BACKEND_PAGE_SIZE) {
+      setExhausted(true);
+    }
+
+    // Data from API is newest-first; reverse to get chronological (oldest-first)
+    const newCommits = [...data].reverse();
+    const prev = allCommitsRef.current;
+
+    if (prev.length === 0) {
+      // First load — position window to include current commit if present
+      allCommitsRef.current = newCommits;
+      setAllCommits(newCommits);
+
+      const currentIdx = treeId
+        ? newCommits.findIndex(c => c.git_commit_hash === treeId)
+        : -1;
+      if (currentIdx >= 0) {
+        setWindowEnd(
+          Math.max(
+            currentIdx,
+            Math.min(WINDOW_SIZE - 1, newCommits.length - 1),
+          ),
+        );
+      } else {
+        setWindowEnd(newCommits.length - 1);
+      }
+      return;
+    }
+
+    // Deduplicate: only prepend commits not already in the buffer
+    const existingHashes = new Set(prev.map(c => c.git_commit_hash));
+    const uniqueNew = newCommits.filter(
+      c => !existingHashes.has(c.git_commit_hash),
+    );
+
+    if (uniqueNew.length === 0) {
+      return;
+    }
+
+    const merged = [...uniqueNew, ...prev];
+    allCommitsRef.current = merged;
+    setAllCommits(merged);
+
+    // Adjust window position for the prepended items
+    if (jumpToOldestRef.current) {
+      jumpToOldestRef.current = false;
+      setWindowEnd(Math.min(WINDOW_SIZE - 1, merged.length - 1));
+    } else {
+      setWindowEnd(w => w + uniqueNew.length);
+    }
+  }, [data, effectiveAnchor, treeId]);
+
+  // Compute visible window — clamp to valid range and enforce minimum WINDOW_SIZE
+  const clampedWindowEnd =
+    allCommits.length > 0
+      ? Math.min(
+          Math.max(windowEnd, Math.min(WINDOW_SIZE - 1, allCommits.length - 1)),
+          allCommits.length - 1,
+        )
+      : 0;
+  const windowStart = Math.max(0, clampedWindowEnd - WINDOW_SIZE + 1);
+  const visibleCommits =
+    allCommits.length > 0
+      ? allCommits.slice(windowStart, clampedWindowEnd + 1)
+      : [];
+
+  // Navigation
+  const isFetchingOlder = status === 'pending' && allCommits.length > 0;
+  const canGoNewer = clampedWindowEnd < allCommits.length - 1;
+  const canGoOlder = (windowStart > 0 || !exhausted) && !isFetchingOlder;
+
+  const goNewer = useCallback(() => {
+    setWindowEnd(w => Math.min(w + 1, allCommits.length - 1));
+  }, [allCommits.length]);
+
+  const goNewest = useCallback(() => {
+    setWindowEnd(allCommits.length - 1);
+  }, [allCommits.length]);
+
+  const goOlder = useCallback(() => {
+    if (windowStart > 0) {
+      setWindowEnd(w => w - 1);
+    } else if (!exhausted && allCommits.length > 0) {
+      // Need to fetch more: use the oldest known commit as anchor
+      const oldestHash = allCommits[0].git_commit_hash;
+      setFetchAnchor(oldestHash);
+      // Pre-decrement so after merge shift (+uniqueNew.length), the net
+      // effect is one position to the left — the user sees the next older commit
+      // immediately once data arrives. The effectiveWindowEnd clamp keeps
+      // the display stable (≥ WINDOW_SIZE items) during the loading gap.
+      setWindowEnd(w => w - 1);
+    }
+  }, [windowStart, exhausted, allCommits]);
+
+  const goOldest = useCallback(() => {
+    if (exhausted) {
+      setWindowEnd(WINDOW_SIZE - 1);
+    } else if (allCommits.length > 0) {
+      // Flag the merge effect to position window at oldest end after fetch
+      jumpToOldestRef.current = true;
+      const oldestHash = allCommits[0].git_commit_hash;
+      setFetchAnchor(oldestHash);
+    }
+  }, [exhausted, allCommits]);
+
+  const displayableData = visibleCommits.length > 0 ? visibleCommits : null;
+
+  // Only show loading skeleton on the initial fetch.
+  // When fetching older pages, keep displaying the buffered chart.
+  const effectiveStatus =
+    allCommits.length > 0 && status === 'pending' ? 'success' : status;
 
   type MessagesID = {
     graphName: MessagesKey;
@@ -145,7 +325,7 @@ const CommitNavigationGraph = ({
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Transform the data to fit the format required by the MUI LineChart component
+  // Transform the visible window data for the MUI LineChart
   const series: TLineChartProps['series'] = [
     {
       id: 'good',
@@ -179,8 +359,9 @@ const CommitNavigationGraph = ({
 
   const commitData: TCommitValue[] = [];
   const xAxisIndexes: number[] = [];
-  // TODO Extract the magic code to outside the component
-  data?.forEach((item, index) => {
+
+  // visibleCommits is already in chronological order (oldest first)
+  visibleCommits.forEach((item, index) => {
     if (currentPageTab === 'global.builds') {
       const inconclusiveCount =
         item.builds.MISS +
@@ -188,9 +369,9 @@ const CommitNavigationGraph = ({
         item.builds.ERROR +
         item.builds.DONE +
         item.builds.NULL;
-      series[0].data?.unshift(item.builds.PASS);
-      series[1].data?.unshift(item.builds.FAIL);
-      series[2].data?.unshift(inconclusiveCount);
+      series[0].data?.push(item.builds.PASS);
+      series[1].data?.push(item.builds.FAIL);
+      series[2].data?.push(inconclusiveCount);
     }
     if (currentPageTab === 'global.boots') {
       const inconclusiveCount =
@@ -199,9 +380,9 @@ const CommitNavigationGraph = ({
         item.boots.error +
         item.boots.done +
         item.boots.null;
-      series[0].data?.unshift(item.boots.pass);
-      series[1].data?.unshift(item.boots.fail);
-      series[2].data?.unshift(inconclusiveCount);
+      series[0].data?.push(item.boots.pass);
+      series[1].data?.push(item.boots.fail);
+      series[2].data?.push(inconclusiveCount);
     }
     if (currentPageTab === 'global.tests') {
       const inconclusiveCount =
@@ -210,11 +391,11 @@ const CommitNavigationGraph = ({
         item.tests.error +
         item.tests.done +
         item.tests.null;
-      series[0].data?.unshift(item.tests.pass);
-      series[1].data?.unshift(item.tests.fail);
-      series[2].data?.unshift(inconclusiveCount);
+      series[0].data?.push(item.tests.pass);
+      series[1].data?.push(item.tests.fail);
+      series[2].data?.push(inconclusiveCount);
     }
-    commitData.unshift({
+    commitData.push({
       commitHash: item.git_commit_hash,
       commitName: item.git_commit_name,
       commitTags: item.git_commit_tags,
@@ -261,7 +442,7 @@ const CommitNavigationGraph = ({
 
   return (
     <QuerySwitcher
-      status={status}
+      status={effectiveStatus}
       data={displayableData}
       customError={
         <MemoizedSectionError
@@ -275,90 +456,132 @@ const CommitNavigationGraph = ({
       <BaseCard
         title={formatMessage({ id: messagesId.graphName })}
         content={
-          <LineChart
-            height={400}
-            margin={{ top: 100 }}
-            xAxis={xAxis}
-            series={series}
-            sx={{
-              '& .MuiChartsAxis-directionY .MuiChartsAxis-tickContainer:first-of-type':
-                {
-                  display: 'none', // hides first tick on y axis (avoiding text colision)
+          <>
+            <LineChart
+              height={400}
+              margin={{ top: 100 }}
+              xAxis={xAxis}
+              series={series}
+              sx={{
+                '& .MuiChartsAxis-directionY .MuiChartsAxis-tickContainer:first-of-type':
+                  {
+                    display: 'none', // hides first tick on y axis (avoiding text colision)
+                  },
+              }}
+              slotProps={{
+                legend: {
+                  itemGap: 2,
+                  position: { vertical: 'top', horizontal: 'middle' },
                 },
-            }}
-            slotProps={{
-              legend: {
-                itemGap: 2,
-                position: { vertical: 'top', horizontal: 'middle' },
-              },
-            }}
-            slots={{
-              axisTickLabel: chartTextProps => {
-                let displayText = chartTextProps.text;
-                const splitResult = chartTextProps.text.split('-');
+              }}
+              slots={{
+                axisTickLabel: chartTextProps => {
+                  let displayText = chartTextProps.text;
+                  const splitResult = chartTextProps.text.split('-');
 
-                const possibleIdentifier = splitResult[0];
+                  const possibleIdentifier = splitResult[0];
 
-                let isCurrentCommit = false;
-                if (possibleIdentifier === 'commitIndex') {
-                  const possibleIndex = splitResult[1];
-                  const possibleIndexNumber = parseInt(possibleIndex);
-                  const parsedPossibleIndex = z
-                    .number()
-                    .catch(e => {
-                      console.error('Error parsing index', e);
-                      return 0;
-                    })
-                    .parse(possibleIndexNumber);
+                  let isCurrentCommit = false;
+                  if (possibleIdentifier === 'commitIndex') {
+                    const possibleIndex = splitResult[1];
+                    const possibleIndexNumber = parseInt(possibleIndex);
+                    const parsedPossibleIndex = z
+                      .number()
+                      .catch(e => {
+                        console.error('Error parsing index', e);
+                        return 0;
+                      })
+                      .parse(possibleIndexNumber);
 
-                  isCurrentCommit =
-                    treeId === commitData[parsedPossibleIndex].commitHash;
+                    isCurrentCommit =
+                      treeId === commitData[parsedPossibleIndex].commitHash;
 
-                  displayText = getChartXLabel(commitData[parsedPossibleIndex]);
+                    displayText = getChartXLabel(
+                      commitData[parsedPossibleIndex],
+                    );
+                  }
+
+                  return (
+                    <>
+                      {isCurrentCommit && (
+                        <>
+                          <polygon points="-5,-250 5,-250 0,-240" fill="blue" />
+                          <line
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="-250"
+                            stroke="blue"
+                            strokeWidth="2"
+                            strokeDasharray="5,5"
+                          />
+                        </>
+                      )}
+
+                      <text
+                        className="MuiChartsAxis-tickLabel"
+                        x="0"
+                        y="9"
+                        textAnchor="middle"
+                        dominantBaseline="hanging"
+                        style={{ fontSize: '0.9rem' }}
+                      >
+                        <tspan x="0" dy="0px" dominantBaseline="hanging">
+                          {displayText}
+                        </tspan>
+                      </text>
+                    </>
+                  );
+                },
+              }}
+              onMarkClick={(_event, payload) => {
+                const commitIndex = payload.dataIndex ?? 0;
+                const commitHash = commitData[commitIndex].commitHash;
+                const commitName = commitData[commitIndex].commitName;
+                if (commitHash) {
+                  onMarkClick(commitHash, commitName);
                 }
-
-                return (
-                  <>
-                    {isCurrentCommit && (
-                      <>
-                        <polygon points="-5,-250 5,-250 0,-240" fill="blue" />
-                        <line
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="-250"
-                          stroke="blue"
-                          strokeWidth="2"
-                          strokeDasharray="5,5"
-                        />
-                      </>
-                    )}
-
-                    <text
-                      className="MuiChartsAxis-tickLabel"
-                      x="0"
-                      y="9"
-                      textAnchor="middle"
-                      dominantBaseline="hanging"
-                      style={{ fontSize: '0.9rem' }}
-                    >
-                      <tspan x="0" dy="0px" dominantBaseline="hanging">
-                        {displayText}
-                      </tspan>
-                    </text>
-                  </>
-                );
-              },
-            }}
-            onMarkClick={(_event, payload) => {
-              const commitIndex = payload.dataIndex ?? 0;
-              const commitHash = commitData[commitIndex].commitHash;
-              const commitName = commitData[commitIndex].commitName;
-              if (commitHash) {
-                onMarkClick(commitHash, commitName);
-              }
-            }}
-          />
+              }}
+            />
+            <div className="mt-2 flex items-center justify-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goOldest}
+                disabled={!canGoOlder}
+                title={formatMessage({ id: 'global.first' })}
+              >
+                <MdFirstPage className="text-blue" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goOlder}
+                disabled={!canGoOlder}
+                title={formatMessage({ id: 'global.older' })}
+              >
+                <MdArrowBackIos className="text-blue" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goNewer}
+                disabled={!canGoNewer}
+                title={formatMessage({ id: 'global.newer' })}
+              >
+                <MdArrowForwardIos className="text-blue" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goNewest}
+                disabled={!canGoNewer}
+                title={formatMessage({ id: 'global.last' })}
+              >
+                <MdLastPage className="text-blue" />
+              </Button>
+            </div>
+          </>
         }
       />
     </QuerySwitcher>
