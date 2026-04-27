@@ -1,11 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import {
-  useSearch,
-  useNavigate,
-  useRouterState,
-  useMatches,
-} from '@tanstack/react-router';
+import { useSearch, useNavigate, useMatches } from '@tanstack/react-router';
 
 import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
 
@@ -121,9 +116,6 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
 const TopBar = (): JSX.Element => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const matches = useMatches();
-  const redirectStateFrom = useRouterState({
-    select: s => s.location.state.from,
-  });
 
   const routeInfo = useMemo(() => {
     const lastMatch = matches[matches.length - 1];
@@ -142,8 +134,6 @@ const TopBar = (): JSX.Element => {
     };
   }, [matches]);
 
-  const basePath = redirectStateFrom ?? routeInfo.firstUrlLocation;
-
   return (
     <>
       <div className="fixed top-0 z-10 flex h-20 w-full max-w-full bg-white px-6 md:max-w-[calc(100%-14rem)] md:px-16">
@@ -159,7 +149,7 @@ const TopBar = (): JSX.Element => {
               <HiMenu className="size-6" />
             </Button>
             <span className="mr-2 text-2xl sm:mr-10">
-              <TitleName basePath={basePath} />
+              <TitleName basePath={routeInfo.firstUrlLocation} />
             </span>
             {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
               <OriginSelect isHardwarePath={routeInfo.isHardwarePage} />
