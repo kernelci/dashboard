@@ -30,11 +30,7 @@ import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
-import TableStatusFilter from '@/components/Table/TableStatusFilter';
-
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
-
-import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
 
@@ -42,6 +38,10 @@ import type { TableKeys } from '@/utils/constants/tables';
 import { buildHardwareArray, buildTreeBranch } from '@/utils/table';
 
 import { EMPTY_VALUE } from '@/lib/string';
+
+import { TableTopFilters } from '@/components/Table/TableTopFilters';
+
+import type { TStatusFilters } from '@/components/Table/TableStatusFilter';
 
 import { IndividualTestsTable } from './IndividualTestsTable';
 import { defaultColumns, defaultInnerColumns } from './DefaultTestsColumns';
@@ -110,7 +110,9 @@ export function TestsTable({
 }: ITestsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
-  const [globalFilter, setGlobalFilter] = useState<string | undefined>();
+  const [globalFilter, setGlobalFilter] = useState<string | undefined>(
+    currentPathFilter,
+  );
   const { pagination, paginationUpdater } = usePaginationState(tableKey);
 
   const intl = useIntl();
@@ -292,7 +294,7 @@ export function TestsTable({
     [globalStatusGroup],
   );
 
-  const filters = useMemo(
+  const filters: TStatusFilters[] = useMemo(
     () => [
       {
         label: intl.formatMessage(
@@ -332,14 +334,12 @@ export function TestsTable({
 
   const onSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.value !== undefined && updatePathFilter) {
+      setGlobalFilter(String(e.target.value));
+      if (updatePathFilter) {
         updatePathFilter(e.target.value);
       }
-      if (updatePathFilter === undefined) {
-        setGlobalFilter(String(e.target.value));
-      }
     },
-    [setGlobalFilter, updatePathFilter],
+    [updatePathFilter],
   );
 
   const groupHeaders = table.getHeaderGroups()[0]?.headers;
@@ -356,25 +356,11 @@ export function TestsTable({
           });
       return (
         <TableHead key={header.id} className="border-b px-2 font-bold">
-          {header.id === 'path_group' ? (
-            <div className="flex items-center">
-              {headerComponent}
-              <DebounceInput
-                key={currentPathFilter}
-                debouncedSideEffect={onSearchChange}
-                startingValue={currentPathFilter}
-                className="w-50 font-normal"
-                type="text"
-                placeholder={intl.formatMessage({ id: 'global.search' })}
-              />
-            </div>
-          ) : (
-            headerComponent
-          )}
+          {headerComponent}
         </TableHead>
       );
     });
-  }, [currentPathFilter, groupHeaders, intl, onSearchChange, sorting]);
+  }, [groupHeaders, sorting]);
 
   const modelRows = table.getRowModel().rows;
   const tableRows = useMemo((): JSX.Element[] | JSX.Element => {
@@ -420,7 +406,13 @@ export function TestsTable({
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
+      <TableTopFilters
+        key="testsTableSearch"
+        filters={filters}
+        onClickFilter={onClickFilter}
+        onSearchChange={onSearchChange}
+        currentPathFilter={currentPathFilter}
+      />
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableRows}</TableBody>
       </BaseTable>
