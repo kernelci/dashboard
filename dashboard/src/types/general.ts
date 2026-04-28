@@ -17,6 +17,9 @@ export type TPathTests = {
   null_tests: number;
   total_tests: number;
   individual_tests: TIndividualTest[];
+  sub_groups?: TPathTests[];
+  path_prefix?: string;
+  is_leaf_group?: boolean;
 };
 
 export type TIndividualTest = {

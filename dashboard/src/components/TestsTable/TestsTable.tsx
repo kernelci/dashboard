@@ -13,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { Fragment, useCallback, useMemo, useState, type JSX } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState, type JSX } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
@@ -116,55 +116,152 @@ export function TestsTable({
   const intl = useIntl();
 
   const rawData = useMemo((): TPathTests[] => {
-    type Groups = {
-      [K: string]: TPathTests;
+    type GroupNode = {
+      done_tests: number;
+      fail_tests: number;
+      miss_tests: number;
+      pass_tests: number;
+      null_tests: number;
+      skip_tests: number;
+      error_tests: number;
+      total_tests: number;
+      individual_tests: TIndividualTest[];
+      children: Map<string, GroupNode>;
     };
-    const groups: Groups = {};
+
+    const rootGroups = new Map<string, GroupNode>();
+
+    const createEmptyNode = (): GroupNode => ({
+      done_tests: 0,
+      fail_tests: 0,
+      miss_tests: 0,
+      pass_tests: 0,
+      null_tests: 0,
+      skip_tests: 0,
+      error_tests: 0,
+      total_tests: 0,
+      individual_tests: [],
+      children: new Map(),
+    });
+
+    const countStatus = (node: GroupNode, status?: string): void => {
+      node.total_tests++;
+      switch (status?.toUpperCase()) {
+        case StatusTable.DONE:
+          node.done_tests++;
+          break;
+        case StatusTable.ERROR:
+          node.error_tests++;
+          break;
+        case StatusTable.FAIL:
+          node.fail_tests++;
+          break;
+        case StatusTable.MISS:
+          node.miss_tests++;
+          break;
+        case StatusTable.PASS:
+          node.pass_tests++;
+          break;
+        case StatusTable.SKIP:
+          node.skip_tests++;
+          break;
+        default:
+          node.null_tests++;
+      }
+    };
+
     if (testHistory !== undefined) {
       testHistory.forEach(e => {
-        if (!e.path) {
-          e.path = EMPTY_VALUE;
+        const path = e.path || EMPTY_VALUE;
+        const segments = path === EMPTY_VALUE ? [EMPTY_VALUE] : path.split('.');
+
+        let currentLevel = rootGroups;
+        let currentPathPrefix = '';
+
+        for (let i = 0; i < segments.length; i++) {
+          const segment = segments[i];
+          const isLastSegment = i === segments.length - 1;
+
+          if (!currentLevel.has(segment)) {
+            currentLevel.set(segment, createEmptyNode());
+          }
+
+          const node = currentLevel.get(segment)!;
+
+          if (isLastSegment) {
+            countStatus(node, e.status);
+            node.individual_tests.push({
+              id: e.id,
+              duration: e.duration?.toString() ?? '',
+              path: e.path,
+              start_time: e.start_time,
+              status: e.status,
+              hardware: buildHardwareArray(
+                e.environment_compatible,
+                e.environment_misc,
+              ),
+              treeBranch: buildTreeBranch(
+                e.tree_name,
+                e.git_repository_branch,
+              ),
+              lab: e.lab,
+            });
+          } else {
+            currentPathPrefix =
+              currentPathPrefix === ''
+                ? segment
+                : `${currentPathPrefix}.${segment}`;
+            currentLevel = node.children;
+          }
         }
-        const parts = e.path.split('.', 1);
-        const group = parts.length > 0 ? parts[0] : '-';
-        if (!(group in groups)) {
-          groups[group] = {
-            done_tests: 0,
-            fail_tests: 0,
-            miss_tests: 0,
-            pass_tests: 0,
-            null_tests: 0,
-            skip_tests: 0,
-            error_tests: 0,
-            total_tests: 0,
-            path_group: group,
-            individual_tests: [],
-          };
-        }
-        groups[group].individual_tests.push({
-          id: e.id,
-          duration: e.duration?.toString() ?? '',
-          path: e.path,
-          start_time: e.start_time,
-          status: e.status,
-          hardware: buildHardwareArray(
-            e.environment_compatible,
-            e.environment_misc,
-          ),
-          treeBranch: buildTreeBranch(e.tree_name, e.git_repository_branch),
-          lab: e.lab,
-        });
       });
     }
-    return Object.values(groups);
+
+    const buildTree = (
+      groups: Map<string, GroupNode>,
+      parentPath: string,
+    ): TPathTests[] => {
+      const result: TPathTests[] = [];
+
+      groups.forEach((node, segment) => {
+        const fullPath =
+          parentPath === '' ? segment : `${parentPath}.${segment}`;
+
+        const subGroups =
+          node.children.size > 0 ? buildTree(node.children, fullPath) : [];
+
+        const hasDirectTests = node.individual_tests.length > 0;
+
+        result.push({
+          done_tests: node.done_tests,
+          fail_tests: node.fail_tests,
+          miss_tests: node.miss_tests,
+          pass_tests: node.pass_tests,
+          null_tests: node.null_tests,
+          skip_tests: node.skip_tests,
+          error_tests: node.error_tests,
+          total_tests: node.total_tests,
+          path_group: segment,
+          path_prefix: parentPath,
+          individual_tests: node.individual_tests,
+          sub_groups: subGroups.length > 0 ? subGroups : undefined,
+          is_leaf_group: hasDirectTests || subGroups.length === 0,
+        });
+      });
+
+      return result;
+    };
+
+    return buildTree(rootGroups, '');
   }, [testHistory]);
 
-  const [globalStatusGroup, pathFilteredData] = useMemo((): [
-    TPathTestsStatus,
-    TPathTests[],
-  ] => {
+  const [globalStatusGroup, pathFilteredData, searchExpandedState] = useMemo(
+    ():
+      | [TPathTestsStatus, TPathTests[], ExpandedState | undefined]
+      | [TPathTestsStatus, TPathTests[], undefined] => {
     const path = globalFilter;
     const isValidPath = path !== undefined && path !== '';
+
     const globalGroup: TPathTestsStatus = {
       done_tests: 0,
       fail_tests: 0,
@@ -176,86 +273,193 @@ export function TestsTable({
       total_tests: 0,
     };
 
-    const filteredData = rawData.reduce<TPathTests[]>((acc, test) => {
-      const localGroup: TPathTestsStatus = {
-        done_tests: 0,
-        fail_tests: 0,
-        miss_tests: 0,
-        pass_tests: 0,
-        null_tests: 0,
-        skip_tests: 0,
-        error_tests: 0,
-        total_tests: 0,
-      };
-      const individualTest = test.individual_tests.filter(t => {
-        let dataIncludesPath = true;
-        if (isValidPath) {
-          dataIncludesPath = t.path?.includes(path) ?? false;
-        }
-        if (dataIncludesPath) {
-          countStatus(localGroup, t.status);
-          countStatus(globalGroup, t.status);
-        }
-        return dataIncludesPath;
-      });
+    const filterNode = (node: TPathTests, searchPath: string): TPathTests | null => {
+      const nodeFullPath = node.path_prefix
+        ? `${node.path_prefix}.${node.path_group}`
+        : node.path_group;
+      const nodeMatches = nodeFullPath.includes(searchPath);
 
-      if (individualTest.length > 0) {
-        acc.push({
-          path_group: test.path_group,
-          individual_tests: individualTest,
+      const filteredSubGroups = node.sub_groups
+        ?.map(sub => filterNode(sub, searchPath))
+        .filter((sub): sub is TPathTests => sub !== null);
+
+      const filteredIndividualTests = node.individual_tests.filter(t =>
+        t.path?.includes(searchPath),
+      );
+
+      const hasMatchingChildren =
+        (filteredSubGroups && filteredSubGroups.length > 0) ||
+        filteredIndividualTests.length > 0;
+
+      if (nodeMatches || hasMatchingChildren) {
+        const localGroup: TPathTestsStatus = {
+          done_tests: 0,
+          fail_tests: 0,
+          miss_tests: 0,
+          pass_tests: 0,
+          null_tests: 0,
+          skip_tests: 0,
+          error_tests: 0,
+          total_tests: 0,
+        };
+
+        const countItems = (
+          tests: TIndividualTest[],
+          groups: TPathTests[],
+        ): void => {
+          tests.forEach(t => {
+            countStatus(localGroup, t.status);
+            countStatus(globalGroup, t.status);
+          });
+          groups.forEach(g => {
+            localGroup.done_tests += g.done_tests;
+            localGroup.fail_tests += g.fail_tests;
+            localGroup.miss_tests += g.miss_tests;
+            localGroup.pass_tests += g.pass_tests;
+            localGroup.null_tests += g.null_tests;
+            localGroup.skip_tests += g.skip_tests;
+            localGroup.error_tests += g.error_tests;
+            localGroup.total_tests += g.total_tests;
+            globalGroup.done_tests += g.done_tests;
+            globalGroup.fail_tests += g.fail_tests;
+            globalGroup.miss_tests += g.miss_tests;
+            globalGroup.pass_tests += g.pass_tests;
+            globalGroup.null_tests += g.null_tests;
+            globalGroup.skip_tests += g.skip_tests;
+            globalGroup.error_tests += g.error_tests;
+            globalGroup.total_tests += g.total_tests;
+          });
+        };
+
+        countItems(filteredIndividualTests, filteredSubGroups ?? []);
+
+        return {
+          ...node,
           ...localGroup,
-        });
+          sub_groups: filteredSubGroups?.length ? filteredSubGroups : undefined,
+          individual_tests: filteredIndividualTests,
+          is_leaf_group:
+            filteredIndividualTests.length > 0 ||
+            !filteredSubGroups?.length,
+        };
       }
 
-      return acc;
-    }, []);
+      return null;
+    };
 
-    return [globalGroup, filteredData];
+    const collectExpandedState = (
+      nodes: TPathTests[],
+      expandedAcc: Record<string, boolean>,
+    ): void => {
+      nodes.forEach(node => {
+        const rowId = node.path_prefix
+          ? `${node.path_prefix}.${node.path_group}`
+          : node.path_group;
+        if (node.sub_groups?.length || node.individual_tests.length) {
+          expandedAcc[rowId] = true;
+        }
+        if (node.sub_groups) {
+          collectExpandedState(node.sub_groups, expandedAcc);
+        }
+      });
+    };
+
+    if (isValidPath) {
+      const filteredData = rawData
+        .map(node => filterNode(node, path))
+        .filter((node): node is TPathTests => node !== null);
+
+      const autoExpanded: Record<string, boolean> = {};
+      collectExpandedState(filteredData, autoExpanded);
+
+      return [globalGroup, filteredData, autoExpanded as ExpandedState];
+    }
+
+    rawData.forEach(node => {
+      const countNode = (n: TPathTests): void => {
+        n.individual_tests.forEach(t => countStatus(globalGroup, t.status));
+        n.sub_groups?.forEach(countNode);
+      };
+      countNode(node);
+    });
+
+    return [globalGroup, rawData, undefined];
   }, [globalFilter, rawData]);
 
   const data = useMemo((): TPathTests[] => {
-    switch (filter) {
-      case 'all':
-        return pathFilteredData;
-      case 'success':
-        return pathFilteredData
-          ?.filter(tests => tests.pass_tests > 0)
-          .map(test => ({
-            ...test,
-            individual_tests: test.individual_tests.filter(
-              t => t.status?.toUpperCase() === StatusTable.PASS,
-            ),
-          }));
-      case 'failed':
-        return pathFilteredData
-          ?.filter(tests => tests.fail_tests > 0)
-          .map(test => ({
-            ...test,
-            individual_tests: test.individual_tests.filter(
-              t => t.status?.toUpperCase() === StatusTable.FAIL,
-            ),
-          }));
-      case 'inconclusive':
-        return pathFilteredData
-          ?.filter(
-            tests =>
-              tests.done_tests > 0 ||
-              tests.error_tests > 0 ||
-              tests.miss_tests > 0 ||
-              tests.skip_tests > 0 ||
-              tests.null_tests > 0,
-          )
-          .map(test => ({
-            ...test,
-            individual_tests: test.individual_tests.filter(t => {
-              const uppercaseTestStatus = t.status?.toUpperCase();
-              const result =
-                uppercaseTestStatus !== StatusTable.PASS &&
-                uppercaseTestStatus !== StatusTable.FAIL;
-              return result;
-            }),
-          }));
-    }
+    const filterByStatus = (
+      nodes: TPathTests[],
+      statusFilter: 'success' | 'failed' | 'inconclusive' | 'all',
+    ): TPathTests[] => {
+      const results: TPathTests[] = [];
+
+      nodes.forEach(node => {
+        const filteredSubGroups = node.sub_groups
+          ? filterByStatus(node.sub_groups, statusFilter)
+          : undefined;
+
+        const filteredIndividualTests = node.individual_tests.filter(t => {
+          const uppercaseStatus = t.status?.toUpperCase();
+          switch (statusFilter) {
+            case 'success':
+              return uppercaseStatus === StatusTable.PASS;
+            case 'failed':
+              return uppercaseStatus === StatusTable.FAIL;
+            case 'inconclusive':
+              return (
+                uppercaseStatus !== StatusTable.PASS &&
+                uppercaseStatus !== StatusTable.FAIL
+              );
+            default:
+              return true;
+          }
+        });
+
+        const localGroup: TPathTestsStatus = {
+          done_tests: 0,
+          fail_tests: 0,
+          miss_tests: 0,
+          pass_tests: 0,
+          null_tests: 0,
+          skip_tests: 0,
+          error_tests: 0,
+          total_tests: 0,
+        };
+
+        filteredIndividualTests.forEach(t => {
+          countStatus(localGroup, t.status);
+        });
+        filteredSubGroups?.forEach(g => {
+          localGroup.done_tests += g.done_tests;
+          localGroup.fail_tests += g.fail_tests;
+          localGroup.miss_tests += g.miss_tests;
+          localGroup.pass_tests += g.pass_tests;
+          localGroup.null_tests += g.null_tests;
+          localGroup.skip_tests += g.skip_tests;
+          localGroup.error_tests += g.error_tests;
+          localGroup.total_tests += g.total_tests;
+        });
+
+        const hasContent =
+          filteredIndividualTests.length > 0 ||
+          (filteredSubGroups && filteredSubGroups.length > 0);
+
+        if (hasContent) {
+          results.push({
+            ...node,
+            ...localGroup,
+            sub_groups: filteredSubGroups?.length ? filteredSubGroups : undefined,
+            individual_tests: filteredIndividualTests,
+            is_leaf_group:
+              filteredIndividualTests.length > 0 || !filteredSubGroups?.length,
+          });
+        }
+      });
+
+      return results;
+    };
+
+    return filterByStatus(pathFilteredData, filter);
   }, [filter, pathFilteredData]);
 
   const table = useReactTable({
@@ -267,17 +471,29 @@ export function TestsTable({
     onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getRowCanExpand: _ => true,
+    getSubRows: row => row.sub_groups,
+    getRowCanExpand: row =>
+      (row.original.sub_groups !== undefined &&
+        row.original.sub_groups.length > 0) ||
+      row.original.individual_tests.length > 0,
     getExpandedRowModel: getExpandedRowModel(),
     onExpandedChange: setExpanded,
     onGlobalFilterChange: setGlobalFilter,
-    getRowId: row => row.path_group,
+    getRowId: row =>
+      row.path_prefix ? `${row.path_prefix}.${row.path_group}` : row.path_group,
     state: {
       sorting,
       pagination,
       expanded,
+      globalFilter,
     },
   });
+
+  useEffect(() => {
+    if (searchExpandedState !== undefined) {
+      setExpanded(searchExpandedState);
+    }
+  }, [searchExpandedState]);
 
   const filterCount: Record<PossibleTableFilters, number> = useMemo(
     () => ({
@@ -379,36 +595,45 @@ export function TestsTable({
   const modelRows = table.getRowModel().rows;
   const tableRows = useMemo((): JSX.Element[] | JSX.Element => {
     return modelRows?.length ? (
-      modelRows.map(row => (
-        <Fragment key={row.id}>
-          <TableRow
-            className="group hover:bg-light-blue cursor-pointer"
-            onClick={() => {
-              if (row.getCanExpand()) {
-                row.toggleExpanded();
-              }
-            }}
-            data-state={row.getIsExpanded() ? 'open' : 'closed'}
-          >
-            {row.getVisibleCells().map(cell => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-          </TableRow>
-          {row.getIsExpanded() && (
-            <TableRow>
-              <TableCell colSpan={6} className="p-0">
-                <IndividualTestsTable
-                  getRowLink={getRowLink}
-                  data={data[row.index].individual_tests}
-                  columns={innerColumns}
-                />
-              </TableCell>
+      modelRows.map(row => {
+        const hasIndividualTests = row.original.individual_tests.length > 0;
+        const hasSubGroups =
+          row.original.sub_groups !== undefined &&
+          row.original.sub_groups.length > 0;
+        const isLeafGroup = !hasSubGroups;
+
+        return (
+          <Fragment key={row.id}>
+            <TableRow
+              className="group hover:bg-light-blue cursor-pointer"
+              onClick={() => {
+                if (row.getCanExpand()) {
+                  row.toggleExpanded();
+                }
+              }}
+              data-state={row.getIsExpanded() ? 'open' : 'closed'}
+              data-depth={row.depth}
+            >
+              {row.getVisibleCells().map(cell => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
             </TableRow>
-          )}
-        </Fragment>
-      ))
+            {row.getIsExpanded() && isLeafGroup && hasIndividualTests && (
+              <TableRow>
+                <TableCell colSpan={6} className="p-0">
+                  <IndividualTestsTable
+                    getRowLink={getRowLink}
+                    data={row.original.individual_tests}
+                    columns={innerColumns}
+                  />
+                </TableCell>
+              </TableRow>
+            )}
+          </Fragment>
+        );
+      })
     ) : (
       <TableRow>
         <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -416,7 +641,7 @@ export function TestsTable({
         </TableCell>
       </TableRow>
     );
-  }, [columns.length, data, getRowLink, innerColumns, modelRows]);
+  }, [columns.length, getRowLink, innerColumns, modelRows]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
