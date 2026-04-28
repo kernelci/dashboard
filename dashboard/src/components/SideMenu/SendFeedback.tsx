@@ -1,6 +1,6 @@
 import { MdOutlineFeedback } from 'react-icons/md';
 
-import { useEffect, useMemo, useState, type JSX } from 'react';
+import { useMemo, type JSX } from 'react';
 
 import { useLocation } from '@tanstack/react-router';
 
@@ -25,27 +25,27 @@ const SendFeedback = (
 ): JSX.Element => {
   const location = useLocation();
 
-  const [fullLocation, setFullLocation] = useState(
-    `${window.location.origin}${location.pathname}${location.search}${location.hash}`,
-  );
-
-  useEffect(() => {
-    const newUrl = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
-    setFullLocation(newUrl);
+  const fullLocation = useMemo(() => {
+    const href = location.href;
+    // href is relative (starts with "/"), prepend origin
+    if (href.startsWith('/')) {
+      return `${window.location.origin}${href}`;
+    }
+    return href;
   }, [location]);
 
   const actionLinks: ActionLink[] = useMemo(() => {
     const github_body = encodeURIComponent(
       `# Feedback Description:
-  
+
 ## URL used to send feedback:
 ${fullLocation}`,
     );
 
-    const email_subject = 'Dashboard Feedback';
+    const email_subject = encodeURIComponent('Dashboard Feedback');
     const email_body = encodeURIComponent(
       `Feedback Description:
-  
+
 URL used to send feedback:
 ${fullLocation}`,
     );
