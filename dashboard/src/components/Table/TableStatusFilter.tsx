@@ -5,14 +5,16 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from '@/components/ui/button';
 import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
 
+export type TStatusFilters = {
+  label: string;
+  value: PossibleTableFilters;
+  isSelected: boolean;
+};
+
 interface ITableStatusFilter {
   onClickBuild?: (value: PossibleTableFilters) => void;
   onClickTest?: (value: PossibleTableFilters) => void;
-  filters: {
-    label: string;
-    value: PossibleTableFilters;
-    isSelected: boolean;
-  }[];
+  filters: TStatusFilters[];
 }
 
 const TableStatusFilter = ({

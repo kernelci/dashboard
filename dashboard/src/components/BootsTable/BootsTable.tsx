@@ -28,10 +28,7 @@ import type { TestHistory } from '@/types/general';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
-import TableStatusFilter from '@/components/Table/TableStatusFilter';
-
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
-import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { useTestIssues } from '@/api/testDetails';
 import { useLogData } from '@/hooks/useLogData';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
@@ -54,6 +51,8 @@ import { TooltipDateTime } from '@/components/TooltipDateTime';
 import TooltipHardware from '@/components/Table/TooltipHardware';
 import { EMPTY_VALUE } from '@/lib/string';
 import { UNKNOWN_STRING } from '@/utils/constants/backend';
+import { TableTopFilters } from '@/components/Table/TableTopFilters';
+import type { TStatusFilters } from '@/components/Table/TableStatusFilter';
 
 const defaultColumns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -146,6 +145,9 @@ export function BootsTable({
 }: IBootsTable): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([]);
   const { pagination, paginationUpdater } = usePaginationState(tableKey);
+  const [globalFilter, setGlobalFilter] = useState<string | undefined>(
+    currentPathFilter,
+  );
 
   const intl = useIntl();
 
@@ -187,13 +189,13 @@ export function BootsTable({
     onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    onGlobalFilterChange: setGlobalFilter,
     state: {
       sorting,
       pagination,
+      globalFilter,
     },
   });
-
-  const { globalFilter } = table.getState();
 
   const filterCount: Record<PossibleTableFilters, number> = useMemo(() => {
     const count: Record<PossibleTableFilters, number> = {
@@ -222,7 +224,7 @@ export function BootsTable({
     [filter],
   );
 
-  const filters = useMemo(
+  const filters: TStatusFilters[] = useMemo(
     () => [
       {
         label: intl.formatMessage(
@@ -268,14 +270,12 @@ export function BootsTable({
 
   const onSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.value !== undefined && updatePathFilter) {
+      setGlobalFilter(e.target.value);
+      if (updatePathFilter) {
         updatePathFilter(e.target.value);
       }
-      if (updatePathFilter === undefined) {
-        table.setGlobalFilter(String(e.target.value));
-      }
     },
-    [table, updatePathFilter],
+    [updatePathFilter],
   );
 
   const groupHeaders = table.getHeaderGroups()[0]?.headers;
@@ -292,25 +292,11 @@ export function BootsTable({
           });
       return (
         <TableHead key={header.id} className="border-b px-2 font-bold">
-          {header.id === 'path' ? (
-            <div className="flex items-center">
-              {headerComponent}
-              <DebounceInput
-                key={currentPathFilter}
-                debouncedSideEffect={onSearchChange}
-                startingValue={currentPathFilter}
-                className="w-50 font-normal"
-                type="text"
-                placeholder={intl.formatMessage({ id: 'global.search' })}
-              />
-            </div>
-          ) : (
-            headerComponent
-          )}
+          {headerComponent}
         </TableHead>
       );
     });
-  }, [currentPathFilter, groupHeaders, intl, onSearchChange, sorting]);
+  }, [groupHeaders, sorting]);
 
   const modelRows = table.getRowModel().rows;
 
@@ -414,7 +400,13 @@ export function BootsTable({
       status={status}
       error={error}
     >
-      <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
+      <TableTopFilters
+        key="bootsTableSearch"
+        filters={filters}
+        onClickFilter={onClickFilter}
+        onSearchChange={onSearchChange}
+        currentPathFilter={currentPathFilter}
+      />
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableRows}</TableBody>
       </BaseTable>

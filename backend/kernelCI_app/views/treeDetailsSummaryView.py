@@ -265,6 +265,14 @@ class BaseTreeDetailsSummary(APIView):
             issues_dict=self.test_issues_dict
         )
 
+    def _should_fallback_to_legacy_tests(self) -> bool:
+        """Rollup rows cannot evaluate path filters with test-level precision.
+
+        tree_tests_rollup stores only `path_group` (first path segment). When a
+        path filter is present, summary correctness requires raw test rows.
+        """
+        return bool(self.filters.filterTestPath or self.filters.filterBootPath)
+
     def get(
         self,
         request: HttpRequest,
@@ -308,14 +316,24 @@ class BaseTreeDetailsSummary(APIView):
 
         self._sanitize_builds_rows(builds_rows)
 
-        if rollup_rows:
+        should_fallback_to_legacy = self._should_fallback_to_legacy_tests()
+
+        # We only use the rollup rows if they exist and we have no other constraints
+        if rollup_rows and not should_fallback_to_legacy:
             self._sanitize_rollup_rows(rollup_rows)
         else:
-            out(
-                f"Rollup data empty for commit {commit_hash} "
-                f"(origin={origin_param}, tree={tree_name}, git_url={git_url_param}), "
-                f"falling back to legacy query"
-            )
+            if should_fallback_to_legacy:
+                out(
+                    f"Path filter detected for commit {commit_hash} "
+                    f"(origin={origin_param}, tree={tree_name}, git_url={git_url_param}), "
+                    "falling back to legacy query for accurate test/boot summary"
+                )
+            else:
+                out(
+                    f"Rollup data empty for commit {commit_hash} "
+                    f"(origin={origin_param}, tree={tree_name}, git_url={git_url_param}), "
+                    f"falling back to legacy query"
+                )
             legacy_rows = get_tree_details_data(
                 origin_param=origin_param,
                 git_url_param=git_url_param,

@@ -14,10 +14,8 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
 
-import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
-import TableStatusFilter from '@/components/Table/TableStatusFilter';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import {
   possibleTableFilters,
@@ -37,6 +35,10 @@ import { useBuildIssues } from '@/api/buildDetails';
 import { useLogData } from '@/hooks/useLogData';
 
 import { getBuildStatusGroup } from '@/utils/status';
+
+import { TableTopFilters } from '@/components/Table/TableTopFilters';
+
+import type { TStatusFilters } from '@/components/Table/TableStatusFilter';
 
 import { defaultBuildColumns } from './DefaultBuildsColumns';
 
@@ -119,7 +121,7 @@ export function BuildsTable({
     return count;
   }, [rawData, globalFilter, table]);
 
-  const filters = useMemo(
+  const filters: TStatusFilters[] = useMemo(
     () => [
       {
         label: intl.formatMessage(
@@ -294,15 +296,12 @@ export function BuildsTable({
       status={status}
       error={error}
     >
-      <div className="flex items-center justify-between">
-        <TableStatusFilter filters={filters} onClickBuild={onClickFilter} />
-        <DebounceInput
-          debouncedSideEffect={onSearchChange}
-          className="w-50"
-          type="text"
-          placeholder={intl.formatMessage({ id: 'global.search' })}
-        />
-      </div>
+      <TableTopFilters
+        key="buildsTableSearch"
+        filters={filters}
+        onClickFilter={onClickFilter}
+        onSearchChange={onSearchChange}
+      />
       <BaseTable headerComponents={tableHeaders}>
         <TableBody>{tableBody}</TableBody>
       </BaseTable>
