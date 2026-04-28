@@ -16,7 +16,7 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { MessagesKey } from '@/locales/messages';
 import { formatDate } from '@/utils/utils';
 import { mapFilterToReq } from '@/components/Tabs/Filters';
-import { useCommitHistory } from '@/api/commitHistory';
+import { useCommitHistory, useCommits } from '@/api/commitHistory';
 import type { TFilter, TreeEntityTypes } from '@/types/general';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
@@ -93,10 +93,32 @@ const CommitNavigationGraph = ({
     }
   }, [currentPageTab]);
 
+  //const { data, status, error, isLoading } = useCommitHistory({
+    //gitBranch: gitBranch ?? '',
+    //gitUrl: gitUrl ?? '',
+    //commitHash: headCommitHash ?? '',
+    //origin: origin,
+    //filter: reqFilter,
+    //endTimestampInSeconds,
+    //startTimestampInSeconds,
+    //treeName,
+    //treeUrlFrom,
+    //types,
+    //buildsRelatedToFilteredTestsOnly,
+  //});
+
+  const commitsList = useCommits({
+    gitBranch: gitBranch ?? '',
+    gitUrl: gitUrl ?? '',
+    origin: origin,
+    treeName,
+  });
+
+
   const { data, status, error, isLoading } = useCommitHistory({
     gitBranch: gitBranch ?? '',
     gitUrl: gitUrl ?? '',
-    commitHash: headCommitHash ?? '',
+    commitHash: commitsList.data?.map(x => x.git_commit_hash) || [],
     origin: origin,
     filter: reqFilter,
     endTimestampInSeconds,
@@ -272,6 +294,11 @@ const CommitNavigationGraph = ({
         />
       }
     >
+        { "hehehehehehehehehehehehehehe" }
+        { "\n" }
+        { JSON.stringify(commitsList) }
+        {"\n"}
+        { JSON.stringify({ treeName, gitUrl, gitBranch, origin }) }
       <BaseCard
         title={formatMessage({ id: messagesId.graphName })}
         content={
