@@ -54,6 +54,7 @@ class Issues(models.Model):
 
 
 class Checkouts(models.Model):
+    # time this entry was ingested
     field_timestamp = models.DateTimeField(
         db_column="_timestamp", blank=True, null=True
     )
@@ -68,6 +69,7 @@ class Checkouts(models.Model):
     patchset_hash = models.TextField(blank=True, null=True)
     message_id = models.TextField(blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
+    # time reported by the submission
     start_time = models.DateTimeField(blank=True, null=True)
     log_url = models.TextField(blank=True, null=True)
     log_excerpt = models.CharField(max_length=16384, blank=True, null=True)

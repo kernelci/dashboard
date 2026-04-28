@@ -19,18 +19,6 @@ def setup_mock_queryset(mock_model, return_value):
     return mock_queryset
 
 
-def setup_mock_test_queryset(mock_tests_model):
-    mock_queryset = Mock()
-    mock_queryset.values.return_value = mock_queryset
-    mock_queryset.filter.return_value = mock_queryset
-    mock_queryset.order_by.return_value = mock_queryset
-    mock_sliced = Mock()
-    mock_sliced.__iter__ = Mock(return_value=iter([]))
-    mock_queryset.__getitem__ = Mock(return_value=mock_sliced)
-    mock_tests_model.objects.filter.return_value = mock_queryset
-    return mock_queryset
-
-
 TEST_TREE = Tree(
     index="0",
     tree_name="mainline",
