@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
 import pytest
@@ -46,6 +47,22 @@ client = TestClient()
             ),
             HTTPStatus.BAD_REQUEST,
             True,
+        ),
+        (
+            TestStatusHistoryRequest(
+                path="fluster.debian.v4l2.gstreamer_av1.validate-fluster-results",
+                origin="maestro",
+                git_repository_url="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+                git_repository_branch="master",
+                platform="mt8195-cherry-tomato-r2",
+                field_timestamp=datetime.now(timezone.utc)
+                + timedelta(days=365),  # 1 year ahead
+                current_test_start_time=None,
+                config_name="defconfig+lab-setup+arm64-chromebook"
+                "+CONFIG_MODULE_COMPRESS=n+CONFIG_MODULE_COMPRESS_NONE=y",
+            ),
+            HTTPStatus.OK,
+            False,
         ),
     ],
 )
