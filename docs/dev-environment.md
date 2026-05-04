@@ -16,7 +16,7 @@ This document explains how to run the KernelCI Dashboard locally with live reloa
 | Service | Image / Build | Port | Purpose |
 |---|---|---|---|
 | `backend` | `./backend` (Dockerfile) | 8000 | Django dev server with live reload |
-| `dashboard_db` | `postgres:17` | — | PostgreSQL database |
+| `dashboard_db` | `postgres:17` | 5434 → 5432 | PostgreSQL database |
 | `redis` | `redis:8.0-M04-alpine` | — | Cache / message broker |
 | `dashboard_dev` | `./dashboard/Dockerfile.dev` | 5173 | Vite dev server with HMR |
 | `proxy` | `./proxy` (Dockerfile) | 9000 | Nginx — routes `/api` → backend, `/` → Vite |
@@ -39,7 +39,7 @@ DB_PASSWORD=<choose a password>
 DJANGO_SECRET_KEY=<any long random string>
 ```
 
-For a fully local setup leave `DB_HOST=dashboard_db` (the default). The `CORS_ALLOW_ALL_ORIGINS` and `PROXY_TARGET` values can stay at their defaults.
+For a fully local setup leave `DB_HOST=dashboard_db` (the default). The `CORS_ALLOWED_ORIGINS`, `PROXY_TARGET`, and `DB_PORT_PUBLISHED` values can stay at their defaults.
 
 ### 3. Start the stack
 
@@ -73,12 +73,12 @@ Both should return HTTP 200.
 
 ## Connecting a database client (DBeaver, TablePlus, etc.)
 
-The `dashboard_db` service exposes PostgreSQL on the host at port 5432. Use these settings in any SQL client:
+The `dashboard_db` service exposes PostgreSQL on the host at port `5434` by default to avoid conflicts with a local PostgreSQL install. Override `DB_PORT_PUBLISHED` in `.env` if you need a different host port.
 
 | Field | Value |
 |---|---|
 | Host | `localhost` |
-| Port | `5432` |
+| Port | `5434` (or `$DB_PORT_PUBLISHED` from `.env`) |
 | Database | `dashboard` (or `$DB_NAME` from `.env`) |
 | User | `admin` (or `$DB_USER` from `.env`) |
 | Password | value of `DB_PASSWORD` in `.env` |
@@ -91,13 +91,6 @@ Any change to a `.py` file inside `backend/` is picked up automatically. Django'
 
 ```bash
 docker compose -f docker-compose.dev.yml logs -f backend
-```
-
-When you run `makemigrations` / `migrate`, do it inside the running container so migrations are applied to the live database:
-
-```bash
-docker compose -f docker-compose.dev.yml exec backend poetry run python manage.py makemigrations
-docker compose -f docker-compose.dev.yml exec backend poetry run python manage.py migrate
 ```
 
 ### Frontend
@@ -113,6 +106,10 @@ CSS-only changes are injected into the page without touching JavaScript at all.
 If you introduce a syntax error, Vite surfaces it in the browser overlay and in the terminal — fix the file and it recovers automatically.
 
 ## Running database migrations
+
+The backend container runs migrations automatically on startup through `backend/utils/docker/backend_entrypoint.sh`. That entrypoint calls `backend/migrate-app-db.sh` for the default PostgreSQL database and `backend/migrate-cache-db.sh` for the SQLite cache / notifications databases.
+
+When you need to create or apply migrations manually, run the commands inside the running backend container so they target the live development databases:
 
 ```bash
 # Create a new migration after editing models.py
@@ -184,23 +181,23 @@ Normal source code changes never require a rebuild — they are picked up via vo
 
 The `--build` flag forces Compose to rebuild images even if they already exist locally. Without it, `docker compose up` reuses whatever is cached.
 
-If you change `pyproject.toml` or `pnpm-lock.yaml`, rebuild the affected image:
+If you change `pyproject.toml` or `pnpm-lock.yaml`, restart the affected service with `--build`:
 
 ```bash
 # Backend only
-docker compose -f docker-compose.dev.yml build backend
+docker compose -f docker-compose.dev.yml up -d --build backend
 
 # Frontend only
-docker compose -f docker-compose.dev.yml build dashboard_dev
+docker compose -f docker-compose.dev.yml up -d --build dashboard_dev
 
 # Both
-docker compose -f docker-compose.dev.yml build
+docker compose -f docker-compose.dev.yml up -d --build backend dashboard_dev
 ```
 
-Then restart (the `--build` flag forces a rebuild when images already exist):
+If you want Compose to recreate containers without stopping the whole stack first, add `--force-recreate`:
 
 ```bash
-docker compose -f docker-compose.dev.yml up -d --build
+docker compose -f docker-compose.dev.yml up -d --force-recreate backend dashboard_dev
 ```
 
 ## Edge cases and known limitations

@@ -153,4 +153,4 @@ If you want to verify container/deployment environment settings before running s
 
 Check out our [CONTRIBUTING.md](/CONTRIBUTING.md), and there is an [onboarding guide](docs/Onboarding.md) to help get acquainted with the project. Contributions are welcome!
 
-For a local development environment with live reload (backend + frontend), see [docs/dev-environment.md](docs/dev-environment.md).
+For a local development environment with live reload (backend + frontend), see [docs/dev-environment.md](docs/dev-environment.md). That Docker-based workflow uses a root `.env` file plus `dashboard/.env`; the backend-specific manual setup above still uses `.env.backend`. Use the env files required by the workflow you choose.
