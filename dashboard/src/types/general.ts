@@ -235,6 +235,10 @@ export const isTFilterNumberKeys = (key: string): key is TFilterNumberKeys => {
   return zFilterNumberKeys.safeParse(key).success;
 };
 
+export const isTFilterKeys = (key: string): key is TFilterKeys => {
+  return isTFilterObjectKeys(key) || isTFilterNumberKeys(key);
+};
+
 export type SearchParamsKeys =
   | 'origin'
   | 'intervalInDays'
@@ -275,8 +279,6 @@ const requestFilters = {
     'test.duration_[gte]',
     'test.duration_[lte]',
     'test.hardware',
-    'test.path',
-    'boot.path',
     'boot.status',
     'boot.duration_[gte]',
     'boot.duration_[lte]',
@@ -324,8 +326,6 @@ export const filterFieldMap = {
   'test.duration_[gte]': 'testDurationMin',
   'test.duration_[lte]': 'testDurationMax',
   'test.hardware': 'hardware',
-  'test.path': 'testPath',
-  'boot.path': 'bootPath',
   'build.issue': 'buildIssue',
   'boot.issue': 'bootIssue',
   'test.issue': 'testIssue',

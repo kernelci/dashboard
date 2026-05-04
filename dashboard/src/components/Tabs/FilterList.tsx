@@ -1,7 +1,10 @@
 import { useCallback, type JSX } from 'react';
 
 import FilterList from '@/components/FilterList/FilterList';
-import type { TFilter } from '@/types/general';
+import { isTFilterKeys } from '@/types/general';
+import type { TFilter, TFilterKeys } from '@/types/general';
+
+const IGNORED_FILTERS: TFilterKeys[] = ['testPath', 'bootPath'];
 
 interface IDetailsFilterList {
   filter: TFilter;
@@ -15,6 +18,15 @@ export const createFlatFilter = (filter: TFilter): string[] => {
   const flatFilter: string[] = [];
 
   Object.entries(filter).forEach(([field, fieldValue]) => {
+    // Type guard + don't show filters outside of the expected keys
+    if (!isTFilterKeys(field)) {
+      return;
+    }
+
+    if (IGNORED_FILTERS.includes(field)) {
+      return;
+    }
+
     if (typeof fieldValue === 'object') {
       Object.entries(fieldValue).forEach(([value, isSelected]) => {
         if (isSelected) {
