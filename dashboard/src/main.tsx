@@ -24,6 +24,7 @@ import { ToastProvider } from './components/ui/toast';
 import type { RedirectFrom, RequiredStatusCount } from './types/general';
 import { parseSearch, stringifySearch } from './utils/search';
 import { retryHandler } from './utils/query';
+import { MILLISECONDS_IN_ONE_SECOND } from './utils/date';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -58,11 +59,12 @@ declare module '@tanstack/react-router' {
   }
 }
 
+const QUERY_STALE_SECONDS = 30;
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // eslint-disable-next-line no-magic-numbers
-      staleTime: 1000 * 60 * 5, // 5 minutes,
+      staleTime: QUERY_STALE_SECONDS * MILLISECONDS_IN_ONE_SECOND,
       retry: retryHandler(),
     },
   },
