@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, RootModel
 
+from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonListing import StatusCountV2
 from kernelCI_app.typeModels.databases import (
@@ -24,13 +25,13 @@ class TestStatusCount(BaseModel):
     # Disables automatic pytest test discovery for this class
     __test__ = False
 
-    pass_count: int = Field(alias="pass")
-    error_count: int = Field(alias="error")
-    fail_count: int = Field(alias="fail")
-    skip_count: int = Field(alias="skip")
-    miss_count: int = Field(alias="miss")
-    done_count: int = Field(alias="done")
-    null_count: int = Field(alias="null")
+    pass_count: int = Field(alias="pass", default=0)
+    error_count: int = Field(alias="error", default=0)
+    fail_count: int = Field(alias="fail", default=0)
+    skip_count: int = Field(alias="skip", default=0)
+    miss_count: int = Field(alias="miss", default=0)
+    done_count: int = Field(alias="done", default=0)
+    null_count: int = Field(alias="null", default=0)
 
     def __add__(self, other: "TestStatusCount") -> "TestStatusCount":
         return TestStatusCount(
@@ -44,6 +45,15 @@ class TestStatusCount(BaseModel):
                 "null": self.null_count + other.null_count,
             }
         )
+
+    def increment(self, status: Optional[str], count: int = 1) -> None:
+        if status is None:
+            status = "NULL"
+        try:
+            status_prop = f"{status.lower()}_count"
+            setattr(self, status_prop, getattr(self, status_prop) + count)
+        except AttributeError:
+            log_message(f"Unknown status: {status}")
 
 
 class BaseCheckouts(BaseModel):
