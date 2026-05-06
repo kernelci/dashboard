@@ -1,0 +1,79 @@
+volumes:
+    backend-data:
+    dashboard-db-data:
+
+networks:
+    public:
+    private:
+
+services:
+    backend:
+        build:
+            context: ./backend
+        volumes:
+            - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+            - ./backend:/backend          # live reload: source mounted over image copy
+        env_file: [.env]
+        environment:
+            - PYTHONOPTIMIZE=0            # required for runserver/reload to work correctly
+        networks: [private, public]
+        ports: ["8000:8000"]
+        command:
+            - poetry
+            - run
+            - python
+            - manage.py
+            - runserver
+            - 0.0.0.0:8000
+        entrypoint: "./utils/docker/backend_entrypoint.sh"
+        depends_on:
+            dashboard_db:
+                condition: service_healthy
+            redis:
+                condition: service_started
+
+    dashboard_db:
+        image: postgres:17
+        environment:
+            - POSTGRES_USER=${DB_USER:-admin}
+            - POSTGRES_PASSWORD=${DB_PASSWORD:-barebare}
+            - POSTGRES_DB=${DB_NAME:-dashboard}
+        volumes:
+            - dashboard-db-data:/var/lib/postgresql/data
+        networks: [private]
+        ports: ["${DB_PORT_PUBLISHED:-5434}:5432"]
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d ${DB_NAME:-dashboard}"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    redis:
+        image: redis:8.0-M04-alpine
+        networks: [private]
+
+    dashboard_dev:
+        build:
+            context: ./dashboard
+            dockerfile: Dockerfile.dev
+        environment:
+            - TSR_TMP_DIR=/dashboard/src/.tanstack-tmp  # keep codegen tmp on same bind mount as routeTree.gen.ts
+        volumes:
+            - ./dashboard/src:/dashboard/src        # HMR: watch source changes
+            - ./dashboard/public:/dashboard/public  # HMR: watch public assets
+        networks: [public]
+        ports: ["5173:5173"]
+
+    proxy:
+        build: ./proxy
+        restart: always
+        depends_on: [backend, dashboard_dev]
+        networks: [public]
+        volumes:
+            # Override default template with dev template (Vite proxy + WebSocket)
+            - ./proxy/etc/nginx/templates/dev.conf.template:/etc/nginx/templates/default.conf.template
+        environment:
+            - PROXY_TARGET=${PROXY_TARGET:-http://backend:8000}
+        ports:
+            - ${STAGING_EXTERNAL_HTTP_PORT:-9000}:80
+        env_file: [.env]
