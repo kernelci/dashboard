@@ -19,6 +19,8 @@ from kernelCI_app.helpers.logger import out
 from kernelCI_app.management.commands.helpers.aggregation_helpers import simplify_status
 from kernelCI_app.management.commands.helpers.process_pending_helpers import (
     aggregate_tests_rollup,
+    fetch_test_issues,
+    get_rollup_key,
 )
 from kernelCI_app.management.commands.helpers.tree_listing import (
     TreeListingRow,
@@ -27,7 +29,6 @@ from kernelCI_app.management.commands.helpers.tree_listing import (
 from kernelCI_app.models import (
     Builds,
     Checkouts,
-    Incidents,
     PendingBuilds,
     PendingTest,
     ProcessedListingItems,
@@ -95,11 +96,6 @@ def get_tree_listing_key(
     return hashlib.sha256(
         f"{origin}|{tree_name}|{git_url}|{git_branch}|{entity_id}".encode("utf-8")
     ).digest()
-
-
-def get_rollup_key(test_id: str) -> bytes:
-    """Generate a hash (rollup key) from test_id with 'rollup|' prefix for namespacing."""
-    return hashlib.sha256(f"rollup|{test_id}".encode("utf-8")).digest()
 
 
 SIMPLIFIED_STATUS_TO_COUNT = {
@@ -511,25 +507,6 @@ def aggregate_hardware_status(
             )
 
     return hardware_status_data, new_processed_entries
-
-
-def _fetch_test_issues(test_ids: list[str]) -> dict[str, dict]:
-    """Bulk-fetch the first incident per test_id, returning {test_id: {issue_id, issue_version}}."""
-    issues_map: dict[str, dict] = {}
-    incidents = Incidents.objects.filter(
-        test_id__in=test_ids,
-    ).values("test_id", "issue_id", "issue_version")
-
-    for inc in incidents:
-        issues_map.setdefault(
-            inc["test_id"],
-            {
-                "issue_id": inc["issue_id"],
-                "issue_version": inc["issue_version"],
-            },
-        )
-
-    return issues_map
 
 
 class Command(BaseCommand):
@@ -1060,7 +1037,7 @@ class Command(BaseCommand):
         if not tests_to_process:
             return
 
-        issues_map = _fetch_test_issues(test_ids)
+        issues_map = fetch_test_issues(test_ids)
         rollup_data = aggregate_tests_rollup(
             tests_to_process,
             test_builds_by_id,
