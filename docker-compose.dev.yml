@@ -43,7 +43,7 @@ services:
         networks: [private]
         ports: ["${DB_PORT_PUBLISHED:-5434}:5432"]
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin}"]
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d ${DB_NAME:-dashboard}"]
             interval: 5s
             timeout: 5s
             retries: 5
