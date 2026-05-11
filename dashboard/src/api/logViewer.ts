@@ -16,33 +16,29 @@ const STALE_DURATION_MS = minutesToMilliseconds(60);
 type FetchAndDecompressLogsResponse = {
   content: string;
 };
+
+const isGzipBytes = (data: Uint8Array): boolean =>
+  // eslint-disable-next-line no-magic-numbers
+  data.length >= 2 && data[0] === 0x1f && data[1] === 0x8b;
+
 async function fetchAndDecompressLog(
   url: string,
 ): Promise<FetchAndDecompressLogsResponse> {
   const proxyUrl = `/api/proxy/?url=${encodeURIComponent(url)}`;
-  const urlPathname = new URL(url).pathname;
-  const isGzipped = urlPathname.endsWith('.gz');
 
   try {
-    if (isGzipped) {
-      const response = await RequestData.get<ArrayBuffer>(proxyUrl, {
-        responseType: 'arraybuffer',
-      });
+    const response = await RequestData.get<ArrayBuffer>(proxyUrl, {
+      responseType: 'arraybuffer',
+    });
 
-      const uint8ArrayResponse = new Uint8Array(response);
-      const decompressedData = pako.inflate(uint8ArrayResponse);
-      const textDecoder = new TextDecoder('utf-8');
-      const decompressedText = textDecoder.decode(decompressedData);
+    let byteResponse = new Uint8Array(response);
+    const textDecoder = new TextDecoder('utf-8');
 
-      return { content: decompressedText };
-    } else {
-      // For non-gzipped files, request as text
-      const response = await RequestData.get<string>(proxyUrl, {
-        responseType: 'text',
-      });
-
-      return { content: response };
+    while (isGzipBytes(byteResponse)) {
+      byteResponse = pako.inflate(byteResponse);
     }
+
+    return { content: textDecoder.decode(byteResponse) };
   } catch (error) {
     console.error(error);
 
