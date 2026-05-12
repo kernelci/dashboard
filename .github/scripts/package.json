@@ -1,0 +1,8 @@
+{
+  "name": "automation-scripts",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@octokit/rest": "22.0.1"
+  }
+}
