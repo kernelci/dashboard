@@ -55,7 +55,6 @@ import type { ListingTableColumnMeta } from '@/types/table';
 
 import { statusCountToRequiredStatusCount } from '@/utils/status';
 
-import { MemoizedInputTime } from '@/components/InputTime';
 import { shouldShowRelativeDate } from '@/lib/date';
 import { valueOrEmpty } from '@/lib/string';
 import { PinnedTrees } from '@/utils/constants/tables';
@@ -533,7 +532,6 @@ export function TreeTable({
           />
         </span>
         <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
-          <MemoizedInputTime navigateFrom={urlFromMap.navigate} />
           <ItemsPerPageSelector
             table={table}
             onPaginationChange={navigateWithPageSize}

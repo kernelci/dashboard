@@ -46,8 +46,6 @@ import {
 
 import type { ListingTableColumnMeta } from '@/types/table';
 
-import { MemoizedInputTime } from '@/components/InputTime';
-
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
@@ -368,7 +366,6 @@ export function TreeTableV2({
           />
         </span>
         <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
-          <MemoizedInputTime navigateFrom={urlFromMap.navigate} />
           <ItemsPerPageSelector
             table={table}
             onPaginationChange={navigateWithPageSize}
