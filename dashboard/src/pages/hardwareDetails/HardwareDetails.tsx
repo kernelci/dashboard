@@ -24,10 +24,13 @@ import { useHardwareDetailsCommitHistory } from '@/api/hardwareDetails';
 
 import type {
   CommitHead,
+  CommitHistory,
   CommitHistoryTable,
   PreparedTrees,
   HardwareTrees,
 } from '@/types/hardware/hardwareDetails';
+
+import { parseSearchIntent } from '@/lib/intent';
 
 import MemoizedCompatibleHardware from '@/components/Cards/CompatibleHardware';
 
@@ -70,16 +73,44 @@ import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsFilter from './HardwareDetailsFilter';
 
+function matchesCommitToken(
+  hash: string,
+  tags: string[] | undefined,
+  selected: string,
+): boolean {
+  return (
+    hash.toLowerCase() === selected.toLowerCase() ||
+    (tags?.includes(selected) ?? false)
+  );
+}
+
+function findMatchingCheckout(
+  rows: CommitHistory[],
+  tokens: string[],
+): CommitHistory | undefined {
+  for (const token of tokens) {
+    const found = rows.find(r =>
+      matchesCommitToken(r.git_commit_hash, r.git_commit_tags, token),
+    );
+    if (found) {
+      return found;
+    }
+  }
+  return undefined;
+}
+
 const prepareTreeItems = ({
   treeItems,
   commitHistoryData,
   isCommitHistoryDataLoading,
   isMainPageLoading,
+  commitIntentTokens,
 }: {
   treeItems?: HardwareTrees[];
   commitHistoryData?: CommitHistoryTable;
   isCommitHistoryDataLoading: boolean;
   isMainPageLoading: boolean;
+  commitIntentTokens?: string[] | null;
 }): PreparedTrees[] | void =>
   treeItems?.map(tree => {
     const treeIdentifier = makeTreeIdentifierKey({
@@ -88,27 +119,41 @@ const prepareTreeItems = ({
       gitRepositoryUrl: tree.git_repository_url ?? '',
     });
 
-    const result: PreparedTrees = {
+    const rows = commitHistoryData?.[treeIdentifier] ?? [];
+    const excludeFromCommitIntentDefaultSelection =
+      !!commitIntentTokens?.length &&
+      !isCommitHistoryDataLoading &&
+      !findMatchingCheckout(rows, commitIntentTokens) &&
+      !commitIntentTokens.some(t =>
+        matchesCommitToken(
+          tree.head_git_commit_hash ?? '',
+          tree.head_git_commit_tag,
+          t,
+        ),
+      );
+
+    return {
       tree_name: tree['tree_name'] ?? '-',
       origin: tree['origin'],
       git_repository_branch: tree['git_repository_branch'] ?? '-',
       head_git_commit_name: tree['head_git_commit_name'] ?? '-',
       head_git_commit_hash: tree['head_git_commit_hash'] ?? '-',
+      head_git_commit_tag: tree['head_git_commit_tag'],
       git_repository_url: tree['git_repository_url'] ?? '-',
       index: tree['index'],
       selected_commit_status: tree['selected_commit_status'],
-      selectableCommits: commitHistoryData?.[treeIdentifier] ?? [],
+      selectableCommits: rows,
       isCommitHistoryDataLoading,
-      isMainPageLoading: isMainPageLoading,
+      isMainPageLoading,
+      excludeFromCommitIntentDefaultSelection,
     };
-
-    return result;
   });
 
 function HardwareDetails(): JSX.Element {
-  const { treeIndexes, treeCommits, diffFilter, origin } = useSearch({
-    from: '/_main/hardware/$hardwareId',
-  });
+  const { treeIndexes, treeCommits, diffFilter, origin, hardwareSearch } =
+    useSearch({
+      from: '/_main/hardware/$hardwareId',
+    });
   const { startTimestampInSeconds, endTimestampInSeconds } = useSearch({
     from: '/_main/hardware/$hardwareId/',
   });
@@ -190,7 +235,10 @@ function HardwareDetails(): JSX.Element {
 
   const numIndexes = summaryResponse?.data?.common?.trees?.length || 0;
   const updateTreeFilters = useCallback(
-    (selectedIndexes: number[] | null) => {
+    (
+      selectedIndexes: number[] | null,
+      { replace = false }: { replace?: boolean } = {},
+    ) => {
       const numSelectedIndexes = selectedIndexes?.length || 0;
       const indexes =
         numSelectedIndexes === numIndexes ? null : selectedIndexes;
@@ -200,6 +248,7 @@ function HardwareDetails(): JSX.Element {
           treeIndexes: indexes,
         }),
         state: s => s,
+        replace,
       });
     },
     [navigate, numIndexes],
@@ -259,6 +308,61 @@ function HardwareDetails(): JSX.Element {
       },
       { enabled: !fullResponse.isLoading && !!fullResponse.data },
     );
+
+  const commitHistoryTable = commitHistoryData?.commit_history_table;
+
+  const commitIntent = useMemo(
+    () => parseSearchIntent(hardwareSearch ?? ''),
+    [hardwareSearch],
+  );
+  const intentCommits =
+    commitIntent.intent === 'commits' ? commitIntent.commits : null;
+
+  useEffect(() => {
+    if (!isEmptyObject(treeCommits) || !intentCommits?.length) {
+      return;
+    }
+
+    const trees = summaryResponse.data?.common.trees;
+    if (!trees?.length || !commitHistoryTable || commitHistoryIsLoading) {
+      return;
+    }
+
+    const newTreeCommits: Record<string, string> = {};
+    for (const tree of trees) {
+      const key = makeTreeIdentifierKey({
+        treeName: tree.tree_name ?? '',
+        gitRepositoryBranch: tree.git_repository_branch ?? '',
+        gitRepositoryUrl: tree.git_repository_url ?? '',
+      });
+      const match = findMatchingCheckout(
+        commitHistoryTable[key] ?? [],
+        intentCommits,
+      );
+      if (match && match.git_commit_hash !== tree.head_git_commit_hash) {
+        newTreeCommits[tree.index] = match.git_commit_hash;
+      }
+    }
+
+    if (!Object.keys(newTreeCommits).length) {
+      return;
+    }
+
+    setTreeIndexesLength(trees.length);
+    navigate({
+      search: prev => ({ ...prev, treeCommits: newTreeCommits }),
+      state: s => s,
+      replace: true,
+    });
+  }, [
+    treeCommits,
+    intentCommits,
+    summaryResponse.data?.common.trees,
+    commitHistoryTable,
+    commitHistoryIsLoading,
+    navigate,
+    setTreeIndexesLength,
+  ]);
 
   const filterListElement = useMemo(() => {
     const flatFilter = createFlatFilter(diffFilter);
@@ -360,15 +464,19 @@ function HardwareDetails(): JSX.Element {
     () =>
       prepareTreeItems({
         treeItems: summaryResponse.data?.common.trees,
-        commitHistoryData: commitHistoryData?.commit_history_table,
-        isCommitHistoryDataLoading: commitHistoryIsLoading,
+        commitHistoryData: commitHistoryTable,
+        isCommitHistoryDataLoading:
+          commitHistoryIsLoading || !commitHistoryData,
         isMainPageLoading:
           fullResponse.isLoading || fullResponse.isPlaceholderData,
+        commitIntentTokens: intentCommits,
       }),
     [
       commitHistoryIsLoading,
+      commitHistoryData,
+      commitHistoryTable,
+      intentCommits,
       summaryResponse.data?.common.trees,
-      commitHistoryData?.commit_history_table,
       fullResponse.isLoading,
       fullResponse.isPlaceholderData,
     ],
@@ -481,6 +589,7 @@ function HardwareDetails(): JSX.Element {
                   selectedIndexes={treeIndexes}
                   updateTreeFilters={updateTreeFilters}
                   setTreeIndexesLength={setTreeIndexesLength}
+                  selectionResetKey={`${hardwareId}\0${hardwareSearch ?? ''}`}
                 />
                 {summaryResponse.data &&
                   summaryResponse.data.common.compatibles.length > 0 && (

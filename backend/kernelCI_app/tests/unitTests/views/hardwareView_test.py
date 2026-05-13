@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from django.test.testcases import SimpleTestCase
 from rest_framework.test import APIRequestFactory
@@ -30,6 +30,41 @@ class TestHardwareView(SimpleTestCase):
         response = self.view.get(request)
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
+        mock_get_hardware_listing_data.assert_called_once_with(
+            origin="origin1",
+            start_date=ANY,
+            end_date=ANY,
+            commits_list=None,
+        )
+
+    @patch("kernelCI_app.views.hardwareView.get_hardware_listing_data")
+    def test_get_hardware_listing_passes_commits_list(
+        self, mock_get_hardware_listing_data
+    ):
+        mock_get_hardware_listing_data.return_value = [
+            ("platform1", "hardware1", *range(22)),
+        ]
+        h1 = "a" * 40
+        h2 = "b" * 40
+
+        request = self.factory.get(
+            self.url,
+            {
+                "startTimestampInSeconds": "1741192200",
+                "endTimestampInSeconds": "1741624200",
+                "origin": "origin1",
+                "commitsList": f"{h1},{h2}",
+            },
+        )
+        response = self.view.get(request)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        mock_get_hardware_listing_data.assert_called_once_with(
+            origin="origin1",
+            start_date=ANY,
+            end_date=ANY,
+            commits_list=[h1, h2],
+        )
 
     def test_get_hardware_listing_invalid_query_params_returns_bad_request(self):
         query_params = {"origin": "origin1"}

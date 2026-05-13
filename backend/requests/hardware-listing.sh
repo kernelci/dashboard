@@ -1,5 +1,8 @@
 http 'http://localhost:8000/api/hardware/?startTimestampInSeconds=1736510400&endTimestampInSeconds=1736942400&origin=maestro'
 
+# Optional: comma-separated commit identifiers — full SHA and/or git tag strings (matches hash or overlaps git_commit_tags)
+# http 'http://localhost:8000/api/hardware/?startTimestampInSeconds=1736510400&endTimestampInSeconds=1736942400&origin=maestro&commitsList=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
 # HTTP/1.1 200 OK
 # Allow: GET, HEAD, OPTIONS
 # Cache-Control: max-age=0

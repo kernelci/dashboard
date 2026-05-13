@@ -8,6 +8,15 @@ from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.commonListing import StatusCountV2
 
 
+def _normalize_commits_list(value: object) -> Optional[list[str]]:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        cleaned = [part.strip() for part in value.split(",") if part.strip()]
+        return cleaned if cleaned else None
+    return None
+
+
 class HardwareItemV2(BaseModel):
     hardware: Optional[Union[str, set[str]]]
     platform: str
@@ -34,6 +43,10 @@ class HardwareQueryParamsV2DocumentationOnly(BaseModel):
     endTimestampInSeconds: str = Field(  # noqa: N815
         description=DocStrings.DEFAULT_END_TS_DESCRIPTION
     )
+    commitsList: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_LISTING_COMMITS_LIST_DESCRIPTION,
+    )
 
 
 class HardwareQueryParamsV2(BaseModel):
@@ -44,3 +57,7 @@ class HardwareQueryParamsV2(BaseModel):
     ]
     start_date: datetime
     end_date: datetime
+    commits_list: Annotated[
+        Optional[list[str]],
+        BeforeValidator(_normalize_commits_list),
+    ] = Field(default=None)

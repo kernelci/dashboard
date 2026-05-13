@@ -25,6 +25,7 @@ const defaultValues = {
   treeCommits: {},
   tableFilter: zTableFilterInfoDefault,
   diffFilter: DEFAULT_DIFF_FILTER,
+  hardwareSearch: '',
 };
 const hardwareDetailsSearchSchema = z.object({
   origin: zOrigin,
@@ -33,6 +34,7 @@ const hardwareDetailsSearchSchema = z.object({
   treeCommits: zTreeCommits,
   tableFilter: zTableFilterInfoValidator,
   diffFilter: zDiffFilter,
+  hardwareSearch: z.string().catch(''),
 } satisfies SearchSchema);
 
 export const Route = createFileRoute('/_main/hardware/$hardwareId')({

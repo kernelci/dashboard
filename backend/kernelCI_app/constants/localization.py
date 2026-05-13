@@ -93,6 +93,10 @@ class DocStrings:
     )
 
     HARDWARE_LISTING_ORIGIN_DESCRIPTION = "Origin of the hardware"
+    HARDWARE_LISTING_COMMITS_LIST_DESCRIPTION = (
+        "Optional comma-separated git commit identifiers: full SHA(s) "
+        "and/or tag strings that appear in checkout.git_commit_tags."
+    )
 
     ISSUE_DETAILS_VERSION_DESCRIPTION = "Issue version"
 

@@ -21,7 +21,7 @@ export type HardwareTrees = {
   git_repository_url?: string;
   head_git_commit_name?: string;
   head_git_commit_hash?: string;
-  head_git_commit_tags?: string[];
+  head_git_commit_tag?: string[];
   selected_commit_status?: TTreesStatusSummary;
   index: string;
 };
@@ -30,6 +30,7 @@ export type PreparedTrees = HardwareTrees & {
   selectableCommits: CommitHistory[];
   isCommitHistoryDataLoading: boolean;
   isMainPageLoading: boolean;
+  excludeFromCommitIntentDefaultSelection?: boolean;
 };
 
 export type HardwareCommon = {

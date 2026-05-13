@@ -61,6 +61,7 @@ const fetchHardwareListingV2 = async (
   origin: string,
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
+  commitsList?: string[],
 ): Promise<HardwareListingResponseV2> => {
   const data = await RequestData.get<HardwareListingResponseV2>(
     '/api/hardware-v2/',
@@ -69,6 +70,7 @@ const fetchHardwareListingV2 = async (
         startTimestampInSeconds,
         endTimestampInSeconds,
         origin,
+        ...(commitsList?.length ? { commitsList: commitsList.join(',') } : {}),
       },
     },
   );
@@ -80,6 +82,7 @@ export const useHardwareListingV2 = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
   searchFrom: HardwareListingRoutesMap['v2']['search'],
+  commitsList?: string[],
 ): UseQueryResult<HardwareListingResponseV2> => {
   const { origin } = useSearch({ from: searchFrom });
 
@@ -88,6 +91,7 @@ export const useHardwareListingV2 = (
     startTimestampInSeconds,
     endTimestampInSeconds,
     origin,
+    commitsList ?? null,
   ];
 
   return useQuery({
@@ -97,6 +101,7 @@ export const useHardwareListingV2 = (
         origin,
         startTimestampInSeconds,
         endTimestampInSeconds,
+        commitsList,
       ),
     refetchOnWindowFocus: false,
   });
