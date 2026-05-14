@@ -116,6 +116,11 @@ urlpatterns = [
     ),
     path("log-downloader/", view_cache(views.LogDownloaderView), name="logDownloader"),
     path(
+        "hardware/selectors/",
+        view_cache(views.HardwareSelectorsView),
+        name="hardwareSelectors",
+    ),
+    path(
         "hardware/<str:hardware_id>",
         view_cache(views.HardwareDetails),
         name="hardwareDetails",
@@ -146,6 +151,11 @@ urlpatterns = [
         name="hardwareDetailsTests",
     ),
     path("hardware/", view_cache(views.HardwareView), name="hardware"),
+    path(
+        "hardware-by-revision/",
+        view_cache(views.HardwareByRevisionView),
+        name="hardwareByRevision",
+    ),
     path("hardware-v2/", view_cache(views.HardwareViewV2), name="hardware-v2"),
     path("issue/", view_cache(views.IssueView), name="issue"),
     path(

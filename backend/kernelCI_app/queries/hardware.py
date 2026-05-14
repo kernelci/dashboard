@@ -201,6 +201,111 @@ def get_hardware_listing_data(
         return cursor.fetchall()
 
 
+def get_hardware_selectors(origin: str) -> list[dict]:
+    cache_key = "hardwareSelectors"
+    cache_params = {"origin": origin}
+
+    rows = get_query_cache(cache_key, cache_params)
+    if rows is not None:
+        return rows
+
+    params = {"origin": origin}
+
+    query = """
+        SELECT DISTINCT ON (
+            c.tree_name,
+            c.git_repository_url,
+            c.git_repository_branch,
+            c.git_commit_hash,
+            c.git_commit_name
+        )
+            c.tree_name,
+            c.git_repository_url,
+            c.git_repository_branch,
+            c.git_commit_hash,
+            c.git_commit_name,
+            c.start_time
+        FROM checkouts c
+        INNER JOIN builds b ON b.checkout_id = c.id
+        INNER JOIN tests t ON t.build_id = b.id
+        WHERE
+            t.origin = %(origin)s
+            AND t.start_time > (NOW() - INTERVAL '15 days')
+            AND t.environment_misc ->> 'platform' IS NOT NULL
+        ORDER BY
+            c.tree_name,
+            c.git_repository_url,
+            c.git_repository_branch,
+            c.git_commit_hash,
+            c.git_commit_name,
+            c.start_time DESC;
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = dict_fetchall(cursor)
+
+    set_query_cache(key=cache_key, params=cache_params, rows=rows)
+    return rows
+
+
+def get_hardware_listing_data_by_revision(
+    *,
+    origin: str,
+    tree_name: str,
+    git_repository_url: str,
+    git_repository_branch: str,
+    git_commit_hash: str,
+) -> list[dict]:
+    count_clauses = _get_hardware_listing_count_clauses()
+    params = {
+        "origin": origin,
+        "tree_name": tree_name,
+        "git_repository_url": git_repository_url,
+        "git_repository_branch": git_repository_branch,
+        "git_commit_hash": git_commit_hash,
+    }
+
+    query = f"""
+        WITH relevant_tests AS (
+            SELECT
+                tests.environment_compatible AS hardware,
+                tests.environment_misc ->> 'platform' AS platform,
+                tests.status,
+                tests.path,
+                tests.id,
+                b.id AS build_id,
+                b.status AS build_status
+            FROM
+                checkouts c
+                INNER JOIN builds b ON b.checkout_id = c.id
+                INNER JOIN tests ON tests.build_id = b.id
+            WHERE
+                c.tree_name = %(tree_name)s
+                AND c.git_repository_url = %(git_repository_url)s
+                AND c.git_repository_branch = %(git_repository_branch)s
+                AND c.git_commit_hash = %(git_commit_hash)s
+                AND tests.origin = %(origin)s
+                AND tests.environment_misc ->> 'platform' IS NOT NULL
+        )
+        SELECT
+            relevant_tests.platform,
+            relevant_tests.hardware,
+            {count_clauses}
+        FROM
+            relevant_tests
+        GROUP BY
+            relevant_tests.platform,
+            relevant_tests.hardware
+        ORDER BY
+            relevant_tests.platform ASC
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return dict_fetchall(cursor)
+
+
 def get_hardware_listing_data_bulk(
     keys: list[tuple[str, str]],
     start_date: datetime,

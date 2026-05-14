@@ -133,3 +133,11 @@ class TestURLPatterns:
         url = reverse("treeDetailsSummaryView", kwargs={"commit_hash": commit_hash})
         resolved = resolve(url)
         assert resolved.kwargs["commit_hash"] == commit_hash
+
+    def test_hardware_selectors_route(self):
+        url = reverse("hardwareSelectors")
+        resolved = resolve(url)
+
+        assert url == "/api/hardware/selectors/"
+        assert resolved.url_name == "hardwareSelectors"
+        assert "hardware_id" not in resolved.kwargs
