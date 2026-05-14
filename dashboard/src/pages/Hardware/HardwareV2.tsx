@@ -32,11 +32,7 @@ export const HardwareV2 = ({
         />
       )}
       <div className="bg-light-gray w-full py-10">
-        <HardwareListingPageV2
-          inputFilter={intent.search}
-          commitsList={intent.intent === 'commits' ? intent.commits : undefined}
-          urlFromMap={urlFromMap}
-        />
+        <HardwareListingPageV2 intent={intent} urlFromMap={urlFromMap} />
       </div>
     </>
   );

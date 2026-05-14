@@ -23,7 +23,7 @@ import { useNavigate, useSearch, type LinkProps } from '@tanstack/react-router';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
-import { formattedBreakLineValue } from '@/locales/messages';
+import type { MessagesKey } from '@/locales/messages';
 
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ConditionalTableCell } from '@/components/Table/ConditionalTableCell';
@@ -37,7 +37,12 @@ import {
   PaginationInfo,
 } from '@/components/Table/PaginationInfo';
 
-import type { HardwareItem } from '@/types/hardware';
+import type {
+  HardwareItem,
+  HardwareRevisionSelection,
+  HardwareSelectorBranch,
+  HardwareSelectorTree,
+} from '@/types/hardware';
 
 import { statusCountToRequiredStatusCount, sumStatus } from '@/utils/status';
 
@@ -55,6 +60,10 @@ import { Badge } from '@/components/ui/badge';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
+import { buildHardwareDetailsSearch } from './hardwareTableUtils';
+import { HardwareRevisionSelectors } from './HardwareRevisionSelectors';
+import type { HardwareRevisionSelectorValue } from './hardwareSelection';
+
 // TODO Extract and reuse the table
 interface IHardwareTable {
   treeTableRows: HardwareItem[];
@@ -65,6 +74,12 @@ interface IHardwareTable {
   error?: Error | null;
   isLoading?: boolean;
   navigateFrom: HardwareListingRoutes;
+  emptyMessageId?: MessagesKey;
+  selectors?: HardwareSelectorTree[];
+  selectedTree?: HardwareSelectorTree | null;
+  selectedBranch?: HardwareSelectorBranch | null;
+  selection?: HardwareRevisionSelection | null;
+  onTreeChange?: (nextSelection: HardwareRevisionSelectorValue) => void;
 }
 
 type HardwareListingRoutes = '/hardware' | '/hardware/v1' | '/hardware/v2';
@@ -77,17 +92,20 @@ const getLinkProps = (
   tabTarget?: string,
   newDiffFilter?: TFilter,
 ): LinkProps => {
+  const currentPageTab = zPossibleTabValidator.parse(tabTarget);
+
   return {
     from: navigateFrom,
     to: '/hardware/$hardwareId',
     params: { hardwareId: row.original.platform },
-    search: previousSearch => ({
-      ...previousSearch,
-      currentPageTab: zPossibleTabValidator.parse(tabTarget),
-      startTimestampInSeconds,
-      endTimestampInSeconds,
-      diffFilter: { ...previousSearch.diffFilter, ...newDiffFilter },
-    }),
+    search: previousSearch =>
+      buildHardwareDetailsSearch({
+        previousSearch,
+        currentPageTab,
+        startTimestampInSeconds,
+        endTimestampInSeconds,
+        newDiffFilter,
+      }),
     state: s => ({
       ...s,
       id: row.original.platform,
@@ -370,6 +388,12 @@ export function HardwareTable({
   error,
   isLoading,
   navigateFrom,
+  emptyMessageId = 'hardwareListing.notFound',
+  selectors,
+  selectedTree = null,
+  selectedBranch = null,
+  selection = null,
+  onTreeChange = (): void => {},
 }: IHardwareTable): JSX.Element {
   const { listingSize } = useSearch({ strict: false });
   const navigate = useNavigate({ from: navigateFrom });
@@ -456,11 +480,12 @@ export function HardwareTable({
     ) : (
       <TableRow>
         <TableCell colSpan={columns.length} className="h-24 text-center">
-          <FormattedMessage id="hardwareListing.notFound" />
+          <FormattedMessage id={emptyMessageId} />
         </TableCell>
       </TableRow>
     );
   }, [
+    emptyMessageId,
     modelRows,
     navigateFrom,
     columns.length,
@@ -480,23 +505,28 @@ export function HardwareTable({
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <div className="flex flex-wrap items-center justify-end gap-4">
-        <span className="text-dim-gray flex-1 justify-start text-left text-sm">
-          <FormattedMessage
-            id="global.projectUnderDevelopment"
-            values={formattedBreakLineValue}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        {selectors && (
+          <HardwareRevisionSelectors
+            selectors={selectors}
+            selectedTree={selectedTree}
+            selectedBranch={selectedBranch}
+            selection={selection}
+            onTreeChange={onTreeChange}
           />
-        </span>
-        <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
-          <ItemsPerPageSelector
-            table={table}
-            onPaginationChange={navigateWithPageSize}
-            className="pl-4"
-          />
-        </div>
-        <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
-          <ListingCount table={table} intlLabel="global.hardware" />
-          <PaginationButtons table={table} className="pl-4" />
+        )}
+        <div className="flex flex-wrap items-center justify-end gap-4">
+          <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
+            <ItemsPerPageSelector
+              table={table}
+              onPaginationChange={navigateWithPageSize}
+              className="pl-4"
+            />
+          </div>
+          <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
+            <ListingCount table={table} intlLabel="global.hardware" />
+            <PaginationButtons table={table} className="pl-4" />
+          </div>
         </div>
       </div>
       <QuerySwitcher

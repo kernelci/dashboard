@@ -214,9 +214,19 @@ export const messages = {
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
     'hardwareListing.bannerTitle': 'Hardware Listing',
+    'hardwareListing.branchSelectorLabel': 'Branch',
     'hardwareListing.description': 'List of hardware from kernel tests',
     'hardwareListing.notFound': 'No hardware information available',
+    'hardwareListing.revisionEmpty':
+      'The selected revision has no hardware rows yet. Data ingestion may still be in progress.',
+    'hardwareListing.revisionSelectorLabel': 'Revision',
+    'hardwareListing.selectionResetDescription':
+      'The previous tree/branch/revision selection has no qualifying data for the selected origin and was reset to the latest available revision.',
+    'hardwareListing.selectionResetTitle': 'Hardware selection reset',
+    'hardwareListing.selectorsNoData':
+      'No qualifying hardware data is available for the selected origin yet.',
     'hardwareListing.title': 'Hardware Listing ― KCI Dashboard',
+    'hardwareListing.treeSelectorLabel': 'Tree',
     'issue.alsoPresentTooltip': 'Issue also present in {tree}',
     'issue.firstSeen': 'First seen',
     'issue.newIssue': 'New issue: This is the first time this issue was seen',

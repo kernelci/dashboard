@@ -21,6 +21,10 @@ const zHardwareSchema = z.object({
   intervalInDays: makeZIntervalInDays(REDUCED_TIME_SEARCH),
   hardwareSearch: z.string().catch(''),
   listingSize: zListingSize,
+  treeName: z.optional(z.string()),
+  gitRepositoryUrl: z.optional(z.string()),
+  gitBranch: z.optional(z.string()),
+  gitCommitHash: z.optional(z.string()),
 } satisfies SearchSchema);
 
 export const Route = createFileRoute('/_main/hardware')({
