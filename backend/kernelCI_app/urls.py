@@ -9,12 +9,9 @@ from drf_spectacular.views import (
 
 from kernelCI_app import views
 
-timeout = settings.CACHE_TIMEOUT
-cache = cache_page(timeout)
 
-
-def view_cache(view):
-    return cache(view.as_view())
+def view_cache(view, timeout: int = settings.CACHE_TIMEOUT):
+    return cache_page(timeout)(view.as_view())
 
 
 urlpatterns = [
@@ -117,7 +114,7 @@ urlpatterns = [
     path("log-downloader/", view_cache(views.LogDownloaderView), name="logDownloader"),
     path(
         "hardware/selectors/",
-        view_cache(views.HardwareSelectorsView),
+        view_cache(views.HardwareSelectorsView, timeout=60 * 60),
         name="hardwareSelectors",
     ),
     path(
