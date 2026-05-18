@@ -330,40 +330,42 @@ class HardwareDetailsSummary(APIView):
             status_count = StatusCount()
             status_count.increment(status, count)
 
-            if (tree_name, git_repository_url, git_repository_branch) not in all_trees:
-                all_trees[(tree_name, git_repository_url, git_repository_branch)] = (
-                    Tree(
-                        index="",  # if we dont mind to sort, we can just use len(all_trees)
-                        tree_name=tree_name,
-                        git_repository_branch=git_repository_branch,
-                        git_repository_url=git_repository_url,
-                        head_git_commit_hash=git_commit_hash,
-                        head_git_commit_name=git_commit_name,
-                        head_git_commit_tag=git_commit_tags,
-                        origin=origin,
-                        selected_commit_status={
-                            "builds": StatusCount(),
-                            "boots": StatusCount(),
-                            "tests": StatusCount(),
-                        },
-                        is_selected=None,
-                    )
+            tree_key = (
+                tree_name,
+                git_repository_url,
+                git_repository_branch,
+                git_commit_hash,
+            )
+            if tree_key not in all_trees:
+                all_trees[tree_key] = Tree(
+                    index="",
+                    tree_name=tree_name,
+                    git_repository_branch=git_repository_branch,
+                    git_repository_url=git_repository_url,
+                    head_git_commit_hash=git_commit_hash,
+                    head_git_commit_name=git_commit_name,
+                    head_git_commit_tag=git_commit_tags,
+                    origin=origin,
+                    selected_commit_status={
+                        "builds": StatusCount(),
+                        "boots": StatusCount(),
+                        "tests": StatusCount(),
+                    },
+                    is_selected=None,
                 )
             row_type = self.get_summary_type(**instance)
-            all_trees[
-                (tree_name, git_repository_url, git_repository_branch)
-            ].selected_commit_status[row_type] += status_count
+            all_trees[tree_key].selected_commit_status[row_type] += status_count
             all_compatibles.update(compatibles or [])
 
         all_compatibles.discard(hardware_id)
 
-        # not sure if it is worth sorting for index (but is also not slowing us down)
         sorted_trees = sorted(
             all_trees.values(),
             key=lambda t: (
                 t.tree_name or "",
                 t.git_repository_branch or "",
-                t.head_git_commit_name or "",
+                t.git_repository_url or "",
+                t.head_git_commit_hash or "",
             ),
         )
         for i, tree in enumerate(sorted_trees):
