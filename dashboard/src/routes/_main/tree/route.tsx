@@ -8,18 +8,18 @@ import {
   type SearchSchema,
 } from '@/types/general';
 import {
+  DEFAULT_LISTING_INTERVAL_IN_DAYS,
   DEFAULT_LISTING_ITEMS,
-  DEFAULT_TIME_SEARCH,
 } from '@/utils/constants/general';
 
 const defaultValues = {
-  intervalInDays: DEFAULT_TIME_SEARCH,
+  intervalInDays: DEFAULT_LISTING_INTERVAL_IN_DAYS,
   treeSearch: '',
   listingSize: DEFAULT_LISTING_ITEMS,
 };
 
 export const RootSearchSchema = z.object({
-  intervalInDays: makeZIntervalInDays(DEFAULT_TIME_SEARCH),
+  intervalInDays: makeZIntervalInDays(DEFAULT_LISTING_INTERVAL_IN_DAYS),
   treeSearch: z.string().catch(''),
   listingSize: zListingSize,
 } satisfies SearchSchema);

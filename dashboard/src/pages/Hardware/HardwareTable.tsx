@@ -49,8 +49,6 @@ import type { ListingTableColumnMeta } from '@/types/table';
 
 import { RedirectFrom, type TFilter } from '@/types/general';
 
-import { MemoizedInputTime } from '@/components/InputTime';
-import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 import { EMPTY_VALUE } from '@/lib/string';
 import { Badge } from '@/components/ui/badge';
 
@@ -490,10 +488,6 @@ export function HardwareTable({
           />
         </span>
         <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
-          <MemoizedInputTime
-            navigateFrom={navigateFrom}
-            defaultInterval={REDUCED_TIME_SEARCH}
-          />
           <ItemsPerPageSelector
             table={table}
             onPaginationChange={navigateWithPageSize}
