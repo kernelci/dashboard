@@ -56,6 +56,9 @@ class ClientStrings:
     BUILD_DETAILS_NOT_FOUND = "Build not found"
     TREE_NOT_FOUND = "Tree not found."
     TREE_LATEST_DEFAULT_ORIGIN = "No origin was provided so it was defaulted to"
+    METRICS_INVALID_INTERVAL = (
+        "start_days_ago must be greater than end_days_ago to define a valid interval"
+    )
 
 
 @_simple_enum(StrEnum)
@@ -67,6 +70,12 @@ class DocStrings:
         "Optional filter dictionary for additional query parameters"
     )
     DEFAULT_INTERVAL_DESCRIPTION = "Interval in days for the listing"
+    METRICS_START_DAYS_AGO_DESCRIPTION = (
+        "Number of days ago that marks the start of the metrics interval"
+    )
+    METRICS_END_DAYS_AGO_DESCRIPTION = (
+        "Number of days ago that marks the end of the metrics interval"
+    )
     DEFAULT_LISTING_STARTING_DATE_DESCRIPTION = (
         "Starting date to calculate the search interval."
         " Should be in ISO format such as 'YYYY-MM-DD HH:MM:SS'."

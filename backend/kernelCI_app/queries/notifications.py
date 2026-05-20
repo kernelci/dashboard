@@ -1,4 +1,6 @@
 import sys
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 from django.db import connection, connections
 from pydantic import ValidationError
@@ -642,6 +644,24 @@ def get_issues_summary_data(*, checkout_ids: list[str]) -> list[dict]:
         return dict_fetchall(cursor=cursor)
 
 
+def query_fetchone_work(*, query: str, params: dict[str, Any]):
+    try:
+        with connections["default"].cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchone()
+    finally:
+        connections["default"].close()
+
+
+def query_fetchall_work(*, query: str, params: dict[str, Any]):
+    try:
+        with connections["default"].cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchall()
+    finally:
+        connections["default"].close()
+
+
 def get_metrics_data(
     *,
     start_days_ago: int,
@@ -786,21 +806,28 @@ def get_metrics_data(
     GROUP BY lab
     """
 
-    with connections["default"].cursor() as cursor:
-        cursor.execute(total_objects_query, params)
-        total_objects_result = cursor.fetchone()
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        total_objects_result = executor.submit(
+            query_fetchone_work, query=total_objects_query, params=params
+        )
+        prev_total_objects_result = executor.submit(
+            query_fetchone_work, query=total_objects_query, params=prev_params
+        )
+        build_incidents_result = executor.submit(
+            query_fetchall_work, query=build_incidents_query, params=params
+        )
+        lab_summary_results = executor.submit(
+            query_fetchall_work, query=lab_summary_query, params=params
+        )
+        prev_lab_summary_results = executor.submit(
+            query_fetchall_work, query=lab_summary_query, params=prev_params
+        )
 
-        cursor.execute(total_objects_query, prev_params)
-        prev_total_objects_result = cursor.fetchone()
-
-        cursor.execute(build_incidents_query, params)
-        build_incidents_result = cursor.fetchall()
-
-        cursor.execute(lab_summary_query, params)
-        lab_summary_results = cursor.fetchall()
-
-        cursor.execute(lab_summary_query, prev_params)
-        prev_lab_summary_results = cursor.fetchall()
+    total_objects_result = total_objects_result.result()
+    prev_total_objects_result = prev_total_objects_result.result()
+    build_incidents_result = build_incidents_result.result()
+    lab_summary_results = lab_summary_results.result()
+    prev_lab_summary_results = prev_lab_summary_results.result()
 
     try:
         build_incidents_by_origin: dict[str, BuildIncidentsCount] = {}
