@@ -1,0 +1,5 @@
+# Access-control file
+.github/scripts/ @kernelci/admins
+.github/workflows/ @kernelci/admins
+
+.github/dashboard-team @kernelci/admins @victor-accarini

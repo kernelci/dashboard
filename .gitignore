@@ -9,3 +9,6 @@ application_default_credentials.json
 # k6 data
 k6/data/dump.sql
 k6/results/*.json
+
+# .github scripts dependencies
+.github/scripts/node_modules

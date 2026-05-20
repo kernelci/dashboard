@@ -1,0 +1,91 @@
+name: Sync Dashboard Team
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/dashboard-team"
+      - ".github/scripts/sync-dashboard-team.js"
+      - ".github/scripts/package.json"
+      - ".github/scripts/package-lock.json"
+      - ".github/workflows/sync-dashboard-team.yaml"
+
+  pull_request:
+    paths:
+      - ".github/dashboard-team"
+      - ".github/scripts/sync-dashboard-team.js"
+      - ".github/scripts/package.json"
+      - ".github/scripts/package-lock.json"
+      - ".github/workflows/sync-dashboard-team.yaml"
+
+concurrency:
+  group: sync-dashboard-team
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Add validation checks for Pull Requests
+  validate:
+    if: github.event_name == 'pull_request' && secrets.ORG_ADMIN_TOKEN != ''
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: .github/scripts/package-lock.json
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm ci
+
+      - name: Dry run
+        working-directory: .github/scripts
+        run: node sync-dashboard-team.js
+        env:
+          DRY_RUN: true
+          GITHUB_TOKEN: ${{ secrets.ORG_ADMIN_TOKEN }}
+          ORG: kernelci
+          TEAM_SLUG: dashboard
+
+  # Sync the members with the organization and dashboard-team
+  sync:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: .github/scripts/package-lock.json
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm ci
+
+      - name: Sync Dashboard Team
+        working-directory: .github/scripts
+        run: node sync-dashboard-team.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.ORG_ADMIN_TOKEN }}
+          ORG: kernelci
+          TEAM_SLUG: dashboard
