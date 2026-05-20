@@ -12,7 +12,6 @@ from kernelCI_app.utils import string_to_json
 
 client = MetricsClient()
 
-# Snapshot from: curl -s http://localhost:8000/api/metrics/
 metrics_expected_fields = [
     "n_trees",
     "n_checkouts",

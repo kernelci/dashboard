@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from django.db.utils import DatabaseError
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 from rest_framework.response import Response
@@ -28,24 +29,25 @@ class MetricsView(APIView):
         try:
             query_parameters = MetricsQueryParameters.model_validate(request.GET.dict())
         except ValidationError as e:
-            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
         if query_parameters.start_days_ago <= query_parameters.end_days_ago:
             return create_api_error_response(
                 error_message=ClientStrings.METRICS_INVALID_INTERVAL
             )
-
         try:
             data = get_metrics_data(
                 start_days_ago=query_parameters.start_days_ago,
                 end_days_ago=query_parameters.end_days_ago,
             )
-            valid_response = metrics_report_data_to_response(data)
-        except ValidationError as e:
-            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
-        except Exception as e:
+        except DatabaseError as e:
             return create_api_error_response(
                 error_message=str(e),
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
+        try:
+            valid_response = metrics_report_data_to_response(data)
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
         return Response(valid_response.model_dump())

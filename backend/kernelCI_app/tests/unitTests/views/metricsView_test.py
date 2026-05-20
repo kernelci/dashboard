@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.db.utils import OperationalError
 from django.test.testcases import SimpleTestCase
 from pydantic import ValidationError
 from rest_framework.test import APIRequestFactory
@@ -70,12 +71,12 @@ class TestMetricsView(SimpleTestCase):
         request = self.factory.get(self.url)
         response = self.view.get(request)
 
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 400)
         self.assertIsNotNone(response.data)
 
     @patch("kernelCI_app.views.metricsView.get_metrics_data")
     def test_get_metrics_internal_error(self, mock_get_metrics_data):
-        mock_get_metrics_data.side_effect = Exception("Database unavailable")
+        mock_get_metrics_data.side_effect = OperationalError("Database unavailable")
         request = self.factory.get(self.url)
         response = self.view.get(request)
 
