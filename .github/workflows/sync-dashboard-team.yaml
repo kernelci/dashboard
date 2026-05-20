@@ -29,8 +29,10 @@ permissions:
 jobs:
   # Add validation checks for Pull Requests
   validate:
-    if: github.event_name == 'pull_request' && secrets.ORG_ADMIN_TOKEN != ''
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    env:
+      ORG_ADMIN_TOKEN: ${{ secrets.ORG_ADMIN_TOKEN }}
 
     permissions:
       contents: read
@@ -51,11 +53,12 @@ jobs:
         run: npm ci
 
       - name: Dry run
+        if: env.ORG_ADMIN_TOKEN != ''
         working-directory: .github/scripts
         run: node sync-dashboard-team.js
         env:
           DRY_RUN: true
-          GITHUB_TOKEN: ${{ secrets.ORG_ADMIN_TOKEN }}
+          GITHUB_TOKEN: ${{ env.ORG_ADMIN_TOKEN }}
           ORG: kernelci
           TEAM_SLUG: dashboard
 
