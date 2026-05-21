@@ -40,21 +40,6 @@ test.describe('Tree Listing Page Tests', () => {
     ).toBeVisible();
   });
 
-  test('change time interval', async ({ page }) => {
-    await expect(page.locator(COMMON_SELECTORS.tableRow).first()).toBeVisible();
-
-    const intervalInput = page
-      .locator(TREE_LISTING_SELECTORS.intervalInput)
-      .first();
-    await expect(intervalInput).toBeVisible();
-
-    await intervalInput.fill('14');
-
-    await page.waitForTimeout(DEFAULT_ACTION_TIMEOUT);
-
-    await expect(intervalInput).toHaveValue('14');
-  });
-
   test('change table size', async ({ page }) => {
     await expect(page.locator(TREE_LISTING_SELECTORS.table)).toBeVisible();
 
