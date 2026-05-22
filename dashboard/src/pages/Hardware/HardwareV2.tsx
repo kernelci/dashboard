@@ -8,6 +8,7 @@ import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags'
 import { NewPageBanner } from '@/components/Banner/PageBanner';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
+import { parseSearchIntent } from '@/lib/intent';
 
 export const HardwareV2 = ({
   urlFromMap,
@@ -18,6 +19,8 @@ export const HardwareV2 = ({
   const { hardwareSearch } = useSearch({
     from: urlFromMap.search,
   });
+
+  const intent = parseSearchIntent(hardwareSearch ?? '');
 
   return (
     <>
@@ -30,7 +33,8 @@ export const HardwareV2 = ({
       )}
       <div className="bg-light-gray w-full py-10">
         <HardwareListingPageV2
-          inputFilter={hardwareSearch ?? ''}
+          inputFilter={intent.search}
+          commitsList={intent.intent === 'commits' ? intent.commits : undefined}
           urlFromMap={urlFromMap}
         />
       </div>

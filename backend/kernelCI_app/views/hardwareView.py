@@ -1,4 +1,3 @@
-from datetime import datetime
 from http import HTTPStatus
 
 from drf_spectacular.utils import extend_schema
@@ -70,18 +69,16 @@ class HardwareView(APIView):
                 start_date=request.GET.get("startTimestampInSeconds"),
                 end_date=request.GET.get("endTimestampInSeconds"),
                 origin=request.GET.get("origin"),
+                commits_list=request.GET.get("commitsList"),
             )
-
-            start_date: datetime = query_params.start_date
-            end_date: datetime = query_params.end_date
-            origin = query_params.origin
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
         hardwares_raw = get_hardware_listing_data(
-            origin=origin,
-            start_date=start_date,
-            end_date=end_date,
+            origin=query_params.origin,
+            start_date=query_params.start_date,
+            end_date=query_params.end_date,
+            commits_list=query_params.commits_list,
         )
 
         try:

@@ -2,6 +2,7 @@ import type {
   ColumnDef,
   RowSelectionState,
   SortingState,
+  Updater,
 } from '@tanstack/react-table';
 import {
   flexRender,
@@ -14,7 +15,7 @@ import {
 
 import type { SetStateAction, Dispatch, JSX } from 'react';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -55,8 +56,12 @@ const DEBOUNCE_INTERVAL = 2000;
 interface IHardwareHeader {
   treeItems: PreparedTrees[];
   selectedIndexes: number[] | null;
-  updateTreeFilters: (selectedIndexes: number[] | null) => void;
+  updateTreeFilters: (
+    selectedIndexes: number[] | null,
+    options?: { replace?: boolean },
+  ) => void;
   setTreeIndexesLength: Dispatch<SetStateAction<number>>;
+  selectionResetKey: string;
 }
 
 const CommitSelector = ({
@@ -255,7 +260,7 @@ const getColumns = (
           <CommitSelector
             headCommitName={row.original.head_git_commit_name}
             headCommitHash={row.original.head_git_commit_hash}
-            headCommitTags={row.original.head_git_commit_tags}
+            headCommitTags={row.original.head_git_commit_tag}
             selectableCommits={row.original.selectableCommits}
             isCommitsLoading={row.original.isCommitHistoryDataLoading}
             treeIndex={row.original.index}
@@ -329,23 +334,29 @@ const getColumns = (
 
 const getInitialRowSelection = (
   selectedIndexes: number[] | null,
-  treeItemsLength: number,
+  treeItems: PreparedTrees[],
   isInitialLoad = false,
 ): Record<string, boolean> => {
-  if (selectedIndexes === null) {
-    return Object.fromEntries(
-      Array.from({ length: treeItemsLength }, (_, i) => [i.toString(), true]),
-    );
+  if (treeItems.length === 0) {
+    return {};
   }
 
-  if (selectedIndexes.length === 0 && isInitialLoad) {
+  if (
+    selectedIndexes === null ||
+    (selectedIndexes.length === 0 && isInitialLoad)
+  ) {
     return Object.fromEntries(
-      Array.from({ length: treeItemsLength }, (_, i) => [i.toString(), true]),
+      treeItems
+        .filter(t => !t.excludeFromCommitIntentDefaultSelection)
+        .map(t => [t.index, true]),
     );
   }
 
   return Object.fromEntries(
-    Array.from(selectedIndexes, treeIndex => [treeIndex.toString(), true]),
+    selectedIndexes
+      .map(idx => treeItems.find(t => t.index === String(idx)))
+      .filter((t): t is PreparedTrees => !!t)
+      .map(t => [t.index, true]),
   );
 };
 
@@ -369,6 +380,7 @@ export function HardwareHeader({
   selectedIndexes = null,
   updateTreeFilters,
   setTreeIndexesLength,
+  selectionResetKey,
 }: IHardwareHeader): JSX.Element {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'tree_name', desc: false },
@@ -377,25 +389,64 @@ export function HardwareHeader({
     'hardwareDetailsTrees',
   );
 
+  const treeItemsRef = useRef(treeItems);
+  treeItemsRef.current = treeItems;
+
+  /** After the user toggles row selection, do not re-apply commit-intent default selection. */
+  const userAdjustedRowSelectionRef = useRef(false);
+
+  useEffect(() => {
+    userAdjustedRowSelectionRef.current = false;
+  }, [selectionResetKey]);
+
+  const commitHistoryReady =
+    treeItems.length > 0 && !treeItems[0]?.isCommitHistoryDataLoading;
+
   // The initial assignment is useful to catch the initial indexes from URL
   const [rowSelection, setRowSelection] = useState(() =>
-    getInitialRowSelection(selectedIndexes, treeItems.length, true),
+    getInitialRowSelection(selectedIndexes, treeItems, true),
   );
 
   const rowSelectionDebounced = useDebounce(rowSelection, DEBOUNCE_INTERVAL);
 
   useEffect(() => {
     const updatedSelection = indexesFromRowSelection(rowSelectionDebounced);
-    updateTreeFilters(updatedSelection);
+    updateTreeFilters(updatedSelection, {
+      replace: !userAdjustedRowSelectionRef.current,
+    });
   }, [rowSelectionDebounced, updateTreeFilters, treeItems.length]);
 
-  // This useEffect update the current row selection when the selectedIndexes change.
-  // Useful when the user select a tree by filter modal.
   useEffect(() => {
-    setRowSelection(() =>
-      getInitialRowSelection(selectedIndexes, treeItems.length),
-    );
-  }, [selectedIndexes, treeItems.length]);
+    if (treeItems.length === 0) {
+      return;
+    }
+
+    if (selectedIndexes !== null) {
+      setRowSelection(() =>
+        getInitialRowSelection(selectedIndexes, treeItemsRef.current),
+      );
+      return;
+    }
+
+    if (userAdjustedRowSelectionRef.current) {
+      return;
+    }
+
+    setRowSelection(() => getInitialRowSelection(null, treeItemsRef.current));
+  }, [
+    selectedIndexes,
+    treeItems.length,
+    selectionResetKey,
+    commitHistoryReady,
+  ]);
+
+  const onRowSelectionChange = useCallback(
+    (updater: Updater<RowSelectionState>) => {
+      userAdjustedRowSelectionRef.current = true;
+      setRowSelection(updater);
+    },
+    [],
+  );
 
   const columns = useMemo(
     () => getColumns(setTreeIndexesLength),
@@ -413,7 +464,7 @@ export function HardwareHeader({
     getFilteredRowModel: getFilteredRowModel(),
     getRowId: originalRow => originalRow.index,
     enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
+    onRowSelectionChange,
     state: {
       sorting,
       pagination,

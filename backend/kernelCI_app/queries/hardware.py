@@ -110,23 +110,50 @@ def _get_hardware_listing_count_clauses() -> str:
 
 
 def get_hardware_listing_data(
-    start_date: datetime, end_date: datetime, origin: str
+    *,
+    start_date: datetime,
+    end_date: datetime,
+    origin: str,
+    commits_list: Optional[list[str]] = None,
 ) -> list[dict]:
     """
     Retrieves the listing of platform, compatibles, and
     the status counts of builds, boots and tests
     for the latest checkout of every tree.
     The selected checkouts and tests are limited to the start_date/end_date interval.
+    When commits_list is set, tree heads are not used: checkouts qualify if
+    git_commit_hash is in the token list or git_commit_tags overlaps it (comma-
+    separated request values can be full SHAs or tag strings stored on checkouts).
+    Still scoped by the test start_time and origin filters below.
     """
 
     count_clauses = _get_hardware_listing_count_clauses()
-    tree_head_clause = _get_hardware_tree_heads_clause(id_only=True)
 
     params = {
         "start_date": start_date,
         "end_date": end_date,
         "origin": origin,
     }
+
+    if commits_list:
+        params["commits_list"] = commits_list
+        checkout_ids_select = """
+            SELECT C.id
+            FROM checkouts C
+            WHERE C.git_commit_hash = ANY(%(commits_list)s)
+               OR (
+                   C.git_commit_tags IS NOT NULL
+                   AND C.git_commit_tags && %(commits_list)s::text[]
+               )
+            """
+    else:
+        checkout_ids_select = _get_hardware_tree_heads_clause(id_only=True)
+
+    selected_checkouts_cte = f"""
+            selected_checkouts AS (
+                {checkout_ids_select}
+            ),
+        """
 
     # The grouping by platform and compatibles is possible because a platform
     # can dictate the array of compatibles, meaning that if the array of compatibles
@@ -137,12 +164,7 @@ def get_hardware_listing_data(
     # to the tests, not checkouts. There are no platforms being tested by multiple origins yet.
     query = f"""
         WITH
-            -- Selects the id of the latest checkout of all trees in the given period.
-            -- No checkout data is returned in the end.
-            tree_heads AS (
-                {tree_head_clause}
-            ),
-            -- Selects all tests/builds related to those checkouts.
+            {selected_checkouts_cte}
             relevant_tests AS (
                 SELECT
                     "tests"."environment_compatible" AS hardware,
@@ -155,7 +177,7 @@ def get_hardware_listing_data(
                 FROM
                     tests
                     INNER JOIN builds b ON tests.build_id = b.id
-                    JOIN tree_heads TH ON b.checkout_id = TH.id
+                    JOIN selected_checkouts AC ON b.checkout_id = AC.id
                 WHERE
                     "tests"."environment_misc" ->> 'platform' IS NOT NULL
                     AND "tests"."origin" = %(origin)s
@@ -261,7 +283,10 @@ def get_hardware_listing_data_bulk(
 
 
 def get_hardware_listing_data_from_status_table(
-    start_date: datetime, end_date: datetime, origin: str
+    start_date: datetime,
+    end_date: datetime,
+    origin: str,
+    commits_list: Optional[list[str]] = None,
 ) -> list[tuple]:
     """
     Retrieves hardware listing data from the HardwareStatus denormalized table.
@@ -273,7 +298,49 @@ def get_hardware_listing_data_from_status_table(
         "origin": origin,
     }
 
-    query = """
+    if commits_list:
+        params["commits_list"] = commits_list
+        query = """
+        SELECT
+            platform,
+            compatibles AS hardware,
+            SUM(build_pass) AS build_pass,
+            SUM(build_failed) AS build_fail,
+            SUM(build_inc) AS build_null,
+            SUM(boot_pass) AS boot_pass,
+            SUM(boot_failed) AS boot_fail,
+            SUM(boot_inc) AS boot_null,
+            SUM(test_pass) AS test_pass,
+            SUM(test_failed) AS test_fail,
+            SUM(test_inc) AS test_null
+        FROM
+            hardware_status
+        INNER JOIN
+            checkouts C
+            ON
+                hardware_status.checkout_id = C.id
+            AND
+                C.start_time >= %(start_date)s
+            AND
+                C.start_time <= %(end_date)s
+            AND (
+                C.git_commit_hash = ANY(%(commits_list)s)
+                OR (
+                    C.git_commit_tags IS NOT NULL
+                    AND C.git_commit_tags && %(commits_list)s::text[]
+                )
+            )
+        WHERE
+            hardware_status.test_origin = %(origin)s
+        GROUP BY
+            platform,
+            compatibles
+        ORDER BY
+            platform,
+            compatibles
+    """
+    else:
+        query = """
         SELECT
             platform,
             compatibles AS hardware,

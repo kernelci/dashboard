@@ -26,6 +26,7 @@ import { HardwareTable } from './HardwareTable';
 
 interface HardwareListingPageV2Props {
   inputFilter: string;
+  commitsList?: string[];
   urlFromMap: HardwareListingRoutesMap['v2'];
 }
 
@@ -68,6 +69,7 @@ const useHardwareListingTime = (
 
 const HardwareListingPageV2 = ({
   inputFilter,
+  commitsList,
   urlFromMap,
 }: HardwareListingPageV2Props): JSX.Element => {
   const { startTimestampInSeconds, endTimestampInSeconds } =
@@ -78,6 +80,7 @@ const HardwareListingPageV2 = ({
     startTimestampInSeconds,
     endTimestampInSeconds,
     urlFromMap.search,
+    commitsList,
   );
 
   const listItems: HardwareItem[] = useMemo(() => {
