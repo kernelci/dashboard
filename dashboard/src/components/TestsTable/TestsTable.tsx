@@ -46,6 +46,7 @@ import {
   matchByPathSubstring,
   matchTestByPathSubstring,
 } from './filterTestsTree';
+import { collapseSingleChildChains } from './collapseTestsTree';
 
 export interface ITestsTable {
   tableKey: TableKeys;
@@ -93,13 +94,13 @@ export function TestsTable({
     [pathFilteredTree],
   );
 
-  const data = useMemo(
-    () =>
+  const data = useMemo(() => {
+    const filtered =
       filter === 'all'
         ? pathFilteredTree
-        : pruneTree(pathFilteredTree, { matchTest: matchByStatus(filter) }),
-    [pathFilteredTree, filter],
-  );
+        : pruneTree(pathFilteredTree, { matchTest: matchByStatus(filter) });
+    return collapseSingleChildChains(filtered);
+  }, [pathFilteredTree, filter]);
 
   const table = useReactTable({
     data,

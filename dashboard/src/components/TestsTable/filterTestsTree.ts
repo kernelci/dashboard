@@ -28,20 +28,17 @@ export function pruneTree(
 
     const nodeMatchesPath = predicates.matchNodePath?.(fullPath) ?? false;
 
-    let filteredSubGroups: TPathTests[] | undefined;
-    let filteredIndividualTests: TIndividualTest[];
-
     if (nodeMatchesPath) {
-      filteredSubGroups = node.sub_groups;
-      filteredIndividualTests = node.individual_tests;
-    } else {
-      filteredSubGroups = node.sub_groups
-        ? pruneTree(node.sub_groups, predicates)
-        : undefined;
-      filteredIndividualTests = node.individual_tests.filter(
-        predicates.matchTest,
-      );
+      results.push(node);
+      return;
     }
+
+    const filteredSubGroups = node.sub_groups
+      ? pruneTree(node.sub_groups, predicates)
+      : undefined;
+    const filteredIndividualTests = node.individual_tests.filter(
+      predicates.matchTest,
+    );
 
     const hasSubGroups = filteredSubGroups && filteredSubGroups.length > 0;
     const hasIndividualTests = filteredIndividualTests.length > 0;
@@ -51,14 +48,11 @@ export function pruneTree(
     }
 
     const localGroup: TPathTestsStatus = createEmptyGroupStatusCounts();
-
     filteredIndividualTests.forEach(t => {
       countStatus(localGroup, t.status);
     });
 
-    if (nodeMatchesPath) {
-      addCounts(localGroup, node);
-    } else if (hasSubGroups) {
+    if (hasSubGroups) {
       filteredSubGroups!.forEach(g => {
         addCounts(localGroup, g);
       });
