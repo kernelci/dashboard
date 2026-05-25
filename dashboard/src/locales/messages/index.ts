@@ -291,6 +291,7 @@ export const messages = {
     'routes.hardwareNewMonitor': 'Hardware New',
     'routes.issueDetails': 'Issue',
     'routes.issueMonitor': 'Issues',
+    'routes.metricsMonitor': 'Metrics',
     'routes.testDetails': 'Test',
     'routes.treeMonitor': 'Trees',
     'routes.unknown': 'Unknown',

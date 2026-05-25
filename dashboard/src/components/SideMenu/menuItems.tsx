@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 
-import { MdOutlineMonitorHeart } from 'react-icons/md';
+import { MdOutlineBarChart, MdOutlineMonitorHeart } from 'react-icons/md';
 import { RxRadiobutton } from 'react-icons/rx';
 import { ImTree } from 'react-icons/im';
 import { HiOutlineDocumentSearch } from 'react-icons/hi';
@@ -30,6 +30,7 @@ export type LinkStringItems = {
 const TreeIcon = <ImTree className="size-5" />;
 const MonitorHeartIcon = <MdOutlineMonitorHeart className="size-5" />;
 const RadioButtonIcon = <RxRadiobutton className="size-5" />;
+const MetricsIcon = <MdOutlineBarChart className="size-5" />;
 const DocumentSearchIcon = <HiOutlineDocumentSearch />;
 
 export const routeItems: RouteMenuItems[] = [
@@ -49,6 +50,12 @@ export const routeItems: RouteMenuItems[] = [
     navigateTo: '/issues',
     idIntl: 'routes.issueMonitor',
     icon: RadioButtonIcon,
+    selected: false,
+  },
+  {
+    navigateTo: '/metrics',
+    idIntl: 'routes.metricsMonitor',
+    icon: MetricsIcon,
     selected: false,
   },
 ];

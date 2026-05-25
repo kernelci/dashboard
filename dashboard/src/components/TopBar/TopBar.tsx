@@ -108,6 +108,8 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
       return <FormattedMessage id="routes.testDetails" />;
     case 'issue':
       return <FormattedMessage id="routes.issueDetails" />;
+    case 'metrics':
+      return <FormattedMessage id="routes.metricsMonitor" />;
     default:
       return <FormattedMessage id="routes.unknown" />;
   }
