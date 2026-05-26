@@ -55,9 +55,9 @@ const DEBOUNCE_INTERVAL = 2000;
 
 interface IHardwareHeader {
   treeItems: PreparedTrees[];
-  selectedIndexes: number[] | null;
+  selectedIndexes: string[] | null;
   updateTreeFilters: (
-    selectedIndexes: number[] | null,
+    selectedIndexes: string[] | null,
     options?: { replace?: boolean },
   ) => void;
   setTreeIndexesLength: Dispatch<SetStateAction<number>>;
@@ -333,7 +333,7 @@ const getColumns = (
 };
 
 const getInitialRowSelection = (
-  selectedIndexes: number[] | null,
+  selectedIndexes: string[] | null,
   treeItems: PreparedTrees[],
   isInitialLoad = false,
 ): Record<string, boolean> => {
@@ -352,27 +352,28 @@ const getInitialRowSelection = (
     );
   }
 
+  const normalizedSelectedIndexes = selectedIndexes.map(index => {
+    const numericIndex = Number(index);
+    return Number.isInteger(numericIndex) &&
+      numericIndex >= 0 &&
+      numericIndex < treeItems.length
+      ? treeItems[numericIndex]?.index ?? index
+      : index;
+  });
+  const selectedSet = new Set(normalizedSelectedIndexes);
   return Object.fromEntries(
-    selectedIndexes
-      .map(idx => treeItems.find(t => t.index === String(idx)))
-      .filter((t): t is PreparedTrees => !!t)
-      .map(t => [t.index, true]),
+    treeItems.map(item => [item.index, selectedSet.has(item.index)]),
   );
 };
 
 const indexesFromRowSelection = (
   rowSelection: RowSelectionState,
-): number[] | null => {
-  const rowSelectionValues = Object.values(rowSelection);
-  if (rowSelectionValues.length === 0) {
-    return [];
-  }
+): string[] | null => {
+  const selected = Object.entries(rowSelection)
+    .filter(([, isSelected]) => isSelected)
+    .map(([key]) => key);
 
-  const selectedIndexes = Object.keys(rowSelection).map(rowId =>
-    parseInt(rowId),
-  );
-
-  return selectedIndexes;
+  return selected;
 };
 
 export function HardwareHeader({
