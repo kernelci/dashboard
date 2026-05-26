@@ -92,15 +92,21 @@ def get_displayed_commit(*, tree: Tree, selected_commit: Optional[str]):
     return selected_commit
 
 
+def _is_legacy_numeric_keys(keys: Dict[str, str]) -> bool:
+    return bool(keys) and all(k.isdigit() for k in keys)
+
+
 def get_trees_with_selected_commit(
     *, trees: List[Tree], selected_commits: Dict[str, str]
 ) -> List[Tree]:
     selected: List[Tree] = []
 
-    for tree in trees:
-        tree_idx = tree.index
+    is_legacy = _is_legacy_numeric_keys(selected_commits)
 
-        raw_selected_commit = selected_commits.get(tree_idx)
+    for i, tree in enumerate(trees):
+        lookup_key = str(i) if is_legacy else tree.index
+
+        raw_selected_commit = selected_commits.get(lookup_key)
 
         is_tree_selected = raw_selected_commit is not None
 

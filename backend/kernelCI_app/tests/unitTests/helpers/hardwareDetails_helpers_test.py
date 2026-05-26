@@ -41,6 +41,8 @@ from kernelCI_app.helpers.hardwareDetails import (
     update_issues,
 )
 from kernelCI_app.tests.unitTests.helpers.fixtures.hardware_details_data import (
+    BASE_TREE_KEY,
+    DIFF_TREE_KEY,
     base_tree,
     base_tree_status_summary,
     create_test_summary,
@@ -126,9 +128,24 @@ class TestGetDisplayedCommit:
 
 class TestGetTreesWithSelectedCommit:
     def test_get_trees_with_selected_commit(self):
-        """Test get_trees_with_selected_commit function."""
+        """Test get_trees_with_selected_commit function with stable keys."""
         trees = [base_tree, tree_with_different_commit]
-        selected_commits = {"1": "custom123", "2": None}
+        selected_commits = {BASE_TREE_KEY: "custom123", DIFF_TREE_KEY: None}
+
+        result = get_trees_with_selected_commit(
+            trees=trees, selected_commits=selected_commits
+        )
+
+        assert len(result) == 2
+        assert result[0].head_git_commit_hash == "custom123"
+        assert result[0].is_selected is True
+        assert result[1].head_git_commit_hash == "def456"
+        assert result[1].is_selected is False
+
+    def test_get_trees_with_selected_commit_legacy_numeric_keys(self):
+        """Test backward compat: numeric keys still work for one release."""
+        trees = [base_tree, tree_with_different_commit]
+        selected_commits = {"0": "custom123"}
 
         result = get_trees_with_selected_commit(
             trees=trees, selected_commits=selected_commits

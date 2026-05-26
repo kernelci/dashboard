@@ -35,8 +35,12 @@ const HardwareCommitNavigationGraph = ({
   );
 
   const treeIdx =
-    trees.length === 1 ? 0 : treeIndexes?.length === 1 ? treeIndexes[0] : null;
-  const tree = treeIdx !== null && trees[treeIdx];
+    trees.length === 1
+      ? trees[0].index
+      : treeIndexes?.length === 1
+        ? treeIndexes[0]
+        : null;
+  const tree = treeIdx !== null && trees.find(t => t.index === treeIdx);
 
   const commitHeads = useMemo(
     (): CommitHead[] =>
@@ -61,7 +65,7 @@ const HardwareCommitNavigationGraph = ({
   );
 
   const commitsList = useMemo(() => {
-    const treeForIdentifier = treeIdx !== null ? trees[treeIdx] : undefined;
+    const treeForIdentifier = tree || undefined;
     const key = treeForIdentifier
       ? makeTreeIdentifierKey({
           treeName: treeForIdentifier.tree_name ?? '',
@@ -71,7 +75,7 @@ const HardwareCommitNavigationGraph = ({
       : '';
     const entries = commitHistoryData?.commit_history_table?.[key] ?? [];
     return entries.map(c => c.git_commit_hash);
-  }, [commitHistoryData?.commit_history_table, treeIdx, trees]);
+  }, [commitHistoryData?.commit_history_table, tree]);
 
   const markClickHandle = useCallback(
     (commitHash: string) => {
@@ -94,7 +98,7 @@ const HardwareCommitNavigationGraph = ({
     return <></>;
   }
 
-  const treeId = treeCommits?.[treeIdx] ?? tree['head_git_commit_hash'];
+  const treeId = treeCommits?.[treeIdx!] ?? tree['head_git_commit_hash'];
 
   return (
     <CommitNavigationGraph

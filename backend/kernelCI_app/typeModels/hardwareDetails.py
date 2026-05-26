@@ -79,7 +79,7 @@ class CommitHistoryValidCheckout(BaseModel):
 
 
 class Tree(BaseModel):
-    index: str
+    index: str = Field(description=DocStrings.HARDWARE_DETAILS_TREE_INDEX_DESCRIPTION)
     origin: Origin
     tree_name: Optional[str]
     git_repository_branch: Optional[str]
