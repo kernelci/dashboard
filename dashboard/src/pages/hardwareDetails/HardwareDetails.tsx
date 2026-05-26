@@ -229,6 +229,38 @@ function HardwareDetails(): JSX.Element {
       treeIndexesLength: treeIndexesLength,
     });
 
+  const hasLegacyNumericTreeKeys =
+    treeIndexes?.some(k => /^\d+$/.test(k)) ||
+    Object.keys(treeCommits).some(k => /^\d+$/.test(k));
+
+  useEffect(() => {
+    const trees = summaryResponse.data?.common.trees;
+    if (!trees || !hasLegacyNumericTreeKeys) {
+      return;
+    }
+
+    const mapKey = (k: string): string =>
+      /^\d+$/.test(k) ? trees[Number(k)]?.index ?? k : k;
+
+    navigate({
+      replace: true,
+      search: prev => ({
+        ...prev,
+        treeIndexes: treeIndexes ? [...new Set(treeIndexes.map(mapKey))] : null,
+        treeCommits: Object.fromEntries(
+          Object.entries(treeCommits).map(([k, v]) => [mapKey(k), v]),
+        ),
+      }),
+      state: s => s,
+    });
+  }, [
+    navigate,
+    summaryResponse.data,
+    treeCommits,
+    treeIndexes,
+    hasLegacyNumericTreeKeys,
+  ]);
+
   const hardwareStatusHistoryState = useRouterState({
     select: s => s.location.state.hardwareStatusCount,
   });
@@ -236,7 +268,7 @@ function HardwareDetails(): JSX.Element {
   const numIndexes = summaryResponse?.data?.common?.trees?.length || 0;
   const updateTreeFilters = useCallback(
     (
-      selectedIndexes: number[] | null,
+      selectedIndexes: string[] | null,
       { replace = false }: { replace?: boolean } = {},
     ) => {
       const numSelectedIndexes = selectedIndexes?.length || 0;
@@ -582,7 +614,7 @@ function HardwareDetails(): JSX.Element {
             </p>
           </div>
           <div className="mt-5">
-            {!!treeData && (
+            {!!treeData && !hasLegacyNumericTreeKeys && (
               <>
                 <HardwareHeader
                   treeItems={treeData}

@@ -52,7 +52,7 @@ export const parseSearch = (searchStr: string): AnySchema => {
       df_btdm: 'number',
       df_tdx: 'number',
       df_tdm: 'number',
-      x: 'number[]',
+      x: 'string[]',
       st: 'number',
       et: 'number',
       iv: 'number',

@@ -2849,7 +2849,13 @@ components:
         selectedCommits:
           additionalProperties:
             type: string
-          description: Dictionary mapping tree names to selected commit hashes
+          description: Dictionary mapping stable tree keys to selected commit hashes.
+            Keys are the first 14 hexadecimal characters of SHA-256 over 'tree_name|git_repository_branch|git_repository_url',
+            matching Tree.index values returned by the hardware details endpoints.
+            Values are a git commit hash or 'head' to use the tree head commit. An
+            empty object selects all trees with their head commits. Legacy clients
+            may send numeric string keys ('0', '1', ...) that map to trees by position
+            in the sorted tree list.
           title: Selectedcommits
           type: object
         filter:
@@ -3885,7 +3891,7 @@ components:
         id:
           $ref: '#/components/schemas/Test__Id'
         status:
-          $ref: '#/components/schemas/Test__Status'
+          $ref: '#/components/schemas/StatusValues'
         git_commit_hash:
           $ref: '#/components/schemas/Checkout__GitCommitHash'
       required:
@@ -4052,6 +4058,8 @@ components:
     Tree:
       properties:
         index:
+          description: Stable identifier for a tree, derived as the first 14 hexadecimal
+            characters of SHA-256 over 'tree_name|git_repository_branch|git_repository_url'
           title: Index
           type: string
         origin:
