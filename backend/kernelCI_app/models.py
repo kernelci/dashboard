@@ -499,3 +499,111 @@ class TreeTestsRollup(models.Model):
                 name="tree_tests_rollup_group_total",
             ),
         ]
+
+
+class HardwareRegistrySiliconVendor(models.Model):
+    id = models.TextField(primary_key=True)
+    type = models.CharField(max_length=64, blank=True)
+    url = models.TextField(blank=True, null=True)
+    details = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "hardware_registry_silicon_vendors"
+
+    def __str__(self) -> str:
+        return self.id
+
+
+class HardwareRegistryPlatformVendor(models.Model):
+    id = models.TextField(primary_key=True)
+    type = models.CharField(max_length=64, default="platform_vendor")
+    url = models.TextField(blank=True, null=True)
+    details = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "hardware_registry_platform_vendors"
+
+    def __str__(self) -> str:
+        return self.id
+
+
+class HardwareRegistryProcessor(models.Model):
+    id = models.TextField(primary_key=True)
+    type = models.CharField(max_length=64, default="soc")
+    vendor = models.ForeignKey(
+        HardwareRegistrySiliconVendor,
+        db_column="vendor_id",
+        on_delete=models.CASCADE,
+        related_name="hardware_registry_processors",
+    )
+    url = models.TextField(blank=True, null=True)
+    details = models.TextField(blank=True, null=True)
+    architecture = models.TextField(blank=True, null=True)
+    cores = models.IntegerField(blank=True, null=True)
+    max_clock_speed_mhz = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        db_table = "hardware_registry_processors"
+
+    def __str__(self) -> str:
+        return self.id
+
+
+class HardwareRegistrySystemModule(models.Model):
+    id = models.TextField(primary_key=True)
+    type = models.CharField(max_length=64)
+    vendor = models.ForeignKey(
+        HardwareRegistryPlatformVendor,
+        db_column="vendor_id",
+        on_delete=models.CASCADE,
+        related_name="hardware_registry_system_modules",
+    )
+    processor = models.ForeignKey(
+        HardwareRegistryProcessor,
+        db_column="processor_id",
+        on_delete=models.CASCADE,
+        related_name="hardware_registry_system_modules",
+    )
+    url = models.TextField(blank=True, null=True)
+    details = models.TextField(blank=True, null=True)
+    form_factor = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "hardware_registry_system_modules"
+
+    def __str__(self) -> str:
+        return self.id
+
+
+class HardwareRegistryPlatform(models.Model):
+    id = models.TextField(primary_key=True)
+    type = models.CharField(max_length=64)
+    vendor = models.ForeignKey(
+        HardwareRegistryPlatformVendor,
+        db_column="vendor_id",
+        on_delete=models.CASCADE,
+        related_name="hardware_registry_platforms",
+    )
+    processor = models.ForeignKey(
+        HardwareRegistryProcessor,
+        db_column="processor_id",
+        on_delete=models.CASCADE,
+        related_name="hardware_registry_platforms",
+    )
+    system_module = models.ForeignKey(
+        HardwareRegistrySystemModule,
+        db_column="system_module_id",
+        on_delete=models.CASCADE,
+        related_name="hardware_registry_platforms",
+        null=True,
+        blank=True,
+    )
+    url = models.TextField(blank=True, null=True)
+    details = models.TextField(blank=True, null=True)
+    form_factor = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "hardware_registry_platforms"
+
+    def __str__(self) -> str:
+        return self.id
