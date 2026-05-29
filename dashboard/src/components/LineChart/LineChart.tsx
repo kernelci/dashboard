@@ -36,7 +36,10 @@ export type TLineChartProps = {
   slotProps?: MUILineChartProps['slotProps'];
   height?: MUILineChartProps['height'];
   margin?: MUILineChartProps['margin'];
+  isLoading?: boolean;
 };
+
+const EmptyNoDataOverlay = (): null => null;
 
 export const LineChart = ({
   labels,
@@ -48,7 +51,13 @@ export const LineChart = ({
   height,
   margin,
   onMarkClick,
+  isLoading,
 }: TLineChartProps): JSX.Element => {
+  const mergedSlots = {
+    ...slots,
+    noDataOverlay: slots?.noDataOverlay ?? EmptyNoDataOverlay,
+  };
+
   return (
     <div className="px-4">
       {labels && (
@@ -58,12 +67,13 @@ export const LineChart = ({
         className="w-full"
         xAxis={xAxis}
         sx={sx}
-        slots={slots}
+        slots={mergedSlots}
         slotProps={slotProps}
         series={series}
         onMarkClick={onMarkClick}
         height={height}
         margin={margin}
+        loading={isLoading}
       />
     </div>
   );

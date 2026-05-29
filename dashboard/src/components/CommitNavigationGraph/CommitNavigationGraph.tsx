@@ -1,12 +1,26 @@
 import { useIntl } from 'react-intl';
 
-import { memo, useMemo, type JSX } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type JSX,
+} from 'react';
 
 import { z } from 'zod';
 
 import { useMediaQuery } from '@mui/material';
 
 import { useTheme } from '@mui/material/styles';
+
+import {
+  MdArrowBackIos,
+  MdArrowForwardIos,
+  MdFirstPage,
+  MdLastPage,
+} from 'react-icons/md';
 
 import { Colors } from '@/components/StatusChart/StatusCharts';
 import { LineChart } from '@/components/LineChart';
@@ -18,13 +32,20 @@ import { formatDate } from '@/utils/utils';
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 import { useCommitHistory } from '@/api/commitHistory';
 import type { TFilter, TreeEntityTypes } from '@/types/general';
+import type {
+  PaginatedCommitHistoryByTree,
+  TreeDetailsRouteFrom,
+} from '@/types/tree/TreeDetails';
 
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { gitValues } from '@/components/Tooltip/CommitTagTooltip';
-import type { TreeDetailsRouteFrom } from '@/types/tree/TreeDetails';
+
+import { Button } from '@/components/ui/button';
 
 const graphDisplaySize = 8;
+
+const NUM_SELECTED_COMMITS = 6;
 
 export const getChartXLabel = ({
   commitTags,
@@ -45,15 +66,85 @@ export const getChartXLabel = ({
   return content;
 };
 
+type PageTab = 'global.builds' | 'global.boots' | 'global.tests';
+
+type PlotInfo = {
+  treeEntityTypes: TreeEntityTypes[];
+  messageIds: {
+    graphName: MessagesKey;
+    good: MessagesKey;
+    bad: MessagesKey;
+    mid: MessagesKey;
+  };
+  aggregate: (item: PaginatedCommitHistoryByTree) => [number, number, number];
+};
+
+const plotInfoByTab = {
+  'global.builds': {
+    treeEntityTypes: ['builds'],
+    messageIds: {
+      graphName: 'treeDetails.buildsHistory',
+      good: 'treeDetails.validBuilds',
+      bad: 'treeDetails.invalidBuilds',
+      mid: 'treeDetails.inconclusiveBuilds',
+    },
+    aggregate: (item): [number, number, number] => [
+      item.builds.PASS,
+      item.builds.FAIL,
+      item.builds.MISS +
+        item.builds.SKIP +
+        item.builds.ERROR +
+        item.builds.DONE +
+        item.builds.NULL,
+    ],
+  },
+  'global.boots': {
+    treeEntityTypes: ['boots'],
+    messageIds: {
+      graphName: 'treeDetails.bootsHistory',
+      good: 'treeDetails.successBoots',
+      bad: 'treeDetails.failedBoots',
+      mid: 'treeDetails.inconclusiveBoots',
+    },
+    aggregate: (item): [number, number, number] => [
+      item.boots.pass,
+      item.boots.fail,
+      item.boots.miss +
+        item.boots.skip +
+        item.boots.error +
+        item.boots.done +
+        item.boots.null,
+    ],
+  },
+  'global.tests': {
+    treeEntityTypes: ['tests'],
+    messageIds: {
+      graphName: 'treeDetails.testsHistory',
+      good: 'treeDetails.testsSuccess',
+      bad: 'treeDetails.testsFailed',
+      mid: 'treeDetails.testsInconclusive',
+    },
+    aggregate: (item): [number, number, number] => [
+      item.tests.pass,
+      item.tests.fail,
+      item.tests.miss +
+        item.tests.skip +
+        item.tests.error +
+        item.tests.done +
+        item.tests.null,
+    ],
+  },
+} satisfies Record<PageTab, PlotInfo>;
+
 interface ICommitNavigationGraph {
   origin: string;
-  currentPageTab: string;
+  currentPageTab: PageTab;
   diffFilter: TFilter;
   gitUrl?: string;
   gitBranch?: string;
   headCommitHash?: string;
+  commitsList?: string[];
   treeId?: string;
-  commitsList: string[];
   startTimestampInSeconds?: number;
   endTimestampInSeconds?: number;
   onMarkClick: (commitHash: string, commitName?: string) => void;
@@ -62,20 +153,6 @@ interface ICommitNavigationGraph {
   buildsRelatedToFilteredTestsOnly?: boolean;
 }
 
-const selectedCommits = (
-  allCommits: string[] | undefined,
-  headCommit: string | undefined,
-): string[] => {
-  allCommits = allCommits || [];
-  headCommit = headCommit || '';
-  const NUM_SELECTED_COMMITS = 6;
-  const headIndex = allCommits.findIndex(x => x === headCommit);
-  if (headIndex < 0) {
-    return [];
-  }
-  return allCommits.slice(headIndex, headIndex + NUM_SELECTED_COMMITS);
-};
-
 const CommitNavigationGraph = ({
   origin,
   currentPageTab,
@@ -83,8 +160,8 @@ const CommitNavigationGraph = ({
   gitUrl,
   gitBranch,
   headCommitHash,
-  treeId,
   commitsList,
+  treeId,
   onMarkClick,
   endTimestampInSeconds,
   startTimestampInSeconds,
@@ -96,87 +173,124 @@ const CommitNavigationGraph = ({
 
   const reqFilter = mapFilterToReq(diffFilter);
 
-  const types: TreeEntityTypes[] = useMemo(() => {
-    switch (currentPageTab) {
-      case 'global.builds':
-        return ['builds'];
-      case 'global.boots':
-        return ['boots'];
-      case 'global.tests':
-        return ['tests'];
-      default:
-        return ['builds'];
+  const [allCommits, setAllCommits] = useState<
+    Map<string, PaginatedCommitHistoryByTree>
+  >(new Map());
+  const [visibleRange, setVisibleRange] = useState<[number, number]>([0, 0]);
+
+  const plotInfo = plotInfoByTab[currentPageTab];
+
+  useEffect(() => {
+    const commits = commitsList;
+    if (!commits?.length) {
+      setVisibleRange([0, 0]);
+      return;
     }
-  }, [currentPageTab]);
+    const start = commits.findIndex(c => c === headCommitHash);
+    const last = Math.min(start + NUM_SELECTED_COMMITS, commits.length);
+    setVisibleRange([start, last]);
+  }, [commitsList, headCommitHash]);
+
+  const commitHashes = useMemo(
+    () => commitsList?.slice(visibleRange[0], visibleRange[1]) ?? [],
+    [commitsList, visibleRange],
+  );
+
+  const missingCommitHashes = useMemo(
+    () => commitHashes.filter(h => !allCommits.has(h)),
+    [commitHashes, allCommits],
+  );
 
   const { data, status, error, isLoading } = useCommitHistory({
     gitBranch: gitBranch ?? '',
     gitUrl: gitUrl ?? '',
-    commitHash: selectedCommits(commitsList, headCommitHash),
+    commitHash: missingCommitHashes,
     origin: origin,
     filter: reqFilter,
     endTimestampInSeconds,
     startTimestampInSeconds,
     treeName,
     treeUrlFrom,
-    types,
+    types: plotInfo.treeEntityTypes,
     buildsRelatedToFilteredTestsOnly,
   });
 
-  const displayableData = data ? data : null;
-
-  type MessagesID = {
-    graphName: MessagesKey;
-    good: MessagesKey;
-    bad: MessagesKey;
-    mid: MessagesKey;
-  };
-
-  const messagesId: MessagesID = useMemo(() => {
-    switch (currentPageTab) {
-      case 'global.boots':
-        return {
-          graphName: 'treeDetails.bootsHistory',
-          good: 'treeDetails.successBoots',
-          bad: 'treeDetails.failedBoots',
-          mid: 'treeDetails.inconclusiveBoots',
-        } as MessagesID;
-      case 'global.tests':
-        return {
-          graphName: 'treeDetails.testsHistory',
-          good: 'treeDetails.testsSuccess',
-          bad: 'treeDetails.testsFailed',
-          mid: 'treeDetails.testsInconclusive',
-        } as MessagesID;
-      default:
-        return {
-          graphName: 'treeDetails.buildsHistory',
-          good: 'treeDetails.validBuilds',
-          bad: 'treeDetails.invalidBuilds',
-          mid: 'treeDetails.inconclusiveBuilds',
-        } as MessagesID;
+  useEffect(() => {
+    if (!data?.length) {
+      return;
     }
-  }, [currentPageTab]);
+    setAllCommits(prev => {
+      let next: Map<string, PaginatedCommitHistoryByTree> | null = null;
+      missingCommitHashes.forEach((commit, idx) => {
+        const incoming = data[idx];
+        if (incoming === undefined) {
+          return;
+        }
+        if (prev.get(commit) !== incoming) {
+          if (!next) {
+            next = new Map(prev);
+          }
+          next.set(commit, incoming);
+        }
+      });
+      return next ?? prev;
+    });
+  }, [data, missingCommitHashes]);
+
+  const canGoNewer = visibleRange[0] > 0;
+  const canGoOlder = visibleRange[1] < (commitsList?.length || 1) - 1;
+
+  const goNewer = useCallback(() => {
+    setVisibleRange(([start, end]) => [
+      Math.max(start - NUM_SELECTED_COMMITS, 0),
+      Math.max(end - NUM_SELECTED_COMMITS, NUM_SELECTED_COMMITS),
+    ]);
+  }, []);
+
+  const goNewest = useCallback(() => {
+    setVisibleRange(_ => [0, NUM_SELECTED_COMMITS] as [number, number]);
+  }, []);
+
+  const commitsLength = commitsList?.length ?? 0;
+
+  const goOlder = useCallback(() => {
+    const last = Math.max(commitsLength, 0);
+    setVisibleRange(
+      ([start, end]) =>
+        [
+          Math.min(start + NUM_SELECTED_COMMITS, last - NUM_SELECTED_COMMITS),
+          Math.min(end + NUM_SELECTED_COMMITS, last),
+        ] as [number, number],
+    );
+  }, [commitsLength]);
+
+  const goOldest = useCallback(() => {
+    const last = Math.max(commitsLength, 0);
+    setVisibleRange(_ => [last - NUM_SELECTED_COMMITS, last]);
+  }, [commitsLength]);
+
+  const visibleCommits = commitHashes
+    .map(commit => allCommits.get(commit))
+    .reverse();
 
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Transform the data to fit the format required by the MUI LineChart component
   const series: TLineChartProps['series'] = [
     {
       id: 'good',
-      label: formatMessage({ id: messagesId.good }),
+      label: formatMessage({ id: plotInfo.messageIds.good }),
       data: [],
       color: Colors.Green,
     },
     {
-      label: formatMessage({ id: messagesId.bad }),
+      label: formatMessage({ id: plotInfo.messageIds.bad }),
       id: 'bad',
       data: [],
       color: Colors.Red,
     },
     {
-      label: formatMessage({ id: messagesId.mid }),
+      label: formatMessage({ id: plotInfo.messageIds.mid }),
       id: 'mid',
       data: [],
       color: Colors.Gray,
@@ -195,56 +309,29 @@ const CommitNavigationGraph = ({
 
   const commitData: TCommitValue[] = [];
   const xAxisIndexes: number[] = [];
-  // TODO Extract the magic code to outside the component
-  data?.forEach((item, index) => {
-    if (currentPageTab === 'global.builds') {
-      const inconclusiveCount =
-        item.builds.MISS +
-        item.builds.SKIP +
-        item.builds.ERROR +
-        item.builds.DONE +
-        item.builds.NULL;
-      series[0].data?.unshift(item.builds.PASS);
-      series[1].data?.unshift(item.builds.FAIL);
-      series[2].data?.unshift(inconclusiveCount);
+
+  visibleCommits.forEach(item => {
+    if (!item) {
+      return;
     }
-    if (currentPageTab === 'global.boots') {
-      const inconclusiveCount =
-        item.boots.miss +
-        item.boots.skip +
-        item.boots.error +
-        item.boots.done +
-        item.boots.null;
-      series[0].data?.unshift(item.boots.pass);
-      series[1].data?.unshift(item.boots.fail);
-      series[2].data?.unshift(inconclusiveCount);
-    }
-    if (currentPageTab === 'global.tests') {
-      const inconclusiveCount =
-        item.tests.miss +
-        item.tests.skip +
-        item.tests.error +
-        item.tests.done +
-        item.tests.null;
-      series[0].data?.unshift(item.tests.pass);
-      series[1].data?.unshift(item.tests.fail);
-      series[2].data?.unshift(inconclusiveCount);
-    }
-    commitData.unshift({
+    const [good, bad, mid] = plotInfo.aggregate(item);
+    series[0].data?.push(good);
+    series[1].data?.push(bad);
+    series[2].data?.push(mid);
+    commitData.push({
       commitHash: item.git_commit_hash,
       commitName: item.git_commit_name,
       commitTags: item.git_commit_tags,
       earliestStartTime: item.earliest_start_time,
     });
 
-    xAxisIndexes.push(index);
+    xAxisIndexes.push(commitData.length - 1);
   });
 
-  // filter only selected, first and last commit
   const smallScreenTickFilter = (value: number, _: number): boolean =>
     value === 0 ||
     value === commitData.length - 1 ||
-    commitData[value].commitHash === treeId;
+    commitData[value]?.commitHash === treeId;
 
   // tickLabelInterval can be set to auto, or to a custom filter
   const tickLabelInterval = isSmallScreen ? smallScreenTickFilter : 'auto';
@@ -257,13 +344,15 @@ const CommitNavigationGraph = ({
       valueFormatter: (value: number, context): string => {
         const currentCommitData = commitData[value];
         const currentCommitDateTime = formatDate(
-          currentCommitData.earliestStartTime ?? '-',
+          currentCommitData?.earliestStartTime ?? '-',
           true,
         );
 
         if (context.location === 'tooltip') {
           return (
-            (currentCommitData.commitName ?? currentCommitData.commitHash) +
+            (currentCommitData?.commitName ??
+              currentCommitData?.commitHash ??
+              '') +
             ' - ' +
             currentCommitDateTime
           );
@@ -275,13 +364,15 @@ const CommitNavigationGraph = ({
     },
   ];
 
+  const querySwitcherStatus = allCommits?.size > 0 ? 'success' : status;
+
   return (
     <QuerySwitcher
-      status={status}
-      data={displayableData}
+      status={querySwitcherStatus}
+      data={visibleCommits}
       customError={
         <MemoizedSectionError
-          isLoading={isLoading}
+          isLoading={isLoading && allCommits.size === 0}
           errorMessage={error?.message}
           emptyLabel={'global.error'}
           forceErrorMessageUse
@@ -289,92 +380,134 @@ const CommitNavigationGraph = ({
       }
     >
       <BaseCard
-        title={formatMessage({ id: messagesId.graphName })}
+        title={formatMessage({ id: plotInfo.messageIds.graphName })}
         content={
-          <LineChart
-            height={400}
-            margin={{ top: 100 }}
-            xAxis={xAxis}
-            series={series}
-            sx={{
-              '& .MuiChartsAxis-directionY .MuiChartsAxis-tickContainer:first-of-type':
-                {
-                  display: 'none', // hides first tick on y axis (avoiding text colision)
+          <>
+            <LineChart
+              height={400}
+              isLoading={isLoading}
+              margin={{ top: 100 }}
+              xAxis={xAxis}
+              series={series}
+              sx={{
+                '& .MuiChartsAxis-directionY .MuiChartsAxis-tickContainer:first-of-type':
+                  {
+                    display: 'none',
+                  },
+              }}
+              slotProps={{
+                legend: {
+                  itemGap: 2,
+                  position: { vertical: 'top', horizontal: 'middle' },
                 },
-            }}
-            slotProps={{
-              legend: {
-                itemGap: 2,
-                position: { vertical: 'top', horizontal: 'middle' },
-              },
-            }}
-            slots={{
-              axisTickLabel: chartTextProps => {
-                let displayText = chartTextProps.text;
-                const splitResult = chartTextProps.text.split('-');
+              }}
+              slots={{
+                axisTickLabel: chartTextProps => {
+                  let displayText = chartTextProps.text;
+                  const splitResult = chartTextProps.text.split('-');
 
-                const possibleIdentifier = splitResult[0];
+                  const possibleIdentifier = splitResult[0];
 
-                let isCurrentCommit = false;
-                if (possibleIdentifier === 'commitIndex') {
-                  const possibleIndex = splitResult[1];
-                  const possibleIndexNumber = parseInt(possibleIndex);
-                  const parsedPossibleIndex = z
-                    .number()
-                    .catch(e => {
-                      console.error('Error parsing index', e);
-                      return 0;
-                    })
-                    .parse(possibleIndexNumber);
+                  let isCurrentCommit = false;
+                  if (possibleIdentifier === 'commitIndex') {
+                    const possibleIndex = splitResult[1];
+                    const possibleIndexNumber = parseInt(possibleIndex);
+                    const parsedPossibleIndex = z
+                      .number()
+                      .catch(e => {
+                        console.error('Error parsing index', e);
+                        return 0;
+                      })
+                      .parse(possibleIndexNumber);
 
-                  isCurrentCommit =
-                    treeId === commitData[parsedPossibleIndex].commitHash;
+                    const row = commitData[parsedPossibleIndex];
+                    isCurrentCommit = treeId === row?.commitHash;
 
-                  displayText = getChartXLabel(commitData[parsedPossibleIndex]);
+                    if (row) {
+                      displayText = getChartXLabel(row);
+                    }
+                  }
+
+                  return (
+                    <>
+                      {isCurrentCommit && (
+                        <>
+                          <polygon points="-5,-250 5,-250 0,-240" fill="blue" />
+                          <line
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="-250"
+                            stroke="blue"
+                            strokeWidth="2"
+                            strokeDasharray="5,5"
+                          />
+                        </>
+                      )}
+
+                      <text
+                        className="MuiChartsAxis-tickLabel"
+                        x="0"
+                        y="9"
+                        textAnchor="middle"
+                        dominantBaseline="hanging"
+                        style={{ fontSize: '0.9rem' }}
+                      >
+                        <tspan x="0" dy="0px" dominantBaseline="hanging">
+                          {displayText}
+                        </tspan>
+                      </text>
+                    </>
+                  );
+                },
+              }}
+              onMarkClick={(_event, payload) => {
+                const commitIndex = payload.dataIndex ?? 0;
+                const row = commitData[commitIndex];
+                if (row?.commitHash) {
+                  onMarkClick(row.commitHash, row.commitName);
                 }
-
-                return (
-                  <>
-                    {isCurrentCommit && (
-                      <>
-                        <polygon points="-5,-250 5,-250 0,-240" fill="blue" />
-                        <line
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="-250"
-                          stroke="blue"
-                          strokeWidth="2"
-                          strokeDasharray="5,5"
-                        />
-                      </>
-                    )}
-
-                    <text
-                      className="MuiChartsAxis-tickLabel"
-                      x="0"
-                      y="9"
-                      textAnchor="middle"
-                      dominantBaseline="hanging"
-                      style={{ fontSize: '0.9rem' }}
-                    >
-                      <tspan x="0" dy="0px" dominantBaseline="hanging">
-                        {displayText}
-                      </tspan>
-                    </text>
-                  </>
-                );
-              },
-            }}
-            onMarkClick={(_event, payload) => {
-              const commitIndex = payload.dataIndex ?? 0;
-              const commitHash = commitData[commitIndex].commitHash;
-              const commitName = commitData[commitIndex].commitName;
-              if (commitHash) {
-                onMarkClick(commitHash, commitName);
-              }
-            }}
-          />
+              }}
+            />
+            <div className="mb-2 flex items-center justify-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goOldest}
+                disabled={isLoading || !canGoOlder}
+                title={formatMessage({ id: 'global.first' })}
+              >
+                <MdFirstPage className="text-blue" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goOlder}
+                disabled={isLoading || !canGoOlder}
+                title={formatMessage({ id: 'global.older' })}
+              >
+                <MdArrowBackIos className="text-blue" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goNewer}
+                disabled={isLoading || !canGoNewer}
+                title={formatMessage({ id: 'global.newer' })}
+              >
+                <MdArrowForwardIos className="text-blue" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goNewest}
+                disabled={isLoading || !canGoNewer}
+                title={formatMessage({ id: 'global.last' })}
+              >
+                <MdLastPage className="text-blue" />
+              </Button>
+            </div>
+          </>
         }
       />
     </QuerySwitcher>
