@@ -150,6 +150,14 @@ HEALTHCHECK_MONITORING_PATH_MAP: dict[str, str] = {
 }
 """Maps monitoring_id to the relative_path that will be appended to the base healthcheck URL."""
 
+DEFAULT_HARDWARE_REGISTRY_INDEX_URL = (
+    "https://raw.githubusercontent.com/kernelci/kernelci-pipeline/main/"
+    "config/hardware_registry/index.yaml"
+)
+HARDWARE_REGISTRY_INDEX_URL = os.environ.get(
+    "HARDWARE_REGISTRY_INDEX_URL", DEFAULT_HARDWARE_REGISTRY_INDEX_URL
+)
+
 SKIP_CRONJOBS = is_boolean_or_string_true(os.environ.get("SKIP_CRONJOBS", False))
 if SKIP_CRONJOBS:
     CRONJOBS = []
@@ -234,6 +242,14 @@ else:
                 "--cc=kernelci-results@groups.io",
                 "--send",
                 "--yes",
+            ],
+        ),
+        (
+            "0 3 * * *",
+            "django.core.management.call_command",
+            [
+                "update_hardware_registry",
+                f"--index={HARDWARE_REGISTRY_INDEX_URL}",
             ],
         ),
     ]
