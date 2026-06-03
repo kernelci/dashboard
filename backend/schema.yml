@@ -171,55 +171,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HardwareListingResponse'
-          description: ''
-  /api/hardware-v2/:
-    get:
-      operationId: hardware_v2_retrieve
-      parameters:
-      - in: query
-        name: commitsList
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          title: Commitslist
-        description: 'Optional comma-separated git commit identifiers: full SHA(s)
-          and/or tag strings that appear in checkout.git_commit_tags.'
-      - in: query
-        name: endTimestampInSeconds
-        schema:
-          title: Endtimestampinseconds
-          type: string
-        description: Interval end timestamp in seconds for the results
-        required: true
-      - in: query
-        name: origin
-        schema:
-          default: maestro
-          title: Origin
-          type: string
-        description: Origin of the hardware
-      - in: query
-        name: startTimestampInSeconds
-        schema:
-          title: Starttimestampinseconds
-          type: string
-        description: Interval start timestamp in seconds for the results
-        required: true
-      tags:
-      - hardware-v2
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HardwareListingResponseV2'
+                $ref: '#/components/schemas/HardwareListingByRevisionResponse'
           description: ''
   /api/hardware/{hardware_id}:
     post:
@@ -685,6 +637,47 @@ paths:
               schema:
                 $ref: '#/components/schemas/LogDownloaderResponse'
           description: ''
+  /api/metrics/:
+    get:
+      operationId: metrics_retrieve
+      parameters:
+      - in: query
+        name: end_days_ago
+        schema:
+          default: 0
+          minimum: 0
+          title: End Days Ago
+          type: integer
+        description: Number of days ago that marks the end of the metrics interval
+      - in: query
+        name: start_days_ago
+        schema:
+          default: 7
+          minimum: 0
+          title: Start Days Ago
+          type: integer
+        description: Number of days ago that marks the start of the metrics interval
+      tags:
+      - metrics
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+          description: ''
   /api/origins/:
     get:
       operationId: origins_retrieve
@@ -1050,38 +1043,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/TreeListingResponse'
           description: ''
-  /api/tree-fast/:
-    get:
-      operationId: tree_fast_retrieve
-      parameters:
-      - in: query
-        name: interval_in_days
-        schema:
-          default: 7
-          exclusiveMinimum: 0
-          title: Interval In Days
-          type: integer
-        description: Interval in days for the listing
-      - in: query
-        name: origin
-        schema:
-          default: maestro
-          title: Origin
-          type: string
-        description: Origin filter
-      tags:
-      - tree-fast
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TreeListingFastResponse'
-          description: ''
   /api/tree-report/:
     get:
       operationId: tree_report_retrieve
@@ -1155,38 +1116,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TreeReportResponse'
-          description: ''
-  /api/tree-v2/:
-    get:
-      operationId: tree_v2_retrieve
-      parameters:
-      - in: query
-        name: interval_in_days
-        schema:
-          default: 7
-          exclusiveMinimum: 0
-          title: Interval In Days
-          type: integer
-        description: Interval in days for the listing
-      - in: query
-        name: origin
-        schema:
-          default: maestro
-          title: Origin
-          type: string
-        description: Origin filter
-      tags:
-      - tree-v2
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TreeListingResponseV2'
           description: ''
   /api/tree/{commit_hash}/boots:
     get:
@@ -2180,6 +2109,27 @@ components:
       - git_repository_branch
       title: BuildHistoryItem
       type: object
+    BuildIncidentsCount:
+      properties:
+        total_incidents:
+          title: Total Incidents
+          type: integer
+        n_new_issues:
+          title: N New Issues
+          type: integer
+        n_existing_issues:
+          title: N Existing Issues
+          type: integer
+        n_total_issues:
+          title: N Total Issues
+          type: integer
+      required:
+      - total_incidents
+      - n_new_issues
+      - n_existing_issues
+      - n_total_issues
+      title: BuildIncidentsCount
+      type: object
     BuildSummary:
       properties:
         status:
@@ -2322,97 +2272,6 @@ components:
       anyOf:
       - $ref: '#/components/schemas/StatusValues'
       - type: 'null'
-    Checkout:
-      properties:
-        git_repository_url:
-          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
-        git_commit_hash:
-          $ref: '#/components/schemas/Checkout__GitCommitHash'
-        git_commit_name:
-          $ref: '#/components/schemas/Checkout__GitCommitName'
-        origin:
-          $ref: '#/components/schemas/Origin'
-        git_repository_branch:
-          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
-        start_time:
-          $ref: '#/components/schemas/Timestamp'
-        origin_builds_finish_time:
-          $ref: '#/components/schemas/Checkout__OriginBuildsFinishTime'
-        origin_tests_finish_time:
-          $ref: '#/components/schemas/Checkout__OriginTestsFinishTime'
-        id:
-          $ref: '#/components/schemas/Checkout__Id'
-        build_status:
-          $ref: '#/components/schemas/StatusCount'
-        test_status:
-          $ref: '#/components/schemas/TestStatusCount'
-        boot_status:
-          $ref: '#/components/schemas/TestStatusCount'
-        tree_name:
-          $ref: '#/components/schemas/Checkout__TreeName'
-        git_commit_tags:
-          items:
-            $ref: '#/components/schemas/Checkout__GitCommitTags'
-          title: Git Commit Tags
-          type: array
-      required:
-      - git_repository_url
-      - git_commit_hash
-      - git_commit_name
-      - origin
-      - git_repository_branch
-      - start_time
-      - origin_builds_finish_time
-      - origin_tests_finish_time
-      - id
-      - build_status
-      - test_status
-      - boot_status
-      - tree_name
-      - git_commit_tags
-      title: Checkout
-      type: object
-    CheckoutFast:
-      properties:
-        git_repository_url:
-          $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
-        git_commit_hash:
-          $ref: '#/components/schemas/Checkout__GitCommitHash'
-        git_commit_name:
-          $ref: '#/components/schemas/Checkout__GitCommitName'
-        origin:
-          $ref: '#/components/schemas/Origin'
-        git_repository_branch:
-          $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
-        start_time:
-          $ref: '#/components/schemas/Timestamp'
-        origin_builds_finish_time:
-          $ref: '#/components/schemas/Checkout__OriginBuildsFinishTime'
-        origin_tests_finish_time:
-          $ref: '#/components/schemas/Checkout__OriginTestsFinishTime'
-        id:
-          $ref: '#/components/schemas/Checkout__Id'
-        tree_name:
-          $ref: '#/components/schemas/Checkout__TreeName'
-        patchset_hash:
-          $ref: '#/components/schemas/Checkout__PatchsetHash'
-        git_commit_tags:
-          $ref: '#/components/schemas/Checkout__GitCommitTags'
-      required:
-      - git_repository_url
-      - git_commit_hash
-      - git_commit_name
-      - origin
-      - git_repository_branch
-      - start_time
-      - origin_builds_finish_time
-      - origin_tests_finish_time
-      - id
-      - tree_name
-      - patchset_hash
-      - git_commit_tags
-      title: CheckoutFast
-      type: object
     CheckoutIssue:
       description: Represents a build issue found in a checkout.
       properties:
@@ -2484,20 +2343,6 @@ components:
       - type: 'null'
     Checkout__Id:
       type: string
-    Checkout__OriginBuildsFinishTime:
-      anyOf:
-      - format: date-time
-        type: string
-      - type: 'null'
-    Checkout__OriginTestsFinishTime:
-      anyOf:
-      - format: date-time
-        type: string
-      - type: 'null'
-    Checkout__PatchsetHash:
-      anyOf:
-      - type: string
-      - type: 'null'
     Checkout__TreeName:
       anyOf:
       - type: string
@@ -2994,7 +2839,6 @@ components:
           - items:
               type: string
             type: array
-            uniqueItems: true
           - type: 'null'
           title: Hardware
         platform:
@@ -3014,7 +2858,18 @@ components:
       - build_status_summary
       title: HardwareItem
       type: object
-    HardwareItemV2:
+    HardwareListingByRevisionResponse:
+      properties:
+        hardware:
+          items:
+            $ref: '#/components/schemas/HardwareItem'
+          title: Hardware
+          type: array
+      required:
+      - hardware
+      title: HardwareListingByRevisionResponse
+      type: object
+    HardwareListingItem:
       properties:
         hardware:
           anyOf:
@@ -3029,40 +2884,29 @@ components:
           title: Platform
           type: string
         test_status_summary:
-          $ref: '#/components/schemas/StatusCountV2'
+          $ref: '#/components/schemas/ListingStatusCount'
         boot_status_summary:
-          $ref: '#/components/schemas/StatusCountV2'
+          $ref: '#/components/schemas/ListingStatusCount'
         build_status_summary:
-          $ref: '#/components/schemas/StatusCountV2'
+          $ref: '#/components/schemas/ListingStatusCount'
       required:
       - hardware
       - platform
       - test_status_summary
       - boot_status_summary
       - build_status_summary
-      title: HardwareItemV2
+      title: HardwareListingItem
       type: object
     HardwareListingResponse:
       properties:
         hardware:
           items:
-            $ref: '#/components/schemas/HardwareItem'
+            $ref: '#/components/schemas/HardwareListingItem'
           title: Hardware
           type: array
       required:
       - hardware
       title: HardwareListingResponse
-      type: object
-    HardwareListingResponseV2:
-      properties:
-        hardware:
-          items:
-            $ref: '#/components/schemas/HardwareItemV2'
-          title: Hardware
-          type: array
-      required:
-      - hardware
-      title: HardwareListingResponseV2
       type: object
     HardwareSelectorBranch:
       properties:
@@ -3589,6 +3433,45 @@ components:
       - type: 'null'
     Issue__Version:
       type: integer
+    LabMetricsData:
+      properties:
+        builds:
+          title: Builds
+          type: integer
+        boots:
+          title: Boots
+          type: integer
+        tests:
+          title: Tests
+          type: integer
+      required:
+      - builds
+      - boots
+      - tests
+      title: LabMetricsData
+      type: object
+    ListingStatusCount:
+      properties:
+        PASS:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Pass
+        FAIL:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Fail
+        INCONCLUSIVE:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 0
+          title: Inconclusive
+      title: ListingStatusCount
+      type: object
     LocalFilters:
       properties:
         issues:
@@ -3662,6 +3545,77 @@ components:
       required:
       - log_files
       title: LogDownloaderResponse
+      type: object
+    MetricsResponse:
+      properties:
+        n_trees:
+          title: N Trees
+          type: integer
+        n_checkouts:
+          title: N Checkouts
+          type: integer
+        n_builds:
+          title: N Builds
+          type: integer
+        n_tests:
+          title: N Tests
+          type: integer
+        n_issues:
+          title: N Issues
+          type: integer
+        n_incidents:
+          title: N Incidents
+          type: integer
+        build_incidents_by_origin:
+          additionalProperties:
+            $ref: '#/components/schemas/BuildIncidentsCount'
+          title: Build Incidents By Origin
+          type: object
+        top_issues_by_origin:
+          additionalProperties:
+            items:
+              $ref: '#/components/schemas/TopIssue'
+            type: array
+          title: Top Issues By Origin
+          type: object
+        lab_maps:
+          additionalProperties:
+            $ref: '#/components/schemas/LabMetricsData'
+          title: Lab Maps
+          type: object
+        prev_n_trees:
+          title: Prev N Trees
+          type: integer
+        prev_n_checkouts:
+          title: Prev N Checkouts
+          type: integer
+        prev_n_builds:
+          title: Prev N Builds
+          type: integer
+        prev_n_tests:
+          title: Prev N Tests
+          type: integer
+        prev_lab_maps:
+          additionalProperties:
+            $ref: '#/components/schemas/LabMetricsData'
+          title: Prev Lab Maps
+          type: object
+      required:
+      - n_trees
+      - n_checkouts
+      - n_builds
+      - n_tests
+      - n_issues
+      - n_incidents
+      - build_incidents_by_origin
+      - top_issues_by_origin
+      - lab_maps
+      - prev_n_trees
+      - prev_n_checkouts
+      - prev_n_builds
+      - prev_n_tests
+      - prev_lab_maps
+      title: MetricsResponse
       type: object
     Origin:
       type: string
@@ -3771,28 +3725,6 @@ components:
           default: 0
           title: 'Null'
       title: StatusCount
-      type: object
-    StatusCountV2:
-      properties:
-        PASS:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 0
-          title: Pass
-        FAIL:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 0
-          title: Fail
-        INCONCLUSIVE:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 0
-          title: Inconclusive
-      title: StatusCountV2
       type: object
     StatusValues:
       enum:
@@ -4210,6 +4142,27 @@ components:
       - format: date-time
         type: string
       - type: 'null'
+    TopIssue:
+      properties:
+        id:
+          title: Id
+          type: string
+        version:
+          title: Version
+          type: integer
+        comment:
+          title: Comment
+          type: string
+        total_incidents:
+          title: Total Incidents
+          type: integer
+      required:
+      - id
+      - version
+      - comment
+      - total_incidents
+      title: TopIssue
+      type: object
     Tree:
       properties:
         index:
@@ -4435,21 +4388,16 @@ components:
       - git_repository_branch
       title: TreeLatestResponse
       type: object
-    TreeListingFastResponse:
-      items:
-        $ref: '#/components/schemas/CheckoutFast'
-      title: TreeListingFastResponse
-      type: array
     TreeListingItem:
       properties:
         id:
           $ref: '#/components/schemas/Checkout__Id'
         build_status:
-          $ref: '#/components/schemas/StatusCountV2'
+          $ref: '#/components/schemas/ListingStatusCount'
         boot_status:
-          $ref: '#/components/schemas/StatusCountV2'
+          $ref: '#/components/schemas/ListingStatusCount'
         test_status:
-          $ref: '#/components/schemas/StatusCountV2'
+          $ref: '#/components/schemas/ListingStatusCount'
         tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
         git_commit_tags:
@@ -4483,13 +4431,8 @@ components:
       type: object
     TreeListingResponse:
       items:
-        $ref: '#/components/schemas/Checkout'
-      title: TreeListingResponse
-      type: array
-    TreeListingResponseV2:
-      items:
         $ref: '#/components/schemas/TreeListingItem'
-      title: TreeListingResponseV2
+      title: TreeListingResponse
       type: array
     TreeReportIssues:
       properties:

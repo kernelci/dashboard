@@ -57,7 +57,7 @@ import { useHardwareDetailsLazyLoadQuery } from '@/hooks/useHardwareDetailsLazyL
 import { useQueryInconsistencyInvalidator } from '@/hooks/useQueryInconsistencyInvalidator';
 
 import type { GroupedStatus } from '@/utils/status';
-import { groupStatus, statusCountToRequiredStatusCount } from '@/utils/status';
+import { groupStatus, statusCountToShortStatusCount } from '@/utils/status';
 
 import PageWithTitle from '@/components/PageWithTitle';
 
@@ -266,9 +266,9 @@ function HardwareDetails(): JSX.Element {
       const { boots, builds, tests } = data.summary;
 
       return {
-        boots: statusCountToRequiredStatusCount(boots.status),
-        tests: statusCountToRequiredStatusCount(tests.status),
-        builds: builds.status,
+        boots: statusCountToShortStatusCount(boots.status),
+        tests: statusCountToShortStatusCount(tests.status),
+        builds: statusCountToShortStatusCount(builds.status),
       } satisfies HardwareStatusComparedState;
     }, [summaryResponse]);
 

@@ -30,7 +30,7 @@ class ListingQueryParameters(ListingInterval):
     ]
 
 
-class StatusCountV2(BaseModel):
+class ListingStatusCount(BaseModel):
     PASS: Optional[int] = 0
     FAIL: Optional[int] = 0
     INCONCLUSIVE: Optional[int] = 0

@@ -1,16 +1,4 @@
-import type { RequiredStatusCount, ShortStatusCount } from '@/types/general';
-
-export type TreeFastPathResponse = Array<{
-  id: string;
-  tree_name?: string;
-  git_repository_branch: string;
-  git_repository_url: string;
-  git_commit_hash: string;
-  git_commit_name?: string;
-  git_commit_tags?: string[];
-  patchset_hash?: string;
-  start_time: string;
-}>;
+import type { ShortStatusCount } from '@/types/general';
 
 export type TableTestStatus = {
   done: number;
@@ -33,17 +21,7 @@ type BaseTree = {
   git_commit_tags?: string[];
 };
 
-type AllTabCounts = {
-  build_status?: RequiredStatusCount;
-  test_status?: TableTestStatus;
-  boot_status?: TableTestStatus;
-};
-
-export type TreeTableBody = BaseTree & AllTabCounts;
-
-export type Tree = BaseTree & Required<AllTabCounts>;
-
-export type TreeV2 = BaseTree & {
+export type TreeListingItem = BaseTree & {
   build_status: ShortStatusCount;
   test_status: ShortStatusCount;
   boot_status: ShortStatusCount;

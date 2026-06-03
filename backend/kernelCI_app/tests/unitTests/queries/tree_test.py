@@ -1,72 +1,13 @@
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from kernelCI_app.queries.tree import (
     get_latest_tree,
     get_tree_details_data,
-    get_tree_listing_data,
-    get_tree_listing_data_by_checkout_id,
-    get_tree_listing_fast,
 )
 from kernelCI_app.tests.unitTests.queries.conftest import (
     setup_mock_cursor,
     setup_mock_queryset,
 )
-
-
-class TestGetTreeListingData:
-    @patch("kernelCI_app.queries.tree.dict_fetchall")
-    @patch("kernelCI_app.queries.tree.connection")
-    def test_get_tree_listing_data_success(self, mock_connection, mock_dict_fetchall):
-        expected_result = [{"checkout_id": "checkout", "tree_name": "mainline"}]
-        mock_dict_fetchall.return_value = expected_result
-        setup_mock_cursor(mock_connection)
-
-        result = get_tree_listing_data(origin="maestro", interval_in_days=7)
-
-        assert result == expected_result
-
-
-class TestGetTreeListingFast:
-    @patch("kernelCI_app.queries.tree.get_query_time_interval")
-    @patch("kernelCI_app.queries.tree.Checkouts")
-    def test_get_tree_listing_fast_with_origin(
-        self, mock_checkouts_model, mock_get_interval
-    ):
-        mock_get_interval.return_value.timestamp.return_value = 1704067200.0
-        mock_checkouts_model.objects.raw.return_value = [Mock(id="checkout")]
-
-        result = get_tree_listing_fast(origin="maestro", interval={"days": 7})
-
-        assert len(result) == 1
-
-    @patch("kernelCI_app.queries.tree.get_query_time_interval")
-    @patch("kernelCI_app.queries.tree.Checkouts")
-    def test_get_tree_listing_fast_without_origin(
-        self, mock_checkouts_model, mock_get_interval
-    ):
-        mock_get_interval.return_value.timestamp.return_value = 1704067200.0
-        mock_checkouts_model.objects.raw.return_value = []
-
-        result = get_tree_listing_fast(origin=None, interval={"days": 7})
-
-        assert result == []
-
-
-class TestGetTreeListingDataByCheckoutId:
-    @patch("kernelCI_app.queries.tree.dict_fetchall")
-    @patch("kernelCI_app.queries.tree.connection")
-    def test_get_tree_listing_data_by_checkout_id_success(
-        self, mock_connection, mock_dict_fetchall
-    ):
-        expected_result = [{"id": "checkout_1", "tree_name": "mainline"}]
-        mock_dict_fetchall.return_value = expected_result
-        setup_mock_cursor(mock_connection)
-
-        result = get_tree_listing_data_by_checkout_id(
-            checkout_ids=["checkout_1", "checkout_2"]
-        )
-
-        assert result == expected_result
 
 
 class TestGetTreeDetailsData:

@@ -38,26 +38,11 @@ tree_listing = [
     "build_status",
     "test_status",
     "boot_status",
-    "origin_builds_finish_time",
-    "origin_tests_finish_time",
 ]
-tree_listing_build_status = [
-    "FAIL",
-    "ERROR",
-    "MISS",
+tree_listing_status = [
     "PASS",
-    "DONE",
-    "SKIP",
-    "NULL",
-]
-tree_listing_test_status = [
-    "fail",
-    "error",
-    "miss",
-    "pass",
-    "done",
-    "skip",
-    "null",
+    "FAIL",
+    "INCONCLUSIVE",
 ]
 tree_commit_history = [
     "git_commit_hash",

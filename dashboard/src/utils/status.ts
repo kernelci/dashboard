@@ -1,5 +1,9 @@
 import type { Status } from '@/types/database';
-import type { StatusCount, RequiredStatusCount } from '@/types/general';
+import type {
+  StatusCount,
+  RequiredStatusCount,
+  ShortStatusCount,
+} from '@/types/general';
 import type { AccordionItemBuilds } from '@/types/tree/TreeDetails';
 
 type StatusGroups = 'success' | 'failed' | 'inconclusive';
@@ -76,5 +80,25 @@ export const statusCountToRequiredStatusCount = (
     ERROR: statusCount.ERROR ?? 0,
     NULL: statusCount.NULL ?? 0,
     DONE: statusCount.DONE ?? 0,
+  };
+};
+
+export const statusCountToShortStatusCount = (
+  statusCount: StatusCount,
+): ShortStatusCount => {
+  const groupedStatus = groupStatus({
+    passCount: statusCount.PASS,
+    failCount: statusCount.FAIL,
+    missCount: statusCount.MISS,
+    skipCount: statusCount.SKIP,
+    errorCount: statusCount.ERROR,
+    nullCount: statusCount.NULL,
+    doneCount: statusCount.DONE,
+  });
+
+  return {
+    PASS: groupedStatus.successCount,
+    FAIL: groupedStatus.failedCount,
+    INCONCLUSIVE: groupedStatus.inconclusiveCount,
   };
 };

@@ -3,80 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useSearch } from '@tanstack/react-router';
 
-import type {
-  Tree,
-  TreeFastPathResponse,
-  TreeLatestResponse,
-  TreeV2,
-} from '@/types/tree/Tree';
+import type { TreeLatestResponse, TreeListingItem } from '@/types/tree/Tree';
 import { DEFAULT_ORIGIN } from '@/types/general';
 
 import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
 
 import { RequestData } from './commonRequest';
-
-const fetchTreeCheckoutData = async (
-  origin: string,
-  intervalInDays?: number,
-): Promise<Tree[]> => {
-  const params = {
-    origin: origin,
-    interval_in_days: intervalInDays,
-  };
-
-  const data = await RequestData.get<Tree[]>('/api/tree/', {
-    params,
-  });
-  return data;
-};
-
-export const useTreeTable = ({
-  enabled,
-  searchFrom,
-}: {
-  enabled: boolean;
-  searchFrom: TreeListingRoutesMap['v1']['search'];
-}): UseQueryResult<Tree[]> => {
-  const { origin, intervalInDays } = useSearch({ from: searchFrom });
-  const queryKey = ['treeTable', origin, intervalInDays];
-
-  return useQuery({
-    queryKey,
-    queryFn: () => fetchTreeCheckoutData(origin, intervalInDays),
-    enabled,
-    refetchOnWindowFocus: false,
-  });
-};
-
-const fetchTreeFastCheckoutData = async (
-  origin: string,
-  intervalInDays: number,
-): Promise<TreeFastPathResponse> => {
-  const params = {
-    origin: origin,
-    interval_in_days: intervalInDays,
-  };
-
-  const data = await RequestData.get<TreeFastPathResponse>('/api/tree-fast/', {
-    params,
-  });
-  return data;
-};
-
-export const useTreeTableFast = ({
-  searchFrom,
-}: {
-  searchFrom: TreeListingRoutesMap['v1']['search'];
-}): UseQueryResult<TreeFastPathResponse> => {
-  const { origin, intervalInDays } = useSearch({ from: searchFrom });
-
-  const queryKey = ['treeTableFast', origin, intervalInDays];
-
-  return useQuery({
-    queryKey,
-    queryFn: () => fetchTreeFastCheckoutData(origin, intervalInDays),
-  });
-};
 
 const fetchTreeLatest = async (
   treeName: string,
@@ -109,32 +41,32 @@ export const useTreeLatest = (
   });
 };
 
-const fetchTreeListingV2 = async (
+const fetchTreeListing = async (
   origin: string,
   intervalInDays: number,
-): Promise<TreeV2[]> => {
+): Promise<TreeListingItem[]> => {
   const params = {
     origin: origin,
     interval_in_days: intervalInDays,
   };
 
-  const data = await RequestData.get<TreeV2[]>('/api/tree-v2/', {
+  const data = await RequestData.get<TreeListingItem[]>('/api/tree/', {
     params,
   });
   return data;
 };
 
-export const useTreeListingV2 = ({
+export const useTreeListing = ({
   searchFrom,
 }: {
-  searchFrom: TreeListingRoutesMap['v2']['search'];
-}): UseQueryResult<TreeV2[]> => {
+  searchFrom: TreeListingRoutesMap['search'];
+}): UseQueryResult<TreeListingItem[]> => {
   const { origin, intervalInDays } = useSearch({ from: searchFrom });
-  const queryKey = ['treeTableV2', origin, intervalInDays];
+  const queryKey = ['treeTable', origin, intervalInDays];
 
   return useQuery({
     queryKey,
-    queryFn: () => fetchTreeListingV2(origin, intervalInDays),
+    queryFn: () => fetchTreeListing(origin, intervalInDays),
     refetchOnWindowFocus: false,
   });
 };

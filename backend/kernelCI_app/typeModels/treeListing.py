@@ -1,10 +1,10 @@
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field, RootModel
 
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.typeModels.common import StatusCount
-from kernelCI_app.typeModels.commonListing import StatusCountV2
+from kernelCI_app.typeModels.commonListing import ListingStatusCount
 from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitHash,
     Checkout__GitCommitName,
@@ -14,7 +14,6 @@ from kernelCI_app.typeModels.databases import (
     Checkout__Id,
     Checkout__OriginBuildsFinishTime,
     Checkout__OriginTestsFinishTime,
-    Checkout__PatchsetHash,
     Checkout__TreeName,
     Origin,
     Timestamp,
@@ -79,26 +78,11 @@ class Checkout(CommonCheckouts):
     git_commit_tags: list[Checkout__GitCommitTags]
 
 
-class CheckoutFast(CommonCheckouts):
-    id: Checkout__Id
-    tree_name: Checkout__TreeName
-    patchset_hash: Checkout__PatchsetHash
-    git_commit_tags: Checkout__GitCommitTags
-
-
-class TreeListingResponse(RootModel):
-    root: List[Checkout]
-
-
-class TreeListingFastResponse(RootModel):
-    root: List[CheckoutFast]
-
-
 class TreeListingItem(BaseModel):
     id: Checkout__Id = Field(validation_alias="checkout_id")
-    build_status: StatusCountV2
-    boot_status: StatusCountV2
-    test_status: StatusCountV2
+    build_status: ListingStatusCount
+    boot_status: ListingStatusCount
+    test_status: ListingStatusCount
     tree_name: Checkout__TreeName
     git_commit_tags: Checkout__GitCommitTags
     origin: Origin
@@ -109,5 +93,5 @@ class TreeListingItem(BaseModel):
     start_time: Timestamp
 
 
-class TreeListingResponseV2(RootModel):
+class TreeListingResponse(RootModel):
     root: list[TreeListingItem]

@@ -368,7 +368,7 @@ def kcidb_last_test_without_issue(issue, incident):
     return kcidb_execute_query(query, params)
 
 
-# Similar to get_tree_listing_data, but at the same time it has to be different.
+# Similar to the tree listing summary query, but with notification-specific filters.
 # Only the "with", "join" and "where" clauses change
 def get_checkout_summary_data(
     *,

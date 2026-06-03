@@ -5,34 +5,25 @@ import { useSearch } from '@tanstack/react-router';
 import HardwareListingPage from '@/pages/Hardware/HardwareListingPage';
 
 import { MemoizedListingOGTags } from '@/components/OpenGraphTags/ListingOGTags';
-import { OldPageBanner } from '@/components/Banner/PageBanner';
-import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
+import { parseSearchIntent } from '@/lib/intent';
 
 const Hardware = ({
   urlFromMap,
 }: {
-  urlFromMap: HardwareListingRoutesMap['v1'];
+  urlFromMap: HardwareListingRoutesMap;
 }): JSX.Element => {
-  const { hardwareListingVersion } = useFeatureFlag();
   const { hardwareSearch } = useSearch({
     from: urlFromMap.search,
   });
 
+  const intent = parseSearchIntent(hardwareSearch ?? '');
+
   return (
     <>
       <MemoizedListingOGTags monitor="/hardware" search={hardwareSearch} />
-      {hardwareListingVersion !== 'v1' && (
-        <OldPageBanner
-          pageNameId="hardwareListing.bannerTitle"
-          pageRoute="/hardware"
-        />
-      )}
       <div className="bg-light-gray w-full py-10">
-        <HardwareListingPage
-          inputFilter={hardwareSearch ?? ''}
-          urlFromMap={urlFromMap}
-        />
+        <HardwareListingPage intent={intent} urlFromMap={urlFromMap} />
       </div>
     </>
   );

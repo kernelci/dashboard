@@ -28,7 +28,7 @@ import type { MessagesKey } from '@/locales/messages';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ConditionalTableCell } from '@/components/Table/ConditionalTableCell';
 
-import { GroupedTestStatusWithLink } from '@/components/Status/Status';
+import { BaseGroupedStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
 import {
   ItemsPerPageSelector,
@@ -44,7 +44,7 @@ import type {
   HardwareSelectorTree,
 } from '@/types/hardware';
 
-import { statusCountToRequiredStatusCount, sumStatus } from '@/utils/status';
+import { sumStatus } from '@/utils/status';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
 
@@ -82,7 +82,7 @@ interface IHardwareTable {
   onTreeChange?: (nextSelection: HardwareRevisionSelectorValue) => void;
 }
 
-type HardwareListingRoutes = '/hardware' | '/hardware/v1' | '/hardware/v2';
+type HardwareListingRoutes = '/hardware';
 
 const getLinkProps = (
   row: Row<HardwareItem>,
@@ -112,12 +112,8 @@ const getLinkProps = (
       from: RedirectFrom.Hardware,
       hardwareStatusCount: {
         builds: row.original.build_status_summary,
-        tests: statusCountToRequiredStatusCount(
-          row.original.test_status_summary,
-        ),
-        boots: statusCountToRequiredStatusCount(
-          row.original.boot_status_summary,
-        ),
+        tests: row.original.test_status_summary,
+        boots: row.original.boot_status_summary,
       },
     }),
   };
@@ -187,14 +183,12 @@ const getColumns = (
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
         return row.original.build_status_summary ? (
-          <GroupedTestStatusWithLink
-            pass={row.original.build_status_summary.PASS}
-            skip={row.original.build_status_summary.SKIP}
-            fail={row.original.build_status_summary.FAIL}
-            miss={row.original.build_status_summary.MISS}
-            done={row.original.build_status_summary.DONE}
-            error={row.original.build_status_summary.ERROR}
-            nullStatus={row.original.build_status_summary.NULL}
+          <BaseGroupedStatusWithLink
+            groupedStatus={{
+              successCount: row.original.build_status_summary.PASS,
+              failedCount: row.original.build_status_summary.FAIL,
+              inconclusiveCount: row.original.build_status_summary.INCONCLUSIVE,
+            }}
             passLinkProps={getLinkProps(
               row,
               startTimestampInSeconds,
@@ -255,14 +249,12 @@ const getColumns = (
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
         return row.original.boot_status_summary ? (
-          <GroupedTestStatusWithLink
-            pass={row.original.boot_status_summary.PASS}
-            skip={row.original.boot_status_summary.SKIP}
-            fail={row.original.boot_status_summary.FAIL}
-            miss={row.original.boot_status_summary.MISS}
-            done={row.original.boot_status_summary.DONE}
-            error={row.original.boot_status_summary.ERROR}
-            nullStatus={row.original.boot_status_summary.NULL}
+          <BaseGroupedStatusWithLink
+            groupedStatus={{
+              successCount: row.original.boot_status_summary.PASS,
+              failedCount: row.original.boot_status_summary.FAIL,
+              inconclusiveCount: row.original.boot_status_summary.INCONCLUSIVE,
+            }}
             passLinkProps={getLinkProps(
               row,
               startTimestampInSeconds,
@@ -323,14 +315,12 @@ const getColumns = (
         const tabTarget = (column.columnDef.meta as ListingTableColumnMeta)
           .tabTarget;
         return row.original.test_status_summary ? (
-          <GroupedTestStatusWithLink
-            pass={row.original.test_status_summary.PASS}
-            skip={row.original.test_status_summary.SKIP}
-            fail={row.original.test_status_summary.FAIL}
-            miss={row.original.test_status_summary.MISS}
-            done={row.original.test_status_summary.DONE}
-            error={row.original.test_status_summary.ERROR}
-            nullStatus={row.original.test_status_summary.NULL}
+          <BaseGroupedStatusWithLink
+            groupedStatus={{
+              successCount: row.original.test_status_summary.PASS,
+              failedCount: row.original.test_status_summary.FAIL,
+              inconclusiveCount: row.original.test_status_summary.INCONCLUSIVE,
+            }}
             passLinkProps={getLinkProps(
               row,
               startTimestampInSeconds,

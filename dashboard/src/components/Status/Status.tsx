@@ -117,42 +117,6 @@ export const BaseGroupedStatusWithLink = ({
   );
 };
 
-interface ITestStatusWithLink extends ITestStatus, IStatusLinkProps {}
-
-export const GroupedTestStatusWithLink = ({
-  pass,
-  error,
-  miss,
-  fail,
-  done,
-  skip,
-  nullStatus,
-  hideInconclusive = false,
-  passLinkProps,
-  failLinkProps,
-  inconclusiveLinkProps,
-}: ITestStatusWithLink): JSX.Element => {
-  const groupedStatus = groupStatus({
-    doneCount: done,
-    errorCount: error,
-    failCount: fail,
-    missCount: miss,
-    passCount: pass,
-    skipCount: skip,
-    nullCount: nullStatus,
-  });
-
-  return (
-    <BaseGroupedStatusWithLink
-      groupedStatus={groupedStatus}
-      passLinkProps={passLinkProps}
-      failLinkProps={failLinkProps}
-      inconclusiveLinkProps={inconclusiveLinkProps}
-      hideInconclusive={hideInconclusive}
-    />
-  );
-};
-
 interface IBuildStatus {
   valid?: number;
   invalid?: number;
