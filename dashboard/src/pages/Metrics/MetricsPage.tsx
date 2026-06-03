@@ -1,8 +1,10 @@
-import type { JSX } from 'react';
+import { Fragment, useState, type JSX } from 'react';
 
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 
 import { ArrowRightIcon } from 'lucide-react';
+
+import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 
 import { useMetrics } from '@/api/metrics';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
@@ -36,12 +38,20 @@ type CoverageMetric = {
   previous: number;
 };
 
+type IssueDetail = {
+  id: string;
+  version: number;
+  comment: string;
+  count: number;
+};
+
 type BuildIncident = {
   origin: string;
   existingIssues: number;
   newIssues: number;
   totalIncidents: number;
-  topIssues: { id: string; version: number; comment: string; count: number }[];
+  topIssues: IssueDetail[];
+  newIssueDetails: IssueDetail[];
 };
 
 type LabData = {
@@ -87,9 +97,42 @@ const getBuildIncidents = (data: MetricsResponse): BuildIncident[] => {
         comment: issue.comment,
         count: issue.total_incidents,
       })),
+      newIssueDetails: (data.new_issues_by_origin[origin] ?? []).map(issue => ({
+        id: issue.id,
+        version: issue.version,
+        comment: issue.comment,
+        count: issue.total_incidents,
+      })),
     }),
   );
 };
+
+function IssueDetailRow({ issue }: { issue: IssueDetail }): JSX.Element {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-md px-3 py-2">
+      <div className="flex w-4/5 min-w-0 items-center">
+        <span className="min-w-0 truncate text-sm text-gray-900">
+          {issue.comment}
+        </span>
+        <span className="ml-2 shrink-0 text-xs text-gray-500">
+          {formatNumber(issue.count)} incidents
+        </span>
+      </div>
+      <Link
+        to="/issue/$issueId"
+        params={{ issueId: issue.id }}
+        search={s => ({
+          origin: s.origin,
+          issueVersion: issue.version,
+        })}
+        className="flex shrink-0 items-center gap-1 text-sm text-blue-600"
+      >
+        View
+        <ArrowRightIcon size={14} />
+      </Link>
+    </div>
+  );
+}
 
 const getLabActivity = (data: MetricsResponse): LabData[] => {
   const allLabNames = new Set([
@@ -216,6 +259,22 @@ function RegressionsSection({
 }: {
   regressions: BuildIncident[];
 }): JSX.Element {
+  const [expandedOrigins, setExpandedOrigins] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  const toggleOrigin = (origin: string): void => {
+    setExpandedOrigins(previous => {
+      const next = new Set(previous);
+      if (next.has(origin)) {
+        next.delete(origin);
+      } else {
+        next.add(origin);
+      }
+      return next;
+    });
+  };
+
   const totalIncidents = regressions.reduce(
     (sum, r) => sum + r.totalIncidents,
     0,
@@ -228,16 +287,20 @@ function RegressionsSection({
 
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold text-gray-900">
+      <h2 className="mb-1 text-lg font-semibold text-gray-900">
         Build Regressions
       </h2>
+      <p className="mb-4 text-sm text-gray-500">
+        A regression is a reported problem affecting one or more builds. New
+        issues are those whose first build incident occurred in this period.
+      </p>
       {regressions.length === 0 ? (
         <p className="text-sm text-gray-500">
           No build regressions in this period.
         </p>
       ) : (
         <div className="rounded-lg border border-gray-200 bg-white">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
                 <TableHead className="font-bold text-black">Origin</TableHead>
@@ -250,21 +313,62 @@ function RegressionsSection({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {regressions.map(row => (
-                <TableRow key={row.origin}>
-                  <TableCell className="font-medium">{row.origin}</TableCell>
-                  <TableCell>
-                    {row.existingIssues} + {row.newIssues} ={' '}
-                    {row.existingIssues + row.newIssues}
-                    {row.newIssues > 0 && (
-                      <span className="ml-2 rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700">
-                        {row.newIssues} new
-                      </span>
+              {regressions.map(row => {
+                const isExpandable = row.newIssues > 0;
+                const isExpanded = expandedOrigins.has(row.origin);
+
+                return (
+                  <Fragment key={row.origin}>
+                    <TableRow>
+                      <TableCell className="font-medium">
+                        {isExpandable ? (
+                          <button
+                            type="button"
+                            onClick={() => toggleOrigin(row.origin)}
+                            className="flex items-center gap-2 text-left"
+                            aria-expanded={isExpanded}
+                          >
+                            <ChevronRightAnimate isExpanded={isExpanded} />
+                            {row.origin}
+                          </button>
+                        ) : (
+                          row.origin
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {row.existingIssues} + {row.newIssues} ={' '}
+                        {row.existingIssues + row.newIssues}
+                        {row.newIssues > 0 && (
+                          <span className="ml-2 rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700">
+                            {row.newIssues} new
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>{formatNumber(row.totalIncidents)}</TableCell>
+                    </TableRow>
+                    {isExpandable && isExpanded && (
+                      <TableRow key={`${row.origin}-details`}>
+                        <TableCell colSpan={3} className="bg-gray-50 py-3">
+                          {row.newIssueDetails.length > 0 ? (
+                            <div className="space-y-1">
+                              <p className="px-3 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                                New regressions
+                              </p>
+                              {row.newIssueDetails.map(issue => (
+                                <IssueDetailRow key={issue.id} issue={issue} />
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="px-3 text-sm text-gray-500">
+                              New issue details unavailable.
+                            </p>
+                          )}
+                        </TableCell>
+                      </TableRow>
                     )}
-                  </TableCell>
-                  <TableCell>{formatNumber(row.totalIncidents)}</TableCell>
-                </TableRow>
-              ))}
+                  </Fragment>
+                );
+              })}
               <TableRow className="bg-gray-50 font-medium">
                 <TableCell className="font-bold">Total</TableCell>
                 <TableCell>

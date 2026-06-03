@@ -27,6 +27,7 @@ export type MetricsResponse = {
   n_incidents: number;
   build_incidents_by_origin: Record<string, BuildIncidentsCount>;
   top_issues_by_origin: Record<string, TopIssue[]>;
+  new_issues_by_origin: Record<string, TopIssue[]>;
   lab_maps: Record<string, LabMetricsData>;
   prev_n_trees: number;
   prev_n_checkouts: number;
