@@ -790,6 +790,42 @@ def get_metrics_data(
     WHERE r.ranked <= 3 AND n.total_incidents > 0
     """
 
+    new_build_issues_query = """
+    WITH time_rank AS (
+        SELECT
+            _timestamp,
+            origin,
+            issue_id,
+            ROW_NUMBER() OVER (PARTITION BY issue_id ORDER BY _timestamp) AS rn
+        FROM incidents
+        WHERE build_id IS NOT NULL
+    ),
+    new_issues AS (
+        SELECT issue_id, origin
+        FROM time_rank
+        WHERE rn = 1
+            AND _timestamp BETWEEN
+                NOW() - INTERVAL %(start_days_ago)s
+                AND NOW() - INTERVAL %(end_days_ago)s
+    )
+    SELECT
+        inc.origin,
+        inc.issue_id,
+        inc.issue_version,
+        i.comment,
+        COUNT(inc.*) AS total
+    FROM incidents inc
+    JOIN issues i ON inc.issue_id = i.id AND inc.issue_version = i.version
+    JOIN new_issues ni ON inc.issue_id = ni.issue_id AND inc.origin = ni.origin
+    WHERE
+        inc.build_id IS NOT NULL
+        AND inc._timestamp BETWEEN
+            NOW() - INTERVAL %(start_days_ago)s
+            AND NOW() - INTERVAL %(end_days_ago)s
+    GROUP BY inc.origin, inc.issue_id, inc.issue_version, i.comment
+    ORDER BY inc.origin, total DESC
+    """
+
     lab_summary_query = """
     -- get count of tests of each lab and how many builds are related to those tests
     SELECT
@@ -806,7 +842,7 @@ def get_metrics_data(
     GROUP BY lab
     """
 
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=6) as executor:
         total_objects_result = executor.submit(
             query_fetchone_work, query=total_objects_query, params=params
         )
@@ -815,6 +851,9 @@ def get_metrics_data(
         )
         build_incidents_result = executor.submit(
             query_fetchall_work, query=build_incidents_query, params=params
+        )
+        new_build_issues_result = executor.submit(
+            query_fetchall_work, query=new_build_issues_query, params=params
         )
         lab_summary_results = executor.submit(
             query_fetchall_work, query=lab_summary_query, params=params
@@ -826,12 +865,14 @@ def get_metrics_data(
     total_objects_result = total_objects_result.result()
     prev_total_objects_result = prev_total_objects_result.result()
     build_incidents_result = build_incidents_result.result()
+    new_build_issues_result = new_build_issues_result.result()
     lab_summary_results = lab_summary_results.result()
     prev_lab_summary_results = prev_lab_summary_results.result()
 
     try:
         build_incidents_by_origin: dict[str, BuildIncidentsCount] = {}
         top_issues_by_origin: dict[str, dict[tuple[str, int], TopIssue]] = {}
+        new_issues_by_origin: dict[str, dict[tuple[str, int], TopIssue]] = {}
         for row in build_incidents_result:
             origin = row[0]
             issue_id = row[4]
@@ -851,6 +892,19 @@ def get_metrics_data(
                 total_incidents=row[7],
             )
 
+        for row in new_build_issues_result:
+            origin = row[0]
+            issue_id = row[1]
+            issue_version = row[2]
+            if new_issues_by_origin.get(origin) is None:
+                new_issues_by_origin[origin] = {}
+            new_issues_by_origin[origin][(issue_id, issue_version)] = TopIssue(
+                id=issue_id,
+                version=issue_version,
+                comment=row[3],
+                total_incidents=row[4],
+            )
+
         data = MetricsReportData(
             n_trees=total_objects_result[0],
             n_checkouts=total_objects_result[1],
@@ -860,6 +914,7 @@ def get_metrics_data(
             n_incidents=total_objects_result[5],
             build_incidents_by_origin=build_incidents_by_origin,
             top_issues_by_origin=top_issues_by_origin,
+            new_issues_by_origin=new_issues_by_origin,
             lab_maps={
                 row[0]: LabMetricsData(
                     builds=row[1],

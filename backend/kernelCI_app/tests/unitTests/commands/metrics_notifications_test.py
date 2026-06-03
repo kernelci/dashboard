@@ -62,6 +62,16 @@ def make_metrics_data(**overrides) -> MetricsReportData:
                 ),
             },
         },
+        new_issues_by_origin={
+            "maestro": {
+                ("issue-new", 1): TopIssue(
+                    id="issue-new",
+                    version=1,
+                    comment="New regression issue",
+                    total_incidents=10,
+                ),
+            },
+        },
         lab_maps={
             "lava-collabora": LabMetricsData(
                 builds=0, boots=50000, tests=450000, origin="maestro"
@@ -242,6 +252,7 @@ class TestGenerateMetricsReport(TestCase):
             n_incidents=75,
             build_incidents_by_origin=mock.ANY,
             top_issues_by_origin=mock.ANY,
+            new_issues_by_origin=mock.ANY,
             lab_maps=mock.ANY,
             prev_n_trees=100,
             prev_n_checkouts=1000,

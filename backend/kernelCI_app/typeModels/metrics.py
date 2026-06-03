@@ -34,6 +34,7 @@ class MetricsResponse(BaseModel):
     n_incidents: int
     build_incidents_by_origin: dict[str, BuildIncidentsCount]
     top_issues_by_origin: dict[str, list[TopIssue]]
+    new_issues_by_origin: dict[str, list[TopIssue]]
     lab_maps: dict[str, LabMetricsData]
     prev_n_trees: int
     prev_n_checkouts: int
@@ -54,6 +55,10 @@ def metrics_report_data_to_response(data: MetricsReportData) -> MetricsResponse:
         top_issues_by_origin={
             origin: list(issues.values())
             for origin, issues in data.top_issues_by_origin.items()
+        },
+        new_issues_by_origin={
+            origin: list(issues.values())
+            for origin, issues in data.new_issues_by_origin.items()
         },
         lab_maps=data.lab_maps,
         prev_n_trees=data.prev_n_trees,

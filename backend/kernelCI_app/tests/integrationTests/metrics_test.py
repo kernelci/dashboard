@@ -21,6 +21,7 @@ metrics_expected_fields = [
     "n_incidents",
     "build_incidents_by_origin",
     "top_issues_by_origin",
+    "new_issues_by_origin",
     "lab_maps",
     "prev_n_trees",
     "prev_n_checkouts",
