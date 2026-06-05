@@ -5,6 +5,7 @@ from typing import Any
 from django.db import connection, connections
 from pydantic import ValidationError
 
+from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.queries.tree import get_tree_listing_query
@@ -644,22 +645,32 @@ def get_issues_summary_data(*, checkout_ids: list[str]) -> list[dict]:
         return dict_fetchall(cursor=cursor)
 
 
-def query_fetchone_work(*, query: str, params: dict[str, Any]):
+def query_fetchone_work(*, cache_key: str, query: str, params: dict[str, Any]):
+    rows = get_query_cache(key=cache_key, params=params)
+    if rows is not None:
+        return rows
     try:
         with connections["default"].cursor() as cursor:
             cursor.execute(query, params)
-            return cursor.fetchone()
+            rows = cursor.fetchone()
     finally:
         connections["default"].close()
+    set_query_cache(key=cache_key, params=params, rows=rows)
+    return rows
 
 
-def query_fetchall_work(*, query: str, params: dict[str, Any]):
+def query_fetchall_work(*, cache_key: str, query: str, params: dict[str, Any]):
+    rows = get_query_cache(key=cache_key, params=params)
+    if rows is not None:
+        return rows
     try:
         with connections["default"].cursor() as cursor:
             cursor.execute(query, params)
-            return cursor.fetchall()
+            rows = cursor.fetchall()
     finally:
         connections["default"].close()
+    set_query_cache(key=cache_key, params=params, rows=rows)
+    return rows
 
 
 def get_metrics_data(
@@ -844,22 +855,40 @@ def get_metrics_data(
 
     with ThreadPoolExecutor(max_workers=6) as executor:
         total_objects_result = executor.submit(
-            query_fetchone_work, query=total_objects_query, params=params
+            query_fetchone_work,
+            cache_key="metricsTotalObjects",
+            query=total_objects_query,
+            params=params,
         )
         prev_total_objects_result = executor.submit(
-            query_fetchone_work, query=total_objects_query, params=prev_params
+            query_fetchone_work,
+            cache_key="metricsTotalObjects",
+            query=total_objects_query,
+            params=prev_params,
         )
         build_incidents_result = executor.submit(
-            query_fetchall_work, query=build_incidents_query, params=params
+            query_fetchall_work,
+            cache_key="metricsBuildIncidents",
+            query=build_incidents_query,
+            params=params,
         )
         new_build_issues_result = executor.submit(
-            query_fetchall_work, query=new_build_issues_query, params=params
+            query_fetchall_work,
+            cache_key="metricsNewBuildIssues",
+            query=new_build_issues_query,
+            params=params,
         )
         lab_summary_results = executor.submit(
-            query_fetchall_work, query=lab_summary_query, params=params
+            query_fetchall_work,
+            cache_key="metricsLabSummary",
+            query=lab_summary_query,
+            params=params,
         )
         prev_lab_summary_results = executor.submit(
-            query_fetchall_work, query=lab_summary_query, params=prev_params
+            query_fetchall_work,
+            cache_key="metricsLabSummary",
+            query=lab_summary_query,
+            params=prev_params,
         )
 
     total_objects_result = total_objects_result.result()
