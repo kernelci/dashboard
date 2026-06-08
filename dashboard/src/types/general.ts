@@ -406,6 +406,7 @@ export type PossibleMonitorPath =
   | '/hardware/v1'
   | '/hardware/v2'
   | '/tree/v1'
-  | '/tree/v2';
+  | '/tree/v2'
+  | '/metrics';
 
 export type TreeEntityTypes = 'builds' | 'boots' | 'tests';

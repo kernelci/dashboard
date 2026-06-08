@@ -34,6 +34,8 @@ class MetricsReportData(BaseModel):
     build_incidents_by_origin: dict[str, BuildIncidentsCount]
     # top_issues = origin -> (issue_id, version) -> TopIssue
     top_issues_by_origin: dict[str, dict[tuple[str, int], TopIssue]]
+    # new_issues = origin -> (issue_id, version) -> TopIssue (first build incident in period)
+    new_issues_by_origin: dict[str, dict[tuple[str, int], TopIssue]]
     lab_maps: dict[str, LabMetricsData]
     # Previous interval (for comparison)
     prev_n_trees: int
