@@ -175,7 +175,6 @@ else:
                 "--monitoring-id=notifications_new_issues",
                 "--action=new_issues",
                 "--to=kernelci-results@groups.io",
-                "--cc=gus@collabora.com",
                 "--send",
                 "--yes",
             ],
