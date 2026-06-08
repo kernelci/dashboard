@@ -39,6 +39,7 @@ from kernelCI_app.queries.notifications import (
     get_metrics_data,
     kcidb_build_incidents,
     kcidb_issue_details,
+    kcidb_last_build_without_issue,
     kcidb_last_test_without_issue,
     kcidb_new_issues,
     kcidb_test_incidents,
@@ -222,6 +223,10 @@ def generate_issue_report(
     if issue["build_id"]:
         issue_type = "build"
         incidents = kcidb_build_incidents(issue_id)
+        for incident in incidents:
+            last_build = kcidb_last_build_without_issue(issue, incident)
+            if last_build:
+                incident["last_pass_commit"] = last_build[0]["git_commit_hash"]
         report = generate_build_issue_report(issue, incidents)
     elif issue["test_id"]:
         incidents = kcidb_test_incidents(issue_id)
@@ -566,6 +571,7 @@ def generate_test_report(*, service, test_id, email_args, signup_folder):
         test_start_time=test["start_time"],
         config_name=test["config_name"],
         field_timestamp=test["_timestamp"],
+        group_size=10,
     )
 
     status_symbols = []
@@ -580,6 +586,17 @@ def generate_test_report(*, service, test_id, email_args, signup_folder):
     # Reverse to show oldest first
     status_symbols.reverse()
     test["status_history"] = " → ".join(status_symbols)
+
+    # Most recent passing commit before the failure, used to bound the
+    # regression range for regzbot (history is ordered most recent first).
+    test["last_pass_commit"] = None
+    for entry in history:
+        if (
+            entry["status"] == "PASS"
+            and entry["build__checkout__git_commit_hash"] != test["git_commit_hash"]
+        ):
+            test["last_pass_commit"] = entry["build__checkout__git_commit_hash"]
+            break
 
     template = setup_jinja_template("test_report.txt.j2")
     report_content = template.render(test=test)

@@ -370,6 +370,51 @@ def kcidb_last_test_without_issue(issue, incident):
     return kcidb_execute_query(query, params)
 
 
+def kcidb_last_build_without_issue(issue, incident):
+    """Fetches the last successful build of the same config that does not carry
+    the given issue, used to bound the regression range for regzbot."""
+
+    params = {
+        "origin": "maestro",
+        "issue_id": issue["id"],
+        "config_name": incident["config_name"],
+        "architecture": incident["architecture"],
+        "compiler": incident["compiler"],
+        "giturl": issue["git_repository_url"],
+        "branch": issue["git_repository_branch"],
+        "interval": "18 days",
+    }
+
+    query = """
+    WITH builds_with_issue AS (
+        SELECT DISTINCT c.git_commit_hash
+        FROM builds b
+        JOIN checkouts c ON b.checkout_id = c.id
+        JOIN incidents inc ON inc.build_id = b.id
+        WHERE inc.issue_id = %(issue_id)s
+     )
+    SELECT b.id, b.start_time, c.git_commit_hash
+        FROM builds b
+        JOIN checkouts c ON b.checkout_id = c.id
+        WHERE c.git_repository_url = %(giturl)s
+        AND c.git_repository_branch = %(branch)s
+        AND b.config_name = %(config_name)s
+        AND b.architecture = %(architecture)s
+        AND b.compiler = %(compiler)s
+        AND b.status = 'PASS'
+        AND c.origin = %(origin)s
+        AND b.start_time >= NOW() - INTERVAL %(interval)s
+        AND c.git_commit_hash NOT IN
+            (
+                SELECT git_commit_hash FROM builds_with_issue
+            )
+        ORDER BY b.start_time DESC
+        LIMIT 1;
+    """
+
+    return kcidb_execute_query(query, params)
+
+
 # Similar to the tree listing summary query, but with notification-specific filters.
 # Only the "with", "join" and "where" clauses change
 def get_checkout_summary_data(
