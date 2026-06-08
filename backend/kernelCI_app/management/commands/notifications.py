@@ -2,6 +2,7 @@ import json
 import sys
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+from email.utils import make_msgid
 from types import SimpleNamespace
 from typing import Optional
 from urllib.parse import quote_plus
@@ -154,10 +155,14 @@ def ask_ignore_issue():
             print("Please enter 'y' or 'n'.")
 
 
-def generate_build_issue_report(issue, incidents):
+def generate_build_issue_report(issue, incidents, message_id=None):
     template = setup_jinja_template("issue_build.txt.j2")
     report = {}
-    report["content"] = template.render(issue=issue, builds=incidents)
+    report["content"] = template.render(
+        issue=issue,
+        builds=incidents,
+        message_id=message_id.strip("<>") if message_id else None,
+    )
     snippet = (
         issue["comment"]
         if len(issue["comment"]) <= 70
@@ -169,10 +174,14 @@ def generate_build_issue_report(issue, incidents):
     return report
 
 
-def generate_boot_issue_report(issue, incidents):
+def generate_boot_issue_report(issue, incidents, message_id=None):
     template = setup_jinja_template("issue_boot.txt.j2")
     report = {}
-    report["content"] = template.render(issue=issue, boots=incidents)
+    report["content"] = template.render(
+        issue=issue,
+        boots=incidents,
+        message_id=message_id.strip("<>") if message_id else None,
+    )
     snippet = (
         issue["comment"]
         if len(issue["comment"]) <= 70
@@ -219,6 +228,9 @@ def generate_issue_report(
     if isinstance(issue["misc"], str):
         issue["misc"] = json.loads(issue["misc"])
 
+    # Generated upfront so the report body can link to its own mail on lore
+    message_id = make_msgid(domain="kernelci.org")
+
     issue_type: PossibleIssueType
     if issue["build_id"]:
         issue_type = "build"
@@ -227,7 +239,7 @@ def generate_issue_report(
             last_build = kcidb_last_build_without_issue(issue, incident)
             if last_build:
                 incident["last_pass_commit"] = last_build[0]["git_commit_hash"]
-        report = generate_build_issue_report(issue, incidents)
+        report = generate_build_issue_report(issue, incidents, message_id)
     elif issue["test_id"]:
         incidents = kcidb_test_incidents(issue_id)
         issue_type = "boot" if is_boot(path=incidents[0]["path"]) else "test"
@@ -236,7 +248,7 @@ def generate_issue_report(
             incident["last_pass"] = last_test[0]["start_time"]
             incident["last_pass_commit"] = last_test[0]["git_commit_hash"]
             incident["last_pass_id"] = last_test[0]["id"]
-        report = generate_boot_issue_report(issue, incidents)
+        report = generate_boot_issue_report(issue, incidents, message_id)
     else:
         print(f"unable to generate issue report for {issue_id}", file=sys.stderr)
         sys.exit(-1)
@@ -249,6 +261,7 @@ def generate_issue_report(
         email_args=email_args,
         signup_folder=signup_folder,
         git_url=issue["git_repository_url"],
+        message_id=message_id,
     )
 
     if msg_id and email_args.update:
@@ -598,8 +611,11 @@ def generate_test_report(*, service, test_id, email_args, signup_folder):
             test["last_pass_commit"] = entry["build__checkout__git_commit_hash"]
             break
 
+    # Generated upfront so the report body can link to its own mail on lore
+    message_id = make_msgid(domain="kernelci.org")
+
     template = setup_jinja_template("test_report.txt.j2")
-    report_content = template.render(test=test)
+    report_content = template.render(test=test, message_id=message_id.strip("<>"))
 
     if is_boot(path=test["path"]):
         subject_prefix = "[BOOT REGRESSION]"
@@ -632,6 +648,7 @@ def generate_test_report(*, service, test_id, email_args, signup_folder):
         email_args=email_args,
         git_url=test["git_repository_url"],
         signup_folder=signup_folder,
+        message_id=message_id,
     )
 
 

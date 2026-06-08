@@ -11,7 +11,15 @@ def smtp_setup_connection():
 
 
 def smtp_send_email(
-    connection, sender_email, to, subject, message_text, cc, reply_to, in_reply_to=None
+    connection,
+    sender_email,
+    to,
+    subject,
+    message_text,
+    cc,
+    reply_to,
+    in_reply_to=None,
+    message_id=None,
 ):
     """Send an email using Django's SMTP backend.
 
@@ -24,6 +32,9 @@ def smtp_send_email(
         cc: CC recipients
         reply_to: Reply-to address
         in_reply_to: Message ID to set in In-Reply-To header (optional)
+        message_id: Message ID to use for the email, generated when not given.
+          Pass one when the message body references its own Message-ID
+          (e.g. a lore.kernel.org link).
 
     Returns:
         Message ID of the sent email
@@ -45,7 +56,8 @@ def smtp_send_email(
         )
 
         # Generate a unique message ID for tracking
-        message_id = make_msgid()
+        if not message_id:
+            message_id = make_msgid()
         email.extra_headers["Message-ID"] = message_id
 
         if in_reply_to:
