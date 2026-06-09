@@ -106,6 +106,10 @@ export const messages = {
     'footer.command': 'Command for this page:\n{command}',
     'footer.kcidev':
       'You can use {link} to retrieve KernelCI data from the command line',
+    'footer.lfPolicies':
+      'For website terms of use, trademark policy, and other project policies, see {lfPoliciesLink}.',
+    'footer.privacyNotice':
+      'We collect aggregate usage analytics to operate and improve the service. See {dashboardPrivacyLink} for Dashboard analytics details and {lfPrivacyLink} for the LF Projects privacy policy.',
     'footer.question': 'Did you know?',
     'global.allCount': 'All: {count}',
     'global.arch': 'Arch',
@@ -159,6 +163,7 @@ export const messages = {
     'global.labs': 'Labs',
     'global.last': 'Last',
     'global.legend': 'Legend',
+    'global.lfPrivacyPolicy': 'LF Projects Privacy Policy',
     'global.loading': 'Loading...',
     'global.logExcerpt': 'Log Excerpt',
     'global.logs': 'Logs',
@@ -175,6 +180,7 @@ export const messages = {
     'global.path': 'Path',
     'global.platform': 'Platform',
     'global.prev': 'Prev',
+    'global.privacy': 'Privacy Policy',
     'global.projectUnderDevelopment':
       'This is an ongoing project.{br}' +
       `Please report bugs and suggestions to ${FEEDBACK_EMAIL_TO}.`,
@@ -314,6 +320,7 @@ export const messages = {
     'metricsPage.period.previousTwoWeeks': 'Last 2 weeks',
     'metricsPage.period.previousWeek': 'Last week',
     'metricsPage.periodLabel': 'Period:',
+    'privacy.title': 'Privacy Policy',
     'routes.buildDetails': 'Build',
     'routes.hardwareMonitor': 'Hardware',
     'routes.hardwareNewMonitor': 'Hardware New',

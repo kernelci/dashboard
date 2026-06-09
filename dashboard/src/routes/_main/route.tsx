@@ -9,6 +9,7 @@ import { useIntl } from 'react-intl';
 import type { JSX } from 'react';
 
 import SideMenu from '@/components/SideMenu/SideMenu';
+import { SiteFooter } from '@/components/SiteFooter/SiteFooter';
 import TopBar from '@/components/TopBar/TopBar';
 
 const RouteComponent = (): JSX.Element => {
@@ -24,6 +25,7 @@ const RouteComponent = (): JSX.Element => {
             <TopBar />
             <div className="bg-light-gray h-full w-full px-8 pt-24 md:px-16">
               <Outlet />
+              <SiteFooter />
             </div>
           </main>
         </div>
