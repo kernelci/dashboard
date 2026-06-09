@@ -112,7 +112,7 @@ The backend uses Ruff for linting and formatting.
 This repository uses pre-commit for Git hooks (`pre-commit` and `pre-push`). Install hooks once per clone from the repository root:
 
 ```sh
-poetry -C backend run pre-commit install --hook-type pre-commit --hook-type pre-push --install-hooks
+poetry -C backend run pre-commit install --hook-type pre-commit --hook-type pre-push --hook-type commit-msg --install-hooks
 ```
 
 To run all configured hooks manually:

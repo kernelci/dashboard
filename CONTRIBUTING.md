@@ -103,7 +103,7 @@ You can find more details on the Conventional Commits specification site.
   - Auto-fix lint issues: `poetry run ruff check . --fix`
   - Run type checks (optional but recommended): `poetry run mypy`
   - Run tests: `poetry run pytest`
-  - Install Git hooks once per clone: from the repository root run `poetry -C backend run pre-commit install --hook-type pre-commit --hook-type pre-push --install-hooks`
+  - Install Git hooks once per clone: from the repository root run `poetry -C backend run pre-commit install --hook-type pre-commit --hook-type pre-push --hook-type commit-msg --install-hooks`
   - Run all hooks manually: `poetry -C backend run pre-commit run --all-files`
 - Frontend
   - See [dashboard/README.md](dashboard/README.md) for scripts and commands
