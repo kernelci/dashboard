@@ -50,6 +50,7 @@ services:
 
     redis:
         image: redis:8.0-M04-alpine
+        command: ["redis-server", "--maxmemory-policy", "noeviction"]
         networks: [private]
 
     dashboard_dev:
