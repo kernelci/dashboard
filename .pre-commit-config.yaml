@@ -49,3 +49,18 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
+
+      - id: check-dco
+        name: Check DCO Sign-off
+        stages: [commit-msg]
+        entry: sh
+        args:
+          - -c
+          - |
+            if ! ( git interpret-trailers --parse "$1" | grep -q "Signed-off-by:" ); then
+              echo 'Missing DCO "Signed-off-by:" line. Try committing with "--signoff|-s"'
+              exit 1
+            fi
+          - --
+        language: system
+        always_run: true
