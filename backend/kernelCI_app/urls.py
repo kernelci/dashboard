@@ -8,6 +8,7 @@ from drf_spectacular.views import (
 )
 
 from kernelCI_app import views
+from kernelCI_app.queries.notifications import METRICS_CACHE_TIMEOUT
 
 
 def view_cache(view, timeout: int = settings.CACHE_TIMEOUT):
@@ -182,5 +183,9 @@ urlpatterns = [
     path("proxy/", views.ProxyView.as_view(), name="proxyView"),
     path("origins/", views.OriginsView.as_view(), name="originsView"),
     path("tree-report/", views.TreeReport.as_view(), name="treeReportView"),
-    path("metrics/", view_cache(views.MetricsView), name="metricsView"),
+    path(
+        "metrics/",
+        view_cache(views.MetricsView, timeout=METRICS_CACHE_TIMEOUT),
+        name="metricsView",
+    ),
 ]

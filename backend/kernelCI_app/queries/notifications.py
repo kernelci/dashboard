@@ -16,6 +16,8 @@ from kernelCI_app.typeModels.metrics_notifications import (
     TopIssue,
 )
 
+METRICS_CACHE_TIMEOUT = 60 * 60 * 6  # 6 hours
+
 
 def kcidb_execute_query(query, params=None):
     try:
@@ -645,7 +647,13 @@ def get_issues_summary_data(*, checkout_ids: list[str]) -> list[dict]:
         return dict_fetchall(cursor=cursor)
 
 
-def query_fetchone_work(*, cache_key: str, query: str, params: dict[str, Any]):
+def query_fetchone_work(
+    *,
+    cache_key: str,
+    query: str,
+    params: dict[str, Any],
+    timeout: int = METRICS_CACHE_TIMEOUT,
+):
     rows = get_query_cache(key=cache_key, params=params)
     if rows is not None:
         return rows
@@ -655,11 +663,17 @@ def query_fetchone_work(*, cache_key: str, query: str, params: dict[str, Any]):
             rows = cursor.fetchone()
     finally:
         connections["default"].close()
-    set_query_cache(key=cache_key, params=params, rows=rows)
+    set_query_cache(key=cache_key, params=params, rows=rows, timeout=timeout)
     return rows
 
 
-def query_fetchall_work(*, cache_key: str, query: str, params: dict[str, Any]):
+def query_fetchall_work(
+    *,
+    cache_key: str,
+    query: str,
+    params: dict[str, Any],
+    timeout: int = METRICS_CACHE_TIMEOUT,
+):
     rows = get_query_cache(key=cache_key, params=params)
     if rows is not None:
         return rows
@@ -669,7 +683,7 @@ def query_fetchall_work(*, cache_key: str, query: str, params: dict[str, Any]):
             rows = cursor.fetchall()
     finally:
         connections["default"].close()
-    set_query_cache(key=cache_key, params=params, rows=rows)
+    set_query_cache(key=cache_key, params=params, rows=rows, timeout=timeout)
     return rows
 
 
