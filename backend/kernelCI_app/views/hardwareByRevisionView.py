@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from kernelCI_app.queries.hardware import get_hardware_listing_data_by_revision
 from kernelCI_app.typeModels.hardwareListing import (
     HardwareItem,
-    HardwareListingResponse,
+    HardwareListingByRevisionResponse,
 )
 from kernelCI_app.typeModels.hardwareListingByRevision import (
     HardwareListingByRevisionQueryParams,
@@ -59,7 +59,7 @@ class HardwareByRevisionView(APIView):
 
     @extend_schema(
         parameters=[HardwareListingByRevisionQueryParamsDocumentationOnly],
-        responses=HardwareListingResponse,
+        responses=HardwareListingByRevisionResponse,
     )
     def get(self, request: Request):
         try:
@@ -83,7 +83,7 @@ class HardwareByRevisionView(APIView):
 
         try:
             sanitized_records = self._sanitize_records(hardwares_raw=hardwares_raw)
-            result = HardwareListingResponse(hardware=sanitized_records)
+            result = HardwareListingByRevisionResponse(hardware=sanitized_records)
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 

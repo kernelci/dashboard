@@ -6,6 +6,7 @@ from pydantic import BaseModel, BeforeValidator, Field
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import StatusCount
+from kernelCI_app.typeModels.commonListing import ListingStatusCount
 
 
 def _normalize_commits_list(value: object) -> Optional[list[str]]:
@@ -25,7 +26,19 @@ class HardwareItem(BaseModel):
     build_status_summary: StatusCount
 
 
+class HardwareListingItem(BaseModel):
+    hardware: Optional[Union[str, set[str]]]
+    platform: str
+    test_status_summary: ListingStatusCount
+    boot_status_summary: ListingStatusCount
+    build_status_summary: ListingStatusCount
+
+
 class HardwareListingResponse(BaseModel):
+    hardware: list[HardwareListingItem]
+
+
+class HardwareListingByRevisionResponse(BaseModel):
     hardware: list[HardwareItem]
 
 

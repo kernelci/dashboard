@@ -1,101 +1,84 @@
 from http import HTTPStatus
 
 from django.http import HttpRequest
-from django.utils.timezone import make_aware, now
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from kernelCI_app.constants.localization import ClientStrings
-from kernelCI_app.helpers.errorHandling import (
-    create_api_error_response,
+from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.queries.tree import get_tree_listing_data_denormalized
+from kernelCI_app.typeModels.commonListing import (
+    ListingQueryParameters,
+    ListingStatusCount,
 )
-from kernelCI_app.helpers.trees import sanitize_tree
-from kernelCI_app.queries.tree import get_tree_listing_data
-from kernelCI_app.typeModels.commonListing import ListingQueryParameters
-from kernelCI_app.typeModels.treeListing import (
-    Checkout,
-    TreeListingResponse,
-)
-from kernelCI_cache.constants import UNSTABLE_CHECKOUT_THRESHOLD
-from kernelCI_cache.queries.tree import get_cached_tree_listing_data
+from kernelCI_app.typeModels.treeListing import TreeListingItem, TreeListingResponse
 
 
 class TreeView(APIView):
+    def _sanitize_records(self, trees_raw: list[tuple]) -> list[TreeListingItem]:
+        trees = []
+        for tree in trees_raw:
+            trees.append(
+                TreeListingItem(
+                    checkout_id=tree[0],
+                    origin=tree[1],
+                    tree_name=tree[2],
+                    git_repository_url=tree[3],
+                    git_repository_branch=tree[4],
+                    git_commit_hash=tree[5],
+                    git_commit_name=tree[6],
+                    git_commit_tags=tree[7],
+                    start_time=tree[8],
+                    build_status=ListingStatusCount(
+                        PASS=tree[9],
+                        FAIL=tree[10],
+                        INCONCLUSIVE=tree[11],
+                    ),
+                    boot_status=ListingStatusCount(
+                        PASS=tree[12],
+                        FAIL=tree[13],
+                        INCONCLUSIVE=tree[14],
+                    ),
+                    test_status=ListingStatusCount(
+                        PASS=tree[15],
+                        FAIL=tree[16],
+                        INCONCLUSIVE=tree[17],
+                    ),
+                )
+            )
+
+        return trees
+
     @extend_schema(
-        responses=TreeListingResponse,
         parameters=[ListingQueryParameters],
-        methods=["GET"],
+        responses=TreeListingResponse,
     )
-    def get(self, request: HttpRequest) -> Response:
+    def get(self, request: HttpRequest):
         try:
-            request_params = ListingQueryParameters(
+            query_params = ListingQueryParameters(
                 origin=request.GET.get("origin"),
                 interval_in_days=request.GET.get("interval_in_days"),
             )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
-        origin_param = request_params.origin
-        interval_param = request_params.interval_in_days
-
-        cached_checkouts = get_cached_tree_listing_data(
-            origin=origin_param,
-            interval_in_days=interval_param,
-            min_age_in_days=min(interval_param, UNSTABLE_CHECKOUT_THRESHOLD),
+        trees_raw = get_tree_listing_data_denormalized(
+            origin=query_params.origin,
+            interval_in_days=query_params.interval_in_days,
         )
 
-        has_cache = cached_checkouts is not None and len(cached_checkouts) > 0
-
-        if has_cache:
-            # Query kcidb from now up to the earliest cache entry so that we can
-            # avoid a cache gap between the last cache entry and UNSTABLE_CHECKOUT_THRESHOLD
-            earliest_cache_time = min(
-                checkout["start_time"] for checkout in cached_checkouts
-            )
-            if earliest_cache_time.tzinfo is None:
-                earliest_cache_time = make_aware(earliest_cache_time)
-            days_to_earliest = (now() - earliest_cache_time).days
-            kcidb_interval = max(days_to_earliest, UNSTABLE_CHECKOUT_THRESHOLD)
-        else:
-            kcidb_interval = interval_param
-
-        kcidb_checkouts = get_tree_listing_data(
-            origin=origin_param,
-            interval_in_days=kcidb_interval,
-        )
-
-        if not cached_checkouts and not kcidb_checkouts:
+        if not trees_raw:
             return create_api_error_response(
-                error_message=ClientStrings.NO_TREES_FOUND, status_code=HTTPStatus.OK
+                error_message=ClientStrings.NO_TREES_FOUND,
+                status_code=HTTPStatus.OK,
             )
-
-        # This set is only meant to remove the duplicate cases when the
-        # checkout is present in both the cache and in kcidb in the last x days.
-        # It saves the kcidb tree_name as part of the key, such that it doesn't skip
-        # trees with the same branch and git_url but different tree_name.
-        unique_trees: set[tuple[str, str, str]] = set()
-        checkouts: list[Checkout] = []
-
-        for checkout in kcidb_checkouts + list(cached_checkouts):
-            tree_name = checkout["tree_name"]
-            git_branch = checkout["git_repository_branch"]
-            git_url = checkout["git_repository_url"]
-
-            kcidb_identifier = (
-                tree_name,
-                git_branch,
-                git_url,
-            )
-            if kcidb_identifier not in unique_trees:
-                unique_trees.add(kcidb_identifier)
-                typed_checkout = sanitize_tree(checkout=checkout)
-                checkouts.append(typed_checkout)
 
         try:
-            valid_response = TreeListingResponse(checkouts)
+            sanitized_records = self._sanitize_records(trees_raw=trees_raw)
+            result = TreeListingResponse(sanitized_records)
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(valid_response.model_dump(by_alias=True))
+        return Response(data=result.model_dump(), status=HTTPStatus.OK)

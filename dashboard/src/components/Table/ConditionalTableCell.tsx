@@ -7,10 +7,10 @@ import { memo, useMemo, type JSX } from 'react';
 import { TableCell, TableCellWithLink } from '@/components/ui/table';
 import CopyButton from '@/components/Button/CopyButton';
 import { gitCommitValueSelector } from '@/components/Tooltip/CommitTagTooltip';
-import type { TreeTableBody } from '@/types/tree/Tree';
+import type { TreeListingItem } from '@/types/tree/Tree';
 import type { HardwareItem } from '@/types/hardware';
 
-interface ConditionalTableCellProps<T = TreeTableBody | HardwareItem> {
+interface ConditionalTableCellProps<T = TreeListingItem | HardwareItem> {
   cell: Cell<T, unknown>;
   linkProps: LinkProps;
   linkClassName?: string;
@@ -18,7 +18,7 @@ interface ConditionalTableCellProps<T = TreeTableBody | HardwareItem> {
 
 type ColumnType = 'status' | 'git_commit_tags' | 'regular';
 
-const isTreeTableBody = (data: unknown): data is TreeTableBody => {
+const isTreeListingRow = (data: unknown): data is TreeListingItem => {
   return (
     typeof data === 'object' &&
     data !== null &&
@@ -34,7 +34,7 @@ const isTreeTableBody = (data: unknown): data is TreeTableBody => {
  * - Git commit tags: Uses TableCell with custom link + copy button
  * - Regular columns: Uses TableCellWithLink for navigation
  */
-const ConditionalTableCellComponent = <T = TreeTableBody | HardwareItem,>({
+const ConditionalTableCellComponent = <T = TreeListingItem | HardwareItem,>({
   cell,
   linkProps,
   linkClassName = 'w-full inline-block h-full',
@@ -65,7 +65,7 @@ const ConditionalTableCellComponent = <T = TreeTableBody | HardwareItem,>({
     }
 
     const rowData = cell.row.original;
-    if (!isTreeTableBody(rowData)) {
+    if (!isTreeListingRow(rowData)) {
       return null;
     }
 
@@ -119,7 +119,7 @@ const ConditionalTableCellComponent = <T = TreeTableBody | HardwareItem,>({
 };
 
 export const ConditionalTableCell = memo(ConditionalTableCellComponent) as <
-  T = TreeTableBody | HardwareItem,
+  T = TreeListingItem | HardwareItem,
 >(
   props: ConditionalTableCellProps<T>,
 ) => JSX.Element;

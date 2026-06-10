@@ -9,6 +9,7 @@ from django.db import transaction
 
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.system import get_running_instance
+from kernelCI_app.management.commands.helpers.aggregation_helpers import simplify_status
 from kernelCI_app.management.commands.helpers.process_pending_helpers import (
     accumulate_rollup_entry,
     extract_path_group,
@@ -16,8 +17,11 @@ from kernelCI_app.management.commands.helpers.process_pending_helpers import (
 from kernelCI_app.models import (
     Builds,
     Checkouts,
+    HardwareStatus,
     Incidents,
     Issues,
+    LatestCheckout,
+    SimplifiedStatusChoices,
     StatusChoices,
     Tests,
     TreeTestsRollup,
@@ -30,6 +34,13 @@ from kernelCI_app.tests.factories import (
     TestFactory,
 )
 from kernelCI_app.tests.factories.mocks import Build, Issue, Test
+
+STATUS_FIELD_BY_SIMPLIFIED_STATUS = {
+    SimplifiedStatusChoices.PASS: "pass",
+    SimplifiedStatusChoices.FAIL: "failed",
+    SimplifiedStatusChoices.INCONCLUSIVE: "inc",
+    None: "inc",
+}
 
 
 class Command(BaseCommand):
@@ -74,6 +85,8 @@ class Command(BaseCommand):
             issues = self.create_issues(count=options["issues"])
             incidents = self.create_incidents(issues=issues, builds=builds, tests=tests)
             rollup_rows = self.create_tests_rollup(tests=tests, incidents=incidents)
+            latest_checkouts = self.create_latest_checkouts(checkouts=checkouts)
+            hardware_rows = self.create_hardware_status(tests=tests)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -84,6 +97,8 @@ class Command(BaseCommand):
                 f"- {len(issues)} issues\n"
                 f"- {len(incidents)} incidents\n"
                 f"- {len(rollup_rows)} tree_tests_rollup rows\n"
+                f"- {len(latest_checkouts)} latest_checkout rows\n"
+                f"- {len(hardware_rows)} hardware_status rows\n"
             )
         )
 
@@ -112,6 +127,8 @@ class Command(BaseCommand):
 
     def clear_data(self) -> None:
         """Clear existing test data."""
+        HardwareStatus.objects.all().delete()
+        LatestCheckout.objects.all().delete()
         TreeTestsRollup.objects.all().delete()
         Incidents.objects.all().delete()
         Issues.objects.all().delete()
@@ -335,3 +352,90 @@ class Command(BaseCommand):
 
         created = TreeTestsRollup.objects.bulk_create(rollup_objects)
         return created
+
+    def create_latest_checkouts(
+        self, *, checkouts: list[Checkouts]
+    ) -> list[LatestCheckout]:
+        """Create latest_checkout rows used by listing queries."""
+        self.stdout.write("Creating latest_checkout rows...")
+
+        latest_by_tree: dict[tuple, Checkouts] = {}
+        for checkout in checkouts:
+            key = (
+                checkout.origin,
+                checkout.tree_name,
+                checkout.git_repository_url,
+                checkout.git_repository_branch,
+            )
+            current = latest_by_tree.get(key)
+            if current is None or checkout.start_time > current.start_time:
+                latest_by_tree[key] = checkout
+
+        latest_checkouts = [
+            LatestCheckout(
+                checkout_id=checkout.id,
+                start_time=checkout.start_time,
+                origin=checkout.origin,
+                tree_name=checkout.tree_name,
+                git_repository_url=checkout.git_repository_url,
+                git_repository_branch=checkout.git_repository_branch,
+            )
+            for checkout in latest_by_tree.values()
+        ]
+
+        return LatestCheckout.objects.bulk_create(latest_checkouts)
+
+    def create_hardware_status(self, *, tests: list[Tests]) -> list[HardwareStatus]:
+        """Aggregate seeded tests into hardware_status rows."""
+        self.stdout.write("Creating hardware_status aggregations...")
+
+        hardware_data: dict[tuple, dict] = {}
+        counted_builds_by_key: dict[tuple, set[str]] = {}
+
+        for test in tests:
+            platform = (
+                test.environment_misc.get("platform") if test.environment_misc else None
+            )
+            if platform is None:
+                continue
+
+            checkout = test.build.checkout
+            key = (test.origin, platform, checkout.id)
+            if key not in hardware_data:
+                hardware_data[key] = {
+                    "checkout_id": checkout.id,
+                    "test_origin": test.origin,
+                    "platform": platform,
+                    "compatibles": test.environment_compatible,
+                    "start_time": checkout.start_time,
+                    "build_pass": 0,
+                    "build_failed": 0,
+                    "build_inc": 0,
+                    "boot_pass": 0,
+                    "boot_failed": 0,
+                    "boot_inc": 0,
+                    "test_pass": 0,
+                    "test_failed": 0,
+                    "test_inc": 0,
+                }
+                counted_builds_by_key[key] = set()
+
+            record = hardware_data[key]
+            status_type = STATUS_FIELD_BY_SIMPLIFIED_STATUS[
+                simplify_status(test.status)
+            ]
+
+            test_prefix = "boot" if (test.path or "").startswith("boot") else "test"
+            record[f"{test_prefix}_{status_type}"] += 1
+
+            if test.build_id not in counted_builds_by_key[
+                key
+            ] and not test.build_id.startswith("maestro:dummy_"):
+                counted_builds_by_key[key].add(test.build_id)
+                build_status_type = STATUS_FIELD_BY_SIMPLIFIED_STATUS[
+                    simplify_status(test.build.status)
+                ]
+                record[f"build_{build_status_type}"] += 1
+
+        hardware_rows = [HardwareStatus(**data) for data in hardware_data.values()]
+        return HardwareStatus.objects.bulk_create(hardware_rows)

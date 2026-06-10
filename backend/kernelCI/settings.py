@@ -167,9 +167,6 @@ else:
         "CRONTAB_COMMAND_SUFFIX", ">> /proc/1/fd/1 2>&1"
     )
     CRONJOBS = [
-        # not using a monitoring_id in the first task since it should
-        # be removed once the denormalization is set in stone
-        ("0 * * * *", "kernelCI_app.tasks.update_checkout_cache"),
         (
             "59 * * * *",
             "django.core.management.call_command",

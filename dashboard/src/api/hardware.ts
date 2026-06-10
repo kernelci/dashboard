@@ -8,15 +8,30 @@ import type {
   HardwareRevisionSelection,
   HardwareSelectorsResponse,
 } from '@/types/hardware';
+import type { StatusCount } from '@/types/general';
+import { statusCountToShortStatusCount } from '@/utils/status';
 
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
 
 import { RequestData } from './commonRequest';
 
+type HardwareListingByRevisionApiItem = {
+  hardware?: string[];
+  platform: string;
+  build_status_summary: StatusCount;
+  test_status_summary: StatusCount;
+  boot_status_summary: StatusCount;
+};
+
+type HardwareListingByRevisionApiResponse = {
+  hardware: HardwareListingByRevisionApiItem[];
+};
+
 const fetchHardwareListing = async (
   origin: string,
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
+  commitsList?: string[],
 ): Promise<HardwareListingResponse> => {
   const data = await RequestData.get<HardwareListingResponse>(
     '/api/hardware/',
@@ -25,6 +40,7 @@ const fetchHardwareListing = async (
         startTimestampInSeconds,
         endTimestampInSeconds,
         origin,
+        ...(commitsList?.length ? { commitsList: commitsList.join(',') } : {}),
       },
     },
   );
@@ -35,7 +51,8 @@ const fetchHardwareListing = async (
 export const useHardwareListing = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
-  searchFrom: HardwareListingRoutesMap['v1']['search'],
+  searchFrom: HardwareListingRoutesMap['search'],
+  commitsList?: string[],
 ): UseQueryResult<HardwareListingResponse> => {
   const { origin } = useSearch({ from: searchFrom });
 
@@ -44,6 +61,7 @@ export const useHardwareListing = (
     startTimestampInSeconds,
     endTimestampInSeconds,
     origin,
+    commitsList ?? null,
   ];
 
   return useQuery({
@@ -53,6 +71,7 @@ export const useHardwareListing = (
         origin,
         startTimestampInSeconds,
         endTimestampInSeconds,
+        commitsList,
       ),
     refetchOnWindowFocus: false,
   });
@@ -74,7 +93,7 @@ const fetchHardwareSelectors = async (
 };
 
 export const useHardwareSelectors = (
-  searchFrom: HardwareListingRoutesMap['v2']['search'],
+  searchFrom: HardwareListingRoutesMap['search'],
 ): UseQueryResult<HardwareSelectorsResponse> => {
   const { origin } = useSearch({ from: searchFrom });
 
@@ -89,7 +108,7 @@ const fetchHardwareListingByRevision = async (
   selection: HardwareRevisionSelection,
   origin: string,
 ): Promise<HardwareListingResponse> => {
-  const data = await RequestData.get<HardwareListingResponse>(
+  const data = await RequestData.get<HardwareListingByRevisionApiResponse>(
     '/api/hardware-by-revision/',
     {
       params: {
@@ -102,12 +121,26 @@ const fetchHardwareListingByRevision = async (
     },
   );
 
-  return data;
+  return {
+    hardware: data.hardware.map(item => ({
+      hardware: item.hardware,
+      platform: item.platform,
+      build_status_summary: statusCountToShortStatusCount(
+        item.build_status_summary,
+      ),
+      test_status_summary: statusCountToShortStatusCount(
+        item.test_status_summary,
+      ),
+      boot_status_summary: statusCountToShortStatusCount(
+        item.boot_status_summary,
+      ),
+    })),
+  };
 };
 
 export const useHardwareListingByRevision = (
   selection: HardwareRevisionSelection | null,
-  searchFrom: HardwareListingRoutesMap['v2']['search'],
+  searchFrom: HardwareListingRoutesMap['search'],
 ): UseQueryResult<HardwareListingResponse> => {
   const { origin } = useSearch({ from: searchFrom });
 

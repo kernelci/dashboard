@@ -1,12 +1,8 @@
 import { useMemo, type JSX } from 'react';
 
-import type {
-  Tree,
-  TreeFastPathResponse,
-  TreeTableBody,
-} from '@/types/tree/Tree';
+import type { TreeListingItem } from '@/types/tree/Tree';
 
-import { useTreeTable, useTreeTableFast } from '@/api/tree';
+import { useTreeListing } from '@/api/tree';
 
 import { Toaster } from '@/components/ui/toaster';
 
@@ -18,40 +14,23 @@ import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
 
 import { TreeTable } from './TreeTable';
 
-function isCompleteTree(
-  data: Tree | TreeFastPathResponse[number],
-): data is Tree {
-  return 'build_status' in data;
-}
-
 const TreeListingPage = ({
   inputFilter,
   urlFromMap,
 }: {
   inputFilter: string;
-  urlFromMap: TreeListingRoutesMap['v1'];
+  urlFromMap: TreeListingRoutesMap;
 }): JSX.Element => {
-  //TODO: Combine these 2 hooks inside a single hook
-  const {
-    data: fastData,
-    status: fastStatus,
-    error: fastError,
-    isLoading: isFastLoading,
-  } = useTreeTableFast({ searchFrom: urlFromMap.search });
-  const { data, error, status, isLoading } = useTreeTable({
-    enabled: fastStatus === 'success' && !!fastData,
+  const { data, error, status, isLoading } = useTreeListing({
     searchFrom: urlFromMap.search,
   });
 
-  const listItems: TreeTableBody[] = useMemo(() => {
-    if (!fastData || fastStatus === 'error') {
+  const listItems: TreeListingItem[] = useMemo(() => {
+    if (!data) {
       return [];
     }
 
-    const hasCompleteData = !isLoading && !!data;
-    const currentData = hasCompleteData ? data : fastData;
-
-    return currentData
+    return data
       .filter(tree => {
         return (
           matchesRegexOrIncludes(tree.git_commit_hash, inputFilter) ||
@@ -59,22 +38,6 @@ const TreeListingPage = ({
           matchesRegexOrIncludes(tree.git_repository_url, inputFilter) ||
           matchesRegexOrIncludes(tree.tree_name, inputFilter)
         );
-      })
-      .map((tree): TreeTableBody => {
-        if (!isCompleteTree(tree)) {
-          return {
-            git_commit_hash: tree.git_commit_hash,
-            patchset_hash: tree.patchset_hash,
-            tree_name: tree.tree_name,
-            git_repository_branch: tree.git_repository_branch,
-            start_time: tree.start_time,
-            git_repository_url: tree.git_repository_url,
-            git_commit_name: tree.git_commit_name,
-            git_commit_tags: tree.git_commit_tags ?? [],
-          };
-        }
-
-        return tree;
       })
       .sort((a, b) => {
         const currentATreeName = a.tree_name ?? '';
@@ -100,7 +63,7 @@ const TreeListingPage = ({
           new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
         );
       });
-  }, [data, fastData, inputFilter, isLoading, fastStatus]);
+  }, [data, inputFilter]);
 
   const kcidevComponent = useMemo(
     () => (
@@ -109,26 +72,16 @@ const TreeListingPage = ({
     [],
   );
 
-  const hasPartialFailure = fastStatus === 'success' && status === 'error';
-  // Only show error in QuerySwitcher if the first or both queries fail
-  const actualError = hasPartialFailure ? null : fastError || error;
-  const actualStatus = hasPartialFailure
-    ? fastStatus
-    : actualError
-      ? 'error'
-      : fastStatus ?? status;
-
   return (
     <>
       <Toaster />
       <div className="flex flex-col gap-6">
         <TreeTable
           treeTableRows={listItems}
-          status={actualStatus}
-          queryData={fastData}
-          error={actualError}
-          isLoading={isFastLoading}
-          showStatusUnavailable={hasPartialFailure}
+          status={status}
+          queryData={data}
+          error={error}
+          isLoading={isLoading}
           urlFromMap={urlFromMap}
         />
       </div>

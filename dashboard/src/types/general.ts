@@ -395,18 +395,11 @@ export const getTargetFilter = (
 export enum RedirectFrom {
   Tree = 'tree',
   Hardware = 'hardware',
-  HardwareV1 = 'hardware/v1',
   Issues = 'issues',
 }
 
 export type ListingPaths = '/tree' | '/hardware' | '/issues';
 
-export type PossibleMonitorPath =
-  | ListingPaths
-  | '/hardware/v1'
-  | '/hardware/v2'
-  | '/tree/v1'
-  | '/tree/v2'
-  | '/metrics';
+export type PossibleMonitorPath = ListingPaths | '/metrics';
 
 export type TreeEntityTypes = 'builds' | 'boots' | 'tests';

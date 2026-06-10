@@ -21,7 +21,11 @@ import { routeTree } from './routeTree.gen';
 import './index.css';
 import { isDev } from './lib/utils/vite';
 import { ToastProvider } from './components/ui/toast';
-import type { RedirectFrom, RequiredStatusCount } from './types/general';
+import type {
+  RedirectFrom,
+  RequiredStatusCount,
+  ShortStatusCount,
+} from './types/general';
 import { parseSearch, stringifySearch } from './utils/search';
 import { retryHandler } from './utils/query';
 import { MILLISECONDS_IN_ONE_SECOND } from './utils/date';
@@ -52,9 +56,9 @@ declare module '@tanstack/react-router' {
       tests?: RequiredStatusCount;
     };
     hardwareStatusCount?: {
-      builds: RequiredStatusCount;
-      boots: RequiredStatusCount;
-      tests: RequiredStatusCount;
+      builds: ShortStatusCount;
+      boots: ShortStatusCount;
+      tests: ShortStatusCount;
     };
   }
 }

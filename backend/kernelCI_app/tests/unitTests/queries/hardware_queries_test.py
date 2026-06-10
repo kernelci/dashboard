@@ -5,7 +5,6 @@ from kernelCI_app.queries.hardware import (
     _generate_query_params,
     get_hardware_commit_history,
     get_hardware_details_data,
-    get_hardware_listing_data,
     get_hardware_trees_data,
     query_records,
 )
@@ -17,25 +16,6 @@ from kernelCI_app.typeModels.hardwareDetails import CommitHead
 
 START_DATE = datetime(2025, 11, 11)
 END_DATE = datetime(2025, 11, 12)
-
-
-class TestGetHardwareListingData:
-    @patch("kernelCI_app.queries.hardware.connection")
-    def test_get_hardware_listing_data_success(self, mock_connection):
-        expected_result = [
-            ("platform", ["compatible"], 10, 5, 0, 0, 0, 0, 0, 20, 10, 0, 0, 0, 0, 0)
-        ]
-        mock_cursor = setup_mock_cursor(mock_connection)
-        mock_cursor.fetchall.return_value = expected_result
-
-        result = get_hardware_listing_data(
-            start_date=datetime(2025, 11, 10),
-            end_date=datetime(2025, 11, 12),
-            origin="maestro",
-        )
-
-        assert result == expected_result
-        mock_cursor.execute.assert_called_once()
 
 
 class TestGetHardwareDetailsData:

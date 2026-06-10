@@ -22,8 +22,6 @@ urlpatterns = [
     ),
     path("test/<str:test_id>", view_cache(views.TestDetails), name="testDetails"),
     path("tree/", view_cache(views.TreeView), name="tree"),
-    path("tree-v2/", view_cache(views.TreeViewV2), name="tree-v2"),
-    path("tree-fast/", view_cache(views.TreeViewFast), name="tree-fast"),
     path(
         "tree/<str:commit_hash>/full",
         views.TreeDetails.as_view(),
@@ -114,7 +112,7 @@ urlpatterns = [
     path("log-downloader/", view_cache(views.LogDownloaderView), name="logDownloader"),
     path(
         "hardware/selectors/",
-        view_cache(views.HardwareSelectorsView, timeout=60 * 60),
+        view_cache(views.HardwareSelectorsView, timeout=settings.CACHE_TIMEOUT * 60),
         name="hardwareSelectors",
     ),
     path(
@@ -153,7 +151,6 @@ urlpatterns = [
         view_cache(views.HardwareByRevisionView),
         name="hardwareByRevision",
     ),
-    path("hardware-v2/", view_cache(views.HardwareViewV2), name="hardware-v2"),
     path("issue/", view_cache(views.IssueView), name="issue"),
     path(
         "issue/extras/", view_cache(views.IssueExtraDetails), name="issueExtraDetails"
