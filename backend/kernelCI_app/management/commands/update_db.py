@@ -15,7 +15,15 @@ from django.db import connections, models
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Tests
+from kernelCI_app.models import (
+    Builds,
+    Checkouts,
+    Incidents,
+    Issues,
+    Tests,
+    TreeListing,
+    TreeTestsRollup,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +158,8 @@ class Command(BaseCommand):
     def _invalid_table_error(self, table: str) -> str:
         return (
             f"Unknown table '{table}'.\n"
-            "\tValid options are: issues, checkouts, builds, tests, incidents."
+            "\tValid options are: issues, checkouts, builds, tests, incidents, "
+            "tree_listing, tree_tests_rollup."
         )
 
     def handle(self, *args, command, **options):
@@ -220,6 +229,8 @@ class Command(BaseCommand):
                     self.snapshot_builds()
                     self.snapshot_tests()
                     self.snapshot_incidents()
+                    self.snapshot_tree_listing()
+                    self.snapshot_tree_tests_rollup()
                 case "issues":
                     self.snapshot_issues()
                 case "checkouts":
@@ -230,6 +241,10 @@ class Command(BaseCommand):
                     self.snapshot_tests()
                 case "incidents":
                     self.snapshot_incidents()
+                case "tree_listing":
+                    self.snapshot_tree_listing()
+                case "tree_tests_rollup":
+                    self.snapshot_tree_tests_rollup()
                 case _:
                     self.stdout.write(self._invalid_table_error(table))
             self.stdout.write(
@@ -249,6 +264,8 @@ class Command(BaseCommand):
             self.restore_issues()
             self.restore_tests()
             self.restore_incidents()
+            self.restore_tree_listing()
+            self.restore_tree_tests_rollup()
             self.stdout.write(
                 self.style.SUCCESS("Successfully migrated all data to dashboard_db")
             )
@@ -801,3 +818,189 @@ class Command(BaseCommand):
             records = self.read_records(reader)
             self.insert_incidents_data(records)
             self.stdout.write("Incidents migration completed")
+
+    # TREE LISTING ########################################
+    def select_tree_listing_data(self) -> list[tuple]:
+        query = f"""
+            SELECT checkout_id, origin, tree_name, git_repository_url,
+                   git_repository_branch, git_commit_hash, git_commit_name,
+                   git_commit_tags, start_time, build_pass, build_failed, build_inc,
+                   boot_pass, boot_failed, boot_inc, test_pass, test_failed, test_inc
+            FROM tree_listing
+            WHERE start_time >= NOW() - INTERVAL %s
+            AND start_time <= NOW() - INTERVAL %s
+            {self.origin_condition}
+            ORDER BY start_time, checkout_id
+        """
+        query_params = [
+            self.start_interval,
+            self.end_interval,
+        ] + self.origins
+
+        with connections["default"].cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, query_params)
+            return kcidb_cursor.fetchall()
+
+    def insert_tree_listing_data(self, records: list[tuple]) -> int:
+        original_tree_listing: list[TreeListing] = [
+            TreeListing(
+                checkout_id=record[0],
+                origin=record[1],
+                tree_name=record[2],
+                git_repository_url=record[3],
+                git_repository_branch=record[4],
+                git_commit_hash=record[5],
+                git_commit_name=record[6],
+                git_commit_tags=parse_array(record[7]),
+                start_time=parse_datetime(record[8]) if record[8] else None,
+                build_pass=record[9] or 0,
+                build_failed=record[10] or 0,
+                build_inc=record[11] or 0,
+                boot_pass=record[12] or 0,
+                boot_failed=record[13] or 0,
+                boot_inc=record[14] or 0,
+                test_pass=record[15] or 0,
+                test_failed=record[16] or 0,
+                test_inc=record[17] or 0,
+            )
+            for record in records
+        ]
+
+        migrated_tree_listing = TreeListing.objects.bulk_create(
+            original_tree_listing,
+            ignore_conflicts=True,
+            batch_size=DEFAULT_BATCH_SIZE,
+        )
+        total_inserted = len(migrated_tree_listing)
+
+        self.stdout.write(f"Processed {total_inserted} TreeListing records")
+        return total_inserted
+
+    def snapshot_tree_listing(self) -> None:
+        """Migrate TreeListing data from default to dashboard_db"""
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating TreeListing...")
+            records = self.select_tree_listing_data()
+            self.insert_records(file, "tree_listing", records)
+            self.add_file_to_snapshot(file, "tree_listing")
+            self.stdout.write("TreeListing migration completed")
+
+    def restore_tree_listing(self) -> None:
+        """Migrate TreeListing data from default to dashboard_db"""
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("tree_listing.csv")
+        ) as file:
+            self.stdout.write("\nMigrating TreeListing...")
+            reader = csv.reader(file)
+            records = self.read_records(reader)
+            self.insert_tree_listing_data(records)
+            self.stdout.write("TreeListing migration completed")
+
+    # TREE TESTS ROLLUP ########################################
+    def select_tree_tests_rollup_data(
+        self,
+    ) -> Generator[list[tuple], None, list[tuple]]:
+        origin_condition = (
+            f"AND tree_tests_rollup.origin IN ({','.join(['%s'] * len(self.origins))})"
+            if self.origins
+            else ""
+        )
+        query = f"""
+            SELECT origin, tree_name, git_repository_branch, git_repository_url,
+                   git_commit_hash, path_group, build_config_name,
+                   build_architecture, build_compiler, hardware_key, test_platform,
+                   test_lab, test_origin, issue_id, issue_version,
+                   issue_uncategorized, is_boot, pass_tests, fail_tests, skip_tests,
+                   error_tests, miss_tests, done_tests, null_tests, total_tests
+            FROM tree_tests_rollup
+            WHERE EXISTS (
+                SELECT 1
+                FROM checkouts
+                WHERE checkouts.start_time >= NOW() - INTERVAL %s
+                AND checkouts.start_time <= NOW() - INTERVAL %s
+                AND checkouts.origin = tree_tests_rollup.origin
+                AND checkouts.tree_name IS NOT DISTINCT FROM tree_tests_rollup.tree_name
+                AND checkouts.git_repository_branch IS NOT DISTINCT FROM
+                    tree_tests_rollup.git_repository_branch
+                AND checkouts.git_repository_url IS NOT DISTINCT FROM
+                    tree_tests_rollup.git_repository_url
+                AND checkouts.git_commit_hash IS NOT DISTINCT FROM
+                    tree_tests_rollup.git_commit_hash
+            )
+            {origin_condition}
+            ORDER BY origin, tree_name, git_repository_branch, git_repository_url,
+                     git_commit_hash, path_group
+        """
+        query_params = [
+            self.start_interval,
+            self.end_interval,
+        ] + self.origins
+
+        with connections["default"].cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, query_params)
+            self.stdout.write("Finished fetching tree_tests_rollup")
+            while batch := kcidb_cursor.fetchmany(SELECT_BATCH_SIZE):
+                yield batch
+
+    def insert_tree_tests_rollup_data(self, records: list[tuple]) -> int:
+        original_tree_tests_rollup: list[TreeTestsRollup] = [
+            TreeTestsRollup(
+                origin=record[0],
+                tree_name=record[1],
+                git_repository_branch=record[2],
+                git_repository_url=record[3],
+                git_commit_hash=record[4],
+                path_group=record[5],
+                build_config_name=record[6],
+                build_architecture=record[7],
+                build_compiler=record[8],
+                hardware_key=record[9],
+                test_platform=record[10],
+                test_lab=record[11],
+                test_origin=record[12],
+                issue_id=record[13],
+                issue_version=record[14] or None,
+                issue_uncategorized=record[15],
+                is_boot=record[16],
+                pass_tests=record[17] or 0,
+                fail_tests=record[18] or 0,
+                skip_tests=record[19] or 0,
+                error_tests=record[20] or 0,
+                miss_tests=record[21] or 0,
+                done_tests=record[22] or 0,
+                null_tests=record[23] or 0,
+                total_tests=record[24] or 0,
+            )
+            for record in records
+        ]
+
+        migrated_tree_tests_rollup = TreeTestsRollup.objects.bulk_create(
+            original_tree_tests_rollup,
+            ignore_conflicts=True,
+            batch_size=TEST_BATCH_SIZE,
+        )
+        total_inserted = len(migrated_tree_tests_rollup)
+
+        self.stdout.write(f"Processed {total_inserted} TreeTestsRollup records")
+        return total_inserted
+
+    def snapshot_tree_tests_rollup(self) -> None:
+        """Migrate TreeTestsRollup data from default to dashboard_db"""
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating TreeTestsRollup...")
+            records = self.select_tree_tests_rollup_data()
+            for record_batch in records:
+                self.insert_records(file, "tree_tests_rollup", record_batch)
+            self.add_file_to_snapshot(file, "tree_tests_rollup")
+            self.stdout.write("TreeTestsRollup migration completed")
+
+    def restore_tree_tests_rollup(self) -> None:
+        """Migrate TreeTestsRollup data from default to dashboard_db"""
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("tree_tests_rollup.csv")
+        ) as file:
+            self.stdout.write("\nMigrating TreeTestsRollup...")
+            reader = csv.reader(file)
+            while records := self.read_records(reader, max_rows=TEST_BATCH_SIZE):
+                self.insert_tree_tests_rollup_data(records)
+            self.stdout.write("TreeTestsRollup migration completed")
