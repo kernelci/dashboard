@@ -1,19 +1,32 @@
 {% extends "base.txt" %}
 {% block header %}{% endblock %}
-{% block content %}
-Hello,
-
+{% block content -%}
 New test failure found on {{ test["tree_name"] }}/{{ test["git_repository_branch"] }}:
 
 {{ test["path"] }} running on {{ test["platform"] }}
+{% if test["log_excerpt"] %}
+Log excerpt:
+=====================================================
+{{ test["log_excerpt"] }}
+=====================================================
+{% endif %}
+When fixing this issue, please attribute this report according to the
+patch submission rules:
 
-giturl: {{ test["git_repository_url"] }}
-branch: {{ test["git_repository_branch"] }}
-commit HEAD: {{ test["git_commit_hash"] }}
+Reported-by: kernelci.org bot <bot@kernelci.org>
+{% if message_id -%}
+Link: https://lore.kernel.org/all/{{ message_id }}/
+{% endif %}
+For complete logs and details about the environment used, see the test
+on the KernelCI dashboard:
+
+- dashboard: https://d.kernelci.org/t/{{ test["id"] }}
+- giturl: {{ test["git_repository_url"] }}
+- branch: {{ test["git_repository_branch"] }}
+- commit HEAD: {{ test["git_commit_hash"] }}
 {% if test["git_commit_tags"] -%}
-tags: {% for tag in test["git_commit_tags"] %}{{tag}}{% if not loop.last %}, {% endif %}{% endfor %}
-{%- endif %}
-
+- tags: {% for tag in test["git_commit_tags"] %}{{tag}}{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
 test id: {{ test["id"] }}
 status: {{ test["status"] }}
 start time: {{ test["start_time"] }}
@@ -23,10 +36,6 @@ log: {{ test["log_url"] }}
 {% if test["status_history"] -%}
 history: {{ test["status_history"] }}
 {%- endif %}
-
-Please include the KernelCI tag when submitting a fix:
-
-Reported-by: kernelci.org bot <bot@kernelci.org>
 
 # Test details:
 - test path: {{ test["path"] }}
@@ -44,15 +53,10 @@ Reported-by: kernelci.org bot <bot@kernelci.org>
 - compiler: {{ test["compiler"] }}
 {%- endif %}
 
-Dashboard: https://d.kernelci.org/t/{{ test["id"] }}
+{% if test["last_pass_commit"] -%}
+#regzbot introduced: {{ test["last_pass_commit"] }}..{{ test["git_commit_hash"] }}
+#regzbot link: https://d.kernelci.org/t/{{ test["id"] }}
 
-{% if test["log_excerpt"] %}
-Log excerpt:
-=====================================================
-{{ test["log_excerpt"] }}
-=====================================================
-{% endif %}
-
+{% endif -%}
 #kernelci test {{ test["id"] }}
-
 {%- endblock -%}

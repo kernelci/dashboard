@@ -1,33 +1,33 @@
-
 {% extends "base.txt" %}
 {% block header %}{% endblock %}
-{% block content %}
-Hello,
-
+{% block content -%}
 New build issue found on {{ issue["tree_name"] }}/{{ issue["git_repository_branch"] }}:
 
 ---
 {{ issue["comment"]}}
 ---
-
-- dashboard: https://d.kernelci.org/i/{{ issue["id"] }}
-- giturl: {{ issue["git_repository_url"]}}
-- commit HEAD:  {{ issue["git_commit_hash"] }}
-{% if issue["git_commit_tags"] -%}
-- tags: {% for tag in issue["git_commit_tags"] %}{{tag}}{% if not loop.last %},{% endif %}{% endfor %}
-{%- endif %}
-
-Please include the KernelCI tag when submitting a fix:
-
-Reported-by: kernelci.org bot <bot@kernelci.org>
-
 {% if "misc" in issue.keys() and "logspec" in issue["misc"].keys() %}
 Log excerpt:
 =====================================================
 {{ issue["misc"]["logspec"]["error"]["log_excerpt"] }}
 =====================================================
 {% endif %}
+When fixing this issue, please attribute this report according to the
+patch submission rules:
 
+Reported-by: kernelci.org bot <bot@kernelci.org>
+{% if message_id -%}
+Link: https://lore.kernel.org/all/{{ message_id }}/
+{% endif %}
+For complete logs and details about the environment used, see the issue
+on the KernelCI dashboard:
+
+- dashboard: https://d.kernelci.org/i/{{ issue["id"] }}
+- giturl: {{ issue["git_repository_url"]}}
+- commit HEAD:  {{ issue["git_commit_hash"] }}
+{% if issue["git_commit_tags"] -%}
+- tags: {% for tag in issue["git_commit_tags"] %}{{tag}}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
 # Builds where the incident occurred:
 {% for build in builds %}
 ## {{ build["config_name"] }} on ({{ build["architecture"] }}):
@@ -35,8 +35,10 @@ Log excerpt:
 - config: {{ build["config_url"] }}
 - dashboard: https://d.kernelci.org/build/{{build["id"]}}
 {% endfor %}
+{% if builds and builds[0]["last_pass_commit"] -%}
+#regzbot introduced: {{ builds[0]["last_pass_commit"] }}..{{ issue["git_commit_hash"] }}
+#regzbot link: https://d.kernelci.org/i/{{ issue["id"] }}
 
+{% endif -%}
 #kernelci issue {{ issue["id"] }}
-
-
 {%- endblock -%}

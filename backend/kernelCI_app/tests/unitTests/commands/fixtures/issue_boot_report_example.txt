@@ -1,0 +1,54 @@
+New boot regression found on mainline/master:
+
+---
+Kernel panic - not syncing: Attempted to kill init!
+---
+
+Log excerpt:
+=====================================================
+[    2.512362] Run /sbin/init as init process
+[    2.514426] Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000004
+[    2.515282] CPU: 1 PID: 1 Comm: init Not tainted 6.16.0-rc1 #1
+[    2.515684] Hardware name: Radxa ROCK 3A (DT)
+[    2.516028] Call trace:
+[    2.516216]  dump_backtrace+0x9c/0x100
+[    2.516517]  panic+0x188/0x384
+
+=====================================================
+
+When fixing this issue, please attribute this report according to the
+patch submission rules:
+
+Reported-by: kernelci.org bot <bot@kernelci.org>
+Link: https://lore.kernel.org/all/20260601120000.123456-1@kernelci.org/
+
+For complete logs and details about the environment used, see the issue
+on the KernelCI dashboard:
+
+- dashboard: https://d.kernelci.org/i/maestro:0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c
+- giturl: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+- commit HEAD:  ddd664bbff63e09e7a7f9acae9c43605d4cf185f
+- tags: v6.16-rc1
+
+# Hardware platforms affected:
+
+## rk3568-rock-3a
+- dashboard: https://d.kernelci.org/test/maestro:boot-7c8d9e0f1a2b
+- compatibles: radxa,rock-3a | rockchip,rk3568
+- 5 fails since 2026-06-01 12:00 UTC
+- test path: boot
+- last pass: https://d.kernelci.org/test/maestro:boot-1a2b3c4d5e6f
+    - on 2026-05-30 09:00 UTC
+    - commit hash:  a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0
+    - test id:  maestro:boot-1a2b3c4d5e6f
+
+#regzbot introduced: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0..ddd664bbff63e09e7a7f9acae9c43605d4cf185f
+#regzbot link: https://d.kernelci.org/i/maestro:0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c
+
+#kernelci issue maestro:0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c
+
+--
+This is an experimental report format. Please send feedback in!
+Talk to us at kernelci@lists.linux.dev
+
+Made with love by the KernelCI team - https://kernelci.org

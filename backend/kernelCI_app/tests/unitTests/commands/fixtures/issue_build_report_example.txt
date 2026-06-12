@@ -1,0 +1,45 @@
+New build issue found on mainline/master:
+
+---
+include/linux/signal.h:160:1: error: array index 2 is past the end of the array (that has type 'unsigned long[2]') [-Werror,-Warray-bounds] in lib/maple_tree.o (lib/maple_tree.c) [logspec:kbuild,kbuild.compiler.error]
+---
+
+Log excerpt:
+=====================================================
+include/linux/signal.h:160:1: error: array index 2 is past the end of the array [-Werror,-Warray-bounds]
+  160 | _SIG_SET_BINOP(sigandsets, _sig_and)
+fatal error: too many errors emitted, stopping now
+20 errors generated.
+
+=====================================================
+
+When fixing this issue, please attribute this report according to the
+patch submission rules:
+
+Reported-by: kernelci.org bot <bot@kernelci.org>
+Link: https://lore.kernel.org/all/20260601120000.123456-1@kernelci.org/
+
+For complete logs and details about the environment used, see the issue
+on the KernelCI dashboard:
+
+- dashboard: https://d.kernelci.org/i/maestro:98c2d110d805d1a864a89edd1e2c447175476af8
+- giturl: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+- commit HEAD:  ddd664bbff63e09e7a7f9acae9c43605d4cf185f
+
+# Builds where the incident occurred:
+
+## defconfig+allmodconfig+CONFIG_FRAME_WARN=2048 on (arm):
+- compiler: clang-21
+- config: https://files.kernelci.org/maestro/config
+- dashboard: https://d.kernelci.org/build/maestro:6a2202cf2cc72b6e94c25e88
+
+#regzbot introduced: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0..ddd664bbff63e09e7a7f9acae9c43605d4cf185f
+#regzbot link: https://d.kernelci.org/i/maestro:98c2d110d805d1a864a89edd1e2c447175476af8
+
+#kernelci issue maestro:98c2d110d805d1a864a89edd1e2c447175476af8
+
+--
+This is an experimental report format. Please send feedback in!
+Talk to us at kernelci@lists.linux.dev
+
+Made with love by the KernelCI team - https://kernelci.org
