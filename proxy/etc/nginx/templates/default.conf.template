@@ -6,6 +6,7 @@ server {
         proxy_send_timeout 240s;
         send_timeout 240s;
     }
+
     location / {
         root /data/static;
         try_files $uri /index.html;
