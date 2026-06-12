@@ -4,6 +4,7 @@ from typing import Optional, TypedDict
 from django.db import connection
 
 from kernelCI_app.cache import get_query_cache, set_query_cache
+from kernelCI_app.constants.hardwareDetails import make_tree_key
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.queries.duration import (
     get_boot_test_duration_clause,
@@ -795,6 +796,8 @@ def get_hardware_trees_head_commits(
             TH.git_repository_url,
             TH.git_commit_hash
         ) TH.tree_name,
+        TH.git_repository_branch,
+        TH.git_repository_url,
         TH.git_commit_hash
     FROM
         tests
@@ -829,8 +832,15 @@ def get_hardware_trees_head_commits(
         cursor.execute(query, params)
         tree_records = dict_fetchall(cursor)
         trees = [
-            (str(idx), tree["git_commit_hash"])
-            for (idx, tree) in enumerate(tree_records)
+            (
+                make_tree_key(
+                    tree["tree_name"] or "",
+                    tree.get("git_repository_branch", "") or "",
+                    tree.get("git_repository_url", "") or "",
+                ),
+                tree["git_commit_hash"],
+            )
+            for tree in tree_records
         ]
         set_query_cache(key=cache_key, params=cache_params, rows=trees)
 
@@ -905,10 +915,15 @@ def get_hardware_trees_data(
             tree_records = dict_fetchall(cursor)
 
         trees = []
-        for idx, tree in enumerate(tree_records):
+        for tree in tree_records:
+            tree_index = make_tree_key(
+                tree["tree_name"] or "",
+                tree["git_repository_branch"] or "",
+                tree["git_repository_url"] or "",
+            )
             trees.append(
                 Tree(
-                    index=str(idx),
+                    index=tree_index,
                     tree_name=tree["tree_name"],
                     origin=tree["origin"],
                     git_repository_branch=tree["git_repository_branch"],
