@@ -15,7 +15,17 @@ from django.db import connections, models
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from kernelCI_app.models import Builds, Checkouts, Incidents, Issues, Tests
+from kernelCI_app.models import (
+    Builds,
+    Checkouts,
+    HardwareStatus,
+    Incidents,
+    Issues,
+    LatestCheckout,
+    Tests,
+    TreeListing,
+    TreeTestsRollup,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +87,7 @@ def ensure_suffix(filepath: str, suffix: str) -> Path:
 
 
 class Command(BaseCommand):
-    help = "Migrate data from default database to dashboard_db"
+    help = "Migrate data dashboard_db to/from file"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -106,8 +116,10 @@ class Command(BaseCommand):
         snapshot_parser.add_argument(
             "--end-interval",
             type=str,
-            help="End interval for filtering data ('x days' or 'x hours' format)",
-            required=True,
+            help="End interval for filtering data ('x days' or 'x hours' format)."
+            " Optional, defaults to now ('0 hours').",
+            required=False,
+            default=None,
         )
         snapshot_parser.add_argument(
             "--table",
@@ -150,7 +162,8 @@ class Command(BaseCommand):
     def _invalid_table_error(self, table: str) -> str:
         return (
             f"Unknown table '{table}'.\n"
-            "\tValid options are: issues, checkouts, builds, tests, incidents."
+            "\tValid options are: issues, checkouts, builds, tests, incidents, "
+            "latest_checkout, hardware_status, tree_listing, tree_tests_rollup."
         )
 
     def handle(self, *args, command, **options):
@@ -171,20 +184,33 @@ class Command(BaseCommand):
         self,
         *args,
         start_interval: str,
-        end_interval: str,
+        end_interval: Optional[str],
         table: str,
         origins: list[str],
         related_data_only: bool,
         filepath: str,
         **options,
     ):
+        end_interval_unsafe_tables = (
+            None,
+            "latest_checkout",
+            "tree_listing",
+            "tree_tests_rollup",
+        )
+
         self.start_interval = start_interval
-        self.end_interval = end_interval
+        self.end_interval = end_interval if end_interval is not None else "0 hours"
         self.related_data_only = related_data_only
         self.origins = origins
         self.origin_condition = (
             f"AND origin IN ({','.join(['%s'] * len(origins))})" if origins else ""
         )
+
+        if end_interval is not None and table in end_interval_unsafe_tables:
+            logger.warning(
+                "--end-interval is set while snapshotting time aggregated tables"
+                ", so an end interval may produce incorrect/stale data."
+            )
 
         self.start_timestamp = parse_interval(self.start_interval)
         self.end_timestamp = parse_interval(self.end_interval)
@@ -220,6 +246,10 @@ class Command(BaseCommand):
                     self.snapshot_builds()
                     self.snapshot_tests()
                     self.snapshot_incidents()
+                    self.snapshot_latest_checkout()
+                    self.snapshot_hardware_status()
+                    self.snapshot_tree_listing()
+                    self.snapshot_tree_tests_rollup()
                 case "issues":
                     self.snapshot_issues()
                 case "checkouts":
@@ -230,6 +260,14 @@ class Command(BaseCommand):
                     self.snapshot_tests()
                 case "incidents":
                     self.snapshot_incidents()
+                case "latest_checkout":
+                    self.snapshot_latest_checkout()
+                case "hardware_status":
+                    self.snapshot_hardware_status()
+                case "tree_listing":
+                    self.snapshot_tree_listing()
+                case "tree_tests_rollup":
+                    self.snapshot_tree_tests_rollup()
                 case _:
                     self.stdout.write(self._invalid_table_error(table))
             self.stdout.write(
@@ -249,6 +287,10 @@ class Command(BaseCommand):
             self.restore_issues()
             self.restore_tests()
             self.restore_incidents()
+            self.restore_latest_checkout()
+            self.restore_hardware_status()
+            self.restore_tree_listing()
+            self.restore_tree_tests_rollup()
             self.stdout.write(
                 self.style.SUCCESS("Successfully migrated all data to dashboard_db")
             )
@@ -420,7 +462,7 @@ class Command(BaseCommand):
         return total_inserted
 
     def snapshot_checkouts(self) -> None:
-        """Migrate Checkouts data from default to dashboard_db"""
+        """Migrate Checkouts data from dashboard_db to file"""
 
         with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
             self.stdout.write("\nMigrating Checkouts...")
@@ -430,7 +472,7 @@ class Command(BaseCommand):
             self.stdout.write("Checkouts migration completed")
 
     def restore_checkouts(self) -> None:
-        """Migrate Checkouts data from default to dashboard_db"""
+        """Migrate Checkouts data from file to dashboard_db"""
 
         with TextIOWrapper(self.snapshot_archive.extractfile("checkouts.csv")) as file:
             reader = csv.reader(file)
@@ -493,7 +535,7 @@ class Command(BaseCommand):
         )
 
     def snapshot_builds(self) -> None:
-        """Migrate Builds data from default to dashboard_db,
+        """Migrate Builds data from dashboard_db to file,
         only inserts builds that have the related checkout in the dashboard_db
         in order to preserve the foreign key constraint"""
         with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
@@ -504,7 +546,7 @@ class Command(BaseCommand):
             self.stdout.write("Builds migration completed")
 
     def restore_builds(self) -> None:
-        """Migrate Builds data from default to dashboard_db,
+        """Migrate Builds data from file to dashboard_db,
         only inserts builds that have the related checkout in the dashboard_db
         in order to preserve the foreign key constraint"""
         with TextIOWrapper(self.snapshot_archive.extractfile("builds.csv")) as file:
@@ -631,7 +673,7 @@ class Command(BaseCommand):
         self.snapshot_archive.addfile(tar_info, file)
 
     def snapshot_tests(self) -> None:
-        """Migrate Tests data from default to dashboard_db,
+        """Migrate Tests data from dashboard_db to file,
         only inserts tests that have the related build in the dashboard_db
         in order to preserve the foreign key constraint"""
         with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
@@ -643,7 +685,7 @@ class Command(BaseCommand):
             self.stdout.write("Tests migration completed")
 
     def restore_tests(self) -> None:
-        """Migrate Tests data from default to dashboard_db,
+        """Migrate Tests data from file to dashboard_db,
         only inserts tests that have the related build in the dashboard_db
         in order to preserve the foreign key constraint"""
         with TextIOWrapper(self.snapshot_archive.extractfile("tests.csv")) as file:
@@ -777,7 +819,7 @@ class Command(BaseCommand):
         return total_inserted
 
     def snapshot_incidents(self) -> None:
-        """Migrate Incidents data from default to dashboard_db,
+        """Migrate Incidents data from dashboard_db to file,
         incidents are related to issues, builds and tests.
         So if any of them are not null, an incident will only be inserted
         if the related issue, build or test exists in the dashboard_db"""
@@ -790,7 +832,7 @@ class Command(BaseCommand):
             self.stdout.write("Incidents migration completed")
 
     def restore_incidents(self) -> None:
-        """Migrate Incidents data from default to dashboard_db,
+        """Migrate Incidents data from file to dashboard_db,
         incidents are related to issues, builds and tests.
         So if any of them are not null, an incident will only be inserted
         if the related issue, build or test exists in the dashboard_db"""
@@ -801,3 +843,330 @@ class Command(BaseCommand):
             records = self.read_records(reader)
             self.insert_incidents_data(records)
             self.stdout.write("Incidents migration completed")
+
+    # LATEST CHECKOUT ########################################
+    def select_latest_checkout_data(self) -> list[tuple]:
+        query = f"""
+            SELECT checkout_id, origin, tree_name, git_repository_url,
+                   git_repository_branch, start_time
+            FROM latest_checkout
+            WHERE start_time >= NOW() - INTERVAL %s
+            AND start_time <= NOW() - INTERVAL %s
+            {self.origin_condition}
+            ORDER BY start_time, checkout_id
+        """
+        query_params = [
+            self.start_interval,
+            self.end_interval,
+        ] + self.origins
+
+        with connections["default"].cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, query_params)
+            return kcidb_cursor.fetchall()
+
+    def insert_latest_checkout_data(self, records: list[tuple]) -> int:
+        original_latest_checkout: list[LatestCheckout] = [
+            LatestCheckout(
+                checkout_id=record[0],
+                origin=record[1],
+                tree_name=record[2],
+                git_repository_url=record[3],
+                git_repository_branch=record[4],
+                start_time=parse_datetime(record[5]) if record[5] else None,
+            )
+            for record in records
+        ]
+
+        migrated_latest_checkout = LatestCheckout.objects.bulk_create(
+            original_latest_checkout,
+            ignore_conflicts=True,
+            batch_size=DEFAULT_BATCH_SIZE,
+        )
+        total_inserted = len(migrated_latest_checkout)
+
+        self.stdout.write(f"Processed {total_inserted} LatestCheckout records")
+        return total_inserted
+
+    def snapshot_latest_checkout(self) -> None:
+        """Migrate LatestCheckout data from dashboard_db to file"""
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating LatestCheckout...")
+            records = self.select_latest_checkout_data()
+            self.insert_records(file, "latest_checkout", records)
+            self.add_file_to_snapshot(file, "latest_checkout")
+            self.stdout.write("LatestCheckout migration completed")
+
+    def restore_latest_checkout(self) -> None:
+        """Migrate LatestCheckout data from file to dashboard_db"""
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("latest_checkout.csv")
+        ) as file:
+            self.stdout.write("\nMigrating LatestCheckout...")
+            reader = csv.reader(file)
+            records = self.read_records(reader)
+            self.insert_latest_checkout_data(records)
+            self.stdout.write("LatestCheckout migration completed")
+
+    # HARDWARE STATUS ########################################
+    def select_hardware_status_data(self) -> list[tuple]:
+        origin_condition = (
+            f"AND test_origin IN ({','.join(['%s'] * len(self.origins))})"
+            if self.origins
+            else ""
+        )
+        query = f"""
+            SELECT checkout_id, test_origin, platform, compatibles, start_time,
+                   build_pass, build_failed, build_inc,
+                   boot_pass, boot_failed, boot_inc,
+                   test_pass, test_failed, test_inc
+            FROM hardware_status
+            WHERE start_time >= NOW() - INTERVAL %s
+            AND start_time <= NOW() - INTERVAL %s
+            {origin_condition}
+            ORDER BY start_time, test_origin, platform, checkout_id
+        """
+        query_params = [
+            self.start_interval,
+            self.end_interval,
+        ] + self.origins
+
+        with connections["default"].cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, query_params)
+            return kcidb_cursor.fetchall()
+
+    def insert_hardware_status_data(self, records: list[tuple]) -> int:
+        original_hardware_status: list[HardwareStatus] = [
+            HardwareStatus(
+                checkout_id=record[0],
+                test_origin=record[1],
+                platform=record[2],
+                compatibles=parse_array(record[3]),
+                start_time=parse_datetime(record[4]) if record[4] else None,
+                build_pass=record[5] or 0,
+                build_failed=record[6] or 0,
+                build_inc=record[7] or 0,
+                boot_pass=record[8] or 0,
+                boot_failed=record[9] or 0,
+                boot_inc=record[10] or 0,
+                test_pass=record[11] or 0,
+                test_failed=record[12] or 0,
+                test_inc=record[13] or 0,
+            )
+            for record in records
+        ]
+
+        migrated_hardware_status = HardwareStatus.objects.bulk_create(
+            original_hardware_status,
+            ignore_conflicts=True,
+            batch_size=DEFAULT_BATCH_SIZE,
+        )
+        total_inserted = len(migrated_hardware_status)
+
+        self.stdout.write(f"Processed {total_inserted} HardwareStatus records")
+        return total_inserted
+
+    def snapshot_hardware_status(self) -> None:
+        """Migrate HardwareStatus data from dashboard_db to file"""
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating HardwareStatus...")
+            records = self.select_hardware_status_data()
+            self.insert_records(file, "hardware_status", records)
+            self.add_file_to_snapshot(file, "hardware_status")
+            self.stdout.write("HardwareStatus migration completed")
+
+    def restore_hardware_status(self) -> None:
+        """Migrate HardwareStatus data from file to dashboard_db"""
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("hardware_status.csv")
+        ) as file:
+            self.stdout.write("\nMigrating HardwareStatus...")
+            reader = csv.reader(file)
+            records = self.read_records(reader)
+            self.insert_hardware_status_data(records)
+            self.stdout.write("HardwareStatus migration completed")
+
+    # TREE LISTING ########################################
+    def select_tree_listing_data(self) -> list[tuple]:
+        query = f"""
+            SELECT checkout_id, origin, tree_name, git_repository_url,
+                   git_repository_branch, git_commit_hash, git_commit_name,
+                   git_commit_tags, start_time, build_pass, build_failed, build_inc,
+                   boot_pass, boot_failed, boot_inc, test_pass, test_failed, test_inc
+            FROM tree_listing
+            WHERE start_time >= NOW() - INTERVAL %s
+            AND start_time <= NOW() - INTERVAL %s
+            {self.origin_condition}
+            ORDER BY start_time, checkout_id
+        """
+        query_params = [
+            self.start_interval,
+            self.end_interval,
+        ] + self.origins
+
+        with connections["default"].cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, query_params)
+            return kcidb_cursor.fetchall()
+
+    def insert_tree_listing_data(self, records: list[tuple]) -> int:
+        original_tree_listing: list[TreeListing] = [
+            TreeListing(
+                checkout_id=record[0],
+                origin=record[1],
+                tree_name=record[2],
+                git_repository_url=record[3],
+                git_repository_branch=record[4],
+                git_commit_hash=record[5],
+                git_commit_name=record[6],
+                git_commit_tags=parse_array(record[7]),
+                start_time=parse_datetime(record[8]) if record[8] else None,
+                build_pass=record[9] or 0,
+                build_failed=record[10] or 0,
+                build_inc=record[11] or 0,
+                boot_pass=record[12] or 0,
+                boot_failed=record[13] or 0,
+                boot_inc=record[14] or 0,
+                test_pass=record[15] or 0,
+                test_failed=record[16] or 0,
+                test_inc=record[17] or 0,
+            )
+            for record in records
+        ]
+
+        migrated_tree_listing = TreeListing.objects.bulk_create(
+            original_tree_listing,
+            ignore_conflicts=True,
+            batch_size=DEFAULT_BATCH_SIZE,
+        )
+        total_inserted = len(migrated_tree_listing)
+
+        self.stdout.write(f"Processed {total_inserted} TreeListing records")
+        return total_inserted
+
+    def snapshot_tree_listing(self) -> None:
+        """Migrate TreeListing data from dashboard_db to file"""
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating TreeListing...")
+            records = self.select_tree_listing_data()
+            self.insert_records(file, "tree_listing", records)
+            self.add_file_to_snapshot(file, "tree_listing")
+            self.stdout.write("TreeListing migration completed")
+
+    def restore_tree_listing(self) -> None:
+        """Migrate TreeListing data from file to dashboard_db"""
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("tree_listing.csv")
+        ) as file:
+            self.stdout.write("\nMigrating TreeListing...")
+            reader = csv.reader(file)
+            records = self.read_records(reader)
+            self.insert_tree_listing_data(records)
+            self.stdout.write("TreeListing migration completed")
+
+    # TREE TESTS ROLLUP ########################################
+    def select_tree_tests_rollup_data(
+        self,
+    ) -> Generator[list[tuple], None, list[tuple]]:
+        origin_condition = (
+            f"AND tree_tests_rollup.origin IN ({','.join(['%s'] * len(self.origins))})"
+            if self.origins
+            else ""
+        )
+        query = f"""
+            SELECT origin, tree_name, git_repository_branch, git_repository_url,
+                   git_commit_hash, path_group, build_config_name,
+                   build_architecture, build_compiler, hardware_key, test_platform,
+                   test_lab, test_origin, issue_id, issue_version,
+                   issue_uncategorized, is_boot, pass_tests, fail_tests, skip_tests,
+                   error_tests, miss_tests, done_tests, null_tests, total_tests
+            FROM tree_tests_rollup
+            WHERE EXISTS (
+                SELECT 1
+                FROM checkouts
+                WHERE checkouts.start_time >= NOW() - INTERVAL %s
+                AND checkouts.start_time <= NOW() - INTERVAL %s
+                AND checkouts.origin = tree_tests_rollup.origin
+                AND checkouts.tree_name IS NOT DISTINCT FROM tree_tests_rollup.tree_name
+                AND checkouts.git_repository_branch IS NOT DISTINCT FROM
+                    tree_tests_rollup.git_repository_branch
+                AND checkouts.git_repository_url IS NOT DISTINCT FROM
+                    tree_tests_rollup.git_repository_url
+                AND checkouts.git_commit_hash IS NOT DISTINCT FROM
+                    tree_tests_rollup.git_commit_hash
+            )
+            {origin_condition}
+            ORDER BY origin, tree_name, git_repository_branch, git_repository_url,
+                     git_commit_hash, path_group
+        """
+        query_params = [
+            self.start_interval,
+            self.end_interval,
+        ] + self.origins
+
+        with connections["default"].cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, query_params)
+            self.stdout.write("Finished fetching tree_tests_rollup")
+            while batch := kcidb_cursor.fetchmany(SELECT_BATCH_SIZE):
+                yield batch
+
+    def insert_tree_tests_rollup_data(self, records: list[tuple]) -> int:
+        original_tree_tests_rollup: list[TreeTestsRollup] = [
+            TreeTestsRollup(
+                origin=record[0],
+                tree_name=record[1],
+                git_repository_branch=record[2],
+                git_repository_url=record[3],
+                git_commit_hash=record[4],
+                path_group=record[5],
+                build_config_name=record[6],
+                build_architecture=record[7],
+                build_compiler=record[8],
+                hardware_key=record[9],
+                test_platform=record[10],
+                test_lab=record[11],
+                test_origin=record[12],
+                issue_id=record[13],
+                issue_version=record[14] or None,
+                issue_uncategorized=record[15],
+                is_boot=record[16],
+                pass_tests=record[17] or 0,
+                fail_tests=record[18] or 0,
+                skip_tests=record[19] or 0,
+                error_tests=record[20] or 0,
+                miss_tests=record[21] or 0,
+                done_tests=record[22] or 0,
+                null_tests=record[23] or 0,
+                total_tests=record[24] or 0,
+            )
+            for record in records
+        ]
+
+        migrated_tree_tests_rollup = TreeTestsRollup.objects.bulk_create(
+            original_tree_tests_rollup,
+            ignore_conflicts=True,
+            batch_size=TEST_BATCH_SIZE,
+        )
+        total_inserted = len(migrated_tree_tests_rollup)
+
+        self.stdout.write(f"Processed {total_inserted} TreeTestsRollup records")
+        return total_inserted
+
+    def snapshot_tree_tests_rollup(self) -> None:
+        """Migrate TreeTestsRollup data from dashboard_db to file"""
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating TreeTestsRollup...")
+            records = self.select_tree_tests_rollup_data()
+            for record_batch in records:
+                self.insert_records(file, "tree_tests_rollup", record_batch)
+            self.add_file_to_snapshot(file, "tree_tests_rollup")
+            self.stdout.write("TreeTestsRollup migration completed")
+
+    def restore_tree_tests_rollup(self) -> None:
+        """Migrate TreeTestsRollup data from file to dashboard_db"""
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("tree_tests_rollup.csv")
+        ) as file:
+            self.stdout.write("\nMigrating TreeTestsRollup...")
+            reader = csv.reader(file)
+            while records := self.read_records(reader, max_rows=TEST_BATCH_SIZE):
+                self.insert_tree_tests_rollup_data(records)
+            self.stdout.write("TreeTestsRollup migration completed")
