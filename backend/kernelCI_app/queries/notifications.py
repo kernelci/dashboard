@@ -1,5 +1,6 @@
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, time, timedelta, timezone
 from typing import Any
 
 from django.db import connection, connections
@@ -16,7 +17,9 @@ from kernelCI_app.typeModels.metrics_notifications import (
     TopIssue,
 )
 
+METRICS_CACHE_WARM_PERIODS = (7, 14)
 METRICS_CACHE_TIMEOUT = 60 * 60 * 6  # 6 hours
+METRICS_CACHE_WARM_TIMEOUT = 60 * 60 * 24 * 8  # 8 days
 
 
 def kcidb_execute_query(query, params=None):
@@ -698,17 +701,24 @@ def query_fetchone_work(
     query: str,
     params: dict[str, Any],
     timeout: int = METRICS_CACHE_TIMEOUT,
-):
-    rows = get_query_cache(key=cache_key, params=params)
-    if rows is not None:
-        return rows
+    use_cache: bool = True,
+) -> Any:
+    if use_cache:
+        cached = get_query_cache(key=cache_key, params=params)
+        if cached is not None:
+            return cached
     try:
         with connections["default"].cursor() as cursor:
             cursor.execute(query, params)
             rows = cursor.fetchone()
     finally:
         connections["default"].close()
-    set_query_cache(key=cache_key, params=params, rows=rows, timeout=timeout)
+    set_query_cache(
+        key=cache_key,
+        params=params,
+        rows=rows,
+        timeout=timeout,
+    )
     return rows
 
 
@@ -718,24 +728,50 @@ def query_fetchall_work(
     query: str,
     params: dict[str, Any],
     timeout: int = METRICS_CACHE_TIMEOUT,
-):
-    rows = get_query_cache(key=cache_key, params=params)
-    if rows is not None:
-        return rows
+    use_cache: bool = True,
+) -> Any:
+    if use_cache:
+        cached = get_query_cache(key=cache_key, params=params)
+        if cached is not None:
+            return cached
     try:
         with connections["default"].cursor() as cursor:
             cursor.execute(query, params)
             rows = cursor.fetchall()
     finally:
         connections["default"].close()
-    set_query_cache(key=cache_key, params=params, rows=rows, timeout=timeout)
+    set_query_cache(
+        key=cache_key,
+        params=params,
+        rows=rows,
+        timeout=timeout,
+    )
     return rows
+
+
+def interval_params(start_days_ago: int, end_days_ago: int) -> dict[str, str]:
+    """Build [start_date, end_date) bounds from UTC day offsets."""
+    today = datetime.now(timezone.utc).date()
+    start_datetime = datetime.combine(
+        today - timedelta(days=start_days_ago), time.min, tzinfo=timezone.utc
+    )
+    end_datetime = datetime.combine(
+        today - timedelta(days=end_days_ago),
+        time.min,
+        tzinfo=timezone.utc,
+    )
+    return {
+        "start_date": start_datetime.isoformat(),
+        "end_date": end_datetime.isoformat(),
+    }
 
 
 def get_metrics_data(
     *,
     start_days_ago: int,
     end_days_ago: int,
+    use_cache: bool = True,
+    cache_timeout: int = METRICS_CACHE_TIMEOUT,
 ) -> MetricsReportData:
 
     if start_days_ago > 30:
@@ -747,41 +783,37 @@ def get_metrics_data(
     prev_start_days_ago = start_days_ago - period_length
     prev_end_days_ago = start_days_ago
 
-    params = {
-        "start_days_ago": str(start_days_ago) + " days",
-        "end_days_ago": str(end_days_ago) + " days",
-    }
-    prev_params = {
-        "start_days_ago": str(prev_start_days_ago) + " days",
-        "end_days_ago": str(prev_end_days_ago) + " days",
-    }
+    params = interval_params(start_days_ago, end_days_ago)
+    prev_params = interval_params(prev_start_days_ago, prev_end_days_ago)
 
     total_objects_query = """
     SELECT
-        (SELECT COUNT(DISTINCT tree_name) FROM checkouts WHERE _timestamp BETWEEN
-            NOW() - INTERVAL %(start_days_ago)s
-            AND NOW() - INTERVAL %(end_days_ago)s)
-            AS n_trees,
-        (SELECT COUNT(*) FROM checkouts WHERE _timestamp BETWEEN
-            NOW() - INTERVAL %(start_days_ago)s
-            AND NOW() - INTERVAL %(end_days_ago)s)
-            AS n_checkouts,
-        (SELECT COUNT(*) FROM builds WHERE _timestamp BETWEEN
-            NOW() - INTERVAL %(start_days_ago)s
-            AND NOW() - INTERVAL %(end_days_ago)s)
+        c.n_trees,
+        c.n_checkouts,
+        (SELECT COUNT(*) FROM builds WHERE _timestamp >=
+            %(start_date)s::timestamptz
+            AND _timestamp < %(end_date)s::timestamptz)
             AS n_builds,
-        (SELECT COUNT(*) FROM tests WHERE _timestamp BETWEEN
-            NOW() - INTERVAL %(start_days_ago)s
-            AND NOW() - INTERVAL %(end_days_ago)s)
+        (SELECT COUNT(*) FROM tests WHERE _timestamp >=
+            %(start_date)s::timestamptz
+            AND _timestamp < %(end_date)s::timestamptz)
             AS n_tests,
-        (SELECT COUNT(*) FROM issues WHERE _timestamp BETWEEN
-            NOW() - INTERVAL %(start_days_ago)s
-            AND NOW() - INTERVAL %(end_days_ago)s)
+        (SELECT COUNT(*) FROM issues WHERE _timestamp >=
+            %(start_date)s::timestamptz
+            AND _timestamp < %(end_date)s::timestamptz)
             AS n_issues,
-        (SELECT COUNT(*) FROM incidents WHERE _timestamp BETWEEN
-            NOW() - INTERVAL %(start_days_ago)s
-            AND NOW() - INTERVAL %(end_days_ago)s)
-            AS n_incidents;
+        (SELECT COUNT(*) FROM incidents WHERE _timestamp >=
+            %(start_date)s::timestamptz
+            AND _timestamp < %(end_date)s::timestamptz)
+            AS n_incidents
+    FROM (
+        SELECT
+            COUNT(DISTINCT tree_name) AS n_trees,
+            COUNT(*) AS n_checkouts
+        FROM checkouts
+        WHERE _timestamp >= %(start_date)s::timestamptz
+            AND _timestamp < %(end_date)s::timestamptz
+    ) c;
     """
 
     build_incidents_query = """
@@ -800,20 +832,14 @@ def get_metrics_data(
         SELECT
             origin,
             COUNT(*) FILTER (
-                WHERE _timestamp BETWEEN
-                    NOW() - INTERVAL %(start_days_ago)s
-                    AND NOW() - INTERVAL %(end_days_ago)s
+                WHERE _timestamp >= %(start_date)s::timestamptz AND _timestamp < %(end_date)s::timestamptz
             ) AS total_incidents,
             COUNT(*) FILTER (
-                WHERE _timestamp BETWEEN
-                    NOW() - INTERVAL %(start_days_ago)s
-                    AND NOW() - INTERVAL %(end_days_ago)s
+                WHERE _timestamp >= %(start_date)s::timestamptz AND _timestamp < %(end_date)s::timestamptz
                 AND rn = 1
             ) AS n_new_issues,
             COUNT(DISTINCT issue_id) FILTER (
-                WHERE _timestamp BETWEEN
-                    NOW() - INTERVAL %(start_days_ago)s
-                    AND NOW() - INTERVAL %(end_days_ago)s
+                WHERE _timestamp >= %(start_date)s::timestamptz AND _timestamp < %(end_date)s::timestamptz
             ) AS n_issues
         FROM time_rank
         GROUP BY origin
@@ -830,9 +856,9 @@ def get_metrics_data(
         JOIN issues i ON inc.issue_id = i.id AND inc.issue_version = i.version
         WHERE
             inc.build_id is not null
-            AND inc._timestamp BETWEEN
-                NOW() - INTERVAL %(start_days_ago)s
-                AND NOW() - INTERVAL %(end_days_ago)s
+            AND inc._timestamp >=
+                %(start_date)s::timestamptz
+                AND inc._timestamp < %(end_date)s::timestamptz
         GROUP BY inc.origin, inc.issue_id, inc.issue_version, i.comment
         ORDER BY inc.origin, total DESC
     ),
@@ -874,9 +900,7 @@ def get_metrics_data(
         SELECT issue_id, origin
         FROM time_rank
         WHERE rn = 1
-            AND _timestamp BETWEEN
-                NOW() - INTERVAL %(start_days_ago)s
-                AND NOW() - INTERVAL %(end_days_ago)s
+            AND _timestamp >= %(start_date)s::timestamptz AND _timestamp < %(end_date)s::timestamptz
     )
     SELECT
         inc.origin,
@@ -889,9 +913,9 @@ def get_metrics_data(
     JOIN new_issues ni ON inc.issue_id = ni.issue_id AND inc.origin = ni.origin
     WHERE
         inc.build_id IS NOT NULL
-        AND inc._timestamp BETWEEN
-            NOW() - INTERVAL %(start_days_ago)s
-            AND NOW() - INTERVAL %(end_days_ago)s
+        AND inc._timestamp >=
+            %(start_date)s::timestamptz
+            AND inc._timestamp < %(end_date)s::timestamptz
     GROUP BY inc.origin, inc.issue_id, inc.issue_version, i.comment
     ORDER BY inc.origin, total DESC
     """
@@ -906,9 +930,9 @@ def get_metrics_data(
     FROM tests t
     WHERE
         t.misc->>'runtime' IS NOT NULL
-        AND t._timestamp BETWEEN
-            NOW() - INTERVAL %(start_days_ago)s
-            AND NOW() - INTERVAL %(end_days_ago)s
+        AND t._timestamp >=
+            %(start_date)s::timestamptz
+            AND t._timestamp < %(end_date)s::timestamptz
     GROUP BY lab
     """
 
@@ -918,36 +942,48 @@ def get_metrics_data(
             cache_key="metricsTotalObjects",
             query=total_objects_query,
             params=params,
+            use_cache=use_cache,
+            timeout=cache_timeout,
         )
         prev_total_objects_result = executor.submit(
             query_fetchone_work,
             cache_key="metricsTotalObjects",
             query=total_objects_query,
             params=prev_params,
+            use_cache=use_cache,
+            timeout=cache_timeout,
         )
         build_incidents_result = executor.submit(
             query_fetchall_work,
             cache_key="metricsBuildIncidents",
             query=build_incidents_query,
             params=params,
+            use_cache=use_cache,
+            timeout=cache_timeout,
         )
         new_build_issues_result = executor.submit(
             query_fetchall_work,
             cache_key="metricsNewBuildIssues",
             query=new_build_issues_query,
             params=params,
+            use_cache=use_cache,
+            timeout=cache_timeout,
         )
         lab_summary_results = executor.submit(
             query_fetchall_work,
             cache_key="metricsLabSummary",
             query=lab_summary_query,
             params=params,
+            use_cache=use_cache,
+            timeout=cache_timeout,
         )
         prev_lab_summary_results = executor.submit(
             query_fetchall_work,
             cache_key="metricsLabSummary",
             query=lab_summary_query,
             params=prev_params,
+            use_cache=use_cache,
+            timeout=cache_timeout,
         )
 
     total_objects_result = total_objects_result.result()
@@ -1029,3 +1065,22 @@ def get_metrics_data(
         raise e
 
     return data
+
+
+def warm_metrics_cache() -> None:
+    for period_days in METRICS_CACHE_WARM_PERIODS:
+        out(
+            "Warming metrics cache for "
+            f"{period_days}-day period "
+            f"(start_days_ago={period_days}, end_days_ago=0)"
+        )
+        try:
+            get_metrics_data(
+                start_days_ago=period_days,
+                end_days_ago=0,
+                use_cache=False,
+                cache_timeout=METRICS_CACHE_WARM_TIMEOUT,
+            )
+            out(f"Warmed metrics cache for {period_days}-day period")
+        except Exception as e:
+            out(f"Failed to warm metrics cache for {period_days}-day period: {e}")

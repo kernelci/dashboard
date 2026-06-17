@@ -10,6 +10,7 @@ from kernelCI_app.models import Incidents
 
 from .build_factory import BuildFactory
 from .issue_factory import IssueFactory
+from .seed_time import seeded_timestamp_for_index
 from .test_factory import TestFactory
 
 
@@ -42,4 +43,4 @@ class IncidentFactory(DjangoModelFactory):
         }
     )
 
-    field_timestamp = factory.LazyFunction(lambda: timezone.now())
+    field_timestamp = factory.Sequence(seeded_timestamp_for_index)

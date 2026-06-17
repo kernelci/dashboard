@@ -9,6 +9,7 @@ from factory.django import DjangoModelFactory
 from kernelCI_app.models import Checkouts
 
 from .mocks import Checkout
+from .seed_time import seeded_timestamp_for_index
 
 
 class CheckoutFactory(DjangoModelFactory):
@@ -137,4 +138,4 @@ class CheckoutFactory(DjangoModelFactory):
         lambda: timezone.now() - timezone.timedelta(minutes=15)
     )
 
-    field_timestamp = factory.LazyFunction(lambda: timezone.now())
+    field_timestamp = factory.Sequence(seeded_timestamp_for_index)

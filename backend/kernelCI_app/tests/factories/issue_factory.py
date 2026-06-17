@@ -3,12 +3,12 @@ Factory for generating Issue test data.
 """
 
 import factory
-from django.utils import timezone
 from factory.django import DjangoModelFactory
 
 from kernelCI_app.models import Issues
 
 from .mocks import Issue
+from .seed_time import seeded_timestamp_for_index
 
 
 class IssueFactory(DjangoModelFactory):
@@ -59,4 +59,4 @@ class IssueFactory(DjangoModelFactory):
         }
     )
 
-    field_timestamp = factory.LazyFunction(lambda: timezone.now())
+    field_timestamp = factory.Sequence(seeded_timestamp_for_index)

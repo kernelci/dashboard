@@ -1,7 +1,7 @@
 import json
 import sys
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from email.utils import make_msgid
 from types import SimpleNamespace
 from typing import Optional
@@ -38,6 +38,7 @@ from kernelCI_app.queries.hardware import (
 from kernelCI_app.queries.notifications import (
     get_checkout_summary_data,
     get_metrics_data,
+    interval_params,
     kcidb_build_incidents,
     kcidb_issue_details,
     kcidb_last_build_without_issue,
@@ -847,8 +848,14 @@ def generate_metrics_report(
         return
 
     now = datetime.now(timezone.utc)
-    start_datetime = now - timedelta(days=start_days_ago)
-    end_datetime = now - timedelta(days=end_days_ago)
+    bounds = interval_params(start_days_ago, end_days_ago)
+    start_datetime = datetime.fromisoformat(bounds["start_date"])
+    exclusive_end = datetime.fromisoformat(bounds["end_date"])
+    end_datetime = datetime.combine(
+        exclusive_end.date() - timedelta(days=1),
+        time.max,
+        tzinfo=timezone.utc,
+    )
 
     data: MetricsReportData = get_metrics_data(
         start_days_ago=start_days_ago,

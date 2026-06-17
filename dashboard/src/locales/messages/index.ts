@@ -286,6 +286,9 @@ export const messages = {
       'This is the new, optimized version of the {page}. If you find any bugs, please file a {gitHubLink} and you can still access the old version {oldVersionLink}. Please note that some historical data might be missing, but it should be updated with recent data.',
     'messages.olderPageVersion':
       'This is the legacy version of the {page}, please refer to the new, optimized version {newPageLink}. If you find any bugs or divergences, please report to {gitHubLink}.',
+    'metricsPage.period.previousTwoWeeks': 'Last 2 weeks',
+    'metricsPage.period.previousWeek': 'Last week',
+    'metricsPage.periodLabel': 'Period:',
     'routes.buildDetails': 'Build',
     'routes.hardwareMonitor': 'Hardware',
     'routes.hardwareNewMonitor': 'Hardware New',
