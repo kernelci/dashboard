@@ -113,7 +113,7 @@ urlpatterns = [
     path("log-downloader/", view_cache(views.LogDownloaderView), name="logDownloader"),
     path(
         "hardware/selectors/",
-        view_cache(views.HardwareSelectorsView, timeout=settings.CACHE_TIMEOUT * 60),
+        view_cache(views.HardwareSelectorsView),
         name="hardwareSelectors",
     ),
     path(

@@ -135,11 +135,13 @@ def get_hardware_selectors(origin: str) -> list[dict]:
             c.start_time
         FROM checkouts c
         INNER JOIN builds b ON b.checkout_id = c.id
-        INNER JOIN tests t ON t.build_id = b.id
         WHERE
-            t.origin = %(origin)s
-            AND t.start_time > (NOW() - INTERVAL '15 days')
-            AND t.environment_misc ->> 'platform' IS NOT NULL
+            b.origin = %(origin)s
+            AND b.start_time > (NOW() - INTERVAL '30 days')
+            AND c.git_repository_url IS NOT NULL
+            AND c.git_repository_branch IS NOT NULL
+            AND c.git_commit_hash IS NOT NULL
+            AND c.tree_name IS NOT NULL
         ORDER BY
             c.tree_name,
             c.git_repository_url,
