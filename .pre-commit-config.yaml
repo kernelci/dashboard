@@ -23,6 +23,7 @@ repos:
         entry: bash -lc 'cd dashboard && pnpm lint-staged'
         language: system
         pass_filenames: false
+        files: ^dashboard/
         stages: [pre-commit]
 
       - id: frontend-typecheck
@@ -30,6 +31,7 @@ repos:
         entry: bash -lc 'cd dashboard && pnpm typecheck'
         language: system
         pass_filenames: false
+        files: ^dashboard/
         stages: [pre-commit]
 
       - id: frontend-pre-push
