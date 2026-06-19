@@ -41,7 +41,7 @@ It's possible to export `DEBUG_SQL_QUERY=True` if you want to see which SQL quer
 
 ### Databases
 
-For the main database, the backend uses a series of `DB_` environment variables that have to be set such as:
+Export variables from [`.env.backend.example`](../.env.backend.example) (Django does not load that file automatically). Example for the **production database via SSH tunnel**:
 
 ```sh
 export DB_NAME=kcidb
@@ -52,6 +52,8 @@ export DB_PORT=5432
 export DB_ENGINE=django_prometheus.db.backends.postgresql
 export DB_OPTIONS_CONNECT_TIMEOUT=16
 ```
+
+For the **local Docker database**, use `DB_NAME=dashboard`, `DB_USER=admin`, and the password from root `.env`.
 
 #### Connection Pooling (Production)
 
@@ -92,35 +94,17 @@ poetry run python3 manage.py runserver
 
 We have a couple of useful scripts:
 
-* [migrate-cache-db.sh](./migrate-cache-db.sh) will create and apply migrations for the cache SQLite database. This runs automatically when running on docker, but you have to run it mannually otherwise.
+* [migrate-cache-db.sh](./migrate-cache-db.sh) will create and apply migrations for the cache SQLite database. This runs automatically when running on docker, but you have to run it manually otherwise.
 * [migrate-app-db.sh](./migrate-app-db.sh) will create and apply migrations for the main app, generally used for the local database. This does not run automatically in order to avoid potential problems. Be aware that *if* you have write permissions to the production database it will be changed, so double check that you are connected to the right one (but usually developers won't have write access to the production database anyway).
 
 It is important to note that Django automatically creates migrations based on changes to the models when running the first command of the scripts above. You can edit the migrations manually, and you can also run the commands by hand if you want more control over it.
 
-* [copy_db_data.sh](./scripts/copy_db_data.sh) will copy 7 days of data from you `DB_DEFAULT` to your `DASH_DB`. You can also modify the script for a custom interval, and you can check the [update_db](./kernelCI_app/management/commands/update_db.py) command for other arguments such as `--table` and `--origins`.
+* [update_db command](./docs/update_db%20command.md) copies data from the production database (`kcidb`) to the local app database (`dashboard`) over a time interval.
 * [generate-schema.sh](./generate-schema.sh) will automatically generate the OpenAPI schema for the endpoints. Please use it whenever the ins and outs of endpoints change.
 
 ## Linting, formatting, and hooks
 
-The backend uses Ruff for linting and formatting.
-
-- Check lint issues: `poetry run ruff check .`
-- Auto-fix lint issues: `poetry run ruff check . --fix`
-- Check formatting: `poetry run ruff format --check .`
-- Auto-fix formatting: `poetry run ruff format .`
-
-This repository uses pre-commit for Git hooks (`pre-commit` and `pre-push`). Install hooks once per clone from the repository root:
-
-```sh
-poetry -C backend run pre-commit install --hook-type pre-commit --hook-type pre-push --hook-type commit-msg --install-hooks
-```
-
-To run all configured hooks manually:
-
-```sh
-poetry -C backend run pre-commit run --all-files
-```
-
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for lint, format, test, and pre-commit commands.
 
 ## Running tests
 
@@ -178,7 +162,7 @@ For detailed information on both types of performance testing, including setup i
 
 ## Cron jobs
 
-We have support for cron jobs using django-crontab. To set up cron jobs, edit the `CRONJOBS` variable in /backend/kernelCI/settings.py
+We have support for cron jobs using django-crontab. To set up cron jobs, edit the `CRONJOBS` variable in `kernelCI/settings.py`.
 
 To run said cron jobs locally, execute
 ```poetry run ./manage.py crontab add```
@@ -187,9 +171,9 @@ You can also use other args such as `show` to show the cron jobs and `remove` to
 
 These cron jobs will also be automatically executed from the backend container if you are running with docker.
 You can check that the cron jobs are listed inside the docker container with
-```docker exec -it dashboard-backend-1 crontab -l```
+```docker compose exec backend crontab -l```
 or
-```docker exec -it dashboard-backend-1 poetry run ./manage.py crontab show```
+```docker compose exec backend poetry run ./manage.py crontab show```
 
 If you are a developer and want to skip the cron job setup while you're testing, you can also export `SKIP_CRONJOBS=True` to skip cron jobs entirely.
 
@@ -252,14 +236,13 @@ For more detailed developer resources, visit https://discord.com/developers/docs
 The email notification system is used with cron jobs to be able to send regular updates about specific actions to the relevant recipients. You can check more information about it on [notifications.md](../docs/notifications.md)
 
 
-## IDE Specific:
-You are free to use whichever tool you would like, but here are tips for specific IDEs
-
 ## Monitoring and Metrics
 
-The project includes monitoring using Prometheus and Grafana. See the [monitoring documentation](docs/monitoring.md) for detailed information about.
+The project includes monitoring using Prometheus and Grafana. See the [monitoring documentation](../docs/monitoring.md) for details.
 
-### (Optional): Running in PyCharm
+## IDE setup
+
+### PyCharm (optional)
 
 In order to debug backend in PyCharm, just follow these steps:
 
@@ -270,7 +253,7 @@ In order to debug backend in PyCharm, just follow these steps:
    - in `Run` session of the dialog, select `script`, then find the script `manage.py` at the `backend` folder
    - at `script` name input, just enter `runserver`
    - at `Environment Variables`, enter the following values:
-     - `DB_ENGINE`: `django.db.backends.postgresql`, `DB_NAME`: `dashboard`, `DB_USER`: `<youremail>@profusion.mobi`, `DB_PASSWORD`: `<yourpassword>`, `DB_HOST`: `127.0.0.1`, `DB_PORT`: `5432`, `DB_OPTIONS_CONNECT_TIMEOUT`: `16`, `DB_CONN_MAX_AGE`: `0`, `DB_CONN_HEALTH_CHECKS`: `False`
+     - `DB_ENGINE`: `django.db.backends.postgresql`, `DB_NAME`: `dashboard`, `DB_USER`: `<your-db-user>`, `DB_PASSWORD`: `<yourpassword>`, `DB_HOST`: `127.0.0.1`, `DB_PORT`: `5432`, `DB_OPTIONS_CONNECT_TIMEOUT`: `16`, `DB_CONN_MAX_AGE`: `0`, `DB_CONN_HEALTH_CHECKS`: `False`
      - `DEBUG`: `True`
 
 Quote character in password field is escaped normally with `\"` .

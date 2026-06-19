@@ -20,104 +20,26 @@ A Python http server built with [Django](https://www.djangoproject.com/) + [DRF]
 
 ## Quick run
 
-If you want to just run the project, you can try out pre-built images with the [docker-compose-next.yml](./docker-compose-next.yml) file. This pulls images from GHCR and runs them locally without needing to rebuild them. You may still need to set up environment variables, so read the docs.
+To run pre-built images without rebuilding, use [docker-compose-next.yml](./docker-compose-next.yml). Copy [`.env.example`](.env.example) to `.env`, set required values, then start the stack. The proxy defaults to port **80**. See [DEPLOYMENT.md](./DEPLOYMENT.md) for details.
 
-## Build
+## Local development
 
-### Frontend
+Pick the workflow that fits how you want to work:
 
-Create a .env file in /dashboard, check and set the variables and their values
-```sh
- cp ./dashboard/.env.example ./dashboard/.env
-```
+| Workflow | Guide |
+|---|---|
+| Docker with live reload (recommended) | [docs/dev-environment.md](docs/dev-environment.md) — `make dev` or `docker compose -f docker-compose.dev.yml up -d` |
+| Manual backend + frontend on the host | [backend/README.md](backend/README.md) and [dashboard/README.md](dashboard/README.md) |
+| Staging-like container run (no live reload) | [DEPLOYMENT.md](./DEPLOYMENT.md) §1 |
+| Guided first-time setup | [docs/Onboarding.md](docs/Onboarding.md) |
 
-With docker, you can start just the frontend with `docker compose up --build proxy`. It is also possible to run the dashboard outside of it for development purposes.
+**Env files:** Docker Compose reads root `.env` plus `dashboard/.env`. For manual backend runs, export variables from [`.env.backend.example`](.env.backend.example) (Django does not load that file automatically).
 
-We use `pnpm` to help with the package management. Install the dependencies with
-```sh
-pnpm install
-```
-
-Then start the dev server with
-```sh
-pnpm dev
-```
-
-If you want to test the production state of the dashboard, use
-```sh
-pnpm build
-pnpm preview
-```
-
-### Backend
-
-Create a .env file in the base directory,
-```sh
- cp .env.backend.example .env.backend
-```
-
-Create a secret key for Django:
-```sh
-export DJANGO_SECRET_KEY=$(openssl rand -base64 22)
-```
-We are not using sessions or anything like that right now, so changing the secret key won't be a big deal.
-
-Since the production *database* is not open for the public, we use ssh tunneling with a whitelist to access it. This means that the docker setup currently can't access it, but we have a local database that is connected automatically if you don't change the env vars.
-
-If you do use docker, you should create a secret file with the database password:
-```sh
-mkdir -p backend/runtime/secrets
-echo <password> > backend/runtime/secrets/postgres_password_secret
-```
-
-If you are going to use a database user other than `kernelci`, set it to `DB_USER`:
-```sh
-export DB_USER=<user>
-```
-
-If you are setting up instance different than production KernelCI dashboard, you need to define CORS_ALLOWED_ORIGINS. On .env.backend:
-```
-CORS_ALLOWED_ORIGINS=["https://d.kernelci.org","https://dashboard.kernelci.org"]
-```
-
-It is also possible to run the backend outside of docker for development purposes. Simply run the ssh tunnel with the instructions sent to you by the database manager, then export the variables seen in [.env.backend.example](/.env.backend.example).
-
-> For other optional envs, check the [backend README](backend/README.md).
-
-### Common
-
-Startup the services:
- ```sh
- docker compose up --build -d
- ```
- Docker exposes port 80 (that you don't need to enter in the URL) instead of 5173 and 8000 that is used when running the dashboard project outside of docker.
- So you can hit the frontend with `http://localhost`  and the backend with `http://localhost/api` when running locally.
-
-Make sure that docker has the right permissions and has access to the environment variables. One way to do that is to set up a docker permission group.
-
-If you are running the commands for exporting the environment variables and running docker separately, you can run docker with admin privileges and allowing environment variables with:
-```sh
-sudo -E docker compose up --build -d
-```
-Or you can also run the env exports and docker compose within the root user by running `sudo su`.
-
-> Tip: you can create a quick script to set all the necessary envs and start the services. This will also allow docker to see the environment variables correctly. Example:
-
-```sh
-export DB_USER=email@email.com
-export DJANGO_SECRET_KEY=$(openssl rand -base64 22)
-export DB_NAME=kcidb
-export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
-
-docker compose up --build
-```
-
-> [Note] If you are going to run using only the local database, the DB_NAME should be `dashboard` and the `DB_USER` and `DB_PASSWORD` should be `admin` (for now). This simply follows what is going to be setup by the `dashboard_db` service on docker compose.
-
+**Ports:** `docker-compose.dev.yml` and `docker-compose.yml` expose the app at `http://localhost:9000` by default. Running services on the host uses `5173` (frontend) and `8000` (backend). `docker-compose-next.yml` defaults to port **80**.
 
 ## Deploying to production
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for full deployment instructions covering development, staging, and production scenarios.
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for staging, production, and deployment scenarios.
 
 To deploy to prod you need to push a tag in the `release/YYYYMMDD.N` format
 like: `release/20240910.0`
@@ -149,8 +71,6 @@ If you want to verify container/deployment environment settings before running s
 - [docs/verify_env.md](docs/verify_env.md) for detailed examples, including test email sending to a specific destination
   - Destination is required with `--send-test-email` and `--to-email`.
 
-## Contributing 
+## Contributing
 
-Check out our [CONTRIBUTING.md](/CONTRIBUTING.md), and there is an [onboarding guide](docs/Onboarding.md) to help get acquainted with the project. Contributions are welcome!
-
-For a local development environment with live reload (backend + frontend), see [docs/dev-environment.md](docs/dev-environment.md). That Docker-based workflow uses a root `.env` file plus `dashboard/.env`; the backend-specific manual setup above still uses `.env.backend`. Use the env files required by the workflow you choose.
+Check out [CONTRIBUTING.md](./CONTRIBUTING.md) and the [onboarding guide](docs/Onboarding.md). Contributions are welcome!

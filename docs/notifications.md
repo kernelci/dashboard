@@ -16,7 +16,7 @@ If you are running the project in a docker container, you should add a `docker c
 
 ## Actions
 
-The command supports four primary actions:
+The command supports these actions:
 
 1. `new_issues`
     * Generates a summary of new issues.
@@ -53,7 +53,7 @@ These options are available for all actions and are always optional:
 | `--id` | `issue_report`, `test_report` | **Required** for `test_report`; **Required** for `issue_report` unless `--all` is used | Issue ID or Test ID in Dashboard/KCIDB |
 | `--all` | `issue_report` | **Alternative** to `--id` | Create reports for all issues not sent or not ignored |
 | `--update-storage` / `-u` | `issue_report` | Optional | Update JSON storage while generating/sending reports |
-| `--summary-signup-folder` | `summary` | Optional | Alternative signup folder under `/backend/data` |
+| `--summary-signup-folder` | `summary` | Optional | Alternative signup folder under `backend/data` |
 | `--summary-origins` | `summary` | Optional | Comma-separated list to limit to specific origins |
 | `--skip-sent-reports` | `summary` | Optional | Skip reports that have already been sent |
 | `--hardware-origins` | `hardware_summary` | Optional | Comma-separated list to limit to specific origins |

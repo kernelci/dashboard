@@ -63,6 +63,6 @@ Optional email overrides:
 
 ## Notes
 
-- The command uses settings from `kernelCI/settings.py` plus the environment values in `.env.backend`.
+- The command uses settings from `kernelCI/settings.py` plus environment values from root `.env` when run via Docker Compose. For manual backend runs, export variables from [`.env.backend.example`](../.env.backend.example).
 - Non-sending checks are read-only and safe for routine manual execution (storage checks are read-only unless `--create-dirs` is used).
 - Use send mode with a mailbox you control, so you can confirm deliverability and final headers.

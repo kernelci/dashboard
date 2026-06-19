@@ -20,7 +20,7 @@ it will then ask for the user password and start dumping the database. This will
 
 1. Place your SQL dump file as `dump.sql` in this directory
 2. The `init-db.sh` script will automatically restore it when the container starts
-3. Run: `docker-compose -f docker-compose.k6.yml up`
+3. Run: `docker compose -f docker-compose.k6.yml up`
 
 **Smart Restore**: The script will only restore the database if it's empty (no user tables in the 'public' schema).
 
@@ -51,6 +51,6 @@ psql -h localhost -p 5436 -U admin -d dashboard < your_dump_file.sql
 
 To start with a fresh database:
 ```bash
-docker-compose -f docker-compose.k6.yml down -v
-docker-compose -f docker-compose.k6.yml up
+docker compose -f docker-compose.k6.yml down -v
+docker compose -f docker-compose.k6.yml up
 ```

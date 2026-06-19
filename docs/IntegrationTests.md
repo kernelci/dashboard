@@ -242,12 +242,12 @@ docker compose -f docker-compose.test.yml up test_db redis -d
 
 **Step 2: Execute migrations**
 ```bash
-docker compose -f docker-compose.test.yml run --rm test_backend python manage.py migrate
+docker compose -f docker-compose.test.yml run --rm test_backend poetry run python manage.py migrate
 ```
 
 **Step 3: Populate database with test data**
 ```bash
-docker compose -f docker-compose.test.yml run --rm test_backend python manage.py seed_test_data --clear
+docker compose -f docker-compose.test.yml run --rm test_backend poetry run python manage.py seed_test_data --clear
 ```
 
 **Step 4: Start test backend**
@@ -308,7 +308,7 @@ TEST_BASE_URL=http://localhost:8001 poetry run pytest -m integration --use-local
 - Verify backend is running on port 8001: `curl http://localhost:8001/`
 
 **Test data issues:**
-- Clear and repopulate database: `docker compose -f docker-compose.test.yml run --rm test_backend python manage.py seed_test_data --clear`
+- Clear and repopulate database: `docker compose -f docker-compose.test.yml run --rm test_backend poetry run python manage.py seed_test_data --clear`
 
 **Clean up everything:**
 ```bash

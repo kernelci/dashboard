@@ -13,12 +13,12 @@ docker compose -f docker-compose.monitoring.yml up -d
 
 #### Option A: Using Docker Compose (Recommended)
 ```bash
-# Add monitoring configuration to .env.backend
-echo "PROMETHEUS_METRICS_ENABLED=true" >> .env.backend
-echo "PROMETHEUS_METRICS_PORT=8001" >> .env.backend
-echo "PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc_dir" >> .env.backend
+# Add monitoring configuration to root .env
+echo "PROMETHEUS_METRICS_ENABLED=true" >> .env
+echo "PROMETHEUS_METRICS_PORT=8001" >> .env
+echo "PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc_dir" >> .env
 
-# Start the backend with monitoring enabled
+# Start the backend with monitoring enabled (uses root .env)
 docker compose up -d backend
 
 # The backend will automatically expose port 8001 for metrics when PROMETHEUS_METRICS_ENABLED=true
@@ -105,7 +105,7 @@ The backend can ping healthcheck.io for cronjobs that run Django management comm
 - Private monitor tokens stay in environment variables and are mapped in Django settings.
 - Each monitored cron run sends pings to `/start`, `/success`, and `/fail`.
 
-Configure these variables in `.env.backend`:
+Configure these variables in root `.env` (or export them for manual backend runs):
 
 - `HEALTHCHECK_ID_DELETE_UNUSED_HARDWARE_STATUS`
 - `HEALTHCHECK_ID_NOTIFICATIONS_HARDWARE_SUMMARY`

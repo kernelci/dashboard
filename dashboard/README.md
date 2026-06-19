@@ -1,28 +1,16 @@
 # Running in development
 
-- Install the packager manager [pnpm](https://pnpm.io/installation)
-
-- Install all dependencies with:
+Install [pnpm](https://pnpm.io/installation), then from the `dashboard` directory:
 
 ```sh
+cp .env.example .env   # set VITE_API_BASE_URL and other variables
 pnpm install
-```
-
-Create a .env.development file (Do not forget to check and set the variables and their values)
-
-```sh
- cp .env.example .env.development
-```
-
-After establishing the connection with Google Cloud and running `backend`, run the `dashboard` dev server with
-
-```sh
 pnpm dev
 ```
 
-## Running unit tests
+Set `VITE_API_BASE_URL=http://localhost:8000` when the backend runs on the host. With [dev-environment.md](../docs/dev-environment.md) (`docker-compose.dev.yml`), use the proxy at `http://localhost:9000` or Vite directly at `http://localhost:5173`.
 
-The frontend includes unit tests covering some parts of the source code. To run the tests, use the following command:
+## Running unit tests
 
 ```sh
 pnpm test
@@ -30,31 +18,14 @@ pnpm test
 
 ## Running end-to-end (e2e) tests
 
-The project includes Playwright-based end-to-end tests. To run the tests, first set the test environment URL in your .env file:
+Set `PLAYWRIGHT_TEST_BASE_URL` in `.env` (defaults to staging). Install browsers once with `pnpm exec playwright install`, then:
 
 ```sh
-# Copy the example file
-cp .env.example .env
-
-# Edit the .env file to set PLAYWRIGHT_TEST_BASE_URL to your desired environment
-# Available environments:
-# - Staging: https://staging.dashboard.kernelci.org (default)
-# - Production: https://dashboard.kernelci.org
-# - Local: http://localhost:5173
-
-# Install Playwright browsers if you don't have them yet
-pnpm exec playwright install
+pnpm run e2e        # all tests
+pnpm run e2e-ui     # UI mode for debugging
 ```
 
-Then run the e2e tests:
-
-```sh
-# Run all e2e tests
-pnpm run e2e
-
-# Run e2e tests with UI mode for debugging
-pnpm run e2e-ui
-```
+Available base URLs: staging (`https://staging.dashboard.kernelci.org`), production (`https://dashboard.kernelci.org`), local Vite (`http://localhost:5173`), local proxy (`http://localhost:9000`).
 
 ## E2E Test Selectors
 
