@@ -1,3 +1,8 @@
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+  - commit-msg
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.9
@@ -5,8 +10,11 @@ repos:
       - id: ruff-format
         files: ^backend/
         args: [--check]
+        stages: [pre-commit]
+
       - id: ruff-check
         files: ^backend/
+        stages: [pre-commit]
 
   - repo: local
     hooks:
