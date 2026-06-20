@@ -99,19 +99,19 @@ def make_metrics_data(**overrides) -> MetricsReportData:
 
 class TestFmtChange(TestCase):
     def test_no_change(self):
-        assert _fmt_change(100, 100) == "0  (0%)"
+        assert _fmt_change(100, 100) == "0"
 
     def test_positive_change_with_percentage(self):
         result = _fmt_change(110, 100)
-        assert result == "+10  (+10%)"
+        assert result == "+10 (+10%)"
 
     def test_negative_change_with_percentage(self):
         result = _fmt_change(90, 100)
-        assert result == "-10  (-10%)"
+        assert result == "-10 (-10%)"
 
     def test_large_numbers_comma_formatted(self):
         result = _fmt_change(10000, 11000)
-        assert result == "-1,000  (-9%)"
+        assert result == "-1,000 (-9%)"
 
     def test_show_percentage_false(self):
         result = _fmt_change(105, 100, show_percentage=False)
@@ -130,16 +130,16 @@ class TestComputeMetricsDeltas(TestCase):
         deltas = compute_metrics_deltas(data)
         expected = {
             "n_trees": "+5",
-            "n_checkouts": "0  (0%)",
-            "n_builds": "+1,000  (+10%)",
-            "n_tests": "-500,000  (-33%)",
+            "n_checkouts": "0",
+            "n_builds": "+1,000 (+10%)",
+            "n_tests": "-500,000 (-33%)",
             "labs": {
-                "lava-collabora": "-250,000  (-36%)",
-                "lava-broonie": "-175,000  (-27%)",
+                "lava-collabora": "-250,000 (-36%)",
+                "lava-broonie": "-175,000 (-27%)",
             },
             "new_lab_keys": set(),
             "extinct_lab_keys": set(),
-            "n_total_lab_activity": "-425,000  (-31%)",
+            "n_total_lab_activity": "-425,000 (-31%)",
         }
 
         for key, value in deltas.items():

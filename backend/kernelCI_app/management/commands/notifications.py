@@ -778,10 +778,10 @@ def generate_hardware_summary_report(
 
 
 def _fmt_change(cur: int, prev: int, show_percentage: bool = True) -> str:
-    """Return a signed change string, e.g. '-246  (-17%)' or '-5'."""
+    """Return a signed change string, e.g. '-246 (-17%)' or '-5'."""
     diff = cur - prev
     if diff == 0:
-        return "0  (0%)"
+        return "0"
 
     abs_formatted_diff = f"{abs(diff):,}"
     signed_diff = f"+{abs_formatted_diff}" if diff > 0 else f"-{abs_formatted_diff}"
@@ -789,7 +789,7 @@ def _fmt_change(cur: int, prev: int, show_percentage: bool = True) -> str:
     if show_percentage and prev != 0:
         percentage = round((diff / prev) * 100)
         percentage_sign = "+" if percentage > 0 else ""
-        return f"{signed_diff}  ({percentage_sign}{percentage}%)"
+        return f"{signed_diff} ({percentage_sign}{percentage}%)"
 
     return signed_diff
 

@@ -10,13 +10,13 @@ Period: {{ start_datetime }} to {{ end_datetime }}
 
   COVERAGE
   --------
-{{ "{:<22}".format("") -}}{{ "{:<13}".format("This week") -}}{{ "{:<13}".format("Last week") }}Change
-{{ "{:<22}".format("") -}}{{ "{:<13}".format("─────────") -}}{{ "{:<13}".format("─────────") }}──────
-{{ "{:<22}".format("  Trees monitored") -}}{{ "{:<13}".format(fmt(n_trees)) -}}{{ "{:<13}".format(fmt(prev_n_trees)) }}{{ deltas.n_trees }}
-{{ "{:<22}".format("  Checkouts") -}}{{ "{:<13}".format(fmt(n_checkouts)) -}}{{ "{:<13}".format(fmt(prev_n_checkouts)) }}{{ deltas.n_checkouts }}
-{{ "{:<22}".format("  Builds") -}}{{ "{:<13}".format(fmt(n_builds)) -}}{{ "{:<13}".format(fmt(prev_n_builds)) }}{{ deltas.n_builds }}
-{{ "{:<22}".format("  Tests") -}}{{ "{:<13}".format(fmt(n_tests)) -}}{{ "{:<13}".format(fmt(prev_n_tests)) }}{{ deltas.n_tests }}
-
+{#- The "change" column has to have more space for the relative percentage indicator #}
+{{ "{:<22}".format("") -}}{{ "{:>13}".format("This week") -}}{{ "{:>13}".format("Last week") }}{{ "{:>20}".format("Change") }}
+{{ "{:<22}".format("") -}}{{ "{:>13}".format("─────────") -}}{{ "{:>13}".format("─────────") }}{{ "{:>20}".format("─────────") }}
+{{ "{:<22}".format("  Trees monitored") -}}{{ "{:>13}".format(fmt(n_trees)) -}}{{ "{:>13}".format(fmt(prev_n_trees)) }}{{  "{:>20}".format(deltas.n_trees) }}
+{{ "{:<22}".format("  Checkouts") -}}{{ "{:>13}".format(fmt(n_checkouts)) -}}{{ "{:>13}".format(fmt(prev_n_checkouts)) }}{{ "{:>20}".format(deltas.n_checkouts) }}
+{{ "{:<22}".format("  Builds") -}}{{ "{:>13}".format(fmt(n_builds)) -}}{{ "{:>13}".format(fmt(prev_n_builds)) }}{{ "{:>20}".format(deltas.n_builds) }}
+{{ "{:<22}".format("  Tests") -}}{{ "{:>13}".format(fmt(n_tests)) -}}{{ "{:>13}".format(fmt(prev_n_tests)) }}{{ "{:>20}".format(deltas.n_tests) }}
 
   BUILD REGRESSIONS
   -----------------
@@ -82,32 +82,33 @@ Affected builds by top issues
 
 {% if n_labs -%}
 {{ "{:<{width}}".format("  Lab", width=lab_spacing) -}}
-{{ "{:<16}".format("Covered builds") -}}
-{{ "{:<9}".format("Boots") -}}
-{{ "{:<15}".format("Tests") -}}
-Change (tests)
+{{ "{:>16}".format("Covered builds") -}}
+{{ "{:>9}".format("Boots") -}}
+{{ "{:>13}".format("Tests") -}}
+{{ "{:>20}".format("Change (tests)") }}
+{#- Just like the COVERAGE section, the "change" needs more space for the relative percentage indicator #}
   ────────────────────────────────────────────────────────────────────────────────
 {% for lab_key, lab_values in lab_maps.items() | sort -%}
     {%- set display_name = lab_key + " *" if lab_key in deltas.new_lab_keys else lab_key -%}
   {{ "{:<{width}}".format("  " + display_name, width=lab_spacing) -}}
-    {{ "{:<16}".format(fmt(lab_values["builds"])) -}}
-    {{ "{:<9}".format(fmt(lab_values["boots"])) -}}
-    {{ "{:<15}".format(fmt(lab_values["tests"])) -}}
-    {{ deltas.labs.get(lab_key, "") }}
+    {{ "{:>16}".format(fmt(lab_values["builds"])) -}}
+    {{ "{:>9}".format(fmt(lab_values["boots"])) -}}
+    {{ "{:>13}".format(fmt(lab_values["tests"])) -}}
+    {{ "{:>20}".format(deltas.labs.get(lab_key, "")) }}
 {% endfor %}
 {%- for lab_key in deltas.extinct_lab_keys | sort -%}
     {%- set lab_values = prev_lab_maps[lab_key] -%}
   {{ "{:<{width}}".format("  " + lab_key, width=lab_spacing) -}}
-    {{ "{:<16}".format(fmt(0)) -}}
-    {{ "{:<9}".format(fmt(0)) -}}
-    {{ "{:<15}".format(fmt(0)) -}}
-    {{ deltas.labs.get(lab_key, "") }}
+    {{ "{:>16}".format(fmt(0)) -}}
+    {{ "{:>9}".format(fmt(0)) -}}
+    {{ "{:>13}".format(fmt(0)) -}}
+    {{ "{:>20}".format(deltas.labs.get(lab_key, "")) }}
 {% endfor %}  ────────────────────────────────────────────────────────────────────────────────
 {{ "{:<{width}}".format("  Total", width=lab_spacing) -}}
-{{ "{:<16}".format(fmt(lab_maps.values() | map(attribute='builds') | sum)) -}}
-{{ "{:<9}".format(fmt(lab_maps.values() | map(attribute='boots') | sum)) -}}
-{{ "{:<15}".format(fmt(lab_maps.values() | map(attribute='tests') | sum)) -}}
-{{ deltas.n_total_lab_activity }}
+{{ "{:>16}".format(fmt(lab_maps.values() | map(attribute='builds') | sum)) -}}
+{{ "{:>9}".format(fmt(lab_maps.values() | map(attribute='boots') | sum)) -}}
+{{ "{:>13}".format(fmt(lab_maps.values() | map(attribute='tests') | sum)) -}}
+{{ "{:>20}".format(deltas.n_total_lab_activity) }}
 
 {%- endif %}
 
