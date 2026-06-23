@@ -1,5 +1,6 @@
-import { useEffect, useMemo, type JSX } from 'react';
+import { useCallback, useEffect, useMemo, type JSX } from 'react';
 import { FormattedMessage } from 'react-intl';
+import { roundToNearestMinutes } from 'date-fns';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
@@ -8,6 +9,7 @@ import { Toaster } from '@/components/ui/toaster';
 import type { HardwareItem, HardwareRevisionSelection } from '@/types/hardware';
 
 import {
+  useHardwareListing,
   useHardwareListingByRevision,
   useHardwareSelectors,
 } from '@/api/hardware';
@@ -31,7 +33,6 @@ import {
   getSelectionForBranchChange,
   getSelectionForTreeChange,
   getTreeBySelection,
-  resolveHardwareSelection,
   type HardwareRevisionSelectorValue,
 } from './hardwareSelection';
 
@@ -45,59 +46,75 @@ const HardwareListingPage = ({
   urlFromMap,
 }: HardwareListingPageProps): JSX.Element => {
   const navigate = useNavigate({ from: urlFromMap.navigate });
-  const { origin, treeName, gitRepositoryUrl, gitBranch, gitCommitHash } =
-    useSearch({ from: urlFromMap.search });
-  const inputFilter = intent.search;
-  const intentCommits =
-    intent.intent === 'commits' ? intent.commits : undefined;
-
   const {
-    data: selectorsData,
-    error: selectorsError,
-    status: selectorsStatus,
-  } = useHardwareSelectors(urlFromMap.search);
-  const selectors = useMemo(() => selectorsData?.trees ?? [], [selectorsData]);
-
-  const hasSelectionParams = Boolean(
-    treeName || gitRepositoryUrl || gitBranch || gitCommitHash,
-  );
-
-  const resolvedSelection = useMemo(() => {
-    const selectionFromUrl =
-      treeName && gitRepositoryUrl && gitBranch && gitCommitHash
-        ? {
-            treeName,
-            gitRepositoryUrl,
-            gitBranch,
-            gitCommitHash,
-          }
-        : null;
-
-    return resolveHardwareSelection({
-      trees: selectors,
-      selectionFromUrl,
-      hasSelectionParams,
-      intentCommits,
-    });
-  }, [
-    selectors,
+    origin,
+    intervalInDays,
     treeName,
     gitRepositoryUrl,
     gitBranch,
     gitCommitHash,
-    hasSelectionParams,
-    intentCommits,
-  ]);
+  } = useSearch({ from: urlFromMap.search });
+  const inputFilter = intent.search;
+  const intentCommits =
+    intent.intent === 'commits' ? intent.commits : undefined;
+
+  const { startTimestampInSeconds, endTimestampInSeconds } = useMemo(() => {
+    const end = dateObjectToTimestampInSeconds(
+      roundToNearestMinutes(new Date(), { nearestTo: 30 }),
+    );
+    return {
+      startTimestampInSeconds: end - daysToSeconds(intervalInDays),
+      endTimestampInSeconds: end,
+    };
+  }, [intervalInDays]);
+
+  const selection: HardwareRevisionSelection | null = useMemo(() => {
+    if (treeName && gitRepositoryUrl && gitBranch && gitCommitHash) {
+      return { treeName, gitRepositoryUrl, gitBranch, gitCommitHash };
+    }
+    return null;
+  }, [treeName, gitRepositoryUrl, gitBranch, gitCommitHash]);
+  const hasSelection = selection !== null;
+  const hasSelectionParams = Boolean(
+    treeName || gitRepositoryUrl || gitBranch || gitCommitHash,
+  );
+
+  const { data: selectorsData, status: selectorsStatus } = useHardwareSelectors(
+    urlFromMap.search,
+  );
+
+  const trees = useMemo(() => selectorsData?.trees ?? [], [selectorsData]);
 
   const intentMatchedSelection = useMemo(() => {
     if (!intentCommits) {
       return null;
     }
 
-    return (
-      findSelectionByCommitTokens(selectors, intentCommits)?.selection ?? null
-    );
-  }, [selectors, intentCommits]);
+    return findSelectionByCommitTokens(trees, intentCommits)?.selection ?? null;
+  }, [trees, intentCommits]);
+
+  const navigateToSelection = useCallback(
+    (
+      nextSelection: HardwareRevisionSelection,
+      options?: { replace?: boolean; clearHardwareSearch?: boolean },
+    ): void => {
+      const clearHardwareSearch = options?.clearHardwareSearch ?? true;
+
+      navigate({
+        search: previousSearch => ({
+          ...previousSearch,
+          treeName: nextSelection.treeName,
+          gitRepositoryUrl: nextSelection.gitRepositoryUrl,
+          gitBranch: nextSelection.gitBranch,
+          gitCommitHash: nextSelection.gitCommitHash,
+          ...(clearHardwareSearch ? { hardwareSearch: '' } : {}),
+        }),
+        state: s => s,
+        replace: options?.replace,
+      });
+    },
+    [navigate],
+  );
 
   useEffect(() => {
     if (
@@ -109,63 +126,54 @@ const HardwareListingPage = ({
       return;
     }
 
-    navigate({
-      search: previousSearch => ({
-        ...previousSearch,
-        treeName: intentMatchedSelection.treeName,
-        gitRepositoryUrl: intentMatchedSelection.gitRepositoryUrl,
-        gitBranch: intentMatchedSelection.gitBranch,
-        gitCommitHash: intentMatchedSelection.gitCommitHash,
-      }),
-      state: s => s,
+    navigateToSelection(intentMatchedSelection, {
       replace: true,
+      clearHardwareSearch: false,
     });
   }, [
     hasSelectionParams,
     intentCommits,
     intentMatchedSelection,
-    navigate,
+    navigateToSelection,
     selectorsStatus,
   ]);
 
-  const {
-    data: listingData,
-    error: listingError,
-    status: listingStatus,
-    isLoading: isListingLoading,
-  } = useHardwareListingByRevision(
-    resolvedSelection.selection,
-    urlFromMap.search,
-  );
-
   const selectedTree = useMemo(() => {
-    if (resolvedSelection.selection === null) {
+    if (!treeName) {
       return null;
     }
 
-    return getTreeBySelection(selectors, resolvedSelection.selection.treeName);
-  }, [selectors, resolvedSelection.selection]);
+    return getTreeBySelection(trees, treeName);
+  }, [trees, treeName]);
 
   const selectedBranch = useMemo(() => {
-    if (resolvedSelection.selection === null || selectedTree === null) {
+    if (selectedTree === null || !gitRepositoryUrl || !gitBranch) {
       return null;
     }
 
-    return getBranchBySelection(
-      selectedTree,
-      resolvedSelection.selection.gitRepositoryUrl,
-      resolvedSelection.selection.gitBranch,
-    );
-  }, [resolvedSelection.selection, selectedTree]);
+    return getBranchBySelection(selectedTree, gitRepositoryUrl, gitBranch);
+  }, [selectedTree, gitRepositoryUrl, gitBranch]);
+
+  const defaultListing = useHardwareListing(
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+    urlFromMap.search,
+    intentCommits,
+    !hasSelection,
+  );
+  const revisionListing = useHardwareListingByRevision(
+    selection,
+    urlFromMap.search,
+  );
+  const activeListing = hasSelection ? revisionListing : defaultListing;
 
   const listItems: HardwareItem[] = useMemo(() => {
-    if (!listingData || listingError) {
+    const listingData = activeListing.data;
+    if (!listingData || activeListing.error) {
       return [];
     }
 
-    const currentData = listingData.hardware;
-
-    return currentData
+    return listingData.hardware
       .filter(hardware => {
         return (
           matchesRegexOrIncludes(hardware.platform, inputFilter) ||
@@ -182,17 +190,27 @@ const HardwareListingPage = ({
         };
       })
       .sort((a, b) => a.platform.localeCompare(b.platform));
-  }, [listingData, listingError, inputFilter]);
+  }, [activeListing.data, activeListing.error, inputFilter]);
 
-  const revisionStartTimestampInSeconds = resolvedSelection.revisionStartTime
-    ? dateObjectToTimestampInSeconds(
-        new Date(resolvedSelection.revisionStartTime),
-      )
+  const selectedRevision =
+    hasSelection && gitCommitHash
+      ? selectedBranch?.revisions.find(
+          revision => revision.git_commit_hash === gitCommitHash,
+        )
+      : undefined;
+  const revisionStartTimestampInSeconds = selectedRevision
+    ? dateObjectToTimestampInSeconds(new Date(selectedRevision.start_time))
     : 0;
-
   const revisionEndTimestampInSeconds = revisionStartTimestampInSeconds
     ? revisionStartTimestampInSeconds + daysToSeconds(REDUCED_TIME_SEARCH)
     : 0;
+
+  const tableStartTimestampInSeconds = hasSelection
+    ? revisionStartTimestampInSeconds
+    : startTimestampInSeconds;
+  const tableEndTimestampInSeconds = hasSelection
+    ? revisionEndTimestampInSeconds
+    : endTimestampInSeconds;
 
   const kcidevComponent = useMemo(
     () => (
@@ -204,22 +222,6 @@ const HardwareListingPage = ({
     [origin],
   );
 
-  const navigateToSelection = (
-    nextSelection: HardwareRevisionSelection,
-  ): void => {
-    navigate({
-      search: previousSearch => ({
-        ...previousSearch,
-        treeName: nextSelection.treeName,
-        gitRepositoryUrl: nextSelection.gitRepositoryUrl,
-        gitBranch: nextSelection.gitBranch,
-        gitCommitHash: nextSelection.gitCommitHash,
-        hardwareSearch: '',
-      }),
-      state: s => s,
-    });
-  };
-
   const onTreeChange = ({
     tree,
     branch,
@@ -230,7 +232,7 @@ const HardwareListingPage = ({
     }
 
     if (branch) {
-      const selectedTreeByName = getTreeBySelection(selectors, tree);
+      const selectedTreeByName = getTreeBySelection(trees, tree);
       if (selectedTreeByName === null) {
         return;
       }
@@ -264,7 +266,7 @@ const HardwareListingPage = ({
     }
 
     const nextSelection = getSelectionForTreeChange({
-      trees: selectors,
+      trees,
       treeName: tree,
     });
     if (nextSelection === null) {
@@ -274,10 +276,24 @@ const HardwareListingPage = ({
     navigateToSelection(nextSelection);
   };
 
-  const hasSelectors = selectors.length > 0;
-  const hasListingRows = Boolean((listingData?.hardware.length ?? 0) > 0);
+  const onClearSelection = (): void => {
+    navigate({
+      search: previousSearch => ({
+        ...previousSearch,
+        treeName: undefined,
+        gitRepositoryUrl: undefined,
+        gitBranch: undefined,
+        gitCommitHash: undefined,
+      }),
+      state: s => s,
+    });
+  };
+
+  const hasListingRows = Boolean(
+    (activeListing.data?.hardware.length ?? 0) > 0,
+  );
   const tableEmptyMessageId =
-    !hasListingRows && inputFilter.length === 0
+    hasSelection && !hasListingRows && inputFilter.length === 0
       ? 'hardwareListing.revisionEmpty'
       : 'hardwareListing.notFound';
 
@@ -285,57 +301,31 @@ const HardwareListingPage = ({
     <>
       <Toaster />
       <div className="flex flex-col gap-6">
-        {selectorsStatus === 'error' && (
-          <div className="w-full py-6 text-center">
-            <span className="text-weak-gray text-sm">
-              {selectorsError?.message}
-            </span>
-          </div>
-        )}
+        <span className="text-dim-gray flex-1 justify-start text-left text-sm">
+          <FormattedMessage
+            id="global.projectUnderDevelopment"
+            values={{ br: <br /> }}
+          />
+        </span>
 
-        {selectorsStatus === 'pending' && (
-          <div className="w-full py-6 text-center">
-            <FormattedMessage id="global.loading" />
-          </div>
-        )}
-
-        {selectorsStatus === 'success' && (
-          <>
-            {!hasSelectors && (
-              <div className="text-weak-gray flex flex-col items-center py-10 text-center text-lg font-semibold">
-                <FormattedMessage id="hardwareListing.selectorsNoData" />
-              </div>
-            )}
-
-            {hasSelectors && (
-              <>
-                <span className="text-dim-gray flex-1 justify-start text-left text-sm">
-                  <FormattedMessage
-                    id="global.projectUnderDevelopment"
-                    values={{ br: <br /> }}
-                  />
-                </span>
-
-                <HardwareTable
-                  treeTableRows={listItems}
-                  endTimestampInSeconds={revisionEndTimestampInSeconds}
-                  startTimestampInSeconds={revisionStartTimestampInSeconds}
-                  status={listingStatus}
-                  queryData={listingData}
-                  error={listingError}
-                  isLoading={isListingLoading}
-                  navigateFrom={urlFromMap.navigate}
-                  emptyMessageId={tableEmptyMessageId}
-                  selectors={selectors}
-                  selectedTree={selectedTree}
-                  selectedBranch={selectedBranch}
-                  selection={resolvedSelection.selection}
-                  onTreeChange={onTreeChange}
-                />
-              </>
-            )}
-          </>
-        )}
+        <HardwareTable
+          treeTableRows={listItems}
+          endTimestampInSeconds={tableEndTimestampInSeconds}
+          startTimestampInSeconds={tableStartTimestampInSeconds}
+          status={activeListing.status}
+          queryData={activeListing.data}
+          error={activeListing.error}
+          isLoading={activeListing.isLoading}
+          navigateFrom={urlFromMap.navigate}
+          emptyMessageId={tableEmptyMessageId}
+          selectors={trees}
+          selectedTree={selectedTree}
+          selectedBranch={selectedBranch}
+          selection={selection}
+          selectorsLoading={selectorsStatus === 'pending'}
+          onTreeChange={onTreeChange}
+          onClearSelection={onClearSelection}
+        />
       </div>
       {kcidevComponent}
     </>

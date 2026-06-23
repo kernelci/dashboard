@@ -42,3 +42,11 @@ export const COMMON_SELECTORS = {
   originDropdown: '[data-test-id="origin-dropdown"]',
   originOption: (origin: string) => `[data-test-id="origin-option-${origin}"]`,
 } as const;
+
+export const HARDWARE_LISTING_SELECTORS = {
+  table: 'table',
+  treeSelector: '[data-test-id="hardware-tree-selector"]',
+  branchSelector: '[data-test-id="hardware-branch-selector"]',
+  revisionSelector: '[data-test-id="hardware-revision-selector"]',
+  clearSelection: '[data-test-id="hardware-selection-clear"]',
+} as const;

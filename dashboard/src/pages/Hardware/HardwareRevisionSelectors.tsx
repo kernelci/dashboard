@@ -1,6 +1,7 @@
 import { useMemo, useState, type JSX } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Check, ChevronsUpDown } from 'lucide-react';
+import { IoClose } from 'react-icons/io5';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -45,6 +46,7 @@ interface HardwareRevisionSelectorsPresentationProps {
   selectedBranchValue?: string;
   selectedRevisionHash?: string;
   onTreeChange: (nextSelection: HardwareRevisionSelectorValue) => void;
+  onClearSelection: () => void;
 }
 
 interface HardwareRevisionComboboxProps {
@@ -134,7 +136,20 @@ const HardwareRevisionSelectorsPresentation = ({
   selectedBranchValue,
   selectedRevisionHash,
   onTreeChange,
+  onClearSelection,
 }: HardwareRevisionSelectorsPresentationProps): JSX.Element => {
+  const intl = useIntl();
+
+  const treePlaceholder = intl.formatMessage({
+    id: 'hardwareListing.treeSelectorPlaceholder',
+  });
+  const branchPlaceholder = intl.formatMessage({
+    id: 'hardwareListing.branchSelectorPlaceholder',
+  });
+  const revisionPlaceholder = intl.formatMessage({
+    id: 'hardwareListing.revisionSelectorPlaceholder',
+  });
+
   const handleTreeChange = (nextTreeName: string): void => {
     onTreeChange({
       tree: nextTreeName,
@@ -160,18 +175,22 @@ const HardwareRevisionSelectorsPresentation = ({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="flex flex-wrap items-end gap-4">
       <div className="flex flex-col gap-1">
         <span className="text-dim-gray text-sm font-medium">
           <FormattedMessage id="hardwareListing.treeSelectorLabel" />
         </span>
         <HardwareRevisionCombobox
           dataTestId="hardware-tree-selector"
-          emptyMessage="No tree found."
+          emptyMessage={intl.formatMessage({
+            id: 'hardwareListing.treeSelectorEmpty',
+          })}
           onValueChange={handleTreeChange}
           options={treeOptions}
-          placeholder="Select tree"
-          searchPlaceholder="Search tree..."
+          placeholder={treePlaceholder}
+          searchPlaceholder={intl.formatMessage({
+            id: 'hardwareListing.treeSelectorSearchPlaceholder',
+          })}
           selectedValue={selectedTreeName}
         />
       </div>
@@ -182,12 +201,16 @@ const HardwareRevisionSelectorsPresentation = ({
         </span>
         <HardwareRevisionCombobox
           dataTestId="hardware-branch-selector"
-          disabled={branchOptions.length === 0}
-          emptyMessage="No branch found."
+          disabled={!selectedTreeName || branchOptions.length === 0}
+          emptyMessage={intl.formatMessage({
+            id: 'hardwareListing.branchSelectorEmpty',
+          })}
           onValueChange={handleBranchChange}
           options={branchOptions}
-          placeholder="Select branch"
-          searchPlaceholder="Search branch..."
+          placeholder={branchPlaceholder}
+          searchPlaceholder={intl.formatMessage({
+            id: 'hardwareListing.branchSelectorSearchPlaceholder',
+          })}
           selectedValue={selectedBranchValue}
         />
       </div>
@@ -198,15 +221,35 @@ const HardwareRevisionSelectorsPresentation = ({
         </span>
         <HardwareRevisionCombobox
           dataTestId="hardware-revision-selector"
-          disabled={revisionOptions.length === 0}
-          emptyMessage="No revision found."
+          disabled={!selectedBranchValue || revisionOptions.length === 0}
+          emptyMessage={intl.formatMessage({
+            id: 'hardwareListing.revisionSelectorEmpty',
+          })}
           onValueChange={handleRevisionChange}
           options={revisionOptions}
-          placeholder="Select revision"
-          searchPlaceholder="Search revision..."
+          placeholder={revisionPlaceholder}
+          searchPlaceholder={intl.formatMessage({
+            id: 'hardwareListing.revisionSelectorSearchPlaceholder',
+          })}
           selectedValue={selectedRevisionHash}
         />
       </div>
+
+      {selectedTreeName && (
+        <Button
+          aria-label={intl.formatMessage({
+            id: 'hardwareListing.clearSelection',
+          })}
+          className="self-end"
+          data-test-id="hardware-selection-clear"
+          onClick={onClearSelection}
+          size="icon"
+          title={intl.formatMessage({ id: 'hardwareListing.clearSelection' })}
+          variant="ghost"
+        >
+          <IoClose className="size-5" />
+        </Button>
+      )}
     </div>
   );
 };
@@ -217,6 +260,7 @@ interface HardwareRevisionSelectorsProps {
   selectedBranch: HardwareSelectorBranch | null;
   selection: HardwareRevisionSelection | null;
   onTreeChange: (nextSelection: HardwareRevisionSelectorValue) => void;
+  onClearSelection: () => void;
 }
 
 export const HardwareRevisionSelectors = ({
@@ -225,6 +269,7 @@ export const HardwareRevisionSelectors = ({
   selectedBranch,
   selection,
   onTreeChange,
+  onClearSelection,
 }: HardwareRevisionSelectorsProps): JSX.Element => {
   const treeOptions: SelectorOption[] = selectors.map(tree => ({
     value: tree.tree_name,
@@ -250,8 +295,11 @@ export const HardwareRevisionSelectors = ({
     [selectedBranch?.revisions],
   );
 
-  const selectedBranchValue = selection
-    ? encodeBranchValue(selection.gitRepositoryUrl, selection.gitBranch)
+  const selectedBranchValue = selectedBranch
+    ? encodeBranchValue(
+        selectedBranch.git_repository_url,
+        selectedBranch.git_repository_branch,
+      )
     : undefined;
 
   return (
@@ -259,10 +307,11 @@ export const HardwareRevisionSelectors = ({
       treeOptions={treeOptions}
       branchOptions={branchOptions}
       revisionOptions={revisionOptions}
-      selectedTreeName={selection?.treeName}
+      selectedTreeName={selectedTree?.tree_name}
       selectedBranchValue={selectedBranchValue}
       selectedRevisionHash={selection?.gitCommitHash}
       onTreeChange={onTreeChange}
+      onClearSelection={onClearSelection}
     />
   );
 };

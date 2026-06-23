@@ -53,6 +53,7 @@ export const useHardwareListing = (
   endTimestampInSeconds: number,
   searchFrom: HardwareListingRoutesMap['search'],
   commitsList?: string[],
+  enabled = true,
 ): UseQueryResult<HardwareListingResponse> => {
   const { origin } = useSearch({ from: searchFrom });
 
@@ -73,6 +74,7 @@ export const useHardwareListing = (
         endTimestampInSeconds,
         commitsList,
       ),
+    enabled,
     refetchOnWindowFocus: false,
   });
 };
