@@ -53,6 +53,21 @@ class HardwareSelectorsView(APIView):
                 }
             )
 
+        for tree in trees:
+            tree["branches"].sort(
+                key=lambda branch: (
+                    branch["git_repository_url"],
+                    branch["git_repository_branch"],
+                )
+            )
+            for branch in tree["branches"]:
+                branch["revisions"].sort(
+                    key=lambda revision: revision["start_time"],
+                    reverse=True,
+                )
+
+        trees.sort(key=lambda tree: tree["tree_name"])
+
         sanitized_trees: list[HardwareSelectorTree] = []
         for tree in trees:
             branches = [
