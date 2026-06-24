@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from kernelCI_app.constants.hardwareDetails import make_tree_key
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonDetails import (
     TestArchSummaryItem,
@@ -10,8 +11,13 @@ from kernelCI_app.typeModels.hardwareDetails import Tree
 
 def create_tree(**overrides):
     """Create Tree."""
+    tree_name = overrides.get("tree_name", "mainline")
+    branch = overrides.get("git_repository_branch", "master")
+    url = overrides.get("git_repository_url", "https://git.kernel.org")
+    default_index = make_tree_key(tree_name, branch, url)
+
     base_tree = Tree(
-        index="1",
+        index=overrides.get("index", default_index),
         origin="test",
         tree_name="mainline",
         git_repository_branch="master",
@@ -29,12 +35,16 @@ def create_tree(**overrides):
     return base_tree
 
 
+BASE_TREE_KEY = make_tree_key("mainline", "master", "https://git.kernel.org")
+DIFF_TREE_KEY = make_tree_key("stable", "linux-5.4.y", "https://git.kernel.org")
+
+
 def create_tree_status_summary(**overrides):
     """Create tree status summary."""
     summary = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
-    summary["1"]["builds"]["PASS"] = 5
-    summary["2"]["builds"]["FAIL"] = 2
+    summary[BASE_TREE_KEY]["builds"]["PASS"] = 5
+    summary[DIFF_TREE_KEY]["builds"]["FAIL"] = 2
 
     for tree_id, tree_data in overrides.items():
         for category, status_data in tree_data.items():
@@ -127,7 +137,6 @@ def create_test_summary(**overrides):
 base_tree = create_tree()
 
 tree_with_different_commit = create_tree(
-    index="2",
     tree_name="stable",
     git_repository_branch="linux-5.4.y",
     head_git_commit_name="commit2",
