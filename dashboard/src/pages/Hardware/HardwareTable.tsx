@@ -59,6 +59,7 @@ import { Badge } from '@/components/ui/badge';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
+import { LoadingCircle } from '@/components/ui/loading-circle';
 
 import { buildHardwareDetailsSearch } from './hardwareTableUtils';
 import { HardwareRevisionSelectors } from './HardwareRevisionSelectors';
@@ -79,7 +80,9 @@ interface IHardwareTable {
   selectedTree?: HardwareSelectorTree | null;
   selectedBranch?: HardwareSelectorBranch | null;
   selection?: HardwareRevisionSelection | null;
+  selectorsLoading?: boolean;
   onTreeChange?: (nextSelection: HardwareRevisionSelectorValue) => void;
+  onClearSelection?: () => void;
 }
 
 type HardwareListingRoutes = '/hardware';
@@ -383,7 +386,9 @@ export function HardwareTable({
   selectedTree = null,
   selectedBranch = null,
   selection = null,
+  selectorsLoading = false,
   onTreeChange = (): void => {},
+  onClearSelection = (): void => {},
 }: IHardwareTable): JSX.Element {
   const { listingSize } = useSearch({ strict: false });
   const navigate = useNavigate({ from: navigateFrom });
@@ -496,16 +501,22 @@ export function HardwareTable({
   return (
     <div className="flex flex-col gap-6 pb-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        {selectors && (
-          <HardwareRevisionSelectors
-            selectors={selectors}
-            selectedTree={selectedTree}
-            selectedBranch={selectedBranch}
-            selection={selection}
-            onTreeChange={onTreeChange}
-          />
+        {selectorsLoading ? (
+          <LoadingCircle />
+        ) : (
+          selectors &&
+          selectors.length > 0 && (
+            <HardwareRevisionSelectors
+              selectors={selectors}
+              selectedTree={selectedTree}
+              selectedBranch={selectedBranch}
+              selection={selection}
+              onTreeChange={onTreeChange}
+              onClearSelection={onClearSelection}
+            />
+          )
         )}
-        <div className="flex flex-wrap items-center justify-end gap-4">
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-4">
           <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
             <ItemsPerPageSelector
               table={table}
