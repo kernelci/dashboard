@@ -3,13 +3,13 @@ Factory for generating Build test data.
 """
 
 import factory
-from django.utils import timezone
 from factory.django import DjangoModelFactory
 
 from kernelCI_app.models import Builds, StatusChoices
 
 from .checkout_factory import CheckoutFactory
 from .mocks import Build, Checkout
+from .seed_time import seeded_timestamp_for_index
 
 
 class BuildFactory(DjangoModelFactory):
@@ -93,4 +93,4 @@ class BuildFactory(DjangoModelFactory):
         )
     )
 
-    field_timestamp = factory.LazyFunction(lambda: timezone.now())
+    field_timestamp = factory.Sequence(seeded_timestamp_for_index)

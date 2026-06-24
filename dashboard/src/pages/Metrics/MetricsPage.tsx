@@ -1,8 +1,9 @@
 import { Fragment, useState, type JSX } from 'react';
 
-import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 
 import { ArrowRightIcon } from 'lucide-react';
+import { useIntl } from 'react-intl';
 
 import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 
@@ -20,16 +21,16 @@ import {
 } from '@/components/ui/table';
 
 import { cn } from '@/lib/utils';
-
 type PeriodOption = {
-  label: string;
+  labelId:
+    | 'metricsPage.period.previousWeek'
+    | 'metricsPage.period.previousTwoWeeks';
   days: number;
 };
 
 const PERIOD_OPTIONS: PeriodOption[] = [
-  { label: '7 days', days: 7 },
-  { label: '14 days', days: 14 },
-  { label: '30 days', days: 30 },
+  { labelId: 'metricsPage.period.previousWeek', days: 7 },
+  { labelId: 'metricsPage.period.previousTwoWeeks', days: 14 },
 ];
 
 type CoverageMetric = {
@@ -70,6 +71,7 @@ function formatNumber(n: number): string {
 
 const PERCENTAGE_BASE = 100;
 const DEFAULT_INTERVAL_DAYS = 7;
+const DAYS_IN_WEEK = 7;
 
 const getCoverageMetrics = (data: MetricsResponse): CoverageMetric[] => {
   return [
@@ -198,9 +200,13 @@ function PeriodSelector({
   activeDays: number;
   onChange: (days: number) => void;
 }): JSX.Element {
+  const { formatMessage } = useIntl();
+
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-gray-600">Period:</span>
+      <span className="text-sm font-medium text-gray-600">
+        {formatMessage({ id: 'metricsPage.periodLabel' })}
+      </span>
       {PERIOD_OPTIONS.map(opt => (
         <button
           key={opt.days}
@@ -212,7 +218,7 @@ function PeriodSelector({
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
           )}
         >
-          {opt.label}
+          {formatMessage({ id: opt.labelId })}
         </button>
       ))}
     </div>
@@ -542,13 +548,22 @@ function LabsSection({ labs }: { labs: LabData[] }): JSX.Element {
   );
 }
 
+const getMetricsQueryParams = (
+  activeDays: number,
+): { startDaysAgo: number; endDaysAgo: number } => {
+  const today = new Date();
+  const weekEndDaysAgo = (today.getUTCDay() + 1) % DAYS_IN_WEEK;
+  const endDaysAgo = Math.max(weekEndDaysAgo - 1, 0);
+  const startDaysAgo = endDaysAgo + activeDays;
+  return { startDaysAgo, endDaysAgo };
+};
+
 export const MetricsPage = (): JSX.Element => {
-  const { intervalInDays } = useSearch({ from: '/_main/metrics' });
-  const navigate = useNavigate();
+  const [activeDays, setActiveDays] = useState(DEFAULT_INTERVAL_DAYS);
 
-  const activeDays = intervalInDays ?? DEFAULT_INTERVAL_DAYS;
+  const { startDaysAgo, endDaysAgo } = getMetricsQueryParams(activeDays);
 
-  const { status, data, error } = useMetrics({ intervalInDays: activeDays });
+  const { status, data, error } = useMetrics({ startDaysAgo, endDaysAgo });
 
   const coverageMetrics = data ? getCoverageMetrics(data) : [];
   const regressions = data ? getBuildIncidents(data) : [];
@@ -556,19 +571,8 @@ export const MetricsPage = (): JSX.Element => {
 
   return (
     <div className="flex flex-col gap-8 pb-8">
-      <div className="flex items-center justify-end">
-        <PeriodSelector
-          activeDays={activeDays}
-          onChange={days => {
-            navigate({
-              to: '.',
-              search: previousSearch => ({
-                ...previousSearch,
-                intervalInDays: days,
-              }),
-            });
-          }}
-        />
+      <div className="flex justify-end">
+        <PeriodSelector activeDays={activeDays} onChange={setActiveDays} />
       </div>
 
       <QuerySwitcher status={status} data={data} error={error}>

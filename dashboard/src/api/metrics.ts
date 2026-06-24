@@ -24,16 +24,11 @@ export const fetchMetrics = async ({
 };
 
 export const useMetrics = ({
-  intervalInDays,
-}: {
-  intervalInDays: number;
-}): UseQueryResult<MetricsResponse> => {
+  startDaysAgo,
+  endDaysAgo,
+}: FetchMetricsParams): UseQueryResult<MetricsResponse> => {
   return useQuery({
-    queryKey: ['metrics', intervalInDays],
-    queryFn: () =>
-      fetchMetrics({
-        startDaysAgo: intervalInDays,
-        endDaysAgo: 0,
-      }),
+    queryKey: ['metrics', startDaysAgo, endDaysAgo],
+    queryFn: () => fetchMetrics({ startDaysAgo, endDaysAgo }),
   });
 };

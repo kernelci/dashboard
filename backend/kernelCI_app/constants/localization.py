@@ -71,10 +71,10 @@ class DocStrings:
     )
     DEFAULT_INTERVAL_DESCRIPTION = "Interval in days for the listing"
     METRICS_START_DAYS_AGO_DESCRIPTION = (
-        "Number of days ago that marks the start of the metrics interval"
+        "Inclusive UTC day offset for the start of a [start, end) metrics interval"
     )
     METRICS_END_DAYS_AGO_DESCRIPTION = (
-        "Number of days ago that marks the end of the metrics interval"
+        "Exclusive UTC day offset for the end of a [start, end) metrics interval"
     )
     DEFAULT_LISTING_STARTING_DATE_DESCRIPTION = (
         "Starting date to calculate the search interval."

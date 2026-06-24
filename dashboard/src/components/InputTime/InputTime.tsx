@@ -18,7 +18,10 @@ import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import type { PossibleMonitorPath } from '@/types/general';
 import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
 
-type PossibleIntervalPath = Exclude<PossibleMonitorPath, '/issues'>;
+type PossibleIntervalPath = Exclude<
+  PossibleMonitorPath,
+  '/issues' | '/metrics'
+>;
 
 const TOAST_TIMEOUT = 3000;
 

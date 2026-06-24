@@ -30,30 +30,45 @@ metrics_expected_fields = [
     "prev_lab_maps",
 ]
 
-metrics_expected_counts = {
-    "n_trees": 11,
-    "n_checkouts": 58,
-    "n_builds": 28,
-    "n_tests": 30,
-    "n_issues": 20,
-    "n_incidents": 8,
-    "prev_n_trees": 0,
-    "prev_n_checkouts": 0,
-    "prev_n_builds": 0,
-    "prev_n_tests": 0,
-}
+# Plain COUNT(*) fields, additive across disjoint day windows. n_trees is
+# COUNT(DISTINCT tree_name), so it does not add up and is excluded here.
+additive_count_fields = [
+    "n_checkouts",
+    "n_builds",
+    "n_tests",
+    "n_issues",
+    "n_incidents",
+]
 
 
-def test_get_metrics():
-    response = client.get_metrics()
+def _ok_content(query: dict[str, str] | None = None) -> dict:
+    response = client.get_metrics(query=query)
     content = string_to_json(response.content.decode())
-
     assert_status_code_and_error_response(
         response=response,
         content=content,
         status_code=HTTPStatus.OK,
         should_error=False,
     )
+    return content
+
+
+metrics_expected_counts = {
+    "n_trees": 5,
+    "n_checkouts": 21,
+    "n_builds": 12,
+    "n_tests": 14,
+    "n_issues": 7,
+    "n_incidents": 7,
+    "prev_n_trees": 6,
+    "prev_n_checkouts": 20,
+    "prev_n_builds": 7,
+    "prev_n_tests": 7,
+}
+
+
+def test_get_metrics():
+    content = _ok_content()
 
     assert_has_fields_in_response_content(
         fields=metrics_expected_fields, response_content=content
@@ -63,6 +78,28 @@ def test_get_metrics():
         assert content[field] == expected, (
             f"{field}: api={content[field]} expected={expected}"
         )
+
+
+def test_metrics_half_open_windows_tile_exactly():
+    """Adjacent half-open windows [start, end) tile without gaps or overlap:
+    (2, 0) == (1, 0) + (2, 1) for additive counts."""
+    day_1 = _ok_content({"start_days_ago": "1", "end_days_ago": "0"})
+    day_2 = _ok_content({"start_days_ago": "2", "end_days_ago": "1"})
+    both_days = _ok_content({"start_days_ago": "2", "end_days_ago": "0"})
+
+    for field in additive_count_fields:
+        assert both_days[field] == day_1[field] + day_2[field], (
+            f"{field}: (2,0)={both_days[field]} != "
+            f"(1,0)={day_1[field]} + (2,1)={day_2[field]}"
+        )
+
+
+def test_metrics_window_outside_seeded_range_is_empty():
+    """A window entirely beyond the seeded days returns zero counts."""
+    content = _ok_content({"start_days_ago": "30", "end_days_ago": "22"})
+
+    for field in additive_count_fields:
+        assert content[field] == 0, f"{field}: api={content[field]} expected=0"
 
 
 @pytest.mark.parametrize(

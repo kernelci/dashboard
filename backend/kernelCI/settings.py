@@ -228,6 +228,10 @@ else:
             ],
         ),
         (
+            "10 0 * * 6",
+            "kernelCI_app.queries.notifications.warm_metrics_cache",
+        ),
+        (
             "0 0 * * 6",
             "django.core.management.call_command",
             [
