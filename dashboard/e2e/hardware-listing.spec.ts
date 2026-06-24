@@ -137,4 +137,49 @@ test.describe('Hardware Listing Page Tests', () => {
     ).toContainText('Select tree');
     await expect(clearButton).toBeHidden();
   });
+
+  test('filter label updates with query params', async ({ page }) => {
+    const filterLabel = page.locator(HARDWARE_LISTING_SELECTORS.filterLabel);
+    await expect(filterLabel).toBeVisible();
+    await expect(filterLabel).toContainText(
+      /Showing latest checkout for trees updated in the last \d+ days/,
+    );
+
+    const url = new URL(page.url());
+
+    url.searchParams.set('days', '2');
+    await page.goto(url.toString());
+    await expect(filterLabel).toContainText('last 2 days');
+
+    url.searchParams.set('days', '7');
+    await page.goto(url.toString());
+    await expect(filterLabel).toContainText('last 7 days');
+  });
+
+  test('selecting a revision toggles filter label', async ({ page }) => {
+    const filterLabel = page.locator(HARDWARE_LISTING_SELECTORS.filterLabel);
+    await expect(filterLabel).toBeVisible();
+
+    await selectComboboxOption(page, HARDWARE_LISTING_SELECTORS.treeSelector);
+    await expect(filterLabel).toBeHidden();
+
+    await page.locator(HARDWARE_LISTING_SELECTORS.clearSelection).click();
+    await expect(filterLabel).toBeVisible();
+  });
+
+  test('loading URL with revision does not show filter label', async ({
+    page,
+  }) => {
+    await selectComboboxOption(page, HARDWARE_LISTING_SELECTORS.treeSelector);
+    const urlWithRevision = page.url();
+    await expect(urlWithRevision).toMatch(/[?&]ch=/);
+
+    await page.goto(urlWithRevision);
+
+    const filterLabel = page.locator(HARDWARE_LISTING_SELECTORS.filterLabel);
+    await expect(filterLabel).toBeHidden();
+
+    await page.locator(HARDWARE_LISTING_SELECTORS.clearSelection).click();
+    await expect(filterLabel).toBeVisible();
+  });
 });

@@ -223,6 +223,8 @@ export const messages = {
     'hardwareListing.branchSelectorSearchPlaceholder': 'Search branch...',
     'hardwareListing.clearSelection': 'Clear selection',
     'hardwareListing.description': 'List of hardware from kernel tests',
+    'hardwareListing.latestCheckoutFilterLabel':
+      'Showing latest checkout for trees updated in the last {days} days',
     'hardwareListing.notFound': 'No hardware information available',
     'hardwareListing.revisionEmpty':
       'The selected revision has no hardware rows yet. Data ingestion may still be in progress.',
