@@ -4,12 +4,13 @@ KernelCI Metrics Summary
 
   COVERAGE
   --------
-                          This week    Last week              Change
-                          ─────────    ─────────           ─────────
-  Trees monitored               105          100                  +5
-  Checkouts                   1,000        1,000                   0
-  Builds                     11,000       10,000       +1,000 (+10%)
-  Tests                   1,000,000    1,500,000     -500,000 (-33%)
+                   This week  Last week           Change
+                   ─────────  ─────────  ───────────────
+  Trees monitored        105        100               +5
+  Checkouts            1,000      1,000                0
+  Builds              11,000     10,000    +1,000 (+10%)
+  Tests            1,000,000  1,500,000  -500,000 (-33%)
+
 
   BUILD REGRESSIONS
   -----------------
@@ -43,12 +44,12 @@ KernelCI Metrics Summary
 
   Labs marked with an asterisk (*) are new.
 
-  Lab                  Covered builds    Boots        Tests      Change (tests)
-  ────────────────────────────────────────────────────────────────────────────────
-  lava-broonie                      0   25,000      475,000     -175,000 (-27%)
-  lava-collabora                    0   50,000      450,000     -250,000 (-36%)
-  ────────────────────────────────────────────────────────────────────────────────
-  Total                             0   75,000      925,000     -425,000 (-31%)
+  Lab                 Covered builds    Boots     Tests    Change (tests)
+  ───────────────────────────────────────────────────────────────────────
+  lava-broonie                     0   25,000   475,000   -175,000 (-27%)
+  lava-collabora                   0   50,000   450,000   -250,000 (-36%)
+  ───────────────────────────────────────────────────────────────────────
+  Total                            0   75,000   925,000   -425,000 (-31%)
 
 --
 This is an experimental report format. Please send feedback in!

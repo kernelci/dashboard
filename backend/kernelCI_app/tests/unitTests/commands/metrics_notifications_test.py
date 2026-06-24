@@ -262,7 +262,6 @@ class TestGenerateMetricsReport(TestCase):
             start_datetime=mock.ANY,
             end_datetime=mock.ANY,
             deltas=mock.ANY,
-            lab_spacing=mock.ANY,
         )
 
     @patch(f"{MOCK_MODULE}.send_email_report")
