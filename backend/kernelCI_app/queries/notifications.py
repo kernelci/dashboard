@@ -1,6 +1,6 @@
 import sys
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Any
 
 from django.db import connection, connections
@@ -749,6 +749,12 @@ def query_fetchall_work(
     return rows
 
 
+def last_saturday(today: date | None = None) -> date:
+    """Most recent Saturday UTC (today when today is Saturday)."""
+    day = today or datetime.now(timezone.utc).date()
+    return day - timedelta(days=(day.weekday() + 2) % 7)
+
+
 def interval_params(start_days_ago: int, end_days_ago: int) -> dict[str, str]:
     """Build [start_date, end_date) bounds from UTC day offsets."""
     today = datetime.now(timezone.utc).date()
@@ -1068,16 +1074,17 @@ def get_metrics_data(
 
 
 def warm_metrics_cache() -> None:
+    today = datetime.now(timezone.utc).date()
+    end_days_ago = (today - last_saturday(today)).days
     for period_days in METRICS_CACHE_WARM_PERIODS:
         out(
-            "Warming metrics cache for "
-            f"{period_days}-day period "
-            f"(start_days_ago={period_days}, end_days_ago=0)"
+            f"Warming metrics cache for {period_days}-day Sat-Fri period "
+            f"(end_days_ago={end_days_ago})"
         )
         try:
             get_metrics_data(
-                start_days_ago=period_days,
-                end_days_ago=0,
+                start_days_ago=end_days_ago + period_days,
+                end_days_ago=end_days_ago,
                 use_cache=False,
                 cache_timeout=METRICS_CACHE_WARM_TIMEOUT,
             )
