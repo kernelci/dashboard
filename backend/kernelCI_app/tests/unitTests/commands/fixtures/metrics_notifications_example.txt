@@ -16,13 +16,13 @@ KernelCI Metrics Summary
   -----------------
   A "regression" is defined as a reported problem affecting 0 or multiple builds.
 
-  Origin    Regressions       Affected           Affected builds by top issues
-            (known + new)     Builds (total)     #1      #2      #3
-  ─────────────────────────────────────────────────────────────────────────
-  maestro   1   + 1   = 2     70                 50      20      
-  redhat    1   + 0   = 1     5                  5       
-  ─────────────────────────────────────────────────────────────────────────
-  Total     2   + 1   = 3     75
+  Origin           Regressions        Affected  Affected builds by top issues
+                 (known + new)  Builds (total)         #1        #2        #3
+  ───────────────────────────────────────────────────────────────────────────
+  maestro      1 +   1 =     2              70         50        20
+  redhat       1 +   0 =     1               5          5
+  ───────────────────────────────────────────────────────────────────────────
+  Total        2 +   1 =     3              75
 
 
   TOP REGRESSIONS PER ORIGIN
