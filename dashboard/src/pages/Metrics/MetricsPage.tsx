@@ -551,11 +551,8 @@ function LabsSection({ labs }: { labs: LabData[] }): JSX.Element {
 const getMetricsQueryParams = (
   activeDays: number,
 ): { startDaysAgo: number; endDaysAgo: number } => {
-  const today = new Date();
-  const weekEndDaysAgo = (today.getUTCDay() + 1) % DAYS_IN_WEEK;
-  const endDaysAgo = Math.max(weekEndDaysAgo - 1, 0);
-  const startDaysAgo = endDaysAgo + activeDays;
-  return { startDaysAgo, endDaysAgo };
+  const endDaysAgo = (new Date().getUTCDay() + 1) % DAYS_IN_WEEK;
+  return { startDaysAgo: endDaysAgo + activeDays, endDaysAgo };
 };
 
 export const MetricsPage = (): JSX.Element => {
