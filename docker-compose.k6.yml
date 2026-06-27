@@ -30,6 +30,7 @@ services:
     redis:
         image: redis:8.0-M04-alpine
         restart: always
+        command: ["redis-server", "--maxmemory-policy", "noeviction"]
         networks:
             - private
         ports:
