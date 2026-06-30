@@ -7,7 +7,7 @@ BACKEND_DIR   ?= backend
 help: ## Show this help
 	@awk 'BEGIN{FS=":.*##"} /^[a-zA-Z0-9_.-]+:.*##/ {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-setup: ## Copy env files for Docker dev and manual backend workflows, then install dependencies
+setup: ## Copy env files (.env for Docker; .env.backend for manual backend reference), then install dependencies
 	@test -f .env || (cp .env.example .env && echo "Created .env from .env.example")
 	@test -f .env.backend || (cp .env.backend.example .env.backend && echo "Created .env.backend from .env.backend.example")
 	@test -f $(DASHBOARD_DIR)/.env || (cp $(DASHBOARD_DIR)/.env.example $(DASHBOARD_DIR)/.env && echo "Created dashboard/.env from dashboard/.env.example")

@@ -4,15 +4,18 @@ KernelCI Dashboard is an open-source project and contributions of all kinds are 
 
 ## Before you start
 
-- Read the README for an overview of the monorepo.
-- We recommend following the [Onboarding guide](./docs/Onboarding.md) to set up your environment and learn the project workflow. **Start here** if this is your first setup.
-- New to the project? Pick an issue labeled ["good first issue"](https://github.com/kernelci/dashboard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
-- There are a couple of extensions that may help you with linting and formatting your code. Consider installing [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/) for your preferred code editor.
-- For Python development, this repository uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting, and [pre-commit](https://pre-commit.com/) for Git hooks.
+1. Read the [README](./README.md) for a project overview.
+2. Set up locally:
+   - **Docker with live reload:** [docs/dev-environment.md](./docs/dev-environment.md) — or run `make setup` then `make dev`
+   - **Guided walkthrough:** [Onboarding guide](./docs/Onboarding.md)
+   - **Manual backend + frontend on the host:** [backend/README.md](./backend/README.md) and [dashboard/README.md](./dashboard/README.md)
+3. New to the project? Pick an issue labeled ["good first issue"](https://github.com/kernelci/dashboard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+4. For Python development, this repository uses [Ruff](https://docs.astral.sh/ruff/) and [pre-commit](https://pre-commit.com/). For the frontend, consider [ESLint](https://eslint.org/) and [Prettier](https://prettier.io/) in your editor.
 
 ## Useful links
 
 - README: [./README.md](./README.md)
+- Dev environment: [./docs/dev-environment.md](./docs/dev-environment.md)
 - Onboarding guide: [./docs/Onboarding.md](./docs/Onboarding.md)
 - Open issues on [this page](https://github.com/kernelci/dashboard/issues)
 - Good first issues on [this page](https://github.com/kernelci/dashboard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
@@ -41,7 +44,7 @@ KernelCI Dashboard is an open-source project and contributions of all kinds are 
 1. Fork the repo and create a feature branch from main
 2. Keep PRs focused and small; one change per PR
 3. Follow Conventional Commits for commit messages (see Conventional Commits below)
-4. Run services locally (backend, frontend, or Docker) as described in the Onboarding guide; ensure builds and checks pass
+4. Run services locally as described above; ensure builds and checks pass
 5. Update documentation and add tests when applicable
 6. Ensure the PR passes automated checks; see the suggested workflow in the "Make your code pass automated code checks" section
 

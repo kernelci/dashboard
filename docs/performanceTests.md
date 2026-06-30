@@ -16,7 +16,7 @@ K6 is used for performance and load testing of API endpoints.
 Run tests using Docker Compose:
 
 ```bash
-docker-compose -f docker-compose.k6.yml up
+docker compose -f docker-compose.k6.yml up
 ```
 
 The Docker setup handles all K6 dependencies automatically.

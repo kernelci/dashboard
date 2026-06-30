@@ -1,12 +1,15 @@
 # KernelCI Dashboard — Deployment Guide
 
-This guide covers three deployment scenarios: [development](#1-development), [production](#2-production), and [staging](#3-staging).
+This guide covers three deployment scenarios: [containerized staging-like local run](#1-containerized-staging-like-local-run), [production](#2-production), and [staging](#3-staging).
+
+For contributor live reload, see [docs/dev-environment.md](docs/dev-environment.md) instead.
 
 ## Quick Reference
 
 | Scenario | Compose File | Database | Profiles |
 |----------|-------------|----------|----------|
-| Development | `docker-compose.yml` | Local (always on) | `with_commands` (for ingester) |
+| Contributor live reload | `docker-compose.dev.yml` | Local | — |
+| Staging-like local run | `docker-compose.yml` | Local (`dashboard_db`) | `with_commands` (for ingester) |
 | Production | `docker-compose-next.yml` | External PostgreSQL | none (or `with_commands`) |
 | Staging | `docker-compose.yml` | External PostgreSQL (shared with production) | none (or `with_commands`) |
 
@@ -15,7 +18,7 @@ This guide covers three deployment scenarios: [development](#1-development), [pr
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
-- [1. Development](#1-development)
+- [1. Containerized staging-like local run](#1-containerized-staging-like-local-run)
 - [2. Production](#2-production)
 - [3. Staging](#3-staging)
 - [Profile Reference](#profile-reference)
@@ -50,24 +53,13 @@ This guide covers three deployment scenarios: [development](#1-development), [pr
 
 ### Accessing production database
 
-If direct access to the production database is required,
-whether for local debugging or validating critical feature development,
-you must request permissions for the SSH connection and database user.
+See [Onboarding Task 0](docs/Onboarding.md#task-0-check-your-ssh-and-database-access) for SSH tunnel and credential setup.
 
-1. Connect to the Azure database SSH bridge:
-    - Create a new SSH key and add it to your SSH agent.
-    - Share the public SSH key to the database maintainer, to be granted access
-    to the SSH tunnel.
-    - Connect to the database via SSH tunnel with the provided URL.
-2. Request credentials: Obtain a new username and password for the database access.
-3. Connect: Once you have your credentials, connect to the database via `psql`, `pgAdmin`,
-`DBeaver`, or any other PostgreSQL manager.
+## 1. Containerized staging-like local run
 
-## 1. Development
+> For contributor live reload (Django + Vite HMR), use [docs/dev-environment.md](docs/dev-environment.md) (`docker-compose.dev.yml`) instead.
 
-This is the minimal guide for development using
-the fully containerized (Docker Compose) alternative.
-Images are built locally and use a global `.env` file.
+This section covers a staging-like stack built from source with Gunicorn and a production-style frontend image. Images are built locally and use root `.env`. The proxy defaults to port **9000**.
 
 ### Setup
 
@@ -95,40 +87,9 @@ docker compose up --build -d backend
 docker compose up --build -d
 ```
 
-### Local Frontend development
+### Host-based development
 
-When implementing frontend features, a fast "hot reload" workflow
-is usually preferred. In these scenarios, it is recommended to
-run a local frontend server on the host machine.
-
-For active frontend work, we can run the Vite dev server directly:
-
-```bash
-cd dashboard
-pnpm install
-# Copy the example env file and verify VITE_API_BASE_URL
-cp .env.example .env
-pnpm dev
-```
-
-The frontend connects to the backend API via the `VITE_API_BASE_URL`
-defined in `dashboard/.env` (defaults to `http://localhost:8000`).
-
-### Local Backend development
-To implement backend features with hot reloading,
-you can also start a local Django instance.
-
-```bash
-cd backend
-poetry install
-
-# Copy the env file and edit the DB_* to match your local database instance.
-# Also set DEBUG=True to allow CORS connections and stack traces.
-poetry run python3 manage.py runserver
-```
-
-The backend connects to a PostgreSQL instance using the environment variables:
-`DB_NAME`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_ENGINE`, `DB_OPTIONS_CONNECT_TIMEOUT`.
+For hot reload on the host machine, see [dashboard/README.md](dashboard/README.md) (frontend) and [backend/README.md](backend/README.md) (backend). Point `VITE_API_BASE_URL` in `dashboard/.env` at your backend (default `http://localhost:8000`).
 
 ---
 
@@ -138,9 +99,7 @@ Unlike the development deployment, our production environment connects to a
 pre-existing external PostgreSQL instance and use pre-built docker images
 stored in the GitHub Container Registry (GHCR).
 
-Production images are automatically built via GitHub Workflow,
-to every new commit in the main branch, or when
-the `Publish GHCR Images` workflow is triggered manually.
+Production images are built on every push to main and when [deploy-containers.yaml](.github/workflows/deploy-containers.yaml) is triggered manually (`workflow_dispatch`).
 
 The GitHub workflow for production is defined at: [deploy-production](.github/workflows/deploy-production.yaml)
 
@@ -266,7 +225,7 @@ Previous versions used `DB_DEFAULT_*` prefixed variables (e.g., `DB_DEFAULT_PASS
 
 ## Related Documentation
 
-- [README](./README.md) - Project overview and build instructions
+- [README](./README.md) - Project overview and local development
 - [CONTRIBUTING](./CONTRIBUTING.md) - How to contribute to the project
 - [Monitoring Setup](./docs/monitoring.md) — Prometheus metrics configuration
 - [Notifications](./docs/notifications.md) — Email and Discord notification setup

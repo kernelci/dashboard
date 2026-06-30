@@ -1,6 +1,6 @@
 # Getting Onboarded on the KernelCI dashboard project.
 
-This onboarding is written in the form of Tasks that you you can complete to get acquainted with the KernelCI Dashboard project.
+This onboarding is written in the form of Tasks that you can complete to get acquainted with the KernelCI Dashboard project.
 
 ## Introduction
 The KernelCI Dashboard is composed by two main parts
@@ -16,7 +16,7 @@ Our backend also houses an email notification system and a submissions monitorin
 2. The KernelCI Dashboard Frontend
 
 This is the user interface that will be used to interact with the KernelCI Dashboard API.
-Here the user can see the data returned by the API in a more user-friendly way and request diferents forms of visualization.
+Here the user can see the data returned by the API in a more user-friendly way and request different forms of visualization.
 This frontend is written in TypeScript and uses the React library.
 
 > Note:
@@ -24,9 +24,7 @@ This frontend is written in TypeScript and uses the React library.
 
 ## Tasks
 > Note:
-> In case you don't have access to the backend, feel free to use the staging api to run the Frontend Code and send PRs.
-> https://staging.dashboard.kernelci.org
-> You can also ask for access in the #webdashboard channel in the KernelCI Discord.
+> If you don't have backend access, see the [staging environment section](../CONTRIBUTING.md#staging-environment) in CONTRIBUTING.md.
 
 > Remember:
 > Always try to look to the production dashboard between tasks to see if you can assimilate the code to the project
@@ -41,9 +39,9 @@ In order to access the production database, you must be granted access to it fir
 * Connect to the database via SSH tunnel with the provided URL.
 
 2. You should ask for the creation of a new user/password for the database access. Once you have your credentials, connect to the database via `psql`, pgAdmin, DBeaver or any other postgresql manager.
-3. Start up the local dashboard_db by starting its docker container and running the [migration script](../backend/migrate-app-db.sh). This secondary database is very useful for local development and you can modify it as much as you like.
+3. Start the local `dashboard_db` via [dev-environment.md](dev-environment.md) (`make dev` runs migrations automatically), or start the database container yourself and run [migrate-app-db.sh](../backend/migrate-app-db.sh).
 
-You can populate the local db with data dumps provided by colleagues, or run the the `monitor_submissions` command (aka "ingester") and use provided json files to insert data into the db. If you use the ingester, check the [monitor_submissions docs](../backend/docs/monitor_submissions.md) on its description.
+You can populate the local db with data dumps provided by colleagues, or run the `monitor_submissions` command (aka "ingester") and use provided json files to insert data into the db. If you use the ingester, check the [monitor_submissions docs](../backend/docs/monitor_submissions.md) on its description.
 
 Definition of Done: You have access to kcidb and created the local database.
 
@@ -90,70 +88,25 @@ Definition of Done: You are able to query database data with no problem.
 
 ### Task 5: Run the Frontend locally
 1. Go to the `dashboard` directory, see the [README.md](../dashboard/README.md) from the frontend and try running the project locally.
-2. Look at the folder `api` and see how the requests are made, search for where those functions are being used (where the requests are made) and see if you can relate with the production dashboard.
+2. Look at the folder `dashboard/src/api` and see how the requests are made, search for where those functions are being used and see if you can relate with the production dashboard.
 3. Try to mess with the code, change some colors, add some logs, try to understand the code structure, if there is a library that you don't know, read the documentation on that.
 
 Definition of Done: You have the KernelCI Dashboard frontend running locally.
 
 
-### Task 6: Run the project in docker
+### Task 6: Run the project in Docker
 
 > [!TIP]
-> Running the project with Docker is especially useful for testing, as the production instance also runs in containers. This setup provides a more similar environment to production and helps ensure consistency between development and deployment.
+> Running the project with Docker is especially useful for testing, as the production instance also runs in containers.
 
-> [!IMPORTANT]
-> The current docker compose has settings meant for the staging deployment; for local development you'll need to open the `dashboard_db` service's port (set `5434:5432` so the external port doesn't conflict with the backend) and set `STAGING_EXTERNAL_HTTP_PORT` as `80` in `.env`.
+Follow [dev-environment.md](dev-environment.md) (`make dev` or `docker compose -f docker-compose.dev.yml up -d`). Stop any local backend, frontend, SSH tunnel, and Redis first — if Redis was installed via snap, run `sudo snap stop redis`.
 
-1. Make sure your backend, frontend, db ssh and Redis are **not** running locally.
-  
-  If Redis is running and you installed it with snap, stop it with:
-  ```bash
-  sudo snap stop redis
-  ```
+For notification setup (optional during onboarding), see [notifications.md](notifications.md).
 
-2. Set up the root `.env` file by copying `.env.example` and removing the `.example` suffix. For development you'll need to change the following variables in the `.env` file:
-```
-DEBUG_SQL_QUERY=False
-DEBUG=True
-
-DB_NAME=dashboard
-DB_USER=admin
-DB_PASSWORD=admin
-DB_HOST=dashboard_db  # Docker can't connect to the ssh tunnel host directly.
-DJANGO_SECRET_KEY=$(openssl rand -base64 22)
-```
-
-If running the notification commands, add these variables to `.env`:
-```
-EMAIL_HOST_USER=<your email>
-EMAIL_HOST_PASSWORD=<your app password>
-```
-For the onboarding you can skip those, but do check out the [notifications](./notifications.md) part of the dashboard.
-
-Other environment variables can be set as needed.
-
-3. Start up the services with the command:
-
-```bash
-docker compose up --build -d
-```
-
-After starting the services, you can check if your Docker containers are running with:
-
-```bash
-docker ps
-```
-
-If any container fails or exits unexpectedly, you can inspect the logs with:
-
-```bash
-docker logs <container_id>
-```
-
-Definition of Done: The KernelCI Dashboard (backend and frontend) is running via Docker and accessible locally.
+Definition of Done: The KernelCI Dashboard (backend and frontend) is running via Docker and accessible at `http://localhost:9000`.
 
 > [!NOTE]
-> The Task 6 teaches you how to build and run the project locally during development. Note that you can also run the project using pre-built images generated by the [deploy-containers](../.github/workflows/deploy-containers.yaml) workflow, using the [docker-compose-next](../docker-compose-next.yml) file to pull and run these pre-built images without rebuilding them.
+> Pre-built images from [deploy-containers](../.github/workflows/deploy-containers.yaml) can be run with [docker-compose-next.yml](../docker-compose-next.yml) instead of building locally. See [DEPLOYMENT.md](../DEPLOYMENT.md).
 
 ### Task 7: Complete a real Task
 1. Go to https://github.com/kernelci/dashboard/issues and search for issues with the label `good first issue`.
