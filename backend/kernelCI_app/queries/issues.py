@@ -293,6 +293,71 @@ def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
     return records
 
 
+def get_issue_last_seen_data(*, issue_id_list: list[str]) -> list[dict]:
+    """
+    Retrieves the incident and checkout data
+    of the last incident of a list of issues
+    through a list of `issue_id`s.
+    """
+
+    if not issue_id_list:
+        return []
+
+    cache_key = "issue_last_seen"
+    params = {"issue_id_list": issue_id_list}
+    records = get_query_cache(key=cache_key, params=params)
+
+    if records is None:
+        if len(issue_id_list) == 1:
+            comparison = "= %s"
+        else:
+            placeholders = ", ".join(["%s"] * len(issue_id_list))
+            comparison = f"IN ({placeholders})"
+
+        query = f"""
+            WITH last_incident AS (
+                SELECT DISTINCT
+                    ON (IC.issue_id) IC.id
+                FROM
+                    incidents IC
+                WHERE
+                    IC.issue_id {comparison}
+                ORDER BY
+                    IC.issue_id,
+                    IC.issue_version DESC,
+                    IC._timestamp DESC
+            )
+            SELECT
+                IC.id,
+                IC.issue_id,
+                IC._timestamp AS last_seen,
+                IC.issue_version,
+                C.git_commit_hash,
+                C.git_repository_url,
+                C.git_repository_branch,
+                C.git_commit_name,
+                C.tree_name,
+                C.id as checkout_id
+            FROM
+                incidents IC
+            LEFT JOIN tests T ON IC.test_id = T.id
+            LEFT JOIN builds B ON (
+                IC.build_id = B.id
+                OR T.build_id = B.id
+            )
+            LEFT JOIN checkouts C ON B.checkout_id = C.id
+            JOIN last_incident LI ON IC.id = LI.id
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute(query, issue_id_list)
+            records = dict_fetchall(cursor)
+
+        set_query_cache(key=cache_key, params=params, rows=records)
+
+    return records
+
+
 def get_issue_trees_data(
     *, issue_key_list: list[tuple[str, int]]
 ) -> list[dict[str, Any]]:

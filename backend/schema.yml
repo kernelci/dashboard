@@ -2502,6 +2502,10 @@ components:
       properties:
         first_incident:
           $ref: '#/components/schemas/FirstIncident'
+        last_incident:
+          anyOf:
+          - $ref: '#/components/schemas/LastIncident'
+          - type: 'null'
         versions:
           additionalProperties:
             anyOf:
@@ -2557,6 +2561,50 @@ components:
       - issue_version
       - checkout_id
       title: FirstIncident
+      type: object
+    LastIncident:
+      properties:
+        last_seen:
+          $ref: '#/components/schemas/Timestamp'
+        git_commit_hash:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitHash'
+          - type: 'null'
+        git_repository_url:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+          - type: 'null'
+        git_repository_branch:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+          - type: 'null'
+        git_commit_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitName'
+          - type: 'null'
+        tree_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__TreeName'
+          - type: 'null'
+        issue_version:
+          anyOf:
+          - $ref: '#/components/schemas/Issue__Version'
+          - type: 'null'
+        checkout_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Checkout Id
+      required:
+      - last_seen
+      - git_commit_hash
+      - git_repository_url
+      - git_repository_branch
+      - git_commit_name
+      - tree_name
+      - issue_version
+      - checkout_id
+      title: LastIncident
       type: object
     GlobalFilters:
       properties:
