@@ -242,6 +242,7 @@ export const messages = {
     'hardwareListing.treeSelectorSearchPlaceholder': 'Search tree...',
     'issue.alsoPresentTooltip': 'Issue also present in {tree}',
     'issue.firstSeen': 'First seen',
+    'issue.lastSeen': 'Last seen',
     'issue.newIssue': 'New issue: This is the first time this issue was seen',
     'issue.noIssueFound': 'No issues found for this tree/branch/commit',
     'issue.path': 'Issues',
@@ -260,6 +261,7 @@ export const messages = {
     'issueDetails.issueDetails': 'Issue Details',
     'issueDetails.issueListingInfo':
       'The culprit for all issues listed is code',
+    'issueDetails.lastIncident': 'Last incident',
     'issueDetails.logspecData': 'Logspec Data',
     'issueDetails.noBuildResults': 'No builds associated with this issue',
     'issueDetails.noTestResults': 'No tests associated with this issue',

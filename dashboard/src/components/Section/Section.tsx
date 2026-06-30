@@ -93,13 +93,26 @@ export const Subsection = ({ infos, title }: ISubsection): JSX.Element => {
 
   return (
     <div className="border-dark-gray border-t pt-4">
-      {title && <span className="text-xl">{title}</span>}
-      {items.length > 0 && (
-        <div className="grid grid-cols-1 gap-x-8 gap-y-11 pb-4 md:grid-cols-2">
-          {items}
+      {title ? (
+        <div className="flex flex-col gap-4">
+          <span className="max-w-full text-2xl font-bold break-all">{title}</span>
+          {items.length > 0 && (
+            <div className="grid grid-cols-1 gap-x-8 gap-y-11 pb-4 md:grid-cols-2">
+              {items}
+            </div>
+          )}
+          {children.length > 0 && <div className="mb-4">{children}</div>}
         </div>
+      ) : (
+        <>
+          {items.length > 0 && (
+            <div className="grid grid-cols-1 gap-x-8 gap-y-11 pb-4 md:grid-cols-2">
+              {items}
+            </div>
+          )}
+          {children.length > 0 && <div className="mb-4">{children}</div>}
+        </>
       )}
-      {children.length > 0 && <div className="mb-4">{children}</div>}
     </div>
   );
 };
