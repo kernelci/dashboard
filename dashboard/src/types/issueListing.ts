@@ -1,4 +1,4 @@
-import type { FirstIncident } from './issueExtras';
+import type { Incident } from './issueExtras';
 import type { IssueKeys } from './issues';
 
 export type IssueListingItem = IssueKeys & {
@@ -19,8 +19,8 @@ export type IssueListingFilters = {
 
 export type IssueListingResponse = {
   issues: IssueListingItem[];
-  extras: Record<string, FirstIncident>;
+  extras: Record<string, Incident>;
   filters: IssueListingFilters;
 };
 
-export type IssueListingTableItem = IssueListingItem & FirstIncident;
+export type IssueListingTableItem = IssueListingItem & Incident;

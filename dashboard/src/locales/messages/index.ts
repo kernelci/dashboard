@@ -242,10 +242,12 @@ export const messages = {
     'hardwareListing.treeSelectorSearchPlaceholder': 'Search tree...',
     'issue.alsoPresentTooltip': 'Issue also present in {tree}',
     'issue.firstSeen': 'First seen',
+    'issue.lastSeen': 'Last seen',
     'issue.newIssue': 'New issue: This is the first time this issue was seen',
     'issue.noIssueFound': 'No issues found for this tree/branch/commit',
     'issue.path': 'Issues',
     'issue.searchPlaceholder': 'Search by issue comment with a regex',
+    'issue.seen': 'Seen',
     'issue.tooltip':
       'Issues groups several builds or tests by matching result status and logs.{br}They may also be linked to an external issue tracker or mailing list discussion.',
     'issue.uncategorized': 'Uncategorized',
@@ -260,6 +262,7 @@ export const messages = {
     'issueDetails.issueDetails': 'Issue Details',
     'issueDetails.issueListingInfo':
       'The culprit for all issues listed is code',
+    'issueDetails.lastIncident': 'Last Incident Data',
     'issueDetails.logspecData': 'Logspec Data',
     'issueDetails.noBuildResults': 'No builds associated with this issue',
     'issueDetails.noTestResults': 'No tests associated with this issue',
