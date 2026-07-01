@@ -1,12 +1,20 @@
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+  - commit-msg
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.9
+    rev: v0.15.18
     hooks:
       - id: ruff-format
         files: ^backend/
         args: [--check]
+        stages: [pre-commit]
+
       - id: ruff-check
         files: ^backend/
+        stages: [pre-commit]
 
   - repo: local
     hooks:
@@ -15,6 +23,7 @@ repos:
         entry: bash -lc 'cd dashboard && pnpm lint-staged'
         language: system
         pass_filenames: false
+        files: ^dashboard/
         stages: [pre-commit]
 
       - id: frontend-typecheck
@@ -22,6 +31,7 @@ repos:
         entry: bash -lc 'cd dashboard && pnpm typecheck'
         language: system
         pass_filenames: false
+        files: ^dashboard/
         stages: [pre-commit]
 
       - id: frontend-pre-push
