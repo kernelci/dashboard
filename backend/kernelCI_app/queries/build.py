@@ -1,6 +1,7 @@
 from typing import Optional
 
 from django.db.models.expressions import F
+from django.db.models.functions import Coalesce
 from querybuilder.query import Query
 
 from kernelCI_app.models import Builds, Tests
@@ -51,7 +52,8 @@ def get_build_details(build_id: str) -> Optional[list[dict]]:
 def get_build_tests(build_id: str) -> Optional[list[dict]]:
     result = (
         Tests.objects.filter(build_id=build_id)
-        .annotate(lab=F("misc__runtime"))
+        # TODO remove misc__runtime fallback after lab backfill
+        .annotate(lab=Coalesce(F("lab__name"), F("misc__runtime")))
         .values(
             "id",
             "duration",

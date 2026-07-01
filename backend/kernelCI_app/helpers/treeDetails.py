@@ -25,7 +25,6 @@ from kernelCI_app.utils import (
     create_issue_typed,
     extract_error_message,
     is_boot,
-    sanitize_dict,
 )
 
 
@@ -87,31 +86,33 @@ def get_current_row_data(
         "test_number_value": current_row[10],
         "test_misc": current_row[11],
         "test_environment_compatible": current_row[tmp_test_env_comp_key],
-        "build_id": current_row[13],
-        "build_origin": current_row[14],
-        "build_comment": current_row[15],
-        "build_start_time": current_row[16],
-        "build_duration": current_row[17],
-        "build_architecture": current_row[18],
-        "build_command": current_row[19],
-        "build_compiler": current_row[20],
-        "build_config_name": current_row[21],
-        "build_config_url": current_row[22],
-        "build_log_url": current_row[23],
-        "build_status": current_row[24],
-        "build_misc": current_row[25],
-        "checkout_id": current_row[26],
-        "checkout_git_repository_url": current_row[27],
-        "checkout_git_repository_branch": current_row[28],
-        "checkout_git_commit_tags": current_row[29],
-        "checkout_origin": current_row[30],
-        "incident_id": current_row[31],
-        "incident_test_id": current_row[32],
-        "incident_present": current_row[33],
-        "issue_id": current_row[34],
-        "issue_version": current_row[35],
-        "issue_comment": current_row[36],
-        "issue_report_url": current_row[37],
+        "test_lab": current_row[13],
+        "build_id": current_row[14],
+        "build_origin": current_row[15],
+        "build_comment": current_row[16],
+        "build_start_time": current_row[17],
+        "build_duration": current_row[18],
+        "build_architecture": current_row[19],
+        "build_command": current_row[20],
+        "build_compiler": current_row[21],
+        "build_config_name": current_row[22],
+        "build_config_url": current_row[23],
+        "build_log_url": current_row[24],
+        "build_status": current_row[25],
+        "build_misc": current_row[26],
+        "build_lab": current_row[27],
+        "checkout_id": current_row[28],
+        "checkout_git_repository_url": current_row[29],
+        "checkout_git_repository_branch": current_row[30],
+        "checkout_git_commit_tags": current_row[31],
+        "checkout_origin": current_row[32],
+        "incident_id": current_row[33],
+        "incident_test_id": current_row[34],
+        "incident_present": current_row[35],
+        "issue_id": current_row[36],
+        "issue_version": current_row[37],
+        "issue_comment": current_row[38],
+        "issue_report_url": current_row[39],
     }
 
     parsed_environment_misc = handle_misc(
@@ -119,10 +120,7 @@ def get_current_row_data(
     )
     current_row_data["test_platform"] = parsed_environment_misc.get("platform")
     current_row_data["parsed_environment_misc"] = parsed_environment_misc
-    test_misc = sanitize_dict(current_row_data["test_misc"])
-    test_runtime_lab = UNKNOWN_STRING
-    if test_misc is not None:
-        test_runtime_lab = test_misc.get("runtime", UNKNOWN_STRING)
+    test_runtime_lab = current_row_data["test_lab"] or UNKNOWN_STRING
 
     if current_row_data["test_status"] is None:
         current_row_data["test_status"] = NULL_STATUS
@@ -495,8 +493,9 @@ def process_filters(instance, row_data: dict, skip_build_filters: bool = False) 
         instance.global_architectures.add(row_data["build_architecture"])
         instance.global_compilers.add(row_data["build_compiler"])
         instance.unfiltered_origins["build"].add(row_data["build_origin"])
-        if (build_misc := row_data["build_misc"]) is not None:
-            instance.unfiltered_labs["build"].add(build_misc.get("lab", UNKNOWN_STRING))
+        instance.unfiltered_labs["build"].add(
+            row_data.get("build_lab") or UNKNOWN_STRING
+        )
 
         build_issue_id, build_issue_version, is_build_issue = (
             should_increment_build_issue(

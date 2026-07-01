@@ -706,7 +706,7 @@ def generate_hardware_summary_report(
             continue
         hardware_id = environment_misc.get("platform")
         raw["job_id"] = environment_misc.get("job_id")
-        raw["runtime"] = misc.get("runtime")
+        raw["runtime"] = raw.get("lab") or misc.get("runtime")
         origin = raw.get("test_origin")
         key = (hardware_id, origin)
         tree = raw.get("tree_name")

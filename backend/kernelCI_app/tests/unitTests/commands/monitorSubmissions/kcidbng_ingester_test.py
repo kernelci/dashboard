@@ -588,6 +588,7 @@ class TestFlushBuffers:
         "kernelCI_app.management.commands.helpers.kcidbng_ingester.aggregate_checkouts_and_pendings"
     )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
+    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.assign_lab_ids")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.consume_buffer")
     @patch("os.rename")
     @patch("django.db.transaction.atomic")
@@ -598,6 +599,7 @@ class TestFlushBuffers:
         mock_atomic,
         mock_rename,
         mock_consume,
+        mock_assign_lab_ids,
         mock_out,
         mock_aggregate,
     ):
@@ -690,6 +692,7 @@ class TestFlushBuffers:
     )
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out")
+    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.assign_lab_ids")
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.consume_buffer")
     @patch("os.rename")
     @patch("django.db.transaction.atomic")
@@ -700,6 +703,7 @@ class TestFlushBuffers:
         mock_atomic,
         mock_rename,
         mock_consume,
+        mock_assign_lab_ids,
         mock_out,
         mock_logger,
         mock_aggregate,

@@ -24,6 +24,19 @@ class SimplifiedStatusChoices(models.TextChoices):
     INCONCLUSIVE = "I"
 
 
+class Labs(models.Model):
+    """Dimension table for labs (test `runtime` / build `lab`)."""
+
+    id = models.AutoField(primary_key=True)
+    name = models.TextField(unique=True)
+
+    class Meta:
+        db_table = "labs"
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Issues(models.Model):
     field_timestamp = models.DateTimeField(
         db_column="_timestamp", blank=True, null=True
@@ -119,6 +132,9 @@ class Builds(models.Model):
     log_url = models.TextField(blank=True, null=True)
     log_excerpt = models.CharField(max_length=16384, blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
+    lab = models.ForeignKey(
+        Labs, db_constraint=False, null=True, on_delete=models.DO_NOTHING
+    )
     status = models.CharField(
         max_length=10, choices=StatusChoices.choices, blank=True, null=True
     )
@@ -177,6 +193,9 @@ class Tests(models.Model):
     input_files = models.JSONField(blank=True, null=True)
     output_files = models.JSONField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
+    lab = models.ForeignKey(
+        Labs, db_constraint=False, null=True, on_delete=models.DO_NOTHING
+    )
     number_value = models.FloatField(blank=True, null=True)
     environment_compatible = ArrayField(models.TextField(), blank=True, null=True)
     number_prefix = models.CharField(
