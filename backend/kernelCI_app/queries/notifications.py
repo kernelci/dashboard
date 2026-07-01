@@ -926,19 +926,20 @@ def get_metrics_data(
     ORDER BY inc.origin, total DESC
     """
 
+    # TODO: remove t.misc.runtime after backfill on lab_id columns
     lab_summary_query = """
-    -- get count of tests of each lab and how many builds are related to those tests
     SELECT
-        t.misc->>'runtime' AS lab,
+        -- TODO remove misc->>'runtime' fallback after lab backfill
+        COALESCE(l.name, t.misc->>'runtime', t.origin) AS lab,
         COUNT(DISTINCT t.build_id) AS n_builds,
         COUNT(*) FILTER (WHERE t.path LIKE 'boot.%%' OR t.path = 'boot') AS n_boots,
         COUNT(*) FILTER (WHERE t.path NOT LIKE 'boot.%%' AND t.path != 'boot') AS n_tests
     FROM tests t
+    LEFT JOIN labs l ON t.lab_id = l.id
     WHERE
-        t.misc->>'runtime' IS NOT NULL
-        AND t._timestamp >=
-            %(start_date)s::timestamptz
-            AND t._timestamp < %(end_date)s::timestamptz
+        (t.lab_id IS NOT NULL OR t.misc->>'runtime' IS NOT NULL)
+        AND t._timestamp >= %(start_date)s::timestamptz
+        AND t._timestamp < %(end_date)s::timestamptz
     GROUP BY lab
     """
 

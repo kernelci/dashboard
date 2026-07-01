@@ -46,7 +46,7 @@ from kernelCI_app.typeModels.treeCommits import (
     TreeEntityTypes,
 )
 from kernelCI_app.typeModels.treeListing import TestStatusCount
-from kernelCI_app.utils import is_boot, sanitize_dict
+from kernelCI_app.utils import is_boot
 
 
 # TODO Move this endpoint to a function so it doesn't
@@ -84,12 +84,7 @@ class BaseTreeCommitsHistory(APIView):
         result = []
         for row in rows:
             build_misc = row[11]
-            sanitized_build_misc = sanitize_dict(build_misc)
-            build_lab = (
-                sanitized_build_misc.get("lab", UNKNOWN_STRING)
-                if sanitized_build_misc
-                else UNKNOWN_STRING
-            )
+            build_lab = row[24] or UNKNOWN_STRING
 
             result.append(
                 {
