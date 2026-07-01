@@ -36,10 +36,18 @@ const IssueDetailsOGTags = ({
         new Date(firstSeen).toLocaleDateString()
       : '';
 
+    const lastSeen = data.extra?.[issueId]?.last_incident?.last_seen;
+    const lastSeenDescription = lastSeen
+      ? formatMessage({ id: 'issue.lastSeen' }) +
+        ': ' +
+        new Date(lastSeen).toLocaleDateString()
+      : '';
+
     const descriptionChunks = [
       versionDescription,
       culpritDescription,
       firstSeenDescription,
+      lastSeenDescription,
     ].filter(chunk => chunk !== '');
 
     return descriptionChunks.join(';\n');

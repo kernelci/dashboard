@@ -21,8 +21,20 @@ export type FirstIncident = {
   issue_version?: string;
 };
 
+export type LastIncident = {
+  last_seen: Date;
+  git_commit_hash?: string;
+  git_repository_url?: string;
+  git_repository_branch?: string;
+  git_commit_name?: string;
+  tree_name?: string;
+  checkout_id?: string;
+  issue_version?: string;
+};
+
 type TExtraIssuesData = {
   first_incident: FirstIncident;
+  last_incident?: LastIncident;
   versions: Record<number, TIssueVersionData>;
 };
 

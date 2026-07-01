@@ -4,6 +4,7 @@ from unittest.mock import patch
 from kernelCI_app.helpers.issueExtras import (
     TagUrls,
     assign_issue_first_seen,
+    assign_issue_last_seen,
     assign_issue_trees,
     process_issues_extra_details,
 )
@@ -11,14 +12,16 @@ from kernelCI_app.typeModels.issues import (
     ExtraIssuesData,
     FirstIncident,
     IssueWithExtraInfo,
+    LastIncident,
 )
 
 
 class TestProcessIssuesExtraDetails:
     @patch("kernelCI_app.helpers.issueExtras.assign_issue_first_seen")
+    @patch("kernelCI_app.helpers.issueExtras.assign_issue_last_seen")
     @patch("kernelCI_app.helpers.issueExtras.assign_issue_trees")
     def test_process_issues_extra_details_with_issues(
-        self, mock_assign_trees, mock_assign_first_seen
+        self, mock_assign_trees, mock_assign_last_seen, mock_assign_first_seen
     ):
         """Test process_issues_extra_details with issues."""
         issue_key_list = [("issue1", 1), ("issue2", 2)]
@@ -31,14 +34,18 @@ class TestProcessIssuesExtraDetails:
         mock_assign_first_seen.assert_called_once_with(
             issue_key_list=issue_key_list, processed_issues_table=processed_issues_table
         )
+        mock_assign_last_seen.assert_called_once_with(
+            issue_key_list=issue_key_list, processed_issues_table=processed_issues_table
+        )
         mock_assign_trees.assert_called_once_with(
             issue_key_list=issue_key_list, processed_issues_table=processed_issues_table
         )
 
     @patch("kernelCI_app.helpers.issueExtras.assign_issue_first_seen")
+    @patch("kernelCI_app.helpers.issueExtras.assign_issue_last_seen")
     @patch("kernelCI_app.helpers.issueExtras.assign_issue_trees")
     def test_process_issues_extra_details_empty_list(
-        self, mock_assign_trees, mock_assign_first_seen
+        self, mock_assign_trees, mock_assign_last_seen, mock_assign_first_seen
     ):
         """Test process_issues_extra_details with empty issue list."""
         issue_key_list = []
@@ -49,6 +56,7 @@ class TestProcessIssuesExtraDetails:
         )
 
         mock_assign_first_seen.assert_not_called()
+        mock_assign_last_seen.assert_not_called()
         mock_assign_trees.assert_not_called()
 
 
@@ -173,6 +181,79 @@ class TestAssignIssueFirstSeen:
 
         assign_issue_first_seen(
             issue_key_list=issue_key_list, processed_issues_table=processed_issues_table
+        )
+
+        assert len(processed_issues_table) == 0
+
+
+class TestAssignIssueLastSeen:
+    @patch("kernelCI_app.helpers.issueExtras.get_issue_last_seen_data")
+    def test_assign_issue_last_seen_with_data(self, mock_get_data):
+        """Test assign_issue_last_seen with data."""
+        mock_get_data.return_value = [
+            {
+                "issue_id": "issue1",
+                "last_seen": "2024-06-15T10:00:00Z",
+                "git_commit_hash": "xyz789",
+                "git_repository_url": TagUrls.MAINLINE_URL,
+                "git_repository_branch": "master",
+                "git_commit_name": "commit_last",
+                "tree_name": "mainline",
+                "issue_version": 2,
+                "checkout_id": "checkout2",
+            }
+        ]
+
+        processed_issues_table = {
+            "issue1": ExtraIssuesData(
+                first_incident=FirstIncident(
+                    first_seen=datetime.fromisoformat("2024-01-15T10:00:00Z"),
+                    git_commit_hash="abc123",
+                    git_repository_url=TagUrls.MAINLINE_URL,
+                    git_repository_branch="master",
+                    git_commit_name="commit1",
+                    tree_name="mainline",
+                    issue_version=1,
+                    checkout_id="checkout1",
+                ),
+                versions={1: None},
+            )
+        }
+
+        assign_issue_last_seen(
+            issue_key_list=[("issue1", 1)],
+            processed_issues_table=processed_issues_table,
+        )
+
+        mock_get_data.assert_called_once_with(issue_id_list=["issue1"])
+        last_incident = processed_issues_table["issue1"].last_incident
+        assert isinstance(last_incident, LastIncident)
+        assert last_incident.last_seen == datetime.fromisoformat("2024-06-15T10:00:00Z")
+        assert last_incident.git_commit_hash == "xyz789"
+        assert last_incident.issue_version == 2
+
+    @patch("kernelCI_app.helpers.issueExtras.get_issue_last_seen_data")
+    def test_assign_issue_last_seen_skips_missing_issue(self, mock_get_data):
+        """Test assign_issue_last_seen skips issues not in processed table."""
+        mock_get_data.return_value = [
+            {
+                "issue_id": "issue1",
+                "last_seen": "2024-06-15T10:00:00Z",
+                "git_commit_hash": "xyz789",
+                "git_repository_url": TagUrls.MAINLINE_URL,
+                "git_repository_branch": "master",
+                "git_commit_name": "commit_last",
+                "tree_name": "mainline",
+                "issue_version": 2,
+                "checkout_id": "checkout2",
+            }
+        ]
+
+        processed_issues_table = {}
+
+        assign_issue_last_seen(
+            issue_key_list=[("issue1", 1)],
+            processed_issues_table=processed_issues_table,
         )
 
         assert len(processed_issues_table) == 0

@@ -104,7 +104,9 @@ export const IssueDetails = ({
   const firstIncidentSection: ISection | undefined = useMemo(() => {
     return getFirstIncidentSection({
       firstIncident: data?.extra?.[issueId]?.first_incident,
+      lastIncident: data?.extra?.[issueId]?.last_incident,
       title: formatMessage({ id: 'issueDetails.firstIncidentData' }),
+      lastIncidentTitle: formatMessage({ id: 'issueDetails.lastIncident' }),
     });
   }, [data?.extra, formatMessage, issueId]);
 

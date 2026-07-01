@@ -6,6 +6,7 @@ from kernelCI_app.queries.issues import (
     get_issue_builds,
     get_issue_details,
     get_issue_first_seen_data,
+    get_issue_last_seen_data,
     get_issue_listing_data,
     get_issue_tests,
     get_issue_trees_data,
@@ -226,6 +227,68 @@ class TestGetIssueFirstSeenData:
     @patch("kernelCI_app.queries.issues.get_query_cache")
     def test_get_issue_first_seen_data_empty_list(self, mock_get_cache):
         result = get_issue_first_seen_data(issue_id_list=[])
+
+        assert result == []
+        mock_get_cache.assert_not_called()
+
+
+class TestGetIssueLastSeenData:
+    @patch("kernelCI_app.queries.issues.get_query_cache")
+    def test_get_issue_last_seen_data_from_cache(self, mock_get_cache):
+        issue_id_list = ["issue_1", "issue_2"]
+        cached_data = [{"id": "incident_1", "issue_id": "issue_1"}]
+        mock_get_cache.return_value = cached_data
+
+        result = get_issue_last_seen_data(issue_id_list=issue_id_list)
+
+        assert result == cached_data
+
+    @patch("kernelCI_app.queries.issues.get_query_cache")
+    @patch("kernelCI_app.queries.issues.set_query_cache")
+    @patch("kernelCI_app.queries.issues.dict_fetchall")
+    @patch("kernelCI_app.queries.issues.connection")
+    def test_get_issue_last_seen_data_from_database(
+        self, mock_connection, mock_dict_fetchall, mock_set_cache, mock_get_cache
+    ):
+        mock_get_cache.return_value = None
+        expected_result = [{"id": "incident", "issue_id": "issue"}]
+        mock_dict_fetchall.return_value = expected_result
+        setup_mock_cursor(mock_connection)
+
+        result = get_issue_last_seen_data(issue_id_list=["issue"])
+
+        assert result == expected_result
+        mock_set_cache.assert_called_once()
+
+    @patch("kernelCI_app.queries.issues.get_query_cache")
+    @patch("kernelCI_app.queries.issues.set_query_cache")
+    @patch("kernelCI_app.queries.issues.dict_fetchall")
+    @patch("kernelCI_app.queries.issues.connection")
+    def test_get_issue_last_seen_data_multiple_issues(
+        self, mock_connection, mock_dict_fetchall, mock_set_cache, mock_get_cache
+    ):
+        mock_get_cache.return_value = None
+        expected_result = [
+            {"id": "incident_1", "issue_id": "issue_1"},
+            {"id": "incident_2", "issue_id": "issue_2"},
+        ]
+        mock_dict_fetchall.return_value = expected_result
+        mock_cursor = setup_mock_cursor(mock_connection)
+
+        result = get_issue_last_seen_data(
+            issue_id_list=["issue_1", "issue_2", "issue_3"]
+        )
+
+        assert result == expected_result
+        execute_call = mock_cursor.execute.call_args
+        query = execute_call[0][0]
+        assert "IN" in query
+        assert "DESC" in query
+        mock_set_cache.assert_called_once()
+
+    @patch("kernelCI_app.queries.issues.get_query_cache")
+    def test_get_issue_last_seen_data_empty_list(self, mock_get_cache):
+        result = get_issue_last_seen_data(issue_id_list=[])
 
         assert result == []
         mock_get_cache.assert_not_called()

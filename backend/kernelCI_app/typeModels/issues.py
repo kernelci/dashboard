@@ -78,8 +78,20 @@ class FirstIncident(BaseModel):
     checkout_id: Optional[str]
 
 
+class LastIncident(BaseModel):
+    last_seen: Timestamp
+    git_commit_hash: Optional[Checkout__GitCommitHash]
+    git_repository_url: Optional[Checkout__GitRepositoryUrl]
+    git_repository_branch: Optional[Checkout__GitRepositoryBranch]
+    git_commit_name: Optional[Checkout__GitCommitName]
+    tree_name: Optional[Checkout__TreeName]
+    issue_version: Optional[Issue__Version]
+    checkout_id: Optional[str]
+
+
 class ExtraIssuesData(BaseModel):
     first_incident: FirstIncident
+    last_incident: Optional[LastIncident] = None
     versions: dict[int, Optional[IssueWithExtraInfo]]
 
 

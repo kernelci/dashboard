@@ -3,11 +3,16 @@ from typing import List, Optional, Tuple
 
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.queries.issues import get_issue_first_seen_data, get_issue_trees_data
+from kernelCI_app.queries.issues import (
+    get_issue_first_seen_data,
+    get_issue_last_seen_data,
+    get_issue_trees_data,
+)
 from kernelCI_app.typeModels.issues import (
     ExtraIssuesData,
     FirstIncident,
     IssueWithExtraInfo,
+    LastIncident,
     ProcessedExtraDetailedIssues,
     TreeSetItem,
 )
@@ -39,6 +44,10 @@ def process_issues_extra_details(
 
     # TODO: combine both queries into one
     assign_issue_first_seen(
+        issue_key_list=issue_key_list,
+        processed_issues_table=processed_issues_table,
+    )
+    assign_issue_last_seen(
         issue_key_list=issue_key_list,
         processed_issues_table=processed_issues_table,
     )
@@ -90,6 +99,39 @@ def assign_issue_first_seen(
         # If an issue_version exists, the trees can be assigned with `assign_issue_trees`
         for version in versions_per_issue[record_issue_id]:
             processed_issue_from_id.versions.setdefault(version, None)
+
+
+def assign_issue_last_seen(
+    *,
+    issue_key_list: List[Tuple[str, int]],
+    processed_issues_table: ProcessedExtraDetailedIssues,
+) -> None:
+    """
+    Assigns the last seen data to the processed_issues_table by querying with the issue_key_list.
+    """
+    issue_id_set: set[str] = set()
+
+    for issue_id, _issue_version in issue_key_list:
+        issue_id_set.add(issue_id)
+
+    incident_records = get_issue_last_seen_data(issue_id_list=list(issue_id_set))
+
+    for record in incident_records:
+        record_issue_id = record["issue_id"]
+        processed_issue_from_id = processed_issues_table.get(record_issue_id)
+        if processed_issue_from_id is None:
+            continue
+
+        processed_issue_from_id.last_incident = LastIncident(
+            last_seen=record["last_seen"],
+            git_commit_hash=record["git_commit_hash"],
+            git_repository_url=record["git_repository_url"],
+            git_repository_branch=record["git_repository_branch"],
+            git_commit_name=record["git_commit_name"],
+            tree_name=record["tree_name"],
+            issue_version=record["issue_version"],
+            checkout_id=record["checkout_id"],
+        )
 
 
 def assign_issue_trees(
