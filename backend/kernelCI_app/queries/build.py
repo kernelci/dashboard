@@ -1,6 +1,8 @@
 from typing import Optional
 
+from django.db.models import TextField
 from django.db.models.expressions import F
+from django.db.models.functions import Cast, Coalesce
 from querybuilder.query import Query
 
 from kernelCI_app.models import Builds, Tests
@@ -51,7 +53,13 @@ def get_build_details(build_id: str) -> Optional[list[dict]]:
 def get_build_tests(build_id: str) -> Optional[list[dict]]:
     result = (
         Tests.objects.filter(build_id=build_id)
-        .annotate(lab=F("misc__runtime"))
+        # TODO remove misc__runtime fallback after lab backfill
+        .annotate(
+            lab_name=Coalesce(
+                F("lab__name"),
+                Cast(F("misc__runtime"), output_field=TextField()),
+            )
+        )
         .values(
             "id",
             "duration",
@@ -61,7 +69,12 @@ def get_build_tests(build_id: str) -> Optional[list[dict]]:
             "environment_compatible",
             "environment_misc",
             "build__status",
-            "lab",
+            "lab_name",
         )
     )
-    return list(result)
+    tests = []
+    for test in result:
+        test["lab"] = test.pop("lab_name")
+        tests.append(test)
+
+    return tests

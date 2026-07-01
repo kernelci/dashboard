@@ -30,12 +30,38 @@ class TestGetBuildDetails:
 class TestGetBuildTests:
     @patch("kernelCI_app.queries.build.Tests")
     def test_get_build_tests_success(self, mock_tests_model):
-        expected_result = [{"id": "test", "status": "PASS"}]
-        setup_mock_filter_values_queryset(mock_tests_model, expected_result)
+        setup_mock_filter_values_queryset(
+            mock_tests_model,
+            [
+                {
+                    "id": "test",
+                    "duration": 30,
+                    "status": "PASS",
+                    "path": "test.path",
+                    "start_time": "2024-01-15T10:00:00Z",
+                    "environment_compatible": ["hardware1"],
+                    "environment_misc": {"platform": "x86_64"},
+                    "build__status": "PASS",
+                    "lab_name": "lab-a",
+                }
+            ],
+        )
 
         result = get_build_tests("build")
 
-        assert result == expected_result
+        assert result == [
+            {
+                "id": "test",
+                "duration": 30,
+                "status": "PASS",
+                "path": "test.path",
+                "start_time": "2024-01-15T10:00:00Z",
+                "environment_compatible": ["hardware1"],
+                "environment_misc": {"platform": "x86_64"},
+                "build__status": "PASS",
+                "lab": "lab-a",
+            }
+        ]
         mock_tests_model.objects.filter.assert_called_once_with(build_id="build")
 
     @patch("kernelCI_app.queries.build.Tests")

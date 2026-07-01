@@ -50,6 +50,7 @@ class TestTreeCommitsHistory(SimpleTestCase):
                 None,
                 None,
                 None,
+                "lab-a",
             )
         ]
 
@@ -115,6 +116,7 @@ class TestTreeCommitsHistory(SimpleTestCase):
                 None,
                 None,
                 None,
+                "lab-a",
             )
         ]
 
@@ -174,6 +176,7 @@ class TestTreeCommitsHistory(SimpleTestCase):
                 None,
                 None,
                 None,
+                "lab-a",
             ),
             (
                 self.commit_hash,
@@ -200,6 +203,7 @@ class TestTreeCommitsHistory(SimpleTestCase):
                 None,
                 None,
                 None,
+                "lab-a",
             ),
         ]
 
@@ -256,6 +260,7 @@ class TestTreeCommitsHistory(SimpleTestCase):
                 None,
                 None,
                 None,
+                "lab-a",
             )
         ]
 
