@@ -10,12 +10,42 @@ Period: {{ start_datetime }} to {{ end_datetime }}
 
   COVERAGE
   --------
-{{ "{:<22}".format("") -}}{{ "{:<13}".format("This week") -}}{{ "{:<13}".format("Last week") }}Change
-{{ "{:<22}".format("") -}}{{ "{:<13}".format("─────────") -}}{{ "{:<13}".format("─────────") }}──────
-{{ "{:<22}".format("  Trees monitored") -}}{{ "{:<13}".format(fmt(n_trees)) -}}{{ "{:<13}".format(fmt(prev_n_trees)) }}{{ deltas.n_trees }}
-{{ "{:<22}".format("  Checkouts") -}}{{ "{:<13}".format(fmt(n_checkouts)) -}}{{ "{:<13}".format(fmt(prev_n_checkouts)) }}{{ deltas.n_checkouts }}
-{{ "{:<22}".format("  Builds") -}}{{ "{:<13}".format(fmt(n_builds)) -}}{{ "{:<13}".format(fmt(prev_n_builds)) }}{{ deltas.n_builds }}
-{{ "{:<22}".format("  Tests") -}}{{ "{:<13}".format(fmt(n_tests)) -}}{{ "{:<13}".format(fmt(prev_n_tests)) }}{{ deltas.n_tests }}
+{%- set static_spacing = 2 -%}
+{%- set current_week_space = [n_builds|string|length, n_boots|string|length, n_tests|string|length, "This week"|length] | max + static_spacing %}
+{%- set previous_week_space = [prev_n_builds|string|length, prev_n_boots|string|length, prev_n_tests|string|length, "Last week"|length] | max + static_spacing %}
+{%- set change_space = [deltas.n_builds|string|length, deltas.n_boots|string|length, deltas.n_tests|string|length, "Change"|length] | max + static_spacing -%}
+{%- set label_space = 15 %} {#- length of the longest label -#}
+
+{#- Each group is a row, each line is a column #}
+  {{ "{:<{width}}".format("", width=label_space) -}}
+  {{ "{:>{width}}".format("This week", width=current_week_space) -}}
+  {{ "{:>{width}}".format("Last week", width=previous_week_space) -}}
+  {{ "{:>{width}}".format("Change", width=change_space) }}
+  {#-#}
+  {{ "{:<{width}}".format("", width=label_space) -}}
+  {{ "{:>{width}}".format("─" * (current_week_space-static_spacing), width=current_week_space) -}}
+  {{ "{:>{width}}".format("─" * (previous_week_space-static_spacing), width=previous_week_space) -}}
+  {{ "{:>{width}}".format("─" * (change_space-static_spacing), width=change_space) }}
+  {#-#}
+  {{"{:<{width}}".format("Trees monitored", width=label_space) -}}
+  {{ "{:>{width}}".format(fmt(n_trees), width=current_week_space) -}}
+  {{ "{:>{width}}".format(fmt(prev_n_trees), width=previous_week_space) -}}
+  {{  "{:>{width}}".format(deltas.n_trees, width=change_space) }}
+  {#-#}
+  {{ "{:<{width}}".format("Checkouts", width=label_space) -}}
+  {{ "{:>{width}}".format(fmt(n_checkouts), width=current_week_space) -}}
+  {{ "{:>{width}}".format(fmt(prev_n_checkouts), width=previous_week_space) -}}
+  {{ "{:>{width}}".format(deltas.n_checkouts, width=change_space) }}
+  {#-#}
+  {{ "{:<{width}}".format("Builds", width=label_space) -}}
+  {{ "{:>{width}}".format(fmt(n_builds), width=current_week_space) -}}
+  {{ "{:>{width}}".format(fmt(prev_n_builds), width=previous_week_space) -}}
+  {{ "{:>{width}}".format(deltas.n_builds, width=change_space) }}
+  {#-#}
+  {{ "{:<{width}}".format("Tests", width=label_space) -}}
+  {{ "{:>{width}}".format(fmt(n_tests), width=current_week_space) -}}
+  {{ "{:>{width}}".format(fmt(prev_n_tests), width=previous_week_space) -}}
+  {{ "{:>{width}}".format(deltas.n_tests, width=change_space) }}
 
 
   BUILD REGRESSIONS
@@ -24,30 +54,37 @@ Period: {{ start_datetime }} to {{ end_datetime }}
 
 {% if build_incidents_by_origin -%}
 
-{{ "{:<12}".format("  Origin") -}}
-{{ "{:<18}".format("Regressions") -}}
-{{ "{:<19}".format("Affected") -}}
-Affected builds by top issues
-{{ "{:<12}".format("") -}}
-{{ "{:<18}".format("(known + new)") -}}
-{{ "{:<19}".format("Builds (total)") -}}
-{{ "{:<8}".format("#1") -}}{{ "{:<8}".format("#2") -}}#3
-  ─────────────────────────────────────────────────────────────────────────
+{% set origin_space = 12 -%}
+{% set known_reg_space = 6 -%}
+{% set new_reg_space = 6 -%}
+{% set total_reg_space = 6 -%}
+{% set reg_space = known_reg_space + new_reg_space + total_reg_space -%}
+{% set affected_space = 16 -%}
+{% set ind_issues_space = 10 -%}
+{{ "{:<{width}}".format("  Origin", width=origin_space) -}}
+{{ "{:>{width}}".format("Regressions", width=reg_space) -}}
+{{ "{:>{width}}".format("Affected", width=affected_space) -}}
+{{ "{:>{width}}".format("Affected builds by top issues", width=ind_issues_space*3 + 1) }} {#- +1 to get to a 2-space gap, same for the #1 issue and the space after total incidents #}
+{{ "{:<{width}}".format("", width=origin_space) -}}
+{{ "{:>{width}}".format("(known + new)", width=reg_space) -}}
+{{ "{:>{width}}".format("Builds (total)", width=affected_space) -}}
+{{ "{:>{width}}".format("#1", width=ind_issues_space + 1) -}}{{ "{:>{width}}".format("#2", width=ind_issues_space) -}}{{ "{:>{width}}".format("#3", width=ind_issues_space) }}
+  ───────────────────────────────────────────────────────────────────────────
 {% for origin, data in build_incidents_by_origin.items() | sort -%}
-  {{ "{:<12}".format("  " + origin) -}}
-  {{ "{:<4}".format(fmt(data['n_existing_issues'])) -}} +{{" "}}
-  {{- "{:<4}".format(fmt(data['n_new_issues'])) -}} ={{" "}}
-  {{- "{:<6}".format(fmt(data['n_total_issues'])) -}}
-  {{ "{:<19}".format(fmt(data['total_incidents'])) -}}
+  {{ "{:<{width}}".format("  " + origin, width=origin_space) -}}
+  {{ "{:>{width}}".format(fmt(data['n_existing_issues']) + " +", width=known_reg_space) }}
+  {{- "{:>{width}}".format(fmt(data['n_new_issues']) + " =", width=new_reg_space) }}
+  {{- "{:>{width}}".format(fmt(data['n_total_issues']), width=total_reg_space) -}}
+  {{ "{:>{width}}".format(fmt(data['total_incidents']), width=affected_space) -}} {{ " " -}}
   {% for issue_key, data in top_issues_by_origin.get(origin, {}).items() -%}
-    {{ "{:<8}".format(fmt(data['total_incidents'])) -}}
+    {{ "{:>{width}}".format(fmt(data['total_incidents']), width=ind_issues_space) -}}
   {% endfor %}
-{% endfor %}  ─────────────────────────────────────────────────────────────────────────
-{{ "{:<12}".format("  Total") -}}
-{{ "{:<4}".format(fmt(build_incidents_by_origin.values() | map(attribute='n_existing_issues') | sum)) -}} +{{" "}}
-{{- "{:<4}".format(fmt(build_incidents_by_origin.values() | map(attribute='n_new_issues') | sum)) -}} ={{" "}}
-{{- "{:<6}".format(fmt(build_incidents_by_origin.values() | map(attribute='n_total_issues') | sum)) -}}
-{{ fmt(build_incidents_by_origin.values() | map(attribute='total_incidents') | sum) }}
+{% endfor %}  ───────────────────────────────────────────────────────────────────────────
+{{ "{:<{width}}".format("  Total", width=origin_space) -}}
+{{ "{:>{width}}".format(fmt(build_incidents_by_origin.values() | map(attribute='n_existing_issues') | sum) + " +", width=known_reg_space) }}
+{{- "{:>{width}}".format(fmt(build_incidents_by_origin.values() | map(attribute='n_new_issues') | sum) + " =", width=new_reg_space) }}
+{{- "{:>{width}}".format(fmt(build_incidents_by_origin.values() | map(attribute='n_total_issues') | sum), width=total_reg_space) -}}
+{{ "{:>{width}}".format(fmt(build_incidents_by_origin.values() | map(attribute='total_incidents') | sum), width=affected_space) }}
 {%- else %}  No build regressions to show in this period. {%- endif %}
 
 
@@ -80,34 +117,57 @@ Affected builds by top issues
 
   Labs marked with an asterisk (*) are new.
 
-{% if n_labs -%}
-{{ "{:<{width}}".format("  Lab", width=lab_spacing) -}}
-{{ "{:<16}".format("Covered builds") -}}
-{{ "{:<9}".format("Boots") -}}
-{{ "{:<15}".format("Tests") -}}
-Change (tests)
-  ────────────────────────────────────────────────────────────────────────────────
+{% if n_labs and lab_maps -%}
+{#- Compute the text spacing in jinja instead of python to consider the `fmt` macro -#}
+{%- set static_spacing = 3 -%}
+{%- set lab_names_len = lab_maps.keys() | map('length') | max -%}
+{%- set lab_names_space = [lab_names_len, "Lab"|length ] | max + static_spacing + 2 -%} {#- +2 for the possible ` *` -#}
+
+{#- a namespace is required to store the values outside of the loop -#}
+{#- initialize with the label length so we consider them as well -#}
+{%- set ns = namespace(lab_builds_len="Covered builds"|length, lab_boots_len="Boots"|length, lab_tests_len="Tests"|length) -%}
+{%- for v in lab_maps.values() -%}
+  {%- set ns.lab_builds_len = [ns.lab_builds_len, (fmt(v.builds))|length] | max -%}
+  {%- set ns.lab_boots_len = [ns.lab_boots_len, (fmt(v.boots))|length] | max -%}
+  {%- set ns.lab_tests_len = [ns.lab_tests_len, (fmt(v.tests))|length] | max -%}
+{%- endfor -%}
+{%- set lab_builds_space = ns.lab_builds_len + static_spacing -%}
+{%- set lab_boots_space = ns.lab_boots_len + static_spacing -%}
+{%- set lab_tests_space = ns.lab_tests_len + static_spacing -%}
+
+{%- set lab_change_len = deltas.labs.values() | map('length') | max -%}
+{%- set lab_change_space = [lab_change_len, "Change (tests)"|length] | max + static_spacing -%}
+
+{%- set hrule_length = lab_names_space + lab_builds_space + lab_boots_space + lab_tests_space + lab_change_space - 2 -%}
+
+{{ "{:<{width}}".format("  Lab", width=lab_names_space) -}}
+{{ "{:>{width}}".format("Covered builds", width=lab_builds_space) -}}
+{{ "{:>{width}}".format("Boots", width=lab_boots_space) -}}
+{{ "{:>{width}}".format("Tests", width=lab_tests_space) -}}
+{{ "{:>{width}}".format("Change (tests)", width=lab_change_space) }}
+  {{ "─" * hrule_length}}
 {% for lab_key, lab_values in lab_maps.items() | sort -%}
-    {%- set display_name = lab_key + " *" if lab_key in deltas.new_lab_keys else lab_key -%}
-  {{ "{:<{width}}".format("  " + display_name, width=lab_spacing) -}}
-    {{ "{:<16}".format(fmt(lab_values["builds"])) -}}
-    {{ "{:<9}".format(fmt(lab_values["boots"])) -}}
-    {{ "{:<15}".format(fmt(lab_values["tests"])) -}}
-    {{ deltas.labs.get(lab_key, "") }}
+  {%- set display_name = lab_key + " *" if lab_key in deltas.new_lab_keys else lab_key -%}
+  {{ "{:<{width}}".format("  " + display_name, width=lab_names_space) -}}
+  {{ "{:>{width}}".format(fmt(lab_values["builds"]), width=lab_builds_space) -}}
+  {{ "{:>{width}}".format(fmt(lab_values["boots"]), width=lab_boots_space) -}}
+  {{ "{:>{width}}".format(fmt(lab_values["tests"]), width=lab_tests_space) -}}
+  {{ "{:>{width}}".format(deltas.labs.get(lab_key, ""), width=lab_change_space) }}
 {% endfor %}
 {%- for lab_key in deltas.extinct_lab_keys | sort -%}
-    {%- set lab_values = prev_lab_maps[lab_key] -%}
-  {{ "{:<{width}}".format("  " + lab_key, width=lab_spacing) -}}
-    {{ "{:<16}".format(fmt(0)) -}}
-    {{ "{:<9}".format(fmt(0)) -}}
-    {{ "{:<15}".format(fmt(0)) -}}
-    {{ deltas.labs.get(lab_key, "") }}
-{% endfor %}  ────────────────────────────────────────────────────────────────────────────────
-{{ "{:<{width}}".format("  Total", width=lab_spacing) -}}
-{{ "{:<16}".format(fmt(lab_maps.values() | map(attribute='builds') | sum)) -}}
-{{ "{:<9}".format(fmt(lab_maps.values() | map(attribute='boots') | sum)) -}}
-{{ "{:<15}".format(fmt(lab_maps.values() | map(attribute='tests') | sum)) -}}
-{{ deltas.n_total_lab_activity }}
+  {%- set lab_values = prev_lab_maps[lab_key] -%}
+  {{ "{:<{width}}".format("  " + lab_key, width=lab_names_space) -}}
+  {{ "{:>{width}}".format(fmt(0), width=lab_builds_space) -}}
+  {{ "{:>{width}}".format(fmt(0), width=lab_boots_space) -}}
+  {{ "{:>{width}}".format(fmt(0), width=lab_tests_space) -}}
+  {{ "{:>{width}}".format(deltas.labs.get(lab_key, ""), width=lab_change_space) }}
+{% endfor %}
+{{- "  " + "─" * hrule_length}}
+{{ "{:<{width}}".format("  Total", width=lab_names_space) -}}
+{{ "{:>{width}}".format(fmt(lab_maps.values() | map(attribute='builds') | sum), width=lab_builds_space) -}}
+{{ "{:>{width}}".format(fmt(lab_maps.values() | map(attribute='boots') | sum), width=lab_boots_space) -}}
+{{ "{:>{width}}".format(fmt(lab_maps.values() | map(attribute='tests') | sum), width=lab_tests_space) -}}
+{{ "{:>{width}}".format(deltas.n_total_lab_activity, width=lab_change_space) }}
 
 {%- endif %}
 

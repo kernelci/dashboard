@@ -4,25 +4,25 @@ KernelCI Metrics Summary
 
   COVERAGE
   --------
-                      This week    Last week    Change
-                      ─────────    ─────────    ──────
-  Trees monitored     105          100          +5
-  Checkouts           1,000        1,000        0  (0%)
-  Builds              11,000       10,000       +1,000  (+10%)
-  Tests               1,000,000    1,500,000    -500,000  (-33%)
+                   This week  Last week           Change
+                   ─────────  ─────────  ───────────────
+  Trees monitored        105        100               +5
+  Checkouts            1,000      1,000                0
+  Builds              11,000     10,000    +1,000 (+10%)
+  Tests            1,000,000  1,500,000  -500,000 (-33%)
 
 
   BUILD REGRESSIONS
   -----------------
   A "regression" is defined as a reported problem affecting 0 or multiple builds.
 
-  Origin    Regressions       Affected           Affected builds by top issues
-            (known + new)     Builds (total)     #1      #2      #3
-  ─────────────────────────────────────────────────────────────────────────
-  maestro   1   + 1   = 2     70                 50      20      
-  redhat    1   + 0   = 1     5                  5       
-  ─────────────────────────────────────────────────────────────────────────
-  Total     2   + 1   = 3     75
+  Origin           Regressions        Affected  Affected builds by top issues
+                 (known + new)  Builds (total)         #1        #2        #3
+  ───────────────────────────────────────────────────────────────────────────
+  maestro      1 +   1 =     2              70         50        20
+  redhat       1 +   0 =     1               5          5
+  ───────────────────────────────────────────────────────────────────────────
+  Total        2 +   1 =     3              75
 
 
   TOP REGRESSIONS PER ORIGIN
@@ -44,12 +44,12 @@ KernelCI Metrics Summary
 
   Labs marked with an asterisk (*) are new.
 
-  Lab                Covered builds  Boots    Tests          Change (tests)
-  ────────────────────────────────────────────────────────────────────────────────
-  lava-broonie       0               25,000   475,000        -175,000  (-27%)
-  lava-collabora     0               50,000   450,000        -250,000  (-36%)
-  ────────────────────────────────────────────────────────────────────────────────
-  Total              0               75,000   925,000        -425,000  (-31%)
+  Lab                 Covered builds    Boots     Tests    Change (tests)
+  ───────────────────────────────────────────────────────────────────────
+  lava-broonie                     0   25,000   475,000   -175,000 (-27%)
+  lava-collabora                   0   50,000   450,000   -250,000 (-36%)
+  ───────────────────────────────────────────────────────────────────────
+  Total                            0   75,000   925,000   -425,000 (-31%)
 
 --
 This is an experimental report format. Please send feedback in!
