@@ -49,4 +49,5 @@ export const HARDWARE_LISTING_SELECTORS = {
   branchSelector: '[data-test-id="hardware-branch-selector"]',
   revisionSelector: '[data-test-id="hardware-revision-selector"]',
   clearSelection: '[data-test-id="hardware-selection-clear"]',
+  filterLabel: '[data-test-id="hardware-filter-label"]',
 } as const;

@@ -46,6 +46,8 @@ import type {
 
 import { sumStatus } from '@/utils/status';
 
+import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
+
 import { usePaginationState } from '@/hooks/usePaginationState';
 
 import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
@@ -60,6 +62,8 @@ import { Badge } from '@/components/ui/badge';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { LoadingCircle } from '@/components/ui/loading-circle';
+
+import { FilterLabel } from '@/components/FilterLabel/FilterLabel';
 
 import { buildHardwareDetailsSearch } from './hardwareTableUtils';
 import { HardwareRevisionSelectors } from './HardwareRevisionSelectors';
@@ -390,7 +394,7 @@ export function HardwareTable({
   onTreeChange = (): void => {},
   onClearSelection = (): void => {},
 }: IHardwareTable): JSX.Element {
-  const { listingSize } = useSearch({ strict: false });
+  const { listingSize, intervalInDays } = useSearch({ strict: false });
   const navigate = useNavigate({ from: navigateFrom });
 
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -546,11 +550,18 @@ export function HardwareTable({
           <TableBody>{tableBody}</TableBody>
         </BaseTable>
       </QuerySwitcher>
-      <PaginationInfo
-        table={table}
-        intlLabel="global.hardware"
-        onPaginationChange={navigateWithPageSize}
-      />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        {!selection && (
+          <FilterLabel days={intervalInDays ?? REDUCED_TIME_SEARCH} />
+        )}
+        <div style={{ marginLeft: 'auto' }}>
+          <PaginationInfo
+            table={table}
+            intlLabel="global.hardware"
+            onPaginationChange={navigateWithPageSize}
+          />
+        </div>
+      </div>
     </div>
   );
 }

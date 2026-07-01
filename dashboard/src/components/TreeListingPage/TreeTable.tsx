@@ -34,6 +34,7 @@ import { usePaginationState } from '@/hooks/usePaginationState';
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ConditionalTableCell } from '@/components/Table/ConditionalTableCell';
+import { FilterLabel } from '@/components/FilterLabel/FilterLabel';
 
 import { BaseGroupedStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
@@ -50,6 +51,7 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
+import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
 
 import {
   commonTreeTableColumns,
@@ -265,7 +267,7 @@ export function TreeTable({
   isLoading?: boolean;
   urlFromMap: TreeListingRoutesMap;
 }): JSX.Element {
-  const { origin, listingSize } = useSearch({
+  const { origin, listingSize, intervalInDays } = useSearch({
     from: urlFromMap.search,
   });
   const navigate = useNavigate({ from: urlFromMap.navigate });
@@ -395,11 +397,16 @@ export function TreeTable({
           <TableBody>{tableBody}</TableBody>
         </BaseTable>
       </QuerySwitcher>
-      <PaginationInfo
-        table={table}
-        intlLabel="global.trees"
-        onPaginationChange={navigateWithPageSize}
-      />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <FilterLabel days={intervalInDays ?? DEFAULT_TIME_SEARCH} />
+        <div style={{ marginLeft: 'auto' }}>
+          <PaginationInfo
+            table={table}
+            intlLabel="global.trees"
+            onPaginationChange={navigateWithPageSize}
+          />
+        </div>
+      </div>
     </div>
   );
 }
