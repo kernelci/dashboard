@@ -399,7 +399,7 @@ export function TreeTable({
       </QuerySwitcher>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <FilterLabel days={intervalInDays ?? DEFAULT_TIME_SEARCH} />
-        <div style={{ marginLeft: 'auto' }}>
+        <div className="ml-auto">
           <PaginationInfo
             table={table}
             intlLabel="global.trees"

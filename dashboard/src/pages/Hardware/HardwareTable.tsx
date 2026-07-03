@@ -554,7 +554,7 @@ export function HardwareTable({
         {!selection && (
           <FilterLabel days={intervalInDays ?? REDUCED_TIME_SEARCH} />
         )}
-        <div style={{ marginLeft: 'auto' }}>
+        <div className="ml-auto">
           <PaginationInfo
             table={table}
             intlLabel="global.hardware"
