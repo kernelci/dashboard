@@ -83,6 +83,8 @@ export const messages = {
     'filter.issueSubtitle': 'Please select one or more issues:',
     'filter.labs': 'Labs',
     'filter.labsSubtitle': 'Please select one or more labs:',
+    'filter.latestCheckoutFilterLabel':
+      'Showing latest checkout for trees updated in the last {days} days',
     'filter.max': 'Max',
     'filter.min': 'Min',
     'filter.onlySpecificTab': 'Only affects a specific tab',
