@@ -5,7 +5,7 @@ from typing import Any, Literal, Optional
 from django.conf import settings
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
-from kernelCI_app.helpers.issueExtras import assign_issue_first_seen
+from kernelCI_app.helpers.issueExtras import assign_issue_incidents
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.queries.notifications import (
     get_issues_summary_data,
@@ -134,7 +134,7 @@ def get_build_issues_from_checkout(
         issues_id_and_version_set.add((issue_id, issue_version))
 
     processed_issues_table: ProcessedExtraDetailedIssues = {}
-    assign_issue_first_seen(
+    assign_issue_incidents(
         issue_key_list=list(issues_id_and_version_set),
         processed_issues_table=processed_issues_table,
     )

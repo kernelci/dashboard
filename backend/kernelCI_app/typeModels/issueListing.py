@@ -15,7 +15,7 @@ from kernelCI_app.typeModels.databases import (
     Origin,
     Timestamp,
 )
-from kernelCI_app.typeModels.issues import FirstIncident
+from kernelCI_app.typeModels.issues import Incident
 
 
 class IssueListingQueryParameters(ListingInterval):
@@ -53,5 +53,5 @@ class IssueListingFilters(BaseModel):
 
 class IssueListingResponse(BaseModel):
     issues: list[IssueListingItem]
-    extras: dict[str, FirstIncident]
+    extras: dict[str, Incident]
     filters: IssueListingFilters

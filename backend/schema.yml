@@ -2503,7 +2503,9 @@ components:
     ExtraIssuesData:
       properties:
         first_incident:
-          $ref: '#/components/schemas/FirstIncident'
+          $ref: '#/components/schemas/Incident'
+        last_incident:
+          $ref: '#/components/schemas/Incident'
         versions:
           additionalProperties:
             anyOf:
@@ -2513,52 +2515,9 @@ components:
           type: object
       required:
       - first_incident
+      - last_incident
       - versions
       title: ExtraIssuesData
-      type: object
-    FirstIncident:
-      properties:
-        first_seen:
-          $ref: '#/components/schemas/Timestamp'
-        git_commit_hash:
-          anyOf:
-          - $ref: '#/components/schemas/Checkout__GitCommitHash'
-          - type: 'null'
-        git_repository_url:
-          anyOf:
-          - $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
-          - type: 'null'
-        git_repository_branch:
-          anyOf:
-          - $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
-          - type: 'null'
-        git_commit_name:
-          anyOf:
-          - $ref: '#/components/schemas/Checkout__GitCommitName'
-          - type: 'null'
-        tree_name:
-          anyOf:
-          - $ref: '#/components/schemas/Checkout__TreeName'
-          - type: 'null'
-        issue_version:
-          anyOf:
-          - $ref: '#/components/schemas/Issue__Version'
-          - type: 'null'
-        checkout_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Checkout Id
-      required:
-      - first_seen
-      - git_commit_hash
-      - git_repository_url
-      - git_repository_branch
-      - git_commit_name
-      - tree_name
-      - issue_version
-      - checkout_id
-      title: FirstIncident
       type: object
     GlobalFilters:
       properties:
@@ -3105,6 +3064,50 @@ components:
       - platforms
       title: HardwareTestLocalFilters
       type: object
+    Incident:
+      properties:
+        first_seen:
+          $ref: '#/components/schemas/Timestamp'
+        git_commit_hash:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitHash'
+          - type: 'null'
+        git_repository_url:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+          - type: 'null'
+        git_repository_branch:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+          - type: 'null'
+        git_commit_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitName'
+          - type: 'null'
+        tree_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__TreeName'
+          - type: 'null'
+        issue_version:
+          anyOf:
+          - $ref: '#/components/schemas/Issue__Version'
+          - type: 'null'
+        checkout_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Checkout Id
+      required:
+      - first_seen
+      - git_commit_hash
+      - git_repository_url
+      - git_repository_branch
+      - git_commit_name
+      - tree_name
+      - issue_version
+      - checkout_id
+      title: Incident
+      type: object
     Issue:
       properties:
         id:
@@ -3311,7 +3314,7 @@ components:
           type: array
         extras:
           additionalProperties:
-            $ref: '#/components/schemas/FirstIncident'
+            $ref: '#/components/schemas/Incident'
           title: Extras
           type: object
         filters:
