@@ -67,6 +67,7 @@ import { processLogData } from '@/hooks/useLogData';
 
 import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
 import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
+import { isBadRequestError } from '@/utils/query';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
@@ -223,9 +224,8 @@ const TestDetailsSections = ({
   }, [statusHistory?.status_history, test.id]);
 
   const regressionSection: ISection | undefined = useMemo(() => {
-    if (statusHistoryStatus === 'error') {
-      return;
-    }
+    const cannotFetchHistory =
+      statusHistoryStatus === 'error' && isBadRequestError(statusHistoryError);
 
     const regressionTypeTooltip: string | null = ((): string | null => {
       switch (statusHistory?.regression_type) {
@@ -294,12 +294,18 @@ const TestDetailsSections = ({
                   status={statusHistoryStatus}
                   data={statusHistory}
                   customError={
-                    <MemoizedSectionError
-                      isLoading={statusHistoryStatus === 'pending'}
-                      errorMessage={statusHistoryError?.message}
-                      emptyLabel="global.error"
-                      variant="warning"
-                    />
+                    cannotFetchHistory ? (
+                      <div className="text-weak-gray flex flex-col items-center py-6 text-2xl font-semibold">
+                        <FormattedMessage id="testDetails.cannotFetchHistory" />
+                      </div>
+                    ) : (
+                      <MemoizedSectionError
+                        isLoading={statusHistoryStatus === 'pending'}
+                        errorMessage={statusHistoryError?.message}
+                        emptyLabel="global.error"
+                        variant="warning"
+                      />
+                    )
                   }
                 >
                   <div className="flex items-center">{regressionData}</div>
@@ -314,7 +320,7 @@ const TestDetailsSections = ({
     formatMessage,
     regressionData,
     statusHistory,
-    statusHistoryError?.message,
+    statusHistoryError,
     statusHistoryStatus,
   ]);
 

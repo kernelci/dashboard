@@ -1,5 +1,5 @@
 import type { UseQueryResult } from '@tanstack/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type {
   TTestDetails,
@@ -9,6 +9,7 @@ import type {
 
 import type { TIssue } from '@/types/issues';
 import type { ApiUseQueryOptions } from '@/types/api';
+import { isBadRequestError, DEFAULT_QUERY_RETRY_COUNT } from '@/utils/query';
 
 import { RequestData } from './commonRequest';
 
@@ -64,9 +65,30 @@ const fetchTestStatusHistory = async (
 export const useTestStatusHistory = (
   params?: TestStatusHistoryParams,
 ): UseQueryResult<TestStatusHistory> => {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ['testStatusHistoryData', params],
     queryFn: () => fetchTestStatusHistory(params),
+    retry: (failureCount, error) => {
+      if (isBadRequestError(error)) {
+        return false;
+      }
+
+      const globalRetry =
+        queryClient.getDefaultOptions().queries?.retry ??
+        DEFAULT_QUERY_RETRY_COUNT;
+
+      if (typeof globalRetry === 'function') {
+        return globalRetry(failureCount, error);
+      }
+
+      if (typeof globalRetry === 'number') {
+        return failureCount < globalRetry;
+      }
+
+      return globalRetry;
+    },
     enabled: params !== undefined && Object.keys(params).length > 0,
   });
 };
