@@ -648,7 +648,8 @@ paths:
           minimum: 0
           title: End Days Ago
           type: integer
-        description: Number of days ago that marks the end of the metrics interval
+        description: Exclusive UTC day offset for the end of a [start, end) metrics
+          interval
       - in: query
         name: start_days_ago
         schema:
@@ -656,7 +657,8 @@ paths:
           minimum: 0
           title: Start Days Ago
           type: integer
-        description: Number of days ago that marks the start of the metrics interval
+        description: Inclusive UTC day offset for the start of a [start, end) metrics
+          interval
       tags:
       - metrics
       security:
@@ -2839,6 +2841,7 @@ components:
           - items:
               type: string
             type: array
+            uniqueItems: true
           - type: 'null'
           title: Hardware
         platform:
@@ -3578,6 +3581,13 @@ components:
             type: array
           title: Top Issues By Origin
           type: object
+        new_issues_by_origin:
+          additionalProperties:
+            items:
+              $ref: '#/components/schemas/TopIssue'
+            type: array
+          title: New Issues By Origin
+          type: object
         lab_maps:
           additionalProperties:
             $ref: '#/components/schemas/LabMetricsData'
@@ -3609,6 +3619,7 @@ components:
       - n_incidents
       - build_incidents_by_origin
       - top_issues_by_origin
+      - new_issues_by_origin
       - lab_maps
       - prev_n_trees
       - prev_n_checkouts
