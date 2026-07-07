@@ -56,7 +56,7 @@ def get_build_tests(build_id: str) -> Optional[list[dict]]:
         # TODO remove misc__runtime fallback after lab backfill
         .annotate(
             lab=Coalesce(
-                F("lab__name"),
+                F("lab_id__name"),
                 Cast(F("misc__runtime"), output_field=TextField()),
             )
         )
