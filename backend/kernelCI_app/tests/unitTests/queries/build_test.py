@@ -1,10 +1,7 @@
 from unittest.mock import patch
 
 from kernelCI_app.queries.build import get_build_details, get_build_tests
-from kernelCI_app.tests.unitTests.queries.conftest import (
-    setup_mock_filter_values_queryset,
-    setup_mock_query_builder,
-)
+from kernelCI_app.tests.unitTests.queries.conftest import setup_mock_query_builder
 
 
 class TestGetBuildDetails:
@@ -28,25 +25,35 @@ class TestGetBuildDetails:
 
 
 class TestGetBuildTests:
-    @patch("kernelCI_app.queries.build.Tests")
-    def test_get_build_tests_success(self, mock_tests_model):
-        setup_mock_filter_values_queryset(
-            mock_tests_model,
-            [
-                {
-                    "id": "test",
-                    "duration": 30,
-                    "status": "PASS",
-                    "path": "test.path",
-                    "start_time": "2024-01-15T10:00:00Z",
-                    "environment_compatible": ["hardware1"],
-                    "environment_misc": {"platform": "x86_64"},
-                    "build__status": "PASS",
-                    "lab_id": 1,
-                    "lab": "lab-a",
-                }
-            ],
-        )
+    @patch("kernelCI_app.queries.build.connection")
+    def test_get_build_tests_success(self, mock_connection):
+        mock_cursor = mock_connection.cursor.return_value.__enter__.return_value
+        mock_cursor.fetchall.return_value = [
+            (
+                "test",
+                30,
+                "PASS",
+                "test.path",
+                "2024-01-15T10:00:00Z",
+                ["hardware1"],
+                {"platform": "x86_64"},
+                "PASS",
+                1,
+                "lab-a",
+            )
+        ]
+        mock_cursor.description = [
+            ("id",),
+            ("duration",),
+            ("status",),
+            ("path",),
+            ("start_time",),
+            ("environment_compatible",),
+            ("environment_misc",),
+            ("build__status",),
+            ("lab_id",),
+            ("lab",),
+        ]
 
         result = get_build_tests("build")
 
@@ -64,11 +71,13 @@ class TestGetBuildTests:
                 "lab": "lab-a",
             }
         ]
-        mock_tests_model.objects.filter.assert_called_once_with(build_id="build")
+        mock_cursor.execute.assert_called_once()
 
-    @patch("kernelCI_app.queries.build.Tests")
-    def test_get_build_tests_empty_result(self, mock_tests_model):
-        setup_mock_filter_values_queryset(mock_tests_model, [])
+    @patch("kernelCI_app.queries.build.connection")
+    def test_get_build_tests_empty_result(self, mock_connection):
+        mock_cursor = mock_connection.cursor.return_value.__enter__.return_value
+        mock_cursor.fetchall.return_value = []
+        mock_cursor.description = []
 
         result = get_build_tests("build")
 

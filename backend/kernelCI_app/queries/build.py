@@ -1,11 +1,10 @@
 from typing import Optional
 
-from django.db.models import TextField
-from django.db.models.expressions import F
-from django.db.models.functions import Cast, Coalesce
+from django.db import connection
 from querybuilder.query import Query
 
-from kernelCI_app.models import Builds, Tests
+from kernelCI_app.helpers.database import dict_fetchall
+from kernelCI_app.models import Builds
 
 
 def get_build_details(build_id: str) -> Optional[list[dict]]:
@@ -51,26 +50,24 @@ def get_build_details(build_id: str) -> Optional[list[dict]]:
 
 
 def get_build_tests(build_id: str) -> Optional[list[dict]]:
-    result = (
-        Tests.objects.filter(build_id=build_id)
-        # TODO remove misc__runtime fallback after lab backfill
-        .annotate(
-            lab=Coalesce(
-                F("lab_id__name"),
-                Cast(F("misc__runtime"), output_field=TextField()),
-            )
-        )
-        .values(
-            "id",
-            "duration",
-            "status",
-            "path",
-            "start_time",
-            "environment_compatible",
-            "environment_misc",
-            "build__status",
-            "lab_id",
-            "lab",
-        )
-    )
-    return list(result)
+    query = """
+        SELECT
+            tests.id,
+            tests.duration,
+            tests.status,
+            tests.path,
+            tests.start_time,
+            tests.environment_compatible,
+            tests.environment_misc,
+            builds.status AS build__status,
+            tests.lab_id,
+            -- TODO remove misc->>'runtime' fallback after lab backfill
+            COALESCE(labs.name, tests.misc->>'runtime') AS lab
+        FROM tests
+        INNER JOIN builds ON tests.build_id = builds.id
+        LEFT JOIN labs ON tests.lab_id = labs.id
+        WHERE tests.build_id = %s
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(query, [build_id])
+        return dict_fetchall(cursor)
