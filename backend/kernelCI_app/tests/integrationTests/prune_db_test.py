@@ -130,29 +130,57 @@ def test_origins_cascade_ignores_child_origin():
 
 @pytest.mark.django_db
 def test_tables_tests_only():
-    """--tables limits deletion to the selected table."""
+    """--tables tests deletes only old tests; parents and a recent test under an old
+    build/checkout are kept because those parents are not being pruned."""
     checkout = CheckoutFactory(field_timestamp=_days_ago(30))
     build = BuildFactory(checkout=checkout, field_timestamp=_days_ago(30))
-    test = TestFactory(build=build, field_timestamp=_days_ago(30))
+    old_test = TestFactory(build=build, field_timestamp=_days_ago(30))
+    recent_test = TestFactory(build=build, field_timestamp=_days_ago(1))
 
     _prune(yes=True, tables=["tests"])
 
     assert Checkouts.objects.filter(id=checkout.id).exists()
     assert Builds.objects.filter(id=build.id).exists()
-    assert not Tests.objects.filter(id=test.id).exists()
+    assert not Tests.objects.filter(id=old_test.id).exists()
+    assert Tests.objects.filter(id=recent_test.id).exists()
 
 
 @pytest.mark.django_db
 def test_tables_builds_only():
+    """--tables builds deletes only old builds; a recent build survives, the checkout is
+    untouched, and an unlisted child test is left in place (orphaned)."""
     checkout = CheckoutFactory(field_timestamp=_days_ago(30))
-    build = BuildFactory(checkout=checkout, field_timestamp=_days_ago(30))
-    test = TestFactory(build=build, field_timestamp=_days_ago(30))
+    old_build = BuildFactory(checkout=checkout, field_timestamp=_days_ago(30))
+    orphaned_test = TestFactory(build=old_build, field_timestamp=_days_ago(30))
+    recent_build = BuildFactory(checkout=checkout, field_timestamp=_days_ago(1))
 
     _prune(yes=True, tables=["builds"])
 
     assert Checkouts.objects.filter(id=checkout.id).exists()
-    assert not Builds.objects.filter(id=build.id).exists()
-    assert Tests.objects.filter(id=test.id).exists()
+    assert not Builds.objects.filter(id=old_build.id).exists()
+    assert Builds.objects.filter(id=recent_build.id).exists()
+    assert Tests.objects.filter(id=orphaned_test.id).exists()
+
+
+@pytest.mark.django_db
+def test_tables_builds_tests_cascade_within_selection():
+    """With builds and tests selected, an old build still drags its recent tests, but
+    an old checkout does not drag its recent builds (checkouts not selected)."""
+    checkout = CheckoutFactory(field_timestamp=_days_ago(30))
+    old_build = BuildFactory(checkout=checkout, field_timestamp=_days_ago(30))
+    old_build_recent_test = TestFactory(build=old_build, field_timestamp=_days_ago(1))
+    recent_build = BuildFactory(checkout=checkout, field_timestamp=_days_ago(1))
+    recent_build_recent_test = TestFactory(
+        build=recent_build, field_timestamp=_days_ago(1)
+    )
+
+    _prune(yes=True, tables=["builds", "tests"])
+
+    assert Checkouts.objects.filter(id=checkout.id).exists()
+    assert not Builds.objects.filter(id=old_build.id).exists()
+    assert not Tests.objects.filter(id=old_build_recent_test.id).exists()
+    assert Builds.objects.filter(id=recent_build.id).exists()
+    assert Tests.objects.filter(id=recent_build_recent_test.id).exists()
 
 
 @pytest.mark.django_db

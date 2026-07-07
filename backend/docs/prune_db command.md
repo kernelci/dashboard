@@ -16,7 +16,7 @@ Models use `DO_NOTHING` foreign keys, so the command applies manual cascade rule
 ### Optional Parameters
 
 - `--tables`: Limit pruning to specific tables (comma-separated). Valid options: `checkouts`, `builds`, `tests`. Default: all three.
-  - Cascade still applies inside the selected tables: a build matched because its checkout is old is deleted when `builds` is selected, and a test matched because its build is doomed is deleted when `tests` is selected.
+  - Cascade only drags a child when the child's parent table is also selected. For example, `--tables tests` removes only tests past the cutoff; recent tests under an old build/checkout are kept because those parents are not being pruned. With `--tables builds,tests`, an old build still drags its recent tests, but an old checkout does not drag its recent builds (checkouts are not selected).
   - Tables not listed are not deleted. For example, `--tables builds` removes old builds but leaves their tests in place. Selecting a parent without its children (e.g. only `checkouts`) can therefore leave orphaned rows.
 - `--origins`: Limit age-based pruning to specific origins (comma-separated). If omitted, any origin is considered.
   - Cascade ignores origin: once a parent row is doomed, its children are removed even if they belong to a different origin.

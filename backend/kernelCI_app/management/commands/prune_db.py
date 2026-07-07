@@ -98,70 +98,91 @@ class Command(BaseCommand):
         dry_run = options["dry_run"]
         origins = options["origins"]
 
-        params = {"cutoff": cutoff, "batch_size": options["batch_size"]}
+        params = {"cutoff": cutoff}
         origins_condition = ""
         if origins:
-            params["origins"] = list(origins)
+            params["origins"] = origins
             origins_condition = "AND origin = ANY(%(origins)s)"
 
-        where_clauses = self._build_where_clauses(origins_condition, protect_incidents)
+        where_clauses = self._build_where_clauses(
+            origins_condition, protect_incidents, selected_tables
+        )
+        temp_tables = {t: f"prune_{t}" for t in selected_tables}
 
         with connections["default"].cursor() as cursor:
-            counts = {
-                t: self._count(cursor, t, where_clauses[t], params)
-                for t in selected_tables
-            }
-            total = sum(counts.values())
-
-            lines = [f"Rows older than {cutoff.isoformat()}:"]
-            lines += [f"* {t}:\t{counts[t]:>8}" for t in selected_tables]
-            lines += ["----------------------", f"* total:\t{total:>8}"]
-            lines.append("Note: counts include children cascaded from pruned parents.")
-            if protect_incidents:
-                lines.append("Note: rows linked to an incident are kept.")
-            self.stdout.write("\n".join(lines))
-
-            if total == 0:
-                self.stdout.write(self.style.SUCCESS("Nothing to prune."))
-                return
-
-            if dry_run:
-                self.stdout.write(
-                    self.style.WARNING(
-                        "[DRY RUN] No rows deleted. Run without --dry-run to execute."
+            try:
+                # Snapshot ids while parents still exist, so child predicates can
+                # resolve them. Do all tables before deleting anything.
+                for table in selected_tables:
+                    self._materialize(
+                        cursor, table, temp_tables[table], where_clauses[table], params
                     )
+
+                counts = {
+                    t: self._count(cursor, temp_tables[t]) for t in selected_tables
+                }
+                total = sum(counts.values())
+
+                lines = [f"Rows older than {cutoff.isoformat()}:"]
+                lines += [f"* {t}:\t{counts[t]:>8}" for t in selected_tables]
+                lines += ["----------------------", f"* total:\t{total:>8}"]
+                lines.append(
+                    "Note: counts include children cascaded from pruned parents."
                 )
-                return
+                if protect_incidents:
+                    lines.append("Note: rows linked to an incident are kept.")
+                self.stdout.write("\n".join(lines))
 
-            if not options["yes"]:
-                summary = ", ".join(f"{counts[t]} {t}" for t in selected_tables)
-                try:
-                    answer = (
-                        input(f"Delete {summary} ({total} rows total)? [y/N] ")
-                        .strip()
-                        .lower()
-                    )
-                except EOFError:
-                    answer = ""
-                if answer not in ("y", "yes"):
-                    self.stdout.write("Aborted.")
+                if total == 0:
+                    self.stdout.write(self.style.SUCCESS("Nothing to prune."))
                     return
 
-            # Delete child-first (reverse of PRUNABLE_TABLES order): each batch commits
-            # on its own, so a crash mid-run leaves children already gone before their
-            # parents, never the reverse. Reordering this would risk orphans.
-            deleted = 0
-            for table in reversed(selected_tables):
-                deleted += self._batch_delete(
-                    cursor, table, where_clauses[table], params
+                if dry_run:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            "[DRY RUN] No rows deleted. Run without --dry-run to "
+                            "execute."
+                        )
+                    )
+                    return
+
+                if not options["yes"]:
+                    summary = ", ".join(f"{counts[t]} {t}" for t in selected_tables)
+                    try:
+                        answer = (
+                            input(f"Delete {summary} ({total} rows total)? [y/N] ")
+                            .strip()
+                            .lower()
+                        )
+                    except EOFError:
+                        answer = ""
+                    if answer not in ("y", "yes"):
+                        self.stdout.write("Aborted.")
+                        return
+
+                # Delete child-first (reverse of PRUNABLE_TABLES order): each batch
+                # commits on its own, so a crash mid-run leaves children already gone
+                # before their parents, never the reverse. Reordering this would risk
+                # orphans.
+                deleted = 0
+                for table in reversed(selected_tables):
+                    deleted += self._batch_delete(
+                        cursor, table, temp_tables[table], options["batch_size"]
+                    )
+
+                self.stdout.write(
+                    self.style.SUCCESS(f"Successfully pruned {deleted} rows.")
                 )
+            finally:
+                for temp_table in temp_tables.values():
+                    cursor.execute(f"DROP TABLE IF EXISTS {temp_table}")
 
-        self.stdout.write(self.style.SUCCESS(f"Successfully pruned {deleted} rows."))
-
-    def _build_where_clauses(self, origins_condition, protect_incidents):
+    def _build_where_clauses(
+        self, origins_condition, protect_incidents, selected_tables
+    ):
         """Build the per-table WHERE clauses, chaining the cascade so each child
-        matches when its parent is doomed, and appending incident protection when
-        enabled."""
+        matches when its selected parent is doomed, and appending incident protection
+        when enabled."""
         age = f"_timestamp < %(cutoff)s {origins_condition}"
 
         # A row tied to an incident is protected, along with the ancestors that would
@@ -186,32 +207,50 @@ class Command(BaseCommand):
         )
 
         checkout_where = age + exclusion.get("checkouts", "")
-        build_where = (
-            f"(({age}) OR checkout_id IN (SELECT id FROM checkouts WHERE {checkout_where}))"
-            + exclusion.get("builds", "")
-        )
-        test_where = (
-            f"(({age}) OR build_id IN (SELECT id FROM builds WHERE {build_where}))"
-            + exclusion.get("tests", "")
-        )
+
+        build_terms = [f"({age})"]
+        if "checkouts" in selected_tables:
+            build_terms.append(
+                f"checkout_id IN (SELECT id FROM checkouts WHERE {checkout_where})"
+            )
+        build_where = "(" + " OR ".join(build_terms) + ")" + exclusion.get("builds", "")
+
+        test_terms = [f"({age})"]
+        if "builds" in selected_tables:
+            test_terms.append(
+                f"build_id IN (SELECT id FROM builds WHERE {build_where})"
+            )
+        test_where = "(" + " OR ".join(test_terms) + ")" + exclusion.get("tests", "")
+
         return {
             "checkouts": checkout_where,
             "builds": build_where,
             "tests": test_where,
         }
 
-    def _count(self, cursor, table, where, params):
-        cursor.execute(f"SELECT COUNT(*) FROM {table} WHERE {where}", params)
+    def _materialize(self, cursor, table, temp_table, where, params):
+        """Snapshot the doomed ids into a temp table so the nested predicate runs
+        once instead of per batch."""
+        cursor.execute(f"DROP TABLE IF EXISTS {temp_table}")
+        cursor.execute(
+            f"CREATE TEMP TABLE {temp_table} AS SELECT id FROM {table} WHERE {where}",
+            params,
+        )
+
+    def _count(self, cursor, temp_table):
+        cursor.execute(f"SELECT COUNT(*) FROM {temp_table}")
         return cursor.fetchone()[0]
 
-    def _batch_delete(self, cursor, table, where, params):
-        delete_sql = (
-            f"DELETE FROM {table} WHERE id IN "
-            f"(SELECT id FROM {table} WHERE {where} LIMIT %(batch_size)s)"
+    def _batch_delete(self, cursor, table, temp_table, batch_size):
+        sql = (
+            f"WITH batch AS ("
+            f"DELETE FROM {temp_table} WHERE id IN "
+            f"(SELECT id FROM {temp_table} LIMIT %(batch_size)s) RETURNING id"
+            f") DELETE FROM {table} WHERE id IN (SELECT id FROM batch)"
         )
         deleted_total = 0
         while True:
-            cursor.execute(delete_sql, params)
+            cursor.execute(sql, {"batch_size": batch_size})
             deleted = cursor.rowcount
             if deleted == 0:
                 break
