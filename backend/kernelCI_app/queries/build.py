@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 from django.db import connection
@@ -69,4 +70,9 @@ def get_build_tests(build_id: str) -> Optional[list[dict]]:
     """
     with connection.cursor() as cursor:
         cursor.execute(query, [build_id])
-        return dict_fetchall(cursor)
+        rows = dict_fetchall(cursor)
+
+    for row in rows:
+        if isinstance(row["environment_misc"], str):
+            row["environment_misc"] = json.loads(row["environment_misc"])
+    return rows
