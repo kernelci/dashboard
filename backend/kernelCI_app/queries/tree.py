@@ -227,7 +227,7 @@ def get_tree_details_data(
                 tests.number_value AS tests_number_value,
                 tests.misc AS tests_misc,
                 tests.environment_compatible AS tests_environment_compatible,
-                -- TODO remove misc->>'lab' fallback after lab backfill
+                -- TODO remove misc->>'runtime' fallback after lab backfill
                 COALESCE(test_labs.name, tests.misc ->> 'runtime') AS tests_lab,
                 builds_filter.*,
                 incidents.id AS incidents_id,

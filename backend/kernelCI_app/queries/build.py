@@ -60,7 +60,6 @@ def get_build_tests(build_id: str) -> Optional[list[dict]]:
             tests.environment_compatible,
             tests.environment_misc,
             builds.status AS build__status,
-            tests.lab_id,
             -- TODO remove misc->>'runtime' fallback after lab backfill
             COALESCE(labs.name, tests.misc->>'runtime') AS lab
         FROM tests

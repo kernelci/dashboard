@@ -24,7 +24,6 @@ class Migration(migrations.Migration):
             model_name="builds",
             name="lab",
             field=models.ForeignKey(
-                db_constraint=False,
                 null=True,
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 to="kernelCI_app.labs",
@@ -34,7 +33,6 @@ class Migration(migrations.Migration):
             model_name="tests",
             name="lab",
             field=models.ForeignKey(
-                db_constraint=False,
                 null=True,
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 to="kernelCI_app.labs",

@@ -53,7 +53,6 @@ class BuildTestItem(BaseModel):
     start_time: Test__StartTime
     environment_compatible: Test__EnvironmentCompatible
     environment_misc: Test__EnvironmentMisc
-    lab_id: Optional[int]
     lab: Optional[str]
 
 
