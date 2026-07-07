@@ -26,7 +26,6 @@ from kernelCI_app.helpers.hardwareDetails import (
     get_validated_current_tree,
     handle_build,
     handle_build_history,
-    handle_build_summary,
     handle_test_history,
     handle_test_summary,
     handle_tree_status_summary,
@@ -813,44 +812,6 @@ class TestHandleBuildHistory:
         assert len(builds) == 1
         assert builds[0] == mock_build
         mock_get_build_typed.assert_called_once_with(record=record, tree_idx=1)
-
-
-class TestHandleBuildSummary:
-    @patch("kernelCI_app.helpers.hardwareDetails.get_build_typed")
-    @patch("kernelCI_app.helpers.hardwareDetails.process_issue")
-    def test_handle_build_summary(self, mock_process_issue, mock_get_build_typed):
-        """Test handle_build_summary function."""
-        mock_build = MagicMock()
-        mock_build.status = "PASS"
-        mock_build.config_name = "defconfig"
-        mock_build.architecture = "x86_64"
-        mock_build.compiler = "gcc"
-        mock_build.origin = "test"
-        mock_get_build_typed.return_value = mock_build
-
-        record = {"build_id": "build123"}
-        builds_summary = BuildSummary(
-            status=StatusCount(),
-            origins={},
-            architectures={},
-            configs={},
-            issues=[],
-            unknown_issues=0,
-        )
-        issue_dict = {}
-
-        handle_build_summary(
-            record=record,
-            builds_summary=builds_summary,
-            issue_dict=issue_dict,
-            tree_index=1,
-        )
-
-        assert builds_summary.status.PASS == 1
-        assert "defconfig" in builds_summary.configs
-        assert "x86_64" in builds_summary.architectures
-        assert "test" in builds_summary.origins
-        mock_process_issue.assert_called_once()
 
 
 class TestProcessIssue:

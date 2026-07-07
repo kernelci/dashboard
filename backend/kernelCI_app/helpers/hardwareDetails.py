@@ -1,4 +1,3 @@
-import bisect
 import json
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -28,7 +27,6 @@ from kernelCI_app.helpers.misc import (
     misc_value_or_default,
 )
 from kernelCI_app.typeModels.commonDetails import (
-    BuildArchitectures,
     BuildSummary,
     EnvironmentMisc,
     StatusCount,
@@ -394,77 +392,7 @@ def handle_build_history(
     builds.append(build)
 
 
-def handle_build_summary(
-    *,
-    record: Dict,
-    builds_summary: BuildSummary,
-    issue_dict: Dict,
-    tree_index: int,
-) -> None:
-    build: HardwareBuildHistoryItem = get_build_typed(record, tree_idx=tree_index)
-
-    status_key = build.status
-    setattr(
-        builds_summary.status,
-        status_key,
-        getattr(builds_summary.status, status_key) + 1,
-    )
-
-    if config := build.config_name:
-        build_config_summary = builds_summary.configs.get(config)
-        if not build_config_summary:
-            build_config_summary = StatusCount()
-            builds_summary.configs[config] = build_config_summary
-        setattr(
-            builds_summary.configs[config],
-            status_key,
-            getattr(builds_summary.configs[config], status_key) + 1,
-        )
-
-    if arch := build.architecture:
-        build_arch_summary = builds_summary.architectures.get(arch)
-        if not build_arch_summary:
-            build_arch_summary = BuildArchitectures()
-            builds_summary.architectures[arch] = build_arch_summary
-        setattr(
-            builds_summary.architectures[arch],
-            status_key,
-            getattr(builds_summary.architectures[arch], status_key) + 1,
-        )
-
-        compiler = build.compiler
-        if (
-            compiler is not None
-            and compiler not in builds_summary.architectures.get(arch).compilers
-        ):
-            bisect.insort(builds_summary.architectures[arch].compilers, compiler)
-
-    if origin := build.origin:
-        build_origin_summary = builds_summary.origins.get(origin)
-        if not build_origin_summary:
-            build_origin_summary = StatusCount()
-            builds_summary.origins[origin] = build_origin_summary
-        setattr(
-            builds_summary.origins[origin],
-            status_key,
-            getattr(builds_summary.origins[origin], status_key) + 1,
-        )
-
-    lab = record.get("build_lab") or UNKNOWN_STRING
-    build_lab_summary = builds_summary.labs.get(lab)
-    if not build_lab_summary:
-        build_lab_summary = StatusCount()
-        builds_summary.labs[lab] = build_lab_summary
-    setattr(
-        builds_summary.labs[lab],
-        status_key,
-        getattr(builds_summary.labs[lab], status_key) + 1,
-    )
-
-    process_issue(record=record, task_issues_dict=issue_dict, issue_from="build")
-
-
-# deprecated, use handle_build_history and handle_build_summary separately instead, with typing
+# deprecated, use handle_build_history separately instead, with typing
 def handle_build(*, instance, record: Dict, build: Dict) -> None:
     instance.builds["items"].append(build)
     update_issues(
