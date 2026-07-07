@@ -42,7 +42,8 @@ class TestGetBuildTests:
                     "environment_compatible": ["hardware1"],
                     "environment_misc": {"platform": "x86_64"},
                     "build__status": "PASS",
-                    "lab_name": "lab-a",
+                    "lab_id": 1,
+                    "lab": "lab-a",
                 }
             ],
         )
@@ -59,6 +60,7 @@ class TestGetBuildTests:
                 "environment_compatible": ["hardware1"],
                 "environment_misc": {"platform": "x86_64"},
                 "build__status": "PASS",
+                "lab_id": 1,
                 "lab": "lab-a",
             }
         ]

@@ -55,7 +55,7 @@ def get_build_tests(build_id: str) -> Optional[list[dict]]:
         Tests.objects.filter(build_id=build_id)
         # TODO remove misc__runtime fallback after lab backfill
         .annotate(
-            lab_name=Coalesce(
+            lab=Coalesce(
                 F("lab__name"),
                 Cast(F("misc__runtime"), output_field=TextField()),
             )
@@ -69,12 +69,8 @@ def get_build_tests(build_id: str) -> Optional[list[dict]]:
             "environment_compatible",
             "environment_misc",
             "build__status",
-            "lab_name",
+            "lab_id",
+            "lab",
         )
     )
-    tests = []
-    for test in result:
-        test["lab"] = test.pop("lab_name")
-        tests.append(test)
-
-    return tests
+    return list(result)
