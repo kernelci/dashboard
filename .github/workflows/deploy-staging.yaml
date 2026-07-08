@@ -67,9 +67,10 @@ jobs:
             cp ~/.env-staging dashboard-staging/.env &&
             cd dashboard-staging &&
             git checkout ${GITHUB_SHA} &&
-            docker compose down &&
-            docker compose build --no-cache &&
-            docker compose up -d
+            docker compose up --build --pull=always --remove-orphans --detach &&
+            docker image prune -fa --filter "until=48h" &&
+            docker volume ls --filter dangling=true --format "::warning::volume {{.Name}} is dangling" &&
+            docker container ls -f status=exited --format "::warning::container {{.ID}} {{.Status}} ({{.Names}})"
           "
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}

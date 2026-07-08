@@ -106,8 +106,10 @@ jobs:
             cp ~/.env-production dashboard-production/.env &&
             cd dashboard-production &&
             git checkout ${GITHUB_SHA} &&
-            docker compose -f docker-compose-next.yml pull &&
-            docker compose -f docker-compose-next.yml up -d
+            docker compose up --pull=always --remove-orphans --detach &&
+            docker image prune -fa --filter "until=48h" &&
+            docker volume ls --filter dangling=true --format "::warning::volume {{.Name}} is dangling" &&
+            docker container ls -f status=exited --format "::warning::container {{.ID}} {{.Status}} ({{.Names}})"
           "
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}

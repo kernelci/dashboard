@@ -24,5 +24,7 @@ jobs:
           git fetch
           git checkout ${{ github.event.inputs.GIT_BRANCH }}
           cd ..
-          docker compose -f docker-compose-all.yaml --profile=self-hosted build
-          docker compose -f docker-compose-all.yaml --profile=self-hosted up -d --remove-orphans
+          docker compose -f docker-compose-all.yaml --profile=self-hosted up --build --pull=always --remove-orphans --detach
+          docker image prune -fa --filter "until=48h"
+          docker volume ls --filter dangling=true --format "::warning::volume {{.Name}} is dangling"
+          docker container ls -f status=exited --format "::warning::container {{.ID}} {{.Status}} ({{.Names}})"
