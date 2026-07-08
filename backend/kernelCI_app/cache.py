@@ -1,3 +1,5 @@
+import json
+from hashlib import sha256
 from typing import Optional
 
 from django.conf import settings
@@ -13,11 +15,9 @@ _build_lookup = {}
 _test_lookup = {}
 
 
-def _create_cache_params_hash(params: dict):
-    params_list = list(params.items())
-    params_list.sort(key=lambda x: x[0])
-    params_string = ",".join([str(i[1]) for i in params_list])
-    return hash(params_string)
+def _create_cache_params_hash(params: dict) -> str:
+    params_string = json.dumps(params, sort_keys=True, default=str)
+    return sha256(params_string.encode("utf-8")).hexdigest()
 
 
 def set_query_cache(
