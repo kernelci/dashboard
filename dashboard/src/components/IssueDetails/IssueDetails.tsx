@@ -34,7 +34,7 @@ import {
 import { BranchBadge } from '@/components/Badge/BranchBadge';
 
 import { getLogspecSection } from '@/components/Section/LogspecSection';
-import { getFirstIncidentSection } from '@/components/Section/FirstIncidentSection';
+import { getIncidentsSection } from '@/components/Section/FirstIncidentSection';
 
 import PageWithTitle from '@/components/PageWithTitle';
 
@@ -102,9 +102,11 @@ export const IssueDetails = ({
   }, [data?.misc, formatMessage]);
 
   const firstIncidentSection: ISection | undefined = useMemo(() => {
-    return getFirstIncidentSection({
+    return getIncidentsSection({
       firstIncident: data?.extra?.[issueId]?.first_incident,
+      lastIncident: data?.extra?.[issueId]?.last_incident,
       title: formatMessage({ id: 'issueDetails.firstIncidentData' }),
+      lastIncidentTitle: formatMessage({ id: 'issueDetails.lastIncident' }),
     });
   }, [data?.extra, formatMessage, issueId]);
 

@@ -10,7 +10,7 @@ type TIssueVersionData = IssueKeys & {
 
 export type IssueKeyList = [string, number][];
 
-export type FirstIncident = {
+export type Incident = {
   first_seen: Date;
   git_commit_hash?: string;
   git_repository_url?: string;
@@ -22,7 +22,8 @@ export type FirstIncident = {
 };
 
 type TExtraIssuesData = {
-  first_incident: FirstIncident;
+  first_incident: Incident;
+  last_incident: Incident;
   versions: Record<number, TIssueVersionData>;
 };
 

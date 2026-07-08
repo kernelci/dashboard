@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from django.db import connection, connections
 
@@ -228,39 +228,36 @@ def get_test_issues(*, test_id: str) -> list[dict]:
     return rows
 
 
-def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
+def get_issue_seen_data(
+    *, issue_id_list: list[str], mode: Literal["first", "last"] = "first"
+) -> list[dict]:
     """
-    Retrieves the incident and checkout data
-    of the first incident of a list of issues
-    through a list of `issue_id`s.
-    """
+    Retrieves the incident and checkout data of either the first or last
+    incident of a list of issues through a list of `issue_id`s.
 
+    :param mode: Either 'first' to get oldest incidents or 'last' to get the newest ones.
+    """
     if not issue_id_list:
         return []
 
-    cache_key = "issue_first_seen"
+    order_direction = "ASC" if mode == "first" else "DESC"
+    cache_key = f"issue_{mode}_seen"
     params = {"issue_id_list": issue_id_list}
     records = get_query_cache(key=cache_key, params=params)
 
     if records is None:
-        if len(issue_id_list) == 1:
-            comparison = "= %s"
-        else:
-            placeholders = ", ".join(["%s"] * len(issue_id_list))
-            comparison = f"IN ({placeholders})"
-
         query = f"""
-            WITH first_incident AS (
-                SELECT DISTINCT
-                    ON (IC.issue_id) IC.id
+            WITH target_incident AS (
+                SELECT DISTINCT ON (IC.issue_id)
+                    IC.id
                 FROM
                     incidents IC
                 WHERE
-                    IC.issue_id {comparison}
+                    IC.issue_id = ANY(%(issue_id_list)s)
                 ORDER BY
                     IC.issue_id,
-                    IC.issue_version ASC,
-                    IC._timestamp ASC
+                    IC.issue_version {order_direction},
+                    IC._timestamp {order_direction}
             )
             SELECT
                 IC.id,
@@ -281,16 +278,34 @@ def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
                 OR T.build_id = B.id
             )
             LEFT JOIN checkouts C ON B.checkout_id = C.id
-            JOIN first_incident FI ON IC.id = FI.id
+            JOIN target_incident TI ON IC.id = TI.id
         """
 
         with connection.cursor() as cursor:
-            cursor.execute(query, issue_id_list)
+            cursor.execute(query, params)
             records = dict_fetchall(cursor)
 
         set_query_cache(key=cache_key, params=params, rows=records)
 
     return records
+
+
+def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
+    """
+    Retrieves the incident and checkout data
+    of the first incident of a list of issues
+    through a list of `issue_id`s.
+    """
+    return get_issue_seen_data(issue_id_list=issue_id_list, mode="first")
+
+
+def get_issue_last_seen_data(*, issue_id_list: list[str]) -> list[dict]:
+    """
+    Retrieves the incident and checkout data
+    of the last incident of a list of issues
+    through a list of `issue_id`s.
+    """
+    return get_issue_seen_data(issue_id_list=issue_id_list, mode="last")
 
 
 def get_issue_trees_data(

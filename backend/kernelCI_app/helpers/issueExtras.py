@@ -3,10 +3,14 @@ from typing import List, Optional, Tuple
 
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.logger import log_message
-from kernelCI_app.queries.issues import get_issue_first_seen_data, get_issue_trees_data
+from kernelCI_app.queries.issues import (
+    get_issue_first_seen_data,
+    get_issue_last_seen_data,
+    get_issue_trees_data,
+)
 from kernelCI_app.typeModels.issues import (
     ExtraIssuesData,
-    FirstIncident,
+    Incident,
     IssueWithExtraInfo,
     ProcessedExtraDetailedIssues,
     TreeSetItem,
@@ -29,6 +33,19 @@ def parse_issue(issue_str: Optional[str]) -> tuple[str, Optional[int]]:
     return (issue_id, issue_version)
 
 
+def _incident_from_record(record: dict) -> Incident:
+    return Incident(
+        first_seen=record["first_seen"],
+        git_commit_hash=record["git_commit_hash"],
+        git_repository_url=record["git_repository_url"],
+        git_repository_branch=record["git_repository_branch"],
+        git_commit_name=record["git_commit_name"],
+        tree_name=record["tree_name"],
+        issue_version=record["issue_version"],
+        checkout_id=record["checkout_id"],
+    )
+
+
 def process_issues_extra_details(
     *,
     issue_key_list: List[Tuple[str, int]],
@@ -38,7 +55,7 @@ def process_issues_extra_details(
         return
 
     # TODO: combine both queries into one
-    assign_issue_first_seen(
+    assign_issue_incidents(
         issue_key_list=issue_key_list,
         processed_issues_table=processed_issues_table,
     )
@@ -48,47 +65,43 @@ def process_issues_extra_details(
     )
 
 
-def assign_issue_first_seen(
+def assign_issue_incidents(
     *,
     issue_key_list: List[Tuple[str, int]],
     processed_issues_table: ProcessedExtraDetailedIssues,
 ) -> None:
     """
-    Assigns the first seen data to the processed_issues_table by querying with the issue_key_list.
+    Assigns first and last seen data to the processed_issues_table
+    by querying with the issue_key_list.
     """
-    issue_id_set: set[str] = set()
+    issue_id_set = {issue_id for issue_id, _ in issue_key_list}
     versions_per_issue: dict[str, set[int]] = defaultdict(set)
 
     for issue_id, issue_version in issue_key_list:
-        issue_id_set.add(issue_id)
         versions_per_issue[issue_id].add(issue_version)
 
-    incident_records = get_issue_first_seen_data(issue_id_list=list(issue_id_set))
+    first_incident_records = get_issue_first_seen_data(issue_id_list=list(issue_id_set))
+    last_incident_records = get_issue_last_seen_data(issue_id_list=list(issue_id_set))
+    last_incident_by_id = {
+        record["issue_id"]: record for record in last_incident_records
+    }
 
-    for record in incident_records:
-        record_issue_id = record["issue_id"]
-        first_seen = record["first_seen"]
+    for record in first_incident_records:
+        issue_id = record["issue_id"]
+        last_record = last_incident_by_id.get(issue_id)
 
         processed_issue_from_id = processed_issues_table.setdefault(
-            record_issue_id,
+            issue_id,
             ExtraIssuesData(
-                first_incident=FirstIncident(
-                    first_seen=first_seen,
-                    git_commit_hash=record["git_commit_hash"],
-                    git_repository_url=record["git_repository_url"],
-                    git_repository_branch=record["git_repository_branch"],
-                    git_commit_name=record["git_commit_name"],
-                    tree_name=record["tree_name"],
-                    issue_version=record["issue_version"],
-                    checkout_id=record["checkout_id"],
-                ),
+                first_incident=_incident_from_record(record),
+                last_incident=_incident_from_record(last_record),
                 versions={},
             ),
         )
 
         # Initialize the versions table with null because that version may or may not exist.
         # If an issue_version exists, the trees can be assigned with `assign_issue_trees`
-        for version in versions_per_issue[record_issue_id]:
+        for version in versions_per_issue[issue_id]:
             processed_issue_from_id.versions.setdefault(version, None)
 
 

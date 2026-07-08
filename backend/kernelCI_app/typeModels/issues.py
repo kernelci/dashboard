@@ -67,7 +67,7 @@ class IssueExtraDetailsRequest(BaseModel):
     )
 
 
-class FirstIncident(BaseModel):
+class Incident(BaseModel):
     first_seen: Timestamp
     git_commit_hash: Optional[Checkout__GitCommitHash]
     git_repository_url: Optional[Checkout__GitRepositoryUrl]
@@ -79,7 +79,8 @@ class FirstIncident(BaseModel):
 
 
 class ExtraIssuesData(BaseModel):
-    first_incident: FirstIncident
+    first_incident: Incident
+    last_incident: Incident
     versions: dict[int, Optional[IssueWithExtraInfo]]
 
 

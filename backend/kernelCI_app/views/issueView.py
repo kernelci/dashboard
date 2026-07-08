@@ -26,7 +26,7 @@ from kernelCI_app.typeModels.issues import (
     CULPRIT_CODE,
     CULPRIT_HARNESS,
     CULPRIT_TOOL,
-    FirstIncident,
+    Incident,
     PossibleIssueCulprits,
     ProcessedExtraDetailedIssues,
 )
@@ -51,7 +51,7 @@ def _resolve_issue_date_wrapper(
 class IssueView(APIView):
     def __init__(self):
         self.processed_extra_issue_details: ProcessedExtraDetailedIssues = {}
-        self.first_incidents: dict[str, FirstIncident] = {}
+        self.first_incidents: dict[str, Incident] = {}
 
         self.unprocessed_origins: set[str] = set()
         self.unprocessed_culprits: set[PossibleIssueCulprits] = set()
