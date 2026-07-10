@@ -4,6 +4,7 @@ export type TableKeys =
   | 'treeDetailsBoots'
   | 'treeDetailsTests'
   | 'hardwareListing'
+  | 'labsListing'
   | 'hardwareDetailsBuilds'
   | 'hardwareDetailsBoots'
   | 'hardwareDetailsTests'
