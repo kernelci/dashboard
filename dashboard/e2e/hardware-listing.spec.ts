@@ -147,11 +147,11 @@ test.describe('Hardware Listing Page Tests', () => {
 
     const url = new URL(page.url());
 
-    url.searchParams.set('days', '2');
+    url.searchParams.set('i', '2');
     await page.goto(url.toString());
     await expect(filterLabel).toContainText('last 2 days');
 
-    url.searchParams.set('days', '7');
+    url.searchParams.set('i', '7');
     await page.goto(url.toString());
     await expect(filterLabel).toContainText('last 7 days');
   });
