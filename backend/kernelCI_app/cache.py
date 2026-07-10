@@ -1,9 +1,10 @@
 import json
-from hashlib import sha256
 from typing import Optional
 
 from django.conf import settings
 from django.core.cache import cache
+
+from kernelCI_app.utils import stable_hash
 
 timeout = settings.CACHE_TIMEOUT
 DISCORD_NOTIFICATION_COOLDOWN = 600
@@ -17,7 +18,7 @@ _test_lookup = {}
 
 def _create_cache_params_hash(params: dict) -> str:
     params_string = json.dumps(params, sort_keys=True, default=str)
-    return sha256(params_string.encode("utf-8")).hexdigest()
+    return stable_hash(params_string)
 
 
 def set_query_cache(
@@ -51,13 +52,13 @@ def get_query_cache(key, params: Optional[dict] = None):
 
 
 def set_notification_cache(*, notification: str) -> None:
-    notification_hash = hash(notification)
+    notification_hash = stable_hash(notification)
     hash_key = f"{DISCORD_NOTIFICATION_KEY}-{notification_hash}"
     return cache.set(hash_key, notification, DISCORD_NOTIFICATION_COOLDOWN)
 
 
 def get_notification_cache(*, notification: str) -> str:
-    notification_hash = hash(notification)
+    notification_hash = stable_hash(notification)
     hash_key = f"{DISCORD_NOTIFICATION_KEY}-{notification_hash}"
     return cache.get(hash_key)
 

@@ -19,6 +19,7 @@ from kernelCI_app.utils import (
     is_boot,
     read_yaml_file,
     sanitize_dict,
+    stable_hash,
     string_to_json,
     validate_str_to_dict,
 )
@@ -496,3 +497,18 @@ class TestReadYamlFile:
                 result = read_yaml_file(base_dir="/test", file="empty.yaml")
 
         assert result is None
+
+
+class TestStableHash:
+    def test_stable_hash_is_deterministic(self):
+        assert stable_hash("value") == stable_hash("value")
+
+    def test_stable_hash_distinct_inputs(self):
+        assert stable_hash("value1") != stable_hash("value2")
+
+    def test_stable_hash_known_vector(self):
+        """Fixed sha256 hex independent of PYTHONHASHSEED (guards #1971)."""
+        assert (
+            stable_hash("test notification")
+            == "2ecb59da1e4ffd4b18658e810f6c439b1fbe9cd8505eb116710404090d916222"
+        )
