@@ -42,6 +42,7 @@ class ClientStrings:
     ISSUE_TESTS_NOT_FOUND = "No tests found for this issue"
     ISSUE_BUILDS_NOT_FOUND = "No builds found for this issue"
     NO_HARDWARE_FOUND = "No hardware found"
+    NO_LABS_FOUND = "No labs found"
     HARDWARE_NOT_FOUND = "Hardware not found"
     HARDWARE_NO_COMMITS = "This hardware isn't associated with any commit"
     HARDWARE_TEST_NOT_FOUND = "No tests found for this hardware"
@@ -106,6 +107,8 @@ class DocStrings:
         "Optional comma-separated git commit identifiers: full SHA(s) "
         "and/or tag strings that appear in checkout.git_commit_tags."
     )
+
+    LAB_LISTING_ORIGIN_DESCRIPTION = "Origin of the lab results"
 
     ISSUE_DETAILS_VERSION_DESCRIPTION = "Issue version"
 
