@@ -15,6 +15,7 @@ import MobileSideMenu from '@/components/SideMenu/MobileSideMenu';
 import { SearchBoxNavigate } from '@/components/SearchBoxNavigate';
 import { treeListingCleanFullPaths } from '@/utils/constants/treeListing';
 import { hwListingCleanFullPaths } from '@/utils/constants/hardwareListing';
+import { labsListingCleanFullPaths } from '@/utils/constants/labsListing';
 
 const OriginSelect = ({
   isHardwarePath,
@@ -111,6 +112,8 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
       return <FormattedMessage id="routes.issueDetails" />;
     case 'metrics':
       return <FormattedMessage id="routes.metricsMonitor" />;
+    case 'labs':
+      return <FormattedMessage id="routes.labsMonitor" />;
     default:
       return <FormattedMessage id="routes.unknown" />;
   }
@@ -126,13 +129,18 @@ const TopBar = (): JSX.Element => {
     const cleanFullPath = lastMatch?.fullPath.replace(/\//g, '') ?? '';
     const isTreeListing = treeListingCleanFullPaths.includes(cleanFullPath);
     const isHardwareListing = hwListingCleanFullPaths.includes(cleanFullPath);
+    const isLabsListing = labsListingCleanFullPaths.includes(cleanFullPath);
     const isListingPage =
-      isTreeListing || isHardwareListing || cleanFullPath.includes('issues');
+      isTreeListing ||
+      isHardwareListing ||
+      isLabsListing ||
+      cleanFullPath.includes('issues');
 
     return {
       firstUrlLocation,
       isTreeListing: isTreeListing,
       isHardwarePage: cleanFullPath.includes('hardware'),
+      isLabsPage: isLabsListing,
       isListingPage: isListingPage,
     };
   }, [matches]);
@@ -154,8 +162,14 @@ const TopBar = (): JSX.Element => {
             <span className="mr-2 text-2xl sm:mr-10">
               <TitleName basePath={routeInfo.firstUrlLocation} />
             </span>
-            {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
-              <OriginSelect isHardwarePath={routeInfo.isHardwarePage} />
+            {(routeInfo.isTreeListing ||
+              routeInfo.isHardwarePage ||
+              routeInfo.isLabsPage) && (
+              <OriginSelect
+                isHardwarePath={
+                  routeInfo.isHardwarePage || routeInfo.isLabsPage
+                }
+              />
             )}
             <span className="ml-0 flex w-full px-6 lg:ml-14">
               {routeInfo.isListingPage && <SearchBoxNavigate />}

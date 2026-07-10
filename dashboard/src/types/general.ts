@@ -263,6 +263,7 @@ export type SearchParamsKeys =
   | 'treeSearch'
   | 'listingSize'
   | 'hardwareSearch'
+  | 'labsSearch'
   | 'issueSearch'
   | 'treeInfo'
   | 'treeIndexes'
@@ -410,7 +411,7 @@ export enum RedirectFrom {
   Issues = 'issues',
 }
 
-export type ListingPaths = '/tree' | '/hardware' | '/issues';
+export type ListingPaths = '/tree' | '/hardware' | '/issues' | '/labs';
 
 export type PossibleMonitorPath = ListingPaths | '/metrics';
 
