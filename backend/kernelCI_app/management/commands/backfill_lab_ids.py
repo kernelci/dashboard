@@ -5,22 +5,33 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import connections, transaction
 from django.db.backends.utils import CursorWrapper
 
+from kernelCI_app.constants.ingester import AUTOMATIC_LAB_FIELD, AUTOMATIC_LABS
 from kernelCI_app.helpers.logger import out
+
+
+def _real_lab_filter(misc_key: str) -> str:
+    """Keep non-automatic labs only (`_real_lab`). Named param: pattern."""
+    return f"""
+        misc->>'{misc_key}' IS NOT NULL
+        AND misc->>'{misc_key}' !~ %(pattern)s
+        AND misc->>'{AUTOMATIC_LAB_FIELD}' IS NULL
+    """
 
 
 def _collect_lab_names(cur: CursorWrapper) -> list[str]:
     cur.execute(
-        """
+        f"""
         SELECT DISTINCT lab FROM (
             SELECT misc->>'lab' AS lab FROM builds
             WHERE lab_id IS NULL
-              AND misc->>'lab' IS NOT NULL
+              AND {_real_lab_filter("lab")}
             UNION
             SELECT misc->>'runtime' AS lab FROM tests
             WHERE lab_id IS NULL
-              AND misc->>'runtime' IS NOT NULL
+              AND {_real_lab_filter("runtime")}
         ) sub
-        """
+        """,
+        {"pattern": AUTOMATIC_LABS.pattern},
     )
     return [row[0] for row in cur.fetchall()]
 
@@ -41,9 +52,9 @@ def _stage_pending_ids(cur: CursorWrapper, table: str, misc_key: str) -> str:
         CREATE TEMP TABLE {temp} AS
         SELECT id FROM {table}
         WHERE lab_id IS NULL
-          AND misc->>%s IS NOT NULL
+          AND {_real_lab_filter(misc_key)}
         """,
-        [misc_key],
+        {"pattern": AUTOMATIC_LABS.pattern},
     )
     return temp
 
@@ -95,7 +106,8 @@ def _backfill_table(
 class Command(BaseCommand):
     help = (
         "Backfill lab_id FK on builds and tests from JSONB misc fields "
-        "(builds: misc->>'lab', tests: misc->>'runtime')."
+        "(builds: misc->>'lab', tests: misc->>'runtime'). "
+        "Skips automatic labs (shell/k8s* or misc.automatic_lab); leaves lab_id NULL."
     )
 
     def add_arguments(self, parser) -> None:
