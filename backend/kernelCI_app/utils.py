@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import timedelta
+from hashlib import sha256
 from typing import List, Optional, Union
 
 import yaml
@@ -78,6 +79,12 @@ def get_query_time_interval(**kwargs):
 
 def get_error_body_response(reason: str) -> bytes:
     return json.dumps({"error": True, "reason": reason}).encode("utf-8")
+
+
+def stable_hash(value: str) -> str:
+    """Deterministic hash, stable across processes unlike builtin hash()
+    which is seeded per process (PYTHONHASHSEED)."""
+    return sha256(value.encode("utf-8")).hexdigest()
 
 
 def string_to_json(string: str) -> Optional[dict]:
