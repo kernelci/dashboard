@@ -15,6 +15,7 @@ from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.helpers.system import get_running_instance
 from kernelCI_app.helpers.trees import sanitize_tree
 from kernelCI_app.management.commands.helpers.common import (
+    is_regzbot_tree,
     send_email_report,
     setup_jinja_template,
 )
@@ -158,11 +159,13 @@ def ask_ignore_issue():
 
 def generate_build_issue_report(issue, incidents, message_id=None):
     template = setup_jinja_template("issue_build.txt.j2")
+    regzbot_tracked = is_regzbot_tree(issue["tree_name"])
     report = {}
     report["content"] = template.render(
         issue=issue,
         builds=incidents,
-        message_id=message_id.strip("<>") if message_id else None,
+        regzbot_tracked=regzbot_tracked,
+        message_id=message_id.strip("<>") if message_id and regzbot_tracked else None,
     )
     snippet = (
         issue["comment"]
@@ -177,11 +180,13 @@ def generate_build_issue_report(issue, incidents, message_id=None):
 
 def generate_boot_issue_report(issue, incidents, message_id=None):
     template = setup_jinja_template("issue_boot.txt.j2")
+    regzbot_tracked = is_regzbot_tree(issue["tree_name"])
     report = {}
     report["content"] = template.render(
         issue=issue,
         boots=incidents,
-        message_id=message_id.strip("<>") if message_id else None,
+        regzbot_tracked=regzbot_tracked,
+        message_id=message_id.strip("<>") if message_id and regzbot_tracked else None,
     )
     snippet = (
         issue["comment"]
@@ -616,7 +621,12 @@ def generate_test_report(*, service, test_id, email_args, signup_folder):
     message_id = make_msgid(domain="kernelci.org")
 
     template = setup_jinja_template("test_report.txt.j2")
-    report_content = template.render(test=test, message_id=message_id.strip("<>"))
+    regzbot_tracked = is_regzbot_tree(test.get("tree_name"))
+    report_content = template.render(
+        test=test,
+        regzbot_tracked=regzbot_tracked,
+        message_id=message_id.strip("<>") if regzbot_tracked else None,
+    )
 
     if is_boot(path=test["path"]):
         subject_prefix = "[BOOT REGRESSION]"

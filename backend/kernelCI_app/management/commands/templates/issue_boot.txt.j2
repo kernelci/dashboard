@@ -45,7 +45,7 @@ on the KernelCI dashboard:
     - commit hash:  {{ boot["last_pass_commit"] }}
     - test id:  {{ boot["last_pass_id"] }}
 {% endfor %}
-{% if boots and boots[0]["last_pass_commit"] -%}
+{% if regzbot_tracked and boots and boots[0]["last_pass_commit"] -%}
 #regzbot introduced: {{ boots[0]["last_pass_commit"] }}..{{ issue["git_commit_hash"] }}
 #regzbot link: https://d.kernelci.org/i/{{ issue["id"] }}
 
