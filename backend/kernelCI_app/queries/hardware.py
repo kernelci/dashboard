@@ -415,16 +415,10 @@ def get_hardware_listing_data_from_status_table(
             SUM(test_inc) AS test_null
         FROM
             hardware_status
-        INNER JOIN
-            latest_checkout
-            ON
-                hardware_status.checkout_id = latest_checkout.checkout_id
-            AND
-                latest_checkout.start_time >= %(start_date)s
-            AND
-                latest_checkout.start_time <= %(end_date)s
         WHERE
             hardware_status.test_origin = %(origin)s
+            AND hardware_status.start_time >= %(start_date)s
+            AND hardware_status.start_time <= %(end_date)s
         GROUP BY
             platform,
             compatibles
