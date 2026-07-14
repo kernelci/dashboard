@@ -13,7 +13,7 @@ KERNELCI_RESULTS = "kernelci-results@groups.io"
 KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
 REGRESSIONS_LIST = "regressions@lists.linux.dev"
 
-REGZBOT_TREES = {"mainline", "next"}
+REGZBOT_TREES = {"mainline", "next", "stable"}
 
 
 def is_regzbot_tree(tree_name) -> bool:

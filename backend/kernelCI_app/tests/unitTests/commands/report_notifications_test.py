@@ -31,23 +31,27 @@ class TestReportTemplates(TestCase):
 
     @staticmethod
     def render_build_report(
-        *, with_range: bool = True, tree_name: str = "mainline"
+        *, with_range: bool = True, tree_name: str = "mainline", branch: str = "master"
     ) -> str:
-        issue, incidents = make_build_issue(with_range=with_range, tree_name=tree_name)
+        issue, incidents = make_build_issue(
+            with_range=with_range, tree_name=tree_name, branch=branch
+        )
         return generate_build_issue_report(issue, incidents, MESSAGE_ID)["content"]
 
     @staticmethod
     def render_boot_report(
-        *, with_range: bool = True, tree_name: str = "mainline"
+        *, with_range: bool = True, tree_name: str = "mainline", branch: str = "master"
     ) -> str:
-        issue, incidents = make_boot_issue(with_range=with_range, tree_name=tree_name)
+        issue, incidents = make_boot_issue(
+            with_range=with_range, tree_name=tree_name, branch=branch
+        )
         return generate_boot_issue_report(issue, incidents, MESSAGE_ID)["content"]
 
     @staticmethod
     def render_test_report(
-        *, with_range: bool = True, tree_name: str = "mainline"
+        *, with_range: bool = True, tree_name: str = "mainline", branch: str = "master"
     ) -> str:
-        test = make_test(with_range=with_range, tree_name=tree_name)
+        test = make_test(with_range=with_range, tree_name=tree_name, branch=branch)
         regzbot_tracked = is_regzbot_tree(test["tree_name"])
         return setup_jinja_template("test_report.txt.j2").render(
             test=test,
@@ -120,3 +124,14 @@ class TestReportTemplates(TestCase):
             assert "Link:" not in content
             assert "Reported-by: kernelci.org bot <bot@kernelci.org>" in content
             assert "#kernelci" in content
+
+    def test_stable_tree_reports_carry_regzbot_tags(self):
+        for render in (
+            self.render_build_report,
+            self.render_boot_report,
+            self.render_test_report,
+        ):
+            content = render(tree_name="stable", branch="linux-6.15.y")
+            assert "stable/linux-6.15.y" in content
+            assert "#regzbot introduced:" in content
+            assert LORE_LINK in content
