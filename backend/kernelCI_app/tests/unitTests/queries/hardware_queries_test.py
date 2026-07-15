@@ -75,9 +75,9 @@ class TestGetHardwareTreesData:
     @patch("kernelCI_app.queries.hardware.get_query_cache")
     @patch("kernelCI_app.queries.hardware.set_query_cache")
     @patch("kernelCI_app.queries.hardware.dict_fetchall")
-    @patch("kernelCI_app.queries.hardware.connection")
+    @patch("kernelCI_app.queries.hardware.connections")
     def test_get_hardware_trees_data_from_database(
-        self, mock_connection, mock_dict_fetchall, mock_set_cache, mock_get_cache
+        self, mock_connections, mock_dict_fetchall, mock_set_cache, mock_get_cache
     ):
         tree_records = [
             {
@@ -92,7 +92,7 @@ class TestGetHardwareTreesData:
         ]
         mock_get_cache.return_value = None
         mock_dict_fetchall.return_value = tree_records
-        setup_mock_cursor(mock_connection)
+        setup_mock_cursor(mock_connections.__getitem__.return_value)
 
         result = get_hardware_trees_data(
             hardware_id="hardware",
@@ -104,6 +104,7 @@ class TestGetHardwareTreesData:
         assert len(result) == 1
         assert result[0].tree_name == "mainline"
         mock_set_cache.assert_called_once()
+        mock_connections.__getitem__.assert_called_with("default")
 
 
 class TestGenerateQueryParams:

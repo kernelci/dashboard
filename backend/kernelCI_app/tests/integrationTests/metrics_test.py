@@ -56,14 +56,14 @@ def _ok_content(query: dict[str, str] | None = None) -> dict:
 metrics_expected_counts = {
     "n_trees": 5,
     "n_checkouts": 21,
-    "n_builds": 12,
+    "n_builds": 14,
     "n_tests": 14,
     "n_issues": 7,
     "n_incidents": 7,
     "prev_n_trees": 6,
     "prev_n_checkouts": 20,
     "prev_n_builds": 7,
-    "prev_n_tests": 7,
+    "prev_n_tests": 9,
 }
 
 

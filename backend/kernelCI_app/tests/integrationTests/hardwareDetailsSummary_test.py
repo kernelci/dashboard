@@ -63,6 +63,18 @@ AMLOGIC_G12B_HARDWARE = {
     ),
 }
 
+# Older-checkout board (#1264): tested only on an older checkout, not on the latest one.
+OLDER_CHECKOUT_HARDWARE = {
+    "id": "older-checkout-board",
+    "body": HardwareDetailsPostBody(
+        origin="maestro",
+        startTimestampInSeconds=1741300000,
+        endTimestampInSeconds=1741420000,
+        selectedCommits={},
+        filter={},
+    ),
+}
+
 
 client = HardwareClient()
 
@@ -200,6 +212,18 @@ def test_no_filters(base_hardware, status_code, has_error_body):
             fields=hardware.hardware_build_summary,
             response_content=content["summary"]["builds"],
         )
+
+
+def test_older_checkout_board_resolves_older_checkout():
+    """#1264 regression: a board tested only on an older checkout (not the latest
+    one) must still resolve that older checkout as the tree head."""
+    response, content = request_data(OLDER_CHECKOUT_HARDWARE)
+    assert_status_code(response=response, status_code=HTTPStatus.OK)
+    assert "error" not in content
+
+    head_hashes = {tree["head_git_commit_hash"] for tree in content["common"]["trees"]}
+    assert "older_checkout_with_tests" in head_hashes
+    assert "latest_checkout_without_tests" not in head_hashes
 
 
 def test_filter_test_status(test_status_input):
