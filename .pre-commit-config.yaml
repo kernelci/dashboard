@@ -74,3 +74,25 @@ repos:
           - --
         language: system
         always_run: true
+
+      - id: api-schema
+        name: API schema is up-to-date
+        entry: |
+          python -c '
+          import os, subprocess, sys;
+          os.chdir("backend")
+          subprocess.run(["poetry", "install"], capture_output=True)
+          spectacular = subprocess.run(["poetry", "run", "python", "manage.py", "spectacular"], capture_output=True, text=True)
+          new_schema = spectacular.stdout
+          with open("schema.yml") as f:
+              old_schema = f.read()
+          if new_schema != old_schema:
+              print("Schema is not up-to-date. Run 'python manage.py spectacular --file schema.yml' to regenerate it")
+              sys.exit(1)
+          '
+        files: 'backend/(.*\.py|schema.yml)'
+        pass_filenames: false
+        language: python
+        language_version: '3.13'
+        additional_dependencies: [poetry]
+        stages: [pre-commit]
