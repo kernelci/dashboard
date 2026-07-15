@@ -1,6 +1,9 @@
 from unittest import TestCase
 
-from kernelCI_app.management.commands.helpers.common import setup_jinja_template
+from kernelCI_app.management.commands.helpers.common import (
+    is_regzbot_tree,
+    setup_jinja_template,
+)
 from kernelCI_app.management.commands.notifications import (
     generate_boot_issue_report,
     generate_build_issue_report,
@@ -27,20 +30,33 @@ class TestReportTemplates(TestCase):
     """
 
     @staticmethod
-    def render_build_report(*, with_range: bool = True) -> str:
-        issue, incidents = make_build_issue(with_range=with_range)
+    def render_build_report(
+        *, with_range: bool = True, tree_name: str = "mainline", branch: str = "master"
+    ) -> str:
+        issue, incidents = make_build_issue(
+            with_range=with_range, tree_name=tree_name, branch=branch
+        )
         return generate_build_issue_report(issue, incidents, MESSAGE_ID)["content"]
 
     @staticmethod
-    def render_boot_report(*, with_range: bool = True) -> str:
-        issue, incidents = make_boot_issue(with_range=with_range)
+    def render_boot_report(
+        *, with_range: bool = True, tree_name: str = "mainline", branch: str = "master"
+    ) -> str:
+        issue, incidents = make_boot_issue(
+            with_range=with_range, tree_name=tree_name, branch=branch
+        )
         return generate_boot_issue_report(issue, incidents, MESSAGE_ID)["content"]
 
     @staticmethod
-    def render_test_report(*, with_range: bool = True) -> str:
-        test = make_test(with_range=with_range)
+    def render_test_report(
+        *, with_range: bool = True, tree_name: str = "mainline", branch: str = "master"
+    ) -> str:
+        test = make_test(with_range=with_range, tree_name=tree_name, branch=branch)
+        regzbot_tracked = is_regzbot_tree(test["tree_name"])
         return setup_jinja_template("test_report.txt.j2").render(
-            test=test, message_id=MESSAGE_ID.strip("<>")
+            test=test,
+            regzbot_tracked=regzbot_tracked,
+            message_id=MESSAGE_ID.strip("<>") if regzbot_tracked else None,
         )
 
     def test_build_report_structure(self):
@@ -93,3 +109,29 @@ class TestReportTemplates(TestCase):
             assert "#regzbot" not in content
             assert "Reported-by: kernelci.org bot <bot@kernelci.org>" in content
             assert "#kernelci" in content
+
+    def test_reports_omit_regzbot_tags_for_non_upstream_trees(self):
+        # Only trees whose reports are CC'd to the regressions list (and are
+        # therefore archived on lore and followed by regzbot) carry the
+        # regzbot tags and a lore link to their own Message-ID.
+        for render in (
+            self.render_build_report,
+            self.render_boot_report,
+            self.render_test_report,
+        ):
+            content = render(tree_name="android")
+            assert "#regzbot" not in content
+            assert "Link:" not in content
+            assert "Reported-by: kernelci.org bot <bot@kernelci.org>" in content
+            assert "#kernelci" in content
+
+    def test_stable_tree_reports_carry_regzbot_tags(self):
+        for render in (
+            self.render_build_report,
+            self.render_boot_report,
+            self.render_test_report,
+        ):
+            content = render(tree_name="stable", branch="linux-6.15.y")
+            assert "stable/linux-6.15.y" in content
+            assert "#regzbot introduced:" in content
+            assert LORE_LINK in content

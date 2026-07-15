@@ -13,6 +13,18 @@ KERNELCI_RESULTS = "kernelci-results@groups.io"
 KERNELCI_REPLYTO = "kernelci@lists.linux.dev"
 REGRESSIONS_LIST = "regressions@lists.linux.dev"
 
+REGZBOT_TREES = {"mainline", "next", "stable"}
+
+
+def is_regzbot_tree(tree_name) -> bool:
+    """Trees whose regression reports are tracked by regzbot.
+
+    Reports for these trees are CC'd to the regressions list, which is
+    archived on lore and followed by regzbot, so only they carry the
+    #regzbot tags and a lore link to their own Message-ID.
+    """
+    return tree_name in REGZBOT_TREES
+
 
 def setup_jinja_template(template_name: str) -> Template:
     """Gets the template file from management/commands/templates
@@ -145,7 +157,7 @@ def send_email_report(
     if (
         email_args.add_mailing_lists
         and email_args.regression_report
-        and (email_args.tree_name == "mainline" or email_args.tree_name == "next")
+        and is_regzbot_tree(email_args.tree_name)
     ):
         cc = ", ".join([REGRESSIONS_LIST, cc]) if cc else REGRESSIONS_LIST
 

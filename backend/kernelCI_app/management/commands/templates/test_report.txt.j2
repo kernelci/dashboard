@@ -53,7 +53,7 @@ history: {{ test["status_history"] }}
 - compiler: {{ test["compiler"] }}
 {%- endif %}
 
-{% if test["last_pass_commit"] -%}
+{% if regzbot_tracked and test["last_pass_commit"] -%}
 #regzbot introduced: {{ test["last_pass_commit"] }}..{{ test["git_commit_hash"] }}
 #regzbot link: https://d.kernelci.org/t/{{ test["id"] }}
 

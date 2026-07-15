@@ -20,15 +20,17 @@ _LAST_PASS_COMMIT = "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0"
 MESSAGE_ID = "<20260601120000.123456-1@kernelci.org>"
 
 
-def make_build_issue(*, with_range: bool = True):
+def make_build_issue(
+    *, with_range: bool = True, tree_name: str = "mainline", branch: str = "master"
+):
     """Returns an (issue, incidents) pair for a build regression report.
 
     When with_range is False the incident has no last passing commit, which
     is how the regzbot block is omitted in the rendered report.
     """
     issue = {
-        "tree_name": "mainline",
-        "git_repository_branch": "master",
+        "tree_name": tree_name,
+        "git_repository_branch": branch,
         "comment": (
             "include/linux/signal.h:160:1: error: array index 2 is past the end "
             "of the array (that has type 'unsigned long[2]') [-Werror,-Warray-bounds] "
@@ -66,11 +68,13 @@ def make_build_issue(*, with_range: bool = True):
     return issue, [incident]
 
 
-def make_boot_issue(*, with_range: bool = True):
+def make_boot_issue(
+    *, with_range: bool = True, tree_name: str = "mainline", branch: str = "master"
+):
     """Returns an (issue, incidents) pair for a boot regression report."""
     issue = {
-        "tree_name": "mainline",
-        "git_repository_branch": "master",
+        "tree_name": tree_name,
+        "git_repository_branch": branch,
         "comment": "Kernel panic - not syncing: Attempted to kill init!",
         "id": "maestro:0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c",
         "git_repository_url": (
@@ -110,11 +114,13 @@ def make_boot_issue(*, with_range: bool = True):
     return issue, [incident]
 
 
-def make_test(*, with_range: bool = True):
+def make_test(
+    *, with_range: bool = True, tree_name: str = "mainline", branch: str = "master"
+):
     """Returns a test dict for a standalone test regression report."""
     return {
-        "tree_name": "mainline",
-        "git_repository_branch": "master",
+        "tree_name": tree_name,
+        "git_repository_branch": branch,
         "path": "kselftest.net.fib_tests",
         "platform": "rk3568-rock-3a",
         "git_repository_url": (
