@@ -18,6 +18,23 @@ env:
   CI: true
 
 jobs:
+  pre-commit-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: 3.13
+      - name: Cache Pre-Commit Hooks
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Setup pre-commit
+        run: pip install pre-commit
+      - name: Run pre-commit hooks
+        run: pre-commit run --all-files --show-diff-on-failure
+
   setup-node:
     if: github.event.pull_request.draft != true
     runs-on: ubuntu-latest
@@ -42,34 +59,6 @@ jobs:
       - name: Installing dependencies with pnpm
         if: steps.cache-node_modules.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
-        working-directory: ./dashboard
-
-  lint-js:
-    if: github.event.pull_request.draft != true
-    needs: setup-node
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Fetch node_modules
-        uses: actions/cache@v4
-        id: fetch-node_modules
-        with:
-          key: node_modules-${{ runner.os }}-${{ hashFiles('./dashboard/pnpm-lock.yaml') }}
-          path: ./dashboard/node_modules
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.2
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: './dashboard/.nvmrc'
-
-      - name: Run eslint
-        run: pnpm lint-staged
         working-directory: ./dashboard
 
   build-front:
@@ -104,7 +93,7 @@ jobs:
         run: pnpm build
         working-directory: ./dashboard
 
-  lint-and-unit-test-django:
+  unit-test-django:
     if: github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     timeout-minutes: 3
@@ -113,14 +102,6 @@ jobs:
 
       - name: Setup Backend
         uses: ./.github/actions/setup-backend
-
-      - name: Check Lint
-        run: poetry run ruff check .
-        working-directory: ./backend
-
-      - name: Check Format
-        run: poetry run ruff format --check .
-        working-directory: ./backend
 
       - name: Run unit tests with coverage
         run: |
@@ -220,7 +201,7 @@ jobs:
 
   # Call job in a a split file
   call-deploy-staging:
-    needs: [lint-js, build-front, lint-and-unit-test-django, integration-test-django]
+    needs: [pre-commit-checks, build-front, unit-test-django, integration-test-django]
     # This 'if' ensures it only runs on pushes to main (the production requirement)
     if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     uses: ./.github/workflows/deploy-staging.yaml
