@@ -197,10 +197,29 @@ export function BuildsTable({
     [modelRows],
   );
 
-  const [currentLog, setLog] = useState<number | undefined>(undefined);
+  const [currentLogId, setLog] = useState<string | undefined>(undefined);
+
+  const currentLog = useMemo(() => {
+    const index = sortedItems.findIndex(item => item.id === currentLogId);
+    return index === -1 ? undefined : index;
+  }, [sortedItems, currentLogId]);
+
+  const activeLogId = currentLog !== undefined ? currentLogId ?? '' : '';
 
   const onOpenChange = useCallback(() => setLog(undefined), [setLog]);
-  const openLogSheet = useCallback((index: number) => setLog(index), [setLog]);
+  const openLogSheet = useCallback(
+    (index: number) => setLog(sortedItems[index]?.id),
+    [setLog, sortedItems],
+  );
+
+  useEffect(() => {
+    if (
+      currentLogId !== undefined &&
+      !sortedItems.some(item => item.id === currentLogId)
+    ) {
+      setLog(undefined);
+    }
+  }, [currentLogId, sortedItems]);
 
   const tableBody = useMemo((): JSX.Element[] | JSX.Element => {
     {
@@ -228,32 +247,18 @@ export function BuildsTable({
   }, [modelRows, columns.length, openLogSheet, currentLog, getRowLink]);
 
   const handlePreviousItem = useCallback(() => {
-    setLog(previousLog => {
-      if (typeof previousLog === 'number' && previousLog > 0) {
-        return previousLog - 1;
-      }
-
-      return previousLog;
-    });
-  }, [setLog]);
+    if (currentLog !== undefined && currentLog > 0) {
+      setLog(sortedItems[currentLog - 1]?.id);
+    }
+  }, [setLog, currentLog, sortedItems]);
 
   const handleNextItem = useCallback(() => {
-    setLog(previousLog => {
-      if (
-        typeof previousLog === 'number' &&
-        previousLog < sortedItems.length - 1
-      ) {
-        return previousLog + 1;
-      }
+    if (currentLog !== undefined && currentLog < sortedItems.length - 1) {
+      setLog(sortedItems[currentLog + 1]?.id);
+    }
+  }, [setLog, currentLog, sortedItems]);
 
-      return previousLog;
-    });
-  }, [setLog, sortedItems.length]);
-
-  const { data: logData, isLoading } = useLogData(
-    sortedItems.length > 0 ? sortedItems[currentLog ?? 0]?.id : '',
-    'build',
-  );
+  const { data: logData, isLoading } = useLogData(activeLogId, 'build');
 
   const navigationLogsActions = useMemo(
     () => ({
@@ -277,13 +282,7 @@ export function BuildsTable({
     return getRowLink(sortedItems[currentLog ?? 0]?.id ?? '');
   }, [currentLog, getRowLink, sortedItems]);
 
-  const {
-    data: issues,
-    status,
-    error,
-  } = useBuildIssues(
-    currentLog !== undefined ? sortedItems[currentLog]?.id : '',
-  );
+  const { data: issues, status, error } = useBuildIssues(activeLogId);
 
   return (
     <WrapperTableWithLogSheet
