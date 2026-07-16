@@ -82,9 +82,14 @@ class TestGetIssueTests:
 
 
 class TestGetIssueListingData:
+    @patch("kernelCI_app.queries.issues.get_query_cache")
+    @patch("kernelCI_app.queries.issues.set_query_cache")
     @patch("kernelCI_app.queries.issues.dict_fetchall")
     @patch("kernelCI_app.queries.issues.connection")
-    def test_get_issue_listing_data_success(self, mock_connection, mock_dict_fetchall):
+    def test_get_issue_listing_data_success(
+        self, mock_connection, mock_dict_fetchall, mock_set_cache, mock_get_cache
+    ):
+        mock_get_cache.return_value = None
         expected_result = [{"id": "issue", "version": 1}]
         mock_dict_fetchall.return_value = expected_result
         setup_mock_cursor(mock_connection)
@@ -95,6 +100,7 @@ class TestGetIssueListingData:
         )
 
         assert result == expected_result
+        mock_set_cache.assert_called_once()
 
 
 class TestGetLatestIssueVersion:

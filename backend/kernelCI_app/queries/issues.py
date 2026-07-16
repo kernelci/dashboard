@@ -111,6 +111,15 @@ def get_issue_listing_data(
         "start_date": start_date,
         "end_date": end_date,
     }
+    cache_params = {
+        "start_date": int(start_date.timestamp()),
+        "end_date": int(end_date.timestamp()),
+    }
+    cache_key = "issueList"
+
+    rows = get_query_cache(key=cache_key, params=cache_params)
+    if rows is not None:
+        return rows
 
     # Note that an issue with timestamp younger than x days ago
     # can still have incidents in tests older than x days ago
@@ -139,7 +148,9 @@ def get_issue_listing_data(
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return dict_fetchall(cursor)
+        rows = dict_fetchall(cursor)
+        set_query_cache(key=cache_key, params=cache_params, rows=rows)
+        return rows
 
 
 # TODO: combine this query with the other queries for issues
