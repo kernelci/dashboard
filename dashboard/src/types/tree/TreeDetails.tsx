@@ -186,7 +186,9 @@ export type PaginatedCommitHistoryByTree = {
 
 export type Commit = {
   git_commit_hash: string;
-  earliest_checkout: string;
+  git_commit_name?: string | null;
+  earliest_checkout?: string;
+  last_checkout?: string;
 };
 
 export type BuildCountsResponse = {

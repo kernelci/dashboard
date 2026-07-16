@@ -43,7 +43,9 @@ import { Route as MainCheckoutTreeNameBranchIndexRouteImport } from './routes/_m
 import { Route as MainalternativesTTestIdIndexRouteImport } from './routes/_main/(alternatives)/t/$testId/index'
 import { Route as MainalternativesIIssueIdIndexRouteImport } from './routes/_main/(alternatives)/i/$issueId/index'
 import { Route as MainalternativesBBuildIdIndexRouteImport } from './routes/_main/(alternatives)/b/$buildId/index'
+import { Route as MainTreeTreeNameBranchCompareRouteRouteImport } from './routes/_main/tree/$treeName/$branch/compare/route'
 import { Route as MainTreeTreeNameBranchHashRouteRouteImport } from './routes/_main/tree/$treeName/$branch/$hash/route'
+import { Route as MainTreeTreeNameBranchCompareIndexRouteImport } from './routes/_main/tree/$treeName/$branch/compare/index'
 import { Route as MainTreeTreeNameBranchHashIndexRouteImport } from './routes/_main/tree/$treeName/$branch/$hash/index'
 import { Route as MainTreeTreeIdTestTestIdIndexRouteImport } from './routes/_main/tree/$treeId/test/$testId/index'
 import { Route as MainTreeTreeIdBuildBuildIdIndexRouteImport } from './routes/_main/tree/$treeId/build/$buildId/index'
@@ -236,11 +238,23 @@ const MainalternativesBBuildIdIndexRoute =
     path: '/',
     getParentRoute: () => MainalternativesBBuildIdRouteRoute,
   } as any)
+const MainTreeTreeNameBranchCompareRouteRoute =
+  MainTreeTreeNameBranchCompareRouteRouteImport.update({
+    id: '/$treeName/$branch/compare',
+    path: '/$treeName/$branch/compare',
+    getParentRoute: () => MainTreeRouteRoute,
+  } as any)
 const MainTreeTreeNameBranchHashRouteRoute =
   MainTreeTreeNameBranchHashRouteRouteImport.update({
     id: '/$treeName/$branch/$hash',
     path: '/$treeName/$branch/$hash',
     getParentRoute: () => MainTreeRouteRoute,
+  } as any)
+const MainTreeTreeNameBranchCompareIndexRoute =
+  MainTreeTreeNameBranchCompareIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => MainTreeTreeNameBranchCompareRouteRoute,
   } as any)
 const MainTreeTreeNameBranchHashIndexRoute =
   MainTreeTreeNameBranchHashIndexRouteImport.update({
@@ -324,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/test/$testId/': typeof MainTestTestIdIndexRoute
   '/tree/$treeId/': typeof MainTreeTreeIdIndexRoute
   '/tree/$treeName/$branch/$hash': typeof MainTreeTreeNameBranchHashRouteRouteWithChildren
+  '/tree/$treeName/$branch/compare': typeof MainTreeTreeNameBranchCompareRouteRouteWithChildren
   '/b/$buildId/': typeof MainalternativesBBuildIdIndexRoute
   '/i/$issueId/': typeof MainalternativesIIssueIdIndexRoute
   '/t/$testId/': typeof MainalternativesTTestIdIndexRoute
@@ -340,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/tree/$treeId/build/$buildId/': typeof MainTreeTreeIdBuildBuildIdIndexRoute
   '/tree/$treeId/test/$testId/': typeof MainTreeTreeIdTestTestIdIndexRoute
   '/tree/$treeName/$branch/$hash/': typeof MainTreeTreeNameBranchHashIndexRoute
+  '/tree/$treeName/$branch/compare/': typeof MainTreeTreeNameBranchCompareIndexRoute
   '/c/$treeName/$branch/$hash/': typeof MainalternativesCTreeNameBranchHashIndexRoute
 }
 export interface FileRoutesByTo {
@@ -372,6 +388,7 @@ export interface FileRoutesByTo {
   '/tree/$treeId/build/$buildId': typeof MainTreeTreeIdBuildBuildIdIndexRoute
   '/tree/$treeId/test/$testId': typeof MainTreeTreeIdTestTestIdIndexRoute
   '/tree/$treeName/$branch/$hash': typeof MainTreeTreeNameBranchHashIndexRoute
+  '/tree/$treeName/$branch/compare': typeof MainTreeTreeNameBranchCompareIndexRoute
   '/c/$treeName/$branch/$hash': typeof MainalternativesCTreeNameBranchHashIndexRoute
 }
 export interface FileRoutesById {
@@ -403,6 +420,7 @@ export interface FileRoutesById {
   '/_main/test/$testId/': typeof MainTestTestIdIndexRoute
   '/_main/tree/$treeId/': typeof MainTreeTreeIdIndexRoute
   '/_main/tree/$treeName/$branch/$hash': typeof MainTreeTreeNameBranchHashRouteRouteWithChildren
+  '/_main/tree/$treeName/$branch/compare': typeof MainTreeTreeNameBranchCompareRouteRouteWithChildren
   '/_main/(alternatives)/b/$buildId/': typeof MainalternativesBBuildIdIndexRoute
   '/_main/(alternatives)/i/$issueId/': typeof MainalternativesIIssueIdIndexRoute
   '/_main/(alternatives)/t/$testId/': typeof MainalternativesTTestIdIndexRoute
@@ -419,6 +437,7 @@ export interface FileRoutesById {
   '/_main/tree/$treeId/build/$buildId/': typeof MainTreeTreeIdBuildBuildIdIndexRoute
   '/_main/tree/$treeId/test/$testId/': typeof MainTreeTreeIdTestTestIdIndexRoute
   '/_main/tree/$treeName/$branch/$hash/': typeof MainTreeTreeNameBranchHashIndexRoute
+  '/_main/tree/$treeName/$branch/compare/': typeof MainTreeTreeNameBranchCompareIndexRoute
   '/_main/(alternatives)/c/$treeName/$branch/$hash/': typeof MainalternativesCTreeNameBranchHashIndexRoute
 }
 export interface FileRouteTypes {
@@ -450,6 +469,7 @@ export interface FileRouteTypes {
     | '/test/$testId/'
     | '/tree/$treeId/'
     | '/tree/$treeName/$branch/$hash'
+    | '/tree/$treeName/$branch/compare'
     | '/b/$buildId/'
     | '/i/$issueId/'
     | '/t/$testId/'
@@ -466,6 +486,7 @@ export interface FileRouteTypes {
     | '/tree/$treeId/build/$buildId/'
     | '/tree/$treeId/test/$testId/'
     | '/tree/$treeName/$branch/$hash/'
+    | '/tree/$treeName/$branch/compare/'
     | '/c/$treeName/$branch/$hash/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -498,6 +519,7 @@ export interface FileRouteTypes {
     | '/tree/$treeId/build/$buildId'
     | '/tree/$treeId/test/$testId'
     | '/tree/$treeName/$branch/$hash'
+    | '/tree/$treeName/$branch/compare'
     | '/c/$treeName/$branch/$hash'
   id:
     | '__root__'
@@ -528,6 +550,7 @@ export interface FileRouteTypes {
     | '/_main/test/$testId/'
     | '/_main/tree/$treeId/'
     | '/_main/tree/$treeName/$branch/$hash'
+    | '/_main/tree/$treeName/$branch/compare'
     | '/_main/(alternatives)/b/$buildId/'
     | '/_main/(alternatives)/i/$issueId/'
     | '/_main/(alternatives)/t/$testId/'
@@ -544,6 +567,7 @@ export interface FileRouteTypes {
     | '/_main/tree/$treeId/build/$buildId/'
     | '/_main/tree/$treeId/test/$testId/'
     | '/_main/tree/$treeName/$branch/$hash/'
+    | '/_main/tree/$treeName/$branch/compare/'
     | '/_main/(alternatives)/c/$treeName/$branch/$hash/'
   fileRoutesById: FileRoutesById
 }
@@ -793,12 +817,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainalternativesBBuildIdIndexRouteImport
       parentRoute: typeof MainalternativesBBuildIdRouteRoute
     }
+    '/_main/tree/$treeName/$branch/compare': {
+      id: '/_main/tree/$treeName/$branch/compare'
+      path: '/$treeName/$branch/compare'
+      fullPath: '/tree/$treeName/$branch/compare'
+      preLoaderRoute: typeof MainTreeTreeNameBranchCompareRouteRouteImport
+      parentRoute: typeof MainTreeRouteRoute
+    }
     '/_main/tree/$treeName/$branch/$hash': {
       id: '/_main/tree/$treeName/$branch/$hash'
       path: '/$treeName/$branch/$hash'
       fullPath: '/tree/$treeName/$branch/$hash'
       preLoaderRoute: typeof MainTreeTreeNameBranchHashRouteRouteImport
       parentRoute: typeof MainTreeRouteRoute
+    }
+    '/_main/tree/$treeName/$branch/compare/': {
+      id: '/_main/tree/$treeName/$branch/compare/'
+      path: '/'
+      fullPath: '/tree/$treeName/$branch/compare/'
+      preLoaderRoute: typeof MainTreeTreeNameBranchCompareIndexRouteImport
+      parentRoute: typeof MainTreeTreeNameBranchCompareRouteRoute
     }
     '/_main/tree/$treeName/$branch/$hash/': {
       id: '/_main/tree/$treeName/$branch/$hash/'
@@ -962,10 +1000,26 @@ const MainTreeTreeNameBranchHashRouteRouteWithChildren =
     MainTreeTreeNameBranchHashRouteRouteChildren,
   )
 
+interface MainTreeTreeNameBranchCompareRouteRouteChildren {
+  MainTreeTreeNameBranchCompareIndexRoute: typeof MainTreeTreeNameBranchCompareIndexRoute
+}
+
+const MainTreeTreeNameBranchCompareRouteRouteChildren: MainTreeTreeNameBranchCompareRouteRouteChildren =
+  {
+    MainTreeTreeNameBranchCompareIndexRoute:
+      MainTreeTreeNameBranchCompareIndexRoute,
+  }
+
+const MainTreeTreeNameBranchCompareRouteRouteWithChildren =
+  MainTreeTreeNameBranchCompareRouteRoute._addFileChildren(
+    MainTreeTreeNameBranchCompareRouteRouteChildren,
+  )
+
 interface MainTreeRouteRouteChildren {
   MainTreeTreeIdRouteRoute: typeof MainTreeTreeIdRouteRouteWithChildren
   MainTreeIndexRoute: typeof MainTreeIndexRoute
   MainTreeTreeNameBranchHashRouteRoute: typeof MainTreeTreeNameBranchHashRouteRouteWithChildren
+  MainTreeTreeNameBranchCompareRouteRoute: typeof MainTreeTreeNameBranchCompareRouteRouteWithChildren
   MainTreeTreeNameBranchIndexRoute: typeof MainTreeTreeNameBranchIndexRoute
 }
 
@@ -974,6 +1028,8 @@ const MainTreeRouteRouteChildren: MainTreeRouteRouteChildren = {
   MainTreeIndexRoute: MainTreeIndexRoute,
   MainTreeTreeNameBranchHashRouteRoute:
     MainTreeTreeNameBranchHashRouteRouteWithChildren,
+  MainTreeTreeNameBranchCompareRouteRoute:
+    MainTreeTreeNameBranchCompareRouteRouteWithChildren,
   MainTreeTreeNameBranchIndexRoute: MainTreeTreeNameBranchIndexRoute,
 }
 
