@@ -93,6 +93,11 @@ urlpatterns = [
         name="treeDetailsTestsDirectView",
     ),
     path(
+        "tree/<str:tree_name>/<path:git_branch>/compare",
+        view_cache(views.TreeCompareView),
+        name="treeCompare",
+    ),
+    path(
         "tree/<str:tree_name>/<path:git_branch>",
         view_cache(views.TreeLatest),
         name="treeLatest",

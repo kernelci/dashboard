@@ -1204,3 +1204,175 @@ def get_latest_tree(
     query = query.order_by("-start_time").first()
 
     return query
+
+
+def _get_compare_checkout_clauses(
+    *,
+    git_branch_param: Optional[str],
+    tree_name: Optional[str],
+) -> tuple[str, str]:
+    checkout_clauses = create_checkouts_where_clauses(
+        git_url=None,
+        git_branch=git_branch_param,
+        tree_name=tree_name,
+    )
+
+    git_branch_clause = checkout_clauses.get("git_branch_clause")
+    tree_name_clause = checkout_clauses.get("tree_name_clause")
+    tree_name_full_clause = "AND " + tree_name_clause if tree_name_clause else ""
+
+    return git_branch_clause, tree_name_full_clause
+
+
+def get_tree_compare_rollup(
+    *,
+    commit_hashes: list[str],
+    origin_param: str,
+    git_branch_param: Optional[str],
+    tree_name: Optional[str] = None,
+) -> list[dict]:
+    if not commit_hashes:
+        return []
+
+    cache_key = "treeCompareRollup"
+    params = {
+        "commit_hashes": commit_hashes,
+        "tree_name": tree_name,
+        "origin_param": origin_param,
+        "git_branch_param": git_branch_param,
+    }
+
+    rows = get_query_cache(cache_key, params)
+    if rows is not None:
+        return rows
+
+    git_branch_clause, tree_name_full_clause = _get_compare_checkout_clauses(
+        git_branch_param=git_branch_param,
+        tree_name=tree_name,
+    )
+
+    query = f"""
+        WITH RELEVANT_CHECKOUTS AS (
+            SELECT DISTINCT ON (c.git_commit_hash)
+                c.git_commit_hash,
+                c.tree_name,
+                c.git_repository_branch,
+                c.git_repository_url,
+                c.origin
+            FROM
+                checkouts c
+            WHERE
+                c.git_commit_hash = ANY(%(commit_hashes)s)
+                {tree_name_full_clause}
+                AND {git_branch_clause}
+                AND c.origin = %(origin_param)s
+            ORDER BY
+                c.git_commit_hash,
+                c._timestamp DESC
+        )
+        SELECT
+            tr.git_commit_hash,
+            tr.path_group,
+            tr.build_architecture,
+            tr.hardware_key,
+            tr.test_platform,
+            tr.is_boot,
+            tr.pass_tests,
+            tr.fail_tests,
+            tr.skip_tests,
+            tr.error_tests,
+            tr.miss_tests,
+            tr.done_tests,
+            tr.null_tests,
+            tr.total_tests
+        FROM
+            tree_tests_rollup tr
+        INNER JOIN RELEVANT_CHECKOUTS rc ON (
+            tr.git_commit_hash = rc.git_commit_hash
+            AND tr.origin = rc.origin
+            AND tr.tree_name IS NOT DISTINCT FROM rc.tree_name
+            AND tr.git_repository_branch IS NOT DISTINCT FROM rc.git_repository_branch
+            AND tr.git_repository_url IS NOT DISTINCT FROM rc.git_repository_url
+        )
+        ORDER BY
+            tr.total_tests DESC
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = dict_fetchall(cursor=cursor)
+        set_query_cache(key=cache_key, params=params, rows=rows)
+
+    return rows
+
+
+def get_tree_compare_builds(
+    *,
+    commit_hashes: list[str],
+    origin_param: str,
+    git_branch_param: Optional[str],
+    tree_name: Optional[str] = None,
+) -> list[dict]:
+    if not commit_hashes:
+        return []
+
+    cache_key = "treeCompareBuilds"
+    params = {
+        "commit_hashes": commit_hashes,
+        "tree_name": tree_name,
+        "origin_param": origin_param,
+        "git_branch_param": git_branch_param,
+    }
+
+    rows = get_query_cache(cache_key, params)
+    if rows is not None:
+        return rows
+
+    git_branch_clause, tree_name_full_clause = _get_compare_checkout_clauses(
+        git_branch_param=git_branch_param,
+        tree_name=tree_name,
+    )
+
+    query = f"""
+        WITH RELEVANT_CHECKOUTS AS (
+            SELECT DISTINCT ON (c.git_commit_hash)
+                c.id AS checkout_id,
+                c.git_commit_hash,
+                c.git_repository_url
+            FROM
+                checkouts c
+            WHERE
+                c.git_commit_hash = ANY(%(commit_hashes)s)
+                {tree_name_full_clause}
+                AND {git_branch_clause}
+                AND c.origin = %(origin_param)s
+            ORDER BY
+                c.git_commit_hash,
+                c._timestamp DESC
+        )
+        SELECT
+            rc.git_commit_hash,
+            rc.git_repository_url,
+            b.config_name,
+            b.status,
+            COUNT(DISTINCT b.id) AS count
+        FROM
+            RELEVANT_CHECKOUTS rc
+        INNER JOIN builds b ON b.checkout_id = rc.checkout_id
+        WHERE
+            b.config_name IS NOT NULL
+            AND b.id NOT LIKE 'maestro:dummy_%%'
+        GROUP BY
+            rc.git_commit_hash,
+            rc.git_repository_url,
+            b.config_name,
+            b.status
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = dict_fetchall(cursor=cursor)
+        set_query_cache(key=cache_key, params=params, rows=rows)
+
+    return rows
+
