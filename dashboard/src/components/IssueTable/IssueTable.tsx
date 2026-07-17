@@ -198,7 +198,9 @@ export const IssueTable = ({
   const { listingSize } = useSearch({ from: '/_main/issues' });
   const navigate = useNavigate({ from: '/issues' });
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'first_seen', desc: true },
+  ]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     culprit: false,
   });
