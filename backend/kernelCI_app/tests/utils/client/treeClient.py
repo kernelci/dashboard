@@ -18,6 +18,11 @@ class TreeClient(BaseClient):
         url = self.get_endpoint(path=path, query=query)
         return requests.get(url)
 
+    def get_tree_report(self, *, query: dict) -> requests.Response:
+        path = reverse("treeReportView")
+        url = self.get_endpoint(path=path, query=query)
+        return requests.get(url)
+
     def get_tree_latest(
         self, *, tree_name: str, git_branch: str, query: dict
     ) -> requests.Response:

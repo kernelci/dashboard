@@ -1106,6 +1106,15 @@ paths:
           title: Path
           type: array
         description: A list of test paths to query for. SQL Wildcard can be used.
+      - in: query
+        name: tree_name
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Tree Name
+        description: Name of the tree
       tags:
       - tree-report
       security:

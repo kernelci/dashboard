@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TypedDict
+from typing import Optional, TypedDict
 
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
@@ -35,6 +35,10 @@ class TreeReportQueryParameters(BaseModel):
         str,
         Field(description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION),
     ]
+    tree_name: Annotated[
+        Optional[str],
+        Field(default=None, description=DocStrings.TREE_NAME_PATH_DESCRIPTION),
+    ] = None
     path: Annotated[
         list[str],
         Field(

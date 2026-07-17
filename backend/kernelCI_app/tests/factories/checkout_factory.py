@@ -65,7 +65,9 @@ class CheckoutFactory(DjangoModelFactory):
 
     git_commit_hash = factory.LazyAttribute(
         lambda obj: (
-            obj.id if Checkout.is_known_checkout(obj.id) else f"commit_{obj.id[:8]}"
+            Checkout.get_git_commit_hash(obj.id)
+            if Checkout.is_known_checkout(obj.id)
+            else f"commit_{obj.id[:8]}"
         )
     )
 
