@@ -8,7 +8,7 @@ import {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { CSSProperties, JSX } from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 
@@ -87,10 +87,29 @@ export function IndividualTestsTable({
     [modelRows],
   );
 
-  const [currentLog, setLog] = useState<number | undefined>(undefined);
+  const [currentLogId, setLog] = useState<string | undefined>(undefined);
+
+  const currentLog = useMemo(() => {
+    const index = originalItems.findIndex(item => item.id === currentLogId);
+    return index === -1 ? undefined : index;
+  }, [originalItems, currentLogId]);
+
+  const activeLogId = currentLog !== undefined ? currentLogId ?? '' : '';
 
   const onOpenChange = useCallback(() => setLog(undefined), [setLog]);
-  const openLogSheet = useCallback((index: number) => setLog(index), [setLog]);
+  const openLogSheet = useCallback(
+    (index: number) => setLog(originalItems[index]?.id),
+    [setLog, originalItems],
+  );
+
+  useEffect(() => {
+    if (
+      currentLogId !== undefined &&
+      !originalItems.some(item => item.id === currentLogId)
+    ) {
+      setLog(undefined);
+    }
+  }, [currentLogId, originalItems]);
 
   const tableRows = useMemo((): JSX.Element[] => {
     return virtualItems.map(virtualRow => {
@@ -126,32 +145,18 @@ export function IndividualTestsTable({
     }, [virtualItems, virtualizer]);
 
   const handlePreviousItem = useCallback(() => {
-    setLog(previousLog => {
-      if (typeof previousLog === 'number' && previousLog > 0) {
-        return previousLog - 1;
-      }
-
-      return previousLog;
-    });
-  }, [setLog]);
+    if (currentLog !== undefined && currentLog > 0) {
+      setLog(originalItems[currentLog - 1]?.id);
+    }
+  }, [setLog, currentLog, originalItems]);
 
   const handleNextItem = useCallback(() => {
-    setLog(previousLog => {
-      if (
-        typeof previousLog === 'number' &&
-        previousLog < originalItems.length - 1
-      ) {
-        return previousLog + 1;
-      }
+    if (currentLog !== undefined && currentLog < originalItems.length - 1) {
+      setLog(originalItems[currentLog + 1]?.id);
+    }
+  }, [setLog, currentLog, originalItems]);
 
-      return previousLog;
-    });
-  }, [setLog, originalItems.length]);
-
-  const { data: logData, isLoading } = useLogData(
-    originalItems.length > 0 ? originalItems[currentLog ?? 0].id : '',
-    'test',
-  );
+  const { data: logData, isLoading } = useLogData(activeLogId, 'test');
 
   const navigationLogsActions = useMemo(
     () => ({
@@ -175,13 +180,7 @@ export function IndividualTestsTable({
     return getRowLink(logData?.id ?? '');
   }, [logData?.id, getRowLink]);
 
-  const {
-    data: issues,
-    status,
-    error,
-  } = useTestIssues(
-    currentLog !== undefined ? originalItems[currentLog]?.id : '',
-  );
+  const { data: issues, status, error } = useTestIssues(activeLogId);
 
   return (
     <WrapperTableWithLogSheet
