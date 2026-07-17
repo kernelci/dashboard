@@ -16,6 +16,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import { ExternalLinkIcon } from '@/components/Icons/ExternalLink';
 
+import { REPO_URL } from '@/utils/constants/general';
+
 import SendFeedback from './SendFeedback';
 import NavLink from './NavLink';
 import {
@@ -24,6 +26,17 @@ import {
   dashboardItems,
   type RouteMenuItems,
 } from './menuItems';
+
+const dashboardVersion: string = import.meta.env.VITE_DASHBOARD_VERSION;
+
+const versionRepoUrl = (version: string): string => {
+  if (version.endsWith('-dirty')) {
+    return REPO_URL;
+  }
+
+  const commitAfterTag = version.match(/-g([0-9a-f]+)$/)?.[1];
+  return `${REPO_URL}/tree/${commitAfterTag ?? version}`;
+};
 
 type SideMenuItemProps = {
   item: RouteMenuItems;
@@ -124,6 +137,19 @@ const SideMenuContent = ({
         <div className="flex w-full flex-col space-y-0">
           {dashboardElements}
         </div>
+        {dashboardVersion && (
+          <>
+            <Separator className="bg-on-secondary-10 my-4" />
+            <a
+              href={versionRepoUrl(dashboardVersion)}
+              target="_blank"
+              rel="noreferrer"
+              className="block w-full px-4 text-xs break-words text-white/40 hover:text-white/70"
+            >
+              {dashboardVersion}
+            </a>
+          </>
+        )}
       </NavigationMenuList>
     </NavigationMenu>
   );

@@ -9,11 +9,16 @@ jobs:
     outputs:
       has_new_migrations: ${{ steps.check.outputs.has_new_migrations }}
       migration_list: ${{ steps.check.outputs.migration_list }}
+      dashboard_version: ${{ steps.dashboard_version.outputs.dashboard_version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Compute dashboard version
+        id: dashboard_version
+        run: echo "dashboard_version=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
 
       - name: Check for new Django migrations
         id: check
@@ -68,6 +73,7 @@ jobs:
             cp ~/.env-staging dashboard-staging/.env &&
             cd dashboard-staging &&
             git checkout ${GITHUB_SHA} &&
+            export DASHBOARD_VERSION=${DASHBOARD_VERSION} &&
             docker compose pull --ignore-buildable --policy=always &&
             docker compose build --no-cache &&
             docker compose up -d --remove-orphans
@@ -76,6 +82,7 @@ jobs:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
+          DASHBOARD_VERSION: ${{ needs.check-migrations.outputs.dashboard_version }}
 
   cleanup:
     needs: deploy-staging
