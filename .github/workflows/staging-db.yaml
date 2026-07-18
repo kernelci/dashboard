@@ -24,7 +24,23 @@ jobs:
           git fetch
           git checkout ${{ github.event.inputs.GIT_BRANCH }}
           cd ..
-          docker compose -f docker-compose-all.yaml --profile=self-hosted up --build --pull=always --remove-orphans --detach
+          docker compose -f docker-compose-all.yaml --profile=self-hosted pull --ignore-buildable
+          docker compose -f docker-compose-all.yaml --profile=self-hosted build
+          docker compose -f docker-compose-all.yaml --profile=self-hosted up -d --remove-orphans
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+    - name: Prune docker artifacts on remote
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.DB_SSH_HOST }}
+        username: ${{ secrets.DB_SSH_USER }}
+        key: ${{ secrets.DB_SSH_KEY }}
+        script: |
+          set -eu
           docker image prune -fa --filter "until=48h"
+          docker builder prune -f --filter "until=48h"
           docker volume ls --filter dangling=true --format "::warning::volume {{.Name}} is dangling"
-          docker container ls -f status=exited --format "::warning::container {{.ID}} {{.Status}} ({{.Names}})"
+          docker container ls --filter status=exited --format "::warning::container {{.ID}} {{.Status}} ({{.Names}})"

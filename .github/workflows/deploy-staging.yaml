@@ -49,14 +49,15 @@ jobs:
     needs: check-migrations
     runs-on: ubuntu-latest
     steps:
-      - name: Configure staging host authenticity
+      - &ssh-host-auth
+        name: Configure staging host authenticity
         run: |
           mkdir -p ~/.ssh/ && chmod 700 ~/.ssh/
           touch ~/.ssh/known_hosts && chmod 600 ~/.ssh/known_hosts
           echo "$SSH_HOSTKEY" > ~/.ssh/known_hosts
         env:
           SSH_HOSTKEY: ${{ secrets.STAGING_HOSTKEY }}
-            
+
       - name: Deploy to staging
         run: |
           eval $(ssh-agent -s)
@@ -67,15 +68,35 @@ jobs:
             cp ~/.env-staging dashboard-staging/.env &&
             cd dashboard-staging &&
             git checkout ${GITHUB_SHA} &&
-            docker compose up --build --pull=always --remove-orphans --detach &&
-            docker image prune -fa --filter "until=48h" &&
-            docker volume ls --filter dangling=true --format "::warning::volume {{.Name}} is dangling" &&
-            docker container ls -f status=exited --format "::warning::container {{.ID}} {{.Status}} ({{.Names}})"
+            docker compose pull --ignore-buildable --policy=always &&
+            docker compose build --no-cache &&
+            docker compose up -d --remove-orphans
           "
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
+
+  cleanup:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - *ssh-host-auth
+      - name: Prune docker artifacts on remote
+        env:
+          SSH_USER: ${{ secrets.STAGING_USER }}
+          SSH_HOST: ${{ secrets.STAGING_HOST }}
+          SSH_KEY: ${{ secrets.STAGING_KEY }}
+        run: |
+          eval $(ssh-agent -s)
+          echo "$SSH_KEY" | ssh-add - >/dev/null
+          ssh "${SSH_USER}@${SSH_HOST}" <<<'EOF'
+            set -eu
+            docker image prune -fa --filter "until=48h"
+            docker builder prune -f --filter "until=48h"
+            docker volume ls --filter dangling=true --format "::warning::volume {{.Name}} is dangling"
+            docker container ls --filter status=exited --format "::warning::container {{.ID}} {{.Status}} ({{.Names}})"
+          EOF
 
   e2e-tests:
     runs-on: ubuntu-latest
