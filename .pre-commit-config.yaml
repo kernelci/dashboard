@@ -87,12 +87,12 @@ repos:
           with open("schema.yml") as f:
               old_schema = f.read()
           if new_schema != old_schema:
-              print("Schema is not up-to-date. Run 'python manage.py spectacular --file schema.yml' to regenerate it")
+              print("Schema is not up-to-date. Run \"python manage.py spectacular --file schema.yml\" to regenerate it")
               sys.exit(1)
           '
         files: 'backend/(.*\.py|schema.yml)'
         pass_filenames: false
         language: python
-        language_version: '3.13'
+        language_version: '3.12'
         additional_dependencies: [poetry]
         stages: [pre-commit]
