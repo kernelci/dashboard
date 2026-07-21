@@ -48,6 +48,20 @@ This guide covers three deployment scenarios: [development](#1-development), [pr
 | pnpm | Frontend package management | `npm install -g pnpm` |
 | Poetry | Backend package management | `python3 -m pip install poetry` | 
 
+### Bot protection
+
+The standard Compose deployments place
+[Anubis](https://anubis.techaro.lol/) between the public NGINX listener and
+the dashboard. Its policy is stored in `anubis/botPolicy.yaml`. Requests whose
+user agent starts with `curl`, `wget`, `python-requests`, or `kci-dev` are
+explicitly allowed without a challenge; other traffic uses Anubis's default
+policy.
+
+Anubis uses secure cookies by default in `docker-compose-next.yml`. Set
+`ANUBIS_COOKIE_SECURE=false` only when the public dashboard is intentionally
+served over plain HTTP. `docker-compose.yml` defaults this setting to `false`
+for local development.
+
 ### Accessing production database
 
 If direct access to the production database is required,
