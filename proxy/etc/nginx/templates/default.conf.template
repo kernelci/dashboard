@@ -1,12 +1,118 @@
+# This is deliberately a lightweight challenge for unsophisticated bots, not
+# an authentication mechanism. Browser UAs commonly containing "Safari"
+# include Safari itself and Chromium-based browsers; Android browsers are
+# included separately because not all of them advertise Safari.
+map $http_user_agent $dashboard_browser_ua {
+    default 0;
+    ~*(Safari|Android) 1;
+}
+
+map $cookie_kernelci_dashboard_verified $dashboard_cookie_verified {
+    default 0;
+    "1" 1;
+}
+
+map "$dashboard_browser_ua:$dashboard_cookie_verified" $dashboard_cookie_gate {
+    default 0;
+    "1:0" 1;
+}
+
 server {
     location /api {
+        if ($dashboard_cookie_gate) {
+            add_header Cache-Control "no-store" always;
+            return 302 /__dashboard_cookie_check?return=$request_uri;
+        }
         proxy_pass ${PROXY_TARGET};
         proxy_connect_timeout 240s;
         proxy_read_timeout 240s;
         proxy_send_timeout 240s;
         send_timeout 240s;
     }
+
+    # Keep the challenge outside `location /` so it cannot redirect to itself.
+    # Command-line API clients retain access with their normal user agents;
+    # clients claiming to be browsers must complete the same challenge.
+    location = /__dashboard_cookie_check {
+        default_type text/html;
+        add_header Cache-Control "no-store" always;
+        add_header Content-Security-Policy "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'" always;
+        add_header X-Robots-Tag "noindex, nofollow" always;
+        return 200 '<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Redirecting&hellip;</title>
+<style>body{font:16px sans-serif;margin:3rem;color:#222}</style>
+</head>
+<body>
+<p>Checking your browser&hellip;</p>
+<script>
+(function () {
+    var ua = navigator.userAgent;
+    var uaData = navigator.userAgentData;
+    var claimsAndroid = /Android/i.test(ua);
+    var claimsAppleMobile = /(iPhone|iPad|iPod)/i.test(ua);
+    var claimsChromium = /(Chrome|Chromium|CriOS|Edg|OPR)/i.test(ua);
+    var claimsSafari = /Safari/i.test(ua) && !claimsChromium;
+    var platformLooksValid = false;
+
+    if (claimsAndroid) {
+        platformLooksValid = uaData
+            ? uaData.platform === "Android"
+            : navigator.maxTouchPoints > 0;
+    } else if (claimsAppleMobile) {
+        platformLooksValid =
+            navigator.vendor === "Apple Computer, Inc." &&
+            navigator.maxTouchPoints > 0;
+    } else if (claimsChromium) {
+        platformLooksValid = navigator.vendor === "Google Inc.";
+    } else if (claimsSafari) {
+        platformLooksValid = navigator.vendor === "Apple Computer, Inc.";
+    }
+
+    if (navigator.webdriver === true || !platformLooksValid) {
+        document.body.textContent = "Browser verification failed.";
+        return;
+    }
+
+    var cookie =
+        "kernelci_dashboard_verified=1; Max-Age=31536000; Path=/; SameSite=Lax";
+    if (location.protocol === "https:") {
+        cookie += "; Secure";
+    }
+    document.cookie = cookie;
+
+    var cookieVerified = document.cookie.split(";").some(function (item) {
+        return item.trim() === "kernelci_dashboard_verified=1";
+    });
+    if (!cookieVerified) {
+        document.body.textContent =
+            "JavaScript and cookies are required to access this dashboard.";
+        return;
+    }
+
+    var marker = "?return=";
+    var target = location.search.slice(marker.length);
+    if (location.search.slice(0, marker.length) !== marker ||
+        target.charAt(0) !== "/" || target.charAt(1) === "/" ||
+        target.charAt(1) === "\\") {
+        target = "/";
+    }
+    location.replace(target);
+}());
+</script>
+<noscript>JavaScript and cookies are required to access this dashboard.</noscript>
+</body>
+</html>';
+    }
+
     location / {
+        if ($dashboard_cookie_gate) {
+            add_header Cache-Control "no-store" always;
+            return 302 /__dashboard_cookie_check?return=$request_uri;
+        }
         root /data/static;
         try_files $uri /index.html;
     }
