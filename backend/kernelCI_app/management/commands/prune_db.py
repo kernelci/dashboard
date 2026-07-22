@@ -19,6 +19,7 @@ from django.db import connections
 
 from kernelCI_app.management.commands.helpers.intervals import parse_interval
 
+# Strict parent-before-child order: a checkout owns builds, a build owns tests.
 PRUNABLE_TABLES = ("checkouts", "builds", "tests")
 
 
@@ -138,7 +139,7 @@ class Command(BaseCommand):
                     return
 
                 if dry_run:
-                    self.stdout.write(
+                    self.stderr.write(
                         self.style.WARNING(
                             "[DRY RUN] No rows deleted. Run without --dry-run to "
                             "execute."
@@ -147,13 +148,8 @@ class Command(BaseCommand):
                     return
 
                 if not options["yes"]:
-                    summary = ", ".join(f"{counts[t]} {t}" for t in selected_tables)
                     try:
-                        answer = (
-                            input(f"Delete {summary} ({total} rows total)? [y/N] ")
-                            .strip()
-                            .lower()
-                        )
+                        answer = input("Delete these rows? [y/N] ").strip().lower()
                     except EOFError:
                         answer = ""
                     if answer not in ("y", "yes"):
@@ -175,7 +171,7 @@ class Command(BaseCommand):
                 )
             finally:
                 for temp_table in temp_tables.values():
-                    cursor.execute(f"DROP TABLE IF EXISTS {temp_table}")
+                    cursor.execute(f'DROP TABLE IF EXISTS "{temp_table}"')
 
     def _build_where_clauses(
         self, origins_condition, protect_incidents, selected_tables
@@ -231,22 +227,23 @@ class Command(BaseCommand):
     def _materialize(self, cursor, table, temp_table, where, params):
         """Snapshot the doomed ids into a temp table so the nested predicate runs
         once instead of per batch."""
-        cursor.execute(f"DROP TABLE IF EXISTS {temp_table}")
+        cursor.execute(f'DROP TABLE IF EXISTS "{temp_table}"')
         cursor.execute(
-            f"CREATE TEMP TABLE {temp_table} AS SELECT id FROM {table} WHERE {where}",
+            f'CREATE TEMP TABLE "{temp_table}" AS '
+            f'SELECT id FROM "{table}" WHERE {where}',
             params,
         )
 
     def _count(self, cursor, temp_table):
-        cursor.execute(f"SELECT COUNT(*) FROM {temp_table}")
+        cursor.execute(f'SELECT COUNT(*) FROM "{temp_table}"')
         return cursor.fetchone()[0]
 
     def _batch_delete(self, cursor, table, temp_table, batch_size):
         sql = (
             f"WITH batch AS ("
-            f"DELETE FROM {temp_table} WHERE id IN "
-            f"(SELECT id FROM {temp_table} LIMIT %(batch_size)s) RETURNING id"
-            f") DELETE FROM {table} WHERE id IN (SELECT id FROM batch)"
+            f'DELETE FROM "{temp_table}" WHERE id IN '
+            f'(SELECT id FROM "{temp_table}" LIMIT %(batch_size)s) RETURNING id'
+            f') DELETE FROM "{table}" WHERE id IN (SELECT id FROM batch)'
         )
         deleted_total = 0
         while True:

@@ -22,8 +22,9 @@ def _days_ago(days: int):
 
 def _prune(**kwargs) -> str:
     out = StringIO()
-    call_command("prune_db", older_than="10 days", stdout=out, **kwargs)
-    return out.getvalue()
+    err = StringIO()
+    call_command("prune_db", older_than="10 days", stdout=out, stderr=err, **kwargs)
+    return out.getvalue() + err.getvalue()
 
 
 @pytest.mark.django_db
