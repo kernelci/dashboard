@@ -144,7 +144,7 @@ jobs:
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_KEY" | ssh-add - >/dev/null
-          ssh "${SSH_USER}@${SSH_HOST}" <<<'EOF'
+          ssh "${SSH_USER}@${SSH_HOST}" <<'EOF'
             set -eu
             docker image prune -fa --filter "until=48h"
             docker builder prune -f --filter "until=48h"
