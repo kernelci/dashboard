@@ -977,6 +977,109 @@ def get_tree_commit_history_hashes_aggregated(
         return rows
 
 
+def get_tree_compare_data(
+    *,
+    data_type: Literal["boots", "tests"],
+    origin: str,
+    git_branch: str,
+    tree_name: str,
+    commit_hashes: list[str],
+    boots_duration: tuple[Optional[int], Optional[int]] = (None, None),
+    tests_duration: tuple[Optional[int], Optional[int]] = (None, None),
+) -> list[dict]:
+    """Fetch aggregated boot/test rows for commit comparison.
+
+    Groups by identity dims (path, config_name, platform) plus filter dims
+    (status, compiler, arch, lab, origin, issues). Duration filters apply in SQL;
+    remaining filters apply in Python.
+    """
+    if not commit_hashes:
+        return []
+
+    boot_duration_min, boot_duration_max = boots_duration
+    test_duration_min, test_duration_max = tests_duration
+
+    params = {
+        "commit_hashes": commit_hashes,
+        "origin_param": origin,
+        "git_branch_param": git_branch,
+        "tree_name": tree_name,
+        "git_url_param": None,
+        "boot_duration_min": boot_duration_min,
+        "boot_duration_max": boot_duration_max,
+        "test_duration_min": test_duration_min,
+        "test_duration_max": test_duration_max,
+    }
+
+    cache_key = "treeCompareData"
+    cache_params = {
+        **params,
+        "data_type": data_type,
+        "commit_hashes": tuple(sorted(commit_hashes)),
+    }
+    rows = get_query_cache(cache_key, cache_params)
+    if rows is not None:
+        return rows
+
+    checkout_clauses = create_checkouts_where_clauses(
+        git_url=None, git_branch=git_branch, tree_name=tree_name
+    )
+    git_branch_clause = checkout_clauses.get("git_branch_clause")
+    tree_name_clause = checkout_clauses.get("tree_name_clause")
+    tree_name_full_clause = "\nAND " + tree_name_clause if tree_name_clause else ""
+    git_branch_full_clause = "\nAND " + git_branch_clause if git_branch_clause else ""
+
+    if data_type == "boots":
+        path_filter = "AND (tests.path = 'boot' OR tests.path LIKE 'boot.%%')"
+        duration_clause = get_boot_test_duration_clause(boots_duration, (None, None))
+    else:
+        path_filter = "AND tests.path <> 'boot' AND tests.path NOT LIKE 'boot.%%'"
+        duration_clause = get_boot_test_duration_clause((None, None), tests_duration)
+
+    query = f"""
+        SELECT
+            c.git_commit_hash,
+            tests.path,
+            tests.status AS status,
+            builds.config_name,
+            tests.environment_misc->>'platform' AS platform,
+            tests.environment_compatible,
+            array[builds.compiler, builds.architecture] AS compiler_arch,
+            tests.misc->>'runtime' AS lab,
+            tests.origin,
+            ARRAY_AGG(DISTINCT ic.issue_id || ',' || ic.issue_version::text)
+                AS known_issues
+        FROM checkouts c
+        INNER JOIN builds ON c.id = builds.checkout_id
+        INNER JOIN tests ON tests.build_id = builds.id
+            {path_filter}
+        LEFT JOIN incidents ic ON tests.id = ic.test_id
+        WHERE
+            c.git_commit_hash = ANY(%(commit_hashes)s)
+            AND c.origin = %(origin_param)s
+            {git_branch_full_clause}
+            {tree_name_full_clause}
+            {duration_clause}
+        GROUP BY
+            c.git_commit_hash,
+            tests.path,
+            tests.status,
+            builds.config_name,
+            platform,
+            tests.environment_compatible,
+            builds.compiler,
+            builds.architecture,
+            lab,
+            tests.origin
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = dict_fetchall(cursor)
+        set_query_cache(key=cache_key, params=cache_params, rows=rows)
+        return rows
+
+
 def get_tree_commit_history(
     *,
     commit_hash: str,

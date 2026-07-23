@@ -1,4 +1,4 @@
-from typing import Optional, TypedDict
+from typing import Literal, Optional, TypedDict
 
 from pydantic import BaseModel, BeforeValidator
 
@@ -33,6 +33,9 @@ class StatusCount(BaseModel):
             DONE=self.DONE + other.DONE,
             NULL=self.NULL + other.NULL,
         )
+
+
+GroupedStatusLiteral = Literal["PASS", "FAIL", "INCONCLUSIVE"]
 
 
 class GroupedStatus(TypedDict):

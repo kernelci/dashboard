@@ -1,9 +1,10 @@
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
+from kernelCI_app.typeModels.common import GroupedStatusLiteral
 from kernelCI_app.typeModels.commonDetails import (
     BuildHistoryItem,
     CommonDetailsBootsResponse,
@@ -87,3 +88,20 @@ class TreeDetailsFullResponse(
     SummaryResponse,
 ):
     pass
+
+
+class TreeCompareQueryParameters(DirectTreeQueryParameters):
+    commit_a: str = Field(description="First commit hash to compare")
+    commit_b: str = Field(description="Second commit hash to compare")
+
+
+class TreeCompareTest(BaseModel):
+    path: str
+    config_name: str
+    platform: str
+    status_a: Optional[GroupedStatusLiteral]
+    status_b: Optional[GroupedStatusLiteral]
+
+
+class TreeCompareResponse(RootModel[List[TreeCompareTest]]):
+    root: List[TreeCompareTest]
