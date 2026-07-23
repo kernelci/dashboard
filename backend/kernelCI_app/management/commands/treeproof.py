@@ -2,6 +2,7 @@ import logging
 import os
 import re
 from typing import Optional
+from urllib.parse import urlparse
 
 import yaml
 from django.conf import settings
@@ -21,25 +22,51 @@ def process_dict(d):
             process_dict(value)
 
 
+def _repo_from_segments(segments: list[str]) -> Optional[str]:
+    repo = segments[-1]
+    repo = repo[:-4] if repo.lower().endswith(".git") else repo
+    return repo or None
+
+
+def _owner_from_segments(segments: list[str]) -> Optional[str]:
+    if len(segments) < 2:
+        return None
+    return segments[-2]
+
+
+def _tree_name_from_owner_and_repo(owner: str, repo: str) -> str:
+    if repo.lower() in owner.lower():
+        return owner
+    return f"{owner}-{repo}"
+
+
 class Command(BaseCommand):
     def __init__(self):
         self.maestro_trees = dict()
         self.non_maestro_trees = dict()
         self.trees: dict[str, dict] = {"trees": {}}
 
-    def _define_tree_name(self, git_url: str):
-        regex = r"([^/]+)/([^/]+)?$"
-        match = re.search(regex, git_url)
+    def _define_tree_name(self, git_url: Optional[str]) -> Optional[str]:
+        if not isinstance(git_url, str) or not git_url.strip():
+            return None
 
-        first_part = match.group(1)
-        second_part = match.group(2).split(".")[0]
+        raw = git_url.strip().rstrip("/")
+        if "://" not in raw:
+            return None
 
-        new_tree_name = first_part
+        segments = [s for s in urlparse(raw).path.split("/") if s]
+        if not segments:
+            return None
 
-        if second_part.lower() not in first_part.lower():
-            new_tree_name += f"-{second_part}"
+        repo = _repo_from_segments(segments)
+        if repo is None:
+            return None
 
-        return new_tree_name
+        owner = _owner_from_segments(segments)
+        if owner is None:
+            return repo
+
+        return _tree_name_from_owner_and_repo(owner, repo)
 
     def _get_trees_proofs(self, *, is_maestro=False):
         query = (
@@ -64,6 +91,13 @@ class Command(BaseCommand):
 
             if not tree_name or tree_name in origin_trees:
                 tree_name = self._define_tree_name(git_url)
+                if tree_name is None:
+                    logger.warning(
+                        "Skipping treeproof record, cannot derive tree name "
+                        "from git_repository_url=%r",
+                        git_url,
+                    )
+                    continue
 
             if tree_name in origin_trees:
                 suffix_match = re.search(r"-(\d+)$", tree_name)
