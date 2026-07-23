@@ -1,0 +1,9 @@
+bots:
+  # Keep documented API clients out of the challenge flow. These rules must
+  # precede the default policy import because ALLOW stops further evaluation.
+  - name: allow-kernelci-api-clients
+    user_agent_regex: >-
+      (?i)^(curl|wget|python-requests|kci-dev)(/|$)
+    action: ALLOW
+
+  - import: (data)/meta/default-config.yaml

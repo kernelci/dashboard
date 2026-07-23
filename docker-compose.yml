@@ -118,13 +118,37 @@ services:
         volumes:
             - static-data:/data/static
 
+    anubis:
+        image: ${ANUBIS_IMAGE:-ghcr.io/techarohq/anubis:v1.25.0}
+        restart: always
+        networks:
+            - public
+        environment:
+            BIND: ":8923"
+            METRICS_BIND: ":9090"
+            TARGET: "http://proxy:8080"
+            POLICY_FNAME: "/data/cfg/botPolicy.yaml"
+            COOKIE_SECURE: ${ANUBIS_COOKIE_SECURE:-false}
+        volumes:
+            - ./anubis/botPolicy.yaml:/data/cfg/botPolicy.yaml:ro
+        healthcheck:
+            test: ["CMD", "anubis", "--healthcheck"]
+            interval: 5s
+            timeout: 30s
+            retries: 5
+            start_period: 500ms
+
     proxy:
         build: ./proxy
         image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-proxy:${IMAGE_TAG:-latest}
         restart: always
         depends_on:
-            - backend
-            - dashboard
+            backend:
+                condition: service_started
+            dashboard:
+                condition: service_started
+            anubis:
+                condition: service_healthy
         networks:
             - public
         volumes:
