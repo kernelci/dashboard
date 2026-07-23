@@ -258,7 +258,7 @@ docker compose -f docker-compose.test.yml up --build -d
 **Step 5: Run integration tests**
 ```bash
 cd backend
-TEST_BASE_URL=http://localhost:8001 poetry run pytest -m integration --use-local-db --run-all
+DB_HOST=127.0.0.1 DB_PORT=5435 TEST_BASE_URL=http://localhost:8001 DJANGO_SETTINGS_MODULE=kernelCI.test_settings poetry run pytest -m integration --use-local-db --run-all
 ```
 
 **Step 6: Clean up**
@@ -275,26 +275,45 @@ The test environment uses `backend/kernelCI/test_settings.py` which:
 - Configures local PostgreSQL database
 - Sets `TEST_BASE_URL=http://localhost:8001/`
 
+Most integration tests are HTTP black-box tests against the running `test_backend`
+container, but some (e.g. management-command tests) are DB-backed and use
+`@pytest.mark.django_db` with factories. Those connect to PostgreSQL directly from
+the host, so the run commands set `DB_HOST=127.0.0.1` and `DB_PORT=5435` to reach the
+`test_db` container (published on port `5435`) instead of the in-network `test_db:5432`
+default. The name/user/password come from `test_settings` defaults (`kcidb_test`/
+`test_user`/`test_password`), so they don't need to be passed. `pytest-django` then
+creates its own isolated `test_*` database, separate from the seeded one used by the
+HTTP tests.
+
+The commands also set `DJANGO_SETTINGS_MODULE=kernelCI.test_settings` explicitly. The
+`--use-local-db` flag alone is not enough: `pytest-django` reads the `DJANGO_SETTINGS_MODULE`
+ini option from `pyproject.toml` (`kernelCI.settings`) and configures Django before
+`conftest.py` can switch it. Under `kernelCI.settings` the `cache`/`notifications` DBs are
+file-based sqlite under `/volume_data`, which does not exist on the CI runner; the parallel
+(`-n 4`) test-DB setup then fails with "unable to open database file". `test_settings` uses
+in-memory sqlite instead, and the env var wins over the ini, so it forces the correct
+settings.
+
 ### Running Specific Tests
 
 **Run all integration tests:**
 ```bash
-TEST_BASE_URL=http://localhost:8001 poetry run pytest -m integration --use-local-db --run-all
+DB_HOST=127.0.0.1 DB_PORT=5435 TEST_BASE_URL=http://localhost:8001 DJANGO_SETTINGS_MODULE=kernelCI.test_settings poetry run pytest -m integration --use-local-db --run-all
 ```
 
 **Run only a subset of tests (faster):**
 ```bash
-TEST_BASE_URL=http://localhost:8001 poetry run pytest -m integration --use-local-db
+DB_HOST=127.0.0.1 DB_PORT=5435 TEST_BASE_URL=http://localhost:8001 DJANGO_SETTINGS_MODULE=kernelCI.test_settings poetry run pytest -m integration --use-local-db
 ```
 
 **Run specific test file:**
 ```bash
-TEST_BASE_URL=http://localhost:8001 poetry run pytest -m integration --use-local-db backend/kernelCI_app/tests/integrationTests/<your_test>.py
+DB_HOST=127.0.0.1 DB_PORT=5435 TEST_BASE_URL=http://localhost:8001 DJANGO_SETTINGS_MODULE=kernelCI.test_settings poetry run pytest -m integration --use-local-db backend/kernelCI_app/tests/integrationTests/<your_test>.py
 ```
 
 **Run specific method:**
 ```bash
-TEST_BASE_URL=http://localhost:8001 poetry run pytest -m integration --use-local-db backend/kernelCI_app/tests/integrationTests/<your_test>.py::<your_function>
+DB_HOST=127.0.0.1 DB_PORT=5435 TEST_BASE_URL=http://localhost:8001 DJANGO_SETTINGS_MODULE=kernelCI.test_settings poetry run pytest -m integration --use-local-db backend/kernelCI_app/tests/integrationTests/<your_test>.py::<your_function>
 ```
 
 ### Troubleshooting

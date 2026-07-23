@@ -164,7 +164,7 @@ jobs:
 
       - name: Run integration tests with coverage
         run: |
-          TEST_BASE_URL=http://localhost:8001 poetry run pytest -m "integration" --use-local-db --run-all --cov=kernelCI_app --cov=kernelCI_cache --cov-report=term-missing
+          DB_HOST=127.0.0.1 DB_PORT=5435 TEST_BASE_URL=http://localhost:8001 DJANGO_SETTINGS_MODULE=kernelCI.test_settings poetry run pytest -m "integration" --use-local-db --run-all --cov=kernelCI_app --cov=kernelCI_cache --cov-report=term-missing
           cp .coverage coverage-integration.sqlite
         working-directory: ./backend
 

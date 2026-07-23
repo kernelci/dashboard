@@ -3,7 +3,7 @@ import csv
 import json
 import logging
 import tarfile
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import IOBase, StringIO, TextIOWrapper
 from itertools import islice
 from pathlib import Path
@@ -12,9 +12,9 @@ from typing import Generator, Optional
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connections, models
-from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from kernelCI_app.management.commands.helpers.intervals import parse_interval
 from kernelCI_app.models import (
     Builds,
     Checkouts,
@@ -47,26 +47,6 @@ def parse_array(array_str) -> Optional[list[str]]:
         return array
     except (ValueError, SyntaxError):
         return None
-
-
-def parse_interval(interval_str: str) -> datetime:
-    parts = interval_str.split()
-    if len(parts) != 2:
-        raise ValueError(f"Invalid interval format: {interval_str}")
-
-    value, unit = parts
-    value = int(value)
-
-    if unit.lower() in ["minute", "minutes"]:
-        delta = timedelta(minutes=value)
-    elif unit.lower() in ["hour", "hours"]:
-        delta = timedelta(hours=value)
-    elif unit.lower() in ["day", "days"]:
-        delta = timedelta(days=value)
-    else:
-        raise ValueError(f"Unsupported time unit: {unit}")
-
-    return timezone.now() - delta
 
 
 def to_human_readable(num_bytes: int) -> str:
