@@ -1790,6 +1790,56 @@ paths:
               schema:
                 $ref: '#/components/schemas/CommonDetailsTestsResponse'
           description: ''
+  /api/tree/{tree_name}/{git_branch}/boots/compare:
+    get:
+      operationId: tree_boots_compare_retrieve
+      parameters:
+      - in: query
+        name: commit_a
+        schema:
+          title: Commit A
+          type: string
+        description: First commit hash to compare
+        required: true
+      - in: query
+        name: commit_b
+        schema:
+          title: Commit B
+          type: string
+        description: Second commit hash to compare
+        required: true
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCompareResponse'
+          description: ''
   /api/tree/{tree_name}/{git_branch}/commits:
     get:
       operationId: tree_commits_retrieve_2
@@ -1834,6 +1884,56 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TreeCommitsListResponse'
+          description: ''
+  /api/tree/{tree_name}/{git_branch}/tests/compare:
+    get:
+      operationId: tree_tests_compare_retrieve
+      parameters:
+      - in: query
+        name: commit_a
+        schema:
+          title: Commit A
+          type: string
+        description: First commit hash to compare
+        required: true
+      - in: query
+        name: commit_b
+        schema:
+          title: Commit B
+          type: string
+        description: Second commit hash to compare
+        required: true
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCompareResponse'
           description: ''
   /api/tree/commits-history:
     get:
@@ -4318,6 +4418,48 @@ components:
       - tree_url
       - git_commit_tags
       title: TreeCommon
+      type: object
+    TreeCompareResponse:
+      items:
+        $ref: '#/components/schemas/TreeCompareTest'
+      title: TreeCompareResponse
+      type: array
+    TreeCompareTest:
+      properties:
+        path:
+          title: Path
+          type: string
+        config_name:
+          title: Config Name
+          type: string
+        platform:
+          title: Platform
+          type: string
+        status_a:
+          anyOf:
+          - enum:
+            - PASS
+            - FAIL
+            - INCONCLUSIVE
+            type: string
+          - type: 'null'
+          title: Status A
+        status_b:
+          anyOf:
+          - enum:
+            - PASS
+            - FAIL
+            - INCONCLUSIVE
+            type: string
+          - type: 'null'
+          title: Status B
+      required:
+      - path
+      - config_name
+      - platform
+      - status_a
+      - status_b
+      title: TreeCompareTest
       type: object
     TreeDetailsBuildsResponse:
       properties:
