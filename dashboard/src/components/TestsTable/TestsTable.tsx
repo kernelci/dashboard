@@ -260,7 +260,7 @@ export function TestsTable({
         onSearchChange={onSearchChange}
         currentPathFilter={currentPathFilter}
       />
-      <div className="h-[600px] overflow-auto">
+      <div className="max-h-150 overflow-auto">
         <DumbBaseTable containerClassName="overflow-visible h-full bg-white">
           <DumbTableHeader className="sticky top-0 z-10">
             {tableHeaders}
