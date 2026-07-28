@@ -6,12 +6,10 @@ import type {
 } from '@tanstack/react-table';
 
 import {
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
 } from '@tanstack/react-table';
 
 import { useCallback, useMemo, useState, type JSX } from 'react';
@@ -21,12 +19,11 @@ import { FormattedMessage } from 'react-intl';
 
 import { useNavigate, useSearch, type LinkProps } from '@tanstack/react-router';
 
-import BaseTable, { TableHead } from '@/components/Table/BaseTable';
-
 import type { MessagesKey } from '@/locales/messages';
 
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ConditionalTableCell } from '@/components/Table/ConditionalTableCell';
+import { TableFrame } from '@/components/Table/TableFrame';
 
 import { BaseGroupedStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
@@ -36,6 +33,8 @@ import {
   PaginationButtons,
   PaginationInfo,
 } from '@/components/Table/PaginationInfo';
+
+import { columnWidthStyle, useLayoutTable } from '@/hooks/useLayoutTable';
 
 import type {
   HardwareItem,
@@ -47,6 +46,11 @@ import type {
 import { sumStatus } from '@/utils/status';
 
 import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
+import {
+  BOOT_STATUS_MIN_WIDTH,
+  BUILD_STATUS_MIN_WIDTH,
+  TEST_STATUS_MIN_WIDTH,
+} from '@/utils/constants/tables';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
 
@@ -139,6 +143,10 @@ const getColumns = (
       ),
       meta: {
         tabTarget: 'global.builds',
+        headerIntlKey: 'global.platform',
+        isRowHeader: true,
+        minWidth: 120,
+        maxWidth: 280,
       },
     },
     {
@@ -156,7 +164,7 @@ const getColumns = (
         }
 
         return (
-          <div className="flex max-w-xl flex-wrap gap-2">
+          <div className="flex max-w-full flex-wrap gap-2 overflow-hidden">
             {hardwares.map(hardware => {
               return (
                 <Badge
@@ -173,6 +181,9 @@ const getColumns = (
       },
       meta: {
         tabTarget: 'global.builds',
+        headerIntlKey: 'global.compatibles',
+        minWidth: 120,
+        maxWidth: 360,
       },
     },
     {
@@ -239,6 +250,9 @@ const getColumns = (
       },
       meta: {
         tabTarget: 'global.builds',
+        headerIntlKey: 'globalTable.build',
+        minWidth: BUILD_STATUS_MIN_WIDTH,
+        maxWidth: 280,
       },
     },
     {
@@ -305,6 +319,9 @@ const getColumns = (
       },
       meta: {
         tabTarget: 'global.boots',
+        headerIntlKey: 'globalTable.bootStatus',
+        minWidth: BOOT_STATUS_MIN_WIDTH,
+        maxWidth: 320,
       },
     },
     {
@@ -371,6 +388,9 @@ const getColumns = (
       },
       meta: {
         tabTarget: 'global.tests',
+        headerIntlKey: 'globalTable.test',
+        minWidth: TEST_STATUS_MIN_WIDTH,
+        maxWidth: 360,
       },
     },
   ];
@@ -414,7 +434,14 @@ export function HardwareTable({
     [startTimestampInSeconds, endTimestampInSeconds, navigateFrom],
   );
 
-  const table = useReactTable({
+  const {
+    table,
+    containerRef,
+    columnWidths,
+    tableWidth,
+    columnsMenu,
+    tableHeaders,
+  } = useLayoutTable({
     data,
     columns,
     onSortingChange: setSorting,
@@ -430,25 +457,6 @@ export function HardwareTable({
       pagination,
     },
   });
-
-  const groupHeaders = table.getHeaderGroups()[0].headers;
-  const tableHeaders = useMemo((): JSX.Element[] => {
-    return groupHeaders.map(header => {
-      return (
-        <TableHead key={header.id}>
-          {header.isPlaceholder
-            ? null
-            : // the header must change the icon when sorting changes,
-              // but just the column dependency won't trigger the rerender
-              // so we pass an unused sorting prop here to force the useMemo dependency
-              flexRender(header.column.columnDef.header, {
-                ...header.getContext(),
-                sorting,
-              })}
-        </TableHead>
-      );
-    });
-  }, [groupHeaders, sorting]);
 
   const modelRows = table.getRowModel().rows;
   const tableBody = useMemo((): JSX.Element[] | JSX.Element => {
@@ -471,6 +479,7 @@ export function HardwareTable({
                   tabTarget,
                 )}
                 linkClassName="w-full inline-block h-full"
+                style={columnWidthStyle(columnWidths[cell.column.id])}
               />
             );
           })}
@@ -490,6 +499,7 @@ export function HardwareTable({
     columns.length,
     startTimestampInSeconds,
     endTimestampInSeconds,
+    columnWidths,
   ]);
 
   const navigateWithPageSize = useCallback(
@@ -522,6 +532,7 @@ export function HardwareTable({
         )}
         <div className="ml-auto flex flex-wrap items-center justify-end gap-4">
           <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
+            {columnsMenu}
             <ItemsPerPageSelector
               table={table}
               onPaginationChange={navigateWithPageSize}
@@ -546,9 +557,13 @@ export function HardwareTable({
           />
         }
       >
-        <BaseTable headerComponents={tableHeaders}>
+        <TableFrame
+          containerRef={containerRef}
+          tableWidth={tableWidth}
+          headerComponents={tableHeaders}
+        >
           <TableBody>{tableBody}</TableBody>
-        </BaseTable>
+        </TableFrame>
       </QuerySwitcher>
       <div className="flex flex-wrap items-start justify-between gap-4">
         {!selection && (

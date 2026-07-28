@@ -28,6 +28,12 @@ const hardwareDetailsBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.treeBranch" />
     ),
+    meta: {
+      headerIntlKey: 'global.treeBranch',
+      isRowHeader: true,
+      minWidth: 140,
+      maxWidth: 300,
+    },
   },
   ...defaultBuildColumns,
 ];

@@ -1,11 +1,9 @@
 import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import {
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
 } from '@tanstack/react-table';
 
 import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
@@ -14,7 +12,6 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
 
-import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import {
@@ -26,10 +23,12 @@ import {
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
+import { useLayoutTable } from '@/hooks/useLayoutTable';
 
 import type { TableKeys } from '@/utils/constants/tables';
 
 import { TableRowMemoized } from '@/components/Table/TableComponents';
+import { TableFrame } from '@/components/Table/TableFrame';
 
 import { useBuildIssues } from '@/api/buildDetails';
 import { useLogData } from '@/hooks/useLogData';
@@ -84,7 +83,14 @@ export function BuildsTable({
     }));
   }, [buildItems]);
 
-  const table = useReactTable({
+  const {
+    table,
+    containerRef,
+    columnWidths,
+    tableWidth,
+    columnsMenu,
+    tableHeaders,
+  } = useLayoutTable({
     data: rawData,
     columns,
     onSortingChange: setSorting,
@@ -171,25 +177,6 @@ export function BuildsTable({
     [table],
   );
 
-  const groupHeaders = table.getHeaderGroups()[0]?.headers;
-  const tableHeaders = useMemo((): JSX.Element[] => {
-    return groupHeaders.map(header => {
-      return (
-        <TableHead key={header.id} className="border-b px-0 font-bold">
-          {header.isPlaceholder
-            ? null
-            : // the header must change the icon when sorting changes,
-              // but just the column dependency won't trigger the rerender
-              // so we pass an unused sorting prop here to force the useMemo dependency
-              flexRender(header.column.columnDef.header, {
-                ...header.getContext(),
-                sorting,
-              })}
-        </TableHead>
-      );
-    });
-  }, [groupHeaders, sorting]);
-
   const modelRows = table.getRowModel().rows;
 
   const sortedItems = useMemo(
@@ -233,6 +220,7 @@ export function BuildsTable({
               openLogSheet={openLogSheet}
               currentLog={currentLog}
               getRowLink={getRowLink}
+              columnWidths={columnWidths}
             />
           );
         })
@@ -244,7 +232,14 @@ export function BuildsTable({
         </TableRow>
       );
     }
-  }, [modelRows, columns.length, openLogSheet, currentLog, getRowLink]);
+  }, [
+    modelRows,
+    columns.length,
+    openLogSheet,
+    currentLog,
+    getRowLink,
+    columnWidths,
+  ]);
 
   const handlePreviousItem = useCallback(() => {
     if (currentLog !== undefined && currentLog > 0) {
@@ -295,15 +290,22 @@ export function BuildsTable({
       status={status}
       error={error}
     >
-      <TableTopFilters
-        key="buildsTableSearch"
-        filters={filters}
-        onClickFilter={onClickFilter}
-        onSearchChange={onSearchChange}
-      />
-      <BaseTable headerComponents={tableHeaders}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <TableTopFilters
+          key="buildsTableSearch"
+          filters={filters}
+          onClickFilter={onClickFilter}
+          onSearchChange={onSearchChange}
+        />
+        {columnsMenu}
+      </div>
+      <TableFrame
+        containerRef={containerRef}
+        tableWidth={tableWidth}
+        headerComponents={tableHeaders}
+      >
         <TableBody>{tableBody}</TableBody>
-      </BaseTable>
+      </TableFrame>
       <PaginationInfo table={table} intlLabel="global.builds" />
     </WrapperTableWithLogSheet>
   );

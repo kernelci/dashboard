@@ -2,7 +2,7 @@ import type { Cell } from '@tanstack/react-table';
 import { flexRender } from '@tanstack/react-table';
 import type { LinkProps } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
-import { memo, useMemo, type JSX } from 'react';
+import { memo, useMemo, type CSSProperties, type JSX } from 'react';
 
 import { TableCell, TableCellWithLink } from '@/components/ui/table';
 import CopyButton from '@/components/Button/CopyButton';
@@ -14,6 +14,7 @@ interface ConditionalTableCellProps<T = TreeListingItem | HardwareItem> {
   cell: Cell<T, unknown>;
   linkProps: LinkProps;
   linkClassName?: string;
+  style?: CSSProperties;
 }
 
 type ColumnType = 'status' | 'git_commit_tags' | 'regular';
@@ -38,6 +39,7 @@ const ConditionalTableCellComponent = <T = TreeListingItem | HardwareItem,>({
   cell,
   linkProps,
   linkClassName = 'w-full inline-block h-full',
+  style,
 }: ConditionalTableCellProps<T>): JSX.Element => {
   const cellContent = useMemo(() => {
     return flexRender(cell.column.columnDef.cell, cell.getContext());
@@ -79,7 +81,7 @@ const ConditionalTableCellComponent = <T = TreeListingItem | HardwareItem,>({
   switch (columnType) {
     case 'status':
       return (
-        <TableCell key={cell.id} className="p-4">
+        <TableCell key={cell.id} className="overflow-hidden p-4" style={style}>
           {cellContent}
         </TableCell>
       );
@@ -94,7 +96,7 @@ const ConditionalTableCellComponent = <T = TreeListingItem | HardwareItem,>({
         // I couldn't figure out how to achieve this using TanStack Table, as
         // `cell.getValue()` would return an array instead of the expected function.
         return (
-          <TableCell key={cell.id}>
+          <TableCell key={cell.id} className="overflow-hidden" style={style}>
             <Link className="inline-block" {...linkProps}>
               {cellContent}
             </Link>
@@ -102,13 +104,19 @@ const ConditionalTableCellComponent = <T = TreeListingItem | HardwareItem,>({
           </TableCell>
         );
       }
-      return <TableCell key={cell.id}>{cellContent}</TableCell>;
+      return (
+        <TableCell key={cell.id} className="overflow-hidden" style={style}>
+          {cellContent}
+        </TableCell>
+      );
 
     case 'regular':
     default:
       return (
         <TableCellWithLink
           key={cell.id}
+          className="overflow-hidden"
+          style={style}
           linkClassName={linkClassName}
           linkProps={linkProps}
         >

@@ -5,12 +5,10 @@ import type {
   SortingState,
 } from '@tanstack/react-table';
 import {
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
 } from '@tanstack/react-table';
 
 import { useCallback, useMemo, useState, type JSX } from 'react';
@@ -30,11 +28,12 @@ import { formattedBreakLineValue } from '@/locales/messages';
 import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
+import { columnWidthStyle, useLayoutTable } from '@/hooks/useLayoutTable';
 
-import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ConditionalTableCell } from '@/components/Table/ConditionalTableCell';
 import { FilterLabel } from '@/components/FilterLabel/FilterLabel';
+import { TableFrame } from '@/components/Table/TableFrame';
 
 import { BaseGroupedStatusWithLink } from '@/components/Status/Status';
 import { TableHeader } from '@/components/Table/TableHeader';
@@ -52,6 +51,11 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
 import { DEFAULT_TIME_SEARCH } from '@/utils/constants/general';
+import {
+  BOOT_STATUS_MIN_WIDTH,
+  BUILD_STATUS_MIN_WIDTH,
+  TEST_STATUS_MIN_WIDTH,
+} from '@/utils/constants/tables';
 
 import {
   commonTreeTableColumns,
@@ -165,6 +169,9 @@ const getColumns = (origin: string): ColumnDef<TreeListingItem>[] => {
       },
       meta: {
         tabTarget: 'global.builds',
+        headerIntlKey: 'globalTable.build',
+        minWidth: BUILD_STATUS_MIN_WIDTH,
+        maxWidth: 280,
       },
     },
     {
@@ -206,6 +213,9 @@ const getColumns = (origin: string): ColumnDef<TreeListingItem>[] => {
       },
       meta: {
         tabTarget: 'global.boots',
+        headerIntlKey: 'globalTable.bootStatus',
+        minWidth: BOOT_STATUS_MIN_WIDTH,
+        maxWidth: 320,
       },
     },
     {
@@ -247,6 +257,9 @@ const getColumns = (origin: string): ColumnDef<TreeListingItem>[] => {
       },
       meta: {
         tabTarget: 'global.tests',
+        headerIntlKey: 'globalTable.test',
+        minWidth: TEST_STATUS_MIN_WIDTH,
+        maxWidth: 360,
       },
     },
   ];
@@ -285,7 +298,14 @@ export function TreeTable({
 
   const columns = useMemo(() => getColumns(origin), [origin]);
 
-  const table = useReactTable({
+  const {
+    table,
+    containerRef,
+    columnWidths,
+    tableWidth,
+    columnsMenu,
+    tableHeaders,
+  } = useLayoutTable({
     data: orderedData,
     columns,
     onSortingChange: setSorting,
@@ -302,25 +322,6 @@ export function TreeTable({
     },
   });
 
-  const groupHeaders = table.getHeaderGroups()[0].headers;
-  const tableHeaders = useMemo((): JSX.Element[] => {
-    return groupHeaders.map(header => {
-      return (
-        <TableHead key={header.id}>
-          {header.isPlaceholder
-            ? null
-            : // the header must change the icon when sorting changes,
-              // but just the column dependency won't trigger the rerender
-              // so we pass an unused sorting prop here to force the useMemo dependency
-              flexRender(header.column.columnDef.header, {
-                ...header.getContext(),
-                sorting,
-              })}
-        </TableHead>
-      );
-    });
-  }, [groupHeaders, sorting]);
-
   const modelRows = table.getRowModel().rows;
   const tableBody = useMemo((): JSX.Element[] | JSX.Element => {
     return modelRows?.length ? (
@@ -330,12 +331,14 @@ export function TreeTable({
             const tabTarget = (
               cell.column.columnDef.meta as ListingTableColumnMeta
             ).tabTarget;
+            const width = columnWidths[cell.column.id];
             return (
               <ConditionalTableCell
                 key={cell.id}
                 cell={cell}
                 linkProps={getLinkProps(row, origin, tabTarget)}
                 linkClassName="w-full inline-block h-full"
+                style={columnWidthStyle(width)}
               />
             );
           })}
@@ -348,7 +351,7 @@ export function TreeTable({
         </TableCell>
       </TableRow>
     );
-  }, [modelRows, columns.length, origin]);
+  }, [modelRows, columns.length, origin, columnWidths]);
 
   const navigateWithPageSize = useCallback(
     (pageSize: number) => {
@@ -370,6 +373,7 @@ export function TreeTable({
           />
         </span>
         <div className="flex justify-end gap-y-2 max-[700px]:flex-wrap">
+          {columnsMenu}
           <ItemsPerPageSelector
             table={table}
             onPaginationChange={navigateWithPageSize}
@@ -393,9 +397,13 @@ export function TreeTable({
           />
         }
       >
-        <BaseTable headerComponents={tableHeaders}>
+        <TableFrame
+          containerRef={containerRef}
+          tableWidth={tableWidth}
+          headerComponents={tableHeaders}
+        >
           <TableBody>{tableBody}</TableBody>
-        </BaseTable>
+        </TableFrame>
       </QuerySwitcher>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <FilterLabel days={intervalInDays ?? DEFAULT_TIME_SEARCH} />

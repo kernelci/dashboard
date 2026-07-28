@@ -10,7 +10,6 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
 } from '@tanstack/react-table';
 
 import type { SetStateAction, Dispatch, JSX } from 'react';
@@ -23,7 +22,6 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { LiaQuestionCircleSolid } from 'react-icons/lia';
 
-import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import type {
@@ -37,6 +35,13 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { GroupedTestStatus } from '@/components/Status/Status';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
+import { columnWidthStyle, useLayoutTable } from '@/hooks/useLayoutTable';
+import { TableFrame } from '@/components/Table/TableFrame';
+import {
+  BOOT_STATUS_MIN_WIDTH,
+  BUILD_STATUS_MIN_WIDTH,
+  TEST_STATUS_MIN_WIDTH,
+} from '@/utils/constants/tables';
 import {
   Select,
   SelectContent,
@@ -231,6 +236,12 @@ const getColumns = (
           }}
         />
       ),
+      enableResizing: false,
+      meta: {
+        isRowHeader: true,
+        minWidth: 40,
+        maxWidth: 48,
+      },
     },
     {
       accessorKey: 'tree_name',
@@ -243,12 +254,24 @@ const getColumns = (
           <TooltipContent>{row.original.git_repository_url}</TooltipContent>
         </Tooltip>
       ),
+      meta: {
+        headerIntlKey: 'globalTable.tree',
+        isRowHeader: true,
+        minWidth: 120,
+        maxWidth: 240,
+      },
     },
     {
       accessorKey: 'git_repository_branch',
       header: ({ column }): JSX.Element => (
         <TableHeader column={column} intlKey="globalTable.branch" />
       ),
+      meta: {
+        headerIntlKey: 'globalTable.branch',
+        isRowHeader: true,
+        minWidth: 100,
+        maxWidth: 220,
+      },
     },
     {
       accessorKey: 'head_git_commit_name',
@@ -270,6 +293,11 @@ const getColumns = (
           />
         );
       },
+      meta: {
+        headerIntlKey: 'globalTable.commitTag',
+        minWidth: 200,
+        maxWidth: 360,
+      },
     },
     {
       accessorKey: 'selectedCommitStatusSummaryBuilds',
@@ -290,6 +318,11 @@ const getColumns = (
           />
         );
       },
+      meta: {
+        headerIntlKey: 'globalTable.build',
+        minWidth: BUILD_STATUS_MIN_WIDTH,
+        maxWidth: 280,
+      },
     },
     {
       accessorKey: 'selectedCommitStatusSummaryBoots',
@@ -309,6 +342,11 @@ const getColumns = (
           />
         );
       },
+      meta: {
+        headerIntlKey: 'globalTable.bootStatus',
+        minWidth: BOOT_STATUS_MIN_WIDTH,
+        maxWidth: 320,
+      },
     },
     {
       accessorKey: 'selectedCommitStatusSummaryTests',
@@ -327,6 +365,11 @@ const getColumns = (
             skip={statusSummary?.SKIP}
           />
         );
+      },
+      meta: {
+        headerIntlKey: 'globalTable.test',
+        minWidth: TEST_STATUS_MIN_WIDTH,
+        maxWidth: 360,
       },
     },
   ];
@@ -453,9 +496,17 @@ export function HardwareHeader({
     [setTreeIndexesLength],
   );
 
-  const table = useReactTable({
+  const {
+    table,
+    containerRef,
+    columnWidths,
+    tableWidth,
+    columnsMenu,
+    tableHeaders,
+  } = useLayoutTable({
     data: treeItems,
     columns,
+    extraHeaderDeps: [rowSelection],
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
@@ -472,33 +523,17 @@ export function HardwareHeader({
     },
   });
 
-  const groupHeaders = table.getHeaderGroups()[0]?.headers;
-  const tableHeaders = useMemo((): JSX.Element[] => {
-    return groupHeaders.map(header => {
-      return (
-        <TableHead key={header.id}>
-          {header.isPlaceholder
-            ? null
-            : // the header must change the icon when sorting changes,
-              // but just the column dependency won't trigger the rerender
-              // so we pass an unused sorting prop here to force the useMemo dependency
-              flexRender(header.column.columnDef.header, {
-                ...header.getContext(),
-                sorting,
-                rowSelection, // needed for the selection icon too
-              })}
-        </TableHead>
-      );
-    });
-  }, [groupHeaders, sorting, rowSelection]);
-
   const modelRows = table.getRowModel().rows;
   const tableRows = useMemo((): JSX.Element[] | JSX.Element => {
     return modelRows?.length ? (
       modelRows.map(row => (
         <TableRow key={row.id}>
           {row.getVisibleCells().map(cell => (
-            <TableCell key={cell.id}>
+            <TableCell
+              key={cell.id}
+              className="overflow-hidden"
+              style={columnWidthStyle(columnWidths[cell.column.id])}
+            >
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
             </TableCell>
           ))}
@@ -512,13 +547,18 @@ export function HardwareHeader({
       </TableRow>
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modelRows, rowSelection]);
+  }, [modelRows, rowSelection, columnWidths]);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <BaseTable headerComponents={tableHeaders}>
+      <div className="flex justify-end">{columnsMenu}</div>
+      <TableFrame
+        containerRef={containerRef}
+        tableWidth={tableWidth}
+        headerComponents={tableHeaders}
+      >
         <TableBody>{tableRows}</TableBody>
-      </BaseTable>
+      </TableFrame>
       <PaginationInfo table={table} intlLabel="global.trees" />
     </div>
   );

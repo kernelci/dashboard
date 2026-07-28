@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactElement, ReactNode, JSX } from 'react';
+import type { ComponentProps, ReactElement, ReactNode, JSX, Ref } from 'react';
 
 import classNames from 'classnames';
 
@@ -11,6 +11,10 @@ import {
 
 interface IBaseTableCommon {
   className?: string;
+  containerClassName?: string;
+  containerRef?: Ref<HTMLDivElement>;
+  containerStyle?: ComponentProps<typeof Table>['containerStyle'];
+  style?: ComponentProps<typeof Table>['style'];
 }
 
 interface IBodyTable {
@@ -41,15 +45,24 @@ export const DumbBaseTable = ({
   children,
   className,
   containerClassName,
+  containerRef,
+  containerStyle,
+  style,
 }: {
   children: ReactNode;
   className?: string;
   containerClassName?: string;
+  containerRef?: Ref<HTMLDivElement>;
+  containerStyle?: ComponentProps<typeof Table>['containerStyle'];
+  style?: ComponentProps<typeof Table>['style'];
 }): JSX.Element => {
   return (
     <Table
-      className={classNames(className, 'w-full rounded-lg bg-white text-black')}
+      className={classNames(className, 'rounded-lg bg-white text-black')}
       containerClassName={containerClassName}
+      containerRef={containerRef}
+      containerStyle={containerStyle}
+      style={style}
     >
       {children}
     </Table>
@@ -73,10 +86,17 @@ export const DumbTableHeader = ({
 export const TableHead = ({
   children,
   className,
+  style,
+  ...props
 }: ComponentProps<typeof TableHeadComponent>): JSX.Element => {
   return (
     <TableHeadComponent
-      className={classNames(className, 'border-b font-bold text-black')}
+      className={classNames(
+        className,
+        'relative border-b font-bold text-black',
+      )}
+      style={style}
+      {...props}
     >
       {children}
     </TableHeadComponent>
@@ -89,10 +109,20 @@ const BaseTable = ({
   body,
   children,
   className,
+  containerClassName,
+  containerRef,
+  containerStyle,
+  style,
 }: TBaseTable): JSX.Element => {
   return (
     <div className="h-full">
-      <DumbBaseTable className={className}>
+      <DumbBaseTable
+        className={className}
+        containerClassName={containerClassName}
+        containerRef={containerRef}
+        containerStyle={containerStyle}
+        style={style}
+      >
         <DumbTableHeader>
           {headerComponents ??
             headers.map(column => (

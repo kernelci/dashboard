@@ -21,7 +21,7 @@ export const commonTreeTableColumns: ColumnDef<TreeListingItem>[] = [
     cell: ({ row }): JSX.Element => {
       return (
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger className="max-w-full truncate">
             {sanitizeTableValue(row.getValue('tree_name') ?? '', false)}
           </TooltipTrigger>
           <TooltipContent>
@@ -38,6 +38,10 @@ export const commonTreeTableColumns: ColumnDef<TreeListingItem>[] = [
     },
     meta: {
       tabTarget: 'global.builds',
+      headerIntlKey: 'globalTable.tree',
+      isRowHeader: true,
+      minWidth: 120,
+      maxWidth: 280,
     },
   },
   {
@@ -45,9 +49,17 @@ export const commonTreeTableColumns: ColumnDef<TreeListingItem>[] = [
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="globalTable.branch" />
     ),
-    cell: ({ row }) => valueOrEmpty(row.getValue('git_repository_branch')),
+    cell: ({ row }): JSX.Element => (
+      <span className="block max-w-full truncate">
+        {valueOrEmpty(row.getValue('git_repository_branch'))}
+      </span>
+    ),
     meta: {
       tabTarget: 'global.builds',
+      headerIntlKey: 'globalTable.branch',
+      isRowHeader: true,
+      minWidth: 100,
+      maxWidth: 240,
     },
   },
   {
@@ -65,6 +77,9 @@ export const commonTreeTableColumns: ColumnDef<TreeListingItem>[] = [
     ),
     meta: {
       tabTarget: 'global.builds',
+      headerIntlKey: 'globalTable.commitTag',
+      minWidth: 100,
+      maxWidth: 220,
     },
   },
   {
@@ -81,6 +96,9 @@ export const commonTreeTableColumns: ColumnDef<TreeListingItem>[] = [
     ),
     meta: {
       tabTarget: 'global.builds',
+      headerIntlKey: 'global.date',
+      minWidth: 100,
+      maxWidth: 180,
     },
   },
 ];
