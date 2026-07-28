@@ -246,41 +246,75 @@ class Incidents(models.Model):
         ]
 
 
-class HardwareStatus(models.Model):
+class HardwareBuildStatus(models.Model):
+    """Build counters per hardware platform, keyed by build dimensions only.
+
+    A build has no platform of its own, so it is attributed to every platform its
+    tests ran on. Test dimensions are deliberately absent from the key: including
+    them would count a build once per test lab and inflate the totals, and it would
+    also make build counters shift when the user filters on the test side.
+    """
+
     pk = models.CompositePrimaryKey(
-        "test_origin",
+        "build_origin",
+        "build_lab",
         "platform",
         "checkout_id",
     )
     checkout_id = models.TextField()
-    test_origin = models.CharField(max_length=100)
+    build_origin = models.CharField(max_length=100)
+    build_lab = models.TextField()
     platform = models.CharField(max_length=100)
 
     compatibles = ArrayField(models.TextField(), null=True)
     start_time = models.DateTimeField()
 
-    # build status
     build_pass = models.IntegerField(default=0)
     build_failed = models.IntegerField(default=0)
     build_inc = models.IntegerField(default=0)
 
-    # boot status
+    class Meta:
+        db_table = "hardware_build_status"
+        indexes = [
+            models.Index(
+                fields=["build_origin", "start_time"], name="hw_build_origin_time"
+            ),
+            models.Index(fields=["checkout_id"], name="hw_build_checkout_id"),
+        ]
+
+
+class HardwareTestStatus(models.Model):
+    """Boot and test counters per hardware platform, keyed by test dimensions only."""
+
+    pk = models.CompositePrimaryKey(
+        "test_origin",
+        "test_lab",
+        "platform",
+        "checkout_id",
+    )
+    checkout_id = models.TextField()
+    test_origin = models.CharField(max_length=100)
+    test_lab = models.TextField()
+    platform = models.CharField(max_length=100)
+
+    compatibles = ArrayField(models.TextField(), null=True)
+    start_time = models.DateTimeField()
+
     boot_pass = models.IntegerField(default=0)
     boot_failed = models.IntegerField(default=0)
     boot_inc = models.IntegerField(default=0)
 
-    # test status
     test_pass = models.IntegerField(default=0)
     test_failed = models.IntegerField(default=0)
     test_inc = models.IntegerField(default=0)
 
     class Meta:
-        db_table = "hardware_status"
+        db_table = "hardware_test_status"
         indexes = [
             models.Index(
-                fields=["test_origin", "start_time"], name="hw_status_origin_time"
+                fields=["test_origin", "start_time"], name="hw_test_origin_time"
             ),
-            models.Index(fields=["checkout_id"], name="hw_status_checkout_id"),
+            models.Index(fields=["checkout_id"], name="hw_test_checkout_id"),
         ]
 
 

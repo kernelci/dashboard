@@ -10,8 +10,8 @@ Rows linked to an incident (an issue) are kept by default, together with their
 ancestors so nothing is orphaned; pass --skip-issue-protection to prune them too.
 
 Only checkouts, builds and tests are touched. Aggregate and derived tables (e.g.
-tree_tests_rollup, hardware_status, latest_checkout) are left untouched and must
-be cleaned up separately.
+tree_tests_rollup, hardware_build_status, hardware_test_status, latest_checkout)
+are left untouched and must be cleaned up separately.
 """
 
 from django.core.management.base import BaseCommand, CommandError

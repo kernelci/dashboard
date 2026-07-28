@@ -9,7 +9,10 @@ from django.db import transaction
 
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.system import get_running_instance
-from kernelCI_app.management.commands.helpers.aggregation_helpers import simplify_status
+from kernelCI_app.management.commands.helpers.aggregation_helpers import (
+    lab_from_misc,
+    simplify_status,
+)
 from kernelCI_app.management.commands.helpers.process_pending_helpers import (
     accumulate_rollup_entry,
     extract_path_group,
@@ -17,7 +20,8 @@ from kernelCI_app.management.commands.helpers.process_pending_helpers import (
 from kernelCI_app.models import (
     Builds,
     Checkouts,
-    HardwareStatus,
+    HardwareBuildStatus,
+    HardwareTestStatus,
     Incidents,
     Issues,
     LatestCheckout,
@@ -86,7 +90,9 @@ class Command(BaseCommand):
             incidents = self.create_incidents(issues=issues, builds=builds, tests=tests)
             rollup_rows = self.create_tests_rollup(tests=tests, incidents=incidents)
             latest_checkouts = self.create_latest_checkouts(checkouts=checkouts)
-            hardware_rows = self.create_hardware_status(tests=tests)
+            hardware_build_rows, hardware_test_rows = self.create_hardware_status(
+                tests=tests
+            )
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -98,7 +104,8 @@ class Command(BaseCommand):
                 f"- {len(incidents)} incidents\n"
                 f"- {len(rollup_rows)} tree_tests_rollup rows\n"
                 f"- {len(latest_checkouts)} latest_checkout rows\n"
-                f"- {len(hardware_rows)} hardware_status rows\n"
+                f"- {len(hardware_build_rows)} hardware_build_status rows\n"
+                f"- {len(hardware_test_rows)} hardware_test_status rows\n"
             )
         )
 
@@ -127,7 +134,8 @@ class Command(BaseCommand):
 
     def clear_data(self) -> None:
         """Clear existing test data."""
-        HardwareStatus.objects.all().delete()
+        HardwareBuildStatus.objects.all().delete()
+        HardwareTestStatus.objects.all().delete()
         LatestCheckout.objects.all().delete()
         TreeTestsRollup.objects.all().delete()
         Incidents.objects.all().delete()
@@ -385,11 +393,14 @@ class Command(BaseCommand):
 
         return LatestCheckout.objects.bulk_create(latest_checkouts)
 
-    def create_hardware_status(self, *, tests: list[Tests]) -> list[HardwareStatus]:
-        """Aggregate seeded tests into hardware_status rows."""
-        self.stdout.write("Creating hardware_status aggregations...")
+    def create_hardware_status(
+        self, *, tests: list[Tests]
+    ) -> tuple[list[HardwareBuildStatus], list[HardwareTestStatus]]:
+        """Aggregate seeded tests into the two hardware status grains."""
+        self.stdout.write("Creating hardware status aggregations...")
 
-        hardware_data: dict[tuple, dict] = {}
+        build_data: dict[tuple, dict] = {}
+        test_data: dict[tuple, dict] = {}
         counted_builds_by_key: dict[tuple, set[str]] = {}
 
         for test in tests:
@@ -400,17 +411,20 @@ class Command(BaseCommand):
                 continue
 
             checkout = test.build.checkout
-            key = (test.origin, platform, checkout.id)
-            if key not in hardware_data:
-                hardware_data[key] = {
+            test_lab = lab_from_misc(test.misc, test.origin, "runtime")
+            build_lab = lab_from_misc(
+                test.build.misc, test.build.origin, "lab", "runtime"
+            )
+
+            test_key = (test.origin, test_lab, platform, checkout.id)
+            if test_key not in test_data:
+                test_data[test_key] = {
                     "checkout_id": checkout.id,
                     "test_origin": test.origin,
+                    "test_lab": test_lab,
                     "platform": platform,
                     "compatibles": test.environment_compatible,
                     "start_time": checkout.start_time,
-                    "build_pass": 0,
-                    "build_failed": 0,
-                    "build_inc": 0,
                     "boot_pass": 0,
                     "boot_failed": 0,
                     "boot_inc": 0,
@@ -418,24 +432,42 @@ class Command(BaseCommand):
                     "test_failed": 0,
                     "test_inc": 0,
                 }
-                counted_builds_by_key[key] = set()
 
-            record = hardware_data[key]
             status_type = STATUS_FIELD_BY_SIMPLIFIED_STATUS[
                 simplify_status(test.status)
             ]
-
             test_prefix = "boot" if (test.path or "").startswith("boot") else "test"
-            record[f"{test_prefix}_{status_type}"] += 1
+            test_data[test_key][f"{test_prefix}_{status_type}"] += 1
+
+            build_key = (test.build.origin, build_lab, platform, checkout.id)
+            if build_key not in build_data:
+                build_data[build_key] = {
+                    "checkout_id": checkout.id,
+                    "build_origin": test.build.origin,
+                    "build_lab": build_lab,
+                    "platform": platform,
+                    "compatibles": test.environment_compatible,
+                    "start_time": checkout.start_time,
+                    "build_pass": 0,
+                    "build_failed": 0,
+                    "build_inc": 0,
+                }
+                counted_builds_by_key[build_key] = set()
 
             if test.build_id not in counted_builds_by_key[
-                key
+                build_key
             ] and not test.build_id.startswith("maestro:dummy_"):
-                counted_builds_by_key[key].add(test.build_id)
+                counted_builds_by_key[build_key].add(test.build_id)
                 build_status_type = STATUS_FIELD_BY_SIMPLIFIED_STATUS[
                     simplify_status(test.build.status)
                 ]
-                record[f"build_{build_status_type}"] += 1
+                build_data[build_key][f"build_{build_status_type}"] += 1
 
-        hardware_rows = [HardwareStatus(**data) for data in hardware_data.values()]
-        return HardwareStatus.objects.bulk_create(hardware_rows)
+        return (
+            HardwareBuildStatus.objects.bulk_create(
+                [HardwareBuildStatus(**data) for data in build_data.values()]
+            ),
+            HardwareTestStatus.objects.bulk_create(
+                [HardwareTestStatus(**data) for data in test_data.values()]
+            ),
+        )

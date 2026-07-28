@@ -1,19 +1,19 @@
-from typing import Annotated
+from typing import Optional
 
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import BaseModel, Field
 
-from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 
 
 class HardwareListingByRevisionQueryParamsDocumentationOnly(BaseModel):
-    origin: Annotated[
-        str,
-        Field(
-            default=DEFAULT_ORIGIN,
-            description=DocStrings.HARDWARE_LISTING_ORIGIN_DESCRIPTION,
-        ),
-    ]
+    testOrigin: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_LISTING_TEST_ORIGIN_DESCRIPTION,
+    )
+    origin: Optional[str] = Field(
+        default=None,
+        description=DocStrings.HARDWARE_LISTING_DEPRECATED_ORIGIN_DESCRIPTION,
+    )
     tree_name: str = Field(description=DocStrings.TREE_NAME_PATH_DESCRIPTION)
     git_repository_url: str = Field(
         description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION
@@ -25,11 +25,9 @@ class HardwareListingByRevisionQueryParamsDocumentationOnly(BaseModel):
 
 
 class HardwareListingByRevisionQueryParams(BaseModel):
-    origin: Annotated[
-        str,
-        Field(default=DEFAULT_ORIGIN),
-        BeforeValidator(lambda o: DEFAULT_ORIGIN if o is None else o),
-    ]
+    # This listing only knows about the origin of the tests, and unset means every origin,
+    # matching the listing it shares the page with
+    test_origin: Optional[str] = None
     tree_name: str
     git_repository_url: str
     git_repository_branch: str

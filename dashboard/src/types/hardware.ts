@@ -20,6 +20,24 @@ export interface HardwareListingResponse {
   hardware: HardwareListingApiItem[];
 }
 
+/** The five filters of the hardware listing, as they appear in the URL. */
+export type HardwareListingFilters = {
+  checkoutOrigin: string;
+  buildOrigin: string;
+  testOrigin: string;
+  buildLab: string;
+  testLab: string;
+};
+
+/** Values available for each filter, none of them narrowed by the others. */
+export type HardwareFiltersResponse = {
+  checkout_origins: string[];
+  build_origins: string[];
+  build_labs: string[];
+  test_origins: string[];
+  test_labs: string[];
+};
+
 export type HardwareSelectorRevision = {
   git_commit_hash: string;
   git_commit_name?: string | null;

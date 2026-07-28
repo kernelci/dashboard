@@ -4,10 +4,17 @@ import shutil
 import signal
 import time
 from datetime import datetime
-from typing import Literal, Optional, Sequence, TypedDict, Union
+from typing import (
+    Literal,
+    NamedTuple,
+    Optional,
+    Sequence,
+    TypedDict,
+    Union,
+)
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import connection, transaction
 from django.db.utils import OperationalError
 from prometheus_client import Counter, start_http_server
@@ -16,7 +23,12 @@ from psycopg.errors import DeadlockDetected
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.constants.ingester import PROMETHEUS_MULTIPROC_DIR
 from kernelCI_app.helpers.logger import out
-from kernelCI_app.management.commands.helpers.aggregation_helpers import simplify_status
+from kernelCI_app.management.commands.helpers.aggregation_helpers import (
+    BUILD_STATUS_COUNTERS,
+    TEST_STATUS_COUNTERS,
+    lab_from_misc,
+    simplify_status,
+)
 from kernelCI_app.management.commands.helpers.process_pending_helpers import (
     aggregate_tests_rollup,
     fetch_test_issues,
@@ -38,26 +50,35 @@ from kernelCI_app.models import (
 AGGREGATION_RECORDS_WRITTEN = Counter(
     "aggregation_records_written_total",
     "Total number of records written to destination tables",
-    ["table"],  # values: "tree_listing", "hardware_status", "processed_items"
+    # values: "tree_listing", "hardware_build_status", "hardware_test_status",
+    # "processed_items"
+    ["table"],
 )
 
 DEADLOCK_RETRIES_TOTAL = Counter(
     "aggregation_deadlock_retries_total",
     "Total number of deadlock retries",
-    ["table"],  # values: "tree_listing", "hardware_status"
+    ["table"],  # values: "tree_listing"
 )
 
 
-class ListingItemCount(TypedDict):
+class BuildItemCount(TypedDict):
     build_pass: int
     build_failed: int
     build_inc: int
+
+
+class TestItemCount(TypedDict):
     boot_pass: int
     boot_failed: int
     boot_inc: int
     test_pass: int
     test_failed: int
     test_inc: int
+
+
+class ListingItemCount(BuildItemCount, TestItemCount):
+    """Every counter a listing row can hold, for grains not split by build or test side."""
 
 
 class TreeListingRecord(ListingItemCount):
@@ -72,21 +93,35 @@ class TreeListingRecord(ListingItemCount):
     start_time: datetime | None
 
 
-class HardwareStatusRecord(ListingItemCount):
+# (origin, lab, platform, checkout_id) for either hardware grain
+HardwareGrainKey = tuple[str, str, str, str]
+
+
+class HardwareBuildStatusRecord(BuildItemCount):
     checkout_id: str
-    test_origin: str
+    build_origin: str
+    build_lab: str
     platform: str
     compatibles: Optional[list[str]]
     start_time: datetime
 
 
-def get_hardware_key(
-    origin: str, platform: str, checkout_id: str, entity_id: str
-) -> bytes:
-    """Generate a hash (hardware key) from origin, platform, and checkout ID."""
-    return hashlib.sha256(
-        f"{origin}|{platform}|{checkout_id}|{entity_id}".encode("utf-8")
-    ).digest()
+class HardwareTestStatusRecord(TestItemCount):
+    checkout_id: str
+    test_origin: str
+    test_lab: str
+    platform: str
+    compatibles: Optional[list[str]]
+    start_time: datetime
+
+
+def get_hardware_key(*dimensions: str) -> bytes:
+    """Generate a hash (hardware key) from the grain dimensions and the entity ID.
+
+    Both hardware grains hash their own key columns, so a build and a test that
+    share a platform and checkout never collide in ProcessedListingItems.
+    """
+    return hashlib.sha256("|".join(dimensions).encode("utf-8")).digest()
 
 
 def get_tree_listing_key(
@@ -135,21 +170,40 @@ def _init_tree_listing_record(*, checkout: Checkouts) -> TreeListingRecord:
     }
 
 
-def _init_hardware_status_record(
+def _init_hardware_build_status_record(
     checkout: Checkouts,
-    test_origin: str,
+    build_origin: str,
+    build_lab: str,
     platform: str,
     compatibles: Optional[list[str]] = None,
-) -> HardwareStatusRecord:
+) -> HardwareBuildStatusRecord:
     return {
         "checkout_id": checkout.id,
-        "test_origin": test_origin,
+        "build_origin": build_origin,
+        "build_lab": build_lab,
         "platform": platform,
         "compatibles": compatibles,
         "start_time": checkout.start_time,
         "build_pass": 0,
         "build_failed": 0,
         "build_inc": 0,
+    }
+
+
+def _init_hardware_test_status_record(
+    checkout: Checkouts,
+    test_origin: str,
+    test_lab: str,
+    platform: str,
+    compatibles: Optional[list[str]] = None,
+) -> HardwareTestStatusRecord:
+    return {
+        "checkout_id": checkout.id,
+        "test_origin": test_origin,
+        "test_lab": test_lab,
+        "platform": platform,
+        "compatibles": compatibles,
+        "start_time": checkout.start_time,
         "boot_pass": 0,
         "boot_failed": 0,
         "boot_inc": 0,
@@ -159,13 +213,22 @@ def _init_hardware_status_record(
     }
 
 
+class HardwareContext(NamedTuple):
+    test: PendingTest
+    build: Builds
+    build_lab: str
+    test_lab: str
+    test_listing_key: bytes
+    build_listing_key: bytes
+
+
 def _collect_hardware_status_contexts(
     tests_instances: Sequence[PendingTest],
     builds_by_id: dict[str, Builds],
-) -> tuple[list[tuple[PendingTest, Builds, Checkouts, bytes, bytes]], set[bytes]]:
+) -> tuple[list[HardwareContext], set[bytes]]:
     """Collect valid test contexts with their associated build and checkout."""
-    contexts = []
-    keys_to_check = set()
+    contexts: list[HardwareContext] = []
+    keys_to_check: set[bytes] = set()
 
     for test in tests_instances:
         # Hardware status only counts tests with non-null platform
@@ -178,14 +241,28 @@ def _collect_hardware_status_contexts(
             continue
 
         checkout: Checkouts = build.checkout
+        build_lab = lab_from_misc(build.misc, build.origin, "lab", "runtime")
+        # PendingTest.lab already carries misc.runtime
+        test_lab = test.lab or test.origin
 
-        test_key = get_hardware_key(
-            test.origin, test.platform, checkout.id, test.test_id
+        test_listing_key = get_hardware_key(
+            test.origin, test_lab, test.platform, checkout.id, test.test_id
         )
-        build_key = get_hardware_key(test.origin, test.platform, checkout.id, build.id)
-        contexts.append((test, build, checkout, test_key, build_key))
-        keys_to_check.add(test_key)
-        keys_to_check.add(build_key)
+        build_listing_key = get_hardware_key(
+            build.origin, build_lab, test.platform, checkout.id, build.id
+        )
+        contexts.append(
+            HardwareContext(
+                test=test,
+                build=build,
+                build_lab=build_lab,
+                test_lab=test_lab,
+                test_listing_key=test_listing_key,
+                build_listing_key=build_listing_key,
+            )
+        )
+        keys_to_check.add(test_listing_key)
+        keys_to_check.add(build_listing_key)
 
     return contexts, keys_to_check
 
@@ -199,30 +276,30 @@ def _check_item_was_processed(
     *,
     existing_processed: set[ProcessedListingItems],
     new_processed_entries: set[ProcessedListingItems],
-    status_record: ListingItemCount,
     listing_item_key: bytes,
     item_checkout_id: str,
     item_status: Optional[SimplifiedStatusChoices],
-    decrement_status_type: Literal["build_inc", "boot_inc", "test_inc"],
-) -> bool:
+) -> tuple[bool, int]:
     """
     Checks if an item is already processed in existing or new processed entries.
-    Returns True if already processed, False otherwise.
+
+    Returns whether it was already processed and, when a previous pass counted it as
+    inconclusive, how many times the caller must undo that inconclusive count.
 
     Item means either PendingTest or Builds/PendingBuilds.
     """
+    decrements = 0
+
     for existing in existing_processed:
         if (
             existing.listing_item_key == listing_item_key
             and existing.checkout_id == item_checkout_id
         ):
-            if existing.status is not None:
-                return True
-            if existing.status is None and item_status is None:
-                return True
+            if existing.status is not None or item_status is None:
+                return True, 0
             # If existing status is null and new status is not null,
             # we will update this entry as well as the count
-            status_record[decrement_status_type] -= 1
+            decrements += 1
             break
 
     for new_entry in new_processed_entries:
@@ -230,26 +307,24 @@ def _check_item_was_processed(
             new_entry.listing_item_key == listing_item_key
             and new_entry.checkout_id == item_checkout_id
         ):
-            if new_entry.status is not None:
-                return True
-            if new_entry.status is None and item_status is None:
-                return True
+            if new_entry.status is not None or item_status is None:
+                return True, 0
             # It can happen to exist both in existing_processed and new_processed_entries
             # in which case we do double the decrement, because both previous entries incremented it
-            status_record[decrement_status_type] -= 1
+            decrements += 1
             new_processed_entries.remove(
                 new_entry
             )  # no need to process the old entry anymore
             break
 
-    return False
+    return False, decrements
 
 
 def _process_test_status(
     test: PendingTest,
     test_listing_key: bytes,
     checkout_id: str,
-    status_record: ListingItemCount,
+    status_record: TestItemCount,
     existing_processed: set[ProcessedListingItems],
     new_processed_entries: set[ProcessedListingItems],
 ) -> bool:
@@ -262,15 +337,14 @@ def _process_test_status(
         listing_item_key=test_listing_key, checkout_id=checkout_id, status=test.status
     )
 
-    if _check_item_was_processed(
+    was_processed, decrements = _check_item_was_processed(
         existing_processed=existing_processed,
         new_processed_entries=new_processed_entries,
-        status_record=status_record,
         listing_item_key=test_listing_key,
         item_checkout_id=checkout_id,
         item_status=test.status,
-        decrement_status_type="boot_inc" if test.is_boot else "test_inc",
-    ):
+    )
+    if was_processed:
         return False
 
     t_pass, t_fail, t_inc = map_simplified_status_to_count(test.status)
@@ -278,11 +352,11 @@ def _process_test_status(
     if test.is_boot:
         status_record["boot_pass"] += t_pass
         status_record["boot_failed"] += t_fail
-        status_record["boot_inc"] += t_inc
+        status_record["boot_inc"] += t_inc - decrements
     else:
         status_record["test_pass"] += t_pass
         status_record["test_failed"] += t_fail
-        status_record["test_inc"] += t_inc
+        status_record["test_inc"] += t_inc - decrements
 
     new_processed_entries.add(to_process)
 
@@ -294,7 +368,7 @@ def _process_build_status(
     build_checkout_id: str,
     build_status: Optional[SimplifiedStatusChoices],
     build_listing_key: bytes,
-    status_record: ListingItemCount,
+    status_record: BuildItemCount,
     existing_processed: set[ProcessedListingItems],
     new_processed_entries: set[ProcessedListingItems],
 ) -> None:
@@ -312,22 +386,21 @@ def _process_build_status(
         status=build_status,
     )
 
-    if _check_item_was_processed(
+    was_processed, decrements = _check_item_was_processed(
         existing_processed=existing_processed,
         new_processed_entries=new_processed_entries,
-        status_record=status_record,
         listing_item_key=build_listing_key,
         item_checkout_id=build_checkout_id,
         item_status=build_status,
-        decrement_status_type="build_inc",
-    ):
+    )
+    if was_processed:
         return
 
     b_pass, b_fail, b_inc = map_simplified_status_to_count(build_status)
 
     status_record["build_pass"] += b_pass
     status_record["build_failed"] += b_fail
-    status_record["build_inc"] += b_inc
+    status_record["build_inc"] += b_inc - decrements
 
     new_processed_entries.add(to_process)
 
@@ -454,18 +527,24 @@ def aggregate_hardware_status(
     tests_instances: Sequence[PendingTest],
     test_builds_by_id: dict[str, Builds],
 ) -> tuple[
-    dict[tuple[str, str, str], HardwareStatusRecord], set[ProcessedListingItems]
+    dict[HardwareGrainKey, HardwareBuildStatusRecord],
+    dict[HardwareGrainKey, HardwareTestStatusRecord],
+    set[ProcessedListingItems],
 ]:
     """
     Aggregate hardware status from pending tests, builds, and checkouts.
 
-    Returns a dictionary of hardware status records
-    keyed by `(test_origin, platform, checkout_id)` (for updating HardwareStatus table)
-    and a set of new processed entries (for updating the ProcessedListingItems table).
+    Returns build records keyed by `(build_origin, build_lab, platform, checkout_id)`,
+    test records keyed by `(test_origin, test_lab, platform, checkout_id)`, and a set of
+    new processed entries (for updating the ProcessedListingItems table).
+
+    The grains are separate so that build counters stay independent of the test filters,
+    and so a build reached from several test labs is still counted once.
 
     This function does not update the database, only prepares the data for it.
     """
-    hardware_status_data: dict[tuple[str, str, str], HardwareStatusRecord] = {}
+    build_status_data: dict[HardwareGrainKey, HardwareBuildStatusRecord] = {}
+    test_status_data: dict[HardwareGrainKey, HardwareTestStatusRecord] = {}
     new_processed_entries: set[ProcessedListingItems] = set()
 
     contexts, keys_to_check = _collect_hardware_status_contexts(
@@ -473,48 +552,72 @@ def aggregate_hardware_status(
     )
 
     if not contexts:
-        return hardware_status_data, new_processed_entries
+        return build_status_data, test_status_data, new_processed_entries
 
     existing_processed = _get_existing_processed(keys_to_check)
 
-    for test, build, checkout, test_h_key, build_h_key in contexts:
-        record_key = (test.origin, test.platform, checkout.id)
+    for context in contexts:
+        test, build = context.test, context.build
+        checkout = build.checkout
+        test_record_key = (test.origin, context.test_lab, test.platform, checkout.id)
 
         try:
-            status_record = hardware_status_data[record_key]
+            test_record = test_status_data[test_record_key]
         except KeyError:
-            status_record = _init_hardware_status_record(
-                checkout, test.origin, test.platform, test.compatible
+            test_record = _init_hardware_test_status_record(
+                checkout, test.origin, context.test_lab, test.platform, test.compatible
             )
-            hardware_status_data[record_key] = status_record
+            test_status_data[test_record_key] = test_record
 
-        if _process_test_status(
+        if not _process_test_status(
             test,
-            test_h_key,
+            context.test_listing_key,
             checkout.id,
-            status_record,
+            test_record,
             existing_processed,
             new_processed_entries,
         ):
-            _process_build_status(
-                build_id=build.id,
-                build_checkout_id=checkout.id,
-                build_status=simplify_status(build.status),
-                build_listing_key=build_h_key,
-                status_record=status_record,
-                existing_processed=existing_processed,
-                new_processed_entries=new_processed_entries,
-            )
+            continue
 
-    return hardware_status_data, new_processed_entries
+        build_record_key = (
+            build.origin,
+            context.build_lab,
+            test.platform,
+            checkout.id,
+        )
+
+        try:
+            build_record = build_status_data[build_record_key]
+        except KeyError:
+            build_record = _init_hardware_build_status_record(
+                checkout,
+                build.origin,
+                context.build_lab,
+                test.platform,
+                test.compatible,
+            )
+            build_status_data[build_record_key] = build_record
+
+        _process_build_status(
+            build_id=build.id,
+            build_checkout_id=checkout.id,
+            build_status=simplify_status(build.status),
+            build_listing_key=context.build_listing_key,
+            status_record=build_record,
+            existing_processed=existing_processed,
+            new_processed_entries=new_processed_entries,
+        )
+
+    return build_status_data, test_status_data, new_processed_entries
 
 
 class Command(BaseCommand):
-    # WARNING: This command is designed for single-worker execution only.
-    # Running multiple concurrent workers is not safe: select_for_update(skip_locked=True)
-    # releases row locks when Transaction 1 commits, but pending rows are not deleted until
-    # Transaction 2. In that window a second worker can claim and process the same rows,
-    # causing double-counting in tree_listing aggregations.
+    # WARNING: This command is designed for single-worker execution only, enforced by
+    # _acquire_singleton_lock. Running multiple concurrent workers is not safe:
+    # select_for_update(skip_locked=True) releases row locks when Transaction 1 commits,
+    # but pending rows are not deleted until Transaction 2. In that window a second worker
+    # can claim and process the same rows, double-counting in tree_listing and inflating
+    # the build counters of hardware_build_status.
     help = """
         Process pending tests for hardware status aggregation,
         checking corresponding builds and checkouts in the database.
@@ -546,10 +649,35 @@ class Command(BaseCommand):
             help="Sleep interval in seconds when running in loop mode",
         )
 
+    def _acquire_singleton_lock(self) -> None:
+        """Refuse to start when another worker holds the lock.
+
+        Concurrency silently inflates the aggregate counters, so failing loudly here is
+        the only signal an operator gets. The lock is session scoped: Postgres drops it
+        when this connection ends, including if Django transparently reconnects.
+        """
+        # Advisory locks are keyed by integer, so hash the command name into one.
+        # Signed, because the key is a Postgres bigint.
+        lock_key = int.from_bytes(
+            hashlib.sha256(b"process_pending_aggregations").digest()[:8],
+            "big",
+            signed=True,
+        )
+
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT pg_try_advisory_lock(%s)", [lock_key])
+            if not cursor.fetchone()[0]:
+                raise CommandError(
+                    "Another process_pending_aggregations worker is already running. "
+                    "Concurrent workers double-count builds, so this one will not start."
+                )
+
     def handle(self, *args, **options):
         batch_size = options["batch_size"]
         loop = options["loop"]
         interval = options["interval"]
+
+        self._acquire_singleton_lock()
 
         metrics_port = int(os.environ.get("PROMETHEUS_METRICS_PORT", 8001))
         if PROMETHEUS_MULTIPROC_DIR:
@@ -693,58 +821,47 @@ class Command(BaseCommand):
         out(f"Inserted {len(values)} tree_listing records in {time.time() - t0:.3f}s")
         AGGREGATION_RECORDS_WRITTEN.labels(table="tree_listing").inc(len(values))
 
-    def _process_hardware_status(
+    def _process_hardware_grain(
         self,
-        hardware_status_data: dict[tuple[str, str, str], HardwareStatusRecord],
+        *,
+        grain: Literal["build", "test"],
+        counters: tuple[str, ...],
+        # Left untyped: columns are read by runtime key, which TypedDicts disallow
+        status_data: dict,
     ) -> None:
-        if hardware_status_data:
-            values = [
-                (
-                    data["checkout_id"],
-                    data["test_origin"],
-                    data["platform"],
-                    data["compatibles"],
-                    data["start_time"],
-                    data["build_pass"],
-                    data["build_failed"],
-                    data["build_inc"],
-                    data["boot_pass"],
-                    data["boot_failed"],
-                    data["boot_inc"],
-                    data["test_pass"],
-                    data["test_failed"],
-                    data["test_inc"],
-                )
-                for data in hardware_status_data.values()
-            ]
+        """Upsert one hardware grain, summing counters onto any existing row."""
+        if not status_data:
+            return
 
-            t0 = time.time()
-            with connection.cursor() as cursor:
-                cursor.executemany(
-                    """
-                    INSERT INTO hardware_status (
-                        checkout_id, test_origin, platform, compatibles, start_time,
-                        build_pass, build_failed, build_inc,
-                        boot_pass, boot_failed, boot_inc,
-                        test_pass, test_failed, test_inc
-                    )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (test_origin, platform, checkout_id) DO UPDATE SET
-                    build_pass = hardware_status.build_pass + EXCLUDED.build_pass,
-                    build_failed = hardware_status.build_failed + EXCLUDED.build_failed,
-                    build_inc = hardware_status.build_inc + EXCLUDED.build_inc,
-                    boot_pass = hardware_status.boot_pass + EXCLUDED.boot_pass,
-                    boot_failed = hardware_status.boot_failed + EXCLUDED.boot_failed,
-                    boot_inc = hardware_status.boot_inc + EXCLUDED.boot_inc,
-                    test_pass = hardware_status.test_pass + EXCLUDED.test_pass,
-                    test_failed = hardware_status.test_failed + EXCLUDED.test_failed,
-                    test_inc = hardware_status.test_inc + EXCLUDED.test_inc
-                    """,
-                    values,
-                )
-            out(
-                f"Inserted {len(values)} hardware_status records in {time.time() - t0:.3f}s"
+        table = f"hardware_{grain}_status"
+        origin_field, lab_field = f"{grain}_origin", f"{grain}_lab"
+        columns = (
+            "checkout_id",
+            origin_field,
+            lab_field,
+            "platform",
+            "compatibles",
+            "start_time",
+            *counters,
+        )
+        values = [
+            tuple(data[column] for column in columns) for data in status_data.values()
+        ]
+
+        t0 = time.time()
+        with connection.cursor() as cursor:
+            cursor.executemany(
+                f"""
+                INSERT INTO {table} ({", ".join(columns)})
+                VALUES ({", ".join(["%s"] * len(columns))})
+                ON CONFLICT ({origin_field}, {lab_field}, platform, checkout_id)
+                DO UPDATE SET
+                {", ".join(f"{c} = {table}.{c} + EXCLUDED.{c}" for c in counters)}
+                """,
+                values,
             )
+        out(f"Inserted {len(values)} {table} records in {time.time() - t0:.3f}s")
+        AGGREGATION_RECORDS_WRITTEN.labels(table=table).inc(len(values))
 
     def _get_ready_builds(
         self, *, last_processed_build_id: Optional[str], batch_size: int
@@ -1053,10 +1170,19 @@ class Command(BaseCommand):
         ready_tests: Sequence[PendingTest],
         test_builds_by_id: dict[str, Builds],
     ) -> None:
-        hardware_status_data, new_processed_entries_hardware = (
+        build_status_data, test_status_data, new_processed_entries_hardware = (
             aggregate_hardware_status(ready_tests, test_builds_by_id)
         )
-        self._process_hardware_status(hardware_status_data)
+        self._process_hardware_grain(
+            grain="build",
+            counters=BUILD_STATUS_COUNTERS,
+            status_data=build_status_data,
+        )
+        self._process_hardware_grain(
+            grain="test",
+            counters=TEST_STATUS_COUNTERS,
+            status_data=test_status_data,
+        )
         self._process_new_processed_entries(new_processed_entries_hardware)
 
     def _process_tree_listing_batch(

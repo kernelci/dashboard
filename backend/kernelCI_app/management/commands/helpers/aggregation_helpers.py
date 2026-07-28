@@ -31,6 +31,28 @@ def simplify_status(status: Optional[StatusChoices]) -> SimplifiedStatusChoices:
         return SimplifiedStatusChoices.INCONCLUSIVE
 
 
+BUILD_STATUS_COUNTERS = ("build_pass", "build_failed", "build_inc")
+TEST_STATUS_COUNTERS = (
+    "boot_pass",
+    "boot_failed",
+    "boot_inc",
+    "test_pass",
+    "test_failed",
+    "test_inc",
+)
+
+
+def lab_from_misc(misc: Optional[dict], origin: str, *keys: str) -> str:
+    """Virtual lab, taken from the first of `keys` present in misc, falling back to the
+    origin that submitted the item. Never null, so it is safe as an aggregate key.
+
+    Builds prefer their own lab over the runtime they were built in. Tests only carry
+    misc.runtime, and the ones missing it are not recoverable from misc.lab.
+    """
+    misc = misc or {}
+    return next((misc[key] for key in keys if misc.get(key)), origin)
+
+
 def convert_build(b: Builds) -> PendingBuilds:
     return PendingBuilds(
         build_id=b.id,

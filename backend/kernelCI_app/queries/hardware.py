@@ -161,15 +161,16 @@ def get_hardware_selectors(origin: str) -> list[dict]:
 
 def get_hardware_listing_data_by_revision(
     *,
-    origin: str,
+    test_origin: Optional[str],
     tree_name: str,
     git_repository_url: str,
     git_repository_branch: str,
     git_commit_hash: str,
 ) -> list[dict]:
     count_clauses = _get_hardware_listing_count_clauses()
+    origin_clause = "AND tests.origin = %(test_origin)s" if test_origin else ""
     params = {
-        "origin": origin,
+        "test_origin": test_origin,
         "tree_name": tree_name,
         "git_repository_url": git_repository_url,
         "git_repository_branch": git_repository_branch,
@@ -195,7 +196,7 @@ def get_hardware_listing_data_by_revision(
                 AND c.git_repository_url = %(git_repository_url)s
                 AND c.git_repository_branch = %(git_repository_branch)s
                 AND c.git_commit_hash = %(git_commit_hash)s
-                AND tests.origin = %(origin)s
+                {origin_clause}
                 AND tests.environment_misc ->> 'platform' IS NOT NULL
         )
         SELECT
@@ -297,100 +298,206 @@ def get_hardware_listing_data_bulk(
         return dict_fetchall(cursor)
 
 
-def get_hardware_listing_data_from_status_table(
+def _get_scoped_checkouts_clause(
+    *, commits_list: Optional[list[str]], checkout_origin: Optional[str]
+) -> str:
+    """Checkout scope shared by both hardware grains.
+
+    Without a commits list the listing follows each tree's head checkout, taken from
+    latest_checkout, which is why the window is applied to the checkout start time
+    rather than to the test start time.
+    """
+    if commits_list:
+        origin_clause = "AND C.origin = %(checkout_origin)s" if checkout_origin else ""
+        return f"""
+            SELECT C.id AS checkout_id
+            FROM checkouts C
+            WHERE C.start_time >= %(start_date)s
+                AND C.start_time <= %(end_date)s
+                AND (
+                    C.git_commit_hash = ANY(%(commits_list)s)
+                    OR (
+                        C.git_commit_tags IS NOT NULL
+                        AND C.git_commit_tags && %(commits_list)s::text[]
+                    )
+                )
+                {origin_clause}
+        """
+
+    origin_clause = "AND LC.origin = %(checkout_origin)s" if checkout_origin else ""
+    return f"""
+        SELECT LC.checkout_id
+        FROM latest_checkout LC
+        WHERE LC.start_time >= %(start_date)s
+            AND LC.start_time <= %(end_date)s
+            {origin_clause}
+    """
+
+
+def get_hardware_listing_data(
+    *,
     start_date: datetime,
     end_date: datetime,
-    origin: str,
+    checkout_origin: Optional[str] = None,
+    build_origin: Optional[str] = None,
+    build_lab: Optional[str] = None,
+    test_origin: Optional[str] = None,
+    test_lab: Optional[str] = None,
     commits_list: Optional[list[str]] = None,
 ) -> list[tuple]:
     """
-    Retrieves hardware listing data from the HardwareStatus denormalized table.
-    Groups by platform and compatibles, aggregating status counts.
+    Retrieves hardware listing data from the two hardware status aggregates.
+
+    Counters are column-scoped: checkout origin narrows both grains, the build filters
+    narrow only the build counters and the test filters only the boot and test counters.
+    A platform that survives a test filter therefore still reports every build it is
+    attributed, not only the builds of the matching tests.
+
+    A filtered side is required for the platform to be listed at all, so filtering by a
+    test lab drops the platforms that lab never tested instead of listing them with
+    zeroed test counters.
     """
-    params = {
+    params: dict = {
         "start_date": start_date,
         "end_date": end_date,
-        "origin": origin,
+        **{
+            name: value
+            for name, value in (
+                ("checkout_origin", checkout_origin),
+                ("build_origin", build_origin),
+                ("build_lab", build_lab),
+                ("test_origin", test_origin),
+                ("test_lab", test_lab),
+                ("commits_list", commits_list),
+            )
+            if value
+        },
     }
 
-    if commits_list:
-        params["commits_list"] = commits_list
-        query = """
+    build_filters = "".join(
+        clause
+        for value, clause in (
+            (build_origin, " AND build_origin = %(build_origin)s"),
+            (build_lab, " AND build_lab = %(build_lab)s"),
+        )
+        if value
+    )
+    test_filters = "".join(
+        clause
+        for value, clause in (
+            (test_origin, " AND test_origin = %(test_origin)s"),
+            (test_lab, " AND test_lab = %(test_lab)s"),
+        )
+        if value
+    )
+    row_guards = "".join(
+        clause
+        for filters, clause in (
+            (build_filters, " AND B.platform IS NOT NULL"),
+            (test_filters, " AND T.platform IS NOT NULL"),
+        )
+        if filters
+    )
+
+    query = f"""
+        WITH scoped_checkouts AS (
+            {
+        _get_scoped_checkouts_clause(
+            commits_list=commits_list, checkout_origin=checkout_origin
+        )
+    }
+        ),
+        build_counts AS (
+            SELECT
+                platform,
+                compatibles,
+                SUM(build_pass) AS build_pass,
+                SUM(build_failed) AS build_fail,
+                SUM(build_inc) AS build_null
+            FROM hardware_build_status
+            INNER JOIN scoped_checkouts USING (checkout_id)
+            WHERE TRUE {build_filters}
+            GROUP BY platform, compatibles
+        ),
+        test_counts AS (
+            SELECT
+                platform,
+                compatibles,
+                SUM(boot_pass) AS boot_pass,
+                SUM(boot_failed) AS boot_fail,
+                SUM(boot_inc) AS boot_null,
+                SUM(test_pass) AS test_pass,
+                SUM(test_failed) AS test_fail,
+                SUM(test_inc) AS test_null
+            FROM hardware_test_status
+            INNER JOIN scoped_checkouts USING (checkout_id)
+            WHERE TRUE {test_filters}
+            GROUP BY platform, compatibles
+        )
         SELECT
-            platform,
-            compatibles AS hardware,
-            SUM(build_pass) AS build_pass,
-            SUM(build_failed) AS build_fail,
-            SUM(build_inc) AS build_null,
-            SUM(boot_pass) AS boot_pass,
-            SUM(boot_failed) AS boot_fail,
-            SUM(boot_inc) AS boot_null,
-            SUM(test_pass) AS test_pass,
-            SUM(test_failed) AS test_fail,
-            SUM(test_inc) AS test_null
-        FROM
-            hardware_status
-        INNER JOIN
-            checkouts C
-            ON
-                hardware_status.checkout_id = C.id
-            AND
-                C.start_time >= %(start_date)s
-            AND
-                C.start_time <= %(end_date)s
-            AND (
-                C.git_commit_hash = ANY(%(commits_list)s)
-                OR (
-                    C.git_commit_tags IS NOT NULL
-                    AND C.git_commit_tags && %(commits_list)s::text[]
-                )
-            )
-        WHERE
-            hardware_status.test_origin = %(origin)s
-        GROUP BY
-            platform,
-            compatibles
-        ORDER BY
-            platform,
-            compatibles
-    """
-    else:
-        query = """
-        SELECT
-            platform,
-            compatibles AS hardware,
-            SUM(build_pass) AS build_pass,
-            SUM(build_failed) AS build_fail,
-            SUM(build_inc) AS build_null,
-            SUM(boot_pass) AS boot_pass,
-            SUM(boot_failed) AS boot_fail,
-            SUM(boot_inc) AS boot_null,
-            SUM(test_pass) AS test_pass,
-            SUM(test_failed) AS test_fail,
-            SUM(test_inc) AS test_null
-        FROM
-            hardware_status
-        INNER JOIN
-            latest_checkout
-            ON
-                hardware_status.checkout_id = latest_checkout.checkout_id
-            AND
-                latest_checkout.start_time >= %(start_date)s
-            AND
-                latest_checkout.start_time <= %(end_date)s
-        WHERE
-            hardware_status.test_origin = %(origin)s
-        GROUP BY
-            platform,
-            compatibles
-        ORDER BY
-            platform,
-            compatibles
+            COALESCE(T.platform, B.platform) AS platform,
+            COALESCE(T.compatibles, B.compatibles) AS hardware,
+            COALESCE(B.build_pass, 0),
+            COALESCE(B.build_fail, 0),
+            COALESCE(B.build_null, 0),
+            COALESCE(T.boot_pass, 0),
+            COALESCE(T.boot_fail, 0),
+            COALESCE(T.boot_null, 0),
+            COALESCE(T.test_pass, 0),
+            COALESCE(T.test_fail, 0),
+            COALESCE(T.test_null, 0)
+        FROM test_counts T
+        FULL OUTER JOIN build_counts B
+            ON T.platform = B.platform
+            AND T.compatibles IS NOT DISTINCT FROM B.compatibles
+        WHERE TRUE {row_guards}
+        ORDER BY platform, hardware
     """
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         return cursor.fetchall()
+
+
+def get_hardware_filters(*, start_date: datetime, end_date: datetime) -> dict:
+    """Retrieves the values available for each hardware listing filter in a window.
+
+    Each list is gathered independently so that choosing one filter never removes
+    options from another. Reading them from the aggregates keeps this cheap enough to
+    answer per request, which the raw tables were not.
+    """
+    query = """
+        SELECT
+            (
+                SELECT COALESCE(ARRAY_AGG(DISTINCT origin ORDER BY origin), '{}')
+                FROM latest_checkout
+                WHERE start_time >= %(start_date)s AND start_time <= %(end_date)s
+            ) AS checkout_origins,
+            (
+                SELECT COALESCE(ARRAY_AGG(DISTINCT build_origin ORDER BY build_origin), '{}')
+                FROM hardware_build_status
+                WHERE start_time >= %(start_date)s AND start_time <= %(end_date)s
+            ) AS build_origins,
+            (
+                SELECT COALESCE(ARRAY_AGG(DISTINCT build_lab ORDER BY build_lab), '{}')
+                FROM hardware_build_status
+                WHERE start_time >= %(start_date)s AND start_time <= %(end_date)s
+            ) AS build_labs,
+            (
+                SELECT COALESCE(ARRAY_AGG(DISTINCT test_origin ORDER BY test_origin), '{}')
+                FROM hardware_test_status
+                WHERE start_time >= %(start_date)s AND start_time <= %(end_date)s
+            ) AS test_origins,
+            (
+                SELECT COALESCE(ARRAY_AGG(DISTINCT test_lab ORDER BY test_lab), '{}')
+                FROM hardware_test_status
+                WHERE start_time >= %(start_date)s AND start_time <= %(end_date)s
+            ) AS test_labs
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, {"start_date": start_date, "end_date": end_date})
+        return dict_fetchall(cursor)[0]
 
 
 def get_hardware_details_data(

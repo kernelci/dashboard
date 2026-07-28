@@ -78,6 +78,33 @@ paths:
       operationId: hardware_retrieve
       parameters:
       - in: query
+        name: buildLab
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Buildlab
+        description: Build lab, any when unset
+      - in: query
+        name: buildOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Buildorigin
+        description: Build origin, any when unset
+      - in: query
+        name: checkoutOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Checkoutorigin
+        description: Checkout origin, any when unset
+      - in: query
         name: commitsList
         schema:
           anyOf:
@@ -97,10 +124,12 @@ paths:
       - in: query
         name: origin
         schema:
-          default: maestro
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Origin
-          type: string
-        description: Origin of the hardware
+        description: Deprecated alias for testOrigin, kept for existing links
       - in: query
         name: startTimestampInSeconds
         schema:
@@ -108,6 +137,24 @@ paths:
           type: string
         description: Interval start timestamp in seconds for the results
         required: true
+      - in: query
+        name: testLab
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testlab
+        description: Test lab, any when unset
+      - in: query
+        name: testOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testorigin
+        description: Test origin, any when unset
       tags:
       - hardware
       security:
@@ -149,10 +196,21 @@ paths:
       - in: query
         name: origin
         schema:
-          default: maestro
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
           title: Origin
-          type: string
-        description: Origin of the hardware
+        description: Deprecated alias for testOrigin, kept for existing links
+      - in: query
+        name: testOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testorigin
+        description: Test origin, any when unset
       - in: query
         name: tree_name
         schema:
@@ -398,6 +456,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HardwareDetailsTestsResponse'
+          description: ''
+  /api/hardware/filters/:
+    get:
+      operationId: hardware_filters_retrieve
+      description: Values available for each hardware listing filter, none narrowed
+        by the others
+      parameters:
+      - in: query
+        name: endTimestampInSeconds
+        schema:
+          title: Endtimestampinseconds
+          type: string
+        description: Interval end timestamp in seconds for the results
+        required: true
+      - in: query
+        name: startTimestampInSeconds
+        schema:
+          title: Starttimestampinseconds
+          type: string
+        description: Interval start timestamp in seconds for the results
+        required: true
+      tags:
+      - hardware
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareFiltersResponse'
           description: ''
   /api/hardware/selectors/:
     get:
@@ -2791,6 +2882,42 @@ components:
       required:
       - tests
       title: HardwareDetailsTestsResponse
+      type: object
+    HardwareFiltersResponse:
+      description: Values available for each hardware listing filter.
+      properties:
+        checkout_origins:
+          items:
+            type: string
+          title: Checkout Origins
+          type: array
+        build_origins:
+          items:
+            type: string
+          title: Build Origins
+          type: array
+        build_labs:
+          items:
+            type: string
+          title: Build Labs
+          type: array
+        test_origins:
+          items:
+            type: string
+          title: Test Origins
+          type: array
+        test_labs:
+          items:
+            type: string
+          title: Test Labs
+          type: array
+      required:
+      - checkout_origins
+      - build_origins
+      - build_labs
+      - test_origins
+      - test_labs
+      title: HardwareFiltersResponse
       type: object
     HardwareItem:
       properties:

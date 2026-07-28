@@ -130,6 +130,7 @@ const TopBar = (): JSX.Element => {
     return {
       firstUrlLocation,
       isTreeListing: isTreeListing,
+      isHardwareListing: isHardwareListing,
       isHardwarePage: cleanFullPath.includes('hardware'),
       isListingPage: isListingPage,
     };
@@ -152,7 +153,10 @@ const TopBar = (): JSX.Element => {
             <span className="mr-2 text-2xl sm:mr-10">
               <TitleName basePath={routeInfo.firstUrlLocation} />
             </span>
-            {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
+            {/* The hardware listing replaced this single origin with its own five
+                filters, but hardware details still browses by one origin */}
+            {(routeInfo.isTreeListing ||
+              (routeInfo.isHardwarePage && !routeInfo.isHardwareListing)) && (
               <OriginSelect isHardwarePath={routeInfo.isHardwarePage} />
             )}
             <span className="ml-0 flex w-full px-6 lg:ml-14">

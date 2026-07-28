@@ -62,7 +62,7 @@ python manage.py prune_db --older-than "30 days" --skip-issue-protection --yes
 The command only touches `checkouts`, `builds`, and `tests`. Related tables are left as-is, including:
 
 - `incidents` rows themselves (only used to decide which builds/tests/checkouts to keep)
-- `hardware_status`, `latest_checkout`, `tree_tests_rollup` (reference checkouts)
+- `hardware_build_status`, `hardware_test_status`, `latest_checkout`, `tree_tests_rollup` (reference checkouts)
 - `pending_build`, `pending_test` (reference builds)
 
 If those tables must stay consistent, plan separate cleanup or accept stale references until another process removes them.

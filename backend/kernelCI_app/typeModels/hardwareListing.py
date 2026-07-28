@@ -3,7 +3,6 @@ from typing import Annotated, Optional, Union
 
 from pydantic import BaseModel, BeforeValidator, Field
 
-from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonListing import ListingStatusCount
@@ -38,6 +37,21 @@ class HardwareListingResponse(BaseModel):
     hardware: list[HardwareListingItem]
 
 
+class HardwareFiltersResponse(BaseModel):
+    """Values available for each hardware listing filter."""
+
+    checkout_origins: list[str]
+    build_origins: list[str]
+    build_labs: list[str]
+    test_origins: list[str]
+    test_labs: list[str]
+
+
+class HardwareFiltersQueryParams(BaseModel):
+    start_date: datetime
+    end_date: datetime
+
+
 class HardwareListingByRevisionResponse(BaseModel):
     hardware: list[HardwareItem]
 
@@ -47,10 +61,10 @@ class HardwareListingByRevisionResponse(BaseModel):
 # TODO Remove timestamp from the api and this model
 class HardwareQueryParamsDocumentationOnly(BaseModel):
     origin: Annotated[
-        str,
+        Optional[str],
         Field(
-            default=DEFAULT_ORIGIN,
-            description=DocStrings.HARDWARE_LISTING_ORIGIN_DESCRIPTION,
+            default=None,
+            description=DocStrings.HARDWARE_LISTING_DEPRECATED_ORIGIN_DESCRIPTION,
         ),
     ]
     startTimestampInSeconds: str = Field(  # noqa: N815
@@ -63,17 +77,48 @@ class HardwareQueryParamsDocumentationOnly(BaseModel):
         default=None,
         description=DocStrings.HARDWARE_LISTING_COMMITS_LIST_DESCRIPTION,
     )
+    checkoutOrigin: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_LISTING_CHECKOUT_ORIGIN_DESCRIPTION,
+    )
+    buildOrigin: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_LISTING_BUILD_ORIGIN_DESCRIPTION,
+    )
+    testOrigin: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_LISTING_TEST_ORIGIN_DESCRIPTION,
+    )
+    buildLab: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_LISTING_BUILD_LAB_DESCRIPTION,
+    )
+    testLab: Optional[str] = Field(  # noqa: N815
+        default=None,
+        description=DocStrings.HARDWARE_LISTING_TEST_LAB_DESCRIPTION,
+    )
+
+
+class HardwareFiltersQueryParamsDocumentationOnly(BaseModel):
+    startTimestampInSeconds: str = Field(  # noqa: N815
+        description=DocStrings.DEFAULT_START_TS_DESCRIPTION
+    )
+    endTimestampInSeconds: str = Field(  # noqa: N815
+        description=DocStrings.DEFAULT_END_TS_DESCRIPTION
+    )
 
 
 class HardwareQueryParams(BaseModel):
-    origin: Annotated[
-        str,
-        Field(default=DEFAULT_ORIGIN),
-        BeforeValidator(lambda o: DEFAULT_ORIGIN if o is None else o),
-    ]
     start_date: datetime
     end_date: datetime
     commits_list: Annotated[
         Optional[list[str]],
         BeforeValidator(_normalize_commits_list),
     ] = Field(default=None)
+    # All five filters are optional and unset means unfiltered. Callers choose their own
+    # defaults, so that a user can ask for every test origin instead of just the default one.
+    checkout_origin: Optional[str] = None
+    build_origin: Optional[str] = None
+    build_lab: Optional[str] = None
+    test_origin: Optional[str] = None
+    test_lab: Optional[str] = None

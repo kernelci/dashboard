@@ -1,7 +1,8 @@
 """
-Management command to delete unused entries from hardware_status table.
+Management command to delete unused entries from the hardware status tables.
 
-Removes HardwareStatus entries that have no corresponding checkout_id in the LatestCheckout table.
+Removes hardware build/test status and processed listing entries that have no
+corresponding checkout_id in the LatestCheckout table.
 """
 
 import logging
@@ -13,14 +14,19 @@ from kernelCI_app.management.commands.helpers.healthcheck import (
     MONITORING_ID_PARAM_HELP_TEXT,
     run_with_healthcheck_monitoring,
 )
-from kernelCI_app.models import HardwareStatus, LatestCheckout, ProcessedListingItems
+from kernelCI_app.models import (
+    HardwareBuildStatus,
+    HardwareTestStatus,
+    LatestCheckout,
+    ProcessedListingItems,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
     help = (
-        "Delete HardwareStatus entries with no corresponding checkout_id "
+        "Delete hardware status entries with no corresponding checkout_id "
         "in the LatestCheckout table"
     )
 
@@ -50,6 +56,34 @@ class Command(BaseCommand):
             action=lambda: self._run_action(options),
         )
 
+    # Each table is pruned by the field its delete batches are keyed on
+    ORPHAN_TARGETS = (
+        (HardwareBuildStatus, "checkout_id"),
+        (HardwareTestStatus, "checkout_id"),
+        (ProcessedListingItems, "listing_item_key"),
+    )
+
+    def _delete_orphans(
+        self, *, model, batch_field: str, valid_checkout_ids: set[str], batch_size: int
+    ) -> int:
+        table = model._meta.db_table
+        orphans = model.objects.exclude(checkout_id__in=valid_checkout_ids).values_list(
+            batch_field, flat=True
+        )
+        total = orphans.count()
+        if total == 0:
+            return 0
+
+        deleted = 0
+        while True:
+            batch = list(orphans[:batch_size])
+            if not batch:
+                break
+            deleted += model.objects.filter(**{f"{batch_field}__in": batch}).delete()[0]
+            self.stdout.write(f"Deleted {table} entries (total: {deleted}/{total})")
+
+        return deleted
+
     def _run_action(self, options):
         dry_run = options["dry_run"]
         batch_size = options["batch_size"]
@@ -59,83 +93,31 @@ class Command(BaseCommand):
                 LatestCheckout.objects.values_list("checkout_id", flat=True)
             )
 
-            orphaned_hardware_entries = HardwareStatus.objects.exclude(
-                checkout_id__in=valid_checkout_ids
-            ).values_list("checkout_id", flat=True)
-            orphaned_hardware_count = orphaned_hardware_entries.count()
-
-            orphaned_processed_hardware_entries = (
-                ProcessedListingItems.objects.exclude(
-                    checkout_id__in=valid_checkout_ids
-                )
-            ).values_list("listing_item_key", flat=True)
-
-            orphaned_processed_hardware_count = (
-                orphaned_processed_hardware_entries.count()
-            )
-
-            if orphaned_hardware_count == 0 and orphaned_processed_hardware_count == 0:
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        "No orphaned HardwareStatus/ProcessedListingItems entries found."
-                    )
-                )
-                return
-
             if dry_run:
+                counts = {
+                    model._meta.db_table: model.objects.exclude(
+                        checkout_id__in=valid_checkout_ids
+                    ).count()
+                    for model, _ in self.ORPHAN_TARGETS
+                }
+                summary = ", ".join(f"{table}={n}" for table, n in counts.items())
                 self.stdout.write(
                     self.style.WARNING(
-                        f"[DRY RUN] Would delete {orphaned_hardware_count} HardwareStatus entries and "
-                        f"{orphaned_processed_hardware_count} ProcessedListingItems entries "
+                        f"[DRY RUN] Would delete {summary}. "
                         "Run without --dry-run to execute deletion."
                     )
                 )
                 return
 
-            self.stdout.write(
-                f"Found {orphaned_hardware_count} HardwareStatus entries "
-                f"and {orphaned_processed_hardware_count} ProcessedListingItems entries "
-                "with no corresponding LatestCheckout."
-            )
-
-            total_hardware_deleted = 0
-            total_processed_hardware_deleted = 0
-            while True:
-                hardware_batch_ids = list(orphaned_hardware_entries[:batch_size])
-                processed_hardware_batch_ids = list(
-                    orphaned_processed_hardware_entries[:batch_size]
+            deleted = {
+                model._meta.db_table: self._delete_orphans(
+                    model=model,
+                    batch_field=batch_field,
+                    valid_checkout_ids=valid_checkout_ids,
+                    batch_size=batch_size,
                 )
+                for model, batch_field in self.ORPHAN_TARGETS
+            }
 
-                if not hardware_batch_ids and not processed_hardware_batch_ids:
-                    break
-
-                if hardware_batch_ids:
-                    hardware_delete_count = HardwareStatus.objects.filter(
-                        checkout_id__in=hardware_batch_ids
-                    ).delete()[0]
-                    self.stdout.write(
-                        f"Deleted hardware_status(n={hardware_delete_count}) entries "
-                        f"(total: {total_hardware_deleted}/{orphaned_hardware_count})"
-                    )
-                    total_hardware_deleted += hardware_delete_count
-
-                if processed_hardware_batch_ids:
-                    processed_hardware_delete_count = (
-                        ProcessedListingItems.objects.filter(
-                            listing_item_key__in=processed_hardware_batch_ids
-                        ).delete()[0]
-                    )
-
-                    total_processed_hardware_deleted += processed_hardware_delete_count
-
-                    self.stdout.write(
-                        f"Deleted processed_hardware_status(n={processed_hardware_delete_count}) entries "
-                        f"(total: {total_processed_hardware_deleted}/{orphaned_processed_hardware_count})"
-                    )
-
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Successfully deleted hardware_status(n={total_hardware_deleted}) "
-                f"and processed_hardware_status(n={total_processed_hardware_deleted})."
-            )
-        )
+        summary = ", ".join(f"{table}={n}" for table, n in deleted.items())
+        self.stdout.write(self.style.SUCCESS(f"Successfully deleted {summary}."))

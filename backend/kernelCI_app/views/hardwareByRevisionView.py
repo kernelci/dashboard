@@ -64,7 +64,10 @@ class HardwareByRevisionView(APIView):
     def get(self, request: Request):
         try:
             query_params = HardwareListingByRevisionQueryParams(
-                origin=request.GET.get("origin"),
+                # "origin" is the deprecated alias of "testOrigin"
+                test_origin=request.GET.get("testOrigin")
+                or request.GET.get("origin")
+                or None,
                 tree_name=request.GET.get("tree_name"),
                 git_repository_url=request.GET.get("git_repository_url"),
                 git_repository_branch=request.GET.get("git_repository_branch"),
@@ -74,7 +77,7 @@ class HardwareByRevisionView(APIView):
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
         hardwares_raw = get_hardware_listing_data_by_revision(
-            origin=query_params.origin,
+            test_origin=query_params.test_origin,
             tree_name=query_params.tree_name,
             git_repository_url=query_params.git_repository_url,
             git_repository_branch=query_params.git_repository_branch,

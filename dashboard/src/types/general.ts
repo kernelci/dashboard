@@ -262,7 +262,12 @@ export type SearchParamsKeys =
   | 'startTimestampInSeconds'
   | 'endTimestampInSeconds'
   | 'issueVersion'
-  | 'logOpen';
+  | 'logOpen'
+  | 'checkoutOrigin'
+  | 'buildOrigin'
+  | 'testOrigin'
+  | 'buildLab'
+  | 'testLab';
 export type SearchSchema = Partial<Record<SearchParamsKeys, ZodTypeAny>>;
 
 const requestFilters = {

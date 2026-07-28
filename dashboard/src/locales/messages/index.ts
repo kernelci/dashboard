@@ -54,6 +54,7 @@ export const messages = {
     'dateRange.endBeforeStart': 'End date cannot be before the start date',
     'dateRange.startAfterEnd': 'Start date cannot be after the end date',
     'dateRange.startTooEarly': 'Start date cannot be before 2024-01-01',
+    'filter.anyValue': 'Any',
     'filter.architectureSubtitle': 'Please select one or more Architectures:',
     'filter.bootDuration': 'Boot duration',
     'filter.bootIssue': 'Boot issue',
@@ -62,8 +63,16 @@ export const messages = {
     'filter.bootStatus': 'Boot Status',
     'filter.buildDuration': 'Build duration',
     'filter.buildIssue': 'Build Issue',
+    'filter.buildLab': 'Build lab',
+    'filter.buildLabSubtitle':
+      'The lab that ran the builds. Only affects the build counters:',
     'filter.buildOrigin': 'Build origin',
+    'filter.buildOriginSubtitle':
+      'The origin that submitted the builds. Only affects the build counters:',
     'filter.buildStatus': 'Build Status',
+    'filter.checkoutOrigin': 'Checkout origin',
+    'filter.checkoutOriginSubtitle':
+      'The origin that submitted the checkouts. Affects every counter:',
     'filter.compatiblesSubtitle': 'Please select one or more compatibles:',
     'filter.compilersSubtitle': 'Please select one or more compilers:',
     'filter.configsSubtitle': 'Please select one or more configs:',
@@ -87,6 +96,7 @@ export const messages = {
       'Showing latest checkout for trees updated in the last {days} days',
     'filter.max': 'Max',
     'filter.min': 'Min',
+    'filter.noneAvailable': 'No values available',
     'filter.onlySpecificTab': 'Only affects a specific tab',
     'filter.options': 'Options',
     'filter.optionsSubtitle': 'Select one or more options:',
@@ -98,7 +108,12 @@ export const messages = {
     'filter.tableFilter': 'Status filters:',
     'filter.testDuration': 'Test duration',
     'filter.testIssue': 'Test issue',
+    'filter.testLab': 'Test lab',
+    'filter.testLabSubtitle':
+      'The lab that ran the tests. Only affects the boot and test counters:',
     'filter.testOrigin': 'Test origin',
+    'filter.testOriginSubtitle':
+      'The origin that submitted the tests. Only affects the boot and test counters:',
     'filter.testPlatform': 'Test Platforms',
     'filter.testStatus': 'Test Status',
     'filter.treeSubtitle': 'Please select one or more Trees:',

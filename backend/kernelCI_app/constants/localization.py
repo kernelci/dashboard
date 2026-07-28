@@ -102,9 +102,20 @@ class DocStrings:
     )
 
     HARDWARE_LISTING_ORIGIN_DESCRIPTION = "Origin of the hardware"
+    HARDWARE_LISTING_DEPRECATED_ORIGIN_DESCRIPTION = (
+        "Deprecated alias for testOrigin, kept for existing links"
+    )
     HARDWARE_LISTING_COMMITS_LIST_DESCRIPTION = (
         "Optional comma-separated git commit identifiers: full SHA(s) "
         "and/or tag strings that appear in checkout.git_commit_tags."
+    )
+    HARDWARE_LISTING_CHECKOUT_ORIGIN_DESCRIPTION = "Checkout origin, any when unset"
+    HARDWARE_LISTING_BUILD_ORIGIN_DESCRIPTION = "Build origin, any when unset"
+    HARDWARE_LISTING_TEST_ORIGIN_DESCRIPTION = "Test origin, any when unset"
+    HARDWARE_LISTING_BUILD_LAB_DESCRIPTION = "Build lab, any when unset"
+    HARDWARE_LISTING_TEST_LAB_DESCRIPTION = "Test lab, any when unset"
+    HARDWARE_FILTERS_DESCRIPTION = (
+        "Values available for each hardware listing filter, none narrowed by the others"
     )
 
     ISSUE_DETAILS_VERSION_DESCRIPTION = "Issue version"

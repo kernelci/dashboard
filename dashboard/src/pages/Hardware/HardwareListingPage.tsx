@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/toaster';
 import type { HardwareItem, HardwareRevisionSelection } from '@/types/hardware';
 
 import {
+  useHardwareFilters,
   useHardwareListing,
   useHardwareListingByRevision,
   useHardwareSelectors,
@@ -26,6 +27,7 @@ import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing
 import type { SearchIntent } from '@/lib/intent';
 
 import { HardwareTable } from './HardwareTable';
+import HardwareListingFilter from './HardwareListingFilter';
 import {
   decodeBranchValue,
   findSelectionByCommitTokens,
@@ -47,12 +49,12 @@ const HardwareListingPage = ({
 }: HardwareListingPageProps): JSX.Element => {
   const navigate = useNavigate({ from: urlFromMap.navigate });
   const {
-    origin,
     intervalInDays,
     treeName,
     gitRepositoryUrl,
     gitBranch,
     gitCommitHash,
+    checkoutOrigin,
   } = useSearch({ from: urlFromMap.search });
   const inputFilter = intent.search;
   const intentCommits =
@@ -81,6 +83,11 @@ const HardwareListingPage = ({
 
   const { data: selectorsData, status: selectorsStatus } = useHardwareSelectors(
     urlFromMap.search,
+  );
+
+  const { data: filtersData } = useHardwareFilters(
+    startTimestampInSeconds,
+    endTimestampInSeconds,
   );
 
   const trees = useMemo(() => selectorsData?.trees ?? [], [selectorsData]);
@@ -214,12 +221,13 @@ const HardwareListingPage = ({
 
   const kcidevComponent = useMemo(
     () => (
+      // kci-dev takes a single origin, so it gets the checkout one the listing is based on
       <MemoizedKcidevFooter
         commandGroup="hardwareListing"
-        args={{ cmdName: 'hardware list', origin: origin, json: true }}
+        args={{ cmdName: 'hardware list', origin: checkoutOrigin, json: true }}
       />
     ),
-    [origin],
+    [checkoutOrigin],
   );
 
   const onTreeChange = ({
@@ -301,12 +309,15 @@ const HardwareListingPage = ({
     <>
       <Toaster />
       <div className="flex flex-col gap-6">
-        <span className="text-dim-gray flex-1 justify-start text-left text-sm">
-          <FormattedMessage
-            id="global.projectUnderDevelopment"
-            values={{ br: <br /> }}
-          />
-        </span>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <span className="text-dim-gray flex-1 justify-start text-left text-sm">
+            <FormattedMessage
+              id="global.projectUnderDevelopment"
+              values={{ br: <br /> }}
+            />
+          </span>
+          <HardwareListingFilter data={filtersData} urlFromMap={urlFromMap} />
+        </div>
 
         <HardwareTable
           treeTableRows={listItems}

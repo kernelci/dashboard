@@ -50,4 +50,6 @@ export const HARDWARE_LISTING_SELECTORS = {
   revisionSelector: '[data-test-id="hardware-revision-selector"]',
   clearSelection: '[data-test-id="hardware-selection-clear"]',
   filterLabel: '[data-test-id="listing-filter-label"]',
+  filterSelector: (filter: string) =>
+    `[data-test-id="hardware-filter-${filter}"]`,
 } as const;

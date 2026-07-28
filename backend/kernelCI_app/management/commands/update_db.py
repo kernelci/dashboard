@@ -14,11 +14,16 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import connections, models
 from django.utils.dateparse import parse_datetime
 
+from kernelCI_app.management.commands.helpers.aggregation_helpers import (
+    BUILD_STATUS_COUNTERS,
+    TEST_STATUS_COUNTERS,
+)
 from kernelCI_app.management.commands.helpers.intervals import parse_interval
 from kernelCI_app.models import (
     Builds,
     Checkouts,
-    HardwareStatus,
+    HardwareBuildStatus,
+    HardwareTestStatus,
     Incidents,
     Issues,
     LatestCheckout,
@@ -888,22 +893,23 @@ class Command(BaseCommand):
             self.stdout.write("LatestCheckout migration completed")
 
     # HARDWARE STATUS ########################################
-    def select_hardware_status_data(self) -> list[tuple]:
+    def _select_hardware_status_data(
+        self, *, table: str, origin_column: str, counters: str
+    ) -> list[tuple]:
         origin_condition = (
-            f"AND test_origin IN ({','.join(['%s'] * len(self.origins))})"
+            f"AND {origin_column} IN ({','.join(['%s'] * len(self.origins))})"
             if self.origins
             else ""
         )
+        lab_column = origin_column.replace("_origin", "_lab")
         query = f"""
-            SELECT checkout_id, test_origin, platform, compatibles, start_time,
-                   build_pass, build_failed, build_inc,
-                   boot_pass, boot_failed, boot_inc,
-                   test_pass, test_failed, test_inc
-            FROM hardware_status
+            SELECT checkout_id, {origin_column}, {lab_column}, platform, compatibles,
+                   start_time, {counters}
+            FROM {table}
             WHERE start_time >= NOW() - INTERVAL %s
             AND start_time <= NOW() - INTERVAL %s
             {origin_condition}
-            ORDER BY start_time, test_origin, platform, checkout_id
+            ORDER BY start_time, {origin_column}, {lab_column}, platform, checkout_id
         """
         query_params = [
             self.start_interval,
@@ -914,56 +920,109 @@ class Command(BaseCommand):
             kcidb_cursor.execute(query, query_params)
             return kcidb_cursor.fetchall()
 
-    def insert_hardware_status_data(self, records: list[tuple]) -> int:
-        original_hardware_status: list[HardwareStatus] = [
-            HardwareStatus(
-                checkout_id=record[0],
-                test_origin=record[1],
-                platform=record[2],
-                compatibles=parse_array(record[3]),
-                start_time=parse_datetime(record[4]) if record[4] else None,
-                build_pass=record[5] or 0,
-                build_failed=record[6] or 0,
-                build_inc=record[7] or 0,
-                boot_pass=record[8] or 0,
-                boot_failed=record[9] or 0,
-                boot_inc=record[10] or 0,
-                test_pass=record[11] or 0,
-                test_failed=record[12] or 0,
-                test_inc=record[13] or 0,
-            )
-            for record in records
-        ]
-
-        migrated_hardware_status = HardwareStatus.objects.bulk_create(
-            original_hardware_status,
-            ignore_conflicts=True,
-            batch_size=DEFAULT_BATCH_SIZE,
+    def select_hardware_build_status_data(self) -> list[tuple]:
+        return self._select_hardware_status_data(
+            table="hardware_build_status",
+            origin_column="build_origin",
+            counters=", ".join(BUILD_STATUS_COUNTERS),
         )
-        total_inserted = len(migrated_hardware_status)
 
-        self.stdout.write(f"Processed {total_inserted} HardwareStatus records")
+    def select_hardware_test_status_data(self) -> list[tuple]:
+        return self._select_hardware_status_data(
+            table="hardware_test_status",
+            origin_column="test_origin",
+            counters=", ".join(TEST_STATUS_COUNTERS),
+        )
+
+    def _insert_hardware_status_data(
+        self, *, model, grain: str, counters: tuple[str, ...], records: list[tuple]
+    ) -> int:
+        """Insert rows of one hardware grain, in the column order that
+        _select_hardware_status_data emits."""
+        rows = []
+        for record in records:
+            values = dict(
+                zip(
+                    (
+                        "checkout_id",
+                        f"{grain}_origin",
+                        f"{grain}_lab",
+                        "platform",
+                        "compatibles",
+                        "start_time",
+                        *counters,
+                    ),
+                    record,
+                    strict=True,
+                )
+            )
+            values["compatibles"] = parse_array(values["compatibles"])
+            values["start_time"] = (
+                parse_datetime(values["start_time"]) if values["start_time"] else None
+            )
+            for counter in counters:
+                values[counter] = values[counter] or 0
+            rows.append(model(**values))
+
+        total_inserted = len(
+            model.objects.bulk_create(
+                rows, ignore_conflicts=True, batch_size=DEFAULT_BATCH_SIZE
+            )
+        )
+        self.stdout.write(f"Processed {total_inserted} {model.__name__} records")
         return total_inserted
 
+    def insert_hardware_build_status_data(self, records: list[tuple]) -> int:
+        return self._insert_hardware_status_data(
+            model=HardwareBuildStatus,
+            grain="build",
+            counters=BUILD_STATUS_COUNTERS,
+            records=records,
+        )
+
+    def insert_hardware_test_status_data(self, records: list[tuple]) -> int:
+        return self._insert_hardware_status_data(
+            model=HardwareTestStatus,
+            grain="test",
+            counters=TEST_STATUS_COUNTERS,
+            records=records,
+        )
+
     def snapshot_hardware_status(self) -> None:
-        """Migrate HardwareStatus data from dashboard_db to file"""
-        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
-            self.stdout.write("\nMigrating HardwareStatus...")
-            records = self.select_hardware_status_data()
-            self.insert_records(file, "hardware_status", records)
-            self.add_file_to_snapshot(file, "hardware_status")
-            self.stdout.write("HardwareStatus migration completed")
+        """Migrate both hardware status grains from dashboard_db to file"""
+        for table, select in (
+            ("hardware_build_status", self.select_hardware_build_status_data),
+            ("hardware_test_status", self.select_hardware_test_status_data),
+        ):
+            with SpooledTemporaryFile(
+                mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES
+            ) as file:
+                self.stdout.write(f"\nMigrating {table}...")
+                self.insert_records(file, table, select())
+                self.add_file_to_snapshot(file, table)
+                self.stdout.write(f"{table} migration completed")
 
     def restore_hardware_status(self) -> None:
-        """Migrate HardwareStatus data from file to dashboard_db"""
-        with TextIOWrapper(
-            self.snapshot_archive.extractfile("hardware_status.csv")
-        ) as file:
-            self.stdout.write("\nMigrating HardwareStatus...")
-            reader = csv.reader(file)
-            records = self.read_records(reader)
-            self.insert_hardware_status_data(records)
-            self.stdout.write("HardwareStatus migration completed")
+        """Migrate both hardware status grains from file to dashboard_db"""
+        for table, insert in (
+            ("hardware_build_status", self.insert_hardware_build_status_data),
+            ("hardware_test_status", self.insert_hardware_test_status_data),
+        ):
+            try:
+                member = self.snapshot_archive.extractfile(f"{table}.csv")
+            except KeyError:
+                # Snapshots taken before the hardware_status split carry a single
+                # aggregate; rebuild both grains with backfill_hardware_aggregations
+                # followed by process_pending_aggregations instead.
+                self.stdout.write(
+                    self.style.WARNING(f"\nNo {table}.csv in snapshot, skipping")
+                )
+                continue
+
+            with TextIOWrapper(member) as file:
+                self.stdout.write(f"\nMigrating {table}...")
+                insert(self.read_records(csv.reader(file)))
+                self.stdout.write(f"{table} migration completed")
 
     # TREE LISTING ########################################
     def select_tree_listing_data(self) -> list[tuple]:
