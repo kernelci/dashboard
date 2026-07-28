@@ -54,6 +54,8 @@ import { useTestIssues } from '@/api/testDetails';
 import { useLogData } from '@/hooks/useLogData';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 
+import { useSortingState } from '@/hooks/useSortingState';
+
 import {
   adaptColumnsForUnifiedTable,
   defaultInnerColumns,
@@ -85,7 +87,10 @@ export interface ITestsTable {
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
+  sortKey?: string;
 }
+
+const DEFAULT_TESTS_SORTING: SortingState = [{ id: 'path_group', desc: false }];
 
 export function TestsTable({
   testHistory,
@@ -95,10 +100,12 @@ export function TestsTable({
   getRowLink,
   updatePathFilter,
   currentPathFilter,
+  sortKey,
 }: ITestsTable): JSX.Element {
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'path_group', desc: false },
-  ]);
+  const { sorting, handleSortingChange } = useSortingState({
+    defaultSorting: DEFAULT_TESTS_SORTING,
+    sortKey,
+  });
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [groupingMode, setGroupingMode] =
     useState<TableGroupingMode>('grouped');
@@ -165,7 +172,7 @@ export function TestsTable({
     data,
     columns,
     enableSortingRemoval: false,
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getSubRows: row => row.subRows,

@@ -33,6 +33,7 @@ import { useTestIssues } from '@/api/testDetails';
 import { useLogData } from '@/hooks/useLogData';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 import { usePaginationState } from '@/hooks/usePaginationState';
+import { useSortingState } from '@/hooks/useSortingState';
 
 import type { TableKeys } from '@/utils/constants/tables';
 
@@ -132,6 +133,8 @@ interface IBootsTable {
   currentPathFilter?: string;
 }
 
+const DEFAULT_BOOTS_SORTING: SortingState = [{ id: 'path', desc: false }];
+
 // TODO: would be useful if the navigation happened within the table, so the parent component would only be required to pass the navigation url instead of the whole function for the update and the currentPath diffFilter (boots/tests Table)
 export function BootsTable({
   tableKey,
@@ -143,9 +146,9 @@ export function BootsTable({
   updatePathFilter,
   currentPathFilter,
 }: IBootsTable): JSX.Element {
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'path', desc: false },
-  ]);
+  const { sorting, handleSortingChange } = useSortingState({
+    defaultSorting: DEFAULT_BOOTS_SORTING,
+  });
   const { pagination, paginationUpdater } = usePaginationState(tableKey);
   const [globalFilter, setGlobalFilter] = useState<string | undefined>(
     currentPathFilter,
@@ -186,7 +189,7 @@ export function BootsTable({
     data: testsData,
     columns,
     enableSortingRemoval: false,
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: paginationUpdater,

@@ -80,6 +80,7 @@ export const IssueDetailsBuildSection = ({
             getRowLink={getTableRowLink}
             onClickFilter={onClickFilter}
             columns={columns}
+            sortKey="buildsTable"
           />
         </div>
       ) : (

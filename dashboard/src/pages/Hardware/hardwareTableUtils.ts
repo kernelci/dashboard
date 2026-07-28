@@ -23,6 +23,7 @@ export const buildHardwareDetailsSearch = ({
     gitRepositoryUrl: _gitRepositoryUrl,
     gitBranch: _gitBranch,
     gitCommitHash: _gitCommitHash,
+    tableSort: _tableSort,
     ...searchWithoutTreeParams
   } = previousSearch;
 

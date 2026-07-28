@@ -140,6 +140,17 @@ export const zListingSize = z
   .optional(z.number().min(1).catch(DEFAULT_LISTING_ITEMS))
   .default(DEFAULT_LISTING_ITEMS);
 
+/** Sentinel for an explicit unsorted state when the table default is not unsorted. */
+export const TABLE_SORT_UNSORTED = 'none' as const;
+
+/** Flat string for one table; record only when multiple tables share a page. */
+export const zTableSortValidator = z
+  .union([z.string(), z.record(z.string())])
+  .optional()
+  .catch(undefined);
+
+export type TableSortSearch = z.infer<typeof zTableSortValidator>;
+
 const zIntervalInDaysUncatched = z.number().min(1);
 
 export const makeZIntervalInDays = (
@@ -247,6 +258,7 @@ export type SearchParamsKeys =
   | 'intervalInDays'
   | 'currentPageTab'
   | 'tableFilter'
+  | 'tableSort'
   | 'diffFilter'
   | 'treeSearch'
   | 'listingSize'

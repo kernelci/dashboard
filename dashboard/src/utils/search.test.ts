@@ -19,6 +19,7 @@ const simpleObject = {
   intervalInDays: 7,
   // eslint-disable-next-line no-magic-numbers
   treeIndexes: [1, 2, 3],
+  tableSort: '-status',
 };
 
 const simpleObjectMinify = {
@@ -26,9 +27,10 @@ const simpleObjectMinify = {
   i: 7,
   // eslint-disable-next-line no-magic-numbers
   x: [1, 2, 3],
+  s: '-status',
 };
 
-const simpleObjectStringify = '?o=maestro&i=7&x[]=1,2,3';
+const simpleObjectStringify = '?o=maestro&i=7&x[]=1,2,3&s=-status';
 
 const nestedObject = {
   origin: 'maestro',
@@ -37,6 +39,10 @@ const nestedObject = {
     bootsTable: 'all',
     buildsTable: 'failed',
     testsTable: 'all',
+  },
+  tableSort: {
+    buildsTable: 'path',
+    testsTable: '-startTime',
   },
   treeInfo: {
     treeName: 'android',
@@ -58,6 +64,10 @@ const nestedObjectMinify = {
     b: 'f',
     t: 'a',
   },
+  s: {
+    b: 'path',
+    t: '-startTime',
+  },
   tri: {
     t: 'android',
     ch: 'hash',
@@ -73,6 +83,7 @@ const nestedObjectMinify = {
 const nestedObjectStringify =
   '?o=maestro&i=7' +
   '&tf|bt=a&tf|b=f&tf|t=a' +
+  '&s|b=path&s|t=-startTime' +
   '&tri|t=android&tri|ch=hash' +
   '&df|c|defconfig=true&df|a|arm=true&df|tp=amlogic' +
   '&x[]=0,1,2';
@@ -83,6 +94,8 @@ const flatObject = {
   'tableFilter|bootsTable': 'all',
   'tableFilter|buildsTable': 'failed',
   'tableFilter|testsTable': 'all',
+  'tableSort|buildsTable': 'path',
+  'tableSort|testsTable': '-startTime',
   'treeInfo|treeName': 'android',
   'treeInfo|headCommitHash': 'hash',
   'diffFilter|configs|defconfig': true,
@@ -97,6 +110,8 @@ const flatObjectMinify = {
   'tf|bt': 'a',
   'tf|b': 'f',
   'tf|t': 'a',
+  's|b': 'path',
+  's|t': '-startTime',
   'tri|t': 'android',
   'tri|ch': 'hash',
   'df|c|defconfig': true,
@@ -234,7 +249,7 @@ describe('parseSearch', () => {
 
   it('Simple object with empty array', () => {
     const simpleObjectEmptyArray = { ...simpleObject, treeIndexes: [] };
-    const simpleObjectEmptyArrayStringify = '?o=maestro&i=7&x[]';
+    const simpleObjectEmptyArrayStringify = '?o=maestro&i=7&x[]&s=-status';
     expect(parseSearch(simpleObjectEmptyArrayStringify)).toStrictEqual(
       simpleObjectEmptyArray,
     );
