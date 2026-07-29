@@ -1808,6 +1808,13 @@ paths:
           type: string
         description: Second commit hash to compare
         required: true
+      - in: query
+        name: full
+        schema:
+          default: false
+          title: Full
+          type: boolean
+        description: Include rows with unchanged status
       - in: path
         name: git_branch
         schema:
@@ -1903,6 +1910,13 @@ paths:
           type: string
         description: Second commit hash to compare
         required: true
+      - in: query
+        name: full
+        schema:
+          default: false
+          title: Full
+          type: boolean
+        description: Include rows with unchanged status
       - in: path
         name: git_branch
         schema:

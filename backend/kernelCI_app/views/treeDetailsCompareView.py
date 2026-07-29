@@ -61,7 +61,9 @@ class BaseTreeDetailsCompare(APIView):
         )
 
         try:
-            response = TreeCompareResponse(root=build_compare_rows(status_a, status_b))
+            response = TreeCompareResponse(
+                root=build_compare_rows(status_a, status_b, full=params.full)
+            )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 

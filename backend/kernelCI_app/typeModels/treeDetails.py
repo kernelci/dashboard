@@ -93,6 +93,7 @@ class TreeDetailsFullResponse(
 class TreeCompareQueryParameters(DirectTreeQueryParameters):
     commit_a: str = Field(description="First commit hash to compare")
     commit_b: str = Field(description="Second commit hash to compare")
+    full: bool = Field(False, description="Include rows with unchanged status")
 
 
 class TreeCompareTest(BaseModel):

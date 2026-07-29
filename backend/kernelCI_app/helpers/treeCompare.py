@@ -140,15 +140,17 @@ def collapse_side_statuses(
 def build_compare_rows(
     status_a: dict[CompareKey, GroupedStatusLiteral],
     status_b: dict[CompareKey, GroupedStatusLiteral],
+    *,
+    full: bool = False,
 ) -> list[TreeCompareTest]:
-    """Return rows where grouped status differs, including one-sided nulls."""
+    """Return differing rows, or every row when full is enabled."""
     keys = set(status_a) | set(status_b)
     rows: list[TreeCompareTest] = []
 
     for path, config_name, platform in sorted(keys):
         a = status_a.get((path, config_name, platform))
         b = status_b.get((path, config_name, platform))
-        if a == b:
+        if not full and a == b:
             continue
         rows.append(
             TreeCompareTest(

@@ -56,6 +56,28 @@ class TestTreeDetailsCompareView(SimpleTestCase):
         self.assertEqual(mock_query.call_args.kwargs["data_type"], "boots")
 
     @patch("kernelCI_app.views.treeDetailsCompareView.get_tree_compare_data")
+    def test_full_returns_unchanged_rows(self, mock_query):
+        mock_query.return_value = [
+            self._row(self.commit_a, "PASS"),
+            self._row(self.commit_b, "PASS"),
+        ]
+        request = self.factory.get(
+            "/api/tree/mainline/master/boots/compare",
+            {
+                "commit_a": self.commit_a,
+                "commit_b": self.commit_b,
+                "full": "true",
+            },
+        )
+        response = self.boots_view.get(
+            request, tree_name="mainline", git_branch="master"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["status_a"], "PASS")
+        self.assertEqual(response.data[0]["status_b"], "PASS")
+
+    @patch("kernelCI_app.views.treeDetailsCompareView.get_tree_compare_data")
     def test_tests_compare_uses_tests_data_type(self, mock_query):
         mock_query.return_value = [
             self._row(self.commit_a, "PASS", path="ltp.smoke"),

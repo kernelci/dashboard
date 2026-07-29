@@ -84,6 +84,16 @@ class TestBuildCompareRows(SimpleTestCase):
         )
         self.assertEqual(rows, [])
 
+    def test_full_includes_same_grouped_bucket(self):
+        rows = build_compare_rows(
+            {("boot", "defconfig", "qemu"): "PASS"},
+            {("boot", "defconfig", "qemu"): "PASS"},
+            full=True,
+        )
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].status_a, "PASS")
+        self.assertEqual(rows[0].status_b, "PASS")
+
 
 class TestCollapseSideStatuses(SimpleTestCase):
     def setUp(self):
