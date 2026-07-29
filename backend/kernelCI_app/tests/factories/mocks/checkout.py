@@ -44,6 +44,14 @@ class Checkout:
         return checkout_data.get("git_branch") if checkout_data else None
 
     @classmethod
+    def get_git_commit_hash(cls, checkout_id: str):
+        """Get git commit hash for a checkout (defaults to checkout_id)."""
+        checkout_data = TREE_DATA.get(checkout_id)
+        if not checkout_data:
+            return None
+        return checkout_data.get("git_commit_hash", checkout_id)
+
+    @classmethod
     def get_tree_name(cls, checkout_id: str):
         """Get tree name for a checkout."""
         checkout_data = TREE_DATA.get(checkout_id)

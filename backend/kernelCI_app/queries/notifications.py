@@ -1,7 +1,7 @@
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, time, timedelta, timezone
-from typing import Any
+from typing import Any, Optional
 
 from django.db import connection, connections
 from pydantic import ValidationError
@@ -425,6 +425,7 @@ def get_checkout_summary_data(
     tuple_params: list[tuple[str, str, str]],
     interval_min="5 hours",
     interval_max="29 hours",
+    tree_name: Optional[str] = None,
 ) -> list[dict]:
     """Queries for the checkout and status count data similarly to tree_listing but
     using a list of parameters for the filtering
@@ -432,6 +433,7 @@ def get_checkout_summary_data(
     Parameters:
         tuple_params: a list of tuples (str, str, str)
         representing (git_repository_branch, git_repository_url, origin)
+        tree_name: optional filter so trees sharing branch/git_url stay distinct
 
     Returns:
         out: a list of dicts with the records found.
@@ -439,6 +441,8 @@ def get_checkout_summary_data(
     """
     if not tuple_params:
         return []
+
+    tree_name_filter = "AND C.TREE_NAME = %s" if tree_name is not None else ""
 
     with_clause = f"""
             WITH
@@ -448,6 +452,7 @@ def get_checkout_summary_data(
                         C.GIT_REPOSITORY_URL,
                         C.GIT_COMMIT_HASH,
                         C.ORIGIN,
+                        C.TREE_NAME,
                         ROW_NUMBER() OVER (
                             PARTITION BY
                                 C.GIT_REPOSITORY_BRANCH,
@@ -469,13 +474,15 @@ def get_checkout_summary_data(
                     WHERE
                         C.START_TIME >= NOW() - INTERVAL %s
                         AND C.START_TIME <= NOW() - INTERVAL %s
+                        {tree_name_filter}
                 ),
                 FIRST_TREE_CHECKOUT AS (
                     SELECT
                         GIT_REPOSITORY_BRANCH,
                         GIT_REPOSITORY_URL,
                         GIT_COMMIT_HASH,
-                        ORIGIN
+                        ORIGIN,
+                        TREE_NAME
                     FROM
                         ORDERED_CHECKOUTS_BY_TREE
                     WHERE
@@ -489,6 +496,7 @@ def get_checkout_summary_data(
                     AND checkouts.git_repository_url IS NOT DISTINCT FROM FTC.GIT_REPOSITORY_URL
                     AND checkouts.git_commit_hash = FTC.GIT_COMMIT_HASH
                     AND checkouts.origin = FTC.ORIGIN
+                    AND checkouts.tree_name IS NOT DISTINCT FROM FTC.TREE_NAME
                 )
     """
 
@@ -502,15 +510,12 @@ def get_checkout_summary_data(
     for tuple in tuple_params:
         flattened_list += list(tuple)
 
+    params = flattened_list + [interval_max, interval_min]
+    if tree_name is not None:
+        params.append(tree_name)
+
     with connection.cursor() as cursor:
-        cursor.execute(
-            query,
-            flattened_list
-            + [
-                interval_max,
-                interval_min,
-            ],
-        )
+        cursor.execute(query, params)
         return dict_fetchall(cursor=cursor)
 
 
