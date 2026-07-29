@@ -59,7 +59,9 @@ export function BuildsTable({
   onClickFilter,
   getRowLink,
 }: IBuildsTable): JSX.Element {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'config', desc: false },
+  ]);
   const { pagination, paginationUpdater } = usePaginationState(tableKey);
 
   const intl = useIntl();
@@ -87,6 +89,7 @@ export function BuildsTable({
   const table = useReactTable({
     data: rawData,
     columns,
+    enableSortingRemoval: false,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
