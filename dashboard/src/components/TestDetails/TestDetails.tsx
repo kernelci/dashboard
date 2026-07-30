@@ -223,9 +223,19 @@ const TestDetailsSections = ({
       });
   }, [statusHistory?.status_history, test.id]);
 
+  const hasRequiredTrackingFields = Boolean(
+    test.path &&
+      test.origin &&
+      test.git_repository_url &&
+      test.git_repository_branch &&
+      test.config_name,
+  );
+
   const regressionSection: ISection | undefined = useMemo(() => {
     const cannotFetchHistory =
-      statusHistoryStatus === 'error' && isBadRequestError(statusHistoryError);
+      !hasRequiredTrackingFields ||
+      (statusHistoryStatus === 'error' &&
+        isBadRequestError(statusHistoryError));
 
     const regressionTypeTooltip: string | null = ((): string | null => {
       switch (statusHistory?.regression_type) {
@@ -291,7 +301,9 @@ const TestDetailsSections = ({
               children: (
                 <QuerySwitcher
                   skeletonClassname="h-[100px]"
-                  status={statusHistoryStatus}
+                  status={
+                    hasRequiredTrackingFields ? statusHistoryStatus : 'error'
+                  }
                   data={statusHistory}
                   customError={
                     cannotFetchHistory ? (
@@ -318,6 +330,7 @@ const TestDetailsSections = ({
     };
   }, [
     formatMessage,
+    hasRequiredTrackingFields,
     regressionData,
     statusHistory,
     statusHistoryError,
@@ -531,27 +544,37 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
     status: issueStatus,
     error: issueError,
   } = useTestIssues(testId ?? '', data !== undefined);
+  const statusHistoryParams = useMemo(() => {
+    if (
+      !data?.path ||
+      !data.origin ||
+      !data.git_repository_url ||
+      !data.git_repository_branch ||
+      !data.config_name
+    ) {
+      return undefined;
+    }
+
+    return {
+      path: data.path,
+      origin: data.origin,
+      git_repository_url: data.git_repository_url,
+      git_repository_branch: data.git_repository_branch,
+      platform:
+        typeof data.environment_misc?.['platform'] === 'string'
+          ? data.environment_misc['platform']
+          : undefined,
+      current_test_start_time: data.start_time,
+      config_name: data.config_name,
+      field_timestamp: data.field_timestamp,
+    };
+  }, [data]);
+
   const {
     data: statusHistoryData,
     status: statusHistoryStatus,
     error: statusHistoryError,
-  } = useTestStatusHistory(
-    data !== undefined
-      ? {
-          path: data.path,
-          origin: data.origin,
-          git_repository_url: data.git_repository_url,
-          git_repository_branch: data.git_repository_branch,
-          platform:
-            typeof data.environment_misc?.['platform'] === 'string'
-              ? data.environment_misc['platform']
-              : undefined,
-          current_test_start_time: data.start_time,
-          config_name: data.config_name,
-          field_timestamp: data.field_timestamp,
-        }
-      : undefined,
-  );
+  } = useTestStatusHistory(statusHistoryParams);
 
   const logData = useMemo(() => {
     if (!data) {
