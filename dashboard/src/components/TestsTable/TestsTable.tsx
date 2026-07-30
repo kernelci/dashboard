@@ -81,8 +81,6 @@ export interface ITestsTable {
   testHistory?: TestHistory[];
   onClickFilter: (filter: PossibleTableFilters) => void;
   filter: PossibleTableFilters;
-  /** @deprecated Group-only columns are no longer used; prefer innerColumns. */
-  columns?: ColumnDef<UnifiedTestRow>[];
   innerColumns?: ColumnDef<TIndividualTest>[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   updatePathFilter?: (pathFilter: string) => void;
@@ -106,9 +104,20 @@ export function TestsTable({
 
   const intl = useIntl();
 
+  const sortingRef = useRef(sorting);
+  sortingRef.current = sorting;
+
+  const getSortDirection = useCallback((columnId: string) => {
+    const entry = sortingRef.current.find(item => item.id === columnId);
+    if (!entry) {
+      return false as const;
+    }
+    return entry.desc ? ('desc' as const) : ('asc' as const);
+  }, []);
+
   const columns = useMemo(
-    () => adaptColumnsForUnifiedTable(innerColumns),
-    [innerColumns],
+    () => adaptColumnsForUnifiedTable(innerColumns, getSortDirection),
+    [getSortDirection, innerColumns],
   );
 
   const rawTree = useMemo(() => buildTestsTree(testHistory), [testHistory]);
@@ -136,12 +145,15 @@ export function TestsTable({
     return collapseSingleChildChains(filtered);
   }, [pathFilteredTree, filter]);
 
-  const data = useMemo(() => {
-    if (groupingMode === 'ungrouped') {
-      return flattenTestsToLeafRows(filteredTree);
-    }
-    return buildUnifiedTestsTree(filteredTree);
-  }, [filteredTree, groupingMode]);
+  const groupedData = useMemo(
+    () => buildUnifiedTestsTree(filteredTree),
+    [filteredTree],
+  );
+  const flatData = useMemo(
+    () => flattenTestsToLeafRows(filteredTree),
+    [filteredTree],
+  );
+  const data = groupingMode === 'ungrouped' ? flatData : groupedData;
 
   useEffect(() => {
     setExpanded({});

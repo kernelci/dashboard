@@ -6,6 +6,7 @@ import {
   countStatus,
   getTotalTests,
 } from './testStatusHelpers';
+import { buildGroupSummaries } from './groupSummaries';
 import type { UnifiedTestRow } from './types';
 
 function statusCountsFromTest(test: TIndividualTest): TPathTestsStatus {
@@ -14,14 +15,11 @@ function statusCountsFromTest(test: TIndividualTest): TPathTestsStatus {
   return { ...counts, total_tests: getTotalTests(counts) };
 }
 
-function testToLeafRow(
-  test: TIndividualTest,
-  relativePath: string,
-): UnifiedTestRow {
+function testToLeafRow(test: TIndividualTest): UnifiedTestRow {
   return {
     id: test.id,
     kind: 'leaf',
-    path: relativePath,
+    path: test.path ?? '',
     ...statusCountsFromTest(test),
     status: test.status,
     start_time: test.start_time,
@@ -52,6 +50,7 @@ function toGroupRow(
     null_tests: node.null_tests,
     total_tests: node.total_tests,
     subRows: children,
+    summaries: buildGroupSummaries(children),
   };
 }
 
@@ -59,7 +58,7 @@ function toGroupRow(
  * Converts a collapsed path tree into unified group/leaf rows.
  *
  * Groups wrapping a single item are omitted: a node with one leaf child
- * (after recursion) is hoisted to the parent with the path segment prepended.
+ * (after recursion) is hoisted to the parent.
  */
 export function buildUnifiedTestsTree(nodes: TPathTests[]): UnifiedTestRow[] {
   const rows: UnifiedTestRow[] = [];
@@ -69,9 +68,7 @@ export function buildUnifiedTestsTree(nodes: TPathTests[]): UnifiedTestRow[] {
       ? buildUnifiedTestsTree(node.sub_groups)
       : [];
 
-    const directLeafRows = node.individual_tests.map(test =>
-      testToLeafRow(test, ''),
-    );
+    const directLeafRows = node.individual_tests.map(testToLeafRow);
 
     const children = [...subGroupRows, ...directLeafRows];
 
@@ -80,11 +77,7 @@ export function buildUnifiedTestsTree(nodes: TPathTests[]): UnifiedTestRow[] {
     }
 
     if (children.length === 1 && children[0].kind === 'leaf') {
-      const child = children[0];
-      rows.push({
-        ...child,
-        path: child.path ? `${node.path_group}.${child.path}` : node.path_group,
-      });
+      rows.push(children[0]);
       return;
     }
 
@@ -101,7 +94,7 @@ export function flattenTestsToLeafRows(nodes: TPathTests[]): UnifiedTestRow[] {
   const walk = (nodesToWalk: TPathTests[]): void => {
     nodesToWalk.forEach(node => {
       node.individual_tests.forEach(test => {
-        rows.push(testToLeafRow(test, test.path ?? ''));
+        rows.push(testToLeafRow(test));
       });
       if (node.sub_groups) {
         walk(node.sub_groups);
