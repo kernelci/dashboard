@@ -7,7 +7,13 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.utils import timezone
 
-from kernelCI_app.models import Builds, Checkouts, Tests
+from kernelCI_app.models import (
+    Builds,
+    Checkouts,
+    HardwareDailyBuilds,
+    HardwareDailyTests,
+    Tests,
+)
 from kernelCI_app.tests.factories import (
     BuildFactory,
     CheckoutFactory,
@@ -39,6 +45,58 @@ def test_old_checkout_cascades():
     assert not Checkouts.objects.filter(id=checkout.id).exists()
     assert not Builds.objects.filter(id=build.id).exists()
     assert not Tests.objects.filter(id=test.id).exists()
+
+
+@pytest.mark.django_db
+def test_hardware_daily_pruned_by_checkout_day():
+    """The aggregate is pruned on its own checkout_day even when the raw checkout
+    survives: retention follows the summary's date grain, not the surviving facts."""
+    checkout_time = _days_ago(30)
+    checkout = CheckoutFactory(start_time=checkout_time, field_timestamp=_days_ago(1))
+    build = BuildFactory(checkout=checkout, status="PASS", field_timestamp=_days_ago(1))
+    TestFactory(
+        build=build,
+        environment_misc={"platform": "pA"},
+        path="boot",
+        status="PASS",
+        field_timestamp=_days_ago(1),
+    )
+    call_command("recompute_hardware_daily", day=checkout_time.date())
+
+    assert HardwareDailyBuilds.objects.filter(checkout_id=checkout.id).exists()
+    assert HardwareDailyTests.objects.filter(checkout_id=checkout.id).exists()
+
+    _prune(yes=True)
+
+    assert Checkouts.objects.filter(id=checkout.id).exists()
+    assert not HardwareDailyBuilds.objects.filter(checkout_id=checkout.id).exists()
+    assert not HardwareDailyTests.objects.filter(checkout_id=checkout.id).exists()
+
+
+@pytest.mark.django_db
+def test_tables_target_only_hardware_daily():
+    """--tables can prune an aggregate on its own, leaving raw and the other grain."""
+    checkout_time = _days_ago(30)
+    checkout = CheckoutFactory(start_time=checkout_time, field_timestamp=_days_ago(30))
+    build = BuildFactory(
+        checkout=checkout, status="PASS", field_timestamp=_days_ago(30)
+    )
+    test = TestFactory(
+        build=build,
+        environment_misc={"platform": "pA"},
+        path="boot",
+        status="PASS",
+        field_timestamp=_days_ago(30),
+    )
+    call_command("recompute_hardware_daily", day=checkout_time.date())
+
+    _prune(yes=True, tables=["hardware_daily_builds"])
+
+    assert not HardwareDailyBuilds.objects.filter(checkout_id=checkout.id).exists()
+    assert HardwareDailyTests.objects.filter(checkout_id=checkout.id).exists()
+    assert Checkouts.objects.filter(id=checkout.id).exists()
+    assert Builds.objects.filter(id=build.id).exists()
+    assert Tests.objects.filter(id=test.id).exists()
 
 
 @pytest.mark.django_db
@@ -133,10 +191,20 @@ def test_origins_cascade_ignores_child_origin():
 def test_tables_tests_only():
     """--tables tests deletes only old tests; parents and a recent test under an old
     build/checkout are kept because those parents are not being pruned."""
-    checkout = CheckoutFactory(field_timestamp=_days_ago(30))
-    build = BuildFactory(checkout=checkout, field_timestamp=_days_ago(30))
-    old_test = TestFactory(build=build, field_timestamp=_days_ago(30))
+    checkout_time = _days_ago(30)
+    checkout = CheckoutFactory(start_time=checkout_time, field_timestamp=_days_ago(30))
+    build = BuildFactory(
+        checkout=checkout, status="PASS", field_timestamp=_days_ago(30)
+    )
+    old_test = TestFactory(
+        build=build,
+        environment_misc={"platform": "pA"},
+        path="boot",
+        status="PASS",
+        field_timestamp=_days_ago(30),
+    )
     recent_test = TestFactory(build=build, field_timestamp=_days_ago(1))
+    call_command("recompute_hardware_daily", day=checkout_time.date())
 
     _prune(yes=True, tables=["tests"])
 
@@ -144,6 +212,8 @@ def test_tables_tests_only():
     assert Builds.objects.filter(id=build.id).exists()
     assert not Tests.objects.filter(id=old_test.id).exists()
     assert Tests.objects.filter(id=recent_test.id).exists()
+    assert HardwareDailyBuilds.objects.filter(checkout_id=checkout.id).exists()
+    assert HardwareDailyTests.objects.filter(checkout_id=checkout.id).exists()
 
 
 @pytest.mark.django_db

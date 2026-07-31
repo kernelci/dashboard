@@ -4,6 +4,7 @@ Management command to seed test database with realistic data.
 
 import sys
 
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -17,6 +18,8 @@ from kernelCI_app.management.commands.helpers.process_pending_helpers import (
 from kernelCI_app.models import (
     Builds,
     Checkouts,
+    HardwareDailyBuilds,
+    HardwareDailyTests,
     HardwareStatus,
     Incidents,
     Issues,
@@ -87,6 +90,9 @@ class Command(BaseCommand):
             rollup_rows = self.create_tests_rollup(tests=tests, incidents=incidents)
             latest_checkouts = self.create_latest_checkouts(checkouts=checkouts)
             hardware_rows = self.create_hardware_status(tests=tests)
+            daily_build_count, daily_test_count = self.create_hardware_daily(
+                checkouts=checkouts
+            )
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -99,6 +105,8 @@ class Command(BaseCommand):
                 f"- {len(rollup_rows)} tree_tests_rollup rows\n"
                 f"- {len(latest_checkouts)} latest_checkout rows\n"
                 f"- {len(hardware_rows)} hardware_status rows\n"
+                f"- {daily_build_count} hardware_daily_builds rows\n"
+                f"- {daily_test_count} hardware_daily_tests rows\n"
             )
         )
 
@@ -127,6 +135,8 @@ class Command(BaseCommand):
 
     def clear_data(self) -> None:
         """Clear existing test data."""
+        HardwareDailyBuilds.objects.all().delete()
+        HardwareDailyTests.objects.all().delete()
         HardwareStatus.objects.all().delete()
         LatestCheckout.objects.all().delete()
         TreeTestsRollup.objects.all().delete()
@@ -439,3 +449,22 @@ class Command(BaseCommand):
 
         hardware_rows = [HardwareStatus(**data) for data in hardware_data.values()]
         return HardwareStatus.objects.bulk_create(hardware_rows)
+
+    def create_hardware_daily(self, *, checkouts: list[Checkouts]) -> tuple[int, int]:
+        """Rebuild the daily hardware aggregates from the seeded raw rows."""
+        self.stdout.write("Creating hardware daily aggregations...")
+
+        days = sorted(
+            {
+                checkout.start_time.date()
+                for checkout in checkouts
+                if checkout.start_time
+            }
+        )
+        for day in days:
+            call_command("recompute_hardware_daily", day=day, verbosity=0)
+
+        return (
+            HardwareDailyBuilds.objects.count(),
+            HardwareDailyTests.objects.count(),
+        )
