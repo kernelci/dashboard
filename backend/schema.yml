@@ -2247,8 +2247,10 @@ components:
       type: string
     Build__InputFiles:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -2262,15 +2264,19 @@ components:
       - type: 'null'
     Build__Misc:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
     Build__OutputFiles:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -2765,7 +2771,8 @@ components:
           type: object
         filter:
           anyOf:
-          - type: object
+          - additionalProperties: true
+            type: object
           - type: 'null'
           default: null
           description: Optional filter dictionary for additional query parameters
@@ -3433,8 +3440,10 @@ components:
       type: string
     Issue__Misc:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -3676,6 +3685,11 @@ components:
     ProcessedExtraDetailedIssues:
       additionalProperties:
         $ref: '#/components/schemas/ExtraIssuesData'
+      description: Extra info about issues, grouped by ID when it's version-agnostic
+      examples:
+      - 'redhat:issue_3332: { first_incident: { first_seen: ''2024-10-20'', git_commit_hash:
+        ''commit1'', git_repository_url: ''example.com'', git_repository_branch: ''branch1''},
+        0: {...}}'
       type: object
     RegressionData:
       additionalProperties:
@@ -4064,13 +4078,15 @@ components:
           uniqueItems: true
         environment_compatible:
           anyOf:
-          - type: object
+          - additionalProperties: true
+            type: object
           - type: 'null'
           default: null
           title: Environment Compatible
         environment_misc:
           anyOf:
-          - type: object
+          - additionalProperties: true
+            type: object
           - type: 'null'
           default: null
           title: Environment Misc
@@ -4111,8 +4127,10 @@ components:
       - type: 'null'
     Test__EnvironmentMisc:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -4120,8 +4138,10 @@ components:
       type: string
     Test__InputFiles:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -4135,15 +4155,19 @@ components:
       - type: 'null'
     Test__Misc:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
     Test__OutputFiles:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -4227,7 +4251,8 @@ components:
           title: Head Git Commit Tag
         selected_commit_status:
           anyOf:
-          - type: object
+          - additionalProperties: true
+            type: object
           - type: 'null'
           title: Selected Commit Status
         is_selected:
