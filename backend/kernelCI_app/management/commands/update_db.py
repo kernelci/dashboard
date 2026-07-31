@@ -12,12 +12,14 @@ from typing import Generator, Optional
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connections, models
-from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_date, parse_datetime
 
 from kernelCI_app.management.commands.helpers.intervals import parse_interval
 from kernelCI_app.models import (
     Builds,
     Checkouts,
+    HardwareDailyBuilds,
+    HardwareDailyTests,
     HardwareStatus,
     Incidents,
     Issues,
@@ -143,7 +145,8 @@ class Command(BaseCommand):
         return (
             f"Unknown table '{table}'.\n"
             "\tValid options are: issues, checkouts, builds, tests, incidents, "
-            "latest_checkout, hardware_status, tree_listing, tree_tests_rollup."
+            "latest_checkout, hardware_status, hardware_daily_builds, "
+            "hardware_daily_tests, tree_listing, tree_tests_rollup."
         )
 
     def handle(self, *args, command, **options):
@@ -174,6 +177,8 @@ class Command(BaseCommand):
         end_interval_unsafe_tables = (
             None,
             "latest_checkout",
+            "hardware_daily_builds",
+            "hardware_daily_tests",
             "tree_listing",
             "tree_tests_rollup",
         )
@@ -228,6 +233,8 @@ class Command(BaseCommand):
                     self.snapshot_incidents()
                     self.snapshot_latest_checkout()
                     self.snapshot_hardware_status()
+                    self.snapshot_hardware_daily_builds()
+                    self.snapshot_hardware_daily_tests()
                     self.snapshot_tree_listing()
                     self.snapshot_tree_tests_rollup()
                 case "issues":
@@ -244,6 +251,10 @@ class Command(BaseCommand):
                     self.snapshot_latest_checkout()
                 case "hardware_status":
                     self.snapshot_hardware_status()
+                case "hardware_daily_builds":
+                    self.snapshot_hardware_daily_builds()
+                case "hardware_daily_tests":
+                    self.snapshot_hardware_daily_tests()
                 case "tree_listing":
                     self.snapshot_tree_listing()
                 case "tree_tests_rollup":
@@ -269,6 +280,8 @@ class Command(BaseCommand):
             self.restore_incidents()
             self.restore_latest_checkout()
             self.restore_hardware_status()
+            self.restore_hardware_daily_builds()
+            self.restore_hardware_daily_tests()
             self.restore_tree_listing()
             self.restore_tree_tests_rollup()
             self.stdout.write(
@@ -964,6 +977,134 @@ class Command(BaseCommand):
             records = self.read_records(reader)
             self.insert_hardware_status_data(records)
             self.stdout.write("HardwareStatus migration completed")
+
+    # HARDWARE DAILY BUILDS ########################################
+    def select_hardware_daily_builds_data(self) -> list[tuple]:
+        origin_condition = (
+            f"AND build_origin IN ({','.join(['%s'] * len(self.origins))})"
+            if self.origins
+            else ""
+        )
+        query = f"""
+            SELECT checkout_day, checkout_id, build_origin, build_lab, platform,
+                   compatibles, build_pass, build_failed, build_inc
+            FROM hardware_daily_builds
+            WHERE checkout_day >= (NOW() - INTERVAL %s)::date
+            AND checkout_day <= (NOW() - INTERVAL %s)::date
+            {origin_condition}
+            ORDER BY checkout_day, build_origin, build_lab, platform, checkout_id
+        """
+        query_params = [self.start_interval, self.end_interval] + self.origins
+
+        with connections["default"].cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, query_params)
+            return kcidb_cursor.fetchall()
+
+    def insert_hardware_daily_builds_data(self, records: list[tuple]) -> int:
+        rows = [
+            HardwareDailyBuilds(
+                checkout_day=parse_date(record[0]) if record[0] else None,
+                checkout_id=record[1],
+                build_origin=record[2],
+                build_lab=record[3],
+                platform=record[4],
+                compatibles=parse_array(record[5]),
+                build_pass=record[6] or 0,
+                build_failed=record[7] or 0,
+                build_inc=record[8] or 0,
+            )
+            for record in records
+        ]
+        total_inserted = len(
+            HardwareDailyBuilds.objects.bulk_create(
+                rows, ignore_conflicts=True, batch_size=DEFAULT_BATCH_SIZE
+            )
+        )
+        self.stdout.write(f"Processed {total_inserted} HardwareDailyBuilds records")
+        return total_inserted
+
+    def snapshot_hardware_daily_builds(self) -> None:
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating hardware_daily_builds...")
+            records = self.select_hardware_daily_builds_data()
+            self.insert_records(file, "hardware_daily_builds", records)
+            self.add_file_to_snapshot(file, "hardware_daily_builds")
+            self.stdout.write("hardware_daily_builds migration completed")
+
+    def restore_hardware_daily_builds(self) -> None:
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("hardware_daily_builds.csv")
+        ) as file:
+            self.stdout.write("\nMigrating hardware_daily_builds...")
+            records = self.read_records(csv.reader(file))
+            self.insert_hardware_daily_builds_data(records)
+            self.stdout.write("hardware_daily_builds migration completed")
+
+    # HARDWARE DAILY TESTS ########################################
+    def select_hardware_daily_tests_data(self) -> list[tuple]:
+        origin_condition = (
+            f"AND test_origin IN ({','.join(['%s'] * len(self.origins))})"
+            if self.origins
+            else ""
+        )
+        query = f"""
+            SELECT checkout_day, checkout_id, test_origin, test_lab, platform,
+                   compatibles, boot_pass, boot_failed, boot_inc,
+                   test_pass, test_failed, test_inc
+            FROM hardware_daily_tests
+            WHERE checkout_day >= (NOW() - INTERVAL %s)::date
+            AND checkout_day <= (NOW() - INTERVAL %s)::date
+            {origin_condition}
+            ORDER BY checkout_day, test_origin, test_lab, platform, checkout_id
+        """
+        query_params = [self.start_interval, self.end_interval] + self.origins
+
+        with connections["default"].cursor() as kcidb_cursor:
+            kcidb_cursor.execute(query, query_params)
+            return kcidb_cursor.fetchall()
+
+    def insert_hardware_daily_tests_data(self, records: list[tuple]) -> int:
+        rows = [
+            HardwareDailyTests(
+                checkout_day=parse_date(record[0]) if record[0] else None,
+                checkout_id=record[1],
+                test_origin=record[2],
+                test_lab=record[3],
+                platform=record[4],
+                compatibles=parse_array(record[5]),
+                boot_pass=record[6] or 0,
+                boot_failed=record[7] or 0,
+                boot_inc=record[8] or 0,
+                test_pass=record[9] or 0,
+                test_failed=record[10] or 0,
+                test_inc=record[11] or 0,
+            )
+            for record in records
+        ]
+        total_inserted = len(
+            HardwareDailyTests.objects.bulk_create(
+                rows, ignore_conflicts=True, batch_size=DEFAULT_BATCH_SIZE
+            )
+        )
+        self.stdout.write(f"Processed {total_inserted} HardwareDailyTests records")
+        return total_inserted
+
+    def snapshot_hardware_daily_tests(self) -> None:
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating hardware_daily_tests...")
+            records = self.select_hardware_daily_tests_data()
+            self.insert_records(file, "hardware_daily_tests", records)
+            self.add_file_to_snapshot(file, "hardware_daily_tests")
+            self.stdout.write("hardware_daily_tests migration completed")
+
+    def restore_hardware_daily_tests(self) -> None:
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("hardware_daily_tests.csv")
+        ) as file:
+            self.stdout.write("\nMigrating hardware_daily_tests...")
+            records = self.read_records(csv.reader(file))
+            self.insert_hardware_daily_tests_data(records)
+            self.stdout.write("hardware_daily_tests migration completed")
 
     # TREE LISTING ########################################
     def select_tree_listing_data(self) -> list[tuple]:

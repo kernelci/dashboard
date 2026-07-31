@@ -1,3 +1,11 @@
+import hashlib
+
+
+def table_lock_id(table: str) -> int:
+    """Advisory lock key for a table, narrowed to the int4 the lock takes."""
+    return int.from_bytes(hashlib.sha256(table.encode()).digest()[:4]) % 2**31
+
+
 def dict_fetchall(cursor) -> list[dict]:
     """
     Return all rows from a cursor as a dict.
