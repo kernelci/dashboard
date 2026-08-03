@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 import requests
+from kernelCI_app.constants.general import REQUESTS_TIMEOUT_FETCH_IN_SECONDS
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.typeModels.logDownloader import (
@@ -17,7 +18,7 @@ from kernelCI_app.typeModels.logDownloader import (
 
 def scrape_log_data(url):
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=REQUESTS_TIMEOUT_FETCH_IN_SECONDS)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.content, "html.parser")
