@@ -2,7 +2,10 @@ from unittest.mock import MagicMock, call, mock_open, patch
 
 import pytest
 
-from kernelCI_app.constants.ingester import AUTOMATIC_LAB_FIELD
+from kernelCI_app.constants.ingester import (
+    AUTOMATIC_LAB_FIELD,
+    INGESTER_GRAFANA_LABEL,
+)
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     SubmissionFileMetadata,
     _extract_origins_info,
@@ -835,7 +838,7 @@ class TestIngestSubmissionsParallel:
         mock_value.side_effect = [mock_ok, mock_fail, mock_processed]
 
         # Mock the process
-        mock_process_instance = MagicMock()
+        mock_process_instance = MagicMock(exitcode=0)
         mock_process.return_value = mock_process_instance
 
         ingest_submissions_parallel(
@@ -870,3 +873,147 @@ class TestIngestSubmissionsParallel:
                 mb / total_elapsed,
             ),
         )
+
+    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out", MagicMock())
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.WORKER_FAILURES_COUNTER"
+    )
+    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
+    @patch("multiprocessing.Process")
+    @patch("multiprocessing.Queue")
+    @patch("multiprocessing.Value")
+    @patch("time.sleep", MagicMock())
+    @patch("time.time", MagicMock(side_effect=TIME_MOCK))
+    @patch("os.path.getsize")
+    def test_ingest_submissions_parallel_worker_failure(
+        self,
+        mock_getsize,
+        mock_value,
+        mock_queue_cls,
+        mock_process,
+        mock_logger,
+        mock_failures_counter,
+    ):
+        """Test that all workers failing breaks the loop and logs errors."""
+        file1_path = SUBMISSION_FILEPATH_MOCK + SUBMISSION_FILENAME_MOCK
+
+        mock_getsize.return_value = self.FILE1_SIZE
+
+        mock_queue = MagicMock()
+        mock_queue_cls.return_value = mock_queue
+
+        # Queue not empty on first check, triggers the is_alive guard
+        mock_queue.empty.return_value = False
+        mock_queue.qsize.return_value = 1
+
+        mock_ok = MagicMock(value=0)
+        mock_fail = MagicMock(value=1)
+        mock_processed = MagicMock(value=0)
+        mock_value.side_effect = [mock_ok, mock_fail, mock_processed]
+
+        # Two workers: one crashed (exitcode=1), one killed (exitcode=-9)
+        crashed_worker = MagicMock(exitcode=1, pid=1001)
+        crashed_worker.is_alive.return_value = False
+
+        killed_worker = MagicMock(exitcode=-9, pid=1002)
+        killed_worker.is_alive.return_value = False
+
+        mock_process.side_effect = [crashed_worker, killed_worker]
+
+        ingest_submissions_parallel(
+            json_files=[file1_path],
+            tree_names={},
+            dirs=SUBMISSION_DIRS_MOCK,
+            max_workers=2,
+        )
+
+        # Loop should break because no workers are alive
+        mock_logger.error.assert_any_call(
+            "All workers exited while queue still has items"
+        )
+
+        # Both workers should be joined and their exit codes logged
+        crashed_worker.join.assert_called_once()
+        killed_worker.join.assert_called_once()
+
+        mock_logger.error.assert_any_call(
+            "Worker %s exited with code %s (%s)", 1001, 1, "exception"
+        )
+        mock_logger.error.assert_any_call(
+            "Worker %s exited with code %s (%s)", 1002, -9, "signal"
+        )
+
+        # Prometheus counter incremented with correct labels
+        mock_failures_counter.labels.assert_any_call(
+            ingester=INGESTER_GRAFANA_LABEL, reason="exception"
+        )
+        mock_failures_counter.labels.assert_any_call(
+            ingester=INGESTER_GRAFANA_LABEL, reason="signal"
+        )
+        assert mock_failures_counter.labels.return_value.inc.call_count == 2
+
+    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.out", MagicMock())
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.WORKER_FAILURES_COUNTER"
+    )
+    @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
+    @patch("multiprocessing.Process")
+    @patch("multiprocessing.Queue")
+    @patch("multiprocessing.Value")
+    @patch("time.sleep", MagicMock())
+    @patch("time.time", MagicMock(side_effect=TIME_MOCK))
+    @patch("os.path.getsize")
+    def test_ingest_submissions_parallel_partial_worker_failure(
+        self,
+        mock_getsize,
+        mock_value,
+        mock_queue_cls,
+        mock_process,
+        mock_logger,
+        mock_failures_counter,
+    ):
+        """Test that partial worker failure still completes when a worker survives."""
+        file1_path = SUBMISSION_FILEPATH_MOCK + SUBMISSION_FILENAME_MOCK
+
+        mock_getsize.return_value = self.FILE1_SIZE
+
+        mock_queue = MagicMock()
+        mock_queue_cls.return_value = mock_queue
+
+        # Queue non-empty on first iteration, then empty (surviving worker drained it)
+        mock_queue.empty.side_effect = [False, True]
+        mock_queue.qsize.return_value = 1
+
+        mock_ok = MagicMock(value=0)
+        mock_fail = MagicMock(value=0)
+        mock_processed = MagicMock(value=0)
+        mock_value.side_effect = [mock_ok, mock_fail, mock_processed]
+
+        # One worker crashed, one is still alive and draining the queue
+        crashed_worker = MagicMock(exitcode=1, pid=1001)
+        crashed_worker.is_alive.return_value = False
+
+        alive_worker = MagicMock(exitcode=0, pid=1002)
+        alive_worker.is_alive.return_value = True
+
+        mock_process.side_effect = [crashed_worker, alive_worker]
+
+        ingest_submissions_parallel(
+            json_files=[file1_path],
+            tree_names={},
+            dirs=SUBMISSION_DIRS_MOCK,
+            max_workers=2,
+        )
+
+        # Both workers should be joined
+        crashed_worker.join.assert_called_once()
+        alive_worker.join.assert_called_once()
+
+        # Only the crashed worker should trigger an error log and counter
+        mock_logger.error.assert_called_once_with(
+            "Worker %s exited with code %s (%s)", 1001, 1, "exception"
+        )
+        mock_failures_counter.labels.assert_called_once_with(
+            ingester=INGESTER_GRAFANA_LABEL, reason="exception"
+        )
+        mock_failures_counter.labels.return_value.inc.assert_called_once()
