@@ -7,6 +7,7 @@ import threading
 from typing import Any, Literal, Optional
 
 import requests
+from kernelCI_app.constants.general import REQUESTS_TIMEOUT_UPLOAD_IN_SECONDS
 from kernelCI_app.constants.ingester import (
     CACHE_LOGS_SIZE_LIMIT,
     LOGEXCERPT_THRESHOLD,
@@ -47,7 +48,12 @@ def upload_logexcerpt(logexcerpt: str, id: str) -> str:
         }
         files = {"file0": ("logexcerpt.txt.gz", f), "path": f"logexcerpt/{id}"}
         try:
-            r = requests.post(UPLOAD_URL, headers=hdr, files=files)
+            r = requests.post(
+                UPLOAD_URL,
+                headers=hdr,
+                files=files,
+                timeout=REQUESTS_TIMEOUT_UPLOAD_IN_SECONDS,
+            )
         except Exception as e:
             logger.error("Error uploading logexcerpt for %s: %s", id, e)
             os.remove(logexcerpt_filename)
