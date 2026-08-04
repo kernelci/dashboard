@@ -11,3 +11,8 @@ SCHEMA_VERSION_ENV_FILE = "kernelCI/envconfig/schema-version.yaml"
 
 PRODUCTION_HOST = "https://dashboard.kernelci.org"
 STAGING_HOST = "https://staging.dashboard.kernelci.org"
+
+# Timeouts in seconds
+REQUESTS_TIMEOUT_UPLOAD_IN_SECONDS = 30
+REQUESTS_TIMEOUT_WEBHOOK_IN_SECONDS = 10
+REQUESTS_TIMEOUT_FETCH_IN_SECONDS = 30

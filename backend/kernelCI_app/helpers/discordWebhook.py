@@ -8,6 +8,7 @@ from kernelCI_app.cache import (
     get_notification_cache,
     set_notification_cache,
 )
+from kernelCI_app.constants.general import REQUESTS_TIMEOUT_WEBHOOK_IN_SECONDS
 from kernelCI_app.helpers.logger import log_message
 
 # For more information on discord webhook structure, visit
@@ -97,7 +98,9 @@ def send_discord_notification(
         data["embeds"] = embeds
 
     try:
-        result = requests.post(url=url, json=data)
+        result = requests.post(
+            url=url, json=data, timeout=REQUESTS_TIMEOUT_WEBHOOK_IN_SECONDS
+        )
         result.raise_for_status()
     except requests.HTTPError as e:
         log_message(e)
