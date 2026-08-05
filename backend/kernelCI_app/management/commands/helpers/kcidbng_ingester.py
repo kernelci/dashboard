@@ -71,6 +71,11 @@ TESTS_COUNTER = Counter(
 INCIDENTS_COUNTER = Counter(
     "kcidb_incidents", "Number of incidents ingested", ["ingester", "origin"]
 )
+WORKER_FAILURES_COUNTER = Counter(
+    "kcidb_ingester_worker_failures",
+    "Number of ingester worker processes that exited abnormally",
+    ["ingester", "reason"],
+)
 
 
 def standardize_tree_names(
@@ -569,10 +574,25 @@ def ingest_submissions_parallel(  # noqa: C901 - orchestrator with IO + multipro
                     process_queue.qsize(),
                 )
                 last_progress = time.time()
+            if not any(w.is_alive() for w in writers):
+                if not process_queue.empty():
+                    logger.error("All workers exited while queue still has items")
+                break
             time.sleep(1)
 
         for writer in writers:
             writer.join()
+            if writer.exitcode:
+                reason = "signal" if writer.exitcode < 0 else "exception"
+                logger.error(
+                    "Worker %s exited with code %s (%s)",
+                    writer.pid,
+                    writer.exitcode,
+                    reason,
+                )
+                WORKER_FAILURES_COUNTER.labels(
+                    ingester=INGESTER_GRAFANA_LABEL, reason=reason
+                ).inc()
     except KeyboardInterrupt:
         out("\nKeyboardInterrupt: terminating workers...")
         for writer in writers:
