@@ -325,6 +325,11 @@ export const messages = {
     'tab.findOnPreviousCheckoutsTooltip':
       'You may still find {tab} on previous checkouts',
     'tab.name': 'Name',
+    'table.grouping.collapseAll': 'Collapse all',
+    'table.grouping.disable': 'Disable grouping',
+    'table.grouping.enable': 'Enable grouping',
+    'table.grouping.expandAll': 'Expand all',
+    'table.grouping.label': 'Grouping',
     'table.itemsPerPage': 'Items per page:',
     'table.of': 'of',
     'table.showing': 'Showing:',
