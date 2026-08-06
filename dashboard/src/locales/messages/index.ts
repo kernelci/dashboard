@@ -344,6 +344,7 @@ export const messages = {
       'Inconclusive - test concluded with inconclusive results such as infrastructure errors.{br}{br}' +
       'Inconclusive groups tests with ERROR, MISS, SKIP, DONE, and unknown statuses defined by KCIDB.',
     'testDetails.buildInfo': 'Build Info',
+    'testDetails.cannotFetchHistory': 'No tracking information available',
     'testDetails.notFound': 'Test not found',
     'testDetails.regressionTooltip.fixed':
       'Test was failing but passed in the last iterations',
