@@ -5,21 +5,32 @@ import { Link, LinkProps as RouterLinkProps } from '@tanstack/react-router';
 
 const Table = React.forwardRef<
   HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement> & { containerClassName?: string }
->(({ className, containerClassName, ...props }, ref) => (
-  <div
-    className={cn(
-      'border-dark-gray relative w-full overflow-auto rounded-lg border-x border-t',
-      containerClassName,
-    )}
-  >
-    <table
-      ref={ref}
-      className={cn('w-full caption-bottom text-sm', className)}
-      {...props}
-    />
-  </div>
-));
+  React.HTMLAttributes<HTMLTableElement> & {
+    containerClassName?: string;
+    containerRef?: React.Ref<HTMLDivElement>;
+    containerStyle?: React.CSSProperties;
+  }
+>(
+  (
+    { className, containerClassName, containerRef, containerStyle, ...props },
+    ref,
+  ) => (
+    <div
+      ref={containerRef}
+      style={containerStyle}
+      className={cn(
+        'border-dark-gray relative w-full overflow-auto rounded-lg border-x border-t',
+        containerClassName,
+      )}
+    >
+      <table
+        ref={ref}
+        className={cn('w-full caption-bottom text-sm', className)}
+        {...props}
+      />
+    </div>
+  ),
+);
 Table.displayName = 'Table';
 
 const TableHeader = React.forwardRef<

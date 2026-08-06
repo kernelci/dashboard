@@ -7,6 +7,8 @@ import { TableCellWithLink, TableRow } from '@/components/ui/table';
 
 import { cn } from '@/lib/utils';
 
+import { columnWidthStyle } from '@/utils/columnLayout';
+
 import { DETAILS_COLUMN_ID } from './DetailsColumn';
 
 type BaseComponentType = {
@@ -18,6 +20,7 @@ interface ITableCellComponent<T> {
   rowIndex: number;
   openLogSheet: (index: number) => void;
   detailsLinkProps: LinkProps;
+  columnWidths?: Record<string, number>;
 }
 
 const TableCellComponent = <T,>({
@@ -25,6 +28,7 @@ const TableCellComponent = <T,>({
   rowIndex,
   openLogSheet,
   detailsLinkProps,
+  columnWidths,
 }: ITableCellComponent<T>): JSX.Element => {
   const handleClick = useCallback(() => {
     openLogSheet(rowIndex);
@@ -42,6 +46,8 @@ const TableCellComponent = <T,>({
     <TableCellWithLink
       onClick={parsedHandleClick}
       key={cell.id}
+      className="overflow-hidden"
+      style={columnWidthStyle(columnWidths?.[cell.column.id])}
       linkProps={parsedLinkProps}
     >
       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -58,6 +64,7 @@ interface ITableRowComponent<T extends BaseComponentType> {
   currentLog?: number;
   openLogSheet: (index: number) => void;
   getRowLink: (detailsId: string) => LinkProps;
+  columnWidths?: Record<string, number>;
 }
 
 const TableRowComponent = <T extends BaseComponentType>({
@@ -66,6 +73,7 @@ const TableRowComponent = <T extends BaseComponentType>({
   currentLog,
   openLogSheet,
   getRowLink,
+  columnWidths,
 }: ITableRowComponent<T>): JSX.Element => {
   const className = index === currentLog ? 'bg-sky-200' : undefined;
 
@@ -85,6 +93,7 @@ const TableRowComponent = <T extends BaseComponentType>({
           rowIndex={index}
           openLogSheet={openLogSheet}
           detailsLinkProps={linkProps}
+          columnWidths={columnWidths}
         />
       ))}
     </TableRow>

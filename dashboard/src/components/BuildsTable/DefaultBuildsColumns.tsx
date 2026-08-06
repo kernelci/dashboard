@@ -26,18 +26,34 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
         tooltipId="build.dummyInfo"
       />
     ),
+    meta: {
+      headerIntlKey: 'global.config',
+      isRowHeader: true,
+      minWidth: 140,
+      maxWidth: 320,
+    },
   },
   {
     accessorKey: 'architecture',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.arch" />
     ),
+    meta: {
+      headerIntlKey: 'global.arch',
+      minWidth: 90,
+      maxWidth: 160,
+    },
   },
   {
     accessorKey: 'compiler',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.compiler" />
     ),
+    meta: {
+      headerIntlKey: 'global.compiler',
+      minWidth: 100,
+      maxWidth: 200,
+    },
   },
   {
     accessorKey: 'date',
@@ -52,6 +68,11 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
         showLabelTZ={true}
       />
     ),
+    meta: {
+      headerIntlKey: 'global.date',
+      minWidth: 140,
+      maxWidth: 220,
+    },
   },
   {
     accessorKey: 'buildErrors',
@@ -69,6 +90,11 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
         }
       />
     ),
+    meta: {
+      headerIntlKey: 'global.buildErrors',
+      minWidth: 100,
+      maxWidth: 160,
+    },
   },
   {
     accessorKey: 'buildTime',
@@ -77,6 +103,11 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
     ),
     cell: ({ row }): JSX.Element => {
       return row.getValue('buildTime');
+    },
+    meta: {
+      headerIntlKey: 'global.buildTime',
+      minWidth: 100,
+      maxWidth: 160,
     },
   },
   {
@@ -95,10 +126,20 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
     },
     filterFn: (row, columnId, filterValue) =>
       getBuildStatusGroup(row.getValue(columnId)) === filterValue,
+    meta: {
+      headerIntlKey: 'global.status',
+      minWidth: 100,
+      maxWidth: 160,
+    },
   },
   {
     id: DETAILS_COLUMN_ID,
     header: (): JSX.Element => <MoreDetailsTableHeader />,
     cell: (): JSX.Element => <MoreDetailsIcon />,
+    enableResizing: false,
+    meta: {
+      minWidth: 64,
+      maxWidth: 96,
+    },
   },
 ];

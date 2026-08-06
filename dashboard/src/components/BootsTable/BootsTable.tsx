@@ -1,11 +1,9 @@
 import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import {
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
 } from '@tanstack/react-table';
 
 import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
@@ -26,17 +24,17 @@ import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 import type { TestHistory } from '@/types/general';
 
-import BaseTable, { TableHead } from '@/components/Table/BaseTable';
-
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import { useTestIssues } from '@/api/testDetails';
 import { useLogData } from '@/hooks/useLogData';
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 import { usePaginationState } from '@/hooks/usePaginationState';
+import { useLayoutTable } from '@/hooks/useLayoutTable';
 
 import type { TableKeys } from '@/utils/constants/tables';
 
 import { TableRowMemoized } from '@/components/Table/TableComponents';
+import { TableFrame } from '@/components/Table/TableFrame';
 
 import { buildHardwareArray, buildTreeBranch } from '@/utils/table';
 
@@ -60,6 +58,12 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.path" />
     ),
+    meta: {
+      headerIntlKey: 'global.path',
+      isRowHeader: true,
+      minWidth: 160,
+      maxWidth: 400,
+    },
   },
   {
     accessorKey: 'status',
@@ -72,6 +76,11 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
         tooltipId="boots.statusTooltip"
       />
     ),
+    meta: {
+      headerIntlKey: 'global.status',
+      minWidth: 100,
+      maxWidth: 160,
+    },
   },
   {
     accessorKey: 'startTime',
@@ -86,6 +95,11 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
         showLabelTZ={true}
       />
     ),
+    meta: {
+      headerIntlKey: 'buildDetails.startTime',
+      minWidth: 140,
+      maxWidth: 220,
+    },
   },
   {
     accessorKey: 'duration',
@@ -94,6 +108,11 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
     ),
     cell: ({ row }): string =>
       row.getValue('duration') ? row.getValue('duration') : '-',
+    meta: {
+      headerIntlKey: 'global.duration',
+      minWidth: 100,
+      maxWidth: 160,
+    },
   },
   {
     id: 'lab',
@@ -104,6 +123,11 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
     cell: ({ row }): string => {
       return row.getValue('lab') || UNKNOWN_STRING;
     },
+    meta: {
+      headerIntlKey: 'global.lab',
+      minWidth: 100,
+      maxWidth: 200,
+    },
   },
   {
     accessorKey: 'hardware',
@@ -113,11 +137,21 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
     cell: ({ row }): JSX.Element | string => {
       return <TooltipHardware hardwares={row.original.hardware} />;
     },
+    meta: {
+      headerIntlKey: 'global.hardware',
+      minWidth: 120,
+      maxWidth: 280,
+    },
   },
   {
     id: DETAILS_COLUMN_ID,
     header: (): JSX.Element => <MoreDetailsTableHeader />,
     cell: (): JSX.Element => <MoreDetailsIcon />,
+    enableResizing: false,
+    meta: {
+      minWidth: 64,
+      maxWidth: 96,
+    },
   },
 ];
 
@@ -180,7 +214,14 @@ export function BootsTable({
 
   const testsData = useMemo(() => rawData.tests, [rawData]);
 
-  const table = useReactTable({
+  const {
+    table,
+    containerRef,
+    columnWidths,
+    tableWidth,
+    columnsMenu,
+    tableHeaders,
+  } = useLayoutTable({
     data: testsData,
     columns,
     onSortingChange: setSorting,
@@ -278,26 +319,6 @@ export function BootsTable({
     [updatePathFilter],
   );
 
-  const groupHeaders = table.getHeaderGroups()[0]?.headers;
-  const tableHeaders = useMemo((): JSX.Element[] => {
-    return groupHeaders.map(header => {
-      const headerComponent = header.isPlaceholder
-        ? null
-        : // the header must change the icon when sorting changes,
-          // but just the column dependency won't trigger the rerender
-          // so we pass an unused sorting prop here to force the useMemo dependency
-          flexRender(header.column.columnDef.header, {
-            ...header.getContext(),
-            sorting,
-          });
-      return (
-        <TableHead key={header.id} className="border-b px-2 font-bold">
-          {headerComponent}
-        </TableHead>
-      );
-    });
-  }, [groupHeaders, sorting]);
-
   const modelRows = table.getRowModel().rows;
 
   const sortedItems = useMemo(
@@ -339,6 +360,7 @@ export function BootsTable({
           openLogSheet={openLogSheet}
           currentLog={currentLog}
           getRowLink={getRowLink}
+          columnWidths={columnWidths}
         />
       ))
     ) : (
@@ -348,7 +370,14 @@ export function BootsTable({
         </TableCell>
       </TableRow>
     );
-  }, [modelRows, getRowLink, openLogSheet, currentLog, columns.length]);
+  }, [
+    modelRows,
+    getRowLink,
+    openLogSheet,
+    currentLog,
+    columns.length,
+    columnWidths,
+  ]);
 
   const handlePreviousItem = useCallback(() => {
     if (currentLog !== undefined && currentLog > 0) {
@@ -399,16 +428,23 @@ export function BootsTable({
       status={status}
       error={error}
     >
-      <TableTopFilters
-        key="bootsTableSearch"
-        filters={filters}
-        onClickFilter={onClickFilter}
-        onSearchChange={onSearchChange}
-        currentPathFilter={currentPathFilter}
-      />
-      <BaseTable headerComponents={tableHeaders}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <TableTopFilters
+          key="bootsTableSearch"
+          filters={filters}
+          onClickFilter={onClickFilter}
+          onSearchChange={onSearchChange}
+          currentPathFilter={currentPathFilter}
+        />
+        {columnsMenu}
+      </div>
+      <TableFrame
+        containerRef={containerRef}
+        tableWidth={tableWidth}
+        headerComponents={tableHeaders}
+      >
         <TableBody>{tableRows}</TableBody>
-      </BaseTable>
+      </TableFrame>
       <PaginationInfo table={table} intlLabel="global.boots" />
     </WrapperTableWithLogSheet>
   );

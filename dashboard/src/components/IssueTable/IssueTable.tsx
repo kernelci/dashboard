@@ -5,16 +5,9 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
 } from '@tanstack/react-table';
 
-import type {
-  Row,
-  SortingState,
-  ColumnDef,
-  Cell,
-  VisibilityState,
-} from '@tanstack/react-table';
+import type { Row, SortingState, ColumnDef, Cell } from '@tanstack/react-table';
 
 import type { LinkProps } from '@tanstack/react-router';
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -30,6 +23,7 @@ import type {
 } from '@/types/issueListing';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { usePaginationState } from '@/hooks/usePaginationState';
+import { columnWidthStyle, useLayoutTable } from '@/hooks/useLayoutTable';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import {
   TableBody,
@@ -37,7 +31,7 @@ import {
   TableCellWithLink,
   TableRow,
 } from '@/components/ui/table';
-import BaseTable, { TableHead } from '@/components/Table/BaseTable';
+import { TableFrame } from '@/components/Table/TableFrame';
 
 import { IssueCulprit } from '@/components/Issue/IssueCulprit';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/Tooltip';
@@ -107,7 +101,7 @@ const columns: ColumnDef<IssueListingTableItem>[] = [
     cell: ({ row }): JSX.Element | string =>
       row.getValue('comment') ? (
         <Tooltip>
-          <TooltipTrigger className="max-w-[200px] truncate md:max-w-[225px] xl:max-w-[315px] 2xl:max-w-[570px]">
+          <TooltipTrigger className="max-w-full truncate">
             {row.getValue('comment')}
           </TooltipTrigger>
           <TooltipContent>{row.original.id}</TooltipContent>
@@ -115,12 +109,23 @@ const columns: ColumnDef<IssueListingTableItem>[] = [
       ) : (
         row.original.id
       ),
+    meta: {
+      headerIntlKey: 'issueDetails.comment',
+      isRowHeader: true,
+      minWidth: 160,
+      maxWidth: 480,
+    },
   },
   {
     accessorKey: 'origin',
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.origin" />
     ),
+    meta: {
+      headerIntlKey: 'global.origin',
+      minWidth: 80,
+      maxWidth: 160,
+    },
   },
   {
     id: 'culprit',
@@ -145,6 +150,11 @@ const columns: ColumnDef<IssueListingTableItem>[] = [
         culprit_tool={row.original.culprit_tool}
       />
     ),
+    meta: {
+      headerIntlKey: 'issueDetails.culpritTitle',
+      minWidth: 100,
+      maxWidth: 200,
+    },
   },
   {
     accessorKey: 'first_seen',
@@ -158,6 +168,11 @@ const columns: ColumnDef<IssueListingTableItem>[] = [
         showRelative={shouldShowRelativeDate(row.getValue('first_seen'))}
       />
     ),
+    meta: {
+      headerIntlKey: 'issue.firstSeen',
+      minWidth: 100,
+      maxWidth: 180,
+    },
   },
   {
     id: 'treeBranch',
@@ -177,6 +192,11 @@ const columns: ColumnDef<IssueListingTableItem>[] = [
         tooltipId="issueListing.treeBranchTooltip"
       />
     ),
+    meta: {
+      headerIntlKey: 'global.treeBranch',
+      minWidth: 120,
+      maxWidth: 280,
+    },
   },
 ];
 
@@ -201,9 +221,6 @@ export const IssueTable = ({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'first_seen', desc: true },
   ]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    culprit: false,
-  });
 
   const { pagination, paginationUpdater } = usePaginationState(
     'issueListing',
@@ -221,40 +238,27 @@ export const IssueTable = ({
     }));
   }, [issueListing]);
 
-  const table = useReactTable({
+  const {
+    table,
+    containerRef,
+    columnWidths,
+    tableWidth,
+    columnsMenu,
+    tableHeaders,
+  } = useLayoutTable({
     data: issueTableRows,
     columns,
+    initialColumnVisibility: { culprit: false },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
     state: {
       sorting,
       pagination,
-      columnVisibility,
     },
   });
-
-  const groupHeaders = table.getHeaderGroups()[0].headers;
-  const tableHeaders = useMemo((): JSX.Element[] => {
-    return groupHeaders.map(header => {
-      return (
-        <TableHead key={header.id}>
-          {header.isPlaceholder
-            ? null
-            : // the header must change the icon when sorting changes,
-              // but just the column dependency won't trigger the rerender
-              // so we pass an unused sorting prop here to force the useMemo dependency
-              flexRender(header.column.columnDef.header, {
-                ...header.getContext(),
-                sorting,
-              })}
-        </TableHead>
-      );
-    });
-  }, [groupHeaders, sorting]);
 
   const modelRows = table.getRowModel().rows;
   const tableBody = useMemo((): JSX.Element[] | JSX.Element => {
@@ -265,6 +269,8 @@ export const IssueTable = ({
             return (
               <TableCellWithLink
                 key={cell.id}
+                className="overflow-hidden"
+                style={columnWidthStyle(columnWidths[cell.column.id])}
                 linkClassName="w-full inline-block h-full"
                 linkProps={getLinkProps(row, cell)}
               >
@@ -281,7 +287,7 @@ export const IssueTable = ({
         </TableCell>
       </TableRow>
     );
-  }, [modelRows]);
+  }, [modelRows, columnWidths]);
 
   const navigateWithPageSize = useCallback(
     (pageSize: number) => {
@@ -295,6 +301,7 @@ export const IssueTable = ({
 
   return (
     <>
+      <div className="mb-4 flex justify-end">{columnsMenu}</div>
       <QuerySwitcher
         status={status}
         data={queryData}
@@ -307,9 +314,13 @@ export const IssueTable = ({
           />
         }
       >
-        <BaseTable headerComponents={tableHeaders}>
+        <TableFrame
+          containerRef={containerRef}
+          tableWidth={tableWidth}
+          headerComponents={tableHeaders}
+        >
           <TableBody>{tableBody}</TableBody>
-        </BaseTable>
+        </TableFrame>
       </QuerySwitcher>
       <PaginationInfo
         table={table}

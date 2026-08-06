@@ -26,7 +26,7 @@ const DEFAULT_SORTING = 'false';
 const zSortingEnum = z.enum(sortingMethods);
 const zSortingMethod = zSortingEnum.catch(DEFAULT_SORTING);
 
-const arrowClassName = 'ml-1 h-4 w-4';
+const arrowClassName = 'ml-1 h-4 w-4 shrink-0';
 const sortedArrow = {
   asc: <ArrowUp className={arrowClassName} />,
   desc: <ArrowDown className={arrowClassName} />,
@@ -52,19 +52,20 @@ export const TableHeader = <T,>({
   }, [column, sortable]);
 
   return (
-    <span className="flex">
+    <span className="flex min-w-0 items-center">
       <Button
         variant="ghost"
-        className="justify-start px-2"
+        className="max-w-full min-w-0 justify-start px-2"
         onClick={headerSort}
       >
-        <FormattedMessage key={intlKey} id={intlKey} />
-
+        <span className="truncate">
+          <FormattedMessage key={intlKey} id={intlKey} />
+        </span>
         {sortable && sortedArrow[zSortingMethod.parse(column.getIsSorted())]}
       </Button>
       {tooltipId && (
         <TooltipIcon
-          triggerClassName="ml-2"
+          triggerClassName="ml-1 shrink-0"
           contentClassName="font-normal whitespace-pre-line"
           tooltipId={tooltipId}
         />
