@@ -281,11 +281,11 @@ def flush_buffers(
     if total == 0:
         return
 
-    assign_lab_ids(builds_buf, tests_buf)
-
     # Insert in dependency-safe order
     flush_start = time.time()
     try:
+        # Autocommit, outside the transaction: avoids holding lab locks per flush.
+        assign_lab_ids(builds_buf, tests_buf)
         # Single transaction for all tables in the flush
         with transaction.atomic():
             consume_buffer(issues_buf, "issues")
