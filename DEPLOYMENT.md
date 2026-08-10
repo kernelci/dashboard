@@ -205,6 +205,28 @@ docker compose -f docker-compose-next.yml pull
 docker compose -f docker-compose-next.yml up -d
 ```
 
+### Tagging a release
+
+Every production deployment must be preceded by a release tag.
+The dashboard displays its version (`git describe --tags`) at the bottom of the
+side menu, so an untagged deployment shows a string like
+`release/<old release>-N-g<sha>`, making it hard to tell which release is live.
+
+1. Tag the `main` commit being released, following the `release/YYYYMMDD.N`
+convention (`N` starts at `0` and increments for further releases on the same day):
+
+    ```bash
+    git fetch --tags
+    git tag release/20260729.0 <commit>
+    git push origin release/20260729.0
+    ```
+
+2. Manually trigger the `Publish GHCR Images` workflow. Images built by the
+earlier push to `main` were baked before the tag existed, so they still carry the
+previous version string.
+3. Trigger the `Deploy production Dashboard` workflow with the new tag.
+4. Confirm the version shown in the side menu matches the tag.
+
 ---
 
 ## 3. Staging

@@ -8,6 +8,9 @@ RUN npm install -g pnpm@10.33.3 && pnpm install --frozen-lockfile
 
 COPY dashboard/. ./
 
+ARG DASHBOARD_VERSION
+ENV VITE_DASHBOARD_VERSION=$DASHBOARD_VERSION
+
 RUN pnpm build
 
 # Stage 2: Copy the static files from the builder stage
