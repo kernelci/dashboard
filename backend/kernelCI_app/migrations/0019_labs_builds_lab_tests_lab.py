@@ -27,6 +27,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 to="kernelCI_app.labs",
+                db_constraint=True,
             ),
         ),
         migrations.AddField(
@@ -36,6 +37,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 to="kernelCI_app.labs",
+                db_constraint=True,
             ),
         ),
     ]
