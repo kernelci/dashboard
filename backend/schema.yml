@@ -2513,6 +2513,14 @@ components:
             - type: 'null'
           title: Versions
           type: object
+        per_tree:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/TreeSeenData'
+            type: array
+          - type: 'null'
+          default: null
+          title: Per Tree
       required:
       - first_incident
       - last_incident
@@ -3179,6 +3187,45 @@ components:
         $ref: '#/components/schemas/IssueBuildItem'
       title: IssueBuildsResponse
       type: array
+    IssueCheckout:
+      properties:
+        start_time:
+          $ref: '#/components/schemas/Timestamp'
+        git_commit_hash:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitHash'
+          - type: 'null'
+          default: null
+        git_repository_url:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+          - type: 'null'
+          default: null
+        git_repository_branch:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+          - type: 'null'
+          default: null
+        git_commit_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitName'
+          - type: 'null'
+          default: null
+        tree_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__TreeName'
+          - type: 'null'
+          default: null
+        checkout_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Checkout Id
+      required:
+      - start_time
+      title: IssueCheckout
+      type: object
     IssueDetailsResponse:
       properties:
         field_timestamp:
@@ -4527,6 +4574,22 @@ components:
       - unstable_tests
       - issues
       title: TreeReportResponse
+      type: object
+    TreeSeenData:
+      properties:
+        first_incident:
+          $ref: '#/components/schemas/Incident'
+        last_incident:
+          $ref: '#/components/schemas/Incident'
+        first_good_checkout:
+          anyOf:
+          - $ref: '#/components/schemas/IssueCheckout'
+          - type: 'null'
+          default: null
+      required:
+      - first_incident
+      - last_incident
+      title: TreeSeenData
       type: object
     TreeSetItem:
       properties:

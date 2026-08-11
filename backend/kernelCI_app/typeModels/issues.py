@@ -78,10 +78,27 @@ class Incident(BaseModel):
     checkout_id: Optional[str]
 
 
+class IssueCheckout(BaseModel):
+    start_time: Timestamp
+    git_commit_hash: Optional[Checkout__GitCommitHash] = None
+    git_repository_url: Optional[Checkout__GitRepositoryUrl] = None
+    git_repository_branch: Optional[Checkout__GitRepositoryBranch] = None
+    git_commit_name: Optional[Checkout__GitCommitName] = None
+    tree_name: Optional[Checkout__TreeName] = None
+    checkout_id: Optional[str] = None
+
+
+class TreeSeenData(BaseModel):
+    first_incident: Incident
+    last_incident: Incident
+    first_good_checkout: Optional[IssueCheckout] = None
+
+
 class ExtraIssuesData(BaseModel):
     first_incident: Incident
     last_incident: Incident
     versions: dict[int, Optional[IssueWithExtraInfo]]
+    per_tree: Optional[list[TreeSeenData]] = None
 
 
 type ProcessedExtraDetailedIssues = Annotated[

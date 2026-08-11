@@ -14,6 +14,7 @@ export interface ILinkWithIcon {
   onClick?: () => void;
   unformattedTitle?: string;
   titleIcon?: JSX.Element;
+  className?: string;
 }
 
 const LinkWithIcon = ({
@@ -25,6 +26,7 @@ const LinkWithIcon = ({
   onClick,
   unformattedTitle,
   titleIcon,
+  className,
 }: ILinkWithIcon): JSX.Element => {
   const WrapperLink = link ? 'a' : 'div';
 
@@ -38,7 +40,9 @@ const LinkWithIcon = ({
   }, [title, unformattedTitle]);
 
   return (
-    <div className="flex flex-col items-start gap-1 text-[16px]">
+    <div
+      className={cn('flex flex-col items-start gap-1 text-[16px]', className)}
+    >
       {(titleText || titleIcon) && (
         <div className="flex flex-row gap-[5px]">
           {titleText && <span className="font-bold">{titleText}</span>}

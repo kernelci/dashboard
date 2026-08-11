@@ -8,7 +8,10 @@ from rest_framework.views import APIView
 
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
-from kernelCI_app.helpers.issueExtras import process_issues_extra_details
+from kernelCI_app.helpers.issueExtras import (
+    assign_issue_per_tree,
+    process_issues_extra_details,
+)
 from kernelCI_app.queries.issues import get_issue_details, get_latest_issue_version
 from kernelCI_app.typeModels.commonOpenApiParameters import ISSUE_ID_PATH_PARAM
 from kernelCI_app.typeModels.issueDetails import (
@@ -58,6 +61,10 @@ class IssueDetails(APIView):
             )
 
         process_issues_extra_details(
+            issue_key_list=[(issue_id, query_params.version)],
+            processed_issues_table=self.processed_issue_extras,
+        )
+        assign_issue_per_tree(
             issue_key_list=[(issue_id, query_params.version)],
             processed_issues_table=self.processed_issue_extras,
         )

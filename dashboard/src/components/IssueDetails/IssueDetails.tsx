@@ -50,6 +50,8 @@ import { Badge } from '@/components/ui/badge';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
+import { IncidentsSection } from './IncidentsSection';
+
 import { IssueDetailsTestSection } from './IssueDetailsTestSection';
 
 import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
@@ -221,15 +223,6 @@ export const IssueDetails = ({
     ];
   }, [data, tagPills, issueCulprit]);
 
-  const sectionsData: ISection[] = useMemo(() => {
-    return [
-      ...generalSections,
-      firstIncidentSection,
-      logspecSection,
-      miscSection,
-    ].filter(section => !!section);
-  }, [generalSections, logspecSection, miscSection, firstIncidentSection]);
-
   const issueDetailsTabTitle = useMemo(() => {
     return formatMessage(
       { id: 'title.issueDetails' },
@@ -260,7 +253,15 @@ export const IssueDetails = ({
           <Sheet>
             <div className="flex flex-col gap-4 pb-10">
               {breadcrumb}
-              <SectionGroup sections={sectionsData} />
+              <SectionGroup sections={generalSections} />
+              <IncidentsSection perTree={data?.extra?.[issueId]?.per_tree} />
+              <SectionGroup
+                sections={[
+                  firstIncidentSection,
+                  logspecSection,
+                  miscSection,
+                ].filter(section => !!section)}
+              />
               <IssueDetailsTestSection
                 issueId={issueId}
                 versionNumber={versionNumber}
