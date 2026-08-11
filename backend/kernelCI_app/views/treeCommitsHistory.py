@@ -592,7 +592,7 @@ class TreeCommitsHistoryList(BaseTreeCommitsHistory):
         if is_filtered_out(architecture, filters.filterArchitecture):
             return True
         filtered_issues = filters.filterIssues.get(filter_type, set())
-        if filtered_issues and not known_issues.issubset(filtered_issues):
+        if filtered_issues and known_issues.isdisjoint(filtered_issues):
             return True
 
         return False
