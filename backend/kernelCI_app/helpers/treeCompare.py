@@ -162,9 +162,7 @@ def build_boot_test_compare_filter_clauses(  # noqa: C901 - maps FilterParams fi
         filters.filterBootPath if data_type == "boots" else filters.filterTestPath
     )
     if path_filter:
-        pre_join.append(
-            "AND COALESCE(t.path, '') LIKE '%%' || %(test_path)s || '%%'"
-        )
+        pre_join.append("AND COALESCE(t.path, '') LIKE '%%' || %(test_path)s || '%%'")
         params["test_path"] = path_filter
 
     origin_filter = (

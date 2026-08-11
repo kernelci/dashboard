@@ -410,8 +410,6 @@ export const messages = {
       'Compare pass/fail counts between two revisions on the same tree and branch.',
     'treeCompare.drilldownHint':
       'Individual builds, boots, and tests that changed between Side A and Side B.',
-    'treeCompare.needTwoRevisions':
-      'Select two different revisions to compare. This tree needs at least two commits with results.',
     'treeCompare.failures.change': 'Change',
     'treeCompare.failures.configArch': 'Config / Arch',
     'treeCompare.failures.pathArch': 'Path / Arch',
@@ -426,6 +424,8 @@ export const messages = {
     'treeCompare.matrix.pass': 'pass',
     'treeCompare.matrix.regressions': 'regressions',
     'treeCompare.matrix.tests': 'tests',
+    'treeCompare.needTwoRevisions':
+      'Select two different revisions to compare. This tree needs at least two commits with results.',
     'treeCompare.openCompare': 'Compare revisions',
     'treeCompare.selectRevision': 'Select a revision',
     'treeCompare.sideA': 'Side A',

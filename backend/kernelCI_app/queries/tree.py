@@ -991,7 +991,6 @@ def get_tree_commit_history_hashes_aggregated(
         return rows
 
 
-
 def get_tree_compare_boots_tests_diff(
     *,
     data_type: Literal["boots", "tests"],
@@ -1013,7 +1012,10 @@ def get_tree_compare_boots_tests_diff(
     Duration kwargs are accepted for call-site compat but ignored: filtering by
     duration before the A/B join invents false appeared/disappeared rows.
     """
-    del boots_duration, tests_duration  # ponytail: post-join duration needs selected cols
+    del (
+        boots_duration,
+        tests_duration,
+    )  # ponytail: post-join duration needs selected cols
     commit_hashes = [hash_a, hash_b]
     filter_sql = build_boot_test_compare_filter_clauses(filters, data_type)
 
@@ -1692,7 +1694,6 @@ def get_tree_compare_builds_diff(
     return rows
 
 
-
 # Keep in sync with dashboard deriveCompareChange (INCONCLUSIVE transitions included).
 _CHANGE_COUNT_SELECT = """
     COUNT(*) FILTER (
@@ -1922,9 +1923,7 @@ def _get_tree_compare_boots_tests_change_counts(
     if data_type == "boots":
         path_filter = "AND (t.path = 'boot' OR t.path LIKE 'boot.%%')"
     else:
-        path_filter = (
-            "AND t.path IS DISTINCT FROM 'boot' AND t.path NOT LIKE 'boot.%%'"
-        )
+        path_filter = "AND t.path IS DISTINCT FROM 'boot' AND t.path NOT LIKE 'boot.%%'"
 
     query = f"""
         WITH RELEVANT_CHECKOUTS AS (

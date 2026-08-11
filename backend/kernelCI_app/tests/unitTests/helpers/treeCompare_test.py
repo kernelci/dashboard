@@ -37,7 +37,9 @@ class TestBuildCompareFilterClauses(SimpleTestCase):
             self._filters({"filter_build.status": ["FAIL", "NULL"]})
         )
         self.assertEqual(result.pre_join, "")
-        self.assertIn("a.grouped_status = ANY(%(grouped_build_statuses)s)", result.post_join)
+        self.assertIn(
+            "a.grouped_status = ANY(%(grouped_build_statuses)s)", result.post_join
+        )
         self.assertCountEqual(
             result.params["grouped_build_statuses"],
             ["FAIL", "INCONCLUSIVE"],
