@@ -69,6 +69,8 @@ import { isEmptyObject } from '@/utils/utils';
 
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 
+import { TreeCompareLink } from '@/pages/TreeCompare/TreeCompareLink';
+
 import TreeDetailsFilter from './TreeDetailsFilter';
 import TreeDetailsTab from './Tabs/TreeDetailsTab';
 
@@ -411,7 +413,7 @@ const TreeDetails = ({
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="mt-5">
+        <div className="mt-5 flex flex-col gap-3">
           <TreeHeader
             gitBranch={sanitizedTreeInfo.gitBranch}
             treeNames={sanitizedTreeInfo.treeName}
@@ -421,6 +423,16 @@ const TreeDetails = ({
             commitTags={data?.common.git_commit_tags}
             origin={searchParams.origin}
           />
+          {sanitizedTreeInfo.treeName && sanitizedTreeInfo.gitBranch && (
+            <div className="flex justify-end">
+              <TreeCompareLink
+                treeName={sanitizedTreeInfo.treeName}
+                branch={sanitizedTreeInfo.gitBranch}
+                hash={sanitizedTreeInfo.hash}
+                origin={searchParams.origin}
+              />
+            </div>
+          )}
         </div>
         <div className="flex flex-col pb-2">
           <TreeDetailsTab
