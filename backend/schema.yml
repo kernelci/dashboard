@@ -4284,6 +4284,10 @@ components:
           - type: 'null'
           default: null
           title: Start Time End
+        git_commit_name:
+          $ref: '#/components/schemas/Checkout__GitCommitName'
+        git_commit_tags:
+          $ref: '#/components/schemas/Checkout__GitCommitTags'
       required:
       - git_commit_hash
       title: TreeCommitItem

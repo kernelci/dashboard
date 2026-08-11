@@ -62,6 +62,27 @@ urlpatterns = [
         view_cache(views.TreeCommitsListView),
         name="treeCommitsList",
     ),
+    # Compare routes must come before .../<commit_hash>/boots|builds (else commit_hash="compare")
+    path(
+        "tree/<str:tree_name>/<path:git_branch>/compare/boots",
+        view_cache(views.TreeDetailsBootsCompare),
+        name="treeDetailsBootsCompareView",
+    ),
+    path(
+        "tree/<str:tree_name>/<path:git_branch>/compare/tests",
+        view_cache(views.TreeDetailsTestsCompare),
+        name="treeDetailsTestsCompareView",
+    ),
+    path(
+        "tree/<str:tree_name>/<path:git_branch>/compare/builds",
+        view_cache(views.TreeCompareBuildsView),
+        name="treeCompareBuilds",
+    ),
+    path(
+        "tree/<str:tree_name>/<path:git_branch>/compare",
+        view_cache(views.TreeCompareView),
+        name="treeCompare",
+    ),
     path(
         "tree/<str:tree_name>/<path:git_branch>/<str:commit_hash>/commits",
         view_cache(views.TreeCommitsHistoryDirect),
