@@ -1,6 +1,7 @@
 import type {
   ColumnDef,
   ColumnFiltersState,
+  ExpandedState,
   Row,
   SortingState,
 } from '@tanstack/react-table';
@@ -8,18 +9,21 @@ import type {
 import {
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 
-import { useCallback, useMemo, useState, type JSX } from 'react';
+import { Fragment, useCallback, useMemo, useState, type JSX } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 
 import { FormattedMessage } from 'react-intl';
 
 import { useNavigate, useSearch, type LinkProps } from '@tanstack/react-router';
+
+import { MdChevronRight, MdDeveloperBoard } from 'react-icons/md';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 
@@ -64,6 +68,11 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { LoadingCircle } from '@/components/ui/loading-circle';
 
 import { FilterLabel } from '@/components/FilterLabel/FilterLabel';
+import { HardwareRegistryListingDetails } from '@/components/HardwareRegistry/HardwareRegistry';
+import {
+  getMockHardwareRegistryListingInfo,
+  type HardwareRegistryInfo,
+} from '@/lib/hardwareRegistryMock';
 
 import { buildHardwareDetailsSearch } from './hardwareTableUtils';
 import { HardwareRevisionSelectors } from './HardwareRevisionSelectors';
@@ -90,9 +99,12 @@ interface IHardwareTable {
 }
 
 type HardwareListingRoutes = '/hardware';
+type HardwareListingRow = HardwareItem & {
+  registry?: HardwareRegistryInfo;
+};
 
 const getLinkProps = (
-  row: Row<HardwareItem>,
+  row: Row<HardwareListingRow>,
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
   navigateFrom: HardwareListingRoutes,
@@ -130,13 +142,58 @@ const getColumns = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
   navigateFrom: HardwareListingRoutes,
-): ColumnDef<HardwareItem>[] => {
+): ColumnDef<HardwareListingRow>[] => {
   return [
+    {
+      id: 'registry_expander',
+      header: () => null,
+      enableSorting: false,
+      cell: ({ row }): JSX.Element | null =>
+        row.getCanExpand() ? (
+          <button
+            type="button"
+            aria-label={
+              row.getIsExpanded() ? 'Collapse details' : 'Expand details'
+            }
+            aria-expanded={row.getIsExpanded()}
+            onClick={row.getToggleExpandedHandler()}
+          >
+            <MdChevronRight
+              className={`size-5 transition-transform ${
+                row.getIsExpanded() ? 'rotate-90' : ''
+              }`}
+            />
+          </button>
+        ) : null,
+    },
     {
       accessorKey: 'platform',
       header: ({ column }): JSX.Element => (
         <TableHeader column={column} intlKey="global.platform" />
       ),
+      meta: {
+        tabTarget: 'global.builds',
+      },
+    },
+    {
+      id: 'processor',
+      accessorFn: row => row.registry?.processor?.id ?? '',
+      header: ({ column }): JSX.Element => (
+        <TableHeader column={column} intlKey="global.processor" />
+      ),
+      cell: ({ row }): JSX.Element => {
+        const processorId = row.original.registry?.processor?.id;
+        if (!processorId) {
+          return <>{EMPTY_VALUE}</>;
+        }
+
+        return (
+          <span className="flex items-center gap-2">
+            <MdDeveloperBoard className="text-blue size-5 shrink-0" />
+            {processorId}
+          </span>
+        );
+      },
       meta: {
         tabTarget: 'global.builds',
       },
@@ -399,13 +456,17 @@ export function HardwareTable({
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [expanded, setExpanded] = useState<ExpandedState>({});
   const { pagination, paginationUpdater } = usePaginationState(
     'hardwareListing',
     listingSize,
   );
 
   const data = useMemo(() => {
-    return treeTableRows;
+    return treeTableRows.map((row, index) => ({
+      ...row,
+      registry: getMockHardwareRegistryListingInfo(row.platform, index),
+    }));
   }, [treeTableRows]);
 
   const columns = useMemo(
@@ -419,7 +480,10 @@ export function HardwareTable({
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    getRowCanExpand: row => row.original.registry !== undefined,
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),
@@ -428,6 +492,7 @@ export function HardwareTable({
       sorting,
       columnFilters,
       pagination,
+      expanded,
     },
   });
 
@@ -454,27 +519,44 @@ export function HardwareTable({
   const tableBody = useMemo((): JSX.Element[] | JSX.Element => {
     return modelRows?.length ? (
       modelRows.map(row => (
-        <TableRow key={row.id}>
-          {row.getVisibleCells().map(cell => {
-            const tabTarget = (
-              cell.column.columnDef.meta as ListingTableColumnMeta
-            ).tabTarget;
-            return (
-              <ConditionalTableCell
-                key={cell.id}
-                cell={cell}
-                linkProps={getLinkProps(
-                  row,
-                  startTimestampInSeconds,
-                  endTimestampInSeconds,
-                  navigateFrom,
-                  tabTarget,
-                )}
-                linkClassName="w-full inline-block h-full"
-              />
-            );
-          })}
-        </TableRow>
+        <Fragment key={row.id}>
+          <TableRow>
+            {row.getVisibleCells().map(cell => {
+              if (cell.column.id === 'registry_expander') {
+                return (
+                  <TableCell key={cell.id} className="w-10">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                );
+              }
+
+              const tabTarget = (
+                cell.column.columnDef.meta as ListingTableColumnMeta
+              ).tabTarget;
+              return (
+                <ConditionalTableCell
+                  key={cell.id}
+                  cell={cell}
+                  linkProps={getLinkProps(
+                    row,
+                    startTimestampInSeconds,
+                    endTimestampInSeconds,
+                    navigateFrom,
+                    tabTarget,
+                  )}
+                  linkClassName="w-full inline-block h-full"
+                />
+              );
+            })}
+          </TableRow>
+          {row.getIsExpanded() && row.original.registry && (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="p-0">
+                <HardwareRegistryListingDetails info={row.original.registry} />
+              </TableCell>
+            </TableRow>
+          )}
+        </Fragment>
       ))
     ) : (
       <TableRow>
