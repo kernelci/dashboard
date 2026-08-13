@@ -217,6 +217,7 @@ def get_build(row_data: dict) -> BuildHistoryItem:
         start_time=row_data["build_start_time"],
         git_repository_url=row_data["checkout_git_repository_url"],
         git_repository_branch=row_data["checkout_git_repository_branch"],
+        lab=row_data.get("build_lab") or UNKNOWN_STRING,
     )
 
 

@@ -663,6 +663,8 @@ def get_tree_details_builds(
             b.log_url AS build_log_url,
             b.status AS build_status,
             b.misc AS build_misc,
+            -- TODO remove misc->>'lab' fallback after lab backfill
+            COALESCE(bl.name, b.misc->>'lab') AS build_lab,
             rc.checkout_id,
             rc.git_repository_url AS checkout_git_repository_url,
             rc.git_repository_branch AS checkout_git_repository_branch,
@@ -678,6 +680,8 @@ def get_tree_details_builds(
         FROM
             builds b
         INNER JOIN RELEVANT_CHECKOUTS rc ON b.checkout_id IN (SELECT checkout_id FROM RELEVANT_CHECKOUTS)
+        LEFT JOIN labs bl
+            ON b.lab_id = bl.id
         LEFT JOIN incidents inc
             ON inc.build_id = b.id AND inc.test_id IS NULL
         LEFT JOIN issues iss

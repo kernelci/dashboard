@@ -153,6 +153,7 @@ def get_build_typed(record: Dict, tree_idx: int) -> HardwareBuildHistoryItem:
         tree_name=record["build__checkout__tree_name"],
         issue_id=record["build__incidents__issue__id"],
         issue_version=record["build__incidents__issue__version"],
+        lab=record.get("build_lab") or UNKNOWN_STRING,
     )
 
 
