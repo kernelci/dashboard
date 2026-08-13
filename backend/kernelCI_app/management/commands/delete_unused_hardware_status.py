@@ -1,27 +1,28 @@
 """
-Management command to delete unused entries from hardware_status table.
-
-Removes HardwareStatus entries that have no corresponding checkout_id in the LatestCheckout table.
+Prune HardwareStatus and ProcessedListingItems older than
+HARDWARE_STATUS_RETENTION_DAYS. Both use the same cutoff so already-processed
+entries stay in sync with status rows and we avoid over/undercounting on
+re-ingest.
 """
 
-import logging
+from datetime import timedelta
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
 from kernelCI_app.management.commands.helpers.healthcheck import (
     MONITORING_ID_PARAM_HELP_TEXT,
     run_with_healthcheck_monitoring,
 )
-from kernelCI_app.models import HardwareStatus, LatestCheckout, ProcessedListingItems
-
-logger = logging.getLogger(__name__)
+from kernelCI_app.models import Checkouts, HardwareStatus, ProcessedListingItems
 
 
 class Command(BaseCommand):
     help = (
-        "Delete HardwareStatus entries with no corresponding checkout_id "
-        "in the LatestCheckout table"
+        "Delete HardwareStatus entries (and their ProcessedListingItems) older "
+        "than HARDWARE_STATUS_RETENTION_DAYS"
     )
 
     def add_arguments(self, parser):
@@ -54,88 +55,86 @@ class Command(BaseCommand):
         dry_run = options["dry_run"]
         batch_size = options["batch_size"]
 
-        with transaction.atomic():
-            valid_checkout_ids = set(
-                LatestCheckout.objects.values_list("checkout_id", flat=True)
-            )
+        cutoff = timezone.now() - timedelta(
+            days=settings.HARDWARE_STATUS_RETENTION_DAYS
+        )
 
-            orphaned_hardware_entries = HardwareStatus.objects.exclude(
-                checkout_id__in=valid_checkout_ids
-            ).values_list("checkout_id", flat=True)
-            orphaned_hardware_count = orphaned_hardware_entries.count()
+        stale_hardware = HardwareStatus.objects.filter(start_time__lt=cutoff)
+        recent_checkout_ids = Checkouts.objects.filter(start_time__gte=cutoff).values(
+            "id"
+        )
+        stale_processed = ProcessedListingItems.objects.exclude(
+            checkout_id__in=recent_checkout_ids
+        )
 
-            orphaned_processed_hardware_entries = (
-                ProcessedListingItems.objects.exclude(
-                    checkout_id__in=valid_checkout_ids
-                )
-            ).values_list("listing_item_key", flat=True)
+        stale_hardware_count = stale_hardware.count()
+        stale_processed_count = stale_processed.count()
 
-            orphaned_processed_hardware_count = (
-                orphaned_processed_hardware_entries.count()
-            )
-
-            if orphaned_hardware_count == 0 and orphaned_processed_hardware_count == 0:
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        "No orphaned HardwareStatus/ProcessedListingItems entries found."
-                    )
-                )
-                return
-
-            if dry_run:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"[DRY RUN] Would delete {orphaned_hardware_count} HardwareStatus entries and "
-                        f"{orphaned_processed_hardware_count} ProcessedListingItems entries "
-                        "Run without --dry-run to execute deletion."
-                    )
-                )
-                return
-
+        if stale_hardware_count == 0 and stale_processed_count == 0:
             self.stdout.write(
-                f"Found {orphaned_hardware_count} HardwareStatus entries "
-                f"and {orphaned_processed_hardware_count} ProcessedListingItems entries "
-                "with no corresponding LatestCheckout."
+                self.style.SUCCESS(
+                    "No orphaned HardwareStatus/ProcessedListingItems entries found."
+                )
             )
+            return
 
-            total_hardware_deleted = 0
-            total_processed_hardware_deleted = 0
+        if dry_run:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"[DRY RUN] Would delete {stale_hardware_count} HardwareStatus entries and "
+                    f"{stale_processed_count} ProcessedListingItems entries "
+                    "Run without --dry-run to execute deletion."
+                )
+            )
+            return
+
+        self.stdout.write(
+            f"Found {stale_hardware_count} HardwareStatus entries "
+            f"and {stale_processed_count} ProcessedListingItems entries "
+            f"older than {settings.HARDWARE_STATUS_RETENTION_DAYS} days."
+        )
+
+        total_hardware_deleted = 0
+        total_processed_deleted = 0
+        with transaction.atomic():
             while True:
-                hardware_batch_ids = list(orphaned_hardware_entries[:batch_size])
-                processed_hardware_batch_ids = list(
-                    orphaned_processed_hardware_entries[:batch_size]
+                hardware_batch = list(
+                    stale_hardware.values_list(
+                        "test_origin", "platform", "checkout_id"
+                    )[:batch_size]
+                )
+                processed_batch = list(
+                    stale_processed.values_list("listing_item_key", flat=True)[
+                        :batch_size
+                    ]
                 )
 
-                if not hardware_batch_ids and not processed_hardware_batch_ids:
+                if not hardware_batch and not processed_batch:
                     break
 
-                if hardware_batch_ids:
+                if hardware_batch:
                     hardware_delete_count = HardwareStatus.objects.filter(
-                        checkout_id__in=hardware_batch_ids
+                        pk__in=hardware_batch
                     ).delete()[0]
+                    total_hardware_deleted += hardware_delete_count
                     self.stdout.write(
                         f"Deleted hardware_status(n={hardware_delete_count}) entries "
-                        f"(total: {total_hardware_deleted}/{orphaned_hardware_count})"
-                    )
-                    total_hardware_deleted += hardware_delete_count
-
-                if processed_hardware_batch_ids:
-                    processed_hardware_delete_count = (
-                        ProcessedListingItems.objects.filter(
-                            listing_item_key__in=processed_hardware_batch_ids
-                        ).delete()[0]
+                        f"(total: {total_hardware_deleted}/{stale_hardware_count})"
                     )
 
-                    total_processed_hardware_deleted += processed_hardware_delete_count
-
+                if processed_batch:
+                    processed_delete_count = ProcessedListingItems.objects.filter(
+                        listing_item_key__in=processed_batch
+                    ).delete()[0]
+                    total_processed_deleted += processed_delete_count
                     self.stdout.write(
-                        f"Deleted processed_hardware_status(n={processed_hardware_delete_count}) entries "
-                        f"(total: {total_processed_hardware_deleted}/{orphaned_processed_hardware_count})"
+                        f"Deleted processed_listing_items(n={processed_delete_count}) entries "
+                        f"(total: {total_processed_deleted}/{stale_processed_count})"
                     )
 
         self.stdout.write(
             self.style.SUCCESS(
                 f"Successfully deleted hardware_status(n={total_hardware_deleted}) "
-                f"and processed_hardware_status(n={total_processed_hardware_deleted})."
+                f"and processed_listing_items(n={total_processed_deleted})."
             )
         )
