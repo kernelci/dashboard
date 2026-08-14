@@ -1,4 +1,10 @@
-import type { ComponentProps, ReactElement, ReactNode, JSX } from 'react';
+import type {
+  ComponentProps,
+  CSSProperties,
+  ReactElement,
+  ReactNode,
+  JSX,
+} from 'react';
 
 import classNames from 'classnames';
 
@@ -41,15 +47,18 @@ export const DumbBaseTable = ({
   children,
   className,
   containerClassName,
+  style,
 }: {
   children: ReactNode;
   className?: string;
   containerClassName?: string;
+  style?: CSSProperties;
 }): JSX.Element => {
   return (
     <Table
       className={classNames(className, 'w-full rounded-lg bg-white text-black')}
       containerClassName={containerClassName}
+      style={style}
     >
       {children}
     </Table>
@@ -73,10 +82,12 @@ export const DumbTableHeader = ({
 export const TableHead = ({
   children,
   className,
+  ...props
 }: ComponentProps<typeof TableHeadComponent>): JSX.Element => {
   return (
     <TableHeadComponent
       className={classNames(className, 'border-b font-bold text-black')}
+      {...props}
     >
       {children}
     </TableHeadComponent>

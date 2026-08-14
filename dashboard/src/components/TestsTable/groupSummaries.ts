@@ -1,9 +1,10 @@
+import { UNKNOWN_STRING } from '@/utils/constants/backend';
+
 import type { GroupFieldSummary, UnifiedTestRow } from './types';
 
 const AGGREGATED_FIELDS = [
   'start_time',
   'duration',
-  'lab',
   'hardware',
   'treeBranch',
 ] as const;
@@ -78,6 +79,13 @@ function summarizeDates(values: unknown[]): GroupFieldSummary {
   return { kind: 'dateRange', min: min.value, max: max.value };
 }
 
+function normalizeLab(value: unknown): string {
+  if (value === undefined || value === null || value === '') {
+    return UNKNOWN_STRING;
+  }
+  return String(value);
+}
+
 export function buildGroupSummaries(
   children: UnifiedTestRow[],
 ): Partial<Record<string, GroupFieldSummary>> {
@@ -91,6 +99,8 @@ export function buildGroupSummaries(
         ? summarizeDates(values)
         : summarizeGeneric(values);
   }
+
+  summaries.lab = summarizeGeneric(leaves.map(leaf => normalizeLab(leaf.lab)));
 
   return summaries;
 }
