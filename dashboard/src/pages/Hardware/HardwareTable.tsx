@@ -397,16 +397,14 @@ export function HardwareTable({
   const { listingSize, intervalInDays } = useSearch({ strict: false });
   const navigate = useNavigate({ from: navigateFrom });
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'platform', desc: false },
+  ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const { pagination, paginationUpdater } = usePaginationState(
     'hardwareListing',
     listingSize,
   );
-
-  const data = useMemo(() => {
-    return treeTableRows;
-  }, [treeTableRows]);
 
   const columns = useMemo(
     () =>
@@ -415,8 +413,9 @@ export function HardwareTable({
   );
 
   const table = useReactTable({
-    data,
+    data: treeTableRows,
     columns,
+    enableSortingRemoval: false,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),

@@ -96,7 +96,9 @@ export function TestsTable({
   updatePathFilter,
   currentPathFilter,
 }: ITestsTable): JSX.Element {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'path_group', desc: false },
+  ]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [groupingMode, setGroupingMode] =
     useState<TableGroupingMode>('grouped');
@@ -162,6 +164,7 @@ export function TestsTable({
   const table = useReactTable({
     data,
     columns,
+    enableSortingRemoval: false,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),

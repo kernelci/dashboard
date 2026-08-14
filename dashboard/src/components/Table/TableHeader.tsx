@@ -6,7 +6,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 
 import { z } from 'zod';
 
-import { useCallback, type JSX } from 'react';
+import type { JSX } from 'react';
 
 import type { MessagesKey } from '@/locales/messages';
 
@@ -39,24 +39,12 @@ export const TableHeader = <T,>({
   intlKey,
   tooltipId,
 }: ITableHeader<T>): JSX.Element => {
-  const headerSort = useCallback(() => {
-    if (sortable) {
-      if (column.getIsSorted() === 'asc') {
-        column.toggleSorting(true);
-      } else if (column.getIsSorted() === 'desc') {
-        column.clearSorting();
-      } else {
-        column.toggleSorting(false);
-      }
-    }
-  }, [column, sortable]);
-
   return (
     <span className="flex">
       <Button
         variant="ghost"
         className="justify-start px-2"
-        onClick={headerSort}
+        onClick={sortable ? column.getToggleSortingHandler() : undefined}
       >
         <FormattedMessage key={intlKey} id={intlKey} />
 

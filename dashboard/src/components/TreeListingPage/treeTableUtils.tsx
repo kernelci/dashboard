@@ -88,7 +88,7 @@ export const commonTreeTableColumns: ColumnDef<TreeListingItem>[] = [
 export const sortTreesWithPinnedFirst = <T extends TreeListingItem>(
   treeTableRows: T[],
 ): T[] => {
-  return treeTableRows.sort((a, b) => {
+  return [...treeTableRows].sort((a, b) => {
     const aKey = makeTreeIdentifierKey({
       treeName: valueOrEmpty(a.tree_name),
       gitRepositoryBranch: valueOrEmpty(a.git_repository_branch),

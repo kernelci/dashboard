@@ -143,7 +143,9 @@ export function BootsTable({
   updatePathFilter,
   currentPathFilter,
 }: IBootsTable): JSX.Element {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'path', desc: false },
+  ]);
   const { pagination, paginationUpdater } = usePaginationState(tableKey);
   const [globalFilter, setGlobalFilter] = useState<string | undefined>(
     currentPathFilter,
@@ -183,6 +185,7 @@ export function BootsTable({
   const table = useReactTable({
     data: testsData,
     columns,
+    enableSortingRemoval: false,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

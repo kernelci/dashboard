@@ -30,39 +30,14 @@ const TreeListingPage = ({
       return [];
     }
 
-    return data
-      .filter(tree => {
-        return (
-          matchesRegexOrIncludes(tree.git_commit_hash, inputFilter) ||
-          matchesRegexOrIncludes(tree.git_repository_branch, inputFilter) ||
-          matchesRegexOrIncludes(tree.git_repository_url, inputFilter) ||
-          matchesRegexOrIncludes(tree.tree_name, inputFilter)
-        );
-      })
-      .sort((a, b) => {
-        const currentATreeName = a.tree_name ?? '';
-        const currentBTreeName = b.tree_name ?? '';
-        const treeNameComparison =
-          currentATreeName.localeCompare(currentBTreeName);
-
-        if (treeNameComparison !== 0) {
-          return treeNameComparison;
-        }
-
-        const currentABranch = a.git_repository_branch ?? '';
-        const currentBBranch = b.git_repository_branch ?? '';
-        const branchComparison = currentABranch.localeCompare(currentBBranch);
-        if (branchComparison !== 0) {
-          return branchComparison;
-        }
-
-        if (a.start_time === undefined || b.start_time === undefined) {
-          return 0;
-        }
-        return (
-          new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
-        );
-      });
+    return data.filter(tree => {
+      return (
+        matchesRegexOrIncludes(tree.git_commit_hash, inputFilter) ||
+        matchesRegexOrIncludes(tree.git_repository_branch, inputFilter) ||
+        matchesRegexOrIncludes(tree.git_repository_url, inputFilter) ||
+        matchesRegexOrIncludes(tree.tree_name, inputFilter)
+      );
+    });
   }, [data, inputFilter]);
 
   const kcidevComponent = useMemo(

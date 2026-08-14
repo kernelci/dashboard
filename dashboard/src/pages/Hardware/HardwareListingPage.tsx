@@ -188,8 +188,7 @@ const HardwareListingPage = ({
           test_status_summary: hardware.test_status_summary,
           boot_status_summary: hardware.boot_status_summary,
         };
-      })
-      .sort((a, b) => a.platform.localeCompare(b.platform));
+      });
   }, [activeListing.data, activeListing.error, inputFilter]);
 
   const selectedRevision =
