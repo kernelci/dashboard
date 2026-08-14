@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from kernelCI_app.constants.general import UNKNOWN_STRING
+from kernelCI_app.constants.hardwareDetails import make_tree_key
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
@@ -368,8 +369,12 @@ class HardwareDetailsSummary(APIView):
                 t.head_git_commit_hash or "",
             ),
         )
-        for i, tree in enumerate(sorted_trees):
-            tree.index = str(i)
+        for tree in sorted_trees:
+            tree.index = make_tree_key(
+                tree.tree_name or "",
+                tree.git_repository_branch or "",
+                tree.git_repository_url or "",
+            )
 
         return sorted_trees, sorted(all_compatibles)
 
@@ -471,19 +476,32 @@ class HardwareDetailsSummary(APIView):
             )
         )
 
+    def _is_legacy_numeric_keys(self, keys: dict[str, str]) -> bool:
+        return all(k.isdigit() for k in keys)
+
     def select_commits_hashes(
         self,
-        tree_heads: list[(str, str)],
+        tree_heads: list[tuple[str, str]],
         selected_commits: Optional[dict[str, str]] = None,
     ):
         selected_commit_hashes = []
         if selected_commits:
-            for idx, head in tree_heads:
-                if idx in self.selected_commits:
-                    selected_commit = self.selected_commits.get(idx, "head")
-                    selected_commit_hashes.append(
-                        head if selected_commit == "head" else selected_commit
-                    )
+            if self._is_legacy_numeric_keys(self.selected_commits):
+                indexed_heads = list(enumerate(tree_heads))
+                for i, (_, head) in indexed_heads:
+                    str_i = str(i)
+                    if str_i in self.selected_commits:
+                        selected_commit = self.selected_commits.get(str_i, "head")
+                        selected_commit_hashes.append(
+                            head if selected_commit == "head" else selected_commit
+                        )
+            else:
+                for key, head in tree_heads:
+                    if key in self.selected_commits:
+                        selected_commit = self.selected_commits.get(key, "head")
+                        selected_commit_hashes.append(
+                            head if selected_commit == "head" else selected_commit
+                        )
         else:
             selected_commit_hashes = [head for (_, head) in tree_heads]
         return selected_commit_hashes
