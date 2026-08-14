@@ -474,6 +474,81 @@ def get_issue_first_good_checkouts(
         return dict_fetchall(cursor)
 
 
+def get_issue_next_checkout_data(*, issue_id_list: list[str]) -> list[dict]:
+    """
+    For each issue, finds the next checkout after the last-seen checkout
+    on the same tree, ordered by checkout start_time.
+
+    Tree identity is (origin, tree_name, git_repository_url, git_repository_branch).
+    "Next" is the earliest checkout with start_time greater than the last-seen
+    checkout's start_time (no parent-commit hierarchy available).
+
+    Issues with no last-seen checkout, no start_time, or no later checkout
+    on that tree are omitted from the result.
+    """
+    if not issue_id_list:
+        return []
+
+    params = {"issue_id_list": issue_id_list}
+
+    query = """
+        WITH last_seen AS (
+            SELECT DISTINCT ON (IC.issue_id)
+                IC.issue_id,
+                C.id AS last_checkout_id,
+                C.start_time AS last_start_time,
+                C.origin,
+                C.tree_name,
+                C.git_repository_url,
+                C.git_repository_branch
+            FROM
+                incidents IC
+            LEFT JOIN tests T ON IC.test_id = T.id
+            LEFT JOIN builds B ON (
+                IC.build_id = B.id
+                OR T.build_id = B.id
+            )
+            LEFT JOIN checkouts C ON B.checkout_id = C.id
+            WHERE
+                IC.issue_id = ANY(%(issue_id_list)s)
+            ORDER BY
+                IC.issue_id,
+                IC.issue_version DESC,
+                IC._timestamp DESC
+        )
+        SELECT DISTINCT ON (LS.issue_id)
+            LS.issue_id,
+            C.id AS checkout_id,
+            C.start_time,
+            C.git_commit_hash,
+            C.git_commit_name,
+            C.git_repository_url,
+            C.git_repository_branch,
+            C.tree_name,
+            C.origin
+        FROM
+            last_seen LS
+            INNER JOIN checkouts C ON (
+                C.origin = LS.origin
+                AND C.tree_name IS NOT DISTINCT FROM LS.tree_name
+                AND C.git_repository_url IS NOT DISTINCT FROM LS.git_repository_url
+                AND C.git_repository_branch IS NOT DISTINCT FROM LS.git_repository_branch
+                AND C.start_time > LS.last_start_time
+            )
+        WHERE
+            LS.last_checkout_id IS NOT NULL
+            AND LS.last_start_time IS NOT NULL
+        ORDER BY
+            LS.issue_id,
+            C.start_time ASC,
+            C.id ASC
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return dict_fetchall(cursor)
+
+
 def get_issue_trees_data(
     *, issue_key_list: list[tuple[str, int]]
 ) -> list[dict[str, Any]]:

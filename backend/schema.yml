@@ -2572,6 +2572,11 @@ components:
       - type: 'null'
     Checkout__Id:
       type: string
+    Checkout__StartTime:
+      anyOf:
+      - format: date-time
+        type: string
+      - type: 'null'
     Checkout__TreeName:
       anyOf:
       - type: string
@@ -2860,6 +2865,11 @@ components:
           $ref: '#/components/schemas/Incident'
         last_incident:
           $ref: '#/components/schemas/Incident'
+        next_checkout:
+          anyOf:
+          - $ref: '#/components/schemas/NextCheckout'
+          - type: 'null'
+          default: null
         versions:
           additionalProperties:
             anyOf:
@@ -4040,6 +4050,49 @@ components:
       - prev_n_tests
       - prev_lab_maps
       title: MetricsResponse
+      type: object
+    NextCheckout:
+      description: Earliest checkout on the same tree after the last-seen checkout.
+      properties:
+        checkout_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Checkout Id
+        start_time:
+          $ref: '#/components/schemas/Checkout__StartTime'
+        git_commit_hash:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitHash'
+          - type: 'null'
+        git_commit_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitName'
+          - type: 'null'
+        git_repository_url:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+          - type: 'null'
+        git_repository_branch:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+          - type: 'null'
+        tree_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__TreeName'
+          - type: 'null'
+        origin:
+          $ref: '#/components/schemas/Origin'
+      required:
+      - checkout_id
+      - start_time
+      - git_commit_hash
+      - git_commit_name
+      - git_repository_url
+      - git_repository_branch
+      - tree_name
+      - origin
+      title: NextCheckout
       type: object
     Origin:
       type: string
