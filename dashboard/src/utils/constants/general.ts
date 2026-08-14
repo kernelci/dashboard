@@ -10,3 +10,5 @@ export const DEFAULT_TIME_SEARCH = 7;
 export const REDUCED_TIME_SEARCH = 5;
 export const DEFAULT_LISTING_ITEMS = 10;
 export const DEFAULT_LISTING_INTERVAL_IN_DAYS = 30;
+
+export const EMPTY_OBJECT = {};

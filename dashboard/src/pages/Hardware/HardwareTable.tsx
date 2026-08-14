@@ -49,6 +49,7 @@ import { sumStatus } from '@/utils/status';
 import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
+import { useSortingState } from '@/hooks/useSortingState';
 
 import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
@@ -376,6 +377,10 @@ const getColumns = (
   ];
 };
 
+const DEFAULT_HARDWARE_SORTING: SortingState = [
+  { id: 'platform', desc: false },
+];
+
 export function HardwareTable({
   treeTableRows,
   startTimestampInSeconds,
@@ -397,9 +402,9 @@ export function HardwareTable({
   const { listingSize, intervalInDays } = useSearch({ strict: false });
   const navigate = useNavigate({ from: navigateFrom });
 
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'platform', desc: false },
-  ]);
+  const { sorting, handleSortingChange } = useSortingState({
+    defaultSorting: DEFAULT_HARDWARE_SORTING,
+  });
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const { pagination, paginationUpdater } = usePaginationState(
     'hardwareListing',
@@ -416,7 +421,7 @@ export function HardwareTable({
     data: treeTableRows,
     columns,
     enableSortingRemoval: false,
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
