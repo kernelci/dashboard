@@ -1,33 +1,10 @@
-import type { ComponentProps, ReactElement, JSX } from 'react';
+import type { ComponentProps, ReactNode, JSX } from 'react';
 import { LineChart as LineChartComponent } from '@mui/x-charts/LineChart';
-
-import ColoredCircle from '@/components/ColoredCircle/ColoredCircle';
-
-interface ILineChartLabel {
-  text: string;
-  backgroundColor: string;
-}
-
-export const LineChartLabel = ({
-  text,
-  backgroundColor,
-}: ILineChartLabel): JSX.Element => {
-  return (
-    <div className="flex items-center gap-2 pr-6 font-medium text-gray-700">
-      <ColoredCircle
-        className="h-3 w-3"
-        backgroundClassName={backgroundColor}
-      />
-      <span>{text}</span>
-    </div>
-  );
-};
 
 type MUILineChart = typeof LineChartComponent;
 type MUILineChartProps = ComponentProps<MUILineChart>;
 
 export type TLineChartProps = {
-  labels?: ReactElement;
   series: MUILineChartProps['series'];
   xAxis: MUILineChartProps['xAxis'];
   sx?: MUILineChartProps['sx'];
@@ -37,12 +14,12 @@ export type TLineChartProps = {
   height?: MUILineChartProps['height'];
   margin?: MUILineChartProps['margin'];
   isLoading?: boolean;
+  children?: ReactNode;
 };
 
 const EmptyNoDataOverlay = (): null => null;
 
 export const LineChart = ({
-  labels,
   series,
   xAxis,
   slots,
@@ -52,6 +29,7 @@ export const LineChart = ({
   margin,
   onMarkClick,
   isLoading,
+  children,
 }: TLineChartProps): JSX.Element => {
   const mergedSlots = {
     ...slots,
@@ -60,9 +38,6 @@ export const LineChart = ({
 
   return (
     <div className="px-4">
-      {labels && (
-        <div className="mt-3 mb-0 flex justify-end gap-2">{labels}</div>
-      )}
       <LineChartComponent
         className="w-full"
         xAxis={xAxis}
@@ -74,7 +49,9 @@ export const LineChart = ({
         height={height}
         margin={margin}
         loading={isLoading}
-      />
+      >
+        {children}
+      </LineChartComponent>
     </div>
   );
 };

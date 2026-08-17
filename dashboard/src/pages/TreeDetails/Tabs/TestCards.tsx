@@ -1,4 +1,4 @@
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { memo, type JSX } from 'react';
 
 import { DumbListingContent } from '@/components/ListingContent/ListingContent';
@@ -215,6 +215,7 @@ interface IStatusChart extends Pick<TTreeTestsData, 'statusCounts'> {
 }
 
 const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
+  const { formatMessage } = useIntl();
   const groupedStatusCounts = groupStatus({
     doneCount: statusCounts.DONE,
     errorCount: statusCounts.ERROR,
@@ -257,9 +258,8 @@ const StatusChart = ({ statusCounts, title }: IStatusChart): JSX.Element => {
       title={title}
       content={
         <StatusChartMemoized
-          type="chart"
           elements={filteredChartElements}
-          pieCentralLabel="Statuses"
+          pieCentralLabel={formatMessage({ id: 'global.executed' })}
           pieCentralDescription={<>{totalCount}</>}
         />
       }

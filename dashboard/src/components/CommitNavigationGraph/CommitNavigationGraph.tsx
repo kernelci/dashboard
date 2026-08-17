@@ -9,9 +9,9 @@ import {
   type JSX,
 } from 'react';
 
-import { z } from 'zod';
-
 import { useMediaQuery } from '@mui/material';
+
+import { ChartsReferenceLine } from '@mui/x-charts/ChartsReferenceLine';
 
 import { useTheme } from '@mui/material/styles';
 
@@ -47,7 +47,7 @@ const graphDisplaySize = 8;
 
 const NUM_SELECTED_COMMITS = 6;
 
-export const getChartXLabel = ({
+const getChartXLabel = ({
   commitTags,
   commitHash,
   commitName,
@@ -70,24 +70,14 @@ type PageTab = 'global.builds' | 'global.boots' | 'global.tests';
 
 type PlotInfo = {
   treeEntityTypes: TreeEntityTypes[];
-  messageIds: {
-    graphName: MessagesKey;
-    good: MessagesKey;
-    bad: MessagesKey;
-    mid: MessagesKey;
-  };
+  graphName: MessagesKey;
   aggregate: (item: PaginatedCommitHistoryByTree) => [number, number, number];
 };
 
 const plotInfoByTab = {
   'global.builds': {
     treeEntityTypes: ['builds'],
-    messageIds: {
-      graphName: 'treeDetails.buildsHistory',
-      good: 'treeDetails.validBuilds',
-      bad: 'treeDetails.invalidBuilds',
-      mid: 'treeDetails.inconclusiveBuilds',
-    },
+    graphName: 'treeDetails.buildsHistory',
     aggregate: (item): [number, number, number] => [
       item.builds.PASS,
       item.builds.FAIL,
@@ -100,12 +90,7 @@ const plotInfoByTab = {
   },
   'global.boots': {
     treeEntityTypes: ['boots'],
-    messageIds: {
-      graphName: 'treeDetails.bootsHistory',
-      good: 'treeDetails.successBoots',
-      bad: 'treeDetails.failedBoots',
-      mid: 'treeDetails.inconclusiveBoots',
-    },
+    graphName: 'treeDetails.bootsHistory',
     aggregate: (item): [number, number, number] => [
       item.boots.pass,
       item.boots.fail,
@@ -118,12 +103,7 @@ const plotInfoByTab = {
   },
   'global.tests': {
     treeEntityTypes: ['tests'],
-    messageIds: {
-      graphName: 'treeDetails.testsHistory',
-      good: 'treeDetails.testsSuccess',
-      bad: 'treeDetails.testsFailed',
-      mid: 'treeDetails.testsInconclusive',
-    },
+    graphName: 'treeDetails.testsHistory',
     aggregate: (item): [number, number, number] => [
       item.tests.pass,
       item.tests.fail,
@@ -275,22 +255,23 @@ const CommitNavigationGraph = ({
 
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
+  const legendItemGap = 16;
 
   const series: TLineChartProps['series'] = [
     {
       id: 'good',
-      label: formatMessage({ id: plotInfo.messageIds.good }),
+      label: formatMessage({ id: 'global.success' }),
       data: [],
       color: Colors.Green,
     },
     {
-      label: formatMessage({ id: plotInfo.messageIds.bad }),
+      label: formatMessage({ id: 'global.failed' }),
       id: 'bad',
       data: [],
       color: Colors.Red,
     },
     {
-      label: formatMessage({ id: plotInfo.messageIds.mid }),
+      label: formatMessage({ id: 'global.inconclusive' }),
       id: 'mid',
       data: [],
       color: Colors.Gray,
@@ -333,32 +314,25 @@ const CommitNavigationGraph = ({
     value === commitData.length - 1 ||
     commitData[value]?.commitHash === treeId;
 
-  // tickLabelInterval can be set to auto, or to a custom filter
   const tickLabelInterval = isSmallScreen ? smallScreenTickFilter : 'auto';
+
+  const currentCommitIndex = commitData.findIndex(
+    row => row.commitHash === treeId,
+  );
 
   const xAxis: TLineChartProps['xAxis'] = [
     {
       scaleType: 'point',
-      min: 100,
       data: xAxisIndexes,
       valueFormatter: (value: number, context): string => {
-        const currentCommitData = commitData[value];
-        const currentCommitDateTime = formatDate(
-          currentCommitData?.earliestStartTime ?? '-',
-          true,
-        );
-
-        if (context.location === 'tooltip') {
-          return (
-            (currentCommitData?.commitName ??
-              currentCommitData?.commitHash ??
-              '') +
-            ' - ' +
-            currentCommitDateTime
-          );
+        const row = commitData[value];
+        if (!row) {
+          return '';
         }
-
-        return `commitIndex-${value}`;
+        if (context.location === 'tooltip') {
+          return `${row.commitName ?? row.commitHash} - ${formatDate(row.earliestStartTime ?? '-', true)}`;
+        }
+        return getChartXLabel(row);
       },
       tickLabelInterval: tickLabelInterval,
     },
@@ -380,7 +354,7 @@ const CommitNavigationGraph = ({
       }
     >
       <BaseCard
-        title={formatMessage({ id: plotInfo.messageIds.graphName })}
+        title={formatMessage({ id: plotInfo.graphName })}
         content={
           <>
             <LineChart
@@ -389,76 +363,10 @@ const CommitNavigationGraph = ({
               margin={{ top: 100 }}
               xAxis={xAxis}
               series={series}
-              sx={{
-                '& .MuiChartsAxis-directionY .MuiChartsAxis-tickContainer:first-of-type':
-                  {
-                    display: 'none',
-                  },
-              }}
               slotProps={{
                 legend: {
-                  itemGap: 2,
+                  itemGap: isSmallScreen ? undefined : legendItemGap,
                   position: { vertical: 'top', horizontal: 'middle' },
-                },
-              }}
-              slots={{
-                axisTickLabel: chartTextProps => {
-                  let displayText = chartTextProps.text;
-                  const splitResult = chartTextProps.text.split('-');
-
-                  const possibleIdentifier = splitResult[0];
-
-                  let isCurrentCommit = false;
-                  if (possibleIdentifier === 'commitIndex') {
-                    const possibleIndex = splitResult[1];
-                    const possibleIndexNumber = parseInt(possibleIndex);
-                    const parsedPossibleIndex = z
-                      .number()
-                      .catch(e => {
-                        console.error('Error parsing index', e);
-                        return 0;
-                      })
-                      .parse(possibleIndexNumber);
-
-                    const row = commitData[parsedPossibleIndex];
-                    isCurrentCommit = treeId === row?.commitHash;
-
-                    if (row) {
-                      displayText = getChartXLabel(row);
-                    }
-                  }
-
-                  return (
-                    <>
-                      {isCurrentCommit && (
-                        <>
-                          <polygon points="-5,-250 5,-250 0,-240" fill="blue" />
-                          <line
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="-250"
-                            stroke="blue"
-                            strokeWidth="2"
-                            strokeDasharray="5,5"
-                          />
-                        </>
-                      )}
-
-                      <text
-                        className="MuiChartsAxis-tickLabel"
-                        x="0"
-                        y="9"
-                        textAnchor="middle"
-                        dominantBaseline="hanging"
-                        style={{ fontSize: '0.9rem' }}
-                      >
-                        <tspan x="0" dy="0px" dominantBaseline="hanging">
-                          {displayText}
-                        </tspan>
-                      </text>
-                    </>
-                  );
                 },
               }}
               onMarkClick={(_event, payload) => {
@@ -468,7 +376,18 @@ const CommitNavigationGraph = ({
                   onMarkClick(row.commitHash, row.commitName);
                 }
               }}
-            />
+            >
+              {currentCommitIndex >= 0 && (
+                <ChartsReferenceLine
+                  x={currentCommitIndex}
+                  lineStyle={{
+                    stroke: 'blue',
+                    strokeWidth: 2,
+                    strokeDasharray: '5,5',
+                  }}
+                />
+              )}
+            </LineChart>
             <div className="mb-2 flex items-center justify-center gap-1">
               <Button
                 variant="outline"
