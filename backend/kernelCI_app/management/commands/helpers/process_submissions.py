@@ -189,7 +189,8 @@ def build_instances_from_submission(
 
                         try:
                             misc = build.misc
-                            lab = misc.get("lab")
+                            # TODO remove misc->>'lab' fallback after lab backfill
+                            lab = build._lab_name or misc.get("lab")
                         except AttributeError:
                             lab = None
 
@@ -204,7 +205,8 @@ def build_instances_from_submission(
 
                         try:
                             misc = test.misc
-                            lab = misc.get("lab", misc.get("runtime"))
+                            # TODO remove misc->>'runtime' fallback after lab backfill
+                            lab = test._lab_name or misc.get("runtime")
                         except AttributeError:
                             lab = None
 
