@@ -96,22 +96,20 @@ class Command(BaseCommand):
 
         total_hardware_deleted = 0
         total_processed_deleted = 0
-        with transaction.atomic():
-            while True:
-                hardware_batch = list(
-                    stale_hardware.values_list(
-                        "test_origin", "platform", "checkout_id"
-                    )[:batch_size]
-                )
-                processed_batch = list(
-                    stale_processed.values_list("listing_item_key", flat=True)[
-                        :batch_size
-                    ]
-                )
+        while True:
+            hardware_batch = list(
+                stale_hardware.values_list("test_origin", "platform", "checkout_id")[
+                    :batch_size
+                ]
+            )
+            processed_batch = list(
+                stale_processed.values_list("listing_item_key", flat=True)[:batch_size]
+            )
 
-                if not hardware_batch and not processed_batch:
-                    break
+            if not hardware_batch and not processed_batch:
+                break
 
+            with transaction.atomic():
                 if hardware_batch:
                     hardware_delete_count = HardwareStatus.objects.filter(
                         pk__in=hardware_batch
