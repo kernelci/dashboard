@@ -118,3 +118,36 @@ Configure these variables in `.env.backend`:
 - **Target**: `host.docker.internal:8001` (backend running locally)
 - **Metrics Path**: `/metrics/`
 - **Scrape Interval**: 15 seconds
+
+## Client Analytics
+
+The `BackendRequestMetricsMiddleware` records anonymous, aggregate usage
+analytics for requests to `/api/`. For the user-facing privacy statement (what
+is collected and why), see [`PRIVACY.md`](../PRIVACY.md). This section is the
+technical/operator reference.
+
+### Metrics emitted
+
+- `dashboard_backend_requests_by_client_total` — labels: `endpoint` (Django URL
+  name), `method`, `status_class` (e.g. `2xx`), `browser`, `os`, `device`
+  (coarse User-Agent buckets; bots bucketed as `bot`), `referrer_domain` (the
+  external `Referer` domain truncated to 100 chars; same-host/direct becomes
+  `direct_or_internal`).
+- `dashboard_unique_visitors_total`, `dashboard_unique_visitors_by_endpoint_total`
+  — daily de-duplicated visitor counts.
+
+### Anonymization mechanism
+
+Unique visitors are de-duplicated without storing any identifier:
+
+- Fingerprint = `HMAC-SHA256(daily_salt, "<client_ip>|<user_agent>")`.
+- `daily_salt` is a random 32-byte secret generated per UTC day, kept only in
+  the cache (Redis) with a ~25h TTL, never persisted to disk, rotated daily.
+- Only the hash is used as a `cache.add` de-duplication key (~25h TTL); raw
+  IP/User-Agent are discarded immediately and never written to a metric or disk.
+
+### Operator notes
+
+- **Cache access is sensitive**: while a day's salt lives in the cache, an
+  attacker with cache access could brute-force the limited IP+UA space for that
+  day. Secret salt + daily rotation mitigates cross-day linkage.
