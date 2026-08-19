@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TestHistory } from '@/types/general';
 import type { Status } from '@/types/database';
+import { UNKNOWN_STRING } from '@/utils/constants/backend';
 
 import { buildTestsTree } from './buildTestsTree';
 import { collapseSingleChildChains } from './collapseTestsTree';
@@ -102,12 +103,44 @@ describe('buildGroupSummaries', () => {
 
   it('marks uniform values and mixed counts', () => {
     const summaries = buildGroupSummaries([
-      leaf({ id: '1', lab: 'lab-a', duration: '1s' }),
-      leaf({ id: '2', lab: 'lab-a', duration: '2s' }),
+      leaf({ id: '1', hardware: ['hw-a'], duration: '1s', lab: 'lab-b' }),
+      leaf({ id: '2', hardware: ['hw-a'], duration: '2s', lab: 'lab-a' }),
     ]);
 
-    expect(summaries.lab).toEqual({ kind: 'uniform', value: 'lab-a' });
+    expect(summaries.hardware).toEqual({ kind: 'uniform', value: ['hw-a'] });
     expect(summaries.duration).toEqual({ kind: 'mixed', count: 2 });
+    expect(summaries.lab).toEqual({ kind: 'mixed', count: 2 });
+  });
+
+  it('counts unique child labs', () => {
+    const summaries = buildGroupSummaries([
+      leaf({ id: '1', lab: 'z-lab' }),
+      leaf({ id: '2', lab: 'a-lab' }),
+      leaf({ id: '3', lab: 'z-lab' }),
+    ]);
+
+    expect(summaries.lab).toEqual({ kind: 'mixed', count: 2 });
+  });
+
+  it('counts Unknown as a distinct lab', () => {
+    const summaries = buildGroupSummaries([
+      leaf({ id: '1', lab: 'lab-a' }),
+      leaf({ id: '2' }),
+    ]);
+
+    expect(summaries.lab).toEqual({ kind: 'mixed', count: 2 });
+  });
+
+  it('shows Unknown when all child labs are missing', () => {
+    const summaries = buildGroupSummaries([
+      leaf({ id: '1' }),
+      leaf({ id: '2' }),
+    ]);
+
+    expect(summaries.lab).toEqual({
+      kind: 'uniform',
+      value: UNKNOWN_STRING,
+    });
   });
 
   it('builds a date range from distinct start times', () => {

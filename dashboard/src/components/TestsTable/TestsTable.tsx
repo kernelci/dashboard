@@ -59,6 +59,7 @@ import { useSortingState } from '@/hooks/useSortingState';
 import {
   adaptColumnsForUnifiedTable,
   defaultInnerColumns,
+  PATH_TREE_INDENT,
 } from './DefaultTestsColumns';
 import { buildTestsTree } from './buildTestsTree';
 import {
@@ -77,6 +78,41 @@ import type { UnifiedTestRow } from './types';
 
 const ESTIMATED_ROW_HEIGHT = 60;
 const VIRTUALIZER_OVERSCAN = 5;
+const PATH_CHEVRON_WIDTH = 24;
+const OTHER_COLUMN_MIN_WIDTH = 88;
+
+const PATH_CHAR_WIDTH = 7.5;
+const PATH_CELL_PADDING = 34;
+const MIN_PATH_COLUMN_WIDTH = 120;
+const MAX_PATH_COLUMN_WIDTH = 480;
+
+const pathColumnWidthFromStrings = (strings: string[], extra = 0): number => {
+  const longest = strings.reduce(
+    (max, value) => Math.max(max, value.length),
+    0,
+  );
+  return Math.round(
+    Math.min(
+      MAX_PATH_COLUMN_WIDTH,
+      Math.max(
+        MIN_PATH_COLUMN_WIDTH,
+        longest * PATH_CHAR_WIDTH + PATH_CELL_PADDING + extra,
+      ),
+    ),
+  );
+};
+
+const maxTreeDepth = (rows: UnifiedTestRow[], depth = 0): number => {
+  let max = depth;
+  for (const row of rows) {
+    if (row.subRows?.length) {
+      max = Math.max(max, maxTreeDepth(row.subRows, depth + 1));
+    } else {
+      max = Math.max(max, depth);
+    }
+  }
+  return max;
+};
 
 export interface ITestsTable {
   tableKey: TableKeys;
@@ -163,6 +199,20 @@ export function TestsTable({
     [filteredTree],
   );
   const data = groupingMode === 'ungrouped' ? flatData : groupedData;
+
+  const pathColumnWidth = useMemo(() => {
+    const paths = flatData.map(row => row.path);
+    const maxDepth =
+      groupingMode === 'ungrouped' ? 0 : maxTreeDepth(groupedData);
+    const indentExtra =
+      maxDepth * PATH_TREE_INDENT + (maxDepth > 0 ? PATH_CHEVRON_WIDTH : 0);
+    return pathColumnWidthFromStrings(paths, indentExtra);
+  }, [flatData, groupedData, groupingMode]);
+
+  const tableMinWidth = useMemo(
+    () => pathColumnWidth + (columns.length - 1) * OTHER_COLUMN_MIN_WIDTH,
+    [columns.length, pathColumnWidth],
+  );
 
   useEffect(() => {
     setExpanded({});
@@ -280,12 +330,18 @@ export function TestsTable({
             sorting,
           });
       return (
-        <TableHead key={header.id} className="border-b px-2 font-bold">
+        <TableHead
+          key={header.id}
+          className="border-b px-2 font-bold"
+          style={
+            header.column.id === 'path' ? { width: pathColumnWidth } : undefined
+          }
+        >
           {headerComponent}
         </TableHead>
       );
     });
-  }, [groupHeaders, sorting]);
+  }, [groupHeaders, sorting, pathColumnWidth]);
 
   const modelRows = table.getRowModel().rows;
 
@@ -502,8 +558,15 @@ export function TestsTable({
         currentPathFilter={currentPathFilter}
         groupingControls={groupingControls}
       />
-      <div ref={parentRef} className="max-h-150 overflow-auto">
-        <DumbBaseTable containerClassName="overflow-visible h-full bg-white">
+      <div
+        ref={parentRef}
+        className="max-h-150 overflow-auto [scrollbar-gutter:stable]"
+      >
+        <DumbBaseTable
+          className="table-fixed [&_td]:overflow-hidden [&_th]:overflow-hidden"
+          containerClassName="overflow-visible h-full bg-white"
+          style={{ minWidth: tableMinWidth }}
+        >
           <DumbTableHeader className="sticky top-0 z-10">
             {tableHeaders}
           </DumbTableHeader>

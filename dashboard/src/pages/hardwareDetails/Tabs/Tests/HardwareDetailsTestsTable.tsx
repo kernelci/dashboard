@@ -4,8 +4,7 @@ import { useCallback, type JSX } from 'react';
 
 import type { LinkProps } from '@tanstack/react-router';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
-
+import { PathWithTooltip } from '@/components/TestsTable/DefaultTestsColumns';
 import type { ITestsTable } from '@/components/TestsTable/TestsTable';
 import { TestsTable } from '@/components/TestsTable/TestsTable';
 import { TableHeader } from '@/components/Table/TableHeader';
@@ -25,18 +24,9 @@ const innerColumns: ColumnDef<TIndividualTest>[] = [
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.path" />
     ),
-    cell: ({ row }): JSX.Element => {
-      return (
-        <Tooltip>
-          <TooltipTrigger>
-            <div className="max-w-80 overflow-clip text-nowrap text-ellipsis">
-              {row.getValue('path')}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>{row.getValue('path')}</TooltipContent>
-        </Tooltip>
-      );
-    },
+    cell: ({ row }): JSX.Element => (
+      <PathWithTooltip value={String(row.getValue('path') ?? '')} />
+    ),
   },
   {
     accessorKey: 'treeBranch',

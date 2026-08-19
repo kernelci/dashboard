@@ -30,8 +30,36 @@ import { UNKNOWN_STRING } from '@/utils/constants/backend';
 import { getDateSortKey } from './groupSummaries';
 import type { GroupFieldSummary, UnifiedTestRow } from './types';
 
-const INDENT_WIDTH = 20;
+const INDENT_WIDTH = 12;
+export const PATH_TREE_INDENT = INDENT_WIDTH;
 const MUTED_VALUE_CLASS = 'text-gray-500';
+
+export const PathWithPrefixEllipsis = ({
+  value,
+}: {
+  value: string;
+}): JSX.Element => (
+  <div
+    className="w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+    dir="rtl"
+    style={{ textAlign: 'left' }}
+  >
+    <span dir="ltr" style={{ unicodeBidi: 'embed' }}>
+      {value}
+    </span>
+  </div>
+);
+
+export const PathWithTooltip = ({ value }: { value: string }): JSX.Element => (
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <div className="min-w-0 overflow-hidden">
+        <PathWithPrefixEllipsis value={value} />
+      </div>
+    </TooltipTrigger>
+    <TooltipContent>{value}</TooltipContent>
+  </Tooltip>
+);
 
 export type SortDirectionGetter = (columnId: string) => false | 'asc' | 'desc';
 
@@ -45,32 +73,30 @@ const PathCell = ({
   const isLeaf = row.original.kind === 'leaf';
 
   return (
-    <div className="flex items-center" style={{ paddingLeft: `${indent}px` }}>
+    <div
+      className="flex w-full min-w-0 items-center"
+      style={{ paddingLeft: `${indent}px` }}
+    >
       {isExpandable && (
-        <span className="mr-2">
+        <span className="mr-2 shrink-0">
           <ChevronRightAnimate
             isExpanded={row.getIsExpanded()}
             animated={false}
           />
         </span>
       )}
-      {!isExpandable && row.depth > 0 && <span className="mr-2 w-4" />}
+      {!isExpandable && row.depth > 0 && <span className="mr-2 w-4 shrink-0" />}
       <Tooltip>
-        <TooltipTrigger>
-          {isLeaf ? (
-            <div
-              className="max-w-80 overflow-hidden text-nowrap text-ellipsis"
-              style={{ direction: 'rtl', textAlign: 'left' }}
-            >
-              <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>
+        <TooltipTrigger asChild>
+          <div className="min-w-0 flex-1 overflow-hidden">
+            {isLeaf ? (
+              <PathWithPrefixEllipsis value={value} />
+            ) : (
+              <div className="overflow-hidden text-ellipsis whitespace-nowrap">
                 {value}
-              </span>
-            </div>
-          ) : (
-            <div className="max-w-80 overflow-clip text-nowrap text-ellipsis">
-              {value}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </TooltipTrigger>
         <TooltipContent>{value}</TooltipContent>
       </Tooltip>
@@ -165,6 +191,7 @@ function renderUniformGroupCell(
   context: CellContext<UnifiedTestRow, unknown>,
   value: unknown,
 ): ReactNode {
+  const columnId = getColumnId(column);
   const leafLikeOriginal = {
     ...context.row.original,
     kind: 'leaf' as const,
@@ -176,6 +203,9 @@ function renderUniformGroupCell(
     row: {
       ...context.row,
       original: leafLikeOriginal,
+      // Leaf cells read row.getValue(id); the group row has no leaf field values.
+      getValue: (id: string) =>
+        id === columnId ? value : context.row.getValue(id),
     } as Row<UnifiedTestRow>,
   });
 }
@@ -402,23 +432,9 @@ export const defaultInnerColumns: ColumnDef<TIndividualTest>[] = [
     header: ({ column }): JSX.Element => (
       <TableHeader column={column} intlKey="global.path" />
     ),
-    cell: ({ row }): JSX.Element => {
-      return (
-        <Tooltip>
-          <TooltipTrigger>
-            <div
-              className="max-w-80 overflow-hidden text-nowrap text-ellipsis"
-              style={{ direction: 'rtl', textAlign: 'left' }}
-            >
-              <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>
-                {row.getValue('path')}
-              </span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>{row.getValue('path')}</TooltipContent>
-        </Tooltip>
-      );
-    },
+    cell: ({ row }): JSX.Element => (
+      <PathWithTooltip value={String(row.getValue('path') ?? '')} />
+    ),
   },
   {
     accessorKey: 'status',
