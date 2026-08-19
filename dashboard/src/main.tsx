@@ -90,7 +90,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister }}
+      persistOptions={{
+        persister,
+        buster: import.meta.env.VITE_CACHE_BUSTER,
+      }}
     >
       <IntlProvider
         messages={currentMessages}

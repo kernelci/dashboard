@@ -23,6 +23,9 @@ export default defineConfig({
   plugins: [tailwindcss(), tsconfigPaths(), react(), TanStackRouterVite()],
   define: {
     'import.meta.env.VITE_DASHBOARD_VERSION': JSON.stringify(dashboardVersion),
+    'import.meta.env.VITE_CACHE_BUSTER': JSON.stringify(
+      dashboardVersion || `build-${Date.now()}`,
+    ),
   },
   resolve: {
     alias: {
