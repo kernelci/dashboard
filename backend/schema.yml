@@ -1844,6 +1844,206 @@ paths:
               schema:
                 $ref: '#/components/schemas/TreeCommitsListResponse'
           description: ''
+  /api/tree/{tree_name}/{git_branch}/compare:
+    get:
+      operationId: tree_compare_retrieve
+      parameters:
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: hash_a
+        schema:
+          title: Hash A
+          type: string
+        description: Commit hash for side A
+        required: true
+      - in: query
+        name: hash_b
+        schema:
+          title: Hash B
+          type: string
+        description: Commit hash for side B
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCompareResponse'
+          description: ''
+  /api/tree/{tree_name}/{git_branch}/compare/boots:
+    get:
+      operationId: tree_compare_boots_retrieve
+      parameters:
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: hash_a
+        schema:
+          title: Hash A
+          type: string
+        description: Commit hash for side A
+        required: true
+      - in: query
+        name: hash_b
+        schema:
+          title: Hash B
+          type: string
+        description: Commit hash for side B
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCompareBootsTestsResponse'
+          description: ''
+  /api/tree/{tree_name}/{git_branch}/compare/builds:
+    get:
+      operationId: tree_compare_builds_retrieve
+      parameters:
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: hash_a
+        schema:
+          title: Hash A
+          type: string
+        description: Commit hash for side A
+        required: true
+      - in: query
+        name: hash_b
+        schema:
+          title: Hash B
+          type: string
+        description: Commit hash for side B
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCompareBuildsResponse'
+          description: ''
+  /api/tree/{tree_name}/{git_branch}/compare/tests:
+    get:
+      operationId: tree_compare_tests_retrieve
+      parameters:
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: hash_a
+        schema:
+          title: Hash A
+          type: string
+        description: Commit hash for side A
+        required: true
+      - in: query
+        name: hash_b
+        schema:
+          title: Hash B
+          type: string
+        description: Commit hash for side B
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCompareBootsTestsResponse'
+          description: ''
   /api/tree/commits-history:
     get:
       operationId: tree_commits_history_retrieve
@@ -2473,6 +2673,133 @@ components:
       required:
       - tests
       title: CommonDetailsTestsResponse
+      type: object
+    CompareBuildDiffRow:
+      properties:
+        config_name:
+          title: Config Name
+          type: string
+        architecture:
+          title: Architecture
+          type: string
+        compiler:
+          title: Compiler
+          type: string
+        status_a:
+          anyOf:
+          - enum:
+            - PASS
+            - FAIL
+            - INCONCLUSIVE
+            type: string
+          - type: 'null'
+          default: null
+          title: Status A
+        status_b:
+          anyOf:
+          - enum:
+            - PASS
+            - FAIL
+            - INCONCLUSIVE
+            type: string
+          - type: 'null'
+          default: null
+          title: Status B
+      required:
+      - config_name
+      - architecture
+      - compiler
+      title: CompareBuildDiffRow
+      type: object
+    CompareChangeCounts:
+      properties:
+        regression:
+          default: 0
+          title: Regression
+          type: integer
+        fixed:
+          default: 0
+          title: Fixed
+          type: integer
+        newFailure:
+          default: 0
+          title: Newfailure
+          type: integer
+        stillFailing:
+          default: 0
+          title: Stillfailing
+          type: integer
+        newPass:
+          default: 0
+          title: Newpass
+          type: integer
+        appeared:
+          default: 0
+          title: Appeared
+          type: integer
+        disappeared:
+          default: 0
+          title: Disappeared
+          type: integer
+      title: CompareChangeCounts
+      type: object
+    CompareDelta:
+      properties:
+        pass:
+          default: 0
+          title: Pass
+          type: integer
+        fail:
+          default: 0
+          title: Fail
+          type: integer
+      title: CompareDelta
+      type: object
+    CompareEntitySummary:
+      properties:
+        sideA:
+          $ref: '#/components/schemas/CompareStatusCounts'
+        sideB:
+          $ref: '#/components/schemas/CompareStatusCounts'
+        delta:
+          $ref: '#/components/schemas/CompareDelta'
+        changes:
+          $ref: '#/components/schemas/CompareChangeCounts'
+      required:
+      - sideA
+      - sideB
+      - delta
+      title: CompareEntitySummary
+      type: object
+    CompareStatusCounts:
+      properties:
+        pass:
+          default: 0
+          title: Pass
+          type: integer
+        fail:
+          default: 0
+          title: Fail
+          type: integer
+        inconclusive:
+          default: 0
+          title: Inconclusive
+          type: integer
+      title: CompareStatusCounts
+      type: object
+    CompareSummary:
+      properties:
+        builds:
+          $ref: '#/components/schemas/CompareEntitySummary'
+        boots:
+          $ref: '#/components/schemas/CompareEntitySummary'
+        tests:
+          $ref: '#/components/schemas/CompareEntitySummary'
+      required:
+      - builds
+      - boots
+      - tests
+      title: CompareSummary
       type: object
     DatabaseStatusValues:
       enum:
@@ -4284,6 +4611,12 @@ components:
           - type: 'null'
           default: null
           title: Start Time End
+        git_commit_name:
+          $ref: '#/components/schemas/Checkout__GitCommitName'
+          default: null
+        git_commit_tags:
+          $ref: '#/components/schemas/Checkout__GitCommitTags'
+          default: null
       required:
       - git_commit_hash
       title: TreeCommitItem
@@ -4352,6 +4685,77 @@ components:
       - tree_url
       - git_commit_tags
       title: TreeCommon
+      type: object
+    TreeCompareBootsTestsResponse:
+      items:
+        $ref: '#/components/schemas/TreeCompareTest'
+      title: TreeCompareBootsTestsResponse
+      type: array
+    TreeCompareBuildsResponse:
+      items:
+        $ref: '#/components/schemas/CompareBuildDiffRow'
+      title: TreeCompareBuildsResponse
+      type: array
+    TreeCompareResponse:
+      properties:
+        treeName:
+          title: Treename
+          type: string
+        branch:
+          title: Branch
+          type: string
+        gitUrl:
+          default: ''
+          title: Giturl
+          type: string
+        summary:
+          $ref: '#/components/schemas/CompareSummary'
+      required:
+      - treeName
+      - branch
+      - summary
+      title: TreeCompareResponse
+      type: object
+    TreeCompareTest:
+      properties:
+        path:
+          title: Path
+          type: string
+        config_name:
+          title: Config Name
+          type: string
+        architecture:
+          title: Architecture
+          type: string
+        platform:
+          title: Platform
+          type: string
+        status_a:
+          anyOf:
+          - enum:
+            - PASS
+            - FAIL
+            - INCONCLUSIVE
+            type: string
+          - type: 'null'
+          title: Status A
+        status_b:
+          anyOf:
+          - enum:
+            - PASS
+            - FAIL
+            - INCONCLUSIVE
+            type: string
+          - type: 'null'
+          title: Status B
+      required:
+      - path
+      - config_name
+      - architecture
+      - platform
+      - status_a
+      - status_b
+      title: TreeCompareTest
       type: object
     TreeDetailsBuildsResponse:
       properties:
