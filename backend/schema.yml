@@ -2027,6 +2027,12 @@ components:
           $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        lab:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Lab
         checkout_id:
           $ref: '#/components/schemas/Checkout__Id'
         command:
@@ -2104,6 +2110,12 @@ components:
           $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        lab:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Lab
       required:
       - id
       - origin
@@ -2585,6 +2597,12 @@ components:
           $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        lab:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Lab
         tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
         issue_id:
