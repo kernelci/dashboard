@@ -255,7 +255,6 @@ def get_hardware_listing_data_bulk(
                 FROM
                     tests
                     INNER JOIN builds b ON tests.build_id = b.id
-                    LEFT JOIN labs tl ON tests.lab_id = tl.id
                 WHERE
                     "tests"."environment_misc" ->> 'platform' IS NOT NULL
                     AND "tests"."start_time" >= %(start_date)s
@@ -268,8 +267,7 @@ def get_hardware_listing_data_bulk(
                         OR tests.environment_misc ->> 'platform' = key_list.hardware_id
                     )
                     AND tests.origin = key_list.origin
-                    -- TODO remove misc->>'runtime' fallback after lab backfill
-                    AND COALESCE(tl.name, tests.misc ->> 'runtime') = key_list.lab_name
+                    AND tests.misc ->> 'runtime' = key_list.lab_name
                     )
             )
         SELECT
@@ -480,8 +478,7 @@ def get_hardware_details_summary(
                      AS known_issues,
                  array[builds.compiler, builds.architecture] AS compiler_arch,
                  builds.config_name,
-                 -- TODO remove misc->>'lab' fallback after lab backfill
-                 COALESCE(bl.name, builds.misc->>'lab') AS lab,
+                 builds.misc->>'lab' AS lab,
                  tests.environment_misc->>'platform' AS platform,
                  tests.environment_compatible,
                  checkouts.origin,
@@ -500,7 +497,6 @@ def get_hardware_details_summary(
                 tests.build_id = builds.id
             INNER JOIN checkouts ON
                 builds.checkout_id = checkouts.id
-            LEFT JOIN labs bl ON builds.lab_id = bl.id
             LEFT OUTER JOIN incidents ON
                 builds.id = incidents.build_id
             WHERE
@@ -526,8 +522,7 @@ def get_hardware_details_summary(
                      as known_issues,
                  array[builds.compiler, builds.architecture] AS compiler_arch,
                  builds.config_name,
-                 -- TODO remove misc->>'runtime' fallback after lab backfill
-                 COALESCE(tl.name, tests.misc->>'runtime') AS lab,
+                 tests.misc->>'runtime' AS lab,
                  tests.environment_misc->>'platform' AS platform,
                  tests.environment_compatible,
                  checkouts.origin,
@@ -546,7 +541,6 @@ def get_hardware_details_summary(
                 tests.build_id = builds.id
             INNER JOIN checkouts ON
                 builds.checkout_id = checkouts.id
-            LEFT JOIN labs tl ON tests.lab_id = tl.id
             LEFT OUTER JOIN incidents ON
                 tests.id = incidents.test_id
             WHERE
@@ -632,21 +626,13 @@ def query_records(
                 issues.report_url AS incidents__issue__report_url,
                 incidents.test_id AS incidents__test_id,
                 T7.issue_id AS build__incidents__issue__id,
-                T8.version AS build__incidents__issue__version,
-                -- TODO remove misc->>'runtime' fallback after lab backfill
-                COALESCE(tl.name, tests.misc->>'runtime') AS lab,
-                -- TODO remove misc->>'lab' fallback after lab backfill
-                COALESCE(bl.name, builds.misc->>'lab') AS build_lab
+                T8.version AS build__incidents__issue__version
             FROM
                 tests
             INNER JOIN builds ON
                 tests.build_id = builds.id
             INNER JOIN checkouts ON
                 builds.checkout_id = checkouts.id
-            LEFT JOIN labs tl ON
-                tests.lab_id = tl.id
-            LEFT JOIN labs bl ON
-                builds.lab_id = bl.id
             LEFT OUTER JOIN incidents ON
                 tests.id = incidents.test_id
             LEFT OUTER JOIN issues ON
@@ -735,16 +721,13 @@ def get_hardware_summary_data(
                 checkouts.git_commit_name,
                 checkouts.git_commit_hash,
                 checkouts.tree_name,
-                checkouts.origin AS checkout_origin,
-                -- TODO remove misc->>'runtime' fallback after lab backfill
-                COALESCE(tl.name, tests.misc->>'runtime') AS lab
+                checkouts.origin AS checkout_origin
             FROM
                 tests
             INNER JOIN builds ON
                 tests.build_id = builds.id
             INNER JOIN checkouts ON
                 builds.checkout_id = checkouts.id
-            LEFT JOIN labs tl ON tests.lab_id = tl.id
             WHERE
                 tests.start_time >= %s
                 AND tests.start_time <= %s
@@ -757,8 +740,7 @@ def get_hardware_summary_data(
                     OR tests.environment_misc ->> 'platform' = key_list.hardware_id
                 )
                 AND tests.origin = key_list.origin
-                -- TODO remove misc->>'runtime' fallback after lab backfill
-                AND COALESCE(tl.name, tests.misc ->> 'runtime') = key_list.lab_name
+                AND tests.misc ->> 'runtime' = key_list.lab_name
                 )
             ORDER BY
                 tests.start_time DESC

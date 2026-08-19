@@ -151,7 +151,6 @@ INSERT_QUERIES = {
             "log_url",
             "log_excerpt",
             "misc",
-            "lab_id",
             "status",
         ],
         "query": """
@@ -173,11 +172,10 @@ INSERT_QUERIES = {
                     log_url,
                     log_excerpt,
                     misc,
-                    lab_id,
                     status
                 )
                 VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
                 ON CONFLICT (id)
                 DO UPDATE SET
@@ -195,7 +193,6 @@ INSERT_QUERIES = {
                     log_url = COALESCE(builds.log_url, EXCLUDED.log_url),
                     log_excerpt = COALESCE(builds.log_excerpt, EXCLUDED.log_excerpt),
                     misc = COALESCE(builds.misc, EXCLUDED.misc),
-                    lab_id = COALESCE(builds.lab_id, EXCLUDED.lab_id),
                     status = COALESCE(builds.status, EXCLUDED.status);
             """,
     },
@@ -216,7 +213,6 @@ INSERT_QUERIES = {
             "duration",
             "output_files",
             "misc",
-            "lab_id",
             "number_value",
             "environment_compatible",
             "number_prefix",
@@ -240,7 +236,6 @@ INSERT_QUERIES = {
                     duration,
                     output_files,
                     misc,
-                    lab_id,
                     number_value,
                     environment_compatible,
                     number_prefix,
@@ -248,7 +243,7 @@ INSERT_QUERIES = {
                     input_files
                 )
                 VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
                 ON CONFLICT (id)
                 DO UPDATE SET
@@ -264,7 +259,6 @@ INSERT_QUERIES = {
                     duration = COALESCE(tests.duration, EXCLUDED.duration),
                     output_files = COALESCE(tests.output_files, EXCLUDED.output_files),
                     misc = COALESCE(tests.misc, EXCLUDED.misc),
-                    lab_id = COALESCE(tests.lab_id, EXCLUDED.lab_id),
                     number_value = COALESCE(tests.number_value, EXCLUDED.number_value),
                     environment_compatible = COALESCE(tests.environment_compatible, EXCLUDED.environment_compatible),
                     number_prefix = COALESCE(tests.number_prefix, EXCLUDED.number_prefix),

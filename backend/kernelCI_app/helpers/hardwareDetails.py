@@ -153,7 +153,6 @@ def get_build_typed(record: Dict, tree_idx: int) -> HardwareBuildHistoryItem:
         tree_name=record["build__checkout__tree_name"],
         issue_id=record["build__incidents__issue__id"],
         issue_version=record["build__incidents__issue__version"],
-        lab=record.get("build_lab") or UNKNOWN_STRING,
     )
 
 
@@ -291,6 +290,8 @@ def handle_test_history(
     full_environment_misc: bool = False,
 ) -> None:
     create_record_test_platform(record=record)
+    record_misc = sanitize_dict(record.get("misc"))
+
     environment_misc_dict = get_environment_misc_value(
         full_environment_misc=full_environment_misc,
         parsed_environment_misc=record.get("parsed_environment_misc"),
@@ -312,7 +313,11 @@ def handle_test_history(
         environment_misc=environment_misc,
         tree_name=record["build__checkout__tree_name"],
         git_repository_branch=record["build__checkout__git_repository_branch"],
-        lab=record.get("lab") or UNKNOWN_STRING,
+        lab=(
+            record_misc.get("runtime", UNKNOWN_STRING)
+            if record_misc
+            else UNKNOWN_STRING
+        ),
     )
 
     task.append(test_history_item)
@@ -375,14 +380,16 @@ def handle_test_summary(
         getattr(task.origins[origin], status) + 1,
     )
 
-    lab = record.get("lab") or UNKNOWN_STRING
-    if task.labs.get(lab) is None:
-        task.labs[lab] = StatusCount()
-    setattr(
-        task.labs[lab],
-        status,
-        getattr(task.labs[lab], status) + 1,
-    )
+    misc = sanitize_dict(record.get("misc")) or {}
+    lab = misc.get("runtime", UNKNOWN_STRING)
+    if lab:
+        if task.labs.get(lab) is None:
+            task.labs[lab] = StatusCount()
+        setattr(
+            task.labs[lab],
+            status,
+            getattr(task.labs[lab], status) + 1,
+        )
 
 
 def handle_build_history(
@@ -451,16 +458,18 @@ def handle_build_summary(
             getattr(builds_summary.origins[origin], status_key) + 1,
         )
 
-    lab = record.get("build_lab") or UNKNOWN_STRING
-    build_lab_summary = builds_summary.labs.get(lab)
-    if not build_lab_summary:
-        build_lab_summary = StatusCount()
-        builds_summary.labs[lab] = build_lab_summary
-    setattr(
-        builds_summary.labs[lab],
-        status_key,
-        getattr(builds_summary.labs[lab], status_key) + 1,
-    )
+    misc = sanitize_dict(build.misc) or {}
+    lab = misc.get("lab", UNKNOWN_STRING)
+    if lab:
+        build_lab_summary = builds_summary.labs.get(lab)
+        if not build_lab_summary:
+            build_lab_summary = StatusCount()
+            builds_summary.labs[lab] = build_lab_summary
+        setattr(
+            builds_summary.labs[lab],
+            status_key,
+            getattr(builds_summary.labs[lab], status_key) + 1,
+        )
 
     process_issue(record=record, task_issues_dict=issue_dict, issue_from="build")
 
@@ -570,7 +579,8 @@ def decide_if_is_full_record_filtered_out(
     if not is_current_tree_selected:
         return True
 
-    lab = record.get("lab") or UNKNOWN_STRING
+    misc = sanitize_dict(record.get("misc")) or {}
+    lab = misc.get("runtime", UNKNOWN_STRING)
 
     is_record_filtered_out_result = instance.filters.is_record_filtered_out(
         hardwares=record["environment_compatible"],
@@ -720,8 +730,10 @@ def process_filters(*, instance, record: Dict) -> None:
 
         instance.unfiltered_origins["build"].add(record["build__origin"])
 
-        if record.get("build_lab"):
-            instance.unfiltered_labs["build"].add(record["build_lab"])
+        build_misc = sanitize_dict(record.get("build__misc")) or {}
+        build_lab = build_misc.get("lab")
+        if build_lab:
+            instance.unfiltered_labs["build"].add(build_lab)
 
     if record["id"] is not None:
         if is_boot(record["path"]):
@@ -759,8 +771,10 @@ def process_filters(*, instance, record: Dict) -> None:
         platform_set.add(test_platform)
         origin_set.add(record["test_origin"])
 
-        if record.get("lab"):
-            instance.unfiltered_labs[flag_tab].add(record["lab"])
+        test_misc = sanitize_dict(record.get("misc")) or {}
+        test_lab = test_misc.get("runtime")
+        if test_lab:
+            instance.unfiltered_labs[flag_tab].add(test_lab)
 
 
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:
