@@ -40,9 +40,11 @@ const OriginSelect = ({
     if (!originData) {
       return [];
     }
-    return isHardwarePath
-      ? originData.test_origins
-      : originData.checkout_origins;
+    return (
+      (isHardwarePath
+        ? originData.test_origins
+        : originData.checkout_origins) ?? []
+    );
   }, [originData, isHardwarePath]);
 
   const selectItems = useMemo(() => {

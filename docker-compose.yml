@@ -115,7 +115,7 @@ services:
             context: .
             dockerfile: ./dashboard/Dockerfile
             args:
-                DASHBOARD_VERSION: ${DASHBOARD_VERSION:-}
+                DASHBOARD_VERSION: ${DASHBOARD_VERSION:-local-dev}
         image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-frontend:${IMAGE_TAG:-latest}
         volumes:
             - static-data:/data/static
