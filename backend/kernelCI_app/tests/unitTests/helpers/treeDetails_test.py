@@ -323,7 +323,6 @@ class TestGetBuild:
             "build_start_time": "2024-01-15T10:00:00Z",
             "checkout_git_repository_url": "https://git.kernel.org",
             "checkout_git_repository_branch": "master",
-            "build_lab": "lab1",
         }
 
         result = get_build(row_data)
@@ -337,7 +336,6 @@ class TestGetBuild:
         assert result.duration == 100
         assert result.git_repository_url == "https://git.kernel.org"
         assert result.git_repository_branch == "master"
-        assert result.lab == "lab1"
 
 
 class TestProcessBuildsIssue:

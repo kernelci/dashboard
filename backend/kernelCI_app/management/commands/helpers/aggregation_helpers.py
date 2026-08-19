@@ -52,8 +52,7 @@ def convert_test(t: Tests) -> PendingTest:
         is_boot=is_boot(t.path) if t.path else False,
         path=t.path,
         start_time=t.start_time,
-        # TODO remove misc->>'runtime' fallback after lab backfill
-        lab=t._lab_name or misc.get("runtime"),
+        lab=misc.get("runtime"),
         full_status=t.status,
     )
 

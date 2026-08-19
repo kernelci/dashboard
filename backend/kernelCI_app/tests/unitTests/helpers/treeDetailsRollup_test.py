@@ -146,7 +146,7 @@ class TestProcessBuildFilters:
             "build_architecture": "x86",
             "build_compiler": "clang",
             "build_origin": "maestro",
-            "build_lab": "l1",
+            "build_misc": {"lab": "l1"},
             "issue_id": "issue123",
             "issue_version": 2,
             "incident_test_id": None,
@@ -168,7 +168,7 @@ class TestProcessBuildFilters:
             "build_architecture": "x86",
             "build_compiler": "clang",
             "build_origin": "maestro",
-            "build_lab": None,
+            "build_misc": None,
             "issue_id": "issue456",
             "issue_version": 2,
             "incident_test_id": "some-test",
@@ -176,7 +176,7 @@ class TestProcessBuildFilters:
         process_build_filters(inst, row)
 
         assert inst.unfiltered_build_issues == set()
-        assert inst.unfiltered_labs["build"] == {UNKNOWN_STRING}
+        assert inst.unfiltered_labs["build"] == set()
 
 
 class TestProcessRollupFilters:

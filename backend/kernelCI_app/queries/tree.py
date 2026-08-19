@@ -227,8 +227,6 @@ def get_tree_details_data(
                 tests.number_value AS tests_number_value,
                 tests.misc AS tests_misc,
                 tests.environment_compatible AS tests_environment_compatible,
-                -- TODO remove misc->>'runtime' fallback after lab backfill
-                COALESCE(test_labs.name, tests.misc ->> 'runtime') AS tests_lab,
                 builds_filter.*,
                 incidents.id AS incidents_id,
                 incidents.test_id AS incidents_test_id,
@@ -253,7 +251,6 @@ def get_tree_details_data(
                     builds.log_url AS builds_log_url,
                     builds.status AS builds_valid,
                     builds.misc AS builds_misc,
-                    COALESCE(build_labs.name, builds.misc ->> 'lab') AS builds_lab,
                     tree_head.*
                 FROM
                     (
@@ -276,13 +273,9 @@ def get_tree_details_data(
                     ) AS tree_head
                 LEFT JOIN builds
                     ON tree_head.checkout_id = builds.checkout_id
-                LEFT JOIN labs AS build_labs
-                    ON builds.lab_id = build_labs.id
             ) AS builds_filter
         LEFT JOIN tests
             ON builds_filter.builds_id = tests.build_id
-        LEFT JOIN labs AS test_labs
-            ON tests.lab_id = test_labs.id
         LEFT JOIN incidents
             ON tests.id = incidents.test_id OR
                builds_filter.builds_id = incidents.build_id
@@ -482,25 +475,16 @@ def get_tree_data(
                 NULL AS tests_environment_compatible,"""
         )
 
-        # TODO remove misc->>'runtime' fallback after lab backfill
-        test_lab_select = (
-            "COALESCE(test_labs.name, tests.misc->>'runtime') AS test_lab,"
-            if include_test_cols
-            else "NULL AS test_lab,"
-        )
-
         tests_join = ""
         if is_boots:
             tests_join = (
                 "LEFT JOIN tests ON builds_filter.builds_id = tests.build_id"
                 " AND (tests.path = 'boot' OR tests.path LIKE 'boot.%%')"
-                " LEFT JOIN labs AS test_labs ON tests.lab_id = test_labs.id"
             )
         elif is_tests:
             tests_join = (
                 "LEFT JOIN tests ON builds_filter.builds_id = tests.build_id"
                 " AND tests.path <> 'boot' AND tests.path NOT LIKE 'boot.%%'"
-                " LEFT JOIN labs AS test_labs ON tests.lab_id = test_labs.id"
             )
 
         incidents_on = (
@@ -524,7 +508,6 @@ def get_tree_data(
         )
         SELECT
             {tests_select}
-                {test_lab_select}
                 builds_filter.*,
                 incidents.id AS incidents_id,
                 incidents.test_id AS incidents_test_id,
@@ -549,8 +532,6 @@ def get_tree_data(
                     builds.log_url AS builds_log_url,
                     builds.status AS builds_valid,
                     builds.misc AS builds_misc,
-                    -- TODO remove misc->>'lab' fallback after lab backfill
-                    COALESCE(build_labs.name, builds.misc->>'lab') AS build_lab,
                     tree_head.*
                 FROM
                     (
@@ -573,8 +554,6 @@ def get_tree_data(
                     ) AS tree_head
                 LEFT JOIN builds
                     ON tree_head.checkout_id = builds.checkout_id
-                LEFT JOIN labs AS build_labs
-                    ON builds.lab_id = build_labs.id
             ) AS builds_filter
         {tests_join}
         LEFT JOIN incidents
@@ -663,8 +642,6 @@ def get_tree_details_builds(
             b.log_url AS build_log_url,
             b.status AS build_status,
             b.misc AS build_misc,
-            -- TODO remove misc->>'lab' fallback after lab backfill
-            COALESCE(bl.name, b.misc->>'lab') AS build_lab,
             rc.checkout_id,
             rc.git_repository_url AS checkout_git_repository_url,
             rc.git_repository_branch AS checkout_git_repository_branch,
@@ -680,8 +657,6 @@ def get_tree_details_builds(
         FROM
             builds b
         INNER JOIN RELEVANT_CHECKOUTS rc ON b.checkout_id IN (SELECT checkout_id FROM RELEVANT_CHECKOUTS)
-        LEFT JOIN labs bl
-            ON b.lab_id = bl.id
         LEFT JOIN incidents inc
             ON inc.build_id = b.id AND inc.test_id IS NULL
         LEFT JOIN issues iss
@@ -909,15 +884,13 @@ def get_tree_commit_history_hashes_aggregated(
             builds.status AS status,
             array[builds.compiler, builds.architecture] AS compiler_arch,
             builds.config_name AS config_name,
-            -- TODO remove misc->>'lab' fallback after lab backfill
-            COALESCE(bl.name, builds.misc->>'lab') AS lab,
+            builds.misc->>'lab' AS lab,
             ARRAY_AGG(DISTINCT ic.issue_id || ',' || ic.issue_version::text) AS known_issues,
             true AS is_build,
             false AS is_boot,
             false AS is_test
         FROM checkouts c
         INNER JOIN builds ON c.id = builds.checkout_id
-        LEFT JOIN labs bl ON builds.lab_id = bl.id
         LEFT JOIN incidents ic ON builds.id = ic.build_id
         WHERE
             c.git_commit_hash = ANY(%(commit_hashes)s)
@@ -955,8 +928,7 @@ def get_tree_commit_history_hashes_aggregated(
             tests.status AS status,
             array[builds.compiler, builds.architecture] AS compiler_arch,
             builds.config_name AS config_name,
-            -- TODO remove misc->>'runtime' fallback after lab backfill
-            COALESCE(tl.name, tests.misc->>'runtime') AS lab,
+            tests.misc->>'runtime' AS lab,
             ARRAY_AGG(DISTINCT ic.issue_id || ',' || ic.issue_version::text) AS known_issues,
             false AS is_build,
             true AS is_test,
@@ -964,7 +936,6 @@ def get_tree_commit_history_hashes_aggregated(
         FROM checkouts c
         INNER JOIN builds ON c.id = builds.checkout_id
         INNER JOIN tests ON tests.build_id = builds.id {boot_filter}
-        LEFT JOIN labs tl ON tests.lab_id = tl.id
         LEFT JOIN incidents ic ON tests.id = ic.test_id
         LEFT JOIN issues i ON ic.issue_id = i.id
         WHERE
@@ -1051,11 +1022,7 @@ def get_tree_commit_history(
     test_prefix = "t." if include_test_data else "NULL AS "
     build_id = "b.id" if include_builds else "NULL"
     build_misc = "b.misc" if include_builds else "NULL"
-    # TODO remove misc fallbacks after lab backfill
-    build_lab = "COALESCE(bl.name, b.misc->>'lab')" if include_builds else "NULL"
-    test_misc_runtime = (
-        "COALESCE(tl.name, t.misc->>'runtime')" if include_test_data else "NULL"
-    )
+    test_misc_runtime = "t.misc->>'runtime'" if include_test_data else "NULL"
     test_id = "t.id" if include_test_data else "NULL"
 
     select_clause = f"""c.git_commit_hash,
@@ -1081,8 +1048,7 @@ def get_tree_commit_history(
         ic.id AS incidents_id,
         ic.test_id AS incidents_test_id,
         i.id AS issues_id,
-        i.version AS issues_version,
-        {build_lab} AS build_lab"""
+        i.version AS issues_version"""
 
     if include_boots and not include_tests:
         test_filter = "AND (t.path IS NULL OR t.path LIKE 'boot%%')"
@@ -1093,14 +1059,12 @@ def get_tree_commit_history(
 
     if include_test_data:
         test_join = f"LEFT JOIN tests AS t ON t.build_id = b.id {test_filter}"
-        test_join += "\n        LEFT JOIN labs AS tl ON t.lab_id = tl.id"
         incidents_condition = "t.id = ic.test_id OR b.id = ic.build_id"
     else:
         test_join = ""
         incidents_condition = "b.id = ic.build_id"
 
     join_clause = f"""LEFT JOIN builds AS b ON c.id = b.checkout_id
-        LEFT JOIN labs AS bl ON b.lab_id = bl.id
         {test_join}
         LEFT JOIN incidents AS ic ON {incidents_condition}
         LEFT JOIN issues AS i ON ic.issue_id = i.id"""

@@ -105,9 +105,6 @@ def _standardize_lab_field(item: dict[str, Any], field: str) -> None:
     """
     lab = item.get("misc", {}).get(field)
     is_automatic = lab and AUTOMATIC_LABS.match(lab)
-    # Real lab for the lab_id FK, captured before the origin fallback (#1752) below
-    # overwrites misc, which would otherwise pollute the lab dimension.
-    item["_real_lab"] = None if is_automatic else lab
     if is_automatic:
         item["misc"][AUTOMATIC_LAB_FIELD] = lab
         item["misc"].pop(field, None)
@@ -196,39 +193,6 @@ def prepare_file_data(
         }
 
 
-def assign_lab_ids(builds_buf: list[Builds], tests_buf: list[Tests]) -> None:
-    """Resolve each instance's real lab name to a labs.id and set its lab_id FK.
-
-    Select-first so we only INSERT genuinely new labs (avoids burning the id
-    sequence on every flush). New labs are committed outside the fact-insert
-    transaction (autocommit).
-    """
-    objs = [*builds_buf, *tests_buf]
-    names = {name for obj in objs if (name := obj._lab_name)}
-
-    id_map: dict[str, int] = {}
-    if names:
-        with connections["default"].cursor() as cursor:
-            cursor.execute(
-                "SELECT id, name FROM labs WHERE name = ANY(%s)", [list(names)]
-            )
-            id_map = {name: lab_id for lab_id, name in cursor.fetchall()}
-
-            missing = [name for name in names if name not in id_map]
-            if missing:
-                cursor.executemany(
-                    "INSERT INTO labs (name) VALUES (%s) ON CONFLICT (name) DO NOTHING",
-                    [(name,) for name in missing],
-                )
-                cursor.execute(
-                    "SELECT id, name FROM labs WHERE name = ANY(%s)", [missing]
-                )
-                id_map.update({name: lab_id for lab_id, name in cursor.fetchall()})
-
-    for obj in objs:
-        obj.lab_id = id_map.get(obj._lab_name) if obj._lab_name else None
-
-
 def consume_buffer(buffer: list[TableModels], table_name: TableNames) -> None:
     """
     Consume a buffer of items and insert them into the database.
@@ -289,8 +253,6 @@ def flush_buffers(
     # Insert in dependency-safe order
     flush_start = time.time()
     try:
-        # Autocommit, outside the transaction: avoids holding lab locks per flush.
-        assign_lab_ids(builds_buf, tests_buf)
         # Single transaction for all tables in the flush
         with transaction.atomic():
             consume_buffer(issues_buf, "issues")

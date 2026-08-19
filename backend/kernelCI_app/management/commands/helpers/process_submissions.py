@@ -117,7 +117,6 @@ def make_build_instance(build: dict[str, Any]) -> Builds:
     filtered_build = {key: value for key, value in build.items() if key in BUILD_FIELDS}
     obj = Builds(**filtered_build)
     obj.field_timestamp = timezone.now()
-    obj._lab_name = build.get("_real_lab")
     return obj
 
 
@@ -128,7 +127,6 @@ def make_test_instance(test: dict[str, Any]) -> Tests:
     }
     obj = Tests(**filtered_test)
     obj.field_timestamp = timezone.now()
-    obj._lab_name = test.get("_real_lab")
     return obj
 
 
@@ -189,8 +187,7 @@ def build_instances_from_submission(
 
                         try:
                             misc = build.misc
-                            # TODO remove misc->>'lab' fallback after lab backfill
-                            lab = build._lab_name or misc.get("lab")
+                            lab = misc.get("lab")
                         except AttributeError:
                             lab = None
 
@@ -205,8 +202,7 @@ def build_instances_from_submission(
 
                         try:
                             misc = test.misc
-                            # TODO remove misc->>'runtime' fallback after lab backfill
-                            lab = test._lab_name or misc.get("runtime")
+                            lab = misc.get("lab", misc.get("runtime"))
                         except AttributeError:
                             lab = None
 
