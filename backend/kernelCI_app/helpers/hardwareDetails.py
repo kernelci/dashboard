@@ -1,4 +1,3 @@
-import bisect
 import json
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -28,7 +27,6 @@ from kernelCI_app.helpers.misc import (
     misc_value_or_default,
 )
 from kernelCI_app.typeModels.commonDetails import (
-    BuildArchitectures,
     BuildSummary,
     EnvironmentMisc,
     StatusCount,
@@ -290,8 +288,6 @@ def handle_test_history(
     full_environment_misc: bool = False,
 ) -> None:
     create_record_test_platform(record=record)
-    record_misc = sanitize_dict(record.get("misc"))
-
     environment_misc_dict = get_environment_misc_value(
         full_environment_misc=full_environment_misc,
         parsed_environment_misc=record.get("parsed_environment_misc"),
@@ -313,11 +309,7 @@ def handle_test_history(
         environment_misc=environment_misc,
         tree_name=record["build__checkout__tree_name"],
         git_repository_branch=record["build__checkout__git_repository_branch"],
-        lab=(
-            record_misc.get("runtime", UNKNOWN_STRING)
-            if record_misc
-            else UNKNOWN_STRING
-        ),
+        lab=record.get("lab") or UNKNOWN_STRING,
     )
 
     task.append(test_history_item)
@@ -380,16 +372,14 @@ def handle_test_summary(
         getattr(task.origins[origin], status) + 1,
     )
 
-    misc = sanitize_dict(record.get("misc")) or {}
-    lab = misc.get("runtime", UNKNOWN_STRING)
-    if lab:
-        if task.labs.get(lab) is None:
-            task.labs[lab] = StatusCount()
-        setattr(
-            task.labs[lab],
-            status,
-            getattr(task.labs[lab], status) + 1,
-        )
+    lab = record.get("lab") or UNKNOWN_STRING
+    if task.labs.get(lab) is None:
+        task.labs[lab] = StatusCount()
+    setattr(
+        task.labs[lab],
+        status,
+        getattr(task.labs[lab], status) + 1,
+    )
 
 
 def handle_build_history(
@@ -402,79 +392,7 @@ def handle_build_history(
     builds.append(build)
 
 
-def handle_build_summary(
-    *,
-    record: Dict,
-    builds_summary: BuildSummary,
-    issue_dict: Dict,
-    tree_index: int,
-) -> None:
-    build: HardwareBuildHistoryItem = get_build_typed(record, tree_idx=tree_index)
-
-    status_key = build.status
-    setattr(
-        builds_summary.status,
-        status_key,
-        getattr(builds_summary.status, status_key) + 1,
-    )
-
-    if config := build.config_name:
-        build_config_summary = builds_summary.configs.get(config)
-        if not build_config_summary:
-            build_config_summary = StatusCount()
-            builds_summary.configs[config] = build_config_summary
-        setattr(
-            builds_summary.configs[config],
-            status_key,
-            getattr(builds_summary.configs[config], status_key) + 1,
-        )
-
-    if arch := build.architecture:
-        build_arch_summary = builds_summary.architectures.get(arch)
-        if not build_arch_summary:
-            build_arch_summary = BuildArchitectures()
-            builds_summary.architectures[arch] = build_arch_summary
-        setattr(
-            builds_summary.architectures[arch],
-            status_key,
-            getattr(builds_summary.architectures[arch], status_key) + 1,
-        )
-
-        compiler = build.compiler
-        if (
-            compiler is not None
-            and compiler not in builds_summary.architectures.get(arch).compilers
-        ):
-            bisect.insort(builds_summary.architectures[arch].compilers, compiler)
-
-    if origin := build.origin:
-        build_origin_summary = builds_summary.origins.get(origin)
-        if not build_origin_summary:
-            build_origin_summary = StatusCount()
-            builds_summary.origins[origin] = build_origin_summary
-        setattr(
-            builds_summary.origins[origin],
-            status_key,
-            getattr(builds_summary.origins[origin], status_key) + 1,
-        )
-
-    misc = sanitize_dict(build.misc) or {}
-    lab = misc.get("lab", UNKNOWN_STRING)
-    if lab:
-        build_lab_summary = builds_summary.labs.get(lab)
-        if not build_lab_summary:
-            build_lab_summary = StatusCount()
-            builds_summary.labs[lab] = build_lab_summary
-        setattr(
-            builds_summary.labs[lab],
-            status_key,
-            getattr(builds_summary.labs[lab], status_key) + 1,
-        )
-
-    process_issue(record=record, task_issues_dict=issue_dict, issue_from="build")
-
-
-# deprecated, use handle_build_history and handle_build_summary separately instead, with typing
+# deprecated, use handle_build_history separately instead, with typing
 def handle_build(*, instance, record: Dict, build: Dict) -> None:
     instance.builds["items"].append(build)
     update_issues(
@@ -579,8 +497,7 @@ def decide_if_is_full_record_filtered_out(
     if not is_current_tree_selected:
         return True
 
-    misc = sanitize_dict(record.get("misc")) or {}
-    lab = misc.get("runtime", UNKNOWN_STRING)
+    lab = record.get("lab") or UNKNOWN_STRING
 
     is_record_filtered_out_result = instance.filters.is_record_filtered_out(
         hardwares=record["environment_compatible"],
@@ -730,10 +647,8 @@ def process_filters(*, instance, record: Dict) -> None:
 
         instance.unfiltered_origins["build"].add(record["build__origin"])
 
-        build_misc = sanitize_dict(record.get("build__misc")) or {}
-        build_lab = build_misc.get("lab")
-        if build_lab:
-            instance.unfiltered_labs["build"].add(build_lab)
+        if record.get("build_lab"):
+            instance.unfiltered_labs["build"].add(record["build_lab"])
 
     if record["id"] is not None:
         if is_boot(record["path"]):
@@ -771,10 +686,8 @@ def process_filters(*, instance, record: Dict) -> None:
         platform_set.add(test_platform)
         origin_set.add(record["test_origin"])
 
-        test_misc = sanitize_dict(record.get("misc")) or {}
-        test_lab = test_misc.get("runtime")
-        if test_lab:
-            instance.unfiltered_labs[flag_tab].add(test_lab)
+        if record.get("lab"):
+            instance.unfiltered_labs[flag_tab].add(record["lab"])
 
 
 def is_record_tree_selected(*, record, tree: Tree, is_all_selected: bool) -> bool:

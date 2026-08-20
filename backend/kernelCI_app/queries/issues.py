@@ -76,13 +76,15 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
             T.START_TIME,
             T.ENVIRONMENT_COMPATIBLE,
             T.ENVIRONMENT_MISC,
-            T.MISC->>'runtime' AS lab,
+            -- TODO remove MISC->>'runtime' fallback after lab backfill
+            COALESCE(TL.NAME, T.MISC->>'runtime') AS lab,
             C.TREE_NAME,
             C.GIT_REPOSITORY_BRANCH,
             C.GIT_REPOSITORY_URL
         FROM
             INCIDENTS INC
             LEFT JOIN TESTS T ON (INC.TEST_ID = T.ID)
+            LEFT JOIN LABS TL ON (T.LAB_ID = TL.ID)
             LEFT JOIN BUILDS B ON (T.BUILD_ID = B.ID)
             LEFT JOIN CHECKOUTS C ON (B.CHECKOUT_ID = C.ID)
         WHERE
