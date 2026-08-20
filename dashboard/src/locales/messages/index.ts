@@ -258,9 +258,11 @@ export const messages = {
     'issueDetails.culpritHarness': 'Harness',
     'issueDetails.culpritTitle': 'Culprit',
     'issueDetails.culpritTool': 'Tool',
+    'issueDetails.firstGoodCheckout': 'First Good Checkout',
     'issueDetails.firstIncidentData': 'First Incident Data',
     'issueDetails.firstIncidentVersion': 'First Incident Version',
     'issueDetails.id': 'Issue Id',
+    'issueDetails.incidents': 'Incidents per Tree',
     'issueDetails.issueDetails': 'Issue Details',
     'issueDetails.issueListingInfo':
       'The culprit for all issues listed is code',
@@ -271,6 +273,7 @@ export const messages = {
     'issueDetails.notFound': 'Issue not found',
     'issueDetails.reportSubject': 'Report Subject',
     'issueDetails.reportUrl': 'Report URL',
+    'issueDetails.stillFailing': 'Still failing',
     'issueDetails.version': 'Version',
     'issueListing.culpritInfo':
       'Layers of the execution stack responsible for the issue.\nIf all are false, the issue is considered invalid.',

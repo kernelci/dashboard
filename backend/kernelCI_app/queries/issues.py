@@ -240,57 +240,104 @@ def get_test_issues(*, test_id: str) -> list[dict]:
 
 
 def get_issue_seen_data(
-    *, issue_id_list: list[str], mode: Literal["first", "last"] = "first"
+    *,
+    issue_id_list: list[str],
+    mode: Literal["first", "last"] = "first",
+    group_by: Literal["issue", "tree"] = "issue",
 ) -> list[dict]:
     """
     Retrieves the incident and checkout data of either the first or last
     incident of a list of issues through a list of `issue_id`s.
 
     :param mode: Either 'first' to get oldest incidents or 'last' to get the newest ones.
+    :param group_by: 'issue' returns one row per issue; 'tree' returns one row per
+        (issue, tree_name, git_repository_url, git_repository_branch).
     """
     if not issue_id_list:
         return []
 
     order_direction = "ASC" if mode == "first" else "DESC"
     cache_key = f"issue_{mode}_seen"
+    if group_by == "tree":
+        cache_key = f"{cache_key}_per_tree"
     params = {"issue_id_list": issue_id_list}
     records = get_query_cache(key=cache_key, params=params)
 
     if records is None:
-        query = f"""
-            WITH target_incident AS (
-                SELECT DISTINCT ON (IC.issue_id)
-                    IC.id
+        if group_by == "tree":
+            query = f"""
+                SELECT DISTINCT ON (
+                    IC.issue_id,
+                    C.tree_name,
+                    C.git_repository_url,
+                    C.git_repository_branch
+                )
+                    IC.id,
+                    IC.issue_id,
+                    IC._timestamp AS first_seen,
+                    IC.issue_version,
+                    C.git_commit_hash,
+                    C.git_repository_url,
+                    C.git_repository_branch,
+                    C.git_commit_name,
+                    C.tree_name,
+                    C.id AS checkout_id,
+                    C.start_time AS checkout_start_time
                 FROM
                     incidents IC
+                LEFT JOIN tests T ON IC.test_id = T.id
+                LEFT JOIN builds B ON (
+                    IC.build_id = B.id
+                    OR T.build_id = B.id
+                )
+                LEFT JOIN checkouts C ON B.checkout_id = C.id
                 WHERE
                     IC.issue_id = ANY(%(issue_id_list)s)
+                    AND C.tree_name IS NOT NULL
+                    AND C.git_repository_branch IS NOT NULL
                 ORDER BY
                     IC.issue_id,
+                    C.tree_name,
+                    C.git_repository_url,
+                    C.git_repository_branch,
                     IC.issue_version {order_direction},
                     IC._timestamp {order_direction}
-            )
-            SELECT
-                IC.id,
-                IC.issue_id,
-                IC._timestamp AS first_seen,
-                IC.issue_version,
-                C.git_commit_hash,
-                C.git_repository_url,
-                C.git_repository_branch,
-                C.git_commit_name,
-                C.tree_name,
-                C.id as checkout_id
-            FROM
-                incidents IC
-            LEFT JOIN tests T ON IC.test_id = T.id
-            LEFT JOIN builds B ON (
-                IC.build_id = B.id
-                OR T.build_id = B.id
-            )
-            LEFT JOIN checkouts C ON B.checkout_id = C.id
-            JOIN target_incident TI ON IC.id = TI.id
-        """
+            """
+        else:
+            query = f"""
+                WITH target_incident AS (
+                    SELECT DISTINCT ON (IC.issue_id)
+                        IC.id
+                    FROM
+                        incidents IC
+                    WHERE
+                        IC.issue_id = ANY(%(issue_id_list)s)
+                    ORDER BY
+                        IC.issue_id,
+                        IC.issue_version {order_direction},
+                        IC._timestamp {order_direction}
+                )
+                SELECT
+                    IC.id,
+                    IC.issue_id,
+                    IC._timestamp AS first_seen,
+                    IC.issue_version,
+                    C.git_commit_hash,
+                    C.git_repository_url,
+                    C.git_repository_branch,
+                    C.git_commit_name,
+                    C.tree_name,
+                    C.id as checkout_id
+                FROM
+                    incidents IC
+                LEFT JOIN tests T ON IC.test_id = T.id
+                LEFT JOIN builds B ON (
+                    IC.build_id = B.id
+                    OR T.build_id = B.id
+                )
+                LEFT JOIN checkouts C ON B.checkout_id = C.id
+                JOIN target_incident TI ON IC.id = TI.id
+            """
 
         with connection.cursor() as cursor:
             cursor.execute(query, params)
@@ -301,22 +348,128 @@ def get_issue_seen_data(
     return records
 
 
-def get_issue_first_seen_data(*, issue_id_list: list[str]) -> list[dict]:
+def get_issue_first_seen_data(
+    *,
+    issue_id_list: list[str],
+    group_by: Literal["issue", "tree"] = "issue",
+) -> list[dict]:
     """
     Retrieves the incident and checkout data
     of the first incident of a list of issues
     through a list of `issue_id`s.
     """
-    return get_issue_seen_data(issue_id_list=issue_id_list, mode="first")
+    return get_issue_seen_data(
+        issue_id_list=issue_id_list, mode="first", group_by=group_by
+    )
 
 
-def get_issue_last_seen_data(*, issue_id_list: list[str]) -> list[dict]:
+def get_issue_last_seen_data(
+    *,
+    issue_id_list: list[str],
+    group_by: Literal["issue", "tree"] = "issue",
+) -> list[dict]:
     """
     Retrieves the incident and checkout data
     of the last incident of a list of issues
     through a list of `issue_id`s.
     """
-    return get_issue_seen_data(issue_id_list=issue_id_list, mode="last")
+    return get_issue_seen_data(
+        issue_id_list=issue_id_list, mode="last", group_by=group_by
+    )
+
+
+def get_issue_first_good_checkouts(
+    *,
+    last_seen_trees: list[dict],
+) -> list[dict]:
+    """
+    For each (issue_id, tree, url, branch, last_seen) entry, returns the earliest
+    checkout on that tree with start_time > last_seen and no incident for the issue.
+
+    Uses a single query with a LATERAL join so PostgreSQL does one indexed lookup
+    per tree instead of scanning every later checkout for every tree.
+
+    :param last_seen_trees: dicts with keys issue_id, tree_name, git_repository_url,
+        git_repository_branch, last_seen (datetime).
+    """
+    if not last_seen_trees:
+        return []
+
+    params = {
+        "issue_ids": [entry["issue_id"] for entry in last_seen_trees],
+        "tree_names": [entry["tree_name"] for entry in last_seen_trees],
+        "git_repository_urls": [
+            entry["git_repository_url"] for entry in last_seen_trees
+        ],
+        "git_repository_branches": [
+            entry["git_repository_branch"] for entry in last_seen_trees
+        ],
+        "last_seens": [entry["last_seen"] for entry in last_seen_trees],
+    }
+
+    query = """
+        WITH last_seen_trees AS (
+            SELECT *
+            FROM unnest(
+                %(issue_ids)s::text[],
+                %(tree_names)s::text[],
+                %(git_repository_urls)s::text[],
+                %(git_repository_branches)s::text[],
+                %(last_seens)s::timestamptz[]
+            ) AS t(
+                issue_id,
+                tree_name,
+                git_repository_url,
+                git_repository_branch,
+                last_seen
+            )
+        )
+        SELECT
+            ls.issue_id,
+            good.checkout_id,
+            good.start_time,
+            good.git_commit_hash,
+            good.git_repository_url,
+            good.git_repository_branch,
+            good.git_commit_name,
+            good.tree_name
+        FROM
+            last_seen_trees ls
+            CROSS JOIN LATERAL (
+                SELECT
+                    C.id AS checkout_id,
+                    C.start_time,
+                    C.git_commit_hash,
+                    C.git_repository_url,
+                    C.git_repository_branch,
+                    C.git_commit_name,
+                    C.tree_name
+                FROM checkouts C
+                WHERE
+                    C.tree_name = ls.tree_name
+                    AND C.git_repository_url IS NOT DISTINCT FROM ls.git_repository_url
+                    AND C.git_repository_branch = ls.git_repository_branch
+                    AND C.start_time > ls.last_seen
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM incidents IC
+                        LEFT JOIN tests T ON IC.test_id = T.id
+                        LEFT JOIN builds B ON (
+                            IC.build_id = B.id
+                            OR T.build_id = B.id
+                        )
+                        WHERE
+                            IC.issue_id = ls.issue_id
+                            AND B.checkout_id = C.id
+                    )
+                ORDER BY C.start_time ASC
+                LIMIT 1
+            ) good
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return dict_fetchall(cursor)
 
 
 def get_issue_trees_data(
