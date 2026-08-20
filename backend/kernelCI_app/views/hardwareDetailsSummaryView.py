@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from kernelCI_app.constants.general import UNKNOWN_STRING
+from kernelCI_app.constants.hardwareDetails import SELECTED_HEAD_TREE_VALUE
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
 from kernelCI_app.helpers.filters import (
@@ -27,6 +28,7 @@ from kernelCI_app.helpers.hardwareDetails import (
 )
 from kernelCI_app.helpers.issueExtras import parse_issue
 from kernelCI_app.queries.hardware import (
+    get_hardware_details_common,
     get_hardware_details_summary,
     get_hardware_trees_head_commits,
 )
@@ -45,8 +47,11 @@ from kernelCI_app.typeModels.commonOpenApiParameters import (
 )
 from kernelCI_app.typeModels.hardwareDetails import (
     HardwareCommon,
+    HardwareDetailsCommonResponse,
     HardwareDetailsFilters,
+    HardwareDetailsFiltersResponse,
     HardwareDetailsPostBody,
+    HardwareDetailsSummaryDataResponse,
     HardwareDetailsSummaryResponse,
     HardwareTestLocalFilters,
     Tree,
@@ -522,6 +527,138 @@ class HardwareDetailsSummary(APIView):
             status_code=status_code,
         )
 
+    def _prepare(
+        self, request, hardware_id: str
+    ) -> tuple[Optional[list], Optional[Response]]:
+        validation_error = self._validate_request(request)
+        if validation_error:
+            return None, validation_error
+
+        tree_heads = get_hardware_trees_head_commits(
+            hardware_id=hardware_id,
+            origin=self.origin,
+            start_datetime=self.start_datetime,
+            end_datetime=self.end_datetime,
+        )
+        if not tree_heads:
+            return None, self._get_error_response(ClientStrings.HARDWARE_NO_COMMITS)
+        return tree_heads, None
+
+    def _get_filtered_rows(self, hardware_id: str, tree_heads) -> list[dict]:
+        filters: FilterParams = self.filters
+        selected_commit_hashes = self.select_commits_hashes(
+            tree_heads, self.selected_commits
+        )
+        return get_hardware_details_summary(
+            hardware_id=hardware_id,
+            origin=self.origin,
+            commit_hashes=selected_commit_hashes,
+            start_datetime=self.start_datetime,
+            end_datetime=self.end_datetime,
+            builds_duration=(
+                filters.filterBuildDurationMin,
+                filters.filterBuildDurationMax,
+            ),
+            boots_duration=(
+                filters.filterBootDurationMin,
+                filters.filterBootDurationMax,
+            ),
+            tests_duration=(
+                filters.filterTestDurationMin,
+                filters.filterTestDurationMax,
+            ),
+            per_checkout=self._needs_per_checkout_rows(),
+        )
+
+    def _needs_per_checkout_rows(self) -> bool:
+        """Merging rows across checkouts unions their `known_issues`, so an issue
+        filter would keep counts that belong to the merged-away sub-groups."""
+        return any(self.filters.filterIssues.values())
+
+    def _has_sql_duration_filter(self) -> bool:
+        filters: FilterParams = self.filters
+        return any(
+            duration is not None
+            for duration in (
+                filters.filterBuildDurationMin,
+                filters.filterBuildDurationMax,
+                filters.filterBootDurationMin,
+                filters.filterBootDurationMax,
+                filters.filterTestDurationMin,
+                filters.filterTestDurationMax,
+            )
+        )
+
+    def _filtered_sql_matches_heads(self, tree_heads) -> bool:
+        if self._has_sql_duration_filter():
+            return False
+        selected = self.selected_commits or {}
+        if not selected:
+            return True
+        if len(selected) != len(tree_heads):
+            return False
+        for idx, head in tree_heads:
+            commit = selected.get(idx)
+            if commit is None:
+                return False
+            if commit != SELECTED_HEAD_TREE_VALUE and commit != head:
+                return False
+        return True
+
+    def _get_unfiltered_rows(
+        self,
+        hardware_id: str,
+        tree_heads,
+        filtered_rows: Optional[list[dict]] = None,
+    ) -> list[dict]:
+        if filtered_rows is not None and self._filtered_sql_matches_heads(tree_heads):
+            return filtered_rows
+        head_commit_hashes = self.select_commits_hashes(tree_heads)
+        return get_hardware_details_summary(
+            hardware_id=hardware_id,
+            origin=self.origin,
+            commit_hashes=head_commit_hashes,
+            start_datetime=self.start_datetime,
+            end_datetime=self.end_datetime,
+            per_checkout=self._needs_per_checkout_rows(),
+        )
+
+    def _get_common_rows(self, hardware_id: str, tree_heads) -> list[dict]:
+        head_commit_hashes = self.select_commits_hashes(tree_heads)
+        return get_hardware_details_common(
+            hardware_id=hardware_id,
+            origin=self.origin,
+            commit_hashes=head_commit_hashes,
+            start_datetime=self.start_datetime,
+            end_datetime=self.end_datetime,
+        )
+
+    def _build_summary(self, rows: list[dict], hardware_id: str) -> Summary:
+        builds_summary, boots_summary, tests_summary = self.aggregate_summaries(
+            rows, hardware_id
+        )
+        return Summary(builds=builds_summary, boots=boots_summary, tests=tests_summary)
+
+    def _build_common(self, rows: list[dict], hardware_id: str) -> HardwareCommon:
+        all_trees, all_compatibles = self.aggregate_common(rows, hardware_id)
+        return HardwareCommon(trees=all_trees, compatibles=all_compatibles)
+
+    def _build_filters(
+        self, rows: list[dict], hardware_id: str
+    ) -> HardwareDetailsFilters:
+        all_filters, builds_filters, boots_filters, tests_filters = (
+            self.aggregate_filters(
+                *self.aggregate_summaries(rows, hardware_id),
+                hardware_id,
+            )
+        )
+        return HardwareDetailsFilters(
+            all=all_filters,
+            builds=builds_filters,
+            boots=boots_filters,
+            tests=tests_filters,
+        )
+
     @extend_schema(
         parameters=[HARDWARE_ID_PATH_PARAM],
         responses=HardwareDetailsSummaryResponse,
@@ -529,92 +666,97 @@ class HardwareDetailsSummary(APIView):
         methods=["POST"],
     )
     def post(self, request, hardware_id) -> Response:
-        validation_error = self._validate_request(request)
-        if validation_error:
-            return validation_error
+        tree_heads, error_response = self._prepare(request, hardware_id)
+        if error_response:
+            return error_response
 
         try:
-            tree_heads = get_hardware_trees_head_commits(
-                hardware_id=hardware_id,
-                origin=self.origin,
-                start_datetime=self.start_datetime,
-                end_datetime=self.end_datetime,
-            )
-
-            if not tree_heads:
-                return self._get_error_response(ClientStrings.HARDWARE_NO_COMMITS)
-
-            filters: FilterParams = self.filters
-
-            selected_commit_hashes = self.select_commits_hashes(
-                tree_heads, self.selected_commits
-            )
-
-            summary: list[dict] = get_hardware_details_summary(
-                hardware_id=hardware_id,
-                origin=self.origin,
-                commit_hashes=selected_commit_hashes,
-                start_datetime=self.start_datetime,
-                end_datetime=self.end_datetime,
-                builds_duration=(
-                    filters.filterBuildDurationMin,
-                    filters.filterBuildDurationMax,
-                ),
-                boots_duration=(
-                    filters.filterBootDurationMin,
-                    filters.filterBootDurationMax,
-                ),
-                tests_duration=(
-                    filters.filterTestDurationMin,
-                    filters.filterTestDurationMax,
-                ),
-            )
-
-            if not summary:
+            summary_rows = self._get_filtered_rows(hardware_id, tree_heads)
+            if not summary_rows:
                 return self._get_error_response(ClientStrings.HARDWARE_NOT_FOUND)
 
-            # TODO: necessary due to the fact we return filter info,
-            # a dedicated endpoint for filters is important
-            if filters.filters or self.selected_commits:
-                head_commit_hashes = self.select_commits_hashes(tree_heads)
-                unfiltered_summary = get_hardware_details_summary(
-                    hardware_id=hardware_id,
-                    origin=self.origin,
-                    commit_hashes=head_commit_hashes,
-                    start_datetime=self.start_datetime,
-                    end_datetime=self.end_datetime,
-                )
-            else:
-                unfiltered_summary = summary
-
-            builds_summary, boots_summary, tests_summary = self.aggregate_summaries(
-                summary, hardware_id
+            unfiltered_rows = self._get_unfiltered_rows(
+                hardware_id, tree_heads, summary_rows
             )
-            all_trees, all_compatibles = self.aggregate_common(
-                unfiltered_summary, hardware_id
-            )
-            all_filters, builds_filters, boots_filters, tests_filters = (
-                self.aggregate_filters(
-                    *self.aggregate_summaries(unfiltered_summary, hardware_id),
-                    hardware_id,
-                )
-            )
-
-            summary = Summary(
-                builds=builds_summary, boots=boots_summary, tests=tests_summary
-            )
-            commons = HardwareCommon(trees=all_trees, compatibles=all_compatibles)
-            filters = HardwareDetailsFilters(
-                all=all_filters,
-                builds=builds_filters,
-                boots=boots_filters,
-                tests=tests_filters,
-            )
-
+            common_rows = self._get_common_rows(hardware_id, tree_heads)
             valid_response = HardwareDetailsSummaryResponse(
-                summary=summary, filters=filters, common=commons
+                summary=self._build_summary(summary_rows, hardware_id),
+                filters=self._build_filters(unfiltered_rows, hardware_id),
+                common=self._build_common(common_rows, hardware_id),
             )
+            return Response(valid_response.model_dump())
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
+
+class HardwareDetailsSummaryDataView(HardwareDetailsSummary):
+    @extend_schema(
+        parameters=[HARDWARE_ID_PATH_PARAM],
+        responses=HardwareDetailsSummaryDataResponse,
+        request=HardwareDetailsPostBody,
+        methods=["POST"],
+    )
+    def post(self, request, hardware_id) -> Response:
+        tree_heads, error_response = self._prepare(request, hardware_id)
+        if error_response:
+            return error_response
+
+        try:
+            summary_rows = self._get_filtered_rows(hardware_id, tree_heads)
+            if not summary_rows:
+                return self._get_error_response(ClientStrings.HARDWARE_NOT_FOUND)
+
+            valid_response = HardwareDetailsSummaryDataResponse(
+                summary=self._build_summary(summary_rows, hardware_id),
+            )
+            return Response(valid_response.model_dump())
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+class HardwareDetailsFiltersView(HardwareDetailsSummary):
+    @extend_schema(
+        parameters=[HARDWARE_ID_PATH_PARAM],
+        responses=HardwareDetailsFiltersResponse,
+        request=HardwareDetailsPostBody,
+        methods=["POST"],
+    )
+    def post(self, request, hardware_id) -> Response:
+        tree_heads, error_response = self._prepare(request, hardware_id)
+        if error_response:
+            return error_response
+
+        try:
+            unfiltered_rows = self._get_unfiltered_rows(hardware_id, tree_heads)
+            if not unfiltered_rows:
+                return self._get_error_response(ClientStrings.HARDWARE_NOT_FOUND)
+            valid_response = HardwareDetailsFiltersResponse(
+                filters=self._build_filters(unfiltered_rows, hardware_id)
+            )
+            return Response(valid_response.model_dump())
+        except ValidationError as e:
+            return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+class HardwareDetailsCommonView(HardwareDetailsSummary):
+    @extend_schema(
+        parameters=[HARDWARE_ID_PATH_PARAM],
+        responses=HardwareDetailsCommonResponse,
+        request=HardwareDetailsPostBody,
+        methods=["POST"],
+    )
+    def post(self, request, hardware_id) -> Response:
+        tree_heads, error_response = self._prepare(request, hardware_id)
+        if error_response:
+            return error_response
+
+        try:
+            common_rows = self._get_common_rows(hardware_id, tree_heads)
+            if not common_rows:
+                return self._get_error_response(ClientStrings.HARDWARE_NOT_FOUND)
+            valid_response = HardwareDetailsCommonResponse(
+                common=self._build_common(common_rows, hardware_id)
+            )
             return Response(valid_response.model_dump())
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)

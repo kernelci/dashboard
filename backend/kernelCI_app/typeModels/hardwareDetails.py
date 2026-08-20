@@ -133,6 +133,18 @@ class HardwareDetailsSummaryResponse(BaseModel):
     common: HardwareCommon
 
 
+class HardwareDetailsSummaryDataResponse(BaseModel):
+    summary: Summary
+
+
+class HardwareDetailsFiltersResponse(BaseModel):
+    filters: HardwareDetailsFilters
+
+
+class HardwareDetailsCommonResponse(BaseModel):
+    common: HardwareCommon
+
+
 class HardwareDetailsBuildsResponse(BaseModel):
     builds: List[HardwareBuildHistoryItem]
 

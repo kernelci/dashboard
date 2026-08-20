@@ -1,8 +1,10 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 
 import type { QuerySelectorStatus } from '@/components/QuerySwitcher/QuerySwitcher';
-import type { UseHardwareDetailsWithoutVariant } from '@/api/hardwareDetails';
-import { useHardwareDetails } from '@/api/hardwareDetails';
+import {
+  useHardwareDetails,
+  type UseHardwareDetailsWithoutVariant,
+} from '@/api/hardwareDetails';
 import type {
   HardwareDetailsSummary,
   THardwareDetails,
@@ -24,31 +26,52 @@ export type HardwareDetailsLazyLoaded = {
 };
 
 export const useHardwareDetailsLazyLoadQuery = (
-  useHardwareDetailsArgs: UseHardwareDetailsWithoutVariant,
+  args: UseHardwareDetailsWithoutVariant,
 ): HardwareDetailsLazyLoaded => {
-  const summaryResult = useHardwareDetails({
-    ...useHardwareDetailsArgs,
-    variant: 'summary',
-  });
+  const summaryQuery = useHardwareDetails({ ...args, variant: 'summary-data' });
+  const commonQuery = useHardwareDetails({ ...args, variant: 'common' });
+  const filtersQuery = useHardwareDetails({ ...args, variant: 'filters' });
+
+  const isLoading =
+    summaryQuery.isLoading || commonQuery.isLoading || filtersQuery.isLoading;
+  const error =
+    summaryQuery.error ?? commonQuery.error ?? filtersQuery.error ?? null;
+
+  const data: HardwareDetailsSummary | undefined =
+    summaryQuery.data && commonQuery.data && filtersQuery.data
+      ? {
+          summary: summaryQuery.data.summary,
+          common: commonQuery.data.common,
+          filters: filtersQuery.data.filters,
+        }
+      : undefined;
+
+  const status: QuerySelectorStatus = isLoading
+    ? 'pending'
+    : error
+      ? 'error'
+      : data
+        ? 'success'
+        : 'pending';
 
   const fullResult = useHardwareDetails({
-    ...useHardwareDetailsArgs,
+    ...args,
     variant: 'full',
-    enabled: !!summaryResult.data,
+    enabled: (args.enabled ?? true) && !!data,
   });
 
   return {
     summary: {
-      data: summaryResult.data,
-      isLoading: summaryResult.isLoading,
-      status: summaryResult.status,
-      isPlaceholderData: summaryResult.isPlaceholderData,
-      error: summaryResult.error,
+      data,
+      isLoading,
+      status,
+      isPlaceholderData: summaryQuery.isPlaceholderData,
+      error,
     },
     full: fullResult,
     common: {
-      isAllReady: !!summaryResult && !!fullResult,
-      isAnyLoading: summaryResult.isLoading || fullResult.isLoading,
+      isAllReady: !!data && !!fullResult.data,
+      isAnyLoading: isLoading || fullResult.isLoading,
     },
   };
 };

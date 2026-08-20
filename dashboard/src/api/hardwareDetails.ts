@@ -4,7 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import type {
   CommitHead,
   CommitHistoryResponse,
+  HardwareDetailsCommonResponse,
+  HardwareDetailsFiltersResponse,
   HardwareDetailsSummary,
+  HardwareDetailsSummaryDataResponse,
   THardwareDetails,
   TTreeCommits,
 } from '@/types/hardware/hardwareDetails';
@@ -51,7 +54,15 @@ type HardwareDetailsVariants =
   | 'builds'
   | 'boots'
   | 'tests'
-  | 'summary';
+  | 'summary'
+  | 'summary-data'
+  | 'common'
+  | 'filters';
+
+const UNFILTERED_VARIANTS: ReadonlySet<HardwareDetailsVariants> = new Set([
+  'common',
+  'filters',
+]);
 
 type fetchHardwareDetailsBody = {
   startTimestampInSeconds: number;
@@ -59,6 +70,49 @@ type fetchHardwareDetailsBody = {
   origin: string;
   selectedCommits: Record<string, string>;
   filter?: Record<string, string[]>;
+};
+
+const buildHardwareDetailsRequestBody = ({
+  origin,
+  startTimestampInSeconds,
+  endTimestampInSeconds,
+  filter,
+  selectedIndexes,
+  treeCommits,
+  treeIndexesLength,
+}: Pick<
+  UseHardwareDetailsWithoutVariant,
+  | 'origin'
+  | 'startTimestampInSeconds'
+  | 'endTimestampInSeconds'
+  | 'filter'
+  | 'selectedIndexes'
+  | 'treeCommits'
+  | 'treeIndexesLength'
+>): fetchHardwareDetailsBody => {
+  const testFilter = getTargetFilter(filter, 'test');
+  const detailsFilter = getTargetFilter(filter, 'hardwareDetails');
+
+  const filters = {
+    ...testFilter,
+    ...detailsFilter,
+  };
+
+  const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
+
+  const selectedTrees = mapIndexesToSelectedTrees(
+    selectedIndexes,
+    treeIndexesLength,
+    treeCommits,
+  );
+
+  return {
+    origin,
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+    selectedCommits: selectedTrees,
+    filter: filtersFormatted,
+  };
 };
 
 const fetchHardwareDetails = async <T extends HardwareDetailsVariants>({
@@ -76,6 +130,9 @@ const fetchHardwareDetails = async <T extends HardwareDetailsVariants>({
     boots: `/api/hardware/${hardwareId}/boots`,
     tests: `/api/hardware/${hardwareId}/tests`,
     summary: `/api/hardware/${hardwareId}/summary`,
+    'summary-data': `/api/hardware/${hardwareId}/summary-data`,
+    common: `/api/hardware/${hardwareId}/common`,
+    filters: `/api/hardware/${hardwareId}/filters`,
   };
 
   const data = await RequestData.post<HardwareDetailsResponse<T>>(
@@ -89,6 +146,9 @@ const fetchHardwareDetails = async <T extends HardwareDetailsVariants>({
 type HardwareDetailsResponseTable = {
   full: THardwareDetails;
   summary: HardwareDetailsSummary;
+  'summary-data': HardwareDetailsSummaryDataResponse;
+  common: HardwareDetailsCommonResponse;
+  filters: HardwareDetailsFiltersResponse;
   builds: BuildsTabBuild[];
   boots: TestHistory[];
   tests: TestHistory[];
@@ -127,29 +187,18 @@ export const useHardwareDetails = <T extends HardwareDetailsVariants>({
 }: UseHardwareDetailsParameters<T>): UseQueryResult<
   HardwareDetailsResponse<T>
 > => {
-  const testFilter = getTargetFilter(filter, 'test');
-  const detailsFilter = getTargetFilter(filter, 'hardwareDetails');
-
-  const filters = {
-    ...testFilter,
-    ...detailsFilter,
-  };
-
-  const filtersFormatted = mapFiltersKeysToBackendCompatible(filters);
-
-  const selectedTrees = mapIndexesToSelectedTrees(
-    selectedIndexes,
-    treeIndexesLength,
-    treeCommits,
-  );
-
-  const body: fetchHardwareDetailsBody = {
+  const body = buildHardwareDetailsRequestBody({
     origin,
     startTimestampInSeconds,
     endTimestampInSeconds,
-    selectedCommits: selectedTrees,
-    filter: filtersFormatted,
-  };
+    filter,
+    selectedIndexes,
+    treeCommits,
+    treeIndexesLength,
+  });
+  if (UNFILTERED_VARIANTS.has(variant)) {
+    delete body.filter;
+  }
 
   return useQuery({
     queryKey: ['HardwareDetails', hardwareId, body, variant],

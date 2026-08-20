@@ -321,6 +321,76 @@ paths:
               schema:
                 $ref: '#/components/schemas/HardwareCommitHistoryResponse'
           description: ''
+  /api/hardware/{hardware_id}/common:
+    post:
+      operationId: hardware_common_create
+      parameters:
+      - in: path
+        name: hardware_id
+        schema:
+          type: string
+        description: ID of the hardware, as the name of the platform/compatible
+        required: true
+      tags:
+      - hardware
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareDetailsCommonResponse'
+          description: ''
+  /api/hardware/{hardware_id}/filters:
+    post:
+      operationId: hardware_filters_create
+      parameters:
+      - in: path
+        name: hardware_id
+        schema:
+          type: string
+        description: ID of the hardware, as the name of the platform/compatible
+        required: true
+      tags:
+      - hardware
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareDetailsFiltersResponse'
+          description: ''
   /api/hardware/{hardware_id}/summary:
     post:
       operationId: hardware_summary_create
@@ -355,6 +425,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HardwareDetailsSummaryResponse'
+          description: ''
+  /api/hardware/{hardware_id}/summary-data:
+    post:
+      operationId: hardware_summary_data_create
+      parameters:
+      - in: path
+        name: hardware_id
+        schema:
+          type: string
+        description: ID of the hardware, as the name of the platform/compatible
+        required: true
+      tags:
+      - hardware
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HardwareDetailsPostBody'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareDetailsSummaryDataResponse'
           description: ''
   /api/hardware/{hardware_id}/tests:
     post:
@@ -3022,6 +3127,14 @@ components:
       - builds
       title: HardwareDetailsBuildsResponse
       type: object
+    HardwareDetailsCommonResponse:
+      properties:
+        common:
+          $ref: '#/components/schemas/HardwareCommon'
+      required:
+      - common
+      title: HardwareDetailsCommonResponse
+      type: object
     HardwareDetailsFilters:
       properties:
         all:
@@ -3038,6 +3151,14 @@ components:
       - boots
       - tests
       title: HardwareDetailsFilters
+      type: object
+    HardwareDetailsFiltersResponse:
+      properties:
+        filters:
+          $ref: '#/components/schemas/HardwareDetailsFilters'
+      required:
+      - filters
+      title: HardwareDetailsFiltersResponse
       type: object
     HardwareDetailsFullResponse:
       properties:
@@ -3109,6 +3230,14 @@ components:
       - endTimestampInSeconds
       - selectedCommits
       title: HardwareDetailsPostBody
+      type: object
+    HardwareDetailsSummaryDataResponse:
+      properties:
+        summary:
+          $ref: '#/components/schemas/Summary'
+      required:
+      - summary
+      title: HardwareDetailsSummaryDataResponse
       type: object
     HardwareDetailsSummaryResponse:
       properties:

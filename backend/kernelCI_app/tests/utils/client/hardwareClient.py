@@ -47,6 +47,38 @@ class HardwareClient(BaseClient):
         url = self.get_endpoint(path=path)
         return requests.post(url, data=json.dumps(body.model_dump()))
 
+    def post_hardware_details_summary_data(
+        self,
+        *,
+        hardware_id: str,
+        body: HardwareDetailsPostBody,
+    ) -> requests.Response:
+        path = reverse(
+            "hardwareDetailsSummaryData", kwargs={"hardware_id": hardware_id}
+        )
+        url = self.get_endpoint(path=path)
+        return requests.post(url, data=json.dumps(body.model_dump()))
+
+    def post_hardware_details_filters(
+        self,
+        *,
+        hardware_id: str,
+        body: HardwareDetailsPostBody,
+    ) -> requests.Response:
+        path = reverse("hardwareDetailsFilters", kwargs={"hardware_id": hardware_id})
+        url = self.get_endpoint(path=path)
+        return requests.post(url, data=json.dumps(body.model_dump()))
+
+    def post_hardware_details_common(
+        self,
+        *,
+        hardware_id: str,
+        body: HardwareDetailsPostBody,
+    ) -> requests.Response:
+        path = reverse("hardwareDetailsCommon", kwargs={"hardware_id": hardware_id})
+        url = self.get_endpoint(path=path)
+        return requests.post(url, data=json.dumps(body.model_dump()))
+
     def post_hardware_details_full(
         self,
         *,

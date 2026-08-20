@@ -162,6 +162,21 @@ urlpatterns = [
         name="hardwareDetailsSummary",
     ),
     path(
+        "hardware/<str:hardware_id>/summary-data",
+        views.HardwareDetailsSummaryDataView.as_view(),
+        name="hardwareDetailsSummaryData",
+    ),
+    path(
+        "hardware/<str:hardware_id>/filters",
+        views.HardwareDetailsFiltersView.as_view(),
+        name="hardwareDetailsFilters",
+    ),
+    path(
+        "hardware/<str:hardware_id>/common",
+        views.HardwareDetailsCommonView.as_view(),
+        name="hardwareDetailsCommon",
+    ),
+    path(
         "hardware/<str:hardware_id>/tests",
         views.HardwareDetailsTests.as_view(),
         name="hardwareDetailsTests",

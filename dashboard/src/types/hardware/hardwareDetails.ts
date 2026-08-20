@@ -42,7 +42,7 @@ interface HardwareTestLocalFilters extends LocalFilters {
   platforms: string[];
 }
 
-type HardwareDetailsFilters = {
+export type HardwareDetailsFilters = {
   all: GlobalFilters;
   builds: LocalFilters;
   boots: HardwareTestLocalFilters;
@@ -54,6 +54,21 @@ export type HardwareDetailsSummary = {
   filters: HardwareDetailsFilters;
   common: HardwareCommon;
 };
+
+export type HardwareDetailsSummaryDataResponse = Pick<
+  HardwareDetailsSummary,
+  'summary'
+>;
+
+export type HardwareDetailsFiltersResponse = Pick<
+  HardwareDetailsSummary,
+  'filters'
+>;
+
+export type HardwareDetailsCommonResponse = Pick<
+  HardwareDetailsSummary,
+  'common'
+>;
 
 export type THardwareDetails = {
   builds: BuildsTabBuild[];
