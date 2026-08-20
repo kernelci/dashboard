@@ -21,9 +21,21 @@ export type Incident = {
   issue_version?: string;
 };
 
+export type NextCheckout = {
+  checkout_id?: string;
+  start_time?: Date;
+  git_commit_hash?: string;
+  git_commit_name?: string;
+  git_repository_url?: string;
+  git_repository_branch?: string;
+  tree_name?: string;
+  origin: string;
+};
+
 type TExtraIssuesData = {
   first_incident: Incident;
   last_incident: Incident;
+  next_checkout?: NextCheckout | null;
   versions: Record<number, TIssueVersionData>;
 };
 

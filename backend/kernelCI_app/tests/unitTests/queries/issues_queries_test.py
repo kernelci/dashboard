@@ -8,6 +8,7 @@ from kernelCI_app.queries.issues import (
     get_issue_first_seen_data,
     get_issue_last_seen_data,
     get_issue_listing_data,
+    get_issue_next_checkout_data,
     get_issue_tests,
     get_issue_trees_data,
     get_latest_issue_version,
@@ -319,6 +320,80 @@ class TestGetIssueLastSeenData:
 
         assert result == []
         mock_get_cache.assert_not_called()
+
+
+class TestGetIssueNextCheckoutData:
+    @patch("kernelCI_app.queries.issues.dict_fetchall")
+    @patch("kernelCI_app.queries.issues.connection")
+    def test_get_issue_next_checkout_data_from_database(
+        self, mock_connection, mock_dict_fetchall
+    ):
+        expected_result = [
+            {
+                "issue_id": "issue",
+                "checkout_id": "checkout_next",
+                "start_time": datetime(2024, 6, 16, 10, 0, 0),
+                "git_commit_hash": "def456",
+                "git_commit_name": "v6.10",
+                "git_repository_url": "https://example.com/linux.git",
+                "git_repository_branch": "master",
+                "tree_name": "mainline",
+                "origin": "maestro",
+            }
+        ]
+        mock_dict_fetchall.return_value = expected_result
+        mock_cursor = setup_mock_cursor(mock_connection)
+
+        result = get_issue_next_checkout_data(issue_id_list=["issue"])
+
+        assert result == expected_result
+        execute_call = mock_cursor.execute.call_args
+        query = execute_call[0][0]
+        params = execute_call[0][1]
+        assert "ANY(%(issue_id_list)s)" in query
+        assert "C.start_time > LS.last_start_time" in query
+        assert "C.start_time ASC" in query
+        assert params == {"issue_id_list": ["issue"]}
+
+    @patch("kernelCI_app.queries.issues.dict_fetchall")
+    @patch("kernelCI_app.queries.issues.connection")
+    def test_get_issue_next_checkout_data_multiple_issues(
+        self, mock_connection, mock_dict_fetchall
+    ):
+        expected_result = [
+            {"issue_id": "issue_1", "checkout_id": "checkout_1"},
+            {"issue_id": "issue_2", "checkout_id": "checkout_2"},
+        ]
+        mock_dict_fetchall.return_value = expected_result
+        mock_cursor = setup_mock_cursor(mock_connection)
+
+        result = get_issue_next_checkout_data(
+            issue_id_list=["issue_1", "issue_2", "issue_3"]
+        )
+
+        assert result == expected_result
+        execute_call = mock_cursor.execute.call_args
+        params = execute_call[0][1]
+        assert params == {"issue_id_list": ["issue_1", "issue_2", "issue_3"]}
+
+    @patch("kernelCI_app.queries.issues.connection")
+    def test_get_issue_next_checkout_data_empty_list(self, mock_connection):
+        result = get_issue_next_checkout_data(issue_id_list=[])
+
+        assert result == []
+        mock_connection.cursor.assert_not_called()
+
+    @patch("kernelCI_app.queries.issues.dict_fetchall")
+    @patch("kernelCI_app.queries.issues.connection")
+    def test_get_issue_next_checkout_data_no_next_checkout(
+        self, mock_connection, mock_dict_fetchall
+    ):
+        mock_dict_fetchall.return_value = []
+        setup_mock_cursor(mock_connection)
+
+        result = get_issue_next_checkout_data(issue_id_list=["issue"])
+
+        assert result == []
 
 
 class TestGetIssueTreesData:
