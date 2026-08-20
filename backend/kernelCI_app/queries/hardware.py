@@ -118,8 +118,28 @@ def get_hardware_selectors(origin: str) -> list[dict]:
         return rows
 
     params = {"origin": origin}
+    cross_origin_test_origins = {"aspeed", "ti"}
 
-    query = """
+    if origin in cross_origin_test_origins:
+        from_where = """
+            FROM tests t
+            INNER JOIN builds b ON b.id = t.build_id
+            INNER JOIN checkouts c ON c.id = b.checkout_id
+            WHERE
+                t.origin = %(origin)s
+                AND t.start_time > (NOW() - INTERVAL '30 days')
+                AND t.environment_misc ->> 'platform' IS NOT NULL
+        """
+    else:
+        from_where = """
+            FROM checkouts c
+            INNER JOIN builds b ON b.checkout_id = c.id
+            WHERE
+                b.origin = %(origin)s
+                AND b.start_time > (NOW() - INTERVAL '30 days')
+        """
+
+    query = f"""
         SELECT DISTINCT ON (
             c.tree_name,
             c.git_repository_url,
@@ -133,11 +153,7 @@ def get_hardware_selectors(origin: str) -> list[dict]:
             c.git_commit_hash,
             c.git_commit_name,
             c.start_time
-        FROM checkouts c
-        INNER JOIN builds b ON b.checkout_id = c.id
-        WHERE
-            b.origin = %(origin)s
-            AND b.start_time > (NOW() - INTERVAL '30 days')
+        {from_where}
             AND c.git_repository_url IS NOT NULL
             AND c.git_repository_branch IS NOT NULL
             AND c.git_commit_hash IS NOT NULL
