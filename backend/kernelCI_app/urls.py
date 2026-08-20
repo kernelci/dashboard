@@ -167,6 +167,7 @@ urlpatterns = [
         name="hardwareDetailsTests",
     ),
     path("hardware/", view_cache(views.HardwareView), name="hardware"),
+    path("labs/", view_cache(views.LabView), name="labs"),
     path(
         "hardware-by-revision/",
         view_cache(views.HardwareByRevisionView),

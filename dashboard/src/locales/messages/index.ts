@@ -156,6 +156,7 @@ export const messages = {
     'global.issues': 'Issues',
     'global.kcidev': 'kci-dev',
     'global.lab': 'Lab',
+    'global.labs': 'Labs',
     'global.last': 'Last',
     'global.legend': 'Legend',
     'global.loading': 'Loading...',
@@ -280,6 +281,11 @@ export const messages = {
     'issueListing.treeBranchTooltip':
       'The tree name and git repository branch of the first incident\nClick a cell to see details of that checkout',
     'jsonSheet.title': 'JSON Viewer',
+    'labs.searchPlaceholder': 'Search by lab name with a regex',
+    'labsListing.description':
+      'List of labs with aggregated build, boot and test status',
+    'labsListing.notFound': 'No lab information available',
+    'labsListing.title': 'Lab Listing ― KCI Dashboard',
     'logSheet.downloadLog': 'You can download the full log here: {link}',
     'logSheet.fileName': 'File Name',
     'logSheet.fileSize': 'File Size',
@@ -309,6 +315,7 @@ export const messages = {
     'routes.hardwareNewMonitor': 'Hardware New',
     'routes.issueDetails': 'Issue',
     'routes.issueMonitor': 'Issues',
+    'routes.labsMonitor': 'Labs',
     'routes.metricsMonitor': 'Metrics',
     'routes.testDetails': 'Test',
     'routes.treeMonitor': 'Trees',

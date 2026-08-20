@@ -144,6 +144,7 @@ const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   treeSearch: 'ts',
   listingSize: 'ls',
   hardwareSearch: 'hs',
+  labsSearch: 'lsr',
   issueSearch: 'is',
   treeInfo: 'tri',
   treeIndexes: 'x',
