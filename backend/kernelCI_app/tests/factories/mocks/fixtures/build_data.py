@@ -144,6 +144,20 @@ EXPECTED_BUILD_IDS = {
         "status": "FAIL",
         "config_name": "defconfig",
     },
+    "older_checkout_build": {
+        "checkout_id": "older_checkout_with_tests",
+        "origin": "maestro",
+        "architecture": "arm64",
+        "status": "PASS",
+        "config_name": "defconfig",
+    },
+    "latest_checkout_build": {
+        "checkout_id": "latest_checkout_without_tests",
+        "origin": "maestro",
+        "architecture": "arm64",
+        "status": "PASS",
+        "config_name": "defconfig",
+    },
     # TODO: Add builds to test STATUS NULL + add integration tests for this case
 }
 

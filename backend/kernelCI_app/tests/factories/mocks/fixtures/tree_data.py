@@ -189,4 +189,23 @@ TREE_DATA = {
         "start_time": _SEED_NOW - timedelta(hours=1),
         "hardware_platform": None,
     },
+    # Older-checkout scenario (#1264): the older checkout ran "older-checkout-board",
+    # but the latest checkout (latest_checkout_without_tests) did not. Details must
+    # still resolve the older checkout as the tree head.
+    "older_checkout_with_tests": {
+        "origin": "maestro",
+        "git_url": "https://git.kernel.org/pub/scm/linux/kernel/git/older-checkout/linux.git",
+        "git_branch": "master",
+        "tree_name": "older_checkout_mainline",
+        "start_time": datetime.fromtimestamp(1741356000, timezone.utc),
+        "hardware_platform": "older-checkout-board",
+    },
+    "latest_checkout_without_tests": {
+        "origin": "maestro",
+        "git_url": "https://git.kernel.org/pub/scm/linux/kernel/git/older-checkout/linux.git",
+        "git_branch": "master",
+        "tree_name": "older_checkout_mainline",
+        "start_time": datetime.fromtimestamp(1741399200, timezone.utc),
+        "hardware_platform": None,
+    },
 }
