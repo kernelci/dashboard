@@ -145,8 +145,9 @@ export const useHardwareDetails = <T extends HardwareDetailsVariants>({
 
   const body: fetchHardwareDetailsBody = {
     origin,
-    startTimestampInSeconds,
-    endTimestampInSeconds,
+    // URL rewrite flips string vs number; coerce so the query key stays stable.
+    startTimestampInSeconds: Number(startTimestampInSeconds),
+    endTimestampInSeconds: Number(endTimestampInSeconds),
     selectedCommits: selectedTrees,
     filter: filtersFormatted,
   };
@@ -197,8 +198,8 @@ export const useHardwareDetailsCommitHistory = (
 ): UseQueryResult<CommitHistoryResponse> => {
   const body: FetchHardwareDetailsCommitHistoryBody = {
     origin,
-    startTimestampInSeconds,
-    endTimestampInSeconds,
+    startTimestampInSeconds: Number(startTimestampInSeconds),
+    endTimestampInSeconds: Number(endTimestampInSeconds),
     commitHeads,
   };
 
