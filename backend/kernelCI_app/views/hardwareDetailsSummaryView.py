@@ -575,8 +575,21 @@ class HardwareDetailsSummary(APIView):
 
             # TODO: necessary due to the fact we return filter info,
             # a dedicated endpoint for filters is important
-            if filters.filters or self.selected_commits:
-                head_commit_hashes = self.select_commits_hashes(tree_heads)
+            head_commit_hashes = self.select_commits_hashes(tree_heads)
+            duration_in_sql = any(
+                duration is not None
+                for duration in (
+                    filters.filterBuildDurationMin,
+                    filters.filterBuildDurationMax,
+                    filters.filterBootDurationMin,
+                    filters.filterBootDurationMax,
+                    filters.filterTestDurationMin,
+                    filters.filterTestDurationMax,
+                )
+            )
+            if selected_commit_hashes == head_commit_hashes and not duration_in_sql:
+                unfiltered_summary = summary
+            else:
                 unfiltered_summary = get_hardware_details_summary(
                     hardware_id=hardware_id,
                     origin=self.origin,
@@ -584,8 +597,6 @@ class HardwareDetailsSummary(APIView):
                     start_datetime=self.start_datetime,
                     end_datetime=self.end_datetime,
                 )
-            else:
-                unfiltered_summary = summary
 
             builds_summary, boots_summary, tests_summary = self.aggregate_summaries(
                 summary, hardware_id
