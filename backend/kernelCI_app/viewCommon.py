@@ -39,10 +39,9 @@ def create_details_build_summary(builds: list[BuildHistoryItem]) -> BaseBuildSum
             status = origin_summ.setdefault(origin, StatusCount())
             _increment_status(status, status_key)
 
-        if build.misc is not None and isinstance(build.misc, dict):
-            lab = build.misc.get("lab", UNKNOWN_STRING)
-            status = labs_summ.setdefault(lab, StatusCount())
-            _increment_status(status, status_key)
+        lab = build.lab or UNKNOWN_STRING
+        status = labs_summ.setdefault(lab, StatusCount())
+        _increment_status(status, status_key)
 
     return BaseBuildSummary(
         status=status_summ,
