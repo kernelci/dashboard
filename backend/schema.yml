@@ -713,6 +713,39 @@ paths:
                 additionalProperties:
                   type: string
           description: ''
+  /api/labs/origins/:
+    get:
+      operationId: labs_origins_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 30
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      tags:
+      - labs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabOriginsResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+          description: ''
   /api/proxy/:
     get:
       operationId: proxy_retrieve
@@ -4043,6 +4076,17 @@ components:
       type: object
     Origin:
       type: string
+    LabOriginsResponse:
+      properties:
+        origins:
+          items:
+            $ref: '#/components/schemas/Origin'
+          title: Origins
+          type: array
+      required:
+      - origins
+      title: LabOriginsResponse
+      type: object
     OriginsResponse:
       properties:
         checkout_origins:

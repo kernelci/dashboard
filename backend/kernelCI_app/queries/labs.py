@@ -1,5 +1,40 @@
 from django.db import connection
 
+from kernelCI_app.cache import get_query_cache, set_query_cache
+from kernelCI_app.queries.checkout import ORIGINS_CACHE_TIMEOUT
+
+
+def get_lab_origins(*, interval_in_days: int) -> list[str]:
+    # ponytail: lab_id only (no JSONB COALESCE). Origins that still only have
+    # misc lab/runtime names stay out of the dropdown until backfill. If a
+    # cache miss is slow, add partial indexes on (start_time, origin)
+    # WHERE lab_id IS NOT NULL for tests and builds.
+    cache_key = f"lab_origins_query_{interval_in_days}"
+    cached = get_query_cache(key=cache_key)
+    if cached is not None:
+        return cached
+
+    query = """
+        SELECT DISTINCT origin FROM tests
+        WHERE start_time >= CURRENT_DATE - INTERVAL '%(interval_in_days)s days'
+          AND lab_id IS NOT NULL
+        UNION
+        SELECT DISTINCT origin FROM builds
+        WHERE start_time >= CURRENT_DATE - INTERVAL '%(interval_in_days)s days'
+          AND lab_id IS NOT NULL
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, {"interval_in_days": interval_in_days})
+        origins = [row[0] for row in cursor.fetchall() if row[0]]
+        if origins:
+            set_query_cache(
+                key=cache_key,
+                rows=origins,
+                timeout=ORIGINS_CACHE_TIMEOUT,
+            )
+        return origins
+
 
 def get_lab_listing_data(
     *,

@@ -8,7 +8,7 @@ import { HiMenu } from 'react-icons/hi';
 
 import Select, { SelectItem } from '@/components/Select/Select';
 import { DEFAULT_ORIGIN } from '@/types/general';
-import { useOrigins } from '@/api/origin';
+import { useLabOrigins, useOrigins } from '@/api/origin';
 import { Button } from '@/components/ui/button';
 import MobileSideMenu from '@/components/SideMenu/MobileSideMenu';
 
@@ -17,13 +17,21 @@ import { treeListingCleanFullPaths } from '@/utils/constants/treeListing';
 import { hwListingCleanFullPaths } from '@/utils/constants/hardwareListing';
 import { labsListingCleanFullPaths } from '@/utils/constants/labsListing';
 
+type OriginSource = 'checkout' | 'test' | 'lab';
+
 const OriginSelect = ({
-  isHardwarePath,
+  originSource,
 }: {
-  isHardwarePath: boolean;
+  originSource: OriginSource;
 }): JSX.Element => {
   const { origin } = useSearch({ strict: false });
-  const { data: originData, status: originStatus } = useOrigins();
+  const isLabSource = originSource === 'lab';
+  const { data: originData, status: originStatus } = useOrigins({
+    enabled: !isLabSource,
+  });
+  const { data: labOriginData, status: labOriginStatus } = useLabOrigins({
+    enabled: isLabSource,
+  });
 
   const navigate = useNavigate();
 
@@ -38,15 +46,18 @@ const OriginSelect = ({
   );
 
   const pageOrigins = useMemo(() => {
+    if (isLabSource) {
+      return labOriginData?.origins ?? [];
+    }
     if (!originData) {
       return [];
     }
     return (
-      (isHardwarePath
+      (originSource === 'test'
         ? originData.test_origins
         : originData.checkout_origins) ?? []
     );
-  }, [originData, isHardwarePath]);
+  }, [isLabSource, labOriginData, originData, originSource]);
 
   const selectItems = useMemo(() => {
     return pageOrigins.map(option => (
@@ -76,7 +87,7 @@ const OriginSelect = ({
     }
   }, [navigate, origin, pageOrigins]);
 
-  if (originStatus === 'pending') {
+  if ((isLabSource ? labOriginStatus : originStatus) === 'pending') {
     return <FormattedMessage id="global.loading" />;
   }
 
@@ -166,8 +177,12 @@ const TopBar = (): JSX.Element => {
               routeInfo.isHardwarePage ||
               routeInfo.isLabsPage) && (
               <OriginSelect
-                isHardwarePath={
-                  routeInfo.isHardwarePage || routeInfo.isLabsPage
+                originSource={
+                  routeInfo.isLabsPage
+                    ? 'lab'
+                    : routeInfo.isHardwarePage
+                      ? 'test'
+                      : 'checkout'
                 }
               />
             )}
