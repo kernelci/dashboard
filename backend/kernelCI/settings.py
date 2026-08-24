@@ -147,9 +147,6 @@ HEALTHCHECK_MONITORING_PATH_MAP: dict[str, str] = {
     "notifications_summary_maestro": os.environ.get(
         "HEALTHCHECK_ID_NOTIFICATIONS_SUMMARY_MAESTRO", ""
     ),
-    "recompute_hardware_daily": os.environ.get(
-        "HEALTHCHECK_ID_RECOMPUTE_HARDWARE_DAILY", ""
-    ),
 }
 """Maps monitoring_id to the relative_path that will be appended to the base healthcheck URL."""
 
@@ -260,8 +257,7 @@ else:
             "django.core.management.call_command",
             [
                 "recompute_hardware_daily",
-                "--days=7",
-                "--monitoring-id=recompute_hardware_daily",
+                "--days=15",
             ],
         ),
         (
@@ -270,7 +266,6 @@ else:
             [
                 "recompute_hardware_daily",
                 "--days=1",
-                "--monitoring-id=recompute_hardware_daily",
             ],
         ),
     ]

@@ -113,7 +113,6 @@ Configure these variables in `.env.backend`:
 - `HEALTHCHECK_ID_NOTIFICATIONS_NEW_ISSUES`
 - `HEALTHCHECK_ID_NOTIFICATIONS_SUMMARY_MICROSOFT`
 - `HEALTHCHECK_ID_NOTIFICATIONS_SUMMARY_MAESTRO`
-- `HEALTHCHECK_ID_RECOMPUTE_HARDWARE_DAILY`
 
 ## `prometheus.yml`
 - **Target**: `host.docker.internal:8001` (backend running locally)
