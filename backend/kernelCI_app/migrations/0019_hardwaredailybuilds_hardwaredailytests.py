@@ -29,6 +29,10 @@ class Migration(migrations.Migration):
                 ),
                 ("checkout_day", models.DateField()),
                 ("checkout_id", models.TextField()),
+                (
+                    "checkout_origin",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
                 ("build_origin", models.CharField(max_length=100)),
                 ("build_lab", models.TextField()),
                 ("platform", models.CharField(max_length=100)),
@@ -48,7 +52,11 @@ class Migration(migrations.Migration):
                     models.Index(
                         fields=["build_origin", "checkout_day"],
                         name="hw_daily_builds_org_day",
-                    )
+                    ),
+                    models.Index(
+                        fields=["checkout_origin", "checkout_day"],
+                        name="hw_daily_builds_co_day",
+                    ),
                 ],
             },
         ),
@@ -71,6 +79,10 @@ class Migration(migrations.Migration):
                 ),
                 ("checkout_day", models.DateField()),
                 ("checkout_id", models.TextField()),
+                (
+                    "checkout_origin",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
                 ("test_origin", models.CharField(max_length=100)),
                 ("test_lab", models.TextField()),
                 ("platform", models.CharField(max_length=100)),
@@ -93,7 +105,11 @@ class Migration(migrations.Migration):
                     models.Index(
                         fields=["test_origin", "checkout_day"],
                         name="hw_daily_tests_org_day",
-                    )
+                    ),
+                    models.Index(
+                        fields=["checkout_origin", "checkout_day"],
+                        name="hw_daily_tests_co_day",
+                    ),
                 ],
             },
         ),

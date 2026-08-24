@@ -9,10 +9,8 @@ children are newer than the cutoff.
 Rows linked to an incident (an issue) are kept by default, together with their
 ancestors so nothing is orphaned; pass --skip-issue-protection to prune them too.
 
-Also prunes hardware_daily_builds and hardware_daily_tests by checkout_day (same age
-window). The aggregates use their own date grain, so --tables can target them alone.
-Other derived tables (tree_tests_rollup, hardware_status, latest_checkout) are left
-untouched and must be cleaned up separately.
+Also prunes hardware_daily_* by checkout_day (same age). Other derived tables
+(tree_tests_rollup, hardware_status, latest_checkout) are left untouched.
 """
 
 from django.core.management.base import BaseCommand, CommandError
@@ -20,9 +18,7 @@ from django.db import connections
 
 from kernelCI_app.management.commands.helpers.intervals import parse_interval
 
-# Strict parent-before-child order: a checkout owns builds, a build owns tests.
 PRUNABLE_TABLES = ("checkouts", "builds", "tests")
-# Aggregates pruned by their own checkout_day, independent of the raw cascade above.
 HARDWARE_DAILY_TABLES = ("hardware_daily_builds", "hardware_daily_tests")
 VALID_TABLES = PRUNABLE_TABLES + HARDWARE_DAILY_TABLES
 
@@ -67,11 +63,10 @@ class Command(BaseCommand):
             type=lambda s: [t.strip() for t in s.split(",")],
             default=list(VALID_TABLES),
             help="Limit pruning to specific tables (comma-separated: "
-            f"{', '.join(VALID_TABLES)}). Only the listed tables are deleted; "
-            "unlisted child tables are left untouched, so selecting a parent without "
-            "its children (e.g. only 'checkouts') can leave orphans. The "
-            "hardware_daily_* aggregates are pruned by their own checkout_day and can "
-            "be targeted on their own. Default: all.",
+            f"{', '.join(VALID_TABLES)}). Only listed tables are deleted; a parent "
+            "without its children (e.g. only 'checkouts') can leave orphans. "
+            "hardware_daily_* prune by checkout_day and can be targeted alone. "
+            "Default: all.",
         )
         parser.add_argument(
             "--skip-issue-protection",
@@ -177,21 +172,13 @@ class Command(BaseCommand):
                         self.stdout.write("Aborted.")
                         return
 
-                # Prune the daily aggregates on their own checkout_day grain, not by
-                # chasing the pruned checkouts: the summary is a coarser fact table that
-                # is meant to be able to outlive raw (recompute_hardware_daily keeps a
-                # day whose raw was pruned), so its retention is a date range, not the
-                # set of surviving checkouts.
                 deleted = 0
                 for table in selected_daily_tables:
                     deleted += self._batch_delete_hardware_daily(
                         cursor, table, cutoff.date(), options["batch_size"]
                     )
 
-                # Delete child-first (reverse of PRUNABLE_TABLES order): each batch
-                # commits on its own, so a crash mid-run leaves children already gone
-                # before their parents, never the reverse. Reordering this would risk
-                # orphans.
+                # Child-first: a crash must not leave orphans.
                 for table in reversed(selected_tables):
                     deleted += self._batch_delete(
                         cursor, table, temp_tables[table], options["batch_size"]
@@ -287,7 +274,6 @@ class Command(BaseCommand):
         return deleted_total
 
     def _count_hardware_daily(self, cursor, table, cutoff_day):
-        """Count aggregate rows whose whole checkout_day precedes the cutoff day."""
         cursor.execute(
             f'SELECT COUNT(*) FROM "{table}" WHERE checkout_day < %(cutoff_day)s',
             {"cutoff_day": cutoff_day},
@@ -295,10 +281,6 @@ class Command(BaseCommand):
         return cursor.fetchone()[0]
 
     def _batch_delete_hardware_daily(self, cursor, table, cutoff_day, batch_size):
-        """Delete aggregate rows older than the cutoff day, batched by ctid.
-
-        checkout_day leads the primary key, so the predicate is a range scan.
-        """
         sql = (
             f'DELETE FROM "{table}" WHERE ctid IN ('
             f'SELECT ctid FROM "{table}" WHERE checkout_day < %(cutoff_day)s '
