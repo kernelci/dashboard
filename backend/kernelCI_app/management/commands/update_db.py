@@ -981,20 +981,21 @@ class Command(BaseCommand):
     # HARDWARE DAILY BUILDS ########################################
     def select_hardware_daily_builds_data(self) -> list[tuple]:
         origin_condition = (
-            f"AND build_origin IN ({','.join(['%s'] * len(self.origins))})"
+            f"AND (checkout_origin IN ({','.join(['%s'] * len(self.origins))})"
+            f" OR build_origin IN ({','.join(['%s'] * len(self.origins))}))"
             if self.origins
             else ""
         )
         query = f"""
-            SELECT checkout_day, checkout_id, build_origin, build_lab, platform,
-                   compatibles, build_pass, build_failed, build_inc
+            SELECT checkout_day, checkout_id, checkout_origin, build_origin, build_lab,
+                   platform, compatibles, build_pass, build_failed, build_inc
             FROM hardware_daily_builds
             WHERE checkout_day >= (NOW() - INTERVAL %s)::date
             AND checkout_day <= (NOW() - INTERVAL %s)::date
             {origin_condition}
             ORDER BY checkout_day, build_origin, build_lab, platform, checkout_id
         """
-        query_params = [self.start_interval, self.end_interval] + self.origins
+        query_params = [self.start_interval, self.end_interval] + self.origins * 2
 
         with connections["default"].cursor() as kcidb_cursor:
             kcidb_cursor.execute(query, query_params)
@@ -1005,13 +1006,14 @@ class Command(BaseCommand):
             HardwareDailyBuilds(
                 checkout_day=parse_date(record[0]) if record[0] else None,
                 checkout_id=record[1],
-                build_origin=record[2],
-                build_lab=record[3],
-                platform=record[4],
-                compatibles=parse_array(record[5]),
-                build_pass=record[6] or 0,
-                build_failed=record[7] or 0,
-                build_inc=record[8] or 0,
+                checkout_origin=record[2],
+                build_origin=record[3],
+                build_lab=record[4],
+                platform=record[5],
+                compatibles=parse_array(record[6]),
+                build_pass=record[7] or 0,
+                build_failed=record[8] or 0,
+                build_inc=record[9] or 0,
             )
             for record in records
         ]
@@ -1043,13 +1045,14 @@ class Command(BaseCommand):
     # HARDWARE DAILY TESTS ########################################
     def select_hardware_daily_tests_data(self) -> list[tuple]:
         origin_condition = (
-            f"AND test_origin IN ({','.join(['%s'] * len(self.origins))})"
+            f"AND (checkout_origin IN ({','.join(['%s'] * len(self.origins))})"
+            f" OR test_origin IN ({','.join(['%s'] * len(self.origins))}))"
             if self.origins
             else ""
         )
         query = f"""
-            SELECT checkout_day, checkout_id, test_origin, test_lab, platform,
-                   compatibles, boot_pass, boot_failed, boot_inc,
+            SELECT checkout_day, checkout_id, checkout_origin, test_origin, test_lab,
+                   platform, compatibles, boot_pass, boot_failed, boot_inc,
                    test_pass, test_failed, test_inc
             FROM hardware_daily_tests
             WHERE checkout_day >= (NOW() - INTERVAL %s)::date
@@ -1057,7 +1060,7 @@ class Command(BaseCommand):
             {origin_condition}
             ORDER BY checkout_day, test_origin, test_lab, platform, checkout_id
         """
-        query_params = [self.start_interval, self.end_interval] + self.origins
+        query_params = [self.start_interval, self.end_interval] + self.origins * 2
 
         with connections["default"].cursor() as kcidb_cursor:
             kcidb_cursor.execute(query, query_params)
@@ -1068,16 +1071,17 @@ class Command(BaseCommand):
             HardwareDailyTests(
                 checkout_day=parse_date(record[0]) if record[0] else None,
                 checkout_id=record[1],
-                test_origin=record[2],
-                test_lab=record[3],
-                platform=record[4],
-                compatibles=parse_array(record[5]),
-                boot_pass=record[6] or 0,
-                boot_failed=record[7] or 0,
-                boot_inc=record[8] or 0,
-                test_pass=record[9] or 0,
-                test_failed=record[10] or 0,
-                test_inc=record[11] or 0,
+                checkout_origin=record[2],
+                test_origin=record[3],
+                test_lab=record[4],
+                platform=record[5],
+                compatibles=parse_array(record[6]),
+                boot_pass=record[7] or 0,
+                boot_failed=record[8] or 0,
+                boot_inc=record[9] or 0,
+                test_pass=record[10] or 0,
+                test_failed=record[11] or 0,
+                test_inc=record[12] or 0,
             )
             for record in records
         ]
