@@ -323,11 +323,23 @@ class TestGetIssueLastSeenData:
 
 
 class TestGetIssueNextCheckoutData:
+    @patch("kernelCI_app.queries.issues.get_query_cache")
+    def test_get_issue_next_checkout_data_from_cache(self, mock_get_cache):
+        cached_data = [{"issue_id": "issue", "checkout_id": "checkout_next"}]
+        mock_get_cache.return_value = cached_data
+
+        result = get_issue_next_checkout_data(issue_id_list=["issue"])
+
+        assert result == cached_data
+
+    @patch("kernelCI_app.queries.issues.get_query_cache")
+    @patch("kernelCI_app.queries.issues.set_query_cache")
     @patch("kernelCI_app.queries.issues.dict_fetchall")
     @patch("kernelCI_app.queries.issues.connection")
     def test_get_issue_next_checkout_data_from_database(
-        self, mock_connection, mock_dict_fetchall
+        self, mock_connection, mock_dict_fetchall, mock_set_cache, mock_get_cache
     ):
+        mock_get_cache.return_value = None
         expected_result = [
             {
                 "issue_id": "issue",
@@ -353,13 +365,22 @@ class TestGetIssueNextCheckoutData:
         assert "ANY(%(issue_id_list)s)" in query
         assert "C.start_time > LS.last_start_time" in query
         assert "C.start_time ASC" in query
+        assert "CROSS JOIN LATERAL" in query
         assert params == {"issue_id_list": ["issue"]}
+        mock_set_cache.assert_called_once_with(
+            key="issue_next_checkout",
+            params={"issue_id_list": ["issue"]},
+            rows=expected_result,
+        )
 
+    @patch("kernelCI_app.queries.issues.get_query_cache")
+    @patch("kernelCI_app.queries.issues.set_query_cache")
     @patch("kernelCI_app.queries.issues.dict_fetchall")
     @patch("kernelCI_app.queries.issues.connection")
     def test_get_issue_next_checkout_data_multiple_issues(
-        self, mock_connection, mock_dict_fetchall
+        self, mock_connection, mock_dict_fetchall, mock_set_cache, mock_get_cache
     ):
+        mock_get_cache.return_value = None
         expected_result = [
             {"issue_id": "issue_1", "checkout_id": "checkout_1"},
             {"issue_id": "issue_2", "checkout_id": "checkout_2"},
@@ -376,24 +397,32 @@ class TestGetIssueNextCheckoutData:
         params = execute_call[0][1]
         assert params == {"issue_id_list": ["issue_1", "issue_2", "issue_3"]}
 
+    @patch("kernelCI_app.queries.issues.get_query_cache")
     @patch("kernelCI_app.queries.issues.connection")
-    def test_get_issue_next_checkout_data_empty_list(self, mock_connection):
+    def test_get_issue_next_checkout_data_empty_list(
+        self, mock_connection, mock_get_cache
+    ):
         result = get_issue_next_checkout_data(issue_id_list=[])
 
         assert result == []
         mock_connection.cursor.assert_not_called()
+        mock_get_cache.assert_not_called()
 
+    @patch("kernelCI_app.queries.issues.get_query_cache")
+    @patch("kernelCI_app.queries.issues.set_query_cache")
     @patch("kernelCI_app.queries.issues.dict_fetchall")
     @patch("kernelCI_app.queries.issues.connection")
     def test_get_issue_next_checkout_data_no_next_checkout(
-        self, mock_connection, mock_dict_fetchall
+        self, mock_connection, mock_dict_fetchall, mock_set_cache, mock_get_cache
     ):
+        mock_get_cache.return_value = None
         mock_dict_fetchall.return_value = []
         setup_mock_cursor(mock_connection)
 
         result = get_issue_next_checkout_data(issue_id_list=["issue"])
 
         assert result == []
+        mock_set_cache.assert_called_once()
 
 
 class TestGetIssueTreesData:

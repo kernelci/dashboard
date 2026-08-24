@@ -489,7 +489,11 @@ def get_issue_next_checkout_data(*, issue_id_list: list[str]) -> list[dict]:
     if not issue_id_list:
         return []
 
+    cache_key = "issue_next_checkout"
     params = {"issue_id_list": issue_id_list}
+    records = get_query_cache(key=cache_key, params=params)
+    if records is not None:
+        return records
 
     query = """
         WITH last_seen AS (
@@ -516,7 +520,7 @@ def get_issue_next_checkout_data(*, issue_id_list: list[str]) -> list[dict]:
                 IC.issue_version DESC,
                 IC._timestamp DESC
         )
-        SELECT DISTINCT ON (LS.issue_id)
+        SELECT
             LS.issue_id,
             C.id AS checkout_id,
             C.start_time,
@@ -528,25 +532,40 @@ def get_issue_next_checkout_data(*, issue_id_list: list[str]) -> list[dict]:
             C.origin
         FROM
             last_seen LS
-            INNER JOIN checkouts C ON (
-                C.origin = LS.origin
-                AND C.tree_name IS NOT DISTINCT FROM LS.tree_name
-                AND C.git_repository_url IS NOT DISTINCT FROM LS.git_repository_url
-                AND C.git_repository_branch IS NOT DISTINCT FROM LS.git_repository_branch
-                AND C.start_time > LS.last_start_time
-            )
+            CROSS JOIN LATERAL (
+                SELECT
+                    C.id,
+                    C.start_time,
+                    C.git_commit_hash,
+                    C.git_commit_name,
+                    C.git_repository_url,
+                    C.git_repository_branch,
+                    C.tree_name,
+                    C.origin
+                FROM
+                    checkouts C
+                WHERE
+                    C.origin = LS.origin
+                    AND C.tree_name IS NOT DISTINCT FROM LS.tree_name
+                    AND C.git_repository_url IS NOT DISTINCT FROM LS.git_repository_url
+                    AND C.git_repository_branch IS NOT DISTINCT FROM LS.git_repository_branch
+                    AND C.start_time > LS.last_start_time
+                ORDER BY
+                    C.start_time ASC,
+                    C.id ASC
+                LIMIT 1
+            ) C
         WHERE
             LS.last_checkout_id IS NOT NULL
             AND LS.last_start_time IS NOT NULL
-        ORDER BY
-            LS.issue_id,
-            C.start_time ASC,
-            C.id ASC
     """
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return dict_fetchall(cursor)
+        records = dict_fetchall(cursor)
+
+    set_query_cache(key=cache_key, params=params, rows=records)
+    return records
 
 
 def get_issue_trees_data(
