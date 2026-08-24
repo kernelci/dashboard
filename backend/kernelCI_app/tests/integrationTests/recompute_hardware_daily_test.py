@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.db import connections
 
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
-from kernelCI_app.helpers.database import table_lock_id
+from kernelCI_app.management.commands.recompute_hardware_daily import lock_key
 from kernelCI_app.models import HardwareDailyBuilds, HardwareDailyTests, Tests
 from kernelCI_app.tests.factories import BuildFactory, CheckoutFactory, TestFactory
 
@@ -20,7 +20,14 @@ def _checkout(**kwargs):
 
 
 def _test_on(
-    build, platform, *, path="ltp.x", status="PASS", lab="lab-1", compatibles=None
+    build,
+    platform,
+    *,
+    path="ltp.x",
+    status="PASS",
+    lab="lab-1",
+    compatibles=None,
+    **kwargs,
 ):
     TestFactory(
         build=build,
@@ -29,6 +36,7 @@ def _test_on(
         environment_misc={"platform": platform},
         environment_compatible=compatibles,
         misc={"runtime": lab} if lab else {},
+        **kwargs,
     )
 
 
@@ -106,6 +114,20 @@ def test_lab_comes_from_misc_and_falls_back_to_origin():
 
 
 @pytest.mark.django_db
+def test_checkout_origin_is_stored_on_both_tables():
+    checkout = _checkout(origin="maestro")
+    build = BuildFactory(checkout=checkout, status="PASS", origin="maestro")
+    _test_on(build, "pA", path="boot", origin="linaro")
+
+    _recompute()
+
+    assert HardwareDailyBuilds.objects.get().checkout_origin == "maestro"
+    test_row = HardwareDailyTests.objects.get()
+    assert test_row.checkout_origin == "maestro"
+    assert test_row.test_origin == "linaro"
+
+
+@pytest.mark.django_db
 def test_rerun_replaces_the_day_without_duplicating():
     _test_on(BuildFactory(checkout=_checkout(), status="PASS"), "pA", path="boot")
 
@@ -139,7 +161,7 @@ def test_day_locked_by_another_run_is_skipped():
     with other_run.cursor() as cursor:
         cursor.execute(
             "SELECT pg_advisory_lock(%s, %s)",
-            [table_lock_id("hardware_daily_builds"), DAY.toordinal()],
+            [lock_key("hardware_daily_builds"), DAY.toordinal()],
         )
         _recompute()
     other_run.close()
