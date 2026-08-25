@@ -1,15 +1,20 @@
 import type {
   CompareBootFailureRow,
   CompareBuildFailureRow,
-  CompareChangeFilter,
   CompareChangeType,
   CompareGroupedApiStatus,
   CompareItemStatus,
+  CompareStatusPair,
   CompareTestFailureRow,
   TreeCompareBuildDiffApiRow,
   TreeCompareTestDiffApiRow,
 } from '@/types/tree/TreeCompare';
-import { compareChangeFilters } from '@/types/tree/TreeCompare';
+import {
+  compareAbsentStatusToken,
+  compareChangeTypes,
+  compareEmptyStatusPairsToken,
+  compareItemStatuses,
+} from '@/types/tree/TreeCompare';
 
 export function apiStatusToItemStatus(
   status: CompareGroupedApiStatus | null | undefined,
@@ -65,6 +70,49 @@ export function deriveCompareChange(
   return 'appeared';
 }
 
+/** Status pairs that currently classify as each change-type chip. */
+export const changeTypeStatusPairs: Record<
+  CompareChangeType,
+  CompareStatusPair[]
+> = Object.fromEntries(
+  compareChangeTypes.map(change => [change, [] as CompareStatusPair[]]),
+) as Record<CompareChangeType, CompareStatusPair[]>;
+
+for (const from of compareItemStatuses) {
+  for (const to of compareItemStatuses) {
+    changeTypeStatusPairs[deriveCompareChange(from, to)].push({ from, to });
+  }
+}
+
+export function changeTypeIsSelected(
+  pairs: readonly CompareStatusPair[],
+  change: CompareChangeType,
+): boolean {
+  const selected = new Set(
+    normalizeStatusPairs(pairs).map(serializeStatusPair),
+  );
+  const required = changeTypeStatusPairs[change];
+  return (
+    required.length > 0 &&
+    required.every(pair => selected.has(serializeStatusPair(pair)))
+  );
+}
+
+/** Add every pair for a change type, or remove them all if already complete. */
+export function toggleChangeTypePairs(
+  current: readonly CompareStatusPair[],
+  change: CompareChangeType,
+): CompareStatusPair[] {
+  const target = changeTypeStatusPairs[change];
+  if (changeTypeIsSelected(current, change)) {
+    const remove = new Set(target.map(serializeStatusPair));
+    return normalizeStatusPairs(
+      current.filter(pair => !remove.has(serializeStatusPair(pair))),
+    );
+  }
+  return normalizeStatusPairs([...current, ...target]);
+}
+
 export function mapBuildDiffRows(
   rows: TreeCompareBuildDiffApiRow[],
 ): CompareBuildFailureRow[] {
@@ -103,34 +151,93 @@ export function mapBootOrTestDiffRows(
   });
 }
 
-/** Keep URL/search order stable and drop unknown values. */
-export function normalizeChangeFilters(
-  filters: readonly CompareChangeFilter[],
-): CompareChangeFilter[] {
-  return compareChangeFilters.filter(filter => filters.includes(filter));
+function isCompareItemStatus(value: string): value is CompareItemStatus {
+  return (compareItemStatuses as readonly string[]).includes(value);
 }
 
-export function toggleChangeFilter(
-  current: readonly CompareChangeFilter[],
-  value: CompareChangeFilter,
-): CompareChangeFilter[] {
-  const next = current.includes(value)
-    ? current.filter(filter => filter !== value)
-    : [...current, value];
-  return normalizeChangeFilters(next);
+function encodeStatus(status: CompareItemStatus): string {
+  return status === '—' ? compareAbsentStatusToken : status;
 }
 
-/**
- * Empty selection or every chip selected both mean "show all" — same as
- * former "All changes". Partial selection keeps matching change types.
- */
-export function applyChangeFilter<T extends { change: CompareChangeType }>(
-  rows: T[],
-  changeFilter: readonly CompareChangeFilter[],
-): T[] {
-  if (changeFilter.length === 0) {
+function decodeStatus(raw: string): CompareItemStatus | undefined {
+  if (raw === compareAbsentStatusToken) {
+    return '—';
+  }
+  return isCompareItemStatus(raw) ? raw : undefined;
+}
+
+export function serializeStatusPair(pair: CompareStatusPair): string {
+  return `${encodeStatus(pair.from)}:${encodeStatus(pair.to)}`;
+}
+
+export function parseStatusPair(raw: string): CompareStatusPair | undefined {
+  const separatorIndex = raw.indexOf(':');
+  if (separatorIndex === -1) {
+    return undefined;
+  }
+  const from = decodeStatus(raw.slice(0, separatorIndex));
+  const to = decodeStatus(raw.slice(separatorIndex + 1));
+  if (!from || !to) {
+    return undefined;
+  }
+  return { from, to };
+}
+
+/** Drop invalid/duplicate pairs; keep first-seen order. */
+export function normalizeStatusPairs(
+  pairs: readonly CompareStatusPair[],
+): CompareStatusPair[] {
+  const seen = new Set<string>();
+  const normalized: CompareStatusPair[] = [];
+  for (const pair of pairs) {
+    if (!isCompareItemStatus(pair.from) || !isCompareItemStatus(pair.to)) {
+      continue;
+    }
+    const key = serializeStatusPair(pair);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    normalized.push({ from: pair.from, to: pair.to });
+  }
+  return normalized;
+}
+
+export function serializeStatusPairs(
+  pairs: readonly CompareStatusPair[],
+): string[] {
+  const normalized = normalizeStatusPairs(pairs);
+  if (normalized.length === 0) {
+    return [compareEmptyStatusPairsToken];
+  }
+  return normalized.map(serializeStatusPair);
+}
+
+export function parseStatusPairs(
+  values: readonly string[],
+): CompareStatusPair[] {
+  if (
+    values.length === 0 ||
+    (values.length === 1 && values[0] === compareEmptyStatusPairsToken)
+  ) {
+    return [];
+  }
+  return normalizeStatusPairs(
+    values.flatMap(value => {
+      const pair = parseStatusPair(value);
+      return pair ? [pair] : [];
+    }),
+  );
+}
+
+/** Empty list shows all rows; otherwise a row matches any selected (from, to) pair. */
+export function applyStatusPairFilter<
+  T extends { sideA: CompareItemStatus; sideB: CompareItemStatus },
+>(rows: T[], pairs: readonly CompareStatusPair[]): T[] {
+  if (pairs.length === 0) {
     return rows;
   }
-  const selected = new Set<string>(changeFilter);
-  return rows.filter(row => selected.has(row.change));
+  return rows.filter(row =>
+    pairs.some(pair => pair.from === row.sideA && pair.to === row.sideB),
+  );
 }

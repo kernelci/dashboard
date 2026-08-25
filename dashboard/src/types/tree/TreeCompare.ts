@@ -54,7 +54,13 @@ export type TreeCompareData = {
 };
 
 /** Side status for an individual compared item. */
-export type CompareItemStatus = 'PASS' | 'FAIL' | 'INCONCLUSIVE' | '—';
+export const compareItemStatuses = [
+  'PASS',
+  'FAIL',
+  'INCONCLUSIVE',
+  '—',
+] as const;
+export type CompareItemStatus = (typeof compareItemStatuses)[number];
 
 export type CompareGroupedApiStatus = 'PASS' | 'FAIL' | 'INCONCLUSIVE';
 
@@ -77,14 +83,17 @@ export type TreeCompareTestDiffApiRow = {
   status_b: CompareGroupedApiStatus | null;
 };
 
-/** Filter chips for the breakdown tables — one per change type. */
-export const compareChangeFilters = compareChangeTypes;
-export type CompareChangeFilter = (typeof compareChangeFilters)[number];
+export type CompareStatusPair = {
+  from: CompareItemStatus;
+  to: CompareItemStatus;
+};
 
-export const compareDefaultChangeFilters: CompareChangeFilter[] = [
-  'regression',
-  'fixed',
-];
+/** URL token for an empty pair list (show all rows). Missing param still means default. */
+export const compareEmptyStatusPairsToken = 'none';
+/** URL token for absent (`—`) so query strings stay ASCII. */
+export const compareAbsentStatusToken = 'ABSENT';
+
+export const compareDefaultStatusPairParams = ['PASS:FAIL', 'FAIL:PASS'];
 
 type CompareFailureRowBase = {
   id: string;
@@ -123,7 +132,7 @@ export const compareDefaultValues = {
   hashB: '',
   origin: 'maestro',
   currentPageTab: 'global.builds' as const,
-  changeFilter: compareDefaultChangeFilters,
+  statusPair: compareDefaultStatusPairParams,
 };
 
 export const compareSearchSchema = z.object({
@@ -138,18 +147,16 @@ export const compareSearchSchema = z.object({
     .default(compareDefaultValues.currentPageTab)
     .catch(compareDefaultValues.currentPageTab),
   // Single URL value becomes a string; normalize to an array.
-  changeFilter: z.preprocess(
-    value => {
-      if (!value) {
-        return compareDefaultChangeFilters;
-      }
-      return Array.isArray(value) ? value : [value];
-    },
-    z
-      .array(z.enum(compareChangeFilters))
-      .default(compareDefaultChangeFilters)
-      .catch(compareDefaultChangeFilters),
-  ),
+  // `none` is an explicit empty list; omitting the param uses the default pairs.
+  statusPair: z.preprocess(value => {
+    if (value === undefined) {
+      return compareDefaultStatusPairParams;
+    }
+    if (value === '') {
+      return [compareEmptyStatusPairsToken];
+    }
+    return Array.isArray(value) ? value : [value];
+  }, z.array(z.string()).default(compareDefaultStatusPairParams).catch(compareDefaultStatusPairParams)),
 });
 
 export type CompareSearch = z.infer<typeof compareSearchSchema>;

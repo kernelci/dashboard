@@ -4,7 +4,13 @@ import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import type { CompareItemStatus } from '@/types/tree/TreeCompare';
+import {
+  compareItemStatuses,
+  type CompareChangeType,
+  type CompareItemStatus,
+  type CompareStatusPair,
+} from '@/types/tree/TreeCompare';
+import type { MessagesKey } from '@/locales/messages';
 
 import { TooltipIcon } from '@/components/Icons/TooltipIcon';
 import { Button } from '@/components/ui/button';
@@ -15,17 +21,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import {
+  changeTypeIsSelected,
+  toggleChangeTypePairs,
+} from '@/utils/treeCompareDiff';
 
-export type CompareStatusPair = {
-  from: CompareItemStatus;
-  to: CompareItemStatus;
-};
+export type { CompareStatusPair };
 
-export const compareStatuses: readonly CompareItemStatus[] = [
-  'PASS',
-  'FAIL',
-  'INCONCLUSIVE',
-  '—',
+const QUICK_FILTERS: {
+  value: CompareChangeType;
+  labelId: MessagesKey;
+}[] = [
+  { value: 'regression', labelId: 'treeCompare.change.regressions' },
+  { value: 'fixed', labelId: 'treeCompare.change.fixed' },
+  { value: 'newFailure', labelId: 'treeCompare.change.newFailures' },
+  { value: 'stillFailing', labelId: 'treeCompare.change.stillFailing' },
+  { value: 'newPass', labelId: 'treeCompare.change.newPasses' },
+  { value: 'appeared', labelId: 'treeCompare.change.appeared' },
+  { value: 'disappeared', labelId: 'treeCompare.change.disappeared' },
 ];
 
 export function CompareStatusSelect({
@@ -56,7 +70,7 @@ export function CompareStatusSelect({
           />
         </SelectTrigger>
         <SelectContent>
-          {compareStatuses.map(status => (
+          {compareItemStatuses.map(status => (
             <SelectItem key={status} value={status}>
               {status}
             </SelectItem>
@@ -119,9 +133,39 @@ export function CompareStatusPairFilter({
       <div className="text-dim-gray flex items-center gap-1 text-sm">
         <FormattedMessage id="filter.tableFilter" />
         <TooltipIcon
+          tooltipId="treeCompare.change.glossary"
+          iconClassName="text-dim-gray size-4"
+        />
+        <TooltipIcon
           tooltipId="treeCompare.statusPairFilter.glossary"
           iconClassName="text-dim-gray size-4"
         />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {QUICK_FILTERS.map(option => {
+          const selected = changeTypeIsSelected(value, option.value);
+          return (
+            <Button
+              key={option.value}
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-pressed={selected}
+              className={cn(
+                'rounded-full border-black',
+                selected
+                  ? 'bg-blue hover:bg-blue text-white hover:text-white'
+                  : 'bg-white text-black',
+              )}
+              onClick={() =>
+                onChange(toggleChangeTypePairs(value, option.value))
+              }
+            >
+              <FormattedMessage id={option.labelId} />
+            </Button>
+          );
+        })}
       </div>
 
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-end">

@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import {
   deriveCompareChange,
-  applyChangeFilter,
+  applyStatusPairFilter,
   mapBootOrTestDiffRows,
   mapBuildDiffRows,
-  toggleChangeFilter,
+  normalizeStatusPairs,
+  parseStatusPairs,
+  serializeStatusPairs,
+  toggleChangeTypePairs,
 } from './treeCompareDiff';
 
 describe('deriveCompareChange', () => {
@@ -32,47 +35,91 @@ describe('deriveCompareChange', () => {
   });
 });
 
-describe('applyChangeFilter', () => {
+describe('applyStatusPairFilter', () => {
   const rows = [
-    { id: '1', change: 'regression' as const },
-    { id: '2', change: 'fixed' as const },
-    { id: '3', change: 'stillFailing' as const },
-    { id: '4', change: 'newPass' as const },
+    { id: '1', sideA: 'PASS' as const, sideB: 'FAIL' as const },
+    { id: '2', sideA: 'FAIL' as const, sideB: 'PASS' as const },
+    { id: '3', sideA: 'FAIL' as const, sideB: 'FAIL' as const },
+    { id: '4', sideA: '—' as const, sideB: 'FAIL' as const },
   ];
 
-  it('keeps only selected change types', () => {
+  it('keeps rows matching any selected pair', () => {
     expect(
-      applyChangeFilter(rows, ['regression', 'fixed']).map(r => r.id),
+      applyStatusPairFilter(rows, [
+        { from: 'PASS', to: 'FAIL' },
+        { from: 'FAIL', to: 'PASS' },
+      ]).map(row => row.id),
     ).toEqual(['1', '2']);
   });
 
   it('returns all rows when nothing is selected', () => {
-    expect(applyChangeFilter(rows, [])).toEqual(rows);
-  });
-
-  it('returns all rows when every filter chip is selected', () => {
-    expect(
-      applyChangeFilter(rows, [
-        'regression',
-        'fixed',
-        'newFailure',
-        'stillFailing',
-        'newPass',
-        'appeared',
-        'disappeared',
-      ]),
-    ).toEqual(rows);
+    expect(applyStatusPairFilter(rows, [])).toEqual(rows);
   });
 });
 
-describe('toggleChangeFilter', () => {
-  it('adds and removes values in stable order', () => {
-    expect(toggleChangeFilter(['regression'], 'fixed')).toEqual([
-      'regression',
-      'fixed',
+describe('parse/normalize/serialize status pairs', () => {
+  it('round-trips pairs including absent', () => {
+    expect(parseStatusPairs(['PASS:FAIL', 'ABSENT:FAIL'])).toEqual([
+      { from: 'PASS', to: 'FAIL' },
+      { from: '—', to: 'FAIL' },
     ]);
-    expect(toggleChangeFilter(['regression', 'fixed'], 'regression')).toEqual([
-      'fixed',
+    expect(
+      serializeStatusPairs([
+        { from: 'PASS', to: 'FAIL' },
+        { from: '—', to: 'FAIL' },
+      ]),
+    ).toEqual(['PASS:FAIL', 'ABSENT:FAIL']);
+  });
+
+  it('uses none for an empty list and parses it back to empty', () => {
+    expect(serializeStatusPairs([])).toEqual(['none']);
+    expect(parseStatusPairs(['none'])).toEqual([]);
+    expect(parseStatusPairs([])).toEqual([]);
+  });
+
+  it('drops invalid and duplicate pairs', () => {
+    expect(
+      parseStatusPairs(['PASS:FAIL', 'NOPE:FAIL', 'PASS:FAIL', 'FAIL:PASS']),
+    ).toEqual([
+      { from: 'PASS', to: 'FAIL' },
+      { from: 'FAIL', to: 'PASS' },
+    ]);
+    expect(
+      normalizeStatusPairs([
+        { from: 'PASS', to: 'FAIL' },
+        { from: 'PASS', to: 'FAIL' },
+      ]),
+    ).toEqual([{ from: 'PASS', to: 'FAIL' }]);
+  });
+});
+
+describe('toggleChangeTypePairs', () => {
+  it('adds every pair for a change type', () => {
+    expect(toggleChangeTypePairs([], 'regression')).toEqual([
+      { from: 'PASS', to: 'FAIL' },
+      { from: 'PASS', to: 'INCONCLUSIVE' },
+    ]);
+  });
+
+  it('removes those pairs when the chip is already complete', () => {
+    expect(
+      toggleChangeTypePairs(
+        [
+          { from: 'PASS', to: 'FAIL' },
+          { from: 'PASS', to: 'INCONCLUSIVE' },
+          { from: 'FAIL', to: 'PASS' },
+        ],
+        'regression',
+      ),
+    ).toEqual([{ from: 'FAIL', to: 'PASS' }]);
+  });
+
+  it('completes a partial chip instead of removing it', () => {
+    expect(
+      toggleChangeTypePairs([{ from: 'PASS', to: 'FAIL' }], 'regression'),
+    ).toEqual([
+      { from: 'PASS', to: 'FAIL' },
+      { from: 'PASS', to: 'INCONCLUSIVE' },
     ]);
   });
 });
