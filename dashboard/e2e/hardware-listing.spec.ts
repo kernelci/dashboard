@@ -1,6 +1,6 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 
-import { HARDWARE_LISTING_SELECTORS } from './e2e-selectors';
+import { COMMON_SELECTORS, HARDWARE_LISTING_SELECTORS } from './e2e-selectors';
 
 const SELECTOR_LOAD_TIMEOUT = 15000;
 const SELECTION_URL_PARAMS = ['t=', 'gu=', 'gb=', 'ch='] as const;
@@ -45,6 +45,17 @@ const expectNoSelectionInUrl = (page: Page): void => {
   for (const param of SELECTION_URL_PARAMS) {
     expect(url).not.toMatch(new RegExp(`[?&]${param}`));
   }
+};
+
+const openFilterDrawer = async (page: Page): Promise<void> => {
+  await page.getByRole('button', { name: 'Filters', exact: true }).click();
+  await expect(page.getByText('Test lab', { exact: true })).toBeVisible({
+    timeout: SELECTOR_LOAD_TIMEOUT,
+  });
+};
+
+const applyFilters = async (page: Page): Promise<void> => {
+  await page.getByRole('button', { name: 'Filter', exact: true }).click();
 };
 
 test.describe('Hardware Listing Page Tests', () => {
@@ -165,6 +176,60 @@ test.describe('Hardware Listing Page Tests', () => {
 
     await page.locator(HARDWARE_LISTING_SELECTORS.clearSelection).click();
     await expect(filterLabel).toBeVisible();
+  });
+
+  test('origin is filtered in the drawer instead of the top bar', async ({
+    page,
+  }) => {
+    await expect(page.locator(COMMON_SELECTORS.originDropdown)).toBeHidden();
+    await openFilterDrawer(page);
+    await expect(
+      page
+        .locator('h3', { hasText: 'Checkout origin' })
+        .locator('..')
+        .getByRole('checkbox', { name: 'maestro', exact: true }),
+    ).toBeChecked();
+  });
+
+  test('selecting a test lab puts it in the URL', async ({ page }) => {
+    await openFilterDrawer(page);
+
+    const testLabSection = page
+      .locator('h3', { hasText: 'Test lab' })
+      .locator('..');
+    const labCheckbox = testLabSection.getByRole('checkbox').first();
+    test.skip(
+      (await testLabSection.getByRole('checkbox').count()) === 0,
+      'Need at least one test lab option',
+    );
+
+    const lab =
+      (await labCheckbox.locator('xpath=..').textContent())?.trim() ?? '';
+    await labCheckbox.click();
+    await applyFilters(page);
+
+    await expect(page).toHaveURL(/[?&]df=/);
+    await expect(page).toHaveURL(new RegExp(encodeURIComponent(lab)));
+  });
+
+  test('clearing the checkout origin keeps every origin in the URL', async ({
+    page,
+  }) => {
+    await openFilterDrawer(page);
+    await page
+      .locator('h3', { hasText: 'Checkout origin' })
+      .locator('..')
+      .getByRole('checkbox', { name: 'maestro', exact: true })
+      .click();
+    await applyFilters(page);
+
+    await expect(page).toHaveURL(/[?&]df=/);
+    await expect(
+      page
+        .locator('h3', { hasText: 'Checkout origin' })
+        .locator('..')
+        .getByRole('checkbox', { name: 'maestro', exact: true }),
+    ).not.toBeChecked();
   });
 
   test('loading URL with revision does not show filter label', async ({

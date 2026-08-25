@@ -8,8 +8,8 @@ from rest_framework.views import APIView
 
 from kernelCI_app.queries.hardware import get_hardware_listing_data_by_revision
 from kernelCI_app.typeModels.hardwareListing import (
-    HardwareItem,
-    HardwareListingByRevisionResponse,
+    HardwareListingItem,
+    HardwareListingResponse,
 )
 from kernelCI_app.typeModels.hardwareListingByRevision import (
     HardwareListingByRevisionQueryParams,
@@ -18,53 +18,14 @@ from kernelCI_app.typeModels.hardwareListingByRevision import (
 
 
 class HardwareByRevisionView(APIView):
-    def _sanitize_records(self, hardwares_raw: list[dict]) -> list[HardwareItem]:
-        hardwares = []
-        for hardware in hardwares_raw:
-            hardwares.append(
-                HardwareItem(
-                    platform=hardware["platform"],
-                    hardware=hardware["hardware"],
-                    build_status_summary={
-                        "PASS": hardware["pass_builds"],
-                        "FAIL": hardware["fail_builds"],
-                        "NULL": hardware["null_builds"],
-                        "ERROR": hardware["error_builds"],
-                        "MISS": hardware["miss_builds"],
-                        "DONE": hardware["done_builds"],
-                        "SKIP": hardware["skip_builds"],
-                    },
-                    boot_status_summary={
-                        "PASS": hardware["pass_boots"],
-                        "FAIL": hardware["fail_boots"],
-                        "NULL": hardware["null_boots"],
-                        "ERROR": hardware["error_boots"],
-                        "MISS": hardware["miss_boots"],
-                        "DONE": hardware["done_boots"],
-                        "SKIP": hardware["skip_boots"],
-                    },
-                    test_status_summary={
-                        "PASS": hardware["pass_tests"],
-                        "FAIL": hardware["fail_tests"],
-                        "NULL": hardware["null_tests"],
-                        "ERROR": hardware["error_tests"],
-                        "MISS": hardware["miss_tests"],
-                        "DONE": hardware["done_tests"],
-                        "SKIP": hardware["skip_tests"],
-                    },
-                )
-            )
-
-        return hardwares
-
     @extend_schema(
         parameters=[HardwareListingByRevisionQueryParamsDocumentationOnly],
-        responses=HardwareListingByRevisionResponse,
+        responses=HardwareListingResponse,
     )
     def get(self, request: Request):
         try:
-            query_params = HardwareListingByRevisionQueryParams(
-                origin=request.GET.get("origin"),
+            query_params = HardwareListingByRevisionQueryParams.from_request(
+                request.GET,
                 tree_name=request.GET.get("tree_name"),
                 git_repository_url=request.GET.get("git_repository_url"),
                 git_repository_branch=request.GET.get("git_repository_branch"),
@@ -74,7 +35,11 @@ class HardwareByRevisionView(APIView):
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
         hardwares_raw = get_hardware_listing_data_by_revision(
-            origin=query_params.origin,
+            checkout_origin=query_params.checkout_origin,
+            build_origin=query_params.build_origin,
+            test_origin=query_params.test_origin,
+            build_lab=query_params.build_lab,
+            test_lab=query_params.test_lab,
             tree_name=query_params.tree_name,
             git_repository_url=query_params.git_repository_url,
             git_repository_branch=query_params.git_repository_branch,
@@ -82,8 +47,9 @@ class HardwareByRevisionView(APIView):
         )
 
         try:
-            sanitized_records = self._sanitize_records(hardwares_raw=hardwares_raw)
-            result = HardwareListingByRevisionResponse(hardware=sanitized_records)
+            result = HardwareListingResponse(
+                hardware=[HardwareListingItem.from_row(row) for row in hardwares_raw]
+            )
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 

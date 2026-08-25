@@ -96,13 +96,11 @@ class HardwareSelectorsView(APIView):
     )
     def get(self, request: Request):
         try:
-            query_params = HardwareSelectorsQueryParams(
-                origin=request.GET.get("origin")
-            )
+            query_params = HardwareSelectorsQueryParams.from_request(request.GET)
         except ValidationError as e:
             return Response(data=e.json(), status=HTTPStatus.BAD_REQUEST)
 
-        selectors_raw = get_hardware_selectors(origin=query_params.origin)
+        selectors_raw = get_hardware_selectors(build_origin=query_params.build_origin)
 
         try:
             result = self._sanitize_records(selectors_raw=selectors_raw)

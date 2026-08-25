@@ -9,6 +9,9 @@ import { Toaster } from '@/components/ui/toaster';
 import type { HardwareItem, HardwareRevisionSelection } from '@/types/hardware';
 
 import {
+  buildOriginForSelectors,
+  hardwareListingParams,
+  useHardwareFilters,
   useHardwareListing,
   useHardwareListingByRevision,
   useHardwareSelectors,
@@ -25,6 +28,7 @@ import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
 import type { SearchIntent } from '@/lib/intent';
 
+import { HardwareListingFilter } from './HardwareListingFilter';
 import { HardwareTable } from './HardwareTable';
 import {
   decodeBranchValue,
@@ -47,12 +51,12 @@ const HardwareListingPage = ({
 }: HardwareListingPageProps): JSX.Element => {
   const navigate = useNavigate({ from: urlFromMap.navigate });
   const {
-    origin,
     intervalInDays,
     treeName,
     gitRepositoryUrl,
     gitBranch,
     gitCommitHash,
+    diffFilter,
   } = useSearch({ from: urlFromMap.search });
   const inputFilter = intent.search;
   const intentCommits =
@@ -79,9 +83,10 @@ const HardwareListingPage = ({
     treeName || gitRepositoryUrl || gitBranch || gitCommitHash,
   );
 
-  const { data: selectorsData, status: selectorsStatus } = useHardwareSelectors(
-    urlFromMap.search,
-  );
+  const buildOrigin = buildOriginForSelectors(diffFilter);
+
+  const { data: selectorsData, status: selectorsStatus } =
+    useHardwareSelectors(buildOrigin);
 
   const trees = useMemo(() => selectorsData?.trees ?? [], [selectorsData]);
 
@@ -154,17 +159,24 @@ const HardwareListingPage = ({
     return getBranchBySelection(selectedTree, gitRepositoryUrl, gitBranch);
   }, [selectedTree, gitRepositoryUrl, gitBranch]);
 
+  const filters = useMemo(
+    () => hardwareListingParams(diffFilter),
+    [diffFilter],
+  );
+
+  const { data: filterOptions } = useHardwareFilters(
+    startTimestampInSeconds,
+    endTimestampInSeconds,
+  );
+
   const defaultListing = useHardwareListing(
     startTimestampInSeconds,
     endTimestampInSeconds,
-    urlFromMap.search,
+    filters,
     intentCommits,
     !hasSelection,
   );
-  const revisionListing = useHardwareListingByRevision(
-    selection,
-    urlFromMap.search,
-  );
+  const revisionListing = useHardwareListingByRevision(selection, filters);
   const activeListing = hasSelection ? revisionListing : defaultListing;
 
   const listItems: HardwareItem[] = useMemo(() => {
@@ -180,15 +192,7 @@ const HardwareListingPage = ({
           includesInAnStringOrStringArray(hardware.hardware ?? '', inputFilter)
         );
       })
-      .map((hardware): HardwareItem => {
-        return {
-          hardware: hardware.hardware,
-          platform: hardware.platform,
-          build_status_summary: hardware.build_status_summary,
-          test_status_summary: hardware.test_status_summary,
-          boot_status_summary: hardware.boot_status_summary,
-        };
-      });
+      .sort((a, b) => a.platform.localeCompare(b.platform));
   }, [activeListing.data, activeListing.error, inputFilter]);
 
   const selectedRevision =
@@ -215,10 +219,10 @@ const HardwareListingPage = ({
     () => (
       <MemoizedKcidevFooter
         commandGroup="hardwareListing"
-        args={{ cmdName: 'hardware list', origin: origin, json: true }}
+        args={{ cmdName: 'hardware list', origin: buildOrigin, json: true }}
       />
     ),
-    [origin],
+    [buildOrigin],
   );
 
   const onTreeChange = ({
@@ -300,12 +304,19 @@ const HardwareListingPage = ({
     <>
       <Toaster />
       <div className="flex flex-col gap-6">
-        <span className="text-dim-gray flex-1 justify-start text-left text-sm">
-          <FormattedMessage
-            id="global.projectUnderDevelopment"
-            values={{ br: <br /> }}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <span className="text-dim-gray flex-1 justify-start text-left text-sm">
+            <FormattedMessage
+              id="global.projectUnderDevelopment"
+              values={{ br: <br /> }}
+            />
+          </span>
+          <HardwareListingFilter
+            data={filterOptions}
+            navigateFrom={urlFromMap.navigate}
+            paramFilter={diffFilter}
           />
-        </span>
+        </div>
 
         <HardwareTable
           treeTableRows={listItems}

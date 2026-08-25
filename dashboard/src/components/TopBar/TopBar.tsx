@@ -129,11 +129,16 @@ const TopBar = (): JSX.Element => {
     const isListingPage =
       isTreeListing || isHardwareListing || cleanFullPath.includes('issues');
 
+    const isHardwarePage = cleanFullPath.includes('hardware');
+
     return {
       firstUrlLocation,
       isTreeListing: isTreeListing,
-      isHardwarePage: cleanFullPath.includes('hardware'),
+      isHardwarePage,
       isListingPage: isListingPage,
+      // The hardware listing filters origin per side in its own drawer, so a
+      // page-wide origin would only contradict it.
+      showOriginSelect: isTreeListing || (isHardwarePage && !isHardwareListing),
     };
   }, [matches]);
 
@@ -154,7 +159,7 @@ const TopBar = (): JSX.Element => {
             <span className="mr-2 text-2xl sm:mr-10">
               <TitleName basePath={routeInfo.firstUrlLocation} />
             </span>
-            {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
+            {routeInfo.showOriginSelect && (
               <OriginSelect isHardwarePath={routeInfo.isHardwarePage} />
             )}
             <span className="ml-0 flex w-full px-6 lg:ml-14">

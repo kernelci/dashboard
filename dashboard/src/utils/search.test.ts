@@ -307,6 +307,20 @@ describe('parseSearch', () => {
   });
 });
 
+describe('hardware listing filters', () => {
+  const filters = {
+    diffFilter: {
+      checkoutOrigins: { maestro: true },
+      testOrigin: { ti: true },
+      testLabs: { 'lava-broonie': true },
+    },
+  };
+
+  it('keeps selected filters in the URL', () => {
+    expect(parseSearch(stringifySearch(filters))).toStrictEqual(filters);
+  });
+});
+
 describe('stringifySearch', () => {
   const assertSearchParams = (
     result: string,
