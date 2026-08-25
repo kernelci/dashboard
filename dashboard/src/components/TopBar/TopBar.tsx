@@ -147,12 +147,17 @@ const TopBar = (): JSX.Element => {
       isLabsListing ||
       cleanFullPath.includes('issues');
 
+    const isHardwarePage = cleanFullPath.includes('hardware');
+
     return {
       firstUrlLocation,
       isTreeListing: isTreeListing,
-      isHardwarePage: cleanFullPath.includes('hardware'),
+      isHardwarePage,
       isLabsPage: isLabsListing,
       isListingPage: isListingPage,
+      // Hardware listing filters origin per side in its own drawer.
+      showOriginSelect:
+        isTreeListing || isLabsListing || (isHardwarePage && !isHardwareListing),
     };
   }, [matches]);
 
@@ -173,9 +178,7 @@ const TopBar = (): JSX.Element => {
             <span className="mr-2 text-2xl sm:mr-10">
               <TitleName basePath={routeInfo.firstUrlLocation} />
             </span>
-            {(routeInfo.isTreeListing ||
-              routeInfo.isHardwarePage ||
-              routeInfo.isLabsPage) && (
+            {routeInfo.showOriginSelect && (
               <OriginSelect
                 originSource={
                   routeInfo.isLabsPage
