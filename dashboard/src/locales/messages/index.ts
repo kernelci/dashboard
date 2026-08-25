@@ -441,6 +441,17 @@ export const messages = {
     'treeCompare.selectRevision': 'Select a revision',
     'treeCompare.sideA': 'Side A',
     'treeCompare.sideB': 'Side B',
+    'treeCompare.statusPairFilter.active': 'Active status pair filters',
+    'treeCompare.statusPairFilter.add': 'Add',
+    'treeCompare.statusPairFilter.from': 'From',
+    'treeCompare.statusPairFilter.glossary':
+      'PASS — completed successfully{br}' +
+      'FAIL — completed with a failure{br}' +
+      'INCONCLUSIVE — no definitive pass or fail result{br}' +
+      '— — absent on this side',
+    'treeCompare.statusPairFilter.remove': 'Remove {from} to {to} filter',
+    'treeCompare.statusPairFilter.select': 'Select status',
+    'treeCompare.statusPairFilter.to': 'To',
     'treeCompare.suggestion.branchHead': 'Branch head',
     'treeCompare.suggestion.previous': 'Previous commit',
     'treeCompare.suggestion.swap': 'Swap sides',
