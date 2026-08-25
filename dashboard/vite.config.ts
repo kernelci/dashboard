@@ -19,14 +19,23 @@ const dashboardVersion =
   })();
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [tailwindcss(), tsconfigPaths(), react(), TanStackRouterVite()],
-  define: {
-    'import.meta.env.VITE_DASHBOARD_VERSION': JSON.stringify(dashboardVersion),
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+export default defineConfig(({ command }) => {
+  if (command === 'build' && !dashboardVersion) {
+    throw new Error(
+      'VITE_DASHBOARD_VERSION is unset and `git describe` failed. Set it to build.',
+    );
+  }
+
+  return {
+    plugins: [tailwindcss(), tsconfigPaths(), react(), TanStackRouterVite()],
+    define: {
+      'import.meta.env.VITE_DASHBOARD_VERSION':
+        JSON.stringify(dashboardVersion),
     },
-  },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
+  };
 });
