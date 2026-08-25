@@ -8,7 +8,11 @@ from django.db import connections
 
 from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.management.commands.recompute_hardware_daily import lock_key
-from kernelCI_app.models import HardwareDailyBuilds, HardwareDailyTests, Tests
+from kernelCI_app.models import (
+    HardwareDailyBuilds,
+    HardwareDailyTests,
+    Tests,
+)
 from kernelCI_app.tests.factories import BuildFactory, CheckoutFactory, TestFactory
 
 DAY = date(2026, 7, 15)
