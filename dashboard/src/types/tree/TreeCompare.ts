@@ -88,10 +88,11 @@ export type CompareStatusPair = {
   to: CompareItemStatus;
 };
 
-/** URL token for an empty pair list (show all rows). Missing param still means default. */
+/** URL/storage token for an empty pair list (show all rows). */
 export const compareEmptyStatusPairsToken = 'none';
 /** URL token for absent (`—`) so query strings stay ASCII. */
 export const compareAbsentStatusToken = 'ABSENT';
+export const compareStatusPairStorageKey = 'treeCompare.statusPair';
 
 export const compareDefaultStatusPairParams = ['PASS:FAIL', 'FAIL:PASS'];
 
@@ -132,7 +133,6 @@ export const compareDefaultValues = {
   hashB: '',
   origin: 'maestro',
   currentPageTab: 'global.builds' as const,
-  statusPair: compareDefaultStatusPairParams,
 };
 
 export const compareSearchSchema = z.object({
@@ -146,17 +146,17 @@ export const compareSearchSchema = z.object({
     .enum(possibleTabs)
     .default(compareDefaultValues.currentPageTab)
     .catch(compareDefaultValues.currentPageTab),
-  // Single URL value becomes a string; normalize to an array.
-  // `none` is an explicit empty list; omitting the param uses the default pairs.
+  // Omit = unspecified (hydrate from localStorage, then hardcoded default).
+  // `none` is an explicit empty list.
   statusPair: z.preprocess(value => {
     if (value === undefined) {
-      return compareDefaultStatusPairParams;
+      return undefined;
     }
     if (value === '') {
       return [compareEmptyStatusPairsToken];
     }
     return Array.isArray(value) ? value : [value];
-  }, z.array(z.string()).default(compareDefaultStatusPairParams).catch(compareDefaultStatusPairParams)),
+  }, z.array(z.string()).optional().catch(undefined)),
 });
 
 export type CompareSearch = z.infer<typeof compareSearchSchema>;

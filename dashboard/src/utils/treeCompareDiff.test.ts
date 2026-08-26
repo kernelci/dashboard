@@ -7,6 +7,7 @@ import {
   mapBuildDiffRows,
   normalizeStatusPairs,
   parseStatusPairs,
+  resolveStatusPairs,
   serializeStatusPairs,
   toggleChangeTypePairs,
 } from './treeCompareDiff';
@@ -90,6 +91,35 @@ describe('parse/normalize/serialize status pairs', () => {
         { from: 'PASS', to: 'FAIL' },
       ]),
     ).toEqual([{ from: 'PASS', to: 'FAIL' }]);
+  });
+});
+
+describe('resolveStatusPairs', () => {
+  const stored = ['ABSENT:FAIL'];
+  const url = ['PASS:FAIL', 'FAIL:PASS'];
+
+  it('uses URL pairs when present, ignoring storage', () => {
+    expect(resolveStatusPairs(url, stored)).toEqual([
+      { from: 'PASS', to: 'FAIL' },
+      { from: 'FAIL', to: 'PASS' },
+    ]);
+  });
+
+  it('treats none in the URL as an empty list, ignoring storage', () => {
+    expect(resolveStatusPairs(['none'], stored)).toEqual([]);
+  });
+
+  it('uses storage when the URL omits statusPair', () => {
+    expect(resolveStatusPairs(undefined, stored)).toEqual([
+      { from: '—', to: 'FAIL' },
+    ]);
+  });
+
+  it('uses the hardcoded default when URL and storage are both missing', () => {
+    expect(resolveStatusPairs(undefined, undefined)).toEqual([
+      { from: 'PASS', to: 'FAIL' },
+      { from: 'FAIL', to: 'PASS' },
+    ]);
   });
 });
 

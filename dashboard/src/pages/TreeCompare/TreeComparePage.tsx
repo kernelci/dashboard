@@ -31,10 +31,10 @@ import {
 } from '@/api/treeCompare';
 
 import {
-  compareDefaultStatusPairParams,
   compareNavigateFrom,
   compareRouteName,
   type CompareBootFailureRow,
+  type CompareStatusPair,
   type CompareTestFailureRow,
 } from '@/types/tree/TreeCompare';
 import type { PossibleTabs } from '@/types/tree/TreeDetails';
@@ -42,8 +42,10 @@ import {
   applyStatusPairFilter,
   mapBootOrTestDiffRows,
   mapBuildDiffRows,
-  parseStatusPairs,
+  readStoredStatusPairs,
+  resolveStatusPairs,
   serializeStatusPairs,
+  writeStoredStatusPairs,
 } from '@/utils/treeCompareDiff';
 
 import { CompareStatusPairFilter } from './components/CompareStatusPairFilter';
@@ -121,10 +123,7 @@ const TreeComparePage = (): JSX.Element => {
             updates.currentPageTab ??
             previous.currentPageTab ??
             'global.builds',
-          statusPair:
-            updates.statusPair ??
-            previous.statusPair ??
-            compareDefaultStatusPairParams,
+          statusPair: updates.statusPair ?? previous.statusPair,
         }),
         params: { treeName, branch },
         resetScroll: false,
@@ -193,7 +192,20 @@ const TreeComparePage = (): JSX.Element => {
     [testsDiffQuery.data],
   );
 
-  const statusPairs = useMemo(() => parseStatusPairs(statusPair), [statusPair]);
+  const storedStatusPairs = useMemo(() => readStoredStatusPairs(), []);
+  const statusPairs = useMemo(
+    () => resolveStatusPairs(statusPair, storedStatusPairs),
+    [statusPair, storedStatusPairs],
+  );
+
+  const onStatusPairsChange = useCallback(
+    (value: CompareStatusPair[]) => {
+      const serialized = serializeStatusPairs(value);
+      writeStoredStatusPairs(serialized);
+      updateSearch({ statusPair: serialized });
+    },
+    [updateSearch],
+  );
 
   const filteredBuilds = useMemo(
     () => applyStatusPairFilter(buildRows, statusPairs),
@@ -391,9 +403,7 @@ const TreeComparePage = (): JSX.Element => {
               <div className="mb-4">
                 <CompareStatusPairFilter
                   value={statusPairs}
-                  onChange={value =>
-                    updateSearch({ statusPair: serializeStatusPairs(value) })
-                  }
+                  onChange={onStatusPairsChange}
                 />
               </div>
               <Tabs

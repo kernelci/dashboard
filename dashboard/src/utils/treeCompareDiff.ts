@@ -12,8 +12,10 @@ import type {
 import {
   compareAbsentStatusToken,
   compareChangeTypes,
+  compareDefaultStatusPairParams,
   compareEmptyStatusPairsToken,
   compareItemStatuses,
+  compareStatusPairStorageKey,
 } from '@/types/tree/TreeCompare';
 
 export function apiStatusToItemStatus(
@@ -228,6 +230,50 @@ export function parseStatusPairs(
       return pair ? [pair] : [];
     }),
   );
+}
+
+/** URL wins when present; otherwise stored tokens; otherwise the hardcoded default. */
+export function resolveStatusPairs(
+  url: readonly string[] | undefined,
+  stored: readonly string[] | undefined,
+): CompareStatusPair[] {
+  if (url !== undefined) {
+    return parseStatusPairs(url);
+  }
+  if (stored !== undefined) {
+    return parseStatusPairs(stored);
+  }
+  return parseStatusPairs(compareDefaultStatusPairParams);
+}
+
+export function readStoredStatusPairs(): string[] | undefined {
+  try {
+    const raw = window.localStorage.getItem(compareStatusPairStorageKey);
+    if (raw === null) {
+      return undefined;
+    }
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      !Array.isArray(parsed) ||
+      parsed.some(item => typeof item !== 'string')
+    ) {
+      return undefined;
+    }
+    return parsed;
+  } catch {
+    return undefined;
+  }
+}
+
+export function writeStoredStatusPairs(values: readonly string[]): void {
+  try {
+    window.localStorage.setItem(
+      compareStatusPairStorageKey,
+      JSON.stringify(values),
+    );
+  } catch {
+    // Quota / private mode: in-memory + URL still work.
+  }
 }
 
 /** Empty list shows all rows; otherwise a row matches any selected (from, to) pair. */
