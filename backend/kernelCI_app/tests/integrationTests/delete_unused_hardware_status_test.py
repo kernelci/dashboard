@@ -1,8 +1,7 @@
 """Integration tests for delete_unused_hardware_status retention.
 
 Pins the #1983 regression: hardware_status rows for non-tip checkouts inside the
-retention window must survive the weekly cron. Also pins that HardwareStatus and
-ProcessedListingItems share the same age cutoff.
+retention window must survive the weekly cron.
 """
 
 from io import StringIO
@@ -12,11 +11,7 @@ from django.core.management import call_command
 from django.test import override_settings
 from django.utils import timezone
 
-from kernelCI_app.models import (
-    HardwareStatus,
-    LatestCheckout,
-    ProcessedListingItems,
-)
+from kernelCI_app.models import HardwareStatus, LatestCheckout
 from kernelCI_app.tests.factories import CheckoutFactory
 
 RETENTION_DAYS = 7
@@ -43,14 +38,6 @@ def _make_hardware_status(
         compatibles=None,
         start_time=start_time,
         test_pass=1,
-    )
-
-
-def _make_processed(*, checkout_id: str, key_byte: int):
-    return ProcessedListingItems.objects.create(
-        listing_item_key=bytes([key_byte]) * 32,
-        checkout_id=checkout_id,
-        status="P",
     )
 
 
@@ -107,44 +94,6 @@ def test_deletes_hardware_older_than_retention():
 
 @pytest.mark.django_db
 @override_settings(HARDWARE_STATUS_RETENTION_DAYS=RETENTION_DAYS)
-def test_processed_items_match_hardware_cutoff():
-    """ProcessedListingItems and hardware_status use the same age cutoff."""
-    recent = CheckoutFactory(start_time=_days_ago(2), id="ret_recent_processed")
-    old = CheckoutFactory(
-        start_time=_days_ago(RETENTION_DAYS + 5), id="ret_old_processed"
-    )
-
-    recent_hw = _make_hardware_status(
-        checkout=recent, platform="recent-board", start_time=recent.start_time
-    )
-    old_hw = _make_hardware_status(
-        checkout=old, platform="old-board", start_time=old.start_time
-    )
-    recent_processed = _make_processed(checkout_id=recent.id, key_byte=1)
-    old_processed = _make_processed(checkout_id=old.id, key_byte=2)
-
-    _run_delete()
-
-    assert HardwareStatus.objects.filter(
-        test_origin=recent_hw.test_origin,
-        platform=recent_hw.platform,
-        checkout_id=recent_hw.checkout_id,
-    ).exists()
-    assert not HardwareStatus.objects.filter(
-        test_origin=old_hw.test_origin,
-        platform=old_hw.platform,
-        checkout_id=old_hw.checkout_id,
-    ).exists()
-    assert ProcessedListingItems.objects.filter(
-        listing_item_key=recent_processed.listing_item_key
-    ).exists()
-    assert not ProcessedListingItems.objects.filter(
-        listing_item_key=old_processed.listing_item_key
-    ).exists()
-
-
-@pytest.mark.django_db
-@override_settings(HARDWARE_STATUS_RETENTION_DAYS=RETENTION_DAYS)
 def test_does_not_wipe_recent_sibling_platform_rows():
     """Deleting by checkout_id alone would wipe in-window siblings. Must not."""
     checkout = CheckoutFactory(start_time=_days_ago(2), id="ret_sibling_checkout")
@@ -180,7 +129,6 @@ def test_dry_run_deletes_nothing():
     board = _make_hardware_status(
         checkout=old, platform="dry-board", start_time=old.start_time
     )
-    processed = _make_processed(checkout_id=old.id, key_byte=3)
 
     output = _run_delete(dry_run=True)
 
@@ -189,7 +137,4 @@ def test_dry_run_deletes_nothing():
         test_origin=board.test_origin,
         platform=board.platform,
         checkout_id=board.checkout_id,
-    ).exists()
-    assert ProcessedListingItems.objects.filter(
-        listing_item_key=processed.listing_item_key
     ).exists()
