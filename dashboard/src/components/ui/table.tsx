@@ -115,8 +115,6 @@ const TableCellWithLink = React.forwardRef<
     {...props}
   >
     <Link
-      // The link fills the cell, so an outset focus ring is clipped by cells
-      // that hide overflow.
       className={cn(
         'flex min-w-0 flex-1 p-4 focus-visible:-outline-offset-2',
         linkClassName,

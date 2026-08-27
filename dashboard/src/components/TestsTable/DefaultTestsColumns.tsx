@@ -88,7 +88,6 @@ const PathCell = ({
       {!isExpandable && row.depth > 0 && <span className="mr-2 w-4 shrink-0" />}
       <Tooltip>
         <TooltipTrigger asChild>
-          {/* Activation bubbles to the row's onClick, which toggles groups. */}
           <button
             type="button"
             className="min-w-0 flex-1 overflow-hidden text-left"
