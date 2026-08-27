@@ -613,6 +613,71 @@ paths:
               schema:
                 $ref: '#/components/schemas/IssueExtraDetailsResponse'
           description: ''
+  /api/labs/:
+    get:
+      operationId: labs_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin filter
+      tags:
+      - labs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabListingResponse'
+          description: ''
+  /api/labs/origins/:
+    get:
+      operationId: labs_origins_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 30
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      tags:
+      - labs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabOriginsResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+          description: ''
   /api/log-downloader/:
     get:
       operationId: log_downloader_retrieve
@@ -704,39 +769,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OriginsResponse'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties:
-                  type: string
-          description: ''
-  /api/labs/origins/:
-    get:
-      operationId: labs_origins_retrieve
-      parameters:
-      - in: query
-        name: interval_in_days
-        schema:
-          default: 30
-          exclusiveMinimum: 0
-          title: Interval In Days
-          type: integer
-        description: Interval in days for the listing
-      tags:
-      - labs
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LabOriginsResponse'
           description: ''
         '400':
           content:
@@ -3882,6 +3914,35 @@ components:
       - type: 'null'
     Issue__Version:
       type: integer
+    LabListingItem:
+      properties:
+        lab_name:
+          title: Lab Name
+          type: string
+        build_status_summary:
+          $ref: '#/components/schemas/ListingStatusCount'
+        boot_status_summary:
+          $ref: '#/components/schemas/ListingStatusCount'
+        test_status_summary:
+          $ref: '#/components/schemas/ListingStatusCount'
+      required:
+      - lab_name
+      - build_status_summary
+      - boot_status_summary
+      - test_status_summary
+      title: LabListingItem
+      type: object
+    LabListingResponse:
+      properties:
+        labs:
+          items:
+            $ref: '#/components/schemas/LabListingItem'
+          title: Labs
+          type: array
+      required:
+      - labs
+      title: LabListingResponse
+      type: object
     LabMetricsData:
       properties:
         builds:
@@ -3898,6 +3959,17 @@ components:
       - boots
       - tests
       title: LabMetricsData
+      type: object
+    LabOriginsResponse:
+      properties:
+        origins:
+          items:
+            $ref: '#/components/schemas/Origin'
+          title: Origins
+          type: array
+      required:
+      - origins
+      title: LabOriginsResponse
       type: object
     ListingStatusCount:
       properties:
@@ -4076,17 +4148,6 @@ components:
       type: object
     Origin:
       type: string
-    LabOriginsResponse:
-      properties:
-        origins:
-          items:
-            $ref: '#/components/schemas/Origin'
-          title: Origins
-          type: array
-      required:
-      - origins
-      title: LabOriginsResponse
-      type: object
     OriginsResponse:
       properties:
         checkout_origins:
