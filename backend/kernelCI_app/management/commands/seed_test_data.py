@@ -20,6 +20,7 @@ from kernelCI_app.models import (
     HardwareStatus,
     Incidents,
     Issues,
+    Labs,
     LatestCheckout,
     SimplifiedStatusChoices,
     StatusChoices,
@@ -134,6 +135,7 @@ class Command(BaseCommand):
         Issues.objects.all().delete()
         Tests.objects.all().delete()
         Builds.objects.all().delete()
+        Labs.objects.all().delete()
         Checkouts.objects.all().delete()
 
     def create_checkouts(self, *, count: int) -> list[Checkouts]:

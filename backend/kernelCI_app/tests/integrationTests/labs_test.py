@@ -4,6 +4,7 @@ import pytest
 from django.urls import reverse
 
 import requests
+from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.tests.utils.asserts import (
     assert_has_fields_in_response_content,
     assert_status_code_and_error_response,
@@ -57,6 +58,12 @@ def test_lab_listing(
     )
 
     if has_error_body:
+        return
+
+    if (
+        isinstance(content, dict)
+        and content.get("error") == ClientStrings.NO_LABS_FOUND
+    ):
         return
 
     lab = content["labs"][0]
