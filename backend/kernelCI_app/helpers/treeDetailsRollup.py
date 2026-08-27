@@ -55,9 +55,7 @@ def process_build_filters(instance, row_data: dict) -> None:
     instance.global_architectures.add(row_data["build_architecture"])
     instance.global_compilers.add(row_data["build_compiler"])
     instance.unfiltered_origins["build"].add(row_data["build_origin"])
-
-    if (build_misc := row_data["build_misc"]) is not None:
-        instance.unfiltered_labs["build"].add(build_misc.get("lab", UNKNOWN_STRING))
+    instance.unfiltered_labs["build"].add(row_data.get("build_lab") or UNKNOWN_STRING)
 
     build_issue_id, build_issue_version, is_build_issue = should_increment_build_issue(
         issue_id=issue_id,

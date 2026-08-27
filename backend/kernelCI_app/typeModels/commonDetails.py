@@ -96,6 +96,7 @@ class BuildHistoryItem(BaseModel):
     start_time: Build__StartTime
     git_repository_url: Checkout__GitRepositoryUrl
     git_repository_branch: Checkout__GitRepositoryBranch
+    lab: Optional[str] = None
 
     @field_validator("misc", mode="before")
     @classmethod
