@@ -133,7 +133,11 @@ class Builds(models.Model):
     log_excerpt = models.CharField(max_length=16384, blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
     lab = models.ForeignKey(
-        Labs, null=True, on_delete=models.DO_NOTHING, db_constraint=True
+        Labs,
+        null=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+        db_index=False,
     )
     status = models.CharField(
         max_length=10, choices=StatusChoices.choices, blank=True, null=True
@@ -161,6 +165,7 @@ class Builds(models.Model):
             models.Index(fields=["start_time"], name="builds_start_time"),
             models.Index(fields=["series"], name="builds_series_idx"),
             models.Index(fields=["status"], name="builds_status"),
+            models.Index(fields=["lab"], name="builds_lab_id"),
         ]
 
 
@@ -194,7 +199,11 @@ class Tests(models.Model):
     output_files = models.JSONField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
     lab = models.ForeignKey(
-        Labs, null=True, on_delete=models.DO_NOTHING, db_constraint=True
+        Labs,
+        null=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+        db_index=False,
     )
     number_value = models.FloatField(blank=True, null=True)
     environment_compatible = ArrayField(models.TextField(), blank=True, null=True)
@@ -232,6 +241,7 @@ class Tests(models.Model):
                 condition=Q(environment_misc__platform__isnull=False),
                 name="tests_origin_time_platform",
             ),
+            models.Index(fields=["lab"], name="tests_lab_id"),
         ]
 
 
