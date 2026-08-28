@@ -288,6 +288,11 @@ kcidb_config = {
     },
 }
 
+# Postgres session settings, e.g. "-c lock_timeout=30000". migrate-app-db.sh uses this
+# to fail fast instead of queueing behind locks held by the app.
+if os.environ.get("DB_SESSION_OPTIONS"):
+    kcidb_config["OPTIONS"]["options"] = os.environ["DB_SESSION_OPTIONS"]
+
 cache_db_config = {
     "ENGINE": "django.db.backends.sqlite3",
     "NAME": os.path.join(BACKEND_VOLUME_DIR, "cache.sqlite3"),
