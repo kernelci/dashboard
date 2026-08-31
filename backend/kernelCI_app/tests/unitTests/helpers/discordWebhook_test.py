@@ -214,10 +214,10 @@ class TestSendDiscordNotification:
     @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
     @patch("kernelCI_app.helpers.discordWebhook.validate_notification")
     @patch("kernelCI_app.helpers.discordWebhook.requests.post")
-    @patch("kernelCI_app.helpers.discordWebhook.log_message")
+    @patch("kernelCI_app.helpers.discordWebhook.logger.error")
     def test_send_discord_notification_http_error(
         self,
-        mock_log_message,
+        mock_log_error,
         mock_post,
         mock_validate,
         mock_getenv,
@@ -232,5 +232,83 @@ class TestSendDiscordNotification:
         send_discord_notification(embeds=[{"title": "Test embed"}])
 
         mock_post.assert_called_once()
+        mock_log_error.assert_called_once()
 
-        mock_log_message.assert_called_once_with(error)
+    @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
+    @patch("kernelCI_app.helpers.discordWebhook.validate_notification")
+    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.time.sleep")
+    @patch("kernelCI_app.helpers.discordWebhook.logger.warning")
+    def test_send_discord_notification_retries_connection_error(
+        self,
+        mock_log_warning,
+        mock_sleep,
+        mock_post,
+        mock_validate,
+        mock_getenv,
+    ):
+        """Test a connection error is retried and can recover."""
+        mock_getenv.return_value = "https://discord.com/api/webhooks/test"
+        mock_validate.return_value = True
+        response = mock_post.return_value
+        mock_post.side_effect = [requests.ConnectionError("Connection error"), response]
+
+        send_discord_notification(embeds=[{"title": "Test embed"}])
+
+        assert mock_post.call_count == 2
+        mock_log_warning.assert_called_once()
+        mock_sleep.assert_called_once_with(1)
+
+    @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
+    @patch("kernelCI_app.helpers.discordWebhook.validate_notification")
+    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.time.sleep")
+    @patch("kernelCI_app.helpers.discordWebhook.logger.warning")
+    @patch("kernelCI_app.helpers.discordWebhook.logger.error")
+    def test_send_discord_notification_stops_retrying_connection_error(
+        self,
+        mock_log_error,
+        mock_log_warning,
+        mock_sleep,
+        mock_post,
+        mock_validate,
+        mock_getenv,
+    ):
+        """Test connection retries stop at the attempt limit."""
+        mock_getenv.return_value = "https://discord.com/api/webhooks/test"
+        mock_validate.return_value = True
+        mock_post.side_effect = requests.ConnectionError("Connection error")
+
+        send_discord_notification(embeds=[{"title": "Test embed"}])
+
+        assert mock_post.call_count == 3
+        assert mock_log_warning.call_count == 2
+        assert mock_sleep.call_count == 2
+        mock_log_error.assert_called_once()
+
+    @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
+    @patch("kernelCI_app.helpers.discordWebhook.validate_notification")
+    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.time.sleep")
+    @patch("kernelCI_app.helpers.discordWebhook.logger.warning")
+    @patch("kernelCI_app.helpers.discordWebhook.logger.error")
+    def test_send_discord_notification_does_not_retry_timeout(
+        self,
+        mock_log_error,
+        mock_log_warning,
+        mock_sleep,
+        mock_post,
+        mock_validate,
+        mock_getenv,
+    ):
+        """Test an ambiguous timeout is logged without retrying."""
+        mock_getenv.return_value = "https://discord.com/api/webhooks/test"
+        mock_validate.return_value = True
+        mock_post.side_effect = requests.Timeout("Request timed out")
+
+        send_discord_notification(embeds=[{"title": "Test embed"}])
+
+        mock_post.assert_called_once()
+        mock_log_warning.assert_not_called()
+        mock_sleep.assert_not_called()
+        mock_log_error.assert_called_once()
