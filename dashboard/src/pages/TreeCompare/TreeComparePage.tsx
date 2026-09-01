@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, type JSX } from 'react';
+import { useCallback, useEffect, useMemo, useState, type JSX } from 'react';
 
 import {
   Link,
@@ -46,6 +46,10 @@ import {
 } from '@/utils/treeCompareDiff';
 
 import { CompareChangeFilterBar } from './components/CompareChangeStats';
+import {
+  CompareDetailSheet,
+  compareRowToDetailItem,
+} from './components/CompareDetailSheet';
 import {
   CompareBootsFailuresTable,
   CompareBuildsFailuresTable,
@@ -205,6 +209,44 @@ const TreeComparePage = (): JSX.Element => {
     [changeFilter, testRows],
   );
 
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const visibleRows = useMemo(() => {
+    if (currentPageTab === 'global.boots') {
+      return filteredBoots;
+    }
+    if (currentPageTab === 'global.tests') {
+      return filteredTests;
+    }
+    return filteredBuilds;
+  }, [currentPageTab, filteredBoots, filteredBuilds, filteredTests]);
+
+  const selectedIndex = visibleRows.findIndex(row => row.id === selectedId);
+  const selectedRow = selectedIndex >= 0 ? visibleRows[selectedIndex] : null;
+  const logType = currentPageTab === 'global.builds' ? 'build' : 'test';
+
+  const openRow = useCallback((id: string) => {
+    setSelectedId(id);
+  }, []);
+
+  const closeSheet = useCallback((open: boolean) => {
+    if (!open) {
+      setSelectedId(null);
+    }
+  }, []);
+
+  const goToPrevious = useCallback(() => {
+    if (selectedIndex > 0) {
+      setSelectedId(visibleRows[selectedIndex - 1]?.id ?? null);
+    }
+  }, [selectedIndex, visibleRows]);
+
+  const goToNext = useCallback(() => {
+    if (selectedIndex >= 0 && selectedIndex < visibleRows.length - 1) {
+      setSelectedId(visibleRows[selectedIndex + 1]?.id ?? null);
+    }
+  }, [selectedIndex, visibleRows]);
+
   const tabs: ITabItem[] = useMemo(
     () => [
       {
@@ -221,7 +263,11 @@ const TreeComparePage = (): JSX.Element => {
             data={buildsDiffQuery.data}
             error={buildsDiffQuery.error}
           >
-            <CompareBuildsFailuresTable rows={filteredBuilds} />
+            <CompareBuildsFailuresTable
+              rows={filteredBuilds}
+              selectedId={selectedId}
+              onRowClick={openRow}
+            />
           </QuerySwitcher>
         ),
       },
@@ -239,7 +285,11 @@ const TreeComparePage = (): JSX.Element => {
             data={bootsDiffQuery.data}
             error={bootsDiffQuery.error}
           >
-            <CompareBootsFailuresTable rows={filteredBoots} />
+            <CompareBootsFailuresTable
+              rows={filteredBoots}
+              selectedId={selectedId}
+              onRowClick={openRow}
+            />
           </QuerySwitcher>
         ),
       },
@@ -257,7 +307,11 @@ const TreeComparePage = (): JSX.Element => {
             data={testsDiffQuery.data}
             error={testsDiffQuery.error}
           >
-            <CompareTestsFailuresTable rows={filteredTests} />
+            <CompareTestsFailuresTable
+              rows={filteredTests}
+              selectedId={selectedId}
+              onRowClick={openRow}
+            />
           </QuerySwitcher>
         ),
       },
@@ -272,6 +326,8 @@ const TreeComparePage = (): JSX.Element => {
       filteredBoots,
       filteredBuilds,
       filteredTests,
+      openRow,
+      selectedId,
       testsDiffQuery.data,
       testsDiffQuery.error,
       testsDiffQuery.status,
@@ -400,6 +456,18 @@ const TreeComparePage = (): JSX.Element => {
                 }
               />
             </section>
+            <CompareDetailSheet
+              open={selectedRow !== null}
+              item={selectedRow ? compareRowToDetailItem(selectedRow) : null}
+              logType={logType}
+              onOpenChange={closeSheet}
+              onPrevious={goToPrevious}
+              onNext={goToNext}
+              hasPrevious={selectedIndex > 0}
+              hasNext={
+                selectedIndex >= 0 && selectedIndex < visibleRows.length - 1
+              }
+            />
           </>
         )}
       </div>

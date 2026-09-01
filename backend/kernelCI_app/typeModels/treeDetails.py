@@ -97,6 +97,8 @@ class TreeCompareTest(BaseModel):
     platform: str
     status_a: Optional[GroupedStatusLiteral]
     status_b: Optional[GroupedStatusLiteral]
+    id_a: Optional[str] = None
+    id_b: Optional[str] = None
 
 
 class TreeCompareBootsTestsResponse(RootModel[List[TreeCompareTest]]):

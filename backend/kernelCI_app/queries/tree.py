@@ -1059,7 +1059,7 @@ def get_tree_compare_boots_tests_diff(
         **filter_sql.params,
     }
 
-    cache_key = "treeCompareBootsTestsDiff"
+    cache_key = "treeCompareBootsTestsDiffIds"
     cache_params = {
         **params,
         "data_type": data_type,
@@ -1118,6 +1118,7 @@ def get_tree_compare_boots_tests_diff(
                     NULLIF(t.environment_misc->>'platform', ''),
                     %(unknown_string)s
                 ) AS platform,
+                t.id AS item_id,
                 CASE
                     WHEN UPPER(t.status) = 'PASS' THEN 'PASS'
                     WHEN UPPER(t.status) = 'FAIL' THEN 'FAIL'
@@ -1144,12 +1145,14 @@ def get_tree_compare_boots_tests_diff(
                 t._timestamp DESC NULLS LAST
         ),
         SIDE_A AS (
-            SELECT path, config_name, architecture, platform, grouped_status
+            SELECT path, config_name, architecture, platform, grouped_status,
+                item_id
             FROM TEST_ROWS
             WHERE git_commit_hash = %(hash_a)s
         ),
         SIDE_B AS (
-            SELECT path, config_name, architecture, platform, grouped_status
+            SELECT path, config_name, architecture, platform, grouped_status,
+                item_id
             FROM TEST_ROWS
             WHERE git_commit_hash = %(hash_b)s
         )
@@ -1159,7 +1162,9 @@ def get_tree_compare_boots_tests_diff(
             COALESCE(a.architecture, b.architecture) AS architecture,
             COALESCE(a.platform, b.platform) AS platform,
             a.grouped_status AS status_a,
-            b.grouped_status AS status_b
+            b.grouped_status AS status_b,
+            a.item_id AS id_a,
+            b.item_id AS id_b
         FROM
             SIDE_A a
         FULL OUTER JOIN SIDE_B b ON (
@@ -1614,7 +1619,7 @@ def get_tree_compare_builds_diff(
     commit_hashes = [hash_a, hash_b]
     filter_sql = build_build_compare_filter_clauses(filters)
 
-    cache_key = "treeCompareBuildsDiff"
+    cache_key = "treeCompareBuildsDiffIds"
     params = {
         "hash_a": hash_a,
         "hash_b": hash_b,
@@ -1669,6 +1674,7 @@ def get_tree_compare_builds_diff(
                 COALESCE(NULLIF(b.architecture, ''), %(unknown_string)s)
                     AS architecture,
                 COALESCE(NULLIF(b.compiler, ''), %(unknown_string)s) AS compiler,
+                b.id AS item_id,
                 CASE
                     WHEN UPPER(b.status) = 'PASS' THEN 'PASS'
                     WHEN UPPER(b.status) = 'FAIL' THEN 'FAIL'
@@ -1689,12 +1695,12 @@ def get_tree_compare_builds_diff(
                 b._timestamp DESC NULLS LAST
         ),
         SIDE_A AS (
-            SELECT config_name, architecture, compiler, grouped_status
+            SELECT config_name, architecture, compiler, grouped_status, item_id
             FROM BUILD_ROWS
             WHERE git_commit_hash = %(hash_a)s
         ),
         SIDE_B AS (
-            SELECT config_name, architecture, compiler, grouped_status
+            SELECT config_name, architecture, compiler, grouped_status, item_id
             FROM BUILD_ROWS
             WHERE git_commit_hash = %(hash_b)s
         )
@@ -1703,7 +1709,9 @@ def get_tree_compare_builds_diff(
             COALESCE(a.architecture, b.architecture) AS architecture,
             COALESCE(a.compiler, b.compiler) AS compiler,
             a.grouped_status AS status_a,
-            b.grouped_status AS status_b
+            b.grouped_status AS status_b,
+            a.item_id AS id_a,
+            b.item_id AS id_b
         FROM
             SIDE_A a
         FULL OUTER JOIN SIDE_B b ON (

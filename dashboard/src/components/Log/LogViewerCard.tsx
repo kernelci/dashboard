@@ -10,11 +10,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import type { LogData } from '@/hooks/useLogData';
 import { valueOrEmpty } from '@/lib/string';
+import { cn } from '@/lib/utils';
 
 interface ILogViewerCard {
   isLoading?: boolean;
   logData?: LogData;
-  variant?: 'full' | 'modal';
+  /** `compare` drops the status/title chip: the compare sheet header already shows both. */
+  variant?: 'full' | 'modal' | 'compare';
 }
 
 const getTreeBranchHash = (
@@ -121,15 +123,22 @@ export const LogViewerCard = ({
     return `${hardware} (${architecture})`;
   }, [hardware, architecture]);
 
+  const showTitleChip = variant !== 'compare';
+
   return (
     <div className="gap-0">
-      <div className="grid grid-cols-1 items-start justify-between p-4 text-lg md:grid-cols-2">
+      <div
+        className={cn(
+          'grid grid-cols-1 items-start justify-between p-4 text-lg',
+          showTitleChip && 'md:grid-cols-2',
+        )}
+      >
         {isLoading ? (
           <FormattedMessage id="global.loading" />
         ) : (
           <>
             <div>
-              <div className="font-medium">
+              <div className="font-medium break-words">
                 {getTreeBranchHash(
                   logData?.tree_name,
                   logData?.git_repository_branch,
@@ -146,16 +155,18 @@ export const LogViewerCard = ({
                   />
                 </div>
               )}
-              {variant === 'modal' && linkComponent}
+              {variant !== 'full' && linkComponent}
             </div>
-            <Tooltip>
-              <TooltipTrigger>
-                <div className="flex max-w-max flex-row items-center gap-2 rounded-md bg-gray-200 p-3">
-                  <StatusIcon status={logData?.status} /> {logData?.title}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>{logData?.status}</TooltipContent>
-            </Tooltip>
+            {showTitleChip && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="flex max-w-max flex-row items-center gap-2 rounded-md bg-gray-200 p-3">
+                    <StatusIcon status={logData?.status} /> {logData?.title}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>{logData?.status}</TooltipContent>
+              </Tooltip>
+            )}
           </>
         )}
       </div>

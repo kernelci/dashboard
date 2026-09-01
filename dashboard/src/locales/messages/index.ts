@@ -411,6 +411,7 @@ export const messages = {
     'treeCompare.changed': 'Changed',
     'treeCompare.description':
       'Compare pass/fail counts between two revisions on the same tree and branch.',
+    'treeCompare.detail.missingSide': 'No result on this side',
     'treeCompare.drilldownHint':
       'Individual builds, boots, and tests that changed between Side A and Side B.',
     'treeCompare.failures.change': 'Change',

@@ -86,6 +86,8 @@ describe('mapBuildDiffRows', () => {
         compiler: 'gcc',
         status_a: 'PASS',
         status_b: 'FAIL',
+        id_a: 'build-a',
+        id_b: 'build-b',
       },
     ]);
 
@@ -96,6 +98,8 @@ describe('mapBuildDiffRows', () => {
       sideA: 'PASS',
       sideB: 'FAIL',
       change: 'regression',
+      idA: 'build-a',
+      idB: 'build-b',
     });
   });
 });
@@ -111,6 +115,8 @@ describe('mapBootOrTestDiffRows', () => {
           platform: 'qemu-arm64',
           status_a: null,
           status_b: 'FAIL',
+          id_a: null,
+          id_b: 'test-b',
         },
       ],
       'boot',
@@ -124,6 +130,8 @@ describe('mapBootOrTestDiffRows', () => {
       sideA: '—',
       sideB: 'FAIL',
       change: 'newFailure',
+      idA: null,
+      idB: 'test-b',
     });
   });
 });

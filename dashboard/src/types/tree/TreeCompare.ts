@@ -65,6 +65,8 @@ export type TreeCompareBuildDiffApiRow = {
   compiler: string;
   status_a: CompareGroupedApiStatus | null;
   status_b: CompareGroupedApiStatus | null;
+  id_a: string | null;
+  id_b: string | null;
 };
 
 /** Boots/tests detail endpoints: GET .../compare/boots|tests (bare array) */
@@ -75,6 +77,8 @@ export type TreeCompareTestDiffApiRow = {
   platform: string;
   status_a: CompareGroupedApiStatus | null;
   status_b: CompareGroupedApiStatus | null;
+  id_a: string | null;
+  id_b: string | null;
 };
 
 /** Filter chips for the breakdown tables — one per change type. */
@@ -91,6 +95,8 @@ type CompareFailureRowBase = {
   change: CompareChangeType;
   sideA: CompareItemStatus;
   sideB: CompareItemStatus;
+  idA: string | null;
+  idB: string | null;
 };
 
 export type CompareBuildFailureRow = CompareFailureRowBase & {
