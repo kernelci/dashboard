@@ -107,6 +107,13 @@ export const DuplicateGuard: Story = {
     await expect(
       canvas.getByRole('button', { name: 'Remove PASS to FAIL filter' }),
     ).toBeInTheDocument();
+    await expect(addButton).toBeDisabled();
+    await expect(
+      canvas.getByRole('combobox', { name: 'From' }),
+    ).toHaveTextContent('Select status');
+    await expect(
+      canvas.getByRole('combobox', { name: 'To' }),
+    ).toHaveTextContent('Select status');
   },
 };
 

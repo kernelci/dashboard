@@ -186,7 +186,7 @@ export function parseStatusPair(raw: string): CompareStatusPair | undefined {
 }
 
 /** Drop invalid/duplicate pairs; keep first-seen order. */
-export function normalizeStatusPairs(
+function normalizeStatusPairs(
   pairs: readonly CompareStatusPair[],
 ): CompareStatusPair[] {
   const seen = new Set<string>();

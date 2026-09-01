@@ -401,14 +401,6 @@ export const messages = {
     'treeCompare.change.appeared': 'Appeared',
     'treeCompare.change.disappeared': 'Disappeared',
     'treeCompare.change.fixed': 'Fixed',
-    'treeCompare.change.glossary':
-      'Regression — PASS → FAIL or PASS → INCONCLUSIVE{br}' +
-      'Fixed — FAIL → PASS or FAIL → INCONCLUSIVE{br}' +
-      'New failure — absent/INCONCLUSIVE on Side A → FAIL on Side B{br}' +
-      'Still failing — FAIL → FAIL{br}' +
-      'New pass — absent/INCONCLUSIVE on Side A → PASS on Side B{br}' +
-      'Appeared — absent on Side A → INCONCLUSIVE on Side B{br}' +
-      'Disappeared — present on Side A → absent on Side B',
     'treeCompare.change.newFailure': 'New failure',
     'treeCompare.change.newFailures': 'New failures',
     'treeCompare.change.newPass': 'New pass',

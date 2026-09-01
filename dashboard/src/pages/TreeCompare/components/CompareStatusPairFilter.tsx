@@ -59,6 +59,7 @@ export function CompareStatusSelect({
         {label}
       </label>
       <Select
+        key={value ?? 'unset'}
         value={value}
         onValueChange={selected => onChange(selected as CompareItemStatus)}
       >
@@ -126,16 +127,14 @@ export function CompareStatusPairFilter({
       return;
     }
     onChange([...value, { from, to }]);
+    setFrom(undefined);
+    setTo(undefined);
   };
 
   return (
     <div className="flex flex-col gap-3">
       <div className="text-dim-gray flex items-center gap-1 text-sm">
         <FormattedMessage id="filter.tableFilter" />
-        <TooltipIcon
-          tooltipId="treeCompare.change.glossary"
-          iconClassName="text-dim-gray size-4"
-        />
         <TooltipIcon
           tooltipId="treeCompare.statusPairFilter.glossary"
           iconClassName="text-dim-gray size-4"

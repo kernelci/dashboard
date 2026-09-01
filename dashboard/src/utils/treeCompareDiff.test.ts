@@ -5,7 +5,6 @@ import {
   applyStatusPairFilter,
   mapBootOrTestDiffRows,
   mapBuildDiffRows,
-  normalizeStatusPairs,
   parseStatusPairs,
   resolveStatusPairs,
   serializeStatusPairs,
@@ -58,7 +57,7 @@ describe('applyStatusPairFilter', () => {
   });
 });
 
-describe('parse/normalize/serialize status pairs', () => {
+describe('parse/serialize status pairs', () => {
   it('round-trips pairs including absent', () => {
     expect(parseStatusPairs(['PASS:FAIL', 'ABSENT:FAIL'])).toEqual([
       { from: 'PASS', to: 'FAIL' },
@@ -86,11 +85,11 @@ describe('parse/normalize/serialize status pairs', () => {
       { from: 'FAIL', to: 'PASS' },
     ]);
     expect(
-      normalizeStatusPairs([
+      serializeStatusPairs([
         { from: 'PASS', to: 'FAIL' },
         { from: 'PASS', to: 'FAIL' },
       ]),
-    ).toEqual([{ from: 'PASS', to: 'FAIL' }]);
+    ).toEqual(['PASS:FAIL']);
   });
 });
 
