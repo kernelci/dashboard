@@ -276,8 +276,12 @@ const BUILD_SORT_GETTERS: Record<
 
 export function CompareBuildsFailuresTable({
   rows,
+  selectedId,
+  onRowClick,
 }: {
   rows: CompareBuildFailureRow[];
+  selectedId?: string | null;
+  onRowClick: (id: string) => void;
 }): JSX.Element {
   const [sort, setSort] = useState<SortState<BuildSortKey>>(null);
   const [search, setSearch] = useState('');
@@ -344,7 +348,12 @@ export function CompareBuildsFailuresTable({
           return (
             <TableRow
               key={row.id}
-              className={cn(isFailureHighlight(row.change) && 'bg-red-50')}
+              onClick={() => onRowClick(row.id)}
+              className={cn(
+                'hover:bg-light-blue cursor-pointer',
+                isFailureHighlight(row.change) && 'bg-red-50',
+                selectedId === row.id && 'bg-sky-200 hover:bg-sky-200',
+              )}
             >
               <TableCell className="max-w-0">
                 <div
@@ -387,8 +396,12 @@ const PATH_SORT_GETTERS: Record<
 
 function PathHardwareTable({
   rows,
+  selectedId,
+  onRowClick,
 }: {
   rows: Array<CompareBootFailureRow | CompareTestFailureRow>;
+  selectedId?: string | null;
+  onRowClick: (id: string) => void;
 }): JSX.Element {
   const [sort, setSort] = useState<SortState<PathSortKey>>(null);
   const [search, setSearch] = useState('');
@@ -469,7 +482,12 @@ function PathHardwareTable({
           return (
             <TableRow
               key={row.id}
-              className={cn(isFailureHighlight(row.change) && 'bg-red-50')}
+              onClick={() => onRowClick(row.id)}
+              className={cn(
+                'hover:bg-light-blue cursor-pointer',
+                isFailureHighlight(row.change) && 'bg-red-50',
+                selectedId === row.id && 'bg-sky-200 hover:bg-sky-200',
+              )}
             >
               <TableCell className="max-w-0">
                 <div
@@ -509,16 +527,36 @@ function PathHardwareTable({
 
 export function CompareBootsFailuresTable({
   rows,
+  selectedId,
+  onRowClick,
 }: {
   rows: CompareBootFailureRow[];
+  selectedId?: string | null;
+  onRowClick: (id: string) => void;
 }): JSX.Element {
-  return <PathHardwareTable rows={rows} />;
+  return (
+    <PathHardwareTable
+      rows={rows}
+      selectedId={selectedId}
+      onRowClick={onRowClick}
+    />
+  );
 }
 
 export function CompareTestsFailuresTable({
   rows,
+  selectedId,
+  onRowClick,
 }: {
   rows: CompareTestFailureRow[];
+  selectedId?: string | null;
+  onRowClick: (id: string) => void;
 }): JSX.Element {
-  return <PathHardwareTable rows={rows} />;
+  return (
+    <PathHardwareTable
+      rows={rows}
+      selectedId={selectedId}
+      onRowClick={onRowClick}
+    />
+  );
 }

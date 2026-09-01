@@ -74,6 +74,8 @@ class CompareBuildDiffRow(BaseModel):
     compiler: str
     status_a: Optional[CompareGroupedStatus] = None
     status_b: Optional[CompareGroupedStatus] = None
+    id_a: Optional[str] = None
+    id_b: Optional[str] = None
 
 
 class TreeCompareBuildsResponse(RootModel[List[CompareBuildDiffRow]]):

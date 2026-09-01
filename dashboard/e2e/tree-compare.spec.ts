@@ -4,7 +4,9 @@ const FULL_HASH_LENGTH = 40;
 const HASH_A = 'a'.repeat(FULL_HASH_LENGTH);
 const HASH_B = 'b'.repeat(FULL_HASH_LENGTH);
 
-test('loads revisions and comparison data from the API', async ({ page }) => {
+test('loads comparison data and opens a side-by-side details drawer', async ({
+  page,
+}) => {
   await page.route('**/api/tree/linux/master/commits?**', route =>
     route.fulfill({
       json: [
@@ -29,6 +31,8 @@ test('loads revisions and comparison data from the API', async ({ page }) => {
           compiler: 'clang-17',
           status_a: 'PASS',
           status_b: 'FAIL',
+          id_a: 'build-a',
+          id_b: 'build-b',
         },
       ],
     }),
@@ -90,6 +94,38 @@ test('loads revisions and comparison data from the API', async ({ page }) => {
     }),
   );
 
+  await page.route('**/api/build/build-a**', route =>
+    route.fulfill({
+      json: {
+        id: 'build-a',
+        status: 'PASS',
+        build_origin: 'maestro',
+        timestamp: '2026-07-14T10:00:00Z',
+        log_excerpt: 'side A build log',
+        architecture: 'arm64',
+        git_commit_hash: HASH_A,
+        tree_name: 'linux',
+        git_repository_branch: 'master',
+      },
+    }),
+  );
+
+  await page.route('**/api/build/build-b**', route =>
+    route.fulfill({
+      json: {
+        id: 'build-b',
+        status: 'FAIL',
+        build_origin: 'maestro',
+        timestamp: '2026-07-13T10:00:00Z',
+        log_excerpt: 'side B build log',
+        architecture: 'arm64',
+        git_commit_hash: HASH_B,
+        tree_name: 'linux',
+        git_repository_branch: 'master',
+      },
+    }),
+  );
+
   await page.goto(
     `/tree/linux/master/compare?hashA=${HASH_A}&hashB=${HASH_B}&origin=maestro`,
   );
@@ -104,5 +140,12 @@ test('loads revisions and comparison data from the API', async ({ page }) => {
     page.getByRole('button', { name: 'Remove PASS to FAIL filter' }),
   ).toBeVisible();
   await expect(page.getByText('defconfig+allmodconfig')).toBeVisible();
-  await expect(page.getByText('Regression')).toBeVisible();
+  await expect(page.getByText('Regression', { exact: true })).toBeVisible();
+
+  await page.getByText('defconfig+allmodconfig').click();
+
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByText('Log Viewer')).toBeVisible();
+  await expect(page.getByText('side A build log')).toBeVisible();
+  await expect(page.getByText('side B build log')).toBeVisible();
 });

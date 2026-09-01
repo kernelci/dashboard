@@ -15,6 +15,8 @@ BUILD_DIFF_ROW = {
     "compiler": "gcc-12",
     "status_a": "PASS",
     "status_b": "FAIL",
+    "id_a": "build-a",
+    "id_b": "build-b",
 }
 
 
