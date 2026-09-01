@@ -107,29 +107,25 @@ const HighlightCounts = ({
   return (
     <div className="py-4 pl-3">
       <ul className={cn('flex gap-2 pb-2', highlightsClassnames)}>
-        <li>
-          <span className="flex gap-1">
-            <span className="font-bold">
-              <FormattedMessage
-                id="codeBlock.highlights"
-                defaultMessage={'Highlights:'}
-              />
-            </span>
-          </span>
-        </li>
         <li className="flex gap-1">
           <ColoredCircle
             quantity={highlightedCode.failCount}
             backgroundClassName="bg-light-red"
           />
-          <FormattedMessage id="global.fails" defaultMessage={'Fails'} />
+          <FormattedMessage
+            id="codeBlock.suspectedFail"
+            defaultMessage={'Suspected fail'}
+          />
         </li>
         <li className="flex gap-1">
           <ColoredCircle
             quantity={highlightedCode.errorCount}
             backgroundClassName="bg-orange-200"
           />
-          <FormattedMessage id="global.errors" defaultMessage={'Errors'} />
+          <FormattedMessage
+            id="codeBlock.suspectedError"
+            defaultMessage={'Suspected error'}
+          />
         </li>
         <li className="flex gap-1">
           <ColoredCircle
@@ -140,7 +136,10 @@ const HighlightCounts = ({
             }
             backgroundClassName="bg-medium-gray"
           />
-          <FormattedMessage id="global.others" defaultMessage={'Others'} />
+          <FormattedMessage
+            id="codeBlock.otherMatches"
+            defaultMessage={'Other matches'}
+          />
         </li>
       </ul>
       <div className="flex items-center">
@@ -148,7 +147,7 @@ const HighlightCounts = ({
         <p className="pl-1 text-sm">
           <FormattedMessage
             id="codeBlock.highlightsTooltip"
-            defaultMessage="Test"
+            defaultMessage="Heuristic keyword search in the log — counts may not match the test status"
           />
         </p>
       </div>
