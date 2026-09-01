@@ -168,56 +168,59 @@ export const generateHighlightedCode = (code: string): IHighlightedCode => {
     return match;
   });
 
-  newCode = newCode.replace(
-    // matches any line with the occurrence of error or fail
-    /^.*(error|fail).*$/gim,
-    match => {
-      highlights++;
-      if (
-        // matches failed to/with, more than 0 fails/failed and no flags
-        match.search(
-          new RegExp(
-            [
-              '.*(',
-              '((\\bfailed\\s*(to|with|$|([\\b\\s:]*\\(*-*[1-9]))))', // failed to/with or failed: N
-              '|',
-              '(',
-              '(((([1-9][0]*\\s*)|[=:])fail[s]*(?!\\s*:\\s*0))', // N fail[s] (not N fail[s]:0)
-              '|',
-              '(fail[s]*(([:,][\\b\\s:]*[^0\\s])|$|\\s+-[1-9]))', // fail[s]: x (not fail[s]: 0)
-              ')',
-              '(?![|/]))', // Not match fail flags
-              ')',
-            ].join(''),
-            'i',
-          ),
-        ) !== -1
-      ) {
-        fails++;
-        return '<span class="text-red">' + match + '</span>';
-      }
-      // matches error codes greater than 0 or more than 0 errors
-      if (
-        match.search(
-          new RegExp(
-            [
-              '.*(',
-              '([1-9][0]*\\s*error[s]*(?!\\s*:\\s*0))', // N error[s] (not N error[s]:0)
-              '|',
-              '(?<!Ignore\\s*)', // Not match "Ignore errors"
-              '(error[s]*(([:,][\\b\\s:\\(-]*[^0\\s])|$|\\s+-[1-9]|\\s[a-z]))', // error[s]: x or error -N (not error[s]: 0)
-              ')',
-            ].join(''),
-            'i',
-          ),
-        ) !== -1
-      ) {
-        errors++;
-        return '<span class="text-orange-500">' + match + '</span>';
-      }
-      return '<span class="text-sky-600">' + match + '</span>';
-    },
-  );
+  newCode = newCode.replace(/^.*(error|\bfail).*$/gim, match => {
+    if (/^\s*# Totals:/i.test(match)) {
+      return match;
+    }
+    const stripped = match.replace(/\w*error_mode|_0_errors/gi, '');
+    if (!/^.*(error|\bfail).*$/im.test(stripped)) {
+      return match;
+    }
+    highlights++;
+    if (
+      // matches failed to/with, more than 0 fails/failed and no flags
+      stripped.search(
+        new RegExp(
+          [
+            '.*(',
+            '((\\bfailed\\s*(to|with|$|([\\b\\s:]*\\(*-*[1-9]))))', // failed to/with or failed: N
+            '|',
+            '(',
+            '(((([1-9][0]*\\s*)|[=:])\\bfail[s]*(?!\\s*:\\s*0))', // N fail[s] (not N fail[s]:0)
+            '|',
+            '(\\bfail[s]*(([:,][\\b\\s:]*[^0\\s])|$|\\s+-[1-9]))', // fail[s]: x (not fail[s]: 0)
+            ')',
+            '(?![|/]))', // Not match fail flags
+            ')',
+          ].join(''),
+          'i',
+        ),
+      ) !== -1
+    ) {
+      fails++;
+      return '<span class="text-red">' + match + '</span>';
+    }
+    // matches error codes greater than 0 or more than 0 errors
+    if (
+      stripped.search(
+        new RegExp(
+          [
+            '.*(',
+            '([1-9][0]*\\s*error[s]*(?!\\s*:\\s*0))', // N error[s] (not N error[s]:0)
+            '|',
+            '(?<!Ignore\\s*)', // Not match "Ignore errors"
+            '(error[s]*(([:,][\\b\\s:\\(-]*[^0\\s])|$|\\s+-[1-9]|\\s[a-z]))', // error[s]: x or error -N (not error[s]: 0)
+            ')',
+          ].join(''),
+          'i',
+        ),
+      ) !== -1
+    ) {
+      errors++;
+      return '<span class="text-orange-500">' + match + '</span>';
+    }
+    return '<span class="text-sky-600">' + match + '</span>';
+  });
   return {
     highlightedCode: newCode,
     highlightCount: highlights,

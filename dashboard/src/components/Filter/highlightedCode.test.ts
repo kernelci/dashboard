@@ -6,14 +6,20 @@ import { generateHighlightedCode } from './CodeBlock';
 describe('highlightCode', () => {
   it('Gets n errors', () => {
     const result = generateHighlightedCode(
-      'There was 1 error\n' + 'Then there were 200 errors',
+      'There was 1 error\n' +
+        'Then there were 200 errors\n' +
+        '<LAVA_SIGNAL_TESTCASE TEST_CASE_ID=arm64_check_buffer_fill_sync_error_mode RESULT=pass>\n' +
+        '<LAVA_SIGNAL_TESTCASE TEST_CASE_ID=arm64_vec-syscfg_SVE_prctl_set_all_VLs_0_errors RESULT=pass>',
     );
     expect(result.errorCount).toBe(2);
   });
 
   it('Gets n fails', () => {
     const result = generateHighlightedCode(
-      'There was 1 fail\n' + 'Then there were 200 fails',
+      'There was 1 fail\n' +
+        'Then there were 200 fails\n' +
+        'set -o pipefail\n' +
+        '# Totals: pass: fail: xfail: xp[ ] <LAVA_SIGNAL_TESTCASE TEST_CASE_ID=arm64_btitest RESULT=pass>',
     );
     expect(result.failCount).toBe(2);
   });
