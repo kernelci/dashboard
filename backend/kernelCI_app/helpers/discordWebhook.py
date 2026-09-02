@@ -116,7 +116,7 @@ def send_discord_notification(
                 return
 
             logger.warning(
-                "Discord webhook connection failed; retrying (%s/%s): %s",
+                "Discord webhook connection failed (attempt %s/%s): %s",
                 attempt,
                 WEBHOOK_MAX_ATTEMPTS,
                 e,
