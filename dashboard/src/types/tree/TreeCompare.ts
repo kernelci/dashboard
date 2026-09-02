@@ -25,6 +25,9 @@ export const compareChangeTypes = [
 
 export type CompareChangeType = (typeof compareChangeTypes)[number];
 
+/** Row-level classification: the backend counts no category for unchanged pairs. */
+export type CompareRowChange = CompareChangeType | 'unchanged';
+
 export type CompareChangeStats = Record<CompareChangeType, number>;
 
 export type CompareEntitySummary = {
@@ -54,7 +57,13 @@ export type TreeCompareData = {
 };
 
 /** Side status for an individual compared item. */
-export type CompareItemStatus = 'PASS' | 'FAIL' | 'INCONCLUSIVE' | '—';
+export const compareItemStatuses = [
+  'PASS',
+  'FAIL',
+  'INCONCLUSIVE',
+  '—',
+] as const;
+export type CompareItemStatus = (typeof compareItemStatuses)[number];
 
 export type CompareGroupedApiStatus = 'PASS' | 'FAIL' | 'INCONCLUSIVE';
 
@@ -77,18 +86,22 @@ export type TreeCompareTestDiffApiRow = {
   status_b: CompareGroupedApiStatus | null;
 };
 
-/** Filter chips for the breakdown tables — one per change type. */
-export const compareChangeFilters = compareChangeTypes;
-export type CompareChangeFilter = (typeof compareChangeFilters)[number];
+export type CompareStatusPair = {
+  from: CompareItemStatus;
+  to: CompareItemStatus;
+};
 
-export const compareDefaultChangeFilters: CompareChangeFilter[] = [
-  'regression',
-  'fixed',
-];
+/** URL/storage token for an empty pair list (show all rows). */
+export const compareEmptyStatusPairsToken = 'none';
+/** URL token for absent (`—`) so query strings stay ASCII. */
+export const compareAbsentStatusToken = 'ABSENT';
+export const compareStatusPairStorageKey = 'treeCompare.statusPair';
+
+export const compareDefaultStatusPairParams = ['PASS:FAIL', 'FAIL:PASS'];
 
 type CompareFailureRowBase = {
   id: string;
-  change: CompareChangeType;
+  change: CompareRowChange;
   sideA: CompareItemStatus;
   sideB: CompareItemStatus;
 };
@@ -123,7 +136,6 @@ export const compareDefaultValues = {
   hashB: '',
   origin: 'maestro',
   currentPageTab: 'global.builds' as const,
-  changeFilter: compareDefaultChangeFilters,
 };
 
 export const compareSearchSchema = z.object({
@@ -137,19 +149,17 @@ export const compareSearchSchema = z.object({
     .enum(possibleTabs)
     .default(compareDefaultValues.currentPageTab)
     .catch(compareDefaultValues.currentPageTab),
-  // Single URL value becomes a string; normalize to an array.
-  changeFilter: z.preprocess(
-    value => {
-      if (!value) {
-        return compareDefaultChangeFilters;
-      }
-      return Array.isArray(value) ? value : [value];
-    },
-    z
-      .array(z.enum(compareChangeFilters))
-      .default(compareDefaultChangeFilters)
-      .catch(compareDefaultChangeFilters),
-  ),
+  // Omit = unspecified (hydrate from localStorage, then hardcoded default).
+  // `none` is an explicit empty list.
+  statusPair: z.preprocess(value => {
+    if (value === undefined) {
+      return undefined;
+    }
+    if (value === '') {
+      return [compareEmptyStatusPairsToken];
+    }
+    return Array.isArray(value) ? value : [value];
+  }, z.array(z.string()).optional().catch(undefined)),
 });
 
 export type CompareSearch = z.infer<typeof compareSearchSchema>;

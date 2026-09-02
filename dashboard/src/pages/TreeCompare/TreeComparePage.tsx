@@ -31,21 +31,24 @@ import {
 } from '@/api/treeCompare';
 
 import {
-  compareDefaultChangeFilters,
   compareNavigateFrom,
   compareRouteName,
   type CompareBootFailureRow,
-  type CompareChangeFilter,
+  type CompareStatusPair,
   type CompareTestFailureRow,
 } from '@/types/tree/TreeCompare';
 import type { PossibleTabs } from '@/types/tree/TreeDetails';
 import {
-  applyChangeFilter,
+  applyStatusPairFilter,
   mapBootOrTestDiffRows,
   mapBuildDiffRows,
+  readStoredStatusPairs,
+  resolveStatusPairs,
+  serializeStatusPairs,
+  writeStoredStatusPairs,
 } from '@/utils/treeCompareDiff';
 
-import { CompareChangeFilterBar } from './components/CompareChangeStats';
+import { CompareStatusPairFilter } from './components/CompareStatusPairFilter';
 import {
   CompareBootsFailuresTable,
   CompareBuildsFailuresTable,
@@ -59,7 +62,7 @@ const SHORT_HASH_LENGTH = 7;
 const TreeComparePage = (): JSX.Element => {
   const { formatMessage } = useIntl();
   const { treeName, branch } = useParams({ from: compareRouteName });
-  const { hashA, hashB, origin, currentPageTab, changeFilter } = useSearch({
+  const { hashA, hashB, origin, currentPageTab, statusPair } = useSearch({
     from: compareRouteName,
   });
   const navigate = useNavigate({ from: compareNavigateFrom });
@@ -109,7 +112,7 @@ const TreeComparePage = (): JSX.Element => {
       hashA?: string;
       hashB?: string;
       currentPageTab?: PossibleTabs;
-      changeFilter?: CompareChangeFilter[];
+      statusPair?: string[];
     }) => {
       navigate({
         search: previous => ({
@@ -120,10 +123,7 @@ const TreeComparePage = (): JSX.Element => {
             updates.currentPageTab ??
             previous.currentPageTab ??
             'global.builds',
-          changeFilter:
-            updates.changeFilter ??
-            previous.changeFilter ??
-            compareDefaultChangeFilters,
+          statusPair: updates.statusPair ?? previous.statusPair,
         }),
         params: { treeName, branch },
         resetScroll: false,
@@ -192,17 +192,32 @@ const TreeComparePage = (): JSX.Element => {
     [testsDiffQuery.data],
   );
 
+  const storedStatusPairs = useMemo(() => readStoredStatusPairs(), []);
+  const statusPairs = useMemo(
+    () => resolveStatusPairs(statusPair, storedStatusPairs),
+    [statusPair, storedStatusPairs],
+  );
+
+  const onStatusPairsChange = useCallback(
+    (value: CompareStatusPair[]) => {
+      const serialized = serializeStatusPairs(value);
+      writeStoredStatusPairs(serialized);
+      updateSearch({ statusPair: serialized });
+    },
+    [updateSearch],
+  );
+
   const filteredBuilds = useMemo(
-    () => applyChangeFilter(buildRows, changeFilter),
-    [buildRows, changeFilter],
+    () => applyStatusPairFilter(buildRows, statusPairs),
+    [buildRows, statusPairs],
   );
   const filteredBoots = useMemo(
-    () => applyChangeFilter(bootRows, changeFilter),
-    [bootRows, changeFilter],
+    () => applyStatusPairFilter(bootRows, statusPairs),
+    [bootRows, statusPairs],
   );
   const filteredTests = useMemo(
-    () => applyChangeFilter(testRows, changeFilter),
-    [changeFilter, testRows],
+    () => applyStatusPairFilter(testRows, statusPairs),
+    [statusPairs, testRows],
   );
 
   const tabs: ITabItem[] = useMemo(
@@ -386,9 +401,9 @@ const TreeComparePage = (): JSX.Element => {
                 <FormattedMessage id="treeCompare.drilldownHint" />
               </div>
               <div className="mb-4">
-                <CompareChangeFilterBar
-                  value={changeFilter}
-                  onChange={value => updateSearch({ changeFilter: value })}
+                <CompareStatusPairFilter
+                  value={statusPairs}
+                  onChange={onStatusPairsChange}
                 />
               </div>
               <Tabs

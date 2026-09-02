@@ -401,14 +401,6 @@ export const messages = {
     'treeCompare.change.appeared': 'Appeared',
     'treeCompare.change.disappeared': 'Disappeared',
     'treeCompare.change.fixed': 'Fixed',
-    'treeCompare.change.glossary':
-      'Regression — PASS → FAIL or PASS → INCONCLUSIVE{br}' +
-      'Fixed — FAIL → PASS or FAIL → INCONCLUSIVE{br}' +
-      'New failure — absent/INCONCLUSIVE on Side A → FAIL on Side B{br}' +
-      'Still failing — FAIL → FAIL{br}' +
-      'New pass — absent/INCONCLUSIVE on Side A → PASS on Side B{br}' +
-      'Appeared — absent on Side A → INCONCLUSIVE on Side B{br}' +
-      'Disappeared — present on Side A → absent on Side B',
     'treeCompare.change.newFailure': 'New failure',
     'treeCompare.change.newFailures': 'New failures',
     'treeCompare.change.newPass': 'New pass',
@@ -416,6 +408,7 @@ export const messages = {
     'treeCompare.change.regression': 'Regression',
     'treeCompare.change.regressions': 'Regressions',
     'treeCompare.change.stillFailing': 'Still failing',
+    'treeCompare.change.unchanged': 'Unchanged',
     'treeCompare.changed': 'Changed',
     'treeCompare.description':
       'Compare pass/fail counts between two revisions on the same tree and branch.',
@@ -441,6 +434,17 @@ export const messages = {
     'treeCompare.selectRevision': 'Select a revision',
     'treeCompare.sideA': 'Side A',
     'treeCompare.sideB': 'Side B',
+    'treeCompare.statusPairFilter.active': 'Active status pair filters',
+    'treeCompare.statusPairFilter.add': 'Add',
+    'treeCompare.statusPairFilter.from': 'From',
+    'treeCompare.statusPairFilter.glossary':
+      'PASS — completed successfully{br}' +
+      'FAIL — completed with a failure{br}' +
+      'INCONCLUSIVE — no definitive pass or fail result{br}' +
+      '— — absent on this side',
+    'treeCompare.statusPairFilter.remove': 'Remove {from} to {to} filter',
+    'treeCompare.statusPairFilter.select': 'Select status',
+    'treeCompare.statusPairFilter.to': 'To',
     'treeCompare.suggestion.branchHead': 'Branch head',
     'treeCompare.suggestion.previous': 'Previous commit',
     'treeCompare.suggestion.swap': 'Swap sides',

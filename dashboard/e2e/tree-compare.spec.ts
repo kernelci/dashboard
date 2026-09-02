@@ -96,6 +96,13 @@ test('loads revisions and comparison data from the API', async ({ page }) => {
 
   await expect(page.getByText('Tree summary')).toBeVisible();
   await expect(page.getByText('Changed results')).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'From' })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'To' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Regressions' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Add' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Remove PASS to FAIL filter' }),
+  ).toBeVisible();
   await expect(page.getByText('defconfig+allmodconfig')).toBeVisible();
   await expect(page.getByText('Regression')).toBeVisible();
 });
