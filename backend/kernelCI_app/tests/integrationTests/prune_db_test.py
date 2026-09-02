@@ -166,6 +166,56 @@ def test_origins_limit_age_prune():
 
 
 @pytest.mark.django_db
+def test_origins_limit_hardware_daily_prune():
+    """--origins limits hardware daily pruning by checkout_origin."""
+    checkout_time = _days_ago(30)
+
+    kept_checkout = CheckoutFactory(
+        start_time=checkout_time,
+        field_timestamp=_days_ago(1),
+        origin="keep-me",
+    )
+    kept_build = BuildFactory(
+        checkout=kept_checkout, status="PASS", field_timestamp=_days_ago(1)
+    )
+    TestFactory(
+        build=kept_build,
+        environment_misc={"platform": "pA"},
+        path="boot",
+        status="PASS",
+        field_timestamp=_days_ago(1),
+    )
+
+    pruned_checkout = CheckoutFactory(
+        start_time=checkout_time,
+        field_timestamp=_days_ago(1),
+        origin="prune-me",
+    )
+    pruned_build = BuildFactory(
+        checkout=pruned_checkout, status="PASS", field_timestamp=_days_ago(1)
+    )
+    TestFactory(
+        build=pruned_build,
+        environment_misc={"platform": "pB"},
+        path="boot",
+        status="PASS",
+        field_timestamp=_days_ago(1),
+    )
+    call_command("recompute_hardware_daily", day=checkout_time.date())
+
+    _prune(yes=True, origins=["prune-me"])
+
+    assert HardwareDailyBuilds.objects.filter(checkout_id=kept_checkout.id).exists()
+    assert HardwareDailyTests.objects.filter(checkout_id=kept_checkout.id).exists()
+    assert not HardwareDailyBuilds.objects.filter(
+        checkout_id=pruned_checkout.id
+    ).exists()
+    assert not HardwareDailyTests.objects.filter(
+        checkout_id=pruned_checkout.id
+    ).exists()
+
+
+@pytest.mark.django_db
 def test_origins_cascade_ignores_child_origin():
     """Children of a pruned parent are removed even when their origin differs."""
     checkout = CheckoutFactory(field_timestamp=_days_ago(30), origin="parent-origin")
