@@ -101,7 +101,10 @@ class DocStrings:
         "Dictionary mapping tree names to selected commit hashes"
     )
 
-    HARDWARE_LISTING_ORIGIN_DESCRIPTION = "Origin of the hardware"
+    HARDWARE_LISTING_ORIGIN_DESCRIPTION = (
+        "Origin of the checkout the hardware was tested from. "
+        "Pass it empty to list every origin."
+    )
     HARDWARE_LISTING_COMMITS_LIST_DESCRIPTION = (
         "Optional comma-separated git commit identifiers: full SHA(s) "
         "and/or tag strings that appear in checkout.git_commit_tags."

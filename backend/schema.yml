@@ -78,6 +78,32 @@ paths:
       operationId: hardware_retrieve
       parameters:
       - in: query
+        name: buildLab
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Buildlab
+      - in: query
+        name: buildOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: maestro
+          title: Buildorigin
+      - in: query
+        name: checkoutOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: maestro
+          title: Checkoutorigin
+        description: Origin of the checkout the hardware was tested from. Pass it
+          empty to list every origin.
+      - in: query
         name: commitsList
         schema:
           anyOf:
@@ -97,10 +123,13 @@ paths:
       - in: query
         name: origin
         schema:
-          default: maestro
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          deprecated: true
           title: Origin
-          type: string
-        description: Origin of the hardware
+        description: Deprecated alias for checkoutOrigin and buildOrigin
       - in: query
         name: startTimestampInSeconds
         schema:
@@ -108,6 +137,22 @@ paths:
           type: string
         description: Interval start timestamp in seconds for the results
         required: true
+      - in: query
+        name: testLab
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testlab
+      - in: query
+        name: testOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testorigin
       tags:
       - hardware
       security:
@@ -125,6 +170,30 @@ paths:
     get:
       operationId: hardware_by_revision_retrieve
       parameters:
+      - in: query
+        name: buildLab
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Buildlab
+      - in: query
+        name: buildOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: maestro
+          title: Buildorigin
+      - in: query
+        name: checkoutOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: maestro
+          title: Checkoutorigin
       - in: query
         name: git_commit_hash
         schema:
@@ -149,10 +218,29 @@ paths:
       - in: query
         name: origin
         schema:
-          default: maestro
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          deprecated: true
           title: Origin
-          type: string
-        description: Origin of the hardware
+        description: Deprecated alias for checkoutOrigin and buildOrigin
+      - in: query
+        name: testLab
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testlab
+      - in: query
+        name: testOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Testorigin
       - in: query
         name: tree_name
         schema:
@@ -171,7 +259,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HardwareListingByRevisionResponse'
+                $ref: '#/components/schemas/HardwareListingResponse'
           description: ''
   /api/hardware/{hardware_id}:
     post:
@@ -399,17 +487,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/HardwareDetailsTestsResponse'
           description: ''
+  /api/hardware/filters/:
+    get:
+      operationId: hardware_filters_retrieve
+      parameters:
+      - in: query
+        name: endTimestampInSeconds
+        schema:
+          title: Endtimestampinseconds
+          type: string
+        description: Interval end timestamp in seconds for the results
+        required: true
+      - in: query
+        name: startTimestampInSeconds
+        schema:
+          title: Starttimestampinseconds
+          type: string
+        description: Interval start timestamp in seconds for the results
+        required: true
+      tags:
+      - hardware
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HardwareFiltersResponse'
+          description: ''
   /api/hardware/selectors/:
     get:
       operationId: hardware_selectors_retrieve
       parameters:
       - in: query
+        name: buildOrigin
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: maestro
+          title: Buildorigin
+        description: Optional origin of builds that provide revisions
+      - in: query
         name: origin
         schema:
-          default: maestro
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          deprecated: true
           title: Origin
-          type: string
-        description: Origin of the hardware
+        description: Deprecated alias for buildOrigin
       tags:
       - hardware
       security:
@@ -3161,44 +3292,40 @@ components:
       - tests
       title: HardwareDetailsTestsResponse
       type: object
-    HardwareItem:
+    HardwareFiltersResponse:
       properties:
-        hardware:
-          anyOf:
-          - type: string
-          - items:
-              type: string
-            type: array
-            uniqueItems: true
-          - type: 'null'
-          title: Hardware
-        platform:
-          title: Platform
-          type: string
-        test_status_summary:
-          $ref: '#/components/schemas/StatusCount'
-        boot_status_summary:
-          $ref: '#/components/schemas/StatusCount'
-        build_status_summary:
-          $ref: '#/components/schemas/StatusCount'
-      required:
-      - hardware
-      - platform
-      - test_status_summary
-      - boot_status_summary
-      - build_status_summary
-      title: HardwareItem
-      type: object
-    HardwareListingByRevisionResponse:
-      properties:
-        hardware:
+        checkout_origins:
           items:
-            $ref: '#/components/schemas/HardwareItem'
-          title: Hardware
+            type: string
+          title: Checkout Origins
+          type: array
+        build_origins:
+          items:
+            type: string
+          title: Build Origins
+          type: array
+        test_origins:
+          items:
+            type: string
+          title: Test Origins
+          type: array
+        build_labs:
+          items:
+            type: string
+          title: Build Labs
+          type: array
+        test_labs:
+          items:
+            type: string
+          title: Test Labs
           type: array
       required:
-      - hardware
-      title: HardwareListingByRevisionResponse
+      - checkout_origins
+      - build_origins
+      - test_origins
+      - build_labs
+      - test_labs
+      title: HardwareFiltersResponse
       type: object
     HardwareListingItem:
       properties:

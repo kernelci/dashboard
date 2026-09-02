@@ -218,6 +218,18 @@ export const messages = {
     'hardwareDetails.selectTreeTitle': 'No Tree Selected',
     'hardwareDetails.timeFrame':
       'Results from {startDate} and {startTime} to {endDate} {endTime}',
+    'hardwareFilter.buildLab': 'Build lab',
+    'hardwareFilter.buildLabSubtitle': 'Lab that produced the builds',
+    'hardwareFilter.buildOrigin': 'Build origin',
+    'hardwareFilter.buildOriginSubtitle': 'Origin that submitted the builds',
+    'hardwareFilter.checkoutOrigin': 'Checkout origin',
+    'hardwareFilter.checkoutOriginSubtitle':
+      'Origin that submitted the checkouts',
+    'hardwareFilter.testLab': 'Test lab',
+    'hardwareFilter.testLabSubtitle':
+      'Lab that ran the tests, including labs reporting through another origin',
+    'hardwareFilter.testOrigin': 'Test origin',
+    'hardwareFilter.testOriginSubtitle': 'Origin that submitted the tests',
     'hardwareListing.bannerTitle': 'Hardware Listing',
     'hardwareListing.branchSelectorEmpty': 'No branch found.',
     'hardwareListing.branchSelectorLabel': 'Branch',
