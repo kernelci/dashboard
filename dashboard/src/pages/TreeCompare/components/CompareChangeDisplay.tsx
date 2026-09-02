@@ -3,8 +3,8 @@ import type { JSX } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import type {
-  CompareChangeType,
   CompareItemStatus,
+  CompareRowChange,
 } from '@/types/tree/TreeCompare';
 
 import type { MessagesKey } from '@/locales/messages';
@@ -35,7 +35,7 @@ export function CompareStatusChip({
   );
 }
 
-const CHANGE_STYLES: Record<CompareChangeType, string> = {
+const CHANGE_STYLES: Record<CompareRowChange, string> = {
   regression: 'bg-light-red text-red',
   fixed: 'bg-light-green text-dark-green',
   newFailure: 'bg-orange-100 text-orange-700',
@@ -43,9 +43,10 @@ const CHANGE_STYLES: Record<CompareChangeType, string> = {
   newPass: 'bg-light-blue text-dark-blue',
   appeared: 'bg-yellow text-dim-black',
   disappeared: 'bg-dark-gray text-dim-gray',
+  unchanged: 'bg-medium-gray text-dim-gray',
 };
 
-const CHANGE_MESSAGE_IDS: Record<CompareChangeType, MessagesKey> = {
+const CHANGE_MESSAGE_IDS: Record<CompareRowChange, MessagesKey> = {
   regression: 'treeCompare.change.regression',
   fixed: 'treeCompare.change.fixed',
   newFailure: 'treeCompare.change.newFailure',
@@ -53,12 +54,13 @@ const CHANGE_MESSAGE_IDS: Record<CompareChangeType, MessagesKey> = {
   newPass: 'treeCompare.change.newPass',
   appeared: 'treeCompare.change.appeared',
   disappeared: 'treeCompare.change.disappeared',
+  unchanged: 'treeCompare.change.unchanged',
 };
 
 export function CompareChangeBadge({
   change,
 }: {
-  change: CompareChangeType;
+  change: CompareRowChange;
 }): JSX.Element {
   return (
     <span
@@ -72,7 +74,7 @@ export function CompareChangeBadge({
   );
 }
 
-export function isFailureHighlight(change: CompareChangeType): boolean {
+export function isFailureHighlight(change: CompareRowChange): boolean {
   return (
     change === 'regression' ||
     change === 'newFailure' ||

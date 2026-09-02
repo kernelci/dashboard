@@ -25,6 +25,9 @@ export const compareChangeTypes = [
 
 export type CompareChangeType = (typeof compareChangeTypes)[number];
 
+/** Row-level classification: the backend counts no category for unchanged pairs. */
+export type CompareRowChange = CompareChangeType | 'unchanged';
+
 export type CompareChangeStats = Record<CompareChangeType, number>;
 
 export type CompareEntitySummary = {
@@ -98,7 +101,7 @@ export const compareDefaultStatusPairParams = ['PASS:FAIL', 'FAIL:PASS'];
 
 type CompareFailureRowBase = {
   id: string;
-  change: CompareChangeType;
+  change: CompareRowChange;
   sideA: CompareItemStatus;
   sideB: CompareItemStatus;
 };

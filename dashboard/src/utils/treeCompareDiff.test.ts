@@ -33,6 +33,14 @@ describe('deriveCompareChange', () => {
     expect(deriveCompareChange('INCONCLUSIVE', 'FAIL')).toBe('newFailure');
     expect(deriveCompareChange('INCONCLUSIVE', 'PASS')).toBe('newPass');
   });
+
+  it('does not classify same-status pairs, except FAIL to FAIL', () => {
+    expect(deriveCompareChange('PASS', 'PASS')).toBe('unchanged');
+    expect(deriveCompareChange('INCONCLUSIVE', 'INCONCLUSIVE')).toBe(
+      'unchanged',
+    );
+    expect(deriveCompareChange('FAIL', 'FAIL')).toBe('stillFailing');
+  });
 });
 
 describe('applyStatusPairFilter', () => {
@@ -123,6 +131,16 @@ describe('resolveStatusPairs', () => {
 });
 
 describe('toggleChangeTypePairs', () => {
+  it('keeps unchanged pairs out of the chips', () => {
+    expect(toggleChangeTypePairs([], 'newPass')).toEqual([
+      { from: 'INCONCLUSIVE', to: 'PASS' },
+      { from: '—', to: 'PASS' },
+    ]);
+    expect(toggleChangeTypePairs([], 'appeared')).toEqual([
+      { from: '—', to: 'INCONCLUSIVE' },
+    ]);
+  });
+
   it('adds every pair for a change type', () => {
     expect(toggleChangeTypePairs([], 'regression')).toEqual([
       { from: 'PASS', to: 'FAIL' },

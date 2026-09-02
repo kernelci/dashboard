@@ -4,6 +4,7 @@ import type {
   CompareChangeType,
   CompareGroupedApiStatus,
   CompareItemStatus,
+  CompareRowChange,
   CompareStatusPair,
   CompareTestFailureRow,
   TreeCompareBuildDiffApiRow,
@@ -31,7 +32,11 @@ export function apiStatusToItemStatus(
 export function deriveCompareChange(
   statusA: CompareItemStatus,
   statusB: CompareItemStatus,
-): CompareChangeType {
+): CompareRowChange {
+  // Same status on both sides is no change; only FAIL→FAIL has a backend count.
+  if (statusA === statusB && statusA !== 'FAIL') {
+    return 'unchanged';
+  }
   // Present on A, absent on B — was wrongly folded into regression/fixed.
   if (statusA !== '—' && statusB === '—') {
     return 'disappeared';
@@ -82,7 +87,10 @@ export const changeTypeStatusPairs: Record<
 
 for (const from of compareItemStatuses) {
   for (const to of compareItemStatuses) {
-    changeTypeStatusPairs[deriveCompareChange(from, to)].push({ from, to });
+    const change = deriveCompareChange(from, to);
+    if (change !== 'unchanged') {
+      changeTypeStatusPairs[change].push({ from, to });
+    }
   }
 }
 

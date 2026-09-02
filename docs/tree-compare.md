@@ -35,6 +35,7 @@ Statuses are grouped into **PASS**, **FAIL**, and **INCONCLUSIVE** (everything e
 | `newPass` | missing/INCONCLUSIVE → PASS |
 | `appeared` | missing → INCONCLUSIVE |
 | `disappeared` | present on A, missing on B |
+| `unchanged` | same status on both sides (except FAIL → FAIL); frontend-only, has no backend count and no filter chip |
 
 Backend SQL aggregates (`_CHANGE_COUNT_SELECT` in `queries/tree.py`) and the frontend `deriveCompareChange` helper must stay in sync.
 

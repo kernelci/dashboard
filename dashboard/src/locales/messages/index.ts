@@ -408,6 +408,7 @@ export const messages = {
     'treeCompare.change.regression': 'Regression',
     'treeCompare.change.regressions': 'Regressions',
     'treeCompare.change.stillFailing': 'Still failing',
+    'treeCompare.change.unchanged': 'Unchanged',
     'treeCompare.changed': 'Changed',
     'treeCompare.description':
       'Compare pass/fail counts between two revisions on the same tree and branch.',
