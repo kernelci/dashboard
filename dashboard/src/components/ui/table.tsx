@@ -114,7 +114,13 @@ const TableCellWithLink = React.forwardRef<
     className={cn('align-middle [&:has([role=checkbox])]:pr-0', className)}
     {...props}
   >
-    <Link className={cn('flex min-w-0 flex-1 p-4', linkClassName)} {...linkProps}>
+    <Link
+      className={cn(
+        'flex min-w-0 flex-1 p-4 focus-visible:-outline-offset-2',
+        linkClassName,
+      )}
+      {...linkProps}
+    >
       {children}
     </Link>
   </td>

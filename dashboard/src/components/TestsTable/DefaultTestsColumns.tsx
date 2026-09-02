@@ -53,9 +53,9 @@ export const PathWithPrefixEllipsis = ({
 export const PathWithTooltip = ({ value }: { value: string }): JSX.Element => (
   <Tooltip>
     <TooltipTrigger asChild>
-      <div className="min-w-0 overflow-hidden">
+      <button type="button" className="min-w-0 overflow-hidden text-left">
         <PathWithPrefixEllipsis value={value} />
-      </div>
+      </button>
     </TooltipTrigger>
     <TooltipContent>{value}</TooltipContent>
   </Tooltip>
@@ -88,7 +88,10 @@ const PathCell = ({
       {!isExpandable && row.depth > 0 && <span className="mr-2 w-4 shrink-0" />}
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="min-w-0 flex-1 overflow-hidden">
+          <button
+            type="button"
+            className="min-w-0 flex-1 overflow-hidden text-left"
+          >
             {isLeaf ? (
               <PathWithPrefixEllipsis value={value} />
             ) : (
@@ -96,7 +99,7 @@ const PathCell = ({
                 {value}
               </div>
             )}
-          </div>
+          </button>
         </TooltipTrigger>
         <TooltipContent>{value}</TooltipContent>
       </Tooltip>
