@@ -71,6 +71,7 @@ After importing the dashboard, you'll have:
   - Total Calls
   - Average Response Time
   - Total Time (cumulative time per endpoint)
+- **Deploys** - Annotation and Running Version panel from `dashboard_build_info` (`DASHBOARD_VERSION`)
 
 ### Aggregation Process Dashboard
 
@@ -93,6 +94,7 @@ The monitoring system supports multi-worker Gunicorn deployments using Prometheu
 ### Configuration
 
 #### Environment Variables
+- `DASHBOARD_VERSION`: Label on `dashboard_build_info` (default: `unknown`)
 - `PROMETHEUS_METRICS_ENABLED`: Set to `true` to enable Prometheus metrics (default: `false`)
 - `PROMETHEUS_METRICS_PORT`: Port for the metrics aggregator (default: `8001`)
 - `PROMETHEUS_MULTIPROC_DIR`: Directory for multiprocess metric files (default: `/tmp/prometheus_multiproc_dir`)

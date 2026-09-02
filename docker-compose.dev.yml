@@ -16,6 +16,7 @@ services:
         env_file: [.env]
         environment:
             - PYTHONOPTIMIZE=0            # required for runserver/reload to work correctly
+            - DASHBOARD_VERSION=${DASHBOARD_VERSION:-local-dev}
         networks: [private, public]
         ports: ["8000:8000"]
         command:

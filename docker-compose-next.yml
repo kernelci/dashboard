@@ -52,6 +52,8 @@ services:
             - --bind=0.0.0.0:8000
             - --timeout=250
         env_file: .env
+        environment:
+            - DASHBOARD_VERSION=${DASHBOARD_VERSION:-unknown}
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
         restart: always

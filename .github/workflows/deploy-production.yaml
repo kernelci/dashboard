@@ -107,6 +107,7 @@ jobs:
             cp ~/.env-production dashboard-production/.env &&
             cd dashboard-production &&
             git checkout ${GITHUB_SHA} &&
+            export DASHBOARD_VERSION=${DASHBOARD_VERSION} &&
             docker compose -f docker-compose-next.yml pull --policy=always &&
             docker compose -f docker-compose-next.yml up -d --remove-orphans
           "
@@ -114,6 +115,7 @@ jobs:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
+          DASHBOARD_VERSION: ${{ github.event.inputs.tag }}
 
       - name: Discord notification on success
         if: success()

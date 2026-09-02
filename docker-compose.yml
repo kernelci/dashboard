@@ -17,6 +17,8 @@ services:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
         env_file:
             - .env
+        environment:
+            - DASHBOARD_VERSION=${DASHBOARD_VERSION:-local-dev}
         networks:
             - private
             - public
