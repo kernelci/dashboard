@@ -35,6 +35,7 @@ import { BranchBadge } from '@/components/Badge/BranchBadge';
 
 import { getLogspecSection } from '@/components/Section/LogspecSection';
 import { getIncidentsSection } from '@/components/Section/FirstIncidentSection';
+import { getNextCheckoutSection } from '@/components/Section/NextCheckoutSection';
 
 import PageWithTitle from '@/components/PageWithTitle';
 
@@ -109,6 +110,13 @@ export const IssueDetails = ({
       lastIncident: data?.extra?.[issueId]?.last_incident,
       title: formatMessage({ id: 'issueDetails.firstIncidentData' }),
       lastIncidentTitle: formatMessage({ id: 'issueDetails.lastIncident' }),
+    });
+  }, [data?.extra, formatMessage, issueId]);
+
+  const nextCheckoutSection: ISection | undefined = useMemo(() => {
+    return getNextCheckoutSection({
+      nextCheckout: data?.extra?.[issueId]?.next_checkout,
+      title: formatMessage({ id: 'issueDetails.nextCheckout' }),
     });
   }, [data?.extra, formatMessage, issueId]);
 
@@ -258,6 +266,7 @@ export const IssueDetails = ({
               <SectionGroup
                 sections={[
                   firstIncidentSection,
+                  nextCheckoutSection,
                   logspecSection,
                   miscSection,
                 ].filter(section => !!section)}

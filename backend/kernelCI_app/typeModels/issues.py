@@ -9,8 +9,10 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitName,
     Checkout__GitRepositoryBranch,
     Checkout__GitRepositoryUrl,
+    Checkout__StartTime,
     Checkout__TreeName,
     Issue__Version,
+    Origin,
     Timestamp,
 )
 
@@ -94,9 +96,23 @@ class TreeSeenData(BaseModel):
     first_good_checkout: Optional[IssueCheckout] = None
 
 
+class NextCheckout(BaseModel):
+    """Earliest checkout on the same tree after the last-seen checkout."""
+
+    checkout_id: Optional[str]
+    start_time: Checkout__StartTime
+    git_commit_hash: Optional[Checkout__GitCommitHash]
+    git_commit_name: Optional[Checkout__GitCommitName]
+    git_repository_url: Optional[Checkout__GitRepositoryUrl]
+    git_repository_branch: Optional[Checkout__GitRepositoryBranch]
+    tree_name: Optional[Checkout__TreeName]
+    origin: Origin
+
+
 class ExtraIssuesData(BaseModel):
     first_incident: Incident
     last_incident: Incident
+    next_checkout: Optional[NextCheckout] = None
     versions: dict[int, Optional[IssueWithExtraInfo]]
     per_tree: Optional[list[TreeSeenData]] = None
 

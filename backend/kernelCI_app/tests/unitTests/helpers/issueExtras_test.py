@@ -53,10 +53,11 @@ class TestProcessIssuesExtraDetails:
 
 
 class TestAssignIssueFirstSeen:
+    @patch("kernelCI_app.helpers.issueExtras.get_issue_next_checkout_data")
     @patch("kernelCI_app.helpers.issueExtras.get_issue_last_seen_data")
     @patch("kernelCI_app.helpers.issueExtras.get_issue_first_seen_data")
     def test_assign_issue_first_seen_with_data(
-        self, mock_get_first_data, mock_get_last_data
+        self, mock_get_first_data, mock_get_last_data, mock_get_next_checkout
     ):
         """Test assign_issue_incidents with data."""
         mock_get_first_data.return_value = [
@@ -85,6 +86,19 @@ class TestAssignIssueFirstSeen:
                 "checkout_id": "checkout2",
             }
         ]
+        mock_get_next_checkout.return_value = [
+            {
+                "issue_id": "issue1",
+                "checkout_id": "checkout_next",
+                "start_time": "2024-06-16T10:00:00Z",
+                "git_commit_hash": "next123",
+                "git_commit_name": "commit_next",
+                "git_repository_url": TagUrls.MAINLINE_URL,
+                "git_repository_branch": "master",
+                "tree_name": "mainline",
+                "origin": "maestro",
+            }
+        ]
 
         issue_key_list = [("issue1", 1)]
         processed_issues_table = {}
@@ -95,6 +109,7 @@ class TestAssignIssueFirstSeen:
 
         mock_get_first_data.assert_called_once_with(issue_id_list=["issue1"])
         mock_get_last_data.assert_called_once_with(issue_id_list=["issue1"])
+        mock_get_next_checkout.assert_called_once_with(issue_id_list=["issue1"])
 
         assert "issue1" in processed_issues_table
         issue_data = processed_issues_table["issue1"]
@@ -104,12 +119,16 @@ class TestAssignIssueFirstSeen:
         )
         assert issue_data.first_incident.git_commit_hash == "abc123"
         assert issue_data.last_incident.git_commit_hash == "xyz789"
+        assert issue_data.next_checkout is not None
+        assert issue_data.next_checkout.checkout_id == "checkout_next"
+        assert issue_data.next_checkout.git_commit_hash == "next123"
         assert 1 in issue_data.versions
 
+    @patch("kernelCI_app.helpers.issueExtras.get_issue_next_checkout_data")
     @patch("kernelCI_app.helpers.issueExtras.get_issue_last_seen_data")
     @patch("kernelCI_app.helpers.issueExtras.get_issue_first_seen_data")
     def test_assign_issue_incidents_with_multiple_versions(
-        self, mock_get_first_data, mock_get_last_data
+        self, mock_get_first_data, mock_get_last_data, mock_get_next_checkout
     ):
         """Test assign_issue_incidents with multiple versions."""
         mock_get_first_data.return_value = [
@@ -126,6 +145,7 @@ class TestAssignIssueFirstSeen:
             }
         ]
         mock_get_last_data.return_value = mock_get_first_data.return_value
+        mock_get_next_checkout.return_value = []
 
         issue_key_list = [("issue1", 1), ("issue1", 2)]
         processed_issues_table = {}
@@ -141,15 +161,17 @@ class TestAssignIssueFirstSeen:
         )
         assert issue_data.first_incident.git_commit_hash == "abc123"
         assert issue_data.first_incident.issue_version == 1
+        assert issue_data.next_checkout is None
         assert 1 in issue_data.versions
         assert 2 in issue_data.versions
         assert issue_data.versions[1] is None
         assert issue_data.versions[2] is None
 
+    @patch("kernelCI_app.helpers.issueExtras.get_issue_next_checkout_data")
     @patch("kernelCI_app.helpers.issueExtras.get_issue_last_seen_data")
     @patch("kernelCI_app.helpers.issueExtras.get_issue_first_seen_data")
     def test_assign_issue_incidents_with_multiple_issues(
-        self, mock_get_first_data, mock_get_last_data
+        self, mock_get_first_data, mock_get_last_data, mock_get_next_checkout
     ):
         """Test assign_issue_incidents with multiple issues."""
         mock_get_first_data.return_value = [
@@ -177,6 +199,7 @@ class TestAssignIssueFirstSeen:
             },
         ]
         mock_get_last_data.return_value = mock_get_first_data.return_value
+        mock_get_next_checkout.return_value = []
 
         issue_key_list = [("issue1", 1), ("issue2", 1)]
         processed_issues_table = {}
@@ -189,14 +212,16 @@ class TestAssignIssueFirstSeen:
         assert "issue2" in processed_issues_table
         assert len(processed_issues_table) == 2
 
+    @patch("kernelCI_app.helpers.issueExtras.get_issue_next_checkout_data")
     @patch("kernelCI_app.helpers.issueExtras.get_issue_last_seen_data")
     @patch("kernelCI_app.helpers.issueExtras.get_issue_first_seen_data")
     def test_assign_issue_incidents_no_data(
-        self, mock_get_first_data, mock_get_last_data
+        self, mock_get_first_data, mock_get_last_data, mock_get_next_checkout
     ):
         """Test assign_issue_incidents with no data."""
         mock_get_first_data.return_value = []
         mock_get_last_data.return_value = []
+        mock_get_next_checkout.return_value = []
 
         issue_key_list = [("issue1", 1)]
         processed_issues_table = {}
@@ -206,6 +231,7 @@ class TestAssignIssueFirstSeen:
         )
 
         assert len(processed_issues_table) == 0
+        mock_get_next_checkout.assert_called_once_with(issue_id_list=["issue1"])
 
 
 class TestAssignIssueTrees:

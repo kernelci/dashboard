@@ -7,6 +7,7 @@ from kernelCI_app.queries.issues import (
     get_issue_first_good_checkouts,
     get_issue_first_seen_data,
     get_issue_last_seen_data,
+    get_issue_next_checkout_data,
     get_issue_trees_data,
 )
 from kernelCI_app.typeModels.issues import (
@@ -14,6 +15,7 @@ from kernelCI_app.typeModels.issues import (
     Incident,
     IssueCheckout,
     IssueWithExtraInfo,
+    NextCheckout,
     ProcessedExtraDetailedIssues,
     TreeSeenData,
     TreeSetItem,
@@ -69,6 +71,19 @@ def _tree_key(record: dict) -> tuple:
     )
 
 
+def _next_checkout_from_record(record: dict) -> NextCheckout:
+    return NextCheckout(
+        checkout_id=record["checkout_id"],
+        start_time=record["start_time"],
+        git_commit_hash=record["git_commit_hash"],
+        git_commit_name=record["git_commit_name"],
+        git_repository_url=record["git_repository_url"],
+        git_repository_branch=record["git_repository_branch"],
+        tree_name=record["tree_name"],
+        origin=record["origin"],
+    )
+
+
 def process_issues_extra_details(
     *,
     issue_key_list: List[Tuple[str, int]],
@@ -94,7 +109,7 @@ def assign_issue_incidents(
     processed_issues_table: ProcessedExtraDetailedIssues,
 ) -> None:
     """
-    Assigns first and last seen data to the processed_issues_table
+    Assigns first/last seen and next-checkout data to the processed_issues_table
     by querying with the issue_key_list.
     """
     issue_id_set = {issue_id for issue_id, _ in issue_key_list}
@@ -103,21 +118,30 @@ def assign_issue_incidents(
     for issue_id, issue_version in issue_key_list:
         versions_per_issue[issue_id].add(issue_version)
 
-    first_incident_records = get_issue_first_seen_data(issue_id_list=list(issue_id_set))
-    last_incident_records = get_issue_last_seen_data(issue_id_list=list(issue_id_set))
+    issue_id_list = list(issue_id_set)
+    first_incident_records = get_issue_first_seen_data(issue_id_list=issue_id_list)
+    last_incident_records = get_issue_last_seen_data(issue_id_list=issue_id_list)
+    next_checkout_records = get_issue_next_checkout_data(issue_id_list=issue_id_list)
     last_incident_by_id = {
         record["issue_id"]: record for record in last_incident_records
+    }
+    next_checkout_by_id = {
+        record["issue_id"]: record for record in next_checkout_records
     }
 
     for record in first_incident_records:
         issue_id = record["issue_id"]
         last_record = last_incident_by_id.get(issue_id)
+        next_record = next_checkout_by_id.get(issue_id)
 
         processed_issue_from_id = processed_issues_table.setdefault(
             issue_id,
             ExtraIssuesData(
                 first_incident=_incident_from_record(record),
                 last_incident=_incident_from_record(last_record),
+                next_checkout=(
+                    _next_checkout_from_record(next_record) if next_record else None
+                ),
                 versions={},
             ),
         )
