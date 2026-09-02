@@ -1,4 +1,6 @@
+import logging
 import os
+import time
 from datetime import datetime, timezone
 from typing import Any, Optional, TypedDict
 
@@ -16,6 +18,10 @@ from kernelCI_app.helpers.logger import log_message
 
 AVATAR_URL = "https://avatars.githubusercontent.com/u/11725450?s=200&v=4"
 WEBHOOK_NAME = "KernelCI Dashboard Notifications"
+WEBHOOK_MAX_ATTEMPTS = 3
+WEBHOOK_RETRY_DELAY_IN_SECONDS = 1
+
+logger = logging.getLogger(__name__)
 
 
 class DiscordImage(TypedDict):
@@ -97,12 +103,27 @@ def send_discord_notification(
     if embeds is not None:
         data["embeds"] = embeds
 
-    try:
-        result = requests.post(
-            url=url, json=data, timeout=REQUESTS_TIMEOUT_WEBHOOK_IN_SECONDS
-        )
-        result.raise_for_status()
-    except requests.HTTPError as e:
-        log_message(e)
+    for attempt in range(1, WEBHOOK_MAX_ATTEMPTS + 1):
+        try:
+            result = requests.post(
+                url=url, json=data, timeout=REQUESTS_TIMEOUT_WEBHOOK_IN_SECONDS
+            )
+            result.raise_for_status()
+            return
+        except requests.ConnectionError as e:
+            if attempt == WEBHOOK_MAX_ATTEMPTS:
+                logger.error("Discord webhook request failed: %s", e, exc_info=True)
+                return
+
+            logger.warning(
+                "Discord webhook connection failed (attempt %s/%s): %s",
+                attempt,
+                WEBHOOK_MAX_ATTEMPTS,
+                e,
+            )
+            time.sleep(WEBHOOK_RETRY_DELAY_IN_SECONDS)
+        except requests.RequestException as e:
+            logger.error("Discord webhook request failed: %s", e, exc_info=True)
+            return
 
     return
