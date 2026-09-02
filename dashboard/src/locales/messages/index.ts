@@ -39,8 +39,11 @@ export const messages = {
     'buildDetails.startTime': 'Start Time',
     'buildDetails.testResults': 'Test Results',
     'buildTab.buildStatus': 'Build status',
-    'codeBlock.highlights': 'Highlights:',
-    'codeBlock.highlightsTooltip': 'Counting estimated based on text output',
+    'codeBlock.highlightsTooltip':
+      'Heuristic keyword search in the log — counts may not match the test status',
+    'codeBlock.otherMatches': 'Other matches',
+    'codeBlock.suspectedError': 'Suspected error',
+    'codeBlock.suspectedFail': 'Suspected fail',
     'commonDetails.artifacts': 'Artifacts',
     'commonDetails.environmentMiscData': 'Environment Misc Data',
     'commonDetails.gitCommitHash': 'Git Commit Hash',
