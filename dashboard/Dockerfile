@@ -8,6 +8,8 @@ RUN npm install -g pnpm@10.33.3 && pnpm install --frozen-lockfile
 
 COPY dashboard/. ./
 
+COPY PRIVACY.md ../PRIVACY.md
+
 ARG DASHBOARD_VERSION
 ENV VITE_DASHBOARD_VERSION=$DASHBOARD_VERSION
 

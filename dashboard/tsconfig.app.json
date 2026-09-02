@@ -9,7 +9,8 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@privacy-policy": ["../PRIVACY.md"]
     },
 
     /* Bundler mode */

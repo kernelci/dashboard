@@ -118,3 +118,45 @@ Configure these variables in `.env.backend`:
 - **Target**: `host.docker.internal:8001` (backend running locally)
 - **Metrics Path**: `/metrics/`
 - **Scrape Interval**: 15 seconds
+
+## Client Analytics
+
+The `BackendRequestMetricsMiddleware` records aggregate usage analytics for
+requests to `/api/`. Long-lived Prometheus series are anonymous counts.
+Unique-visitor de-duplication uses a short-lived **pseudonymised** fingerprint
+in cache (not true anonymisation while the daily salt exists). For the
+user-facing privacy statement, see [`PRIVACY.md`](../PRIVACY.md). This section
+is the technical/operator reference.
+
+### Metrics emitted
+
+- `dashboard_backend_requests_by_client_total` — labels: `endpoint` (Django URL
+  name), `method`, `status_class` (e.g. `2xx`), `browser`, `os`, `device`
+  (coarse User-Agent buckets; bots bucketed as `bot`), `referrer_domain` (the
+  external `Referer` domain truncated to 100 chars; same-host/direct becomes
+  `direct_or_internal`).
+- `dashboard_unique_visitors_total`, `dashboard_unique_visitors_by_endpoint_total`
+  — daily de-duplicated visitor counts (counters only; no visitor IDs in labels).
+
+### Pseudonymisation mechanism
+
+Unique visitors are de-duplicated without writing raw IP or User-Agent to
+metrics:
+
+- Client IP and User-Agent are **processed in memory** only to compute
+  `HMAC-SHA256(daily_salt, "<client_ip>|<user_agent>")`, then discarded.
+- `daily_salt` is a random 32-byte secret generated per UTC day, kept only in
+  the cache (Redis) with a ~25h TTL, never persisted to disk by this feature,
+  rotated daily.
+- Only the hash is used as a `cache.add` de-duplication key (~25h TTL).
+- Under GDPR, IP is personal data; the cache key is **pseudonymised personal
+  data** for up to ~25h. After salt and keys expire, only aggregate counters
+  remain (anonymous).
+
+### Operator notes
+
+- **Cache access is sensitive**: while a day's salt lives in the cache, an
+  attacker with cache access could brute-force the limited IP+UA space for that
+  day. Restrict Redis/memcached access accordingly. Secret salt + daily
+  rotation mitigates cross-day linkage.
+- Do not export or scrape cache keys into logs or long-term storage.
