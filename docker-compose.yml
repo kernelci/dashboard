@@ -35,8 +35,16 @@ services:
             - --timeout=250
         entrypoint: "./utils/docker/backend_entrypoint.sh"
         depends_on:
-            - redis
-            - dashboard_db
+            redis:
+                condition: service_healthy
+            dashboard_db:
+                condition: service_started
+        healthcheck:
+            test: ["CMD", "curl", "-f", "-H", "Host: backend", "http://localhost:8000/health/"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 60s
 
     ingester:
         container_name: dashboard_ingester_service_staging
@@ -111,6 +119,11 @@ services:
         restart: always
         networks:
             - private
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
 
     dashboard:
         build:
@@ -146,6 +159,11 @@ services:
         build: ./proxy
         image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_REPOSITORY:-local}/dashboard-proxy:${IMAGE_TAG:-latest}
         restart: always
+        healthcheck:
+            test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
         depends_on:
             backend:
                 condition: service_started

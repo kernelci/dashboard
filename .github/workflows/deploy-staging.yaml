@@ -84,6 +84,47 @@ jobs:
           SSH_KEY: ${{ secrets.STAGING_KEY }}
           DASHBOARD_VERSION: ${{ needs.check-migrations.outputs.dashboard_version }}
 
+      - name: Collect staging deployment status
+        id: deployment-status
+        if: always()
+        env:
+          SSH_USER: ${{ secrets.STAGING_USER }}
+          SSH_HOST: ${{ secrets.STAGING_HOST }}
+          SSH_KEY: ${{ secrets.STAGING_KEY }}
+        run: |
+          eval $(ssh-agent -s)
+          echo "$SSH_KEY" | ssh-add - >/dev/null
+
+          set +e
+          diagnostics=$(ssh "${SSH_USER}@${SSH_HOST}" \
+            "cd dashboard-staging && sh .github/scripts/deploy_collect_compose_status.sh docker-compose.yml" 2>&1)
+          status=$?
+          set -e
+
+          {
+            echo "### Staging deployment status"
+            echo
+            printf '%s\n' "$diagnostics"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          {
+            echo "diagnostics<<DEPLOYMENT_STATUS_EOF"
+            printf '%s\n' "$diagnostics"
+            echo "DEPLOYMENT_STATUS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          exit "$status"
+
+      - name: Discord notification on failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            Staging Dashboard deployment failed.
+            ${{ steps.deployment-status.outputs.diagnostics }}
+
   cleanup:
     needs: deploy-staging
     runs-on: ubuntu-latest

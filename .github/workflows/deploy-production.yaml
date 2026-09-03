@@ -115,6 +115,37 @@ jobs:
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
 
+      - name: Collect production deployment status
+        id: deployment-status
+        if: always()
+        env:
+          SSH_USER: ${{ secrets.STAGING_USER }}
+          SSH_HOST: ${{ secrets.STAGING_HOST }}
+          SSH_KEY: ${{ secrets.STAGING_KEY }}
+        run: |
+          eval $(ssh-agent -s)
+          echo "$SSH_KEY" | ssh-add - >/dev/null
+
+          set +e
+          diagnostics=$(ssh "${SSH_USER}@${SSH_HOST}" \
+            "cd dashboard-production && sh .github/scripts/deploy_collect_compose_status.sh docker-compose-next.yml" 2>&1)
+          status=$?
+          set -e
+
+          {
+            echo "### Production deployment status"
+            echo
+            printf '%s\n' "$diagnostics"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          {
+            echo "diagnostics<<DEPLOYMENT_STATUS_EOF"
+            printf '%s\n' "$diagnostics"
+            echo "DEPLOYMENT_STATUS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          exit "$status"
+
       - name: Discord notification on success
         if: success()
         env:
@@ -129,7 +160,9 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "Production Dashboard deployment failed with tag `${{ github.event.inputs.tag }}`"
+          args: |
+            Production Dashboard deployment failed with tag `${{ github.event.inputs.tag }}`.
+            ${{ steps.deployment-status.outputs.diagnostics }}
 
   cleanup:
     needs: deploy-production

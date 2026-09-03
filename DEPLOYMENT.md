@@ -250,6 +250,23 @@ A GitHub workflow for staging is defined at [deploy-staging](.github/workflows/d
 > Changes that involve alterations in database schema should be previously communicated
 > via [Discord channel](https://discord.com/channels/1245820301053530313/1301896040349433957).
 
+## Post-deployment status
+
+Staging and production workflows add a service table to the GitHub Actions job
+summary after deployment. It reports each container's state, health, restart
+count, and running image. The same table is included in deployment failure
+notifications.
+
+The backend health check requests `http://localhost:8000/health/` with the
+`backend` host header, so `ALLOWED_HOSTS` must contain `backend`.
+
+To inspect the same information on a deployment host:
+
+```bash
+sh .github/scripts/deploy_collect_compose_status.sh docker-compose.yml
+sh .github/scripts/deploy_collect_compose_status.sh docker-compose-next.yml
+```
+
 ---
 
 ## Profile Reference
