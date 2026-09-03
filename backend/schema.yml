@@ -2787,6 +2787,18 @@ components:
           - type: 'null'
           default: null
           title: Status B
+        id_a:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Id A
+        id_b:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Id B
       required:
       - config_name
       - architecture
@@ -4971,6 +4983,18 @@ components:
             type: string
           - type: 'null'
           title: Status B
+        id_a:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Id A
+        id_b:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Id B
       required:
       - path
       - config_name

@@ -137,6 +137,8 @@ export function mapBuildDiffRows(
       sideA,
       sideB,
       change: deriveCompareChange(sideA, sideB),
+      idA: row.id_a ?? null,
+      idB: row.id_b ?? null,
     };
   });
 }
@@ -157,6 +159,8 @@ export function mapBootOrTestDiffRows(
       sideA,
       sideB,
       change: deriveCompareChange(sideA, sideB),
+      idA: row.id_a ?? null,
+      idB: row.id_b ?? null,
     };
   });
 }
