@@ -97,8 +97,10 @@ services:
 
     dashboard_db:
         image: postgres:17
-        env_file:
-            - .env
+        environment:
+            POSTGRES_USER: ${DB_USER:-admin}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env}
+            POSTGRES_DB: ${DB_NAME:-dashboard}
         volumes:
             - dashboard-db-data:/var/lib/postgresql/data
         networks:
