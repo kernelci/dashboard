@@ -1,3 +1,5 @@
+import { daysToSeconds } from '@/utils/date';
+
 export type KcidevCommand = {
   id: string;
   label: string;
@@ -19,6 +21,31 @@ type TreeResultsOptions = CommonOptions & {
 type HardwareResultsOptions = CommonOptions & {
   name?: string;
   origin?: string;
+};
+
+type IssueListingOptions = CommonOptions & {
+  origins: readonly string[];
+  days?: number;
+};
+
+type IssueListingState = {
+  selectedOrigins: Readonly<Record<string, boolean>>;
+  availableOrigins: readonly string[];
+  defaultDays: number;
+  startTimestampInSeconds?: number;
+  endTimestampInSeconds?: number;
+  hasCulpritFilter: boolean;
+  hasCategoryFilter: boolean;
+  hasIncidentFilter: boolean;
+  hasTextSearch: boolean;
+};
+
+type TreeCompareOptions = CommonOptions & {
+  origin?: string;
+  gitUrl?: string;
+  branch?: string;
+  hashA?: string;
+  hashB?: string;
 };
 
 const baseArgv = ['kci-dev', 'results'] as const;
@@ -84,6 +111,118 @@ export const createResultDetailsCommand = (
         [...baseArgv, result, '--id', id],
         omittedFilters,
       );
+
+export const createIssueDetailsCommand = ({
+  id,
+  origin,
+  omittedFilters,
+}: CommonOptions & {
+  id?: string;
+  origin?: string;
+}): KcidevCommand | undefined => {
+  if (!id || !origin) {
+    return undefined;
+  }
+
+  return command(
+    'issue-details',
+    'Issue details',
+    [...baseArgv, 'issue', '--id', id, '--origin', origin],
+    omittedFilters,
+  );
+};
+
+export const createIssueListingCommands = ({
+  origins,
+  days,
+  omittedFilters,
+}: IssueListingOptions): KcidevCommand[] => {
+  if (days === undefined) {
+    return [];
+  }
+
+  return origins.map(origin =>
+    command(
+      `issues-${origin}`,
+      `Issues from ${origin}`,
+      [...baseArgv, 'issues', '--origin', origin, '--days', String(days)],
+      omittedFilters,
+    ),
+  );
+};
+
+export const createIssueListingCommandsFromState = ({
+  selectedOrigins,
+  availableOrigins,
+  defaultDays,
+  startTimestampInSeconds,
+  endTimestampInSeconds,
+  hasCulpritFilter,
+  hasCategoryFilter,
+  hasIncidentFilter,
+  hasTextSearch,
+}: IssueListingState): KcidevCommand[] => {
+  const selected = Object.entries(selectedOrigins)
+    .filter(([, enabled]) => enabled)
+    .map(([origin]) => origin);
+  const customRange =
+    startTimestampInSeconds !== undefined ||
+    endTimestampInSeconds !== undefined;
+  const days =
+    startTimestampInSeconds !== undefined && endTimestampInSeconds !== undefined
+      ? Math.max(
+          1,
+          Math.ceil(
+            (endTimestampInSeconds - startTimestampInSeconds) /
+              daysToSeconds(1),
+          ),
+        )
+      : defaultDays;
+  const omittedFilters = [
+    ...(customRange ? ['exact start and end boundaries'] : []),
+    ...(hasCulpritFilter ? ['issue culprit'] : []),
+    ...(hasCategoryFilter ? ['issue category'] : []),
+    ...(hasIncidentFilter ? ['incident'] : []),
+    ...(hasTextSearch ? ['text search'] : []),
+  ];
+
+  return createIssueListingCommands({
+    origins: selected.length > 0 ? selected : availableOrigins,
+    days,
+    omittedFilters,
+  });
+};
+
+export const createTreeCompareCommand = ({
+  origin,
+  gitUrl,
+  branch,
+  hashA,
+  hashB,
+  omittedFilters,
+}: TreeCompareOptions): KcidevCommand | undefined => {
+  if (!origin || !gitUrl || !branch || !hashA || !hashB) {
+    return undefined;
+  }
+
+  return command(
+    'tree-compare',
+    'Tree comparison',
+    [
+      ...baseArgv,
+      'compare',
+      '--origin',
+      origin,
+      '--giturl',
+      gitUrl,
+      '--branch',
+      branch,
+      hashA,
+      hashB,
+    ],
+    omittedFilters,
+  );
+};
 
 export const createHardwareListingCommand = ({
   origin,

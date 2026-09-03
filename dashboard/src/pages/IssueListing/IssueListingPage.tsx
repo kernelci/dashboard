@@ -18,6 +18,8 @@ import { formattedBreakLineValue } from '@/locales/messages';
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createIssueListingCommandsFromState } from '@/components/Footer/kcidevCommand';
+import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 import IssueListingFilter from './IssueListingFilter';
 
@@ -35,6 +37,26 @@ export const IssueListingPage = ({
   const { data, status, error, isLoading } = useIssueListing(requestFilters);
 
   const updatePreviousSearch = useSearchStore(s => s.updatePreviousSearch);
+
+  const issueCommands = useMemo(() => {
+    return createIssueListingCommandsFromState({
+      selectedOrigins: diffFilter.origins ?? {},
+      availableOrigins: data?.filters.origins ?? [],
+      defaultDays: REDUCED_TIME_SEARCH,
+      startTimestampInSeconds: searchParams.startTimestampInSeconds,
+      endTimestampInSeconds: searchParams.endTimestampInSeconds,
+      hasCulpritFilter: Object.values(diffFilter.issueCulprits ?? {}).some(
+        Boolean,
+      ),
+      hasCategoryFilter: Object.values(diffFilter.issueCategories ?? {}).some(
+        Boolean,
+      ),
+      hasIncidentFilter: Object.values(diffFilter.issueOptions ?? {}).some(
+        Boolean,
+      ),
+      hasTextSearch: Boolean(inputFilter.trim()),
+    });
+  }, [data?.filters.origins, diffFilter, inputFilter, searchParams]);
 
   useEffect(
     () => updatePreviousSearch(searchParams),
@@ -86,7 +108,7 @@ export const IssueListingPage = ({
           error={error}
           isLoading={isLoading}
         />
-        <MemoizedKcidevFooter />
+        <MemoizedKcidevFooter command={issueCommands} />
       </div>
     </>
   );

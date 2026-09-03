@@ -105,4 +105,12 @@ test('loads revisions and comparison data from the API', async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByText('defconfig+allmodconfig')).toBeVisible();
   await expect(page.getByText('Regression')).toBeVisible();
+
+  await page.getByRole('button', { name: 'CLI command' }).click();
+  const command = page.getByLabel('Tree comparison');
+  await expect(command).toContainText('--giturl');
+  await expect(command).not.toContainText('--git-url');
+  await expect(command).toContainText('--origin maestro');
+  await expect(command).toContainText('--branch master');
+  await expect(command).toContainText(`${HASH_A} ${HASH_B}`);
 });

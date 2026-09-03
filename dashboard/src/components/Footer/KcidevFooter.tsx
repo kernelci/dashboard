@@ -17,22 +17,18 @@ type CopyStatus = 'idle' | 'copied' | 'error';
 const KcidevFooter = ({
   command,
 }: {
-  command?: KcidevCommand;
+  command?: KcidevCommand | readonly KcidevCommand[];
 }): JSX.Element => {
   const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
-  const serializedCommand = useMemo(
-    () => command && serializeKcidevCommand(command),
+  const commands = useMemo(
+    () => (command ? (Array.isArray(command) ? command : [command]) : []),
     [command],
   );
 
-  const copyCommand = async (): Promise<void> => {
-    if (!serializedCommand) {
-      return;
-    }
-
+  const copyCommand = async (value: KcidevCommand): Promise<void> => {
     setCopyStatus('idle');
     try {
-      await navigator.clipboard.writeText(serializedCommand);
+      await navigator.clipboard.writeText(serializeKcidevCommand(value));
       setCopyStatus('copied');
     } catch {
       setCopyStatus('error');
@@ -44,7 +40,7 @@ const KcidevFooter = ({
       <span>
         <FormattedMessage id="footer.description" />
       </span>
-      {serializedCommand && command && (
+      {commands.length > 0 && (
         <Popover
           onOpenChange={open => {
             if (open) {
@@ -65,28 +61,40 @@ const KcidevFooter = ({
             <h2 className="mb-3 text-base font-semibold">
               <FormattedMessage id="footer.commandTitle" />
             </h2>
-            <pre
-              aria-label={command.label}
-              className="mb-3 max-w-full cursor-text overflow-x-auto rounded-md bg-slate-100 p-3 text-sm select-text"
-              tabIndex={0}
-            >
-              <code>{serializedCommand}</code>
-            </pre>
-            {command.omittedFilters.length > 0 && (
-              <div
-                className="mb-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
-                role="note"
-              >
-                <FormattedMessage
-                  id="footer.unsupportedFilters"
-                  values={{ filters: command.omittedFilters.join(', ') }}
-                />
+            {commands.map(value => (
+              <div className="mb-3" key={value.id}>
+                {commands.length > 1 && (
+                  <h3 className="mb-1 text-sm font-medium">{value.label}</h3>
+                )}
+                <pre
+                  aria-label={value.label}
+                  className="max-w-full cursor-text overflow-x-auto rounded-md bg-slate-100 p-3 text-sm select-text"
+                  tabIndex={0}
+                >
+                  <code>{serializeKcidevCommand(value)}</code>
+                </pre>
+                {value.omittedFilters.length > 0 && (
+                  <div
+                    className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+                    role="note"
+                  >
+                    <FormattedMessage
+                      id="footer.unsupportedFilters"
+                      values={{ filters: value.omittedFilters.join(', ') }}
+                    />
+                  </div>
+                )}
+                <Button
+                  className="mt-2"
+                  type="button"
+                  onClick={() => copyCommand(value)}
+                >
+                  <FormattedMessage id="footer.copyCommand" />
+                  {commands.length > 1 && `: ${value.label}`}
+                </Button>
               </div>
-            )}
+            ))}
             <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" onClick={copyCommand}>
-                <FormattedMessage id="footer.copyCommand" />
-              </Button>
               <a
                 className="text-dark-blue underline"
                 href="https://kci.dev"

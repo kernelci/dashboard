@@ -50,6 +50,7 @@ import { TooltipIcon } from '@/components/Icons/TooltipIcon';
 import { Badge } from '@/components/ui/badge';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createIssueDetailsCommand } from '@/components/Footer/kcidevCommand';
 
 import { IncidentsSection } from './IncidentsSection';
 
@@ -286,7 +287,14 @@ export const IssueDetails = ({
                 onClickFilter={onClickBuildFilter}
               />
               <LogOrJsonSheetContent type="json" jsonContent={jsonContent} />
-              <MemoizedKcidevFooter />
+              <MemoizedKcidevFooter
+                command={createIssueDetailsCommand({
+                  id: issueId,
+                  origin: data?.origin,
+                  omittedFilters:
+                    versionNumber === undefined ? [] : ['issue version'],
+                })}
+              />
             </div>
           </Sheet>
         </ErrorBoundary>

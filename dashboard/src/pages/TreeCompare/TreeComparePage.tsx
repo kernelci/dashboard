@@ -21,6 +21,8 @@ import PageWithTitle from '@/components/PageWithTitle';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import Tabs from '@/components/Tabs/Tabs';
 import type { ITabItem } from '@/components/Tabs/Tabs';
+import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createTreeCompareCommand } from '@/components/Footer/kcidevCommand';
 
 import { useCommits } from '@/api/commitHistory';
 import {
@@ -417,6 +419,17 @@ const TreeComparePage = (): JSX.Element => {
             </section>
           </>
         )}
+        <MemoizedKcidevFooter
+          command={createTreeCompareCommand({
+            origin,
+            gitUrl: compareQuery.data?.gitUrl,
+            branch,
+            hashA: resolvedHashA || undefined,
+            hashB: resolvedHashB || undefined,
+            omittedFilters:
+              statusPairs.length > 0 ? ['status-pair filter'] : [],
+          })}
+        />
       </div>
     </PageWithTitle>
   );
