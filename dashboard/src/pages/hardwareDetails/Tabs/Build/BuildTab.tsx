@@ -29,6 +29,7 @@ import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/H
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createHardwareResultsCommand } from '@/components/Footer/kcidevCommand';
 
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
@@ -88,13 +89,10 @@ const BuildTab = ({
   const kcidevComponent = useMemo(
     () => (
       <MemoizedKcidevFooter
-        commandGroup="hardwareDetails"
-        args={{
-          cmdName: 'hardware builds',
+        command={createHardwareResultsCommand('builds', {
           name: hardwareId,
-          origin: origin,
-          json: true,
-        }}
+          origin,
+        })}
       />
     ),
     [hardwareId, origin],

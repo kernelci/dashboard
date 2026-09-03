@@ -48,6 +48,7 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createTreeResultsCommand } from '@/components/Footer/kcidevCommand';
 
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
@@ -73,7 +74,7 @@ const BuildTab = ({
 }: BuildTab): JSX.Element => {
   const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
   const params = useParams({ from: urlFrom });
-  const { diffFilter, treeInfo } = useSearch({
+  const { diffFilter, treeInfo, origin } = useSearch({
     from: urlFrom,
   });
 
@@ -179,16 +180,16 @@ const BuildTab = ({
   const kcidevComponent = useMemo(
     () => (
       <MemoizedKcidevFooter
-        commandGroup="treeDetails"
-        args={{
-          cmdName: 'builds',
-          'git-url': sanitizedTreeInfo.gitUrl,
+        command={createTreeResultsCommand('builds', {
+          origin,
+          gitUrl: sanitizedTreeInfo.gitUrl,
           branch: sanitizedTreeInfo.gitBranch,
           commit: sanitizedTreeInfo.hash,
-        }}
+        })}
       />
     ),
     [
+      origin,
       sanitizedTreeInfo.gitBranch,
       sanitizedTreeInfo.gitUrl,
       sanitizedTreeInfo.hash,

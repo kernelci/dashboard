@@ -70,6 +70,7 @@ import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 import { isBadRequestError } from '@/utils/query';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createResultDetailsCommand } from '@/components/Footer/kcidevCommand';
 
 import { isBoot } from '@/utils/test';
 
@@ -603,13 +604,7 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
 
     return (
       <MemoizedKcidevFooter
-        commandGroup={'details'}
-        args={{
-          cmdName: command,
-          id: testId,
-          'download-logs': true,
-          json: true,
-        }}
+        command={createResultDetailsCommand(command, testId)}
       />
     );
   }, [data?.path, testId]);

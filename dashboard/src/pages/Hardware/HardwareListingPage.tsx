@@ -20,6 +20,7 @@ import {
 } from '@/lib/string';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createHardwareListingCommand } from '@/components/Footer/kcidevCommand';
 import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
@@ -214,8 +215,7 @@ const HardwareListingPage = ({
   const kcidevComponent = useMemo(
     () => (
       <MemoizedKcidevFooter
-        commandGroup="hardwareListing"
-        args={{ cmdName: 'hardware list', origin: origin, json: true }}
+        command={createHardwareListingCommand({ origin })}
       />
     ),
     [origin],

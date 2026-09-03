@@ -37,6 +37,7 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createTreeResultsCommand } from '@/components/Footer/kcidevCommand';
 import { getStringParam } from '@/utils/utils';
 
 interface BootsTabProps {
@@ -52,7 +53,7 @@ const BootsTab = ({
   const params = useParams({
     from: urlFrom,
   });
-  const { tableFilter, diffFilter, treeInfo } = useSearch({
+  const { tableFilter, diffFilter, treeInfo, origin } = useSearch({
     from: urlFrom,
   });
 
@@ -229,16 +230,16 @@ const BootsTab = ({
   const kcidevComponent = useMemo(
     () => (
       <MemoizedKcidevFooter
-        commandGroup="treeDetails"
-        args={{
-          cmdName: 'boots',
-          'git-url': sanitizedTreeInfo.gitUrl,
+        command={createTreeResultsCommand('boots', {
+          origin,
+          gitUrl: sanitizedTreeInfo.gitUrl,
           branch: sanitizedTreeInfo.gitBranch,
           commit: sanitizedTreeInfo.hash,
-        }}
+        })}
       />
     ),
     [
+      origin,
       sanitizedTreeInfo.gitBranch,
       sanitizedTreeInfo.gitUrl,
       sanitizedTreeInfo.hash,

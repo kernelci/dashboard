@@ -50,6 +50,7 @@ import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
 import { processLogData } from '@/hooks/useLogData';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createResultDetailsCommand } from '@/components/Footer/kcidevCommand';
 
 import { TreeDetailsLink } from '@/components/TreeDetailsLink/TreeDetailsLink';
 
@@ -304,13 +305,7 @@ const BuildDetails = ({
   const kcidevComponent = useMemo(
     () => (
       <MemoizedKcidevFooter
-        commandGroup="details"
-        args={{
-          cmdName: 'build',
-          id: buildId,
-          'download-logs': true,
-          json: true,
-        }}
+        command={createResultDetailsCommand('build', buildId)}
       />
     ),
     [buildId],

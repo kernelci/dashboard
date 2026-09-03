@@ -86,7 +86,7 @@ export const IssueListingPage = ({
           error={error}
           isLoading={isLoading}
         />
-        <MemoizedKcidevFooter commandGroup="issue" />
+        <MemoizedKcidevFooter />
       </div>
     </>
   );

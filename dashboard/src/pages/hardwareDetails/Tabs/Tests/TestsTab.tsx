@@ -31,6 +31,7 @@ import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createHardwareResultsCommand } from '@/components/Footer/kcidevCommand';
 
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 
@@ -118,13 +119,10 @@ const TestsTab = ({
   const kcidevComponent = useMemo(
     () => (
       <MemoizedKcidevFooter
-        commandGroup="hardwareDetails"
-        args={{
-          cmdName: 'hardware tests',
+        command={createHardwareResultsCommand('tests', {
           name: hardwareId,
-          origin: origin,
-          json: true,
-        }}
+          origin,
+        })}
       />
     ),
     [hardwareId, origin],

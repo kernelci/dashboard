@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { matchesRegexOrIncludes } from '@/lib/string';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createTreeListingCommand } from '@/components/Footer/kcidevCommand';
 
 import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
 
@@ -17,9 +18,13 @@ import { TreeTable } from './TreeTable';
 const TreeListingPage = ({
   inputFilter,
   urlFromMap,
+  origin,
+  intervalInDays,
 }: {
   inputFilter: string;
   urlFromMap: TreeListingRoutesMap;
+  origin: string;
+  intervalInDays: number;
 }): JSX.Element => {
   const { data, error, status, isLoading } = useTreeListing({
     searchFrom: urlFromMap.search,
@@ -42,9 +47,15 @@ const TreeListingPage = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter commandGroup="trees" args={{ cmdName: 'trees' }} />
+      <MemoizedKcidevFooter
+        command={createTreeListingCommand({
+          origin,
+          days: intervalInDays,
+          omittedFilters: inputFilter ? ['treeSearch'] : [],
+        })}
+      />
     ),
-    [],
+    [inputFilter, intervalInDays, origin],
   );
 
   return (

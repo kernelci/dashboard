@@ -12,7 +12,7 @@ const Trees = ({
 }: {
   urlFromMap: TreeListingRoutesMap;
 }): JSX.Element => {
-  const { treeSearch } = useSearch({
+  const { treeSearch, origin, intervalInDays } = useSearch({
     from: urlFromMap.search,
   });
 
@@ -20,7 +20,12 @@ const Trees = ({
     <>
       <MemoizedListingOGTags monitor="/tree" search={treeSearch} />
       <div className="bg-light-gray w-full py-4">
-        <TreeListingPage inputFilter={treeSearch} urlFromMap={urlFromMap} />
+        <TreeListingPage
+          inputFilter={treeSearch}
+          urlFromMap={urlFromMap}
+          origin={origin}
+          intervalInDays={intervalInDays}
+        />
       </div>
     </>
   );

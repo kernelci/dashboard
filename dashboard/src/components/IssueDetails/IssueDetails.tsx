@@ -286,7 +286,7 @@ export const IssueDetails = ({
                 onClickFilter={onClickBuildFilter}
               />
               <LogOrJsonSheetContent type="json" jsonContent={jsonContent} />
-              <MemoizedKcidevFooter commandGroup="issue" />
+              <MemoizedKcidevFooter />
             </div>
           </Sheet>
         </ErrorBoundary>

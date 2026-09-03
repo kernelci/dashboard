@@ -37,6 +37,7 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { createTreeResultsCommand } from '@/components/Footer/kcidevCommand';
 import { getStringParam } from '@/utils/utils';
 
 interface TestsTabProps {
@@ -50,7 +51,7 @@ const TestsTab = ({
 }: TestsTabProps): JSX.Element => {
   const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
   const params = useParams({ from: urlFrom });
-  const { tableFilter, diffFilter, treeInfo } = useSearch({
+  const { tableFilter, diffFilter, treeInfo, origin } = useSearch({
     from: urlFrom,
   });
 
@@ -228,16 +229,16 @@ const TestsTab = ({
   const kcidevComponent = useMemo(
     () => (
       <MemoizedKcidevFooter
-        commandGroup="treeDetails"
-        args={{
-          cmdName: 'tests',
-          'git-url': sanitizedTreeInfo.gitUrl,
+        command={createTreeResultsCommand('tests', {
+          origin,
+          gitUrl: sanitizedTreeInfo.gitUrl,
           branch: sanitizedTreeInfo.gitBranch,
           commit: sanitizedTreeInfo.hash,
-        }}
+        })}
       />
     ),
     [
+      origin,
       sanitizedTreeInfo.gitBranch,
       sanitizedTreeInfo.gitUrl,
       sanitizedTreeInfo.hash,

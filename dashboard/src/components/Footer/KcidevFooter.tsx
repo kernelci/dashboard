@@ -5,129 +5,12 @@ import { TbTerminal2 } from 'react-icons/tb';
 
 import { TooltipIcon } from '@/components/Icons/TooltipIcon';
 
-// These types define the possible args of the command,
-// including their variation (command after `kci-dev results`)
-type TreeDetailsCmdFlags = {
-  cmdName: 'summary' | 'builds' | 'boots' | 'tests';
-  'git-url'?: string;
-  branch?: string;
-  commit: string;
-};
+import { serializeKcidevCommand, type KcidevCommand } from './kcidevCommand';
 
-type DetailsCmdFlags = {
-  cmdName: 'build' | 'boot' | 'test';
-  id: string;
-  'download-logs': boolean;
-  json: boolean;
-};
-
-type HardwareDetailsCmdFlags = {
-  cmdName:
-    | 'hardware summary'
-    | 'hardware builds'
-    | 'hardware boots'
-    | 'hardware tests';
-  name: string;
-  origin: string;
-  json?: boolean;
-};
-
-type HardwareListingCmdFlags = {
-  cmdName: 'hardware list';
-  origin: string;
-  json: boolean;
-};
-
-type TreeListingCmdFlags = {
-  cmdName: 'trees';
-};
-
-// This map dictates which flags each commandGroup will accept
-type CommandArgsMap = {
-  treeDetails: TreeDetailsCmdFlags;
-  details: DetailsCmdFlags;
-  hardwareDetails: HardwareDetailsCmdFlags;
-  hardwareListing: HardwareListingCmdFlags;
-  trees: TreeListingCmdFlags;
-  issue: never;
-};
-
-// This type and map will tell which arguments will be added as `command value` or `command --key value`
-type PositionalArgs = {
-  required: string[];
-  flags: string[];
-};
-
-const commandArgs: {
-  [K in keyof CommandArgsMap]: PositionalArgs;
-} = {
-  treeDetails: {
-    required: ['cmdName'],
-    flags: ['git-url', 'branch', 'commit'],
-  },
-  details: {
-    required: ['cmdName'],
-    flags: ['id', 'download-logs', 'json'],
-  },
-  hardwareDetails: {
-    required: ['cmdName'],
-    flags: ['name', 'origin', 'json'],
-  },
-  hardwareListing: {
-    required: ['cmdName'],
-    flags: ['origin', 'json'],
-  },
-  trees: {
-    required: ['cmdName'],
-    flags: [],
-  },
-  issue: {
-    required: [],
-    flags: [],
-  },
-};
-
-const BASECOMMAND = 'kci-dev results';
-
-const buildCommand = <K extends keyof CommandArgsMap>(
-  commandGroup: K,
-  args: CommandArgsMap[K],
-): string | undefined => {
-  const parts = [BASECOMMAND];
-
-  for (const key in args) {
-    if (Object.prototype.hasOwnProperty.call(args, key)) {
-      const value = args[key];
-      if (value) {
-        if (commandArgs[commandGroup]['required'].includes(key)) {
-          parts.push(String(value));
-        } else {
-          if (typeof value === 'boolean' && value) {
-            parts.push(`--${key}`);
-          } else {
-            parts.push(`--${key} '${value}'`);
-          }
-        }
-      } else {
-        // for the purpose of the examples, if some of the values
-        // are missing then we don't return the command
-        return undefined;
-      }
-    }
-  }
-
-  return parts.join(' ');
-};
-
-// TODO: there are better ways of passing the args,
-// one of them could be changing the parameters of the component itself
-// instead of passing the args inside an object, which would also help with memoization
-const KcidevFooter = <K extends keyof CommandArgsMap>({
-  commandGroup,
-  args,
+const KcidevFooter = ({
+  command,
 }: {
-  commandGroup: K;
-  args?: CommandArgsMap[K];
+  command?: KcidevCommand;
 }): JSX.Element => {
   const { formatMessage } = useIntl();
 
@@ -144,13 +27,10 @@ const KcidevFooter = <K extends keyof CommandArgsMap>({
     );
   }, [formatMessage]);
 
-  const command = useMemo(() => {
-    if (!args) {
-      return;
-    }
-
-    return buildCommand(commandGroup, args);
-  }, [commandGroup, args]);
+  const serializedCommand = useMemo(
+    () => command && serializeKcidevCommand(command),
+    [command],
+  );
 
   return (
     <div className="flex justify-center text-center align-middle text-[14px]">
@@ -160,10 +40,10 @@ const KcidevFooter = <K extends keyof CommandArgsMap>({
         </span>
         <FormattedMessage id="footer.kcidev" values={{ link: kcidevLink }} />
       </span>
-      {command && (
+      {serializedCommand && (
         <TooltipIcon
           tooltipId="footer.command"
-          tooltipValues={{ command: command }}
+          tooltipValues={{ command: serializedCommand }}
           icon={<TbTerminal2 className="ml-2 size-5" />}
         />
       )}
