@@ -35,6 +35,7 @@ class TreeReport(APIView):
                 origin=request.GET.get("origin"),
                 git_branch=request.GET.get("git_branch"),
                 git_url=request.GET.get("git_url"),
+                tree_name=request.GET.get("tree_name"),
                 path=request.GET.getlist("path"),
                 group_size=request.GET.get("group_size"),
                 min_age_in_hours=request.GET.get("min_age_in_hours"),
@@ -61,6 +62,7 @@ class TreeReport(APIView):
             tuple_params=[tree_key],
             interval_min=min_query_interval,
             interval_max=max_query_interval,
+            tree_name=params.tree_name or None,
         )
         if not records:
             return create_api_error_response(

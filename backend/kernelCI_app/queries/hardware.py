@@ -12,44 +12,71 @@ from kernelCI_app.queries.duration import (
 from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
 
-def _get_hardware_tree_heads_clause(*, id_only: bool) -> str:
-    """Returns the tree_heads for the hardware queries,
-    where the checkout is not filtered by origin.
+def _get_hardware_tree_heads_with_ctes() -> str:
+    """Latest checkouts in the window, then probe tests via builds.build_id.
 
-    This is done because tests from a origin can be
-    related to checkouts from another origin."""
-    if id_only is True:
-        fields = "C.id"
-    else:
-        fields = """C.id,
-                    C.origin,
+    Checkout origin is not filtered: tests from one origin can belong to
+    checkouts from another.
+    """
+    return """
+        tree_heads AS MATERIALIZED (
+            SELECT DISTINCT
+                ON (
                     C.tree_name,
-                    C.start_time,
                     C.git_repository_branch,
                     C.git_repository_url,
-                    C.git_commit_name,
-                    C.git_commit_hash,
-                    C.git_commit_tags"""
-
-    return f"""SELECT DISTINCT
-                    ON (
-                        C.tree_name,
-                        C.git_repository_branch,
-                        C.git_repository_url,
-                        C.origin
-                    )
-                    {fields}
-                FROM
-                    checkouts C
-                WHERE
-                    C.start_time >= %(start_date)s
-                    AND C.start_time <= %(end_date)s
-                ORDER BY
-                    C.tree_name ASC,
-                    C.git_repository_branch ASC,
-                    C.git_repository_url ASC,
-                    C.origin ASC,
-                    C.start_time DESC"""
+                    C.origin
+                )
+                C.id,
+                C.origin,
+                C.tree_name,
+                C.start_time,
+                C.git_repository_branch,
+                C.git_repository_url,
+                C.git_commit_name,
+                C.git_commit_hash,
+                C.git_commit_tags
+            FROM
+                checkouts C
+            WHERE
+                C.start_time >= %(start_date)s
+                AND C.start_time <= %(end_date)s
+            ORDER BY
+                C.tree_name ASC,
+                C.git_repository_branch ASC,
+                C.git_repository_url ASC,
+                C.origin ASC,
+                C.start_time DESC
+        ),
+        period_builds AS MATERIALIZED (
+            SELECT
+                builds.id,
+                builds.checkout_id
+            FROM
+                tree_heads TH
+                INNER JOIN builds ON builds.checkout_id = TH.id
+        ),
+        hardware_checkouts AS (
+            SELECT DISTINCT
+                period_builds.checkout_id AS id
+            FROM
+                period_builds
+                INNER JOIN LATERAL (
+                    SELECT
+                        1
+                    FROM
+                        tests
+                    WHERE
+                        tests.build_id = period_builds.id
+                        AND tests.origin = %(origin)s
+                        AND (
+                            tests.environment_compatible @> ARRAY[%(hardware)s]::TEXT[]
+                            OR tests.environment_misc ->> 'platform' = %(hardware)s
+                        )
+                    LIMIT
+                        1
+                ) t ON true
+        )"""
 
 
 # TODO: unify with get_tree_listing_count_clause
@@ -118,8 +145,28 @@ def get_hardware_selectors(origin: str) -> list[dict]:
         return rows
 
     params = {"origin": origin}
+    cross_origin_test_origins = {"aspeed", "ti"}
 
-    query = """
+    if origin in cross_origin_test_origins:
+        from_where = """
+            FROM tests t
+            INNER JOIN builds b ON b.id = t.build_id
+            INNER JOIN checkouts c ON c.id = b.checkout_id
+            WHERE
+                t.origin = %(origin)s
+                AND t.start_time > (NOW() - INTERVAL '30 days')
+                AND t.environment_misc ->> 'platform' IS NOT NULL
+        """
+    else:
+        from_where = """
+            FROM checkouts c
+            INNER JOIN builds b ON b.checkout_id = c.id
+            WHERE
+                b.origin = %(origin)s
+                AND b.start_time > (NOW() - INTERVAL '30 days')
+        """
+
+    query = f"""
         SELECT DISTINCT ON (
             c.tree_name,
             c.git_repository_url,
@@ -133,11 +180,7 @@ def get_hardware_selectors(origin: str) -> list[dict]:
             c.git_commit_hash,
             c.git_commit_name,
             c.start_time
-        FROM checkouts c
-        INNER JOIN builds b ON b.checkout_id = c.id
-        WHERE
-            b.origin = %(origin)s
-            AND b.start_time > (NOW() - INTERVAL '30 days')
+        {from_where}
             AND c.git_repository_url IS NOT NULL
             AND c.git_repository_branch IS NOT NULL
             AND c.git_commit_hash IS NOT NULL
@@ -255,6 +298,7 @@ def get_hardware_listing_data_bulk(
                 FROM
                     tests
                     INNER JOIN builds b ON tests.build_id = b.id
+                    LEFT JOIN labs tl ON tests.lab_id = tl.id
                 WHERE
                     "tests"."environment_misc" ->> 'platform' IS NOT NULL
                     AND "tests"."start_time" >= %(start_date)s
@@ -267,7 +311,8 @@ def get_hardware_listing_data_bulk(
                         OR tests.environment_misc ->> 'platform' = key_list.hardware_id
                     )
                     AND tests.origin = key_list.origin
-                    AND tests.misc ->> 'runtime' = key_list.lab_name
+                    -- TODO remove misc->>'runtime' fallback after lab backfill
+                    AND COALESCE(tl.name, tests.misc ->> 'runtime') = key_list.lab_name
                     )
             )
         SELECT
@@ -437,7 +482,6 @@ def get_hardware_details_summary(
     start_datetime: datetime,
     end_datetime: datetime,
 ):
-
     if builds_duration is None:
         builds_duration = (None, None)
     if boots_duration is None:
@@ -463,12 +507,30 @@ def get_hardware_details_summary(
     if query_rows is not None:
         return query_rows
 
-    builds_duration_clause = get_build_duration_clause(builds_duration)
-    boots_tests_duration_clause = get_boot_test_duration_clause(
-        boots_duration, tests_duration
-    )
-
     query = """
+            WITH platform_tests AS (
+            SELECT
+                id, build_id, status, path, duration, misc,
+                environment_misc, environment_compatible, lab_id
+            FROM
+                tests
+            WHERE
+                tests.origin = %(origin)s
+                AND tests.start_time >= %(start_date)s
+                AND tests.start_time <= %(end_date)s
+                AND tests.environment_compatible @> ARRAY[%(platform)s]::TEXT[]
+            UNION
+            SELECT
+                id, build_id, status, path, duration, misc,
+                environment_misc, environment_compatible, lab_id
+            FROM
+                tests
+            WHERE
+                tests.origin = %(origin)s
+                AND tests.start_time >= %(start_date)s
+                AND tests.start_time <= %(end_date)s
+                AND tests.environment_misc ->> 'platform' = %(platform)s
+            )
            (SELECT
                  COUNT(DISTINCT builds.id) AS count,
                  checkouts.origin,
@@ -478,10 +540,10 @@ def get_hardware_details_summary(
                      AS known_issues,
                  array[builds.compiler, builds.architecture] AS compiler_arch,
                  builds.config_name,
-                 builds.misc->>'lab' AS lab,
+                 -- TODO remove misc->>'lab' fallback after lab backfill
+                 COALESCE(bl.name, builds.misc->>'lab') AS lab,
                  tests.environment_misc->>'platform' AS platform,
                  tests.environment_compatible,
-                 checkouts.origin,
                  checkouts.tree_name,
                  checkouts.git_repository_url,
                  checkouts.git_commit_tags,
@@ -493,23 +555,20 @@ def get_hardware_details_summary(
                  false AS is_boot
              FROM
                 builds
-            INNER JOIN tests ON
+            INNER JOIN platform_tests tests ON
                 tests.build_id = builds.id
             INNER JOIN checkouts ON
                 builds.checkout_id = checkouts.id
+            LEFT JOIN labs bl ON builds.lab_id = bl.id
             LEFT OUTER JOIN incidents ON
                 builds.id = incidents.build_id
             WHERE
-                (
-                    builds.config_name IS NOT NULL
-                    AND builds.id not like 'maestro:dummy_%%'
-                    AND (tests.environment_compatible @> ARRAY[%(platform)s]::TEXT[]
-                    OR tests.environment_misc ->> 'platform' = %(platform)s)
-                )
+                builds.config_name IS NOT NULL
+                AND builds.id not like 'maestro:dummy_%%'
                 AND builds.origin = %(origin)s
                 AND builds.start_time >= %(start_date)s
                 AND builds.start_time <= %(end_date)s
-                AND (checkouts.git_commit_hash = ANY(%(commits)s)) {0}
+                AND (checkouts.git_commit_hash = ANY(%(commits)s)) {builds_duration_clause}
             GROUP BY checkouts.id, builds.status, tests.environment_compatible, compiler_arch,
                 builds.config_name, lab, platform, is_boot)
             UNION ALL
@@ -522,10 +581,10 @@ def get_hardware_details_summary(
                      as known_issues,
                  array[builds.compiler, builds.architecture] AS compiler_arch,
                  builds.config_name,
-                 tests.misc->>'runtime' AS lab,
+                 -- TODO remove misc->>'runtime' fallback after lab backfill
+                 COALESCE(tl.name, tests.misc->>'runtime') AS lab,
                  tests.environment_misc->>'platform' AS platform,
                  tests.environment_compatible,
-                 checkouts.origin,
                  checkouts.tree_name,
                  checkouts.git_repository_url,
                  checkouts.git_commit_tags,
@@ -537,26 +596,22 @@ def get_hardware_details_summary(
                  (tests.path like 'boot.%%' or tests.path = 'boot') AS is_boot
              FROM
                 builds
-            INNER JOIN tests ON
+            INNER JOIN platform_tests tests ON
                 tests.build_id = builds.id
             INNER JOIN checkouts ON
                 builds.checkout_id = checkouts.id
+            LEFT JOIN labs tl ON tests.lab_id = tl.id
             LEFT OUTER JOIN incidents ON
                 tests.id = incidents.test_id
             WHERE
-                (
-                    (tests.environment_compatible @> ARRAY[%(platform)s]::TEXT[]
-                    OR tests.environment_misc ->> 'platform' = %(platform)s)
-                )
-                AND tests.origin = %(origin)s
-                AND tests.start_time >= %(start_date)s
-                AND tests.start_time <= %(end_date)s
-                AND (checkouts.git_commit_hash = ANY(%(commits)s)) {1}
+                (checkouts.git_commit_hash = ANY(%(commits)s)) {boots_tests_duration_clause}
             GROUP BY checkouts.id, tests.status, tests.environment_compatible, compiler_arch,
                 builds.config_name, lab, platform, is_boot);
     """.format(
-        builds_duration_clause,
-        boots_tests_duration_clause,
+        builds_duration_clause=get_build_duration_clause(builds_duration),
+        boots_tests_duration_clause=get_boot_test_duration_clause(
+            boots_duration, tests_duration
+        ),
     )
 
     build_duration_min, build_duration_max = builds_duration
@@ -626,13 +681,21 @@ def query_records(
                 issues.report_url AS incidents__issue__report_url,
                 incidents.test_id AS incidents__test_id,
                 T7.issue_id AS build__incidents__issue__id,
-                T8.version AS build__incidents__issue__version
+                T8.version AS build__incidents__issue__version,
+                -- TODO remove misc->>'runtime' fallback after lab backfill
+                COALESCE(tl.name, tests.misc->>'runtime') AS lab,
+                -- TODO remove misc->>'lab' fallback after lab backfill
+                COALESCE(bl.name, builds.misc->>'lab') AS build_lab
             FROM
                 tests
             INNER JOIN builds ON
                 tests.build_id = builds.id
             INNER JOIN checkouts ON
                 builds.checkout_id = checkouts.id
+            LEFT JOIN labs tl ON
+                tests.lab_id = tl.id
+            LEFT JOIN labs bl ON
+                builds.lab_id = bl.id
             LEFT OUTER JOIN incidents ON
                 tests.id = incidents.test_id
             LEFT OUTER JOIN issues ON
@@ -721,13 +784,16 @@ def get_hardware_summary_data(
                 checkouts.git_commit_name,
                 checkouts.git_commit_hash,
                 checkouts.tree_name,
-                checkouts.origin AS checkout_origin
+                checkouts.origin AS checkout_origin,
+                -- TODO remove misc->>'runtime' fallback after lab backfill
+                COALESCE(tl.name, tests.misc->>'runtime') AS lab
             FROM
                 tests
             INNER JOIN builds ON
                 tests.build_id = builds.id
             INNER JOIN checkouts ON
                 builds.checkout_id = checkouts.id
+            LEFT JOIN labs tl ON tests.lab_id = tl.id
             WHERE
                 tests.start_time >= %s
                 AND tests.start_time <= %s
@@ -740,7 +806,8 @@ def get_hardware_summary_data(
                     OR tests.environment_misc ->> 'platform' = key_list.hardware_id
                 )
                 AND tests.origin = key_list.origin
-                AND tests.misc ->> 'runtime' = key_list.lab_name
+                -- TODO remove misc->>'runtime' fallback after lab backfill
+                AND COALESCE(tl.name, tests.misc ->> 'runtime') = key_list.lab_name
                 )
             ORDER BY
                 tests.start_time DESC
@@ -762,10 +829,6 @@ def get_hardware_trees_head_commits(
     start_datetime: datetime,
     end_datetime: datetime,
 ) -> list[tuple[str, str]]:
-
-    # similar to the get_hardware_trees_data, except we limit the information
-    # being brought to the commit hash
-
     cache_key = "hardwareTreesHeadCommits"
 
     cache_params = {
@@ -780,16 +843,9 @@ def get_hardware_trees_head_commits(
     if trees:
         return trees
 
-    tree_head_clause = _get_hardware_tree_heads_clause(id_only=False)
-
-    # We need a subquery because if we filter by any hardware, it will get the
-    # last head that has that hardware, but not the real head of the trees
     query = f"""
     WITH
-        -- Selects the data of the latest checkout of all trees in the given period
-        tree_heads AS (
-            {tree_head_clause}
-        )
+        {_get_hardware_tree_heads_with_ctes()}
     SELECT DISTINCT
         ON (
             TH.tree_name,
@@ -799,19 +855,8 @@ def get_hardware_trees_head_commits(
         ) TH.tree_name,
         TH.git_commit_hash
     FROM
-        tests
-        INNER JOIN builds ON tests.build_id = builds.id
-        INNER JOIN tree_heads TH ON builds.checkout_id = TH.id
-    WHERE
-        (
-            (
-                tests.environment_compatible @> ARRAY[%(hardware)s]::TEXT[]
-                OR tests.environment_misc ->> 'platform' = %(hardware)s
-            )
-            AND tests.origin = %(origin)s
-            AND TH.start_time >= %(start_date)s
-            AND TH.start_time <= %(end_date)s
-        )
+        tree_heads TH
+        INNER JOIN hardware_checkouts HC ON HC.id = TH.id
     ORDER BY
         TH.tree_name ASC,
         TH.git_repository_branch ASC,
@@ -857,17 +902,10 @@ def get_hardware_trees_data(
 
     trees: list[Tree] = get_query_cache(cache_key, params)
 
-    tree_head_clause = _get_hardware_tree_heads_clause(id_only=False)
-
     if not trees:
-        # We need a subquery because if we filter by any hardware, it will get the
-        # last head that has that hardware, but not the real head of the trees
         query = f"""
         WITH
-            -- Selects the data of the latest checkout of all trees in the given period
-            tree_heads AS (
-                {tree_head_clause}
-            )
+            {_get_hardware_tree_heads_with_ctes()}
         SELECT DISTINCT
             ON (
                 TH.tree_name,
@@ -882,19 +920,8 @@ def get_hardware_trees_data(
             TH.git_commit_hash,
             TH.git_commit_tags
         FROM
-            tests
-            INNER JOIN builds ON tests.build_id = builds.id
-            INNER JOIN tree_heads TH ON builds.checkout_id = TH.id
-        WHERE
-            (
-                (
-                    tests.environment_compatible @> ARRAY[%(hardware)s]::TEXT[]
-                    OR tests.environment_misc ->> 'platform' = %(hardware)s
-                )
-                AND tests.origin = %(origin)s
-                AND TH.start_time >= %(start_date)s
-                AND TH.start_time <= %(end_date)s
-            )
+            tree_heads TH
+            INNER JOIN hardware_checkouts HC ON HC.id = TH.id
         ORDER BY
             TH.tree_name ASC,
             TH.git_repository_branch ASC,

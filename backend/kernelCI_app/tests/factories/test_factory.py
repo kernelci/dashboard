@@ -5,7 +5,7 @@ Factory for generating Test test data.
 import factory
 from factory.django import DjangoModelFactory
 
-from kernelCI_app.models import StatusChoices, Tests
+from kernelCI_app.models import Labs, StatusChoices, Tests
 
 from .build_factory import BuildFactory
 from .mocks import Checkout, Test
@@ -31,6 +31,10 @@ class TestFactory(DjangoModelFactory):
     comment = factory.Faker("text", max_nb_chars=200)
 
     start_time = factory.LazyAttribute(lambda obj: obj.build.start_time)
+
+    lab = factory.LazyAttribute(
+        lambda obj: Labs.objects.get_or_create(name=f"lab-{obj.origin}")[0]
+    )
 
     duration = factory.Faker("pyfloat", min_value=60.0, max_value=1800.0)
 
@@ -79,9 +83,10 @@ class TestFactory(DjangoModelFactory):
     )
     log_excerpt = factory.Faker("text", max_nb_chars=1500)
 
-    misc = factory.LazyFunction(
-        lambda: {
+    misc = factory.LazyAttribute(
+        lambda obj: {
             "test_environment": "qemu",
+            "runtime": f"lab-{obj.origin}",
             "kernel_version": "6.1.0",
             "test_suite": "ltp",
             "test_version": "20240115",

@@ -26,6 +26,7 @@ import {
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
+import { useSortingState } from '@/hooks/useSortingState';
 
 import type { TableKeys } from '@/utils/constants/tables';
 
@@ -49,7 +50,10 @@ export interface IBuildsTable {
   filter: PossibleTableFilters;
   onClickFilter: (filter: PossibleTableFilters) => void;
   getRowLink: (buildId: string) => LinkProps;
+  sortKey?: string;
 }
+
+const DEFAULT_BUILDS_SORTING: SortingState = [{ id: 'config', desc: false }];
 
 export function BuildsTable({
   tableKey,
@@ -58,8 +62,12 @@ export function BuildsTable({
   filter,
   onClickFilter,
   getRowLink,
+  sortKey,
 }: IBuildsTable): JSX.Element {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const { sorting, handleSortingChange } = useSortingState({
+    defaultSorting: DEFAULT_BUILDS_SORTING,
+    sortKey,
+  });
   const { pagination, paginationUpdater } = usePaginationState(tableKey);
 
   const intl = useIntl();
@@ -87,7 +95,8 @@ export function BuildsTable({
   const table = useReactTable({
     data: rawData,
     columns,
-    onSortingChange: setSorting,
+    enableSortingRemoval: false,
+    onSortingChange: handleSortingChange,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: paginationUpdater,

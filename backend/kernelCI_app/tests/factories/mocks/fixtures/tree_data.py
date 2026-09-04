@@ -2,7 +2,10 @@
 Tree data fixtures for test factories.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+
+# Evaluated at seed import so tree-report age windows (hours from NOW) still match.
+_SEED_NOW = datetime.now(timezone.utc)
 
 TREE_DATA = {
     "a1c24ab822793eb513351686f631bd18952b7870": {  # ARM64_TREE
@@ -165,6 +168,25 @@ TREE_DATA = {
         "start_time": datetime.fromtimestamp(
             1741356000, timezone.utc
         ),  # failed_tests_build
+        "hardware_platform": None,
+    },
+    # https://github.com/kernelci/dashboard/issues/1460 — same url/branch/hash, different tree_name
+    "issue1460_older_checkout": {
+        "origin": "maestro",
+        "git_url": "https://example.com/kernelci-dashboard-issue-1460.git",
+        "git_branch": "issue-1460-branch",
+        "tree_name": "issue1460_older",
+        "git_commit_hash": "issue1460sharedhash00000000000000000000",
+        "start_time": _SEED_NOW - timedelta(hours=5),
+        "hardware_platform": None,
+    },
+    "issue1460_newer_checkout": {
+        "origin": "maestro",
+        "git_url": "https://example.com/kernelci-dashboard-issue-1460.git",
+        "git_branch": "issue-1460-branch",
+        "tree_name": "issue1460_newer",
+        "git_commit_hash": "issue1460sharedhash00000000000000000000",
+        "start_time": _SEED_NOW - timedelta(hours=1),
         "hardware_platform": None,
     },
 }

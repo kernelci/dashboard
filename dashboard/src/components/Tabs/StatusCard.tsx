@@ -87,7 +87,6 @@ const StatusCard = ({
       title={title}
       content={
         <StatusChartMemoized
-          type="chart"
           pieCentralLabel={formatMessage({ id: 'global.executed' })}
           pieCentralDescription={<>{totalCount}</>}
           onLegendClick={handleLegendClick}

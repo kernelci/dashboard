@@ -1,9 +1,4 @@
-import type {
-  ColumnDef,
-  ColumnFiltersState,
-  Row,
-  SortingState,
-} from '@tanstack/react-table';
+import type { ColumnDef, ColumnFiltersState, Row } from '@tanstack/react-table';
 import {
   flexRender,
   getCoreRowModel,
@@ -30,6 +25,7 @@ import { formattedBreakLineValue } from '@/locales/messages';
 import { zPossibleTabValidator } from '@/types/tree/TreeDetails';
 
 import { usePaginationState } from '@/hooks/usePaginationState';
+import { useSortingState } from '@/hooks/useSortingState';
 
 import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
@@ -272,7 +268,7 @@ export function TreeTable({
   });
   const navigate = useNavigate({ from: urlFromMap.navigate });
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const { sorting, handleSortingChange } = useSortingState();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const { pagination, paginationUpdater } = usePaginationState(
     'treeListing',
@@ -288,7 +284,7 @@ export function TreeTable({
   const table = useReactTable({
     data: orderedData,
     columns,
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

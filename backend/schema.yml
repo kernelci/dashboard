@@ -613,6 +613,71 @@ paths:
               schema:
                 $ref: '#/components/schemas/IssueExtraDetailsResponse'
           description: ''
+  /api/labs/:
+    get:
+      operationId: labs_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 7
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin filter
+      tags:
+      - labs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabListingResponse'
+          description: ''
+  /api/labs/origins/:
+    get:
+      operationId: labs_origins_retrieve
+      parameters:
+      - in: query
+        name: interval_in_days
+        schema:
+          default: 30
+          exclusiveMinimum: 0
+          title: Interval In Days
+          type: integer
+        description: Interval in days for the listing
+      tags:
+      - labs
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabOriginsResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+          description: ''
   /api/log-downloader/:
     get:
       operationId: log_downloader_retrieve
@@ -1106,6 +1171,15 @@ paths:
           title: Path
           type: array
         description: A list of test paths to query for. SQL Wildcard can be used.
+      - in: query
+        name: tree_name
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Tree Name
+        description: Name of the tree
       tags:
       - tree-report
       security:
@@ -1835,6 +1909,206 @@ paths:
               schema:
                 $ref: '#/components/schemas/TreeCommitsListResponse'
           description: ''
+  /api/tree/{tree_name}/{git_branch}/compare:
+    get:
+      operationId: tree_compare_retrieve
+      parameters:
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: hash_a
+        schema:
+          title: Hash A
+          type: string
+        description: Commit hash for side A
+        required: true
+      - in: query
+        name: hash_b
+        schema:
+          title: Hash B
+          type: string
+        description: Commit hash for side B
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCompareResponse'
+          description: ''
+  /api/tree/{tree_name}/{git_branch}/compare/boots:
+    get:
+      operationId: tree_compare_boots_retrieve
+      parameters:
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: hash_a
+        schema:
+          title: Hash A
+          type: string
+        description: Commit hash for side A
+        required: true
+      - in: query
+        name: hash_b
+        schema:
+          title: Hash B
+          type: string
+        description: Commit hash for side B
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCompareBootsTestsResponse'
+          description: ''
+  /api/tree/{tree_name}/{git_branch}/compare/builds:
+    get:
+      operationId: tree_compare_builds_retrieve
+      parameters:
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: hash_a
+        schema:
+          title: Hash A
+          type: string
+        description: Commit hash for side A
+        required: true
+      - in: query
+        name: hash_b
+        schema:
+          title: Hash B
+          type: string
+        description: Commit hash for side B
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCompareBuildsResponse'
+          description: ''
+  /api/tree/{tree_name}/{git_branch}/compare/tests:
+    get:
+      operationId: tree_compare_tests_retrieve
+      parameters:
+      - in: path
+        name: git_branch
+        schema:
+          type: string
+        description: Git branch name of the tree
+        required: true
+      - in: query
+        name: hash_a
+        schema:
+          title: Hash A
+          type: string
+        description: Commit hash for side A
+        required: true
+      - in: query
+        name: hash_b
+        schema:
+          title: Hash B
+          type: string
+        description: Commit hash for side B
+        required: true
+      - in: query
+        name: origin
+        schema:
+          default: maestro
+          title: Origin
+          type: string
+        description: Origin of the tree
+      - in: path
+        name: tree_name
+        schema:
+          type: string
+        description: Name of the tree
+        required: true
+      tags:
+      - tree
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeCompareBootsTestsResponse'
+          description: ''
   /api/tree/commits-history:
     get:
       operationId: tree_commits_history_retrieve
@@ -2018,6 +2292,12 @@ components:
           $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        lab:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Lab
         checkout_id:
           $ref: '#/components/schemas/Checkout__Id'
         command:
@@ -2095,6 +2375,12 @@ components:
           $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        lab:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Lab
       required:
       - id
       - origin
@@ -2238,8 +2524,10 @@ components:
       type: string
     Build__InputFiles:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -2253,15 +2541,19 @@ components:
       - type: 'null'
     Build__Misc:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
     Build__OutputFiles:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -2345,6 +2637,11 @@ components:
       - type: 'null'
     Checkout__Id:
       type: string
+    Checkout__StartTime:
+      anyOf:
+      - format: date-time
+        type: string
+      - type: 'null'
     Checkout__TreeName:
       anyOf:
       - type: string
@@ -2459,6 +2756,133 @@ components:
       - tests
       title: CommonDetailsTestsResponse
       type: object
+    CompareBuildDiffRow:
+      properties:
+        config_name:
+          title: Config Name
+          type: string
+        architecture:
+          title: Architecture
+          type: string
+        compiler:
+          title: Compiler
+          type: string
+        status_a:
+          anyOf:
+          - enum:
+            - PASS
+            - FAIL
+            - INCONCLUSIVE
+            type: string
+          - type: 'null'
+          default: null
+          title: Status A
+        status_b:
+          anyOf:
+          - enum:
+            - PASS
+            - FAIL
+            - INCONCLUSIVE
+            type: string
+          - type: 'null'
+          default: null
+          title: Status B
+      required:
+      - config_name
+      - architecture
+      - compiler
+      title: CompareBuildDiffRow
+      type: object
+    CompareChangeCounts:
+      properties:
+        regression:
+          default: 0
+          title: Regression
+          type: integer
+        fixed:
+          default: 0
+          title: Fixed
+          type: integer
+        newFailure:
+          default: 0
+          title: Newfailure
+          type: integer
+        stillFailing:
+          default: 0
+          title: Stillfailing
+          type: integer
+        newPass:
+          default: 0
+          title: Newpass
+          type: integer
+        appeared:
+          default: 0
+          title: Appeared
+          type: integer
+        disappeared:
+          default: 0
+          title: Disappeared
+          type: integer
+      title: CompareChangeCounts
+      type: object
+    CompareDelta:
+      properties:
+        pass:
+          default: 0
+          title: Pass
+          type: integer
+        fail:
+          default: 0
+          title: Fail
+          type: integer
+      title: CompareDelta
+      type: object
+    CompareEntitySummary:
+      properties:
+        sideA:
+          $ref: '#/components/schemas/CompareStatusCounts'
+        sideB:
+          $ref: '#/components/schemas/CompareStatusCounts'
+        delta:
+          $ref: '#/components/schemas/CompareDelta'
+        changes:
+          $ref: '#/components/schemas/CompareChangeCounts'
+      required:
+      - sideA
+      - sideB
+      - delta
+      title: CompareEntitySummary
+      type: object
+    CompareStatusCounts:
+      properties:
+        pass:
+          default: 0
+          title: Pass
+          type: integer
+        fail:
+          default: 0
+          title: Fail
+          type: integer
+        inconclusive:
+          default: 0
+          title: Inconclusive
+          type: integer
+      title: CompareStatusCounts
+      type: object
+    CompareSummary:
+      properties:
+        builds:
+          $ref: '#/components/schemas/CompareEntitySummary'
+        boots:
+          $ref: '#/components/schemas/CompareEntitySummary'
+        tests:
+          $ref: '#/components/schemas/CompareEntitySummary'
+      required:
+      - builds
+      - boots
+      - tests
+      title: CompareSummary
+      type: object
     DatabaseStatusValues:
       enum:
       - FAIL
@@ -2506,6 +2930,11 @@ components:
           $ref: '#/components/schemas/Incident'
         last_incident:
           $ref: '#/components/schemas/Incident'
+        next_checkout:
+          anyOf:
+          - $ref: '#/components/schemas/NextCheckout'
+          - type: 'null'
+          default: null
         versions:
           additionalProperties:
             anyOf:
@@ -2513,6 +2942,14 @@ components:
             - type: 'null'
           title: Versions
           type: object
+        per_tree:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/TreeSeenData'
+            type: array
+          - type: 'null'
+          default: null
+          title: Per Tree
       required:
       - first_incident
       - last_incident
@@ -2570,6 +3007,12 @@ components:
           $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
         git_repository_branch:
           $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+        lab:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Lab
         tree_name:
           $ref: '#/components/schemas/Checkout__TreeName'
         issue_id:
@@ -2756,7 +3199,8 @@ components:
           type: object
         filter:
           anyOf:
-          - type: object
+          - additionalProperties: true
+            type: object
           - type: 'null'
           default: null
           description: Optional filter dictionary for additional query parameters
@@ -3179,6 +3623,45 @@ components:
         $ref: '#/components/schemas/IssueBuildItem'
       title: IssueBuildsResponse
       type: array
+    IssueCheckout:
+      properties:
+        start_time:
+          $ref: '#/components/schemas/Timestamp'
+        git_commit_hash:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitHash'
+          - type: 'null'
+          default: null
+        git_repository_url:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+          - type: 'null'
+          default: null
+        git_repository_branch:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+          - type: 'null'
+          default: null
+        git_commit_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitName'
+          - type: 'null'
+          default: null
+        tree_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__TreeName'
+          - type: 'null'
+          default: null
+        checkout_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Checkout Id
+      required:
+      - start_time
+      title: IssueCheckout
+      type: object
     IssueDetailsResponse:
       properties:
         field_timestamp:
@@ -3424,8 +3907,10 @@ components:
       type: string
     Issue__Misc:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -3439,6 +3924,35 @@ components:
       - type: 'null'
     Issue__Version:
       type: integer
+    LabListingItem:
+      properties:
+        lab_name:
+          title: Lab Name
+          type: string
+        build_status_summary:
+          $ref: '#/components/schemas/ListingStatusCount'
+        boot_status_summary:
+          $ref: '#/components/schemas/ListingStatusCount'
+        test_status_summary:
+          $ref: '#/components/schemas/ListingStatusCount'
+      required:
+      - lab_name
+      - build_status_summary
+      - boot_status_summary
+      - test_status_summary
+      title: LabListingItem
+      type: object
+    LabListingResponse:
+      properties:
+        labs:
+          items:
+            $ref: '#/components/schemas/LabListingItem'
+          title: Labs
+          type: array
+      required:
+      - labs
+      title: LabListingResponse
+      type: object
     LabMetricsData:
       properties:
         builds:
@@ -3455,6 +3969,17 @@ components:
       - boots
       - tests
       title: LabMetricsData
+      type: object
+    LabOriginsResponse:
+      properties:
+        origins:
+          items:
+            $ref: '#/components/schemas/Origin'
+          title: Origins
+          type: array
+      required:
+      - origins
+      title: LabOriginsResponse
       type: object
     ListingStatusCount:
       properties:
@@ -3631,6 +4156,49 @@ components:
       - prev_lab_maps
       title: MetricsResponse
       type: object
+    NextCheckout:
+      description: Earliest checkout on the same tree after the last-seen checkout.
+      properties:
+        checkout_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Checkout Id
+        start_time:
+          $ref: '#/components/schemas/Checkout__StartTime'
+        git_commit_hash:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitHash'
+          - type: 'null'
+        git_commit_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitCommitName'
+          - type: 'null'
+        git_repository_url:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryUrl'
+          - type: 'null'
+        git_repository_branch:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__GitRepositoryBranch'
+          - type: 'null'
+        tree_name:
+          anyOf:
+          - $ref: '#/components/schemas/Checkout__TreeName'
+          - type: 'null'
+        origin:
+          $ref: '#/components/schemas/Origin'
+      required:
+      - checkout_id
+      - start_time
+      - git_commit_hash
+      - git_commit_name
+      - git_repository_url
+      - git_repository_branch
+      - tree_name
+      - origin
+      title: NextCheckout
+      type: object
     Origin:
       type: string
     OriginsResponse:
@@ -3667,6 +4235,11 @@ components:
     ProcessedExtraDetailedIssues:
       additionalProperties:
         $ref: '#/components/schemas/ExtraIssuesData'
+      description: Extra info about issues, grouped by ID when it's version-agnostic
+      examples:
+      - 'redhat:issue_3332: { first_incident: { first_seen: ''2024-10-20'', git_commit_hash:
+        ''commit1'', git_repository_url: ''example.com'', git_repository_branch: ''branch1''},
+        0: {...}}'
       type: object
     RegressionData:
       additionalProperties:
@@ -4055,13 +4628,15 @@ components:
           uniqueItems: true
         environment_compatible:
           anyOf:
-          - type: object
+          - additionalProperties: true
+            type: object
           - type: 'null'
           default: null
           title: Environment Compatible
         environment_misc:
           anyOf:
-          - type: object
+          - additionalProperties: true
+            type: object
           - type: 'null'
           default: null
           title: Environment Misc
@@ -4102,8 +4677,10 @@ components:
       - type: 'null'
     Test__EnvironmentMisc:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -4111,8 +4688,10 @@ components:
       type: string
     Test__InputFiles:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -4126,15 +4705,19 @@ components:
       - type: 'null'
     Test__Misc:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
     Test__OutputFiles:
       anyOf:
-      - type: object
+      - additionalProperties: true
+        type: object
       - items:
+          additionalProperties: true
           type: object
         type: array
       - type: 'null'
@@ -4218,7 +4801,8 @@ components:
           title: Head Git Commit Tag
         selected_commit_status:
           anyOf:
-          - type: object
+          - additionalProperties: true
+            type: object
           - type: 'null'
           title: Selected Commit Status
         is_selected:
@@ -4250,6 +4834,12 @@ components:
           - type: 'null'
           default: null
           title: Start Time End
+        git_commit_name:
+          $ref: '#/components/schemas/Checkout__GitCommitName'
+          default: null
+        git_commit_tags:
+          $ref: '#/components/schemas/Checkout__GitCommitTags'
+          default: null
       required:
       - git_commit_hash
       title: TreeCommitItem
@@ -4318,6 +4908,77 @@ components:
       - tree_url
       - git_commit_tags
       title: TreeCommon
+      type: object
+    TreeCompareBootsTestsResponse:
+      items:
+        $ref: '#/components/schemas/TreeCompareTest'
+      title: TreeCompareBootsTestsResponse
+      type: array
+    TreeCompareBuildsResponse:
+      items:
+        $ref: '#/components/schemas/CompareBuildDiffRow'
+      title: TreeCompareBuildsResponse
+      type: array
+    TreeCompareResponse:
+      properties:
+        treeName:
+          title: Treename
+          type: string
+        branch:
+          title: Branch
+          type: string
+        gitUrl:
+          default: ''
+          title: Giturl
+          type: string
+        summary:
+          $ref: '#/components/schemas/CompareSummary'
+      required:
+      - treeName
+      - branch
+      - summary
+      title: TreeCompareResponse
+      type: object
+    TreeCompareTest:
+      properties:
+        path:
+          title: Path
+          type: string
+        config_name:
+          title: Config Name
+          type: string
+        architecture:
+          title: Architecture
+          type: string
+        platform:
+          title: Platform
+          type: string
+        status_a:
+          anyOf:
+          - enum:
+            - PASS
+            - FAIL
+            - INCONCLUSIVE
+            type: string
+          - type: 'null'
+          title: Status A
+        status_b:
+          anyOf:
+          - enum:
+            - PASS
+            - FAIL
+            - INCONCLUSIVE
+            type: string
+          - type: 'null'
+          title: Status B
+      required:
+      - path
+      - config_name
+      - architecture
+      - platform
+      - status_a
+      - status_b
+      title: TreeCompareTest
       type: object
     TreeDetailsBuildsResponse:
       properties:
@@ -4527,6 +5188,22 @@ components:
       - unstable_tests
       - issues
       title: TreeReportResponse
+      type: object
+    TreeSeenData:
+      properties:
+        first_incident:
+          $ref: '#/components/schemas/Incident'
+        last_incident:
+          $ref: '#/components/schemas/Incident'
+        first_good_checkout:
+          anyOf:
+          - $ref: '#/components/schemas/IssueCheckout'
+          - type: 'null'
+          default: null
+      required:
+      - first_incident
+      - last_incident
+      title: TreeSeenData
       type: object
     TreeSetItem:
       properties:

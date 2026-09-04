@@ -139,10 +139,12 @@ const generalMinifiedParams: Record<SearchParamsKeys, string> = {
   intervalInDays: 'i',
   currentPageTab: 'p',
   tableFilter: 'tf',
+  tableSort: 's',
   diffFilter: 'df',
   treeSearch: 'ts',
   listingSize: 'ls',
   hardwareSearch: 'hs',
+  labsSearch: 'lsr',
   issueSearch: 'is',
   treeInfo: 'tri',
   treeIndexes: 'x',
@@ -274,6 +276,8 @@ const groupedMinifiedParams = {
   general: Object.fromEntries(generalMinifiedParamsArray),
   tri: Object.fromEntries(treeInfoMinifiedParamsArray),
   tf: Object.fromEntries(tableFilterMinifiedParamsArray),
+  // Multi-table sort keys reuse the tableFilter abbreviations (b, bt, t).
+  s: Object.fromEntries(tableFilterMinifiedParamsArray),
   df: Object.fromEntries(diffFilterMinifiedParamsArray),
   value: Object.fromEntries(minifiedValuesArray),
 } as const;

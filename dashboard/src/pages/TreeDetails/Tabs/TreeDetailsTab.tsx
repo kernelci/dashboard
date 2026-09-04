@@ -88,6 +88,7 @@ const TreeDetailsTab = ({
           return {
             ...previousParams,
             currentPageTab: validatedValue,
+            tableSort: undefined,
           };
         },
         state: s => s,

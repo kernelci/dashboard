@@ -5,7 +5,7 @@ Factory for generating Build test data.
 import factory
 from factory.django import DjangoModelFactory
 
-from kernelCI_app.models import Builds, StatusChoices
+from kernelCI_app.models import Builds, Labs, StatusChoices
 
 from .checkout_factory import CheckoutFactory
 from .mocks import Build, Checkout
@@ -27,6 +27,10 @@ class BuildFactory(DjangoModelFactory):
     comment = factory.Faker("text", max_nb_chars=200)
 
     start_time = factory.LazyAttribute(lambda obj: obj.checkout.start_time)
+
+    lab = factory.LazyAttribute(
+        lambda obj: Labs.objects.get_or_create(name=f"lab-{obj.origin}")[0]
+    )
 
     duration = factory.Faker("pyfloat", min_value=300.0, max_value=3600.0)
 
@@ -74,6 +78,7 @@ class BuildFactory(DjangoModelFactory):
     misc = factory.LazyAttribute(
         lambda obj: {
             "build_environment": "docker",
+            "lab": f"lab-{obj.origin}",
             "kernel_version": "6.1.0",
             "build_time": "2024-01-15T10:30:00Z",
             "memory_usage": "2.5GB",

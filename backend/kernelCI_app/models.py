@@ -24,6 +24,19 @@ class SimplifiedStatusChoices(models.TextChoices):
     INCONCLUSIVE = "I"
 
 
+class Labs(models.Model):
+    """Dimension table for labs (test `runtime` / build `lab`)."""
+
+    id = models.AutoField(primary_key=True)
+    name = models.TextField(unique=True)
+
+    class Meta:
+        db_table = "labs"
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Issues(models.Model):
     field_timestamp = models.DateTimeField(
         db_column="_timestamp", blank=True, null=True
@@ -119,6 +132,13 @@ class Builds(models.Model):
     log_url = models.TextField(blank=True, null=True)
     log_excerpt = models.CharField(max_length=16384, blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
+    lab = models.ForeignKey(
+        Labs,
+        null=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+        db_index=False,
+    )
     status = models.CharField(
         max_length=10, choices=StatusChoices.choices, blank=True, null=True
     )
@@ -145,6 +165,7 @@ class Builds(models.Model):
             models.Index(fields=["start_time"], name="builds_start_time"),
             models.Index(fields=["series"], name="builds_series_idx"),
             models.Index(fields=["status"], name="builds_status"),
+            models.Index(fields=["lab"], name="builds_lab_id"),
         ]
 
 
@@ -177,6 +198,13 @@ class Tests(models.Model):
     input_files = models.JSONField(blank=True, null=True)
     output_files = models.JSONField(blank=True, null=True)
     misc = models.JSONField(blank=True, null=True)
+    lab = models.ForeignKey(
+        Labs,
+        null=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+        db_index=False,
+    )
     number_value = models.FloatField(blank=True, null=True)
     environment_compatible = ArrayField(models.TextField(), blank=True, null=True)
     number_prefix = models.CharField(
@@ -213,6 +241,7 @@ class Tests(models.Model):
                 condition=Q(environment_misc__platform__isnull=False),
                 name="tests_origin_time_platform",
             ),
+            models.Index(fields=["lab"], name="tests_lab_id"),
         ]
 
 

@@ -9,8 +9,10 @@ from kernelCI_app.typeModels.databases import (
     Checkout__GitCommitName,
     Checkout__GitRepositoryBranch,
     Checkout__GitRepositoryUrl,
+    Checkout__StartTime,
     Checkout__TreeName,
     Issue__Version,
+    Origin,
     Timestamp,
 )
 
@@ -78,10 +80,41 @@ class Incident(BaseModel):
     checkout_id: Optional[str]
 
 
+class IssueCheckout(BaseModel):
+    start_time: Timestamp
+    git_commit_hash: Optional[Checkout__GitCommitHash] = None
+    git_repository_url: Optional[Checkout__GitRepositoryUrl] = None
+    git_repository_branch: Optional[Checkout__GitRepositoryBranch] = None
+    git_commit_name: Optional[Checkout__GitCommitName] = None
+    tree_name: Optional[Checkout__TreeName] = None
+    checkout_id: Optional[str] = None
+
+
+class TreeSeenData(BaseModel):
+    first_incident: Incident
+    last_incident: Incident
+    first_good_checkout: Optional[IssueCheckout] = None
+
+
+class NextCheckout(BaseModel):
+    """Earliest checkout on the same tree after the last-seen checkout."""
+
+    checkout_id: Optional[str]
+    start_time: Checkout__StartTime
+    git_commit_hash: Optional[Checkout__GitCommitHash]
+    git_commit_name: Optional[Checkout__GitCommitName]
+    git_repository_url: Optional[Checkout__GitRepositoryUrl]
+    git_repository_branch: Optional[Checkout__GitRepositoryBranch]
+    tree_name: Optional[Checkout__TreeName]
+    origin: Origin
+
+
 class ExtraIssuesData(BaseModel):
     first_incident: Incident
     last_incident: Incident
+    next_checkout: Optional[NextCheckout] = None
     versions: dict[int, Optional[IssueWithExtraInfo]]
+    per_tree: Optional[list[TreeSeenData]] = None
 
 
 type ProcessedExtraDetailedIssues = Annotated[

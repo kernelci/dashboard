@@ -4,15 +4,20 @@ from typing import List, Optional, Tuple
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.queries.issues import (
+    get_issue_first_good_checkouts,
     get_issue_first_seen_data,
     get_issue_last_seen_data,
+    get_issue_next_checkout_data,
     get_issue_trees_data,
 )
 from kernelCI_app.typeModels.issues import (
     ExtraIssuesData,
     Incident,
+    IssueCheckout,
     IssueWithExtraInfo,
+    NextCheckout,
     ProcessedExtraDetailedIssues,
+    TreeSeenData,
     TreeSetItem,
 )
 
@@ -46,6 +51,39 @@ def _incident_from_record(record: dict) -> Incident:
     )
 
 
+def _checkout_from_record(record: dict) -> IssueCheckout:
+    return IssueCheckout(
+        start_time=record["start_time"],
+        git_commit_hash=record["git_commit_hash"],
+        git_repository_url=record["git_repository_url"],
+        git_repository_branch=record["git_repository_branch"],
+        git_commit_name=record["git_commit_name"],
+        tree_name=record["tree_name"],
+        checkout_id=record["checkout_id"],
+    )
+
+
+def _tree_key(record: dict) -> tuple:
+    return (
+        record["tree_name"],
+        record["git_repository_url"],
+        record["git_repository_branch"],
+    )
+
+
+def _next_checkout_from_record(record: dict) -> NextCheckout:
+    return NextCheckout(
+        checkout_id=record["checkout_id"],
+        start_time=record["start_time"],
+        git_commit_hash=record["git_commit_hash"],
+        git_commit_name=record["git_commit_name"],
+        git_repository_url=record["git_repository_url"],
+        git_repository_branch=record["git_repository_branch"],
+        tree_name=record["tree_name"],
+        origin=record["origin"],
+    )
+
+
 def process_issues_extra_details(
     *,
     issue_key_list: List[Tuple[str, int]],
@@ -71,7 +109,7 @@ def assign_issue_incidents(
     processed_issues_table: ProcessedExtraDetailedIssues,
 ) -> None:
     """
-    Assigns first and last seen data to the processed_issues_table
+    Assigns first/last seen and next-checkout data to the processed_issues_table
     by querying with the issue_key_list.
     """
     issue_id_set = {issue_id for issue_id, _ in issue_key_list}
@@ -80,21 +118,30 @@ def assign_issue_incidents(
     for issue_id, issue_version in issue_key_list:
         versions_per_issue[issue_id].add(issue_version)
 
-    first_incident_records = get_issue_first_seen_data(issue_id_list=list(issue_id_set))
-    last_incident_records = get_issue_last_seen_data(issue_id_list=list(issue_id_set))
+    issue_id_list = list(issue_id_set)
+    first_incident_records = get_issue_first_seen_data(issue_id_list=issue_id_list)
+    last_incident_records = get_issue_last_seen_data(issue_id_list=issue_id_list)
+    next_checkout_records = get_issue_next_checkout_data(issue_id_list=issue_id_list)
     last_incident_by_id = {
         record["issue_id"]: record for record in last_incident_records
+    }
+    next_checkout_by_id = {
+        record["issue_id"]: record for record in next_checkout_records
     }
 
     for record in first_incident_records:
         issue_id = record["issue_id"]
         last_record = last_incident_by_id.get(issue_id)
+        next_record = next_checkout_by_id.get(issue_id)
 
         processed_issue_from_id = processed_issues_table.setdefault(
             issue_id,
             ExtraIssuesData(
                 first_incident=_incident_from_record(record),
                 last_incident=_incident_from_record(last_record),
+                next_checkout=(
+                    _next_checkout_from_record(next_record) if next_record else None
+                ),
                 versions={},
             ),
         )
@@ -103,6 +150,67 @@ def assign_issue_incidents(
         # If an issue_version exists, the trees can be assigned with `assign_issue_trees`
         for version in versions_per_issue[issue_id]:
             processed_issue_from_id.versions.setdefault(version, None)
+
+
+def assign_issue_per_tree(
+    *,
+    issue_key_list: List[Tuple[str, int]],
+    processed_issues_table: ProcessedExtraDetailedIssues,
+) -> None:
+    """Assigns per-tree first/last seen and first good checkout to each issue."""
+    issue_id_set = {issue_id for issue_id, _ in issue_key_list}
+
+    first_records = get_issue_first_seen_data(
+        issue_id_list=list(issue_id_set), group_by="tree"
+    )
+    last_records = get_issue_last_seen_data(
+        issue_id_list=list(issue_id_set), group_by="tree"
+    )
+
+    first_by_tree: dict[str, dict[tuple, dict]] = defaultdict(dict)
+    for record in first_records:
+        first_by_tree[record["issue_id"]][_tree_key(record)] = record
+
+    last_by_tree: dict[str, dict[tuple, dict]] = defaultdict(dict)
+    for record in last_records:
+        last_by_tree[record["issue_id"]][_tree_key(record)] = record
+
+    tree_seen_by_key: dict[tuple[str, tuple], TreeSeenData] = {}
+    last_seen_trees: list[dict] = []
+
+    for issue_id, last_map in last_by_tree.items():
+        if issue_id not in processed_issues_table:
+            continue
+
+        trees: list[TreeSeenData] = []
+        for tree_key, last_record in last_map.items():
+            first_record = first_by_tree[issue_id].get(tree_key, last_record)
+            tree_seen = TreeSeenData(
+                first_incident=_incident_from_record(first_record),
+                last_incident=_incident_from_record(last_record),
+            )
+            trees.append(tree_seen)
+            tree_seen_by_key[(issue_id, tree_key)] = tree_seen
+
+            last_seen_trees.append(
+                {
+                    "issue_id": issue_id,
+                    "tree_name": last_record["tree_name"],
+                    "git_repository_url": last_record["git_repository_url"],
+                    "git_repository_branch": last_record["git_repository_branch"],
+                    "last_seen": last_record.get("checkout_start_time")
+                    or last_record["first_seen"],
+                }
+            )
+
+        processed_issues_table[issue_id].per_tree = trees
+
+    for good_record in get_issue_first_good_checkouts(last_seen_trees=last_seen_trees):
+        tree_seen = tree_seen_by_key.get(
+            (good_record["issue_id"], _tree_key(good_record))
+        )
+        if tree_seen is not None:
+            tree_seen.first_good_checkout = _checkout_from_record(good_record)
 
 
 def assign_issue_trees(

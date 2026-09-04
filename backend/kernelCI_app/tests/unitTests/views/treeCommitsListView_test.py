@@ -15,7 +15,12 @@ class TestTreeCommitsListView(SimpleTestCase):
     @patch("kernelCI_app.views.treeCommitsListView.get_tree_commits")
     def test_tree_commits_list_view_success(self, mock_get_commits):
         mock_get_commits.return_value = [
-            {"git_commit_hash": "abc123", "start_time_end": "2025-11-10T10:00:00Z"}
+            {
+                "git_commit_hash": "abc123",
+                "start_time_end": "2025-11-10T10:00:00Z",
+                "git_commit_name": "v6.12-rc1",
+                "git_commit_tags": ["v6.12-rc1"],
+            }
         ]
 
         request = self.factory.get(
@@ -33,6 +38,8 @@ class TestTreeCommitsListView(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["git_commit_name"], "v6.12-rc1")
+        self.assertEqual(response.data[0]["git_commit_tags"], ["v6.12-rc1"])
 
     @patch("kernelCI_app.views.treeCommitsListView.get_tree_commits")
     def test_tree_commits_list_view_empty(self, mock_get_commits):
@@ -57,7 +64,12 @@ class TestTreeCommitsListView(SimpleTestCase):
     @patch("kernelCI_app.views.treeCommitsListView.get_tree_commits")
     def test_tree_commits_list_view_with_git_url(self, mock_get_commits):
         mock_get_commits.return_value = [
-            {"git_commit_hash": "abc123", "start_time_end": "2025-11-10T10:00:00Z"}
+            {
+                "git_commit_hash": "abc123",
+                "start_time_end": "2025-11-10T10:00:00Z",
+                "git_commit_name": None,
+                "git_commit_tags": [],
+            }
         ]
 
         request = self.factory.get(

@@ -15,10 +15,12 @@ import { Route as MainRouteRouteImport } from './routes/_main/route'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as MainTreeRouteRouteImport } from './routes/_main/tree/route'
 import { Route as MainMetricsRouteRouteImport } from './routes/_main/metrics/route'
+import { Route as MainLabsRouteRouteImport } from './routes/_main/labs/route'
 import { Route as MainIssuesRouteRouteImport } from './routes/_main/issues/route'
 import { Route as MainHardwareRouteRouteImport } from './routes/_main/hardware/route'
 import { Route as MainTreeIndexRouteImport } from './routes/_main/tree/index'
 import { Route as MainMetricsIndexRouteImport } from './routes/_main/metrics/index'
+import { Route as MainLabsIndexRouteImport } from './routes/_main/labs/index'
 import { Route as MainIssuesIndexRouteImport } from './routes/_main/issues/index'
 import { Route as MainHardwareIndexRouteImport } from './routes/_main/hardware/index'
 import { Route as MainTreeTreeIdRouteRouteImport } from './routes/_main/tree/$treeId/route'
@@ -43,7 +45,9 @@ import { Route as MainCheckoutTreeNameBranchIndexRouteImport } from './routes/_m
 import { Route as MainalternativesTTestIdIndexRouteImport } from './routes/_main/(alternatives)/t/$testId/index'
 import { Route as MainalternativesIIssueIdIndexRouteImport } from './routes/_main/(alternatives)/i/$issueId/index'
 import { Route as MainalternativesBBuildIdIndexRouteImport } from './routes/_main/(alternatives)/b/$buildId/index'
+import { Route as MainTreeTreeNameBranchCompareRouteRouteImport } from './routes/_main/tree/$treeName/$branch/compare/route'
 import { Route as MainTreeTreeNameBranchHashRouteRouteImport } from './routes/_main/tree/$treeName/$branch/$hash/route'
+import { Route as MainTreeTreeNameBranchCompareIndexRouteImport } from './routes/_main/tree/$treeName/$branch/compare/index'
 import { Route as MainTreeTreeNameBranchHashIndexRouteImport } from './routes/_main/tree/$treeName/$branch/$hash/index'
 import { Route as MainTreeTreeIdTestTestIdIndexRouteImport } from './routes/_main/tree/$treeId/test/$testId/index'
 import { Route as MainTreeTreeIdBuildBuildIdIndexRouteImport } from './routes/_main/tree/$treeId/build/$buildId/index'
@@ -83,6 +87,11 @@ const MainMetricsRouteRoute = MainMetricsRouteRouteImport.update({
   path: '/metrics',
   getParentRoute: () => MainRouteRoute,
 } as any)
+const MainLabsRouteRoute = MainLabsRouteRouteImport.update({
+  id: '/labs',
+  path: '/labs',
+  getParentRoute: () => MainRouteRoute,
+} as any)
 const MainIssuesRouteRoute = MainIssuesRouteRouteImport.update({
   id: '/issues',
   path: '/issues',
@@ -102,6 +111,11 @@ const MainMetricsIndexRoute = MainMetricsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainMetricsRouteRoute,
+} as any)
+const MainLabsIndexRoute = MainLabsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MainLabsRouteRoute,
 } as any)
 const MainIssuesIndexRoute = MainIssuesIndexRouteImport.update({
   id: '/',
@@ -236,11 +250,23 @@ const MainalternativesBBuildIdIndexRoute =
     path: '/',
     getParentRoute: () => MainalternativesBBuildIdRouteRoute,
   } as any)
+const MainTreeTreeNameBranchCompareRouteRoute =
+  MainTreeTreeNameBranchCompareRouteRouteImport.update({
+    id: '/$treeName/$branch/compare',
+    path: '/$treeName/$branch/compare',
+    getParentRoute: () => MainTreeRouteRoute,
+  } as any)
 const MainTreeTreeNameBranchHashRouteRoute =
   MainTreeTreeNameBranchHashRouteRouteImport.update({
     id: '/$treeName/$branch/$hash',
     path: '/$treeName/$branch/$hash',
     getParentRoute: () => MainTreeRouteRoute,
+  } as any)
+const MainTreeTreeNameBranchCompareIndexRoute =
+  MainTreeTreeNameBranchCompareIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => MainTreeTreeNameBranchCompareRouteRoute,
   } as any)
 const MainTreeTreeNameBranchHashIndexRoute =
   MainTreeTreeNameBranchHashIndexRouteImport.update({
@@ -303,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/log-viewer': typeof LogViewerRoute
   '/hardware': typeof MainHardwareRouteRouteWithChildren
   '/issues': typeof MainIssuesRouteRouteWithChildren
+  '/labs': typeof MainLabsRouteRouteWithChildren
   '/metrics': typeof MainMetricsRouteRouteWithChildren
   '/tree': typeof MainTreeRouteRouteWithChildren
   '/build/$buildId': typeof MainBuildBuildIdRouteRouteWithChildren
@@ -312,6 +339,7 @@ export interface FileRoutesByFullPath {
   '/tree/$treeId': typeof MainTreeTreeIdRouteRouteWithChildren
   '/hardware/': typeof MainHardwareIndexRoute
   '/issues/': typeof MainIssuesIndexRoute
+  '/labs/': typeof MainLabsIndexRoute
   '/metrics/': typeof MainMetricsIndexRoute
   '/tree/': typeof MainTreeIndexRoute
   '/b/$buildId': typeof MainalternativesBBuildIdRouteRouteWithChildren
@@ -324,6 +352,7 @@ export interface FileRoutesByFullPath {
   '/test/$testId/': typeof MainTestTestIdIndexRoute
   '/tree/$treeId/': typeof MainTreeTreeIdIndexRoute
   '/tree/$treeName/$branch/$hash': typeof MainTreeTreeNameBranchHashRouteRouteWithChildren
+  '/tree/$treeName/$branch/compare': typeof MainTreeTreeNameBranchCompareRouteRouteWithChildren
   '/b/$buildId/': typeof MainalternativesBBuildIdIndexRoute
   '/i/$issueId/': typeof MainalternativesIIssueIdIndexRoute
   '/t/$testId/': typeof MainalternativesTTestIdIndexRoute
@@ -340,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/tree/$treeId/build/$buildId/': typeof MainTreeTreeIdBuildBuildIdIndexRoute
   '/tree/$treeId/test/$testId/': typeof MainTreeTreeIdTestTestIdIndexRoute
   '/tree/$treeName/$branch/$hash/': typeof MainTreeTreeNameBranchHashIndexRoute
+  '/tree/$treeName/$branch/compare/': typeof MainTreeTreeNameBranchCompareIndexRoute
   '/c/$treeName/$branch/$hash/': typeof MainalternativesCTreeNameBranchHashIndexRoute
 }
 export interface FileRoutesByTo {
@@ -348,6 +378,7 @@ export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
   '/hardware': typeof MainHardwareIndexRoute
   '/issues': typeof MainIssuesIndexRoute
+  '/labs': typeof MainLabsIndexRoute
   '/metrics': typeof MainMetricsIndexRoute
   '/tree': typeof MainTreeIndexRoute
   '/i': typeof MainalternativesIIndexRoute
@@ -372,6 +403,7 @@ export interface FileRoutesByTo {
   '/tree/$treeId/build/$buildId': typeof MainTreeTreeIdBuildBuildIdIndexRoute
   '/tree/$treeId/test/$testId': typeof MainTreeTreeIdTestTestIdIndexRoute
   '/tree/$treeName/$branch/$hash': typeof MainTreeTreeNameBranchHashIndexRoute
+  '/tree/$treeName/$branch/compare': typeof MainTreeTreeNameBranchCompareIndexRoute
   '/c/$treeName/$branch/$hash': typeof MainalternativesCTreeNameBranchHashIndexRoute
 }
 export interface FileRoutesById {
@@ -381,6 +413,7 @@ export interface FileRoutesById {
   '/log-viewer': typeof LogViewerRoute
   '/_main/hardware': typeof MainHardwareRouteRouteWithChildren
   '/_main/issues': typeof MainIssuesRouteRouteWithChildren
+  '/_main/labs': typeof MainLabsRouteRouteWithChildren
   '/_main/metrics': typeof MainMetricsRouteRouteWithChildren
   '/_main/tree': typeof MainTreeRouteRouteWithChildren
   '/_main/': typeof MainIndexRoute
@@ -391,6 +424,7 @@ export interface FileRoutesById {
   '/_main/tree/$treeId': typeof MainTreeTreeIdRouteRouteWithChildren
   '/_main/hardware/': typeof MainHardwareIndexRoute
   '/_main/issues/': typeof MainIssuesIndexRoute
+  '/_main/labs/': typeof MainLabsIndexRoute
   '/_main/metrics/': typeof MainMetricsIndexRoute
   '/_main/tree/': typeof MainTreeIndexRoute
   '/_main/(alternatives)/b/$buildId': typeof MainalternativesBBuildIdRouteRouteWithChildren
@@ -403,6 +437,7 @@ export interface FileRoutesById {
   '/_main/test/$testId/': typeof MainTestTestIdIndexRoute
   '/_main/tree/$treeId/': typeof MainTreeTreeIdIndexRoute
   '/_main/tree/$treeName/$branch/$hash': typeof MainTreeTreeNameBranchHashRouteRouteWithChildren
+  '/_main/tree/$treeName/$branch/compare': typeof MainTreeTreeNameBranchCompareRouteRouteWithChildren
   '/_main/(alternatives)/b/$buildId/': typeof MainalternativesBBuildIdIndexRoute
   '/_main/(alternatives)/i/$issueId/': typeof MainalternativesIIssueIdIndexRoute
   '/_main/(alternatives)/t/$testId/': typeof MainalternativesTTestIdIndexRoute
@@ -419,6 +454,7 @@ export interface FileRoutesById {
   '/_main/tree/$treeId/build/$buildId/': typeof MainTreeTreeIdBuildBuildIdIndexRoute
   '/_main/tree/$treeId/test/$testId/': typeof MainTreeTreeIdTestTestIdIndexRoute
   '/_main/tree/$treeName/$branch/$hash/': typeof MainTreeTreeNameBranchHashIndexRoute
+  '/_main/tree/$treeName/$branch/compare/': typeof MainTreeTreeNameBranchCompareIndexRoute
   '/_main/(alternatives)/c/$treeName/$branch/$hash/': typeof MainalternativesCTreeNameBranchHashIndexRoute
 }
 export interface FileRouteTypes {
@@ -429,6 +465,7 @@ export interface FileRouteTypes {
     | '/log-viewer'
     | '/hardware'
     | '/issues'
+    | '/labs'
     | '/metrics'
     | '/tree'
     | '/build/$buildId'
@@ -438,6 +475,7 @@ export interface FileRouteTypes {
     | '/tree/$treeId'
     | '/hardware/'
     | '/issues/'
+    | '/labs/'
     | '/metrics/'
     | '/tree/'
     | '/b/$buildId'
@@ -450,6 +488,7 @@ export interface FileRouteTypes {
     | '/test/$testId/'
     | '/tree/$treeId/'
     | '/tree/$treeName/$branch/$hash'
+    | '/tree/$treeName/$branch/compare'
     | '/b/$buildId/'
     | '/i/$issueId/'
     | '/t/$testId/'
@@ -466,6 +505,7 @@ export interface FileRouteTypes {
     | '/tree/$treeId/build/$buildId/'
     | '/tree/$treeId/test/$testId/'
     | '/tree/$treeName/$branch/$hash/'
+    | '/tree/$treeName/$branch/compare/'
     | '/c/$treeName/$branch/$hash/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -474,6 +514,7 @@ export interface FileRouteTypes {
     | '/'
     | '/hardware'
     | '/issues'
+    | '/labs'
     | '/metrics'
     | '/tree'
     | '/i'
@@ -498,6 +539,7 @@ export interface FileRouteTypes {
     | '/tree/$treeId/build/$buildId'
     | '/tree/$treeId/test/$testId'
     | '/tree/$treeName/$branch/$hash'
+    | '/tree/$treeName/$branch/compare'
     | '/c/$treeName/$branch/$hash'
   id:
     | '__root__'
@@ -506,6 +548,7 @@ export interface FileRouteTypes {
     | '/log-viewer'
     | '/_main/hardware'
     | '/_main/issues'
+    | '/_main/labs'
     | '/_main/metrics'
     | '/_main/tree'
     | '/_main/'
@@ -516,6 +559,7 @@ export interface FileRouteTypes {
     | '/_main/tree/$treeId'
     | '/_main/hardware/'
     | '/_main/issues/'
+    | '/_main/labs/'
     | '/_main/metrics/'
     | '/_main/tree/'
     | '/_main/(alternatives)/b/$buildId'
@@ -528,6 +572,7 @@ export interface FileRouteTypes {
     | '/_main/test/$testId/'
     | '/_main/tree/$treeId/'
     | '/_main/tree/$treeName/$branch/$hash'
+    | '/_main/tree/$treeName/$branch/compare'
     | '/_main/(alternatives)/b/$buildId/'
     | '/_main/(alternatives)/i/$issueId/'
     | '/_main/(alternatives)/t/$testId/'
@@ -544,6 +589,7 @@ export interface FileRouteTypes {
     | '/_main/tree/$treeId/build/$buildId/'
     | '/_main/tree/$treeId/test/$testId/'
     | '/_main/tree/$treeName/$branch/$hash/'
+    | '/_main/tree/$treeName/$branch/compare/'
     | '/_main/(alternatives)/c/$treeName/$branch/$hash/'
   fileRoutesById: FileRoutesById
 }
@@ -597,6 +643,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainMetricsRouteRouteImport
       parentRoute: typeof MainRouteRoute
     }
+    '/_main/labs': {
+      id: '/_main/labs'
+      path: '/labs'
+      fullPath: '/labs'
+      preLoaderRoute: typeof MainLabsRouteRouteImport
+      parentRoute: typeof MainRouteRoute
+    }
     '/_main/issues': {
       id: '/_main/issues'
       path: '/issues'
@@ -624,6 +677,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/metrics/'
       preLoaderRoute: typeof MainMetricsIndexRouteImport
       parentRoute: typeof MainMetricsRouteRoute
+    }
+    '/_main/labs/': {
+      id: '/_main/labs/'
+      path: '/'
+      fullPath: '/labs/'
+      preLoaderRoute: typeof MainLabsIndexRouteImport
+      parentRoute: typeof MainLabsRouteRoute
     }
     '/_main/issues/': {
       id: '/_main/issues/'
@@ -793,12 +853,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainalternativesBBuildIdIndexRouteImport
       parentRoute: typeof MainalternativesBBuildIdRouteRoute
     }
+    '/_main/tree/$treeName/$branch/compare': {
+      id: '/_main/tree/$treeName/$branch/compare'
+      path: '/$treeName/$branch/compare'
+      fullPath: '/tree/$treeName/$branch/compare'
+      preLoaderRoute: typeof MainTreeTreeNameBranchCompareRouteRouteImport
+      parentRoute: typeof MainTreeRouteRoute
+    }
     '/_main/tree/$treeName/$branch/$hash': {
       id: '/_main/tree/$treeName/$branch/$hash'
       path: '/$treeName/$branch/$hash'
       fullPath: '/tree/$treeName/$branch/$hash'
       preLoaderRoute: typeof MainTreeTreeNameBranchHashRouteRouteImport
       parentRoute: typeof MainTreeRouteRoute
+    }
+    '/_main/tree/$treeName/$branch/compare/': {
+      id: '/_main/tree/$treeName/$branch/compare/'
+      path: '/'
+      fullPath: '/tree/$treeName/$branch/compare/'
+      preLoaderRoute: typeof MainTreeTreeNameBranchCompareIndexRouteImport
+      parentRoute: typeof MainTreeTreeNameBranchCompareRouteRoute
     }
     '/_main/tree/$treeName/$branch/$hash/': {
       id: '/_main/tree/$treeName/$branch/$hash/'
@@ -922,6 +996,18 @@ const MainIssuesRouteRouteWithChildren = MainIssuesRouteRoute._addFileChildren(
   MainIssuesRouteRouteChildren,
 )
 
+interface MainLabsRouteRouteChildren {
+  MainLabsIndexRoute: typeof MainLabsIndexRoute
+}
+
+const MainLabsRouteRouteChildren: MainLabsRouteRouteChildren = {
+  MainLabsIndexRoute: MainLabsIndexRoute,
+}
+
+const MainLabsRouteRouteWithChildren = MainLabsRouteRoute._addFileChildren(
+  MainLabsRouteRouteChildren,
+)
+
 interface MainMetricsRouteRouteChildren {
   MainMetricsIndexRoute: typeof MainMetricsIndexRoute
 }
@@ -962,10 +1048,26 @@ const MainTreeTreeNameBranchHashRouteRouteWithChildren =
     MainTreeTreeNameBranchHashRouteRouteChildren,
   )
 
+interface MainTreeTreeNameBranchCompareRouteRouteChildren {
+  MainTreeTreeNameBranchCompareIndexRoute: typeof MainTreeTreeNameBranchCompareIndexRoute
+}
+
+const MainTreeTreeNameBranchCompareRouteRouteChildren: MainTreeTreeNameBranchCompareRouteRouteChildren =
+  {
+    MainTreeTreeNameBranchCompareIndexRoute:
+      MainTreeTreeNameBranchCompareIndexRoute,
+  }
+
+const MainTreeTreeNameBranchCompareRouteRouteWithChildren =
+  MainTreeTreeNameBranchCompareRouteRoute._addFileChildren(
+    MainTreeTreeNameBranchCompareRouteRouteChildren,
+  )
+
 interface MainTreeRouteRouteChildren {
   MainTreeTreeIdRouteRoute: typeof MainTreeTreeIdRouteRouteWithChildren
   MainTreeIndexRoute: typeof MainTreeIndexRoute
   MainTreeTreeNameBranchHashRouteRoute: typeof MainTreeTreeNameBranchHashRouteRouteWithChildren
+  MainTreeTreeNameBranchCompareRouteRoute: typeof MainTreeTreeNameBranchCompareRouteRouteWithChildren
   MainTreeTreeNameBranchIndexRoute: typeof MainTreeTreeNameBranchIndexRoute
 }
 
@@ -974,6 +1076,8 @@ const MainTreeRouteRouteChildren: MainTreeRouteRouteChildren = {
   MainTreeIndexRoute: MainTreeIndexRoute,
   MainTreeTreeNameBranchHashRouteRoute:
     MainTreeTreeNameBranchHashRouteRouteWithChildren,
+  MainTreeTreeNameBranchCompareRouteRoute:
+    MainTreeTreeNameBranchCompareRouteRouteWithChildren,
   MainTreeTreeNameBranchIndexRoute: MainTreeTreeNameBranchIndexRoute,
 }
 
@@ -1063,6 +1167,7 @@ const MainalternativesTTestIdRouteRouteWithChildren =
 interface MainRouteRouteChildren {
   MainHardwareRouteRoute: typeof MainHardwareRouteRouteWithChildren
   MainIssuesRouteRoute: typeof MainIssuesRouteRouteWithChildren
+  MainLabsRouteRoute: typeof MainLabsRouteRouteWithChildren
   MainMetricsRouteRoute: typeof MainMetricsRouteRouteWithChildren
   MainTreeRouteRoute: typeof MainTreeRouteRouteWithChildren
   MainIndexRoute: typeof MainIndexRoute
@@ -1082,6 +1187,7 @@ interface MainRouteRouteChildren {
 const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainHardwareRouteRoute: MainHardwareRouteRouteWithChildren,
   MainIssuesRouteRoute: MainIssuesRouteRouteWithChildren,
+  MainLabsRouteRoute: MainLabsRouteRouteWithChildren,
   MainMetricsRouteRoute: MainMetricsRouteRouteWithChildren,
   MainTreeRouteRoute: MainTreeRouteRouteWithChildren,
   MainIndexRoute: MainIndexRoute,

@@ -30,6 +30,7 @@ import type {
 } from '@/types/issueListing';
 import { TableHeader } from '@/components/Table/TableHeader';
 import { usePaginationState } from '@/hooks/usePaginationState';
+import { useSortingState } from '@/hooks/useSortingState';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import {
   TableBody,
@@ -63,7 +64,7 @@ const getLinkProps = (
       to: '/tree/$treeId',
       params: { treeId: row.original.git_commit_hash },
       state: s => s,
-      search: previousSearch => ({
+      search: ({ tableSort: _tableSort, ...previousSearch }) => ({
         ...previousSearch,
         origin: row.original.origin,
         treeInfo: {
@@ -188,6 +189,8 @@ interface IIssueTable {
   isLoading?: boolean;
 }
 
+const DEFAULT_ISSUE_SORTING: SortingState = [{ id: 'first_seen', desc: true }];
+
 export const IssueTable = ({
   issueListing,
   status,
@@ -198,9 +201,9 @@ export const IssueTable = ({
   const { listingSize } = useSearch({ from: '/_main/issues' });
   const navigate = useNavigate({ from: '/issues' });
 
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'first_seen', desc: true },
-  ]);
+  const { sorting, handleSortingChange } = useSortingState({
+    defaultSorting: DEFAULT_ISSUE_SORTING,
+  });
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     culprit: false,
   });
@@ -224,7 +227,7 @@ export const IssueTable = ({
   const table = useReactTable({
     data: issueTableRows,
     columns,
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: paginationUpdater,

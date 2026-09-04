@@ -212,25 +212,84 @@ class TestSendDiscordNotification:
         assert data["username"] == "Custom Name"
 
     @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
-    @patch("kernelCI_app.helpers.discordWebhook.validate_notification")
     @patch("kernelCI_app.helpers.discordWebhook.requests.post")
-    @patch("kernelCI_app.helpers.discordWebhook.log_message")
     def test_send_discord_notification_http_error(
         self,
-        mock_log_message,
         mock_post,
-        mock_validate,
         mock_getenv,
+        caplog,
     ):
         """Test send_discord_notification with HTTP error."""
         mock_getenv.return_value = "https://discord.com/api/webhooks/test"
-        mock_validate.return_value = True
-
-        error = requests.HTTPError("HTTP error")
-        mock_post.return_value.raise_for_status.side_effect = error
+        mock_post.return_value.raise_for_status.side_effect = requests.HTTPError(
+            "HTTP error"
+        )
 
         send_discord_notification(embeds=[{"title": "Test embed"}])
 
         mock_post.assert_called_once()
+        assert "Discord webhook request failed" in caplog.text
 
-        mock_log_message.assert_called_once_with(error)
+    @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
+    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.time.sleep")
+    def test_send_discord_notification_retries_connection_error(
+        self,
+        mock_sleep,
+        mock_post,
+        mock_getenv,
+        caplog,
+    ):
+        """Test a connection error is retried and can recover."""
+        mock_getenv.return_value = "https://discord.com/api/webhooks/test"
+        response = mock_post.return_value
+        mock_post.side_effect = [requests.ConnectionError("Connection error"), response]
+
+        send_discord_notification(embeds=[{"title": "Test embed"}])
+
+        assert mock_post.call_count == 2
+        mock_sleep.assert_called_once_with(1)
+        assert "attempt 1/3" in caplog.text
+
+    @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
+    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.time.sleep")
+    def test_send_discord_notification_stops_retrying_connection_error(
+        self,
+        mock_sleep,
+        mock_post,
+        mock_getenv,
+        caplog,
+    ):
+        """Test connection retries stop at the attempt limit."""
+        mock_getenv.return_value = "https://discord.com/api/webhooks/test"
+        mock_post.side_effect = requests.ConnectionError("Connection error")
+
+        send_discord_notification(embeds=[{"title": "Test embed"}])
+
+        assert mock_post.call_count == 3
+        assert mock_sleep.call_count == 2
+        assert "attempt 1/3" in caplog.text
+        assert "attempt 2/3" in caplog.text
+        assert "Discord webhook request failed" in caplog.text
+
+    @patch("kernelCI_app.helpers.discordWebhook.os.getenv")
+    @patch("kernelCI_app.helpers.discordWebhook.requests.post")
+    @patch("kernelCI_app.helpers.discordWebhook.time.sleep")
+    def test_send_discord_notification_does_not_retry_timeout(
+        self,
+        mock_sleep,
+        mock_post,
+        mock_getenv,
+        caplog,
+    ):
+        """Test an ambiguous timeout is logged without retrying."""
+        mock_getenv.return_value = "https://discord.com/api/webhooks/test"
+        mock_post.side_effect = requests.Timeout("Request timed out")
+
+        send_discord_notification(embeds=[{"title": "Test embed"}])
+
+        mock_post.assert_called_once()
+        mock_sleep.assert_not_called()
+        assert "attempt" not in caplog.text
+        assert "Discord webhook request failed" in caplog.text

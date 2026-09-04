@@ -72,6 +72,7 @@ export const IssueDetailsTestSection = ({
             filter={testTableFilter}
             getRowLink={getTableRowLink}
             innerColumns={innerColumns}
+            sortKey="testsTable"
           />
         </div>
       ) : (

@@ -1,6 +1,7 @@
 import type {
   ColumnDef,
   ExpandedState,
+  Row,
   SortingState,
 } from '@tanstack/react-table';
 import {
@@ -10,8 +11,17 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
-import { Fragment, useCallback, useMemo, useState, type JSX } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type JSX,
+} from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
@@ -20,7 +30,7 @@ import type { LinkProps } from '@tanstack/react-router';
 import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
 import { possibleTableFilters } from '@/types/tree/TreeDetails';
 
-import type { TestHistory, TIndividualTest, TPathTests } from '@/types/general';
+import type { TestHistory, TIndividualTest } from '@/types/general';
 
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 
@@ -36,8 +46,21 @@ import { TableTopFilters } from '@/components/Table/TableTopFilters';
 
 import type { TStatusFilters } from '@/components/Table/TableStatusFilter';
 
-import { IndividualTestsTable } from './IndividualTestsTable';
-import { defaultColumns, defaultInnerColumns } from './DefaultTestsColumns';
+import type { TableGroupingMode } from '@/components/Table/TableGroupingControls';
+
+import { TableRowMemoized } from '@/components/Table/TableComponents';
+
+import { useTestIssues } from '@/api/testDetails';
+import { useLogData } from '@/hooks/useLogData';
+import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
+
+import { useSortingState } from '@/hooks/useSortingState';
+
+import {
+  adaptColumnsForUnifiedTable,
+  defaultInnerColumns,
+  PATH_TREE_INDENT,
+} from './DefaultTestsColumns';
 import { buildTestsTree } from './buildTestsTree';
 import {
   pruneTree,
@@ -47,35 +70,100 @@ import {
   matchTestByPathSubstring,
 } from './filterTestsTree';
 import { collapseSingleChildChains } from './collapseTestsTree';
+import {
+  buildUnifiedTestsTree,
+  flattenTestsToLeafRows,
+} from './buildUnifiedTestsTree';
+import type { UnifiedTestRow } from './types';
+
+const ESTIMATED_ROW_HEIGHT = 60;
+const VIRTUALIZER_OVERSCAN = 5;
+const PATH_CHEVRON_WIDTH = 24;
+const OTHER_COLUMN_MIN_WIDTH = 88;
+
+const PATH_CHAR_WIDTH = 7.5;
+const PATH_CELL_PADDING = 34;
+const MIN_PATH_COLUMN_WIDTH = 120;
+const MAX_PATH_COLUMN_WIDTH = 480;
+
+const pathColumnWidthFromStrings = (strings: string[], extra = 0): number => {
+  const longest = strings.reduce(
+    (max, value) => Math.max(max, value.length),
+    0,
+  );
+  return Math.round(
+    Math.min(
+      MAX_PATH_COLUMN_WIDTH,
+      Math.max(
+        MIN_PATH_COLUMN_WIDTH,
+        longest * PATH_CHAR_WIDTH + PATH_CELL_PADDING + extra,
+      ),
+    ),
+  );
+};
+
+const maxTreeDepth = (rows: UnifiedTestRow[], depth = 0): number => {
+  let max = depth;
+  for (const row of rows) {
+    if (row.subRows?.length) {
+      max = Math.max(max, maxTreeDepth(row.subRows, depth + 1));
+    } else {
+      max = Math.max(max, depth);
+    }
+  }
+  return max;
+};
 
 export interface ITestsTable {
   tableKey: TableKeys;
   testHistory?: TestHistory[];
   onClickFilter: (filter: PossibleTableFilters) => void;
   filter: PossibleTableFilters;
-  columns?: ColumnDef<TPathTests>[];
   innerColumns?: ColumnDef<TIndividualTest>[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
+  sortKey?: string;
 }
 
-// TODO: would be useful if the navigation happened within the table, so the parent component would only be required to pass the navigation url instead of the whole function for the update and the currentPath diffFilter (boots/tests Table)
+const DEFAULT_TESTS_SORTING: SortingState = [{ id: 'path_group', desc: false }];
+
 export function TestsTable({
   testHistory,
   onClickFilter,
   filter,
-  columns = defaultColumns,
   innerColumns = defaultInnerColumns,
   getRowLink,
   updatePathFilter,
   currentPathFilter,
+  sortKey,
 }: ITestsTable): JSX.Element {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const { sorting, handleSortingChange } = useSortingState({
+    defaultSorting: DEFAULT_TESTS_SORTING,
+    sortKey,
+  });
   const [expanded, setExpanded] = useState<ExpandedState>({});
+  const [groupingMode, setGroupingMode] =
+    useState<TableGroupingMode>('grouped');
   const pathFilter = currentPathFilter?.trim();
 
   const intl = useIntl();
+
+  const sortingRef = useRef(sorting);
+  sortingRef.current = sorting;
+
+  const getSortDirection = useCallback((columnId: string) => {
+    const entry = sortingRef.current.find(item => item.id === columnId);
+    if (!entry) {
+      return false as const;
+    }
+    return entry.desc ? ('desc' as const) : ('asc' as const);
+  }, []);
+
+  const columns = useMemo(
+    () => adaptColumnsForUnifiedTable(innerColumns, getSortDirection),
+    [getSortDirection, innerColumns],
+  );
 
   const rawTree = useMemo(() => buildTestsTree(testHistory), [testHistory]);
 
@@ -94,7 +182,7 @@ export function TestsTable({
     [pathFilteredTree],
   );
 
-  const data = useMemo(() => {
+  const filteredTree = useMemo(() => {
     const filtered =
       filter === 'all'
         ? pathFilteredTree
@@ -102,21 +190,47 @@ export function TestsTable({
     return collapseSingleChildChains(filtered);
   }, [pathFilteredTree, filter]);
 
+  const groupedData = useMemo(
+    () => buildUnifiedTestsTree(filteredTree),
+    [filteredTree],
+  );
+  const flatData = useMemo(
+    () => flattenTestsToLeafRows(filteredTree),
+    [filteredTree],
+  );
+  const data = groupingMode === 'ungrouped' ? flatData : groupedData;
+
+  const pathColumnWidth = useMemo(() => {
+    const paths = flatData.map(row => row.path);
+    const maxDepth =
+      groupingMode === 'ungrouped' ? 0 : maxTreeDepth(groupedData);
+    const indentExtra =
+      maxDepth * PATH_TREE_INDENT + (maxDepth > 0 ? PATH_CHEVRON_WIDTH : 0);
+    return pathColumnWidthFromStrings(paths, indentExtra);
+  }, [flatData, groupedData, groupingMode]);
+
+  const tableMinWidth = useMemo(
+    () => pathColumnWidth + (columns.length - 1) * OTHER_COLUMN_MIN_WIDTH,
+    [columns.length, pathColumnWidth],
+  );
+
+  useEffect(() => {
+    setExpanded({});
+  }, [groupingMode, filteredTree]);
+
   const table = useReactTable({
     data,
     columns,
-    onSortingChange: setSorting,
+    enableSortingRemoval: false,
+    onSortingChange: handleSortingChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getSubRows: row => row.sub_groups,
+    getSubRows: row => row.subRows,
     getRowCanExpand: row =>
-      (row.original.sub_groups !== undefined &&
-        row.original.sub_groups.length > 0) ||
-      row.original.individual_tests.length > 0,
+      row.original.kind === 'group' && (row.original.subRows?.length ?? 0) > 0,
     getExpandedRowModel: getExpandedRowModel(),
     onExpandedChange: setExpanded,
-    getRowId: row =>
-      row.path_prefix ? `${row.path_prefix}.${row.path_group}` : row.path_group,
+    getRowId: row => row.id,
     state: {
       sorting,
       expanded,
@@ -184,90 +298,281 @@ export function TestsTable({
     [updatePathFilter],
   );
 
+  const onExpandAll = useCallback(() => {
+    table.toggleAllRowsExpanded(true);
+  }, [table]);
+
+  const onCollapseAll = useCallback(() => {
+    table.toggleAllRowsExpanded(false);
+  }, [table]);
+
+  const onGroupingModeChange = useCallback((mode: TableGroupingMode) => {
+    setGroupingMode(mode);
+  }, []);
+
+  const groupingControls = useMemo(
+    () => ({
+      mode: groupingMode,
+      onModeChange: onGroupingModeChange,
+      onExpandAll,
+      onCollapseAll,
+    }),
+    [groupingMode, onCollapseAll, onExpandAll, onGroupingModeChange],
+  );
+
   const groupHeaders = table.getHeaderGroups()[0]?.headers;
   const tableHeaders = useMemo((): JSX.Element[] => {
     return groupHeaders.map(header => {
       const headerComponent = header.isPlaceholder
         ? null
-        : // the header must change the icon when sorting changes,
-          // but just the column dependency won't trigger the rerender
-          // so we pass an unused sorting prop here to force the useMemo dependency
-          flexRender(header.column.columnDef.header, {
+        : flexRender(header.column.columnDef.header, {
             ...header.getContext(),
             sorting,
           });
       return (
-        <TableHead key={header.id} className="border-b px-2 font-bold">
+        <TableHead
+          key={header.id}
+          className="border-b px-2 font-bold"
+          style={
+            header.column.id === 'path' ? { width: pathColumnWidth } : undefined
+          }
+        >
           {headerComponent}
         </TableHead>
       );
     });
-  }, [groupHeaders, sorting]);
+  }, [groupHeaders, sorting, pathColumnWidth]);
 
   const modelRows = table.getRowModel().rows;
-  const tableRows = useMemo((): JSX.Element[] | JSX.Element => {
-    return modelRows.length ? (
-      modelRows.map(row => {
-        const hasIndividualTests = row.original.individual_tests.length > 0;
 
-        return (
-          <Fragment key={row.id}>
-            <TableRow
-              className="group hover:bg-light-blue cursor-pointer"
-              onClick={() => {
-                if (row.getCanExpand()) {
-                  row.toggleExpanded();
-                }
-              }}
-              data-state={row.getIsExpanded() ? 'open' : 'closed'}
-              data-depth={row.depth}
-            >
-              {row.getVisibleCells().map(cell => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-            {row.getIsExpanded() && hasIndividualTests && (
-              <TableRow>
-                <TableCell colSpan={6} className="p-0">
-                  <IndividualTestsTable
-                    getRowLink={getRowLink}
-                    data={row.original.individual_tests}
-                    columns={innerColumns}
-                  />
-                </TableCell>
-              </TableRow>
-            )}
-          </Fragment>
+  const { leafRows, leafIndexById } = useMemo(() => {
+    const leaves: Row<UnifiedTestRow>[] = [];
+    const indexById = new Map<string, number>();
+
+    for (const row of modelRows) {
+      if (row.original.kind === 'leaf') {
+        indexById.set(row.original.id, leaves.length);
+        leaves.push(row);
+      }
+    }
+
+    return { leafRows: leaves, leafIndexById: indexById };
+  }, [modelRows]);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: modelRows.length,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    getScrollElement: () => parentRef.current,
+    overscan: VIRTUALIZER_OVERSCAN,
+  });
+  const virtualItems = virtualizer.getVirtualItems();
+
+  // Prefer spacer <tr>s over outer padding so sticky headers stay correct.
+  // https://tanstack.com/virtual/latest/docs/framework/react/examples/table
+  const [paddingTop, paddingBottom] = useMemo((): [number, number] => {
+    if (virtualItems.length === 0) {
+      return [0, 0];
+    }
+    return [
+      virtualItems[0].start,
+      virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end,
+    ];
+  }, [virtualItems, virtualizer]);
+
+  const spacerCellStyle = useMemo(
+    (): CSSProperties => ({
+      padding: 0,
+      border: 0,
+    }),
+    [],
+  );
+
+  const [currentLogId, setLog] = useState<string | undefined>(undefined);
+
+  const currentLog = useMemo(() => {
+    if (currentLogId === undefined) {
+      return undefined;
+    }
+    return leafIndexById.get(currentLogId);
+  }, [leafIndexById, currentLogId]);
+
+  const activeLogId = currentLog !== undefined ? currentLogId ?? '' : '';
+
+  const onOpenChange = useCallback(() => setLog(undefined), []);
+  const openLogSheet = useCallback(
+    (index: number) => setLog(leafRows[index]?.original.id),
+    [leafRows],
+  );
+
+  useEffect(() => {
+    if (currentLogId !== undefined && !leafIndexById.has(currentLogId)) {
+      setLog(undefined);
+    }
+  }, [currentLogId, leafIndexById]);
+
+  const handlePreviousItem = useCallback(() => {
+    if (currentLog !== undefined && currentLog > 0) {
+      setLog(leafRows[currentLog - 1]?.original.id);
+    }
+  }, [currentLog, leafRows]);
+
+  const handleNextItem = useCallback(() => {
+    if (currentLog !== undefined && currentLog < leafRows.length - 1) {
+      setLog(leafRows[currentLog + 1]?.original.id);
+    }
+  }, [currentLog, leafRows]);
+
+  const { data: logData, isLoading } = useLogData(activeLogId, 'test');
+
+  const navigationLogsActions = useMemo(
+    () => ({
+      nextItem: handleNextItem,
+      hasNext:
+        typeof currentLog === 'number' && currentLog < leafRows.length - 1,
+      previousItem: handlePreviousItem,
+      hasPrevious: !!currentLog,
+      isLoading,
+    }),
+    [
+      currentLog,
+      isLoading,
+      leafRows.length,
+      handleNextItem,
+      handlePreviousItem,
+    ],
+  );
+
+  const currentLinkProps = useMemo(() => {
+    return getRowLink(logData?.id ?? '');
+  }, [logData?.id, getRowLink]);
+
+  const { data: issues, status, error } = useTestIssues(activeLogId);
+
+  const tableRows = useMemo((): JSX.Element[] | JSX.Element => {
+    if (!modelRows.length) {
+      return (
+        <TableRow>
+          <TableCell colSpan={columns.length} className="h-24 text-center">
+            <FormattedMessage id="global.noResults" />
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    const rows: JSX.Element[] = [];
+
+    if (paddingTop > 0) {
+      rows.push(
+        <tr key="virtual-padding-top" aria-hidden>
+          <td
+            colSpan={columns.length}
+            style={{ ...spacerCellStyle, height: paddingTop }}
+          />
+        </tr>,
+      );
+    }
+
+    for (const virtualRow of virtualItems) {
+      const row = modelRows[virtualRow.index];
+      if (!row) {
+        continue;
+      }
+
+      if (row.original.kind === 'group') {
+        rows.push(
+          <TableRow
+            key={row.id}
+            className="group hover:bg-light-blue cursor-pointer"
+            onClick={() => {
+              if (row.getCanExpand()) {
+                row.toggleExpanded();
+              }
+            }}
+            data-state={row.getIsExpanded() ? 'open' : 'closed'}
+            data-depth={row.depth}
+          >
+            {row.getVisibleCells().map(cell => (
+              <TableCell key={cell.id}>
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
+          </TableRow>,
         );
-      })
-    ) : (
-      <TableRow>
-        <TableCell colSpan={columns.length} className="h-24 text-center">
-          <FormattedMessage id="global.noResults" />
-        </TableCell>
-      </TableRow>
-    );
-  }, [columns.length, getRowLink, innerColumns, modelRows]);
+        continue;
+      }
+
+      rows.push(
+        <TableRowMemoized<UnifiedTestRow>
+          key={row.id}
+          index={leafIndexById.get(row.original.id) ?? -1}
+          row={row}
+          openLogSheet={openLogSheet}
+          currentLog={currentLog}
+          getRowLink={getRowLink}
+        />,
+      );
+    }
+
+    if (paddingBottom > 0) {
+      rows.push(
+        <tr key="virtual-padding-bottom" aria-hidden>
+          <td
+            colSpan={columns.length}
+            style={{ ...spacerCellStyle, height: paddingBottom }}
+          />
+        </tr>,
+      );
+    }
+
+    return rows;
+  }, [
+    columns.length,
+    currentLog,
+    getRowLink,
+    leafIndexById,
+    modelRows,
+    openLogSheet,
+    paddingBottom,
+    paddingTop,
+    spacerCellStyle,
+    virtualItems,
+  ]);
 
   return (
-    <div className="flex flex-col gap-6 pb-4">
+    <WrapperTableWithLogSheet
+      currentLog={currentLog}
+      logData={logData}
+      navigationLogsActions={navigationLogsActions}
+      onOpenChange={onOpenChange}
+      currentLinkProps={currentLinkProps}
+      issues={issues}
+      status={status}
+      error={error}
+    >
       <TableTopFilters
         key="testsTableSearch"
         filters={filters}
         onClickFilter={onClickFilter}
         onSearchChange={onSearchChange}
         currentPathFilter={currentPathFilter}
+        groupingControls={groupingControls}
       />
-      <div className="h-[600px] overflow-auto">
-        <DumbBaseTable containerClassName="overflow-visible h-full bg-white">
+      <div
+        ref={parentRef}
+        className="max-h-150 overflow-auto [scrollbar-gutter:stable]"
+      >
+        <DumbBaseTable
+          className="table-fixed [&_td]:overflow-hidden [&_th]:overflow-hidden"
+          containerClassName="overflow-visible h-full bg-white"
+          style={{ minWidth: tableMinWidth }}
+        >
           <DumbTableHeader className="sticky top-0 z-10">
             {tableHeaders}
           </DumbTableHeader>
           <TableBody>{tableRows}</TableBody>
         </DumbBaseTable>
       </div>
-    </div>
+    </WrapperTableWithLogSheet>
   );
 }

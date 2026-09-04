@@ -99,6 +99,8 @@ class TreeCommitsHistoryQueryParameters(DirectTreeCommitsQueryParameters):
 class TreeCommitItem(BaseModel):
     git_commit_hash: Checkout__GitCommitHash
     last_checkout: Optional[datetime] = Field(None, alias="start_time_end")
+    git_commit_name: Checkout__GitCommitName = None
+    git_commit_tags: Checkout__GitCommitTags = None
 
 
 class TreeCommitsData(BaseModel):

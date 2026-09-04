@@ -8,21 +8,30 @@ import { HiMenu } from 'react-icons/hi';
 
 import Select, { SelectItem } from '@/components/Select/Select';
 import { DEFAULT_ORIGIN } from '@/types/general';
-import { useOrigins } from '@/api/origin';
+import { useLabOrigins, useOrigins } from '@/api/origin';
 import { Button } from '@/components/ui/button';
 import MobileSideMenu from '@/components/SideMenu/MobileSideMenu';
 
 import { SearchBoxNavigate } from '@/components/SearchBoxNavigate';
 import { treeListingCleanFullPaths } from '@/utils/constants/treeListing';
 import { hwListingCleanFullPaths } from '@/utils/constants/hardwareListing';
+import { labsListingCleanFullPaths } from '@/utils/constants/labsListing';
+
+type OriginSource = 'checkout' | 'test' | 'lab';
 
 const OriginSelect = ({
-  isHardwarePath,
+  originSource,
 }: {
-  isHardwarePath: boolean;
+  originSource: OriginSource;
 }): JSX.Element => {
   const { origin } = useSearch({ strict: false });
-  const { data: originData, status: originStatus } = useOrigins();
+  const isLabSource = originSource === 'lab';
+  const { data: originData, status: originStatus } = useOrigins({
+    enabled: !isLabSource,
+  });
+  const { data: labOriginData, status: labOriginStatus } = useLabOrigins({
+    enabled: isLabSource,
+  });
 
   const navigate = useNavigate();
 
@@ -37,13 +46,18 @@ const OriginSelect = ({
   );
 
   const pageOrigins = useMemo(() => {
+    if (isLabSource) {
+      return labOriginData?.origins ?? [];
+    }
     if (!originData) {
       return [];
     }
-    return isHardwarePath
-      ? originData.test_origins
-      : originData.checkout_origins;
-  }, [originData, isHardwarePath]);
+    return (
+      (originSource === 'test'
+        ? originData.test_origins
+        : originData.checkout_origins) ?? []
+    );
+  }, [isLabSource, labOriginData, originData, originSource]);
 
   const selectItems = useMemo(() => {
     return pageOrigins.map(option => (
@@ -73,7 +87,7 @@ const OriginSelect = ({
     }
   }, [navigate, origin, pageOrigins]);
 
-  if (originStatus === 'pending') {
+  if ((isLabSource ? labOriginStatus : originStatus) === 'pending') {
     return <FormattedMessage id="global.loading" />;
   }
 
@@ -109,6 +123,8 @@ const TitleName = ({ basePath }: { basePath: string }): JSX.Element => {
       return <FormattedMessage id="routes.issueDetails" />;
     case 'metrics':
       return <FormattedMessage id="routes.metricsMonitor" />;
+    case 'labs':
+      return <FormattedMessage id="routes.labsMonitor" />;
     default:
       return <FormattedMessage id="routes.unknown" />;
   }
@@ -124,13 +140,18 @@ const TopBar = (): JSX.Element => {
     const cleanFullPath = lastMatch?.fullPath.replace(/\//g, '') ?? '';
     const isTreeListing = treeListingCleanFullPaths.includes(cleanFullPath);
     const isHardwareListing = hwListingCleanFullPaths.includes(cleanFullPath);
+    const isLabsListing = labsListingCleanFullPaths.includes(cleanFullPath);
     const isListingPage =
-      isTreeListing || isHardwareListing || cleanFullPath.includes('issues');
+      isTreeListing ||
+      isHardwareListing ||
+      isLabsListing ||
+      cleanFullPath.includes('issues');
 
     return {
       firstUrlLocation,
       isTreeListing: isTreeListing,
       isHardwarePage: cleanFullPath.includes('hardware'),
+      isLabsPage: isLabsListing,
       isListingPage: isListingPage,
     };
   }, [matches]);
@@ -152,8 +173,18 @@ const TopBar = (): JSX.Element => {
             <span className="mr-2 text-2xl sm:mr-10">
               <TitleName basePath={routeInfo.firstUrlLocation} />
             </span>
-            {(routeInfo.isTreeListing || routeInfo.isHardwarePage) && (
-              <OriginSelect isHardwarePath={routeInfo.isHardwarePage} />
+            {(routeInfo.isTreeListing ||
+              routeInfo.isHardwarePage ||
+              routeInfo.isLabsPage) && (
+              <OriginSelect
+                originSource={
+                  routeInfo.isLabsPage
+                    ? 'lab'
+                    : routeInfo.isHardwarePage
+                      ? 'test'
+                      : 'checkout'
+                }
+              />
             )}
             <span className="ml-0 flex w-full px-6 lg:ml-14">
               {routeInfo.isListingPage && <SearchBoxNavigate />}

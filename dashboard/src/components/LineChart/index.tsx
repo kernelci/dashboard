@@ -1,3 +1,3 @@
-import { LineChartLabel, LineChart } from './LineChart';
+import { LineChart } from './LineChart';
 
-export { LineChartLabel, LineChart };
+export { LineChart };

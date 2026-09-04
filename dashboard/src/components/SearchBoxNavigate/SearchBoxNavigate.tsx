@@ -8,12 +8,14 @@ import DebounceInput from '@/components/DebounceInput/DebounceInput';
 import { CustomDialog } from '@/components/Dialog/CustomDialog';
 import { treeListingCleanFullPaths } from '@/utils/constants/treeListing';
 import { hwListingCleanFullPaths } from '@/utils/constants/hardwareListing';
+import { labsListingCleanFullPaths } from '@/utils/constants/labsListing';
 
 // Relates the type of listing to the corresponding search key
 const forwardFields: Record<string, string> = {
   tree: 'treeSearch',
   hardware: 'hardwareSearch',
   issue: 'issueSearch',
+  labs: 'labsSearch',
 };
 
 interface ISearchData {
@@ -40,11 +42,15 @@ export const SearchBoxNavigate = (): JSX.Element => {
       return 'issue';
     }
 
+    if (labsListingCleanFullPaths.includes(cleanFullPath)) {
+      return 'labs';
+    }
+
     return 'unknown';
   }, [matches]);
   const { formatMessage } = useIntl();
 
-  const { treeSearch, hardwareSearch, issueSearch } = useSearch({
+  const { treeSearch, hardwareSearch, issueSearch, labsSearch } = useSearch({
     strict: false,
   });
   const searchData = useMemo((): ISearchData => {
@@ -71,6 +77,14 @@ export const SearchBoxNavigate = (): JSX.Element => {
           }),
           navigateTarget: 'issueSearch',
         };
+      case 'labs':
+        return {
+          currentSearch: labsSearch,
+          searchPlaceholder: formatMessage({
+            id: 'labs.searchPlaceholder',
+          }),
+          navigateTarget: 'labsSearch',
+        };
       default:
         return {
           currentSearch: '',
@@ -78,7 +92,14 @@ export const SearchBoxNavigate = (): JSX.Element => {
           navigateTarget: '',
         };
     }
-  }, [routeInfo, treeSearch, formatMessage, hardwareSearch, issueSearch]);
+  }, [
+    routeInfo,
+    treeSearch,
+    formatMessage,
+    hardwareSearch,
+    issueSearch,
+    labsSearch,
+  ]);
 
   const navigate = useNavigate();
 

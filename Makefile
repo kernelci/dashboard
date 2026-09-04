@@ -50,6 +50,9 @@ ci: ## Reproduce full CI pipeline (lint + build + test + integration)
 dev: ## Start development environment with docker-compose.dev.yml
 	docker compose -f docker-compose.dev.yml up -d
 
+dev-down: ## Stop development environment with docker-compose.dev.yml
+	docker compose -f docker-compose.dev.yml down
+
 dev-build: ## Start development environment and rebuild images
 	docker compose -f docker-compose.dev.yml up --build -d
 
