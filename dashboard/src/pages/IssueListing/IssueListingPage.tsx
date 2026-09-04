@@ -17,7 +17,7 @@ import { formattedBreakLineValue } from '@/locales/messages';
 
 import { mapFilterToReq } from '@/components/Tabs/Filters';
 
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
 import { createIssueListingCommandsFromState } from '@/components/Footer/kcidevCommand';
 import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
@@ -99,6 +99,7 @@ export const IssueListingPage = ({
           <div className="flex items-center justify-between gap-x-8 gap-y-2 max-[650px]:w-full max-[650px]:flex-wrap max-[650px]:justify-end">
             <MemoizedDateRangeInput />
             <IssueListingFilter paramFilter={diffFilter} data={data?.filters} />
+            <MemoizedKcidevCommandButton command={issueCommands} />
           </div>
         </div>
         <IssueTable
@@ -108,7 +109,6 @@ export const IssueListingPage = ({
           error={error}
           isLoading={isLoading}
         />
-        <MemoizedKcidevFooter command={issueCommands} />
       </div>
     </>
   );

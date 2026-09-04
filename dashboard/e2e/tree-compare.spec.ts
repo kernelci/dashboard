@@ -106,6 +106,9 @@ test('loads revisions and comparison data from the API', async ({ page }) => {
   await expect(page.getByText('defconfig+allmodconfig')).toBeVisible();
   await expect(page.getByText('Regression')).toBeVisible();
 
+  await expect(
+    page.getByRole('button', { name: 'CLI command' }),
+  ).toBeInViewport();
   await page.getByRole('button', { name: 'CLI command' }).click();
   const command = page.getByLabel('Tree comparison');
   await expect(command).toContainText('--giturl');

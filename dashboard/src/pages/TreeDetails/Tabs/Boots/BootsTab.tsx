@@ -36,7 +36,7 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
 import {
   dashboardFiltersFromDiffFilter,
   createTreeResultsCommand,
@@ -232,7 +232,7 @@ const BootsTab = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter
+      <MemoizedKcidevCommandButton
         command={createTreeResultsCommand('boots', {
           origin,
           filters: dashboardFiltersFromDiffFilter(diffFilter, 'boots'),
@@ -345,6 +345,9 @@ const BootsTab = ({
         }
       >
         <div className="flex flex-col gap-8 pt-4">
+          <div className="flex flex-wrap justify-end gap-2">
+            {kcidevComponent}
+          </div>
           <MemoizedResponsiveDetailsCards
             topCards={topCards}
             bodyCards={bodyCards}
@@ -361,7 +364,6 @@ const BootsTab = ({
               currentPathFilter={currentPathFilter}
             />
           </QuerySwitcher>
-          {kcidevComponent}
         </div>
       </QuerySwitcher>
       {isEmptySummary && (

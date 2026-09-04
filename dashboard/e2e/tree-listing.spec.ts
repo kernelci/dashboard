@@ -38,6 +38,9 @@ test.describe('Tree Listing Page Tests', () => {
     await expect(
       page.locator(TREE_LISTING_SELECTORS.branchColumnHeader),
     ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'CLI command' }),
+    ).toBeInViewport();
   });
 
   test('change table size', async ({ page }) => {

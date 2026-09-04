@@ -47,7 +47,7 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
 import {
   dashboardFiltersFromDiffFilter,
   createTreeResultsCommand,
@@ -182,7 +182,7 @@ const BuildTab = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter
+      <MemoizedKcidevCommandButton
         command={createTreeResultsCommand('builds', {
           origin,
           filters: dashboardFiltersFromDiffFilter(diffFilter, 'builds'),
@@ -282,6 +282,9 @@ const BuildTab = ({
         }
       >
         <div className="flex flex-col gap-8 pt-4">
+          <div className="flex flex-wrap justify-end gap-2">
+            {kcidevComponent}
+          </div>
           <MemoizedResponsiveDetailsCards
             topCards={topCards}
             bodyCards={bodyCards}
@@ -309,7 +312,6 @@ const BuildTab = ({
               />
             </div>
           </QuerySwitcher>
-          {kcidevComponent}
         </div>
       </QuerySwitcher>
       {isEmptySummary && (

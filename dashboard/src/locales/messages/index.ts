@@ -110,9 +110,8 @@ export const messages = {
     'footer.copyCommand': 'Copy command',
     'footer.copyError':
       'Could not copy the command. Select it above and copy it manually.',
-    'footer.description':
-      'Need this data in a terminal or script? Use kci-dev.',
     'footer.installKcidev': 'Install kci-dev',
+    'footer.promotionLabel': 'Install kci-dev',
     'footer.unsupportedFilters':
       'This command cannot reproduce these dashboard filters: {filters}.',
     'global.allCount': 'All: {count}',

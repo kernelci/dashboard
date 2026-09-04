@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 import { matchesRegexOrIncludes } from '@/lib/string';
 
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
 import { createTreeListingCommand } from '@/components/Footer/kcidevCommand';
 
 import type { TreeListingRoutesMap } from '@/utils/constants/treeListing';
@@ -47,7 +47,7 @@ const TreeListingPage = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter
+      <MemoizedKcidevCommandButton
         command={createTreeListingCommand({
           origin,
           days: intervalInDays,
@@ -62,6 +62,9 @@ const TreeListingPage = ({
     <>
       <Toaster />
       <div className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {kcidevComponent}
+        </div>
         <TreeTable
           treeTableRows={listItems}
           status={status}
@@ -71,7 +74,6 @@ const TreeListingPage = ({
           urlFromMap={urlFromMap}
         />
       </div>
-      {kcidevComponent}
     </>
   );
 };

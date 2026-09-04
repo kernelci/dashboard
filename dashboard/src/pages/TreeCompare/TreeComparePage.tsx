@@ -21,7 +21,7 @@ import PageWithTitle from '@/components/PageWithTitle';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import Tabs from '@/components/Tabs/Tabs';
 import type { ITabItem } from '@/components/Tabs/Tabs';
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
 import { createTreeCompareCommand } from '@/components/Footer/kcidevCommand';
 
 import { useCommits } from '@/api/commitHistory';
@@ -333,11 +333,24 @@ const TreeComparePage = (): JSX.Element => {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="flex flex-col gap-2">
-          <h1 className="text-dim-black text-2xl font-bold">{pageTitle}</h1>
-          <p className="text-dim-gray text-sm">
-            <FormattedMessage id="treeCompare.description" />
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-dim-black text-2xl font-bold">{pageTitle}</h1>
+            <p className="text-dim-gray text-sm">
+              <FormattedMessage id="treeCompare.description" />
+            </p>
+          </div>
+          <MemoizedKcidevCommandButton
+            command={createTreeCompareCommand({
+              origin,
+              gitUrl: compareQuery.data?.gitUrl,
+              branch,
+              hashA: resolvedHashA || undefined,
+              hashB: resolvedHashB || undefined,
+              omittedFilters:
+                statusPairs.length > 0 ? ['status-pair filter'] : [],
+            })}
+          />
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-4">
@@ -419,17 +432,6 @@ const TreeComparePage = (): JSX.Element => {
             </section>
           </>
         )}
-        <MemoizedKcidevFooter
-          command={createTreeCompareCommand({
-            origin,
-            gitUrl: compareQuery.data?.gitUrl,
-            branch,
-            hashA: resolvedHashA || undefined,
-            hashB: resolvedHashB || undefined,
-            omittedFilters:
-              statusPairs.length > 0 ? ['status-pair filter'] : [],
-          })}
-        />
       </div>
     </PageWithTitle>
   );

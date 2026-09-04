@@ -7,14 +7,14 @@ import type { JSX } from 'react';
 import { LOCALES } from '@/locales/constants';
 import { messages } from '@/locales/messages';
 
-import { MemoizedKcidevFooter } from './KcidevFooter';
+import { MemoizedKcidevCommandButton } from './KcidevCommandButton';
 
 const completeCommand =
   "kci-dev results trees --origin 'unsafe origin' --days 7";
 
-const meta: Meta<typeof MemoizedKcidevFooter> = {
-  title: 'Components/Footer/KcidevFooter',
-  component: MemoizedKcidevFooter,
+const meta: Meta<typeof MemoizedKcidevCommandButton> = {
+  title: 'Components/Footer/KcidevCommandButton',
+  component: MemoizedKcidevCommandButton,
   decorators: [
     (story): JSX.Element => (
       <IntlProvider messages={messages[LOCALES.EN_US]} locale={LOCALES.EN_US}>
