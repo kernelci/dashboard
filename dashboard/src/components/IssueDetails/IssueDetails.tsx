@@ -177,6 +177,7 @@ export const IssueDetails = ({
       return [];
     }
     const reportUrl = valueOrEmpty(data.report_url);
+    const loreUrl = `https://lore.kernel.org/all/?q=${encodeURIComponent(data.id)}`;
     const reportSubject = valueOrEmpty(data.report_subject);
 
     return [
@@ -193,6 +194,15 @@ export const IssueDetails = ({
               {
                 title: 'global.origin',
                 linkText: valueOrEmpty(data.origin),
+              },
+              {
+                title: 'issueDetails.loreUrl',
+                linkText: shouldTruncate(loreUrl) ? (
+                  <TruncatedValueTooltip value={loreUrl} isUrl={true} />
+                ) : (
+                  loreUrl
+                ),
+                link: loreUrl,
               },
               {
                 title: 'issueDetails.reportUrl',
