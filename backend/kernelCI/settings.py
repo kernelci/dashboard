@@ -433,6 +433,11 @@ DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS = int(
     os.environ.get("DEFAULT_ORIGIN_LISTING_INTERVAL_IN_DAYS", 30)
 )
 
+# How long hardware_status rows are kept before the weekly prune cron deletes them.
+HARDWARE_STATUS_RETENTION_DAYS = int(
+    os.environ.get("HARDWARE_STATUS_RETENTION_DAYS", 30)
+)
+
 PROMETHEUS_METRICS_ENABLED = is_boolean_or_string_true(
     os.environ.get("PROMETHEUS_METRICS_ENABLED", False)
 )

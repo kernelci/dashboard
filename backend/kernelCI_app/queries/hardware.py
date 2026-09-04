@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, TypedDict
 
-from django.db import connection
+from django.db import connection, connections
 
 from kernelCI_app.cache import get_query_cache, set_query_cache
 from kernelCI_app.helpers.database import dict_fetchall
@@ -12,71 +12,38 @@ from kernelCI_app.queries.duration import (
 from kernelCI_app.typeModels.hardwareDetails import CommitHead, Tree
 
 
-def _get_hardware_tree_heads_with_ctes() -> str:
-    """Latest checkouts in the window, then probe tests via builds.build_id.
+def _get_hardware_trees_from_status_query(*, fields: str) -> str:
+    """Latest checkout per tree in the window for this hardware via hardware_status.
 
-    Checkout origin is not filtered: tests from one origin can belong to
-    checkouts from another.
+    Checkout origin is not filtered: tests from one origin can be related to
+    checkouts from another origin.
     """
-    return """
-        tree_heads AS MATERIALIZED (
-            SELECT DISTINCT
-                ON (
-                    C.tree_name,
-                    C.git_repository_branch,
-                    C.git_repository_url,
-                    C.origin
-                )
-                C.id,
-                C.origin,
-                C.tree_name,
-                C.start_time,
-                C.git_repository_branch,
-                C.git_repository_url,
-                C.git_commit_name,
-                C.git_commit_hash,
-                C.git_commit_tags
-            FROM
-                checkouts C
-            WHERE
-                C.start_time >= %(start_date)s
-                AND C.start_time <= %(end_date)s
-            ORDER BY
-                C.tree_name ASC,
-                C.git_repository_branch ASC,
-                C.git_repository_url ASC,
-                C.origin ASC,
-                C.start_time DESC
-        ),
-        period_builds AS MATERIALIZED (
-            SELECT
-                builds.id,
-                builds.checkout_id
-            FROM
-                tree_heads TH
-                INNER JOIN builds ON builds.checkout_id = TH.id
-        ),
-        hardware_checkouts AS (
-            SELECT DISTINCT
-                period_builds.checkout_id AS id
-            FROM
-                period_builds
-                INNER JOIN LATERAL (
-                    SELECT
-                        1
-                    FROM
-                        tests
-                    WHERE
-                        tests.build_id = period_builds.id
-                        AND tests.origin = %(origin)s
-                        AND (
-                            tests.environment_compatible @> ARRAY[%(hardware)s]::TEXT[]
-                            OR tests.environment_misc ->> 'platform' = %(hardware)s
-                        )
-                    LIMIT
-                        1
-                ) t ON true
-        )"""
+    return f"""
+        SELECT DISTINCT ON (
+            C.tree_name,
+            C.git_repository_branch,
+            C.git_repository_url,
+            C.origin
+        )
+            {fields}
+        FROM
+            hardware_status HS
+            INNER JOIN checkouts C ON C.id = HS.checkout_id
+        WHERE
+            HS.test_origin = %(origin)s
+            AND (
+                HS.platform = %(hardware)s
+                OR HS.compatibles @> ARRAY[%(hardware)s]::TEXT[]
+            )
+            AND HS.start_time >= %(start_date)s
+            AND HS.start_time <= %(end_date)s
+        ORDER BY
+            C.tree_name ASC,
+            C.git_repository_branch ASC,
+            C.git_repository_url ASC,
+            C.origin ASC,
+            C.start_time DESC
+    """
 
 
 # TODO: unify with get_tree_listing_count_clause
@@ -401,6 +368,36 @@ def get_hardware_listing_data_from_status_table(
     """
     else:
         query = """
+        WITH latest_per_tree AS (
+            SELECT DISTINCT ON (
+                HS.platform,
+                HS.compatibles,
+                C.tree_name,
+                C.git_repository_branch,
+                C.git_repository_url,
+                C.origin
+            )
+                HS.platform,
+                HS.compatibles,
+                HS.build_pass, HS.build_failed, HS.build_inc,
+                HS.boot_pass, HS.boot_failed, HS.boot_inc,
+                HS.test_pass, HS.test_failed, HS.test_inc
+            FROM
+                hardware_status HS
+                INNER JOIN checkouts C ON C.id = HS.checkout_id
+            WHERE
+                HS.test_origin = %(origin)s
+                AND HS.start_time >= %(start_date)s
+                AND HS.start_time <= %(end_date)s
+            ORDER BY
+                HS.platform ASC,
+                HS.compatibles ASC,
+                C.tree_name ASC,
+                C.git_repository_branch ASC,
+                C.git_repository_url ASC,
+                C.origin ASC,
+                C.start_time DESC
+        )
         SELECT
             platform,
             compatibles AS hardware,
@@ -414,17 +411,7 @@ def get_hardware_listing_data_from_status_table(
             SUM(test_failed) AS test_fail,
             SUM(test_inc) AS test_null
         FROM
-            hardware_status
-        INNER JOIN
-            latest_checkout
-            ON
-                hardware_status.checkout_id = latest_checkout.checkout_id
-            AND
-                latest_checkout.start_time >= %(start_date)s
-            AND
-                latest_checkout.start_time <= %(end_date)s
-        WHERE
-            hardware_status.test_origin = %(origin)s
+            latest_per_tree
         GROUP BY
             platform,
             compatibles
@@ -829,7 +816,7 @@ def get_hardware_trees_head_commits(
     start_datetime: datetime,
     end_datetime: datetime,
 ) -> list[tuple[str, str]]:
-    cache_key = "hardwareTreesHeadCommits"
+    cache_key = "hardwareTreesHeadCommitsFromStatus"
 
     cache_params = {
         "hardware": hardware_id,
@@ -843,27 +830,12 @@ def get_hardware_trees_head_commits(
     if trees:
         return trees
 
-    query = f"""
-    WITH
-        {_get_hardware_tree_heads_with_ctes()}
-    SELECT DISTINCT
-        ON (
-            TH.tree_name,
-            TH.git_repository_branch,
-            TH.git_repository_url,
-            TH.git_commit_hash
-        ) TH.tree_name,
-        TH.git_commit_hash
-    FROM
-        tree_heads TH
-        INNER JOIN hardware_checkouts HC ON HC.id = TH.id
-    ORDER BY
-        TH.tree_name ASC,
-        TH.git_repository_branch ASC,
-        TH.git_repository_url ASC,
-        TH.git_commit_hash ASC,
-        TH.start_time DESC
-    """
+    query = _get_hardware_trees_from_status_query(
+        fields="""
+            C.tree_name,
+            C.git_commit_hash
+        """
+    )
 
     params = {
         "hardware": hardware_id,
@@ -871,8 +843,7 @@ def get_hardware_trees_head_commits(
         "start_date": start_datetime,
         "end_date": end_datetime,
     }
-    trees = []
-    with connection.cursor() as cursor:
+    with connections["default"].cursor() as cursor:
         cursor.execute(query, params)
         tree_records = dict_fetchall(cursor)
         trees = [
@@ -891,7 +862,7 @@ def get_hardware_trees_data(
     start_datetime: datetime,
     end_datetime: datetime,
 ) -> list[Tree]:
-    cache_key = "hardwareDetailsTreeData"
+    cache_key = "hardwareDetailsTreeDataFromStatus"
 
     params = {
         "hardware": hardware_id,
@@ -903,33 +874,18 @@ def get_hardware_trees_data(
     trees: list[Tree] = get_query_cache(cache_key, params)
 
     if not trees:
-        query = f"""
-        WITH
-            {_get_hardware_tree_heads_with_ctes()}
-        SELECT DISTINCT
-            ON (
-                TH.tree_name,
-                TH.git_repository_branch,
-                TH.git_repository_url,
-                TH.git_commit_hash
-            ) TH.tree_name,
-            TH.origin,
-            TH.git_repository_branch,
-            TH.git_repository_url,
-            TH.git_commit_name,
-            TH.git_commit_hash,
-            TH.git_commit_tags
-        FROM
-            tree_heads TH
-            INNER JOIN hardware_checkouts HC ON HC.id = TH.id
-        ORDER BY
-            TH.tree_name ASC,
-            TH.git_repository_branch ASC,
-            TH.git_repository_url ASC,
-            TH.git_commit_hash ASC,
-            TH.start_time DESC
-        """
-        with connection.cursor() as cursor:
+        query = _get_hardware_trees_from_status_query(
+            fields="""
+                C.tree_name,
+                C.origin,
+                C.git_repository_branch,
+                C.git_repository_url,
+                C.git_commit_name,
+                C.git_commit_hash,
+                C.git_commit_tags
+            """
+        )
+        with connections["default"].cursor() as cursor:
             cursor.execute(query, params)
             tree_records = dict_fetchall(cursor)
 
