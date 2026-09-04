@@ -269,6 +269,7 @@ export const messages = {
       'The culprit for all issues listed is code',
     'issueDetails.lastIncident': 'Last Incident Data',
     'issueDetails.logspecData': 'Logspec Data',
+    'issueDetails.loreUrl': 'Lore URL',
     'issueDetails.nextCheckout': 'Next Checkout',
     'issueDetails.noBuildResults': 'No builds associated with this issue',
     'issueDetails.noTestResults': 'No tests associated with this issue',
