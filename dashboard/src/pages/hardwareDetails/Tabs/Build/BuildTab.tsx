@@ -28,7 +28,11 @@ import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/H
 
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
+import {
+  dashboardFiltersFromDiffFilter,
+  createHardwareResultsCommand,
+} from '@/components/Footer/kcidevCommand';
 
 import { HardwareDetailsBuildsTable } from './HardwareDetailsBuildsTable';
 
@@ -87,17 +91,15 @@ const BuildTab = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter
-        commandGroup="hardwareDetails"
-        args={{
-          cmdName: 'hardware builds',
+      <MemoizedKcidevCommandButton
+        command={createHardwareResultsCommand('builds', {
           name: hardwareId,
-          origin: origin,
-          json: true,
-        }}
+          origin,
+          filters: dashboardFiltersFromDiffFilter(diffFilter, 'builds'),
+        })}
       />
     ),
-    [hardwareId, origin],
+    [diffFilter, hardwareId, origin],
   );
 
   const { topCards, bodyCards, footerCards } = useMemo(() => {
@@ -155,6 +157,7 @@ const BuildTab = ({
 
   return (
     <div className="flex flex-col gap-8 pt-4 pb-10">
+      <div className="flex flex-wrap justify-end gap-2">{kcidevComponent}</div>
       <MemoizedResponsiveDetailsCards
         topCards={topCards}
         bodyCards={bodyCards}
@@ -174,7 +177,6 @@ const BuildTab = ({
             hardwareId={hardwareId}
           />
         </HardwareDetailsTabsQuerySwitcher>
-        {kcidevComponent}
       </div>
     </div>
   );

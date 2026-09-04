@@ -36,7 +36,11 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
+import {
+  dashboardFiltersFromDiffFilter,
+  createTreeResultsCommand,
+} from '@/components/Footer/kcidevCommand';
 import { getStringParam } from '@/utils/utils';
 
 interface TestsTabProps {
@@ -50,7 +54,7 @@ const TestsTab = ({
 }: TestsTabProps): JSX.Element => {
   const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
   const params = useParams({ from: urlFrom });
-  const { tableFilter, diffFilter, treeInfo } = useSearch({
+  const { tableFilter, diffFilter, treeInfo, origin } = useSearch({
     from: urlFrom,
   });
 
@@ -227,17 +231,19 @@ const TestsTab = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter
-        commandGroup="treeDetails"
-        args={{
-          cmdName: 'tests',
-          'git-url': sanitizedTreeInfo.gitUrl,
+      <MemoizedKcidevCommandButton
+        command={createTreeResultsCommand('tests', {
+          origin,
+          filters: dashboardFiltersFromDiffFilter(diffFilter, 'tests'),
+          gitUrl: sanitizedTreeInfo.gitUrl,
           branch: sanitizedTreeInfo.gitBranch,
           commit: sanitizedTreeInfo.hash,
-        }}
+        })}
       />
     ),
     [
+      diffFilter,
+      origin,
       sanitizedTreeInfo.gitBranch,
       sanitizedTreeInfo.gitUrl,
       sanitizedTreeInfo.hash,
@@ -338,6 +344,9 @@ const TestsTab = ({
         }
       >
         <div className="flex flex-col gap-8 pt-4">
+          <div className="flex flex-wrap justify-end gap-2">
+            {kcidevComponent}
+          </div>
           <MemoizedResponsiveDetailsCards
             topCards={topCards}
             bodyCards={bodyCards}
@@ -355,7 +364,6 @@ const TestsTab = ({
               currentPathFilter={currentPathFilter}
             />
           </QuerySwitcher>
-          {kcidevComponent}
         </div>
       </QuerySwitcher>
       {isEmptySummary && (

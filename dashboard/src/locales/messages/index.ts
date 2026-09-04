@@ -103,10 +103,17 @@ export const messages = {
     'filter.testStatus': 'Test Status',
     'filter.treeSubtitle': 'Please select one or more Trees:',
     'filter.treeURL': 'Tree URL',
-    'footer.command': 'Command for this page:\n{command}',
-    'footer.kcidev':
-      'You can use {link} to retrieve KernelCI data from the command line',
-    'footer.question': 'Did you know?',
+    'footer.cliCommand': 'CLI command',
+    'footer.commandDocumentation': 'Command documentation',
+    'footer.commandTitle': 'Run this query with kci-dev',
+    'footer.copied': 'Copied',
+    'footer.copyCommand': 'Copy command',
+    'footer.copyError':
+      'Could not copy the command. Select it above and copy it manually.',
+    'footer.installKcidev': 'Install kci-dev',
+    'footer.promotionLabel': 'Install kci-dev',
+    'footer.unsupportedFilters':
+      'This command cannot reproduce these dashboard filters: {filters}.',
     'global.allCount': 'All: {count}',
     'global.arch': 'Arch',
     'global.architecture': 'Architecture',

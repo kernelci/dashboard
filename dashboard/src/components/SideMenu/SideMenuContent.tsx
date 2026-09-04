@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 
 import { ExternalLinkIcon } from '@/components/Icons/ExternalLink';
+import { KcidevPromotion } from '@/components/Footer/KcidevPromotion';
 
 import { REPO_URL } from '@/utils/constants/general';
 
@@ -122,6 +123,9 @@ const SideMenuContent = ({
         ))}
         <Separator className="bg-on-secondary-10 my-4" />
         {linksItemElements}
+        <NavigationMenuItem className="w-full">
+          <KcidevPromotion onLinkClick={onLinkClick} />
+        </NavigationMenuItem>
         <SendFeedback className="w-full" />
         <Separator className="bg-on-secondary-10 my-4" />
         <Tooltip>
