@@ -48,7 +48,10 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
-import { createTreeResultsCommand } from '@/components/Footer/kcidevCommand';
+import {
+  dashboardFiltersFromDiffFilter,
+  createTreeResultsCommand,
+} from '@/components/Footer/kcidevCommand';
 
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
@@ -182,6 +185,7 @@ const BuildTab = ({
       <MemoizedKcidevFooter
         command={createTreeResultsCommand('builds', {
           origin,
+          filters: dashboardFiltersFromDiffFilter(diffFilter, 'builds'),
           gitUrl: sanitizedTreeInfo.gitUrl,
           branch: sanitizedTreeInfo.gitBranch,
           commit: sanitizedTreeInfo.hash,
@@ -189,6 +193,7 @@ const BuildTab = ({
       />
     ),
     [
+      diffFilter,
       origin,
       sanitizedTreeInfo.gitBranch,
       sanitizedTreeInfo.gitUrl,

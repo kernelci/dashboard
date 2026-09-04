@@ -32,7 +32,10 @@ import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/H
 import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
-import { createHardwareResultsCommand } from '@/components/Footer/kcidevCommand';
+import {
+  dashboardFiltersFromDiffFilter,
+  createHardwareResultsCommand,
+} from '@/components/Footer/kcidevCommand';
 
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 
@@ -137,10 +140,11 @@ const BootsTab = ({
         command={createHardwareResultsCommand('boots', {
           name: hardwareId,
           origin,
+          filters: dashboardFiltersFromDiffFilter(diffFilter, 'boots'),
         })}
       />
     ),
-    [hardwareId, origin],
+    [diffFilter, hardwareId, origin],
   );
 
   const { topCards, bodyCards, footerCards } = useMemo(() => {

@@ -10,7 +10,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-import { serializeKcidevCommand, type KcidevCommand } from './kcidevCommand';
+import {
+  serializeShellArgv,
+  type KcidevCommand,
+  type KcidevCommandVariant,
+} from './kcidevCommand';
 
 type CopyStatus = 'idle' | 'copied' | 'error';
 
@@ -24,11 +28,23 @@ const KcidevFooter = ({
     () => (command ? (Array.isArray(command) ? command : [command]) : []),
     [command],
   );
+  const displayedCommands = useMemo(
+    () =>
+      commands.flatMap(value =>
+        (
+          value.variants ??
+          ([
+            { id: 'human' as const, label: 'Human-readable', argv: value.argv },
+          ] satisfies KcidevCommandVariant[])
+        ).map((variant: KcidevCommandVariant) => ({ command: value, variant })),
+      ),
+    [commands],
+  );
 
-  const copyCommand = async (value: KcidevCommand): Promise<void> => {
+  const copyCommand = async (argv: readonly string[]): Promise<void> => {
     setCopyStatus('idle');
     try {
-      await navigator.clipboard.writeText(serializeKcidevCommand(value));
+      await navigator.clipboard.writeText(serializeShellArgv(argv));
       setCopyStatus('copied');
     } catch {
       setCopyStatus('error');
@@ -61,17 +77,21 @@ const KcidevFooter = ({
             <h2 className="mb-3 text-base font-semibold">
               <FormattedMessage id="footer.commandTitle" />
             </h2>
-            {commands.map(value => (
-              <div className="mb-3" key={value.id}>
-                {commands.length > 1 && (
-                  <h3 className="mb-1 text-sm font-medium">{value.label}</h3>
-                )}
+            {displayedCommands.map(({ command: value, variant }) => (
+              <div
+                className="mb-3"
+                key={`${value.id}-${variant.id}-${variant.label}`}
+              >
+                <h3 className="mb-1 text-sm font-medium">
+                  {commands.length > 1 && `${value.label}: `}
+                  {variant.label}
+                </h3>
                 <pre
-                  aria-label={value.label}
+                  aria-label={`${value.label}: ${variant.label}`}
                   className="max-w-full cursor-text overflow-x-auto rounded-md bg-slate-100 p-3 text-sm select-text"
                   tabIndex={0}
                 >
-                  <code>{serializeKcidevCommand(value)}</code>
+                  <code>{serializeShellArgv(variant.argv)}</code>
                 </pre>
                 {value.omittedFilters.length > 0 && (
                   <div
@@ -87,10 +107,10 @@ const KcidevFooter = ({
                 <Button
                   className="mt-2"
                   type="button"
-                  onClick={() => copyCommand(value)}
+                  onClick={() => copyCommand(variant.argv)}
                 >
                   <FormattedMessage id="footer.copyCommand" />
-                  {commands.length > 1 && `: ${value.label}`}
+                  {`: ${variant.label}`}
                 </Button>
               </div>
             ))}

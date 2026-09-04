@@ -36,6 +36,7 @@ const meta: Meta<typeof MemoizedKcidevFooter> = {
         '7',
       ],
       omittedFilters: ['tree search'],
+      reproduction: 'partial',
     },
   },
 };
@@ -62,9 +63,9 @@ export const Interaction: Story = {
         await expect(
           page.getByRole('heading', { name: 'Run this query with kci-dev' }),
         ).toBeVisible();
-        await expect(page.getByLabelText('Tree listing')).toHaveTextContent(
-          completeCommand,
-        );
+        await expect(
+          page.getByLabelText('Tree listing: Human-readable'),
+        ).toHaveTextContent(completeCommand);
         await expect(page.getByRole('note')).toHaveTextContent('tree search');
       },
     );
@@ -73,7 +74,7 @@ export const Interaction: Story = {
       'reports copy success only after the clipboard resolves',
       async () => {
         await userEvent.click(
-          page.getByRole('button', { name: 'Copy command' }),
+          page.getByRole('button', { name: 'Copy command: Human-readable' }),
         );
         await expect(writeText).toHaveBeenCalledWith(completeCommand);
         await expect(page.getByText('Copied')).toBeVisible();
@@ -91,14 +92,14 @@ export const Interaction: Story = {
         writeText.mockRejectedValueOnce(new Error('Clipboard denied'));
         await userEvent.keyboard('{Enter}');
         await userEvent.click(
-          page.getByRole('button', { name: 'Copy command' }),
+          page.getByRole('button', { name: 'Copy command: Human-readable' }),
         );
         await expect(page.getByRole('alert')).toHaveTextContent(
           'Select it above and copy it manually.',
         );
-        await expect(page.getByLabelText('Tree listing')).toHaveTextContent(
-          completeCommand,
-        );
+        await expect(
+          page.getByLabelText('Tree listing: Human-readable'),
+        ).toHaveTextContent(completeCommand);
       },
     );
   },

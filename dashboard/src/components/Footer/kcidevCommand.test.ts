@@ -14,6 +14,7 @@ import {
   createTreeResultsCommand,
   serializeKcidevCommand,
   serializeShellArgv,
+  translateDashboardFilters,
 } from './kcidevCommand';
 
 describe('kci-dev command generation', () => {
@@ -99,7 +100,7 @@ describe('kci-dev command generation', () => {
         days: 5,
         omittedFilters: ['incident', 'text search'],
       }),
-    ).toEqual([
+    ).toMatchObject([
       {
         id: 'issues-maestro',
         label: 'Issues from maestro',
@@ -113,6 +114,7 @@ describe('kci-dev command generation', () => {
           '5',
         ],
         omittedFilters: ['incident', 'text search'],
+        reproduction: 'partial',
       },
       {
         id: 'issues-test-origin',
@@ -127,6 +129,7 @@ describe('kci-dev command generation', () => {
           '5',
         ],
         omittedFilters: ['incident', 'text search'],
+        reproduction: 'partial',
       },
     ]);
   });
@@ -313,5 +316,118 @@ describe('kci-dev command generation', () => {
       expect(generated?.argv).not.toContain('--json');
       expect(generated?.argv).not.toContain('--download-logs');
     }
+  });
+
+  it.each([
+    ['architectures', 'arm64', '--arch'],
+    ['configs', 'defconfig', '--config'],
+    ['compilers', 'gcc-14', '--compiler'],
+    ['hardware', 'qemu-arm64', '--hardware'],
+    ['testPaths', 'boot.login', '--test-path'],
+    ['bootOrigins', 'tuxsuite', '--boot-origin'],
+  ] as const)('maps one %s value through %s', (key, value, option) => {
+    expect(translateDashboardFilters({ [key]: [value] })).toEqual({
+      argv: [option, value],
+      omittedFilters: [],
+      reproduction: 'exact',
+    });
+  });
+
+  it.each([
+    ['architectures', 'architecture (multiple values)'],
+    ['configs', 'config (multiple values)'],
+    ['compilers', 'compiler (multiple values)'],
+    ['hardware', 'hardware (multiple values)'],
+    ['testPaths', 'boot/test path (multiple values)'],
+    ['bootOrigins', 'boot origin (multiple values)'],
+  ] as const)('omits multiple %s values', (key, label) => {
+    expect(translateDashboardFilters({ [key]: ['one', 'two'] })).toEqual({
+      argv: [],
+      omittedFilters: [label],
+      reproduction: 'partial',
+    });
+  });
+
+  it('maps supported duration boundaries', () => {
+    expect(
+      translateDashboardFilters({ minDuration: 1.5, maxDuration: 20 }).argv,
+    ).toEqual(['--min-duration', '1.5', '--max-duration', '20']);
+  });
+
+  it('discloses unsupported filters once in deterministic order', () => {
+    expect(
+      translateDashboardFilters({
+        statuses: ['PASS'],
+        labs: ['lab-a'],
+        issueAssociations: ['issue-a'],
+        issueCulprits: ['code'],
+        issueCategories: ['regression'],
+        issueOptions: ['resolved'],
+        hasExactDateBoundaries: true,
+        hasTextSearch: true,
+        hasTreeCompareStatusPairs: true,
+        hasHardwareDateWindow: true,
+      }),
+    ).toEqual({
+      argv: [],
+      omittedFilters: [
+        'status',
+        'lab',
+        'issue association',
+        'issue culprit',
+        'issue category',
+        'issue options',
+        'exact custom date boundaries',
+        'client-side text search',
+        'Tree Compare status pairs',
+        'hardware date window',
+      ],
+      reproduction: 'partial',
+    });
+  });
+
+  it('creates safe detail variants without downloading by default', () => {
+    const generated = createResultDetailsCommand('boot', 'boot-id')!;
+    expect(generated.variants).toEqual([
+      { id: 'human', label: 'Human-readable', argv: generated.argv },
+      { id: 'json', label: 'JSON', argv: [...generated.argv, '--json'] },
+      {
+        id: 'download',
+        label: 'Download logs (writes files)',
+        argv: [...generated.argv, '--download-logs'],
+        writesFiles: true,
+      },
+    ]);
+    expect(generated.argv).not.toContain('--download-logs');
+  });
+
+  it('uses public JSON formats for compare and gate variants', () => {
+    const generated = createTreeCompareCommand({
+      origin: 'maestro',
+      gitUrl: 'https://example.com/linux.git',
+      branch: 'main',
+      hashA: 'base',
+      hashB: 'head',
+    })!;
+    expect(generated.variants?.map(variant => variant.argv)).toContainEqual([
+      ...generated.argv,
+      '--format',
+      'json',
+    ]);
+    expect(generated.variants?.map(variant => variant.argv)).toContainEqual([
+      'kci-dev',
+      'results',
+      'gate',
+      '--origin',
+      'maestro',
+      '--giturl',
+      'https://example.com/linux.git',
+      '--branch',
+      'main',
+      '--base',
+      'base',
+      '--head',
+      'head',
+    ]);
   });
 });
