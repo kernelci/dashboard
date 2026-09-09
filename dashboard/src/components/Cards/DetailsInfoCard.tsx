@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { useMemo } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import {
@@ -41,15 +41,17 @@ const columns: ColumnDef<DetailRow>[] = [
 
 export const DetailsInfoCard = ({
   cardTitle,
+  title,
   data,
 }: {
-  cardTitle: MessagesKey;
+  cardTitle?: MessagesKey;
+  title?: ReactNode;
   data: ILinkWithIcon[];
 }): JSX.Element => {
   const sanitizedData: DetailRow[] = useMemo(
     () =>
-      data.map(({ title, ...value }) => ({
-        title,
+      data.map(({ title: fieldTitle, ...value }) => ({
+        title: fieldTitle,
         value: { ...value },
       })),
     [data],
@@ -93,7 +95,7 @@ export const DetailsInfoCard = ({
 
   return (
     <BaseCard
-      title={<FormattedMessage id={cardTitle} />}
+      title={title ?? (cardTitle ? <FormattedMessage id={cardTitle} /> : null)}
       className="mb-0 gap-0"
     >
       <DumbBaseTable containerClassName="rounded-none border-0 border-x-0">
