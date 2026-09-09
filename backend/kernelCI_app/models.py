@@ -109,6 +109,55 @@ class Checkouts(models.Model):
         ]
 
 
+class Commits(models.Model):
+    id = models.AutoField(primary_key=True)
+    git_commit_hash = models.TextField(unique=True)
+    author_name = models.TextField(blank=True, null=True)
+    author_email = models.TextField(blank=True, null=True)
+    author_date = models.DateTimeField(blank=True, null=True)
+    committer_name = models.TextField(blank=True, null=True)
+    committer_email = models.TextField(blank=True, null=True)
+    committer_date = models.DateTimeField(blank=True, null=True)
+    subject = models.TextField(blank=True, null=True)
+    message = models.TextField(blank=True, null=True)
+    fetched_from_url = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "commits"
+
+    def __str__(self) -> str:
+        return self.git_commit_hash
+
+
+class CommitParents(models.Model):
+    id = models.AutoField(primary_key=True)
+    commit = models.ForeignKey(
+        Commits,
+        on_delete=models.CASCADE,
+        related_name="parent_edges",
+        db_index=False,
+    )
+    parent = models.ForeignKey(
+        Commits,
+        on_delete=models.CASCADE,
+        related_name="child_edges",
+        db_index=False,
+    )
+    ord = models.SmallIntegerField()
+
+    class Meta:
+        db_table = "commit_parents"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["commit", "ord"],
+                name="commit_parents_commit_ord",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["parent"], name="commit_parents_parent_id"),
+        ]
+
+
 class Builds(models.Model):
     field_timestamp = models.DateTimeField(
         db_column="_timestamp", blank=True, null=True
