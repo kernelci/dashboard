@@ -304,6 +304,31 @@ def _hardware_filter_clause(
     return f"AND {column} = ANY(%({parameter})s)" if values else ""
 
 
+def _daily_aggregate_rows(table: str, checkouts: Optional[str], filters: str) -> str:
+    if checkouts is not None:
+        return f"""
+            SELECT daily.*
+            FROM {table} daily
+            INNER JOIN selected_checkouts selected
+                ON selected.checkout_id = daily.checkout_id
+                {filters}"""
+
+    predicates = [
+        line.strip().removeprefix("AND ")
+        for line in filters.splitlines()
+        if line.strip()
+    ]
+    if not predicates:
+        return f"""
+            SELECT daily.*
+            FROM {table} daily"""
+
+    return f"""
+            SELECT daily.*
+            FROM {table} daily
+            WHERE {" AND ".join(predicates)}"""
+
+
 def _platform_counts_cte(*, rows: str, prefix: str, sums: str) -> str:
     return f"""
         {prefix}_hardware AS (
@@ -325,7 +350,7 @@ def _platform_counts_cte(*, rows: str, prefix: str, sums: str) -> str:
 
 def _hardware_daily_counts(
     *,
-    checkouts: str,
+    checkouts: Optional[str],
     day_range: str,
     params: dict,
     checkout_origin: Optional[list[str]],
@@ -334,15 +359,8 @@ def _hardware_daily_counts(
     build_lab: Optional[list[str]],
     test_lab: Optional[list[str]],
 ) -> list[tuple]:
-    """Per-platform status counts from the hardware daily aggregates.
-
-    Builds and tests are filtered and counted on their own side, so a platform
-    kept by one side shows up with zeros on the other. A side that was narrowed
-    also decides membership: asking for a test lab lists the platforms that lab
-    tested, not every platform with a matching build and an empty test column.
-    `checkouts` is a SELECT of checkout_id that decides which checkouts are in
-    scope.
-    """
+    """Counts from daily aggregates. Build/test filtered independently; narrowed side picks platforms.
+    Optional checkouts narrows checkout_id; else checkout_day window only."""
     # checkout_origin is nullable: rows whose checkout has been pruned, and rows
     # aggregated before the column existed, have no origin to compare. Narrowing
     # to an origin leaves them out rather than matching them against every one.
@@ -372,14 +390,11 @@ def _hardware_daily_counts(
         (False, False): "FULL OUTER JOIN",
     }[bool(build_origin or build_lab), bool(test_origin or test_lab)]
 
+    scope_cte = f"selected_checkouts AS ({checkouts}),\n        " if checkouts else ""
+
     query = f"""
-        WITH selected_checkouts AS ({checkouts}),
-        build_rows AS (
-            SELECT daily.*
-            FROM hardware_daily_builds daily
-            INNER JOIN selected_checkouts selected
-                ON selected.checkout_id = daily.checkout_id
-                {build_filters}
+        WITH {scope_cte}build_rows AS (
+        {_daily_aggregate_rows("hardware_daily_builds", checkouts, build_filters)}
         ),
         {
         _platform_counts_cte(
@@ -392,11 +407,7 @@ def _hardware_daily_counts(
         )
     },
         test_rows AS (
-            SELECT daily.*
-            FROM hardware_daily_tests daily
-            INNER JOIN selected_checkouts selected
-                ON selected.checkout_id = daily.checkout_id
-                {test_filters}
+        {_daily_aggregate_rows("hardware_daily_tests", checkouts, test_filters)}
         ),
         {
         _platform_counts_cte(
@@ -474,12 +485,7 @@ def get_hardware_listing_data(
               )
         """
     else:
-        checkouts = """
-            SELECT DISTINCT checkout_id
-            FROM hardware_status
-            WHERE start_time >= %(start_date)s
-              AND start_time <= %(end_date)s
-        """
+        checkouts = None
 
     return _hardware_daily_counts(
         checkouts=checkouts,
@@ -496,13 +502,7 @@ def get_hardware_listing_data(
 def get_hardware_filters(
     *, start_date: datetime, end_date: datetime
 ) -> dict[str, list[str]]:
-    """Option lists for the hardware listing filters, over the same day window.
-
-    Each list is independent: picking a lab must not narrow the origins offered,
-    so the drawer never traps the user in a combination they cannot back out of.
-    Labs already carry the origin fallback for labless rows, so virtual and pull
-    labs show up here without extra work.
-    """
+    """Filter option lists for the listing window. Lists are independent (no cascading)."""
     cache_key = "hardwareFilters"
     cache_params = {"start_date": start_date, "end_date": end_date}
 
