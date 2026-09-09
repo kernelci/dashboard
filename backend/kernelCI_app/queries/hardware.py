@@ -853,8 +853,8 @@ def get_hardware_trees_head_commits(
             (
                 make_tree_key(
                     tree["tree_name"] or "",
-                    tree.get("git_repository_branch", "") or "",
-                    tree.get("git_repository_url", "") or "",
+                    tree["git_repository_branch"] or "",
+                    tree["git_repository_url"] or "",
                 ),
                 tree["git_commit_hash"],
             )

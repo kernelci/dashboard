@@ -142,21 +142,6 @@ class TestGetTreesWithSelectedCommit:
         assert result[1].head_git_commit_hash == "def456"
         assert result[1].is_selected is False
 
-    def test_get_trees_with_selected_commit_legacy_numeric_keys(self):
-        """Test backward compat: numeric keys still work for one release."""
-        trees = [base_tree, tree_with_different_commit]
-        selected_commits = {"0": "custom123"}
-
-        result = get_trees_with_selected_commit(
-            trees=trees, selected_commits=selected_commits
-        )
-
-        assert len(result) == 2
-        assert result[0].head_git_commit_hash == "custom123"
-        assert result[0].is_selected is True
-        assert result[1].head_git_commit_hash == "def456"
-        assert result[1].is_selected is False
-
 
 class TestGetArchSummaryTyped:
     def test_get_arch_summary_typed(self):

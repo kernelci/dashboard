@@ -11,9 +11,7 @@ from kernelCI_app.constants.general import (
     UNCATEGORIZED_STRING,
     UNKNOWN_STRING,
 )
-from kernelCI_app.constants.hardwareDetails import (
-    SELECTED_HEAD_TREE_VALUE,
-)
+from kernelCI_app.constants.hardwareDetails import SELECTED_HEAD_TREE_VALUE
 from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
     FilterParams,
@@ -92,21 +90,13 @@ def get_displayed_commit(*, tree: Tree, selected_commit: Optional[str]):
     return selected_commit
 
 
-def _is_legacy_numeric_keys(keys: Dict[str, str]) -> bool:
-    return bool(keys) and all(k.isdigit() for k in keys)
-
-
 def get_trees_with_selected_commit(
     *, trees: List[Tree], selected_commits: Dict[str, str]
 ) -> List[Tree]:
     selected: List[Tree] = []
 
-    is_legacy = _is_legacy_numeric_keys(selected_commits)
-
-    for i, tree in enumerate(trees):
-        lookup_key = str(i) if is_legacy else tree.index
-
-        raw_selected_commit = selected_commits.get(lookup_key)
+    for tree in trees:
+        raw_selected_commit = selected_commits.get(tree.index)
 
         is_tree_selected = raw_selected_commit is not None
 

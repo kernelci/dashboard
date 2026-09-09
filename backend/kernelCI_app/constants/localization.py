@@ -104,9 +104,7 @@ class DocStrings:
         "'tree_name|git_repository_branch|git_repository_url', matching "
         "Tree.index values returned by the hardware details endpoints. "
         "Values are a git commit hash or 'head' to use the tree head commit. "
-        "An empty object selects all trees with their head commits. "
-        "Legacy clients may send numeric string keys ('0', '1', ...) that "
-        "map to trees by position in the sorted tree list."
+        "An empty object selects all trees with their head commits."
     )
     HARDWARE_DETAILS_TREE_INDEX_DESCRIPTION = (
         "Stable identifier for a tree, derived as the first 14 hexadecimal "

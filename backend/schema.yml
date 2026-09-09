@@ -3198,9 +3198,7 @@ components:
             Keys are the first 14 hexadecimal characters of SHA-256 over 'tree_name|git_repository_branch|git_repository_url',
             matching Tree.index values returned by the hardware details endpoints.
             Values are a git commit hash or 'head' to use the tree head commit. An
-            empty object selects all trees with their head commits. Legacy clients
-            may send numeric string keys ('0', '1', ...) that map to trees by position
-            in the sorted tree list.
+            empty object selects all trees with their head commits.
           title: Selectedcommits
           type: object
         filter:

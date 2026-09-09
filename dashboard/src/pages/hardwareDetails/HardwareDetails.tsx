@@ -216,7 +216,7 @@ function HardwareDetails(): JSX.Element {
     });
   }, [navigate]);
 
-  const [treeIndexesLength, setTreeIndexesLength] = useState(0);
+  const [treeKeys, setTreeKeys] = useState<string[]>([]);
   const { summary: summaryResponse, full: fullResponse } =
     useHardwareDetailsLazyLoadQuery({
       hardwareId: hardwareId,
@@ -226,40 +226,18 @@ function HardwareDetails(): JSX.Element {
       filter: reqFilter,
       selectedIndexes: treeIndexes,
       treeCommits: treeCommits,
-      treeIndexesLength: treeIndexesLength,
+      treeKeys,
     });
-
-  const hasLegacyNumericTreeKeys =
-    treeIndexes?.some(k => /^\d+$/.test(k)) ||
-    Object.keys(treeCommits).some(k => /^\d+$/.test(k));
 
   useEffect(() => {
-    const trees = summaryResponse.data?.common.trees;
-    if (!trees || !hasLegacyNumericTreeKeys) {
-      return;
-    }
-
-    const mapKey = (k: string): string =>
-      /^\d+$/.test(k) ? trees[Number(k)]?.index ?? k : k;
-
-    navigate({
-      replace: true,
-      search: prev => ({
-        ...prev,
-        treeIndexes: treeIndexes ? [...new Set(treeIndexes.map(mapKey))] : null,
-        treeCommits: Object.fromEntries(
-          Object.entries(treeCommits).map(([k, v]) => [mapKey(k), v]),
-        ),
-      }),
-      state: s => s,
-    });
-  }, [
-    navigate,
-    summaryResponse.data,
-    treeCommits,
-    treeIndexes,
-    hasLegacyNumericTreeKeys,
-  ]);
+    const next =
+      summaryResponse.data?.common.trees.map(tree => tree.index) ?? [];
+    setTreeKeys(prev =>
+      prev.length === next.length && prev.every((key, i) => key === next[i])
+        ? prev
+        : next,
+    );
+  }, [summaryResponse.data?.common.trees]);
 
   const hardwareStatusHistoryState = useRouterState({
     select: s => s.location.state.hardwareStatusCount,
@@ -380,7 +358,6 @@ function HardwareDetails(): JSX.Element {
       return;
     }
 
-    setTreeIndexesLength(trees.length);
     navigate({
       search: prev => ({ ...prev, treeCommits: newTreeCommits }),
       state: s => s,
@@ -393,7 +370,6 @@ function HardwareDetails(): JSX.Element {
     commitHistoryTable,
     commitHistoryIsLoading,
     navigate,
-    setTreeIndexesLength,
   ]);
 
   const filterListElement = useMemo(() => {
@@ -614,13 +590,12 @@ function HardwareDetails(): JSX.Element {
             </p>
           </div>
           <div className="mt-5">
-            {!!treeData && !hasLegacyNumericTreeKeys && (
+            {!!treeData && (
               <>
                 <HardwareHeader
                   treeItems={treeData}
                   selectedIndexes={treeIndexes}
                   updateTreeFilters={updateTreeFilters}
-                  setTreeIndexesLength={setTreeIndexesLength}
                   selectionResetKey={`${hardwareId}\0${hardwareSearch ?? ''}`}
                 />
                 {summaryResponse.data &&

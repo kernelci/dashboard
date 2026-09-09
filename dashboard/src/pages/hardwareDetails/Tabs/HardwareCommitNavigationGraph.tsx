@@ -34,13 +34,13 @@ const HardwareCommitNavigationGraph = ({
     [diffFilter, hardwareId],
   );
 
-  const treeIdx =
+  const treeKey =
     trees.length === 1
       ? trees[0].index
       : treeIndexes?.length === 1
         ? treeIndexes[0]
         : null;
-  const tree = treeIdx !== null && trees.find(t => t.index === treeIdx);
+  const tree = treeKey !== null && trees.find(t => t.index === treeKey);
 
   const commitHeads = useMemo(
     (): CommitHead[] =>
@@ -79,26 +79,26 @@ const HardwareCommitNavigationGraph = ({
 
   const markClickHandle = useCallback(
     (commitHash: string) => {
-      if (treeIdx === null) {
+      if (treeKey === null) {
         return;
       }
 
       navigate({
         search: current => ({
           ...current,
-          treeCommits: { ...treeCommits, [treeIdx]: commitHash },
+          treeCommits: { ...treeCommits, [treeKey]: commitHash },
         }),
         state: s => s,
       });
     },
-    [navigate, treeIdx, treeCommits],
+    [navigate, treeKey, treeCommits],
   );
 
   if (!tree) {
     return <></>;
   }
 
-  const treeId = treeCommits?.[treeIdx!] ?? tree['head_git_commit_hash'];
+  const treeId = treeCommits?.[treeKey] ?? tree['head_git_commit_hash'];
 
   return (
     <CommitNavigationGraph

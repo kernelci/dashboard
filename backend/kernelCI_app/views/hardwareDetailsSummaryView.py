@@ -476,9 +476,6 @@ class HardwareDetailsSummary(APIView):
             )
         )
 
-    def _is_legacy_numeric_keys(self, keys: dict[str, str]) -> bool:
-        return all(k.isdigit() for k in keys)
-
     def select_commits_hashes(
         self,
         tree_heads: list[tuple[str, str]],
@@ -486,22 +483,12 @@ class HardwareDetailsSummary(APIView):
     ):
         selected_commit_hashes = []
         if selected_commits:
-            if self._is_legacy_numeric_keys(self.selected_commits):
-                indexed_heads = list(enumerate(tree_heads))
-                for i, (_, head) in indexed_heads:
-                    str_i = str(i)
-                    if str_i in self.selected_commits:
-                        selected_commit = self.selected_commits.get(str_i, "head")
-                        selected_commit_hashes.append(
-                            head if selected_commit == "head" else selected_commit
-                        )
-            else:
-                for key, head in tree_heads:
-                    if key in self.selected_commits:
-                        selected_commit = self.selected_commits.get(key, "head")
-                        selected_commit_hashes.append(
-                            head if selected_commit == "head" else selected_commit
-                        )
+            for key, head in tree_heads:
+                if key in self.selected_commits:
+                    selected_commit = self.selected_commits.get(key, "head")
+                    selected_commit_hashes.append(
+                        head if selected_commit == "head" else selected_commit
+                    )
         else:
             selected_commit_hashes = [head for (_, head) in tree_heads]
         return selected_commit_hashes
