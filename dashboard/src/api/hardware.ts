@@ -1,7 +1,7 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 
-import { DEFAULT_ORIGIN, type TFilter } from '@/types/general';
+import type { TFilter } from '@/types/general';
 import { HARDWARE_LISTING_FILTER_SECTIONS } from '@/utils/constants/hardwareListingFilters';
 
 import type {
@@ -30,7 +30,7 @@ export const hardwareListingParams = (
   );
 
 export const buildOriginForSelectors = (diffFilter: TFilter): string =>
-  selectedFilterValues(diffFilter.buildOrigin) || DEFAULT_ORIGIN;
+  selectedFilterValues(diffFilter.buildOrigin);
 
 const fetchHardwareListing = async (
   startTimestampInSeconds: number,
