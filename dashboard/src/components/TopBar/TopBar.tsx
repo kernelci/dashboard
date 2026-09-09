@@ -155,9 +155,10 @@ const TopBar = (): JSX.Element => {
       isHardwarePage,
       isLabsPage: isLabsListing,
       isListingPage: isListingPage,
-      // Hardware listing filters origin per side in its own drawer.
       showOriginSelect:
-        isTreeListing || isLabsListing || (isHardwarePage && !isHardwareListing),
+        isTreeListing ||
+        isLabsListing ||
+        (isHardwarePage && !isHardwareListing),
     };
   }, [matches]);
 

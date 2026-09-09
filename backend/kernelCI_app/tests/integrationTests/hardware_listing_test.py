@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import pytest
 
-from kernelCI_app.models import HardwareDailyBuilds, HardwareDailyTests, LatestCheckout
+from kernelCI_app.models import HardwareDailyBuilds, HardwareDailyTests
 from kernelCI_app.queries.hardware import (
     get_hardware_filters,
     get_hardware_listing_data,
@@ -121,9 +121,6 @@ def test_a_narrowed_side_decides_which_platforms_are_listed():
     _test_on(build, "tested-here", lab="lava-broonie")
     _test_on(build, "tested-elsewhere", lab="lava-collabora")
     _recompute()
-    LatestCheckout.objects.create(
-        checkout_id=checkout.id, start_time=DAY_START, origin="maestro"
-    )
 
     def platforms(**filters):
         rows = get_hardware_listing_data(
@@ -155,9 +152,6 @@ def test_unknown_checkout_origin_is_listed_until_an_origin_is_chosen():
     _recompute()
     HardwareDailyBuilds.objects.update(checkout_origin=None)
     HardwareDailyTests.objects.update(checkout_origin=None)
-    LatestCheckout.objects.create(
-        checkout_id=checkout.id, start_time=DAY_START, origin="maestro"
-    )
 
     def listing(checkout_origin):
         return get_hardware_listing_data(
