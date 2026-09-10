@@ -12,7 +12,6 @@ import { MemoizedMoreDetailsButton } from '@/components/Button/MoreDetailsButton
 import { useLogExcerpt } from '@/api/logViewer';
 import { useLogData, type LogType } from '@/hooks/useLogData';
 import type {
-  CompareChangeType,
   CompareFailureRow,
   CompareItemStatus,
 } from '@/types/tree/TreeCompare';
@@ -22,7 +21,7 @@ import { CompareChangeBadge, CompareStatusChip } from './CompareChangeDisplay';
 export type CompareDetailItem = {
   title: string;
   subtitle: string;
-  change: CompareChangeType;
+  change: CompareFailureRow['change'];
   sideA: CompareItemStatus;
   sideB: CompareItemStatus;
   idA: string | null;
