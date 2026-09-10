@@ -3955,15 +3955,16 @@ components:
       type: object
     LabMetricsData:
       properties:
+        covered_builds:
+          default: 0
+          title: Covered Builds
+          type: integer
         builds:
-          title: Builds
-          type: integer
+          $ref: '#/components/schemas/StatusCount'
         boots:
-          title: Boots
-          type: integer
+          $ref: '#/components/schemas/StatusCount'
         tests:
-          title: Tests
-          type: integer
+          $ref: '#/components/schemas/StatusCount'
       required:
       - builds
       - boots

@@ -1,4 +1,5 @@
 import sys
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, time, timedelta, timezone
 from typing import Any, Optional
@@ -7,9 +8,11 @@ from django.db import connection, connections
 from pydantic import ValidationError
 
 from kernelCI_app.cache import get_query_cache, set_query_cache
+from kernelCI_app.constants.general import MAESTRO_DUMMY_BUILD_PREFIX
 from kernelCI_app.helpers.database import dict_fetchall
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.queries.tree import get_tree_listing_query
+from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.metrics_notifications import (
     BuildIncidentsCount,
     LabMetricsData,
@@ -777,6 +780,41 @@ def interval_params(start_days_ago: int, end_days_ago: int) -> dict[str, str]:
     }
 
 
+def lab_maps_from_status_rows(
+    *,
+    test_rows: list,
+    build_rows: list,
+    covered_build_rows: list | None = None,
+) -> dict[str, LabMetricsData]:
+    labs: defaultdict[str, LabMetricsData] = defaultdict(
+        lambda: LabMetricsData(
+            covered_builds=0,
+            builds=StatusCount(),
+            boots=StatusCount(),
+            tests=StatusCount(),
+        )
+    )
+
+    for lab, kind, status, count in test_rows:
+        if not lab:
+            continue
+        entry = labs[lab]
+        section = entry.boots if kind == "boot" else entry.tests
+        section.increment(status, count)
+
+    for lab, status, count in build_rows:
+        if not lab:
+            continue
+        labs[lab].builds.increment(status, count)
+
+    for lab, count in covered_build_rows or []:
+        if not lab:
+            continue
+        labs[lab].covered_builds = count
+
+    return dict(labs)
+
+
 def get_metrics_data(
     *,
     start_days_ago: int,
@@ -932,23 +970,65 @@ def get_metrics_data(
     """
 
     # TODO: remove t.misc.runtime after backfill on lab_id columns
-    lab_summary_query = """
+    lab_test_status_query = """
     SELECT
         -- TODO remove misc->>'runtime' fallback after lab backfill
         COALESCE(l.name, t.misc->>'runtime') AS lab,
-        COUNT(DISTINCT t.build_id) AS n_builds,
-        COUNT(*) FILTER (WHERE t.path LIKE 'boot.%%' OR t.path = 'boot') AS n_boots,
-        COUNT(*) FILTER (WHERE t.path NOT LIKE 'boot.%%' AND t.path != 'boot') AS n_tests
+        CASE
+            WHEN t.path = 'boot' OR t.path LIKE 'boot.%%' THEN 'boot'
+            ELSE 'test'
+        END AS kind,
+        t.status,
+        COUNT(*) AS n
     FROM tests t
     LEFT JOIN labs l ON t.lab_id = l.id
     WHERE
         (t.lab_id IS NOT NULL OR t.misc->>'runtime' IS NOT NULL)
         AND t._timestamp >= %(start_date)s::timestamptz
         AND t._timestamp < %(end_date)s::timestamptz
+    GROUP BY lab, kind, t.status
+    """
+
+    # TODO: remove b.misc.lab after backfill on lab_id columns
+    lab_build_status_query = """
+    SELECT
+        -- TODO remove misc->>'lab' fallback after lab backfill
+        COALESCE(l.name, b.misc->>'lab') AS lab,
+        b.status,
+        COUNT(*) AS n
+    FROM builds b
+    LEFT JOIN labs l ON b.lab_id = l.id
+    WHERE
+        (b.lab_id IS NOT NULL OR b.misc->>'lab' IS NOT NULL)
+        AND b.id NOT LIKE %(dummy_build_prefix)s
+        AND b._timestamp >= %(start_date)s::timestamptz
+        AND b._timestamp < %(end_date)s::timestamptz
+    GROUP BY lab, b.status
+    """
+
+    lab_covered_builds_query = """
+    SELECT lab, COUNT(*) AS n
+    FROM (
+        SELECT
+            -- TODO remove misc->>'runtime' fallback after lab backfill
+            COALESCE(l.name, t.misc->>'runtime') AS lab,
+            t.build_id
+        FROM tests t
+        LEFT JOIN labs l ON t.lab_id = l.id
+        WHERE
+            (t.lab_id IS NOT NULL OR t.misc->>'runtime' IS NOT NULL)
+            AND t._timestamp >= %(start_date)s::timestamptz
+            AND t._timestamp < %(end_date)s::timestamptz
+        GROUP BY lab, t.build_id
+    ) pairs
     GROUP BY lab
     """
 
-    with ThreadPoolExecutor(max_workers=6) as executor:
+    dummy_prefix = f"{MAESTRO_DUMMY_BUILD_PREFIX}%"
+    lab_params = {**params, "dummy_build_prefix": dummy_prefix}
+    prev_lab_params = {**prev_params, "dummy_build_prefix": dummy_prefix}
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
         total_objects_result = executor.submit(
             query_fetchone_work,
             cache_key="metricsTotalObjects",
@@ -981,18 +1061,50 @@ def get_metrics_data(
             use_cache=use_cache,
             timeout=cache_timeout,
         )
-        lab_summary_results = executor.submit(
+        lab_test_status_results = executor.submit(
             query_fetchall_work,
-            cache_key="metricsLabSummary",
-            query=lab_summary_query,
+            cache_key="metricsLabTestStatus",
+            query=lab_test_status_query,
             params=params,
             use_cache=use_cache,
             timeout=cache_timeout,
         )
-        prev_lab_summary_results = executor.submit(
+        prev_lab_test_status_results = executor.submit(
             query_fetchall_work,
-            cache_key="metricsLabSummary",
-            query=lab_summary_query,
+            cache_key="metricsLabTestStatus",
+            query=lab_test_status_query,
+            params=prev_params,
+            use_cache=use_cache,
+            timeout=cache_timeout,
+        )
+        lab_build_status_results = executor.submit(
+            query_fetchall_work,
+            cache_key="metricsLabBuildStatus",
+            query=lab_build_status_query,
+            params=lab_params,
+            use_cache=use_cache,
+            timeout=cache_timeout,
+        )
+        prev_lab_build_status_results = executor.submit(
+            query_fetchall_work,
+            cache_key="metricsLabBuildStatus",
+            query=lab_build_status_query,
+            params=prev_lab_params,
+            use_cache=use_cache,
+            timeout=cache_timeout,
+        )
+        lab_covered_builds_results = executor.submit(
+            query_fetchall_work,
+            cache_key="metricsLabCoveredBuilds",
+            query=lab_covered_builds_query,
+            params=params,
+            use_cache=use_cache,
+            timeout=cache_timeout,
+        )
+        prev_lab_covered_builds_results = executor.submit(
+            query_fetchall_work,
+            cache_key="metricsLabCoveredBuilds",
+            query=lab_covered_builds_query,
             params=prev_params,
             use_cache=use_cache,
             timeout=cache_timeout,
@@ -1002,8 +1114,12 @@ def get_metrics_data(
     prev_total_objects_result = prev_total_objects_result.result()
     build_incidents_result = build_incidents_result.result()
     new_build_issues_result = new_build_issues_result.result()
-    lab_summary_results = lab_summary_results.result()
-    prev_lab_summary_results = prev_lab_summary_results.result()
+    lab_test_status_results = lab_test_status_results.result()
+    prev_lab_test_status_results = prev_lab_test_status_results.result()
+    lab_build_status_results = lab_build_status_results.result()
+    prev_lab_build_status_results = prev_lab_build_status_results.result()
+    lab_covered_builds_results = lab_covered_builds_results.result()
+    prev_lab_covered_builds_results = prev_lab_covered_builds_results.result()
 
     try:
         build_incidents_by_origin: dict[str, BuildIncidentsCount] = {}
@@ -1051,26 +1167,20 @@ def get_metrics_data(
             build_incidents_by_origin=build_incidents_by_origin,
             top_issues_by_origin=top_issues_by_origin,
             new_issues_by_origin=new_issues_by_origin,
-            lab_maps={
-                row[0]: LabMetricsData(
-                    builds=row[1],
-                    boots=row[2],
-                    tests=row[3],
-                )
-                for row in lab_summary_results
-            },
+            lab_maps=lab_maps_from_status_rows(
+                test_rows=lab_test_status_results,
+                build_rows=lab_build_status_results,
+                covered_build_rows=lab_covered_builds_results,
+            ),
             prev_n_trees=prev_total_objects_result[0],
             prev_n_checkouts=prev_total_objects_result[1],
             prev_n_builds=prev_total_objects_result[2],
             prev_n_tests=prev_total_objects_result[3],
-            prev_lab_maps={
-                row[0]: LabMetricsData(
-                    builds=row[1],
-                    boots=row[2],
-                    tests=row[3],
-                )
-                for row in prev_lab_summary_results
-            },
+            prev_lab_maps=lab_maps_from_status_rows(
+                test_rows=prev_lab_test_status_results,
+                build_rows=prev_lab_build_status_results,
+                covered_build_rows=prev_lab_covered_builds_results,
+            ),
         )
     except ValidationError as e:
         out(f"Validation error when constructing MetricsReportData: {e}")

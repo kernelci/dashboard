@@ -11,7 +11,6 @@ from rest_framework.views import APIView
 from kernelCI_app.constants.general import (
     DEFAULT_ORIGIN,
     MAESTRO_DUMMY_BUILD_PREFIX,
-    UNKNOWN_STRING,
 )
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.commonDetails import PossibleTabs
@@ -194,7 +193,6 @@ class BaseTreeDetailsSummary(APIView):
                 architecture=row_dict["build_architecture"],
                 compiler=row_dict["build_compiler"],
                 config_name=row_dict["build_config_name"],
-                lab=row_dict.get("test_lab", UNKNOWN_STRING),
             ):
                 continue
 
