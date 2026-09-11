@@ -18,6 +18,8 @@ from kernelCI_app.management.commands.helpers.intervals import parse_interval
 from kernelCI_app.models import (
     Builds,
     Checkouts,
+    CommitParents,
+    Commits,
     HardwareStatus,
     Incidents,
     Issues,
@@ -143,7 +145,8 @@ class Command(BaseCommand):
         return (
             f"Unknown table '{table}'.\n"
             "\tValid options are: issues, checkouts, builds, tests, incidents, "
-            "latest_checkout, hardware_status, tree_listing, tree_tests_rollup."
+            "commits, commit_parents, latest_checkout, hardware_status, "
+            "tree_listing, tree_tests_rollup."
         )
 
     def handle(self, *args, command, **options):
@@ -223,6 +226,8 @@ class Command(BaseCommand):
                 case None:
                     self.snapshot_issues()
                     self.snapshot_checkouts()
+                    self.snapshot_commits()
+                    self.snapshot_commit_parents()
                     self.snapshot_builds()
                     self.snapshot_tests()
                     self.snapshot_incidents()
@@ -234,6 +239,10 @@ class Command(BaseCommand):
                     self.snapshot_issues()
                 case "checkouts":
                     self.snapshot_checkouts()
+                case "commits":
+                    self.snapshot_commits()
+                case "commit_parents":
+                    self.snapshot_commit_parents()
                 case "builds":
                     self.snapshot_builds()
                 case "tests":
@@ -262,6 +271,8 @@ class Command(BaseCommand):
     def restore(self, snapshot_filepath: Path):
         self.snapshot_archive = tarfile.open(snapshot_filepath, "r:*")
         try:
+            self.restore_commits()
+            self.restore_commit_parents()
             self.restore_checkouts()
             self.restore_builds()
             self.restore_issues()
@@ -303,6 +314,14 @@ class Command(BaseCommand):
         )
 
         return related_ids, related_condition
+
+    def sync_id_sequence(self, table: str) -> None:
+        with connections["default"].cursor() as cursor:
+            cursor.execute(
+                f"SELECT setval(pg_get_serial_sequence(%s, 'id'),"
+                f" COALESCE((SELECT MAX(id) FROM {table}), 1))",
+                [table],
+            )
 
     # ISSUES ########################################
     def select_issues_data(self) -> list[tuple]:
@@ -460,6 +479,113 @@ class Command(BaseCommand):
             records = self.read_records(reader)
             self.insert_checkouts_data(records)
             self.stdout.write("Checkouts migration completed")
+
+    # COMMITS ########################################
+    def select_commits_data(self) -> Generator[list[tuple], None, None]:
+        query = """
+            SELECT id, git_commit_hash, author_name, author_email, author_date,
+                   committer_name, committer_email, committer_date, subject,
+                   message, fetched_from_url
+            FROM commits
+            ORDER BY id
+        """
+        with connections["default"].cursor() as cursor:
+            cursor.execute(query)
+            while batch := cursor.fetchmany(SELECT_BATCH_SIZE):
+                yield batch
+
+    def insert_commits_data(self, records: list[tuple]) -> int:
+        original_commits = [
+            Commits(
+                id=record[0],
+                git_commit_hash=record[1],
+                author_name=record[2] or None,
+                author_email=record[3] or None,
+                author_date=parse_datetime(record[4]) if record[4] else None,
+                committer_name=record[5] or None,
+                committer_email=record[6] or None,
+                committer_date=parse_datetime(record[7]) if record[7] else None,
+                subject=record[8] or None,
+                message=record[9] or None,
+                fetched_from_url=record[10] or None,
+            )
+            for record in records
+        ]
+        migrated_commits = Commits.objects.bulk_create(
+            original_commits,
+            ignore_conflicts=True,
+            batch_size=DEFAULT_BATCH_SIZE,
+        )
+        self.sync_id_sequence("commits")
+        total_inserted = len(migrated_commits)
+        self.stdout.write(f"Processed {total_inserted} Commits records")
+        return total_inserted
+
+    def snapshot_commits(self) -> None:
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating Commits...")
+            for record_batch in self.select_commits_data():
+                self.insert_records(file, "commits", record_batch)
+            self.add_file_to_snapshot(file, "commits")
+            self.stdout.write("Commits migration completed")
+
+    def restore_commits(self) -> None:
+        with TextIOWrapper(self.snapshot_archive.extractfile("commits.csv")) as file:
+            self.stdout.write("\nMigrating Commits...")
+            reader = csv.reader(file)
+            while records := self.read_records(reader, max_rows=SELECT_BATCH_SIZE):
+                self.insert_commits_data(records)
+            self.stdout.write("Commits migration completed")
+
+    # COMMIT PARENTS ########################################
+    def select_commit_parents_data(self) -> Generator[list[tuple], None, None]:
+        query = """
+            SELECT id, commit_id, parent_id, ord
+            FROM commit_parents
+            ORDER BY id
+        """
+        with connections["default"].cursor() as cursor:
+            cursor.execute(query)
+            while batch := cursor.fetchmany(SELECT_BATCH_SIZE):
+                yield batch
+
+    def insert_commit_parents_data(self, records: list[tuple]) -> int:
+        original_parents = [
+            CommitParents(
+                id=record[0],
+                commit_id=record[1],
+                parent_id=record[2],
+                ord=record[3],
+            )
+            for record in records
+        ]
+        migrated_parents = CommitParents.objects.bulk_create(
+            original_parents,
+            ignore_conflicts=True,
+            batch_size=DEFAULT_BATCH_SIZE,
+        )
+        self.sync_id_sequence("commit_parents")
+        total_inserted = len(migrated_parents)
+        self.stdout.write(f"Processed {total_inserted} CommitParents records")
+        return total_inserted
+
+    def snapshot_commit_parents(self) -> None:
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating CommitParents...")
+            for record_batch in self.select_commit_parents_data():
+                self.insert_records(file, "commit_parents", record_batch)
+            self.add_file_to_snapshot(file, "commit_parents")
+            self.stdout.write("CommitParents migration completed")
+
+    def restore_commit_parents(self) -> None:
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("commit_parents.csv")
+        ) as file:
+            self.stdout.write("\nMigrating CommitParents...")
+            reader = csv.reader(file)
+            while records := self.read_records(reader, max_rows=SELECT_BATCH_SIZE):
+                self.insert_commit_parents_data(records)
+            self.stdout.write("CommitParents migration completed")
 
     # BUILDS ########################################
     def select_builds_data(self) -> list[tuple]:
