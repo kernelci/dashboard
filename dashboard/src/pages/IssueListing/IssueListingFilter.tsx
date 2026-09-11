@@ -35,7 +35,11 @@ export const createFilter = (
     filters.issueOptions[option] = false;
   }
 
-  for (const origin of data.origins) {
+  const origins = Array.isArray(data.origins) ? data.origins : [];
+  const culprits = Array.isArray(data.culprits) ? data.culprits : [];
+  const categories = Array.isArray(data.categories) ? data.categories : [];
+
+  for (const origin of origins) {
     // TODO: remove this origin exception once the culprit filter is available.
     // This origin is from a single unique issue where the culprit is not code;
     // while the culprit filter is hardcoded as "code" in the frontend,
@@ -47,11 +51,11 @@ export const createFilter = (
     }
   }
 
-  for (const culprit of data.culprits) {
+  for (const culprit of culprits) {
     filters.issueCulprits[culprit] = false;
   }
 
-  for (const category of data.categories) {
+  for (const category of categories) {
     filters.issueCategories[category] = false;
   }
 

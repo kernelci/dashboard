@@ -1,4 +1,5 @@
 export const REPO_URL = 'https://github.com/kernelci/dashboard';
+export const GITHUB_ISSUES_URL = `${REPO_URL}/issues`;
 export const FEEDBACK_ISSUE_URL =
   REPO_URL + '/issues/new?labels=feedback&title=[Feedback]:';
 export const FEEDBACK_EMAIL_TO = 'kernelci-webdashboard@groups.io';

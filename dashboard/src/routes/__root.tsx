@@ -14,6 +14,8 @@ import {
   zTableSortValidator,
 } from '@/types/general';
 
+import RouteError from '@/components/UnexpectedError/RouteError';
+
 const defaultValues = {
   origin: DEFAULT_ORIGIN,
   tableSort: undefined,
@@ -32,4 +34,5 @@ export const Route = createRootRoute({
   validateSearch: RouteSchema,
   search: { middlewares: [stripSearchParams(defaultValues)] },
   component: RouteComponent,
+  errorComponent: RouteError,
 });

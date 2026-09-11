@@ -6,7 +6,11 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { Toaster } from '@/components/ui/toaster';
 
-import type { HardwareItem, HardwareRevisionSelection } from '@/types/hardware';
+import type {
+  HardwareItem,
+  HardwareRevisionSelection,
+  HardwareSelectorTree,
+} from '@/types/hardware';
 
 import {
   useHardwareListing,
@@ -35,6 +39,8 @@ import {
   getTreeBySelection,
   type HardwareRevisionSelectorValue,
 } from './hardwareSelection';
+
+const EMPTY_SELECTOR_TREES: HardwareSelectorTree[] = [];
 
 interface HardwareListingPageProps {
   intent: SearchIntent;
@@ -83,7 +89,9 @@ const HardwareListingPage = ({
     urlFromMap.search,
   );
 
-  const trees = useMemo(() => selectorsData?.trees ?? [], [selectorsData]);
+  const trees = Array.isArray(selectorsData?.trees)
+    ? selectorsData.trees
+    : EMPTY_SELECTOR_TREES;
 
   const intentMatchedSelection = useMemo(() => {
     if (!intentCommits) {
@@ -169,7 +177,11 @@ const HardwareListingPage = ({
 
   const listItems: HardwareItem[] = useMemo(() => {
     const listingData = activeListing.data;
-    if (!listingData || activeListing.error) {
+    if (
+      !listingData ||
+      !Array.isArray(listingData.hardware) ||
+      activeListing.error
+    ) {
       return [];
     }
 
@@ -289,7 +301,8 @@ const HardwareListingPage = ({
   };
 
   const hasListingRows = Boolean(
-    (activeListing.data?.hardware.length ?? 0) > 0,
+    Array.isArray(activeListing.data?.hardware) &&
+      activeListing.data.hardware.length > 0,
   );
   const tableEmptyMessageId =
     hasSelection && !hasListingRows && inputFilter.length === 0

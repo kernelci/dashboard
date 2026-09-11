@@ -26,7 +26,7 @@ const TreeListingPage = ({
   });
 
   const listItems: TreeListingItem[] = useMemo(() => {
-    if (!data) {
+    if (!Array.isArray(data)) {
       return [];
     }
 

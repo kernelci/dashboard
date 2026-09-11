@@ -42,7 +42,7 @@ export const IssueListingPage = ({
   );
 
   const filteredData = useMemo((): IssueListingResponse => {
-    if (!data) {
+    if (!data || !Array.isArray(data.issues)) {
       return {
         issues: [],
         extras: {},
