@@ -47,7 +47,11 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
+import {
+  dashboardFiltersFromDiffFilter,
+  createTreeResultsCommand,
+} from '@/components/Footer/kcidevCommand';
 
 import { TreeDetailsBuildsTable } from './TreeDetailsBuildsTable';
 
@@ -73,7 +77,7 @@ const BuildTab = ({
 }: BuildTab): JSX.Element => {
   const navigate = useNavigate({ from: treeDetailsFromMap[urlFrom] });
   const params = useParams({ from: urlFrom });
-  const { diffFilter, treeInfo } = useSearch({
+  const { diffFilter, treeInfo, origin } = useSearch({
     from: urlFrom,
   });
 
@@ -178,17 +182,19 @@ const BuildTab = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter
-        commandGroup="treeDetails"
-        args={{
-          cmdName: 'builds',
-          'git-url': sanitizedTreeInfo.gitUrl,
+      <MemoizedKcidevCommandButton
+        command={createTreeResultsCommand('builds', {
+          origin,
+          filters: dashboardFiltersFromDiffFilter(diffFilter, 'builds'),
+          gitUrl: sanitizedTreeInfo.gitUrl,
           branch: sanitizedTreeInfo.gitBranch,
           commit: sanitizedTreeInfo.hash,
-        }}
+        })}
       />
     ),
     [
+      diffFilter,
+      origin,
       sanitizedTreeInfo.gitBranch,
       sanitizedTreeInfo.gitUrl,
       sanitizedTreeInfo.hash,
@@ -276,6 +282,9 @@ const BuildTab = ({
         }
       >
         <div className="flex flex-col gap-8 pt-4">
+          <div className="flex flex-wrap justify-end gap-2">
+            {kcidevComponent}
+          </div>
           <MemoizedResponsiveDetailsCards
             topCards={topCards}
             bodyCards={bodyCards}
@@ -303,7 +312,6 @@ const BuildTab = ({
               />
             </div>
           </QuerySwitcher>
-          {kcidevComponent}
         </div>
       </QuerySwitcher>
       {isEmptySummary && (
