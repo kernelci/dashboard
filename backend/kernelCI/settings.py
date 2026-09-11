@@ -252,6 +252,22 @@ else:
                 f"--index={HARDWARE_REGISTRY_INDEX_URL}",
             ],
         ),
+        (
+            "0 */6 * * *",
+            "django.core.management.call_command",
+            [
+                "recompute_hardware_daily",
+                "--days=15",
+            ],
+        ),
+        (
+            "50 * * * *",
+            "django.core.management.call_command",
+            [
+                "recompute_hardware_daily",
+                "--days=1",
+            ],
+        ),
     ]
 
 # Email settings for SMTP backend
