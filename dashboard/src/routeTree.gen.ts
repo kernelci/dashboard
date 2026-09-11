@@ -17,6 +17,7 @@ import { Route as MainHardwareRouteRouteImport } from './routes/_main/hardware/r
 import { Route as MainIssuesRouteRouteImport } from './routes/_main/issues/route'
 import { Route as MainLabsRouteRouteImport } from './routes/_main/labs/route'
 import { Route as MainMetricsRouteRouteImport } from './routes/_main/metrics/route'
+import { Route as MainPrivacyRouteRouteImport } from './routes/_main/privacy/route'
 import { Route as MainTreeRouteRouteImport } from './routes/_main/tree/route'
 import { Route as MainBuildBuildIdRouteRouteImport } from './routes/_main/build/$buildId/route'
 import { Route as MainHardwareIndexRouteImport } from './routes/_main/hardware/index'
@@ -25,6 +26,7 @@ import { Route as MainIssueIssueIdRouteRouteImport } from './routes/_main/issue/
 import { Route as MainIssuesIndexRouteImport } from './routes/_main/issues/index'
 import { Route as MainLabsIndexRouteImport } from './routes/_main/labs/index'
 import { Route as MainMetricsIndexRouteImport } from './routes/_main/metrics/index'
+import { Route as MainPrivacyIndexRouteImport } from './routes/_main/privacy/index'
 import { Route as MainTestTestIdRouteRouteImport } from './routes/_main/test/$testId/route'
 import { Route as MainTreeIndexRouteImport } from './routes/_main/tree/index'
 import { Route as MainTreeTreeIdRouteRouteImport } from './routes/_main/tree/$treeId/route'
@@ -97,6 +99,11 @@ const MainMetricsRouteRoute = MainMetricsRouteRouteImport.update({
   path: '/metrics',
   getParentRoute: () => MainRouteRoute,
 } as any)
+const MainPrivacyRouteRoute = MainPrivacyRouteRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => MainRouteRoute,
+} as any)
 const MainTreeRouteRoute = MainTreeRouteRouteImport.update({
   id: '/tree',
   path: '/tree',
@@ -137,6 +144,11 @@ const MainMetricsIndexRoute = MainMetricsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainMetricsRouteRoute,
+} as any)
+const MainPrivacyIndexRoute = MainPrivacyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MainPrivacyRouteRoute,
 } as any)
 const MainTestTestIdRouteRoute = MainTestTestIdRouteRouteImport.update({
   id: '/test/$testId',
@@ -331,6 +343,7 @@ export interface FileRoutesByFullPath {
   '/issues': typeof MainIssuesRouteRouteWithChildren
   '/labs': typeof MainLabsRouteRouteWithChildren
   '/metrics': typeof MainMetricsRouteRouteWithChildren
+  '/privacy': typeof MainPrivacyRouteRouteWithChildren
   '/tree': typeof MainTreeRouteRouteWithChildren
   '/build/$buildId': typeof MainBuildBuildIdRouteRouteWithChildren
   '/hardware/$hardwareId': typeof MainHardwareHardwareIdRouteRouteWithChildren
@@ -341,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/issues/': typeof MainIssuesIndexRoute
   '/labs/': typeof MainLabsIndexRoute
   '/metrics/': typeof MainMetricsIndexRoute
+  '/privacy/': typeof MainPrivacyIndexRoute
   '/tree/': typeof MainTreeIndexRoute
   '/b/$buildId': typeof MainalternativesBBuildIdRouteRouteWithChildren
   '/i/$issueId': typeof MainalternativesIIssueIdRouteRouteWithChildren
@@ -380,6 +394,7 @@ export interface FileRoutesByTo {
   '/issues': typeof MainIssuesIndexRoute
   '/labs': typeof MainLabsIndexRoute
   '/metrics': typeof MainMetricsIndexRoute
+  '/privacy': typeof MainPrivacyIndexRoute
   '/tree': typeof MainTreeIndexRoute
   '/i': typeof MainalternativesIIndexRoute
   '/build/$buildId': typeof MainBuildBuildIdIndexRoute
@@ -415,6 +430,7 @@ export interface FileRoutesById {
   '/_main/issues': typeof MainIssuesRouteRouteWithChildren
   '/_main/labs': typeof MainLabsRouteRouteWithChildren
   '/_main/metrics': typeof MainMetricsRouteRouteWithChildren
+  '/_main/privacy': typeof MainPrivacyRouteRouteWithChildren
   '/_main/tree': typeof MainTreeRouteRouteWithChildren
   '/_main/': typeof MainIndexRoute
   '/_main/build/$buildId': typeof MainBuildBuildIdRouteRouteWithChildren
@@ -426,6 +442,7 @@ export interface FileRoutesById {
   '/_main/issues/': typeof MainIssuesIndexRoute
   '/_main/labs/': typeof MainLabsIndexRoute
   '/_main/metrics/': typeof MainMetricsIndexRoute
+  '/_main/privacy/': typeof MainPrivacyIndexRoute
   '/_main/tree/': typeof MainTreeIndexRoute
   '/_main/(alternatives)/b/$buildId': typeof MainalternativesBBuildIdRouteRouteWithChildren
   '/_main/(alternatives)/i/$issueId': typeof MainalternativesIIssueIdRouteRouteWithChildren
@@ -467,6 +484,7 @@ export interface FileRouteTypes {
     | '/issues'
     | '/labs'
     | '/metrics'
+    | '/privacy'
     | '/tree'
     | '/build/$buildId'
     | '/hardware/$hardwareId'
@@ -477,6 +495,7 @@ export interface FileRouteTypes {
     | '/issues/'
     | '/labs/'
     | '/metrics/'
+    | '/privacy/'
     | '/tree/'
     | '/b/$buildId'
     | '/i/$issueId'
@@ -516,6 +535,7 @@ export interface FileRouteTypes {
     | '/issues'
     | '/labs'
     | '/metrics'
+    | '/privacy'
     | '/tree'
     | '/i'
     | '/build/$buildId'
@@ -550,6 +570,7 @@ export interface FileRouteTypes {
     | '/_main/issues'
     | '/_main/labs'
     | '/_main/metrics'
+    | '/_main/privacy'
     | '/_main/tree'
     | '/_main/'
     | '/_main/build/$buildId'
@@ -561,6 +582,7 @@ export interface FileRouteTypes {
     | '/_main/issues/'
     | '/_main/labs/'
     | '/_main/metrics/'
+    | '/_main/privacy/'
     | '/_main/tree/'
     | '/_main/(alternatives)/b/$buildId'
     | '/_main/(alternatives)/i/$issueId'
@@ -657,6 +679,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainMetricsRouteRouteImport
       parentRoute: typeof MainRouteRoute
     }
+    '/_main/privacy': {
+      id: '/_main/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof MainPrivacyRouteRouteImport
+      parentRoute: typeof MainRouteRoute
+    }
     '/_main/tree': {
       id: '/_main/tree'
       path: '/tree'
@@ -712,6 +741,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/metrics/'
       preLoaderRoute: typeof MainMetricsIndexRouteImport
       parentRoute: typeof MainMetricsRouteRoute
+    }
+    '/_main/privacy/': {
+      id: '/_main/privacy/'
+      path: '/'
+      fullPath: '/privacy/'
+      preLoaderRoute: typeof MainPrivacyIndexRouteImport
+      parentRoute: typeof MainPrivacyRouteRoute
     }
     '/_main/test/$testId': {
       id: '/_main/test/$testId'
@@ -1019,6 +1055,17 @@ const MainMetricsRouteRouteChildren: MainMetricsRouteRouteChildren = {
 const MainMetricsRouteRouteWithChildren =
   MainMetricsRouteRoute._addFileChildren(MainMetricsRouteRouteChildren)
 
+interface MainPrivacyRouteRouteChildren {
+  MainPrivacyIndexRoute: typeof MainPrivacyIndexRoute
+}
+
+const MainPrivacyRouteRouteChildren: MainPrivacyRouteRouteChildren = {
+  MainPrivacyIndexRoute: MainPrivacyIndexRoute,
+}
+
+const MainPrivacyRouteRouteWithChildren =
+  MainPrivacyRouteRoute._addFileChildren(MainPrivacyRouteRouteChildren)
+
 interface MainTreeTreeIdRouteRouteChildren {
   MainTreeTreeIdIndexRoute: typeof MainTreeTreeIdIndexRoute
   MainTreeTreeIdBuildBuildIdIndexRoute: typeof MainTreeTreeIdBuildBuildIdIndexRoute
@@ -1169,6 +1216,7 @@ interface MainRouteRouteChildren {
   MainIssuesRouteRoute: typeof MainIssuesRouteRouteWithChildren
   MainLabsRouteRoute: typeof MainLabsRouteRouteWithChildren
   MainMetricsRouteRoute: typeof MainMetricsRouteRouteWithChildren
+  MainPrivacyRouteRoute: typeof MainPrivacyRouteRouteWithChildren
   MainTreeRouteRoute: typeof MainTreeRouteRouteWithChildren
   MainIndexRoute: typeof MainIndexRoute
   MainBuildBuildIdRouteRoute: typeof MainBuildBuildIdRouteRouteWithChildren
@@ -1189,6 +1237,7 @@ const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainIssuesRouteRoute: MainIssuesRouteRouteWithChildren,
   MainLabsRouteRoute: MainLabsRouteRouteWithChildren,
   MainMetricsRouteRoute: MainMetricsRouteRouteWithChildren,
+  MainPrivacyRouteRoute: MainPrivacyRouteRouteWithChildren,
   MainTreeRouteRoute: MainTreeRouteRouteWithChildren,
   MainIndexRoute: MainIndexRoute,
   MainBuildBuildIdRouteRoute: MainBuildBuildIdRouteRouteWithChildren,

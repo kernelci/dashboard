@@ -3,6 +3,9 @@ export const FEEDBACK_ISSUE_URL =
   REPO_URL + '/issues/new?labels=feedback&title=[Feedback]:';
 export const FEEDBACK_EMAIL_TO = 'kernelci-webdashboard@groups.io';
 export const DOCUMENTATION_URL = 'https://docs.kernelci.org/';
+export const LF_PRIVACY_POLICY_URL =
+  'https://lfprojects.org/policies/privacy-policy/';
+export const LF_PROJECTS_POLICIES_URL = 'https://lfprojects.org/policies/';
 
 // eslint-disable-next-line no-magic-numbers
 export const ItemsPerPageValues = [5, 10, 20, 30, 40, 50];

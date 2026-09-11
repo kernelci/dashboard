@@ -88,7 +88,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "kernelCI_app.middleware.logServerErrorMiddleware.LogServerErrorMiddleware",
+    "kernelCI_app.middleware.LogServerErrorMiddleware",
+    "kernelCI_app.middleware.BackendRequestMetricsMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 

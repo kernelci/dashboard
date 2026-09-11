@@ -35,6 +35,12 @@ export default defineConfig(({ command }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        '@privacy-policy': path.resolve(__dirname, '../PRIVACY.md'),
+      },
+    },
+    server: {
+      fs: {
+        allow: [path.resolve(__dirname, '..')],
       },
     },
   };
