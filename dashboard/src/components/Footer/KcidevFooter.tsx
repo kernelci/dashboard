@@ -34,7 +34,7 @@ type HardwareDetailsCmdFlags = {
 
 type HardwareListingCmdFlags = {
   cmdName: 'hardware list';
-  origin: string;
+  origin?: string;
   json: boolean;
 };
 
