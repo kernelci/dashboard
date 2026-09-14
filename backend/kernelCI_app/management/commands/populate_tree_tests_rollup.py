@@ -168,7 +168,8 @@ class Command(BaseCommand):
         total_tests = 0
 
         tests_qs = Tests.objects.filter(build_id__in=builds.keys()).select_related(
-            "build__checkout"
+            "build__checkout",
+            "lab",
         )
 
         for test_chunk in _chunks(tests_qs.iterator(chunk_size=batch_size), batch_size):
