@@ -299,3 +299,30 @@ export function applyStatusPairFilter<
     pairs.some(pair => pair.from === row.sideA && pair.to === row.sideB),
   );
 }
+
+/** Next/prev over the currently visible (searched/sorted) table rows. */
+export function compareRowNav<T extends { id: string }>(
+  rows: T[],
+  selectedId: string | null,
+): {
+  index: number;
+  row: T | null;
+  previousId: string | null;
+  nextId: string | null;
+  hasPrevious: boolean;
+  hasNext: boolean;
+} {
+  const index =
+    selectedId === null ? -1 : rows.findIndex(row => row.id === selectedId);
+  const previousId = index > 0 ? rows[index - 1]?.id ?? null : null;
+  const nextId =
+    index >= 0 && index < rows.length - 1 ? rows[index + 1]?.id ?? null : null;
+  return {
+    index,
+    row: index >= 0 ? rows[index] ?? null : null,
+    previousId,
+    nextId,
+    hasPrevious: previousId !== null,
+    hasNext: nextId !== null,
+  };
+}

@@ -5,11 +5,8 @@ import { FormattedMessage } from 'react-intl';
 
 import { Sheet } from '@/components/Sheet';
 import { WrapperSheetContent } from '@/components/Sheet/WrapperSheetContent';
-import { LogExcerpt } from '@/components/Log/LogExcerpt';
-import { LogViewerCard } from '@/components/Log/LogViewerCard';
-import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import { LogSheetPanel } from '@/components/Log/LogSheetPanel';
 import { MemoizedMoreDetailsButton } from '@/components/Button/MoreDetailsButton';
-import { useLogExcerpt } from '@/api/logViewer';
 import { useLogData, type LogType } from '@/hooks/useLogData';
 import type {
   CompareFailureRow,
@@ -59,43 +56,6 @@ function detailsLink(logType: LogType, id: string): LinkProps {
   return { to: '/test/$testId', params: { testId: id } };
 }
 
-function CompareSideLog({
-  id,
-  logType,
-}: {
-  id: string | null;
-  logType: LogType;
-}): JSX.Element {
-  const logQuery = useLogData(id ?? '', id ? logType : undefined);
-  const logExcerpt = logQuery.data?.log_excerpt;
-  const excerptQuery = useLogExcerpt(id ? logExcerpt : undefined);
-
-  if (!id) {
-    return (
-      <p className="text-dim-gray text-sm">
-        <FormattedMessage id="treeCompare.detail.missingSide" />
-      </p>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-2">
-      <LogViewerCard
-        logData={logQuery.data}
-        isLoading={logQuery.isLoading}
-        variant="compare"
-      />
-      <QuerySwitcher data={excerptQuery.data} status={excerptQuery.status}>
-        <LogExcerpt
-          logExcerpt={excerptQuery.data?.content}
-          isLoading={logQuery.isLoading}
-          variant="default"
-        />
-      </QuerySwitcher>
-    </div>
-  );
-}
-
 function SideColumn({
   labelId,
   status,
@@ -107,6 +67,8 @@ function SideColumn({
   id: string | null;
   logType: LogType;
 }): JSX.Element {
+  const logQuery = useLogData(id ?? '', id ? logType : undefined);
+
   return (
     <section className="flex min-w-0 flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -120,7 +82,19 @@ function SideColumn({
           <MemoizedMoreDetailsButton linkProps={detailsLink(logType, id)} />
         )}
       </div>
-      <CompareSideLog id={id} logType={logType} />
+      {id ? (
+        <div className="flex flex-col gap-2">
+          <LogSheetPanel
+            logData={logQuery.data}
+            isLoading={logQuery.isLoading}
+            variant="compare"
+          />
+        </div>
+      ) : (
+        <p className="text-dim-gray text-sm">
+          <FormattedMessage id="treeCompare.detail.missingSide" />
+        </p>
+      )}
     </section>
   );
 }

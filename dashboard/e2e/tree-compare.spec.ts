@@ -149,3 +149,134 @@ test('loads comparison data and opens a side-by-side details drawer', async ({
   await expect(page.getByText('side A build log')).toBeVisible();
   await expect(page.getByText('side B build log')).toBeVisible();
 });
+
+test('drawer next stays on searched rows', async ({ page }) => {
+  await page.route('**/api/tree/linux/master/commits?**', route =>
+    route.fulfill({
+      json: [
+        {
+          git_commit_hash: HASH_A,
+          last_checkout: '2026-07-14T10:00:00Z',
+        },
+        {
+          git_commit_hash: HASH_B,
+          last_checkout: '2026-07-13T10:00:00Z',
+        },
+      ],
+    }),
+  );
+
+  await page.route('**/api/tree/linux/master/compare/builds?**', route =>
+    route.fulfill({
+      json: [
+        {
+          config_name: 'keep-one',
+          architecture: 'arm64',
+          compiler: 'gcc',
+          status_a: 'PASS',
+          status_b: 'FAIL',
+          id_a: 'build-keep-a',
+          id_b: 'build-keep-b',
+        },
+        {
+          config_name: 'hidden-row',
+          architecture: 'arm64',
+          compiler: 'gcc',
+          status_a: 'PASS',
+          status_b: 'FAIL',
+          id_a: 'build-hidden-a',
+          id_b: 'build-hidden-b',
+        },
+        {
+          config_name: 'keep-two',
+          architecture: 'arm64',
+          compiler: 'gcc',
+          status_a: 'PASS',
+          status_b: 'FAIL',
+          id_a: 'build-keep2-a',
+          id_b: 'build-keep2-b',
+        },
+      ],
+    }),
+  );
+
+  await page.route('**/api/tree/linux/master/compare/boots?**', route =>
+    route.fulfill({ json: [] }),
+  );
+  await page.route('**/api/tree/linux/master/compare/tests?**', route =>
+    route.fulfill({ json: [] }),
+  );
+  await page.route('**/api/tree/linux/master/compare?**', route =>
+    route.fulfill({
+      json: {
+        treeName: 'linux',
+        branch: 'master',
+        gitUrl: 'https://git.kernel.org/linux.git',
+        summary: {
+          builds: {
+            sideA: { pass: 1, fail: 0, inconclusive: 0 },
+            sideB: { pass: 0, fail: 1, inconclusive: 0 },
+            delta: { pass: -1, fail: 1 },
+            changes: {
+              regression: 3,
+              fixed: 0,
+              newFailure: 0,
+              stillFailing: 0,
+              newPass: 0,
+            },
+          },
+          boots: {
+            sideA: { pass: 0, fail: 0, inconclusive: 0 },
+            sideB: { pass: 0, fail: 0, inconclusive: 0 },
+            delta: { pass: 0, fail: 0 },
+            changes: {
+              regression: 0,
+              fixed: 0,
+              newFailure: 0,
+              stillFailing: 0,
+              newPass: 0,
+            },
+          },
+          tests: {
+            sideA: { pass: 0, fail: 0, inconclusive: 0 },
+            sideB: { pass: 0, fail: 0, inconclusive: 0 },
+            delta: { pass: 0, fail: 0 },
+            changes: {
+              regression: 0,
+              fixed: 0,
+              newFailure: 0,
+              stillFailing: 0,
+              newPass: 0,
+            },
+          },
+        },
+      },
+    }),
+  );
+
+  await page.route('**/api/build/**', route =>
+    route.fulfill({
+      json: {
+        id: 'build',
+        status: 'FAIL',
+        log_excerpt: 'log',
+        architecture: 'arm64',
+        git_commit_hash: HASH_A,
+        tree_name: 'linux',
+        git_repository_branch: 'master',
+      },
+    }),
+  );
+
+  await page.goto(
+    `/tree/linux/master/compare?hashA=${HASH_A}&hashB=${HASH_B}&origin=maestro`,
+  );
+
+  await page.getByPlaceholder('Search').fill('keep-');
+  await expect(page.getByText('hidden-row')).toHaveCount(0);
+  await page.getByText('keep-one').click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page.getByRole('dialog').getByText('keep-two')).toBeVisible();
+  await expect(page.getByRole('dialog').getByText('hidden-row')).toHaveCount(0);
+});

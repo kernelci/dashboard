@@ -5,6 +5,7 @@ import {
   applyStatusPairFilter,
   mapBootOrTestDiffRows,
   mapBuildDiffRows,
+  compareRowNav,
   parseStatusPairs,
   resolveStatusPairs,
   serializeStatusPairs,
@@ -227,5 +228,19 @@ describe('mapBootOrTestDiffRows', () => {
       idA: null,
       idB: 'test-b',
     });
+  });
+});
+
+describe('compareRowNav', () => {
+  it('walks only the visible list, not hidden search matches', () => {
+    const visible = [{ id: 'keep-a' }, { id: 'keep-c' }];
+    const onFirst = compareRowNav(visible, 'keep-a');
+    expect(onFirst.nextId).toBe('keep-c');
+    expect(onFirst.previousId).toBeNull();
+
+    const onLast = compareRowNav(visible, 'keep-c');
+    expect(onLast.previousId).toBe('keep-a');
+    expect(onLast.nextId).toBeNull();
+    expect(onLast.hasNext).toBe(false);
   });
 });

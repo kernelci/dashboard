@@ -11,13 +11,10 @@ import { WrapperSheetContent } from '@/components/Sheet/WrapperSheetContent';
 
 import { MemoizedMoreDetailsButton } from '@/components/Button/MoreDetailsButton';
 
-import { LogViewerCard } from '@/components/Log/LogViewerCard';
-import { LogExcerpt } from '@/components/Log/LogExcerpt';
-import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
+import { LogSheetPanel } from '@/components/Log/LogSheetPanel';
 import IssueSection from '@/components/Issue/IssueSection';
 import type { TIssue } from '@/types/issues';
 import type { LogData } from '@/hooks/useLogData';
-import { useLogExcerpt } from '@/api/logViewer';
 
 export type SheetType = 'log' | 'json';
 
@@ -49,10 +46,6 @@ export const LogOrJsonSheetContent = ({
   status,
   error,
 }: ILogSheet): JSX.Element => {
-  const logExcerpt = logData?.log_excerpt;
-  const { data: logExcerptData, status: logExcerptStatus } =
-    useLogExcerpt(logExcerpt);
-
   return (
     <WrapperSheetContent
       sheetTitle={type === 'log' ? 'logSheet.title' : 'jsonSheet.title'}
@@ -65,17 +58,10 @@ export const LogOrJsonSheetContent = ({
     >
       {type === 'log' ? (
         <div className="flex h-screen flex-col">
-          <LogViewerCard
+          <LogSheetPanel
             logData={logData}
             isLoading={navigationLogsActions?.isLoading}
           />
-          <QuerySwitcher data={logExcerptData} status={logExcerptStatus}>
-            <LogExcerpt
-              logExcerpt={logExcerptData?.content}
-              isLoading={navigationLogsActions?.isLoading}
-              variant="default"
-            />
-          </QuerySwitcher>
 
           {!hideIssueSection && (
             <IssueSection

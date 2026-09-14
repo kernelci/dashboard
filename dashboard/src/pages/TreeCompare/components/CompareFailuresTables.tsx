@@ -8,6 +8,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import type {
   CompareBootFailureRow,
   CompareBuildFailureRow,
+  CompareFailureRow,
   CompareTestFailureRow,
 } from '@/types/tree/TreeCompare';
 
@@ -23,12 +24,18 @@ import {
 } from '@/components/ui/table';
 
 import { cn } from '@/lib/utils';
+import { compareRowNav } from '@/utils/treeCompareDiff';
+import type { LogType } from '@/hooks/useLogData';
 
 import {
   CompareChangeBadge,
   CompareStatusChip,
   isFailureHighlight,
 } from './CompareChangeDisplay';
+import {
+  CompareDetailSheet,
+  compareRowToDetailItem,
+} from './CompareDetailSheet';
 
 const ESTIMATED_ROW_HEIGHT = 56;
 const VIRTUALIZER_OVERSCAN = 10;
@@ -114,6 +121,57 @@ function rowMatchesSearch(values: unknown[], query: string): boolean {
       .toLowerCase()
       .includes(needle),
   );
+}
+
+function useCompareSheet(
+  visibleRows: CompareFailureRow[],
+  logType: LogType,
+): {
+  selectedId: string | null;
+  openRow: (id: string) => void;
+  sheet: JSX.Element;
+} {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const nav = compareRowNav(visibleRows, selectedId);
+
+  const openRow = useCallback((id: string) => {
+    setSelectedId(id);
+  }, []);
+
+  const closeSheet = useCallback((open: boolean) => {
+    if (!open) {
+      setSelectedId(null);
+    }
+  }, []);
+
+  const goToPrevious = useCallback(() => {
+    if (nav.previousId) {
+      setSelectedId(nav.previousId);
+    }
+  }, [nav.previousId]);
+
+  const goToNext = useCallback(() => {
+    if (nav.nextId) {
+      setSelectedId(nav.nextId);
+    }
+  }, [nav.nextId]);
+
+  return {
+    selectedId,
+    openRow,
+    sheet: (
+      <CompareDetailSheet
+        open={nav.row !== null}
+        item={nav.row ? compareRowToDetailItem(nav.row) : null}
+        logType={logType}
+        onOpenChange={closeSheet}
+        onPrevious={goToPrevious}
+        onNext={goToNext}
+        hasPrevious={nav.hasPrevious}
+        hasNext={nav.hasNext}
+      />
+    ),
+  };
 }
 
 function CompareTableSearch({
@@ -276,12 +334,8 @@ const BUILD_SORT_GETTERS: Record<
 
 export function CompareBuildsFailuresTable({
   rows,
-  selectedId,
-  onRowClick,
 }: {
   rows: CompareBuildFailureRow[];
-  selectedId?: string | null;
-  onRowClick: (id: string) => void;
 }): JSX.Element {
   const [sort, setSort] = useState<SortState<BuildSortKey>>(null);
   const [search, setSearch] = useState('');
@@ -299,6 +353,8 @@ export function CompareBuildsFailuresTable({
     );
     return sortRows(filtered, sort, BUILD_SORT_GETTERS);
   }, [rows, search, sort]);
+
+  const { selectedId, openRow, sheet } = useCompareSheet(visibleRows, 'build');
 
   return (
     <div>
@@ -348,7 +404,7 @@ export function CompareBuildsFailuresTable({
           return (
             <TableRow
               key={row.id}
-              onClick={() => onRowClick(row.id)}
+              onClick={() => openRow(row.id)}
               className={cn(
                 'hover:bg-light-blue cursor-pointer',
                 isFailureHighlight(row.change) && 'bg-red-50',
@@ -379,6 +435,7 @@ export function CompareBuildsFailuresTable({
           );
         }}
       />
+      {sheet}
     </div>
   );
 }
@@ -396,12 +453,8 @@ const PATH_SORT_GETTERS: Record<
 
 function PathHardwareTable({
   rows,
-  selectedId,
-  onRowClick,
 }: {
   rows: Array<CompareBootFailureRow | CompareTestFailureRow>;
-  selectedId?: string | null;
-  onRowClick: (id: string) => void;
 }): JSX.Element {
   const [sort, setSort] = useState<SortState<PathSortKey>>(null);
   const [search, setSearch] = useState('');
@@ -427,6 +480,8 @@ function PathHardwareTable({
     );
     return sortRows(filtered, sort, PATH_SORT_GETTERS);
   }, [rows, search, sort]);
+
+  const { selectedId, openRow, sheet } = useCompareSheet(visibleRows, 'test');
 
   return (
     <div>
@@ -482,7 +537,7 @@ function PathHardwareTable({
           return (
             <TableRow
               key={row.id}
-              onClick={() => onRowClick(row.id)}
+              onClick={() => openRow(row.id)}
               className={cn(
                 'hover:bg-light-blue cursor-pointer',
                 isFailureHighlight(row.change) && 'bg-red-50',
@@ -521,42 +576,23 @@ function PathHardwareTable({
           );
         }}
       />
+      {sheet}
     </div>
   );
 }
 
 export function CompareBootsFailuresTable({
   rows,
-  selectedId,
-  onRowClick,
 }: {
   rows: CompareBootFailureRow[];
-  selectedId?: string | null;
-  onRowClick: (id: string) => void;
 }): JSX.Element {
-  return (
-    <PathHardwareTable
-      rows={rows}
-      selectedId={selectedId}
-      onRowClick={onRowClick}
-    />
-  );
+  return <PathHardwareTable rows={rows} />;
 }
 
 export function CompareTestsFailuresTable({
   rows,
-  selectedId,
-  onRowClick,
 }: {
   rows: CompareTestFailureRow[];
-  selectedId?: string | null;
-  onRowClick: (id: string) => void;
 }): JSX.Element {
-  return (
-    <PathHardwareTable
-      rows={rows}
-      selectedId={selectedId}
-      onRowClick={onRowClick}
-    />
-  );
+  return <PathHardwareTable rows={rows} />;
 }
