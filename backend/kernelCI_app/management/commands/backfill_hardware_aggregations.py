@@ -79,7 +79,7 @@ class Command(BaseCommand):
                     "checkout_id", flat=True
                 ),
             )
-            .select_related("build")
+            .select_related("build", "lab")
             .order_by("start_time")
         )
 

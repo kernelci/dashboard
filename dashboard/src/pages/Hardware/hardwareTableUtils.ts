@@ -12,8 +12,9 @@ export const buildHardwareDetailsSearch = ({
 }: {
   previousSearch: ListingSearch;
   currentPageTab: PossibleTabs;
-  startTimestampInSeconds: number;
-  endTimestampInSeconds: number;
+  // Undefined keeps st/et out of the URL, so details falls back to its default window.
+  startTimestampInSeconds?: number;
+  endTimestampInSeconds?: number;
   newDiffFilter?: TFilter;
 }): ListingSearch => {
   const {
