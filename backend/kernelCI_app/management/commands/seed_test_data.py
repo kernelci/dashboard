@@ -6,6 +6,7 @@ import sys
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.system import get_running_instance
@@ -88,6 +89,7 @@ class Command(BaseCommand):
             rollup_rows = self.create_tests_rollup(tests=tests, incidents=incidents)
             latest_checkouts = self.create_latest_checkouts(checkouts=checkouts)
             hardware_rows = self.create_hardware_status(tests=tests)
+            self._align_listing_timestamps(hardware_rows, latest_checkouts)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -102,6 +104,28 @@ class Command(BaseCommand):
                 f"- {len(hardware_rows)} hardware_status rows\n"
             )
         )
+
+    def _align_listing_timestamps(
+        self,
+        hardware_rows: list[HardwareStatus],
+        latest_checkouts: list[LatestCheckout],
+    ) -> None:
+        """Fixtures span years; listing and details only query the last few days."""
+        checkout_ids = {row.checkout_id for row in hardware_rows}
+        checkout_ids.update(lc.checkout_id for lc in latest_checkouts)
+        if not checkout_ids:
+            return
+
+        now = timezone.now()
+        HardwareStatus.objects.filter(checkout_id__in=checkout_ids).update(
+            start_time=now
+        )
+        Checkouts.objects.filter(id__in=checkout_ids).update(start_time=now)
+        LatestCheckout.objects.filter(checkout_id__in=checkout_ids).update(
+            start_time=now
+        )
+        Builds.objects.filter(checkout_id__in=checkout_ids).update(start_time=now)
+        Tests.objects.filter(build__checkout_id__in=checkout_ids).update(start_time=now)
 
     def _validate_clear_operation(self, *, skip_confirmation: bool) -> None:
         """Validate that clear operation is safe to proceed."""
