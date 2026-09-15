@@ -49,6 +49,7 @@ class FakeRollupTreeInstance:
         self.filters.filterTestPath = ""
         self.filters.filterIssues = {"boot": set(), "test": set()}
         self.filters.filterPlatforms = {"boot": set(), "test": set()}
+        self.filters.filter_labs = {"boot": set(), "test": set()}
         self.filters.filter_boot_origin = set()
         self.filters.filter_test_origin = set()
         self.filters.filterBootStatus = []

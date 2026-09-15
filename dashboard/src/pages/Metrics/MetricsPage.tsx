@@ -10,6 +10,7 @@ import { ChevronRightAnimate } from '@/components/AnimatedIcons/Chevron';
 import { useMetrics } from '@/api/metrics';
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import type { MetricsResponse } from '@/types/metrics';
+import { sumStatus } from '@/utils/status';
 
 import {
   Table,
@@ -149,10 +150,10 @@ const getLabActivity = (data: MetricsResponse): LabData[] => {
 
       return {
         name,
-        builds: current?.builds ?? 0,
-        boots: current?.boots ?? 0,
-        tests: current?.tests ?? 0,
-        prevTests: previous?.tests ?? 0,
+        builds: current ? current.covered_builds : 0,
+        boots: current ? sumStatus(current.boots) : 0,
+        tests: current ? sumStatus(current.tests) : 0,
+        prevTests: previous ? sumStatus(previous.tests) : 0,
         isNew: current !== undefined && previous === undefined,
         isExtinct: current === undefined && previous !== undefined,
       };

@@ -34,7 +34,7 @@ class TestBuildBuildCompareFilterClauses(SimpleTestCase):
         filters.filterConfigs = {"defconfig"}
         filters.filterArchitecture = set()
         filters.filterCompiler = set()
-        filters.filter_labs = set()
+        filters.filter_labs = {"boot": set(), "build": set(), "test": set()}
         filters.filterHardware = set()
         filters.filterIssues = {"boot": set(), "build": set(), "test": set()}
 

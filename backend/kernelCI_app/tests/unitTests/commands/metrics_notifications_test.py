@@ -10,12 +10,22 @@ from kernelCI_app.management.commands.notifications import (
 from kernelCI_app.tests.unitTests.commands.fixtures.metrics_notifications_data import (
     METRICS_NOTIFICATIONS_EXAMPLE_FILEPATH,
 )
+from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.metrics_notifications import (
     BuildIncidentsCount,
     LabMetricsData,
     MetricsReportData,
     TopIssue,
 )
+
+
+def _lab(*, covered_builds=0, builds=0, boots=0, tests=0) -> LabMetricsData:
+    return LabMetricsData(
+        covered_builds=covered_builds,
+        builds=StatusCount(PASS=builds),
+        boots=StatusCount(PASS=boots),
+        tests=StatusCount(PASS=tests),
+    )
 
 
 def make_metrics_data(**overrides) -> MetricsReportData:
@@ -73,24 +83,16 @@ def make_metrics_data(**overrides) -> MetricsReportData:
             },
         },
         lab_maps={
-            "lava-collabora": LabMetricsData(
-                builds=0, boots=50000, tests=450000, origin="maestro"
-            ),
-            "lava-broonie": LabMetricsData(
-                builds=0, boots=25000, tests=475000, origin="maestro"
-            ),
+            "lava-collabora": _lab(boots=50000, tests=450000),
+            "lava-broonie": _lab(boots=25000, tests=475000),
         },
         prev_n_trees=100,
         prev_n_checkouts=1000,
         prev_n_builds=10000,
         prev_n_tests=1500000,
         prev_lab_maps={
-            "lava-collabora": LabMetricsData(
-                builds=0, boots=50000, tests=700000, origin="maestro"
-            ),
-            "lava-broonie": LabMetricsData(
-                builds=0, boots=100000, tests=650000, origin="maestro"
-            ),
+            "lava-collabora": _lab(boots=50000, tests=700000),
+            "lava-broonie": _lab(boots=100000, tests=650000),
         },
     )
     defaults.update(overrides)
@@ -149,17 +151,11 @@ class TestComputeMetricsDeltas(TestCase):
     def test_new_lab_detected(self):
         data = make_metrics_data(
             lab_maps={
-                "lava-collabora": LabMetricsData(
-                    builds=0, boots=100, tests=500, origin="maestro"
-                ),
-                "new-lab": LabMetricsData(
-                    builds=0, boots=50, tests=200, origin="maestro"
-                ),
+                "lava-collabora": _lab(boots=100, tests=500),
+                "new-lab": _lab(boots=50, tests=200),
             },
             prev_lab_maps={
-                "lava-collabora": LabMetricsData(
-                    builds=0, boots=100, tests=500, origin="maestro"
-                ),
+                "lava-collabora": _lab(boots=100, tests=500),
             },
         )
         deltas = compute_metrics_deltas(data)
@@ -170,17 +166,11 @@ class TestComputeMetricsDeltas(TestCase):
     def test_extinct_lab_detected(self):
         data = make_metrics_data(
             lab_maps={
-                "lava-collabora": LabMetricsData(
-                    builds=0, boots=100, tests=500, origin="maestro"
-                ),
+                "lava-collabora": _lab(boots=100, tests=500),
             },
             prev_lab_maps={
-                "lava-collabora": LabMetricsData(
-                    builds=0, boots=100, tests=500, origin="maestro"
-                ),
-                "old-lab": LabMetricsData(
-                    builds=0, boots=200, tests=1000, origin="maestro"
-                ),
+                "lava-collabora": _lab(boots=100, tests=500),
+                "old-lab": _lab(boots=200, tests=1000),
             },
         )
         deltas = compute_metrics_deltas(data)
@@ -191,9 +181,7 @@ class TestComputeMetricsDeltas(TestCase):
     def test_lab_missing_in_prev_period(self):
         data = make_metrics_data(
             lab_maps={
-                "new-lab": LabMetricsData(
-                    builds=0, boots=100, tests=500, origin="maestro"
-                ),
+                "new-lab": _lab(boots=100, tests=500),
             },
             prev_lab_maps={},
         )
@@ -323,7 +311,7 @@ class TestMetricsReportTemplate(TestCase):
         assert "No build regressions to show in this period." in content
 
     def test_lab_count_unchanged(self):
-        lab = LabMetricsData(builds=0, boots=100, tests=500, origin="maestro")
+        lab = _lab(boots=100, tests=500)
         content = self.render_report(
             lab_maps={"lava-collabora": lab},
             prev_lab_maps={"lava-collabora": lab},
@@ -331,7 +319,7 @@ class TestMetricsReportTemplate(TestCase):
         assert "unchanged from last week" in content
 
     def test_lab_count_increased(self):
-        lab = LabMetricsData(builds=0, boots=100, tests=500, origin="maestro")
+        lab = _lab(boots=100, tests=500)
         content = self.render_report(
             lab_maps={"lava-collabora": lab, "lava-broonie": lab},
             prev_lab_maps={"lava-collabora": lab},
@@ -339,7 +327,7 @@ class TestMetricsReportTemplate(TestCase):
         assert "1 more than last week" in content
 
     def test_lab_count_decreased(self):
-        lab = LabMetricsData(builds=0, boots=100, tests=500, origin="maestro")
+        lab = _lab(boots=100, tests=500)
         content = self.render_report(
             lab_maps={"lava-collabora": lab},
             prev_lab_maps={"lava-collabora": lab, "lava-broonie": lab},
@@ -347,7 +335,7 @@ class TestMetricsReportTemplate(TestCase):
         assert "1 fewer than last week" in content
 
     def test_new_lab_marked_with_asterisk(self):
-        lab = LabMetricsData(builds=0, boots=100, tests=500, origin="maestro")
+        lab = _lab(boots=100, tests=500)
         content = self.render_report(
             lab_maps={
                 "lava-collabora": lab,
@@ -359,7 +347,7 @@ class TestMetricsReportTemplate(TestCase):
         assert not re.search(r"^.*lava-collabora \*.*$", content, re.MULTILINE)
 
     def test_extinct_lab(self):
-        lab = LabMetricsData(builds=0, boots=100, tests=500, origin="maestro")
+        lab = _lab(boots=100, tests=500)
         content = self.render_report(
             lab_maps={"lava-collabora": lab},
             prev_lab_maps={"lava-collabora": lab, "gone-lab": lab},
