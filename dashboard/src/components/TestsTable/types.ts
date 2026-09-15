@@ -24,4 +24,10 @@ export type UnifiedTestRow = TPathTestsStatus & {
   hardware?: string[];
   treeBranch?: string;
   lab?: string;
+  config?: string;
+  arch?: string;
+  platform?: string;
+  sideA?: string;
+  sideB?: string;
+  change?: string;
 };
