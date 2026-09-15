@@ -10,6 +10,7 @@ volumes:
     backend-data:
     static-data:
     dashboard-db-data:
+    git-mirror:
 
 networks:
     public:
@@ -56,6 +57,7 @@ services:
             - DASHBOARD_VERSION=${DASHBOARD_VERSION:-unknown}
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+            - git-mirror:${GIT_MIRROR_DIR:-/var/lib/kernelci/git-mirror}
         restart: always
         networks:
             - private

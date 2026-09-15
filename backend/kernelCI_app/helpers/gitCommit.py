@@ -317,7 +317,15 @@ def _git_executable() -> str:
     return git
 
 
-def _git(repo_dir: Path, *args: str, timeout: int = 30) -> bytes:
+def run_git(
+    repo_dir: Path,
+    *args: str,
+    timeout: int = 30,
+    stdin: bytes | None = None,
+    stream: bool = False,
+) -> bytes:
+    """Run git in repo_dir. With stream=True git writes straight to our console,
+    so long fetches show their own progress; stdout is then not captured."""
     env = os.environ.copy()
     env.update(_GIT_ENV)
     command = [_git_executable(), "-C", str(repo_dir), *args]
@@ -325,14 +333,18 @@ def _git(repo_dir: Path, *args: str, timeout: int = 30) -> bytes:
         result = subprocess.run(  # noqa: S603
             command,
             check=False,
-            capture_output=True,
+            capture_output=not stream,
             timeout=timeout,
             env=env,
+            input=stdin,
         )
     except subprocess.TimeoutExpired as exc:
         raise FetchFailedError(f"git {' '.join(args)} timed out") from exc
 
     if result.returncode != 0:
-        stderr = result.stderr.decode("utf-8", errors="replace").strip()
+        stderr = (result.stderr or b"").decode("utf-8", errors="replace").strip()
         raise FetchFailedError(f"git {' '.join(args)} failed: {stderr}")
-    return result.stdout
+    return result.stdout or b""
+
+
+_git = run_git
