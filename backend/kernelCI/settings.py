@@ -253,6 +253,11 @@ else:
                 f"--index={HARDWARE_REGISTRY_INDEX_URL}",
             ],
         ),
+        (
+            "0 4 * * *",
+            "django.core.management.call_command",
+            ["sync_commits"],
+        ),
     ]
 
 # Email settings for SMTP backend
@@ -269,6 +274,10 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 BACKEND_VOLUME_DIR = os.environ.get("BACKEND_VOLUME_DIR", "/volume_data")
+# Throwaway git dirs for one-shot SHA fetches (#2090). Prefer tmpfs (e.g. /dev/shm).
+GIT_SCRATCH_DIR = os.environ.get("GIT_SCRATCH_DIR", "/dev/shm/kernelci-git-scratch")
+# Persistent treeless mirror for commit metadata sync (#2109). Not BACKEND_VOLUME_DIR.
+GIT_MIRROR_DIR = os.environ.get("GIT_MIRROR_DIR", "/var/lib/kernelci/git-mirror")
 
 DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
