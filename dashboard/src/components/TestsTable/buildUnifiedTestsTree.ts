@@ -27,6 +27,12 @@ function testToLeafRow(test: TIndividualTest): UnifiedTestRow {
     hardware: test.hardware,
     treeBranch: test.treeBranch,
     lab: test.lab,
+    config: test.config,
+    arch: test.arch,
+    platform: test.platform,
+    sideA: test.sideA,
+    sideB: test.sideB,
+    change: test.change,
   };
 }
 
