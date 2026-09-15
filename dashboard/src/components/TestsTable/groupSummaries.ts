@@ -7,6 +7,10 @@ const AGGREGATED_FIELDS = [
   'duration',
   'hardware',
   'treeBranch',
+  'config',
+  'arch',
+  'platform',
+  'change',
 ] as const;
 
 export type AggregatedField = (typeof AGGREGATED_FIELDS)[number];

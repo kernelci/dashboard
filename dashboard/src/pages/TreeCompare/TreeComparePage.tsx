@@ -52,8 +52,8 @@ import { CompareStatusPairFilter } from './components/CompareStatusPairFilter';
 import {
   CompareBootsFailuresTable,
   CompareBuildsFailuresTable,
-  CompareTestsFailuresTable,
 } from './components/CompareFailuresTables';
+import { CompareTestsGroupedTable } from './components/CompareTestsGroupedTable';
 import { CompareSummary } from './components/CompareSummary';
 import { RevisionSelectorBar } from './components/RevisionSelector';
 
@@ -272,7 +272,7 @@ const TreeComparePage = (): JSX.Element => {
             data={testsDiffQuery.data}
             error={testsDiffQuery.error}
           >
-            <CompareTestsFailuresTable rows={filteredTests} />
+            <CompareTestsGroupedTable rows={filteredTests} />
           </QuerySwitcher>
         ),
       },

@@ -39,7 +39,18 @@ test('loads revisions and comparison data from the API', async ({ page }) => {
   );
 
   await page.route('**/api/tree/linux/master/compare/tests?**', route =>
-    route.fulfill({ json: [] }),
+    route.fulfill({
+      json: [
+        {
+          path: 'kselftest.sgx',
+          config_name: 'defconfig-a',
+          architecture: 'x86_64',
+          platform: 'kubernetes',
+          status_a: 'PASS',
+          status_b: 'FAIL',
+        },
+      ],
+    }),
   );
 
   await page.route('**/api/tree/linux/master/compare?**', route =>
@@ -104,5 +115,11 @@ test('loads revisions and comparison data from the API', async ({ page }) => {
     page.getByRole('button', { name: 'Remove PASS to FAIL filter' }),
   ).toBeVisible();
   await expect(page.getByText('defconfig+allmodconfig')).toBeVisible();
-  await expect(page.getByText('Regression')).toBeVisible();
+
+  await page.getByRole('tab', { name: /Tests/i }).click();
+  await expect(
+    page.getByRole('columnheader', { name: 'Config' }),
+  ).toBeVisible();
+  await expect(page.getByText('kselftest.sgx')).toBeVisible();
+  await expect(page.getByText('defconfig-a')).toBeVisible();
 });
