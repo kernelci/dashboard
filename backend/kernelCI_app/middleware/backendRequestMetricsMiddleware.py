@@ -26,6 +26,7 @@ import hmac
 import logging
 import re
 import secrets
+import threading
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from urllib.parse import urlparse
@@ -41,30 +42,50 @@ UNIQUE_VISITOR_SALT_BYTES = 32
 
 logger = logging.getLogger(__name__)
 
-DASHBOARD_BACKEND_REQUESTS_BY_CLIENT = Counter(
-    "dashboard_backend_requests_by_client_total",
-    "Backend requests grouped by endpoint and client attributes",
-    [
-        "endpoint",
-        "method",
-        "status_class",
-        "browser",
-        "os",
-        "device",
-        "referrer_domain",
-    ],
-)
 
-DASHBOARD_UNIQUE_VISITORS_TOTAL = Counter(
-    "dashboard_unique_visitors_total",
-    "Daily unique backend visitors",
-)
+@dataclass(frozen=True)
+class Metrics:
+    requests_by_client: Counter
+    unique_visitors: Counter
+    unique_visitors_by_endpoint: Counter
 
-DASHBOARD_UNIQUE_VISITORS_BY_ENDPOINT_TOTAL = Counter(
-    "dashboard_unique_visitors_by_endpoint_total",
-    "Daily unique backend visitors deduplicated per endpoint by rotated Redis salt",
-    ["endpoint"],
-)
+
+_metrics: Metrics | None = None
+_metrics_lock = threading.Lock()
+
+
+def get_metrics() -> Metrics:
+    """Do not construct at import; Django admin checks import MIDDLEWARE."""
+    global _metrics
+    if _metrics is None:
+        with _metrics_lock:
+            if _metrics is None:
+                _metrics = Metrics(
+                    requests_by_client=Counter(
+                        "dashboard_backend_requests_by_client_total",
+                        "Backend requests grouped by endpoint and client attributes",
+                        [
+                            "endpoint",
+                            "method",
+                            "status_class",
+                            "browser",
+                            "os",
+                            "device",
+                            "referrer_domain",
+                        ],
+                    ),
+                    unique_visitors=Counter(
+                        "dashboard_unique_visitors_total",
+                        "Daily unique backend visitors",
+                    ),
+                    unique_visitors_by_endpoint=Counter(
+                        "dashboard_unique_visitors_by_endpoint_total",
+                        "Daily unique backend visitors deduplicated per endpoint"
+                        " by rotated Redis salt",
+                        ["endpoint"],
+                    ),
+                )
+    return _metrics
 
 
 @dataclass(frozen=True)
@@ -97,7 +118,7 @@ def record_client(
     device: str,
     referrer_domain: str,
 ) -> None:
-    DASHBOARD_BACKEND_REQUESTS_BY_CLIENT.labels(
+    get_metrics().requests_by_client.labels(
         endpoint=endpoint,
         method=method,
         status_class=status_class,
@@ -122,10 +143,10 @@ def record_unique_visitor(*, request, endpoint: str) -> None:
         )
 
         if cache.add(visitor_key, "true", timeout=UNIQUE_VISITOR_TTL_SECONDS):
-            DASHBOARD_UNIQUE_VISITORS_TOTAL.inc()
+            get_metrics().unique_visitors.inc()
 
         if cache.add(endpoint_visitor_key, "true", timeout=UNIQUE_VISITOR_TTL_SECONDS):
-            DASHBOARD_UNIQUE_VISITORS_BY_ENDPOINT_TOTAL.labels(endpoint=endpoint).inc()
+            get_metrics().unique_visitors_by_endpoint.labels(endpoint=endpoint).inc()
     except Exception as exc:
         logger.debug("Failed to record unique visitor metric: %s", exc)
 
