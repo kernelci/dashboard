@@ -109,17 +109,39 @@ class Checkouts(models.Model):
         ]
 
 
+class CommitIdentity(models.Model):
+    id = models.AutoField(primary_key=True)
+    email = models.TextField(default="", blank=True)
+    name = models.TextField(default="", blank=True)
+
+    class Meta:
+        db_table = "commit_identity"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["email", "name"],
+                name="commit_identity_email_name",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.name} <{self.email}>"
+
+
 class Commits(models.Model):
     id = models.AutoField(primary_key=True)
     git_commit_hash = models.TextField(unique=True)
-    author_name = models.TextField(blank=True, null=True)
-    author_email = models.TextField(blank=True, null=True)
+    author_identity = models.ForeignKey(
+        CommitIdentity,
+        on_delete=models.PROTECT,
+        related_name="authored_commits",
+    )
     author_date = models.DateTimeField(blank=True, null=True)
-    committer_name = models.TextField(blank=True, null=True)
-    committer_email = models.TextField(blank=True, null=True)
+    committer_identity = models.ForeignKey(
+        CommitIdentity,
+        on_delete=models.PROTECT,
+        related_name="committed_commits",
+    )
     committer_date = models.DateTimeField(blank=True, null=True)
-    subject = models.TextField(blank=True, null=True)
-    message = models.TextField(blank=True, null=True)
     fetched_from_url = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -127,6 +149,21 @@ class Commits(models.Model):
 
     def __str__(self) -> str:
         return self.git_commit_hash
+
+
+class CommitMessage(models.Model):
+    commit = models.ForeignKey(
+        Commits,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="message_row",
+        db_column="commit_id",
+    )
+    subject = models.TextField(blank=True, null=True)
+    message = models.BinaryField(blank=True, null=True)
+
+    class Meta:
+        db_table = "commit_message"
 
 
 class CommitParents(models.Model):
