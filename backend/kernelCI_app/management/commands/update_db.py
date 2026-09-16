@@ -14,10 +14,16 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import connections, models
 from django.utils.dateparse import parse_datetime
 
+from kernelCI_app.helpers.commit_message_compression import (
+    bytea_to_message,
+    message_to_bytea,
+)
 from kernelCI_app.management.commands.helpers.intervals import parse_interval
 from kernelCI_app.models import (
     Builds,
     Checkouts,
+    CommitIdentity,
+    CommitMessage,
     CommitParents,
     Commits,
     HardwareStatus,
@@ -145,7 +151,8 @@ class Command(BaseCommand):
         return (
             f"Unknown table '{table}'.\n"
             "\tValid options are: issues, checkouts, builds, tests, incidents, "
-            "commits, commit_parents, latest_checkout, hardware_status, "
+            "commits, commit_identity, commit_message, commit_parents, "
+            "latest_checkout, hardware_status, "
             "tree_listing, tree_tests_rollup."
         )
 
@@ -226,7 +233,9 @@ class Command(BaseCommand):
                 case None:
                     self.snapshot_issues()
                     self.snapshot_checkouts()
+                    self.snapshot_commit_identity()
                     self.snapshot_commits()
+                    self.snapshot_commit_messages()
                     self.snapshot_commit_parents()
                     self.snapshot_builds()
                     self.snapshot_tests()
@@ -241,6 +250,10 @@ class Command(BaseCommand):
                     self.snapshot_checkouts()
                 case "commits":
                     self.snapshot_commits()
+                case "commit_identity":
+                    self.snapshot_commit_identity()
+                case "commit_message":
+                    self.snapshot_commit_messages()
                 case "commit_parents":
                     self.snapshot_commit_parents()
                 case "builds":
@@ -271,7 +284,9 @@ class Command(BaseCommand):
     def restore(self, snapshot_filepath: Path):
         self.snapshot_archive = tarfile.open(snapshot_filepath, "r:*")
         try:
+            self.restore_commit_identity()
             self.restore_commits()
+            self.restore_commit_messages()
             self.restore_commit_parents()
             self.restore_checkouts()
             self.restore_builds()
@@ -480,12 +495,62 @@ class Command(BaseCommand):
             self.insert_checkouts_data(records)
             self.stdout.write("Checkouts migration completed")
 
+    # COMMIT IDENTITY ########################################
+    def select_commit_identity_data(self) -> Generator[list[tuple], None, None]:
+        query = """
+            SELECT id, email, name
+            FROM commit_identity
+            ORDER BY id
+        """
+        with connections["default"].cursor() as cursor:
+            cursor.execute(query)
+            while batch := cursor.fetchmany(SELECT_BATCH_SIZE):
+                yield batch
+
+    def insert_commit_identity_data(self, records: list[tuple]) -> int:
+        identities = [
+            CommitIdentity(
+                id=record[0],
+                email=record[1] or "",
+                name=record[2] or "",
+            )
+            for record in records
+        ]
+        migrated = CommitIdentity.objects.bulk_create(
+            identities,
+            ignore_conflicts=True,
+            batch_size=DEFAULT_BATCH_SIZE,
+        )
+        self.sync_id_sequence("commit_identity")
+        total_inserted = len(migrated)
+        self.stdout.write(f"Processed {total_inserted} CommitIdentity records")
+        return total_inserted
+
+    def snapshot_commit_identity(self) -> None:
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating CommitIdentity...")
+            for record_batch in self.select_commit_identity_data():
+                self.insert_records(file, "commit_identity", record_batch)
+            self.add_file_to_snapshot(file, "commit_identity")
+            self.stdout.write("CommitIdentity migration completed")
+
+    def restore_commit_identity(self) -> None:
+        if "commit_identity.csv" not in self.snapshot_archive.getnames():
+            return
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("commit_identity.csv")
+        ) as file:
+            self.stdout.write("\nMigrating CommitIdentity...")
+            reader = csv.reader(file)
+            while records := self.read_records(reader, max_rows=SELECT_BATCH_SIZE):
+                self.insert_commit_identity_data(records)
+            self.stdout.write("CommitIdentity migration completed")
+
     # COMMITS ########################################
     def select_commits_data(self) -> Generator[list[tuple], None, None]:
         query = """
-            SELECT id, git_commit_hash, author_name, author_email, author_date,
-                   committer_name, committer_email, committer_date, subject,
-                   message, fetched_from_url
+            SELECT id, git_commit_hash, author_identity_id, author_date,
+                   committer_identity_id, committer_date, fetched_from_url
             FROM commits
             ORDER BY id
         """
@@ -494,28 +559,66 @@ class Command(BaseCommand):
             while batch := cursor.fetchmany(SELECT_BATCH_SIZE):
                 yield batch
 
+    def _identity_id(self, email: str | None, name: str | None) -> int:
+        identity, _created = CommitIdentity.objects.get_or_create(
+            email=email or "",
+            name=name or "",
+        )
+        return identity.id
+
     def insert_commits_data(self, records: list[tuple]) -> int:
-        original_commits = [
-            Commits(
-                id=record[0],
-                git_commit_hash=record[1],
-                author_name=record[2] or None,
-                author_email=record[3] or None,
-                author_date=parse_datetime(record[4]) if record[4] else None,
-                committer_name=record[5] or None,
-                committer_email=record[6] or None,
-                committer_date=parse_datetime(record[7]) if record[7] else None,
-                subject=record[8] or None,
-                message=record[9] or None,
-                fetched_from_url=record[10] or None,
+        original_commits: list[Commits] = []
+        flat_messages: list[tuple[int, str | None, str | None]] = []
+
+        for record in records:
+            if len(record) == 11:
+                commit_id = int(record[0])
+                author_id = self._identity_id(record[3], record[2])
+                committer_id = self._identity_id(record[6], record[5])
+                original_commits.append(
+                    Commits(
+                        id=commit_id,
+                        git_commit_hash=record[1],
+                        author_identity_id=author_id,
+                        author_date=parse_datetime(record[4]) if record[4] else None,
+                        committer_identity_id=committer_id,
+                        committer_date=parse_datetime(record[7]) if record[7] else None,
+                        fetched_from_url=record[10] or None,
+                    )
+                )
+                flat_messages.append((commit_id, record[8] or None, record[9] or None))
+                continue
+
+            original_commits.append(
+                Commits(
+                    id=record[0],
+                    git_commit_hash=record[1],
+                    author_identity_id=record[2],
+                    author_date=parse_datetime(record[3]) if record[3] else None,
+                    committer_identity_id=record[4],
+                    committer_date=parse_datetime(record[5]) if record[5] else None,
+                    fetched_from_url=record[6] or None,
+                )
             )
-            for record in records
-        ]
+
         migrated_commits = Commits.objects.bulk_create(
             original_commits,
             ignore_conflicts=True,
             batch_size=DEFAULT_BATCH_SIZE,
         )
+        if flat_messages:
+            CommitMessage.objects.bulk_create(
+                [
+                    CommitMessage(
+                        commit_id=commit_id,
+                        subject=subject,
+                        message=message_to_bytea(message),
+                    )
+                    for commit_id, subject, message in flat_messages
+                ],
+                ignore_conflicts=True,
+                batch_size=DEFAULT_BATCH_SIZE,
+            )
         self.sync_id_sequence("commits")
         total_inserted = len(migrated_commits)
         self.stdout.write(f"Processed {total_inserted} Commits records")
@@ -536,6 +639,56 @@ class Command(BaseCommand):
             while records := self.read_records(reader, max_rows=SELECT_BATCH_SIZE):
                 self.insert_commits_data(records)
             self.stdout.write("Commits migration completed")
+
+    # COMMIT MESSAGE ########################################
+    def select_commit_messages_data(self) -> Generator[list[tuple], None, None]:
+        query = """
+            SELECT commit_id, subject, message
+            FROM commit_message
+            ORDER BY commit_id
+        """
+        with connections["default"].cursor() as cursor:
+            cursor.execute(query)
+            while batch := cursor.fetchmany(SELECT_BATCH_SIZE):
+                yield [(row[0], row[1], bytea_to_message(row[2])) for row in batch]
+
+    def insert_commit_messages_data(self, records: list[tuple]) -> int:
+        messages = [
+            CommitMessage(
+                commit_id=record[0],
+                subject=record[1] or None,
+                message=message_to_bytea(record[2]) if record[2] else None,
+            )
+            for record in records
+        ]
+        migrated = CommitMessage.objects.bulk_create(
+            messages,
+            ignore_conflicts=True,
+            batch_size=DEFAULT_BATCH_SIZE,
+        )
+        total_inserted = len(migrated)
+        self.stdout.write(f"Processed {total_inserted} CommitMessage records")
+        return total_inserted
+
+    def snapshot_commit_messages(self) -> None:
+        with SpooledTemporaryFile(mode="w+b", max_size=MAX_MEMORY_BUFFER_BYTES) as file:
+            self.stdout.write("\nMigrating CommitMessage...")
+            for record_batch in self.select_commit_messages_data():
+                self.insert_records(file, "commit_message", record_batch)
+            self.add_file_to_snapshot(file, "commit_message")
+            self.stdout.write("CommitMessage migration completed")
+
+    def restore_commit_messages(self) -> None:
+        if "commit_message.csv" not in self.snapshot_archive.getnames():
+            return
+        with TextIOWrapper(
+            self.snapshot_archive.extractfile("commit_message.csv")
+        ) as file:
+            self.stdout.write("\nMigrating CommitMessage...")
+            reader = csv.reader(file)
+            while records := self.read_records(reader, max_rows=SELECT_BATCH_SIZE):
+                self.insert_commit_messages_data(records)
+            self.stdout.write("CommitMessage migration completed")
 
     # COMMIT PARENTS ########################################
     def select_commit_parents_data(self) -> Generator[list[tuple], None, None]:

@@ -14,7 +14,7 @@ The migration preserves foreign key constraints. For example, if a test A refere
 ### Optional Parameters
 
 - `--table`: Limit data copy to a specific table
-  - Valid options: `issues`, `checkouts`, `commits`, `commit_parents`, `builds`, `tests`, `incidents`, `latest_checkout`, `hardware_status`, `tree_listing`, `tree_tests_rollup`
+  - Valid options: `issues`, `checkouts`, `commits`, `commit_identity`, `commit_message`, `commit_parents`, `builds`, `tests`, `incidents`, `latest_checkout`, `hardware_status`, `tree_listing`, `tree_tests_rollup`
   - If not provided, data from all tables will be copied
 - `--related-data-only`: Limits the selected data to data where the foreign key constraint is not broken.
   - Default: False.

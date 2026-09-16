@@ -11,22 +11,69 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
+            name="CommitIdentity",
+            fields=[
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("email", models.TextField(blank=True, default="")),
+                ("name", models.TextField(blank=True, default="")),
+            ],
+            options={
+                "db_table": "commit_identity",
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("email", "name"),
+                        name="commit_identity_email_name",
+                    ),
+                ],
+            },
+        ),
+        migrations.CreateModel(
             name="Commits",
             fields=[
                 ("id", models.AutoField(primary_key=True, serialize=False)),
                 ("git_commit_hash", models.TextField(unique=True)),
-                ("author_name", models.TextField(blank=True, null=True)),
-                ("author_email", models.TextField(blank=True, null=True)),
                 ("author_date", models.DateTimeField(blank=True, null=True)),
-                ("committer_name", models.TextField(blank=True, null=True)),
-                ("committer_email", models.TextField(blank=True, null=True)),
                 ("committer_date", models.DateTimeField(blank=True, null=True)),
-                ("subject", models.TextField(blank=True, null=True)),
-                ("message", models.TextField(blank=True, null=True)),
                 ("fetched_from_url", models.TextField(blank=True, null=True)),
+                (
+                    "author_identity",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="authored_commits",
+                        to="kernelCI_app.commitidentity",
+                    ),
+                ),
+                (
+                    "committer_identity",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="committed_commits",
+                        to="kernelCI_app.commitidentity",
+                    ),
+                ),
             ],
             options={
                 "db_table": "commits",
+            },
+        ),
+        migrations.CreateModel(
+            name="CommitMessage",
+            fields=[
+                ("subject", models.TextField(blank=True, null=True)),
+                ("message", models.BinaryField(blank=True, null=True)),
+                (
+                    "commit",
+                    models.ForeignKey(
+                        db_column="commit_id",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        related_name="message_row",
+                        to="kernelCI_app.commits",
+                    ),
+                ),
+            ],
+            options={
+                "db_table": "commit_message",
             },
         ),
         migrations.CreateModel(
