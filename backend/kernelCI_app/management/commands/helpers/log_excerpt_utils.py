@@ -4,6 +4,7 @@ import logging
 import os
 import tempfile
 import threading
+import time
 from typing import Any, Literal, Optional
 
 import requests
@@ -21,10 +22,16 @@ CACHE_LOGS = {}
 cache_logs_lock = threading.Lock()
 logger = logging.getLogger("ingester")
 
+UPLOAD_ATTEMPTS = 3
+UPLOAD_BACKOFF_SEC = 1.0
+
 
 def upload_logexcerpt(logexcerpt: str, id: str) -> Optional[str]:
     """
     Upload logexcerpt to storage and return a reference (URL string) if successful.
+
+    Retries a few times, as storage errors are usually momentary (it answers 409
+    while another worker uploads the same excerpt).
 
     Returns None if it could not be uploaded. Returning the excerpt instead would
     put it in the `output_files` url field, failing the schema validation that
@@ -45,30 +52,45 @@ def upload_logexcerpt(logexcerpt: str, id: str) -> Optional[str]:
         logexcerpt_compressed = gzip.compress(logexcerpt.encode("utf-8"))
         temp_file.write(logexcerpt_compressed)
         temp_file.flush()
-    with open(logexcerpt_filename, "rb") as f:
-        hdr = {
-            "Authorization": f"Bearer {STORAGE_TOKEN}",
-        }
-        files = {"file0": ("logexcerpt.txt.gz", f), "path": f"logexcerpt/{id}"}
-        try:
-            r = requests.post(
-                UPLOAD_URL,
-                headers=hdr,
-                files=files,
-                timeout=REQUESTS_TIMEOUT_UPLOAD_IN_SECONDS,
-            )
-        except Exception as e:
-            logger.error("Error uploading logexcerpt for %s: %s", id, e)
-            os.remove(logexcerpt_filename)
-            return None
-    os.remove(logexcerpt_filename)
-    if r.status_code != 200:
-        logger.error(
-            "Failed to upload logexcerpt for %s: %d : %s", id, r.status_code, r.text
-        )
-        return None
+    hdr = {
+        "Authorization": f"Bearer {STORAGE_TOKEN}",
+    }
+    try:
+        for attempt in range(1, UPLOAD_ATTEMPTS + 1):
+            with open(logexcerpt_filename, "rb") as f:
+                files = {"file0": ("logexcerpt.txt.gz", f), "path": f"logexcerpt/{id}"}
+                try:
+                    r = requests.post(
+                        UPLOAD_URL,
+                        headers=hdr,
+                        files=files,
+                        timeout=REQUESTS_TIMEOUT_UPLOAD_IN_SECONDS,
+                    )
+                except Exception as e:
+                    logger.error(
+                        "Error uploading logexcerpt for %s (attempt %d/%d): %s",
+                        id,
+                        attempt,
+                        UPLOAD_ATTEMPTS,
+                        e,
+                    )
+                else:
+                    if r.status_code == 200:
+                        return f"{STORAGE_BASE_URL}/logexcerpt/{id}/logexcerpt.txt.gz"
+                    logger.error(
+                        "Failed to upload logexcerpt for %s (attempt %d/%d): %d : %s",
+                        id,
+                        attempt,
+                        UPLOAD_ATTEMPTS,
+                        r.status_code,
+                        r.text,
+                    )
+            if attempt < UPLOAD_ATTEMPTS:
+                time.sleep(UPLOAD_BACKOFF_SEC * attempt)
+    finally:
+        os.remove(logexcerpt_filename)
 
-    return f"{STORAGE_BASE_URL}/logexcerpt/{id}/logexcerpt.txt.gz"
+    return None
 
 
 def get_from_cache(log_hash: str) -> Optional[str]:
