@@ -8,6 +8,7 @@ from kernelCI_app.constants.ingester import INGESTER_TREES_FILEPATH
 from kernelCI_app.management.commands.helpers.file_utils import (
     load_tree_names,
     move_file_to_failed_dir,
+    sweep_pending_retry,
     verify_dir,
     verify_spool_dirs,
 )
@@ -153,6 +154,50 @@ class TestMoveFileToFailedDir:
             mock_rename.side_effect,
         )
         mock_basename.assert_called_once()
+
+
+class TestSweepPendingRetry:
+    # Test cases:
+    # - missing directory
+    # - deferred submissions requeued, other files untouched
+    # - oldest first when the sweep is capped
+
+    def test_sweep_missing_directory(self, tmp_path):
+        """Test sweeping a directory that does not exist."""
+        assert sweep_pending_retry(str(tmp_path), str(tmp_path / "nope"), 10) == 0
+
+    def test_sweep_requeues_submissions(self, tmp_path):
+        """Test requeueing deferred submissions."""
+        spool = tmp_path / "spool"
+        pending = spool / "pending_retry"
+        pending.mkdir(parents=True)
+        (pending / "submission-a.json").write_text("{}")
+        (pending / "submission-b.json").write_text("{}")
+        (pending / "notes.txt").write_text("ignore me")
+
+        assert sweep_pending_retry(str(spool), str(pending), 10) == 2
+        assert sorted(p.name for p in spool.glob("*.json")) == [
+            "submission-a.json",
+            "submission-b.json",
+        ]
+        assert (pending / "notes.txt").exists()
+
+    def test_sweep_oldest_first_within_limit(self, tmp_path):
+        """Test that a capped sweep takes the oldest submissions."""
+        spool = tmp_path / "spool"
+        pending = spool / "pending_retry"
+        pending.mkdir(parents=True)
+        for name, mtime in (
+            ("submission-new.json", 2000000),
+            ("submission-old.json", 1000000),
+        ):
+            path = pending / name
+            path.write_text("{}")
+            os.utime(path, (mtime, mtime))
+
+        assert sweep_pending_retry(str(spool), str(pending), 1) == 1
+        assert [p.name for p in spool.glob("*.json")] == ["submission-old.json"]
+        assert (pending / "submission-new.json").exists()
 
 
 class TestVerifyDir:

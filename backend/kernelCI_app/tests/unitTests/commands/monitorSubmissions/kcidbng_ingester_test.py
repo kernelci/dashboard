@@ -1,3 +1,4 @@
+from queue import Queue
 from unittest.mock import MagicMock, call, mock_open, patch
 
 import pytest
@@ -14,8 +15,12 @@ from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
     flush_buffers,
     ingest_submissions_parallel,
     prepare_file_data,
+    process_batch,
     standardize_labs,
     standardize_tree_names,
+)
+from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
+    LogExcerptUploadError,
 )
 from kernelCI_app.tests.unitTests.helpers.fixtures.kcidbng_ingester_data import (
     ARCHIVE_SUBMISSIONS_DIR,
@@ -420,6 +425,22 @@ class TestPrepareFileData:
     # - successful execution
     # - file error
 
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.CONVERT_LOG_EXCERPT",
+        True,
+    )
+    @patch("builtins.open", new_callable=mock_open, read_data=SUBMISSION_FILE_MOCK)
+    @patch(
+        "kernelCI_app.management.commands.helpers.kcidbng_ingester.extract_log_excerpt",
+        side_effect=LogExcerptUploadError("storage unavailable"),
+    )
+    def test_upload_failure_is_retryable(self, mock_extract, mock_file_open):
+        data, metadata = prepare_file_data(
+            SubmissionFileMetadata(name="bad.json", path="bad.json", size=100), {}
+        )
+        assert data is None
+        assert metadata == {"error": "storage unavailable", "retry": True}
+
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.VERBOSE", True)
     @patch("kernelCI_app.management.commands.helpers.kcidbng_ingester.logger")
     @patch("os.remove")
@@ -507,6 +528,55 @@ class TestPrepareFileData:
         assert "error" in result_metadata
         mock_logger.error.assert_called()
         mock_file_open.assert_called_once()
+
+
+@pytest.mark.parametrize("retry", [True, False])
+def test_preparation_failure_moves_only_affected_submission(tmp_path, retry):
+    dirs = {}
+    for name in ("archive", "failed", "pending_retry"):
+        directory = tmp_path / name
+        directory.mkdir()
+        dirs[name] = str(directory)
+    files = []
+    for name in ("bad.json", "good.json"):
+        path = tmp_path / name
+        path.write_text("{}")
+        files.append(SubmissionFileMetadata(name=name, path=str(path), size=2))
+    queue = Queue()
+    queue.put(files)
+    queue.put(None)
+    buffers = []
+
+    def flush(**kwargs):
+        buffers.append(set(kwargs["buffer_files"]))
+        kwargs["buffer_files"].clear()
+
+    module = "kernelCI_app.management.commands.helpers.kcidbng_ingester"
+    with (
+        patch(f"{module}.connections.close_all"),
+        patch(
+            f"{module}.prepare_file_data",
+            side_effect=[(None, {"error": "unavailable", "retry": retry}), ({}, {})],
+        ),
+        patch(
+            f"{module}.build_instances_from_submission",
+            return_value={
+                name: []
+                for name in ("issues", "checkouts", "builds", "tests", "incidents")
+            },
+        ),
+        patch(f"{module}.flush_buffers", side_effect=flush),
+    ):
+        processed, stat_ok, stat_fail = (MagicMock(value=0) for _ in range(3))
+        process_batch(queue, {}, dirs, processed, stat_ok, stat_fail, MagicMock())
+
+    destination = "pending_retry" if retry else "failed"
+    assert (tmp_path / destination / "bad.json").exists()
+    assert not (tmp_path / "bad.json").exists()
+    assert (tmp_path / "good.json").exists()
+    assert buffers == [{("good.json", str(tmp_path / "good.json"))}]
+    assert processed.value == 2
+    assert stat_fail.value == 1
 
 
 class TestConsumeBuffer:
@@ -780,7 +850,7 @@ class TestFlushBuffers:
 
         mock_rename.assert_called_once_with(
             SUBMISSION_FILEPATH_MOCK,
-            "/".join([SUBMISSION_DIRS_MOCK["failed"], SUBMISSION_FILENAME_MOCK]),
+            "/".join([SUBMISSION_DIRS_MOCK["pending_retry"], SUBMISSION_FILENAME_MOCK]),
         )
 
         assert mock_time.call_count == 2
