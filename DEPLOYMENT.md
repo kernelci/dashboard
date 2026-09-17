@@ -20,6 +20,8 @@ This guide covers three deployment scenarios: [development](#1-development), [pr
 - [3. Staging](#3-staging)
 - [Profile Reference](#profile-reference)
 - [Docker Secrets Support](#docker-secrets-support)
+- [Database schema changes](#database-schema-changes)
+- [Ingester deployment](#ingester-deployment)
 - [Migration Guide](#migration-guide-legacy)
 - [Related Documentation](#related-documentation)
 
@@ -76,6 +78,19 @@ you must request permissions for the SSH connection and database user.
 2. Request credentials: Obtain a new username and password for the database access.
 3. Connect: Once you have your credentials, connect to the database via `psql`, `pgAdmin`,
 `DBeaver`, or any other PostgreSQL manager.
+
+## Database schema changes
+
+The backend Docker entrypoint runs Django migrations on startup. Staging and production
+use the same PostgreSQL database, so schema changes affect both environments once deployed.
+
+> [!WARNING]
+> Before merging or deploying database schema changes, coordinate with the team in the
+> [KernelCI dashboard Discord channel](https://discord.com/channels/1245820301053530313/1301896040349433957).
+>
+> Migrations that **create a new table** must be called out explicitly there and
+> **Denys Fedoryshchenko** must be notified. New tables need **manual grants** for
+> database permissions; migrations do not apply those grants.
 
 ## 1. Development
 
@@ -154,15 +169,23 @@ stored in the GitHub Container Registry (GHCR).
 
 Production images are automatically built via GitHub Workflow,
 to every new commit in the main branch, or when
-the `Publish GHCR Images` workflow is triggered manually.
+the `Publish GHCR Images` workflow is triggered manually. After CI passes on
+`main`, the dashboard is also deployed to staging
+([deploy-staging](.github/workflows/deploy-staging.yaml)). Production is deployed
+manually via [deploy-production](.github/workflows/deploy-production.yaml) (see
+[Tagging a release](#tagging-a-release)).
 
-The GitHub workflow for production is defined at: [deploy-production](.github/workflows/deploy-production.yaml)
+> [!IMPORTANT]
+> The **ingester** on `db.kernelci.org` is **not** updated by these dashboard
+> GitHub Actions workflows. Deploy it via [Ingester deployment](#ingester-deployment).
 
 > [!WARNING]
 > It is important to point out that the backend entrypoint in Docker container
 > will run database migrations.
 > Changes that involve alterations in database schema should be previously communicated
 > via [Discord channel](https://discord.com/channels/1245820301053530313/1301896040349433957).
+> See also [Database schema changes](#database-schema-changes) (new tables require notifying
+> Denys Fedoryshchenko for manual permission grants).
 
 ### Setup
 
@@ -241,7 +264,13 @@ the staging still shares the PostgreSQL database with production.
 Which demands extra caution for changes that require migrations or
 significantly impact the database.
 
-A GitHub workflow for staging is defined at [deploy-staging](.github/workflows/deploy-staging.yaml)
+A GitHub workflow for staging is defined at [deploy-staging](.github/workflows/deploy-staging.yaml).
+It runs automatically on pushes to `main` after the checks in
+[ci.yaml](.github/workflows/ci.yaml) succeed.
+
+> [!IMPORTANT]
+> The **ingester** on `db.kernelci.org` is **not** deployed by this workflow.
+> See [Ingester deployment](#ingester-deployment).
 
 > [!WARNING]
 > Migrations are automatically executed in the backend entrypoint
@@ -249,6 +278,8 @@ A GitHub workflow for staging is defined at [deploy-staging](.github/workflows/d
 > And as the staging environment is shared with production, the same precautions should follow.
 > Changes that involve alterations in database schema should be previously communicated
 > via [Discord channel](https://discord.com/channels/1245820301053530313/1301896040349433957).
+> See also [Database schema changes](#database-schema-changes) (new tables require notifying
+> Denys Fedoryshchenko for manual permission grants).
 
 ## Post-deployment status
 
@@ -293,6 +324,22 @@ DB_PASSWORD_FILE=/run/secrets/postgres_password_secret
 ```
 
 The entrypoint's `file_env` function reads the file and exports `DB_PASSWORD`. You cannot set both `DB_PASSWORD` and `DB_PASSWORD_FILE` — the entrypoint will error if both are present.
+
+---
+
+## Ingester deployment
+
+The ingester on `db.kernelci.org` is defined in the
+[kcidb-ng](https://github.com/kernelci/kcidb-ng) `docker-compose.yaml` (it uses the
+`dashboard-backend` image and the `monitor_submissions` command).
+
+Rolling out ingester changes to that host is **not** done through this repository's
+dashboard deployment workflows (`Deploy production Dashboard`, `Deploy staging`, and
+the like). Use the [**Build and Deploy**](https://github.com/kernelci/kcidb-ng/actions/workflows/deploy.yml)
+GitHub Actions workflow in **kernelci/kcidb-ng** (on pushes to `main` or via
+**workflow_dispatch**). That workflow builds the kcidb-ng services and redeploys the
+Compose stack on the database server, including the ingester and
+`pending_aggregations_processor` containers.
 
 ---
 ## Migration Guide (legacy)
