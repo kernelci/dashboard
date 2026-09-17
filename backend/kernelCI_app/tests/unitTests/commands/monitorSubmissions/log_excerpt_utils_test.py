@@ -121,7 +121,7 @@ class TestUploadLogexcerpt:
 
         result = upload_logexcerpt(LOG_EXCERPT_MOCK, EXCERPT_HASH_MOCK)
 
-        assert result == LOG_EXCERPT_MOCK
+        assert result is None
         assert mock_remove.call_count == 1
 
 
@@ -251,6 +251,7 @@ class TestProcessLogExcerptFromItem:
     # - small log excerpt (no processing)
     # - large log excerpt with cache
     # - large log excerpt without cache
+    # - large log excerpt whose upload failed
 
     @patch(
         "kernelCI_app.management.commands.helpers.log_excerpt_utils.LOGEXCERPT_THRESHOLD",
@@ -365,6 +366,49 @@ class TestProcessLogExcerptFromItem:
         assert item["log_excerpt"] == ""
         assert "output_files" in item
         assert len(item["output_files"]) == 1
+
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.LOGEXCERPT_THRESHOLD",
+        10,
+    )
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.VERBOSE", False)
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.logger")
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.get_from_cache",
+    )
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.set_in_cache",
+    )
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.set_log_excerpt_ofile",
+    )
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.upload_logexcerpt",
+    )
+    def test_process_log_excerpt_upload_failed_keeps_item_untouched(
+        self,
+        mock_upload_logexcerpt,
+        mock_set_log_excerpt_ofile,
+        mock_set_in_cache,
+        mock_get_from_cache,
+        mock_logger,
+    ):
+        """Test processing a large log excerpt whose upload failed."""
+        mock_get_from_cache.return_value = None
+        mock_upload_logexcerpt.return_value = None
+
+        item = {
+            "id": "test_build_123",
+            "log_excerpt": "Very long log excerpt that exceeds threshold",
+        }
+        original_item = item.copy()
+
+        process_log_excerpt_from_item(item, "build")
+
+        mock_upload_logexcerpt.assert_called_once()
+        mock_set_in_cache.assert_not_called()
+        mock_set_log_excerpt_ofile.assert_not_called()
+        assert item == original_item
 
 
 class TestExtractLogExcerpt:

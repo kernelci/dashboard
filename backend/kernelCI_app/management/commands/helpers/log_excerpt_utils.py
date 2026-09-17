@@ -22,17 +22,20 @@ cache_logs_lock = threading.Lock()
 logger = logging.getLogger("ingester")
 
 
-def upload_logexcerpt(logexcerpt: str, id: str) -> str:
+def upload_logexcerpt(logexcerpt: str, id: str) -> Optional[str]:
     """
     Upload logexcerpt to storage and return a reference (URL string) if successful.
-    If fails, returns the original logexcerpt.
+
+    Returns None if it could not be uploaded. Returning the excerpt instead would
+    put it in the `output_files` url field, failing the schema validation that
+    follows and discarding the whole submission.
 
     Args:
         logexcerpt: the unchanged logexcerpt
         id: the hash of the logexcerpt
 
     Returns:
-        str: On success upload: the reference url. On failed upload: the original logexcerpt
+        str|None: the reference url, or None when the upload failed
     """
     if VERBOSE:
         logger.info("Uploading logexcerpt for %s to %s", id, UPLOAD_URL)
@@ -57,13 +60,13 @@ def upload_logexcerpt(logexcerpt: str, id: str) -> str:
         except Exception as e:
             logger.error("Error uploading logexcerpt for %s: %s", id, e)
             os.remove(logexcerpt_filename)
-            return logexcerpt  # Return original logexcerpt if upload fails
+            return None
     os.remove(logexcerpt_filename)
     if r.status_code != 200:
         logger.error(
             "Failed to upload logexcerpt for %s: %d : %s", id, r.status_code, r.text
         )
-        return logexcerpt  # Return original logexcerpt if upload fails
+        return None
 
     return f"{STORAGE_BASE_URL}/logexcerpt/{id}/logexcerpt.txt.gz"
 
@@ -141,10 +144,19 @@ def process_log_excerpt_from_item(
                 )
             set_log_excerpt_ofile(item, cached_url)
         else:
-            cached_url = upload_logexcerpt(log_excerpt, log_hash)
-            # TODO: if upload_logexcerpt fails, should we be caching the entire logexcerpt?
-            set_in_cache(log_hash, cached_url)
-            set_log_excerpt_ofile(item, cached_url)
+            uploaded_url = upload_logexcerpt(log_excerpt, log_hash)
+            if uploaded_url is None:
+                # Keep the excerpt inline, and nothing cached, so the next
+                # submission carrying it retries the upload.
+                logger.error(
+                    "Could not upload log_excerpt for %s %s (hash %s)",
+                    item_type,
+                    id,
+                    log_hash,
+                )
+                return
+            set_in_cache(log_hash, uploaded_url)
+            set_log_excerpt_ofile(item, uploaded_url)
 
 
 def extract_log_excerpt(input_data: dict[str, Any]) -> None:
