@@ -37,6 +37,39 @@ def move_file_to_failed_dir(filename: str, failed_dir: str) -> None:
         raise e
 
 
+def sweep_pending_retry(spool_dir: str, pending_retry_dir: str, limit: int) -> int:
+    """
+    Move deferred submissions back into the spool to be ingested again.
+
+    Oldest first, capped per sweep so a backlog does not starve new submissions.
+    There is no attempt limit: the failures that defer a submission end, so an
+    outage has to cost time rather than results.
+
+    Returns the number of files requeued.
+    """
+    try:
+        with os.scandir(pending_retry_dir) as it:
+            entries = sorted(
+                (entry.stat().st_mtime, entry.path)
+                for entry in it
+                if entry.is_file() and entry.name.endswith(".json")
+            )
+    except OSError as e:
+        logger.warning("Could not scan %s: %s", pending_retry_dir, e)
+        return 0
+
+    requeued = 0
+    for _, path in entries[:limit]:
+        try:
+            os.rename(path, os.path.join(spool_dir, os.path.basename(path)))
+        except OSError as e:
+            logger.error("Could not requeue %s: %s", path, e)
+            continue
+        requeued += 1
+
+    return requeued
+
+
 def verify_dir(dir: str) -> None:
     if not os.path.exists(dir):
         logger.error("Directory %s does not exist", dir)

@@ -16,6 +16,7 @@ from kernelCI_app.constants.ingester import (
 )
 from kernelCI_app.management.commands.helpers.file_utils import (
     load_tree_names,
+    sweep_pending_retry,
     verify_spool_dirs,
 )
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
@@ -35,6 +36,11 @@ QUEUE_SIZE_GAUGE = Gauge(
     ["ingester"],
     multiprocess_mode="livemax",
 )
+
+
+RETRY_SWEEP_INTERVAL_SEC = 300
+RETRY_SWEEP_MAX_INTERVAL_SEC = 1800
+RETRY_SWEEP_LIMIT = 5000
 
 
 def check_positive_int(value) -> bool:
@@ -158,10 +164,24 @@ class Command(BaseCommand):
 
         cached_files: list[str] = []
         cache_pos = 0
+        last_sweep = 0.0
 
         try:
             while self.running:
-                # TODO: retry failed files every x cycles
+                # Requeue deferred submissions once the spool is drained, so
+                # they never delay new ones, and eventually regardless in case
+                # it never drains.
+                spool_drained = cache_pos >= len(cached_files)
+                since_sweep = time.time() - last_sweep
+                if (spool_drained and since_sweep >= RETRY_SWEEP_INTERVAL_SEC) or (
+                    since_sweep >= RETRY_SWEEP_MAX_INTERVAL_SEC
+                ):
+                    requeued = sweep_pending_retry(
+                        spool_dir, dirs["pending_retry"], RETRY_SWEEP_LIMIT
+                    )
+                    last_sweep = time.time()
+                    if requeued:
+                        self.stdout.write(f"Requeued {requeued} deferred submissions")
 
                 # Only re-scan directory when cache is depleted
                 if cache_pos >= len(cached_files):
