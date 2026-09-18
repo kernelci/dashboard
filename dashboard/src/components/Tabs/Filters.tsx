@@ -201,7 +201,15 @@ const TimeRangeSection = ({
   const timeChangeHandler = useCallback(
     (e: React.FormEvent<HTMLInputElement>, field: TFilterNumberKeys) => {
       const value = e.currentTarget.value;
-      setDiffFilter(old => ({ ...old, [field]: parseInt(value) }));
+      setDiffFilter(old => {
+        const next = { ...old };
+        if (value === '') {
+          delete next[field];
+        } else {
+          next[field] = Number.parseInt(value, 10);
+        }
+        return next;
+      });
     },
     [setDiffFilter],
   );
