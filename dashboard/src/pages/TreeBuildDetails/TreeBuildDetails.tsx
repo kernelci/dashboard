@@ -6,8 +6,9 @@ import { useCallback, type JSX } from 'react';
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 import {
   zTableFilterInfoDefault,
-  type PossibleTableFilters,
+  type TableStatusToggleValue,
 } from '@/types/tree/TreeDetails';
+import { toggleTableStatus } from '@/utils/tableStatusFilter';
 import { RedirectFrom } from '@/types/general';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 import { useSearchStore } from '@/hooks/store/useSearchStore';
@@ -32,15 +33,18 @@ const TreeBuildDetails = (): JSX.Element => {
     [treeId],
   );
 
-  const onClickFilter = useCallback(
-    (filter: PossibleTableFilters): void => {
+  const onToggleFilter = useCallback(
+    (option: TableStatusToggleValue): void => {
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
-              testsTable: filter,
+              testsTable: toggleTableStatus(
+                previousParams.tableFilter?.testsTable,
+                option,
+              ),
             },
           };
         },
@@ -58,7 +62,7 @@ const TreeBuildDetails = (): JSX.Element => {
           locationMessage="buildDetails.buildDetails"
         />
       }
-      onClickFilter={onClickFilter}
+      onToggleFilter={onToggleFilter}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}
     />

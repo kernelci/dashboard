@@ -94,7 +94,8 @@ export const defaultBuildColumns: ColumnDef<AccordionItemBuilds>[] = [
         : 'NULL';
     },
     filterFn: (row, columnId, filterValue) =>
-      getBuildStatusGroup(row.getValue(columnId)) === filterValue,
+      !Array.isArray(filterValue) ||
+      filterValue.includes(getBuildStatusGroup(row.getValue(columnId))),
   },
   {
     id: DETAILS_COLUMN_ID,

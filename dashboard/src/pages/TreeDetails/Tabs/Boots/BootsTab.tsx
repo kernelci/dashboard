@@ -15,7 +15,7 @@ import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import { MemoizedHardwareTested } from '@/components/Cards/HardwareTested';
 import {
   type TreeDetailsRouteFrom,
-  type PossibleTableFilters,
+  type TableStatusToggleValue,
   treeDetailsFromMap,
   zTableFilterInfoDefault,
 } from '@/types/tree/TreeDetails';
@@ -38,6 +38,7 @@ import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 import { getStringParam } from '@/utils/utils';
+import { toggleTableStatus } from '@/utils/tableStatusFilter';
 
 interface BootsTabProps {
   treeDetailsLazyLoaded: TreeDetailsLazyLoaded;
@@ -91,15 +92,18 @@ const BootsTab = ({
     [navigate, params],
   );
 
-  const onClickFilter = useCallback(
-    (newFilter: PossibleTableFilters): void => {
+  const onToggleFilter = useCallback(
+    (option: TableStatusToggleValue): void => {
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
-              bootsTable: newFilter,
+              bootsTable: toggleTableStatus(
+                previousParams.tableFilter?.bootsTable,
+                option,
+              ),
             },
           };
         },
@@ -348,7 +352,7 @@ const BootsTab = ({
             <BootsTable
               tableKey="treeDetailsBoots"
               filter={tableFilter.bootsTable}
-              onClickFilter={onClickFilter}
+              onToggleFilter={onToggleFilter}
               testHistory={bootsData ?? []}
               getRowLink={getRowLink}
               updatePathFilter={updatePathFilter}

@@ -98,6 +98,8 @@ export const messages = {
     'filter.platformSubtitle': 'Please select one or more platforms:',
     'filter.statusSubtitle': 'Please select one or more Status:',
     'filter.tableFilter': 'Status filters:',
+    'filter.tableFilterAll': 'All',
+    'filter.tableFilterAllStatuses': '(all statuses)',
     'filter.testDuration': 'Test duration',
     'filter.testIssue': 'Test issue',
     'filter.testOrigin': 'Test origin',

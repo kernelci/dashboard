@@ -87,7 +87,7 @@ interface IHardwareDetailsTestTable
 const HardwareDetailsTestTable = ({
   tableKey,
   filter,
-  onClickFilter,
+  onToggleFilter,
   testHistory,
   hardwareId,
   updatePathFilter,
@@ -111,7 +111,7 @@ const HardwareDetailsTestTable = ({
     <TestsTable
       tableKey={tableKey}
       filter={filter}
-      onClickFilter={onClickFilter}
+      onToggleFilter={onToggleFilter}
       testHistory={testHistory}
       innerColumns={innerColumns}
       getRowLink={getRowLink}

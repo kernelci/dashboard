@@ -12,11 +12,12 @@ import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
 import {
   zTableFilterInfoDefault,
   type AccordionItemBuilds,
-  type PossibleTableFilters,
+  type TableStatusToggleValue,
   type TreeDetailsRouteFrom,
   treeDetailsFromMap,
 } from '@/types/tree/TreeDetails';
 import { getStringParam } from '@/utils/utils';
+import { toggleTableStatus } from '@/utils/tableStatusFilter';
 import { RedirectFrom } from '@/types/general';
 
 export interface TTreeDetailsBuildsTable {
@@ -77,15 +78,18 @@ export function TreeDetailsBuildsTable({
     [stateParams, canGoDirect, paramsHash],
   );
 
-  const onClickFilter = useCallback(
-    (newFilter: PossibleTableFilters): void => {
+  const onToggleFilter = useCallback(
+    (option: TableStatusToggleValue): void => {
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
-              buildsTable: newFilter,
+              buildsTable: toggleTableStatus(
+                previousParams.tableFilter?.buildsTable,
+                option,
+              ),
             },
           };
         },
@@ -101,7 +105,7 @@ export function TreeDetailsBuildsTable({
       tableKey="treeDetailsBuilds"
       filter={tableFilter.buildsTable}
       buildItems={buildItems}
-      onClickFilter={onClickFilter}
+      onToggleFilter={onToggleFilter}
       getRowLink={getRowLink}
     />
   );

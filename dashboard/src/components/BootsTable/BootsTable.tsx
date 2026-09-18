@@ -15,10 +15,11 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import type {
   TestByCommitHash,
-  PossibleTableFilters,
+  TableStatusOption,
+  TableStatusSelection,
+  TableStatusToggleValue,
   TTestByCommitHashResponse,
 } from '@/types/tree/TreeDetails';
-import { possibleTableFilters } from '@/types/tree/TreeDetails';
 
 import { getStatusGroup } from '@/utils/status';
 
@@ -53,7 +54,8 @@ import TooltipHardware from '@/components/Table/TooltipHardware';
 import { EMPTY_VALUE } from '@/lib/string';
 import { UNKNOWN_STRING } from '@/utils/constants/backend';
 import { TableTopFilters } from '@/components/Table/TableTopFilters';
-import type { TStatusFilters } from '@/components/Table/TableStatusFilter';
+import { buildStatusFilterChips } from '@/components/Table/TableStatusFilter';
+import { tableStatusFilterValueForColumn } from '@/utils/tableStatusFilter';
 
 const defaultColumns: ColumnDef<TestByCommitHash>[] = [
   {
@@ -65,7 +67,8 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
   {
     accessorKey: 'status',
     filterFn: (row, columnId, filterValue) =>
-      getStatusGroup(row.getValue(columnId)) === filterValue,
+      !Array.isArray(filterValue) ||
+      filterValue.includes(getStatusGroup(row.getValue(columnId))),
     header: ({ column }): JSX.Element => (
       <TableHeader
         column={column}
@@ -125,10 +128,10 @@ const defaultColumns: ColumnDef<TestByCommitHash>[] = [
 interface IBootsTable {
   tableKey: TableKeys;
   testHistory?: TestHistory[];
-  filter: PossibleTableFilters;
+  filter: TableStatusSelection;
   columns?: ColumnDef<TestByCommitHash>[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
-  onClickFilter: (newFilter: PossibleTableFilters) => void;
+  onToggleFilter: (option: TableStatusToggleValue) => void;
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
 }
@@ -142,7 +145,7 @@ export function BootsTable({
   filter,
   columns = defaultColumns,
   getRowLink,
-  onClickFilter,
+  onToggleFilter,
   updatePathFilter,
   currentPathFilter,
 }: IBootsTable): JSX.Element {
@@ -203,9 +206,8 @@ export function BootsTable({
     },
   });
 
-  const filterCount: Record<PossibleTableFilters, number> = useMemo(() => {
-    const count: Record<PossibleTableFilters, number> = {
-      all: 0,
+  const filterCount: Record<TableStatusOption, number> = useMemo(() => {
+    const count: Record<TableStatusOption, number> = {
       success: 0,
       failed: 0,
       inconclusive: 0,
@@ -217,61 +219,34 @@ export function BootsTable({
 
     const dataFilter = globalFilter ? rowsOriginal : testsData;
 
-    count.all = dataFilter.length;
     dataFilter.forEach(test => count[getStatusGroup(test.status)]++);
 
     return count;
   }, [testsData, globalFilter, table]);
 
-  const checkIfFilterIsSelected = useCallback(
-    (possibleFilter: PossibleTableFilters): boolean => {
-      return possibleFilter === filter;
-    },
-    [filter],
-  );
-
-  const filters: TStatusFilters[] = useMemo(
-    () => [
-      {
-        label: intl.formatMessage(
-          { id: 'global.allCount' },
-          { count: filterCount[possibleTableFilters[0]] },
-        ),
-        value: possibleTableFilters[0],
-        isSelected: checkIfFilterIsSelected(possibleTableFilters[0]),
-      },
-      {
-        label: intl.formatMessage(
+  const chips = useMemo(
+    () =>
+      buildStatusFilterChips({
+        success: intl.formatMessage(
           { id: 'global.successCount' },
-          { count: filterCount[possibleTableFilters[1]] },
+          { count: filterCount.success },
         ),
-        value: possibleTableFilters[1],
-        isSelected: checkIfFilterIsSelected(possibleTableFilters[1]),
-      },
-      {
-        label: intl.formatMessage(
+        failed: intl.formatMessage(
           { id: 'global.failedCount' },
-          { count: filterCount[possibleTableFilters[2]] },
+          { count: filterCount.failed },
         ),
-        value: possibleTableFilters[2],
-        isSelected: checkIfFilterIsSelected(possibleTableFilters[2]),
-      },
-      {
-        label: intl.formatMessage(
+        inconclusive: intl.formatMessage(
           { id: 'global.inconclusiveCount' },
-          { count: filterCount[possibleTableFilters[3]] },
+          { count: filterCount.inconclusive },
         ),
-        value: possibleTableFilters[3],
-        isSelected: checkIfFilterIsSelected(possibleTableFilters[3]),
-      },
-    ],
-    [intl, filterCount, checkIfFilterIsSelected],
+      }),
+    [intl, filterCount],
   );
 
   useEffect(() => {
     table
       .getColumn('status')
-      ?.setFilterValue(filter !== 'all' ? filter : undefined);
+      ?.setFilterValue(tableStatusFilterValueForColumn(filter));
   }, [filter, table]);
 
   const onSearchChange = useCallback(
@@ -407,8 +382,9 @@ export function BootsTable({
     >
       <TableTopFilters
         key="bootsTableSearch"
-        filters={filters}
-        onClickFilter={onClickFilter}
+        chips={chips}
+        selection={filter}
+        onToggleFilter={onToggleFilter}
         onSearchChange={onSearchChange}
         currentPathFilter={currentPathFilter}
       />

@@ -17,7 +17,7 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import type {
   TableFilter,
-  PossibleTableFilters,
+  TableStatusToggleValue,
 } from '@/types/tree/TreeDetails';
 import type { TIndividualTest } from '@/types/general';
 
@@ -25,7 +25,7 @@ interface IIssueDetailsTestSection {
   issueId: string;
   versionNumber?: number;
   testTableFilter: TableFilter['testsTable'];
-  onClickFilter: (filter: PossibleTableFilters) => void;
+  onToggleFilter: (option: TableStatusToggleValue) => void;
   getTableRowLink: (testId: string) => LinkProps;
 }
 
@@ -44,7 +44,7 @@ export const IssueDetailsTestSection = ({
   issueId,
   versionNumber,
   testTableFilter,
-  onClickFilter,
+  onToggleFilter,
   getTableRowLink,
 }: IIssueDetailsTestSection): JSX.Element => {
   const { data, error, isLoading } = useIssueDetailsTests(
@@ -68,7 +68,7 @@ export const IssueDetailsTestSection = ({
           <TestsTable
             tableKey="issueDetailsTests"
             testHistory={data}
-            onClickFilter={onClickFilter}
+            onToggleFilter={onToggleFilter}
             filter={testTableFilter}
             getRowLink={getTableRowLink}
             innerColumns={innerColumns}

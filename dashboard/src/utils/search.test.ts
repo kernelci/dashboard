@@ -36,9 +36,9 @@ const nestedObject = {
   origin: 'maestro',
   intervalInDays: 7,
   tableFilter: {
-    bootsTable: 'all',
-    buildsTable: 'failed',
-    testsTable: 'all',
+    bootsTable: ['success', 'failed', 'inconclusive'],
+    buildsTable: ['failed'],
+    testsTable: [],
   },
   tableSort: {
     buildsTable: 'path',
@@ -60,9 +60,9 @@ const nestedObjectMinify = {
   o: 'maestro',
   i: 7,
   tf: {
-    bt: 'a',
-    b: 'f',
-    t: 'a',
+    bt: ['s', 'f', 'i'],
+    b: ['f'],
+    t: [],
   },
   s: {
     b: 'path',
@@ -82,7 +82,7 @@ const nestedObjectMinify = {
 
 const nestedObjectStringify =
   '?o=maestro&i=7' +
-  '&tf|bt=a&tf|b=f&tf|t=a' +
+  '&tf|bt[]=s,f,i&tf|b[]=f&tf|t[]' +
   '&s|b=path&s|t=-startTime' +
   '&tri|t=android&tri|ch=hash' +
   '&df|c|defconfig=true&df|a|arm=true&df|tp=amlogic' +
@@ -91,9 +91,9 @@ const nestedObjectStringify =
 const flatObject = {
   origin: 'maestro',
   intervalInDays: 7,
-  'tableFilter|bootsTable': 'all',
-  'tableFilter|buildsTable': 'failed',
-  'tableFilter|testsTable': 'all',
+  'tableFilter|bootsTable': ['success', 'failed', 'inconclusive'],
+  'tableFilter|buildsTable': ['failed'],
+  'tableFilter|testsTable': [],
   'tableSort|buildsTable': 'path',
   'tableSort|testsTable': '-startTime',
   'treeInfo|treeName': 'android',
@@ -107,9 +107,9 @@ const flatObject = {
 const flatObjectMinify = {
   o: 'maestro',
   i: 7,
-  'tf|bt': 'a',
-  'tf|b': 'f',
-  'tf|t': 'a',
+  'tf|bt': ['s', 'f', 'i'],
+  'tf|b': ['f'],
+  'tf|t': [],
   's|b': 'path',
   's|t': '-startTime',
   'tri|t': 'android',

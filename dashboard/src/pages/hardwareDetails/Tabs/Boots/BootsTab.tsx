@@ -17,7 +17,7 @@ import type {
 
 import {
   zTableFilterInfoDefault,
-  type PossibleTableFilters,
+  type TableStatusToggleValue,
 } from '@/types/tree/TreeDetails';
 
 import { MemoizedResponsiveDetailsCards } from '@/components/Tabs/TabGrid';
@@ -34,6 +34,8 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
 
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
+
+import { toggleTableStatus } from '@/utils/tableStatusFilter';
 
 import { HardwareDetailsBootsTable } from './HardwareDetailsBootsTable';
 
@@ -90,15 +92,18 @@ const BootsTab = ({
     [navigate],
   );
 
-  const onClickFilter = useCallback(
-    (newFilter: PossibleTableFilters): void => {
+  const onToggleFilter = useCallback(
+    (option: TableStatusToggleValue): void => {
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
-              bootsTable: newFilter,
+              bootsTable: toggleTableStatus(
+                previousParams.tableFilter?.bootsTable,
+                option,
+              ),
             },
           };
         },
@@ -214,7 +219,7 @@ const BootsTab = ({
           getRowLink={getRowLink}
           filter={tableFilter.bootsTable}
           testHistory={fullDataResult?.data?.boots}
-          onClickFilter={onClickFilter}
+          onToggleFilter={onToggleFilter}
           updatePathFilter={updatePathFilter}
           currentPathFilter={currentPathFilter}
         />

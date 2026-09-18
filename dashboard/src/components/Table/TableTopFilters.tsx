@@ -1,11 +1,14 @@
 import type { JSX } from 'react';
 import { useIntl } from 'react-intl';
 
-import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
+import type {
+  TableStatusSelection,
+  TableStatusToggleValue,
+} from '@/types/tree/TreeDetails';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
-import type { TStatusFilters } from './TableStatusFilter';
+import type { TStatusFilterChip } from './TableStatusFilter';
 import TableStatusFilter from './TableStatusFilter';
 import {
   TableGroupingControls,
@@ -13,16 +16,18 @@ import {
 } from './TableGroupingControls';
 
 interface ITableTopFilters {
-  filters: TStatusFilters[];
-  onClickFilter: (newFilter: PossibleTableFilters) => void;
+  chips: TStatusFilterChip[];
+  selection: TableStatusSelection;
+  onToggleFilter: (option: TableStatusToggleValue) => void;
   currentPathFilter?: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   groupingControls?: ITableGroupingControls;
 }
 
 export function TableTopFilters({
-  filters,
-  onClickFilter,
+  chips,
+  selection,
+  onToggleFilter,
   currentPathFilter,
   onSearchChange,
   groupingControls,
@@ -30,19 +35,23 @@ export function TableTopFilters({
   const intl = useIntl();
 
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-8">
-        <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
+    <div className="flex w-full flex-col gap-4">
+      <div className="flex w-full flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end lg:justify-between">
+        <TableStatusFilter
+          chips={chips}
+          selection={selection}
+          onToggle={onToggleFilter}
+        />
         <DebounceInput
           debouncedSideEffect={onSearchChange}
           startingValue={currentPathFilter}
-          className="w-9/10 sm:mt-6 sm:w-50"
+          className="w-full min-w-0 lg:max-w-md"
           type="text"
           placeholder={intl.formatMessage({ id: 'global.search' })}
         />
       </div>
       {groupingControls && (
-        <div className="ml-auto">
+        <div className="flex justify-end">
           <TableGroupingControls {...groupingControls} />
         </div>
       )}

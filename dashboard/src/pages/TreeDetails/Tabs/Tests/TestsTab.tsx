@@ -14,8 +14,9 @@ import {
   treeDetailsFromMap,
   type TreeDetailsRouteFrom,
   zTableFilterInfoDefault,
-  type PossibleTableFilters,
+  type TableStatusToggleValue,
 } from '@/types/tree/TreeDetails';
+import { toggleTableStatus } from '@/utils/tableStatusFilter';
 
 import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import { MemoizedHardwareTested } from '@/components/Cards/HardwareTested';
@@ -156,15 +157,18 @@ const TestsTab = ({
     [stateParams, canGoDirect, sanitizedTreeInfo],
   );
 
-  const onClickFilter = useCallback(
-    (filter: PossibleTableFilters): void => {
+  const onToggleFilter = useCallback(
+    (option: TableStatusToggleValue): void => {
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
-              testsTable: filter,
+              testsTable: toggleTableStatus(
+                previousParams.tableFilter?.testsTable,
+                option,
+              ),
             },
           };
         },
@@ -348,7 +352,7 @@ const TestsTab = ({
             <TestsTable
               tableKey="treeDetailsTests"
               testHistory={fullTestsData}
-              onClickFilter={onClickFilter}
+              onToggleFilter={onToggleFilter}
               filter={tableFilter.testsTable}
               getRowLink={getRowLink}
               updatePathFilter={updatePathFilter}

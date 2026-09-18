@@ -1,64 +1,73 @@
-import classNames from 'classnames';
-import { useCallback, useMemo, type JSX } from 'react';
-import { FormattedMessage } from 'react-intl';
+import type { JSX } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 
-import { Button } from '@/components/ui/button';
-import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
+import type {
+  TableStatusOption,
+  TableStatusSelection,
+  TableStatusToggleValue,
+} from '@/types/tree/TreeDetails';
+import { tableStatusOptions } from '@/types/tree/TreeDetails';
+import { FilterButton } from '@/components/Button/FilterButton';
+import { isFullTableStatusSelection } from '@/utils/tableStatusFilter';
 
-export type TStatusFilters = {
+export type TStatusFilterChip = {
   label: string;
-  value: PossibleTableFilters;
-  isSelected: boolean;
+  value: TableStatusOption;
 };
 
 interface ITableStatusFilter {
-  onClickBuild?: (value: PossibleTableFilters) => void;
-  onClickTest?: (value: PossibleTableFilters) => void;
-  filters: TStatusFilters[];
+  chips: TStatusFilterChip[];
+  selection: TableStatusSelection;
+  onToggle: (value: TableStatusToggleValue) => void;
 }
 
 const TableStatusFilter = ({
-  filters,
-  onClickBuild,
-  onClickTest,
+  chips,
+  selection,
+  onToggle,
 }: ITableStatusFilter): JSX.Element => {
-  const onClickFilter = useCallback(
-    (filter: PossibleTableFilters) => {
-      onClickBuild?.(filter);
-      onClickTest?.(filter);
-    },
-    [onClickBuild, onClickTest],
-  );
+  const intl = useIntl();
+  const allStatuses = isFullTableStatusSelection(selection);
 
-  const filterButtons = useMemo(
-    () =>
-      filters.map((filter, index) => (
-        <Button
-          variant="outline"
-          key={filter.label}
-          className={classNames(
-            'hover:bg-light-blue border border-black',
-            index === 0 ? 'rounded-l-full' : 'rounded-l-none',
-            index === filters.length - 1 ? 'rounded-r-full' : 'rounded-r-none',
-            filter.isSelected
-              ? 'bg-blue text-white'
-              : 'bg-transparent text-black',
-          )}
-          onClick={() => onClickFilter(filter.value)}
-        >
-          {filter.label}
-        </Button>
-      )),
-    [filters, onClickFilter],
-  );
   return (
-    <div className="flex flex-col">
-      <span className="ml-4">
+    <div className="flex flex-col gap-2">
+      <span className="text-dim-gray text-sm">
         <FormattedMessage id="filter.tableFilter" />
+        {allStatuses && (
+          <span className="text-dark-gray2 font-normal">
+            {' '}
+            <FormattedMessage id="filter.tableFilterAllStatuses" />
+          </span>
+        )}
       </span>
-      <span>{filterButtons}</span>
+      <div
+        className="flex flex-wrap gap-2"
+        role="group"
+        aria-label={intl.formatMessage({ id: 'filter.tableFilter' })}
+      >
+        <FilterButton selected={allStatuses} onClick={() => onToggle('all')}>
+          <FormattedMessage id="filter.tableFilterAll" />
+        </FilterButton>
+        {chips.map(chip => (
+          <FilterButton
+            key={chip.value}
+            selected={selection.includes(chip.value)}
+            onClick={() => onToggle(chip.value)}
+          >
+            {chip.label}
+          </FilterButton>
+        ))}
+      </div>
     </div>
   );
 };
 
 export default TableStatusFilter;
+
+export const buildStatusFilterChips = (
+  labels: Record<TableStatusOption, string>,
+): TStatusFilterChip[] =>
+  tableStatusOptions.map(value => ({
+    value,
+    label: labels[value],
+  }));
