@@ -18,7 +18,11 @@ import type {
   TFilterObjectsKeys,
   TFilterNumberKeys,
 } from '@/types/general';
-import { filterFieldMap, zFilterObjectsKeys } from '@/types/general';
+import {
+  filterFieldMap,
+  getActiveDurationFilter,
+  zFilterObjectsKeys,
+} from '@/types/general';
 import { UNCATEGORIZED_STRING } from '@/utils/constants/backend';
 import { version_prefix } from '@/utils/utils';
 
@@ -71,7 +75,10 @@ export const mapFilterToReq = (filter: TFilter): TFilter => {
         }
       });
     } else {
-      filterMapped[reqField] = [values.toString()];
+      const duration = getActiveDurationFilter(values);
+      if (duration !== undefined) {
+        filterMapped[reqField] = [duration.toString()];
+      }
     }
   });
 

@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.http import QueryDict
 
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.filters import (
@@ -1136,6 +1137,20 @@ class TestFilterHandlers:
         filter_params._handle_build_duration(build_duration_gte_filter_data)
         assert filter_params.filterBuildDurationMin == 150
         assert filter_params.filterBuildDurationMax is None
+
+    def test_create_filters_from_req_build_duration_string_value(self):
+        """Build duration from query params must not truncate multi-digit values."""
+        request = mock_request()
+        request.GET = QueryDict("filter_duration_[lte]=3600")
+        filter_params = FilterParams(request, process_body=False)
+        assert filter_params.filterBuildDurationMax == 3600
+        assert filter_params.filterBuildDurationMin is None
+
+    def test_create_filters_from_req_boot_duration_string_value(self):
+        request = mock_request()
+        request.GET = QueryDict("filter_boot.duration_[lte]=3600")
+        filter_params = FilterParams(request, process_body=False)
+        assert filter_params.filterBootDurationMax == 3600
 
     def test_handle_path_boot_path(self):
         """Test _handle_path with boot.path field."""

@@ -169,7 +169,10 @@ export const getActiveDurationFilter = (value: unknown): number | undefined => {
 };
 
 const zFilterBoolValue = z.record(z.boolean()).optional();
-const zFilterNumberValue = z.number().optional();
+const zFilterNumberValue = z.preprocess(
+  getActiveDurationFilter,
+  z.number().optional(),
+);
 
 export const zFilterObjectsKeys = z.enum([
   'origins',

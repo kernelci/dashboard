@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { getActiveDurationFilter } from '@/types/general';
+import { getActiveDurationFilter, zDiffFilter } from '@/types/general';
+import { mapFilterToReq } from '@/components/Tabs/Filters';
 import { createFlatFilter } from '@/components/Tabs/FilterList';
 import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
+import { parseSearch } from '@/utils/search';
 
 describe('getActiveDurationFilter', () => {
   it('rejects zero, NaN, and undefined', () => {
@@ -14,6 +16,13 @@ describe('getActiveDurationFilter', () => {
   it('accepts positive numbers', () => {
     const durationSeconds = 30;
     expect(getActiveDurationFilter(durationSeconds)).toBe(durationSeconds);
+  });
+
+  it('coerces numeric strings from the URL', () => {
+    // eslint-disable-next-line no-magic-numbers
+    expect(getActiveDurationFilter('120')).toBe(120);
+    // eslint-disable-next-line no-magic-numbers
+    expect(getActiveDurationFilter('30')).toBe(30);
   });
 });
 
@@ -33,13 +42,43 @@ describe('duration filter issue #428', () => {
     expect(createFlatFilter(durationZeroFilter)).toEqual(['configs:arm64']);
   });
 
-  it('keeps non-zero duration across apply and chips', () => {
+  it('mapFilterToReq does not send zero duration to the API', () => {
+    const mapped = mapFilterToReq(durationZeroFilter) as Record<
+      string,
+      string[]
+    >;
+    expect(mapped['treeDetails.config_name']).toEqual(['arm64']);
+    expect(mapped['treeDetails.duration_[gte]']).toBeUndefined();
+  });
+
+  it('keeps non-zero duration across apply, chips, and API mapping', () => {
     const filter = { buildDurationMin: 120, bootDurationMax: 60 };
 
     expect(cleanFalseFilters(filter)).toEqual(filter);
     expect(createFlatFilter(filter)).toEqual([
       'buildDurationMin:120',
       'bootDurationMax:60',
+    ]);
+    expect(mapFilterToReq(filter) as Record<string, string[]>).toMatchObject({
+      'treeDetails.duration_[gte]': ['120'],
+      'boot.duration_[lte]': ['60'],
+    });
+  });
+
+  it('round-trips duration in the URL with chips and API mapping', () => {
+    const buildDurationMin = 120;
+    const parsed = parseSearch(`df|bdf=${buildDurationMin}&df|c|arm=true`) as {
+      diffFilter: Record<string, unknown>;
+    };
+
+    expect(parsed.diffFilter.buildDurationMin).toBe(buildDurationMin);
+    expect(zDiffFilter.parse(parsed.diffFilter)).toEqual({
+      buildDurationMin,
+      configs: { arm: true },
+    });
+    expect(createFlatFilter(zDiffFilter.parse(parsed.diffFilter))).toEqual([
+      'configs:arm',
+      `buildDurationMin:${buildDurationMin}`,
     ]);
   });
 });
