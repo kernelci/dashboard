@@ -7,7 +7,7 @@ import { Sheet } from '@/components/Sheet';
 import { WrapperSheetContent } from '@/components/Sheet/WrapperSheetContent';
 import { LogSheetPanel } from '@/components/Log/LogSheetPanel';
 import { MemoizedMoreDetailsButton } from '@/components/Button/MoreDetailsButton';
-import { useLogData, type LogType } from '@/hooks/useLogData';
+import { useLogData, type LogData, type LogType } from '@/hooks/useLogData';
 import type {
   CompareFailureRow,
   CompareItemStatus,
@@ -61,14 +61,16 @@ function SideColumn({
   status,
   id,
   logType,
+  logData,
+  isLoading,
 }: {
   labelId: 'treeCompare.sideA' | 'treeCompare.sideB';
   status: CompareItemStatus;
   id: string | null;
   logType: LogType;
+  logData: LogData;
+  isLoading: boolean;
 }): JSX.Element {
-  const logQuery = useLogData(id ?? '', id ? logType : undefined);
-
   return (
     <section className="flex min-w-0 flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -85,8 +87,8 @@ function SideColumn({
       {id ? (
         <div className="flex flex-col gap-2">
           <LogSheetPanel
-            logData={logQuery.data}
-            isLoading={logQuery.isLoading}
+            logData={logData}
+            isLoading={isLoading}
             variant="compare"
           />
         </div>
@@ -120,6 +122,10 @@ export function CompareDetailSheet({
   hasPrevious,
   hasNext,
 }: CompareDetailSheetProps): JSX.Element {
+  const logA = useLogData(item?.idA ?? '', item?.idA ? logType : undefined);
+  const logB = useLogData(item?.idB ?? '', item?.idB ? logType : undefined);
+  const isLoading = logA.isLoading || logB.isLoading;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <WrapperSheetContent
@@ -129,7 +135,7 @@ export function CompareDetailSheet({
           nextItem: onNext,
           hasPrevious,
           hasNext,
-          isLoading: false,
+          isLoading,
         }}
       >
         {item && (
@@ -152,12 +158,16 @@ export function CompareDetailSheet({
                 status={item.sideA}
                 id={item.idA}
                 logType={logType}
+                logData={logA.data}
+                isLoading={logA.isLoading}
               />
               <SideColumn
                 labelId="treeCompare.sideB"
                 status={item.sideB}
                 id={item.idB}
                 logType={logType}
+                logData={logB.data}
+                isLoading={logB.isLoading}
               />
             </div>
           </div>
