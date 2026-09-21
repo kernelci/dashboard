@@ -40,19 +40,8 @@ def convert_build(b: Builds) -> PendingBuilds:
     )
 
 
-def _lab_from_test(test: Tests) -> str | None:
-    ingester_lab = getattr(test, "_lab_name", None)
-    if ingester_lab:
-        return ingester_lab
-    lab_fk = getattr(test, "lab", None)
-    if lab_fk is not None:
-        return lab_fk.name
-    # TODO remove misc->>'runtime' fallback after lab backfill
-    misc = test.misc or {}
-    return misc.get("runtime")
-
-
 def convert_test(t: Tests) -> PendingTest:
+    misc = t.misc or {}
     return PendingTest(
         test_id=t.id,
         origin=t.origin,
@@ -63,7 +52,8 @@ def convert_test(t: Tests) -> PendingTest:
         is_boot=is_boot(t.path) if t.path else False,
         path=t.path,
         start_time=t.start_time,
-        lab=_lab_from_test(t),
+        # TODO remove misc->>'runtime' fallback after lab backfill
+        lab=t._lab_name or misc.get("runtime"),
         full_status=t.status,
     )
 

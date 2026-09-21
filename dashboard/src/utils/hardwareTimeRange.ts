@@ -11,12 +11,35 @@ export const resolveHardwareTimeRange = (
   startTimestampInSeconds: number;
   endTimestampInSeconds: number;
 } => {
-  const end =
-    endTimestampInSeconds ?? dateObjectToTimestampInSeconds(startOfTomorrow());
+  const span = daysToSeconds(intervalInDays);
 
+  if (
+    startTimestampInSeconds !== undefined &&
+    endTimestampInSeconds !== undefined
+  ) {
+    return {
+      startTimestampInSeconds,
+      endTimestampInSeconds,
+    };
+  }
+
+  if (startTimestampInSeconds !== undefined) {
+    return {
+      startTimestampInSeconds,
+      endTimestampInSeconds: startTimestampInSeconds + span,
+    };
+  }
+
+  if (endTimestampInSeconds !== undefined) {
+    return {
+      startTimestampInSeconds: endTimestampInSeconds - span,
+      endTimestampInSeconds,
+    };
+  }
+
+  const end = dateObjectToTimestampInSeconds(startOfTomorrow());
   return {
-    startTimestampInSeconds:
-      startTimestampInSeconds ?? end - daysToSeconds(intervalInDays),
+    startTimestampInSeconds: end - span,
     endTimestampInSeconds: end,
   };
 };

@@ -35,7 +35,7 @@ describe('resolveHardwareTimeRange', () => {
     expect(startTimestampInSeconds).toBeLessThan(nowInSeconds);
   });
 
-  it('sizes the window by the listing interval', () => {
+  it('sizes the window by the listing interval when only end is set', () => {
     const end = 1_700_500_000;
 
     expect(
@@ -43,6 +43,17 @@ describe('resolveHardwareTimeRange', () => {
     ).toEqual({
       startTimestampInSeconds: end - daysToSeconds(CUSTOM_INTERVAL_IN_DAYS),
       endTimestampInSeconds: end,
+    });
+  });
+
+  it('sizes the window by the listing interval when only start is set', () => {
+    const start = 1_700_000_000;
+
+    expect(
+      resolveHardwareTimeRange(CUSTOM_INTERVAL_IN_DAYS, start, undefined),
+    ).toEqual({
+      startTimestampInSeconds: start,
+      endTimestampInSeconds: start + daysToSeconds(CUSTOM_INTERVAL_IN_DAYS),
     });
   });
 });
