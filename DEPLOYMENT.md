@@ -154,7 +154,9 @@ stored in the GitHub Container Registry (GHCR).
 
 Production images are automatically built via GitHub Workflow,
 to every new commit in the main branch, or when
-the `Publish GHCR Images` workflow is triggered manually.
+the `Publish GHCR Images` workflow is triggered manually for a given Git ref.
+Deployment pulls the images tagged with the commit SHA passed as `image_tag`,
+and never rebuilds them.
 
 The GitHub workflow for production is defined at: [deploy-production](.github/workflows/deploy-production.yaml)
 
@@ -200,7 +202,8 @@ docker compose -f docker-compose-next.yml --profile=with_commands up -d
 ### Updating to a new version
 
 ```bash
-# Pull latest images and restart
+# Pull a specific commit SHA and restart
+export IMAGE_TAG=<commit-sha>
 docker compose -f docker-compose-next.yml pull
 docker compose -f docker-compose-next.yml up -d
 ```
@@ -221,10 +224,11 @@ convention (`N` starts at `0` and increments for further releases on the same da
     git push origin release/20260729.0
     ```
 
-2. Manually trigger the `Publish GHCR Images` workflow. Images built by the
-earlier push to `main` were baked before the tag existed, so they still carry the
-previous version string.
-3. Trigger the `Deploy production Dashboard` workflow with the new tag.
+2. Manually trigger the `Publish GHCR Images` workflow with `ref` set to that
+commit. Images built by the earlier push to `main` were baked before the tag
+existed, so they still carry the previous version string.
+3. Trigger the `Deploy production Dashboard` workflow with `image_tag` set to
+the commit SHA that was just built.
 4. Confirm the version shown in the side menu matches the tag.
 
 ---
@@ -232,9 +236,12 @@ previous version string.
 ## 3. Staging
 
 The current staging version of the KernelCI Dashboard is deployed similarly
-to [production](#2-production), with the exception that staging deployment
-does not pull docker images from the GHCR registry;
-instead docker images are built locally.
+to [production](#2-production): it pulls the docker images tagged with the
+commit SHA from the GHCR registry, instead of building them locally.
+
+CI passes `${{ github.sha }}` after the tests pass. Staging can also be
+deployed manually (`workflow_dispatch`) with an explicit `image_tag`, to put a
+hotfix build or an earlier SHA on staging.
 
 However, it important to point that despite being in a different environment,
 the staging still shares the PostgreSQL database with production.
