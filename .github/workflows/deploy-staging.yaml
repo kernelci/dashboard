@@ -2,6 +2,22 @@ name: Deploy Staging and E2E
 
 on:
   workflow_call:
+    inputs:
+      image_tag:
+        description: GHCR image tag (Git commit SHA) to deploy
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: GHCR image tag (Git commit SHA) to deploy
+        required: true
+        type: string
+
+# Staging shares one remote checkout dir, so deploys must not overlap
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
 
 jobs:
   check-migrations:
@@ -14,6 +30,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.image_tag }}
           fetch-depth: 0
 
       - name: Compute dashboard version
@@ -63,25 +80,29 @@ jobs:
         env:
           SSH_HOSTKEY: ${{ secrets.STAGING_HOSTKEY }}
 
+      - name: Staging image tag
+        run: echo "Deploying staging with \`IMAGE_TAG=${{ inputs.image_tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Deploy to staging
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_KEY" | ssh-add - >/dev/null
           ssh "${SSH_USER}@${SSH_HOST}" "
             rm -rf dashboard-staging &&
-            git clone --depth 1 --branch main https://github.com/kernelci/dashboard.git dashboard-staging &&
+            git clone --filter=blob:none --no-checkout https://github.com/kernelci/dashboard.git dashboard-staging &&
             cp ~/.env-staging dashboard-staging/.env &&
             cd dashboard-staging &&
-            git checkout ${GITHUB_SHA} &&
+            git checkout ${IMAGE_TAG} &&
+            export IMAGE_TAG=${IMAGE_TAG} &&
             export DASHBOARD_VERSION=${DASHBOARD_VERSION} &&
-            docker compose pull --ignore-buildable --policy=always &&
-            docker compose build --no-cache &&
-            docker compose up -d --remove-orphans
+            docker compose pull --policy=always &&
+            docker compose up -d --remove-orphans --no-build
           "
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
           DASHBOARD_VERSION: ${{ needs.check-migrations.outputs.dashboard_version }}
 
       - name: Collect staging deployment status
