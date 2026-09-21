@@ -225,3 +225,5 @@ jobs:
     if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     uses: ./.github/workflows/deploy-staging.yaml
     secrets: inherit
+    with:
+      image_tag: ${{ github.sha }}
