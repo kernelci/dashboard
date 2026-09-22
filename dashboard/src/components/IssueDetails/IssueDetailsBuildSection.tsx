@@ -11,7 +11,7 @@ import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import type {
   AccordionItemBuilds,
   TableFilter,
-  TableStatusToggleValue,
+  TableStatusOption,
 } from '@/types/tree/TreeDetails';
 
 import { useIssueDetailsBuilds } from '@/api/issueDetails';
@@ -26,7 +26,7 @@ interface IIssueDetailsBuildSection {
   issueId: string;
   versionNumber?: number;
   buildTableFilter: TableFilter['buildsTable'];
-  onToggleFilter: (option: TableStatusToggleValue) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   getTableRowLink: (testId: string) => LinkProps;
 }
 

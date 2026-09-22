@@ -22,10 +22,7 @@ import { shouldTruncate, valueOrEmpty } from '@/lib/string';
 
 import { Sheet } from '@/components/Sheet';
 
-import type {
-  TableFilter,
-  TableStatusToggleValue,
-} from '@/types/tree/TreeDetails';
+import type { TableFilter, TableStatusOption } from '@/types/tree/TreeDetails';
 
 import type {
   IJsonContent,
@@ -63,7 +60,7 @@ import BuildDetailsTestSection from './BuildDetailsTestSection';
 
 interface BuildDetailsProps {
   breadcrumb?: JSX.Element;
-  onToggleFilter: (option: TableStatusToggleValue) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   tableFilter: TableFilter;
   getTestTableRowLink: (testId: string) => LinkProps;
 }

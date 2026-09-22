@@ -17,11 +17,9 @@ import type { DetailsFilters, Summary } from '@/types/commonDetails';
 import {
   defaultTableStatusSelection,
   normalizeTableStatusSelection,
-  possibleTableFilters,
   tableStatusOptions,
   type TableStatusOption,
   type TableStatusSelection,
-  type TableStatusToggleValue,
 } from '@/utils/tableStatusFilter';
 
 import type { TableTestStatus } from './Tree';
@@ -110,11 +108,9 @@ export const possibleTabs = [
 ] as const;
 
 export {
-  possibleTableFilters,
   tableStatusOptions,
   type TableStatusOption,
   type TableStatusSelection,
-  type TableStatusToggleValue,
 };
 
 export const defaultValidadorValues: {

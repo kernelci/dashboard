@@ -6,7 +6,7 @@ import { useCallback, type JSX } from 'react';
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 import {
   zTableFilterInfoDefault,
-  type TableStatusToggleValue,
+  type TableStatusOption,
 } from '@/types/tree/TreeDetails';
 import { toggleTableStatus } from '@/utils/tableStatusFilter';
 import { RedirectFrom } from '@/types/general';
@@ -34,7 +34,7 @@ const TreeBuildDetails = (): JSX.Element => {
   );
 
   const onToggleFilter = useCallback(
-    (option: TableStatusToggleValue): void => {
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
@@ -49,6 +49,7 @@ const TreeBuildDetails = (): JSX.Element => {
           };
         },
         state: { id: treeId, from: RedirectFrom.Tree },
+        resetScroll: false,
       });
     },
     [navigate, treeId],

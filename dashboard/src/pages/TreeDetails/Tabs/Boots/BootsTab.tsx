@@ -15,7 +15,7 @@ import MemoizedIssuesList from '@/components/Cards/IssuesList';
 import { MemoizedHardwareTested } from '@/components/Cards/HardwareTested';
 import {
   type TreeDetailsRouteFrom,
-  type TableStatusToggleValue,
+  type TableStatusOption,
   treeDetailsFromMap,
   zTableFilterInfoDefault,
 } from '@/types/tree/TreeDetails';
@@ -93,7 +93,7 @@ const BootsTab = ({
   );
 
   const onToggleFilter = useCallback(
-    (option: TableStatusToggleValue): void => {
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
@@ -109,6 +109,7 @@ const BootsTab = ({
         },
         state: s => s,
         params: params,
+        resetScroll: false,
       });
     },
     [navigate, params],

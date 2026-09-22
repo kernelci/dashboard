@@ -11,7 +11,7 @@ import { TableHeader } from '@/components/Table/TableHeader';
 import {
   zTableFilterInfoDefault,
   type AccordionItemBuilds,
-  type TableStatusToggleValue,
+  type TableStatusOption,
 } from '@/types/tree/TreeDetails';
 import { defaultBuildColumns } from '@/components/BuildsTable/DefaultBuildsColumns';
 import { sanitizeBuilds } from '@/utils/utils';
@@ -58,7 +58,7 @@ export function HardwareDetailsBuildsTable({
   );
 
   const onToggleFilter = useCallback(
-    (option: TableStatusToggleValue) => {
+    (option: TableStatusOption) => {
       navigate({
         search: previousParams => {
           return {
@@ -73,6 +73,7 @@ export function HardwareDetailsBuildsTable({
           };
         },
         state: s => s,
+        resetScroll: false,
       });
     },
     [navigate],

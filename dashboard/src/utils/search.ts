@@ -5,8 +5,8 @@ import { type AnySchema, parseSearchWith } from '@tanstack/react-router';
 import { type SearchParamsKeys, type TFilterKeys } from '@/types/general';
 import type {
   possibleTabs,
-  possibleTableFilters,
   TableFilter,
+  TableStatusOption,
   TTreeInformation,
 } from '@/types/tree/TreeDetails';
 
@@ -216,7 +216,7 @@ const minifiedParams: MinifiedParams = {
 } as const;
 
 type MinifiedValues = Record<
-  (typeof possibleTabs)[number] | (typeof possibleTableFilters)[number],
+  (typeof possibleTabs)[number] | TableStatusOption | 'all',
   string
 >;
 type MinifiedValuesKeys = keyof MinifiedValues;

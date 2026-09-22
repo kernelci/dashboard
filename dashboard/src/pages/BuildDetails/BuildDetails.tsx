@@ -5,7 +5,7 @@ import { useSearch, useNavigate, useRouterState } from '@tanstack/react-router';
 
 import {
   zTableFilterInfoDefault,
-  type TableStatusToggleValue,
+  type TableStatusOption,
 } from '@/types/tree/TreeDetails';
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 
@@ -34,7 +34,7 @@ const BuildDetailsPage = (): JSX.Element => {
   );
 
   const onToggleFilter = useCallback(
-    (option: TableStatusToggleValue): void => {
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
@@ -49,6 +49,7 @@ const BuildDetailsPage = (): JSX.Element => {
           };
         },
         state: historyState,
+        resetScroll: false,
       });
     },
     [navigate, historyState],

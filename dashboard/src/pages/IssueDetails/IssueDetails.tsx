@@ -6,7 +6,7 @@ import { useCallback, useMemo, type JSX } from 'react';
 import { IssueDetails } from '@/components/IssueDetails/IssueDetails';
 import {
   zTableFilterInfoDefault,
-  type TableStatusToggleValue,
+  type TableStatusOption,
 } from '@/types/tree/TreeDetails';
 import { toggleTableStatus } from '@/utils/tableStatusFilter';
 import { RedirectFrom } from '@/types/general';
@@ -71,7 +71,7 @@ const IssueDetailsPage = (): JSX.Element => {
   }, [historyState.from, historyState.id, previousSearch]);
 
   const onToggleTestFilter = useCallback(
-    (option: TableStatusToggleValue): void => {
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
@@ -86,13 +86,14 @@ const IssueDetailsPage = (): JSX.Element => {
           };
         },
         state: s => s,
+        resetScroll: false,
       });
     },
     [navigate],
   );
 
   const onToggleBuildFilter = useCallback(
-    (option: TableStatusToggleValue): void => {
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
@@ -107,6 +108,7 @@ const IssueDetailsPage = (): JSX.Element => {
           };
         },
         state: s => s,
+        resetScroll: false,
       });
     },
     [navigate],

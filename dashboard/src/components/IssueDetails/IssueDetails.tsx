@@ -16,10 +16,7 @@ import { getMiscSection } from '@/components/Section/MiscSection';
 
 import { useIssueDetails } from '@/api/issueDetails';
 
-import type {
-  TableFilter,
-  TableStatusToggleValue,
-} from '@/types/tree/TreeDetails';
+import type { TableFilter, TableStatusOption } from '@/types/tree/TreeDetails';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
@@ -60,9 +57,9 @@ import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
 interface IIssueDetails {
   versionNumber?: number;
   tableFilter: TableFilter;
-  onToggleTestFilter: (option: TableStatusToggleValue) => void;
+  onToggleTestFilter: (option: TableStatusOption) => void;
   getTestTableRowLink: (testId: string) => LinkProps;
-  onToggleBuildFilter: (option: TableStatusToggleValue) => void;
+  onToggleBuildFilter: (option: TableStatusOption) => void;
   getBuildTableRowLink: (testId: string) => LinkProps;
   breadcrumb?: JSX.Element;
 }

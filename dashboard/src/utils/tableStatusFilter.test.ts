@@ -11,15 +11,6 @@ describe('toggleTableStatus', () => {
     expect(toggleTableStatus(['failed'], 'failed')).toStrictEqual([]);
   });
 
-  it('toggles all statuses together', () => {
-    expect(toggleTableStatus(defaultTableStatusSelection, 'all')).toStrictEqual(
-      [],
-    );
-    expect(toggleTableStatus([], 'all')).toStrictEqual(
-      defaultTableStatusSelection,
-    );
-  });
-
   it('uses all statuses when no selection exists', () => {
     expect(toggleTableStatus(undefined, 'failed')).toStrictEqual([
       'success',
@@ -33,6 +24,12 @@ describe('normalizeTableStatusSelection', () => {
     expect(normalizeTableStatusSelection([])).toStrictEqual([]);
     expect(normalizeTableStatusSelection('failed')).toStrictEqual(['failed']);
     expect(normalizeTableStatusSelection('all')).toStrictEqual(
+      defaultTableStatusSelection,
+    );
+  });
+
+  it('falls back to default when an array has values but none are valid', () => {
+    expect(normalizeTableStatusSelection(['nope'])).toStrictEqual(
       defaultTableStatusSelection,
     );
   });

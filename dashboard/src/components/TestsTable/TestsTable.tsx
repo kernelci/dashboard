@@ -29,7 +29,7 @@ import type { LinkProps } from '@tanstack/react-router';
 
 import type {
   TableStatusSelection,
-  TableStatusToggleValue,
+  TableStatusOption,
 } from '@/types/tree/TreeDetails';
 
 import type { TestHistory, TIndividualTest } from '@/types/general';
@@ -45,8 +45,6 @@ import {
 import type { TableKeys } from '@/utils/constants/tables';
 
 import { TableTopFilters } from '@/components/Table/TableTopFilters';
-
-import { buildStatusFilterChips } from '@/components/Table/TableStatusFilter';
 
 import type { TableGroupingMode } from '@/components/Table/TableGroupingControls';
 
@@ -119,7 +117,7 @@ const maxTreeDepth = (rows: UnifiedTestRow[], depth = 0): number => {
 export interface ITestsTable {
   tableKey: TableKeys;
   testHistory?: TestHistory[];
-  onToggleFilter: (option: TableStatusToggleValue) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   filter: TableStatusSelection;
   innerColumns?: ColumnDef<TIndividualTest>[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
@@ -250,22 +248,21 @@ export function TestsTable({
     [globalStatusGroup],
   );
 
-  const chips = useMemo(
-    () =>
-      buildStatusFilterChips({
-        success: intl.formatMessage(
-          { id: 'global.successCount' },
-          { count: filterCount.success },
-        ),
-        failed: intl.formatMessage(
-          { id: 'global.failedCount' },
-          { count: filterCount.failed },
-        ),
-        inconclusive: intl.formatMessage(
-          { id: 'global.inconclusiveCount' },
-          { count: filterCount.inconclusive },
-        ),
-      }),
+  const labels = useMemo(
+    () => ({
+      success: intl.formatMessage(
+        { id: 'global.successCount' },
+        { count: filterCount.success },
+      ),
+      failed: intl.formatMessage(
+        { id: 'global.failedCount' },
+        { count: filterCount.failed },
+      ),
+      inconclusive: intl.formatMessage(
+        { id: 'global.inconclusiveCount' },
+        { count: filterCount.inconclusive },
+      ),
+    }),
     [filterCount, intl],
   );
 
@@ -533,7 +530,7 @@ export function TestsTable({
     >
       <TableTopFilters
         key="testsTableSearch"
-        chips={chips}
+        labels={labels}
         selection={filter}
         onToggleFilter={onToggleFilter}
         onSearchChange={onSearchChange}

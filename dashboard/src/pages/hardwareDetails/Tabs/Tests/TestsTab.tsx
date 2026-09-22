@@ -15,7 +15,7 @@ import type {
 
 import {
   zTableFilterInfoDefault,
-  type TableStatusToggleValue,
+  type TableStatusOption,
 } from '@/types/tree/TreeDetails';
 
 import { MemoizedResponsiveDetailsCards } from '@/components/Tabs/TabGrid';
@@ -78,7 +78,7 @@ const TestsTab = ({
   );
 
   const onToggleFilter = useCallback(
-    (option: TableStatusToggleValue): void => {
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
@@ -93,6 +93,7 @@ const TestsTab = ({
           };
         },
         state: s => s,
+        resetScroll: false,
       });
     },
     [navigate],

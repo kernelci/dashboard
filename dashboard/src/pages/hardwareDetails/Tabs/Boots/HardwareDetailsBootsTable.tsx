@@ -18,7 +18,7 @@ import { getStatusGroup } from '@/utils/status';
 import type {
   TestByCommitHash,
   TableStatusSelection,
-  TableStatusToggleValue,
+  TableStatusOption,
 } from '@/types/tree/TreeDetails';
 import type { TestHistory } from '@/types/general';
 
@@ -97,7 +97,7 @@ interface IHardwareBootsTable {
   testHistory?: TestHistory[];
   filter: TableStatusSelection;
   getRowLink: (testId: TestHistory['id']) => LinkProps;
-  onToggleFilter: (option: TableStatusToggleValue) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
 }

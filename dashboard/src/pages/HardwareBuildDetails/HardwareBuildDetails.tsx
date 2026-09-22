@@ -8,7 +8,7 @@ import { useSearchStore } from '@/hooks/store/useSearchStore';
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 import {
   zTableFilterInfoDefault,
-  type TableStatusToggleValue,
+  type TableStatusOption,
 } from '@/types/tree/TreeDetails';
 import { toggleTableStatus } from '@/utils/tableStatusFilter';
 import { RedirectFrom } from '@/types/general';
@@ -35,7 +35,7 @@ const HardwareBuildDetails = (): JSX.Element => {
   );
 
   const onToggleFilter = useCallback(
-    (option: TableStatusToggleValue): void => {
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
@@ -50,6 +50,7 @@ const HardwareBuildDetails = (): JSX.Element => {
           };
         },
         state: { id: hardwareId, from: RedirectFrom.Hardware },
+        resetScroll: false,
       });
     },
     [navigate, hardwareId],

@@ -8,10 +8,7 @@ import { Separator } from '@/components/ui/separator';
 
 import { useBuildTests } from '@/api/buildTests';
 
-import type {
-  TableFilter,
-  TableStatusToggleValue,
-} from '@/types/tree/TreeDetails';
+import type { TableFilter, TableStatusOption } from '@/types/tree/TreeDetails';
 
 import { TestsTable } from '@/components/TestsTable/TestsTable';
 
@@ -20,7 +17,7 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 interface IBuildDetailsTestSection {
   buildId: string;
-  onToggleFilter: (option: TableStatusToggleValue) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   tableFilter: TableFilter;
   getRowLink: (testId: string) => LinkProps;
 }

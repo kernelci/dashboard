@@ -2,13 +2,12 @@ import type { JSX } from 'react';
 import { useIntl } from 'react-intl';
 
 import type {
+  TableStatusOption,
   TableStatusSelection,
-  TableStatusToggleValue,
-} from '@/types/tree/TreeDetails';
+} from '@/utils/tableStatusFilter';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
-import type { TStatusFilterChip } from './TableStatusFilter';
 import TableStatusFilter from './TableStatusFilter';
 import {
   TableGroupingControls,
@@ -16,16 +15,16 @@ import {
 } from './TableGroupingControls';
 
 interface ITableTopFilters {
-  chips: TStatusFilterChip[];
+  labels: Record<TableStatusOption, string>;
   selection: TableStatusSelection;
-  onToggleFilter: (option: TableStatusToggleValue) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   currentPathFilter?: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   groupingControls?: ITableGroupingControls;
 }
 
 export function TableTopFilters({
-  chips,
+  labels,
   selection,
   onToggleFilter,
   currentPathFilter,
@@ -35,23 +34,21 @@ export function TableTopFilters({
   const intl = useIntl();
 
   return (
-    <div className="flex w-full flex-col gap-4">
-      <div className="flex w-full flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end lg:justify-between">
-        <TableStatusFilter
-          chips={chips}
-          selection={selection}
-          onToggle={onToggleFilter}
-        />
-        <DebounceInput
-          debouncedSideEffect={onSearchChange}
-          startingValue={currentPathFilter}
-          className="w-full min-w-0 lg:max-w-md"
-          type="text"
-          placeholder={intl.formatMessage({ id: 'global.search' })}
-        />
-      </div>
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-8">
+      <TableStatusFilter
+        labels={labels}
+        selection={selection}
+        onToggle={onToggleFilter}
+      />
+      <DebounceInput
+        debouncedSideEffect={onSearchChange}
+        startingValue={currentPathFilter}
+        className="order-last w-9/10 sm:order-none sm:w-50"
+        type="text"
+        placeholder={intl.formatMessage({ id: 'global.search' })}
+      />
       {groupingControls && (
-        <div className="flex justify-end">
+        <div className="sm:ml-auto">
           <TableGroupingControls {...groupingControls} />
         </div>
       )}

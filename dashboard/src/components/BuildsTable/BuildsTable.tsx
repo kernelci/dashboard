@@ -21,7 +21,6 @@ import {
   type AccordionItemBuilds,
   type TableStatusOption,
   type TableStatusSelection,
-  type TableStatusToggleValue,
 } from '@/types/tree/TreeDetails';
 
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
@@ -40,9 +39,6 @@ import { getBuildStatusGroup } from '@/utils/status';
 
 import { TableTopFilters } from '@/components/Table/TableTopFilters';
 
-import { buildStatusFilterChips } from '@/components/Table/TableStatusFilter';
-import { tableStatusFilterValueForColumn } from '@/utils/tableStatusFilter';
-
 import { defaultBuildColumns } from './DefaultBuildsColumns';
 
 export interface IBuildsTable {
@@ -50,7 +46,7 @@ export interface IBuildsTable {
   buildItems: AccordionItemBuilds[];
   columns?: ColumnDef<AccordionItemBuilds>[];
   filter: TableStatusSelection;
-  onToggleFilter: (option: TableStatusToggleValue) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   getRowLink: (buildId: string) => LinkProps;
   sortKey?: string;
 }
@@ -130,29 +126,26 @@ export function BuildsTable({
     return count;
   }, [rawData, globalFilter, table]);
 
-  const chips = useMemo(
-    () =>
-      buildStatusFilterChips({
-        success: intl.formatMessage(
-          { id: 'global.successCount' },
-          { count: filterCount.success },
-        ),
-        failed: intl.formatMessage(
-          { id: 'global.failedCount' },
-          { count: filterCount.failed },
-        ),
-        inconclusive: intl.formatMessage(
-          { id: 'global.inconclusiveCount' },
-          { count: filterCount.inconclusive },
-        ),
-      }),
+  const labels = useMemo(
+    () => ({
+      success: intl.formatMessage(
+        { id: 'global.successCount' },
+        { count: filterCount.success },
+      ),
+      failed: intl.formatMessage(
+        { id: 'global.failedCount' },
+        { count: filterCount.failed },
+      ),
+      inconclusive: intl.formatMessage(
+        { id: 'global.inconclusiveCount' },
+        { count: filterCount.inconclusive },
+      ),
+    }),
     [intl, filterCount],
   );
 
   useEffect(() => {
-    table
-      .getColumn('status')
-      ?.setFilterValue(tableStatusFilterValueForColumn(filter));
+    table.getColumn('status')?.setFilterValue(filter);
   }, [filter, table]);
 
   const onSearchChange = useCallback(
@@ -287,7 +280,7 @@ export function BuildsTable({
     >
       <TableTopFilters
         key="buildsTableSearch"
-        chips={chips}
+        labels={labels}
         selection={filter}
         onToggleFilter={onToggleFilter}
         onSearchChange={onSearchChange}

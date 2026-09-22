@@ -6,39 +6,26 @@ export const tableStatusOptions = [
 
 export type TableStatusOption = (typeof tableStatusOptions)[number];
 
-export const possibleTableFilters = ['all', ...tableStatusOptions] as const;
-
-export type TableStatusToggleValue = (typeof possibleTableFilters)[number];
-
 export type TableStatusSelection = TableStatusOption[];
 
 export const defaultTableStatusSelection = [...tableStatusOptions];
 
-export const isFullTableStatusSelection = (
-  selection: TableStatusSelection,
-): boolean => tableStatusOptions.every(option => selection.includes(option));
+const isTableStatusOption = (item: unknown): item is TableStatusOption =>
+  typeof item === 'string' &&
+  (tableStatusOptions as readonly string[]).includes(item);
 
 export const normalizeTableStatusSelection = (
   value: unknown,
 ): TableStatusSelection => {
   if (Array.isArray(value)) {
-    return value.filter(
-      (item): item is TableStatusOption =>
-        typeof item === 'string' &&
-        (tableStatusOptions as readonly string[]).includes(item),
-    );
+    const valid = value.filter(isTableStatusOption);
+    if (valid.length === 0 && value.length > 0) {
+      return defaultTableStatusSelection;
+    }
+    return valid;
   }
 
-  if (
-    value === 'all' ||
-    value === '' ||
-    value === null ||
-    value === undefined
-  ) {
-    return defaultTableStatusSelection;
-  }
-
-  if (value === 'success' || value === 'failed' || value === 'inconclusive') {
+  if (isTableStatusOption(value)) {
     return [value];
   }
 
@@ -47,14 +34,9 @@ export const normalizeTableStatusSelection = (
 
 export const toggleTableStatus = (
   selection: TableStatusSelection | undefined,
-  option: TableStatusToggleValue,
+  option: TableStatusOption,
 ): TableStatusSelection => {
   const active = selection ?? defaultTableStatusSelection;
-  if (option === 'all') {
-    return isFullTableStatusSelection(active)
-      ? []
-      : [...defaultTableStatusSelection];
-  }
   if (active.includes(option)) {
     return active.filter(item => item !== option);
   }
@@ -62,8 +44,3 @@ export const toggleTableStatus = (
     (a, b) => tableStatusOptions.indexOf(a) - tableStatusOptions.indexOf(b),
   );
 };
-
-export const tableStatusFilterValueForColumn = (
-  selection: TableStatusSelection,
-): TableStatusSelection | undefined =>
-  isFullTableStatusSelection(selection) ? undefined : selection;

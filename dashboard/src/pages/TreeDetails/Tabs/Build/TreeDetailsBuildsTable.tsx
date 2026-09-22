@@ -12,7 +12,7 @@ import { BuildsTable } from '@/components/BuildsTable/BuildsTable';
 import {
   zTableFilterInfoDefault,
   type AccordionItemBuilds,
-  type TableStatusToggleValue,
+  type TableStatusOption,
   type TreeDetailsRouteFrom,
   treeDetailsFromMap,
 } from '@/types/tree/TreeDetails';
@@ -79,7 +79,7 @@ export function TreeDetailsBuildsTable({
   );
 
   const onToggleFilter = useCallback(
-    (option: TableStatusToggleValue): void => {
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
@@ -95,6 +95,7 @@ export function TreeDetailsBuildsTable({
         },
         state: s => s,
         params: params,
+        resetScroll: false,
       });
     },
     [navigate, params],

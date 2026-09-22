@@ -1,8 +1,7 @@
-import classNames from 'classnames';
 import type { JSX } from 'react';
 import { FormattedMessage } from 'react-intl';
 
-import { Button } from '@/components/ui/button';
+import { PillButton } from '@/components/Button/FilterButton';
 import type { MessagesKey } from '@/locales/messages';
 
 export type TableGroupingMode = 'grouped' | 'ungrouped';
@@ -58,28 +57,17 @@ export function TableGroupingControls({
         ];
 
   return (
-    <div className="flex flex-col items-end">
-      <span className="mr-4">
+    <div className="flex flex-col gap-2 sm:items-end">
+      <span className="text-dim-gray text-sm">
         <FormattedMessage id="table.grouping.label" />
       </span>
-      <span className="flex flex-wrap justify-end">
-        {buttons.map((button, index) => (
-          <Button
-            variant="outline"
-            key={button.key}
-            className={classNames(
-              'hover:bg-light-blue border border-black bg-transparent text-black',
-              index === 0 ? 'rounded-l-full' : 'rounded-l-none',
-              index === buttons.length - 1
-                ? 'rounded-r-full'
-                : 'rounded-r-none',
-            )}
-            onClick={button.onClick}
-          >
+      <div className="flex flex-wrap gap-2 sm:justify-end">
+        {buttons.map(button => (
+          <PillButton key={button.key} onClick={button.onClick}>
             <FormattedMessage id={button.labelId} />
-          </Button>
+          </PillButton>
         ))}
-      </span>
+      </div>
     </div>
   );
 }

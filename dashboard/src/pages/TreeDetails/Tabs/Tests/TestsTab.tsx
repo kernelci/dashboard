@@ -14,7 +14,7 @@ import {
   treeDetailsFromMap,
   type TreeDetailsRouteFrom,
   zTableFilterInfoDefault,
-  type TableStatusToggleValue,
+  type TableStatusOption,
 } from '@/types/tree/TreeDetails';
 import { toggleTableStatus } from '@/utils/tableStatusFilter';
 
@@ -158,7 +158,7 @@ const TestsTab = ({
   );
 
   const onToggleFilter = useCallback(
-    (option: TableStatusToggleValue): void => {
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
@@ -174,6 +174,7 @@ const TestsTab = ({
         },
         state: s => s,
         params: params,
+        resetScroll: false,
       });
     },
     [navigate, params],

@@ -15,17 +15,14 @@ import { TableHeader } from '@/components/Table/TableHeader';
 import { Separator } from '@/components/ui/separator';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
-import type {
-  TableFilter,
-  TableStatusToggleValue,
-} from '@/types/tree/TreeDetails';
+import type { TableFilter, TableStatusOption } from '@/types/tree/TreeDetails';
 import type { TIndividualTest } from '@/types/general';
 
 interface IIssueDetailsTestSection {
   issueId: string;
   versionNumber?: number;
   testTableFilter: TableFilter['testsTable'];
-  onToggleFilter: (option: TableStatusToggleValue) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   getTableRowLink: (testId: string) => LinkProps;
 }
 
