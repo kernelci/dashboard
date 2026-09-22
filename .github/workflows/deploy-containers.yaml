@@ -34,7 +34,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REF: ${{ github.event.inputs.ref || github.sha }}
-        run: echo "sha=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}" --jq .sha)" >> "$GITHUB_OUTPUT"
+        run: |
+          set -euo pipefail
+          sha=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}" --jq .sha)
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
 
   build-and-push-backend:
     if: github.repository == 'kernelci/dashboard' || github.event_name == 'workflow_dispatch'
