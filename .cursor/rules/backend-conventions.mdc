@@ -1,0 +1,14 @@
+---
+description: Django API conventions (FilterParams body, schema, joins, aggregates)
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Backend
+
+- Request/response shape changed → run `backend/generate-schema.sh`. In a large PR, put schema in its own last commit.
+- `tests.build` is `db_constraint=False`. `INNER JOIN builds` drops orphan tests. Keep the previous join semantics unless dropping orphans is the point.
+- Listing often reads **aggregates** (`hardware_status`, rollups). Compare/details often read **raw** `tests`/`builds`. Mismatched counts or a filter that works on one tab and not another is usually this split.
+- Run the pytest files you touched; `poetry run ruff check` / `ruff format` before calling it done.
+- Always consider table indexes when writing a SQL query. Suggest new indexes when relevant but DO NOT create them without user consent.
+---

@@ -1,0 +1,14 @@
+---
+description: Dashboard frontend conventions (URL state, i18n, filters, pnpm)
+globs: dashboard/**/*
+alwaysApply: false
+---
+
+# Frontend
+
+- Shareable links: put UI state in the URL (TanStack Router). File-based routes: only files whose names start with `~`.
+- Package manager is `pnpm` (not npm/yarn). Unit tests: `pnpm test`. E2E targets `data-test-id`.
+- User-visible strings go in `dashboard/src/locales/messages/index.ts`. Do not hardcode copy.
+- Listing filters must still apply on details. Wire `diffFilter` through `mapFilterToReq` (`components/Tabs/Filters.tsx`) and the shortened names in `utils/search.ts`. Origin on listing ≠ origin on details is a recurring bug.
+- After UI/layout/routing/state changes, verify the flow in the browser (click/type/navigate), not only a screenshot.
+---
