@@ -477,11 +477,12 @@ def get_issue_first_good_checkouts(
 def get_issue_next_checkout_data(*, issue_id_list: list[str]) -> list[dict]:
     """
     For each issue, finds the next checkout after the last-seen checkout
-    on the same tree, ordered by checkout start_time.
+    on the same tree.
 
     Tree identity is (origin, tree_name, git_repository_url, git_repository_branch).
-    "Next" is the earliest checkout with start_time greater than the last-seen
-    checkout's start_time (no parent-commit hierarchy available).
+    Prefer the earliest later checkout whose first-parent ancestry contains the
+    last-seen commit. Fall back to start_time ordering when commit data is missing,
+    incomplete, or does not connect any later checkout.
 
     Issues with no last-seen checkout, no start_time, or no later checkout
     on that tree are omitted from the result.
@@ -496,11 +497,12 @@ def get_issue_next_checkout_data(*, issue_id_list: list[str]) -> list[dict]:
         return records
 
     query = """
-        WITH last_seen AS (
+        WITH RECURSIVE last_seen AS (
             SELECT DISTINCT ON (IC.issue_id)
                 IC.issue_id,
                 C.id AS last_checkout_id,
                 C.start_time AS last_start_time,
+                C.git_commit_hash AS last_git_commit_hash,
                 C.origin,
                 C.tree_name,
                 C.git_repository_url,
@@ -519,6 +521,73 @@ def get_issue_next_checkout_data(*, issue_id_list: list[str]) -> list[dict]:
                 IC.issue_id,
                 IC.issue_version DESC,
                 IC._timestamp DESC
+        ),
+        later_checkouts AS (
+            SELECT
+                LS.issue_id,
+                C.id AS checkout_id,
+                C.start_time,
+                TARGET.id AS target_commit_id,
+                CANDIDATE.id AS commit_id
+            FROM
+                last_seen LS
+                INNER JOIN commits TARGET
+                    ON TARGET.git_commit_hash = LS.last_git_commit_hash
+                INNER JOIN checkouts C ON (
+                    C.origin = LS.origin
+                    AND C.tree_name IS NOT DISTINCT FROM LS.tree_name
+                    AND C.git_repository_url IS NOT DISTINCT FROM LS.git_repository_url
+                    AND C.git_repository_branch IS NOT DISTINCT FROM LS.git_repository_branch
+                    AND C.start_time > LS.last_start_time
+                )
+                INNER JOIN commits CANDIDATE
+                    ON CANDIDATE.git_commit_hash = C.git_commit_hash
+            WHERE
+                LS.last_checkout_id IS NOT NULL
+                AND LS.last_start_time IS NOT NULL
+        ),
+        first_parent_walk AS (
+            SELECT
+                issue_id,
+                checkout_id,
+                start_time,
+                target_commit_id,
+                commit_id,
+                0 AS depth
+            FROM
+                later_checkouts
+
+            UNION ALL
+
+            SELECT
+                WALK.issue_id,
+                WALK.checkout_id,
+                WALK.start_time,
+                WALK.target_commit_id,
+                PARENT.parent_id,
+                WALK.depth + 1
+            FROM
+                first_parent_walk WALK
+                INNER JOIN commit_parents PARENT ON (
+                    PARENT.commit_id = WALK.commit_id
+                    AND PARENT.ord = 0
+                )
+            WHERE
+                WALK.commit_id <> WALK.target_commit_id
+                AND WALK.depth < 1000
+        ),
+        ancestry_next AS (
+            SELECT DISTINCT ON (WALK.issue_id)
+                WALK.issue_id,
+                WALK.checkout_id
+            FROM
+                first_parent_walk WALK
+            WHERE
+                WALK.commit_id = WALK.target_commit_id
+            ORDER BY
+                WALK.issue_id,
+                WALK.start_time ASC,
+                WALK.checkout_id ASC
         )
         SELECT
             LS.issue_id,
@@ -532,29 +601,25 @@ def get_issue_next_checkout_data(*, issue_id_list: list[str]) -> list[dict]:
             C.origin
         FROM
             last_seen LS
-            CROSS JOIN LATERAL (
+            LEFT JOIN ancestry_next AN ON AN.issue_id = LS.issue_id
+            LEFT JOIN LATERAL (
                 SELECT
-                    C.id,
-                    C.start_time,
-                    C.git_commit_hash,
-                    C.git_commit_name,
-                    C.git_repository_url,
-                    C.git_repository_branch,
-                    C.tree_name,
-                    C.origin
+                    FALLBACK.id
                 FROM
-                    checkouts C
+                    checkouts FALLBACK
                 WHERE
-                    C.origin = LS.origin
-                    AND C.tree_name IS NOT DISTINCT FROM LS.tree_name
-                    AND C.git_repository_url IS NOT DISTINCT FROM LS.git_repository_url
-                    AND C.git_repository_branch IS NOT DISTINCT FROM LS.git_repository_branch
-                    AND C.start_time > LS.last_start_time
+                    FALLBACK.origin = LS.origin
+                    AND FALLBACK.tree_name IS NOT DISTINCT FROM LS.tree_name
+                    AND FALLBACK.git_repository_url IS NOT DISTINCT FROM LS.git_repository_url
+                    AND FALLBACK.git_repository_branch IS NOT DISTINCT FROM LS.git_repository_branch
+                    AND FALLBACK.start_time > LS.last_start_time
                 ORDER BY
-                    C.start_time ASC,
-                    C.id ASC
+                    FALLBACK.start_time ASC,
+                    FALLBACK.id ASC
                 LIMIT 1
-            ) C
+            ) FALLBACK ON AN.checkout_id IS NULL
+            INNER JOIN checkouts C
+                ON C.id = COALESCE(AN.checkout_id, FALLBACK.id)
         WHERE
             LS.last_checkout_id IS NOT NULL
             AND LS.last_start_time IS NOT NULL
