@@ -517,6 +517,25 @@ export function HardwareTable({
           <TableRow>
             {row.getVisibleCells().map(cell => {
               if (cell.column.id === 'registry_expander') {
+                const expanderLinkProps = getLinkProps(
+                  row,
+                  startTimestampInSeconds,
+                  endTimestampInSeconds,
+                  navigateFrom,
+                  'global.builds',
+                );
+
+                if (!row.getCanExpand()) {
+                  return (
+                    <ConditionalTableCell
+                      key={cell.id}
+                      cell={cell}
+                      linkProps={expanderLinkProps}
+                      linkClassName="block h-full min-h-10 w-full"
+                    />
+                  );
+                }
+
                 return (
                   <TableCell key={cell.id} className="w-10">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
