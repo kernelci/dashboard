@@ -95,7 +95,20 @@ export const messages = {
     'filter.origins': 'Origins',
     'filter.originsSubtitle': 'Please select one or more origins:',
     'filter.perTabFilter': 'Per tab filters',
+    'filter.platformBoardTypes': 'Board Type',
+    'filter.platformBoardTypesSubtitle':
+      'Please select one or more board types:',
     'filter.platformSubtitle': 'Please select one or more platforms:',
+    'filter.platformVendors': 'Platform Vendor',
+    'filter.platformVendorsSubtitle':
+      'Please select one or more platform vendors:',
+    'filter.processorArchs': 'Architecture',
+    'filter.processorArchsSubtitle': 'Please select one or more architectures:',
+    'filter.processorIds': 'Processor',
+    'filter.processorIdsSubtitle': 'Please select one or more processors:',
+    'filter.processorVendors': 'Processor Vendor',
+    'filter.processorVendorsSubtitle':
+      'Please select one or more processor vendors:',
     'filter.statusSubtitle': 'Please select one or more Status:',
     'filter.tableFilter': 'Status filters:',
     'filter.testDuration': 'Test duration',

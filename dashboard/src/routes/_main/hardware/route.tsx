@@ -2,6 +2,10 @@ import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
 import { z } from 'zod';
 
 import {
+  DEFAULT_REGISTRY_FILTER,
+  zRegistryFilter,
+} from '@/pages/Hardware/hardwareListingFilters';
+import {
   makeZIntervalInDays,
   zListingSize,
   type SearchSchema,
@@ -15,12 +19,14 @@ const defaultValues = {
   intervalInDays: REDUCED_TIME_SEARCH,
   hardwareSearch: '',
   listingSize: DEFAULT_LISTING_ITEMS,
+  registryFilter: DEFAULT_REGISTRY_FILTER,
 };
 
 const zHardwareSchema = z.object({
   intervalInDays: makeZIntervalInDays(REDUCED_TIME_SEARCH),
   hardwareSearch: z.string().catch(''),
   listingSize: zListingSize,
+  registryFilter: zRegistryFilter,
   treeName: z.optional(z.string()),
   gitRepositoryUrl: z.optional(z.string()),
   gitBranch: z.optional(z.string()),
