@@ -6,7 +6,7 @@ import { MdDeveloperBoard } from 'react-icons/md';
 
 import { valueOrEmpty } from '@/lib/string';
 import type { MessagesKey } from '@/locales/messages';
-import type { HardwareRegistryInfo } from '@/lib/hardwareRegistryMock';
+import type { HardwareRegistryInfo } from '@/types/hardware';
 
 import BaseCard from '@/components/Cards/BaseCard';
 import { DetailsInfoCard } from '@/components/Cards/DetailsInfoCard';
@@ -15,11 +15,11 @@ import LinkWithIcon, {
 } from '@/components/LinkWithIcon/LinkWithIcon';
 import { LinkIcon } from '@/components/Icons/Link';
 
-const humanize = (text?: string): string | undefined =>
+const humanize = (text?: string | null): string | undefined =>
   text?.replace(/_/g, ' ');
 
 const processorFields = (info: HardwareRegistryInfo): ILinkWithIcon[] => {
-  const clock = info.processor?.maxClockSpeedMhz;
+  const clock = info.processor?.max_clock_speed_mhz;
   return [
     {
       title: 'global.soc',
@@ -40,8 +40,8 @@ const processorFields = (info: HardwareRegistryInfo): ILinkWithIcon[] => {
     },
     {
       title: 'global.siliconVendor',
-      linkText: valueOrEmpty(info.siliconVendor?.id),
-      link: info.siliconVendor?.url,
+      linkText: valueOrEmpty(info.silicon_vendor?.id),
+      link: info.silicon_vendor?.url,
     },
   ];
 };
@@ -49,18 +49,18 @@ const processorFields = (info: HardwareRegistryInfo): ILinkWithIcon[] => {
 const boardFields = (info: HardwareRegistryInfo): ILinkWithIcon[] => [
   {
     title: 'global.boardType',
-    linkText: valueOrEmpty(humanize(info.boardType)),
+    linkText: valueOrEmpty(humanize(info.board_type)),
   },
   {
     title: 'global.formFactor',
-    linkText: valueOrEmpty(humanize(info.formFactor)),
+    linkText: valueOrEmpty(humanize(info.form_factor)),
   },
-  ...(info.systemModule
+  ...(info.system_module
     ? [
         {
           title: 'global.systemModule' as MessagesKey,
-          linkText: valueOrEmpty(info.systemModule.id),
-          link: info.systemModule.url,
+          linkText: valueOrEmpty(info.system_module.id),
+          link: info.system_module.url,
         },
       ]
     : []),
@@ -82,7 +82,7 @@ const listingFields = (info: HardwareRegistryInfo): ILinkWithIcon[] => {
   return [
     {
       title: 'global.platform',
-      linkText: valueOrEmpty(info.platformId),
+      linkText: valueOrEmpty(info.platform_id),
       link: info.url,
     },
     fieldByTitle(processor, 'global.soc'),
@@ -125,7 +125,7 @@ const RegistryTitle = ({
   <div className="flex flex-col gap-1">
     <div className="flex flex-wrap items-center gap-2">
       <MdDeveloperBoard className="text-blue text-xl" />
-      <LinkWithIcon linkText={info.platformId} link={info.url} />
+      <LinkWithIcon linkText={info.platform_id} link={info.url} />
     </div>
     {info.description && (
       <span className="text-dark-gray2 text-sm font-normal">
@@ -154,7 +154,7 @@ export const HardwareRegistryStrip = ({
   info,
   className,
 }: {
-  info?: HardwareRegistryInfo;
+  info?: HardwareRegistryInfo | null;
   className?: string;
 }): JSX.Element | null => {
   if (!info) {
@@ -177,7 +177,7 @@ export const HardwareRegistryStrip = ({
 export const HardwareRegistryCard = ({
   info,
 }: {
-  info?: HardwareRegistryInfo;
+  info?: HardwareRegistryInfo | null;
 }): JSX.Element | null => {
   if (!info) {
     return null;
@@ -194,7 +194,7 @@ export const HardwareRegistryCard = ({
       data={[
         {
           title: 'global.platform' as MessagesKey,
-          linkText: valueOrEmpty(info.platformId),
+          linkText: valueOrEmpty(info.platform_id),
           link: info.url,
         },
         {

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 export interface ILinkWithIcon {
   title?: MessagesKey;
   linkText?: string | ReactElement;
-  link?: string;
+  link?: string | null;
   icon?: ReactElement;
   linkComponent?: ReactElement;
   onClick?: () => void;
@@ -74,8 +74,8 @@ const LinkWithIcon = ({
               'underline hover:text-gray-900': onClick || link,
             },
           )}
-          href={link}
-          title={link}
+          href={link ?? undefined}
+          title={link ?? undefined}
           target="_blank"
           rel="noreferrer"
           onClick={onClick}
