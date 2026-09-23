@@ -5,6 +5,7 @@ import {
   applyStatusPairFilter,
   mapBootOrTestDiffRows,
   mapBuildDiffRows,
+  compareRowNav,
   parseStatusPairs,
   resolveStatusPairs,
   serializeStatusPairs,
@@ -180,6 +181,8 @@ describe('mapBuildDiffRows', () => {
         compiler: 'gcc',
         status_a: 'PASS',
         status_b: 'FAIL',
+        id_a: 'build-a',
+        id_b: 'build-b',
       },
     ]);
 
@@ -190,6 +193,8 @@ describe('mapBuildDiffRows', () => {
       sideA: 'PASS',
       sideB: 'FAIL',
       change: 'regression',
+      idA: 'build-a',
+      idB: 'build-b',
     });
   });
 });
@@ -205,6 +210,8 @@ describe('mapBootOrTestDiffRows', () => {
           platform: 'qemu-arm64',
           status_a: null,
           status_b: 'FAIL',
+          id_a: null,
+          id_b: 'test-b',
         },
       ],
       'boot',
@@ -218,6 +225,22 @@ describe('mapBootOrTestDiffRows', () => {
       sideA: '—',
       sideB: 'FAIL',
       change: 'newFailure',
+      idA: null,
+      idB: 'test-b',
     });
+  });
+});
+
+describe('compareRowNav', () => {
+  it('walks only the visible list, not hidden search matches', () => {
+    const visible = [{ id: 'keep-a' }, { id: 'keep-c' }];
+    const onFirst = compareRowNav(visible, 'keep-a');
+    expect(onFirst.nextId).toBe('keep-c');
+    expect(onFirst.previousId).toBeNull();
+
+    const onLast = compareRowNav(visible, 'keep-c');
+    expect(onLast.previousId).toBe('keep-a');
+    expect(onLast.nextId).toBeNull();
+    expect(onLast.hasNext).toBe(false);
   });
 });

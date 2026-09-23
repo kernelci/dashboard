@@ -8,6 +8,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import type {
   CompareBootFailureRow,
   CompareBuildFailureRow,
+  CompareFailureRow,
   CompareTestFailureRow,
 } from '@/types/tree/TreeCompare';
 
@@ -23,12 +24,18 @@ import {
 } from '@/components/ui/table';
 
 import { cn } from '@/lib/utils';
+import { compareRowNav } from '@/utils/treeCompareDiff';
+import type { LogType } from '@/hooks/useLogData';
 
 import {
   CompareChangeBadge,
   CompareStatusChip,
   isFailureHighlight,
 } from './CompareChangeDisplay';
+import {
+  CompareDetailSheet,
+  compareRowToDetailItem,
+} from './CompareDetailSheet';
 
 const ESTIMATED_ROW_HEIGHT = 56;
 const VIRTUALIZER_OVERSCAN = 10;
@@ -114,6 +121,57 @@ function rowMatchesSearch(values: unknown[], query: string): boolean {
       .toLowerCase()
       .includes(needle),
   );
+}
+
+function useCompareSheet(
+  visibleRows: CompareFailureRow[],
+  logType: LogType,
+): {
+  selectedId: string | null;
+  openRow: (id: string) => void;
+  sheet: JSX.Element;
+} {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const nav = compareRowNav(visibleRows, selectedId);
+
+  const openRow = useCallback((id: string) => {
+    setSelectedId(id);
+  }, []);
+
+  const closeSheet = useCallback((open: boolean) => {
+    if (!open) {
+      setSelectedId(null);
+    }
+  }, []);
+
+  const goToPrevious = useCallback(() => {
+    if (nav.previousId) {
+      setSelectedId(nav.previousId);
+    }
+  }, [nav.previousId]);
+
+  const goToNext = useCallback(() => {
+    if (nav.nextId) {
+      setSelectedId(nav.nextId);
+    }
+  }, [nav.nextId]);
+
+  return {
+    selectedId,
+    openRow,
+    sheet: (
+      <CompareDetailSheet
+        open={nav.row !== null}
+        item={nav.row ? compareRowToDetailItem(nav.row) : null}
+        logType={logType}
+        onOpenChange={closeSheet}
+        onPrevious={goToPrevious}
+        onNext={goToNext}
+        hasPrevious={nav.hasPrevious}
+        hasNext={nav.hasNext}
+      />
+    ),
+  };
 }
 
 function CompareTableSearch({
@@ -296,6 +354,8 @@ export function CompareBuildsFailuresTable({
     return sortRows(filtered, sort, BUILD_SORT_GETTERS);
   }, [rows, search, sort]);
 
+  const { selectedId, openRow, sheet } = useCompareSheet(visibleRows, 'build');
+
   return (
     <div>
       <CompareTableSearch onSearchChange={onSearchChange} />
@@ -344,7 +404,12 @@ export function CompareBuildsFailuresTable({
           return (
             <TableRow
               key={row.id}
-              className={cn(isFailureHighlight(row.change) && 'bg-red-50')}
+              onClick={() => openRow(row.id)}
+              className={cn(
+                'hover:bg-light-blue cursor-pointer',
+                isFailureHighlight(row.change) && 'bg-red-50',
+                selectedId === row.id && 'bg-sky-200 hover:bg-sky-200',
+              )}
             >
               <TableCell className="max-w-0">
                 <div
@@ -370,6 +435,7 @@ export function CompareBuildsFailuresTable({
           );
         }}
       />
+      {sheet}
     </div>
   );
 }
@@ -414,6 +480,8 @@ function PathHardwareTable({
     );
     return sortRows(filtered, sort, PATH_SORT_GETTERS);
   }, [rows, search, sort]);
+
+  const { selectedId, openRow, sheet } = useCompareSheet(visibleRows, 'test');
 
   return (
     <div>
@@ -469,7 +537,12 @@ function PathHardwareTable({
           return (
             <TableRow
               key={row.id}
-              className={cn(isFailureHighlight(row.change) && 'bg-red-50')}
+              onClick={() => openRow(row.id)}
+              className={cn(
+                'hover:bg-light-blue cursor-pointer',
+                isFailureHighlight(row.change) && 'bg-red-50',
+                selectedId === row.id && 'bg-sky-200 hover:bg-sky-200',
+              )}
             >
               <TableCell className="max-w-0">
                 <div
@@ -503,6 +576,7 @@ function PathHardwareTable({
           );
         }}
       />
+      {sheet}
     </div>
   );
 }

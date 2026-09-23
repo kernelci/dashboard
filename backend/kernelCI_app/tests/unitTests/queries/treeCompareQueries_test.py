@@ -108,6 +108,8 @@ class TestTreeCompareQueries(SimpleTestCase):
         self.assertIn("ELSE 'INCONCLUSIVE'", executed_query)
         self.assertNotIn("incidents", executed_query)
         self.assertNotIn("FROM tests", executed_query)
+        self.assertIn("AS id_a", executed_query)
+        self.assertIn("AS id_b", executed_query)
         self.assertEqual(params["commit_hashes"], ["hash_a", "hash_b"])
 
     @patch("kernelCI_app.queries.tree.connection")
@@ -224,4 +226,6 @@ class TestTreeCompareQueries(SimpleTestCase):
         self.assertIn("NULLIF(b.architecture, '')", executed_query)
         self.assertNotIn("WHEN UPPER(t.status) = 'FAIL' THEN 2", executed_query)
         self.assertNotIn("ARRAY_AGG", executed_query)
+        self.assertIn("AS id_a", executed_query)
+        self.assertIn("AS id_b", executed_query)
         self.assertEqual(params["commit_hashes"], ["hash_a", "hash_b"])
