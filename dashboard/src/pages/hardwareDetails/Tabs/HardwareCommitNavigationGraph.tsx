@@ -8,6 +8,7 @@ import type {
   HardwareDetailsSummary,
 } from '@/types/hardware/hardwareDetails';
 import CommitNavigationGraph from '@/components/CommitNavigationGraph/CommitNavigationGraph';
+import { useHardwareDetailsTimeRange } from '@/hooks/useHardwareDetailsTimeRange';
 import { makeTreeIdentifierKey } from '@/utils/trees';
 
 interface HardwareCommitNavigationGraphProps {
@@ -23,9 +24,8 @@ const HardwareCommitNavigationGraph = ({
     useSearch({
       from: '/_main/hardware/$hardwareId',
     });
-  const { startTimestampInSeconds, endTimestampInSeconds } = useSearch({
-    from: '/_main/hardware/$hardwareId/',
-  });
+  const { startTimestampInSeconds, endTimestampInSeconds } =
+    useHardwareDetailsTimeRange();
 
   const navigate = useNavigate({ from: '/hardware/$hardwareId' });
 

@@ -73,8 +73,8 @@ import type { HardwareRevisionSelectorValue } from './hardwareSelection';
 // TODO Extract and reuse the table
 interface IHardwareTable {
   treeTableRows: HardwareItem[];
-  startTimestampInSeconds: number;
-  endTimestampInSeconds: number;
+  startTimestampInSeconds?: number;
+  endTimestampInSeconds?: number;
   status?: UseQueryResult['status'];
   queryData?: unknown;
   error?: Error | null;
@@ -94,8 +94,8 @@ type HardwareListingRoutes = '/hardware';
 
 const getLinkProps = (
   row: Row<HardwareItem>,
-  startTimestampInSeconds: number,
-  endTimestampInSeconds: number,
+  startTimestampInSeconds: number | undefined,
+  endTimestampInSeconds: number | undefined,
   navigateFrom: HardwareListingRoutes,
   tabTarget?: string,
   newDiffFilter?: TFilter,
@@ -128,8 +128,8 @@ const getLinkProps = (
 };
 
 const getColumns = (
-  startTimestampInSeconds: number,
-  endTimestampInSeconds: number,
+  startTimestampInSeconds: number | undefined,
+  endTimestampInSeconds: number | undefined,
   navigateFrom: HardwareListingRoutes,
 ): ColumnDef<HardwareItem>[] => {
   return [

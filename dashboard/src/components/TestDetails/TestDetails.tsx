@@ -1,5 +1,4 @@
 import { FormattedMessage, useIntl } from 'react-intl';
-import { roundToNearestMinutes } from 'date-fns';
 
 import { Fragment, useCallback, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction, JSX } from 'react';
@@ -65,8 +64,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import MemoizedLinkItem from '@/components/DetailsLink';
 import { processLogData } from '@/hooks/useLogData';
 
-import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
-import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 import { isBadRequestError } from '@/utils/query';
 
 import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
@@ -99,13 +96,11 @@ const TestDetailsSections = ({
   const { formatMessage } = useIntl();
   const historyState = useRouterState({ select: s => s.location.state });
   const searchParams = useSearch({ from: '/_main/test/$testId' });
-  const hardware: string = useMemo(() => {
-    return getTestHardware({
-      misc: test.environment_misc,
-      compatibles: test.environment_compatible,
-      defaultValue: formatMessage({ id: 'global.unknown' }),
-    });
-  }, [formatMessage, test.environment_compatible, test.environment_misc]);
+  const hardwareId = getTestHardware({
+    misc: test.environment_misc,
+    compatibles: test.environment_compatible,
+  });
+  const hardware = hardwareId ?? formatMessage({ id: 'global.unknown' });
 
   const buildDetailsLink = useMemo(() => {
     let linkTo: LinkProps['to'] = '/build/$buildId';
@@ -129,41 +124,25 @@ const TestDetailsSections = ({
     );
   }, [historyState, test.build_id, searchParams]);
 
-  const endTimestampInSeconds = dateObjectToTimestampInSeconds(
-    roundToNearestMinutes(new Date(), {
-      nearestTo: 30,
-    }),
-  );
-  const startTimestampInSeconds =
-    endTimestampInSeconds - daysToSeconds(REDUCED_TIME_SEARCH);
-
   const hardwareDetailsLink = useMemo(() => {
-    if (hardware === formatMessage({ id: 'global.unknown' })) {
+    if (!hardwareId) {
       return <span>{hardware}</span>;
     }
 
     return (
       <MemoizedLinkItem
         to="/hardware/$hardwareId"
-        params={{ hardwareId: hardware }}
+        params={{ hardwareId }}
         state={s => s}
         search={{
           origin: searchParams.origin,
-          startTimestampInSeconds: startTimestampInSeconds,
-          endTimestampInSeconds: endTimestampInSeconds,
         }}
       >
         {hardware}
         <LinkIcon className="text-blue text-xl" />
       </MemoizedLinkItem>
     );
-  }, [
-    searchParams,
-    hardware,
-    formatMessage,
-    startTimestampInSeconds,
-    endTimestampInSeconds,
-  ]);
+  }, [searchParams, hardware, hardwareId]);
 
   const compatiblesLink = useMemo(() => {
     if (!test.environment_compatible) {
@@ -181,8 +160,6 @@ const TestDetailsSections = ({
               state={s => s}
               search={{
                 origin: searchParams.origin,
-                startTimestampInSeconds: startTimestampInSeconds,
-                endTimestampInSeconds: endTimestampInSeconds,
               }}
             >
               {compatible}
@@ -192,12 +169,7 @@ const TestDetailsSections = ({
         )}
       </div>
     );
-  }, [
-    searchParams,
-    test.environment_compatible,
-    startTimestampInSeconds,
-    endTimestampInSeconds,
-  ]);
+  }, [searchParams, test.environment_compatible]);
 
   const setSheetToLog = useCallback(
     (): void => setSheetType('log'),
