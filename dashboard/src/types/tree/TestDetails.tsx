@@ -1,4 +1,5 @@
 import type { Resource, Status } from '@/types/database';
+import type { HardwareRegistryInfo } from '@/types/hardware';
 
 export type TTestDetails = {
   architecture?: string;
@@ -24,6 +25,7 @@ export type TTestDetails = {
   origin?: string;
   field_timestamp: string;
   test_origin: string;
+  registry?: HardwareRegistryInfo | null;
 };
 
 export type TestStatusHistoryItem = {
