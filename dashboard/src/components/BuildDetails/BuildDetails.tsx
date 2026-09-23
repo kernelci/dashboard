@@ -22,10 +22,7 @@ import { shouldTruncate, valueOrEmpty } from '@/lib/string';
 
 import { Sheet } from '@/components/Sheet';
 
-import type {
-  TableFilter,
-  PossibleTableFilters,
-} from '@/types/tree/TreeDetails';
+import type { TableFilter, TableStatusOption } from '@/types/tree/TreeDetails';
 
 import type {
   IJsonContent,
@@ -63,14 +60,14 @@ import BuildDetailsTestSection from './BuildDetailsTestSection';
 
 interface BuildDetailsProps {
   breadcrumb?: JSX.Element;
-  onClickFilter: (filter: PossibleTableFilters) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   tableFilter: TableFilter;
   getTestTableRowLink: (testId: string) => LinkProps;
 }
 
 const BuildDetails = ({
   breadcrumb,
-  onClickFilter,
+  onToggleFilter,
   tableFilter,
   getTestTableRowLink,
 }: BuildDetailsProps): JSX.Element => {
@@ -341,7 +338,7 @@ const BuildDetails = ({
               <SectionGroup sections={generalSections} />
               <BuildDetailsTestSection
                 buildId={buildId ?? ''}
-                onClickFilter={onClickFilter}
+                onToggleFilter={onToggleFilter}
                 tableFilter={tableFilter}
                 getRowLink={getTestTableRowLink}
               />

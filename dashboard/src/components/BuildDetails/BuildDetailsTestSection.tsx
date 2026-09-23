@@ -8,10 +8,7 @@ import { Separator } from '@/components/ui/separator';
 
 import { useBuildTests } from '@/api/buildTests';
 
-import type {
-  TableFilter,
-  PossibleTableFilters,
-} from '@/types/tree/TreeDetails';
+import type { TableFilter, TableStatusOption } from '@/types/tree/TreeDetails';
 
 import { TestsTable } from '@/components/TestsTable/TestsTable';
 
@@ -20,14 +17,14 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
 interface IBuildDetailsTestSection {
   buildId: string;
-  onClickFilter: (filter: PossibleTableFilters) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   tableFilter: TableFilter;
   getRowLink: (testId: string) => LinkProps;
 }
 
 const BuildDetailsTestSection = ({
   buildId,
-  onClickFilter,
+  onToggleFilter,
   tableFilter,
   getRowLink,
 }: IBuildDetailsTestSection): JSX.Element => {
@@ -56,7 +53,7 @@ const BuildDetailsTestSection = ({
           <TestsTable
             tableKey="buildDetailsTests"
             testHistory={data}
-            onClickFilter={onClickFilter}
+            onToggleFilter={onToggleFilter}
             filter={tableFilter.testsTable}
             getRowLink={getRowLink}
           />

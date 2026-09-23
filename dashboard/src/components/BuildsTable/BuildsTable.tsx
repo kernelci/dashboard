@@ -18,9 +18,9 @@ import BaseTable, { TableHead } from '@/components/Table/BaseTable';
 import { PaginationInfo } from '@/components/Table/PaginationInfo';
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
 import {
-  possibleTableFilters,
   type AccordionItemBuilds,
-  type PossibleTableFilters,
+  type TableStatusOption,
+  type TableStatusSelection,
 } from '@/types/tree/TreeDetails';
 
 import WrapperTableWithLogSheet from '@/pages/TreeDetails/Tabs/WrapperTableWithLogSheet';
@@ -39,16 +39,14 @@ import { getBuildStatusGroup } from '@/utils/status';
 
 import { TableTopFilters } from '@/components/Table/TableTopFilters';
 
-import type { TStatusFilters } from '@/components/Table/TableStatusFilter';
-
 import { defaultBuildColumns } from './DefaultBuildsColumns';
 
 export interface IBuildsTable {
   tableKey: TableKeys;
   buildItems: AccordionItemBuilds[];
   columns?: ColumnDef<AccordionItemBuilds>[];
-  filter: PossibleTableFilters;
-  onClickFilter: (filter: PossibleTableFilters) => void;
+  filter: TableStatusSelection;
+  onToggleFilter: (option: TableStatusOption) => void;
   getRowLink: (buildId: string) => LinkProps;
   sortKey?: string;
 }
@@ -60,7 +58,7 @@ export function BuildsTable({
   buildItems,
   columns = defaultBuildColumns,
   filter,
-  onClickFilter,
+  onToggleFilter,
   getRowLink,
   sortKey,
 }: IBuildsTable): JSX.Element {
@@ -110,68 +108,44 @@ export function BuildsTable({
 
   const { globalFilter } = table.getState();
 
-  const filterCount: Record<PossibleTableFilters, number> = useMemo(() => {
+  const filterCount: Record<TableStatusOption, number> = useMemo(() => {
     const rowsOriginal = table
       .getPrePaginationRowModel()
       .rows.map(row => row.original);
 
     const dataFilter = globalFilter ? rowsOriginal : rawData;
 
-    const count: Record<PossibleTableFilters, number> = {
-      all: 0,
+    const count: Record<TableStatusOption, number> = {
       success: 0,
       failed: 0,
       inconclusive: 0,
     };
 
-    count.all = dataFilter ? dataFilter.length : 0;
     dataFilter.forEach(build => count[getBuildStatusGroup(build.status)]++);
 
     return count;
   }, [rawData, globalFilter, table]);
 
-  const filters: TStatusFilters[] = useMemo(
-    () => [
-      {
-        label: intl.formatMessage(
-          { id: 'global.allCount' },
-          { count: filterCount[possibleTableFilters[0]] },
-        ),
-        value: possibleTableFilters[0],
-        isSelected: filter === possibleTableFilters[0],
-      },
-      {
-        label: intl.formatMessage(
-          { id: 'global.successCount' },
-          { count: filterCount[possibleTableFilters[1]] },
-        ),
-        value: possibleTableFilters[1],
-        isSelected: filter === possibleTableFilters[1],
-      },
-      {
-        label: intl.formatMessage(
-          { id: 'global.failedCount' },
-          { count: filterCount[possibleTableFilters[2]] },
-        ),
-        value: possibleTableFilters[2],
-        isSelected: filter === possibleTableFilters[2],
-      },
-      {
-        label: intl.formatMessage(
-          { id: 'global.inconclusiveCount' },
-          { count: filterCount[possibleTableFilters[3]] },
-        ),
-        value: possibleTableFilters[3],
-        isSelected: filter === possibleTableFilters[3],
-      },
-    ],
-    [intl, filterCount, filter],
+  const labels = useMemo(
+    () => ({
+      success: intl.formatMessage(
+        { id: 'global.successCount' },
+        { count: filterCount.success },
+      ),
+      failed: intl.formatMessage(
+        { id: 'global.failedCount' },
+        { count: filterCount.failed },
+      ),
+      inconclusive: intl.formatMessage(
+        { id: 'global.inconclusiveCount' },
+        { count: filterCount.inconclusive },
+      ),
+    }),
+    [intl, filterCount],
   );
 
   useEffect(() => {
-    table
-      .getColumn('status')
-      ?.setFilterValue(filter !== 'all' ? filter : undefined);
+    table.getColumn('status')?.setFilterValue(filter);
   }, [filter, table]);
 
   const onSearchChange = useCallback(
@@ -306,8 +280,9 @@ export function BuildsTable({
     >
       <TableTopFilters
         key="buildsTableSearch"
-        filters={filters}
-        onClickFilter={onClickFilter}
+        labels={labels}
+        selection={filter}
+        onToggleFilter={onToggleFilter}
         onSearchChange={onSearchChange}
       />
       <BaseTable headerComponents={tableHeaders}>

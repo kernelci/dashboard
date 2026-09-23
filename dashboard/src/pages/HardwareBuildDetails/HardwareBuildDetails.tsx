@@ -8,8 +8,9 @@ import { useSearchStore } from '@/hooks/store/useSearchStore';
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 import {
   zTableFilterInfoDefault,
-  type PossibleTableFilters,
+  type TableStatusOption,
 } from '@/types/tree/TreeDetails';
+import { toggleTableStatus } from '@/utils/tableStatusFilter';
 import { RedirectFrom } from '@/types/general';
 import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBreadcrumb';
 
@@ -33,19 +34,23 @@ const HardwareBuildDetails = (): JSX.Element => {
     [hardwareId],
   );
 
-  const onClickFilter = useCallback(
-    (filter: PossibleTableFilters): void => {
+  const onToggleFilter = useCallback(
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
-              testsTable: filter,
+              testsTable: toggleTableStatus(
+                previousParams.tableFilter?.testsTable,
+                option,
+              ),
             },
           };
         },
         state: { id: hardwareId, from: RedirectFrom.Hardware },
+        resetScroll: false,
       });
     },
     [navigate, hardwareId],
@@ -59,7 +64,7 @@ const HardwareBuildDetails = (): JSX.Element => {
           locationMessage="buildDetails.buildDetails"
         />
       }
-      onClickFilter={onClickFilter}
+      onToggleFilter={onToggleFilter}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}
     />

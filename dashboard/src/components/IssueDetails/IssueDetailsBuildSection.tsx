@@ -10,8 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import type {
   AccordionItemBuilds,
-  PossibleTableFilters,
   TableFilter,
+  TableStatusOption,
 } from '@/types/tree/TreeDetails';
 
 import { useIssueDetailsBuilds } from '@/api/issueDetails';
@@ -26,7 +26,7 @@ interface IIssueDetailsBuildSection {
   issueId: string;
   versionNumber?: number;
   buildTableFilter: TableFilter['buildsTable'];
-  onClickFilter: (filter: PossibleTableFilters) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   getTableRowLink: (testId: string) => LinkProps;
 }
 
@@ -44,7 +44,7 @@ export const IssueDetailsBuildSection = ({
   issueId,
   versionNumber,
   buildTableFilter,
-  onClickFilter,
+  onToggleFilter,
   getTableRowLink,
 }: IIssueDetailsBuildSection): JSX.Element => {
   const { data, error, isLoading } = useIssueDetailsBuilds(
@@ -78,7 +78,7 @@ export const IssueDetailsBuildSection = ({
             buildItems={buildData}
             filter={buildTableFilter}
             getRowLink={getTableRowLink}
-            onClickFilter={onClickFilter}
+            onToggleFilter={onToggleFilter}
             columns={columns}
             sortKey="buildsTable"
           />

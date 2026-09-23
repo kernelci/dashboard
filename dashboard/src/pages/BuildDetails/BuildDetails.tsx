@@ -5,11 +5,13 @@ import { useSearch, useNavigate, useRouterState } from '@tanstack/react-router';
 
 import {
   zTableFilterInfoDefault,
-  type PossibleTableFilters,
+  type TableStatusOption,
 } from '@/types/tree/TreeDetails';
 import BuildDetails from '@/components/BuildDetails/BuildDetails';
 
 import { RedirectFrom } from '@/types/general';
+
+import { toggleTableStatus } from '@/utils/tableStatusFilter';
 
 import TreeBuildDetails from '@/pages/TreeBuildDetails';
 import HardwareBuildDetails from '@/pages/HardwareBuildDetails';
@@ -31,19 +33,23 @@ const BuildDetailsPage = (): JSX.Element => {
     [],
   );
 
-  const onClickFilter = useCallback(
-    (filter: PossibleTableFilters): void => {
+  const onToggleFilter = useCallback(
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
-              testsTable: filter,
+              testsTable: toggleTableStatus(
+                previousParams.tableFilter?.testsTable,
+                option,
+              ),
             },
           };
         },
         state: historyState,
+        resetScroll: false,
       });
     },
     [navigate, historyState],
@@ -61,7 +67,7 @@ const BuildDetailsPage = (): JSX.Element => {
 
   return (
     <BuildDetails
-      onClickFilter={onClickFilter}
+      onToggleFilter={onToggleFilter}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
       getTestTableRowLink={getTestTableRowLink}
     />
