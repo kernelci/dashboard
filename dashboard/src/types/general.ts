@@ -272,6 +272,7 @@ export type SearchParamsKeys =
   | 'gitRepositoryUrl'
   | 'gitBranch'
   | 'gitCommitHash'
+  | 'registryFilter'
   | 'startTimestampInSeconds'
   | 'endTimestampInSeconds'
   | 'issueVersion'

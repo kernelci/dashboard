@@ -12,13 +12,8 @@ import FilterTimeRangeSection from '@/components/Filter/TimeRangeSection';
 
 import { DrawerSection } from '@/components/Filter/Drawer';
 
-import type {
-  TFilterKeys,
-  TFilter,
-  TFilterObjectsKeys,
-  TFilterNumberKeys,
-} from '@/types/general';
-import { filterFieldMap, zFilterObjectsKeys } from '@/types/general';
+import type { TFilterKeys, TFilter, TFilterNumberKeys } from '@/types/general';
+import { filterFieldMap } from '@/types/general';
 import { UNCATEGORIZED_STRING } from '@/utils/constants/backend';
 import { version_prefix } from '@/utils/utils';
 
@@ -78,50 +73,49 @@ export const mapFilterToReq = (filter: TFilter): TFilter => {
   return filterMapped;
 };
 
-const parseCheckboxFilter = (
-  filter: TFilter,
-  diffFilter: TFilter,
-  isTFilterObjectKeys: (key: string) => boolean,
-): TFilter => {
-  const result: TFilter = structuredClone(filter);
+const isBoolRecord = (value: unknown): value is Record<string, boolean> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const parseCheckboxFilter = <T extends Record<string, unknown>>(
+  filter: T,
+  diffFilter: T,
+  isObjectKey: (key: string) => boolean,
+): T => {
+  const result = structuredClone(filter);
 
   Object.keys(result).forEach(key => {
-    // key is always returned as string in Object.keys function, but he is a TFilterObjectKeys type.
-    const validateKey = zFilterObjectsKeys.catch('buildStatus').parse(key);
-    const currentFilterSection = result[validateKey];
-
-    if (!currentFilterSection || !isTFilterObjectKeys(validateKey)) {
+    if (!isObjectKey(key)) {
       return;
     }
 
-    const diffFilterSection = diffFilter[validateKey];
-
-    if (diffFilterSection) {
-      Object.keys(diffFilterSection).forEach(filterSectionKey => {
-        currentFilterSection[filterSectionKey] =
-          diffFilterSection[filterSectionKey];
-      });
+    const currentFilterSection = result[key];
+    const diffFilterSection = diffFilter[key];
+    if (
+      !isBoolRecord(currentFilterSection) ||
+      !isBoolRecord(diffFilterSection)
+    ) {
+      return;
     }
+
+    Object.keys(diffFilterSection).forEach(filterSectionKey => {
+      currentFilterSection[filterSectionKey] =
+        diffFilterSection[filterSectionKey];
+    });
   });
 
   return result;
 };
 
-const changeCheckboxFilterValue = (
-  filter: TFilter,
-  filterField: TFilterObjectsKeys,
+const changeCheckboxFilterValue = <T extends Record<string, unknown>>(
+  filter: T,
+  filterField: string,
   value: string,
-): TFilter => {
-  const newFilter = JSON.parse(JSON.stringify(filter ?? {}));
-  if (!newFilter[filterField]) {
-    newFilter[filterField] = {};
-  }
+): T => {
+  const current = filter[filterField];
+  const section = { ...(isBoolRecord(current) ? current : {}) };
+  section[value] = !section[value];
 
-  const filterSection = newFilter[filterField];
-  const filterValue = filterSection[value] ?? false;
-  filterSection[value] = !filterValue;
-
-  return newFilter;
+  return { ...filter, [filterField]: section };
 };
 
 type SectionsProps = {
@@ -129,8 +123,10 @@ type SectionsProps = {
   setDiffFilter: Dispatch<SetStateAction<TFilter>>;
 };
 
-interface ICheckboxSectionProps extends SectionsProps {
-  filter: TFilter;
+interface ICheckboxSectionProps<T extends Record<string, unknown>> {
+  diffFilter: T;
+  setDiffFilter: Dispatch<SetStateAction<T>>;
+  filter: T;
   isTFilterObjectKeys: (key: string) => boolean;
   sections: ISectionItem[];
   showAllIcons?: boolean;
@@ -144,14 +140,14 @@ interface ITreeSectionProps {
 }
 
 // TODO: Remove useState for this forms, use something like react hook forms or tanstack forms (when it gets released)
-const CheckboxSection = ({
+const CheckboxSection = <T extends Record<string, unknown>>({
   diffFilter,
   setDiffFilter,
   filter,
   isTFilterObjectKeys,
   sections,
   showAllIcons = true,
-}: ICheckboxSectionProps): JSX.Element => {
+}: ICheckboxSectionProps<T>): JSX.Element => {
   const intl = useIntl();
 
   const parsedFilter = useMemo(
@@ -161,18 +157,21 @@ const CheckboxSection = ({
 
   const checkboxSectionsProps: ICheckboxSection[] = useMemo(
     () =>
-      sections.map(section => ({
-        title: intl.formatMessage({ id: section.title }),
-        subtitle: intl.formatMessage({ id: section.subtitle }),
-        items: parsedFilter[section.sectionKey],
-        isGlobal: section.isGlobal,
-        showIcon: showAllIcons,
-        onClickItem: (value: string): void => {
-          setDiffFilter(old =>
-            changeCheckboxFilterValue(old, section.sectionKey, value),
-          );
-        },
-      })),
+      sections.map(section => {
+        const items = parsedFilter[section.sectionKey];
+        return {
+          title: intl.formatMessage({ id: section.title }),
+          subtitle: intl.formatMessage({ id: section.subtitle }),
+          items: isBoolRecord(items) ? items : undefined,
+          isGlobal: section.isGlobal,
+          showIcon: showAllIcons,
+          onClickItem: (value: string): void => {
+            setDiffFilter(old =>
+              changeCheckboxFilterValue(old, section.sectionKey, value),
+            );
+          },
+        };
+      }),
     [intl, parsedFilter, sections, setDiffFilter, showAllIcons],
   );
 
@@ -190,7 +189,9 @@ const CheckboxSection = ({
   );
 };
 
-export const MemoizedCheckboxSection = memo(CheckboxSection);
+export const MemoizedCheckboxSection = memo(
+  CheckboxSection,
+) as typeof CheckboxSection;
 
 const TimeRangeSection = ({
   diffFilter,

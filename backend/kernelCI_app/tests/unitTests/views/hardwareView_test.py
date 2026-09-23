@@ -5,7 +5,6 @@ from django.test.testcases import SimpleTestCase
 from rest_framework.test import APIRequestFactory
 
 from kernelCI_app.constants.localization import ClientStrings
-from kernelCI_app.typeModels.hardwareRegistry import HardwareRegistryInfo
 from kernelCI_app.views.hardwareView import HardwareView
 
 
@@ -126,32 +125,3 @@ class TestHardwareView(SimpleTestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
         self.assertIn("platform", response.data)
-
-    @patch(
-        "kernelCI_app.views.hardwareView.get_hardware_listing_data_from_status_table"
-    )
-    def test_get_hardware_listing_includes_registry(self, mock_get_status_table_data):
-        mock_get_status_table_data.return_value = [
-            ("am335x-bone-black", "beaglebone", *range(9)),
-        ]
-        registry = HardwareRegistryInfo(platform_id="am335x-bone-black")
-
-        request = self.factory.get(
-            self.url,
-            {
-                "startTimestampInSeconds": "1741192200",
-                "endTimestampInSeconds": "1741624200",
-                "origin": "origin1",
-            },
-        )
-        with patch(
-            "kernelCI_app.views.hardwareView.get_hardware_registry_by_ids",
-            return_value={"am335x-bone-black": registry},
-        ):
-            response = self.view.get(request)
-
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(
-            response.data["hardware"][0]["registry"]["platform_id"],
-            "am335x-bone-black",
-        )

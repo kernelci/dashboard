@@ -30,6 +30,8 @@ import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing
 import type { SearchIntent } from '@/lib/intent';
 
 import { HardwareTable } from './HardwareTable';
+import HardwareListingFilter from './HardwareListingFilter';
+import { matchesRegistryFilter } from './hardwareListingFilters';
 import {
   decodeBranchValue,
   findSelectionByCommitTokens,
@@ -59,6 +61,7 @@ const HardwareListingPage = ({
     gitRepositoryUrl,
     gitBranch,
     gitCommitHash,
+    registryFilter,
   } = useSearch({ from: urlFromMap.search });
   const inputFilter = intent.search;
   const intentCommits =
@@ -185,23 +188,14 @@ const HardwareListingPage = ({
       return [];
     }
 
-    return listingData.hardware
-      .filter(hardware => {
-        return (
-          matchesRegexOrIncludes(hardware.platform, inputFilter) ||
-          includesInAnStringOrStringArray(hardware.hardware ?? '', inputFilter)
-        );
-      })
-      .map((hardware): HardwareItem => {
-        return {
-          hardware: hardware.hardware,
-          platform: hardware.platform,
-          build_status_summary: hardware.build_status_summary,
-          test_status_summary: hardware.test_status_summary,
-          boot_status_summary: hardware.boot_status_summary,
-        };
-      });
-  }, [activeListing.data, activeListing.error, inputFilter]);
+    return listingData.hardware.filter(hardware => {
+      const matchesSearch =
+        matchesRegexOrIncludes(hardware.platform, inputFilter) ||
+        includesInAnStringOrStringArray(hardware.hardware ?? '', inputFilter);
+
+      return matchesSearch && matchesRegistryFilter(hardware, registryFilter);
+    });
+  }, [activeListing.data, activeListing.error, inputFilter, registryFilter]);
 
   const selectedRevision =
     hasSelection && gitCommitHash
@@ -313,12 +307,19 @@ const HardwareListingPage = ({
     <>
       <Toaster />
       <div className="flex flex-col gap-6">
-        <span className="text-dim-gray flex-1 justify-start text-left text-sm">
-          <FormattedMessage
-            id="global.projectUnderDevelopment"
-            values={{ br: <br /> }}
+        <div className="flex items-center justify-between gap-x-8 gap-y-2">
+          <span className="text-dim-gray flex-1 justify-start text-left text-sm">
+            <FormattedMessage
+              id="global.projectUnderDevelopment"
+              values={{ br: <br /> }}
+            />
+          </span>
+          <HardwareListingFilter
+            paramFilter={registryFilter}
+            items={activeListing.data?.hardware ?? []}
+            urlFromMap={urlFromMap}
           />
-        </span>
+        </div>
 
         <HardwareTable
           treeTableRows={listItems}
