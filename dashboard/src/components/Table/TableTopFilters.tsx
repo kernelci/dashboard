@@ -35,8 +35,6 @@ export function TableTopFilters({
 
   return (
     <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-8">
-      {/* `contents` keeps mobile ordering (status, grouping, search) while
-          sm+ groups the status filter and search into a single row item */}
       <div className="contents sm:flex sm:items-end sm:gap-8">
         <TableStatusFilter
           labels={labels}
