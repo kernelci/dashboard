@@ -17,6 +17,7 @@ This guide covers three deployment scenarios: [development](#1-development), [pr
 - [Prerequisites](#prerequisites)
 - [1. Development](#1-development)
 - [2. Production](#2-production)
+  - [Tagging a release](#tagging-a-release)
 - [3. Staging](#3-staging)
 - [Profile Reference](#profile-reference)
 - [Docker Secrets Support](#docker-secrets-support)
@@ -230,25 +231,73 @@ docker compose -f docker-compose-next.yml up -d
 
 ### Tagging a release
 
+Production is never deployed by merging. Pushes to `main` run [ci.yaml](.github/workflows/ci.yaml),
+deploy staging, and publish GHCR images; production is always triggered manually.
+
 Every production deployment must be preceded by a release tag.
 The dashboard displays its version (`git describe --tags`) at the bottom of the
 side menu, so an untagged deployment shows a string like
 `release/<old release>-N-g<sha>`, making it hard to tell which release is live.
+
+#### Before deploying
+
+- Deploy a commit that is already on `main`, with CI and the staging e2e tests green.
+- Check whether the release carries migrations:
+
+    ```bash
+    git fetch origin main --tags
+    git diff --name-only "$(git describe --abbrev=0 --tags)" origin/main -- '**/migrations/*.py'
+    ```
+
+    If the list is not empty, follow [Database schema changes](#database-schema-changes)
+    before deploying. New tables require notifying Denys Fedoryshchenko and waiting
+    for his acknowledgement, because the permission grants are applied manually.
+
+#### Steps
 
 1. Tag the `main` commit being released, following the `release/YYYYMMDD.N`
 convention (`N` starts at `0` and increments for further releases on the same day):
 
     ```bash
     git fetch --tags
+    git tag -l "release/$(date +%Y%m%d).*"  # pick the next N
     git tag release/20260729.0 <commit>
     git push origin release/20260729.0
     ```
 
 2. Manually trigger the `Publish GHCR Images` workflow. Images built by the
 earlier push to `main` were baked before the tag existed, so they still carry the
-previous version string.
-3. Trigger the `Deploy production Dashboard` workflow with the new tag.
-4. Confirm the version shown in the side menu matches the tag.
+previous version string. Wait for the backend, frontend, and proxy jobs to finish.
+3. Trigger the `Deploy production Dashboard` workflow with the new tag, from `main`
+while `main` still points at the tagged commit.
+4. Confirm the version shown in the side menu of <https://dashboard.kernelci.org>
+matches the tag.
+5. If the release contained migrations, tell Denys Fedoryshchenko on Discord, so he
+can apply the permission grants the migrations do not cover.
+
+The same steps from the command line:
+
+```bash
+gh workflow run "Publish GHCR Images" --repo kernelci/dashboard --ref main
+gh run watch <run-id> --repo kernelci/dashboard
+
+gh workflow run "Deploy production Dashboard" --repo kernelci/dashboard --ref main \
+    -f tag=release/20260729.0
+gh run watch <run-id> --repo kernelci/dashboard
+```
+
+#### Things that are easy to get wrong
+
+- The `tag` input does not select the images. It only sets `DASHBOARD_VERSION` (side menu)
+and the Discord messages. Production pulls `:latest` unless the host `.env` sets
+`IMAGE_TAG`. Do not start step 3 until step 2 has finished.
+- Run the deploy workflow from `main` while `main` is still the tagged commit, so the
+compose files on the host match that release. The host clone is `--depth 1 --branch main`.
+- The **ingester** and `pending_aggregations_processor` are not started by this workflow
+(the `with_commands` profile is not used), and `--remove-orphans` stops them if they are
+already running on the host. See [Ingester deployment](#ingester-deployment).
+- [staging-db.yaml](.github/workflows/staging-db.yaml) deploys the kcidb-ng stack on the
+database host, which is a different deployment from the one described here.
 
 ---
 
