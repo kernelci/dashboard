@@ -72,8 +72,6 @@ import { LoadingCircle } from '@/components/ui/loading-circle';
 
 import { HardwareRegistryStrip } from '@/components/HardwareRegistry/HardwareRegistry';
 
-import { getMockHardwareRegistryInfo } from '@/lib/hardwareRegistryMock';
-
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsFilter from './HardwareDetailsFilter';
@@ -510,11 +508,6 @@ function HardwareDetails(): JSX.Element {
     );
   }, [formatMessage, hardwareId]);
 
-  const registryInfo = useMemo(
-    () => getMockHardwareRegistryInfo(hardwareId),
-    [hardwareId],
-  );
-
   const filterButtonHeaderExtra = useMemo(() => {
     if (!hasSelectedTrees) {
       return undefined;
@@ -612,7 +605,10 @@ function HardwareDetails(): JSX.Element {
             />
           )}
           <div className="mt-5">
-            <HardwareRegistryStrip info={registryInfo} className="mb-6" />
+            <HardwareRegistryStrip
+              info={summaryResponse.data?.common.registry}
+              className="mb-6"
+            />
             {!!treeData && (
               <>
                 <HardwareHeader

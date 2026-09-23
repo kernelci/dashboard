@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from kernelCI_app.helpers.hardwareRegistry import get_hardware_registry_by_ids
 from kernelCI_app.queries.hardware import get_hardware_listing_data_by_revision
 from kernelCI_app.typeModels.hardwareListing import (
     HardwareItem,
@@ -19,6 +20,9 @@ from kernelCI_app.typeModels.hardwareListingByRevision import (
 
 class HardwareByRevisionView(APIView):
     def _sanitize_records(self, hardwares_raw: list[dict]) -> list[HardwareItem]:
+        registry_by_id = get_hardware_registry_by_ids(
+            hardware["platform"] for hardware in hardwares_raw
+        )
         hardwares = []
         for hardware in hardwares_raw:
             hardwares.append(
@@ -52,6 +56,7 @@ class HardwareByRevisionView(APIView):
                         "DONE": hardware["done_tests"],
                         "SKIP": hardware["skip_tests"],
                     },
+                    registry=registry_by_id.get(hardware["platform"]),
                 )
             )
 
