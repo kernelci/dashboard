@@ -323,7 +323,7 @@ describe('parseSearch', () => {
   });
 
   it('parses minified diffFilter duration fields as numbers', () => {
-    const buildDurationMin = 120;
+    const buildDurationMin = 42;
     const bootDurationMax = 90;
     const parsed = parseSearch(
       `?df|bdf=${buildDurationMin}&df|btdc=${bootDurationMax}`,
@@ -372,7 +372,7 @@ describe('stringifySearch', () => {
   });
 
   it('round-trips diffFilter duration fields', () => {
-    const buildDurationMin = 120;
+    const buildDurationMin = 42;
     const search = { diffFilter: { buildDurationMin } };
     const query = stringifySearch(search);
 

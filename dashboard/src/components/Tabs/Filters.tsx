@@ -210,10 +210,11 @@ const TimeRangeSection = ({
       const value = e.currentTarget.value;
       setDiffFilter(old => {
         const next = { ...old };
-        if (value === '') {
-          delete next[field];
+        const parsed = Number.parseInt(value, 10);
+        if (Number.isFinite(parsed)) {
+          next[field] = parsed;
         } else {
-          next[field] = Number.parseInt(value, 10);
+          delete next[field];
         }
         return next;
       });

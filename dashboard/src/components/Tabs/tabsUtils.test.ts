@@ -7,26 +7,27 @@ import { cleanFalseFilters } from '@/components/Tabs/tabsUtils';
 import { parseSearch } from '@/utils/search';
 
 describe('getActiveDurationFilter', () => {
-  it('rejects zero, NaN, and undefined', () => {
+  const durationSeconds = 42;
+
+  it('rejects zero, NaN, and non-numeric values', () => {
     expect(getActiveDurationFilter(0)).toBeUndefined();
     expect(getActiveDurationFilter(Number.NaN)).toBeUndefined();
     expect(getActiveDurationFilter(undefined)).toBeUndefined();
+    expect(getActiveDurationFilter(null)).toBeUndefined();
+    expect(getActiveDurationFilter(true)).toBeUndefined();
+    expect(getActiveDurationFilter([durationSeconds])).toBeUndefined();
+    expect(getActiveDurationFilter({})).toBeUndefined();
   });
 
-  it('accepts positive numbers', () => {
-    const durationSeconds = 30;
+  it('accepts numbers and numeric strings', () => {
     expect(getActiveDurationFilter(durationSeconds)).toBe(durationSeconds);
-  });
-
-  it('coerces numeric strings from the URL', () => {
-    // eslint-disable-next-line no-magic-numbers
-    expect(getActiveDurationFilter('120')).toBe(120);
-    // eslint-disable-next-line no-magic-numbers
-    expect(getActiveDurationFilter('30')).toBe(30);
+    expect(getActiveDurationFilter(String(durationSeconds))).toBe(
+      durationSeconds,
+    );
   });
 });
 
-describe('duration filter issue #428', () => {
+describe('zero duration is not an active filter', () => {
   const durationZeroFilter = {
     buildDurationMin: 0,
     configs: { arm64: true },
@@ -52,21 +53,21 @@ describe('duration filter issue #428', () => {
   });
 
   it('keeps non-zero duration across apply, chips, and API mapping', () => {
-    const filter = { buildDurationMin: 120, bootDurationMax: 60 };
+    const filter = { buildDurationMin: 42, bootDurationMax: 60 };
 
     expect(cleanFalseFilters(filter)).toEqual(filter);
     expect(createFlatFilter(filter)).toEqual([
-      'buildDurationMin:120',
+      'buildDurationMin:42',
       'bootDurationMax:60',
     ]);
     expect(mapFilterToReq(filter) as Record<string, string[]>).toMatchObject({
-      'treeDetails.duration_[gte]': ['120'],
+      'treeDetails.duration_[gte]': ['42'],
       'boot.duration_[lte]': ['60'],
     });
   });
 
   it('round-trips duration in the URL with chips and API mapping', () => {
-    const buildDurationMin = 120;
+    const buildDurationMin = 42;
     const parsed = parseSearch(`df|bdf=${buildDurationMin}&df|c|arm=true`) as {
       diffFilter: Record<string, unknown>;
     };

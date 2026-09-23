@@ -161,10 +161,10 @@ export const DEFAULT_ORIGIN = 'maestro';
 export const zOrigin = z.string().default(DEFAULT_ORIGIN).catch(DEFAULT_ORIGIN);
 
 export const getActiveDurationFilter = (value: unknown): number | undefined => {
-  if (value === undefined || value === null || value === '') {
+  if (typeof value !== 'string' && typeof value !== 'number') {
     return undefined;
   }
-  const n = typeof value === 'number' ? value : Number(value);
+  const n = Number(value);
   return Number.isFinite(n) && n !== 0 ? n : undefined;
 };
 
