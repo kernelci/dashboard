@@ -1,11 +1,13 @@
 import type { JSX } from 'react';
 import { useIntl } from 'react-intl';
 
-import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
+import type {
+  TableStatusOption,
+  TableStatusSelection,
+} from '@/utils/tableStatusFilter';
 
 import DebounceInput from '@/components/DebounceInput/DebounceInput';
 
-import type { TStatusFilters } from './TableStatusFilter';
 import TableStatusFilter from './TableStatusFilter';
 import {
   TableGroupingControls,
@@ -13,16 +15,18 @@ import {
 } from './TableGroupingControls';
 
 interface ITableTopFilters {
-  filters: TStatusFilters[];
-  onClickFilter: (newFilter: PossibleTableFilters) => void;
+  labels: Record<TableStatusOption, string>;
+  selection: TableStatusSelection;
+  onToggleFilter: (option: TableStatusOption) => void;
   currentPathFilter?: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   groupingControls?: ITableGroupingControls;
 }
 
 export function TableTopFilters({
-  filters,
-  onClickFilter,
+  labels,
+  selection,
+  onToggleFilter,
   currentPathFilter,
   onSearchChange,
   groupingControls,
@@ -30,19 +34,23 @@ export function TableTopFilters({
   const intl = useIntl();
 
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-8">
-        <TableStatusFilter filters={filters} onClickTest={onClickFilter} />
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:gap-8">
+      <div className="contents sm:flex sm:items-end sm:gap-8">
+        <TableStatusFilter
+          labels={labels}
+          selection={selection}
+          onToggle={onToggleFilter}
+        />
         <DebounceInput
           debouncedSideEffect={onSearchChange}
           startingValue={currentPathFilter}
-          className="w-9/10 sm:mt-6 sm:w-50"
+          className="order-last w-9/10 sm:order-none sm:w-50"
           type="text"
           placeholder={intl.formatMessage({ id: 'global.search' })}
         />
       </div>
       {groupingControls && (
-        <div className="ml-auto">
+        <div className="sm:ml-auto">
           <TableGroupingControls {...groupingControls} />
         </div>
       )}

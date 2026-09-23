@@ -16,10 +16,7 @@ import { getMiscSection } from '@/components/Section/MiscSection';
 
 import { useIssueDetails } from '@/api/issueDetails';
 
-import type {
-  TableFilter,
-  PossibleTableFilters,
-} from '@/types/tree/TreeDetails';
+import type { TableFilter, TableStatusOption } from '@/types/tree/TreeDetails';
 
 import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 
@@ -60,9 +57,9 @@ import { IssueDetailsBuildSection } from './IssueDetailsBuildSection';
 interface IIssueDetails {
   versionNumber?: number;
   tableFilter: TableFilter;
-  onClickTestFilter: (filter: PossibleTableFilters) => void;
+  onToggleTestFilter: (option: TableStatusOption) => void;
   getTestTableRowLink: (testId: string) => LinkProps;
-  onClickBuildFilter: (filter: PossibleTableFilters) => void;
+  onToggleBuildFilter: (option: TableStatusOption) => void;
   getBuildTableRowLink: (testId: string) => LinkProps;
   breadcrumb?: JSX.Element;
 }
@@ -70,9 +67,9 @@ interface IIssueDetails {
 export const IssueDetails = ({
   versionNumber,
   tableFilter,
-  onClickTestFilter,
+  onToggleTestFilter,
   getTestTableRowLink,
-  onClickBuildFilter,
+  onToggleBuildFilter,
   getBuildTableRowLink,
   breadcrumb,
 }: IIssueDetails): JSX.Element => {
@@ -286,14 +283,14 @@ export const IssueDetails = ({
                 versionNumber={versionNumber}
                 testTableFilter={tableFilter.testsTable}
                 getTableRowLink={getTestTableRowLink}
-                onClickFilter={onClickTestFilter}
+                onToggleFilter={onToggleTestFilter}
               />
               <IssueDetailsBuildSection
                 issueId={issueId}
                 versionNumber={versionNumber}
                 buildTableFilter={tableFilter.buildsTable}
                 getTableRowLink={getBuildTableRowLink}
-                onClickFilter={onClickBuildFilter}
+                onToggleFilter={onToggleBuildFilter}
               />
               <LogOrJsonSheetContent type="json" jsonContent={jsonContent} />
               <MemoizedKcidevFooter commandGroup="issue" />

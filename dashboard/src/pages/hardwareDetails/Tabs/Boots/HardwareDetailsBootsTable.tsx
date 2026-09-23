@@ -17,7 +17,8 @@ import { getStatusGroup } from '@/utils/status';
 
 import type {
   TestByCommitHash,
-  PossibleTableFilters,
+  TableStatusSelection,
+  TableStatusOption,
 } from '@/types/tree/TreeDetails';
 import type { TestHistory } from '@/types/general';
 
@@ -42,7 +43,8 @@ export const columns: ColumnDef<TestByCommitHash>[] = [
   {
     accessorKey: 'status',
     filterFn: (row, columnId, filterValue) =>
-      getStatusGroup(row.getValue(columnId)) === filterValue,
+      !Array.isArray(filterValue) ||
+      filterValue.includes(getStatusGroup(row.getValue(columnId))),
     header: ({ column }): JSX.Element => (
       <TableHeader
         column={column}
@@ -93,9 +95,9 @@ export const columns: ColumnDef<TestByCommitHash>[] = [
 interface IHardwareBootsTable {
   tableKey: TableKeys;
   testHistory?: TestHistory[];
-  filter: PossibleTableFilters;
+  filter: TableStatusSelection;
   getRowLink: (testId: TestHistory['id']) => LinkProps;
-  onClickFilter: (newFilter: PossibleTableFilters) => void;
+  onToggleFilter: (option: TableStatusOption) => void;
   updatePathFilter?: (pathFilter: string) => void;
   currentPathFilter?: string;
 }
@@ -105,7 +107,7 @@ export const HardwareDetailsBootsTable = ({
   testHistory,
   filter,
   getRowLink,
-  onClickFilter,
+  onToggleFilter,
   updatePathFilter,
   currentPathFilter,
 }: IHardwareBootsTable): JSX.Element => {
@@ -116,7 +118,7 @@ export const HardwareDetailsBootsTable = ({
       filter={filter}
       testHistory={testHistory}
       columns={columns}
-      onClickFilter={onClickFilter}
+      onToggleFilter={onToggleFilter}
       updatePathFilter={updatePathFilter}
       currentPathFilter={currentPathFilter}
     />

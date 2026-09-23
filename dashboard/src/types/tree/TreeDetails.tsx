@@ -14,6 +14,14 @@ import type {
 import type { Status } from '@/types/database';
 import type { DetailsFilters, Summary } from '@/types/commonDetails';
 
+import {
+  defaultTableStatusSelection,
+  normalizeTableStatusSelection,
+  tableStatusOptions,
+  type TableStatusOption,
+  type TableStatusSelection,
+} from '@/utils/tableStatusFilter';
+
 import type { TableTestStatus } from './Tree';
 
 export type AccordionItemBuilds = {
@@ -99,19 +107,16 @@ export const possibleTabs = [
   'global.tests',
 ] as const;
 
-export const possibleTableFilters = [
-  'all',
-  'success',
-  'failed',
-  'inconclusive',
-] as const;
+export {
+  tableStatusOptions,
+  type TableStatusOption,
+  type TableStatusSelection,
+};
 
 export const defaultValidadorValues: {
   tab: (typeof possibleTabs)[number];
-  tableFilter: (typeof possibleTableFilters)[number];
 } = {
   tab: 'global.builds',
-  tableFilter: 'all',
 };
 
 export const zPossibleTabValidator = z
@@ -121,29 +126,28 @@ export const zPossibleTabValidator = z
 
 export type PossibleTabs = z.infer<typeof zPossibleTabValidator>;
 
-export const zTableFilterValidator = z
-  .enum(possibleTableFilters)
-  .catch(defaultValidadorValues.tableFilter);
-
-export type PossibleTableFilters = z.infer<typeof zTableFilterValidator>;
+export const zTableStatusSelection = z.preprocess(
+  normalizeTableStatusSelection,
+  z.array(z.enum(tableStatusOptions)),
+);
 
 export const zTableFilterInfo = object({
-  buildsTable: zTableFilterValidator,
-  bootsTable: zTableFilterValidator,
-  testsTable: zTableFilterValidator,
+  buildsTable: zTableStatusSelection,
+  bootsTable: zTableStatusSelection,
+  testsTable: zTableStatusSelection,
 });
 
-export const zTableFilterInfoDefault = {
-  buildsTable: zTableFilterValidator.parse(''),
-  bootsTable: zTableFilterValidator.parse(''),
-  testsTable: zTableFilterValidator.parse(''),
+export type TableFilter = z.infer<typeof zTableFilterInfo>;
+
+export const zTableFilterInfoDefault: TableFilter = {
+  buildsTable: [...defaultTableStatusSelection],
+  bootsTable: [...defaultTableStatusSelection],
+  testsTable: [...defaultTableStatusSelection],
 };
 
 export const zTableFilterInfoValidator = zTableFilterInfo
   .default(zTableFilterInfoDefault)
   .catch(zTableFilterInfoDefault);
-
-export type TableFilter = z.infer<typeof zTableFilterInfo>;
 
 export const DEFAULT_TREE_INFO = {};
 export const zTreeInformationObject = z.object({

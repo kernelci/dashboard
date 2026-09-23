@@ -4,8 +4,11 @@ import { useNavigate, useRouterState, useSearch } from '@tanstack/react-router';
 import { useCallback, useMemo, type JSX } from 'react';
 
 import { IssueDetails } from '@/components/IssueDetails/IssueDetails';
-import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
-import { zTableFilterInfoDefault } from '@/types/tree/TreeDetails';
+import {
+  zTableFilterInfoDefault,
+  type TableStatusOption,
+} from '@/types/tree/TreeDetails';
+import { toggleTableStatus } from '@/utils/tableStatusFilter';
 import { RedirectFrom } from '@/types/general';
 import { MemoizedTreeBreadcrumb } from '@/components/Breadcrumb/TreeBreadcrumb';
 import { MemoizedHardwareBreadcrumb } from '@/components/Breadcrumb/HardwareBreadcrumb';
@@ -67,37 +70,45 @@ const IssueDetailsPage = (): JSX.Element => {
     }
   }, [historyState.from, historyState.id, previousSearch]);
 
-  const onClickTestFilter = useCallback(
-    (filter: PossibleTableFilters): void => {
+  const onToggleTestFilter = useCallback(
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
-              testsTable: filter,
+              testsTable: toggleTableStatus(
+                previousParams.tableFilter?.testsTable,
+                option,
+              ),
             },
           };
         },
         state: s => s,
+        resetScroll: false,
       });
     },
     [navigate],
   );
 
-  const onClickBuildFilter = useCallback(
-    (filter: PossibleTableFilters): void => {
+  const onToggleBuildFilter = useCallback(
+    (option: TableStatusOption): void => {
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
-              buildsTable: filter,
+              buildsTable: toggleTableStatus(
+                previousParams.tableFilter?.buildsTable,
+                option,
+              ),
             },
           };
         },
         state: s => s,
+        resetScroll: false,
       });
     },
     [navigate],
@@ -107,9 +118,9 @@ const IssueDetailsPage = (): JSX.Element => {
     <IssueDetails
       versionNumber={searchParams.issueVersion}
       tableFilter={searchParams.tableFilter ?? zTableFilterInfoDefault}
-      onClickTestFilter={onClickTestFilter}
+      onToggleTestFilter={onToggleTestFilter}
       getTestTableRowLink={getTestTableRowLink}
-      onClickBuildFilter={onClickBuildFilter}
+      onToggleBuildFilter={onToggleBuildFilter}
       getBuildTableRowLink={getBuildTableRowLink}
       breadcrumb={breadcrumbComponent}
     />

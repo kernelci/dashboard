@@ -11,10 +11,11 @@ import { TableHeader } from '@/components/Table/TableHeader';
 import {
   zTableFilterInfoDefault,
   type AccordionItemBuilds,
-  type PossibleTableFilters,
+  type TableStatusOption,
 } from '@/types/tree/TreeDetails';
 import { defaultBuildColumns } from '@/components/BuildsTable/DefaultBuildsColumns';
 import { sanitizeBuilds } from '@/utils/utils';
+import { toggleTableStatus } from '@/utils/tableStatusFilter';
 import type { BuildsTabBuild } from '@/types/general';
 
 export interface THardwareDetailsBuildsTable {
@@ -56,19 +57,23 @@ export function HardwareDetailsBuildsTable({
     [hardwareId],
   );
 
-  const onClickFilter = useCallback(
-    (filter: PossibleTableFilters) => {
+  const onToggleFilter = useCallback(
+    (option: TableStatusOption) => {
       navigate({
         search: previousParams => {
           return {
             ...previousParams,
             tableFilter: {
               ...(previousParams.tableFilter ?? zTableFilterInfoDefault),
-              buildsTable: filter,
+              buildsTable: toggleTableStatus(
+                previousParams.tableFilter?.buildsTable,
+                option,
+              ),
             },
           };
         },
         state: s => s,
+        resetScroll: false,
       });
     },
     [navigate],
@@ -80,7 +85,7 @@ export function HardwareDetailsBuildsTable({
       filter={tableFilter.buildsTable}
       buildItems={buildItems}
       columns={hardwareDetailsBuildColumns}
-      onClickFilter={onClickFilter}
+      onToggleFilter={onToggleFilter}
       getRowLink={getRowLink}
     />
   );

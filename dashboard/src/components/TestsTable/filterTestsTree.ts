@@ -1,6 +1,7 @@
-import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
+import type { TableStatusSelection } from '@/types/tree/TreeDetails';
 import type { TIndividualTest, TPathTests } from '@/types/general';
-import { StatusTable } from '@/utils/constants/database';
+
+import { getStatusGroup } from '@/utils/status';
 
 import {
   type TPathTestsStatus,
@@ -105,25 +106,12 @@ function pathMatchesSearch(candidate: string, search: string): boolean {
   return searchTokens.every(token => normalizedCandidate.includes(token));
 }
 
-export const matchByStatus =
-  (filter: PossibleTableFilters) =>
-  (t: TIndividualTest): boolean => {
-    const uppercaseStatus = t.status?.toUpperCase();
-    switch (filter) {
-      case 'success':
-        return uppercaseStatus === StatusTable.PASS;
-      case 'failed':
-        return uppercaseStatus === StatusTable.FAIL;
-      case 'inconclusive':
-        return (
-          uppercaseStatus !== StatusTable.PASS &&
-          uppercaseStatus !== StatusTable.FAIL
-        );
-      case 'all':
-      default:
-        return true;
-    }
-  };
+export const matchByStatuses =
+  (selection: TableStatusSelection) =>
+  (test: TIndividualTest): boolean =>
+    selection.includes(
+      test.status === undefined ? 'inconclusive' : getStatusGroup(test.status),
+    );
 
 export function matchByPathSubstring(
   path: string,

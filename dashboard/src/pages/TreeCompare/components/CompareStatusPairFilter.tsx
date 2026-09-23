@@ -13,6 +13,7 @@ import {
 import type { MessagesKey } from '@/locales/messages';
 
 import { TooltipIcon } from '@/components/Icons/TooltipIcon';
+import { FilterButton } from '@/components/Button/FilterButton';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -21,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import {
   changeTypeIsSelected,
   toggleChangeTypePairs,
@@ -142,29 +142,15 @@ export function CompareStatusPairFilter({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {QUICK_FILTERS.map(option => {
-          const selected = changeTypeIsSelected(value, option.value);
-          return (
-            <Button
-              key={option.value}
-              type="button"
-              variant="outline"
-              size="sm"
-              aria-pressed={selected}
-              className={cn(
-                'rounded-full border-black',
-                selected
-                  ? 'bg-blue hover:bg-blue text-white hover:text-white'
-                  : 'bg-white text-black',
-              )}
-              onClick={() =>
-                onChange(toggleChangeTypePairs(value, option.value))
-              }
-            >
-              <FormattedMessage id={option.labelId} />
-            </Button>
-          );
-        })}
+        {QUICK_FILTERS.map(option => (
+          <FilterButton
+            key={option.value}
+            selected={changeTypeIsSelected(value, option.value)}
+            onClick={() => onChange(toggleChangeTypePairs(value, option.value))}
+          >
+            <FormattedMessage id={option.labelId} />
+          </FilterButton>
+        ))}
       </div>
 
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-end">

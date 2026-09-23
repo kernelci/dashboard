@@ -5,8 +5,8 @@ import { type AnySchema, parseSearchWith } from '@tanstack/react-router';
 import { type SearchParamsKeys, type TFilterKeys } from '@/types/general';
 import type {
   possibleTabs,
-  possibleTableFilters,
   TableFilter,
+  TableStatusOption,
   TTreeInformation,
 } from '@/types/tree/TreeDetails';
 
@@ -216,7 +216,7 @@ const minifiedParams: MinifiedParams = {
 } as const;
 
 type MinifiedValues = Record<
-  (typeof possibleTabs)[number] | (typeof possibleTableFilters)[number],
+  (typeof possibleTabs)[number] | TableStatusOption | 'all',
   string
 >;
 type MinifiedValuesKeys = keyof MinifiedValues;
@@ -243,6 +243,12 @@ export const minifyParams = (
         key in minifiedParams ? minifiedParams[key as MinifiedParamsKeys] : key;
       if (isStringRecord(searchParams[key])) {
         result[newKey] = minifyParams(searchParams[key]);
+      } else if (Array.isArray(searchParams[key])) {
+        result[newKey] = (searchParams[key] as unknown[]).map(item =>
+          typeof item === 'string' && item in minifiedValues
+            ? minifiedValues[item as MinifiedValuesKeys]
+            : item,
+        );
       } else {
         const value =
           typeof searchParams[key] === 'string' &&
@@ -300,6 +306,14 @@ export const unminifyParams = (
           key in groupedMinifiedParams
             ? (key as GroupedMinifiedKeys)
             : 'general',
+        );
+      } else if (Array.isArray(searchParams[key])) {
+        result[newKey] = (searchParams[key] as unknown[]).map(item =>
+          typeof item === 'string' && item in groupedMinifiedParams['value']
+            ? groupedMinifiedParams['value'][
+                item as keyof (typeof groupedMinifiedParams)['value']
+              ]
+            : item,
         );
       } else {
         const value =

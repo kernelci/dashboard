@@ -1,62 +1,46 @@
-import classNames from 'classnames';
-import { useCallback, useMemo, type JSX } from 'react';
-import { FormattedMessage } from 'react-intl';
+import type { JSX } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 
-import { Button } from '@/components/ui/button';
-import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
-
-export type TStatusFilters = {
-  label: string;
-  value: PossibleTableFilters;
-  isSelected: boolean;
-};
+import { FilterButton } from '@/components/Button/FilterButton';
+import {
+  tableStatusOptions,
+  type TableStatusOption,
+  type TableStatusSelection,
+} from '@/utils/tableStatusFilter';
 
 interface ITableStatusFilter {
-  onClickBuild?: (value: PossibleTableFilters) => void;
-  onClickTest?: (value: PossibleTableFilters) => void;
-  filters: TStatusFilters[];
+  labels: Record<TableStatusOption, string>;
+  selection: TableStatusSelection;
+  onToggle: (value: TableStatusOption) => void;
 }
 
 const TableStatusFilter = ({
-  filters,
-  onClickBuild,
-  onClickTest,
+  labels,
+  selection,
+  onToggle,
 }: ITableStatusFilter): JSX.Element => {
-  const onClickFilter = useCallback(
-    (filter: PossibleTableFilters) => {
-      onClickBuild?.(filter);
-      onClickTest?.(filter);
-    },
-    [onClickBuild, onClickTest],
-  );
+  const intl = useIntl();
 
-  const filterButtons = useMemo(
-    () =>
-      filters.map((filter, index) => (
-        <Button
-          variant="outline"
-          key={filter.label}
-          className={classNames(
-            'hover:bg-light-blue border border-black',
-            index === 0 ? 'rounded-l-full' : 'rounded-l-none',
-            index === filters.length - 1 ? 'rounded-r-full' : 'rounded-r-none',
-            filter.isSelected
-              ? 'bg-blue text-white'
-              : 'bg-transparent text-black',
-          )}
-          onClick={() => onClickFilter(filter.value)}
-        >
-          {filter.label}
-        </Button>
-      )),
-    [filters, onClickFilter],
-  );
   return (
-    <div className="flex flex-col">
-      <span className="ml-4">
+    <div className="flex flex-col gap-2">
+      <span className="text-dim-gray text-sm">
         <FormattedMessage id="filter.tableFilter" />
       </span>
-      <span>{filterButtons}</span>
+      <div
+        className="flex flex-wrap gap-2"
+        role="group"
+        aria-label={intl.formatMessage({ id: 'filter.tableFilter' })}
+      >
+        {tableStatusOptions.map(value => (
+          <FilterButton
+            key={value}
+            selected={selection.includes(value)}
+            onClick={() => onToggle(value)}
+          >
+            {labels[value]}
+          </FilterButton>
+        ))}
+      </div>
     </div>
   );
 };

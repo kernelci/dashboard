@@ -27,8 +27,10 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import type { LinkProps } from '@tanstack/react-router';
 
-import type { PossibleTableFilters } from '@/types/tree/TreeDetails';
-import { possibleTableFilters } from '@/types/tree/TreeDetails';
+import type {
+  TableStatusSelection,
+  TableStatusOption,
+} from '@/types/tree/TreeDetails';
 
 import type { TestHistory, TIndividualTest } from '@/types/general';
 
@@ -43,8 +45,6 @@ import {
 import type { TableKeys } from '@/utils/constants/tables';
 
 import { TableTopFilters } from '@/components/Table/TableTopFilters';
-
-import type { TStatusFilters } from '@/components/Table/TableStatusFilter';
 
 import type { TableGroupingMode } from '@/components/Table/TableGroupingControls';
 
@@ -65,7 +65,7 @@ import { buildTestsTree } from './buildTestsTree';
 import {
   pruneTree,
   computeGlobalCounts,
-  matchByStatus,
+  matchByStatuses,
   matchByPathSubstring,
   matchTestByPathSubstring,
 } from './filterTestsTree';
@@ -117,8 +117,8 @@ const maxTreeDepth = (rows: UnifiedTestRow[], depth = 0): number => {
 export interface ITestsTable {
   tableKey: TableKeys;
   testHistory?: TestHistory[];
-  onClickFilter: (filter: PossibleTableFilters) => void;
-  filter: PossibleTableFilters;
+  onToggleFilter: (option: TableStatusOption) => void;
+  filter: TableStatusSelection;
   innerColumns?: ColumnDef<TIndividualTest>[];
   getRowLink: (testId: TestHistory['id']) => LinkProps;
   updatePathFilter?: (pathFilter: string) => void;
@@ -130,7 +130,7 @@ const DEFAULT_TESTS_SORTING: SortingState = [{ id: 'path_group', desc: false }];
 
 export function TestsTable({
   testHistory,
-  onClickFilter,
+  onToggleFilter,
   filter,
   innerColumns = defaultInnerColumns,
   getRowLink,
@@ -183,10 +183,9 @@ export function TestsTable({
   );
 
   const filteredTree = useMemo(() => {
-    const filtered =
-      filter === 'all'
-        ? pathFilteredTree
-        : pruneTree(pathFilteredTree, { matchTest: matchByStatus(filter) });
+    const filtered = pruneTree(pathFilteredTree, {
+      matchTest: matchByStatuses(filter),
+    });
     return collapseSingleChildChains(filtered);
   }, [pathFilteredTree, filter]);
 
@@ -237,9 +236,8 @@ export function TestsTable({
     },
   });
 
-  const filterCount: Record<PossibleTableFilters, number> = useMemo(
+  const filterCount = useMemo(
     () => ({
-      all: globalStatusGroup.total_tests,
       success: globalStatusGroup.pass_tests,
       failed: globalStatusGroup.fail_tests,
       inconclusive:
@@ -250,42 +248,22 @@ export function TestsTable({
     [globalStatusGroup],
   );
 
-  const filters: TStatusFilters[] = useMemo(
-    () => [
-      {
-        label: intl.formatMessage(
-          { id: 'global.allCount' },
-          { count: filterCount[possibleTableFilters[0]] },
-        ),
-        value: possibleTableFilters[0],
-        isSelected: filter === possibleTableFilters[0],
-      },
-      {
-        label: intl.formatMessage(
-          { id: 'global.successCount' },
-          { count: filterCount[possibleTableFilters[1]] },
-        ),
-        value: possibleTableFilters[1],
-        isSelected: filter === possibleTableFilters[1],
-      },
-      {
-        label: intl.formatMessage(
-          { id: 'global.failedCount' },
-          { count: filterCount[possibleTableFilters[2]] },
-        ),
-        value: possibleTableFilters[2],
-        isSelected: filter === possibleTableFilters[2],
-      },
-      {
-        label: intl.formatMessage(
-          { id: 'global.inconclusiveCount' },
-          { count: filterCount[possibleTableFilters[3]] },
-        ),
-        value: possibleTableFilters[3],
-        isSelected: filter === possibleTableFilters[3],
-      },
-    ],
-    [filterCount, intl, filter],
+  const labels = useMemo(
+    () => ({
+      success: intl.formatMessage(
+        { id: 'global.successCount' },
+        { count: filterCount.success },
+      ),
+      failed: intl.formatMessage(
+        { id: 'global.failedCount' },
+        { count: filterCount.failed },
+      ),
+      inconclusive: intl.formatMessage(
+        { id: 'global.inconclusiveCount' },
+        { count: filterCount.inconclusive },
+      ),
+    }),
+    [filterCount, intl],
   );
 
   const onSearchChange = useCallback(
@@ -552,8 +530,9 @@ export function TestsTable({
     >
       <TableTopFilters
         key="testsTableSearch"
-        filters={filters}
-        onClickFilter={onClickFilter}
+        labels={labels}
+        selection={filter}
+        onToggleFilter={onToggleFilter}
         onSearchChange={onSearchChange}
         currentPathFilter={currentPathFilter}
         groupingControls={groupingControls}
