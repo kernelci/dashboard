@@ -34,9 +34,10 @@ import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
 import type { SearchIntent } from '@/lib/intent';
 
-import { HardwareListingFilter } from './HardwareListingFilter';
+import { HardwareListingFilter, RegistryListingFilter } from './HardwareListingFilter';
 import { HardwareRegistrySync } from './HardwareRegistrySync';
 import { HardwareTable } from './HardwareTable';
+import { matchesRegistryFilter } from './hardwareListingFilters';
 import {
   decodeBranchValue,
   findSelectionByCommitTokens,
@@ -66,6 +67,7 @@ const HardwareListingPage = ({
     gitBranch,
     gitCommitHash,
     diffFilter,
+    registryFilter,
   } = useSearch({ from: urlFromMap.search });
   const inputFilter = intent.search;
   const intentCommits =
@@ -198,13 +200,13 @@ const HardwareListingPage = ({
 
     return listingData.hardware
       .filter(hardware => {
-        return (
+        const matchesSearch =
           matchesRegexOrIncludes(hardware.platform, inputFilter) ||
-          includesInAnStringOrStringArray(hardware.hardware ?? '', inputFilter)
-        );
+          includesInAnStringOrStringArray(hardware.hardware ?? '', inputFilter);
+        return matchesSearch && matchesRegistryFilter(hardware, registryFilter);
       })
       .sort((a, b) => a.platform.localeCompare(b.platform));
-  }, [activeListing.data, activeListing.error, inputFilter]);
+  }, [activeListing.data, activeListing.error, inputFilter, registryFilter]);
 
   const selectedRevision =
     hasSelection && gitCommitHash
@@ -329,11 +331,19 @@ const HardwareListingPage = ({
               values={{ br: <br /> }}
             />
           </span>
-          <HardwareListingFilter
-            data={filterOptions}
-            navigateFrom={urlFromMap.navigate}
-            paramFilter={diffFilter}
-          />
+          <div className="flex items-center gap-4">
+            <HardwareListingFilter
+              data={filterOptions}
+              navigateFrom={urlFromMap.navigate}
+              paramFilter={diffFilter}
+            />
+            <RegistryListingFilter
+              paramFilter={registryFilter}
+              items={activeListing.data?.hardware ?? []}
+              urlFromMap={urlFromMap}
+            />
+            {kcidevComponent}
+          </div>
         </div>
 
         <HardwareTable
