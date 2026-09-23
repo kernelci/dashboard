@@ -22,6 +22,7 @@ from kernelCI_app.typeModels.databases import (
     Origin,
     StatusValues,
 )
+from kernelCI_app.typeModels.hardwareRegistry import HardwareRegistryInfo
 
 
 class HardwareDetailsQueryParameters(BaseModel):
@@ -94,6 +95,7 @@ class Tree(BaseModel):
 class HardwareCommon(BaseModel):
     trees: List[Tree]
     compatibles: List[str]
+    registry: Optional[HardwareRegistryInfo] = None
 
 
 class HardwareTestLocalFilters(LocalFilters):

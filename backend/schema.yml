@@ -3108,6 +3108,11 @@ components:
             type: string
           title: Compatibles
           type: array
+        registry:
+          anyOf:
+          - $ref: '#/components/schemas/HardwareRegistryInfo'
+          - type: 'null'
+          default: null
       required:
       - trees
       - compatibles
@@ -3268,6 +3273,11 @@ components:
           $ref: '#/components/schemas/StatusCount'
         build_status_summary:
           $ref: '#/components/schemas/StatusCount'
+        registry:
+          anyOf:
+          - $ref: '#/components/schemas/HardwareRegistryInfo'
+          - type: 'null'
+          default: null
       required:
       - hardware
       - platform
@@ -3307,6 +3317,11 @@ components:
           $ref: '#/components/schemas/ListingStatusCount'
         build_status_summary:
           $ref: '#/components/schemas/ListingStatusCount'
+        registry:
+          anyOf:
+          - $ref: '#/components/schemas/HardwareRegistryInfo'
+          - type: 'null'
+          default: null
       required:
       - hardware
       - platform
@@ -3325,6 +3340,119 @@ components:
       required:
       - hardware
       title: HardwareListingResponse
+      type: object
+    HardwareRegistryInfo:
+      properties:
+        platform_id:
+          title: Platform Id
+          type: string
+        board_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Board Type
+        form_factor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Form Factor
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Description
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Url
+        vendor:
+          anyOf:
+          - $ref: '#/components/schemas/HardwareRegistryNamedLink'
+          - type: 'null'
+          default: null
+        silicon_vendor:
+          anyOf:
+          - $ref: '#/components/schemas/HardwareRegistryNamedLink'
+          - type: 'null'
+          default: null
+        system_module:
+          anyOf:
+          - $ref: '#/components/schemas/HardwareRegistryNamedLink'
+          - type: 'null'
+          default: null
+        processor:
+          anyOf:
+          - $ref: '#/components/schemas/HardwareRegistryProcessorInfo'
+          - type: 'null'
+          default: null
+      required:
+      - platform_id
+      title: HardwareRegistryInfo
+      type: object
+    HardwareRegistryNamedLink:
+      properties:
+        id:
+          title: Id
+          type: string
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Url
+        form_factor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Form Factor
+      required:
+      - id
+      title: HardwareRegistryNamedLink
+      type: object
+    HardwareRegistryProcessorInfo:
+      properties:
+        id:
+          title: Id
+          type: string
+        architecture:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Architecture
+        cores:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Cores
+        max_clock_speed_mhz:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Max Clock Speed Mhz
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Url
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Description
+      required:
+      - id
+      title: HardwareRegistryProcessorInfo
       type: object
     HardwareSelectorBranch:
       properties:
@@ -4429,6 +4557,11 @@ components:
           - type: 'null'
         test_origin:
           $ref: '#/components/schemas/Origin'
+        registry:
+          anyOf:
+          - $ref: '#/components/schemas/HardwareRegistryInfo'
+          - type: 'null'
+          default: null
       required:
       - field_timestamp
       - id

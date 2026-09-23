@@ -13,6 +13,12 @@ class TestHardwareView(SimpleTestCase):
         self.factory = APIRequestFactory()
         self.view = HardwareView()
         self.url = "/hardware"
+        registry_patcher = patch(
+            "kernelCI_app.views.hardwareView.get_hardware_registry_by_ids",
+            return_value={},
+        )
+        self.addCleanup(registry_patcher.stop)
+        registry_patcher.start()
 
     @patch(
         "kernelCI_app.views.hardwareView.get_hardware_listing_data_from_status_table"
