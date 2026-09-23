@@ -79,8 +79,6 @@ import { DetailsInfoCard } from '@/components/Cards/DetailsInfoCard';
 
 import CopyButton from '@/components/Button/CopyButton';
 
-import { getMockHardwareRegistryInfo } from '@/lib/hardwareRegistryMock';
-
 import { HardwareRegistryCard } from '@/components/HardwareRegistry/HardwareRegistry';
 
 import { StatusHistoryItem } from './StatusHistoryItem';
@@ -203,13 +201,7 @@ const TestDetailsSections = ({
     endTimestampInSeconds,
   ]);
 
-  const registryInfo = useMemo(() => {
-    const platform =
-      typeof test.environment_misc?.['platform'] === 'string'
-        ? test.environment_misc['platform']
-        : undefined;
-    return getMockHardwareRegistryInfo(platform);
-  }, [test.environment_misc]);
+  const registryInfo = test.registry;
 
   const setSheetToLog = useCallback(
     (): void => setSheetType('log'),

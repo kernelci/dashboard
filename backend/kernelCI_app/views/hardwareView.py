@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from kernelCI_app.constants.localization import ClientStrings
 from kernelCI_app.helpers.errorHandling import create_api_error_response
+from kernelCI_app.helpers.hardwareRegistry import get_hardware_registry_by_ids
 from kernelCI_app.queries.hardware import get_hardware_listing_data_from_status_table
 from kernelCI_app.typeModels.commonListing import ListingStatusCount
 from kernelCI_app.typeModels.hardwareListing import (
@@ -23,6 +24,9 @@ class HardwareView(APIView):
     def _sanitize_records(
         self, hardwares_raw: list[tuple]
     ) -> list[HardwareListingItem]:
+        registry_by_id = get_hardware_registry_by_ids(
+            hardware[0] for hardware in hardwares_raw
+        )
         hardwares = []
         for hardware in hardwares_raw:
             hardwares.append(
@@ -44,6 +48,7 @@ class HardwareView(APIView):
                         FAIL=hardware[9],
                         INCONCLUSIVE=hardware[10],
                     ),
+                    registry=registry_by_id.get(hardware[0]),
                 )
             )
 

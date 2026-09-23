@@ -70,10 +70,6 @@ import { LoadingCircle } from '@/components/ui/loading-circle';
 
 import { FilterLabel } from '@/components/FilterLabel/FilterLabel';
 import { HardwareRegistryListingDetails } from '@/components/HardwareRegistry/HardwareRegistry';
-import {
-  getMockHardwareRegistryListingInfo,
-  type HardwareRegistryInfo,
-} from '@/lib/hardwareRegistryMock';
 
 import { buildHardwareDetailsSearch } from './hardwareTableUtils';
 import { HardwareRevisionSelectors } from './HardwareRevisionSelectors';
@@ -100,12 +96,9 @@ interface IHardwareTable {
 }
 
 type HardwareListingRoutes = '/hardware';
-type HardwareListingRow = HardwareItem & {
-  registry?: HardwareRegistryInfo;
-};
 
 const getLinkProps = (
-  row: Row<HardwareListingRow>,
+  row: Row<HardwareItem>,
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
   navigateFrom: HardwareListingRoutes,
@@ -143,7 +136,7 @@ const getColumns = (
   startTimestampInSeconds: number,
   endTimestampInSeconds: number,
   navigateFrom: HardwareListingRoutes,
-): ColumnDef<HardwareListingRow>[] => {
+): ColumnDef<HardwareItem>[] => {
   return [
     {
       id: 'registry_expander',
@@ -469,13 +462,6 @@ export function HardwareTable({
     listingSize,
   );
 
-  const data = useMemo(() => {
-    return treeTableRows.map((row, index) => ({
-      ...row,
-      registry: getMockHardwareRegistryListingInfo(row.platform, index),
-    }));
-  }, [treeTableRows]);
-
   const columns = useMemo(
     () =>
       getColumns(startTimestampInSeconds, endTimestampInSeconds, navigateFrom),
@@ -483,7 +469,7 @@ export function HardwareTable({
   );
 
   const table = useReactTable({
-    data,
+    data: treeTableRows,
     columns,
     enableSortingRemoval: false,
     onSortingChange: handleSortingChange,
@@ -491,7 +477,7 @@ export function HardwareTable({
     onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    getRowCanExpand: row => row.original.registry !== undefined,
+    getRowCanExpand: row => Boolean(row.original.registry),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: paginationUpdater,
     getSortedRowModel: getSortedRowModel(),

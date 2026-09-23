@@ -31,6 +31,7 @@ from kernelCI_app.typeModels.databases import (
     Test__StartTime,
     Timestamp,
 )
+from kernelCI_app.typeModels.hardwareRegistry import HardwareRegistryInfo
 from kernelCI_app.utils import validate_str_to_dict
 
 
@@ -63,6 +64,7 @@ class TestDetailsResponse(BaseModel):
     tree_name: Checkout__TreeName
     origin: Optional[Origin]
     test_origin: Origin
+    registry: Optional[HardwareRegistryInfo] = None
 
 
 type PossibleRegressionType = Literal["regression", "fixed", "unstable", "pass", "fail"]

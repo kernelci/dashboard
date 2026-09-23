@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 export interface ILinkWithIcon {
   title?: MessagesKey;
   linkText?: string | ReactElement;
-  link?: string;
+  link?: string | null;
   icon?: ReactElement;
   linkComponent?: ReactElement;
   onClick?: () => void;
@@ -58,7 +58,7 @@ const LinkWithIcon = ({
           className={cn('flex flex-row items-center gap-1', {
             'underline hover:text-gray-900': onClick || link,
           })}
-          href={link}
+          href={link ?? undefined}
           target="_blank"
           rel="noreferrer"
           onClick={onClick}
