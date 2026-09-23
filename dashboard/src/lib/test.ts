@@ -6,7 +6,7 @@ export const getTestHardware = ({
   misc?: Record<string, unknown>;
   compatibles?: string[];
   defaultValue?: string;
-}): string => {
+}): string | undefined => {
   const platform = misc?.['platform'];
   if (typeof platform === 'string' && platform !== '') {
     return platform;
@@ -16,5 +16,5 @@ export const getTestHardware = ({
     return compatibles[0];
   }
 
-  return defaultValue ?? '-';
+  return defaultValue;
 };

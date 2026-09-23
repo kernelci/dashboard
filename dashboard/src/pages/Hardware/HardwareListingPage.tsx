@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, type JSX } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { roundToNearestMinutes } from 'date-fns';
 
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
@@ -18,6 +17,7 @@ import {
   useHardwareSelectors,
 } from '@/api/hardware';
 import { dateObjectToTimestampInSeconds, daysToSeconds } from '@/utils/date';
+import { resolveHardwareTimeRange } from '@/utils/hardwareTimeRange';
 import {
   includesInAnStringOrStringArray,
   matchesRegexOrIncludes,
@@ -64,15 +64,10 @@ const HardwareListingPage = ({
   const intentCommits =
     intent.intent === 'commits' ? intent.commits : undefined;
 
-  const { startTimestampInSeconds, endTimestampInSeconds } = useMemo(() => {
-    const end = dateObjectToTimestampInSeconds(
-      roundToNearestMinutes(new Date(), { nearestTo: 30 }),
-    );
-    return {
-      startTimestampInSeconds: end - daysToSeconds(intervalInDays),
-      endTimestampInSeconds: end,
-    };
-  }, [intervalInDays]);
+  const { startTimestampInSeconds, endTimestampInSeconds } = useMemo(
+    () => resolveHardwareTimeRange(intervalInDays),
+    [intervalInDays],
+  );
 
   const selection: HardwareRevisionSelection | null = useMemo(() => {
     if (treeName && gitRepositoryUrl && gitBranch && gitCommitHash) {
@@ -218,10 +213,10 @@ const HardwareListingPage = ({
 
   const tableStartTimestampInSeconds = hasSelection
     ? revisionStartTimestampInSeconds
-    : startTimestampInSeconds;
+    : undefined;
   const tableEndTimestampInSeconds = hasSelection
     ? revisionEndTimestampInSeconds
-    : endTimestampInSeconds;
+    : undefined;
 
   const kcidevComponent = useMemo(
     () => (

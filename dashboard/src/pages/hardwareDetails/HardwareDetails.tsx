@@ -53,6 +53,7 @@ import QuerySwitcher from '@/components/QuerySwitcher/QuerySwitcher';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 
 import { useHardwareDetailsLazyLoadQuery } from '@/hooks/useHardwareDetailsLazyLoadQuery';
+import { useHardwareDetailsTimeRange } from '@/hooks/useHardwareDetailsTimeRange';
 
 import { useQueryInconsistencyInvalidator } from '@/hooks/useQueryInconsistencyInvalidator';
 
@@ -154,9 +155,8 @@ function HardwareDetails(): JSX.Element {
     useSearch({
       from: '/_main/hardware/$hardwareId',
     });
-  const { startTimestampInSeconds, endTimestampInSeconds } = useSearch({
-    from: '/_main/hardware/$hardwareId/',
-  });
+  const { startTimestampInSeconds, endTimestampInSeconds } =
+    useHardwareDetailsTimeRange();
 
   const { formatMessage } = useIntl();
 
