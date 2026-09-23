@@ -7,6 +7,7 @@ import { HARDWARE_LISTING_FILTER_SECTIONS } from '@/utils/constants/hardwareList
 import type {
   HardwareFiltersResponse,
   HardwareListingResponse,
+  HardwareRegistryInfo,
   HardwareRegistrySyncResponse,
   HardwareRevisionSelection,
   HardwareSelectorsResponse,

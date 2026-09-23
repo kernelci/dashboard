@@ -6,6 +6,7 @@ from rest_framework.test import APIRequestFactory
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import ClientStrings
+from kernelCI_app.typeModels.hardwareRegistry import HardwareRegistryInfo
 from kernelCI_app.views.hardwareView import HardwareView
 
 
@@ -14,6 +15,12 @@ class TestHardwareView(SimpleTestCase):
         self.factory = APIRequestFactory()
         self.view = HardwareView()
         self.url = "/hardware"
+        registry_patcher = patch(
+            "kernelCI_app.views.hardwareView.get_hardware_registry_by_ids",
+            return_value={},
+        )
+        self.addCleanup(registry_patcher.stop)
+        registry_patcher.start()
 
     @patch("kernelCI_app.views.hardwareView.get_hardware_listing_data")
     def test_get_hardware_listing_defaults_to_maestro_builds(
@@ -184,3 +191,30 @@ class TestHardwareView(SimpleTestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
         self.assertIn("platform", response.data)
+
+    @patch("kernelCI_app.views.hardwareView.get_hardware_listing_data")
+    def test_get_hardware_listing_includes_registry(self, mock_get_hardware_listing):
+        mock_get_hardware_listing.return_value = [
+            ("am335x-bone-black", "beaglebone", *range(9)),
+        ]
+        registry = HardwareRegistryInfo(platform_id="am335x-bone-black")
+
+        request = self.factory.get(
+            self.url,
+            {
+                "startTimestampInSeconds": "1741192200",
+                "endTimestampInSeconds": "1741624200",
+                "origin": "origin1",
+            },
+        )
+        with patch(
+            "kernelCI_app.views.hardwareView.get_hardware_registry_by_ids",
+            return_value={"am335x-bone-black": registry},
+        ):
+            response = self.view.get(request)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            response.data["hardware"][0]["registry"]["platform_id"],
+            "am335x-bone-black",
+        )
