@@ -25,6 +25,18 @@
       "skillPath": "pstack/skills/show-me-your-work/SKILL.md",
       "computedHash": "e77ba9e44543062972cbd2c89950bce72ebeab31d6b67fd37ec7dc412392e60c"
     },
+    "suggesting-cursor-hooks": {
+      "source": "spencerpauly/awesome-cursor-skills",
+      "sourceType": "github",
+      "skillPath": "resources/suggesting-cursor-hooks/SKILL.md",
+      "computedHash": "ad9c88e14773b1b54efd5874dfcd9e01eb2eb5b66f0c044ac15b756ed0307787"
+    },
+    "suggesting-cursor-rules": {
+      "source": "spencerpauly/awesome-cursor-skills",
+      "sourceType": "github",
+      "skillPath": "resources/suggesting-cursor-rules/SKILL.md",
+      "computedHash": "dd458479fdfb56d9624949888f0b1de9343c5428ef701455958dd9060f207463"
+    },
     "thermo-nuclear-code-quality-review": {
       "source": "cursor/plugins",
       "sourceType": "github",
