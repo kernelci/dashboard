@@ -107,17 +107,19 @@ jobs:
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_KEY" | ssh-add - >/dev/null
-          ssh "${SSH_USER}@${SSH_HOST}" "
-            rm -rf dashboard-production &&
-            git clone --filter=blob:none --no-checkout https://github.com/kernelci/dashboard.git dashboard-production &&
-            cp ~/.env-production dashboard-production/.env &&
-            cd dashboard-production &&
-            git checkout ${IMAGE_TAG} &&
-            export IMAGE_TAG=${IMAGE_TAG} &&
-            export DASHBOARD_VERSION=${DASHBOARD_VERSION} &&
-            docker compose -f docker-compose-next.yml pull --policy=always &&
+          ssh "${SSH_USER}@${SSH_HOST}" bash -s <<EOF
+            set -euo pipefail
+            rm -rf dashboard-production
+            git clone --filter=blob:none --depth 1 --no-checkout https://github.com/kernelci/dashboard.git dashboard-production
+            cp ~/.env-production dashboard-production/.env
+            cd dashboard-production
+            git fetch origin ${IMAGE_TAG}
+            git checkout ${IMAGE_TAG}
+            export IMAGE_TAG=${IMAGE_TAG}
+            export DASHBOARD_VERSION=${DASHBOARD_VERSION}
+            docker compose -f docker-compose-next.yml pull --policy=always
             docker compose -f docker-compose-next.yml up -d --remove-orphans
-          "
+          EOF
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
