@@ -4,6 +4,32 @@ Monorepo: React/TypeScript UI (`dashboard/`) plus Django REST API (`backend/`) o
 
 Human onboarding and contribution process live in [docs/Onboarding.md](docs/Onboarding.md) and [CONTRIBUTING.md](CONTRIBUTING.md). Do not copy those here.
 
+### Skills
+
+| Skill | When |
+| --- | --- |
+| [agent-browser](.agents/skills/agent-browser/SKILL.md) | Browser automation (click, navigate, screenshots) |
+| [make-pr-easy-to-review](.agents/skills/make-pr-easy-to-review/SKILL.md) | Tidy history and PR description for review |
+| [principle-prove-it-works](.agents/skills/principle-prove-it-works/SKILL.md) | Verify the real artifact before calling it done |
+| [show-me-your-work](.agents/skills/show-me-your-work/SKILL.md) | Decision log for long or unattended work |
+| [suggesting-cursor-hooks](.agents/skills/suggesting-cursor-hooks/SKILL.md) | Repeated lint/test/type-check requests |
+| [suggesting-cursor-rules](.agents/skills/suggesting-cursor-rules/SKILL.md) | Repeated convention corrections |
+| [thermo-nuclear-code-quality-review](.agents/skills/thermo-nuclear-code-quality-review/SKILL.md) | Harsh maintainability review |
+| [thermo-nuclear-review](.agents/skills/thermo-nuclear-review/SKILL.md) | Security and correctness audit of a branch |
+| [thermos](.agents/skills/thermos/SKILL.md) | Run both thermo reviews, then synthesize |
+| [typescript-best-practices](.agents/skills/typescript-best-practices/SKILL.md) | Editing `.ts` / `.tsx` |
+| [unslop](.agents/skills/unslop/SKILL.md) | Cut AI tells from writing |
+
+### Rules
+
+| Rule | What |
+| --- | --- |
+| [ponytail](.cursor/rules/ponytail.mdc) | Simplest solution that works |
+| [kernelci-collaboration](.cursor/rules/kernelci-collaboration.mdc) | Remotes, reviews, commit hygiene |
+| [frontend-conventions](.cursor/rules/frontend-conventions.mdc) | URL state, i18n, filters, pnpm |
+| [backend-conventions](.cursor/rules/backend-conventions.mdc) | FilterParams, schema, joins, aggregates |
+| [filters](.cursor/rules/filters.mdc) | Filter invariant and add-a-filter checklist |
+
 ## Where to look
 
 | Need | Path |
@@ -68,7 +94,7 @@ Host clients (DBeaver, etc.): `docs/dev-environment.md` — hostname `dashboard_
 
 ## Git
 
-Conventional Commits with a scope, e.g. `fix(tree-compare): restore drawer navigation`. One concern per commit/PR. PR titles match; describe why, how, trade-offs, tests; link issues; screenshots/GIFs for UI. CI green before asking for review. Commit with "Signed-off-by".
+Conventional Commits with a scope, e.g. `fix(tree-compare): restore drawer navigation`. One concern per commit/PR. PR titles match; describe why, how, trade-offs, tests; link issues; screenshots/GIFs for UI. CI green before asking for review. Commit with "Signed-off-by" and "Assisted-by".
 
 Refer to related issues in commit footers, e.g. `Part of #issue-number` and `Closes #issue-number`.
 
