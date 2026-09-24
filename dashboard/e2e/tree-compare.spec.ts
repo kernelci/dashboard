@@ -142,6 +142,19 @@ test('loads comparison data and opens a side-by-side details drawer', async ({
   await expect(page.getByText('defconfig+allmodconfig')).toBeVisible();
   await expect(page.getByText('Regression', { exact: true })).toBeVisible();
 
+  await expect(
+    page.getByRole('button', { name: 'CLI command' }),
+  ).toBeInViewport();
+  await page.getByRole('button', { name: 'CLI command' }).click();
+  const command = page.getByLabel('Tree comparison: Human-readable', {
+    exact: true,
+  });
+  await expect(command).toContainText('--giturl');
+  await expect(command).not.toContainText('--git-url');
+  await expect(command).toContainText('--origin maestro');
+  await expect(command).toContainText('--branch master');
+  await expect(command).toContainText(`${HASH_A} ${HASH_B}`);
+
   await page.getByText('defconfig+allmodconfig').click();
 
   await expect(page.getByRole('dialog')).toBeVisible();

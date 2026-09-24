@@ -23,7 +23,8 @@ import {
   matchesRegexOrIncludes,
 } from '@/lib/string';
 
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
+import { createHardwareListingCommand } from '@/components/Footer/kcidevCommand';
 import { REDUCED_TIME_SEARCH } from '@/utils/constants/general';
 
 import type { HardwareListingRoutesMap } from '@/utils/constants/hardwareListing';
@@ -220,12 +221,18 @@ const HardwareListingPage = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter
-        commandGroup="hardwareListing"
-        args={{ cmdName: 'hardware list', origin: origin, json: true }}
+      <MemoizedKcidevCommandButton
+        command={createHardwareListingCommand({
+          origin,
+          filters: {
+            hasHardwareDateWindow: true,
+            hasTextSearch: inputFilter.trim() !== '',
+            hasTreeSelection: hasSelection,
+          },
+        })}
       />
     ),
-    [origin],
+    [hasSelection, inputFilter, origin],
   );
 
   const onTreeChange = ({
@@ -308,12 +315,15 @@ const HardwareListingPage = ({
     <>
       <Toaster />
       <div className="flex flex-col gap-6">
-        <span className="text-dim-gray flex-1 justify-start text-left text-sm">
-          <FormattedMessage
-            id="global.projectUnderDevelopment"
-            values={{ br: <br /> }}
-          />
-        </span>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <span className="text-dim-gray flex-1 justify-start text-left text-sm">
+            <FormattedMessage
+              id="global.projectUnderDevelopment"
+              values={{ br: <br /> }}
+            />
+          </span>
+          {kcidevComponent}
+        </div>
 
         <HardwareTable
           treeTableRows={listItems}
@@ -334,7 +344,6 @@ const HardwareListingPage = ({
           onClearSelection={onClearSelection}
         />
       </div>
-      {kcidevComponent}
     </>
   );
 };

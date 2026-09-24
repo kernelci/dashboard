@@ -105,14 +105,21 @@ export const messages = {
     'filter.testStatus': 'Test Status',
     'filter.treeSubtitle': 'Please select one or more Trees:',
     'filter.treeURL': 'Tree URL',
-    'footer.command': 'Command for this page:\n{command}',
-    'footer.kcidev':
-      'You can use {link} to retrieve KernelCI data from the command line',
+    'footer.cliCommand': 'CLI command',
+    'footer.commandDocumentation': 'Command documentation',
+    'footer.commandTitle': 'Run this query with kci-dev',
+    'footer.copied': 'Copied',
+    'footer.copyCommand': 'Copy command',
+    'footer.copyError':
+      'Could not copy the command. Select it above and copy it manually.',
     'footer.lfPolicies':
       'For website terms of use, trademark policy, and other project policies, see {lfPoliciesLink}.',
     'footer.privacyNotice':
       'We collect aggregate usage analytics to operate and improve the service. See {dashboardPrivacyLink} for Dashboard analytics details and {lfPrivacyLink} for the LF Projects privacy policy.',
-    'footer.question': 'Did you know?',
+    'footer.promotionLabel': 'Install kci-dev',
+    'footer.unsupportedFilters':
+      'This command cannot reproduce these dashboard filters: {filters}.',
+    'footer.writesFiles': 'This variant writes downloaded logs to local files.',
     'global.allCount': 'All: {count}',
     'global.arch': 'Arch',
     'global.architecture': 'Architecture',
