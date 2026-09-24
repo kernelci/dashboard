@@ -70,4 +70,17 @@ Host clients (DBeaver, etc.): `docs/dev-environment.md` — hostname `dashboard_
 
 Conventional Commits with a scope, e.g. `fix(tree-compare): restore drawer navigation`. One concern per commit/PR. PR titles match; describe why, how, trade-offs, tests; link issues; screenshots/GIFs for UI. CI green before asking for review. Commit with "Signed-off-by".
 
+Refer to related issues in commit footers, e.g. `Part of #issue-number` and `Closes #issue-number`.
+
 Keep credentials, DB passwords, and webhook URLs out of commits. Use the supplied `.env.example` files.
+
+## Pull requests quality
+
+For any changes that affects the frontend, attach visual evidence to the pull requests via `gh pr comment --attach`. NEVER commit evidence files to the repository. 
+
+Add clear and reproducible test instructions to the pull requests so the reviewers can test themselves and validate the implementation.
+
+Describe in the pull request body what was changed, use the `unslop` skill to write. Add references to the related issues.
+
+Prefer using git fixups when addressing something implemented in the same pull request. Push the fixups as is in order to make easier to another devs to review only what changed. The fixups should be squashed before merge.
+
