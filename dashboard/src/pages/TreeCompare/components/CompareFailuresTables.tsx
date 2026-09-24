@@ -55,12 +55,12 @@ const BUILDS_COLGROUP = (
 const BOOTS_COLGROUP = (
   <colgroup>
     <col className="w-[26%]" />
-    <col className="w-[16%]" />
+    <col className="w-[24%]" />
     <col className="w-[14%]" />
-    <col className="w-[14%]" />
+    <col className="w-[10%]" />
     <col className="w-[4%]" />
-    <col className="w-[14%]" />
-    <col className="w-[12%]" />
+    <col className="w-[10%]" />
+    <col className="w-[8%]" />
   </colgroup>
 );
 

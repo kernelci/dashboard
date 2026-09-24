@@ -60,13 +60,13 @@ const VIRTUAL_TABLE_MAX_HEIGHT = 480;
 const TESTS_COLGROUP = (
   <colgroup>
     <col className="w-[30%]" />
-    <col className="w-[14%]" />
+    <col className="w-[22%]" />
     <col className="w-[12%]" />
     <col className="w-[12%]" />
-    <col className="w-[12%]" />
+    <col className="w-[8%]" />
     <col className="w-[4%]" />
-    <col className="w-[12%]" />
-    <col className="w-[14%]" />
+    <col className="w-[8%]" />
+    <col className="w-[10%]" />
   </colgroup>
 );
 
@@ -139,7 +139,14 @@ const compareLeafColumns: ColumnDef<TIndividualTest>[] = [
     header: ({ column }): JSX.Element => (
       <SortableTableHeader column={column} intlKey="global.config" />
     ),
-    cell: ({ getValue }): string => String(getValue() ?? ''),
+    cell: ({ getValue }): JSX.Element => {
+      const value = String(getValue() ?? '');
+      return (
+        <div className="min-w-0 truncate" title={value}>
+          {value}
+        </div>
+      );
+    },
   },
   {
     id: 'arch',
