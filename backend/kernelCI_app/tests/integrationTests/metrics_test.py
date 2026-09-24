@@ -67,6 +67,61 @@ metrics_expected_counts = {
 }
 
 
+def _status(**counts: int) -> dict[str, int]:
+    base = {
+        "PASS": 0,
+        "ERROR": 0,
+        "FAIL": 0,
+        "SKIP": 0,
+        "MISS": 0,
+        "DONE": 0,
+        "NULL": 0,
+    }
+    base.update(counts)
+    return base
+
+
+def _lab(
+    *,
+    covered_builds: int = 0,
+    builds: dict[str, int] | None = None,
+    boots: dict[str, int] | None = None,
+    tests: dict[str, int] | None = None,
+) -> dict:
+    return {
+        "covered_builds": covered_builds,
+        "builds": builds if builds is not None else _status(),
+        "boots": boots if boots is not None else _status(),
+        "tests": tests if tests is not None else _status(),
+    }
+
+
+metrics_expected_lab_maps = {
+    "lab-broonie": _lab(builds=_status(FAIL=1)),
+    "lab-fake-origin": _lab(
+        covered_builds=4,
+        builds=_status(SKIP=7),
+        tests=_status(SKIP=4),
+    ),
+    "lab-maestro": _lab(
+        covered_builds=8,
+        builds=_status(PASS=2, FAIL=3),
+        tests=_status(FAIL=6, SKIP=4),
+    ),
+}
+
+metrics_expected_prev_lab_maps = {
+    "lab-broonie": _lab(covered_builds=1, tests=_status(PASS=1)),
+    "lab-fake-origin": _lab(covered_builds=2, tests=_status(SKIP=2)),
+    "lab-maestro": _lab(
+        covered_builds=6,
+        builds=_status(PASS=7),
+        boots=_status(PASS=1),
+        tests=_status(PASS=4, SKIP=1),
+    ),
+}
+
+
 def test_get_metrics():
     content = _ok_content()
 
@@ -78,6 +133,9 @@ def test_get_metrics():
         assert content[field] == expected, (
             f"{field}: api={content[field]} expected={expected}"
         )
+
+    assert content["lab_maps"] == metrics_expected_lab_maps
+    assert content["prev_lab_maps"] == metrics_expected_prev_lab_maps
 
 
 def test_metrics_half_open_windows_tile_exactly():

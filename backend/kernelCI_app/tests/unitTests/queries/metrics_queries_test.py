@@ -117,3 +117,20 @@ class TestLabMapsFromStatusRows:
         assert labs["lava-b"].tests.ERROR == 2
         assert labs["lava-b"].covered_builds == 2
         assert sum(labs["lava-b"].builds.model_dump().values()) == 0
+
+    def test_skips_null_or_unknown_kind(self):
+        """NULL path → kind NULL; must not land in tests (SQL three-valued logic)."""
+        labs = lab_maps_from_status_rows(
+            test_rows=[
+                ("lava-a", "boot", "PASS", 2),
+                ("lava-a", None, "PASS", 50),
+                ("lava-a", "other", "FAIL", 50),
+                ("lava-a", "test", "PASS", 3),
+            ],
+            build_rows=[],
+            covered_build_rows=[("lava-a", 1)],
+        )
+
+        assert labs["lava-a"].boots.PASS == 2
+        assert labs["lava-a"].tests.PASS == 3
+        assert sum(labs["lava-a"].tests.model_dump().values()) == 3

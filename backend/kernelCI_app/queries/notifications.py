@@ -796,7 +796,7 @@ def lab_maps_from_status_rows(
     )
 
     for lab, kind, status, count in test_rows:
-        if not lab:
+        if not lab or kind not in ("boot", "test"):
             continue
         entry = labs[lab]
         section = entry.boots if kind == "boot" else entry.tests
@@ -976,7 +976,7 @@ def get_metrics_data(
         COALESCE(l.name, t.misc->>'runtime') AS lab,
         CASE
             WHEN t.path = 'boot' OR t.path LIKE 'boot.%%' THEN 'boot'
-            ELSE 'test'
+            WHEN t.path <> 'boot' AND t.path NOT LIKE 'boot.%%' THEN 'test'
         END AS kind,
         t.status,
         COUNT(*) AS n
