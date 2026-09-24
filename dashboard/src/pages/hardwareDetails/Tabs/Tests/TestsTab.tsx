@@ -30,7 +30,11 @@ import { RedirectFrom, type TFilterObjectsKeys } from '@/types/general';
 
 import { HardwareDetailsTabsQuerySwitcher } from '@/pages/hardwareDetails/Tabs/HardwareDetailsTabsQuerySwitcher';
 
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
+import {
+  dashboardFiltersFromDiffFilter,
+  createHardwareResultsCommand,
+} from '@/components/Footer/kcidevCommand';
 
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 
@@ -51,7 +55,14 @@ const TestsTab = ({
   testsSummary,
   fullDataResult,
 }: ITestsTab): JSX.Element => {
-  const { tableFilter, diffFilter, origin } = useSearch({
+  const {
+    tableFilter,
+    diffFilter,
+    origin,
+    treeIndexes,
+    treeCommits,
+    hardwareSearch,
+  } = useSearch({
     from: '/_main/hardware/$hardwareId',
   });
 
@@ -123,17 +134,22 @@ const TestsTab = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter
-        commandGroup="hardwareDetails"
-        args={{
-          cmdName: 'hardware tests',
+      <MemoizedKcidevCommandButton
+        command={createHardwareResultsCommand('tests', {
           name: hardwareId,
-          origin: origin,
-          json: true,
-        }}
+          origin,
+          filters: {
+            ...dashboardFiltersFromDiffFilter(diffFilter, 'tests'),
+            hasHardwareDateWindow: true,
+            hasTextSearch: hardwareSearch.trim() !== '',
+            hasTreeSelection:
+              (treeIndexes?.length ?? 0) > 0 ||
+              Object.keys(treeCommits).length > 0,
+          },
+        })}
       />
     ),
-    [hardwareId, origin],
+    [diffFilter, hardwareId, hardwareSearch, origin, treeCommits, treeIndexes],
   );
 
   const { topCards, bodyCards, footerCards } = useMemo(() => {
@@ -191,6 +207,7 @@ const TestsTab = ({
 
   return (
     <div className="flex flex-col gap-8 pt-4 pb-10">
+      <div className="flex flex-wrap justify-end gap-2">{kcidevComponent}</div>
       <MemoizedResponsiveDetailsCards
         topCards={topCards}
         bodyCards={bodyCards}
@@ -210,7 +227,6 @@ const TestsTab = ({
           currentPathFilter={currentPathFilter}
         />
       </HardwareDetailsTabsQuerySwitcher>
-      {kcidevComponent}
     </div>
   );
 };
