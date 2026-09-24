@@ -66,7 +66,8 @@ import { processLogData } from '@/hooks/useLogData';
 
 import { isBadRequestError } from '@/utils/query';
 
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
+import { createResultDetailsCommand } from '@/components/Footer/kcidevCommand';
 
 import { isBoot } from '@/utils/test';
 
@@ -574,14 +575,8 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
     const command = isBoot(data?.path) ? 'boot' : 'test';
 
     return (
-      <MemoizedKcidevFooter
-        commandGroup={'details'}
-        args={{
-          cmdName: command,
-          id: testId,
-          'download-logs': true,
-          json: true,
-        }}
+      <MemoizedKcidevCommandButton
+        command={createResultDetailsCommand(command, testId)}
       />
     );
   }, [data?.path, testId]);
@@ -603,6 +598,9 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
         <Sheet open={logOpen} onOpenChange={logOpenChange}>
           <div className="flex flex-col gap-4 pb-10">
             {breadcrumb}
+            <div className="flex flex-wrap justify-end gap-2">
+              {kcidevComponent}
+            </div>
 
             {data && (
               <TestDetailsSections
@@ -619,7 +617,6 @@ const TestDetails = ({ breadcrumb }: TestsDetailsProps): JSX.Element => {
               status={issueStatus}
               error={issueError?.message}
             />
-            {kcidevComponent}
           </div>
           <LogOrJsonSheetContent
             type={sheetType}

@@ -46,7 +46,8 @@ import ButtonOpenLogSheet from '@/components/Button/ButtonOpenLogSheet';
 
 import { processLogData } from '@/hooks/useLogData';
 
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
+import { createResultDetailsCommand } from '@/components/Footer/kcidevCommand';
 
 import { TreeDetailsLink } from '@/components/TreeDetailsLink/TreeDetailsLink';
 
@@ -300,14 +301,8 @@ const BuildDetails = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter
-        commandGroup="details"
-        args={{
-          cmdName: 'build',
-          id: buildId,
-          'download-logs': true,
-          json: true,
-        }}
+      <MemoizedKcidevCommandButton
+        command={createResultDetailsCommand('build', buildId)}
       />
     ),
     [buildId],
@@ -335,6 +330,9 @@ const BuildDetails = ({
           <Sheet open={logOpen} onOpenChange={logOpenChange}>
             <div className="flex flex-col gap-4 pb-10">
               {breadcrumb}
+              <div className="flex flex-wrap justify-end gap-2">
+                {kcidevComponent}
+              </div>
               <SectionGroup sections={generalSections} />
               <BuildDetailsTestSection
                 buildId={buildId ?? ''}
@@ -351,7 +349,6 @@ const BuildDetails = ({
                 />
               )}
               {filesSection && <SectionGroup sections={[filesSection]} />}
-              {kcidevComponent}
             </div>
             <LogOrJsonSheetContent
               type={sheetType}

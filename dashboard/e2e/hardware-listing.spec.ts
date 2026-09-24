@@ -59,6 +59,9 @@ test.describe('Hardware Listing Page Tests', () => {
     await expect(page).toHaveTitle(/KernelCI/);
     await expect(page).toHaveURL(/\/hardware/);
     await expect(page.locator(HARDWARE_LISTING_SELECTORS.table)).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'CLI command' }),
+    ).toBeInViewport();
   });
 
   test('selecting a tree auto-fills branch and revision', async ({ page }) => {

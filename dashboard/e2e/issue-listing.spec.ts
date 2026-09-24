@@ -33,6 +33,9 @@ test.describe('Issue Listing Page Tests', () => {
     await expect(
       page.locator(ISSUE_LISTING_SELECTORS.originColumnHeader),
     ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'CLI command' }),
+    ).toBeInViewport();
   });
 
   test('date range inputs are visible with default values', async ({

@@ -46,7 +46,8 @@ import { TooltipIcon } from '@/components/Icons/TooltipIcon';
 
 import { Badge } from '@/components/ui/badge';
 
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
+import { createIssueDetailsCommand } from '@/components/Footer/kcidevCommand';
 
 import { IncidentsSection } from './IncidentsSection';
 
@@ -268,6 +269,16 @@ export const IssueDetails = ({
           <Sheet>
             <div className="flex flex-col gap-4 pb-10">
               {breadcrumb}
+              <div className="flex flex-wrap justify-end gap-2">
+                <MemoizedKcidevCommandButton
+                  command={createIssueDetailsCommand({
+                    id: issueId,
+                    origin: data?.origin,
+                    omittedFilters:
+                      versionNumber === undefined ? [] : ['issue version'],
+                  })}
+                />
+              </div>
               <SectionGroup sections={generalSections} />
               <IncidentsSection perTree={data?.extra?.[issueId]?.per_tree} />
               <SectionGroup
@@ -293,7 +304,6 @@ export const IssueDetails = ({
                 onToggleFilter={onToggleBuildFilter}
               />
               <LogOrJsonSheetContent type="json" jsonContent={jsonContent} />
-              <MemoizedKcidevFooter commandGroup="issue" />
             </div>
           </Sheet>
         </ErrorBoundary>

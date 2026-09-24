@@ -36,7 +36,11 @@ import { generateDiffFilter } from '@/components/Tabs/tabsUtils';
 import { MemoizedSectionError } from '@/components/DetailsPages/SectionError';
 import { MemoizedFilterCard } from '@/components/Cards/FilterCard';
 import { sanitizeTreeinfo } from '@/utils/treeDetails';
-import { MemoizedKcidevFooter } from '@/components/Footer/KcidevFooter';
+import { MemoizedKcidevCommandButton } from '@/components/Footer/KcidevCommandButton';
+import {
+  dashboardFiltersFromDiffFilter,
+  createTreeResultsCommand,
+} from '@/components/Footer/kcidevCommand';
 import { getStringParam } from '@/utils/utils';
 import { toggleTableStatus } from '@/utils/tableStatusFilter';
 
@@ -53,7 +57,7 @@ const BootsTab = ({
   const params = useParams({
     from: urlFrom,
   });
-  const { tableFilter, diffFilter, treeInfo } = useSearch({
+  const { tableFilter, diffFilter, treeInfo, origin } = useSearch({
     from: urlFrom,
   });
 
@@ -233,17 +237,25 @@ const BootsTab = ({
 
   const kcidevComponent = useMemo(
     () => (
-      <MemoizedKcidevFooter
-        commandGroup="treeDetails"
-        args={{
-          cmdName: 'boots',
-          'git-url': sanitizedTreeInfo.gitUrl,
+      <MemoizedKcidevCommandButton
+        command={createTreeResultsCommand('boots', {
+          origin,
+          filters: {
+            ...dashboardFiltersFromDiffFilter(diffFilter, 'boots'),
+            hasTableStatusRestriction:
+              tableFilter.bootsTable.join() !==
+              zTableFilterInfoDefault.bootsTable.join(),
+          },
+          gitUrl: sanitizedTreeInfo.gitUrl,
           branch: sanitizedTreeInfo.gitBranch,
           commit: sanitizedTreeInfo.hash,
-        }}
+        })}
       />
     ),
     [
+      diffFilter,
+      origin,
+      tableFilter,
       sanitizedTreeInfo.gitBranch,
       sanitizedTreeInfo.gitUrl,
       sanitizedTreeInfo.hash,
@@ -344,6 +356,9 @@ const BootsTab = ({
         }
       >
         <div className="flex flex-col gap-8 pt-4">
+          <div className="flex flex-wrap justify-end gap-2">
+            {kcidevComponent}
+          </div>
           <MemoizedResponsiveDetailsCards
             topCards={topCards}
             bodyCards={bodyCards}
@@ -360,7 +375,6 @@ const BootsTab = ({
               currentPathFilter={currentPathFilter}
             />
           </QuerySwitcher>
-          {kcidevComponent}
         </div>
       </QuerySwitcher>
       {isEmptySummary && (
