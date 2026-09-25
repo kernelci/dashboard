@@ -28,7 +28,7 @@ export function apiStatusToItemStatus(
   return status;
 }
 
-/** Mirror backend _CHANGE_COUNT_SELECT categories for A→B transitions. */
+/** Mirror backend _CHANGE_COUNT_SELECT categories for base→target transitions. */
 export function deriveCompareChange(
   statusA: CompareItemStatus,
   statusB: CompareItemStatus,
