@@ -29,15 +29,13 @@ jobs:
     outputs:
       sha: ${{ steps.git.outputs.sha }}
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.ref || github.sha }}
+
       - name: Resolve commit SHA
         id: git
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REF: ${{ github.event.inputs.ref || github.sha }}
-        run: |
-          set -euo pipefail
-          sha=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${REF}" --jq .sha)
-          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   build-and-push-backend:
     if: github.repository == 'kernelci/dashboard' || github.event_name == 'workflow_dispatch'
@@ -46,7 +44,7 @@ jobs:
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.resolve-ref.outputs.sha }}
 
@@ -79,7 +77,7 @@ jobs:
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.resolve-ref.outputs.sha }}
           fetch-depth: 0
@@ -120,7 +118,7 @@ jobs:
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.resolve-ref.outputs.sha }}
 
