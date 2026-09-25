@@ -780,7 +780,7 @@ class TestFlushBuffers:
 
         mock_rename.assert_called_once_with(
             SUBMISSION_FILEPATH_MOCK,
-            "/".join([SUBMISSION_DIRS_MOCK["failed"], SUBMISSION_FILENAME_MOCK]),
+            "/".join([SUBMISSION_DIRS_MOCK["pending_retry"], SUBMISSION_FILENAME_MOCK]),
         )
 
         assert mock_time.call_count == 2

@@ -5,7 +5,7 @@ import shutil
 import signal
 import time
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from prometheus_client import CollectorRegistry, Gauge, multiprocess, start_http_server
 
 from kernelCI_app.constants.ingester import (
@@ -16,6 +16,7 @@ from kernelCI_app.constants.ingester import (
 )
 from kernelCI_app.management.commands.helpers.file_utils import (
     load_tree_names,
+    sweep_pending_retry,
     verify_spool_dirs,
 )
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
@@ -35,6 +36,19 @@ QUEUE_SIZE_GAUGE = Gauge(
     ["ingester"],
     multiprocess_mode="livemax",
 )
+
+
+PENDING_RETRY_GAUGE = Gauge(
+    "kcidb_ingestion_pending_retry",
+    "Number of submissions waiting to be ingested again after a deferred failure",
+    ["ingester"],
+    multiprocess_mode="livemax",
+)
+
+RETRY_SWEEP_INTERVAL_SEC = 300
+RETRY_SWEEP_MAX_INTERVAL_SEC = 1800
+RETRY_SWEEP_LIMIT = 5000
+STALL_GRACE_MINUTES = int(os.environ.get("INGESTER_STALL_GRACE_MINUTES", 60))
 
 
 def check_positive_int(value) -> bool:
@@ -97,6 +111,14 @@ class Command(BaseCommand):
             )
             return []
 
+    @staticmethod
+    def _count_json_files(directory: str) -> int:
+        try:
+            with os.scandir(directory) as it:
+                return sum(1 for e in it if e.is_file() and e.name.endswith(".json"))
+        except OSError:
+            return 0
+
     def add_arguments(self, parser):
         # TODO: add a way to set the folder by env var instead of by argument
         parser.add_argument(
@@ -158,10 +180,52 @@ class Command(BaseCommand):
 
         cached_files: list[str] = []
         cache_pos = 0
+        last_sweep = 0.0
+        stalled_since = None
+        backlog_floor = 0
 
         try:
             while self.running:
-                # TODO: retry failed files every x cycles
+                # Requeue deferred submissions once the spool is drained, so
+                # they never delay new ones, and eventually regardless in case
+                # it never drains.
+                spool_drained = cache_pos >= len(cached_files)
+                since_sweep = time.time() - last_sweep
+                if (spool_drained and since_sweep >= RETRY_SWEEP_INTERVAL_SEC) or (
+                    since_sweep >= RETRY_SWEEP_MAX_INTERVAL_SEC
+                ):
+                    # Measured before the sweep, otherwise requeueing looks
+                    # like the backlog draining.
+                    backlog = self._count_json_files(dirs["pending_retry"])
+                    PENDING_RETRY_GAUGE.labels(INGESTER_GRAFANA_LABEL).set(backlog)
+
+                    if backlog == 0:
+                        stalled_since = None
+                        backlog_floor = 0
+                    elif stalled_since is None or backlog < backlog_floor:
+                        stalled_since = time.time()
+                        backlog_floor = backlog
+                        logger.error(
+                            "%d submissions deferred for retry; will exit if the "
+                            "backlog does not shrink within %d minutes",
+                            backlog,
+                            STALL_GRACE_MINUTES,
+                        )
+                    elif time.time() - stalled_since > STALL_GRACE_MINUTES * 60:
+                        raise CommandError(
+                            f"Ingester stalled: {backlog} submissions waiting in "
+                            f"{dirs['pending_retry']} for over "
+                            f"{STALL_GRACE_MINUTES} minutes without the backlog "
+                            "shrinking. Nothing is lost, they are ingested once "
+                            "the cause is fixed. See the flush errors above."
+                        )
+
+                    requeued = sweep_pending_retry(
+                        spool_dir, dirs["pending_retry"], RETRY_SWEEP_LIMIT
+                    )
+                    last_sweep = time.time()
+                    if requeued:
+                        self.stdout.write(f"Requeued {requeued} deferred submissions")
 
                 # Only re-scan directory when cache is depleted
                 if cache_pos >= len(cached_files):

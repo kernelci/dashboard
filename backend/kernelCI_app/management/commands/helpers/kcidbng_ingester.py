@@ -312,7 +312,7 @@ def flush_buffers(
         logger.error("Error during buffer flush: %s", e)
         try:
             for filename, filepath in buffer_files:
-                os.rename(filepath, os.path.join(dirs["failed"], filename))
+                os.rename(filepath, os.path.join(dirs["pending_retry"], filename))
             out("Moved %d files to pending retry directory" % len(buffer_files))
             with counter_lock:
                 stat_fail.value += len(buffer_files)

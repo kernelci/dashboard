@@ -1,6 +1,8 @@
 from unittest.mock import MagicMock, mock_open, patch
 
+import requests
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
+    UPLOAD_ATTEMPTS,
     cache_logs_maintenance,
     extract_log_excerpt,
     get_from_cache,
@@ -29,6 +31,7 @@ class TestUploadLogexcerpt:
     # Test cases:
     # - successful upload
     # - couldn't upload log_excerpt
+    # - upload succeeding on a retry
 
     @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.VERBOSE", False)
     @patch(
@@ -86,6 +89,7 @@ class TestUploadLogexcerpt:
         )
         assert mock_remove.call_count == 1
 
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.time.sleep")
     @patch(
         "kernelCI_app.management.commands.helpers.log_excerpt_utils.UPLOAD_URL",
         UPLOAD_URL_MOCK,
@@ -102,9 +106,15 @@ class TestUploadLogexcerpt:
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.remove")
     def test_upload_logexcerpt_failed_status_code(
-        self, mock_remove, mock_file_open, mock_gzip, mock_temp_file, mock_post
+        self,
+        mock_remove,
+        mock_file_open,
+        mock_gzip,
+        mock_temp_file,
+        mock_post,
+        mock_sleep,
     ):
-        """Test logexcerpt upload with failed status code."""
+        """Test logexcerpt upload with failed status code on every attempt."""
         mock_temp_file_obj = MagicMock()
         mock_temp_file_obj.name = TMP_TEST_FILE_NAME
         mock_temp_file_obj.__enter__.return_value = mock_temp_file_obj
@@ -121,7 +131,68 @@ class TestUploadLogexcerpt:
 
         result = upload_logexcerpt(LOG_EXCERPT_MOCK, EXCERPT_HASH_MOCK)
 
-        assert result == LOG_EXCERPT_MOCK
+        assert result is None
+        assert mock_post.call_count == UPLOAD_ATTEMPTS
+        assert mock_sleep.call_count == UPLOAD_ATTEMPTS - 1
+        assert mock_remove.call_count == 1
+
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.time.sleep")
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.UPLOAD_URL",
+        UPLOAD_URL_MOCK,
+    )
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.STORAGE_TOKEN",
+        STORAGE_TOKEN_MOCK,
+    )
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.STORAGE_BASE_URL",
+        STORAGE_URL_MOCK,
+    )
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.requests.post")
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.tempfile.NamedTemporaryFile"
+    )
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.gzip.compress")
+    @patch("builtins.open", new_callable=mock_open)
+    @patch("os.remove")
+    def test_upload_logexcerpt_succeeds_on_retry(
+        self,
+        mock_remove,
+        mock_file_open,
+        mock_gzip,
+        mock_temp_file,
+        mock_post,
+        mock_sleep,
+    ):
+        """Test logexcerpt upload succeeding after transient failures."""
+        mock_temp_file_obj = MagicMock()
+        mock_temp_file_obj.name = TMP_TEST_FILE_NAME
+        mock_temp_file_obj.__enter__.return_value = mock_temp_file_obj
+        mock_temp_file_obj.__exit__.return_value = None
+        mock_temp_file.return_value = mock_temp_file_obj
+
+        mock_gzip.return_value = COMPRESSED_LOGEXCERPT
+        mock_file_open.read_data = COMPRESSED_LOGEXCERPT
+
+        conflict = MagicMock()
+        conflict.status_code = 409
+        conflict.text = "Upload already in progress"
+        uploaded = MagicMock()
+        uploaded.status_code = 200
+        mock_post.side_effect = [
+            requests.ConnectionError("connection reset"),
+            conflict,
+            uploaded,
+        ]
+
+        result = upload_logexcerpt(LOG_EXCERPT_MOCK, EXCERPT_HASH_MOCK)
+
+        assert (
+            result
+            == f"{STORAGE_URL_MOCK}/logexcerpt/{EXCERPT_HASH_MOCK}/logexcerpt.txt.gz"
+        )
+        assert mock_post.call_count == 3
         assert mock_remove.call_count == 1
 
 
@@ -251,6 +322,7 @@ class TestProcessLogExcerptFromItem:
     # - small log excerpt (no processing)
     # - large log excerpt with cache
     # - large log excerpt without cache
+    # - large log excerpt whose upload failed
 
     @patch(
         "kernelCI_app.management.commands.helpers.log_excerpt_utils.LOGEXCERPT_THRESHOLD",
@@ -365,6 +437,49 @@ class TestProcessLogExcerptFromItem:
         assert item["log_excerpt"] == ""
         assert "output_files" in item
         assert len(item["output_files"]) == 1
+
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.LOGEXCERPT_THRESHOLD",
+        10,
+    )
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.VERBOSE", False)
+    @patch("kernelCI_app.management.commands.helpers.log_excerpt_utils.logger")
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.get_from_cache",
+    )
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.set_in_cache",
+    )
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.set_log_excerpt_ofile",
+    )
+    @patch(
+        "kernelCI_app.management.commands.helpers.log_excerpt_utils.upload_logexcerpt",
+    )
+    def test_process_log_excerpt_upload_failed_keeps_item_untouched(
+        self,
+        mock_upload_logexcerpt,
+        mock_set_log_excerpt_ofile,
+        mock_set_in_cache,
+        mock_get_from_cache,
+        mock_logger,
+    ):
+        """Test processing a large log excerpt whose upload failed."""
+        mock_get_from_cache.return_value = None
+        mock_upload_logexcerpt.return_value = None
+
+        item = {
+            "id": "test_build_123",
+            "log_excerpt": "Very long log excerpt that exceeds threshold",
+        }
+        original_item = item.copy()
+
+        process_log_excerpt_from_item(item, "build")
+
+        mock_upload_logexcerpt.assert_called_once()
+        mock_set_in_cache.assert_not_called()
+        mock_set_log_excerpt_ofile.assert_not_called()
+        assert item == original_item
 
 
 class TestExtractLogExcerpt:
