@@ -119,25 +119,27 @@ test.describe('Tree Listing Page Tests', () => {
   });
 
   test('change origin', async ({ page }) => {
-    const testOrigin = 'linaro';
-
     await expect(page.locator(TREE_LISTING_SELECTORS.table)).toBeVisible();
 
     await expect(page.locator('text="Origin"')).toBeVisible();
 
     const originDropdown = page.locator(COMMON_SELECTORS.originDropdown);
     await expect(originDropdown).toBeVisible({ timeout: 15000 });
+    const currentOrigin = (await originDropdown.innerText()).trim();
 
     await originDropdown.click();
 
-    await expect(
-      page.locator(COMMON_SELECTORS.originOption(testOrigin)),
-    ).toBeVisible();
+    const newOption = page
+      .locator(
+        `[data-test-id^="origin-option-"]:not([data-test-id="origin-option-${currentOrigin}"])`,
+      )
+      .first();
+    await expect(newOption).toBeVisible();
+    const newOrigin = (await newOption.innerText()).trim();
 
-    await page.locator(COMMON_SELECTORS.originOption(testOrigin)).click();
+    await newOption.click();
 
-    await page.waitForTimeout(SEARCH_UPDATE_TIMEOUT);
-
-    await expect(originDropdown).toContainText(testOrigin);
+    await expect(originDropdown).toHaveText(newOrigin);
+    await expect(page).toHaveURL(new RegExp(`[?&]o=${newOrigin}(&|$)`));
   });
 });
