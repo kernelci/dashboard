@@ -45,6 +45,7 @@ import {
   mapBootOrTestDiffRows,
   mapBuildDiffRows,
   readStoredStatusPairs,
+  resolveCompareHashes,
   resolveStatusPairs,
   serializeStatusPairs,
   writeStoredStatusPairs,
@@ -88,11 +89,10 @@ const TreeComparePage = (): JSX.Element => {
     [commitsQuery.data],
   );
 
-  const resolvedHashA = hashA || revisions[0]?.hash || '';
-  const resolvedHashB =
-    hashB ||
-    revisions.find(revision => revision.hash !== resolvedHashA)?.hash ||
-    '';
+  const { hashA: resolvedHashA, hashB: resolvedHashB } = useMemo(
+    () => resolveCompareHashes(revisions, hashA, hashB),
+    [revisions, hashA, hashB],
+  );
 
   const canCompare = Boolean(resolvedHashA && resolvedHashB);
 
@@ -317,7 +317,7 @@ const TreeComparePage = (): JSX.Element => {
                 params={{
                   treeName,
                   branch,
-                  hash: resolvedHashA,
+                  hash: resolvedHashB,
                 }}
                 state={s => s}
               >
@@ -362,7 +362,7 @@ const TreeComparePage = (): JSX.Element => {
             </div>
             <Link
               to="/tree/$treeName/$branch/$hash"
-              params={{ treeName, branch, hash: resolvedHashA }}
+              params={{ treeName, branch, hash: resolvedHashB }}
               className="text-blue text-sm font-medium hover:underline"
               state={s => s}
             >

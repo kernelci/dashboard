@@ -28,7 +28,7 @@ export function apiStatusToItemStatus(
   return status;
 }
 
-/** Mirror backend _CHANGE_COUNT_SELECT categories for A→B transitions. */
+/** Mirror backend _CHANGE_COUNT_SELECT categories for base→target transitions. */
 export function deriveCompareChange(
   statusA: CompareItemStatus,
   statusB: CompareItemStatus,
@@ -298,6 +298,25 @@ export function applyStatusPairFilter<
   return rows.filter(row =>
     pairs.some(pair => pair.from === row.sideA && pair.to === row.sideB),
   );
+}
+
+/**
+ * Fill in missing sides so the default comparison runs oldest → newest:
+ * B defaults to the branch head, A to the revision right before B.
+ * `revisions` is newest-first.
+ */
+export function resolveCompareHashes(
+  revisions: readonly { hash: string }[],
+  hashA: string,
+  hashB: string,
+): { hashA: string; hashB: string } {
+  const resolvedB =
+    hashB || revisions.find(revision => revision.hash !== hashA)?.hash || '';
+  const indexB = revisions.findIndex(revision => revision.hash === resolvedB);
+  return {
+    hashA: hashA || revisions[indexB + 1]?.hash || '',
+    hashB: resolvedB,
+  };
 }
 
 /** Next/prev over the currently visible (searched/sorted) table rows. */

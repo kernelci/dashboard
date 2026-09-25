@@ -24,7 +24,7 @@ export function TreeCompareLink({
       <Link
         to="/tree/$treeName/$branch/compare"
         params={{ treeName, branch }}
-        search={{ hashA: hash, hashB: '', origin }}
+        search={{ hashA: '', hashB: hash, origin }}
         state={s => s}
       >
         <GitCompareArrows className="mr-2 h-4 w-4" />
