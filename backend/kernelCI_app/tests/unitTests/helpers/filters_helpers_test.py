@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.http import QueryDict
 
 from kernelCI_app.constants.general import UNCATEGORIZED_STRING
 from kernelCI_app.helpers.filters import (
@@ -1357,3 +1358,38 @@ class TestRequestFilters:
             {"filter": {"filter_test.status": "PASS"}}, process_body=True
         )
         assert len(filter_params.filters) == 1
+
+    def test_lab_filter_applies_only_to_its_own_tab(self):
+        request = mock_request()
+        request.GET = QueryDict("filter_boot.lab=lava-a&filter_build.lab=lava-c")
+        filters = FilterParams(request, process_body=False)
+
+        assert not filters.is_boot_filtered_out(
+            path="boot.test", status="PASS", duration=None, lab="lava-a"
+        )
+        assert filters.is_boot_filtered_out(
+            path="boot.test", status="PASS", duration=None, lab="lava-c"
+        )
+        assert not filters.is_test_filtered_out(
+            path="test.specific", status="PASS", duration=None, lab="lava-a"
+        )
+        assert filters.is_build_filtered_out(
+            build_status="PASS",
+            duration=None,
+            issue_id=None,
+            issue_version=None,
+            incident_test_id=None,
+            lab="lava-a",
+        )
+
+    def test_lab_filter_from_request_body(self):
+        filters = FilterParams(
+            {"filter": {"filter_boot.lab": ["lab-1", "lab-2"]}}, process_body=True
+        )
+
+        assert not filters.is_boot_filtered_out(
+            path="boot.test", status="PASS", duration=None, lab="lab-2"
+        )
+        assert filters.is_boot_filtered_out(
+            path="boot.test", status="PASS", duration=None, lab="lab-3"
+        )

@@ -308,6 +308,7 @@ def decide_if_is_build_filtered_out(instance, row_data):
         issue_version=issue_version,
         incident_test_id=incident_test_id,
         build_origin=build_origin,
+        lab=row_data.get("build_lab"),
     )
     return is_build_filtered_out
 
@@ -329,6 +330,7 @@ def decide_if_is_boot_filtered_out(instance, row_data):
         status=test_status,
         incident_test_id=incident_test_id,
         origin=origin,
+        lab=row_data["history_item"]["lab"],
     )
 
 
@@ -340,7 +342,6 @@ def decide_if_is_full_row_filtered_out(instance, row_data):
         architecture=row_data["build_architecture"],
         compiler=row_data["build_compiler"],
         config_name=row_data["build_config_name"],
-        lab=row_data["history_item"]["lab"],
     )
 
 
@@ -361,6 +362,7 @@ def decide_if_is_test_filtered_out(instance, row_data):
         status=test_status,
         incident_test_id=incident_test_id,
         origin=origin,
+        lab=row_data["history_item"]["lab"],
     )
 
 
