@@ -15,11 +15,11 @@ from kernelCI_app.helpers.commitSync import (
     allowlisted_tree_urls,
     ensure_mirror,
     fetch_remote,
+    insert_commits,
     list_tips,
     new_commit_hashes,
     parse_commits,
     sync_commit_metadata,
-    insert_commits,
 )
 from kernelCI_app.helpers.gitCommit import CommitMetadata
 
