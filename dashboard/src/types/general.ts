@@ -185,6 +185,9 @@ export const zFilterObjectsKeys = z.enum([
   'buildOrigin',
   'bootOrigin',
   'testOrigin',
+  'checkoutOrigins',
+  'buildLabs',
+  'testLabs',
 ]);
 
 export const zFilterNumberKeys = z.enum([
@@ -231,6 +234,9 @@ export const zDiffFilter = z
       buildOrigin: zFilterBoolValue,
       bootOrigin: zFilterBoolValue,
       testOrigin: zFilterBoolValue,
+      checkoutOrigins: zFilterBoolValue,
+      buildLabs: zFilterBoolValue,
+      testLabs: zFilterBoolValue,
     } satisfies Record<TFilterKeys, unknown>),
     z.record(z.never()),
   ])

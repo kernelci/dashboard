@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Optional
 
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import BaseModel, Field
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
-from kernelCI_app.constants.localization import DocStrings
+from kernelCI_app.typeModels.hardwareListing import _normalize_comma_list
 
 
 class HardwareSelectorRevision(BaseModel):
@@ -29,18 +29,21 @@ class HardwareSelectorsResponse(BaseModel):
 
 
 class HardwareSelectorsQueryParamsDocumentationOnly(BaseModel):
-    origin: Annotated[
-        str,
-        Field(
-            default=DEFAULT_ORIGIN,
-            description=DocStrings.HARDWARE_LISTING_ORIGIN_DESCRIPTION,
-        ),
-    ]
+    buildOrigin: Optional[str] = Field(  # noqa: N815
+        default=DEFAULT_ORIGIN,
+        description="Optional origin of builds that provide revisions",
+    )
+    origin: Optional[str] = Field(
+        default=None,
+        deprecated=True,
+        description="Deprecated alias for buildOrigin",
+    )
 
 
 class HardwareSelectorsQueryParams(BaseModel):
-    origin: Annotated[
-        str,
-        Field(default=DEFAULT_ORIGIN),
-        BeforeValidator(lambda o: DEFAULT_ORIGIN if o is None else o),
-    ]
+    build_origin: Optional[list[str]] = Field(default_factory=lambda: [DEFAULT_ORIGIN])
+
+    @classmethod
+    def from_request(cls, query):
+        raw = query.get("buildOrigin", query.get("origin", DEFAULT_ORIGIN))
+        return cls(build_origin=_normalize_comma_list(raw))
