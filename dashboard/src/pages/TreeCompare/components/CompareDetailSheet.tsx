@@ -64,7 +64,7 @@ function SideColumn({
   logData,
   isLoading,
 }: {
-  labelId: 'treeCompare.sideA' | 'treeCompare.sideB';
+  labelId: 'treeCompare.base' | 'treeCompare.target';
   status: CompareItemStatus;
   id: string | null;
   logType: LogType;
@@ -154,7 +154,7 @@ export function CompareDetailSheet({
             </div>
             <div className="grid gap-6 lg:grid-cols-2">
               <SideColumn
-                labelId="treeCompare.sideA"
+                labelId="treeCompare.base"
                 status={item.sideA}
                 id={item.idA}
                 logType={logType}
@@ -162,7 +162,7 @@ export function CompareDetailSheet({
                 isLoading={logA.isLoading}
               />
               <SideColumn
-                labelId="treeCompare.sideB"
+                labelId="treeCompare.target"
                 status={item.sideB}
                 id={item.idB}
                 logType={logType}

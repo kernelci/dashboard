@@ -68,11 +68,11 @@ function RevisionCard({
             side === 'A' ? 'bg-blue' : 'bg-dim-gray',
           )}
         >
-          {side}
+          {side === 'A' ? 'B' : 'T'}
         </span>
         <span className="text-dim-black text-sm font-semibold">
           <FormattedMessage
-            id={side === 'A' ? 'treeCompare.sideA' : 'treeCompare.sideB'}
+            id={side === 'A' ? 'treeCompare.base' : 'treeCompare.target'}
           />
         </span>
       </div>
@@ -180,7 +180,7 @@ export function RevisionSelectorBar({
             type="button"
             onClick={onSwap}
             className="bg-medium-gray flex h-10 w-10 items-center justify-center rounded-full"
-            aria-label="Swap sides"
+            aria-label="Swap base and target"
           >
             <ArrowLeftRight className="text-dim-gray h-5 w-5" />
             <span className="sr-only">
