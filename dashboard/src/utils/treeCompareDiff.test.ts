@@ -7,6 +7,7 @@ import {
   mapBuildDiffRows,
   compareRowNav,
   parseStatusPairs,
+  resolveCompareHashes,
   resolveStatusPairs,
   serializeStatusPairs,
   toggleChangeTypePairs,
@@ -41,6 +42,43 @@ describe('deriveCompareChange', () => {
       'unchanged',
     );
     expect(deriveCompareChange('FAIL', 'FAIL')).toBe('stillFailing');
+  });
+});
+
+describe('resolveCompareHashes', () => {
+  const revisions = [{ hash: 'new' }, { hash: 'mid' }, { hash: 'old' }];
+
+  it('defaults to the head on B and the revision before it on A', () => {
+    expect(resolveCompareHashes(revisions, '', '')).toEqual({
+      hashA: 'mid',
+      hashB: 'new',
+    });
+  });
+
+  it('keeps A one revision older than an explicit B', () => {
+    expect(resolveCompareHashes(revisions, '', 'mid')).toEqual({
+      hashA: 'old',
+      hashB: 'mid',
+    });
+  });
+
+  it('never defaults B to the same revision as A', () => {
+    expect(resolveCompareHashes(revisions, 'new', '')).toEqual({
+      hashA: 'new',
+      hashB: 'mid',
+    });
+  });
+
+  it('leaves explicit hashes alone and copes with too few revisions', () => {
+    expect(resolveCompareHashes(revisions, 'old', 'new')).toEqual({
+      hashA: 'old',
+      hashB: 'new',
+    });
+    expect(resolveCompareHashes([{ hash: 'only' }], '', '')).toEqual({
+      hashA: '',
+      hashB: 'only',
+    });
+    expect(resolveCompareHashes([], '', '')).toEqual({ hashA: '', hashB: '' });
   });
 });
 
