@@ -157,10 +157,13 @@ test('loads comparison data and opens a side-by-side details drawer', async ({
 
   await page.getByText('defconfig+allmodconfig').click();
 
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await expect(page.getByText('Log Viewer')).toBeVisible();
-  await expect(page.getByText('side A build log')).toBeVisible();
-  await expect(page.getByText('side B build log')).toBeVisible();
+  const logViewer = page.getByRole('dialog', {
+    name: 'Log Viewer',
+    exact: true,
+  });
+  await expect(logViewer).toBeVisible();
+  await expect(logViewer.getByText('side A build log')).toBeVisible();
+  await expect(logViewer.getByText('side B build log')).toBeVisible();
 });
 
 test('drawer next stays on searched rows', async ({ page }) => {
