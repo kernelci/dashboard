@@ -17,6 +17,7 @@ from pathlib import Path
 from django.conf import settings
 
 from kernelCI_app.constants.tree_names import TREE_NAMES_FILENAME
+from kernelCI_app.helpers.commit_message_compression import message_to_bytea
 from kernelCI_app.helpers.gitCommit import (
     CommitMetadata,
     CommitMetadataError,
@@ -29,7 +30,13 @@ from kernelCI_app.helpers.gitCommit import (
 from kernelCI_app.helpers.logger import out
 from kernelCI_app.helpers.trees import get_tree_file_data
 from kernelCI_app.management.commands.treeproof import Command as TreeproofCommand
-from kernelCI_app.models import Checkouts, CommitParents, Commits
+from kernelCI_app.models import (
+    Checkouts,
+    CommitIdentity,
+    CommitMessage,
+    CommitParents,
+    Commits,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -266,17 +273,35 @@ def parse_commits(repo_dir: Path, hashes: Sequence[str]) -> list[CommitMetadata]
     ]
 
 
+def _identity_id(
+    email: str | None,
+    name: str | None,
+    cache: dict[tuple[str, str], int],
+) -> int:
+    key = (email or "", name or "")
+    identity_id = cache.get(key)
+    if identity_id is not None:
+        return identity_id
+    identity, _created = CommitIdentity.objects.get_or_create(
+        email=key[0],
+        name=key[1],
+    )
+    cache[key] = identity.id
+    return identity.id
+
+
 def insert_commits(metadatas: Sequence[CommitMetadata]) -> tuple[int, int]:
     """Insert commits then parent edges. Existing rows are left alone.
 
     A git object is immutable, so a hash that is already stored is not updated.
     No stubs. Callers pass topo order.
     """
+    identity_ids: dict[tuple[str, str], int] = {}
     commit_count = 0
     edge_count = 0
     for start in range(0, len(metadatas), INSERT_BATCH_SIZE):
         batch = metadatas[start : start + INSERT_BATCH_SIZE]
-        commits, edges = _insert_batch(batch)
+        commits, edges = _insert_batch(batch, identity_ids)
         commit_count += commits
         edge_count += edges
     return commit_count, edge_count
@@ -762,18 +787,21 @@ def _remote_urls(repo_dir: Path) -> dict[str, str]:
     return urls
 
 
-def _insert_batch(metadatas: Sequence[CommitMetadata]) -> tuple[int, int]:
+def _insert_batch(
+    metadatas: Sequence[CommitMetadata],
+    identity_ids: dict[tuple[str, str], int],
+) -> tuple[int, int]:
     rows = [
         Commits(
             git_commit_hash=metadata.git_commit_hash,
-            author_name=metadata.author_name,
-            author_email=metadata.author_email,
+            author_identity_id=_identity_id(
+                metadata.author_email, metadata.author_name, identity_ids
+            ),
             author_date=metadata.author_date,
-            committer_name=metadata.committer_name,
-            committer_email=metadata.committer_email,
+            committer_identity_id=_identity_id(
+                metadata.committer_email, metadata.committer_name, identity_ids
+            ),
             committer_date=metadata.committer_date,
-            subject=metadata.subject,
-            message=metadata.message,
         )
         for metadata in metadatas
     ]
@@ -791,10 +819,18 @@ def _insert_batch(metadatas: Sequence[CommitMetadata]) -> tuple[int, int]:
     )
 
     edges: list[CommitParents] = []
+    messages: list[CommitMessage] = []
     for metadata in metadatas:
         commit_id = hash_to_id.get(metadata.git_commit_hash)
         if commit_id is None:
             continue
+        messages.append(
+            CommitMessage(
+                commit_id=commit_id,
+                subject=metadata.subject,
+                message=message_to_bytea(metadata.message),
+            )
+        )
         for ord_, parent_hash in enumerate(metadata.parent_hashes):
             parent_id = hash_to_id.get(parent_hash)
             if parent_id is None:
@@ -808,6 +844,10 @@ def _insert_batch(metadatas: Sequence[CommitMetadata]) -> tuple[int, int]:
                 CommitParents(commit_id=commit_id, parent_id=parent_id, ord=ord_)
             )
 
+    if messages:
+        CommitMessage.objects.bulk_create(
+            messages, ignore_conflicts=True, batch_size=INSERT_BATCH_SIZE
+        )
     if edges:
         CommitParents.objects.bulk_create(
             edges, ignore_conflicts=True, batch_size=INSERT_BATCH_SIZE

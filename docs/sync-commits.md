@@ -1,9 +1,9 @@
 # Commit metadata sync
 
-Two management commands fill `commits` and `commit_parents` from git, not from
-KCIDB submissions. Author, committer, subject, message, and ordered parents
-are properties of a git object. The same hash can appear on many checkouts, so
-that data does not live on `checkouts`.
+Two management commands fill `commits`, `commit_identity`, `commit_message`,
+and `commit_parents` from git, not from KCIDB submissions. Author, committer,
+subject, message, and ordered parents are properties of a git object. The same
+hash can appear on many checkouts, so that data does not live on `checkouts`.
 
 Parent epic: [#2079](https://github.com/kernelci/dashboard/issues/2079).
 Schema: [#2089](https://github.com/kernelci/dashboard/issues/2089).
@@ -34,8 +34,13 @@ The job never writes `checkouts.git_commit_message`.
 
 ## Tables
 
-`commits`: surrogate `id`, unique `git_commit_hash`, author / committer /
-subject / message.
+`commit_identity`: unique `(email, name)`. Missing name or email is stored as
+`""`.
+
+`commits`: surrogate `id`, unique `git_commit_hash`, `author_identity_id`,
+`committer_identity_id`, author / committer dates, optional `fetched_from_url`.
+
+`commit_message`: `commit_id` primary key, `subject`, `message` as UTF-8 bytes.
 
 `commit_parents`: `commit_id`, `parent_id`, `ord` (`0` = first parent). No
 stub rows. Inserts are topological so the parent row exists before the edge.

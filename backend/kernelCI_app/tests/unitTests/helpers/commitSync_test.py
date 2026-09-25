@@ -3,6 +3,7 @@ import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from django.core.management import call_command
@@ -86,7 +87,10 @@ def _metadata(
 def commit_store(monkeypatch):
     commits_by_hash: dict[str, object] = {}
     parent_rows: list[object] = []
+    message_rows: list[object] = []
+    identities: dict[tuple[str, str], SimpleNamespace] = {}
     next_id = {"n": 1}
+    next_identity_id = {"n": 1}
 
     class _Filter:
         def __init__(self, hashes: set[str]):
@@ -120,11 +124,33 @@ def commit_store(monkeypatch):
             parent_rows.extend(rows)
             return rows
 
+    class _Identities:
+        def get_or_create(self, *, email: str, name: str):
+            key = (email, name)
+            row = identities.get(key)
+            if row is not None:
+                return row, False
+            row = SimpleNamespace(id=next_identity_id["n"], email=email, name=name)
+            next_identity_id["n"] += 1
+            identities[key] = row
+            return row, True
+
+    class _Messages:
+        def bulk_create(self, rows, **_kwargs):
+            message_rows.extend(rows)
+            return rows
+
     monkeypatch.setattr("kernelCI_app.helpers.commitSync.Commits.objects", _Commits())
     monkeypatch.setattr(
         "kernelCI_app.helpers.commitSync.CommitParents.objects", _Parents()
     )
-    return commits_by_hash, parent_rows
+    monkeypatch.setattr(
+        "kernelCI_app.helpers.commitSync.CommitIdentity.objects", _Identities()
+    )
+    monkeypatch.setattr(
+        "kernelCI_app.helpers.commitSync.CommitMessage.objects", _Messages()
+    )
+    return commits_by_hash, parent_rows, message_rows
 
 
 _TREES_FILE = {
@@ -197,7 +223,7 @@ class TestParseBatchOutput:
 
 class TestUpsertCommits:
     def test_topo_order_first_parent_edges(self, commit_store):
-        commits_by_hash, parent_rows = commit_store
+        commits_by_hash, parent_rows, message_rows = commit_store
         root = _metadata("aa" * 20, subject="root")
         skipped = _metadata("bb" * 20, "aa" * 20, subject="skipped")
         tip = _metadata("cc" * 20, "bb" * 20, subject="tip")
@@ -212,9 +238,14 @@ class TestUpsertCommits:
             (commits_by_hash["bb" * 20].id, commits_by_hash["aa" * 20].id, 0),
             (commits_by_hash["cc" * 20].id, commits_by_hash["bb" * 20].id, 0),
         }
+        assert len({row.author_identity_id for row in commits_by_hash.values()}) == 1
+        root_id = commits_by_hash["aa" * 20].id
+        stored = {row.commit_id: row for row in message_rows}
+        assert stored[root_id].subject == "root"
+        assert stored[root_id].message == b"root\n"
 
     def test_skips_edge_when_parent_row_missing(self, commit_store):
-        _commits_by_hash, parent_rows = commit_store
+        _commits_by_hash, parent_rows, _message_rows = commit_store
         child = _metadata("dd" * 20, "ee" * 20, subject="orphan-parent")
 
         commit_count, edge_count = insert_commits([child])
@@ -241,7 +272,7 @@ class TestSyncCommitMetadata:
         )
 
         stats = sync_commit_metadata(mirror_dir=mirror)
-        commits_by_hash, parent_rows = commit_store
+        commits_by_hash, parent_rows, _message_rows = commit_store
 
         assert stats["remotes_ok"] == 1
         assert stats["remotes_failed"] == 0
