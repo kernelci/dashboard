@@ -1,0 +1,16 @@
+---
+description: Filter invariant and add-a-filter checklist (listing, details, URL)
+globs: docs/filters.md,backend/kernelCI_app/helpers/filters.py,backend/kernelCI_app/tests/unitTests/**/*filter*,dashboard/src/**/*Filter*,dashboard/src/**/*filter*,dashboard/src/utils/search.ts,dashboard/src/types/filters.ts,dashboard/src/types/general.ts,dashboard/src/components/Tabs/Filters.tsx
+alwaysApply: false
+---
+
+# Filters
+
+Full steps: `docs/filters.md`.
+
+- Same category = **OR**. Different categories = **AND**. (`Boots Status` MISS|PASS **and** `Arch` arm.)
+- New filter needs **both** sides or the URL/details break:
+  - Backend: `FilterParams` (set, handler, field map, `_is_*_filtered_out`), tree/hardware summary + commitHistory, unit/integration tests, `generate-schema.sh`.
+  - Frontend: API types, filter card/modal, `zFilterObjectsKeys` / `zFilterNumberKeys` in `types/general.ts`, `mapFilterToReq`, shortened key in `utils/search.ts`.
+- Listing origin (and other `diffFilter` keys) must map onto the details request. Do not leave a key that only the listing understands.
+---
