@@ -417,6 +417,7 @@ export const messages = {
     'tree.path': 'Trees',
     'tree.searchPlaceholder': 'Search by tree, branch or tag with a regex',
     'treeCompare.backToDetails': 'Back to tree details',
+    'treeCompare.base': 'Base',
     'treeCompare.breadcrumb': 'Compare',
     'treeCompare.breakdownTitle': 'Changed results',
     'treeCompare.change.appeared': 'Appeared',
@@ -431,11 +432,12 @@ export const messages = {
     'treeCompare.change.stillFailing': 'Still failing',
     'treeCompare.change.unchanged': 'Unchanged',
     'treeCompare.changed': 'Changed',
+    'treeCompare.compare': 'Compare',
     'treeCompare.description':
-      'Compare pass/fail counts between two revisions on the same tree and branch.',
-    'treeCompare.detail.missingSide': 'No result on this side',
+      'Compare pass/fail counts of a revision against a base revision on the same tree and branch.',
+    'treeCompare.detail.missingSide': 'No result on this revision',
     'treeCompare.drilldownHint':
-      'Individual builds, boots, and tests that changed between Side A and Side B.',
+      'Individual builds, boots, and tests that changed from the base revision to the compared revision.',
     'treeCompare.failures.change': 'Change',
     'treeCompare.failures.configArch': 'Config / Arch',
     'treeCompare.failures.pathArch': 'Path / Arch',
@@ -454,8 +456,6 @@ export const messages = {
       'Select two different revisions to compare. This tree needs at least two commits with results.',
     'treeCompare.openCompare': 'Compare revisions',
     'treeCompare.selectRevision': 'Select a revision',
-    'treeCompare.sideA': 'Side A',
-    'treeCompare.sideB': 'Side B',
     'treeCompare.statusPairFilter.active': 'Active status pair filters',
     'treeCompare.statusPairFilter.add': 'Add',
     'treeCompare.statusPairFilter.from': 'From',
@@ -463,13 +463,13 @@ export const messages = {
       'PASS — completed successfully{br}' +
       'FAIL — completed with a failure{br}' +
       'INCONCLUSIVE — no definitive pass or fail result{br}' +
-      '— — absent on this side',
+      '— — absent on this revision',
     'treeCompare.statusPairFilter.remove': 'Remove {from} to {to} filter',
     'treeCompare.statusPairFilter.select': 'Select status',
     'treeCompare.statusPairFilter.to': 'To',
     'treeCompare.suggestion.branchHead': 'Branch head',
     'treeCompare.suggestion.previous': 'Previous commit',
-    'treeCompare.suggestion.swap': 'Swap sides',
+    'treeCompare.suggestion.swap': 'Swap base and compare',
     'treeCompare.suggestions': 'Suggestions',
     'treeCompare.summaryTitle': 'Tree summary',
     'treeDetails.bootsHistory': 'Boots History',
