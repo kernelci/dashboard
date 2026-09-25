@@ -41,6 +41,8 @@ from kernelCI_app.helpers.hardwareDetails import (
     update_issues,
 )
 from kernelCI_app.tests.unitTests.helpers.fixtures.hardware_details_data import (
+    BASE_TREE_KEY,
+    DIFF_TREE_KEY,
     base_tree,
     base_tree_status_summary,
     create_test_summary,
@@ -126,9 +128,9 @@ class TestGetDisplayedCommit:
 
 class TestGetTreesWithSelectedCommit:
     def test_get_trees_with_selected_commit(self):
-        """Test get_trees_with_selected_commit function."""
+        """Test get_trees_with_selected_commit function with stable keys."""
         trees = [base_tree, tree_with_different_commit]
-        selected_commits = {"1": "custom123", "2": None}
+        selected_commits = {BASE_TREE_KEY: "custom123", DIFF_TREE_KEY: None}
 
         result = get_trees_with_selected_commit(
             trees=trees, selected_commits=selected_commits
