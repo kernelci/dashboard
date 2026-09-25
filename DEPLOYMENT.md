@@ -17,6 +17,7 @@ This guide covers three deployment scenarios: [development](#1-development), [pr
 - [Prerequisites](#prerequisites)
 - [1. Development](#1-development)
 - [2. Production](#2-production)
+  - [Production deploy checklist](#production-deploy-checklist)
   - [Tagging a release](#tagging-a-release)
 - [3. Staging](#3-staging)
 - [Profile Reference](#profile-reference)
@@ -174,6 +175,7 @@ the `Publish GHCR Images` workflow is triggered manually. After CI passes on
 `main`, the dashboard is also deployed to staging
 ([deploy-staging](.github/workflows/deploy-staging.yaml)). Production is deployed
 manually via [deploy-production](.github/workflows/deploy-production.yaml) (see
+the [Production deploy checklist](#production-deploy-checklist) and
 [Tagging a release](#tagging-a-release)).
 
 > [!IMPORTANT]
@@ -229,6 +231,32 @@ docker compose -f docker-compose-next.yml pull
 docker compose -f docker-compose-next.yml up -d
 ```
 
+### Production deploy checklist
+
+Read [Tagging a release](#tagging-a-release) when onboarding. After that, this list is
+the path to follow so a step is not skipped. Production is never deployed by merging.
+
+- Pre-deploy
+  - Confirm the commit is on `origin/main`, with CI and staging e2e green
+  - Diff migrations vs the previous release tag; if any, follow
+    [Database schema changes](#database-schema-changes) (new tables: wait for Denys)
+  - Create the `release/YYYYMMDD.N` tag on that commit
+  - Push the tag
+  - Run **Publish GHCR Images** on that `main` commit; wait for backend, frontend, and proxy
+  - Run **Deploy production Dashboard** from `main` with `tag` set to the new release
+    (only after the publish finished)
+
+- Post-deploy
+  - Open <https://dashboard.kernelci.org> in a browser and confirm the new release tag
+    at the bottom of the left side panel
+  - Check the GitHub Actions job summary for container state and health
+    ([Post-deployment status](#post-deployment-status))
+  - Check Dozzle for container health and init logs
+  - If the release had migrations, ping Denys Fedoryshchenko for permission grants
+  - Write a changelog and send it to the KernelCI mailing list
+  - Ingester / `pending_aggregations_processor` are not updated here; use
+    [Ingester deployment](#ingester-deployment) when those need a rollout
+
 ### Tagging a release
 
 Production is never deployed by merging. Pushes to `main` run [ci.yaml](.github/workflows/ci.yaml),
@@ -270,8 +298,8 @@ earlier push to `main` were baked before the tag existed, so they still carry th
 previous version string. Wait for the backend, frontend, and proxy jobs to finish.
 3. Trigger the `Deploy production Dashboard` workflow with the new tag, from `main`
 while `main` still points at the tagged commit.
-4. Confirm the version shown in the side menu of <https://dashboard.kernelci.org>
-matches the tag.
+4. Open <https://dashboard.kernelci.org> in a browser and confirm the new release
+tag at the bottom of the left side panel.
 5. If the release contained migrations, tell Denys Fedoryshchenko on Discord, so he
 can apply the permission grants the migrations do not cover.
 
