@@ -1,6 +1,7 @@
 volumes:
     backend-data:
     dashboard-db-data:
+    git-mirror:
 
 networks:
     public:
@@ -12,6 +13,7 @@ services:
             context: ./backend
         volumes:
             - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+            - git-mirror:${GIT_MIRROR_DIR:-/var/lib/kernelci/git-mirror}
             - ./backend:/backend          # live reload: source mounted over image copy
         env_file: [.env]
         environment:
