@@ -269,6 +269,13 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 BACKEND_VOLUME_DIR = os.environ.get("BACKEND_VOLUME_DIR", "/volume_data")
+# Throwaway git dirs for one-shot SHA fetches (#2090). Prefer tmpfs (e.g. /dev/shm).
+GIT_SCRATCH_DIR = os.environ.get("GIT_SCRATCH_DIR", "/dev/shm/kernelci-git-scratch")
+GIT_FETCH_TIMEOUT_SECONDS = int(os.environ.get("GIT_FETCH_TIMEOUT_SECONDS", "60"))
+# One commit object is tiny; a full kernel history pack is hundreds of MB.
+GIT_FETCH_MAX_PACK_BYTES = int(
+    os.environ.get("GIT_FETCH_MAX_PACK_BYTES", str(2 * 1024 * 1024))
+)
 
 DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
