@@ -1,0 +1,13 @@
+---
+description: GitHub, remotes, reviews, and commit hygiene for KernelCI Dashboard
+alwaysApply: true
+---
+
+# Collaboration
+
+- Canonical repo: `kernelci/dashboard`. `origin` is often the fork. Branch from `upstream/main`; rebase onto `upstream/main`, not `origin/main`.
+- Do not push, open issues, or comment on GitHub (`gh pr comment`, review threads) unless asked. PR reviews stay in chat by default.
+- Conventional Commits with a scope: `fix(tree-compare): …`, `feat(backend): …`. One concern per commit/PR. Do not mix mechanical churn with logic.
+- Always add Signed-off-by to commits (`git commit -s`)
+- Leave unstaged unless they are the task: `.cursor/`, `.pnpm-store/`, local `docker-compose.dev.yml`, compiled e2e output, `dashboard/src/routeTree.gen.ts` when it is only import reorder.
+---
