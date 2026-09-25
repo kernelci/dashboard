@@ -40,7 +40,6 @@ export const COMMON_SELECTORS = {
   tableHeader: 'th',
 
   originDropdown: '[data-test-id="origin-dropdown"]',
-  originOption: (origin: string) => `[data-test-id="origin-option-${origin}"]`,
 } as const;
 
 export const HARDWARE_LISTING_SELECTORS = {
