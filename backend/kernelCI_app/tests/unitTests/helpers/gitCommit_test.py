@@ -6,10 +6,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.test import override_settings
 
 from kernelCI_app.helpers.gitCommit import (
-    MAX_EPHEMERAL_PACK_BYTES,
     CommitParseError,
     FetchFailedError,
     InvalidGitUrlError,
@@ -30,16 +30,23 @@ from kernelCI_app.tests.unitTests.helpers.fixtures.git_commit_data import (
     SECOND_PARENT,
 )
 
+AUTHOR_NAME = "Alice Author"
+AUTHOR_EMAIL = "alice@example.com"
+COMMITTER_NAME = "Bob Committer"
+COMMITTER_EMAIL = "bob@example.com"
+AUTHOR_DATE = "2001-09-09T01:46:40+0000"
+COMMITTER_DATE = "2001-09-09T01:47:40-0500"
+
 
 def _run_git(repo: Path, *args: str) -> str:
     env = {
         **os.environ,
-        "GIT_AUTHOR_NAME": "Alice Author",
-        "GIT_AUTHOR_EMAIL": "alice@example.com",
-        "GIT_COMMITTER_NAME": "Bob Committer",
-        "GIT_COMMITTER_EMAIL": "bob@example.com",
-        "GIT_AUTHOR_DATE": "2001-09-09T01:46:40+0000",
-        "GIT_COMMITTER_DATE": "2001-09-09T01:47:40-0500",
+        "GIT_AUTHOR_NAME": AUTHOR_NAME,
+        "GIT_AUTHOR_EMAIL": AUTHOR_EMAIL,
+        "GIT_COMMITTER_NAME": COMMITTER_NAME,
+        "GIT_COMMITTER_EMAIL": COMMITTER_EMAIL,
+        "GIT_AUTHOR_DATE": AUTHOR_DATE,
+        "GIT_COMMITTER_DATE": COMMITTER_DATE,
     }
     git = shutil.which("git")
     assert git is not None
@@ -57,8 +64,8 @@ def _build_repo_with_merge(tmp_path: Path) -> tuple[Path, str, str, str]:
     repo = tmp_path / "src"
     repo.mkdir()
     _run_git(repo, "init", "-b", "main")
-    _run_git(repo, "config", "user.name", "Alice Author")
-    _run_git(repo, "config", "user.email", "alice@example.com")
+    _run_git(repo, "config", "user.name", AUTHOR_NAME)
+    _run_git(repo, "config", "user.email", AUTHOR_EMAIL)
     _run_git(repo, "config", "uploadpack.allowFilter", "true")
     _run_git(repo, "config", "uploadpack.allowAnySHA1InWant", "true")
     (repo / "a.txt").write_text("a\n")
@@ -85,13 +92,13 @@ class TestParseCommitObject:
         )
 
         assert metadata.git_commit_hash == MERGE_COMMIT_HASH
-        assert metadata.author_name == "Alice Author"
-        assert metadata.author_email == "alice@example.com"
+        assert metadata.author_name == AUTHOR_NAME
+        assert metadata.author_email == AUTHOR_EMAIL
         assert metadata.author_date == datetime(
             2001, 9, 9, 1, 46, 40, tzinfo=timezone.utc
         )
-        assert metadata.committer_name == "Bob Committer"
-        assert metadata.committer_email == "bob@example.com"
+        assert metadata.committer_name == COMMITTER_NAME
+        assert metadata.committer_email == COMMITTER_EMAIL
         assert metadata.committer_date == datetime(
             2001, 9, 8, 20, 47, 40, tzinfo=timezone(timedelta(hours=-5))
         )
@@ -217,7 +224,7 @@ class TestFetchCommitMetadata:
         repo = tmp_path / "bare.git"
         (repo / "objects" / "pack").mkdir(parents=True)
         pack = repo / "objects" / "pack" / "pack-deadbeef.pack"
-        pack.write_bytes(b"\0" * (MAX_EPHEMERAL_PACK_BYTES + 1))
+        pack.write_bytes(b"\0" * (settings.GIT_FETCH_MAX_PACK_BYTES + 1))
         with pytest.raises(OversizedPackError):
             assert_single_commit_fetch(repo)
 

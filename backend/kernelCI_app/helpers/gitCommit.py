@@ -21,9 +21,6 @@ from django.conf import settings
 
 from kernelCI_app.models import Checkouts
 
-FETCH_TIMEOUT_SECONDS = 60
-# One commit object is tiny; a full kernel history pack is hundreds of MB.
-MAX_EPHEMERAL_PACK_BYTES = 2 * 1024 * 1024
 _IDENT_RE = re.compile(r"^([^<]*?) <([^>]*)> (\d+) ([+-]\d{4})$")
 _GIT_ENV = {
     "GIT_TERMINAL_PROMPT": "0",
@@ -93,7 +90,11 @@ def sanitize_git_url(git_url: str | None) -> str | None:
 
 
 def resolve_checkout_git_url(git_commit_hash: str) -> str | None:
-    """Pick a fetch URL from checkouts for this hash. Prefer maestro / git.kernel.org."""
+    """Pick a fetch URL from checkouts for this hash.
+
+    A SHA is not unique in checkouts: the same commit is often submitted from
+    several clones. Ranking is in `_url_preference`.
+    """
     rows = (
         Checkouts.objects.filter(
             git_commit_hash=git_commit_hash,
@@ -155,7 +156,11 @@ def parse_commit_object(*, raw: str, git_commit_hash: str) -> CommitMetadata:
 
 
 def parse_commit(*, repo_path: str, git_commit_hash: str) -> CommitMetadata:
-    """Read one commit from an existing repo. Does not fetch."""
+    """Read one commit from an existing repo. Does not fetch.
+
+    Uses the git CLI (not pygit2/GitPython): fetch needs --filter=tree:0 and
+    --depth=1, git is already on the image, and GitPython still shells out.
+    """
     try:
         full_hash = (
             _git(
@@ -198,7 +203,7 @@ def fetch_commit_metadata(
             "--filter=tree:0",
             "origin",
             git_commit_hash,
-            timeout=FETCH_TIMEOUT_SECONDS,
+            timeout=settings.GIT_FETCH_TIMEOUT_SECONDS,
         )
         assert_single_commit_fetch(repo_dir)
         return parse_commit(repo_path=str(repo_dir), git_commit_hash=git_commit_hash)
@@ -215,9 +220,10 @@ def fetch_commit_metadata(
 def assert_single_commit_fetch(repo_dir: Path) -> None:
     """Fail if the remote ignored shallow/filter and sent a full or treeful pack."""
     pack_bytes = _pack_bytes(repo_dir)
-    if pack_bytes > MAX_EPHEMERAL_PACK_BYTES:
+    max_pack_bytes = settings.GIT_FETCH_MAX_PACK_BYTES
+    if pack_bytes > max_pack_bytes:
         raise OversizedPackError(
-            f"ephemeral fetch pack is {pack_bytes} bytes (max {MAX_EPHEMERAL_PACK_BYTES})"
+            f"ephemeral fetch pack is {pack_bytes} bytes (max {max_pack_bytes})"
         )
 
     counts = _object_type_counts(repo_dir)
@@ -245,6 +251,15 @@ def _resolve_fetch_url(git_commit_hash: str, url: str | None) -> str:
 
 
 def _url_preference(origin: str, url: str) -> tuple[int, str]:
+    """Rank a checkout row when one SHA has several git_repository_url values.
+
+    Lower rank is chosen. The URL string breaks ties inside a tier.
+
+    0  origin is maestro and the host is git.kernel.org
+    1  host is git.kernel.org, any origin
+    2  origin is maestro, any other host
+    3  everything else
+    """
     host = urlparse(url).netloc.lower()
     kernel_org = "git.kernel.org" in host
     maestro = origin == "maestro"
