@@ -18,7 +18,11 @@ import type {
   TFilterObjectsKeys,
   TFilterNumberKeys,
 } from '@/types/general';
-import { filterFieldMap, zFilterObjectsKeys } from '@/types/general';
+import {
+  filterFieldMap,
+  getActiveDurationFilter,
+  zFilterObjectsKeys,
+} from '@/types/general';
 import { UNCATEGORIZED_STRING } from '@/utils/constants/backend';
 import { version_prefix } from '@/utils/utils';
 
@@ -71,7 +75,10 @@ export const mapFilterToReq = (filter: TFilter): TFilter => {
         }
       });
     } else {
-      filterMapped[reqField] = [values.toString()];
+      const duration = getActiveDurationFilter(values);
+      if (duration !== undefined) {
+        filterMapped[reqField] = [duration.toString()];
+      }
     }
   });
 
@@ -201,7 +208,16 @@ const TimeRangeSection = ({
   const timeChangeHandler = useCallback(
     (e: React.FormEvent<HTMLInputElement>, field: TFilterNumberKeys) => {
       const value = e.currentTarget.value;
-      setDiffFilter(old => ({ ...old, [field]: parseInt(value) }));
+      setDiffFilter(old => {
+        const next = { ...old };
+        const parsed = Number.parseInt(value, 10);
+        if (Number.isFinite(parsed)) {
+          next[field] = parsed;
+        } else {
+          delete next[field];
+        }
+        return next;
+      });
     },
     [setDiffFilter],
   );

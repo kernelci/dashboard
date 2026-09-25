@@ -2,7 +2,11 @@ import qs from 'query-string';
 
 import { type AnySchema, parseSearchWith } from '@tanstack/react-router';
 
-import { type SearchParamsKeys, type TFilterKeys } from '@/types/general';
+import {
+  type SearchParamsKeys,
+  type TFilterKeys,
+  zFilterNumberKeys,
+} from '@/types/general';
 import type {
   possibleTabs,
   TableFilter,
@@ -45,17 +49,12 @@ export const parseSearch = (searchStr: string): AnySchema => {
     parseBooleans: true,
     types: {
       i: 'number',
-      df_bdx: 'number',
-      df_bdm: 'number',
       ls: 'number',
-      df_btdx: 'number',
-      df_btdm: 'number',
-      df_tdx: 'number',
-      df_tdm: 'number',
       x: 'number[]',
       st: 'number',
       et: 'number',
       iv: 'number',
+      ...diffFilterDurationQueryNumberTypes,
     },
   });
 
@@ -202,6 +201,13 @@ const diffFilterMinifiedParams: Record<TFilterKeys, string> = {
   bootOrigin: 'boo',
   testOrigin: 'to',
 } as const satisfies Record<TFilterKeys, string>;
+
+const diffFilterDurationQueryNumberTypes = Object.fromEntries(
+  zFilterNumberKeys.options.map(key => [
+    `df${KEY_FLAT_CHAR}${diffFilterMinifiedParams[key]}`,
+    'number',
+  ]),
+) as Record<string, 'number'>;
 
 type MinifiedParams = Record<
   SearchParamsKeys | TFilterKeys | keyof TableFilter | keyof TTreeInformation,

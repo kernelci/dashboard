@@ -321,6 +321,19 @@ describe('parseSearch', () => {
 
     expect(Object.prototype).not.toHaveProperty(marker);
   });
+
+  it('parses minified diffFilter duration fields as numbers', () => {
+    const buildDurationMin = 42;
+    const bootDurationMax = 90;
+    const parsed = parseSearch(
+      `?df|bdf=${buildDurationMin}&df|btdc=${bootDurationMax}`,
+    ) as {
+      diffFilter: { buildDurationMin?: number; bootDurationMax?: number };
+    };
+
+    expect(parsed.diffFilter.buildDurationMin).toBe(buildDurationMin);
+    expect(parsed.diffFilter.bootDurationMax).toBe(bootDurationMax);
+  });
 });
 
 describe('stringifySearch', () => {
@@ -356,5 +369,16 @@ describe('stringifySearch', () => {
   it('Nested object', () => {
     const result = stringifySearch(nestedObject);
     assertSearchParams(result, flatObjectMinify);
+  });
+
+  it('round-trips diffFilter duration fields', () => {
+    const buildDurationMin = 42;
+    const search = { diffFilter: { buildDurationMin } };
+    const query = stringifySearch(search);
+
+    expect(query).toBeTruthy();
+    expect(parseSearch(query as string)).toMatchObject({
+      diffFilter: { buildDurationMin },
+    });
   });
 });

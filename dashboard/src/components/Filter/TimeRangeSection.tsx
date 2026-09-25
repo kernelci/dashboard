@@ -42,7 +42,7 @@ const TimeRangeSection = ({
         <Input
           className={inputClass}
           onChange={onMinChange}
-          value={min || ''}
+          value={min ?? ''}
           min={0}
           type="number"
         />
@@ -56,7 +56,7 @@ const TimeRangeSection = ({
         <Input
           className={inputClass}
           onChange={onMaxChange}
-          value={max || ''}
+          value={max ?? ''}
           min={0}
           type="number"
         />
