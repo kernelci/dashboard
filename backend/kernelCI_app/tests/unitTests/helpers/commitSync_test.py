@@ -83,14 +83,37 @@ def _metadata(
     )
 
 
+class _IdentityStore:
+    def __init__(self) -> None:
+        self.rows: dict[tuple[str, str], SimpleNamespace] = {}
+        self.next_id = 1
+
+    def get_or_create(self, *, email: str, name: str):
+        key = (email, name)
+        row = self.rows.get(key)
+        if row is not None:
+            return row, False
+        row = SimpleNamespace(id=self.next_id, email=email, name=name)
+        self.next_id += 1
+        self.rows[key] = row
+        return row, True
+
+
+class _MessageStore:
+    def __init__(self, rows: list[object]) -> None:
+        self.rows = rows
+
+    def bulk_create(self, rows, **_kwargs):
+        self.rows.extend(rows)
+        return rows
+
+
 @pytest.fixture
 def commit_store(monkeypatch):
     commits_by_hash: dict[str, object] = {}
     parent_rows: list[object] = []
     message_rows: list[object] = []
-    identities: dict[tuple[str, str], SimpleNamespace] = {}
     next_id = {"n": 1}
-    next_identity_id = {"n": 1}
 
     class _Filter:
         def __init__(self, hashes: set[str]):
@@ -124,31 +147,16 @@ def commit_store(monkeypatch):
             parent_rows.extend(rows)
             return rows
 
-    class _Identities:
-        def get_or_create(self, *, email: str, name: str):
-            key = (email, name)
-            row = identities.get(key)
-            if row is not None:
-                return row, False
-            row = SimpleNamespace(id=next_identity_id["n"], email=email, name=name)
-            next_identity_id["n"] += 1
-            identities[key] = row
-            return row, True
-
-    class _Messages:
-        def bulk_create(self, rows, **_kwargs):
-            message_rows.extend(rows)
-            return rows
-
     monkeypatch.setattr("kernelCI_app.helpers.commitSync.Commits.objects", _Commits())
     monkeypatch.setattr(
         "kernelCI_app.helpers.commitSync.CommitParents.objects", _Parents()
     )
     monkeypatch.setattr(
-        "kernelCI_app.helpers.commitSync.CommitIdentity.objects", _Identities()
+        "kernelCI_app.helpers.commitSync.CommitIdentity.objects", _IdentityStore()
     )
     monkeypatch.setattr(
-        "kernelCI_app.helpers.commitSync.CommitMessage.objects", _Messages()
+        "kernelCI_app.helpers.commitSync.CommitMessage.objects",
+        _MessageStore(message_rows),
     )
     return commits_by_hash, parent_rows, message_rows
 
