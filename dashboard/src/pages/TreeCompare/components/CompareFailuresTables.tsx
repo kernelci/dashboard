@@ -3,18 +3,17 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 
 import type {
   CompareBootFailureRow,
   CompareBuildFailureRow,
   CompareFailureRow,
-  CompareTestFailureRow,
 } from '@/types/tree/TreeCompare';
 
 import type { MessagesKey } from '@/locales/messages';
 
-import DebounceInput from '@/components/DebounceInput/DebounceInput';
+import { PathWithPrefixEllipsis } from '@/components/TestsTable/DefaultTestsColumns';
 import {
   TableBody,
   TableCell,
@@ -27,15 +26,16 @@ import { cn } from '@/lib/utils';
 import { compareRowNav } from '@/utils/treeCompareDiff';
 import type { LogType } from '@/hooks/useLogData';
 
-import {
-  CompareChangeBadge,
-  CompareStatusChip,
-  isFailureHighlight,
-} from './CompareChangeDisplay';
+import { CompareChangeBadge, isFailureHighlight } from './CompareChangeDisplay';
 import {
   CompareDetailSheet,
   compareRowToDetailItem,
 } from './CompareDetailSheet';
+import {
+  CompareSideCells,
+  CompareTableSearch,
+  rowMatchesSearch,
+} from './compareTableShared';
 
 const ESTIMATED_ROW_HEIGHT = 56;
 const VIRTUALIZER_OVERSCAN = 10;
@@ -52,14 +52,15 @@ const BUILDS_COLGROUP = (
   </colgroup>
 );
 
-const PATH_COLGROUP = (
+const BOOTS_COLGROUP = (
   <colgroup>
-    <col className="w-[34%]" />
-    <col className="w-[18%]" />
+    <col className="w-[26%]" />
+    <col className="w-[24%]" />
     <col className="w-[14%]" />
+    <col className="w-[10%]" />
     <col className="w-[4%]" />
-    <col className="w-[14%]" />
-    <col className="w-[16%]" />
+    <col className="w-[10%]" />
+    <col className="w-[8%]" />
   </colgroup>
 );
 
@@ -70,7 +71,13 @@ type SortState<Key extends string> = {
 } | null;
 
 type BuildSortKey = 'config' | 'sideA' | 'sideB' | 'change';
-type PathSortKey = 'path' | 'hardware' | 'sideA' | 'sideB' | 'change';
+type BootSortKey =
+  | 'path'
+  | 'config'
+  | 'hardware'
+  | 'sideA'
+  | 'sideB'
+  | 'change';
 
 function cycleSort<Key extends string>(
   current: SortState<Key>,
@@ -108,18 +115,6 @@ function sortRows<T, Key extends string>(
   return [...rows].sort(
     (left, right) =>
       direction * compareSortValues(getValue(left), getValue(right)),
-  );
-}
-
-function rowMatchesSearch(values: unknown[], query: string): boolean {
-  if (!query) {
-    return true;
-  }
-  const needle = query.toLowerCase();
-  return values.some(value =>
-    String(value ?? '')
-      .toLowerCase()
-      .includes(needle),
   );
 }
 
@@ -174,26 +169,6 @@ function useCompareSheet(
   };
 }
 
-function CompareTableSearch({
-  onSearchChange,
-}: {
-  onSearchChange: (event: ChangeEvent<HTMLInputElement>) => void;
-}): JSX.Element {
-  const { formatMessage } = useIntl();
-
-  // mt keeps the input clear of the sticky tabs header, which overlaps its top border.
-  return (
-    <div className="mt-2 mb-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-end">
-      <DebounceInput
-        debouncedSideEffect={onSearchChange}
-        className="w-9/10 sm:w-50"
-        type="text"
-        placeholder={formatMessage({ id: 'global.search' })}
-      />
-    </div>
-  );
-}
-
 function SortableHead<Key extends string>({
   intlKey,
   sortKey,
@@ -227,30 +202,6 @@ function SortableHead<Key extends string>({
         />
       </button>
     </TableHead>
-  );
-}
-
-function SideCells({
-  sideA,
-  sideB,
-}: {
-  sideA: CompareBuildFailureRow['sideA'];
-  sideB: CompareBuildFailureRow['sideB'];
-}): JSX.Element {
-  return (
-    <>
-      <TableCell>
-        <div className="flex justify-center">
-          <CompareStatusChip status={sideA} />
-        </div>
-      </TableCell>
-      <TableCell className="text-dim-gray text-center">→</TableCell>
-      <TableCell>
-        <div className="flex justify-center">
-          <CompareStatusChip status={sideB} />
-        </div>
-      </TableCell>
-    </>
   );
 }
 
@@ -425,7 +376,7 @@ export function CompareBuildsFailuresTable({
                   {row.arch} · {row.compiler}
                 </div>
               </TableCell>
-              <SideCells sideA={row.sideA} sideB={row.sideB} />
+              <CompareSideCells sideA={row.sideA} sideB={row.sideB} />
               <TableCell>
                 <div className="flex justify-center">
                   <CompareChangeBadge change={row.change} />
@@ -440,23 +391,24 @@ export function CompareBuildsFailuresTable({
   );
 }
 
-const PATH_SORT_GETTERS: Record<
-  PathSortKey,
-  (row: CompareBootFailureRow | CompareTestFailureRow) => unknown
+const BOOT_SORT_GETTERS: Record<
+  BootSortKey,
+  (row: CompareBootFailureRow) => unknown
 > = {
   path: row => row.path,
+  config: row => row.config,
   hardware: row => row.hardware,
   sideA: row => row.sideA,
   sideB: row => row.sideB,
   change: row => row.change,
 };
 
-function PathHardwareTable({
+export function CompareBootsFailuresTable({
   rows,
 }: {
-  rows: Array<CompareBootFailureRow | CompareTestFailureRow>;
+  rows: CompareBootFailureRow[];
 }): JSX.Element {
-  const [sort, setSort] = useState<SortState<PathSortKey>>(null);
+  const [sort, setSort] = useState<SortState<BootSortKey>>(null);
   const [search, setSearch] = useState('');
 
   const onSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
@@ -478,7 +430,7 @@ function PathHardwareTable({
         search,
       ),
     );
-    return sortRows(filtered, sort, PATH_SORT_GETTERS);
+    return sortRows(filtered, sort, BOOT_SORT_GETTERS);
   }, [rows, search, sort]);
 
   const { selectedId, openRow, sheet } = useCompareSheet(visibleRows, 'test');
@@ -489,13 +441,19 @@ function PathHardwareTable({
       <VirtualizedCompareTable
         rowCount={visibleRows.length}
         getRowId={index => visibleRows[index]?.id ?? String(index)}
-        colGroup={PATH_COLGROUP}
-        colCount={6}
+        colGroup={BOOTS_COLGROUP}
+        colCount={7}
         headerRow={
           <TableRow className="bg-light-gray hover:bg-light-gray">
             <SortableHead
               intlKey="treeCompare.failures.pathArch"
               sortKey="path"
+              sort={sort}
+              onSort={key => setSort(current => cycleSort(current, key))}
+            />
+            <SortableHead
+              intlKey="global.config"
+              sortKey="config"
               sort={sort}
               onSort={key => setSort(current => cycleSort(current, key))}
             />
@@ -545,11 +503,8 @@ function PathHardwareTable({
               )}
             >
               <TableCell className="max-w-0">
-                <div
-                  className="text-dim-black truncate font-medium"
-                  title={row.path}
-                >
-                  {row.path}
+                <div className="text-dim-black font-medium" title={row.path}>
+                  <PathWithPrefixEllipsis value={row.path} />
                 </div>
                 <div
                   className="text-dim-gray truncate text-xs"
@@ -561,12 +516,20 @@ function PathHardwareTable({
               <TableCell className="max-w-0">
                 <div
                   className="text-dim-black truncate text-sm"
+                  title={row.config}
+                >
+                  {row.config}
+                </div>
+              </TableCell>
+              <TableCell className="max-w-0">
+                <div
+                  className="text-dim-black truncate text-sm"
                   title={row.hardware}
                 >
                   {row.hardware}
                 </div>
               </TableCell>
-              <SideCells sideA={row.sideA} sideB={row.sideB} />
+              <CompareSideCells sideA={row.sideA} sideB={row.sideB} />
               <TableCell>
                 <div className="flex justify-center">
                   <CompareChangeBadge change={row.change} />
@@ -579,20 +542,4 @@ function PathHardwareTable({
       {sheet}
     </div>
   );
-}
-
-export function CompareBootsFailuresTable({
-  rows,
-}: {
-  rows: CompareBootFailureRow[];
-}): JSX.Element {
-  return <PathHardwareTable rows={rows} />;
-}
-
-export function CompareTestsFailuresTable({
-  rows,
-}: {
-  rows: CompareTestFailureRow[];
-}): JSX.Element {
-  return <PathHardwareTable rows={rows} />;
 }

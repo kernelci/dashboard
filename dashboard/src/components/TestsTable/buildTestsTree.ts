@@ -46,6 +46,12 @@ export function buildTestsTree(
             ),
             treeBranch: buildTreeBranch(e.tree_name, e.git_repository_branch),
             lab: e.lab,
+            config: e.config,
+            arch: e.arch,
+            platform: e.platform,
+            sideA: e.sideA,
+            sideB: e.sideB,
+            change: e.change,
           });
         } else {
           currentLevel = node.children;
