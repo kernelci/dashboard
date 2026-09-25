@@ -42,6 +42,10 @@ def convert_build(b: Builds) -> PendingBuilds:
 
 def convert_test(t: Tests) -> PendingTest:
     misc = t.misc or {}
+    lab = getattr(t, "_lab_name", None)
+    if not lab:
+        related_lab = getattr(t, "lab", None)
+        lab = related_lab.name if related_lab is not None else None
     return PendingTest(
         test_id=t.id,
         origin=t.origin,
@@ -53,7 +57,7 @@ def convert_test(t: Tests) -> PendingTest:
         path=t.path,
         start_time=t.start_time,
         # TODO remove misc->>'runtime' fallback after lab backfill
-        lab=t._lab_name or misc.get("runtime"),
+        lab=lab or misc.get("runtime"),
         full_status=t.status,
     )
 
