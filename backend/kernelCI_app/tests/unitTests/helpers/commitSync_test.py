@@ -19,7 +19,7 @@ from kernelCI_app.helpers.commitSync import (
     new_commit_hashes,
     parse_commits,
     sync_commit_metadata,
-    upsert_commits,
+    insert_commits,
 )
 from kernelCI_app.helpers.gitCommit import CommitMetadata
 
@@ -202,7 +202,7 @@ class TestUpsertCommits:
         skipped = _metadata("bb" * 20, "aa" * 20, subject="skipped")
         tip = _metadata("cc" * 20, "bb" * 20, subject="tip")
 
-        commit_count, edge_count = upsert_commits([root, skipped, tip])
+        commit_count, edge_count = insert_commits([root, skipped, tip])
 
         assert commit_count == 3
         assert edge_count == 2
@@ -217,7 +217,7 @@ class TestUpsertCommits:
         _commits_by_hash, parent_rows = commit_store
         child = _metadata("dd" * 20, "ee" * 20, subject="orphan-parent")
 
-        commit_count, edge_count = upsert_commits([child])
+        commit_count, edge_count = insert_commits([child])
 
         assert commit_count == 1
         assert edge_count == 0

@@ -9,15 +9,20 @@ from kernelCI_app.helpers.logger import out
 
 class Command(BaseCommand):
     help = (
-        "Upsert commits / commit_parents from objects already in the persistent "
-        "mirror (tip delta). Does not write checkouts.git_commit_message."
+        "Insert commits / commit_parents from objects already in the persistent "
+        "mirror (tip delta). Existing hashes are left alone. Does not write "
+        "checkouts.git_commit_message."
     )
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--dry-run",
             action="store_true",
-            help="Parse as requested, write nothing to the database or tips file.",
+            help=(
+                "Parse objects already in the mirror. Writes nothing to the "
+                "database or synced-tips, and does not fetch. --fill-gaps still "
+                "fetches missing SHAs and then discards them."
+            ),
         )
         parser.add_argument(
             "--fill-gaps",

@@ -87,7 +87,7 @@ Two cron entries on the backend container:
 - `0 4 * * *` `sync_commit_mirror` — remotes into the mirror. Does not write
   `commits` or `synced-tips`.
 - `0 10 * * *` `sync_commit_ingest` — ingest new mirror objects (tip delta),
-  then upsert. Six hours later so a long first fetch is less likely to
+  then insert. Six hours later so a long first fetch is less likely to
   overlap; do not run both against the same `GIT_MIRROR_DIR` at once.
 
 ```
@@ -111,7 +111,7 @@ sync_commit_ingest
 rev-list new tips --not old tips  (topo, reverse)
         |
         v
-cat-file --batch in 2000-hash chunks → parse → upsert commits then edges
+cat-file --batch in 2000-hash chunks → parse → insert commits then edges
         |
         v
 write synced-tips
@@ -120,8 +120,12 @@ write synced-tips
 optional --fill-gaps (one-shot SHA fetch per missing checkout hash)
 ```
 
-`--dry-run` still fetches/parses if asked, but writes nothing to the database
-or `synced-tips`, and does not regenerate `tree-names.yaml`.
+`sync_commit_mirror --dry-run` still fetches, so the mirror on disk changes.
+It does not regenerate `tree-names.yaml` or write the database.
+
+`sync_commit_ingest --dry-run` parses objects already in the mirror and writes
+nothing to the database or `synced-tips`. It does not fetch. `--fill-gaps`
+still fetches missing checkout SHAs and then discards them.
 
 If `tree-names.yaml` is missing, a non-dry run regenerates it the same way
 the ingester does (`treeproof`). Empty allowlist used to make the job a
@@ -177,17 +181,18 @@ delete the new pack files. That remote is skipped **this run** only.
 Do not retry `HEAD` after a rejected pack. The second download is the same
 full clone.
 
-## Parse and upsert
+## Parse and insert
 
 `git cat-file --batch` over stdin, 2000 hashes at a time. Per-commit
 `rev-parse` + `cat-file` is hundreds of times slower.
 
-Each chunk is upserted before the next is parsed so a full-history import
+Each chunk is inserted before the next is parsed so a full-history import
 does not hold every commit message in RAM. Order stays topological:
 `rev-list --reverse --topo-order`, then chunks in that order.
 
-`bulk_create(..., ignore_conflicts=True)`. Existing hashes are left alone.
-Missing parent rows skip the edge (logged); no stubs.
+`bulk_create(..., ignore_conflicts=True)`. A git object is immutable, so a
+hash that is already stored is left alone rather than updated. Missing parent
+rows skip the edge (logged); no stubs.
 
 ## Parallel fetch
 
@@ -217,7 +222,7 @@ poetry run python manage.py sync_commit_ingest --mirror-dir /path
 
 | Flag | Effect |
 |---|---|
-| `--dry-run` | Fetch, do not regenerate `tree-names.yaml` |
+| `--dry-run` | Still fetches into the mirror. Does not regenerate `tree-names.yaml` |
 | `--skip-unfilterable` | Do not fetch servers without `fetch=filter` |
 | `--verbose-git` | Git's own fetch progress on stdout (noisy in cron) |
 | `--mirror-dir` | Override `GIT_MIRROR_DIR` |
@@ -227,7 +232,7 @@ poetry run python manage.py sync_commit_ingest --mirror-dir /path
 
 | Flag | Effect |
 |---|---|
-| `--dry-run` | No DB writes, no `synced-tips` |
+| `--dry-run` | No fetch, no DB writes, no `synced-tips`. `--fill-gaps` still fetches |
 | `--fill-gaps` | One-shot SHA fetch for checkout hashes still missing |
 | `--mirror-dir` | Override `GIT_MIRROR_DIR` |
 

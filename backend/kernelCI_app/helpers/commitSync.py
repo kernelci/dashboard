@@ -34,7 +34,7 @@ from kernelCI_app.models import Checkouts, CommitParents, Commits
 logger = logging.getLogger(__name__)
 
 TIPS_FILENAME = "synced-tips"
-UPSERT_BATCH_SIZE = 1000
+INSERT_BATCH_SIZE = 1000
 DEFAULT_FETCH_TIMEOUT_SECONDS = 1800
 REV_LIST_TIMEOUT_SECONDS = 3600
 # One `cat-file --batch` process per chunk instead of two per commit. Chunked so a
@@ -266,13 +266,17 @@ def parse_commits(repo_dir: Path, hashes: Sequence[str]) -> list[CommitMetadata]
     ]
 
 
-def upsert_commits(metadatas: Sequence[CommitMetadata]) -> tuple[int, int]:
-    """Insert commits then parent edges. No stubs. Callers pass topo order."""
+def insert_commits(metadatas: Sequence[CommitMetadata]) -> tuple[int, int]:
+    """Insert commits then parent edges. Existing rows are left alone.
+
+    A git object is immutable, so a hash that is already stored is not updated.
+    No stubs. Callers pass topo order.
+    """
     commit_count = 0
     edge_count = 0
-    for start in range(0, len(metadatas), UPSERT_BATCH_SIZE):
-        batch = metadatas[start : start + UPSERT_BATCH_SIZE]
-        commits, edges = _upsert_batch(batch)
+    for start in range(0, len(metadatas), INSERT_BATCH_SIZE):
+        batch = metadatas[start : start + INSERT_BATCH_SIZE]
+        commits, edges = _insert_batch(batch)
         commit_count += commits
         edge_count += edges
     return commit_count, edge_count
@@ -304,7 +308,7 @@ def fill_checkout_gaps(*, dry_run: bool = False) -> tuple[int, int]:
             continue
         fetched += 1
         if not dry_run:
-            commits, _edges = upsert_commits([metadata])
+            commits, _edges = insert_commits([metadata])
             written += commits
         if index % 100 == 0 or index == len(gaps):
             out(f"gaps {index}/{len(gaps)}: {fetched} fetched, {written} written")
@@ -375,7 +379,7 @@ def _ingest_new_commits(
     for batch in iter_parsed_commits(repo_dir, hashes):
         parsed += len(batch)
         if not dry_run:
-            commits, edges = upsert_commits(batch)
+            commits, edges = insert_commits(batch)
             commits_written += commits
             edges_written += edges
         if parsed - logged_at >= PROGRESS_LOG_EVERY or parsed == len(hashes):
@@ -758,7 +762,7 @@ def _remote_urls(repo_dir: Path) -> dict[str, str]:
     return urls
 
 
-def _upsert_batch(metadatas: Sequence[CommitMetadata]) -> tuple[int, int]:
+def _insert_batch(metadatas: Sequence[CommitMetadata]) -> tuple[int, int]:
     rows = [
         Commits(
             git_commit_hash=metadata.git_commit_hash,
@@ -774,7 +778,7 @@ def _upsert_batch(metadatas: Sequence[CommitMetadata]) -> tuple[int, int]:
         for metadata in metadatas
     ]
     Commits.objects.bulk_create(
-        rows, ignore_conflicts=True, batch_size=UPSERT_BATCH_SIZE
+        rows, ignore_conflicts=True, batch_size=INSERT_BATCH_SIZE
     )
 
     hashes = {metadata.git_commit_hash for metadata in metadatas}
@@ -806,6 +810,6 @@ def _upsert_batch(metadatas: Sequence[CommitMetadata]) -> tuple[int, int]:
 
     if edges:
         CommitParents.objects.bulk_create(
-            edges, ignore_conflicts=True, batch_size=UPSERT_BATCH_SIZE
+            edges, ignore_conflicts=True, batch_size=INSERT_BATCH_SIZE
         )
     return len(metadatas), len(edges)

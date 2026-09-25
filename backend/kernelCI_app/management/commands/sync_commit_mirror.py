@@ -20,7 +20,11 @@ class Command(BaseCommand):
         parser.add_argument(
             "--dry-run",
             action="store_true",
-            help="Fetch as requested, do not regenerate tree-names.yaml.",
+            help=(
+                "Still fetches into the persistent mirror, so the git repo on "
+                "disk is updated. Does not regenerate tree-names.yaml or write "
+                "the database."
+            ),
         )
         parser.add_argument(
             "--mirror-dir",
