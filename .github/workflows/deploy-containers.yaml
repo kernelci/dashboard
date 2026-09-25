@@ -5,9 +5,14 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build (branch, tag, or commit SHA)
+        required: true
+        type: string
 
 concurrency:
-  group: publish-ghcr-${{ github.ref }}
+  group: publish-ghcr-${{ github.event.inputs.ref || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -18,13 +23,30 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  resolve-ref:
+    if: github.repository == 'kernelci/dashboard' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.git.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.ref || github.sha }}
+
+      - name: Resolve commit SHA
+        id: git
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   build-and-push-backend:
     if: github.repository == 'kernelci/dashboard' || github.event_name == 'workflow_dispatch'
+    needs: resolve-ref
     runs-on: ubuntu-latest
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve-ref.outputs.sha }}
 
       - name: Compute image prefix
         id: meta
@@ -46,18 +68,18 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: |
-            ${{ steps.meta.outputs.prefix }}/dashboard-backend:latest
-            ${{ steps.meta.outputs.prefix }}/dashboard-backend:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.prefix }}/dashboard-backend:${{ needs.resolve-ref.outputs.sha }}${{ github.event_name == 'push' && format(',{0}/dashboard-backend:latest', steps.meta.outputs.prefix) || '' }}
 
   build-and-push-dashboard:
     if: github.repository == 'kernelci/dashboard' || github.event_name == 'workflow_dispatch'
+    needs: resolve-ref
     runs-on: ubuntu-latest
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
+          ref: ${{ needs.resolve-ref.outputs.sha }}
           fetch-depth: 0
 
       - name: Compute image prefix
@@ -87,17 +109,18 @@ jobs:
           push: true
           build-args: |
             DASHBOARD_VERSION=${{ steps.dashboard_version.outputs.dashboard_version }}
-          tags: |
-            ${{ steps.meta.outputs.prefix }}/dashboard-frontend:latest
-            ${{ steps.meta.outputs.prefix }}/dashboard-frontend:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.prefix }}/dashboard-frontend:${{ needs.resolve-ref.outputs.sha }}${{ github.event_name == 'push' && format(',{0}/dashboard-frontend:latest', steps.meta.outputs.prefix) || '' }}
 
   build-and-push-proxy:
     if: github.repository == 'kernelci/dashboard' || github.event_name == 'workflow_dispatch'
+    needs: resolve-ref
     runs-on: ubuntu-latest
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve-ref.outputs.sha }}
 
       - name: Compute image prefix
         id: meta
@@ -119,13 +142,12 @@ jobs:
         with:
           context: ./proxy
           push: true
-          tags: |
-            ${{ steps.meta.outputs.prefix }}/dashboard-proxy:latest
-            ${{ steps.meta.outputs.prefix }}/dashboard-proxy:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.prefix }}/dashboard-proxy:${{ needs.resolve-ref.outputs.sha }}${{ github.event_name == 'push' && format(',{0}/dashboard-proxy:latest', steps.meta.outputs.prefix) || '' }}
 
   verify:
     if: always()
     needs:
+      - resolve-ref
       - build-and-push-backend
       - build-and-push-dashboard
       - build-and-push-proxy
@@ -134,6 +156,8 @@ jobs:
       - name: Image publish summary
         run: |
           echo "### Published GHCR Images" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit SHA: \`${{ needs.resolve-ref.outputs.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Image | Digest |" >> "$GITHUB_STEP_SUMMARY"
           echo "| ----- | ------ |" >> "$GITHUB_STEP_SUMMARY"

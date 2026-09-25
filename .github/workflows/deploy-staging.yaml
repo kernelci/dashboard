@@ -2,6 +2,22 @@ name: Deploy Staging and E2E
 
 on:
   workflow_call:
+    inputs:
+      image_tag:
+        description: GHCR image tag (Git commit SHA) to deploy
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: GHCR image tag (Git commit SHA) to deploy
+        required: true
+        type: string
+
+# Staging shares one remote checkout dir, so deploys must not overlap
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
 
 jobs:
   check-migrations:
@@ -14,6 +30,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.image_tag }}
           fetch-depth: 0
 
       - name: Compute dashboard version
@@ -63,25 +80,42 @@ jobs:
         env:
           SSH_HOSTKEY: ${{ secrets.STAGING_HOSTKEY }}
 
+      - name: Staging image tag
+        run: echo "Deploying staging with \`IMAGE_TAG=${{ inputs.image_tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Deploy to staging
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_KEY" | ssh-add - >/dev/null
-          ssh "${SSH_USER}@${SSH_HOST}" "
-            rm -rf dashboard-staging &&
-            git clone --depth 1 --branch main https://github.com/kernelci/dashboard.git dashboard-staging &&
-            cp ~/.env-staging dashboard-staging/.env &&
-            cd dashboard-staging &&
-            git checkout ${GITHUB_SHA} &&
-            export DASHBOARD_VERSION=${DASHBOARD_VERSION} &&
-            docker compose pull --ignore-buildable --policy=always &&
-            docker compose build --no-cache &&
-            docker compose up -d --remove-orphans
-          "
+          ssh "${SSH_USER}@${SSH_HOST}" bash -s <<EOF
+            set -euo pipefail
+            rm -rf dashboard-staging
+            git clone --filter=blob:none --depth 1 --no-checkout https://github.com/kernelci/dashboard.git dashboard-staging
+            cp ~/.env-staging dashboard-staging/.env
+            cd dashboard-staging
+            git fetch origin ${IMAGE_TAG}
+            git checkout ${IMAGE_TAG}
+            export IMAGE_TAG=${IMAGE_TAG}
+            export DASHBOARD_VERSION=${DASHBOARD_VERSION}
+            # Retry: Publish GHCR Images runs in parallel with CI and may not have pushed this SHA yet.
+            attempt=1
+            max_attempts=30
+            until docker compose pull --policy=always; do
+              if [ "\$attempt" -ge "\$max_attempts" ]; then
+                echo "Timed out waiting for GHCR images with IMAGE_TAG=${IMAGE_TAG}"
+                exit 1
+              fi
+              echo "Images for IMAGE_TAG=${IMAGE_TAG} not ready yet (attempt \$attempt/\$max_attempts); retrying in 20s"
+              attempt=\$((attempt + 1))
+              sleep 20
+            done
+            docker compose up -d --remove-orphans --no-build
+          EOF
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
           DASHBOARD_VERSION: ${{ needs.check-migrations.outputs.dashboard_version }}
 
       - name: Collect staging deployment status
