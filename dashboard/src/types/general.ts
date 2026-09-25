@@ -164,6 +164,11 @@ export const getActiveDurationFilter = (value: unknown): number | undefined => {
   if (typeof value !== 'string' && typeof value !== 'number') {
     return undefined;
   }
+
+  if (typeof value === 'string' && value.trim() === '') {
+    return undefined;
+  }
+
   const n = Number(value);
   return Number.isFinite(n) && n !== 0 ? n : undefined;
 };

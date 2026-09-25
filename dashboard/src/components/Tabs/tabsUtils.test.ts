@@ -9,9 +9,11 @@ import { parseSearch } from '@/utils/search';
 describe('getActiveDurationFilter', () => {
   const durationSeconds = 42;
 
-  it('rejects zero, NaN, and non-numeric values', () => {
+  it('rejects zero, NaN, blank strings, and non-numeric values', () => {
     expect(getActiveDurationFilter(0)).toBeUndefined();
     expect(getActiveDurationFilter(Number.NaN)).toBeUndefined();
+    expect(getActiveDurationFilter('')).toBeUndefined();
+    expect(getActiveDurationFilter('   ')).toBeUndefined();
     expect(getActiveDurationFilter(undefined)).toBeUndefined();
     expect(getActiveDurationFilter(null)).toBeUndefined();
     expect(getActiveDurationFilter(true)).toBeUndefined();
