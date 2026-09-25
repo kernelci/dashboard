@@ -363,9 +363,12 @@ class TestGetIssueNextCheckoutData:
         query = execute_call[0][0]
         params = execute_call[0][1]
         assert "ANY(%(issue_id_list)s)" in query
-        assert "C.start_time > LS.last_start_time" in query
-        assert "C.start_time ASC" in query
-        assert "CROSS JOIN LATERAL" in query
+        assert "WITH RECURSIVE" in query
+        assert "PARENT.ord = 0" in query
+        assert "WALK.depth < 1000" in query
+        assert "WALK.commit_id = WALK.target_commit_id" in query
+        assert "FALLBACK.start_time > LS.last_start_time" in query
+        assert "COALESCE(AN.checkout_id, FALLBACK.id)" in query
         assert params == {"issue_id_list": ["issue"]}
         mock_set_cache.assert_called_once_with(
             key="issue_next_checkout",
