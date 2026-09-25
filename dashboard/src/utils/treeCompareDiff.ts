@@ -300,6 +300,25 @@ export function applyStatusPairFilter<
   );
 }
 
+/**
+ * Fill in missing sides so the default comparison runs oldest → newest:
+ * B defaults to the branch head, A to the revision right before B.
+ * `revisions` is newest-first.
+ */
+export function resolveCompareHashes(
+  revisions: readonly { hash: string }[],
+  hashA: string,
+  hashB: string,
+): { hashA: string; hashB: string } {
+  const resolvedB =
+    hashB || revisions.find(revision => revision.hash !== hashA)?.hash || '';
+  const indexB = revisions.findIndex(revision => revision.hash === resolvedB);
+  return {
+    hashA: hashA || revisions[indexB + 1]?.hash || '',
+    hashB: resolvedB,
+  };
+}
+
 /** Next/prev over the currently visible (searched/sorted) table rows. */
 export function compareRowNav<T extends { id: string }>(
   rows: T[],

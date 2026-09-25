@@ -15,7 +15,7 @@ Entry point: **Compare revisions** on Tree Details (`TreeCompareLink`), which op
 
 ## User flow
 
-1. Open compare from Tree Details (current revision pre-fills as side A).
+1. Open compare from Tree Details (current revision pre-fills as side B; side A defaults to the revision before it, so A → B reads oldest → newest).
 2. Choose / swap revisions via the revision selector (commit history + shortcuts: previous commit, branch head, swap sides).
 3. Read the summary matrix (fixes, regressions, pass/fail/other counts per builds / boots / tests).
 4. Drill into **Changed results** tabs (Builds / Boots / Tests). Quick change-type chips add or remove their status pairs; custom From/To pairs can be added too (default: `PASS → FAIL` and `FAIL → PASS`). Last edited pairs are remembered in localStorage when the URL omits `statusPair`.
