@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 import { TREE_LISTING_SELECTORS, COMMON_SELECTORS } from './e2e-selectors';
 
@@ -7,6 +7,43 @@ const DEFAULT_ACTION_TIMEOUT = 1000;
 const SEARCH_UPDATE_TIMEOUT = 2000;
 const NAVIGATION_TIMEOUT = 5000;
 const GO_BACK_TIMEOUT = 3000;
+const DEFAULT_TEST_ORIGIN = 'maestro';
+const ALTERNATE_TEST_ORIGIN = 'tree-listing-test';
+
+const makeTreeResponse = (origin: string): Record<string, unknown>[] => [
+  {
+    tree_name: `${origin}-main`,
+    git_repository_branch: 'main',
+    git_commit_hash: `${origin}-commit`,
+    git_repository_url: `https://example.com/${origin}.git`,
+    git_commit_name: `${origin} commit`,
+    git_commit_tags: [],
+    start_time: '2025-01-01T00:00:00Z',
+    build_status: { PASS: 1, FAIL: 0, INCONCLUSIVE: 0 },
+    boot_status: { PASS: 1, FAIL: 0, INCONCLUSIVE: 0 },
+    test_status: { PASS: 1, FAIL: 0, INCONCLUSIVE: 0 },
+  },
+];
+
+const mockTreeListingRequests = async (page: Page): Promise<void> => {
+  await page.route('**/api/origins/', route =>
+    route.fulfill({
+      json: {
+        checkout_origins: [DEFAULT_TEST_ORIGIN, ALTERNATE_TEST_ORIGIN],
+        test_origins: [],
+      },
+    }),
+  );
+  await page.route('**/api/tree/?**', route => {
+    const origin = new URL(route.request().url()).searchParams.get('origin');
+
+    if (origin !== DEFAULT_TEST_ORIGIN && origin !== ALTERNATE_TEST_ORIGIN) {
+      return route.abort('failed');
+    }
+
+    return route.fulfill({ json: makeTreeResponse(origin) });
+  });
+};
 
 test.describe('Test Fallback page', () => {
   test('it loads a 404 page with a link to the main view', async ({ page }) => {
@@ -22,8 +59,9 @@ test.describe('Test Fallback page', () => {
 
 test.describe('Tree Listing Page Tests', () => {
   test.beforeEach(async ({ page }) => {
+    await mockTreeListingRequests(page);
     await page.goto('/tree');
-    await page.waitForTimeout(PAGE_LOAD_TIMEOUT);
+    await expect(page.locator(TREE_LISTING_SELECTORS.table)).toBeVisible();
   });
 
   test('loads tree listing page correctly', async ({ page }) => {
@@ -119,25 +157,34 @@ test.describe('Tree Listing Page Tests', () => {
   });
 
   test('change origin', async ({ page }) => {
-    const testOrigin = 'linaro';
-
-    await expect(page.locator(TREE_LISTING_SELECTORS.table)).toBeVisible();
-
     await expect(page.locator('text="Origin"')).toBeVisible();
 
     const originDropdown = page.locator(COMMON_SELECTORS.originDropdown);
     await expect(originDropdown).toBeVisible({ timeout: 15000 });
+    await expect(originDropdown).toContainText(DEFAULT_TEST_ORIGIN);
+    await expect(page).not.toHaveURL(/[?&]o=/);
+    await expect(
+      page.locator(TREE_LISTING_SELECTORS.treeNameCell('maestro-main')),
+    ).toBeVisible();
 
     await originDropdown.click();
 
     await expect(
-      page.locator(COMMON_SELECTORS.originOption(testOrigin)),
+      page.locator(COMMON_SELECTORS.originOption(ALTERNATE_TEST_ORIGIN)),
     ).toBeVisible();
 
-    await page.locator(COMMON_SELECTORS.originOption(testOrigin)).click();
+    await page
+      .locator(COMMON_SELECTORS.originOption(ALTERNATE_TEST_ORIGIN))
+      .click();
 
-    await page.waitForTimeout(SEARCH_UPDATE_TIMEOUT);
-
-    await expect(originDropdown).toContainText(testOrigin);
+    await expect(originDropdown).toContainText(ALTERNATE_TEST_ORIGIN);
+    await expect(page).toHaveURL(
+      new RegExp(`[?&]o=${ALTERNATE_TEST_ORIGIN}(?:&|$)`),
+    );
+    await expect(
+      page.locator(
+        TREE_LISTING_SELECTORS.treeNameCell(`${ALTERNATE_TEST_ORIGIN}-main`),
+      ),
+    ).toBeVisible();
   });
 });
