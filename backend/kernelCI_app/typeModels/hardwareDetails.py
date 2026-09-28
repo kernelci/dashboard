@@ -59,6 +59,7 @@ class CommitHead(BaseModel):
     repositoryUrl: str  # noqa: N815
     branch: str  # noqa: N815
     commitHash: str  # noqa: N815
+    origin: Optional[str] = None
 
 
 class CommitHistoryPostBody(BaseModel):
@@ -76,6 +77,7 @@ class CommitHistoryValidCheckout(BaseModel):
     git_commit_tags: Optional[List[str]] = []
     git_commit_name: Optional[str]
     start_time: datetime
+    origin: str
 
 
 class Tree(BaseModel):

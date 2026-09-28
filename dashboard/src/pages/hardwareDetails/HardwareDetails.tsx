@@ -117,6 +117,7 @@ const prepareTreeItems = ({
       treeName: tree.tree_name ?? '',
       gitRepositoryBranch: tree.git_repository_branch ?? '',
       gitRepositoryUrl: tree.git_repository_url ?? '',
+      origin: tree.origin,
     });
 
     const rows = commitHistoryData?.[treeIdentifier] ?? [];
@@ -230,8 +231,11 @@ function HardwareDetails(): JSX.Element {
     });
 
   useEffect(() => {
-    const next =
-      summaryResponse.data?.common.trees.map(tree => tree.index) ?? [];
+    const trees = summaryResponse.data?.common.trees;
+    if (!trees?.length) {
+      return;
+    }
+    const next = trees.map(tree => tree.index);
     setTreeKeys(prev =>
       prev.length === next.length && prev.every((key, i) => key === next[i])
         ? prev
@@ -299,6 +303,7 @@ function HardwareDetails(): JSX.Element {
           repositoryUrl: tree.git_repository_url ?? '',
           branch: tree.git_repository_branch ?? '',
           commitHash: tree.head_git_commit_hash ?? '',
+          origin: tree.origin,
         };
 
         result.push(commitHead);
@@ -344,6 +349,7 @@ function HardwareDetails(): JSX.Element {
         treeName: tree.tree_name ?? '',
         gitRepositoryBranch: tree.git_repository_branch ?? '',
         gitRepositoryUrl: tree.git_repository_url ?? '',
+        origin: tree.origin,
       });
       const match = findMatchingCheckout(
         commitHistoryTable[key] ?? [],

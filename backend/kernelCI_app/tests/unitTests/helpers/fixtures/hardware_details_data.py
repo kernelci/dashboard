@@ -14,7 +14,8 @@ def create_tree(**overrides):
     tree_name = overrides.get("tree_name", "mainline")
     branch = overrides.get("git_repository_branch", "master")
     url = overrides.get("git_repository_url", "https://git.kernel.org")
-    default_index = make_tree_key(tree_name, branch, url)
+    origin = overrides.get("origin", "test")
+    default_index = make_tree_key(tree_name, branch, url, origin)
 
     base_tree = Tree(
         index=overrides.get("index", default_index),
@@ -35,8 +36,8 @@ def create_tree(**overrides):
     return base_tree
 
 
-BASE_TREE_KEY = make_tree_key("mainline", "master", "https://git.kernel.org")
-DIFF_TREE_KEY = make_tree_key("stable", "linux-5.4.y", "https://git.kernel.org")
+BASE_TREE_KEY = make_tree_key("mainline", "master", "https://git.kernel.org", "test")
+DIFF_TREE_KEY = make_tree_key("stable", "linux-5.4.y", "https://git.kernel.org", "test")
 
 
 def create_tree_status_summary(**overrides):

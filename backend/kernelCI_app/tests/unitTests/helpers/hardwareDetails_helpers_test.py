@@ -46,6 +46,7 @@ from kernelCI_app.tests.unitTests.helpers.fixtures.hardware_details_data import 
     base_tree,
     base_tree_status_summary,
     create_test_summary,
+    create_tree,
     handle_test_summary_record_new_config,
     handle_test_summary_record_new_origin,
     handle_test_summary_record_new_platform,
@@ -141,6 +142,18 @@ class TestGetTreesWithSelectedCommit:
         assert result[0].is_selected is True
         assert result[1].head_git_commit_hash == "def456"
         assert result[1].is_selected is False
+
+        same_tree_other_origin = create_tree(origin="other")
+        assert base_tree.index != same_tree_other_origin.index
+
+        by_origin = get_trees_with_selected_commit(
+            trees=[base_tree, same_tree_other_origin],
+            selected_commits={same_tree_other_origin.index: "pinned"},
+        )
+        assert by_origin[0].is_selected is False
+        assert by_origin[0].head_git_commit_hash == "abc123"
+        assert by_origin[1].is_selected is True
+        assert by_origin[1].head_git_commit_hash == "pinned"
 
 
 class TestGetArchSummaryTyped:

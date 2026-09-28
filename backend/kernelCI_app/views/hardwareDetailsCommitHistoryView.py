@@ -44,6 +44,7 @@ class HardwareDetailsCommitHistoryView(APIView):
                 "git_commit_name": checkout[4],
                 "git_commit_hash": checkout[5],
                 "start_time": checkout[6],
+                "origin": checkout[7],
             }
             try:
                 validate_checkout = CommitHistoryValidCheckout(**dict_checkout)
@@ -51,6 +52,7 @@ class HardwareDetailsCommitHistoryView(APIView):
                     tree_name=validate_checkout.tree_name,
                     git_repository_url=validate_checkout.git_repository_url,
                     git_repository_branch=validate_checkout.git_repository_branch,
+                    origin=validate_checkout.origin,
                 )
 
                 formatted_checkouts[table_response_key].append(

@@ -101,7 +101,7 @@ class DocStrings:
     HARDWARE_DETAILS_SEL_COMMITS_DESCRIPTION = (
         "Dictionary mapping stable tree keys to selected commit hashes. "
         "Keys are the first 14 hexadecimal characters of SHA-256 over "
-        "'tree_name|git_repository_branch|git_repository_url', matching "
+        "'tree_name|git_repository_branch|git_repository_url|origin', matching "
         "Tree.index values returned by the hardware details endpoints. "
         "Values are a git commit hash or 'head' to use the tree head commit. "
         "An empty object selects all trees with their head commits."
@@ -109,7 +109,7 @@ class DocStrings:
     HARDWARE_DETAILS_TREE_INDEX_DESCRIPTION = (
         "Stable identifier for a tree, derived as the first 14 hexadecimal "
         "characters of SHA-256 over "
-        "'tree_name|git_repository_branch|git_repository_url'"
+        "'tree_name|git_repository_branch|git_repository_url|origin'"
     )
 
     HARDWARE_LISTING_ORIGIN_DESCRIPTION = "Origin of the hardware"

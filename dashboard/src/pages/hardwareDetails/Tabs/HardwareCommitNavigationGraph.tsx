@@ -49,6 +49,7 @@ const HardwareCommitNavigationGraph = ({
         repositoryUrl: treeItem.git_repository_url ?? '',
         branch: treeItem.git_repository_branch ?? '',
         commitHash: treeItem.head_git_commit_hash ?? '',
+        origin: treeItem.origin,
       })),
     [trees],
   );
@@ -71,6 +72,7 @@ const HardwareCommitNavigationGraph = ({
           treeName: treeForIdentifier.tree_name ?? '',
           gitRepositoryBranch: treeForIdentifier.git_repository_branch ?? '',
           gitRepositoryUrl: treeForIdentifier.git_repository_url ?? '',
+          origin: treeForIdentifier.origin,
         })
       : '';
     const entries = commitHistoryData?.commit_history_table?.[key] ?? [];

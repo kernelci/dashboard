@@ -335,7 +335,7 @@ class HardwareDetailsSummary(APIView):
                 tree_name,
                 git_repository_url,
                 git_repository_branch,
-                git_commit_hash,
+                origin,
             )
             if tree_key not in all_trees:
                 all_trees[tree_key] = Tree(
@@ -366,7 +366,7 @@ class HardwareDetailsSummary(APIView):
                 t.tree_name or "",
                 t.git_repository_branch or "",
                 t.git_repository_url or "",
-                t.head_git_commit_hash or "",
+                t.origin or "",
             ),
         )
         for tree in sorted_trees:
@@ -374,6 +374,7 @@ class HardwareDetailsSummary(APIView):
                 tree.tree_name or "",
                 tree.git_repository_branch or "",
                 tree.git_repository_url or "",
+                tree.origin or "",
             )
 
         return sorted_trees, sorted(all_compatibles)
@@ -478,20 +479,21 @@ class HardwareDetailsSummary(APIView):
 
     def select_commits_hashes(
         self,
-        tree_heads: list[tuple[str, str]],
+        tree_heads: list[tuple[str, str, str, str, str, str]],
         selected_commits: Optional[dict[str, str]] = None,
-    ):
-        selected_commit_hashes = []
-        if selected_commits:
-            for key, head in tree_heads:
-                if key in self.selected_commits:
-                    selected_commit = self.selected_commits.get(key, "head")
-                    selected_commit_hashes.append(
-                        head if selected_commit == "head" else selected_commit
-                    )
-        else:
-            selected_commit_hashes = [head for (_, head) in tree_heads]
-        return selected_commit_hashes
+    ) -> list[tuple[str, str, str, str, str]]:
+        """Each row is the checkout identity plus the selected commit hash."""
+        rows = []
+        for key, tree_name, url, branch, commit_hash, checkout_origin in tree_heads:
+            if selected_commits and key not in self.selected_commits:
+                continue
+            chosen = commit_hash
+            if selected_commits:
+                selected_commit = self.selected_commits.get(key, "head")
+                if selected_commit != "head":
+                    chosen = selected_commit
+            rows.append((tree_name, url, branch, chosen, checkout_origin))
+        return rows
 
     def _validate_request(self, request) -> Response | None:
         try:
@@ -551,14 +553,14 @@ class HardwareDetailsSummary(APIView):
 
             filters: FilterParams = self.filters
 
-            selected_commit_hashes = self.select_commits_hashes(
+            selected_checkouts = self.select_commits_hashes(
                 tree_heads, self.selected_commits
             )
 
             summary: list[dict] = get_hardware_details_summary(
                 hardware_id=hardware_id,
                 origin=self.origin,
-                commit_hashes=selected_commit_hashes,
+                checkouts=selected_checkouts,
                 start_datetime=self.start_datetime,
                 end_datetime=self.end_datetime,
                 builds_duration=(
@@ -575,12 +577,9 @@ class HardwareDetailsSummary(APIView):
                 ),
             )
 
-            if not summary:
-                return self._get_error_response(ClientStrings.HARDWARE_NOT_FOUND)
-
             # TODO: necessary due to the fact we return filter info,
             # a dedicated endpoint for filters is important
-            head_commit_hashes = self.select_commits_hashes(tree_heads)
+            head_checkouts = self.select_commits_hashes(tree_heads)
             duration_in_sql = any(
                 duration is not None
                 for duration in (
@@ -592,16 +591,19 @@ class HardwareDetailsSummary(APIView):
                     filters.filterTestDurationMax,
                 )
             )
-            if selected_commit_hashes == head_commit_hashes and not duration_in_sql:
+            if selected_checkouts == head_checkouts and not duration_in_sql:
                 unfiltered_summary = summary
             else:
                 unfiltered_summary = get_hardware_details_summary(
                     hardware_id=hardware_id,
                     origin=self.origin,
-                    commit_hashes=head_commit_hashes,
+                    checkouts=head_checkouts,
                     start_datetime=self.start_datetime,
                     end_datetime=self.end_datetime,
                 )
+
+            if not unfiltered_summary:
+                return self._get_error_response(ClientStrings.HARDWARE_NOT_FOUND)
 
             builds_summary, boots_summary, tests_summary = self.aggregate_summaries(
                 summary, hardware_id

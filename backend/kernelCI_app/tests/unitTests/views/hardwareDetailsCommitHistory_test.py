@@ -34,6 +34,7 @@ class TestHardwareDetailsCommitHistoryView(SimpleTestCase):
                 "name1",
                 "hash1",
                 start_time,
+                "maestro",
             ),
         ]
 
@@ -53,15 +54,17 @@ class TestHardwareDetailsCommitHistoryView(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("commit_history_table", response.data)
-        self.assertIn("tree1-repo1-branch1", response.data["commit_history_table"])
+        self.assertIn(
+            "tree1-repo1-branch1-maestro", response.data["commit_history_table"]
+        )
         self.assertEqual(
-            response.data["commit_history_table"]["tree1-repo1-branch1"][0][
+            response.data["commit_history_table"]["tree1-repo1-branch1-maestro"][0][
                 "git_commit_hash"
             ],
             "hash1",
         )
         self.assertEqual(
-            response.data["commit_history_table"]["tree1-repo1-branch1"][0][
+            response.data["commit_history_table"]["tree1-repo1-branch1-maestro"][0][
                 "start_time"
             ],
             start_time,
