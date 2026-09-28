@@ -52,7 +52,11 @@ import {
   CompareStatusChip,
   isFailureHighlight,
 } from './CompareChangeDisplay';
-import { CompareTableSearch, rowMatchesSearch } from './compareTableShared';
+import {
+  CompareTableSearch,
+  rowMatchesSearch,
+  useCompareSheet,
+} from './compareTableShared';
 
 const ESTIMATED_ROW_HEIGHT = 56;
 const VIRTUALIZER_OVERSCAN = 10;
@@ -387,6 +391,8 @@ export function CompareTestsGroupedTable({
   });
 
   const modelRows = table.getRowModel().rows;
+  const { selectedId, openRow, sheet } = useCompareSheet(filteredRows, 'test');
+
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: modelRows.length,
@@ -486,7 +492,13 @@ export function CompareTestsGroupedTable({
                   return (
                     <TableRow
                       key={row.id}
-                      className={cn(highlight && 'bg-red-50')}
+                      onClick={() => openRow(row.original.id)}
+                      className={cn(
+                        'hover:bg-light-blue cursor-pointer',
+                        highlight && 'bg-red-50',
+                        selectedId === row.original.id &&
+                          'bg-sky-200 hover:bg-sky-200',
+                      )}
                     >
                       {row.getVisibleCells().map(cell => (
                         <TableCell key={cell.id} className="max-w-0 p-4">
@@ -512,6 +524,7 @@ export function CompareTestsGroupedTable({
           </TableBody>
         </table>
       </div>
+      {sheet}
     </div>
   );
 }

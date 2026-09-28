@@ -8,7 +8,6 @@ import { FormattedMessage } from 'react-intl';
 import type {
   CompareBootFailureRow,
   CompareBuildFailureRow,
-  CompareFailureRow,
 } from '@/types/tree/TreeCompare';
 
 import type { MessagesKey } from '@/locales/messages';
@@ -23,18 +22,13 @@ import {
 } from '@/components/ui/table';
 
 import { cn } from '@/lib/utils';
-import { compareRowNav } from '@/utils/treeCompareDiff';
-import type { LogType } from '@/hooks/useLogData';
 
 import { CompareChangeBadge, isFailureHighlight } from './CompareChangeDisplay';
-import {
-  CompareDetailSheet,
-  compareRowToDetailItem,
-} from './CompareDetailSheet';
 import {
   CompareSideCells,
   CompareTableSearch,
   rowMatchesSearch,
+  useCompareSheet,
 } from './compareTableShared';
 
 const ESTIMATED_ROW_HEIGHT = 56;
@@ -116,57 +110,6 @@ function sortRows<T, Key extends string>(
     (left, right) =>
       direction * compareSortValues(getValue(left), getValue(right)),
   );
-}
-
-function useCompareSheet(
-  visibleRows: CompareFailureRow[],
-  logType: LogType,
-): {
-  selectedId: string | null;
-  openRow: (id: string) => void;
-  sheet: JSX.Element;
-} {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const nav = compareRowNav(visibleRows, selectedId);
-
-  const openRow = useCallback((id: string) => {
-    setSelectedId(id);
-  }, []);
-
-  const closeSheet = useCallback((open: boolean) => {
-    if (!open) {
-      setSelectedId(null);
-    }
-  }, []);
-
-  const goToPrevious = useCallback(() => {
-    if (nav.previousId) {
-      setSelectedId(nav.previousId);
-    }
-  }, [nav.previousId]);
-
-  const goToNext = useCallback(() => {
-    if (nav.nextId) {
-      setSelectedId(nav.nextId);
-    }
-  }, [nav.nextId]);
-
-  return {
-    selectedId,
-    openRow,
-    sheet: (
-      <CompareDetailSheet
-        open={nav.row !== null}
-        item={nav.row ? compareRowToDetailItem(nav.row) : null}
-        logType={logType}
-        onOpenChange={closeSheet}
-        onPrevious={goToPrevious}
-        onNext={goToNext}
-        hasPrevious={nav.hasPrevious}
-        hasNext={nav.hasNext}
-      />
-    ),
-  };
 }
 
 function SortableHead<Key extends string>({
