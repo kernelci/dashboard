@@ -1,4 +1,8 @@
-import { isTFilterNumberKeys, isTFilterObjectKeys } from '@/types/general';
+import {
+  getActiveDurationFilter,
+  isTFilterNumberKeys,
+  isTFilterObjectKeys,
+} from '@/types/general';
 import type { TFilterKeys, TFilter, TFilterObjectsKeys } from '@/types/general';
 import { CULPRIT_CODE, HAS_INCIDENT_OPTION } from '@/utils/constants/issues';
 
@@ -32,11 +36,11 @@ export const cleanFalseFilters = (diffFilter: TFilter): TFilter => {
             }
           },
         );
-      } else if (
-        isTFilterNumberKeys(filterSectionKey) &&
-        typeof filterSectionValue === 'number'
-      ) {
-        cleanedFilter[filterSectionKey] = filterSectionValue;
+      } else if (isTFilterNumberKeys(filterSectionKey)) {
+        const duration = getActiveDurationFilter(filterSectionValue);
+        if (duration !== undefined) {
+          cleanedFilter[filterSectionKey] = duration;
+        }
       }
     },
   );

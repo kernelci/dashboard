@@ -160,8 +160,24 @@ export const makeZIntervalInDays = (
 export const DEFAULT_ORIGIN = 'maestro';
 export const zOrigin = z.string().default(DEFAULT_ORIGIN).catch(DEFAULT_ORIGIN);
 
+export const getActiveDurationFilter = (value: unknown): number | undefined => {
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    return undefined;
+  }
+
+  if (typeof value === 'string' && value.trim() === '') {
+    return undefined;
+  }
+
+  const n = Number(value);
+  return Number.isFinite(n) && n !== 0 ? n : undefined;
+};
+
 const zFilterBoolValue = z.record(z.boolean()).optional();
-const zFilterNumberValue = z.number().optional();
+const zFilterNumberValue = z.preprocess(
+  getActiveDurationFilter,
+  z.number().optional(),
+);
 
 export const zFilterObjectsKeys = z.enum([
   'origins',

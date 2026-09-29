@@ -269,6 +269,12 @@ def to_int_or_default(value, default):
     return default
 
 
+def duration_filter_value(value: Any) -> Union[str, int, None]:
+    if isinstance(value, list):
+        return value[0] if value else None
+    return value
+
+
 type FilterFields = Literal[
     "boot.status",
     "boot.duration",
@@ -414,7 +420,7 @@ class FilterParams:
         self.filterBootStatus.add(current_filter["value"])
 
     def _handle_boot_duration(self, current_filter: ParsedFilter) -> None:
-        value = current_filter["value"]
+        value = duration_filter_value(current_filter["value"])
         operation = current_filter["comparison_op"]
         if operation == "lte":
             self.filterBootDurationMax = to_int_or_default(value, None)
@@ -425,7 +431,7 @@ class FilterParams:
         self.filterTestStatus.add(current_filter["value"])
 
     def _handle_test_duration(self, current_filter: ParsedFilter) -> None:
-        value = current_filter["value"]
+        value = duration_filter_value(current_filter["value"])
         operation = current_filter["comparison_op"]
         if operation == "lte":
             self.filterTestDurationMax = to_int_or_default(value, None)
@@ -454,7 +460,7 @@ class FilterParams:
         self.filterBuildStatus.add(current_filter["value"])
 
     def _handle_build_duration(self, current_filter: ParsedFilter) -> None:
-        value = current_filter["value"][0]
+        value = duration_filter_value(current_filter["value"])
         operation = current_filter["comparison_op"]
         if operation == "lte":
             self.filterBuildDurationMax = to_int_or_default(value, None)
