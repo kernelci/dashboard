@@ -130,7 +130,11 @@ The workflow `.github/workflows/deploy-containers.yaml` publishes Docker images 
 - `dashboard-frontend` (from `./dashboard/Dockerfile`)
 - `dashboard-proxy` (from `./proxy`)
 
-This workflow is triggered on pushes to main (on the original repository) and also manually (`workflow_dispatch`) and pushes images to GHCR under `ghcr.io/<owner>/<repo>` with two tags for each image:
+This workflow is triggered on pushes to main (on the original repository) and also manually (`workflow_dispatch`) and pushes images to GHCR under `ghcr.io/<owner>/<repo>` with two tags for each image. After CI passes, pushes to `main` also deploy the dashboard to staging (see [DEPLOYMENT.md — Staging](./DEPLOYMENT.md#3-staging)).
+
+> [!IMPORTANT]
+> The **ingester** on `db.kernelci.org` is **not** updated by pushes to `main` or
+> these dashboard workflows. See [Ingester deployment](./DEPLOYMENT.md#ingester-deployment).
 
 - `latest`
 - `${{ github.sha }}`
