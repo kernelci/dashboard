@@ -74,6 +74,14 @@ to the mirror. The next ingest does `rev-list --remotes` with each stored tip as
 stdin (git's `--not --stdin` does not exclude stdin lines).
 Fetch-only does not touch that file.
 
+When `sync_commit_mirror` finishes (including a failed run, and `--dry-run`),
+it writes `GIT_MIRROR_DIR/mirror-size-bytes`: the apparent size of the mirror
+in bytes. The write is a temp file in that directory, `fsync`, then replace.
+With `PROMETHEUS_METRICS_ENABLED=true`, the metrics process exposes
+`git_mirror_size_bytes` and `git_mirror_size_mtime_seconds` (Unix mtime of
+that file). Prometheus alerts `GitMirrorSizeHigh` when the size stays above
+10 GB for 30 minutes. The series stay absent until the first completed fetch.
+
 ### Recreate the volume
 
 A pack that slipped in unfiltered stays until the volume is wiped.

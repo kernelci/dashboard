@@ -7,7 +7,8 @@ from kernelCI_app.helpers.commitSync import (
     DEFAULT_FETCH_TIMEOUT_SECONDS,
     sync_commit_metadata,
 )
-from kernelCI_app.helpers.logger import out
+from kernelCI_app.helpers.logger import log_message, out
+from utils.git_mirror_size import record_mirror_size
 
 
 class Command(BaseCommand):
@@ -51,16 +52,29 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        mirror_dir = options["mirror_dir"] or settings.GIT_MIRROR_DIR
-        stats = sync_commit_metadata(
-            mirror_dir=Path(mirror_dir),
-            dry_run=options["dry_run"],
-            skip_ingest=True,
-            fetch_timeout=options["fetch_timeout"],
-            verbose_git=options["verbose_git"],
-            skip_unfilterable=options["skip_unfilterable"],
-        )
-        out(
-            "sync_commit_mirror remotes_ok=%(remotes_ok)s remotes_failed=%(remotes_failed)s"
-            % stats
-        )
+        mirror_dir = Path(options["mirror_dir"] or settings.GIT_MIRROR_DIR)
+        try:
+            stats = sync_commit_metadata(
+                mirror_dir=mirror_dir,
+                dry_run=options["dry_run"],
+                skip_ingest=True,
+                fetch_timeout=options["fetch_timeout"],
+                verbose_git=options["verbose_git"],
+                skip_unfilterable=options["skip_unfilterable"],
+            )
+            out(
+                "sync_commit_mirror remotes_ok=%(remotes_ok)s remotes_failed=%(remotes_failed)s"
+                % stats
+            )
+        finally:
+            self._record_mirror_size(mirror_dir)
+
+    def _record_mirror_size(self, mirror_dir: Path) -> None:
+        try:
+            size = record_mirror_size(mirror_dir)
+        except OSError as exc:
+            log_message("sync_commit_mirror failed to record mirror size: %s" % exc)
+            return
+        if size is None:
+            return
+        out("sync_commit_mirror mirror_bytes=%s" % size)
