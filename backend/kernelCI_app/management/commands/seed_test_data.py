@@ -9,7 +9,10 @@ from django.db import transaction
 
 from kernelCI_app.constants.general import UNKNOWN_STRING
 from kernelCI_app.helpers.system import get_running_instance
-from kernelCI_app.management.commands.helpers.aggregation_helpers import simplify_status
+from kernelCI_app.management.commands.helpers.aggregation_helpers import (
+    aggregate_checkouts_and_pendings,
+    simplify_status,
+)
 from kernelCI_app.management.commands.helpers.process_pending_helpers import (
     accumulate_rollup_entry,
     extract_path_group,
@@ -22,9 +25,13 @@ from kernelCI_app.models import (
     Issues,
     Labs,
     LatestCheckout,
+    PendingBuilds,
+    PendingTest,
+    ProcessedListingItems,
     SimplifiedStatusChoices,
     StatusChoices,
     Tests,
+    TreeListing,
     TreeTestsRollup,
 )
 from kernelCI_app.tests.factories import (
@@ -86,7 +93,8 @@ class Command(BaseCommand):
             issues = self.create_issues(count=options["issues"])
             incidents = self.create_incidents(issues=issues, builds=builds, tests=tests)
             rollup_rows = self.create_tests_rollup(tests=tests, incidents=incidents)
-            latest_checkouts = self.create_latest_checkouts(checkouts=checkouts)
+            self.stdout.write("Updating listing aggregates...")
+            aggregate_checkouts_and_pendings(checkouts, tests, builds)
             hardware_rows = self.create_hardware_status(tests=tests)
 
         self.stdout.write(
@@ -98,7 +106,6 @@ class Command(BaseCommand):
                 f"- {len(issues)} issues\n"
                 f"- {len(incidents)} incidents\n"
                 f"- {len(rollup_rows)} tree_tests_rollup rows\n"
-                f"- {len(latest_checkouts)} latest_checkout rows\n"
                 f"- {len(hardware_rows)} hardware_status rows\n"
             )
         )
@@ -128,6 +135,10 @@ class Command(BaseCommand):
 
     def clear_data(self) -> None:
         """Clear existing test data."""
+        ProcessedListingItems.objects.all().delete()
+        PendingTest.objects.all().delete()
+        PendingBuilds.objects.all().delete()
+        TreeListing.objects.all().delete()
         HardwareStatus.objects.all().delete()
         LatestCheckout.objects.all().delete()
         TreeTestsRollup.objects.all().delete()
@@ -354,38 +365,6 @@ class Command(BaseCommand):
 
         created = TreeTestsRollup.objects.bulk_create(rollup_objects)
         return created
-
-    def create_latest_checkouts(
-        self, *, checkouts: list[Checkouts]
-    ) -> list[LatestCheckout]:
-        """Create latest_checkout rows used by listing queries."""
-        self.stdout.write("Creating latest_checkout rows...")
-
-        latest_by_tree: dict[tuple, Checkouts] = {}
-        for checkout in checkouts:
-            key = (
-                checkout.origin,
-                checkout.tree_name,
-                checkout.git_repository_url,
-                checkout.git_repository_branch,
-            )
-            current = latest_by_tree.get(key)
-            if current is None or checkout.start_time > current.start_time:
-                latest_by_tree[key] = checkout
-
-        latest_checkouts = [
-            LatestCheckout(
-                checkout_id=checkout.id,
-                start_time=checkout.start_time,
-                origin=checkout.origin,
-                tree_name=checkout.tree_name,
-                git_repository_url=checkout.git_repository_url,
-                git_repository_branch=checkout.git_repository_branch,
-            )
-            for checkout in latest_by_tree.values()
-        ]
-
-        return LatestCheckout.objects.bulk_create(latest_checkouts)
 
     def create_hardware_status(self, *, tests: list[Tests]) -> list[HardwareStatus]:
         """Aggregate seeded tests into hardware_status rows."""
