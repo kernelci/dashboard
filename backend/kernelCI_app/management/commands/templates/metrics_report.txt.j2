@@ -125,11 +125,14 @@ Period: {{ start_datetime }} to {{ end_datetime }}
 
 {#- a namespace is required to store the values outside of the loop -#}
 {#- initialize with the label length so we consider them as well -#}
-{%- set ns = namespace(lab_builds_len="Covered builds"|length, lab_boots_len="Boots"|length, lab_tests_len="Tests"|length) -%}
+{%- set ns = namespace(lab_builds_len="Covered builds"|length, lab_boots_len="Boots"|length, lab_tests_len="Tests"|length, lab_builds_total=0, lab_boots_total=0, lab_tests_total=0) -%}
 {%- for v in lab_maps.values() -%}
-  {%- set ns.lab_builds_len = [ns.lab_builds_len, (fmt(v.builds))|length] | max -%}
-  {%- set ns.lab_boots_len = [ns.lab_boots_len, (fmt(v.boots))|length] | max -%}
-  {%- set ns.lab_tests_len = [ns.lab_tests_len, (fmt(v.tests))|length] | max -%}
+  {%- set ns.lab_builds_len = [ns.lab_builds_len, (fmt(v.covered_builds))|length] | max -%}
+  {%- set ns.lab_boots_len = [ns.lab_boots_len, (fmt(v.boots.values()|sum))|length] | max -%}
+  {%- set ns.lab_tests_len = [ns.lab_tests_len, (fmt(v.tests.values()|sum))|length] | max -%}
+  {%- set ns.lab_builds_total = ns.lab_builds_total + v.covered_builds -%}
+  {%- set ns.lab_boots_total = ns.lab_boots_total + v.boots.values()|sum -%}
+  {%- set ns.lab_tests_total = ns.lab_tests_total + v.tests.values()|sum -%}
 {%- endfor -%}
 {%- set lab_builds_space = ns.lab_builds_len + static_spacing -%}
 {%- set lab_boots_space = ns.lab_boots_len + static_spacing -%}
@@ -149,9 +152,9 @@ Period: {{ start_datetime }} to {{ end_datetime }}
 {% for lab_key, lab_values in lab_maps.items() | sort -%}
   {%- set display_name = lab_key + " *" if lab_key in deltas.new_lab_keys else lab_key -%}
   {{ "{:<{width}}".format("  " + display_name, width=lab_names_space) -}}
-  {{ "{:>{width}}".format(fmt(lab_values["builds"]), width=lab_builds_space) -}}
-  {{ "{:>{width}}".format(fmt(lab_values["boots"]), width=lab_boots_space) -}}
-  {{ "{:>{width}}".format(fmt(lab_values["tests"]), width=lab_tests_space) -}}
+  {{ "{:>{width}}".format(fmt(lab_values.covered_builds), width=lab_builds_space) -}}
+  {{ "{:>{width}}".format(fmt(lab_values.boots.values()|sum), width=lab_boots_space) -}}
+  {{ "{:>{width}}".format(fmt(lab_values.tests.values()|sum), width=lab_tests_space) -}}
   {{ "{:>{width}}".format(deltas.labs.get(lab_key, ""), width=lab_change_space) }}
 {% endfor %}
 {%- for lab_key in deltas.extinct_lab_keys | sort -%}
@@ -164,9 +167,9 @@ Period: {{ start_datetime }} to {{ end_datetime }}
 {% endfor %}
 {{- "  " + "─" * hrule_length}}
 {{ "{:<{width}}".format("  Total", width=lab_names_space) -}}
-{{ "{:>{width}}".format(fmt(lab_maps.values() | map(attribute='builds') | sum), width=lab_builds_space) -}}
-{{ "{:>{width}}".format(fmt(lab_maps.values() | map(attribute='boots') | sum), width=lab_boots_space) -}}
-{{ "{:>{width}}".format(fmt(lab_maps.values() | map(attribute='tests') | sum), width=lab_tests_space) -}}
+{{ "{:>{width}}".format(fmt(ns.lab_builds_total), width=lab_builds_space) -}}
+{{ "{:>{width}}".format(fmt(ns.lab_boots_total), width=lab_boots_space) -}}
+{{ "{:>{width}}".format(fmt(ns.lab_tests_total), width=lab_tests_space) -}}
 {{ "{:>{width}}".format(deltas.n_total_lab_activity, width=lab_change_space) }}
 
 {%- endif %}

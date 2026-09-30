@@ -103,12 +103,12 @@ def build_build_compare_filter_clauses(  # noqa: C901 - maps FilterParams fields
         params["compilers"] = list(filters.filterCompiler)
         params["unknown_string"] = UNKNOWN_STRING
 
-    if filters.filter_labs:
+    if filters.filter_labs["build"]:
         pre_join.append(
             "AND COALESCE(NULLIF(b.misc->>'lab', ''), %(unknown_string)s)"
             " = ANY(%(labs)s)"
         )
-        params["labs"] = list(filters.filter_labs)
+        params["labs"] = list(filters.filter_labs["build"])
         params["unknown_string"] = UNKNOWN_STRING
 
     if filters.filterHardware:
@@ -210,12 +210,12 @@ def build_boot_test_compare_filter_clauses(  # noqa: C901 - maps FilterParams fi
         params["compilers"] = list(filters.filterCompiler)
         params["unknown_string"] = UNKNOWN_STRING
 
-    if filters.filter_labs:
+    if filters.filter_labs[tab]:
         pre_join.append(
             "AND COALESCE(NULLIF(t.misc->>'runtime', ''), %(unknown_string)s)"
             " = ANY(%(labs)s)"
         )
-        params["labs"] = list(filters.filter_labs)
+        params["labs"] = list(filters.filter_labs[tab])
         params["unknown_string"] = UNKNOWN_STRING
 
     if filters.filterHardware:

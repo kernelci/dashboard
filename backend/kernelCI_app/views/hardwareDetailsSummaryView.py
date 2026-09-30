@@ -119,7 +119,7 @@ class HardwareDetailsSummary(APIView):
             return True
         if is_filtered_out(config, filters.filterConfigs):
             return True
-        if is_filtered_out(lab, filters.filter_labs):
+        if is_filtered_out(lab, filters.filter_labs[filter_type]):
             return True
         if is_filtered_out(architecture, filters.filterArchitecture):
             return True

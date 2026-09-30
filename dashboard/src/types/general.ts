@@ -339,6 +339,7 @@ const requestFilters = {
     'boot.origin',
     'test.origin',
     'test.lab',
+    'boot.lab',
   ],
   issueListing: [
     'origin',
@@ -380,7 +381,10 @@ export const filterFieldMap = {
   'test.issue': 'testIssue',
   'build.status': 'buildStatus',
   'build.origin': 'buildOrigin',
+  // The Labs section is global in the UI and lists runtime labs, which builds
+  // don't share, so only the test and boot tabs get the selection
   'test.lab': 'labs',
+  'boot.lab': 'labs',
   origin: 'origins',
   'issue.culprit': 'issueCulprits',
   'issue.categories': 'issueCategories',

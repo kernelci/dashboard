@@ -570,14 +570,11 @@ def decide_if_is_full_record_filtered_out(
     if not is_current_tree_selected:
         return True
 
-    lab = record.get("lab") or UNKNOWN_STRING
-
     is_record_filtered_out_result = instance.filters.is_record_filtered_out(
         hardwares=record["environment_compatible"],
         architecture=record["build__architecture"],
         compiler=record["build__compiler"],
         config_name=record["build__config_name"],
-        lab=lab,
     )
 
     return is_record_filtered_out_result
@@ -599,6 +596,7 @@ def decide_if_is_build_in_filter(
         issue_version=build.issue_version,
         incident_test_id=incident_test_id,
         build_origin=build.origin,
+        lab=build.lab,
     )
     return (
         is_build_not_processed
@@ -641,6 +639,7 @@ def decide_if_is_test_in_filter(
     issue_version = record["incidents__issue__version"]
     incidents_test_id = record["incidents__test_id"]
     origin = record["test_origin"]
+    lab = record.get("lab")
     platform = sanitize_dict(record.get("environment_misc", {})).get(
         "platform", UNKNOWN_STRING
     )
@@ -652,6 +651,7 @@ def decide_if_is_test_in_filter(
             path=path,
             issue_id=issue_id,
             issue_version=issue_version,
+            lab=lab,
             incident_test_id=incidents_test_id,
             platform=platform,
             origin=origin,
@@ -663,6 +663,7 @@ def decide_if_is_test_in_filter(
             path=path,
             issue_id=issue_id,
             issue_version=issue_version,
+            lab=lab,
             incident_test_id=incidents_test_id,
             platform=platform,
             origin=origin,

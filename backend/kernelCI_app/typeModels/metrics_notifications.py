@@ -2,11 +2,14 @@ from typing import TypedDict
 
 from pydantic import BaseModel
 
+from kernelCI_app.typeModels.common import StatusCount
+
 
 class LabMetricsData(BaseModel):
-    builds: int
-    boots: int
-    tests: int
+    covered_builds: int = 0
+    builds: StatusCount
+    boots: StatusCount
+    tests: StatusCount
 
 
 class BuildIncidentsCount(TypedDict):

@@ -49,7 +49,10 @@ from kernelCI_app.queries.notifications import (
     kcidb_tests_results,
 )
 from kernelCI_app.queries.test import get_test_details_data, get_test_status_history
-from kernelCI_app.typeModels.metrics_notifications import MetricsReportData
+from kernelCI_app.typeModels.metrics_notifications import (
+    LabMetricsData,
+    MetricsReportData,
+)
 from kernelCI_app.utils import group_status, is_boot
 from kernelCI_cache.queries.issues import (
     get_all_issue_keys,
@@ -804,6 +807,10 @@ def _fmt_change(cur: int, prev: int, show_percentage: bool = True) -> str:
     return signed_diff
 
 
+def _lab_tests_run(lab: LabMetricsData) -> int:
+    return sum(lab.tests.model_dump().values())
+
+
 def compute_metrics_deltas(data: MetricsReportData) -> dict:
     """Pre-compute all change strings for the metrics report template."""
     new_lab_keys: set[str] = set(data.lab_maps.keys()) - set(data.prev_lab_maps.keys())
@@ -818,16 +825,18 @@ def compute_metrics_deltas(data: MetricsReportData) -> dict:
         # Gathers change from current labs to their last week,
         # as well as already counting part of last week's total
         prev_lab_tests = (
-            data.prev_lab_maps[lab_key].tests if lab_key in data.prev_lab_maps else 0
+            _lab_tests_run(data.prev_lab_maps[lab_key])
+            if lab_key in data.prev_lab_maps
+            else 0
         )
-        labs[lab_key] = _fmt_change(lab_values.tests, prev_lab_tests)
+        labs[lab_key] = _fmt_change(_lab_tests_run(lab_values), prev_lab_tests)
 
-        n_total_lab_curr += lab_values.tests
+        n_total_lab_curr += _lab_tests_run(lab_values)
         n_total_lab_prev += prev_lab_tests
 
     for lab_key in extinct_lab_keys:
         # Gathers change from extinct labs and finishes counting last week's total
-        extinct_tests = data.prev_lab_maps[lab_key].tests
+        extinct_tests = _lab_tests_run(data.prev_lab_maps[lab_key])
         labs[lab_key] = _fmt_change(0, extinct_tests)
 
         n_total_lab_prev += extinct_tests
