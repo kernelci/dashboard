@@ -9,9 +9,8 @@ children are newer than the cutoff.
 Rows linked to an incident (an issue) are kept by default, together with their
 ancestors so nothing is orphaned; pass --skip-issue-protection to prune them too.
 
-Only checkouts, builds and tests are touched. Aggregate and derived tables (e.g.
-tree_tests_rollup, hardware_status, latest_checkout) are left untouched and must
-be cleaned up separately.
+Also prunes hardware_daily_* by checkout_day (same age). Other derived tables
+(tree_tests_rollup, hardware_status, latest_checkout) are left untouched.
 """
 
 from django.core.management.base import BaseCommand, CommandError
@@ -19,8 +18,16 @@ from django.db import connections
 
 from kernelCI_app.management.commands.helpers.intervals import parse_interval
 
-# Strict parent-before-child order: a checkout owns builds, a build owns tests.
 PRUNABLE_TABLES = ("checkouts", "builds", "tests")
+HARDWARE_DAILY_TABLES = ("hardware_daily_builds", "hardware_daily_tests")
+VALID_TABLES = PRUNABLE_TABLES + HARDWARE_DAILY_TABLES
+
+
+def format_count_table(counts):
+    w = max(map(len, counts)) + 1
+    lines = [f"* {t + ':':<{w}}{n:>8}" for t, n in counts.items()]
+    lines += ["-" * (w + 10), f"* {'total:':<{w}}{sum(counts.values()):>8}"]
+    return "\n".join(lines)
 
 
 class Command(BaseCommand):
@@ -39,6 +46,7 @@ class Command(BaseCommand):
             type=lambda s: [origin.strip() for origin in s.split(",")],
             default=[],
             help="Limit age-based pruning to specific origins (comma-separated). "
+            "Raw rows match origin; hardware_daily_* match checkout_origin. "
             "Children of pruned parents are removed regardless of origin. "
             "If not provided, any origin is considered.",
         )
@@ -61,11 +69,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "--tables",
             type=lambda s: [t.strip() for t in s.split(",")],
-            default=list(PRUNABLE_TABLES),
+            default=list(VALID_TABLES),
             help="Limit pruning to specific tables (comma-separated: "
-            f"{', '.join(PRUNABLE_TABLES)}). Only the listed tables are deleted; "
-            "unlisted child tables are left untouched, so selecting a parent without "
-            "its children (e.g. only 'checkouts') can leave orphans. Default: all.",
+            f"{', '.join(VALID_TABLES)}). Only listed tables are deleted; a parent "
+            "without its children (e.g. only 'checkouts') can leave orphans. "
+            "hardware_daily_* prune by checkout_day and can be targeted alone. "
+            "Default: all.",
         )
         parser.add_argument(
             "--skip-issue-protection",
@@ -87,13 +96,16 @@ class Command(BaseCommand):
                 "positive number."
             )
 
-        unknown_tables = [t for t in options["tables"] if t not in PRUNABLE_TABLES]
+        unknown_tables = [t for t in options["tables"] if t not in VALID_TABLES]
         if unknown_tables:
             raise CommandError(
                 f"Unknown table(s): {', '.join(unknown_tables)}. "
-                f"Valid options are: {', '.join(PRUNABLE_TABLES)}."
+                f"Valid options are: {', '.join(VALID_TABLES)}."
             )
         selected_tables = [t for t in PRUNABLE_TABLES if t in options["tables"]]
+        selected_daily_tables = [
+            t for t in HARDWARE_DAILY_TABLES if t in options["tables"]
+        ]
         protect_incidents = not options["skip_issue_protection"]
 
         dry_run = options["dry_run"]
@@ -122,17 +134,24 @@ class Command(BaseCommand):
                 counts = {
                     t: self._count(cursor, temp_tables[t]) for t in selected_tables
                 }
+                counts |= {
+                    t: self._count_hardware_daily(cursor, t, cutoff.date(), origins)
+                    for t in selected_daily_tables
+                }
                 total = sum(counts.values())
 
-                lines = [f"Rows older than {cutoff.isoformat()}:"]
-                lines += [f"* {t}:\t{counts[t]:>8}" for t in selected_tables]
-                lines += ["----------------------", f"* total:\t{total:>8}"]
-                lines.append(
-                    "Note: counts include children cascaded from pruned parents."
-                )
-                if protect_incidents:
-                    lines.append("Note: rows linked to an incident are kept.")
-                self.stdout.write("\n".join(lines))
+                self.stdout.write(f"Rows older than {cutoff.isoformat()}:")
+                self.stdout.write(format_count_table(counts))
+                if selected_tables:
+                    self.stdout.write(
+                        "Note: counts include children cascaded from pruned parents."
+                    )
+                if protect_incidents and selected_tables:
+                    self.stdout.write("Note: rows linked to an incident are kept.")
+                if selected_daily_tables:
+                    self.stdout.write(
+                        "Note: hardware daily rows are pruned by their own checkout_day."
+                    )
 
                 if total == 0:
                     self.stdout.write(self.style.SUCCESS("Nothing to prune."))
@@ -156,11 +175,13 @@ class Command(BaseCommand):
                         self.stdout.write("Aborted.")
                         return
 
-                # Delete child-first (reverse of PRUNABLE_TABLES order): each batch
-                # commits on its own, so a crash mid-run leaves children already gone
-                # before their parents, never the reverse. Reordering this would risk
-                # orphans.
                 deleted = 0
+                for table in selected_daily_tables:
+                    deleted += self._batch_delete_hardware_daily(
+                        cursor, table, cutoff.date(), options["batch_size"], origins
+                    )
+
+                # Child-first: a crash must not leave orphans.
                 for table in reversed(selected_tables):
                     deleted += self._batch_delete(
                         cursor, table, temp_tables[table], options["batch_size"]
@@ -248,6 +269,38 @@ class Command(BaseCommand):
         deleted_total = 0
         while True:
             cursor.execute(sql, {"batch_size": batch_size})
+            deleted = cursor.rowcount
+            if deleted == 0:
+                break
+            deleted_total += deleted
+            self.stdout.write(f"Deleted {table}(n={deleted}) total={deleted_total}")
+        return deleted_total
+
+    def _count_hardware_daily(self, cursor, table, cutoff_day, origins):
+        sql = f'SELECT COUNT(*) FROM "{table}" WHERE checkout_day < %(cutoff_day)s'
+        params = {"cutoff_day": cutoff_day}
+        if origins:
+            sql += " AND checkout_origin = ANY(%(origins)s)"
+            params["origins"] = origins
+        cursor.execute(sql, params)
+        return cursor.fetchone()[0]
+
+    def _batch_delete_hardware_daily(
+        self, cursor, table, cutoff_day, batch_size, origins
+    ):
+        where = "checkout_day < %(cutoff_day)s"
+        params = {"cutoff_day": cutoff_day, "batch_size": batch_size}
+        if origins:
+            where += " AND checkout_origin = ANY(%(origins)s)"
+            params["origins"] = origins
+        sql = (
+            f'DELETE FROM "{table}" WHERE ctid IN ('
+            f'SELECT ctid FROM "{table}" WHERE {where} '
+            f"LIMIT %(batch_size)s)"
+        )
+        deleted_total = 0
+        while True:
+            cursor.execute(sql, params)
             deleted = cursor.rowcount
             if deleted == 0:
                 break
