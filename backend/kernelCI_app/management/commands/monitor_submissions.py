@@ -5,7 +5,7 @@ import shutil
 import signal
 import time
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from prometheus_client import CollectorRegistry, Gauge, multiprocess, start_http_server
 
 from kernelCI_app.constants.ingester import (
@@ -16,6 +16,7 @@ from kernelCI_app.constants.ingester import (
 )
 from kernelCI_app.management.commands.helpers.file_utils import (
     load_tree_names,
+    sweep_pending_retry,
     verify_spool_dirs,
 )
 from kernelCI_app.management.commands.helpers.kcidbng_ingester import (
@@ -35,6 +36,29 @@ QUEUE_SIZE_GAUGE = Gauge(
     ["ingester"],
     multiprocess_mode="livemax",
 )
+
+
+PENDING_RETRY_GAUGE = Gauge(
+    "kcidb_ingestion_pending_retry",
+    "Number of submissions waiting to be ingested again after a deferred failure",
+    ["ingester"],
+    multiprocess_mode="livemax",
+)
+
+RETRY_SWEEP_INTERVAL_SEC = 300
+RETRY_SWEEP_MAX_INTERVAL_SEC = 1800
+RETRY_SWEEP_LIMIT = 5000
+
+
+def get_stall_grace_minutes() -> int:
+    value = os.environ.get("INGESTER_STALL_GRACE_MINUTES", "60")
+    try:
+        minutes = int(value)
+        if minutes > 0:
+            return minutes
+    except ValueError:
+        pass
+    raise CommandError("INGESTER_STALL_GRACE_MINUTES must be a positive integer")
 
 
 def check_positive_int(value) -> bool:
@@ -97,6 +121,58 @@ class Command(BaseCommand):
             )
             return []
 
+    @staticmethod
+    def _scan_pending_retry(directory: str) -> set[str]:
+        try:
+            with os.scandir(directory) as it:
+                return {e.name for e in it if e.is_file() and e.name.endswith(".json")}
+        except OSError as e:
+            raise CommandError(
+                f"Could not scan retry directory {directory}: {e}"
+            ) from e
+
+    def _check_retry_backlog(
+        self,
+        spool_dir: str,
+        pending_retry_dir: str,
+        retry_started: dict[str, float],
+        grace_minutes: int,
+    ) -> int:
+        """Track each deferred file until it leaves both the retry queue and spool.
+
+        Requeueing and new failures must not reset an older submission's clock.
+        The grace period starts when this monitor first observes the failure,
+        including for files left over from a previous monitor run.
+        """
+        pending = self._scan_pending_retry(pending_retry_dir)
+        now = time.monotonic()
+        for name in pending:
+            if name not in retry_started:
+                retry_started[name] = now
+                logger.warning("Submission %s deferred for retry", name)
+
+        for name in list(retry_started):
+            if name not in pending:
+                path = os.path.join(spool_dir, name)
+                try:
+                    os.stat(path)
+                except FileNotFoundError:
+                    del retry_started[name]
+                    continue
+                except OSError as e:
+                    raise CommandError(
+                        f"Could not inspect deferred file {path}: {e}"
+                    ) from e
+
+            if now - retry_started[name] > grace_minutes * 60:
+                raise CommandError(
+                    f"Ingester stalled: deferred submission {name} remains in "
+                    f"{pending_retry_dir} or {spool_dir} for over {grace_minutes} "
+                    "minutes. Nothing is lost; it can be ingested once the cause "
+                    "is fixed. See the ingestion errors above."
+                )
+        return len(pending)
+
     def add_arguments(self, parser):
         # TODO: add a way to set the folder by env var instead of by argument
         parser.add_argument(
@@ -133,6 +209,7 @@ class Command(BaseCommand):
         trees_file: str,
         **options,
     ):
+        grace_minutes = get_stall_grace_minutes()
         signal.signal(signal.SIGTERM, self.signal_handler)
         signal.signal(signal.SIGINT, self.signal_handler)
 
@@ -158,10 +235,30 @@ class Command(BaseCommand):
 
         cached_files: list[str] = []
         cache_pos = 0
+        last_sweep = float("-inf")
+        retry_started: dict[str, float] = {}
 
         try:
             while self.running:
-                # TODO: retry failed files every x cycles
+                # Requeue deferred submissions once the spool is drained, so
+                # they never delay new ones, and eventually regardless in case
+                # it never drains.
+                spool_drained = cache_pos >= len(cached_files)
+                since_sweep = time.monotonic() - last_sweep
+                if (spool_drained and since_sweep >= RETRY_SWEEP_INTERVAL_SEC) or (
+                    since_sweep >= RETRY_SWEEP_MAX_INTERVAL_SEC
+                ):
+                    backlog = self._check_retry_backlog(
+                        spool_dir, dirs["pending_retry"], retry_started, grace_minutes
+                    )
+                    PENDING_RETRY_GAUGE.labels(INGESTER_GRAFANA_LABEL).set(backlog)
+
+                    requeued = sweep_pending_retry(
+                        spool_dir, dirs["pending_retry"], RETRY_SWEEP_LIMIT
+                    )
+                    last_sweep = time.monotonic()
+                    if requeued:
+                        self.stdout.write(f"Requeued {requeued} deferred submissions")
 
                 # Only re-scan directory when cache is depleted
                 if cache_pos >= len(cached_files):
