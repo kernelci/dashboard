@@ -2,11 +2,6 @@ name: Deploy production Dashboard
 
 on:
   workflow_dispatch:
-    inputs:
-      image_tag:
-        description: GHCR image tag (Git commit SHA) to deploy
-        required: true
-        type: string
 
 jobs:
   start-notification:
@@ -17,7 +12,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "Deploying production Dashboard with tag `${{ github.event.inputs.image_tag }}`"
+          args: "Deploying production Dashboard `${{ github.ref_name }}` (`${{ github.sha }}`)"
 
   check-migrations:
     needs: start-notification
@@ -30,7 +25,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.image_tag }}
           fetch-depth: 0
 
       - name: Compute dashboard version
@@ -76,7 +70,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "New Django migrations detected in production deployment of `${{ github.event.inputs.image_tag }}`:\n`${{ needs.check-migrations.outputs.migration_list }}`"
+          args: "New Django migrations detected in production deployment of `${{ github.ref_name }}` (`${{ github.sha }}`):\n`${{ needs.check-migrations.outputs.migration_list }}`"
   
   notify-no-migrations:
     needs: check-migrations
@@ -88,7 +82,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "No new Django migrations detected in production deployment of `${{ github.event.inputs.image_tag }}`"
+          args: "No new Django migrations detected in production deployment of `${{ github.ref_name }}` (`${{ github.sha }}`)"
 
   deploy-production:
     needs: check-migrations
@@ -113,8 +107,8 @@ jobs:
             git clone --filter=blob:none --depth 1 --no-checkout https://github.com/kernelci/dashboard.git dashboard-production
             cp ~/.env-production dashboard-production/.env
             cd dashboard-production
-            git fetch origin ${IMAGE_TAG}
-            git checkout ${IMAGE_TAG}
+            git fetch --depth 1 origin "${GIT_REF}"
+            git checkout --detach "${IMAGE_TAG}"
             export IMAGE_TAG=${IMAGE_TAG}
             export DASHBOARD_VERSION=${DASHBOARD_VERSION}
             docker compose -f docker-compose-next.yml pull --policy=always
@@ -124,7 +118,8 @@ jobs:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
-          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+          IMAGE_TAG: ${{ github.sha }}
+          GIT_REF: ${{ github.ref }}
           DASHBOARD_VERSION: ${{ needs.check-migrations.outputs.dashboard_version }}
 
       - name: Collect production deployment status
@@ -164,7 +159,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "Production Dashboard deployment successful with tag `${{ github.event.inputs.image_tag }}`"
+          args: "Production Dashboard deployment successful for `${{ github.ref_name }}` (`${{ github.sha }}`)"
 
       - name: Discord notification on failure
         if: failure()
@@ -173,7 +168,7 @@ jobs:
         uses: Ilshidur/action-discord@master
         with:
           args: |
-            Production Dashboard deployment failed with tag `${{ github.event.inputs.image_tag }}`.
+            Production Dashboard deployment failed for `${{ github.ref_name }}` (`${{ github.sha }}`).
             ${{ steps.deployment-status.outputs.diagnostics }}
 
   cleanup:
