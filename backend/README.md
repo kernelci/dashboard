@@ -97,6 +97,8 @@ We have a couple of useful scripts:
 
 It is important to note that Django automatically creates migrations based on changes to the models when running the first command of the scripts above. You can edit the migrations manually, and you can also run the commands by hand if you want more control over it.
 
+Before deploying migrations to staging or production, read [Database schema changes](../../DEPLOYMENT.md#database-schema-changes) in the deployment guide.
+
 * [copy_db_data.sh](./scripts/copy_db_data.sh) will copy 7 days of data from you `DB_DEFAULT` to your `DASH_DB`. You can also modify the script for a custom interval, and you can check the [update_db](./kernelCI_app/management/commands/update_db.py) command for other arguments such as `--table` and `--origins`.
 * [generate-schema.sh](./generate-schema.sh) will automatically generate the OpenAPI schema for the endpoints. Please use it whenever the ins and outs of endpoints change.
 

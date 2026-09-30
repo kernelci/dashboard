@@ -74,7 +74,6 @@ class BaseTreeCommitsHistory(APIView):
         self.filterTreeDetailsCompiler = self.filterParams.filterCompiler
         self.filterArchitecture = self.filterParams.filterArchitecture
         self.filterHardware = self.filterParams.filterHardware
-        self.filter_lab = self.filterParams.filter_labs
         self.filterTestPath = self.filterParams.filterTestPath
         self.filterBootPath = self.filterParams.filterBootPath
         self.filterBuildStatus = self.filterParams.filterBuildStatus
@@ -147,6 +146,7 @@ class BaseTreeCommitsHistory(APIView):
         incident_test_id: Optional[str],
         key: str,
         build_origin: str,
+        lab: str,
     ) -> None:
         is_filtered_out = self.filterParams.is_build_filtered_out(
             duration=duration,
@@ -155,6 +155,7 @@ class BaseTreeCommitsHistory(APIView):
             issue_version=issue_version,
             incident_test_id=incident_test_id,
             build_origin=build_origin,
+            lab=lab,
         )
         if is_filtered_out:
             return
@@ -278,6 +279,7 @@ class BaseTreeCommitsHistory(APIView):
                 incident_test_id=row["incidents_test_id"],
                 key=key,
                 build_origin=build_origin,
+                lab=row["build_lab"],
             )
 
     def _is_record_in_time_period(self, start_time: datetime) -> bool:
@@ -313,6 +315,7 @@ class BaseTreeCommitsHistory(APIView):
                 status=test_status,
                 incident_test_id=incident_test_id,
                 origin=test_origin,
+                lab=row["test_lab"],
             )
 
         return self.filterParams.is_test_filtered_out(
@@ -323,6 +326,7 @@ class BaseTreeCommitsHistory(APIView):
             status=test_status,
             incident_test_id=incident_test_id,
             origin=test_origin,
+            lab=row["test_lab"],
         )
 
     def _process_rows(self, rows: dict, requested_types: list[TreeEntityTypes]) -> None:
@@ -354,7 +358,6 @@ class BaseTreeCommitsHistory(APIView):
                     architecture=row["architecture"],
                     compiler=row["compiler"],
                     config_name=row["config_name"],
-                    lab=row["test_lab"],
                 )
             )
 
@@ -582,7 +585,7 @@ class TreeCommitsHistoryList(BaseTreeCommitsHistory):
             return True
         if is_filtered_out(config, filters.filterConfigs):
             return True
-        if is_filtered_out(lab, filters.filter_labs):
+        if is_filtered_out(lab, filters.filter_labs[filter_type]):
             return True
         if is_filtered_out(architecture, filters.filterArchitecture):
             return True

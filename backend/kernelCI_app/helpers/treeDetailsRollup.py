@@ -134,17 +134,20 @@ def rollup_test_or_boot_filtered_out(
     path_group = row_dict.get("path_group", UNKNOWN_STRING)
     test_origin = row_dict.get("test_origin")
     test_platform = row_dict.get("test_platform")
+    test_lab = row_dict.get("test_lab") or UNKNOWN_STRING
 
     if is_boot_row:
         path_filter = instance.filters.filterBootPath
         issue_filters = instance.filters.filterIssues["boot"]
         platform_filters = instance.filters.filterPlatforms["boot"]
         origin_filters = instance.filters.filter_boot_origin
+        lab_filters = instance.filters.filter_labs["boot"]
     else:
         path_filter = instance.filters.filterTestPath
         issue_filters = instance.filters.filterIssues["test"]
         platform_filters = instance.filters.filterPlatforms["test"]
         origin_filters = instance.filters.filter_test_origin
+        lab_filters = instance.filters.filter_labs["test"]
 
     if path_filter != "" and path_filter not in path_group:
         return True
@@ -161,6 +164,9 @@ def rollup_test_or_boot_filtered_out(
         return True
 
     if origin_filters and test_origin not in origin_filters:
+        return True
+
+    if lab_filters and test_lab not in lab_filters:
         return True
 
     return False

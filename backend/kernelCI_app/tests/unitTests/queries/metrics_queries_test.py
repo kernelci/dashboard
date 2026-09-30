@@ -1,7 +1,11 @@
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from kernelCI_app.queries.notifications import get_metrics_data, interval_params
+from kernelCI_app.queries.notifications import (
+    get_metrics_data,
+    interval_params,
+    lab_maps_from_status_rows,
+)
 
 MODULE = "kernelCI_app.queries.notifications"
 
@@ -79,3 +83,54 @@ class TestIntervalParams:
 
         assert params["start_date"] == "2026-06-06T00:00:00+00:00"
         assert params["end_date"] == "2026-06-14T00:00:00+00:00"
+
+
+class TestLabMapsFromStatusRows:
+    def test_groups_status_counts_by_lab_and_kind(self):
+        labs = lab_maps_from_status_rows(
+            test_rows=[
+                ("lava-a", "boot", "PASS", 3),
+                ("lava-a", "boot", "FAIL", 1),
+                ("lava-a", "test", "PASS", 10),
+                ("lava-b", "test", "ERROR", 2),
+                (None, "test", "PASS", 99),
+            ],
+            build_rows=[
+                ("lava-a", "PASS", 4),
+                ("lava-a", "FAIL", 1),
+            ],
+            covered_build_rows=[
+                ("lava-a", 7),
+                ("lava-b", 2),
+                (None, 99),
+            ],
+        )
+
+        assert set(labs) == {"lava-a", "lava-b"}
+
+        assert labs["lava-a"].covered_builds == 7
+        assert labs["lava-a"].boots.PASS == 3
+        assert labs["lava-a"].boots.FAIL == 1
+        assert labs["lava-a"].tests.PASS == 10
+        assert labs["lava-a"].builds.PASS == 4
+        assert labs["lava-a"].builds.FAIL == 1
+        assert labs["lava-b"].tests.ERROR == 2
+        assert labs["lava-b"].covered_builds == 2
+        assert sum(labs["lava-b"].builds.model_dump().values()) == 0
+
+    def test_skips_null_or_unknown_kind(self):
+        """NULL path → kind NULL; must not land in tests (SQL three-valued logic)."""
+        labs = lab_maps_from_status_rows(
+            test_rows=[
+                ("lava-a", "boot", "PASS", 2),
+                ("lava-a", None, "PASS", 50),
+                ("lava-a", "other", "FAIL", 50),
+                ("lava-a", "test", "PASS", 3),
+            ],
+            build_rows=[],
+            covered_build_rows=[("lava-a", 1)],
+        )
+
+        assert labs["lava-a"].boots.PASS == 2
+        assert labs["lava-a"].tests.PASS == 3
+        assert sum(labs["lava-a"].tests.model_dump().values()) == 3

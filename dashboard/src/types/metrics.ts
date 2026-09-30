@@ -1,3 +1,5 @@
+import type { StatusCount } from '@/types/general';
+
 export type BuildIncidentsCount = {
   total_incidents: number;
   n_new_issues: number;
@@ -13,9 +15,10 @@ export type TopIssue = {
 };
 
 export type LabMetricsData = {
-  builds: number;
-  boots: number;
-  tests: number;
+  covered_builds: number;
+  builds: StatusCount;
+  boots: StatusCount;
+  tests: StatusCount;
 };
 
 export type MetricsResponse = {

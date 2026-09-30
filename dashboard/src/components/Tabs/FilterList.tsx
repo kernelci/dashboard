@@ -1,7 +1,11 @@
 import { useCallback, type JSX } from 'react';
 
 import FilterList from '@/components/FilterList/FilterList';
-import { isTFilterKeys } from '@/types/general';
+import {
+  getActiveDurationFilter,
+  isTFilterKeys,
+  isTFilterNumberKeys,
+} from '@/types/general';
 import type { TFilter, TFilterKeys } from '@/types/general';
 
 const IGNORED_FILTERS: TFilterKeys[] = ['testPath', 'bootPath'];
@@ -33,8 +37,11 @@ export const createFlatFilter = (filter: TFilter): string[] => {
           flatFilter.push(`${field}:${value}`);
         }
       });
-    } else {
-      flatFilter.push(`${field}:${fieldValue}`);
+    } else if (isTFilterNumberKeys(field)) {
+      const duration = getActiveDurationFilter(fieldValue);
+      if (duration !== undefined) {
+        flatFilter.push(`${field}:${duration}`);
+      }
     }
   });
   return flatFilter;

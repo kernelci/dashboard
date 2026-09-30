@@ -555,6 +555,7 @@ class TestDecideIfIsBuildFilteredOut:
             "build_duration": 100,
             "incident_test_id": "test123",
             "build_origin": "test",
+            "build_lab": "build_lab",
         }
 
         result = decide_if_is_build_filtered_out(instance, row_data)
@@ -567,6 +568,7 @@ class TestDecideIfIsBuildFilteredOut:
             issue_version=1,
             incident_test_id="test123",
             build_origin="test",
+            lab="build_lab",
         )
 
 
@@ -584,6 +586,7 @@ class TestDecideIfIsBootFilteredOut:
             "test_path": "boot.test",
             "incident_test_id": "test123",
             "test_origin": "test",
+            "history_item": {"lab": "test_lab"},
         }
 
         result = decide_if_is_boot_filtered_out(instance, row_data)
@@ -597,6 +600,7 @@ class TestDecideIfIsBootFilteredOut:
             status="FAIL",
             incident_test_id="test123",
             origin="test",
+            lab="test_lab",
         )
 
 
@@ -626,7 +630,6 @@ class TestDecideIfIsFullRowFilteredOut:
             architecture="x86_64",
             compiler="gcc",
             config_name="defconfig",
-            lab="test_lab",
         )
 
 
@@ -644,6 +647,7 @@ class TestDecideIfIsTestFilteredOut:
             "test_path": "test.specific",
             "incident_test_id": "test123",
             "test_origin": "test",
+            "history_item": {"lab": "test_lab"},
         }
 
         result = decide_if_is_test_filtered_out(instance, row_data)
@@ -657,6 +661,7 @@ class TestDecideIfIsTestFilteredOut:
             status="FAIL",
             incident_test_id="test123",
             origin="test",
+            lab="test_lab",
         )
 
 

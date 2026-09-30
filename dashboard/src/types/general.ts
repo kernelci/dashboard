@@ -31,6 +31,13 @@ export type TIndividualTest = {
   hardware?: string[];
   treeBranch?: string;
   lab?: string;
+  /** Tree compare tables only */
+  config?: string;
+  arch?: string;
+  platform?: string;
+  sideA?: string;
+  sideB?: string;
+  change?: string;
 };
 
 interface IEnvironmentMisc {
@@ -52,6 +59,12 @@ export type TestHistory = TreeBranchItem & {
   environment_compatible?: string[];
   environment_misc?: IEnvironmentMisc;
   lab?: string;
+  config?: string;
+  arch?: string;
+  platform?: string;
+  sideA?: string;
+  sideB?: string;
+  change?: string;
 };
 
 // TODO: make other endpoints also return the test origin and combine this type with TestHistory
@@ -160,8 +173,24 @@ export const makeZIntervalInDays = (
 export const DEFAULT_ORIGIN = 'maestro';
 export const zOrigin = z.string().default(DEFAULT_ORIGIN).catch(DEFAULT_ORIGIN);
 
+export const getActiveDurationFilter = (value: unknown): number | undefined => {
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    return undefined;
+  }
+
+  if (typeof value === 'string' && value.trim() === '') {
+    return undefined;
+  }
+
+  const n = Number(value);
+  return Number.isFinite(n) && n !== 0 ? n : undefined;
+};
+
 const zFilterBoolValue = z.record(z.boolean()).optional();
-const zFilterNumberValue = z.number().optional();
+const zFilterNumberValue = z.preprocess(
+  getActiveDurationFilter,
+  z.number().optional(),
+);
 
 export const zFilterObjectsKeys = z.enum([
   'origins',
@@ -310,6 +339,7 @@ const requestFilters = {
     'boot.origin',
     'test.origin',
     'test.lab',
+    'boot.lab',
   ],
   issueListing: [
     'origin',
@@ -351,7 +381,10 @@ export const filterFieldMap = {
   'test.issue': 'testIssue',
   'build.status': 'buildStatus',
   'build.origin': 'buildOrigin',
+  // The Labs section is global in the UI and lists runtime labs, which builds
+  // don't share, so only the test and boot tabs get the selection
   'test.lab': 'labs',
+  'boot.lab': 'labs',
   origin: 'origins',
   'issue.culprit': 'issueCulprits',
   'issue.categories': 'issueCategories',

@@ -31,6 +31,7 @@ from kernelCI_app.management.commands.helpers.aggregation_helpers import (
 )
 from kernelCI_app.management.commands.helpers.file_utils import move_file_to_failed_dir
 from kernelCI_app.management.commands.helpers.log_excerpt_utils import (
+    LogExcerptUploadError,
     extract_log_excerpt,
 )
 from kernelCI_app.management.commands.helpers.process_submissions import (
@@ -187,6 +188,9 @@ def prepare_file_data(
             "fsize": fsize,
             "processing_time": processing_time,
         }
+    except LogExcerptUploadError as e:
+        logger.warning("Deferring %s: %s", file["name"], e)
+        return None, {"error": str(e), "retry": True}
     except Exception as e:
         origin_info = _extract_origins_info(data)
         logger.error("Error preparing data from %s%s: %s", file["name"], origin_info, e)
@@ -312,7 +316,7 @@ def flush_buffers(
         logger.error("Error during buffer flush: %s", e)
         try:
             for filename, filepath in buffer_files:
-                os.rename(filepath, os.path.join(dirs["failed"], filename))
+                os.rename(filepath, os.path.join(dirs["pending_retry"], filename))
             out("Moved %d files to pending retry directory" % len(buffer_files))
             with counter_lock:
                 stat_fail.value += len(buffer_files)
@@ -394,7 +398,8 @@ def process_batch(
 
             if metadata and metadata.get("error"):
                 try:
-                    move_file_to_failed_dir(file["path"], dirs["failed"])
+                    destination = "pending_retry" if metadata.get("retry") else "failed"
+                    move_file_to_failed_dir(file["path"], dirs[destination])
                 except Exception:
                     pass
                 with counter_lock:

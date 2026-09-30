@@ -269,6 +269,12 @@ def to_int_or_default(value, default):
     return default
 
 
+def duration_filter_value(value: Any) -> Union[str, int, None]:
+    if isinstance(value, list):
+        return value[0] if value else None
+    return value
+
+
 type FilterFields = Literal[
     "boot.status",
     "boot.duration",
@@ -281,6 +287,9 @@ type FilterFields = Literal[
     "compiler",
     "architecture",
     "test.hardware",
+    "test.lab",
+    "boot.lab",
+    "build.lab",
     "test.path",
     "boot.path",
     "build.issue",
@@ -293,6 +302,11 @@ type FilterFields = Literal[
     "issue.options",
 ]
 type FilterHandlers = dict[FilterFields, Callable]
+
+
+def parse_composed_filter(field: str) -> tuple[PossibleTabs, str]:
+    tab, kind = field.split(".", 1)
+    return tab, kind
 
 
 class InvalidComparisonOPError(
@@ -354,7 +368,11 @@ class FilterParams:
             "boot": set(),
             "test": set(),
         }
-        self.filter_labs: set[str] = set()
+        self.filter_labs: dict[PossibleTabs, set[str]] = {
+            "build": set(),
+            "boot": set(),
+            "test": set(),
+        }
 
         self.filter_issue_culprits: set[PossibleIssueCulprits] = set()
         self.filter_origins: set[str] = set()
@@ -379,6 +397,8 @@ class FilterParams:
             "architecture": self._handle_architecture,
             "test.hardware": self._handle_hardware,
             "test.lab": self._handle_labs,
+            "boot.lab": self._handle_labs,
+            "build.lab": self._handle_labs,
             "test.path": self._handle_path,
             "boot.path": self._handle_path,
             "build.issue": self._handle_issues,
@@ -414,7 +434,7 @@ class FilterParams:
         self.filterBootStatus.add(current_filter["value"])
 
     def _handle_boot_duration(self, current_filter: ParsedFilter) -> None:
-        value = current_filter["value"]
+        value = duration_filter_value(current_filter["value"])
         operation = current_filter["comparison_op"]
         if operation == "lte":
             self.filterBootDurationMax = to_int_or_default(value, None)
@@ -425,7 +445,7 @@ class FilterParams:
         self.filterTestStatus.add(current_filter["value"])
 
     def _handle_test_duration(self, current_filter: ParsedFilter) -> None:
-        value = current_filter["value"]
+        value = duration_filter_value(current_filter["value"])
         operation = current_filter["comparison_op"]
         if operation == "lte":
             self.filterTestDurationMax = to_int_or_default(value, None)
@@ -445,7 +465,8 @@ class FilterParams:
         self.filterHardware.add(current_filter["value"])
 
     def _handle_path(self, current_filter: ParsedFilter) -> None:
-        if current_filter["field"] == "boot.path":
+        tab, _ = parse_composed_filter(current_filter["field"])
+        if tab == "boot":
             self.filterBootPath = current_filter["value"]
         else:
             self.filterTestPath = current_filter["value"]
@@ -454,15 +475,23 @@ class FilterParams:
         self.filterBuildStatus.add(current_filter["value"])
 
     def _handle_build_duration(self, current_filter: ParsedFilter) -> None:
-        value = current_filter["value"][0]
+        value = duration_filter_value(current_filter["value"])
         operation = current_filter["comparison_op"]
         if operation == "lte":
             self.filterBuildDurationMax = to_int_or_default(value, None)
         else:
             self.filterBuildDurationMin = to_int_or_default(value, None)
 
+    def _handle_tab_values(
+        self,
+        store: dict[PossibleTabs, set[str]],
+        current_filter: ParsedFilter,
+    ) -> None:
+        tab, _ = parse_composed_filter(current_filter["field"])
+        store[tab].add(current_filter["value"])
+
     def _handle_issues(self, current_filter: ParsedFilter) -> None:
-        tab = current_filter["field"].split(".")[0]
+        tab, _ = parse_composed_filter(current_filter["field"])
 
         filter_value = current_filter["value"]
         if filter_value == UNCATEGORIZED_STRING:
@@ -474,11 +503,10 @@ class FilterParams:
             self.filterIssues[tab].add((issue_id, issue_version))
 
     def _handle_platforms(self, current_filter: ParsedFilter) -> None:
-        tab = current_filter["field"].split(".")[0]
-        self.filterPlatforms[tab].add(current_filter["value"])
+        self._handle_tab_values(self.filterPlatforms, current_filter)
 
     def _handle_labs(self, current_filter: ParsedFilter) -> None:
-        self.filter_labs.add(current_filter["value"])
+        self._handle_tab_values(self.filter_labs, current_filter)
 
     def _handle_issue_culprits(self, current_filter: ParsedFilter) -> None:
         filter_value = current_filter["value"]
@@ -628,12 +656,14 @@ class FilterParams:
         issue_version: Optional[int],
         incident_test_id: Optional[str],
         build_origin: Optional[str] = None,
+        lab: Optional[str] = None,
     ) -> bool:
         return (
             (
                 len(self.filterBuildStatus) > 0
                 and (build_status.upper() not in self.filterBuildStatus)
             )
+            or is_filtered_out(lab or UNKNOWN_STRING, self.filter_labs["build"])
             or (
                 (
                     self.filterBuildDurationMax is not None
@@ -671,13 +701,11 @@ class FilterParams:
         architecture: Optional[str],
         compiler: Optional[str],
         config_name: Optional[str],
-        lab: Optional[str] = UNKNOWN_STRING,
     ) -> bool:
         hardware_compatibles = [UNKNOWN_STRING]
         record_architecture = UNKNOWN_STRING
         record_compiler = UNKNOWN_STRING
         record_config_name = UNKNOWN_STRING
-        record_lab = UNKNOWN_STRING if lab is None else lab
 
         if hardwares is not None:
             hardware_compatibles = hardwares
@@ -705,7 +733,6 @@ class FilterParams:
                 len(self.filterConfigs) > 0
                 and (record_config_name not in self.filterConfigs)
             )
-            or (len(self.filter_labs) > 0 and (record_lab not in self.filter_labs))
         ):
             return True
 
@@ -722,12 +749,14 @@ class FilterParams:
         incident_test_id: Optional[str] = "incident_test_id",
         platform: Optional[str] = None,
         origin: Optional[str] = None,
+        lab: Optional[str] = None,
     ) -> bool:
         if (
             (self.filterBootPath != "" and (self.filterBootPath not in path))
             or (
                 len(self.filterBootStatus) > 0 and (status not in self.filterBootStatus)
             )
+            or is_filtered_out(lab or UNKNOWN_STRING, self.filter_labs["boot"])
             or (
                 (
                     self.filterBootDurationMax is not None
@@ -773,12 +802,14 @@ class FilterParams:
         incident_test_id: Optional[str] = "incident_test_id",
         platform: Optional[str] = None,
         origin: Optional[str] = None,
+        lab: Optional[str] = None,
     ) -> bool:
         if (
             (self.filterTestPath != "" and (self.filterTestPath not in path))
             or (
                 len(self.filterTestStatus) > 0 and (status not in self.filterTestStatus)
             )
+            or is_filtered_out(lab or UNKNOWN_STRING, self.filter_labs["test"])
             or (
                 (
                     self.filterTestDurationMax is not None
