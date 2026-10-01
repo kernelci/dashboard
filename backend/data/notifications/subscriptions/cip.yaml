@@ -2,3 +2,56 @@ cip:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git
   default_recipients:
     - cip-dev@lists.cip-project.org
+
+  reports:
+    - linux-4.4.y-cip:
+      branch: linux-4.4.y-cip
+      always: True
+
+    - linux-4.4.y-cip-rt:
+      branch: linux-4.4.y-cip-rt
+      always: True
+
+    - linux-4.4.y-st:
+      branch: linux-4.4.y-st
+      always: True
+
+    - linux-4.4.y-st-rc:
+      branch: linux-4.4.y-st-rc
+      always: True
+
+    - linux-4.19.y-cip:
+      branch: linux-4.19.y-cip
+      always: True
+
+    - linux-4.19.y-cip-rt:
+      branch: linux-4.19.y-cip-rt
+      always: True
+
+    - linux-4.19.y-st:
+      branch: linux-4.19.y-st
+      always: True
+
+    - linux-4.19.y-st-rc:
+      branch: linux-4.19.y-st-rc
+      always: True
+
+    - linux-5.10.y-cip:
+      branch: linux-5.10.y-cip
+      always: True
+
+    - linux-5.10.y-cip-rt:
+      branch: linux-5.10.y-cip-rt
+      always: True
+
+    - linux-6.1.y-cip:
+      branch: linux-6.1.y-cip
+      always: True
+
+    - linux-6.1.y-cip-rt:
+      branch: linux-6.1.y-cip-rt
+      always: True
+
+    - linux-6.12.y-cip:
+      branch: linux-6.12.y-cip
+      always: True
