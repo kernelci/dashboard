@@ -7,7 +7,8 @@ Collected as aggregate Prometheus counters:
   * Request attributes: endpoint, method, status_class, and coarse client
     buckets (browser, os, device) derived from the User-Agent. Referrer is
     reduced to its external domain (or ``direct_or_internal``).
-  * Daily unique-visitor estimates (total and per-endpoint).
+  * Daily unique-visitor estimates (total and per-endpoint), labeled by coarse
+    client kind (``dashboard``, ``kci-dev``, ``script``, ``bot``).
 
 Unique-visitor de-duplication uses pseudonymisation, not irreversible
 anonymisation: fingerprint = ``HMAC-SHA256(daily_salt, "<ip>|<user_agent>")``.
@@ -29,6 +30,7 @@ import secrets
 import threading
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from enum import StrEnum
 from urllib.parse import urlparse
 
 from django.core.cache import cache
@@ -37,6 +39,29 @@ from prometheus_client import Counter
 
 UNKNOWN = "unknown"
 DIRECT_OR_INTERNAL = "direct_or_internal"
+
+
+class Client(StrEnum):
+    DASHBOARD = "dashboard"
+    KCI_DEV = "kci-dev"
+    SCRIPT = "script"
+    BOT = "bot"
+
+
+SCRIPT_HTTP_USER_AGENT_MARKERS = (
+    ("curl/", "curl"),
+    ("wget/", "wget"),
+    ("python-requests/", "python-requests"),
+)
+KCI_DEV_USER_AGENT = re.compile(
+    r"^kci-dev(?:/([^\s/()]+))?(?:\s+\(([^)]+)\))?\s*$",
+    re.IGNORECASE,
+)
+KCI_DEV_OS = {
+    "linux": "Linux",
+    "macos": "macOS",
+    "windows": "Windows",
+}
 UNIQUE_VISITOR_TTL_SECONDS = 25 * 60 * 60  # 25h
 UNIQUE_VISITOR_SALT_BYTES = 32
 
@@ -68,6 +93,7 @@ def get_metrics() -> Metrics:
                             "endpoint",
                             "method",
                             "status_class",
+                            "client",
                             "browser",
                             "os",
                             "device",
@@ -77,12 +103,13 @@ def get_metrics() -> Metrics:
                     unique_visitors=Counter(
                         "dashboard_unique_visitors_total",
                         "Daily unique backend visitors",
+                        ["client"],
                     ),
                     unique_visitors_by_endpoint=Counter(
                         "dashboard_unique_visitors_by_endpoint_total",
                         "Daily unique backend visitors deduplicated per endpoint"
                         " by rotated Redis salt",
-                        ["endpoint"],
+                        ["endpoint", "client"],
                     ),
                 )
     return _metrics
@@ -93,6 +120,7 @@ class ClientInfo:
     browser: str
     os: str
     device: str
+    client: Client
 
 
 class BackendRequestMetricsMiddleware:
@@ -103,8 +131,26 @@ class BackendRequestMetricsMiddleware:
         response = self.get_response(request)
         if request.path.startswith("/api/"):
             labels = get_backend_request_labels(request, response)
-            record_client(**labels)
-            record_unique_visitor(request=request, endpoint=labels["endpoint"])
+            record_client(
+                **{
+                    key: labels[key]
+                    for key in (
+                        "endpoint",
+                        "method",
+                        "status_class",
+                        "client",
+                        "browser",
+                        "os",
+                        "device",
+                        "referrer_domain",
+                    )
+                }
+            )
+            record_unique_visitor(
+                request=request,
+                endpoint=labels["endpoint"],
+                client=labels["client"],
+            )
         return response
 
 
@@ -113,6 +159,7 @@ def record_client(
     endpoint: str,
     method: str,
     status_class: str,
+    client: Client,
     browser: str,
     os: str,
     device: str,
@@ -122,6 +169,7 @@ def record_client(
         endpoint=endpoint,
         method=method,
         status_class=status_class,
+        client=client,
         browser=browser,
         os=os,
         device=device,
@@ -129,7 +177,7 @@ def record_client(
     ).inc()
 
 
-def record_unique_visitor(*, request, endpoint: str) -> None:
+def record_unique_visitor(*, request, endpoint: str, client: Client) -> None:
     try:
         analytics_date = get_analytics_date()
         visitor_hash = get_daily_visitor_hash(request, analytics_date=analytics_date)
@@ -143,10 +191,13 @@ def record_unique_visitor(*, request, endpoint: str) -> None:
         )
 
         if cache.add(visitor_key, "true", timeout=UNIQUE_VISITOR_TTL_SECONDS):
-            get_metrics().unique_visitors.inc()
+            get_metrics().unique_visitors.labels(client=client).inc()
 
         if cache.add(endpoint_visitor_key, "true", timeout=UNIQUE_VISITOR_TTL_SECONDS):
-            get_metrics().unique_visitors_by_endpoint.labels(endpoint=endpoint).inc()
+            get_metrics().unique_visitors_by_endpoint.labels(
+                endpoint=endpoint,
+                client=client,
+            ).inc()
     except Exception as exc:
         logger.debug("Failed to record unique visitor metric: %s", exc)
 
@@ -227,6 +278,7 @@ def get_backend_request_labels(request, response) -> dict[str, str]:
             referrer=request.headers.get("Referer", ""),
             request_host=get_request_host(request),
         ),
+        "client": client_info.client,
     }
 
 
@@ -274,15 +326,49 @@ def get_referrer_domain(*, referrer: str, request_host: str) -> str:
 def get_client_info(user_agent: str) -> ClientInfo:
     normalized_user_agent = user_agent.lower()
     if not normalized_user_agent:
-        return ClientInfo(browser=UNKNOWN, os=UNKNOWN, device=UNKNOWN)
+        return ClientInfo(
+            browser=UNKNOWN,
+            os=UNKNOWN,
+            device=UNKNOWN,
+            client=Client.DASHBOARD,
+        )
+
+    kci_dev_match = KCI_DEV_USER_AGENT.match(user_agent)
+    if kci_dev_match is not None:
+        version = kci_dev_match.group(1)
+        os_family = kci_dev_match.group(2)
+        os = UNKNOWN
+        if os_family:
+            os = KCI_DEV_OS.get(os_family.strip().casefold(), UNKNOWN)
+        return ClientInfo(
+            browser=f"kci-dev/{version}" if version else "kci-dev",
+            os=os,
+            device="cli",
+            client=Client.KCI_DEV,
+        )
+
+    for marker, tool in SCRIPT_HTTP_USER_AGENT_MARKERS:
+        if marker in normalized_user_agent:
+            return ClientInfo(
+                browser=tool,
+                os=UNKNOWN,
+                device="script",
+                client=Client.SCRIPT,
+            )
 
     if is_bot(normalized_user_agent):
-        return ClientInfo(browser="bot", os="bot", device="bot")
+        return ClientInfo(
+            browser="bot",
+            os="bot",
+            device="bot",
+            client=Client.BOT,
+        )
 
     return ClientInfo(
         browser=get_browser(normalized_user_agent),
         os=get_os(normalized_user_agent),
         device=get_device(normalized_user_agent),
+        client=Client.DASHBOARD,
     )
 
 
@@ -308,8 +394,6 @@ def get_browser(normalized_user_agent: str) -> str:
         return "Safari"
     if any(s in normalized_user_agent for s in ["msie", "trident/"]):
         return "Internet Explorer"
-    if any(s in normalized_user_agent for s in ["curl/", "wget/", "python-requests/"]):
-        return "HTTP Client"
     return UNKNOWN
 
 
