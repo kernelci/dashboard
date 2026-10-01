@@ -115,6 +115,7 @@ Configure these variables in `.env.backend`:
 - `HEALTHCHECK_ID_NOTIFICATIONS_NEW_ISSUES`
 - `HEALTHCHECK_ID_NOTIFICATIONS_SUMMARY_MICROSOFT`
 - `HEALTHCHECK_ID_NOTIFICATIONS_SUMMARY_MAESTRO`
+- `HEALTHCHECK_ID_PUBLISH_VISITOR_REQUESTS`
 
 ## `prometheus.yml`
 - **Target**: `host.docker.internal:8001` (backend running locally)
@@ -147,6 +148,23 @@ is the technical/operator reference.
 - `dashboard_kci_dev_requests_by_version_total` — `kci-dev` requests only, labels
   `version` and `client` (`kci-dev`). A short release token such as `0.1.11` or
   `0.1.11.dev0` is kept. A missing or other token is `unknown`.
+- `dashboard_visitors_by_request_count_total` — at publish time, each visitor
+  increments exactly one counter with labels `client` and `band` (`1-5`,
+  `6-10`, …, `501-999`, `1000+`). A stored count of 1000 is the cap and
+  publishes as `1000+`. Grafana
+  **Visitors by request count** uses eight instant queries (one per band label,
+  low to high) on `dashboard_visitors_by_request_count_total`. Values are
+  cumulative counters since process start (one increment per visitor at publish
+  time), not a daily rate; use `increase(...[1d])` over a time range for a
+  per-day shape. The visitor hash is not a label.
+
+Local publish of a finished UTC day (needs the same `PROMETHEUS_MULTIPROC_DIR`
+as the backend worker). Omit `--date` for yesterday. Today is refused so a
+manual run cannot lock visitors out of the 00:15 job:
+
+```bash
+cd backend && poetry run python manage.py publish_visitor_requests --date YYYY-MM-DD
+```
 
 The Grafana dashboard variable **Client** filters the request and unique-visitor
 series with `client=~"$client"`. **All clients** is `.+`. **Unique Visitors**
@@ -168,6 +186,8 @@ metrics:
   the cache (Redis) with a ~25h TTL, never persisted to disk by this feature,
   rotated daily.
 - Only the hash is used as a `cache.add` de-duplication key (~25h TTL).
+- Request-count keys refresh that TTL on each `/api/` hit so keys remain until
+  the 00:15 UTC publish job runs for that analytics day.
 - Under GDPR, IP is personal data; the cache key is **pseudonymised personal
   data** for up to ~25h. After salt and keys expire, only aggregate counters
   remain (anonymous).

@@ -1290,6 +1290,166 @@
       ],
       "title": "kci-dev Requests by Version",
       "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 52
+      },
+      "description": "Rows follow request-count bands low to high (1 \u2026 1000+).",
+      "id": 14,
+      "options": {
+        "displayMode": "basic",
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"1-5\"}))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "1-5",
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"6-10\"}))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "6-10",
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"11-20\"}))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "11-20",
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"21-50\"}))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "21-50",
+          "range": false,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"51-100\"}))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "51-100",
+          "range": false,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"101-500\"}))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "101-500",
+          "range": false,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"501-999\"}))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "501-999",
+          "range": false,
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"1000+\"}))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "1000+",
+          "range": false,
+          "refId": "H"
+        }
+      ],
+      "title": "Visitors by request count",
+      "type": "bargauge"
     }
   ],
   "refresh": "5s",
