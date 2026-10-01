@@ -1,0 +1,141 @@
+# Hardware reports for platforms scheduled on the lava-renesas runtime
+
+r8a7742-iwg21d-q7:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r8a7743-iwg20d-q7:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r8a7744-iwg20d-q7:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r8a7745-iwg22d-sodimm:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r8a77470-iwg23s-sbc:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r8a774a1-hihope-rzg2m-ex:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r8a774b1-hihope-rzg2n-ex:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r8a774c0-ek874:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r8a774e1-hihope-rzg2h-ex:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a07g043u11-smarc-rzg2ul:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a07g044c2-smarc-rzg2lc:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a07g044l2-smarc-rzg2l:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a07g054l2-smarc-rzv2l:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a08g045s33-smarc-rzg3s:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a08g046l48-smarc-rzg3l:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a09g047e57-smarc-rzg3e:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a09g056n48-rzv2n-evk:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a09g057h44-rzv2h-evk:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a09g077m44-rzt2h-evk:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
+
+r9a09g087m44-rzn2h-evk:
+  origin: maestro
+  labs:
+    lava-renesas: http://spl2-server-magma/
+  default_recipients:
+    - Chris Paterson <chris.paterson2@renesas.com>
