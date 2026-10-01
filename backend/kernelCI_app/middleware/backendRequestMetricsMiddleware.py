@@ -29,7 +29,7 @@ import re
 import secrets
 import threading
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from urllib.parse import urlparse
 
@@ -64,6 +64,16 @@ KCI_DEV_OS = {
 }
 UNIQUE_VISITOR_TTL_SECONDS = 25 * 60 * 60  # 25h
 UNIQUE_VISITOR_SALT_BYTES = 32
+REQUEST_COUNT_CAP = 1000
+_BANDS = (
+    (5, "1-5"),
+    (10, "6-10"),
+    (20, "11-20"),
+    (50, "21-50"),
+    (100, "51-100"),
+    (500, "101-500"),
+    (999, "501-999"),
+)
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +83,7 @@ class Metrics:
     requests_by_client: Counter
     unique_visitors: Counter
     unique_visitors_by_endpoint: Counter
+    visitors_by_request_count: Counter
 
 
 _metrics: Metrics | None = None
@@ -110,6 +121,11 @@ def get_metrics() -> Metrics:
                         "Daily unique backend visitors deduplicated per endpoint"
                         " by rotated Redis salt",
                         ["endpoint", "client"],
+                    ),
+                    visitors_by_request_count=Counter(
+                        "dashboard_visitors_by_request_count_total",
+                        "Visitors published once per UTC day by request-count band",
+                        ["client", "band"],
                     ),
                 )
     return _metrics
@@ -185,6 +201,9 @@ def record_unique_visitor(*, request, endpoint: str, client: Client) -> None:
             return
 
         visitor_key = f"analytics:unique-visitors:{analytics_date}:{visitor_hash}"
+        request_count_key = (
+            f"analytics:visitor-requests:{analytics_date}:{client.value}:{visitor_hash}"
+        )
         endpoint_visitor_key = (
             f"analytics:unique-visitors:{analytics_date}:"
             f"endpoint:{endpoint}:{visitor_hash}"
@@ -193,6 +212,8 @@ def record_unique_visitor(*, request, endpoint: str, client: Client) -> None:
         if cache.add(visitor_key, "true", timeout=UNIQUE_VISITOR_TTL_SECONDS):
             get_metrics().unique_visitors.labels(client=client).inc()
 
+        _bump_request_count(request_count_key)
+
         if cache.add(endpoint_visitor_key, "true", timeout=UNIQUE_VISITOR_TTL_SECONDS):
             get_metrics().unique_visitors_by_endpoint.labels(
                 endpoint=endpoint,
@@ -200,6 +221,85 @@ def record_unique_visitor(*, request, endpoint: str, client: Client) -> None:
             ).inc()
     except Exception as exc:
         logger.debug("Failed to record unique visitor metric: %s", exc)
+
+
+def _bump_request_count(key: str) -> None:
+    if cache.add(key, 1, timeout=UNIQUE_VISITOR_TTL_SECONDS):
+        return
+    count = cache.get(key)
+    if isinstance(count, int) and count < REQUEST_COUNT_CAP:
+        cache.incr(key)
+    cache.touch(key, UNIQUE_VISITOR_TTL_SECONDS)
+
+
+def request_count_band(count: int) -> str:
+    if count >= REQUEST_COUNT_CAP:
+        return "1000+"
+    for upper, band in _BANDS:
+        if count <= upper:
+            return band
+    return "1000+"
+
+
+def resolve_publish_analytics_date(analytics_date: str | None) -> str:
+    yesterday = (datetime.now(UTC).date() - timedelta(days=1)).isoformat()
+    if analytics_date is None:
+        return yesterday
+    if analytics_date >= datetime.now(UTC).date().isoformat():
+        raise ValueError(
+            f"Refusing to publish {analytics_date}: the UTC day is not finished"
+        )
+    return analytics_date
+
+
+def publish_visitor_requests(analytics_date: str | None = None) -> None:
+    """Observe one sample per visitor after the UTC day ends."""
+    analytics_date = resolve_publish_analytics_date(analytics_date)
+
+    bands = get_metrics().visitors_by_request_count
+    failures = 0
+    for key in iter_visitor_request_keys(analytics_date):
+        rest = key.split(f"analytics:visitor-requests:{analytics_date}:", 1)[1]
+        client_value, _, visitor_hash = rest.partition(":")
+        published_key = (
+            f"analytics:visitor-requests-published:{analytics_date}:"
+            f"{client_value}:{visitor_hash}"
+        )
+        count = cache.get(key)
+        if not isinstance(count, int):
+            continue
+        if not cache.add(published_key, 1, timeout=UNIQUE_VISITOR_TTL_SECONDS):
+            continue
+        try:
+            bands.labels(
+                client=client_value,
+                band=request_count_band(count),
+            ).inc()
+        except Exception:
+            cache.delete(published_key)
+            logger.exception(
+                "Failed to publish visitor request count band for client=%s",
+                client_value,
+            )
+            failures += 1
+            continue
+
+    if failures:
+        raise RuntimeError(
+            f"Failed to publish visitor request counts for {failures} visitor(s)"
+        )
+
+
+def iter_visitor_request_keys(analytics_date: str):
+    prefix = f"analytics:visitor-requests:{analytics_date}:"
+    redis = cache._cache.get_client()
+    version_mark = f":{cache.version}:"
+    match = f"*{version_mark}{prefix}*"
+    for raw_key in redis.scan_iter(match=match, count=200):
+        key = raw_key.decode() if isinstance(raw_key, bytes) else raw_key
+        logical = key.split(version_mark, 1)[-1]
+        if logical.startswith(prefix):
+            yield logical
 
 
 def get_daily_visitor_hash(request, *, analytics_date: str) -> str | None:

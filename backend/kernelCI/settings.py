@@ -148,6 +148,9 @@ HEALTHCHECK_MONITORING_PATH_MAP: dict[str, str] = {
     "notifications_summary_maestro": os.environ.get(
         "HEALTHCHECK_ID_NOTIFICATIONS_SUMMARY_MAESTRO", ""
     ),
+    "publish_visitor_requests": os.environ.get(
+        "HEALTHCHECK_ID_PUBLISH_VISITOR_REQUESTS", ""
+    ),
 }
 """Maps monitoring_id to the relative_path that will be appended to the base healthcheck URL."""
 
@@ -243,6 +246,14 @@ else:
                 "--cc=kernelci-results@groups.io",
                 "--send",
                 "--yes",
+            ],
+        ),
+        (
+            "15 0 * * *",
+            "django.core.management.call_command",
+            [
+                "publish_visitor_requests",
+                "--monitoring-id=publish_visitor_requests",
             ],
         ),
         (
