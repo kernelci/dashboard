@@ -346,8 +346,8 @@ const TreeComparePage = (): JSX.Element => {
               origin,
               gitUrl: compareQuery.data?.gitUrl,
               branch,
-              hashA: resolvedHashA || undefined,
-              hashB: resolvedHashB || undefined,
+              hashA: resolvedBase || undefined,
+              hashB: resolvedCompare || undefined,
               omittedFilters:
                 statusPairs.length > 0 ? ['status-pair filter'] : [],
             })}
