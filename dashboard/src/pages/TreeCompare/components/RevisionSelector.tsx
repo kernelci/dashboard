@@ -16,7 +16,7 @@ import type { CompareRevision } from '@/types/tree/TreeCompare';
 
 import { cn } from '@/lib/utils';
 
-type RevisionSide = 'A' | 'B';
+export type RevisionSide = 'base' | 'compare';
 
 function TagChips({ tags }: { tags: string[] }): JSX.Element | null {
   if (tags.length === 0) {
@@ -58,21 +58,21 @@ function RevisionCard({
     <div
       className={cn(
         'flex flex-1 flex-col gap-3 rounded-lg border bg-white p-4',
-        side === 'A' ? 'border-blue/40' : 'border-dim-gray/30',
+        side === 'base' ? 'border-blue/40' : 'border-dim-gray/30',
       )}
     >
       <div className="flex items-center gap-2">
         <span
           className={cn(
             'inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold text-white',
-            side === 'A' ? 'bg-blue' : 'bg-dim-gray',
+            side === 'base' ? 'bg-blue' : 'bg-dim-gray',
           )}
         >
-          {side}
+          {side === 'base' ? 'B' : 'C'}
         </span>
         <span className="text-dim-black text-sm font-semibold">
           <FormattedMessage
-            id={side === 'A' ? 'treeCompare.sideA' : 'treeCompare.sideB'}
+            id={side === 'base' ? 'treeCompare.base' : 'treeCompare.compare'}
           />
         </span>
       </div>
@@ -145,21 +145,21 @@ function RevisionCard({
 }
 
 interface RevisionSelectorBarProps {
-  hashA: string;
-  hashB: string;
+  baseHash: string;
+  compareHash: string;
   revisions: CompareRevision[];
-  onHashAChange: (hash: string) => void;
-  onHashBChange: (hash: string) => void;
+  onBaseChange: (hash: string) => void;
+  onCompareChange: (hash: string) => void;
   onSideAction: (side: RevisionSide, action: 'previous' | 'branchHead') => void;
   onSwap: () => void;
 }
 
 export function RevisionSelectorBar({
-  hashA,
-  hashB,
+  baseHash,
+  compareHash,
   revisions,
-  onHashAChange,
-  onHashBChange,
+  onBaseChange,
+  onCompareChange,
   onSideAction,
   onSwap,
 }: RevisionSelectorBarProps): JSX.Element {
@@ -167,12 +167,12 @@ export function RevisionSelectorBar({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col items-stretch gap-4 lg:flex-row lg:items-center">
         <RevisionCard
-          side="A"
-          selectedHash={hashA}
+          side="base"
+          selectedHash={baseHash}
           revisions={revisions}
-          onSelect={onHashAChange}
-          onPrevious={() => onSideAction('A', 'previous')}
-          onBranchHead={() => onSideAction('A', 'branchHead')}
+          onSelect={onBaseChange}
+          onPrevious={() => onSideAction('base', 'previous')}
+          onBranchHead={() => onSideAction('base', 'branchHead')}
         />
 
         <div className="flex shrink-0 items-center justify-center">
@@ -180,7 +180,7 @@ export function RevisionSelectorBar({
             type="button"
             onClick={onSwap}
             className="bg-medium-gray flex h-10 w-10 items-center justify-center rounded-full"
-            aria-label="Swap sides"
+            aria-label="Swap base and compare"
           >
             <ArrowLeftRight className="text-dim-gray h-5 w-5" />
             <span className="sr-only">
@@ -190,12 +190,12 @@ export function RevisionSelectorBar({
         </div>
 
         <RevisionCard
-          side="B"
-          selectedHash={hashB}
+          side="compare"
+          selectedHash={compareHash}
           revisions={revisions}
-          onSelect={onHashBChange}
-          onPrevious={() => onSideAction('B', 'previous')}
-          onBranchHead={() => onSideAction('B', 'branchHead')}
+          onSelect={onCompareChange}
+          onPrevious={() => onSideAction('compare', 'previous')}
+          onBranchHead={() => onSideAction('compare', 'branchHead')}
         />
       </div>
     </div>
