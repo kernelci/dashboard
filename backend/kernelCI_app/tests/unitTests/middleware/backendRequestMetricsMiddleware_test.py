@@ -101,7 +101,9 @@ def test_api_request_records_client_on_counter_and_histogram(monkeypatch):
     counter, histogram = _fake_metrics(monkeypatch)
     django_latency = MagicMock()
     after = PrometheusAfterMiddleware(lambda request: HttpResponse())
-    after.metrics.requests_latency_by_view_method = django_latency
+    monkeypatch.setattr(
+        after.metrics, "requests_latency_by_view_method", django_latency
+    )
     BackendRequestMetricsMiddleware(after)(_api_request("kci-dev/0.1.11"))
 
     assert counter.labels.call_args.kwargs["endpoint"] == "schema"
@@ -118,7 +120,9 @@ def test_admin_request_stays_on_django_latency_histogram(monkeypatch):
     counter, histogram = _fake_metrics(monkeypatch)
     django_latency = MagicMock()
     after = PrometheusAfterMiddleware(lambda request: HttpResponse())
-    after.metrics.requests_latency_by_view_method = django_latency
+    monkeypatch.setattr(
+        after.metrics, "requests_latency_by_view_method", django_latency
+    )
     BackendRequestMetricsMiddleware(after)(RequestFactory().get("/admin/"))
 
     django_latency.labels.assert_called_once()
