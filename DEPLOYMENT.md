@@ -353,6 +353,13 @@ A GitHub workflow for staging is defined at [deploy-staging](.github/workflows/d
 It runs automatically on pushes to `main` after the checks in
 [ci.yaml](.github/workflows/ci.yaml) succeed.
 
+That workflow notifies Discord when the deployed commit adds Django migration
+files. The check diffs `HEAD~1`, which is the whole pull request only while
+`main` is updated by squash merges: each push is one commit, and its parent is
+the commit staging last deployed. A rebase of several commits, or a manual run
+from a multi-commit branch, reports only the tip commit. If the repository
+stops using squash-and-merge, update the check in `deploy-staging.yaml`.
+
 > [!IMPORTANT]
 > The **ingester** on `db.kernelci.org` is **not** deployed by this workflow.
 > See [Ingester deployment](#ingester-deployment).
