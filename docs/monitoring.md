@@ -63,14 +63,14 @@ poetry run python manage.py runserver 0.0.0.0:8000 --noreload
 
 After importing the dashboard, you'll have:
 
-- **Average Response Time by Endpoint** - Shows response time per endpoint
-- **Total Calls by Endpoint** - Shows total requests per endpoint
+- **Average Response Time by Endpoint** - Average, p50, and p95 per endpoint and client
+- **Total Calls by Endpoint** - Request count per endpoint and client
 - **Endpoint Performance Summary** - Table with:
-  - Method (GET, POST, etc.)
   - Endpoint name
+  - Client
   - Total Calls
   - Average Response Time
-  - Total Time (cumulative time per endpoint)
+  - Total Time (cumulative time per endpoint and client)
 - **Deploys** - Annotation and Running Version panel from `dashboard_build_info` (`DASHBOARD_VERSION`)
 
 ### Aggregation Process Dashboard
@@ -156,6 +156,12 @@ is the technical/operator reference.
   low to high) on `dashboard_visitors_by_request_count_total`. Values are
   cumulative counters since process start (one increment per visitor at publish
   time), not a daily rate; use `increase(...[$__range:])` over the selected range. The visitor hash is not a label.
+- `dashboard_backend_request_latency_seconds` — histogram of `/api/` request
+  latency in seconds, labelled by `endpoint` and `client`. Buckets match the
+  Django latency histogram. `/api/` requests are not observed on
+  `django_http_requests_latency_seconds_by_view_method`; that series stays for
+  other routes, including `/admin/`. Django status and exception counters are
+  unchanged.
 
 Local publish of a finished UTC day (needs the same `PROMETHEUS_MULTIPROC_DIR`
 as the backend worker). Omit `--date` for yesterday. Today is refused so a
@@ -165,14 +171,17 @@ manual run cannot lock visitors out of the 00:15 job:
 cd backend && poetry run python manage.py publish_visitor_requests --date YYYY-MM-DD
 ```
 
-The Grafana dashboard variable **Client** filters the request and unique-visitor
-series with `client=~"$client"`. **All clients** is `.+`. **Unique Visitors**
-sums the selected clients into one number. **Requests by Client** keeps one
-slice per selected client. Browser, OS, device, endpoint, referrer, and status
+The Grafana dashboard variable **Client** filters the request, unique-visitor,
+and latency series with `client=~"$client"`. **All clients** is `.+`. **Unique
+Visitors** sums the selected clients into one number. **Requests by Client**
+keeps one slice per selected client. Browser, OS, device, referrer, and status
 panels use the same filter. **kci-dev Requests by Version** uses it too, so
-Dashboard, Scripts, Bots, and Unknown show no slices. Response time, total
-calls, and the endpoint summary do not: those are Django HTTP metrics and have
-no `client` label.
+Dashboard, Scripts, Bots, and Unknown show no slices. **Total Calls by
+Endpoint** sums `dashboard_backend_requests_by_client_total` by `endpoint` and
+`client`. **Average Response Time by Endpoint** is the latency histogram's
+`_sum / _count`, plus p50 and p95 from its buckets. **Endpoint Performance
+Summary** uses the counter for calls and the histogram for total time and
+average.
 
 ### Pseudonymisation mechanism
 

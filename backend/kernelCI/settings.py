@@ -90,7 +90,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "kernelCI_app.middleware.LogServerErrorMiddleware",
     "kernelCI_app.middleware.BackendRequestMetricsMiddleware",
-    "kernelCI_app.middleware.prometheusMiddleware.PrometheusAfterMiddleware",
+    "kernelCI_app.middleware.backendRequestMetricsMiddleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "kernelCI.urls"
