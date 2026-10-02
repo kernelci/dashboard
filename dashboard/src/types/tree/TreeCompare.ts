@@ -138,15 +138,14 @@ export type CompareFailureRow =
   | CompareTestFailureRow;
 
 export const compareDefaultValues = {
-  hashA: '',
-  hashB: '',
+  range: '',
   origin: 'maestro',
   currentPageTab: 'global.builds' as const,
 };
 
 export const compareSearchSchema = z.object({
-  hashA: z.string().catch(''),
-  hashB: z.string().catch(''),
+  /** `<base>..<compare>` commit hashes; see `parseCompareRange`. */
+  range: z.string().catch(''),
   origin: z
     .string()
     .default(compareDefaultValues.origin)

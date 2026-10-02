@@ -11,16 +11,16 @@ Given a tree name and branch, pick two commit hashes (base and compare) and answ
 
 Entry point: **Compare revisions** on Tree Details (`TreeCompareLink`), which opens:
 
-`/tree/{treeName}/{branch}/compare?hashA=…&hashB=…&origin=…`
+`/tree/{treeName}/{branch}/compare?range={baseHash}..{compareHash}&origin=…`
 
 ## User flow
 
-1. Open compare from Tree Details (current revision pre-fills as **Compare**, **Base** defaults to the revision before it, so base → compare reads oldest → newest). URL params stay `hashA` (base) and `hashB` (compare).
+1. Open compare from Tree Details (current revision pre-fills as **Compare**, **Base** defaults to the revision before it, so base → compare reads oldest → newest). The `range` URL param is git-style `<base>..<compare>`.
 2. Choose / swap revisions via the revision selector (commit history + shortcuts: previous commit, branch head, swap base and compare).
 3. Read the summary matrix (fixes, regressions, pass/fail/other counts per builds / boots / tests).
 4. Drill into **Changed results** tabs (Builds / Boots / Tests). Quick change-type chips add or remove their status pairs; custom From/To pairs can be added too (default: `PASS → FAIL` and `FAIL → PASS`). Last edited pairs are remembered in localStorage when the URL omits `statusPair`.
 
-URL search state owns: `hashA`, `hashB`, `origin`, `currentPageTab`, and optional `statusPair`.
+URL search state owns: `range` (`<base>..<compare>`), `origin`, `currentPageTab`, and optional `statusPair`.
 
 ## Change categories (base → compare)
 
