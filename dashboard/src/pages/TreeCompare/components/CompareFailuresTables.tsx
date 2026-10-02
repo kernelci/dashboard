@@ -276,7 +276,7 @@ export function CompareBuildsFailuresTable({
             <TableHead className="bg-light-gray w-8" />
             <SortableHead
               className="text-center"
-              intlKey="treeCompare.target"
+              intlKey="treeCompare.compare"
               sortKey="sideB"
               sort={sort}
               onSort={key => setSort(current => cycleSort(current, key))}
@@ -416,7 +416,7 @@ export function CompareBootsFailuresTable({
             <TableHead className="bg-light-gray w-8" />
             <SortableHead
               className="text-center"
-              intlKey="treeCompare.target"
+              intlKey="treeCompare.compare"
               sortKey="sideB"
               sort={sort}
               onSort={key => setSort(current => cycleSort(current, key))}

@@ -4,9 +4,9 @@ High-level overview of the Tree Compare feature: side-by-side comparison of buil
 
 ## Purpose
 
-Given a tree name and branch, pick two commit hashes (base and target) and answer:
+Given a tree name and branch, pick two commit hashes (base and compare) and answer:
 
-- How did overall pass/fail/inconclusive counts move from base → target?
+- How did overall pass/fail/inconclusive counts move from base → compare?
 - Which individual builds / boots / tests changed category (regressions, fixes, new failures, etc.)?
 
 Entry point: **Compare revisions** on Tree Details (`TreeCompareLink`), which opens:
@@ -15,14 +15,14 @@ Entry point: **Compare revisions** on Tree Details (`TreeCompareLink`), which op
 
 ## User flow
 
-1. Open compare from Tree Details (current revision pre-fills as **Target**, **Base** defaults to the revision before it, so base → target reads oldest → newest). URL params stay `hashA` (base) and `hashB` (target).
-2. Choose / swap revisions via the revision selector (commit history + shortcuts: previous commit, branch head, swap base and target).
+1. Open compare from Tree Details (current revision pre-fills as **Compare**, **Base** defaults to the revision before it, so base → compare reads oldest → newest). URL params stay `hashA` (base) and `hashB` (compare).
+2. Choose / swap revisions via the revision selector (commit history + shortcuts: previous commit, branch head, swap base and compare).
 3. Read the summary matrix (fixes, regressions, pass/fail/other counts per builds / boots / tests).
 4. Drill into **Changed results** tabs (Builds / Boots / Tests). Quick change-type chips add or remove their status pairs; custom From/To pairs can be added too (default: `PASS → FAIL` and `FAIL → PASS`). Last edited pairs are remembered in localStorage when the URL omits `statusPair`.
 
 URL search state owns: `hashA`, `hashB`, `origin`, `currentPageTab`, and optional `statusPair`.
 
-## Change categories (base → target)
+## Change categories (base → compare)
 
 Statuses are grouped into **PASS**, **FAIL**, and **INCONCLUSIVE** (everything else, including null). Absent on one side is treated as missing (`null` / `—`).
 
@@ -34,7 +34,7 @@ Statuses are grouped into **PASS**, **FAIL**, and **INCONCLUSIVE** (everything e
 | `stillFailing` | FAIL → FAIL |
 | `newPass` | missing/INCONCLUSIVE → PASS |
 | `appeared` | missing → INCONCLUSIVE |
-| `disappeared` | present on base, missing on target |
+| `disappeared` | present on base, missing on compare |
 | `unchanged` | same status on both sides (except FAIL → FAIL); frontend-only, has no backend count and no filter chip |
 
 Backend SQL aggregates (`_CHANGE_COUNT_SELECT` in `queries/tree.py`) and the frontend `deriveCompareChange` helper must stay in sync.

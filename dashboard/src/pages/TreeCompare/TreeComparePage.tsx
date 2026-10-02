@@ -58,7 +58,10 @@ import {
 } from './components/CompareFailuresTables';
 import { CompareTestsGroupedTable } from './components/CompareTestsGroupedTable';
 import { CompareSummary } from './components/CompareSummary';
-import { RevisionSelectorBar } from './components/RevisionSelector';
+import {
+  RevisionSelectorBar,
+  type RevisionSide,
+} from './components/RevisionSelector';
 
 const SHORT_HASH_LENGTH = 7;
 
@@ -145,8 +148,8 @@ const TreeComparePage = (): JSX.Element => {
   }, [resolvedHashA, resolvedHashB, updateSearch]);
 
   const handleSideAction = useCallback(
-    (side: 'A' | 'B', action: 'previous' | 'branchHead') => {
-      const currentHash = side === 'A' ? resolvedHashA : resolvedHashB;
+    (side: RevisionSide, action: 'previous' | 'branchHead') => {
+      const currentHash = side === 'base' ? resolvedHashA : resolvedHashB;
       const currentIndex = revisions.findIndex(r => r.hash === currentHash);
 
       if (action === 'previous') {
@@ -155,7 +158,7 @@ const TreeComparePage = (): JSX.Element => {
           Math.max(currentIndex, 0) + 1,
         );
         const nextHash = revisions[previousIndex]?.hash ?? currentHash;
-        if (side === 'A') {
+        if (side === 'base') {
           updateSearch({ hashA: nextHash });
         } else {
           updateSearch({ hashB: nextHash });
@@ -164,7 +167,7 @@ const TreeComparePage = (): JSX.Element => {
       }
 
       const headHash = revisions[0]?.hash ?? currentHash;
-      if (side === 'A') {
+      if (side === 'base') {
         updateSearch({ hashA: headHash });
       } else {
         updateSearch({ hashB: headHash });
@@ -375,11 +378,11 @@ const TreeComparePage = (): JSX.Element => {
             error={commitsQuery.error}
           >
             <RevisionSelectorBar
-              hashA={resolvedHashA}
-              hashB={resolvedHashB}
+              baseHash={resolvedHashA}
+              compareHash={resolvedHashB}
               revisions={revisions}
-              onHashAChange={value => updateSearch({ hashA: value })}
-              onHashBChange={value => updateSearch({ hashB: value })}
+              onBaseChange={value => updateSearch({ hashA: value })}
+              onCompareChange={value => updateSearch({ hashB: value })}
               onSideAction={handleSideAction}
               onSwap={handleSwap}
             />
