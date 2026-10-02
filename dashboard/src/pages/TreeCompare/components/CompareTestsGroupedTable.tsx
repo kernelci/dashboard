@@ -232,7 +232,7 @@ function createCompareSideColumns(
         sideStatus(row, 'sideA'),
       header: ({ column }): JSX.Element => (
         <div className="flex justify-center">
-          <SortableTableHeader column={column} intlKey="treeCompare.sideA" />
+          <SortableTableHeader column={column} intlKey="treeCompare.base" />
         </div>
       ),
       cell: ({ row }): JSX.Element | null => {
@@ -273,7 +273,7 @@ function createCompareSideColumns(
         sideStatus(row, 'sideB'),
       header: ({ column }): JSX.Element => (
         <div className="flex justify-center">
-          <SortableTableHeader column={column} intlKey="treeCompare.sideB" />
+          <SortableTableHeader column={column} intlKey="treeCompare.compare" />
         </div>
       ),
       cell: ({ row }): JSX.Element | null => {
