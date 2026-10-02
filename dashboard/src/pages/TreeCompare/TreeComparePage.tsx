@@ -41,11 +41,14 @@ import {
 } from '@/types/tree/TreeCompare';
 import type { PossibleTabs } from '@/types/tree/TreeDetails';
 import {
+  type CompareRange,
   applyStatusPairFilter,
+  formatCompareRange,
   mapBootOrTestDiffRows,
   mapBuildDiffRows,
+  parseCompareRange,
   readStoredStatusPairs,
-  resolveCompareHashes,
+  resolveCompareRange,
   resolveStatusPairs,
   serializeStatusPairs,
   writeStoredStatusPairs,
@@ -68,9 +71,10 @@ const SHORT_HASH_LENGTH = 7;
 const TreeComparePage = (): JSX.Element => {
   const { formatMessage } = useIntl();
   const { treeName, branch } = useParams({ from: compareRouteName });
-  const { hashA, hashB, origin, currentPageTab, statusPair } = useSearch({
+  const { range, origin, currentPageTab, statusPair } = useSearch({
     from: compareRouteName,
   });
+  const { base: baseHash, compare: compareHash } = parseCompareRange(range);
   const navigate = useNavigate({ from: compareNavigateFrom });
 
   const commitsQuery = useCommits({
@@ -92,18 +96,19 @@ const TreeComparePage = (): JSX.Element => {
     [commitsQuery.data],
   );
 
-  const { hashA: resolvedHashA, hashB: resolvedHashB } = useMemo(
-    () => resolveCompareHashes(revisions, hashA, hashB),
-    [revisions, hashA, hashB],
+  const { base: resolvedBase, compare: resolvedCompare } = useMemo(
+    () =>
+      resolveCompareRange(revisions, { base: baseHash, compare: compareHash }),
+    [revisions, baseHash, compareHash],
   );
 
-  const canCompare = Boolean(resolvedHashA && resolvedHashB);
+  const canCompare = Boolean(resolvedBase && resolvedCompare);
 
   const compareParams = {
     treeName,
     branch,
-    hashA: resolvedHashA,
-    hashB: resolvedHashB,
+    hashA: resolvedBase,
+    hashB: resolvedCompare,
     origin,
   };
 
@@ -114,16 +119,17 @@ const TreeComparePage = (): JSX.Element => {
 
   const updateSearch = useCallback(
     (updates: {
-      hashA?: string;
-      hashB?: string;
+      range?: Partial<CompareRange>;
       currentPageTab?: PossibleTabs;
       statusPair?: string[];
     }) => {
       navigate({
         search: previous => ({
           ...previous,
-          hashA: updates.hashA ?? previous.hashA,
-          hashB: updates.hashB ?? previous.hashB,
+          range: formatCompareRange({
+            ...parseCompareRange(previous.range),
+            ...updates.range,
+          }),
           currentPageTab:
             updates.currentPageTab ??
             previous.currentPageTab ??
@@ -138,18 +144,18 @@ const TreeComparePage = (): JSX.Element => {
   );
 
   useEffect(() => {
-    if ((!hashA || !hashB) && resolvedHashA && resolvedHashB) {
-      updateSearch({ hashA: resolvedHashA, hashB: resolvedHashB });
+    if ((!baseHash || !compareHash) && resolvedBase && resolvedCompare) {
+      updateSearch({ range: { base: resolvedBase, compare: resolvedCompare } });
     }
-  }, [hashA, hashB, resolvedHashA, resolvedHashB, updateSearch]);
+  }, [baseHash, compareHash, resolvedBase, resolvedCompare, updateSearch]);
 
   const handleSwap = useCallback(() => {
-    updateSearch({ hashA: resolvedHashB, hashB: resolvedHashA });
-  }, [resolvedHashA, resolvedHashB, updateSearch]);
+    updateSearch({ range: { base: resolvedCompare, compare: resolvedBase } });
+  }, [resolvedBase, resolvedCompare, updateSearch]);
 
   const handleSideAction = useCallback(
     (side: RevisionSide, action: 'previous' | 'branchHead') => {
-      const currentHash = side === 'base' ? resolvedHashA : resolvedHashB;
+      const currentHash = side === 'base' ? resolvedBase : resolvedCompare;
       const currentIndex = revisions.findIndex(r => r.hash === currentHash);
 
       if (action === 'previous') {
@@ -158,22 +164,14 @@ const TreeComparePage = (): JSX.Element => {
           Math.max(currentIndex, 0) + 1,
         );
         const nextHash = revisions[previousIndex]?.hash ?? currentHash;
-        if (side === 'base') {
-          updateSearch({ hashA: nextHash });
-        } else {
-          updateSearch({ hashB: nextHash });
-        }
+        updateSearch({ range: { [side]: nextHash } });
         return;
       }
 
       const headHash = revisions[0]?.hash ?? currentHash;
-      if (side === 'base') {
-        updateSearch({ hashA: headHash });
-      } else {
-        updateSearch({ hashB: headHash });
-      }
+      updateSearch({ range: { [side]: headHash } });
     },
-    [revisions, resolvedHashA, resolvedHashB, updateSearch],
+    [revisions, resolvedBase, resolvedCompare, updateSearch],
   );
 
   const buildRows = useMemo(
@@ -320,7 +318,7 @@ const TreeComparePage = (): JSX.Element => {
                 params={{
                   treeName,
                   branch,
-                  hash: resolvedHashB,
+                  hash: resolvedCompare,
                 }}
                 state={s => s}
               >
@@ -365,7 +363,7 @@ const TreeComparePage = (): JSX.Element => {
             </div>
             <Link
               to="/tree/$treeName/$branch/$hash"
-              params={{ treeName, branch, hash: resolvedHashB }}
+              params={{ treeName, branch, hash: resolvedCompare }}
               className="text-blue text-sm font-medium hover:underline"
               state={s => s}
             >
@@ -378,11 +376,13 @@ const TreeComparePage = (): JSX.Element => {
             error={commitsQuery.error}
           >
             <RevisionSelectorBar
-              baseHash={resolvedHashA}
-              compareHash={resolvedHashB}
+              baseHash={resolvedBase}
+              compareHash={resolvedCompare}
               revisions={revisions}
-              onBaseChange={value => updateSearch({ hashA: value })}
-              onCompareChange={value => updateSearch({ hashB: value })}
+              onBaseChange={value => updateSearch({ range: { base: value } })}
+              onCompareChange={value =>
+                updateSearch({ range: { compare: value } })
+              }
               onSideAction={handleSideAction}
               onSwap={handleSwap}
             />

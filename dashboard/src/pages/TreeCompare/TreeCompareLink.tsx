@@ -6,6 +6,8 @@ import { FormattedMessage } from 'react-intl';
 
 import { Button } from '@/components/ui/button';
 
+import { formatCompareRange } from '@/utils/treeCompareDiff';
+
 interface TreeCompareLinkProps {
   treeName: string;
   branch: string;
@@ -24,7 +26,10 @@ export function TreeCompareLink({
       <Link
         to="/tree/$treeName/$branch/compare"
         params={{ treeName, branch }}
-        search={{ hashA: '', hashB: hash, origin }}
+        search={{
+          range: formatCompareRange({ base: '', compare: hash }),
+          origin,
+        }}
         state={s => s}
       >
         <GitCompareArrows className="mr-2 h-4 w-4" />
