@@ -41,10 +41,11 @@ from urllib.parse import urlparse
 from django.core.cache import cache
 from django.core.exceptions import DisallowedHost
 from django_prometheus.conf import PROMETHEUS_LATENCY_BUCKETS
+from prometheus_client import Counter, Histogram
+
 from kernelCI_app.middleware.prometheusMiddleware import (
     PrometheusAfterMiddleware as HealthAwarePrometheusAfterMiddleware,
 )
-from prometheus_client import Counter, Histogram
 
 UNKNOWN = "unknown"
 DIRECT_OR_INTERNAL = "direct_or_internal"
