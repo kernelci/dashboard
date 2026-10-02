@@ -63,14 +63,14 @@ poetry run python manage.py runserver 0.0.0.0:8000 --noreload
 
 After importing the dashboard, you'll have:
 
-- **Average Response Time by Endpoint** - Shows response time per endpoint
-- **Total Calls by Endpoint** - Shows total requests per endpoint
+- **Average Response Time by Endpoint** - Average, p50, and p95 per endpoint and client
+- **Total Calls by Endpoint** - Request count per endpoint and client
 - **Endpoint Performance Summary** - Table with:
-  - Method (GET, POST, etc.)
   - Endpoint name
+  - Client
   - Total Calls
   - Average Response Time
-  - Total Time (cumulative time per endpoint)
+  - Total Time (cumulative time per endpoint and client)
 - **Deploys** - Annotation and Running Version panel from `dashboard_build_info` (`DASHBOARD_VERSION`)
 
 ### Aggregation Process Dashboard
@@ -141,13 +141,22 @@ is the technical/operator reference.
   — daily de-duplicated visitor counts (counters only; no visitor IDs in labels).
   Label `client`: `dashboard`, `kci-dev` (UA `kci-dev/…`), `script` (`curl/`,
   `wget/`, `python-requests/`), or `bot` (crawler heuristics).
+- `dashboard_backend_request_latency_seconds` — histogram of `/api/` request
+  latency in seconds, labelled by `endpoint` and `client`. Buckets match the
+  Django latency histogram. `/api/` requests are not observed on
+  `django_http_requests_latency_seconds_by_view_method`; that series stays for
+  other routes, including `/admin/`. Django status and exception counters are
+  unchanged.
 
 The Grafana dashboard variable **Client** filters those series with
 `client=~"$client"`. **All clients** is `.+`. **Unique Visitors** sums the
 selected clients into one number. **Requests by Client** keeps one slice per
-selected client. Browser, OS, device, endpoint, referrer, and status panels
-use the same filter. Response time, total calls, and the endpoint summary do
-not: those are Django HTTP metrics and have no `client` label.
+selected client. Browser, OS, device, referrer, and status panels use the same
+filter. **Total Calls by Endpoint** sums `dashboard_backend_requests_by_client_total`
+by `endpoint` and `client`. **Average Response Time by Endpoint** is the latency
+histogram's `_sum / _count`, plus p50 and p95 from its buckets. **Endpoint
+Performance Summary** uses the counter for calls and the histogram for total
+time and average.
 
 ### Pseudonymisation mechanism
 

@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -7,6 +8,8 @@ from django.test import RequestFactory
 from kernelCI_app.middleware.backendRequestMetricsMiddleware import (
     BackendRequestMetricsMiddleware,
     Client,
+    Metrics,
+    PrometheusAfterMiddleware,
     get_client_info,
 )
 
@@ -19,12 +22,37 @@ def _middleware():
 
 def _patch_counters(monkeypatch) -> list[str]:
     created: list[str] = []
-    monkeypatch.setattr(
-        f"{MIDDLEWARE_MODULE}.Counter",
-        lambda *args, **kwargs: created.append(args[0]) or MagicMock(),
-    )
+
+    def fake_metric(*args, **kwargs):
+        created.append(args[0])
+        return MagicMock()
+
+    monkeypatch.setattr(f"{MIDDLEWARE_MODULE}.Counter", fake_metric)
+    monkeypatch.setattr(f"{MIDDLEWARE_MODULE}.Histogram", fake_metric)
     monkeypatch.setattr(f"{MIDDLEWARE_MODULE}._metrics", None)
     return created
+
+
+def _fake_metrics(monkeypatch) -> tuple[MagicMock, MagicMock]:
+    counter = MagicMock()
+    histogram = MagicMock()
+    monkeypatch.setattr(
+        f"{MIDDLEWARE_MODULE}._metrics",
+        Metrics(
+            requests_by_client=counter,
+            unique_visitors=MagicMock(),
+            unique_visitors_by_endpoint=MagicMock(),
+            request_latency=histogram,
+        ),
+    )
+    monkeypatch.setattr(f"{MIDDLEWARE_MODULE}.cache.add", lambda *args, **kwargs: False)
+    return counter, histogram
+
+
+def _api_request(user_agent: str):
+    request = RequestFactory().get("/api/schema/", HTTP_USER_AGENT=user_agent)
+    request.resolver_match = SimpleNamespace(url_name="schema", view_name="schema")
+    return request
 
 
 class TestMiddlewareCall:
@@ -54,7 +82,38 @@ class TestMiddlewareCall:
             "dashboard_backend_requests_by_client_total",
             "dashboard_unique_visitors_total",
             "dashboard_unique_visitors_by_endpoint_total",
+            "dashboard_backend_request_latency_seconds",
         ]
+
+
+def test_api_request_records_client_on_counter_and_histogram(monkeypatch):
+    counter, histogram = _fake_metrics(monkeypatch)
+    django_latency = MagicMock()
+    after = PrometheusAfterMiddleware(lambda request: HttpResponse())
+    after.metrics.requests_latency_by_view_method = django_latency
+    BackendRequestMetricsMiddleware(after)(_api_request("kci-dev/0.1.11"))
+
+    assert counter.labels.call_args.kwargs["endpoint"] == "schema"
+    assert counter.labels.call_args.kwargs["client"] == Client.KCI_DEV
+    assert histogram.labels.call_args.kwargs == {
+        "endpoint": "schema",
+        "client": Client.KCI_DEV,
+    }
+    histogram.labels.return_value.observe.assert_called_once()
+    django_latency.labels.assert_not_called()
+
+
+def test_admin_request_stays_on_django_latency_histogram(monkeypatch):
+    counter, histogram = _fake_metrics(monkeypatch)
+    django_latency = MagicMock()
+    after = PrometheusAfterMiddleware(lambda request: HttpResponse())
+    after.metrics.requests_latency_by_view_method = django_latency
+    BackendRequestMetricsMiddleware(after)(RequestFactory().get("/admin/"))
+
+    django_latency.labels.assert_called_once()
+    django_latency.labels.return_value.observe.assert_called_once()
+    counter.labels.assert_not_called()
+    histogram.labels.assert_not_called()
 
 
 @pytest.mark.parametrize(

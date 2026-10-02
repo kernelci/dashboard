@@ -196,11 +196,35 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "rate(django_http_requests_latency_seconds_by_view_method_sum{view!=\"<unnamed view>\"}[5m]) / rate(django_http_requests_latency_seconds_by_view_method_count{view!=\"<unnamed view>\"}[5m])",
+          "expr": "sum by (endpoint, client) (rate(dashboard_backend_request_latency_seconds_sum{client=~\"$client\"}[5m])) / sum by (endpoint, client) (rate(dashboard_backend_request_latency_seconds_count{client=~\"$client\"}[5m]))",
           "instant": false,
-          "legendFormat": "{{view}} - {{method}}",
+          "legendFormat": "{{endpoint}} - {{client}} avg",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.5, sum by (le, endpoint, client) (rate(dashboard_backend_request_latency_seconds_bucket{client=~\"$client\"}[5m])))",
+          "instant": false,
+          "legendFormat": "{{endpoint}} - {{client}} p50",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le, endpoint, client) (rate(dashboard_backend_request_latency_seconds_bucket{client=~\"$client\"}[5m])))",
+          "instant": false,
+          "legendFormat": "{{endpoint}} - {{client}} p95",
+          "range": true,
+          "refId": "C"
         }
       ],
       "title": "Average Response Time by Endpoint",
@@ -287,9 +311,9 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "django_http_requests_latency_seconds_by_view_method_count{view!=\"<unnamed view>\"}",
+          "expr": "sum by (endpoint, client) (dashboard_backend_requests_by_client_total{client=~\"$client\"})",
           "instant": false,
-          "legendFormat": "{{view}} - {{method}}",
+          "legendFormat": "{{endpoint}} - {{client}}",
           "range": true,
           "refId": "A"
         }
@@ -477,10 +501,10 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "(sum(django_http_requests_latency_seconds_by_view_method_count{view!=\"<unnamed view>\"}) by (view, method)  and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"all\", \"\", \"\") or round(sum(increase(django_http_requests_latency_seconds_by_view_method_count{view!=\"<unnamed view>\"}[$__range:])) by (view, method)) and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"range\", \"\", \"\"))",
+          "expr": "(sum by (endpoint, client) (dashboard_backend_requests_by_client_total{client=~\"$client\"}) and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"all\", \"\", \"\") or round(sum by (endpoint, client) (increase(dashboard_backend_requests_by_client_total{client=~\"$client\"}[$__range:]))) and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"range\", \"\", \"\"))",
           "format": "table",
           "instant": true,
-          "legendFormat": "{{view}} - {{method}}",
+          "legendFormat": "{{endpoint}} - {{client}}",
           "range": false,
           "refId": "A"
         },
@@ -490,11 +514,10 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "(sum(django_http_requests_latency_seconds_by_view_method_sum{view!=\"<unnamed view>\"}) by (view, method) and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"all\", \"\", \"\") or sum(increase(django_http_requests_latency_seconds_by_view_method_sum{view!=\"<unnamed view>\"}[$__range:])) by (view, method) and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"range\", \"\", \"\"))",
+          "expr": "(sum by (endpoint, client) (dashboard_backend_request_latency_seconds_sum{client=~\"$client\"}) and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"all\", \"\", \"\") or sum by (endpoint, client) (increase(dashboard_backend_request_latency_seconds_sum{client=~\"$client\"}[$__range:])) and on() label_replace(vector(1), \"mode\", \"$summary_mode\", \"\", \"\")==label_replace(vector(1), \"mode\", \"range\", \"\", \"\"))",
           "format": "table",
-          "hide": false,
           "instant": true,
-          "legendFormat": "{{view}} - {{method}}",
+          "legendFormat": "{{endpoint}} - {{client}}",
           "range": false,
           "refId": "B"
         }
@@ -518,8 +541,8 @@
             "renameByName": {
               "Value #A": "Total Calls",
               "Value #B": "Total Time",
-              "view": "Endpoint",
-              "method": "Method"
+              "endpoint": "Endpoint",
+              "client": "Client"
             }
           }
         },
@@ -531,7 +554,7 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "Method": {
+              "Client": {
                 "aggregations": [],
                 "operation": "groupby"
               },
@@ -550,7 +573,7 @@
             },
             "include": [
               "Endpoint",
-              "Method",
+              "Client",
               "Total Calls",
               "Total Time"
             ]

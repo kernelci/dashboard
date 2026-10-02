@@ -3,10 +3,12 @@
 Long-lived Prometheus metrics are aggregate counts only. Raw IP, raw
 User-Agent, and full referrer URL are never exposed as metric labels.
 
-Collected as aggregate Prometheus counters:
+Collected as aggregate Prometheus metrics:
   * Request attributes: endpoint, method, status_class, and coarse client
     buckets (browser, os, device) derived from the User-Agent. Referrer is
     reduced to its external domain (or ``direct_or_internal``).
+  * ``/api/`` latency by endpoint and client. Those requests are not also
+    observed on the Django view-latency histogram.
   * Daily unique-visitor estimates (total and per-endpoint), labeled by coarse
     client kind (``dashboard``, ``kci-dev``, ``script``, ``bot``).
 
@@ -28,6 +30,7 @@ import logging
 import re
 import secrets
 import threading
+import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -35,7 +38,11 @@ from urllib.parse import urlparse
 
 from django.core.cache import cache
 from django.core.exceptions import DisallowedHost
-from prometheus_client import Counter
+from django_prometheus.conf import PROMETHEUS_LATENCY_BUCKETS
+from kernelCI_app.middleware.prometheusMiddleware import (
+    PrometheusAfterMiddleware as HealthAwarePrometheusAfterMiddleware,
+)
+from prometheus_client import Counter, Histogram
 
 UNKNOWN = "unknown"
 DIRECT_OR_INTERNAL = "direct_or_internal"
@@ -73,6 +80,7 @@ class Metrics:
     requests_by_client: Counter
     unique_visitors: Counter
     unique_visitors_by_endpoint: Counter
+    request_latency: Histogram
 
 
 _metrics: Metrics | None = None
@@ -111,6 +119,12 @@ def get_metrics() -> Metrics:
                         " by rotated Redis salt",
                         ["endpoint", "client"],
                     ),
+                    request_latency=Histogram(
+                        "dashboard_backend_request_latency_seconds",
+                        "Latency of /api/ requests by endpoint and client",
+                        ["endpoint", "client"],
+                        buckets=PROMETHEUS_LATENCY_BUCKETS,
+                    ),
                 )
     return _metrics
 
@@ -128,6 +142,7 @@ class BackendRequestMetricsMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        started = time.perf_counter()
         response = self.get_response(request)
         if request.path.startswith("/api/"):
             labels = get_backend_request_labels(request, response)
@@ -146,6 +161,10 @@ class BackendRequestMetricsMiddleware:
                     )
                 }
             )
+            get_metrics().request_latency.labels(
+                endpoint=labels["endpoint"],
+                client=labels["client"],
+            ).observe(time.perf_counter() - started)
             record_unique_visitor(
                 request=request,
                 endpoint=labels["endpoint"],
@@ -419,3 +438,20 @@ def get_device(normalized_user_agent: str) -> str:
     if any(s in normalized_user_agent for s in ["mobile", "iphone", "android"]):
         return "mobile"
     return "desktop"
+
+
+class _Unobserved:
+    def observe(self, _amount: float) -> None:
+        return None
+
+
+class PrometheusAfterMiddleware(HealthAwarePrometheusAfterMiddleware):
+    """Keep Django's status and exception counters. Latency for /api/ is ours."""
+
+    def label_metric(self, metric, request, response=None, **labels):
+        if (
+            metric is self.metrics.requests_latency_by_view_method
+            and request.path.startswith("/api/")
+        ):
+            return _Unobserved()
+        return super().label_metric(metric, request, response, **labels)
