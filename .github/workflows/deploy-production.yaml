@@ -2,11 +2,6 @@ name: Deploy production Dashboard
 
 on:
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to deploy'
-        required: true
-        default: 'main'
 
 jobs:
   start-notification:
@@ -17,7 +12,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "Deploying production Dashboard with tag `${{ github.event.inputs.tag }}`"
+          args: "Deploying production Dashboard `${{ github.ref_name }}` (`${{ github.sha }}`)"
 
   check-migrations:
     needs: start-notification
@@ -25,11 +20,16 @@ jobs:
     outputs:
       has_new_migrations: ${{ steps.check.outputs.has_new_migrations }}
       migration_list: ${{ steps.check.outputs.migration_list }}
+      dashboard_version: ${{ steps.dashboard_version.outputs.dashboard_version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Compute dashboard version
+        id: dashboard_version
+        run: echo "dashboard_version=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
 
       - name: Check for new Django migrations
         id: check
@@ -70,7 +70,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "New Django migrations detected in production deployment of `${{ github.event.inputs.tag }}`:\n`${{ needs.check-migrations.outputs.migration_list }}`"
+          args: "New Django migrations detected in production deployment of `${{ github.ref_name }}` (`${{ github.sha }}`):\n`${{ needs.check-migrations.outputs.migration_list }}`"
   
   notify-no-migrations:
     needs: check-migrations
@@ -82,10 +82,10 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "No new Django migrations detected in production deployment of `${{ github.event.inputs.tag }}`"
+          args: "No new Django migrations detected in production deployment of `${{ github.ref_name }}` (`${{ github.sha }}`)"
 
   deploy-production:
-    needs: start-notification
+    needs: check-migrations
     runs-on: ubuntu-latest
     steps:
       - &ssh-host-auth
@@ -101,21 +101,26 @@ jobs:
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_KEY" | ssh-add - >/dev/null
-          ssh "${SSH_USER}@${SSH_HOST}" "
-            rm -rf dashboard-production &&
-            git clone --depth 1 --branch main https://github.com/kernelci/dashboard.git dashboard-production &&
-            cp ~/.env-production dashboard-production/.env &&
-            cd dashboard-production &&
-            git checkout ${GITHUB_SHA} &&
-            export DASHBOARD_VERSION=${DASHBOARD_VERSION} &&
-            docker compose -f docker-compose-next.yml pull --policy=always &&
+          ssh "${SSH_USER}@${SSH_HOST}" bash -s <<EOF
+            set -euo pipefail
+            rm -rf dashboard-production
+            git clone --filter=blob:none --depth 1 --no-checkout https://github.com/kernelci/dashboard.git dashboard-production
+            cp ~/.env-production dashboard-production/.env
+            cd dashboard-production
+            git fetch --depth 1 origin "${GIT_REF}"
+            git checkout --detach "${IMAGE_TAG}"
+            export IMAGE_TAG=${IMAGE_TAG}
+            export DASHBOARD_VERSION=${DASHBOARD_VERSION}
+            docker compose -f docker-compose-next.yml pull --policy=always
             docker compose -f docker-compose-next.yml up -d --remove-orphans
-          "
+          EOF
         env:
           SSH_USER: ${{ secrets.STAGING_USER }}
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
-          DASHBOARD_VERSION: ${{ github.event.inputs.tag }}
+          IMAGE_TAG: ${{ github.sha }}
+          GIT_REF: ${{ github.ref }}
+          DASHBOARD_VERSION: ${{ needs.check-migrations.outputs.dashboard_version }}
 
       - name: Collect production deployment status
         id: deployment-status
@@ -154,7 +159,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "Production Dashboard deployment successful with tag `${{ github.event.inputs.tag }}`"
+          args: "Production Dashboard deployment successful for `${{ github.ref_name }}` (`${{ github.sha }}`)"
 
       - name: Discord notification on failure
         if: failure()
@@ -163,7 +168,7 @@ jobs:
         uses: Ilshidur/action-discord@master
         with:
           args: |
-            Production Dashboard deployment failed with tag `${{ github.event.inputs.tag }}`.
+            Production Dashboard deployment failed for `${{ github.ref_name }}` (`${{ github.sha }}`).
             ${{ steps.deployment-status.outputs.diagnostics }}
 
   cleanup:
