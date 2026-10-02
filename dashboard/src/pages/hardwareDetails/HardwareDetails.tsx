@@ -70,6 +70,8 @@ import { isEmptyObject } from '@/utils/utils';
 
 import { LoadingCircle } from '@/components/ui/loading-circle';
 
+import { HardwareRegistryStrip } from '@/components/HardwareRegistry/HardwareRegistry';
+
 import { HardwareHeader } from './HardwareDetailsHeaderTable';
 import HardwareDetailsTabs from './Tabs/HardwareDetailsTabs';
 import HardwareDetailsFilter from './HardwareDetailsFilter';
@@ -582,6 +584,10 @@ function HardwareDetails(): JSX.Element {
             </p>
           </div>
           <div className="mt-5">
+            <HardwareRegistryStrip
+              info={summaryResponse.data?.common.registry}
+              className="mb-6"
+            />
             {!!treeData && (
               <>
                 <HardwareHeader

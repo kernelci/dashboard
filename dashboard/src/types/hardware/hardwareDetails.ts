@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import type { BuildsTabBuild, StatusCount, TestHistory } from '@/types/general';
+import type { HardwareRegistryInfo } from '@/types/hardware';
 
 import type {
   GlobalFilters,
@@ -36,6 +37,7 @@ export type PreparedTrees = HardwareTrees & {
 export type HardwareCommon = {
   trees: HardwareTrees[];
   compatibles: string[];
+  registry?: HardwareRegistryInfo | null;
 };
 
 interface HardwareTestLocalFilters extends LocalFilters {
