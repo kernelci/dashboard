@@ -53,7 +53,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "### Showing ${client:text}\n\n[All clients](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=.%2B) \u00b7 [Dashboard](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=dashboard) \u00b7 [kci-dev](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=kci-dev) \u00b7 [Scripts](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=script) \u00b7 [Bots](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=bot)",
+        "content": "### Showing ${client:text}\n\n[All clients](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=.%2B) \u00b7 [Dashboard](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=dashboard) \u00b7 [kci-dev](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=kci-dev) \u00b7 [Scripts](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=script) \u00b7 [Bots](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=bot) \u00b7 [Unknown](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=unknown)",
         "mode": "markdown"
       },
       "pluginVersion": "12.2.0",
@@ -1244,7 +1244,7 @@
         "multi": false,
         "name": "client",
         "options": [],
-        "query": "All clients : .+,Dashboard : dashboard,kci-dev : kci-dev,Scripts : script,Bots : bot",
+        "query": "All clients : .+,Dashboard : dashboard,kci-dev : kci-dev,Scripts : script,Bots : bot,Unknown : unknown",
         "skipUrlSync": false,
         "type": "custom"
       },

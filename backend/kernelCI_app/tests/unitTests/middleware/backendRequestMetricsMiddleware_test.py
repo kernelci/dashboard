@@ -62,9 +62,26 @@ class TestMiddlewareCall:
     [
         ("kci-dev/0.1.11", "kci-dev/0.1.11", "unknown", "cli", Client.KCI_DEV),
         ("kci-dev/0.1.11 (Linux)", "kci-dev/0.1.11", "Linux", "cli", Client.KCI_DEV),
+        ("kci-dev/0.1.11 (LINUX)", "kci-dev/0.1.11", "Linux", "cli", Client.KCI_DEV),
         ("kci-dev/0.1.11 (macos)", "kci-dev/0.1.11", "macOS", "cli", Client.KCI_DEV),
+        (
+            "kci-dev/0.1.11 (Windows)",
+            "kci-dev/0.1.11",
+            "Windows",
+            "cli",
+            Client.KCI_DEV,
+        ),
+        (
+            "kci-dev/0.1.11 (unknown)",
+            "kci-dev/0.1.11",
+            "unknown",
+            "cli",
+            Client.KCI_DEV,
+        ),
         ("kci-dev", "kci-dev", "unknown", "cli", Client.KCI_DEV),
-        ("kci-devtools/1.0", "unknown", "unknown", "desktop", Client.DASHBOARD),
+        ("", "unknown", "unknown", "unknown", Client.UNKNOWN),
+        ("kci-devtools/1.0", "unknown", "unknown", "desktop", Client.UNKNOWN),
+        ("Go-http-client/1.1", "unknown", "unknown", "desktop", Client.UNKNOWN),
         ("curl/8.5.0", "curl", "unknown", "script", Client.SCRIPT),
         (
             "python-requests/2.32.3",

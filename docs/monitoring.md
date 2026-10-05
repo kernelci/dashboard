@@ -134,13 +134,14 @@ is the technical/operator reference.
 
 - `dashboard_backend_requests_by_client_total` — labels: `endpoint` (Django URL
   name), `method`, `status_class` (e.g. `2xx`), `client` (`dashboard`, `kci-dev`,
-  `script`, `bot`), `browser`, `os`, `device` (coarse User-Agent buckets; bots
+  `script`, `bot`, `unknown`), `browser`, `os`, `device` (coarse User-Agent buckets; bots
   bucketed as `bot`), `referrer_domain` (the external `Referer` domain truncated
   to 100 chars; same-host/direct becomes `direct_or_internal`).
 - `dashboard_unique_visitors_total`, `dashboard_unique_visitors_by_endpoint_total`
   — daily de-duplicated visitor counts (counters only; no visitor IDs in labels).
-  Label `client`: `dashboard`, `kci-dev` (UA `kci-dev/…`), `script` (`curl/`,
-  `wget/`, `python-requests/`), or `bot` (crawler heuristics).
+  Label `client`: `dashboard` (recognized browser), `kci-dev` (UA `kci-dev/…`),
+  `script` (`curl/`, `wget/`, `python-requests/`), `bot` (crawler heuristics),
+  or `unknown` (empty or unrecognized User-Agent).
 
 The Grafana dashboard variable **Client** filters those series with
 `client=~"$client"`. **All clients** is `.+`. **Unique Visitors** sums the

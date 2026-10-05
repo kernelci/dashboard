@@ -8,7 +8,7 @@ Collected as aggregate Prometheus counters:
     buckets (browser, os, device) derived from the User-Agent. Referrer is
     reduced to its external domain (or ``direct_or_internal``).
   * Daily unique-visitor estimates (total and per-endpoint), labeled by coarse
-    client kind (``dashboard``, ``kci-dev``, ``script``, ``bot``).
+    client kind (``dashboard``, ``kci-dev``, ``script``, ``bot``, ``unknown``).
 
 Unique-visitor de-duplication uses pseudonymisation, not irreversible
 anonymisation: fingerprint = ``HMAC-SHA256(daily_salt, "<ip>|<user_agent>")``.
@@ -46,6 +46,7 @@ class Client(StrEnum):
     KCI_DEV = "kci-dev"
     SCRIPT = "script"
     BOT = "bot"
+    UNKNOWN = "unknown"
 
 
 SCRIPT_HTTP_USER_AGENT_MARKERS = (
@@ -330,7 +331,7 @@ def get_client_info(user_agent: str) -> ClientInfo:
             browser=UNKNOWN,
             os=UNKNOWN,
             device=UNKNOWN,
-            client=Client.DASHBOARD,
+            client=Client.UNKNOWN,
         )
 
     kci_dev_match = KCI_DEV_USER_AGENT.match(user_agent)
@@ -364,11 +365,12 @@ def get_client_info(user_agent: str) -> ClientInfo:
             client=Client.BOT,
         )
 
+    browser = get_browser(normalized_user_agent)
     return ClientInfo(
-        browser=get_browser(normalized_user_agent),
+        browser=browser,
         os=get_os(normalized_user_agent),
         device=get_device(normalized_user_agent),
-        client=Client.DASHBOARD,
+        client=Client.DASHBOARD if browser != UNKNOWN else Client.UNKNOWN,
     )
 
 
