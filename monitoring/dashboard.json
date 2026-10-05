@@ -1349,7 +1349,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"1-5\"}))",
+          "expr": "round(sum(increase(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"1-5\"}[$__range:])))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "1-5",
@@ -1362,7 +1362,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"6-10\"}))",
+          "expr": "round(sum(increase(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"6-10\"}[$__range:])))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "6-10",
@@ -1375,7 +1375,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"11-20\"}))",
+          "expr": "round(sum(increase(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"11-20\"}[$__range:])))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "11-20",
@@ -1388,7 +1388,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"21-50\"}))",
+          "expr": "round(sum(increase(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"21-50\"}[$__range:])))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "21-50",
@@ -1401,7 +1401,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"51-100\"}))",
+          "expr": "round(sum(increase(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"51-100\"}[$__range:])))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "51-100",
@@ -1414,7 +1414,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"101-500\"}))",
+          "expr": "round(sum(increase(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"101-500\"}[$__range:])))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "101-500",
@@ -1427,7 +1427,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"501-999\"}))",
+          "expr": "round(sum(increase(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"501-999\"}[$__range:])))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "501-999",
@@ -1440,7 +1440,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"1000+\"}))",
+          "expr": "round(sum(increase(dashboard_visitors_by_request_count_total{client=~\"$client\", band=\"1000+\"}[$__range:])))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "1000+",

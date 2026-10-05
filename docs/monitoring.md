@@ -155,8 +155,7 @@ is the technical/operator reference.
   **Visitors by request count** uses eight instant queries (one per band label,
   low to high) on `dashboard_visitors_by_request_count_total`. Values are
   cumulative counters since process start (one increment per visitor at publish
-  time), not a daily rate; use `increase(...[1d])` over a time range for a
-  per-day shape. The visitor hash is not a label.
+  time), not a daily rate; use `increase(...[$__range:])` over the selected range. The visitor hash is not a label.
 
 Local publish of a finished UTC day (needs the same `PROMETHEUS_MULTIPROC_DIR`
 as the backend worker). Omit `--date` for yesterday. Today is refused so a
