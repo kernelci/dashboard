@@ -28,7 +28,7 @@ export function apiStatusToItemStatus(
   return status;
 }
 
-/** Mirror backend _CHANGE_COUNT_SELECT categories for A→B transitions. */
+/** Mirror backend _CHANGE_COUNT_SELECT categories for base→compare transitions. */
 export function deriveCompareChange(
   statusA: CompareItemStatus,
   statusB: CompareItemStatus,
@@ -298,6 +298,40 @@ export function applyStatusPairFilter<
   return rows.filter(row =>
     pairs.some(pair => pair.from === row.sideA && pair.to === row.sideB),
   );
+}
+
+export type CompareRange = { base: string; compare: string };
+
+/** `range` URL param is git-style `<base>..<compare>`; either side may be empty. */
+const COMPARE_RANGE_SEPARATOR = '..';
+
+export function parseCompareRange(range: string): CompareRange {
+  const [base = '', compare = ''] = range.split(COMPARE_RANGE_SEPARATOR, 2);
+  return { base, compare };
+}
+
+export function formatCompareRange({ base, compare }: CompareRange): string {
+  return base || compare ? `${base}${COMPARE_RANGE_SEPARATOR}${compare}` : '';
+}
+
+/**
+ * Fill in missing sides so the default comparison runs oldest → newest:
+ * compare defaults to the branch head, base to the revision right before it.
+ * `revisions` is newest-first.
+ */
+export function resolveCompareRange(
+  revisions: readonly { hash: string }[],
+  { base, compare }: CompareRange,
+): CompareRange {
+  const resolvedCompare =
+    compare || revisions.find(revision => revision.hash !== base)?.hash || '';
+  const compareIndex = revisions.findIndex(
+    revision => revision.hash === resolvedCompare,
+  );
+  return {
+    base: base || revisions[compareIndex + 1]?.hash || '',
+    compare: resolvedCompare,
+  };
 }
 
 /** Next/prev over the currently visible (searched/sorted) table rows. */

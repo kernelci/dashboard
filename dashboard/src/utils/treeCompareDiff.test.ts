@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  type CompareRange,
   deriveCompareChange,
   applyStatusPairFilter,
+  formatCompareRange,
   mapBootOrTestDiffRows,
   mapBuildDiffRows,
   compareRowNav,
+  parseCompareRange,
   parseStatusPairs,
+  resolveCompareRange,
   resolveStatusPairs,
   serializeStatusPairs,
   toggleChangeTypePairs,
@@ -41,6 +45,62 @@ describe('deriveCompareChange', () => {
       'unchanged',
     );
     expect(deriveCompareChange('FAIL', 'FAIL')).toBe('stillFailing');
+  });
+});
+
+describe('compare range URL param', () => {
+  it('round-trips <base>..<compare>, with either side empty', () => {
+    expect(parseCompareRange('old..new')).toEqual({
+      base: 'old',
+      compare: 'new',
+    });
+    expect(parseCompareRange('..new')).toEqual({ base: '', compare: 'new' });
+    expect(parseCompareRange('old..')).toEqual({ base: 'old', compare: '' });
+    expect(parseCompareRange('')).toEqual({ base: '', compare: '' });
+    expect(formatCompareRange({ base: 'old', compare: 'new' })).toBe(
+      'old..new',
+    );
+    expect(formatCompareRange({ base: '', compare: 'new' })).toBe('..new');
+  });
+
+  it('formats an empty range as empty so the param is stripped', () => {
+    expect(formatCompareRange({ base: '', compare: '' })).toBe('');
+  });
+});
+
+describe('resolveCompareRange', () => {
+  const revisions = [{ hash: 'new' }, { hash: 'mid' }, { hash: 'old' }];
+  const range = (base: string, compare: string): CompareRange => ({
+    base,
+    compare,
+  });
+
+  it('defaults compare to the head and base to the revision before it', () => {
+    expect(resolveCompareRange(revisions, range('', ''))).toEqual(
+      range('mid', 'new'),
+    );
+  });
+
+  it('keeps base one revision older than an explicit compare', () => {
+    expect(resolveCompareRange(revisions, range('', 'mid'))).toEqual(
+      range('old', 'mid'),
+    );
+  });
+
+  it('never defaults compare to the same revision as base', () => {
+    expect(resolveCompareRange(revisions, range('new', ''))).toEqual(
+      range('new', 'mid'),
+    );
+  });
+
+  it('leaves explicit hashes alone and copes with too few revisions', () => {
+    expect(resolveCompareRange(revisions, range('old', 'new'))).toEqual(
+      range('old', 'new'),
+    );
+    expect(resolveCompareRange([{ hash: 'only' }], range('', ''))).toEqual(
+      range('', 'only'),
+    );
+    expect(resolveCompareRange([], range('', ''))).toEqual(range('', ''));
   });
 });
 

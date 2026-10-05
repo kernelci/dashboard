@@ -138,7 +138,7 @@ test('loads comparison data and opens a side-by-side details drawer', async ({
   );
 
   await page.goto(
-    `/tree/linux/master/compare?hashA=${HASH_A}&hashB=${HASH_B}&origin=maestro`,
+    `/tree/linux/master/compare?range=${HASH_A}..${HASH_B}&origin=maestro`,
   );
 
   await expect(page.getByText('Tree summary')).toBeVisible();
@@ -304,7 +304,7 @@ test('drawer next stays on searched rows', async ({ page }) => {
   );
 
   await page.goto(
-    `/tree/linux/master/compare?hashA=${HASH_A}&hashB=${HASH_B}&origin=maestro`,
+    `/tree/linux/master/compare?range=${HASH_A}..${HASH_B}&origin=maestro`,
   );
 
   await page.getByPlaceholder('Search').fill('keep-');
