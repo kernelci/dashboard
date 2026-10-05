@@ -63,6 +63,7 @@ services:
         volumes:
             - ./dashboard/src:/dashboard/src        # HMR: watch source changes
             - ./dashboard/public:/dashboard/public  # HMR: watch public assets
+            - ./PRIVACY.md:/PRIVACY.md              # Vite alias @privacy-policy -> /PRIVACY.md
         networks: [public]
         ports: ["5173:5173"]
 
