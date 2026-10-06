@@ -54,41 +54,90 @@ class TestMiddlewareCall:
             "dashboard_backend_requests_by_client_total",
             "dashboard_unique_visitors_total",
             "dashboard_unique_visitors_by_endpoint_total",
+            "dashboard_kci_dev_requests_by_version_total",
         ]
 
 
 @pytest.mark.parametrize(
-    ("user_agent", "browser", "os", "device", "client"),
+    ("user_agent", "browser", "os", "device", "client", "kci_dev_version"),
     [
-        ("kci-dev/0.1.11", "kci-dev/0.1.11", "unknown", "cli", Client.KCI_DEV),
-        ("kci-dev/0.1.11 (Linux)", "kci-dev/0.1.11", "Linux", "cli", Client.KCI_DEV),
-        ("kci-dev/0.1.11 (LINUX)", "kci-dev/0.1.11", "Linux", "cli", Client.KCI_DEV),
-        ("kci-dev/0.1.11 (macos)", "kci-dev/0.1.11", "macOS", "cli", Client.KCI_DEV),
+        ("kci-dev/0.1.11", "kci-dev", "unknown", "cli", Client.KCI_DEV, "0.1.11"),
+        (
+            "kci-dev/0.1.11 (Linux)",
+            "kci-dev",
+            "Linux",
+            "cli",
+            Client.KCI_DEV,
+            "0.1.11",
+        ),
+        (
+            "kci-dev/0.1.11 (LINUX)",
+            "kci-dev",
+            "Linux",
+            "cli",
+            Client.KCI_DEV,
+            "0.1.11",
+        ),
+        (
+            "kci-dev/0.1.11 (macos)",
+            "kci-dev",
+            "macOS",
+            "cli",
+            Client.KCI_DEV,
+            "0.1.11",
+        ),
         (
             "kci-dev/0.1.11 (Windows)",
-            "kci-dev/0.1.11",
+            "kci-dev",
             "Windows",
             "cli",
             Client.KCI_DEV,
+            "0.1.11",
         ),
         (
             "kci-dev/0.1.11 (unknown)",
-            "kci-dev/0.1.11",
+            "kci-dev",
             "unknown",
             "cli",
             Client.KCI_DEV,
+            "0.1.11",
         ),
-        ("kci-dev", "kci-dev", "unknown", "cli", Client.KCI_DEV),
-        ("", "unknown", "unknown", "unknown", Client.UNKNOWN),
-        ("kci-devtools/1.0", "unknown", "unknown", "desktop", Client.UNKNOWN),
-        ("Go-http-client/1.1", "unknown", "unknown", "desktop", Client.UNKNOWN),
-        ("curl/8.5.0", "curl", "unknown", "script", Client.SCRIPT),
+        (
+            "kci-dev/0.1.11.dev0 (Linux)",
+            "kci-dev",
+            "Linux",
+            "cli",
+            Client.KCI_DEV,
+            "0.1.11.dev0",
+        ),
+        (
+            "kci-dev/unknown (Linux)",
+            "kci-dev",
+            "Linux",
+            "cli",
+            Client.KCI_DEV,
+            "unknown",
+        ),
+        (
+            "kci-dev/not-a-release",
+            "kci-dev",
+            "unknown",
+            "cli",
+            Client.KCI_DEV,
+            "unknown",
+        ),
+        ("kci-dev", "kci-dev", "unknown", "cli", Client.KCI_DEV, "unknown"),
+        ("", "unknown", "unknown", "unknown", Client.UNKNOWN, None),
+        ("kci-devtools/1.0", "unknown", "unknown", "desktop", Client.UNKNOWN, None),
+        ("Go-http-client/1.1", "unknown", "unknown", "desktop", Client.UNKNOWN, None),
+        ("curl/8.5.0", "curl", "unknown", "script", Client.SCRIPT, None),
         (
             "python-requests/2.32.3",
             "python-requests",
             "unknown",
             "script",
             Client.SCRIPT,
+            None,
         ),
         (
             "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
@@ -96,6 +145,7 @@ class TestMiddlewareCall:
             "bot",
             "bot",
             Client.BOT,
+            None,
         ),
         (
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -104,12 +154,14 @@ class TestMiddlewareCall:
             "Linux",
             "desktop",
             Client.DASHBOARD,
+            None,
         ),
     ],
 )
-def test_get_client_info(user_agent, browser, os, device, client):
+def test_get_client_info(user_agent, browser, os, device, client, kci_dev_version):
     info = get_client_info(user_agent)
     assert info.browser == browser
     assert info.os == os
     assert info.device == device
     assert info.client == client
+    assert info.kci_dev_version == kci_dev_version

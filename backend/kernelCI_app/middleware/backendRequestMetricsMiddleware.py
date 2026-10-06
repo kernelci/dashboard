@@ -7,6 +7,8 @@ Collected as aggregate Prometheus counters:
   * Request attributes: endpoint, method, status_class, and coarse client
     buckets (browser, os, device) derived from the User-Agent. Referrer is
     reduced to its external domain (or ``direct_or_internal``).
+  * ``kci-dev`` release version, on its own counter. The browser label stays
+    ``kci-dev``.
   * Daily unique-visitor estimates (total and per-endpoint), labeled by coarse
     client kind (``dashboard``, ``kci-dev``, ``script``, ``bot``, ``unknown``).
 
@@ -58,6 +60,7 @@ KCI_DEV_USER_AGENT = re.compile(
     r"^kci-dev(?:/([^\s/()]+))?(?:\s+\(([^)]+)\))?\s*$",
     re.IGNORECASE,
 )
+KCI_DEV_VERSION = re.compile(r"^\d+\.\d+\.\d+(?:[a-z0-9.]{0,16})?$", re.IGNORECASE)
 KCI_DEV_OS = {
     "linux": "Linux",
     "macos": "macOS",
@@ -74,6 +77,7 @@ class Metrics:
     requests_by_client: Counter
     unique_visitors: Counter
     unique_visitors_by_endpoint: Counter
+    kci_dev_requests_by_version: Counter
 
 
 _metrics: Metrics | None = None
@@ -112,6 +116,11 @@ def get_metrics() -> Metrics:
                         " by rotated Redis salt",
                         ["endpoint", "client"],
                     ),
+                    kci_dev_requests_by_version=Counter(
+                        "dashboard_kci_dev_requests_by_version_total",
+                        "kci-dev requests by release version",
+                        ["version", "client"],
+                    ),
                 )
     return _metrics
 
@@ -122,6 +131,7 @@ class ClientInfo:
     os: str
     device: str
     client: Client
+    kci_dev_version: str | None = None
 
 
 class BackendRequestMetricsMiddleware:
@@ -147,6 +157,8 @@ class BackendRequestMetricsMiddleware:
                     )
                 }
             )
+            if labels["client"] is Client.KCI_DEV:
+                record_kci_dev_version(labels["kci_dev_version"])
             record_unique_visitor(
                 request=request,
                 endpoint=labels["endpoint"],
@@ -175,6 +187,13 @@ def record_client(
         os=os,
         device=device,
         referrer_domain=referrer_domain,
+    ).inc()
+
+
+def record_kci_dev_version(version: str) -> None:
+    get_metrics().kci_dev_requests_by_version.labels(
+        version=version,
+        client=Client.KCI_DEV,
     ).inc()
 
 
@@ -280,6 +299,7 @@ def get_backend_request_labels(request, response) -> dict[str, str]:
             request_host=get_request_host(request),
         ),
         "client": client_info.client,
+        "kci_dev_version": client_info.kci_dev_version or UNKNOWN,
     }
 
 
@@ -337,15 +357,18 @@ def get_client_info(user_agent: str) -> ClientInfo:
     kci_dev_match = KCI_DEV_USER_AGENT.match(user_agent)
     if kci_dev_match is not None:
         version = kci_dev_match.group(1)
+        if version is None or KCI_DEV_VERSION.fullmatch(version) is None:
+            version = UNKNOWN
         os_family = kci_dev_match.group(2)
         os = UNKNOWN
         if os_family:
             os = KCI_DEV_OS.get(os_family.strip().casefold(), UNKNOWN)
         return ClientInfo(
-            browser=f"kci-dev/{version}" if version else "kci-dev",
+            browser="kci-dev",
             os=os,
             device="cli",
             client=Client.KCI_DEV,
+            kci_dev_version=version,
         )
 
     for marker, tool in SCRIPT_HTTP_USER_AGENT_MARKERS:

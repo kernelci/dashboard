@@ -141,14 +141,21 @@ is the technical/operator reference.
   — daily de-duplicated visitor counts (counters only; no visitor IDs in labels).
   Label `client`: `dashboard` (recognized browser), `kci-dev` (UA `kci-dev/…`),
   `script` (`curl/`, `wget/`, `python-requests/`), `bot` (crawler heuristics),
-  or `unknown` (empty or unrecognized User-Agent).
+  or `unknown` (empty or unrecognized User-Agent). `kci-dev` requests use
+  browser `kci-dev`, device `cli`, and the OS family from `(Linux)`, `(macOS)`,
+  or `(Windows)` when that token is present.
+- `dashboard_kci_dev_requests_by_version_total` — `kci-dev` requests only, labels
+  `version` and `client` (`kci-dev`). A short release token such as `0.1.11` or
+  `0.1.11.dev0` is kept. A missing or other token is `unknown`.
 
-The Grafana dashboard variable **Client** filters those series with
-`client=~"$client"`. **All clients** is `.+`. **Unique Visitors** sums the
-selected clients into one number. **Requests by Client** keeps one slice per
-selected client. Browser, OS, device, endpoint, referrer, and status panels
-use the same filter. Response time, total calls, and the endpoint summary do
-not: those are Django HTTP metrics and have no `client` label.
+The Grafana dashboard variable **Client** filters the request and unique-visitor
+series with `client=~"$client"`. **All clients** is `.+`. **Unique Visitors**
+sums the selected clients into one number. **Requests by Client** keeps one
+slice per selected client. Browser, OS, device, endpoint, referrer, and status
+panels use the same filter. **kci-dev Requests by Version** uses it too, so
+Dashboard, Scripts, Bots, and Unknown show no slices. Response time, total
+calls, and the endpoint summary do not: those are Django HTTP metrics and have
+no `client` label.
 
 ### Pseudonymisation mechanism
 
