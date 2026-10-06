@@ -107,7 +107,7 @@ jobs:
             git clone --filter=blob:none --depth 1 --no-checkout https://github.com/kernelci/dashboard.git dashboard-production
             cp ~/.env-production dashboard-production/.env
             cd dashboard-production
-            git fetch --depth 1 origin "${GIT_REF}"
+            git fetch --depth 1 origin "${IMAGE_TAG}"
             git checkout --detach "${IMAGE_TAG}"
             export IMAGE_TAG=${IMAGE_TAG}
             export DASHBOARD_VERSION=${DASHBOARD_VERSION}
@@ -119,7 +119,6 @@ jobs:
           SSH_HOST: ${{ secrets.STAGING_HOST }}
           SSH_KEY: ${{ secrets.STAGING_KEY }}
           IMAGE_TAG: ${{ github.sha }}
-          GIT_REF: ${{ github.ref }}
           DASHBOARD_VERSION: ${{ needs.check-migrations.outputs.dashboard_version }}
 
       - name: Collect production deployment status

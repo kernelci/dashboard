@@ -325,7 +325,7 @@ full commit SHA. `latest` is pushed only by automatic builds from `main`.
 Do not start step 3 until step 2 has finished.
 - Run publish from the release tag, not from `main` before the tag exists.
 Images built earlier still carry the previous version string. The host fetches
-that ref and checks out the SHA, so the compose files match the release.
+that SHA and checks it out, so the compose files match the release.
 - The **ingester** and `pending_aggregations_processor` are not started by this workflow
 (the `with_commands` profile is not used), and `--remove-orphans` stops them if they are
 already running on the host. See [Ingester deployment](#ingester-deployment).
