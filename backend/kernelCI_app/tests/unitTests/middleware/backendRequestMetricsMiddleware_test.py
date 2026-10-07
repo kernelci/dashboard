@@ -110,6 +110,7 @@ def test_api_request_records_client_on_counter_and_histogram(monkeypatch):
     assert counter.labels.call_args.kwargs["client"] == Client.KCI_DEV
     assert histogram.labels.call_args.kwargs == {
         "endpoint": "schema",
+        "method": "GET",
         "client": Client.KCI_DEV,
     }
     histogram.labels.return_value.observe.assert_called_once()

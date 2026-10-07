@@ -9,7 +9,7 @@ Collected as aggregate Prometheus metrics:
     reduced to its external domain (or ``direct_or_internal``).
   * ``kci-dev`` release version, on its own counter. The browser label stays
     ``kci-dev``.
-  * ``/api/`` latency by endpoint and client. Those requests are not also
+  * ``/api/`` latency by endpoint, method, and client. Those requests are not also
     observed on the Django view-latency histogram.
   * Daily unique-visitor estimates (total and per-endpoint), labeled by coarse
     client kind (``dashboard``, ``kci-dev``, ``script``, ``bot``, ``unknown``).
@@ -148,8 +148,8 @@ def get_metrics() -> Metrics:
                     ),
                     request_latency=Histogram(
                         "dashboard_backend_request_latency_seconds",
-                        "Latency of /api/ requests by endpoint and client",
-                        ["endpoint", "client"],
+                        "Latency of /api/ requests by endpoint, method, and client",
+                        ["endpoint", "method", "client"],
                         buckets=PROMETHEUS_LATENCY_BUCKETS,
                     ),
                 )
@@ -193,6 +193,7 @@ class BackendRequestMetricsMiddleware:
                 record_kci_dev_version(labels["kci_dev_version"])
             get_metrics().request_latency.labels(
                 endpoint=labels["endpoint"],
+                method=labels["method"],
                 client=labels["client"],
             ).observe(time.perf_counter() - started)
             record_unique_visitor(

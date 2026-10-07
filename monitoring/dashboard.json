@@ -196,9 +196,9 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum by (endpoint, client) (rate(dashboard_backend_request_latency_seconds_sum{client=~\"$client\"}[5m])) / sum by (endpoint, client) (rate(dashboard_backend_request_latency_seconds_count{client=~\"$client\"}[5m]))",
+          "expr": "sum by (endpoint, method, client) (rate(dashboard_backend_request_latency_seconds_sum{client=~\"$client\"}[5m])) / sum by (endpoint, method, client) (rate(dashboard_backend_request_latency_seconds_count{client=~\"$client\"}[5m]))",
           "instant": false,
-          "legendFormat": "{{endpoint}} - {{client}} avg",
+          "legendFormat": "{{method}} {{endpoint}} - {{client}} avg",
           "range": true,
           "refId": "A"
         },
@@ -208,9 +208,9 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.5, sum by (le, endpoint, client) (rate(dashboard_backend_request_latency_seconds_bucket{client=~\"$client\"}[5m])))",
+          "expr": "histogram_quantile(0.5, sum by (le, endpoint, method, client) (rate(dashboard_backend_request_latency_seconds_bucket{client=~\"$client\"}[5m])))",
           "instant": false,
-          "legendFormat": "{{endpoint}} - {{client}} p50",
+          "legendFormat": "{{method}} {{endpoint}} - {{client}} p50",
           "range": true,
           "refId": "B"
         },
@@ -220,9 +220,9 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by (le, endpoint, client) (rate(dashboard_backend_request_latency_seconds_bucket{client=~\"$client\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, endpoint, method, client) (rate(dashboard_backend_request_latency_seconds_bucket{client=~\"$client\"}[5m])))",
           "instant": false,
-          "legendFormat": "{{endpoint}} - {{client}} p95",
+          "legendFormat": "{{method}} {{endpoint}} - {{client}} p95",
           "range": true,
           "refId": "C"
         }

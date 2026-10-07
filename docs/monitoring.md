@@ -157,7 +157,7 @@ is the technical/operator reference.
   cumulative counters since process start (one increment per visitor at publish
   time), not a daily rate; use `increase(...[$__range:])` over the selected range. The visitor hash is not a label.
 - `dashboard_backend_request_latency_seconds` — histogram of `/api/` request
-  latency in seconds, labelled by `endpoint` and `client`. Buckets match the
+  latency in seconds, labelled by `endpoint`, `method`, and `client`. Buckets match the
   Django latency histogram. `/api/` requests are not observed on
   `django_http_requests_latency_seconds_by_view_method`; that series stays for
   other routes, including `/admin/`. Django status and exception counters are
