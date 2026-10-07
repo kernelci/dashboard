@@ -1,7 +1,8 @@
 stable:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git
   default_recipients:
-    - stable@vger.kernel.org
+    - email: stable@vger.kernel.org
+      issues: [build]
 
   reports:
     - maestro-6.12.y:

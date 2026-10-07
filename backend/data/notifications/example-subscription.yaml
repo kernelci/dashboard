@@ -1,7 +1,10 @@
 tree: # The filename and the name of the tree may follow the tree-names.yaml file, but does not matter in the code
   url: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git # the git_repository_url of the tree
   default_recipients:
-    - broonie@kernel.org
+    - email: broonie@kernel.org
+      issues: [build] # the issue kinds this address is notified about
+    - email: someone@example.com
+      issues: [build, boot, test]
  
   reports:
     - default:

@@ -7,6 +7,7 @@ from jinja2 import Environment, FileSystemLoader, Template
 from kernelCI_app.helpers.email import smtp_send_email
 from kernelCI_app.helpers.logger import log_message
 from kernelCI_app.management.commands.helpers.summary import SIGNUP_FOLDER
+from kernelCI_app.typeModels.notificationSubscriptions import cc_addresses
 from kernelCI_app.utils import read_yaml_file
 
 KERNELCI_RESULTS = "kernelci-results@groups.io"
@@ -77,7 +78,7 @@ def _get_default_tree_recipients(
                 tree_url = tree_values.get("url")
                 default_recipients = tree_values.get("default_recipients", [])
                 if search_url == tree_url:
-                    return default_recipients
+                    return cc_addresses(default_recipients)
         else:
             log_message(
                 f"Skipping file {filename} on loading summary files. Not a yaml file."
