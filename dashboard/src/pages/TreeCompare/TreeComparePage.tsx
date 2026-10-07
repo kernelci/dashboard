@@ -64,6 +64,7 @@ import { CompareSummary } from './components/CompareSummary';
 import {
   RevisionSelectorBar,
   type RevisionSide,
+  targetRevision,
 } from './components/RevisionSelector';
 
 const SHORT_HASH_LENGTH = 7;
@@ -156,20 +157,9 @@ const TreeComparePage = (): JSX.Element => {
   const handleSideAction = useCallback(
     (side: RevisionSide, action: 'previous' | 'branchHead') => {
       const currentHash = side === 'base' ? resolvedBase : resolvedCompare;
-      const currentIndex = revisions.findIndex(r => r.hash === currentHash);
-
-      if (action === 'previous') {
-        const previousIndex = Math.min(
-          revisions.length - 1,
-          Math.max(currentIndex, 0) + 1,
-        );
-        const nextHash = revisions[previousIndex]?.hash ?? currentHash;
-        updateSearch({ range: { [side]: nextHash } });
-        return;
-      }
-
-      const headHash = revisions[0]?.hash ?? currentHash;
-      updateSearch({ range: { [side]: headHash } });
+      const nextHash =
+        targetRevision(revisions, currentHash, action)?.hash ?? currentHash;
+      updateSearch({ range: { [side]: nextHash } });
     },
     [revisions, resolvedBase, resolvedCompare, updateSearch],
   );

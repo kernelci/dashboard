@@ -3,6 +3,7 @@ import type { JSX } from 'react';
 import { ArrowLeftRight, GitBranch, History } from 'lucide-react';
 import { FormattedMessage } from 'react-intl';
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/Tooltip';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -37,6 +38,45 @@ function TagChips({ tags }: { tags: string[] }): JSX.Element | null {
   );
 }
 
+export function targetRevision(
+  revisions: CompareRevision[],
+  selectedHash: string,
+  action: 'previous' | 'branchHead',
+): CompareRevision | undefined {
+  if (action === 'branchHead') {
+    return revisions[0];
+  }
+  const currentIndex = revisions.findIndex(
+    revision => revision.hash === selectedHash,
+  );
+  const previousIndex = Math.min(
+    revisions.length - 1,
+    Math.max(currentIndex, 0) + 1,
+  );
+  return revisions[previousIndex];
+}
+
+function RevisionDetails({
+  revision,
+}: {
+  revision: CompareRevision;
+}): JSX.Element {
+  return (
+    <div className="flex flex-col gap-1 text-sm">
+      <span className="font-mono text-xs">{revision.shortHash}</span>
+      {revision.commitName && (
+        <span className="text-dim-black font-medium">
+          {revision.commitName}
+        </span>
+      )}
+      <TagChips tags={revision.tags} />
+      {revision.date && (
+        <span className="text-dim-gray text-xs">{revision.date}</span>
+      )}
+    </div>
+  );
+}
+
 function RevisionCard({
   side,
   selectedHash,
@@ -53,6 +93,12 @@ function RevisionCard({
   onBranchHead: () => void;
 }): JSX.Element {
   const selected = revisions.find(r => r.hash === selectedHash);
+  const previousRevision = targetRevision(revisions, selectedHash, 'previous');
+  const branchHeadRevision = targetRevision(
+    revisions,
+    selectedHash,
+    'branchHead',
+  );
 
   return (
     <div
@@ -90,46 +136,48 @@ function RevisionCard({
         </SelectContent>
       </Select>
 
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={onPrevious}
-          aria-label="Previous commit"
-        >
-          <History className="h-3.5 w-3.5" />
-          <span className="sr-only">
-            <FormattedMessage id="treeCompare.suggestion.previous" />
-          </span>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={onBranchHead}
-          aria-label="Branch head"
-        >
-          <GitBranch className="h-3.5 w-3.5" />
-          <span className="sr-only">
-            <FormattedMessage id="treeCompare.suggestion.branchHead" />
-          </span>
-        </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={onPrevious}
+            >
+              <History className="h-3.5 w-3.5" />
+              <FormattedMessage id="treeCompare.suggestion.previous" />
+            </Button>
+          </TooltipTrigger>
+          {previousRevision && (
+            <TooltipContent className="max-w-xs">
+              <RevisionDetails revision={previousRevision} />
+            </TooltipContent>
+          )}
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={onBranchHead}
+            >
+              <GitBranch className="h-3.5 w-3.5" />
+              <FormattedMessage id="treeCompare.suggestion.branchHead" />
+            </Button>
+          </TooltipTrigger>
+          {branchHeadRevision && (
+            <TooltipContent className="max-w-xs">
+              <RevisionDetails revision={branchHeadRevision} />
+            </TooltipContent>
+          )}
+        </Tooltip>
       </div>
 
-      {selected && (
-        <div className="text-dim-gray flex flex-col gap-1 text-sm">
-          {selected.commitName && (
-            <p className="text-dim-black truncate font-medium">
-              {selected.commitName}
-            </p>
-          )}
-          <TagChips tags={selected.tags} />
-          <p className="text-xs">{selected.date}</p>
-        </div>
-      )}
+      {selected && <RevisionDetails revision={selected} />}
     </div>
   );
 }
