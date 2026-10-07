@@ -23,7 +23,9 @@ counters), never as per-user records or per-user timestamps:
 - **Request attributes**: the API endpoint name, HTTP method, response status
   class (e.g. `2xx`), and coarse client buckets derived from your browser's
   User-Agent (e.g. browser family `Chrome`, operating system `Linux`, device
-  type `desktop`). Automated clients are bucketed as `bot`.
+  type `desktop`). Automated clients are bucketed as `bot`. The `kci-dev` CLI
+  is recorded as browser `kci-dev`, and its release version is counted on a
+  separate metric.
 - **Referrer domain**: only the external domain that linked you to the
   Dashboard (e.g. `example.org`). Same-site and direct visits are recorded as
   `direct_or_internal`. The full referring URL is never stored.

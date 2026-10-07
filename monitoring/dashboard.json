@@ -40,6 +40,28 @@
   "liveNow": false,
   "panels": [
     {
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 12,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "### Showing ${client:text}\n\n[All clients](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=.%2B) \u00b7 [Dashboard](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=dashboard) \u00b7 [kci-dev](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=kci-dev) \u00b7 [Scripts](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=script) \u00b7 [Bots](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=bot) \u00b7 [Unknown](/d/kernelci-performance-dashboard/kernelci-performance-dashboard?${__url_time_range}&var-summary_mode=${summary_mode}&var-client=unknown)",
+        "mode": "markdown"
+      },
+      "pluginVersion": "12.2.0",
+      "title": "Client",
+      "transparent": true,
+      "type": "text"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -59,7 +81,7 @@
         "h": 3,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 4
       },
       "id": 4,
       "options": {
@@ -153,7 +175,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 3
+        "y": 7
       },
       "id": 1,
       "options": {
@@ -244,7 +266,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 3
+        "y": 7
       },
       "id": 2,
       "options": {
@@ -426,7 +448,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 15
       },
       "id": 3,
       "options": {
@@ -616,7 +638,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 16
+        "y": 20
       },
       "id": 4,
       "options": {
@@ -625,7 +647,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -639,14 +663,14 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum(increase(dashboard_unique_visitors_total[$__range:])))",
+          "expr": "round(sum(increase(dashboard_unique_visitors_total{client=~\"$client\"}[$__range:])))",
           "instant": true,
-          "legendFormat": "Daily Unique Visitors",
+          "legendFormat": "${client:text}",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Unique Visitors (Selected Range)",
+      "title": "Unique Visitors by Client (Selected Range)",
       "type": "stat"
     },
     {
@@ -705,7 +729,7 @@
         "h": 8,
         "w": 16,
         "x": 8,
-        "y": 16
+        "y": 20
       },
       "id": 5,
       "options": {
@@ -726,7 +750,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum by (endpoint) (rate(dashboard_unique_visitors_by_endpoint_total[5m]))",
+          "expr": "sum by (endpoint) (rate(dashboard_unique_visitors_by_endpoint_total{client=~\"$client\"}[5m]))",
           "instant": false,
           "legendFormat": "{{endpoint}}",
           "range": true,
@@ -762,19 +786,25 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 24
+        "y": 28
       },
       "id": 6,
       "options": {
-        "displayLabels": ["percent"],
+        "displayLabels": [
+          "percent"
+        ],
         "legend": {
           "displayMode": "list",
           "placement": "right",
-          "values": ["value"]
+          "values": [
+            "value"
+          ]
         },
         "pieType": "donut",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -791,7 +821,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum by (browser) (increase(dashboard_backend_requests_by_client_total[$__range:])))",
+          "expr": "round(sum by (browser) (increase(dashboard_backend_requests_by_client_total{client=~\"$client\"}[$__range:])))",
           "instant": true,
           "legendFormat": "{{browser}}",
           "range": false,
@@ -827,19 +857,25 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 24
+        "y": 28
       },
       "id": 7,
       "options": {
-        "displayLabels": ["percent"],
+        "displayLabels": [
+          "percent"
+        ],
         "legend": {
           "displayMode": "list",
           "placement": "right",
-          "values": ["value"]
+          "values": [
+            "value"
+          ]
         },
         "pieType": "donut",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -856,7 +892,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum by (os) (increase(dashboard_backend_requests_by_client_total[$__range:])))",
+          "expr": "round(sum by (os) (increase(dashboard_backend_requests_by_client_total{client=~\"$client\"}[$__range:])))",
           "instant": true,
           "legendFormat": "{{os}}",
           "range": false,
@@ -892,19 +928,25 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 24
+        "y": 28
       },
       "id": 8,
       "options": {
-        "displayLabels": ["percent"],
+        "displayLabels": [
+          "percent"
+        ],
         "legend": {
           "displayMode": "list",
           "placement": "right",
-          "values": ["value"]
+          "values": [
+            "value"
+          ]
         },
         "pieType": "donut",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -921,7 +963,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "round(sum by (device) (increase(dashboard_backend_requests_by_client_total[$__range:])))",
+          "expr": "round(sum by (device) (increase(dashboard_backend_requests_by_client_total{client=~\"$client\"}[$__range:])))",
           "instant": true,
           "legendFormat": "{{device}}",
           "range": false,
@@ -929,6 +971,77 @@
         }
       ],
       "title": "Requests by Device",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            }
+          },
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 36
+      },
+      "id": 11,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "round(sum by (client) (increase(dashboard_backend_requests_by_client_total{client=~\"$client\"}[$__range:])))",
+          "instant": true,
+          "legendFormat": "{{client}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Requests by Client",
       "type": "piechart"
     },
     {
@@ -977,7 +1090,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 32
+        "y": 44
       },
       "id": 9,
       "options": {
@@ -1009,7 +1122,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "topk(10, round(sum by (referrer_domain) (increase(dashboard_backend_requests_by_client_total[$__range:]))))",
+          "expr": "topk(10, round(sum by (referrer_domain) (increase(dashboard_backend_requests_by_client_total{client=~\"$client\"}[$__range:]))))",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{referrer_domain}}",
@@ -1076,7 +1189,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 32
+        "y": 44
       },
       "id": 10,
       "options": {
@@ -1097,7 +1210,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum by (status_class) (rate(dashboard_backend_requests_by_client_total[5m]))",
+          "expr": "sum by (status_class) (rate(dashboard_backend_requests_by_client_total{client=~\"$client\"}[5m]))",
           "instant": false,
           "legendFormat": "{{status_class}}",
           "range": true,
@@ -1106,6 +1219,77 @@
       ],
       "title": "Request Rate by Status Class",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            }
+          },
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 36
+      },
+      "id": 13,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "round(sum by (version) (increase(dashboard_kci_dev_requests_by_version_total{client=~\"$client\"}[$__range:])))",
+          "instant": true,
+          "legendFormat": "{{version}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "kci-dev Requests by Version",
+      "type": "piechart"
     }
   ],
   "refresh": "5s",
@@ -1118,6 +1302,23 @@
   ],
   "templating": {
     "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "All clients",
+          "value": ".+"
+        },
+        "description": "Filters the analytics panels",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Client",
+        "multi": false,
+        "name": "client",
+        "options": [],
+        "query": "All clients : .+,Dashboard : dashboard,kci-dev : kci-dev,Scripts : script,Bots : bot,Unknown : unknown",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
       {
         "current": {
           "selected": false,

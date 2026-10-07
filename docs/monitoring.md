@@ -133,12 +133,29 @@ is the technical/operator reference.
 ### Metrics emitted
 
 - `dashboard_backend_requests_by_client_total` — labels: `endpoint` (Django URL
-  name), `method`, `status_class` (e.g. `2xx`), `browser`, `os`, `device`
-  (coarse User-Agent buckets; bots bucketed as `bot`), `referrer_domain` (the
-  external `Referer` domain truncated to 100 chars; same-host/direct becomes
-  `direct_or_internal`).
+  name), `method`, `status_class` (e.g. `2xx`), `client` (`dashboard`, `kci-dev`,
+  `script`, `bot`, `unknown`), `browser`, `os`, `device` (coarse User-Agent buckets; bots
+  bucketed as `bot`), `referrer_domain` (the external `Referer` domain truncated
+  to 100 chars; same-host/direct becomes `direct_or_internal`).
 - `dashboard_unique_visitors_total`, `dashboard_unique_visitors_by_endpoint_total`
   — daily de-duplicated visitor counts (counters only; no visitor IDs in labels).
+  Label `client`: `dashboard` (recognized browser), `kci-dev` (UA `kci-dev/…`),
+  `script` (`curl/`, `wget/`, `python-requests/`), `bot` (crawler heuristics),
+  or `unknown` (empty or unrecognized User-Agent). `kci-dev` requests use
+  browser `kci-dev`, device `cli`, and the OS family from `(Linux)`, `(macOS)`,
+  or `(Windows)` when that token is present.
+- `dashboard_kci_dev_requests_by_version_total` — `kci-dev` requests only, labels
+  `version` and `client` (`kci-dev`). A short release token such as `0.1.11` or
+  `0.1.11.dev0` is kept. A missing or other token is `unknown`.
+
+The Grafana dashboard variable **Client** filters the request and unique-visitor
+series with `client=~"$client"`. **All clients** is `.+`. **Unique Visitors**
+sums the selected clients into one number. **Requests by Client** keeps one
+slice per selected client. Browser, OS, device, endpoint, referrer, and status
+panels use the same filter. **kci-dev Requests by Version** uses it too, so
+Dashboard, Scripts, Bots, and Unknown show no slices. Response time, total
+calls, and the endpoint summary do not: those are Django HTTP metrics and have
+no `client` label.
 
 ### Pseudonymisation mechanism
 
