@@ -40,6 +40,7 @@ from kernelCI_app.helpers.hardwareDetails import (
     set_trees_status_summary,
     unstable_parse_post_body,
 )
+from kernelCI_app.helpers.hardwareRegistry import get_first_hardware_registry
 from kernelCI_app.queries.hardware import (
     get_hardware_details_data,
     get_hardware_trees_data,
@@ -405,6 +406,9 @@ class HardwareDetails(APIView):
                 common=HardwareCommon(
                     trees=trees,
                     compatibles=list(self.processed_compatibles - {hardware_id}),
+                    registry=get_first_hardware_registry(
+                        [hardware_id, *self.processed_compatibles]
+                    ),
                 ),
             )
         except ValidationError as e:

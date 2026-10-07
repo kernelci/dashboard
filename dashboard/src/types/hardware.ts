@@ -1,23 +1,43 @@
 import type { ShortStatusCount } from './general';
 
+export type HardwareRegistryNamedLink = {
+  id: string;
+  url?: string | null;
+  form_factor?: string | null;
+};
+
+export type HardwareRegistryProcessorInfo = {
+  id: string;
+  architecture?: string | null;
+  cores?: number | null;
+  max_clock_speed_mhz?: number | null;
+  url?: string | null;
+  description?: string | null;
+};
+
+export type HardwareRegistryInfo = {
+  platform_id: string;
+  board_type?: string | null;
+  form_factor?: string | null;
+  description?: string | null;
+  url?: string | null;
+  vendor?: HardwareRegistryNamedLink | null;
+  silicon_vendor?: HardwareRegistryNamedLink | null;
+  system_module?: HardwareRegistryNamedLink | null;
+  processor?: HardwareRegistryProcessorInfo | null;
+};
+
 export type HardwareItem = {
   hardware?: string[];
   platform: string;
   build_status_summary: ShortStatusCount;
   test_status_summary: ShortStatusCount;
   boot_status_summary: ShortStatusCount;
-};
-
-export type HardwareListingApiItem = {
-  hardware?: string[];
-  platform: string;
-  build_status_summary: ShortStatusCount;
-  test_status_summary: ShortStatusCount;
-  boot_status_summary: ShortStatusCount;
+  registry?: HardwareRegistryInfo | null;
 };
 
 export interface HardwareListingResponse {
-  hardware: HardwareListingApiItem[];
+  hardware: HardwareItem[];
 }
 
 export type HardwareSelectorRevision = {

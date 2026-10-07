@@ -7,6 +7,7 @@ from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
 from kernelCI_app.typeModels.common import StatusCount
 from kernelCI_app.typeModels.commonListing import ListingStatusCount
+from kernelCI_app.typeModels.hardwareRegistry import HardwareRegistryInfo
 
 
 def _normalize_commits_list(value: object) -> Optional[list[str]]:
@@ -24,6 +25,7 @@ class HardwareItem(BaseModel):
     test_status_summary: StatusCount
     boot_status_summary: StatusCount
     build_status_summary: StatusCount
+    registry: Optional[HardwareRegistryInfo] = None
 
 
 class HardwareListingItem(BaseModel):
@@ -32,6 +34,7 @@ class HardwareListingItem(BaseModel):
     test_status_summary: ListingStatusCount
     boot_status_summary: ListingStatusCount
     build_status_summary: ListingStatusCount
+    registry: Optional[HardwareRegistryInfo] = None
 
 
 class HardwareListingResponse(BaseModel):
