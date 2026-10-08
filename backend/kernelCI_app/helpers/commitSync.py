@@ -64,7 +64,14 @@ MIRROR_GIT_CONFIG = {
     "http.lowSpeedLimit": "1000",
     "http.lowSpeedTime": "60",
     "gc.auto": "0",
+    # A treeless pack has no full closure, so the bitmap bare repos write by
+    # default aborts repack after the new pack is on disk.
+    "repack.writeBitmaps": "false",
 }
+SHALLOW_FILENAME = "shallow"
+# A multi-GB repack can take hours. Killing it mid-write leaves the new pack
+# beside the old ones, which is how a failed gc grows the mirror.
+GC_TIMEOUT_SECONDS = 6 * 60 * 60
 
 
 class FetchOutcome(Enum):
@@ -131,6 +138,50 @@ def write_stored_tips(repo_dir: Path, tips: Sequence[str]) -> None:
     (repo_dir / TIPS_FILENAME).write_text(text)
 
 
+def present_tips(repo_dir: Path, tips: Sequence[str]) -> tuple[str, ...]:
+    """Drop tips the shallow boundary has removed so rev-list can still run."""
+    kept: list[str] = []
+    for tip in tips:
+        if _commit_exists(repo_dir, tip):
+            kept.append(tip)
+            continue
+        logger.warning("dropping stored tip %s: no longer in the mirror", tip)
+    return tuple(kept)
+
+
+def _commit_exists(repo_dir: Path, git_commit_hash: str) -> bool:
+    try:
+        run_git(repo_dir, "cat-file", "-e", git_commit_hash)
+    except CommitMetadataError:
+        return False
+    return True
+
+
+def shallow_since_for_fetch(repo_dir: Path) -> str | None:
+    """Cutoff for this run, or None when shortening could hide uningested commits.
+
+    An empty mirror can be shallow from the first fetch. A mirror that already
+    has refs waits until synced-tips exists and rev-list has nothing pending.
+    """
+    cutoff = settings.GIT_MIRROR_SHALLOW_SINCE.strip()
+    if not cutoff:
+        return None
+    if not list_tips(repo_dir):
+        out(f"shallow-since={cutoff}: mirror has no refs yet")
+        return cutoff
+    if not (repo_dir / TIPS_FILENAME).is_file():
+        out("shallow-since skipped: ingest has not recorded tips")
+        return None
+    pending = new_commit_hashes(
+        repo_dir, present_tips(repo_dir, read_stored_tips(repo_dir))
+    )
+    if pending:
+        out("shallow-since skipped: ingest has not caught up")
+        return None
+    out(f"shallow-since={cutoff}")
+    return cutoff
+
+
 def checkout_branches_by_url() -> dict[str, set[str]]:
     """Branches we already see in checkouts, keyed by sanitized git url."""
     mapping: dict[str, set[str]] = {}
@@ -161,6 +212,7 @@ def fetch_remote(
     verbose_git: bool = False,
     branches: set[str] | None = None,
     skip_unfilterable: bool = False,
+    shallow_since: str | None = None,
 ) -> bool:
     """Fetch the checkout branches of one remote into the shared mirror.
 
@@ -203,6 +255,7 @@ def fetch_remote(
             timeout=timeout,
             verbose_git=verbose_git,
             use_filter=supports_filter,
+            shallow_since=shallow_since,
         )
         if outcome is FetchOutcome.OK:
             return True
@@ -225,6 +278,24 @@ def mirror_size_bytes(repo_dir: Path) -> int:
     return sum(path.stat().st_size for path in repo_dir.rglob("*") if path.is_file())
 
 
+def gc_mirror(repo_dir: Path) -> None:
+    """Delete unreachable objects now. Bitmaps stay off so a treeless pack can be rewritten."""
+    if not (repo_dir / "HEAD").is_file():
+        out(f"sync_commit_gc skipped: {repo_dir} does not exist")
+        return
+    ensure_mirror(repo_dir)
+    out(f"sync_commit_gc repacking {repo_dir}")
+    run_git(
+        repo_dir,
+        "-c",
+        "repack.writeBitmaps=false",
+        "gc",
+        "--prune=now",
+        timeout=GC_TIMEOUT_SECONDS,
+        stream=True,
+    )
+
+
 def new_commit_hashes(repo_dir: Path, old_tips: Sequence[str]) -> list[str]:
     args = ["rev-list", "--reverse", "--topo-order", "--remotes"]
     stdin: bytes | None = None
@@ -234,13 +305,9 @@ def new_commit_hashes(repo_dir: Path, old_tips: Sequence[str]) -> list[str]:
         # Prefix each tip with `^` instead, which rev-list does honour on stdin.
         args.append("--stdin")
         stdin = "".join(f"^{tip}\n" for tip in old_tips).encode()
-    try:
-        output = run_git(
-            repo_dir, *args, timeout=REV_LIST_TIMEOUT_SECONDS, stdin=stdin
-        ).decode()
-    except FetchFailedError as exc:
-        logger.warning("rev-list failed: %s", exc)
-        return []
+    output = run_git(
+        repo_dir, *args, timeout=REV_LIST_TIMEOUT_SECONDS, stdin=stdin
+    ).decode()
     return [line.strip() for line in output.splitlines() if line.strip()]
 
 
@@ -348,6 +415,7 @@ def _fetch_allowlisted_trees(
     verbose_git: bool,
     skip_unfilterable: bool,
     size_before: int,
+    shallow_since: str | None,
 ) -> tuple[int, int]:
     remotes_ok = 0
     remotes_failed = 0
@@ -370,6 +438,7 @@ def _fetch_allowlisted_trees(
             verbose_git=verbose_git,
             branches=branches_by_url.get(url, set()),
             skip_unfilterable=skip_unfilterable,
+            shallow_since=shallow_since,
         )
         elapsed = time.monotonic() - started
         if succeeded:
@@ -391,7 +460,7 @@ def _ingest_new_commits(
 ) -> tuple[int, int, int]:
     out("enumerating new commit objects...")
     started = time.monotonic()
-    hashes = new_commit_hashes(repo_dir, old_tips)
+    hashes = new_commit_hashes(repo_dir, present_tips(repo_dir, old_tips))
     out(
         f"{len(hashes)} new commits to ingest "
         f"(enumerated in {time.monotonic() - started:.0f}s)"
@@ -413,6 +482,11 @@ def _ingest_new_commits(
                 f"parsed {parsed}/{len(hashes)} commits, "
                 f"wrote {commits_written} commits and {edges_written} parent edges"
             )
+
+    if parsed != len(hashes):
+        raise CommitMetadataError(
+            f"parsed {parsed} of {len(hashes)} commits; tips left unchanged"
+        )
 
     if not dry_run:
         write_stored_tips(repo_dir, list_tips(repo_dir))
@@ -456,6 +530,7 @@ def sync_commit_metadata(
             verbose_git=verbose_git,
             skip_unfilterable=skip_unfilterable,
             size_before=size_before,
+            shallow_since=shallow_since_for_fetch(repo_dir),
         )
 
     empty = {
@@ -598,9 +673,11 @@ def _fetch_refspecs_or_rollback(
     timeout: int,
     verbose_git: bool,
     use_filter: bool = True,
+    shallow_since: str | None = None,
 ) -> FetchOutcome:
     packs_before = _pack_paths(repo_dir)
     refs_before = _remote_refs(repo_dir, name)
+    shallow_before = _read_shallow(repo_dir)
     try:
         run_git(
             repo_dir,
@@ -608,6 +685,7 @@ def _fetch_refspecs_or_rollback(
             "--prune",
             "--no-tags",
             *(["--filter=tree:0"] if use_filter else []),
+            *(["--shallow-since", shallow_since] if shallow_since else []),
             *(["--progress"] if verbose_git else []),
             name,
             *refspecs,
@@ -621,6 +699,7 @@ def _fetch_refspecs_or_rollback(
             name=name,
             packs_before=packs_before,
             refs_before=refs_before,
+            shallow_before=shallow_before,
             keep_packs=True,
         )
         return FetchOutcome.FAILED
@@ -631,7 +710,11 @@ def _fetch_refspecs_or_rollback(
 
     logger.warning("reject pack from %s (%s): %s", name, url, reason)
     _rollback_fetch(
-        repo_dir, name=name, packs_before=packs_before, refs_before=refs_before
+        repo_dir,
+        name=name,
+        packs_before=packs_before,
+        refs_before=refs_before,
+        shallow_before=shallow_before,
     )
     return FetchOutcome.REJECTED
 
@@ -661,12 +744,28 @@ def _remote_refs(repo_dir: Path, name: str) -> dict[str, str]:
     return refs
 
 
+def _read_shallow(repo_dir: Path) -> bytes | None:
+    path = repo_dir / SHALLOW_FILENAME
+    if not path.is_file():
+        return None
+    return path.read_bytes()
+
+
+def _restore_shallow(repo_dir: Path, previous: bytes | None) -> None:
+    path = repo_dir / SHALLOW_FILENAME
+    if previous is None:
+        path.unlink(missing_ok=True)
+        return
+    path.write_bytes(previous)
+
+
 def _rollback_fetch(
     repo_dir: Path,
     *,
     name: str,
     packs_before: set[Path],
     refs_before: dict[str, str],
+    shallow_before: bytes | None,
     keep_packs: bool = False,
 ) -> None:
     """Restore refs, and drop the new packs unless the caller wants to keep them.
@@ -687,6 +786,11 @@ def _rollback_fetch(
             run_git(repo_dir, "update-ref", ref, sha)
         except FetchFailedError as exc:
             logger.warning("could not restore ref %s: %s", ref, exc)
+
+    try:
+        _restore_shallow(repo_dir, shallow_before)
+    except OSError as exc:
+        logger.warning("could not restore %s: %s", SHALLOW_FILENAME, exc)
 
     for path in _pack_paths(repo_dir) - packs_before:
         if keep_packs and not path.name.startswith("tmp_pack"):
@@ -728,13 +832,15 @@ def _pack_rejection_reason(
 
     # The server said it could filter, so trees/blobs mean it did not honour it.
     types = _pack_object_types(repo_dir, idx)
+    if types is None:
+        return f"could not inspect {path.name}"
     leaked = types & {"tree", "blob"}
     if leaked:
         return f"{path.name} contains {', '.join(sorted(leaked))}"
     return None
 
 
-def _pack_object_types(repo_dir: Path, idx: Path) -> set[str]:
+def _pack_object_types(repo_dir: Path, idx: Path) -> set[str] | None:
     try:
         output = run_git(
             repo_dir,
@@ -745,7 +851,7 @@ def _pack_object_types(repo_dir: Path, idx: Path) -> set[str]:
         ).decode()
     except (CommitMetadataError, ValueError) as exc:
         logger.warning("verify-pack %s failed: %s", idx, exc)
-        return set()
+        return None
     types: set[str] = set()
     for line in output.splitlines():
         fields = line.split()

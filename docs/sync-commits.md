@@ -62,7 +62,7 @@ remotes, so the first kernel tree is expensive and the rest mostly reuse it.
 | Server without filter (`git.kernel.org`) | ~3.5 GB (trees + blobs) |
 | Later trees on the same object store | tens of MB of new objects |
 
-Steady-state estimate for the current allowlist (~35 trees): **about 6–8 GB**,
+Steady-state estimate for the current allowlist (~35 trees): **about 6–8 GiB**,
 then daily deltas in the tens of MB. Cloning each tree into a throwaway repo
 and deleting it would cost that 3.5 GB **per tree per run** (no object
 sharing, no incremental fetch).
@@ -80,7 +80,7 @@ in bytes. The write is a temp file in that directory, `fsync`, then replace.
 With `PROMETHEUS_METRICS_ENABLED=true`, the metrics process exposes
 `git_mirror_size_bytes` and `git_mirror_size_mtime_seconds` (Unix mtime of
 that file). Prometheus alerts `GitMirrorSizeHigh` when the size stays above
-10 GB for 30 minutes. The series stay absent until the first completed fetch.
+10 GiB for 30 minutes. The series stay absent until the first completed fetch.
 
 ### Recreate the volume
 
@@ -95,13 +95,15 @@ docker compose -f docker-compose.dev.yml up -d backend
 
 ## Job flow
 
-Two cron entries on the backend container:
+Three cron entries on the backend container:
 
 - `0 4 * * *` `sync_commit_mirror` — remotes into the mirror. Does not write
   `commits` or `synced-tips`.
 - `0 10 * * *` `sync_commit_ingest` — ingest new mirror objects (tip delta),
   then insert. Six hours later so a long first fetch is less likely to
   overlap; do not run both against the same `GIT_MIRROR_DIR` at once.
+- `0 16 * * 0` `sync_commit_gc` — delete unreachable objects and repack.
+  Sunday afternoon, so it does not hold the repo lock during either sync.
 
 ```
 tree-names.yaml URLs
@@ -116,12 +118,17 @@ for each remote (sequential; git locks one repo)
         |   otherwise           git fetch (no filter) <checkout branches>
         |                       or --skip-unfilterable → skip this remote
         |
+        +-- GIT_MIRROR_SHALLOW_SINCE set, and this run is allowed to shorten
+        |       → the same fetch also passes --shallow-since
+        |
         +-- pack too big / incomplete / (filter promised but trees leaked)
-        |       → drop new packs + restore refs; skip this remote this run
+        |       → drop new packs, restore refs and the shallow file;
+        |         skip this remote this run
         |         (no HEAD retry: same server, same behaviour)
         v
 sync_commit_ingest
 rev-list new tips --not old tips  (topo, reverse)
+tips the shallow file removed are dropped first
         |
         v
 cat-file --batch in 2000-hash chunks → parse → insert commits then edges
@@ -143,6 +150,40 @@ still fetches missing checkout SHAs and then discards them.
 If `tree-names.yaml` is missing, a non-dry run regenerates it the same way
 the ingester does (`treeproof`). Empty allowlist used to make the job a
 silent no-op.
+
+## Shallow window
+
+`GIT_MIRROR_SHALLOW_SINCE` is empty by default, so fetches stay full-history.
+Set it only after `sync_commit_ingest` has stored the history you want to keep.
+On an empty mirror the first fetch would otherwise never download that history.
+
+Git stores the boundary commits in `GIT_MIRROR_DIR/shallow`. It does not store
+the date, so every later fetch that is allowed to shorten passes
+`--shallow-since` again. That covers a new remote and moves the window forward.
+
+A run passes the flag in two cases:
+
+- The mirror has no `refs/remotes` yet.
+- `synced-tips` exists and, before this fetch, nothing reachable is still
+  pending ingest.
+
+Otherwise the fetch is unchanged. A populated mirror that has never been
+ingested, and a mirror whose last ingest failed, keep their current history.
+A failed or rejected fetch restores the previous `shallow` file.
+
+After the boundary moves, ingest ignores stored tips that `git cat-file -e`
+can no longer see. The commits that remain reachable are parsed again.
+Existing rows are left alone.
+
+`sync_commit_gc` runs `git gc --prune=now` with `repack.writeBitmaps=false`.
+Git's own repack progress is written straight to the terminal. Objects
+behind the shallow boundary are removed in that run, and `mirror-size-bytes`
+is rewritten afterwards. A bare repo writes a bitmap by
+default, and a bitmap requires every reachable object. `--filter=tree:0`
+omits trees and blobs, so the bitmap step aborts after the new pack is
+written and the mirror grows. The mirror config sets the same option. It
+does not pass `--aggressive` or `gc.repackFilter`. Promisor packs stay
+promisor packs, so the omitted trees are not downloaded.
 
 ## What is fetched
 
@@ -229,6 +270,9 @@ poetry run python manage.py sync_commit_ingest
 poetry run python manage.py sync_commit_ingest --dry-run
 poetry run python manage.py sync_commit_ingest --fill-gaps
 poetry run python manage.py sync_commit_ingest --mirror-dir /path
+
+poetry run python manage.py sync_commit_gc
+poetry run python manage.py sync_commit_gc --mirror-dir /path
 ```
 
 `sync_commit_mirror`:
@@ -249,9 +293,12 @@ poetry run python manage.py sync_commit_ingest --mirror-dir /path
 | `--fill-gaps` | One-shot SHA fetch for checkout hashes still missing |
 | `--mirror-dir` | Override `GIT_MIRROR_DIR` |
 
+`sync_commit_gc` takes `--mirror-dir`. It does nothing when the mirror does not exist.
+
 Env:
 
 - `GIT_MIRROR_DIR` — persistent bare repo
+- `GIT_MIRROR_SHALLOW_SINCE` — optional cutoff (`90 days ago`). Empty keeps full history
 - `GIT_SCRATCH_DIR` — ephemeral clones for `--fill-gaps`
 - `BACKEND_VOLUME_DIR` — `tree-names.yaml` only
 

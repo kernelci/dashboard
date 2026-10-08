@@ -16,16 +16,18 @@ from kernelCI_app.helpers.commitSync import (
     allowlisted_tree_urls,
     ensure_mirror,
     fetch_remote,
+    gc_mirror,
     insert_commits,
     list_tips,
     new_commit_hashes,
     parse_commits,
     sync_commit_metadata,
+    write_stored_tips,
 )
 from kernelCI_app.helpers.gitCommit import CommitMetadata
 
 
-def _run_git(repo: Path, *args: str) -> str:
+def _run_git(repo: Path, *args: str, extra_env: dict[str, str] | None = None) -> str:
     env = {
         **os.environ,
         "GIT_AUTHOR_NAME": "Alice Author",
@@ -34,6 +36,7 @@ def _run_git(repo: Path, *args: str) -> str:
         "GIT_COMMITTER_EMAIL": "bob@example.com",
         "GIT_AUTHOR_DATE": "2001-09-09T01:46:40+0000",
         "GIT_COMMITTER_DATE": "2001-09-09T01:47:40+0000",
+        **(extra_env or {}),
     }
     git = shutil.which("git")
     assert git is not None
@@ -61,6 +64,57 @@ def _linear_repo(tmp_path: Path) -> tuple[Path, list[str]]:
         _run_git(repo, "commit", "-m", name)
         hashes.append(_run_git(repo, "rev-parse", "HEAD"))
     return repo, hashes
+
+
+def _dated_repo(tmp_path: Path) -> tuple[Path, dict[str, str]]:
+    repo = tmp_path / "dated"
+    repo.mkdir()
+    _run_git(repo, "init", "-b", "main")
+    _run_git(repo, "config", "user.name", "Alice Author")
+    _run_git(repo, "config", "user.email", "alice@example.com")
+    hashes: dict[str, str] = {}
+    for date, name in (
+        ("2020-01-01T00:00:00Z", "old"),
+        ("2024-06-01T00:00:00Z", "kept"),
+        ("2026-10-01T00:00:00Z", "recent"),
+    ):
+        (repo / "f.txt").write_text(name + "\n")
+        _run_git(repo, "add", "f.txt")
+        _run_git(
+            repo,
+            "commit",
+            "-m",
+            name,
+            extra_env={"GIT_AUTHOR_DATE": date, "GIT_COMMITTER_DATE": date},
+        )
+        hashes[name] = _run_git(repo, "rev-parse", "HEAD")
+    return repo, hashes
+
+
+def _point_allowlist(monkeypatch, repo: Path) -> None:
+    monkeypatch.setattr(
+        "kernelCI_app.helpers.commitSync.allowlisted_tree_urls",
+        lambda **_kwargs: [f"file://{repo}"],
+    )
+    monkeypatch.setattr(
+        "kernelCI_app.helpers.commitSync.checkout_branches_by_url",
+        lambda: {},
+    )
+
+
+def _is_shallow(repo: Path) -> bool:
+    return _run_git(repo, "rev-parse", "--is-shallow-repository") == "true"
+
+
+def _object_exists(repo: Path, git_commit_hash: str) -> bool:
+    git = shutil.which("git")
+    assert git is not None
+    result = subprocess.run(  # noqa: S603
+        [git, "-C", str(repo), "cat-file", "-e", git_commit_hash],
+        capture_output=True,
+        env={**os.environ, "GIT_NO_LAZY_FETCH": "1"},
+    )
+    return result.returncode == 0
 
 
 def _metadata(
@@ -373,6 +427,25 @@ class TestSyncCommitMetadata:
         assert again["parsed"] == 0
         assert again["commits_written"] == 0
 
+    def test_incomplete_ingest_does_not_advance_tips(
+        self, tmp_path, monkeypatch, commit_store
+    ):
+        repo, hashes = _linear_repo(tmp_path)
+        mirror = tmp_path / "mirror"
+        ensure_mirror(mirror)
+        assert fetch_remote(mirror, url=f"file://{repo}", timeout=30)
+        monkeypatch.setattr(
+            commitSync,
+            "iter_parsed_commits",
+            lambda _repo_dir, _hashes: iter([[_metadata(hashes[0])]]),
+        )
+
+        with pytest.raises(commitSync.CommitMetadataError, match="parsed 1 of 3"):
+            sync_commit_metadata(mirror_dir=mirror, skip_fetch=True)
+
+        assert set(commit_store[0]) == {hashes[0]}
+        assert not (mirror / TIPS_FILENAME).exists()
+
     def test_skip_fetch_and_skip_ingest_is_invalid(self, tmp_path):
         with pytest.raises(ValueError, match="cannot both be set"):
             sync_commit_metadata(
@@ -418,6 +491,23 @@ class TestSyncCommitMetadata:
 
 
 class TestFetchGuards:
+    def test_verify_pack_failure_rejects_pack(self, tmp_path, monkeypatch):
+        mirror = tmp_path / "mirror"
+        pack = mirror / "objects" / "pack" / "pack-test.pack"
+        pack.parent.mkdir(parents=True)
+        pack.write_bytes(b"pack")
+        pack.with_suffix(".idx").write_bytes(b"index")
+
+        def fail_verify_pack(*_args, **_kwargs):
+            raise commitSync.FetchFailedError("verify-pack failed")
+
+        monkeypatch.setattr(commitSync, "run_git", fail_verify_pack)
+
+        assert (
+            commitSync._pack_rejection_reason(mirror, pack, expect_treeless=True)
+            == "could not inspect pack-test.pack"
+        )
+
     def test_does_not_fetch_unlisted_topic_branch(self, tmp_path, monkeypatch):
         repo, hashes = _linear_repo(tmp_path)
         _run_git(repo, "checkout", "-b", "topic")
@@ -609,3 +699,120 @@ class TestSyncCommitCommands:
         assert seen["skip_fetch"] is True
         assert seen["fill_gaps"] is True
         assert "skip_ingest" not in seen or seen.get("skip_ingest") is False
+
+
+class TestShallowMirror:
+    def test_catchup_shortens_and_later_fetch_stays_shallow(
+        self, tmp_path, monkeypatch
+    ):
+        repo, commits = _dated_repo(tmp_path)
+        mirror = tmp_path / "mirror"
+        _point_allowlist(monkeypatch, repo)
+
+        sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
+        assert not _is_shallow(mirror)
+        write_stored_tips(mirror, list_tips(mirror))
+
+        with override_settings(GIT_MIRROR_SHALLOW_SINCE="2024-01-01"):
+            sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
+
+        assert _is_shallow(mirror)
+        assert commits["old"] not in _run_git(mirror, "rev-list", "--remotes").split()
+        assert _object_exists(mirror, commits["old"])
+        gc_mirror(mirror)
+        assert not _object_exists(mirror, commits["old"])
+
+        (repo / "f.txt").write_text("newer\n")
+        _run_git(repo, "add", "f.txt")
+        _run_git(
+            repo,
+            "commit",
+            "-m",
+            "newer",
+            extra_env={
+                "GIT_AUTHOR_DATE": "2026-10-08T00:00:00Z",
+                "GIT_COMMITTER_DATE": "2026-10-08T00:00:00Z",
+            },
+        )
+        newer = _run_git(repo, "rev-parse", "HEAD")
+        with override_settings(GIT_MIRROR_SHALLOW_SINCE="2024-01-01"):
+            sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
+
+        assert _is_shallow(mirror)
+        assert newer in _run_git(mirror, "rev-list", "--remotes").split()
+        assert not _object_exists(mirror, commits["old"])
+
+    def test_populated_mirror_without_tips_stays_full(self, tmp_path, monkeypatch):
+        repo, commits = _dated_repo(tmp_path)
+        mirror = tmp_path / "mirror"
+        _point_allowlist(monkeypatch, repo)
+        sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
+
+        with override_settings(GIT_MIRROR_SHALLOW_SINCE="2024-01-01"):
+            sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
+
+        assert not _is_shallow(mirror)
+        assert _object_exists(mirror, commits["old"])
+
+    def test_missing_stored_tip_does_not_block_ingest(
+        self, tmp_path, monkeypatch, commit_store
+    ):
+        repo, commits = _dated_repo(tmp_path)
+        mirror = tmp_path / "mirror"
+        _point_allowlist(monkeypatch, repo)
+        sync_commit_metadata(mirror_dir=mirror, skip_ingest=True)
+        write_stored_tips(mirror, ("ab" * 20,))
+
+        stats = sync_commit_metadata(mirror_dir=mirror, skip_fetch=True)
+
+        assert stats["commits_written"] == 3
+        assert set(commit_store[0]) == set(commits.values())
+
+    def test_rollback_restores_shallow_file(self, tmp_path):
+        mirror = tmp_path / "mirror"
+        ensure_mirror(mirror)
+        shallow = mirror / commitSync.SHALLOW_FILENAME
+        shallow.write_bytes(b"changed\n")
+
+        commitSync._rollback_fetch(
+            mirror,
+            name="origin",
+            packs_before=set(),
+            refs_before={},
+            shallow_before=b"kept\n",
+        )
+        assert shallow.read_bytes() == b"kept\n"
+
+        commitSync._rollback_fetch(
+            mirror,
+            name="origin",
+            packs_before=set(),
+            refs_before={},
+            shallow_before=None,
+        )
+        assert not shallow.exists()
+
+
+class TestMirrorGc:
+    def test_gc_command_keeps_promisor_pack(self, tmp_path):
+        repo, hashes = _linear_repo(tmp_path)
+        mirror = tmp_path / "mirror"
+        ensure_mirror(mirror)
+        assert fetch_remote(mirror, url=f"file://{repo}", timeout=30, branches={"main"})
+        tip = hashes[-1]
+        commit_text = _run_git(mirror, "cat-file", "-p", tip)
+        tree = next(
+            line.split()[1]
+            for line in commit_text.splitlines()
+            if line.startswith("tree ")
+        )
+
+        gc_mirror(mirror)
+
+        assert _run_git(mirror, "config", "--get", "repack.writeBitmaps") == "false"
+        assert _object_exists(mirror, tip)
+        assert not _object_exists(mirror, tree)
+        assert list((mirror / "objects" / "pack").glob("*.promisor"))
+
+    def test_gc_command_skips_missing_mirror(self, tmp_path):
+        gc_mirror(tmp_path / "missing")

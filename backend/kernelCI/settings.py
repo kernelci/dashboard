@@ -263,6 +263,11 @@ else:
             "django.core.management.call_command",
             ["sync_commit_ingest"],
         ),
+        (
+            "0 16 * * 0",
+            "django.core.management.call_command",
+            ["sync_commit_gc"],
+        ),
     ]
 
 # Email settings for SMTP backend
@@ -288,6 +293,9 @@ GIT_FETCH_MAX_PACK_BYTES = int(
 )
 # Persistent treeless mirror for commit metadata sync (#2109). Not BACKEND_VOLUME_DIR.
 GIT_MIRROR_DIR = os.environ.get("GIT_MIRROR_DIR", "/var/lib/kernelci/git-mirror")
+# Empty keeps full history. A value such as "90 days ago" is passed to
+# git fetch --shallow-since once the ingest has caught up.
+GIT_MIRROR_SHALLOW_SINCE = os.environ.get("GIT_MIRROR_SHALLOW_SINCE", "").strip()
 
 DATABASE_ROUTERS = ["kernelCI_app.routers.databaseRouter.DatabaseRouter"]
 
