@@ -12,3 +12,7 @@ k6/results/*.json
 
 # .github scripts dependencies
 .github/scripts/node_modules
+
+# show-me-your-work skill
+/.audit
+
