@@ -172,6 +172,7 @@ class BackendRequestMetricsMiddleware:
     def __call__(self, request):
         started = time.perf_counter()
         response = self.get_response(request)
+        elapsed = time.perf_counter() - started
         if request.path.startswith("/api/"):
             labels = get_backend_request_labels(request, response)
             record_client(
@@ -195,7 +196,7 @@ class BackendRequestMetricsMiddleware:
                 endpoint=labels["endpoint"],
                 method=labels["method"],
                 client=labels["client"],
-            ).observe(time.perf_counter() - started)
+            ).observe(elapsed)
             record_unique_visitor(
                 request=request,
                 endpoint=labels["endpoint"],
