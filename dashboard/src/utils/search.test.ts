@@ -17,20 +17,19 @@ const KEY_FLAT_CHAR = '|';
 const simpleObject = {
   origin: 'maestro',
   intervalInDays: 7,
-  // eslint-disable-next-line no-magic-numbers
-  treeIndexes: [1, 2, 3],
+  treeIndexes: ['a3f2b8c1', 'b4c5d6e7', 'c5d6e7f8'],
   tableSort: '-status',
 };
 
 const simpleObjectMinify = {
   o: 'maestro',
   i: 7,
-  // eslint-disable-next-line no-magic-numbers
-  x: [1, 2, 3],
+  x: ['a3f2b8c1', 'b4c5d6e7', 'c5d6e7f8'],
   s: '-status',
 };
 
-const simpleObjectStringify = '?o=maestro&i=7&x[]=1,2,3&s=-status';
+const simpleObjectStringify =
+  '?o=maestro&i=7&x[]=a3f2b8c1,b4c5d6e7,c5d6e7f8&s=-status';
 
 const nestedObject = {
   origin: 'maestro',
@@ -53,7 +52,7 @@ const nestedObject = {
     archs: { arm: true },
     testPath: 'amlogic',
   },
-  treeIndexes: [0, 1, 2],
+  treeIndexes: ['a3f2b8c1', 'b4c5d6e7', 'c5d6e7f8'],
 };
 
 const nestedObjectMinify = {
@@ -77,7 +76,7 @@ const nestedObjectMinify = {
     a: { arm: true },
     tp: 'amlogic',
   },
-  x: [0, 1, 2],
+  x: ['a3f2b8c1', 'b4c5d6e7', 'c5d6e7f8'],
 };
 
 const nestedObjectStringify =
@@ -86,7 +85,7 @@ const nestedObjectStringify =
   '&s|b=path&s|t=-startTime' +
   '&tri|t=android&tri|ch=hash' +
   '&df|c|defconfig=true&df|a|arm=true&df|tp=amlogic' +
-  '&x[]=0,1,2';
+  '&x[]=a3f2b8c1,b4c5d6e7,c5d6e7f8';
 
 const flatObject = {
   origin: 'maestro',
@@ -101,7 +100,7 @@ const flatObject = {
   'diffFilter|configs|defconfig': true,
   'diffFilter|archs|arm': true,
   'diffFilter|testPath': 'amlogic',
-  treeIndexes: [0, 1, 2],
+  treeIndexes: ['a3f2b8c1', 'b4c5d6e7', 'c5d6e7f8'],
 };
 
 const flatObjectMinify = {
@@ -117,7 +116,7 @@ const flatObjectMinify = {
   'df|c|defconfig': true,
   'df|a|arm': true,
   'df|tp': 'amlogic',
-  x: [0, 1, 2],
+  x: ['a3f2b8c1', 'b4c5d6e7', 'c5d6e7f8'],
 };
 
 describe('isEncodedArrayParam', () => {
@@ -271,11 +270,13 @@ describe('parseSearch', () => {
     );
   });
 
-  it('JSON stringified simple object with filled array', () => {
+  it('JSON stringified simple object with filled numeric array (legacy)', () => {
+    // eslint-disable-next-line no-magic-numbers
+    const legacyObject = { ...simpleObject, treeIndexes: [1, 2, 3] };
     const JSONSimpleObjectStringify = stringifySearchWith(JSON.stringify)(
-      simpleObject,
+      legacyObject,
     );
-    expect(parseSearch(JSONSimpleObjectStringify)).toStrictEqual(simpleObject);
+    expect(parseSearch(JSONSimpleObjectStringify)).toStrictEqual(legacyObject);
   });
 
   it('JSON stringified simple object with empty array', () => {
@@ -288,15 +289,17 @@ describe('parseSearch', () => {
     );
   });
 
-  it('JSON stringified simple object - not URI encoded', () => {
+  it('JSON stringified simple object - not URI encoded (legacy)', () => {
+    // eslint-disable-next-line no-magic-numbers
+    const legacyObject = { ...simpleObject, treeIndexes: [1, 2, 3] };
     const JSONSimpleObjectStringify = stringifySearchWith(JSON.stringify)(
-      simpleObject,
+      legacyObject,
     );
     const decodeStr = JSONSimpleObjectStringify.replace(/%5B/g, '[').replace(
       /%5D/g,
       ']',
     );
-    expect(parseSearch(decodeStr)).toStrictEqual(simpleObject);
+    expect(parseSearch(decodeStr)).toStrictEqual(legacyObject);
   });
 
   it('JSON stringified nested object', () => {
