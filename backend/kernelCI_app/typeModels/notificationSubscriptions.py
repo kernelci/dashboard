@@ -12,6 +12,7 @@ from pydantic import (
     Field,
     TypeAdapter,
     ValidationError,
+    model_validator,
 )
 
 IssueKind = Literal["build", "boot", "test"]
@@ -35,21 +36,26 @@ def validate_address(value: str) -> str:
 Address = Annotated[str, AfterValidator(validate_address)]
 
 
-class RecipientOptIn(BaseModel):
+class Recipient(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     email: Address
     issues: list[IssueKind] | None = Field(default=None, min_length=1)
 
+    @model_validator(mode="before")
+    @classmethod
+    def from_address(cls, value):
+        if isinstance(value, str):
+            return {"email": value}
+        return value
 
-Recipient = Address | RecipientOptIn
+
 _RECIPIENTS = TypeAdapter(list[Recipient])
 
 
 def cc_addresses(recipients: list) -> list[str]:
-    """Addresses passed to current mails. Mappings contribute ``email`` only."""
-    parsed = _RECIPIENTS.validate_python(recipients)
-    return [item if isinstance(item, str) else item.email for item in parsed]
+    """Addresses passed to current mails."""
+    return [item.email for item in _RECIPIENTS.validate_python(recipients)]
 
 
 class TreeSubscription(BaseModel):
@@ -105,18 +111,8 @@ def _load_mapping(path: Path) -> dict:
 def _validation_error(
     path: Path, exc: ValidationError, *, prefix: str = ""
 ) -> NotificationConfigError:
-    errors = [
-        err
-        for err in exc.errors()
-        if not any("function-after" in str(part) for part in err["loc"])
-    ] or exc.errors()
-    err = errors[-1]
-    parts = [
-        str(part)
-        for part in err["loc"]
-        if str(part) not in {"RecipientOptIn"} and "function-after" not in str(part)
-    ]
-    field = ".".join(parts) or "<file>"
+    err = exc.errors()[-1]
+    field = ".".join(str(part) for part in err["loc"]) or "<file>"
     if prefix:
         field = f"{prefix}.{field}"
     return NotificationConfigError(path.name, field, err["msg"])

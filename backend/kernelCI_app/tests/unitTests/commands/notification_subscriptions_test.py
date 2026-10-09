@@ -40,6 +40,25 @@ def test_subscription_files_load_and_keep_one_cc_address_per_entry():
             assert cc_addresses(raw) == expected
 
 
+def test_invalid_plain_address_names_the_address(tmp_path):
+    _write(
+        tmp_path,
+        "qcs6490_hardware.yaml",
+        {
+            "qcs6490-rb3gen2": {
+                "origin": "maestro",
+                "default_recipients": ["Trilok Soni <not-an-email>"],
+            }
+        },
+    )
+    with pytest.raises(NotificationConfigError) as raised:
+        load_subscriptions(tmp_path)
+    error = raised.value
+    assert error.file == "qcs6490_hardware.yaml"
+    assert error.field == "qcs6490-rb3gen2.default_recipients.0.email"
+    assert "invalid email address: Trilok Soni <not-an-email>" in str(error)
+
+
 def test_invalid_issue_kind_names_file_and_field(tmp_path):
     _write(
         tmp_path,
