@@ -76,7 +76,8 @@ import {
 } from './buildUnifiedTestsTree';
 import type { UnifiedTestRow } from './types';
 
-const ESTIMATED_ROW_HEIGHT = 60;
+const ROW_HEIGHT = 60;
+const ROW_HEIGHT_STYLE: CSSProperties = { height: ROW_HEIGHT };
 const VIRTUALIZER_OVERSCAN = 5;
 const PATH_CHEVRON_WIDTH = 24;
 const OTHER_COLUMN_MIN_WIDTH = 88;
@@ -340,7 +341,7 @@ export function TestsTable({
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: modelRows.length,
-    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    estimateSize: () => ROW_HEIGHT,
     getScrollElement: () => parentRef.current,
     overscan: VIRTUALIZER_OVERSCAN,
   });
@@ -461,6 +462,7 @@ export function TestsTable({
         rows.push(
           <TableRow
             key={row.id}
+            style={ROW_HEIGHT_STYLE}
             className="group hover:bg-light-blue cursor-pointer"
             onClick={() => {
               if (row.getCanExpand()) {
@@ -484,6 +486,7 @@ export function TestsTable({
         <TableRowMemoized<UnifiedTestRow>
           key={row.id}
           index={leafIndexById.get(row.original.id) ?? -1}
+          style={ROW_HEIGHT_STYLE}
           row={row}
           openLogSheet={openLogSheet}
           currentLog={currentLog}
