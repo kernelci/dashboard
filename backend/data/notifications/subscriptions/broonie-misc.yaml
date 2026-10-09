@@ -1,4 +1,5 @@
 broonie-misc:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/broonie/misc.git
   default_recipients:
-    - broonie@kernel.org
+    - email: broonie@kernel.org
+      issues: [build]

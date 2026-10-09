@@ -11,6 +11,7 @@ from kernelCI_app.queries.notifications import (
     get_issues_summary_data,
 )
 from kernelCI_app.typeModels.issues import CheckoutIssue, ProcessedExtraDetailedIssues
+from kernelCI_app.typeModels.notificationSubscriptions import cc_addresses
 from kernelCI_app.utils import read_yaml_file
 
 type PossibleReportOptions = Literal["ignore_default_recipients"]
@@ -91,7 +92,7 @@ def process_submissions_files(
                     report["giturl"] = giturl
                     report["tree_name"] = tree_name
                     if default_recipients:
-                        report["default_recipients"] = default_recipients
+                        report["default_recipients"] = cc_addresses(default_recipients)
 
                     tree_key = (branch, giturl, origin)
                     tree_key_set.add(tree_key)
@@ -216,7 +217,9 @@ def process_hardware_submissions_files(
                 origin = hardware_values.get("origin", DEFAULT_ORIGIN)
                 if hardware_origins is not None and origin not in hardware_origins:
                     continue
-                default_recipients = hardware_values.get("default_recipients", [])
+                default_recipients = cc_addresses(
+                    hardware_values.get("default_recipients", [])
+                )
                 labs = hardware_values.get("labs")
 
                 hardware_key = (hardware_name, origin)

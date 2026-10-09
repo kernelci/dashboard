@@ -1,4 +1,5 @@
 khilman:
   url: https://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux.git
   default_recipients:
-    - khilman@kernel.org
+    - email: khilman@kernel.org
+      issues: [build]
