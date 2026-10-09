@@ -313,6 +313,78 @@ class HardwareStatus(models.Model):
         ]
 
 
+class HardwareDailyBuilds(models.Model):
+    pk = models.CompositePrimaryKey(
+        "checkout_day",
+        "build_origin",
+        "build_lab",
+        "platform",
+        "checkout_id",
+    )
+    checkout_day = models.DateField()
+    checkout_id = models.TextField()
+    checkout_origin = models.CharField(max_length=100, blank=True, null=True)
+    build_origin = models.CharField(max_length=100)
+    build_lab = models.TextField()
+    platform = models.CharField(max_length=100)
+
+    compatibles = ArrayField(models.TextField(), null=True)
+
+    build_pass = models.IntegerField(default=0)
+    build_failed = models.IntegerField(default=0)
+    build_inc = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "hardware_daily_builds"
+        indexes = [
+            models.Index(
+                fields=["build_origin", "checkout_day"], name="hw_daily_builds_org_day"
+            ),
+            models.Index(
+                fields=["checkout_origin", "checkout_day"],
+                name="hw_daily_builds_co_day",
+            ),
+        ]
+
+
+class HardwareDailyTests(models.Model):
+    pk = models.CompositePrimaryKey(
+        "checkout_day",
+        "test_origin",
+        "test_lab",
+        "platform",
+        "checkout_id",
+    )
+    checkout_day = models.DateField()
+    checkout_id = models.TextField()
+    checkout_origin = models.CharField(max_length=100, blank=True, null=True)
+    test_origin = models.CharField(max_length=100)
+    test_lab = models.TextField()
+    platform = models.CharField(max_length=100)
+
+    compatibles = ArrayField(models.TextField(), null=True)
+
+    boot_pass = models.IntegerField(default=0)
+    boot_failed = models.IntegerField(default=0)
+    boot_inc = models.IntegerField(default=0)
+
+    test_pass = models.IntegerField(default=0)
+    test_failed = models.IntegerField(default=0)
+    test_inc = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "hardware_daily_tests"
+        indexes = [
+            models.Index(
+                fields=["test_origin", "checkout_day"], name="hw_daily_tests_org_day"
+            ),
+            models.Index(
+                fields=["checkout_origin", "checkout_day"],
+                name="hw_daily_tests_co_day",
+            ),
+        ]
+
+
 class LatestCheckout(models.Model):
     id = models.AutoField(primary_key=True)
     checkout_id = models.TextField()

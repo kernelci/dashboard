@@ -1,19 +1,23 @@
-from typing import Annotated
+from typing import Optional
 
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import BaseModel, Field
 
 from kernelCI_app.constants.general import DEFAULT_ORIGIN
 from kernelCI_app.constants.localization import DocStrings
+from kernelCI_app.typeModels.hardwareListing import HardwareFilterParams
 
 
 class HardwareListingByRevisionQueryParamsDocumentationOnly(BaseModel):
-    origin: Annotated[
-        str,
-        Field(
-            default=DEFAULT_ORIGIN,
-            description=DocStrings.HARDWARE_LISTING_ORIGIN_DESCRIPTION,
-        ),
-    ]
+    checkoutOrigin: Optional[str] = DEFAULT_ORIGIN  # noqa: N815
+    buildOrigin: Optional[str] = DEFAULT_ORIGIN  # noqa: N815
+    testOrigin: Optional[str] = None  # noqa: N815
+    buildLab: Optional[str] = None  # noqa: N815
+    testLab: Optional[str] = None  # noqa: N815
+    origin: Optional[str] = Field(
+        default=None,
+        deprecated=True,
+        description="Deprecated alias for checkoutOrigin and buildOrigin",
+    )
     tree_name: str = Field(description=DocStrings.TREE_NAME_PATH_DESCRIPTION)
     git_repository_url: str = Field(
         description=DocStrings.TREE_QUERY_GIT_URL_DESCRIPTION
@@ -24,12 +28,7 @@ class HardwareListingByRevisionQueryParamsDocumentationOnly(BaseModel):
     git_commit_hash: str = Field(description=DocStrings.COMMIT_HASH_PATH_DESCRIPTION)
 
 
-class HardwareListingByRevisionQueryParams(BaseModel):
-    origin: Annotated[
-        str,
-        Field(default=DEFAULT_ORIGIN),
-        BeforeValidator(lambda o: DEFAULT_ORIGIN if o is None else o),
-    ]
+class HardwareListingByRevisionQueryParams(HardwareFilterParams):
     tree_name: str
     git_repository_url: str
     git_repository_branch: str

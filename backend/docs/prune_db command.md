@@ -15,9 +15,10 @@ Models use `DO_NOTHING` foreign keys, so the command applies manual cascade rule
 
 ### Optional Parameters
 
-- `--tables`: Limit pruning to specific tables (comma-separated). Valid options: `checkouts`, `builds`, `tests`. Default: all three.
+- `--tables`: Limit pruning to specific tables (comma-separated). Valid options: `checkouts`, `builds`, `tests`, `hardware_daily_builds`, `hardware_daily_tests`. Default: all.
   - Cascade only drags a child when the child's parent table is also selected. For example, `--tables tests` removes only tests past the cutoff; recent tests under an old build/checkout are kept because those parents are not being pruned. With `--tables builds,tests`, an old build still drags its recent tests, but an old checkout does not drag its recent builds (checkouts are not selected).
   - Tables not listed are not deleted. For example, `--tables builds` removes old builds but leaves their tests in place. Selecting a parent without its children (e.g. only `checkouts`) can therefore leave orphaned rows.
+  - `hardware_daily_builds` and `hardware_daily_tests` are independent of the raw cascade: they are pruned by their own `checkout_day` and can be targeted on their own (e.g. `--tables hardware_daily_builds,hardware_daily_tests`) to trim only the aggregates.
 - `--origins`: Limit age-based pruning to specific origins (comma-separated). If omitted, any origin is considered.
   - Cascade ignores origin: once a parent row is doomed, its children are removed even if they belong to a different origin.
 - `--batch-size`: Number of rows deleted per batch (default: `10000`). Must be at least `1`.
@@ -51,6 +52,12 @@ python manage.py prune_db --older-than "30 days" --origins maestro,0dayci --dry-
 python manage.py prune_db --older-than "30 days" --tables tests --yes
 ```
 
+### Prune only the hardware daily aggregates
+
+```bash
+python manage.py prune_db --older-than "60 days" --tables hardware_daily_builds,hardware_daily_tests --yes
+```
+
 ### Prune rows linked to issues (override default protection)
 
 ```bash
@@ -59,7 +66,11 @@ python manage.py prune_db --older-than "30 days" --skip-issue-protection --yes
 
 ## What Is Not Deleted
 
-The command only touches `checkouts`, `builds`, and `tests`. Related tables are left as-is, including:
+The command touches `checkouts`, `builds`, `tests`, and the hardware daily aggregates
+`hardware_daily_builds` / `hardware_daily_tests`. The aggregates are pruned by their
+own `checkout_day` (same age window as `--older-than`), because a daily summary is a
+coarser fact table retained by date range, not by which raw checkouts survive; use
+`--tables` to select any subset. Other related tables are left as-is, including:
 
 - `incidents` rows themselves (only used to decide which builds/tests/checkouts to keep)
 - `hardware_status`, `latest_checkout`, `tree_tests_rollup` (reference checkouts)

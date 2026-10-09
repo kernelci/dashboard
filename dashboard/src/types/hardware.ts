@@ -8,16 +8,8 @@ export type HardwareItem = {
   boot_status_summary: ShortStatusCount;
 };
 
-export type HardwareListingApiItem = {
-  hardware?: string[];
-  platform: string;
-  build_status_summary: ShortStatusCount;
-  test_status_summary: ShortStatusCount;
-  boot_status_summary: ShortStatusCount;
-};
-
 export interface HardwareListingResponse {
-  hardware: HardwareListingApiItem[];
+  hardware: HardwareItem[];
 }
 
 export type HardwareSelectorRevision = {
@@ -47,3 +39,11 @@ export type HardwareRevisionSelection = {
   gitBranch: string;
   gitCommitHash: string;
 };
+
+export interface HardwareFiltersResponse {
+  checkout_origins: string[];
+  build_origins: string[];
+  test_origins: string[];
+  build_labs: string[];
+  test_labs: string[];
+}
