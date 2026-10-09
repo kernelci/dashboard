@@ -138,25 +138,6 @@ def write_stored_tips(repo_dir: Path, tips: Sequence[str]) -> None:
     (repo_dir / TIPS_FILENAME).write_text(text)
 
 
-def present_tips(repo_dir: Path, tips: Sequence[str]) -> tuple[str, ...]:
-    """Drop tips the shallow boundary has removed so rev-list can still run."""
-    kept: list[str] = []
-    for tip in tips:
-        if _commit_exists(repo_dir, tip):
-            kept.append(tip)
-            continue
-        logger.warning("dropping stored tip %s: no longer in the mirror", tip)
-    return tuple(kept)
-
-
-def _commit_exists(repo_dir: Path, git_commit_hash: str) -> bool:
-    try:
-        run_git(repo_dir, "cat-file", "-e", git_commit_hash)
-    except CommitMetadataError:
-        return False
-    return True
-
-
 def shallow_since_for_fetch(repo_dir: Path) -> str | None:
     """Cutoff for this run, or None when shortening could hide uningested commits.
 
@@ -172,9 +153,7 @@ def shallow_since_for_fetch(repo_dir: Path) -> str | None:
     if not (repo_dir / TIPS_FILENAME).is_file():
         out("shallow-since skipped: ingest has not recorded tips")
         return None
-    pending = new_commit_hashes(
-        repo_dir, present_tips(repo_dir, read_stored_tips(repo_dir))
-    )
+    pending = new_commit_hashes(repo_dir, read_stored_tips(repo_dir), limit=1)
     if pending:
         out("shallow-since skipped: ingest has not caught up")
         return None
@@ -296,8 +275,14 @@ def gc_mirror(repo_dir: Path) -> None:
     )
 
 
-def new_commit_hashes(repo_dir: Path, old_tips: Sequence[str]) -> list[str]:
-    args = ["rev-list", "--reverse", "--topo-order", "--remotes"]
+def new_commit_hashes(
+    repo_dir: Path, old_tips: Sequence[str], *, limit: int | None = None
+) -> list[str]:
+    # `--ignore-missing` skips tips gc already deleted. Without it rev-list
+    # aborts, and cat-file would ask the promisor remote to send them back.
+    args = ["rev-list", "--ignore-missing", "--reverse", "--topo-order", "--remotes"]
+    if limit is not None:
+        args[1:1] = ["-n", str(limit)]
     stdin: bytes | None = None
     if old_tips:
         # `--not --stdin` does *not* mark stdin lines uninteresting (git treats
@@ -306,7 +291,11 @@ def new_commit_hashes(repo_dir: Path, old_tips: Sequence[str]) -> list[str]:
         args.append("--stdin")
         stdin = "".join(f"^{tip}\n" for tip in old_tips).encode()
     output = run_git(
-        repo_dir, *args, timeout=REV_LIST_TIMEOUT_SECONDS, stdin=stdin
+        repo_dir,
+        *args,
+        timeout=REV_LIST_TIMEOUT_SECONDS,
+        stdin=stdin,
+        extra_env={"GIT_NO_LAZY_FETCH": "1"},
     ).decode()
     return [line.strip() for line in output.splitlines() if line.strip()]
 
@@ -460,7 +449,7 @@ def _ingest_new_commits(
 ) -> tuple[int, int, int]:
     out("enumerating new commit objects...")
     started = time.monotonic()
-    hashes = new_commit_hashes(repo_dir, present_tips(repo_dir, old_tips))
+    hashes = new_commit_hashes(repo_dir, old_tips)
     out(
         f"{len(hashes)} new commits to ingest "
         f"(enumerated in {time.monotonic() - started:.0f}s)"

@@ -742,6 +742,22 @@ class TestShallowMirror:
         assert newer in _run_git(mirror, "rev-list", "--remotes").split()
         assert not _object_exists(mirror, commits["old"])
 
+    def test_pruned_tip_is_not_downloaded_again(self, tmp_path):
+        repo, commits = _dated_repo(tmp_path)
+        _run_git(repo, "config", "uploadpack.allowFilter", "true")
+        mirror = tmp_path / "mirror"
+        ensure_mirror(mirror)
+        assert fetch_remote(
+            mirror,
+            url=f"file://{repo}",
+            branches={"main"},
+            shallow_since="2024-01-01",
+        )
+        assert not _object_exists(mirror, commits["old"])
+
+        new_commit_hashes(mirror, (commits["old"],), limit=1)
+        assert not _object_exists(mirror, commits["old"])
+
     def test_populated_mirror_without_tips_stays_full(self, tmp_path, monkeypatch):
         repo, commits = _dated_repo(tmp_path)
         mirror = tmp_path / "mirror"

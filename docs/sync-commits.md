@@ -171,9 +171,9 @@ Otherwise the fetch is unchanged. A populated mirror that has never been
 ingested, and a mirror whose last ingest failed, keep their current history.
 A failed or rejected fetch restores the previous `shallow` file.
 
-After the boundary moves, ingest ignores stored tips that `git cat-file -e`
-can no longer see. The commits that remain reachable are parsed again.
-Existing rows are left alone.
+After the boundary moves, `rev-list --ignore-missing` skips stored tips gc
+already deleted, and does not ask the promisor remote to send them back. The
+commits that remain reachable are parsed again. Existing rows are left alone.
 
 `sync_commit_gc` runs `git gc --prune=now` with `repack.writeBitmaps=false`.
 Git's own repack progress is written straight to the terminal. Objects
