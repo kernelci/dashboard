@@ -11,9 +11,7 @@ from kernelCI_app.constants.general import (
     UNCATEGORIZED_STRING,
     UNKNOWN_STRING,
 )
-from kernelCI_app.constants.hardwareDetails import (
-    SELECTED_HEAD_TREE_VALUE,
-)
+from kernelCI_app.constants.hardwareDetails import SELECTED_HEAD_TREE_VALUE
 from kernelCI_app.helpers.commonDetails import PossibleTabs, add_unfiltered_issue
 from kernelCI_app.helpers.filters import (
     FilterParams,
@@ -98,9 +96,7 @@ def get_trees_with_selected_commit(
     selected: List[Tree] = []
 
     for tree in trees:
-        tree_idx = tree.index
-
-        raw_selected_commit = selected_commits.get(tree_idx)
+        raw_selected_commit = selected_commits.get(tree.index)
 
         is_tree_selected = raw_selected_commit is not None
 
