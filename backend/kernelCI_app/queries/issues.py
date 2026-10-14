@@ -68,7 +68,7 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
     }
 
     query = f"""
-        SELECT
+        SELECT DISTINCT ON (INC.TEST_ID)
             INC.TEST_ID AS ID,
             T.STATUS,
             T.DURATION,
@@ -93,6 +93,7 @@ def get_issue_tests(*, issue_id: str, version: Optional[int]) -> list[dict]:
                 AND {version_clause}
             )
             AND INC.TEST_ID IS NOT NULL
+        ORDER BY INC.TEST_ID
     """
 
     with connection.cursor() as cursor:
