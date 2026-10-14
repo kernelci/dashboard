@@ -62,6 +62,20 @@ class TestKcidbNewIssues:
         assert result == expected_result
         mock_execute_query.assert_called_once()
 
+    @patch("kernelCI_app.queries.notifications.kcidb_execute_query")
+    def test_kcidb_new_issues_keeps_boot_filter_until_other_tests_are_requested(
+        self, mock_execute_query
+    ):
+        mock_execute_query.return_value = []
+        kcidb_new_issues()
+        query = mock_execute_query.call_args[0][0]
+        assert "AND (t.path = 'boot' OR t.path = 'boot.nfs')" in query
+        assert "environment_misc->>'platform' AS platform" in query
+
+        kcidb_new_issues(include_other_tests=True)
+        other = mock_execute_query.call_args[0][0]
+        assert "AND NOT (t.path = 'boot' OR t.path = 'boot.nfs')" in other
+
 
 class TestKcidbIssueDetails:
     @patch("kernelCI_app.queries.notifications.kcidb_execute_query")

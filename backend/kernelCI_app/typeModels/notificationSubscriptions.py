@@ -1,4 +1,8 @@
-"""Subscription YAML and metrics rules. Sending behavior is unchanged."""
+"""Subscription YAML and metrics rules.
+
+The issues list records which regression mail an address already gets.
+A new_issues block opts that address into the hourly summary.
+"""
 
 from dataclasses import dataclass
 from email.utils import parseaddr
@@ -120,6 +124,26 @@ def new_issue_subscribers(directory: Path) -> list[NewIssueSubscriber]:
                         )
                     )
     return subscribers
+
+
+def issues_for_subscriber(
+    subscriber: NewIssueSubscriber, issues: list[dict]
+) -> list[dict]:
+    """Issues in this subscriber's scope whose type is in issue_types."""
+    matched = []
+    for issue in issues:
+        if issue.get("type") not in subscriber.issue_types:
+            continue
+        if subscriber.tree_url is not None:
+            if issue.get("git_repository_url") != subscriber.tree_url:
+                continue
+        elif (
+            issue.get("platform") != subscriber.hardware
+            or issue.get("origin") != subscriber.origin
+        ):
+            continue
+        matched.append(issue)
+    return matched
 
 
 class TreeSubscription(BaseModel):

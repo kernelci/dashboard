@@ -5,6 +5,8 @@ tree: # The filename and the name of the tree may follow the tree-names.yaml fil
       issues: [build] # the issue kinds this address is notified about
     - email: someone@example.com
       issues: [build, boot, test]
+      new_issues:
+        issue_types: [boot] # hourly summary for these kinds on this tree
  
   reports:
     - default:

@@ -8,8 +8,10 @@ from kernelCI_app.management.commands.helpers.summary import (
     process_submissions_files,
 )
 from kernelCI_app.typeModels.notificationSubscriptions import (
+    NewIssueSubscriber,
     NotificationConfigError,
     cc_addresses,
+    issues_for_subscriber,
     load_metrics_rules,
     load_subscriptions,
     new_issue_subscribers,
@@ -124,6 +126,56 @@ def test_new_issues_block_lists_tree_and_hardware_subscribers(tmp_path):
             }
         ]
     ) == ["broonie@kernel.org"]
+
+
+def test_issues_for_subscriber_filters_type_and_scope():
+    tree = NewIssueSubscriber(
+        email="a@example.com",
+        issue_types=frozenset({"boot"}),
+        tree_url="https://example.com/sound.git",
+    )
+    hardware = NewIssueSubscriber(
+        email="b@example.com",
+        issue_types=frozenset({"boot", "build"}),
+        hardware="board",
+        origin="maestro",
+    )
+    issues = [
+        {
+            "id": "boot-on-tree",
+            "type": "boot",
+            "git_repository_url": "https://example.com/sound.git",
+            "platform": "other",
+            "origin": "maestro",
+        },
+        {
+            "id": "build-on-tree",
+            "type": "build",
+            "git_repository_url": "https://example.com/sound.git",
+            "platform": None,
+            "origin": "maestro",
+        },
+        {
+            "id": "boot-on-board",
+            "type": "boot",
+            "git_repository_url": "https://example.com/other.git",
+            "platform": "board",
+            "origin": "maestro",
+        },
+        {
+            "id": "boot-on-board-other-origin",
+            "type": "boot",
+            "git_repository_url": "https://example.com/other.git",
+            "platform": "board",
+            "origin": "microsoft",
+        },
+    ]
+    assert [issue["id"] for issue in issues_for_subscriber(tree, issues)] == [
+        "boot-on-tree"
+    ]
+    assert [issue["id"] for issue in issues_for_subscriber(hardware, issues)] == [
+        "boot-on-board"
+    ]
 
 
 def test_current_subscription_files_have_no_new_issues_subscribers():
